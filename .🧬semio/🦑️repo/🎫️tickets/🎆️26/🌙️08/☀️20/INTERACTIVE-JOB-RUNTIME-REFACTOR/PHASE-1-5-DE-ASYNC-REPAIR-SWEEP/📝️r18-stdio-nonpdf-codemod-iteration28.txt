@@ -1,0 +1,4 @@
+[run r13-pfvzfiso] crate=semio-s-plugin-stdio dryRun=false target=(host) excludePath=artifacts/📄️pdf/
+[run r13-pfvzfiso] iteration 1: total errors=56, async-class=38
+[run r13-pfvzfiso] iteration 1: planned 23 edits (17 residue)
+[run r13-pfvzfiso] reached max-iterations=1 without reaching a fixpoint.

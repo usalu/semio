@@ -691,9 +691,7 @@ Always provide a `content` array for non-UI hosts:
 ```typescript
 return {
  content: [{ type: "text", text: "Fallback description of the result" }],
- structuredContent: {
-  /* data for the UI */
- },
+ structuredContent: {/* data for the UI */},
 };
 ```
 

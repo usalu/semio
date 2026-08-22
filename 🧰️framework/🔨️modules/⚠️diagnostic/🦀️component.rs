@@ -3,18 +3,24 @@
 
 pub use crate::span::TextSpan;
 use serde::{Deserialize, Serialize};
-use thiserror::Error;
 
 //#region 🔖️Errors
 /// @emoji 🚧️ Span-carrying parse/print failure — the one error type every DSL surface returns.
-#[derive(Clone, Debug, PartialEq, Error, Serialize, Deserialize)]
-#[error("{message} at {}:{}", span.line, span.column)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct TextError {
     pub message: String,
     pub span: TextSpan,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub expected: Option<String>,
 }
+
+impl std::fmt::Display for TextError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(formatter, "{} at {}:{}", self.message, self.span.line, self.span.column)
+    }
+}
+
+impl std::error::Error for TextError {}
 
 impl TextError {
     pub fn new(message: impl Into<String>, span: TextSpan) -> Self {
@@ -306,9 +312,9 @@ pub fn decode_fault_bytes(bytes: &[u8]) -> Fault {
     serde_json::from_slice(bytes).unwrap_or_else(|_| Fault::new(FaultOrigin::Os, "os.fault.decode", String::from_utf8_lossy(bytes)))
 }
 
-/// @emoji 🔁️ Maps a `thiserror` enum into {@link Fault} with a stable dotted code namespace.
+/// @emoji 🔁️ Maps an error type into {@link Fault} with a stable dotted code namespace.
 #[macro_export]
-macro_rules! fault_from_thiserror {
+macro_rules! fault_from_error {
     ($ty:ty, $origin:expr, $prefix:literal) => {
         impl $crate::FaultFrom for $ty {
             fn fault_origin(&self) -> $crate::FaultOrigin {

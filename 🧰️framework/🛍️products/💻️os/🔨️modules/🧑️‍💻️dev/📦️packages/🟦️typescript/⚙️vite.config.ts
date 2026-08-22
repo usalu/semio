@@ -74,6 +74,7 @@ export default defineConfig({
   cacheDir: playgroundCacheDir,
   publicDir: path.join(playDir, "public"),
   assetsInclude: ["**/*.wasm"],
+  worker: { format: "es" },
   // 🏷️ A brand's own `distDir` (e.g. the Aggregator's `♻️/aggregator/dist`) keeps its build output
   // self-contained alongside its brand config/assets instead of the shared playground `dist/`.
   build: {
@@ -83,6 +84,8 @@ export default defineConfig({
   resolve: {
     alias: [
       ...playgroundSceneHostResolveAliases(repoRoot),
+      { find: "@semio-tech/ui-react/test", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️render.ts") },
+      { find: "@semio-tech/ui-react/runtime", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️runtime.ts") },
       { find: "@semio-tech/ui-react", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx") },
       { find: "@semio-tech/assets", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts") },
       { find: "@semio-tech/ui-styling", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript") },
@@ -148,7 +151,7 @@ export default defineConfig({
   ],
   optimizeDeps: {
     entries: [path.join(playDir, "🌐️index.html")],
-    include: ["react-reconciler", "react-reconciler/constants", "three", "@react-three/fiber", "fuse.js"],
+    include: ["three", "@react-three/fiber"],
     exclude: [...nodeOnlyOptimizeDepsExclude, ...(renderer === "wgpu" ? ["@semio-tech/framework-renderer-react"] : []), ...FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE, ...registryEngineOptimizeDepsExclude],
   },
   define: {

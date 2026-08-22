@@ -207,14 +207,14 @@ pub fn apply_value_diff(diff: &JsonValueDiff, base: &JsonValue) -> JsonValue {
                 JsonValue::Array { items } => items.as_slice(),
                 _ => &[],
             };
-            JsonValue::Array { items: Box::pin(apply_array_diff(diff, items)) }
+            JsonValue::Array { items: apply_array_diff(diff, items) }
         }
         JsonValueDiff::Object { diff } => {
             let members: &[JsonMember] = match base {
                 JsonValue::Object { members } => members.as_slice(),
                 _ => &[],
             };
-            JsonValue::Object { members: Box::pin(apply_object_diff(diff, members)) }
+            JsonValue::Object { members: apply_object_diff(diff, members) }
         }
     }
 }
@@ -324,7 +324,7 @@ pub fn apply_array_diff(diff: &JsonArrayDiff, base: &[JsonValue]) -> Vec<JsonVal
     for m in &diff.modified {
         if let Some(old) = base.get(m.index) {
             if let Some(slot) = items.get_mut(m.index) {
-                *slot = Box::pin(apply_value_diff(&m.diff, old));
+                *slot = apply_value_diff(&m.diff, old);
             }
         }
     }
@@ -352,7 +352,7 @@ pub fn apply_object_diff(diff: &JsonObjectDiff, base: &[JsonMember]) -> Vec<Json
     for m in &diff.modified {
         if let Some(pos) = members.iter().position(|mem| mem.key == m.key) {
             let old = members[pos].value.clone();
-            members[pos].value = Box::pin(apply_value_diff(&m.diff, &old));
+            members[pos].value = apply_value_diff(&m.diff, &old);
         }
     }
     for key in &diff.removed {
@@ -489,7 +489,7 @@ fn absorb_value_diff(d1: JsonValueDiff, d2: JsonValueDiff) -> JsonValueDiff {
         (JsonValueDiff::Bool { .. }, JsonValueDiff::Bool { value }) => JsonValueDiff::Bool { value },
         (JsonValueDiff::Number { .. }, JsonValueDiff::Number { lexeme }) => JsonValueDiff::Number { lexeme },
         (JsonValueDiff::String { .. }, JsonValueDiff::String { value }) => JsonValueDiff::String { value },
-        (JsonValueDiff::Array { diff: a1 }, JsonValueDiff::Array { diff: a2 }) => JsonValueDiff::Array { diff: Box::pin(absorb_array_diff(a1, a2)) },
+        (JsonValueDiff::Array { diff: a1 }, JsonValueDiff::Array { diff: a2 }) => JsonValueDiff::Array { diff: absorb_array_diff(a1, a2) },
         (JsonValueDiff::Object { diff: o1 }, JsonValueDiff::Object { diff: o2 }) => JsonValueDiff::Object { diff: absorb_object_diff(o1, o2) },
         // Defensive: a kind mismatch that isn't a Replace shouldn't arise from two diffs that were
         // actually produced by real sequential application against the same intervening state —
@@ -579,7 +579,7 @@ fn absorb_array_diff(d1: JsonArrayDiff, d2: JsonArrayDiff) -> JsonArrayDiff {
             match slot {
                 AfterSlot::Base { diff, .. } => {
                     let combined = match diff.take() {
-                        Some(existing) => Box::pin(absorb_value_diff(existing, m.diff.clone())),
+                        Some(existing) => absorb_value_diff(existing, m.diff.clone()),
                         None => m.diff.clone(),
                     };
                     *diff = if is_value_diff_effectively_empty(&combined) { None } else { Some(combined) };

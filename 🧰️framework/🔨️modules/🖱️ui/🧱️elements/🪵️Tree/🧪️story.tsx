@@ -11,9 +11,10 @@
 // #region 🔌️Adapters
 import { Button, ControlDef, ControlTree, ControlTreeFolderSettings, Input, LevelProvider, Tree, TreeContent, TreeItem, reactHostPort } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "../../🧪️story";
 import type React from "react";
-import { expect, fireEvent, within } from "storybook/test";
+import { expect } from "vitest";
+import { fireEvent, within } from "@semio-tech/ui-react/test";
 // #endregion 🔌️Adapters
 
 // 🌳️#region 📜️Tree

@@ -442,7 +442,7 @@ mod example_asset_discovery {
         // Prefer the largest match so handcrafted fixtures win over 64-byte / preamble-only stubs
         // that still sit beside them under legacy placeholder slug dirs during migration.
         candidates.sort_by(|a, b| {
-            let size = |path: &PathBuf| std::fs::metadata(path).map(|m| m.len()).unwrap_or(0);
+            let size = |path: &PathBuf| std::fs::metadata(path).map_or(0, |m| m.len());
             size(b).cmp(&size(a)).then_with(|| a.cmp(b))
         });
         candidates.into_iter().next()
@@ -521,7 +521,7 @@ mod pilot_resolve {
     }
 
     async fn name_matches_kind(path: &Path, kind_suffix: &str) -> bool {
-        path.file_name().and_then(|n| n.to_str()).map(|n| n.ends_with(kind_suffix)).unwrap_or(false)
+        path.file_name().and_then(|n| n.to_str()).is_some_and(|n| n.ends_with(kind_suffix))
     }
 
     /// 🖼️ Finds one example `.semio` under `examples_dir` (a `📚️examples` directory) matching
@@ -1134,7 +1134,7 @@ mod m5_handcrafted_grammar_conformance {
 
     pub(super) async fn dsl_body_from_fixture(text: &str) -> String {
         if text.trim_start().starts_with("semio ") {
-            split_text_preamble(text).map(|(env, body)| format!("{}\n{body}", env.envelope_id())).unwrap_or_else(|_| text.to_string())
+            split_text_preamble(text).map_or_else(|_| text.to_string(), |(env, body)| format!("{}\n{body}", env.envelope_id()))
         } else {
             text.to_string()
         }
@@ -1310,7 +1310,7 @@ mod m5_cross_artifact_rejection {
 
     async fn dsl_body_from_fixture(text: &str) -> String {
         if text.trim_start().starts_with("semio ") {
-            split_text_preamble(text).map(|(env, body)| format!("{}\n{body}", env.envelope_id())).unwrap_or_else(|_| text.to_string())
+            split_text_preamble(text).map_or_else(|_| text.to_string(), |(env, body)| format!("{}\n{body}", env.envelope_id()))
         } else {
             text.to_string()
         }
@@ -1384,7 +1384,7 @@ mod m5_production_coverage {
 
     async fn dsl_body_from_fixture(text: &str) -> String {
         if text.trim_start().starts_with("semio ") {
-            split_text_preamble(text).map(|(env, body)| format!("{}\n{body}", env.envelope_id())).unwrap_or_else(|_| text.to_string())
+            split_text_preamble(text).map_or_else(|_| text.to_string(), |(env, body)| format!("{}\n{body}", env.envelope_id()))
         } else {
             text.to_string()
         }

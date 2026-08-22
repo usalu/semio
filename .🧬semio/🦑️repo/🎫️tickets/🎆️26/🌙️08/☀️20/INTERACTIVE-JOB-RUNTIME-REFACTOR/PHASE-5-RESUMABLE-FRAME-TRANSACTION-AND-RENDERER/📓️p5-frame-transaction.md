@@ -119,3 +119,17 @@ P5c/P5e UI-WGPU gates, using the same isolated target:
 ## Outcome
 
 The UI runtime now exposes scheduler-bounded transaction and retained-layout primitives, preserves accepted work across supersession, publishes only consistent completed transactions, fairly advances multiple surfaces, and cannot hide framework-owned whole-tree reconciliation/layout traversal inside one interaction slice. Debug, release, native dependency, and wasm gates are green; the only lint failures are recorded pre-existing diagnostics outside the owned files.
+## 2026-08-22 Live Gate Rerun
+
+The active `semio-framework-ui-runtime` package still contains the seven-stage persistent
+`FrameTransaction::step` implementation and passed its current gates after the shared de-async
+refactor:
+
+- native debug quick: 72/72;
+- native release quick: 72/72;
+- `wasm32-unknown-unknown` check: pass;
+- `wasm32-wasip2` check: pass.
+
+The suite includes the large-tree per-slice eight-millisecond assertion, effect-storm resumability,
+fuel-one input storms, cancellation without revision advance, stale-intent rejection, deterministic
+surface ordering, hard item/node/byte credits, and newer-input supersession.

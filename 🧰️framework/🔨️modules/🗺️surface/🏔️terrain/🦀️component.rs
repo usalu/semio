@@ -120,10 +120,31 @@ const TERRAIN_GRID_RESOLUTION: u32 = 33;
 
 //#region ⚠️ Errors
 /// ⚠️ Terrain DEM tile decode errors.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum FrameworkSurfaceTerrainError {
-    #[error(transparent)]
-    Image(#[from] image::ImageError),
+    Image(image::ImageError),
+}
+
+impl std::fmt::Display for FrameworkSurfaceTerrainError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Image(error) => error.fmt(formatter),
+        }
+    }
+}
+
+impl std::error::Error for FrameworkSurfaceTerrainError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Image(error) => Some(error),
+        }
+    }
+}
+
+impl From<image::ImageError> for FrameworkSurfaceTerrainError {
+    fn from(error: image::ImageError) -> Self {
+        Self::Image(error)
+    }
 }
 //#endregion ⚠️ Errors
 

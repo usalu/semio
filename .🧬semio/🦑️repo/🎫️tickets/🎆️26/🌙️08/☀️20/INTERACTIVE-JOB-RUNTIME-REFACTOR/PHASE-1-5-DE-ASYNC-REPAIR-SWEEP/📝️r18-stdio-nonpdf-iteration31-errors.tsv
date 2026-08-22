@@ -1,0 +1,7 @@
+E0308	🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs	1882	mismatched types
+E0308	🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs	1285	mismatched types
+E0600	🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs	1294	cannot apply unary operator `!` to type `impl Future<Output = bool>`
+E0308	🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs	1891	mismatched types
+E0308	🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs	987	mismatched types
+E0308	🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs	989	mismatched types
+E0308	🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs	992	mismatched types

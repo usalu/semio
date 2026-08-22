@@ -85,24 +85,20 @@ explicit `interval_ms: u64` parameter (production callers pass `HTTP_BUCKET_REFI
 caller is a future process bootstrap, out of this packet's boundary) so this crate's own test doesn't
 have to wait 60 real seconds for one tick.
 
-### `ComputePool::run_blocking` — this is where `run_blocking` actually got eliminated
-- **Kept its exact external signature**: `run_blocking<T: Send + 'static, R: HostAsyncRuntime>(&self,
-  runtime: &R, _scope: &ScopeHandle, ctx: OperationContext, work: impl FnOnce() -> T + Send + 'static)
-  -> Result<T, ComputeError>` — unchanged from before P1a, because `🔌️plugin/🖥️host` and
-  `📇️directory/🔌️client` call it with this exact shape and are outside this packet's boundary.
-- Internally: no more `runtime.run_blocking(scope, ctx, work)` (deleted from the trait). Now builds a
-  `tokio::sync::oneshot` result channel and calls `self.pool.submit(Lane::from_context_lane(ctx.lane),
-  job)` where `self.pool = global_worker_pool()`. The caller `.await`s `result_rx` — **it never blocks
-  a worker waiting for the result; only the worker that eventually RUNS `work` is occupied, for exactly
-  `work`'s own duration**. This is the literal "opaque `FnOnce` closures the runtime cannot yield,
-  cancel or inspect are being eliminated" outcome the packet brief asked for: the work now goes through
-  a named `Lane`, is subject to `WorkerPool`'s DRR fairness and admission control, and is visible to
-  `WorkerPool::active_workers()`/`occupancy()`.
-- Kept its own `tokio::sync::Semaphore`-based admission gate (`capacity`) UNCHANGED — this is a
-  logical, per-`ComputePool` concurrency bound independent of (and typically smaller than) the shared
-  pool's total worker count; it is what makes `ctx.deadline_ms` racing meaningful and is what the
-  `run_blocking_never_exceeds_the_compute_bound_under_a_burst` test still verifies (now against
-  `global_worker_pool()`'s real execution, capacity=3, observed max asserted `<= 3` and `>= 2`).
+### `ComputePool` — superseded by the explicit interactive-job closure
+
+The transitional `ComputePool::run_blocking(FnOnce)` API described by the original P1b packet has now
+been deleted. `ComputePool::run_job` accepts only a repository-owned `InteractiveJob`, holds the
+capacity permit across its lifetime, and submits exactly one fuel- and wall-bounded `drive_step` per
+`WorkerPool` closure. Nonterminal outcomes resubmit; complete, cancelled, and fault outcomes propagate
+through the result channel. Absolute deadlines cancel the operation token before returning
+`DeadlineExceeded`.
+
+Blocking network/filesystem operations remain separated as `ComputePool::run_io`; interactive CPU or
+guest/router execution cannot reach that API through the former generic `run_blocking` name. The
+replacement tests are `interactive_jobs_never_exceed_the_compute_bound_under_a_burst` and
+`interactive_job_deadline_cancels_the_resumable_job`. Full current evidence is in
+`📓️p1m-interactive-compute-closure.md`.
 
 ### `StorageScheduler`/`storage_try_dispatch` — `resolve_ready` narrowed, not deleted
 - `StorageState<R>` gained a `pool: WorkerPool` field (`global_worker_pool()`, set in
@@ -200,7 +196,10 @@ immediately before the final compile/test/clippy passes reported above all lande
 sequence with no further reversion observed. Flagging this so a later session isn't surprised if it
 recurs, and so nobody mistakes it for this packet's own regression.
 
-## Cross-boundary breakage (confirmed, NOT fixed here — outside this packet's boundary)
+## Cross-boundary breakage (historical; superseded by P1m)
+
+The plugin-host `ChannelPolicy` drift and both opaque router call sites described below have since
+been repaired. See `📓️p1m-interactive-compute-closure.md` for current gates and remaining blockers.
 - **`semio-framework-plugin-host`**: `cargo check -p semio-framework-plugin-host` fails with 2 errors,
   both `ChannelPolicy` field-shape mismatches P1a's report already flagged: `⚡️effects/🦀️component.rs:281`
   (`LosslessBounded { cap: COMPLETION_MAILBOX_CAP }`) and `:769` (`ChannelPolicy::LatestWins` used as a

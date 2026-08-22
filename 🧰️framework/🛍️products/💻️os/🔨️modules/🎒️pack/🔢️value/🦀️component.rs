@@ -214,9 +214,8 @@ fn force_symbol(counts: &mut HashMap<String, u64>, forced: &mut HashSet<String>,
     note_symbol(counts, s);
 }
 
-/// 🔁️ Mutually recursive with `walk_value_for_symbols` — every edge in that cycle is boxed
-/// (`Box::pin(...).await`) because an `async fn`'s own opaque `Future` type cannot embed itself or
-/// a cycle-partner's opaque type at an unboxed, unbounded size (R10 residue shape 3).
+/// 🔁️ Mutually recursive with `walk_value_for_symbols`; both walkers are synchronous because they
+/// only inspect already-resident values.
 fn walk_record_for_symbols(counts: &mut HashMap<String, u64>, forced: &mut HashSet<String>, spec: Option<&RecordSpec>, record: &RecordValue) {
     let mut ids: Vec<u16> = record.fields.keys().copied().collect();
     ids.sort_unstable();
@@ -226,7 +225,7 @@ fn walk_record_for_symbols(counts: &mut HashMap<String, u64>, forced: &mut HashS
             continue;
         }
         let shape = spec.and_then(|s| s.fields.iter().find(|f| f.id == id)).map(|f| &f.shape);
-        Box::pin(walk_value_for_symbols(counts, forced, shape, value));
+        walk_value_for_symbols(counts, forced, shape, value);
     }
 }
 
@@ -236,7 +235,7 @@ fn walk_value_for_symbols(counts: &mut HashMap<String, u64>, forced: &mut HashSe
         FieldValue::Tuple(items) => {
             let elem = elem_shape_of(shape);
             for it in items {
-                Box::pin(walk_value_for_symbols(counts, forced, elem, it));
+                walk_value_for_symbols(counts, forced, elem, it);
             }
         }
         FieldValue::List(items) => {
@@ -257,20 +256,20 @@ fn walk_value_for_symbols(counts: &mut HashMap<String, u64>, forced: &mut HashSe
                                 force_symbol(counts, forced, s);
                             }
                         } else {
-                            Box::pin(walk_value_for_symbols(counts, forced, Some(&field.shape), v));
+                            walk_value_for_symbols(counts, forced, Some(&field.shape), v);
                         }
                     }
                 }
             } else {
                 let elem = elem_shape_of(shape);
                 for it in items {
-                    Box::pin(walk_value_for_symbols(counts, forced, elem, it));
+                    walk_value_for_symbols(counts, forced, elem, it);
                 }
             }
         }
         FieldValue::Record(r) => {
             let spec = record_spec_of(shape);
-            Box::pin(walk_record_for_symbols(counts, forced, spec.as_ref(), r));
+            walk_record_for_symbols(counts, forced, spec.as_ref(), r);
         }
         FieldValue::Block(inner) => walk_value_for_symbols(counts, forced, block_inner_shape(shape), inner),
         FieldValue::Statements(items) => {
@@ -278,14 +277,14 @@ fn walk_value_for_symbols(counts: &mut HashMap<String, u64>, forced: &mut HashSe
             for (keyword, record) in items {
                 force_symbol(counts, forced, keyword);
                 let spec = variants.and_then(|vs| vs.iter().find(|(k, _)| k == keyword)).map(|(_, f)| f());
-                Box::pin(walk_record_for_symbols(counts, forced, spec.as_ref(), record));
+                walk_record_for_symbols(counts, forced, spec.as_ref(), record);
             }
         }
         FieldValue::Map(entries) => {
             let inner = map_inner_shape(shape);
             for (k, v) in entries {
                 note_symbol(counts, k);
-                Box::pin(walk_value_for_symbols(counts, forced, inner, v));
+                walk_value_for_symbols(counts, forced, inner, v);
             }
         }
         FieldValue::Value(v) => walk_dsl_value_for_symbols(counts, v),
@@ -313,19 +312,18 @@ fn walk_value_for_symbols(counts: &mut HashMap<String, u64>, forced: &mut HashSe
 }
 
 /// @emoji 🌱️ `DslValue::Object` keys are always inline (never interned) per the wire contract, so
-/// only `String` leaves and array/object values are walked here. Self-recursive (Array/Object
-/// arms), so its own recursive calls are boxed for the same reason as `walk_record_for_symbols`.
+/// only `String` leaves and array/object values are walked here.
 fn walk_dsl_value_for_symbols(counts: &mut HashMap<String, u64>, v: &DslValue) {
     match v {
         DslValue::String(s) => note_symbol(counts, s),
         DslValue::Array(items) => {
             for it in items {
-                Box::pin(walk_dsl_value_for_symbols(counts, it));
+                walk_dsl_value_for_symbols(counts, it);
             }
         }
         DslValue::Object(entries) => {
             for (_, v) in entries {
-                Box::pin(walk_dsl_value_for_symbols(counts, v));
+                walk_dsl_value_for_symbols(counts, v);
             }
         }
         _ => {}
@@ -1803,7 +1801,7 @@ mod tests {
         // Decode against the NARROW spec (doesn't know fields 200/201) — they must still decode
         // and be reported as unknown.
         let (decoded, report) = decode_document(&bytes, &full, &DecodeOptions::default()).expect("decode with narrow spec");
-        let mut unknown_sorted = report.unknown_field_ids.clone();
+        let mut unknown_sorted = report.unknown_field_ids;
         unknown_sorted.sort_unstable();
         assert_eq!(unknown_sorted, vec![200, 201]);
         assert_eq!(decoded.get(200), Some(&FieldValue::Text("extra field payload".to_string())));
@@ -1814,7 +1812,7 @@ mod tests {
         let (decoded_again, report_again) = decode_document(&reencoded, &full, &DecodeOptions::default()).expect("decode again");
         assert_eq!(decoded_again.get(200), Some(&FieldValue::Text("extra field payload".to_string())));
         assert_eq!(decoded_again.get(201), Some(&FieldValue::List(vec![FieldValue::Int(1), FieldValue::Int(2), FieldValue::Int(3)])));
-        let mut unknown_again_sorted = report_again.unknown_field_ids.clone();
+        let mut unknown_again_sorted = report_again.unknown_field_ids;
         unknown_again_sorted.sort_unstable();
         assert_eq!(unknown_again_sorted, vec![200, 201]);
     }

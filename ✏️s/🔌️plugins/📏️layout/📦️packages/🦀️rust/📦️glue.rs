@@ -773,7 +773,8 @@ pub use editor::layout::wasm::LayoutSession;
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
 mod plugin;
-semio_framework_plugin::plugin_exports!(plugin::plugin);
+pub use plugin::LayoutApps;
+semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::LayoutApps);
 
 //#region 📚️Examples
 #[path = "."]

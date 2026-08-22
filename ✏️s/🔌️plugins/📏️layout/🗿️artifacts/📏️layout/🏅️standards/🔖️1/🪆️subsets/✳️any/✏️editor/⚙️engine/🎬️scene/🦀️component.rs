@@ -15,13 +15,12 @@ use std::borrow::Cow;
 use std::io::{Cursor, Write};
 use std::sync::Arc;
 
-use fontique::Blob;
 use image::{ImageBuffer, Rgba};
 use infinite_canvas::camera::{self, Camera, Viewport};
 use infinite_canvas::{Affine, Color, FillRule, Line, Point, Rect, RoundedRect, RoundedRectRadii, Scene, Stroke, Vec2};
+use parley::fontique::Blob;
 use parley::{Alignment, AlignmentOptions, FontContext, FontStack, FontWeight, Layout, LayoutContext, LineHeight, PositionedLayoutItem, StyleProperty};
 use serde_json::Value;
-use sha2::{Digest, Sha256};
 use zip::write::SimpleFileOptions;
 use zip::ZipWriter;
 
@@ -533,7 +532,7 @@ pub async fn export_package_zip(doc_json: &str, preflight_json: &str) -> Result<
         .links
         .iter()
         .map(|link| {
-            let hash = if link.hash.is_empty() { format!("sha256:{:x}", Sha256::digest(link.path.as_bytes())) } else { link.hash.clone() };
+            let hash = if link.hash.is_empty() { format!("sha256:{}", semio_framework_hash::sha256_hex(link.path.as_bytes())) } else { link.hash.clone() };
             serde_json::json!({
                 "id": link.id,
                 "path": link.path,

@@ -2,7 +2,7 @@
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "name": "@semio-tech/framework-async",
   "version": "0.1.0",
-  "description": "framework-async · pure async-runtime interface TS surface — ts-rs mirror (see 🤖️generated) of the OperationContext/CancelToken/Scope/ChannelPolicy/ThreadPlan vocabulary, plus the documented (not yet implemented) WebAsyncScope seam for a future web host.",
+  "description": "framework-async · pure async-runtime interface TS surface — owned-schema mirror (see 🤖️generated) of the OperationContext/CancelToken/Scope/ChannelPolicy vocabulary, plus the documented (not yet implemented) WebAsyncScope seam for a future web host.",
   "type": "module",
   "private": true,
   "exports": {

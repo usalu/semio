@@ -15,7 +15,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { PresentationDeck } from "@semio-tech/animate-js";
 import type { Presentation, Slide } from "@semio-tech/animate-present-core";
 import "@semio-tech/animate-js/globals.css";

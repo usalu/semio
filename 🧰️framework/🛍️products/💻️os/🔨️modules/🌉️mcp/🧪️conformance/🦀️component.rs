@@ -83,17 +83,17 @@ pub fn check(catalog: &Catalog) -> Vec<Finding> {
         let id = capability.id.as_str();
 
         for (label, schema) in [("input", &capability.input_schema), ("output", &capability.output_schema)] {
-            if let Err(error) = jsonschema::Validator::new(schema) {
+            if let Err(error) = crate::schema::compile_validator(schema) {
                 findings.push(Finding::error(id, format!("{label} schema failed to compile as JSON Schema 2020-12: {error}")));
             }
         }
 
-        if let Ok(validator) = jsonschema::Validator::new(&capability.input_schema) {
+        if let Ok(validator) = crate::schema::compile_validator(&capability.input_schema) {
             for example in &capability.examples {
                 if example.input.is_null() {
                     continue;
                 }
-                if !validator.is_valid(&example.input) {
+                if crate::schema::validate(&validator, &example.input).is_err() {
                     findings.push(Finding::error(id, format!("example {:?} does not validate against its own input schema", example.request)));
                 }
             }

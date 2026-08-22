@@ -5,7 +5,7 @@ use crate::app_surface::{hex_to_rgb01, normalize_mode_shape, DisplayMode, Result
 use crate::artifacts::fem2d::{element_id, Fem2dSnapshot, FemCamera};
 use crate::editor::fem2d::modes::edit::windows::model::{fem2d_deformed_shape_layers, fem2d_element_endpoints, fem2d_model_extent, fem2d_region_mesh_triangles, fem2d_structure_layers, find_node_2d, screen_2d, MOMENT_SCALE_2D};
 use crate::model::ElementResult;
-use semio_framework_plugin::{build_canvas_2d_scene, ui_text, Canvas2dScene, Label, UiNode};
+use semio_framework_plugin::{built_text_node, BuiltNode, Canvas2dScene, Label};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 
@@ -18,7 +18,7 @@ pub const BODY_KEY: &str = "fem2d.play.results";
 /// 🌡️ A filled-triangle Canvas2d path layer (`segments` + `fill`, evenodd) for a contour cell —
 /// see `framework/renderer/react/components/canvas-2d-host.tsx`'s `buildScenePath`/`drawSceneNode`
 /// for the exact JSON shape this mirrors.
-async fn filled_triangle_layer(id: String, p0: (f64, f64), p1: (f64, f64), p2: (f64, f64), color: &str, alpha: f64) -> Value {
+fn filled_triangle_layer(id: String, p0: (f64, f64), p1: (f64, f64), p2: (f64, f64), color: &str, alpha: f64) -> Value {
     let (r, g, b) = hex_to_rgb01(color);
     json!({
         "id": id,
@@ -36,7 +36,7 @@ async fn filled_triangle_layer(id: String, p0: (f64, f64), p1: (f64, f64), p2: (
 /// 🌡️ A filled polygon Canvas2d path layer (arbitrary vertex count) — the marching-triangle contour
 /// bands need this (a clipped triangle can come out as a quad), unlike `filled_triangle_layer`'s
 /// fixed 3-point shape.
-async fn filled_polygon_layer(id: String, points: &[(f64, f64)], color: &str, alpha: f64) -> Value {
+fn filled_polygon_layer(id: String, points: &[(f64, f64)], color: &str, alpha: f64) -> Value {
     let (r, g, b) = hex_to_rgb01(color);
     let mut segments = Vec::with_capacity(points.len() + 1);
     for (i, &(x, y)) in points.iter().enumerate() {
@@ -56,7 +56,7 @@ async fn filled_polygon_layer(id: String, points: &[(f64, f64)], color: &str, al
 type ValuedPoint = ((f64, f64), f64);
 
 /// ✂️ Interpolates the crossing point where the segment `a->b`'s value equals `threshold`.
-async fn interpolate_at_value(a: ValuedPoint, b: ValuedPoint, threshold: f64) -> ValuedPoint {
+fn interpolate_at_value(a: ValuedPoint, b: ValuedPoint, threshold: f64) -> ValuedPoint {
     let t = if (b.1 - a.1).abs() < 1e-12 { 0.5 } else { (threshold - a.1) / (b.1 - a.1) };
     ((a.0 .0 + (b.0 .0 - a.0 .0) * t, a.0 .1 + (b.0 .1 - a.0 .1) * t), threshold)
 }
@@ -65,7 +65,7 @@ async fn interpolate_at_value(a: ValuedPoint, b: ValuedPoint, threshold: f64) ->
 /// keeps the portion where `value >= threshold` (`keep_above`) or `value <= threshold` (else),
 /// inserting an interpolated vertex at every edge crossing. The core of marching-triangle contour
 /// banding: clipping a triangle's linear value field against 2 thresholds bands it into one polygon.
-async fn clip_by_value(poly: &[ValuedPoint], threshold: f64, keep_above: bool) -> Vec<ValuedPoint> {
+fn clip_by_value(poly: &[ValuedPoint], threshold: f64, keep_above: bool) -> Vec<ValuedPoint> {
     if poly.is_empty() {
         return Vec::new();
     }
@@ -90,7 +90,7 @@ async fn clip_by_value(poly: &[ValuedPoint], threshold: f64, keep_above: bool) -
 
 /// 🌡️ A stress-contour legend: a small vertical stack of `VON_MISES_BANDS` swatches plus min/max text
 /// labels, anchored near the canvas origin.
-async fn von_mises_legend_layers(min: f64, max: f64) -> Vec<Value> {
+fn von_mises_legend_layers(min: f64, max: f64) -> Vec<Value> {
     let mut layers = Vec::with_capacity(VON_MISES_BANDS.len() + 2);
     for (i, color) in VON_MISES_BANDS.iter().enumerate() {
         let y = 20.0 + i as f64 * 14.0;
@@ -113,7 +113,7 @@ async fn von_mises_legend_layers(min: f64, max: f64) -> Vec<Value> {
 
 //#region 🔖️Render
 /// 📊️ Results window dispatcher — picks the static/modal/buckling render based on `display`.
-pub async fn render(doc: &Fem2dSnapshot, display: &ResultDisplay, camera: &FemCamera) -> UiNode {
+pub fn render(doc: &Fem2dSnapshot, display: &ResultDisplay, camera: &FemCamera) -> BuiltNode {
     match display.mode {
         DisplayMode::Static => render_static(doc, display.source_id.as_deref(), camera),
         DisplayMode::Modal(mode_index) => render_modal(doc, mode_index, camera),
@@ -126,17 +126,17 @@ pub async fn render(doc: &Fem2dSnapshot, display: &ResultDisplay, camera: &FemCa
 /// nodal-averaged, marching-triangle-banded von-Mises stress contour with a color-swatch legend.
 /// `source_id` selects a `fem2d_solve_all` case/combination id, falling back to the first load case
 /// when `None`/unknown (preserves v0's default behavior).
-async fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &FemCamera) -> UiNode {
+fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &FemCamera) -> BuiltNode {
     let results = match crate::fem2d_engine::fem2d_solve_all(doc) {
         Ok(results) => results,
-        Err(e) => return ui_text(Label::data(format!("Analysis error: {e}"))),
+        Err(e) => return built_text_node(Label::data(format!("Analysis error: {e}"))),
     };
     let case_id = source_id.filter(|id| results.contains_key(*id)).map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone()));
     let Some(case_id) = case_id else {
-        return ui_text(Label::data("No load case defined"));
+        return built_text_node(Label::data("No load case defined"));
     };
     let Some(result) = results.get(&case_id) else {
-        return ui_text(Label::data(format!("Result not found: {case_id}")));
+        return built_text_node(Label::data(format!("Result not found: {case_id}")));
     };
 
     let mut layers = fem2d_structure_layers(doc, "#334155", "#334155", "#334155");
@@ -223,16 +223,16 @@ async fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &Fe
     //#endregion 🔖️StressContour
 
     let layers_json = serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into());
-    build_canvas_2d_scene(BODY_KEY, crate::editor::fem2d::FEM2D_APP_ID, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json })
+    crate::app_surface::canvas_2d_surface(BODY_KEY, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json })
 }
 
 /// 📊️ Modal mode-shape overlay: undeformed structure faintly plus the selected mode's deformed-shape
 /// polyline (normalized to unit peak, then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own
 /// extent — see `normalize_mode_shape`) and a frequency caption.
-async fn render_modal(doc: &Fem2dSnapshot, mode_index: usize, camera: &FemCamera) -> UiNode {
+fn render_modal(doc: &Fem2dSnapshot, mode_index: usize, camera: &FemCamera) -> BuiltNode {
     let (freq_hz, mut disp_map) = match crate::fem2d_engine::modal_buckling::fem2d_modal_mode_values(doc, mode_index) {
         Ok(values) => values,
-        Err(e) => return ui_text(Label::data(format!("Modal analysis error: {e}"))),
+        Err(e) => return built_text_node(Label::data(format!("Modal analysis error: {e}"))),
     };
     normalize_mode_shape(&mut disp_map);
     let mut layers = fem2d_structure_layers(doc, "#334155", "#334155", "#334155");
@@ -243,20 +243,20 @@ async fn render_modal(doc: &Fem2dSnapshot, mode_index: usize, camera: &FemCamera
         "text": { "content": format!("Mode {}: {freq_hz:.3} Hz", mode_index + 1), "size": 12.0 },
     }));
     let layers_json = serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into());
-    build_canvas_2d_scene(BODY_KEY, crate::editor::fem2d::FEM2D_APP_ID, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json })
+    crate::app_surface::canvas_2d_surface(BODY_KEY, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json })
 }
 
 /// 📊️ Buckling mode-shape overlay: undeformed structure faintly plus the selected mode's deformed-shape
 /// polyline (normalized to unit peak, then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own
 /// extent — see `normalize_mode_shape`) and a load-factor caption. `source_id` selects the reference
 /// load case, falling back to the first load case when `None`.
-async fn render_buckling(doc: &Fem2dSnapshot, source_id: Option<&str>, mode_index: usize, camera: &FemCamera) -> UiNode {
+fn render_buckling(doc: &Fem2dSnapshot, source_id: Option<&str>, mode_index: usize, camera: &FemCamera) -> BuiltNode {
     let Some(case_id) = source_id.map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone())) else {
-        return ui_text(Label::data("No load case defined"));
+        return built_text_node(Label::data("No load case defined"));
     };
     let (factor, mut disp_map) = match crate::fem2d_engine::modal_buckling::fem2d_buckling_mode_values(doc, &case_id, mode_index) {
         Ok(values) => values,
-        Err(e) => return ui_text(Label::data(format!("Buckling analysis error: {e}"))),
+        Err(e) => return built_text_node(Label::data(format!("Buckling analysis error: {e}"))),
     };
     normalize_mode_shape(&mut disp_map);
     let mut layers = fem2d_structure_layers(doc, "#334155", "#334155", "#334155");
@@ -267,7 +267,7 @@ async fn render_buckling(doc: &Fem2dSnapshot, source_id: Option<&str>, mode_inde
         "text": { "content": format!("Buckling mode {}: factor {factor:.3}", mode_index + 1), "size": 12.0 },
     }));
     let layers_json = serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into());
-    build_canvas_2d_scene(BODY_KEY, crate::editor::fem2d::FEM2D_APP_ID, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json })
+    crate::app_surface::canvas_2d_surface(BODY_KEY, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json })
 }
 //#endregion 🔖️Render
 
@@ -279,13 +279,13 @@ mod tests {
     use crate::editor::fem2d::Fem2dCommand;
 
     async fn load_default_example(app: &mut crate::editor::fem2d::testkit::Fem2dApp) {
-        dispatch(app, Fem2dCommand::SetActiveExample(crate::editor::fem2d::commands::set_active_example::SetActiveExample { example_id: "default".into() }));
+        dispatch(app, Fem2dCommand::SetActiveExample(crate::editor::fem2d::commands::set_active_example::SetActiveExample { example_id: "default".into() })).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn renders_fem2d_results_scene() {
         let mut app = fem2d_app();
-        load_default_example(&mut app);
+        load_default_example(&mut app).await;
         assert!(render_body(&mut app, BODY_KEY).contains("canvas-2d"));
     }
 
@@ -307,29 +307,31 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn results_window_renders_contour_for_region() {
         let mut app = fem2d_app();
-        load_default_example(&mut app);
-        dispatch(&mut app, Fem2dCommand::SetResultDisplay(crate::editor::fem2d::commands::set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "static".into(), mode_index: 0 }));
-        let json = render_body(&mut app, BODY_KEY);
-        // `layers_json` is itself a JSON string embedded inside `UiNode`'s own serialization, so its
-        // quotes come out backslash-escaped in `json` — match on the unescaped substrings instead.
-        assert!(json.contains("fill"), "expected filled-path contour layers for the region's Tri3Cst elements: {json}");
-        assert!(json.contains("contour-"), "expected contour-prefixed layer ids: {json}");
+        load_default_example(&mut app).await;
+        let snapshot = semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot");
+        let node = render(&snapshot, &ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static }, &FemCamera::default());
+        let semio_framework_ui_contract::Component::Surface(props) = &node.component else { panic!("expected canvas surface") };
+        let scene: Canvas2dScene = semio_framework_ui_scene::decode(props).expect("decode canvas scene");
+        assert!(scene.layers_json.contains("fill"), "expected filled-path contour layers for the region's Tri3Cst elements: {}", scene.layers_json);
+        assert!(scene.layers_json.contains("contour-"), "expected contour-prefixed layer ids: {}", scene.layers_json);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn results_window_renders_reaction_labels_2d() {
         let mut app = fem2d_app();
-        load_default_example(&mut app);
-        dispatch(&mut app, Fem2dCommand::SetResultDisplay(crate::editor::fem2d::commands::set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "static".into(), mode_index: 0 }));
-        let json = render_body(&mut app, BODY_KEY);
-        assert!(json.contains("reaction-"), "expected reaction-prefixed text label layers: {json}");
+        load_default_example(&mut app).await;
+        let snapshot = semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot");
+        let node = render(&snapshot, &ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static }, &FemCamera::default());
+        let semio_framework_ui_contract::Component::Surface(props) = &node.component else { panic!("expected canvas surface") };
+        let scene: Canvas2dScene = semio_framework_ui_scene::decode(props).expect("decode canvas scene");
+        assert!(scene.layers_json.contains("reaction-"), "expected reaction-prefixed text label layers: {}", scene.layers_json);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn results_window_renders_modal_mode_shape_2d() {
         let mut app = fem2d_app();
-        load_default_example(&mut app);
-        dispatch(&mut app, Fem2dCommand::SetResultDisplay(crate::editor::fem2d::commands::set_result_display::SetResultDisplay { source_id: None, mode: "modal".into(), mode_index: 0 }));
+        load_default_example(&mut app).await;
+        dispatch(&mut app, Fem2dCommand::SetResultDisplay(crate::editor::fem2d::commands::set_result_display::SetResultDisplay { source_id: None, mode: "modal".into(), mode_index: 0 })).await;
         let json = render_body(&mut app, BODY_KEY);
         assert!(json.contains("canvas-2d"), "expected a valid canvas-2d scene, got: {json}");
         assert!(!json.contains("Modal analysis error"), "unexpected modal error: {json}");
@@ -338,8 +340,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn results_window_renders_buckling_mode_shape_2d() {
         let mut app = fem2d_app();
-        load_default_example(&mut app);
-        dispatch(&mut app, Fem2dCommand::SetResultDisplay(crate::editor::fem2d::commands::set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "buckling".into(), mode_index: 0 }));
+        load_default_example(&mut app).await;
+        dispatch(&mut app, Fem2dCommand::SetResultDisplay(crate::editor::fem2d::commands::set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "buckling".into(), mode_index: 0 })).await;
         let json = render_body(&mut app, BODY_KEY);
         assert!(json.contains("canvas-2d"), "expected a valid canvas-2d scene, got: {json}");
         assert!(!json.contains("Buckling analysis error"), "unexpected buckling error: {json}");

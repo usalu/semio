@@ -59,7 +59,7 @@ fn resolve_point(id: u64, idx: &HashMap<u64, &StepEntity>) -> Option<(f64, f64)>
     let e = idx.get(&id)?;
     match e.name.as_str() {
         "CARTESIAN_POINT" => xy_of_aggregate(e.args.get(1)?),
-        "AXIS2_PLACEMENT_2D" | "AXIS2_PLACEMENT_3D" => Box::pin(resolve_point(reference_of(e.args.get(1)?)?, idx)),
+        "AXIS2_PLACEMENT_2D" | "AXIS2_PLACEMENT_3D" => resolve_point(reference_of(e.args.get(1)?)?, idx),
         _ => None,
     }
 }

@@ -205,8 +205,8 @@ mod wasm_program_exchange {
     /// 🎠️ H3-wgpu-native — now `async`: this is the plugin call `Shell/🧊️component.rs`'s
     /// `pump_sync_events` makes (see `📓️terra-H3-wgpu-native-report.md`'s 3-plugin-blocking-sites
     /// section) — its ONE call site there was changed from a plain call to `.await`, the minimal
-    /// "plugin-call site" edit needed to keep it off the winit thread's own CPU even though the
-    /// caller still `pollster::block_on`s the surrounding turn.
+    /// "plugin-call site" edit needed to keep it off the winit thread's own CPU; the surrounding
+    /// turn is driven by the renderer's app-task seam.
     pub async fn apply_mutations(client: &KernelClient, instance_id: u32, operations: &[u8]) -> Result<(), String> {
         let envelopes = protocol::decode_envelopes(operations).map_err(|error| error.to_string())?;
         let seq = next_seq();
@@ -221,7 +221,10 @@ mod wasm_program_exchange {
     /// reply, never decoded further here.
     pub async fn push_presence(client: &KernelClient, instance_id: u32, own_color: Option<u8>, peers: &[protocol::PresencePeer]) -> Result<(), String> {
         let seq = next_seq();
-        let peer_blobs: Vec<Vec<u8>> = peers.iter().map(protocol::encode_presence_peer).collect();
+        let mut peer_blobs = Vec::with_capacity(peers.len());
+        for peer in peers {
+            peer_blobs.push(protocol::encode_presence_peer(peer).await);
+        }
         let outcome = exchange(client, instance_id, vec![AppCommand::Presence { seq, own_color, peers: peer_blobs }]).await?;
         expect_done(&outcome.frames, seq)
     }
@@ -514,13 +517,10 @@ impl ProgramBridgeEntry {
 
     /// 🧾️ ticket §C5 — full history snapshot for an instance, native-only (mirrors every other
     /// backbone/control call on this type; see `wasm_program_exchange::read_history`'s own doc).
-    /// Kept synchronous like `attach_backbone`/`ephemeral_snapshot` above — its one Shell.rs call
-    /// site (`refresh_history_snapshot`) is a plain, non-`async fn`; `pollster::block_on` here still
-    /// moves the actual wasm execution to the kernel thread even though this call still parks.
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn read_history(&self, instance_id: u32) -> Result<semio_framework::kernel::HistoryPatch, String> {
+    pub async fn read_history(&self, instance_id: u32) -> Result<semio_framework::kernel::HistoryPatch, String> {
         match &self.backend {
-            ProgramBridgeBackend::Wasm { client, .. } => pollster::block_on(wasm_program_exchange::read_history(client, instance_id)),
+            ProgramBridgeBackend::Wasm { client, .. } => wasm_program_exchange::read_history(client, instance_id).await,
             #[cfg(target_arch = "wasm32")]
             _ => Err("read_history unavailable".into()),
         }
@@ -688,10 +688,13 @@ pub fn filter_plugins(entries: Vec<ProgramBridgeEntry>, _plugin_filter: &str) ->
 /// plugin as a lazy `ProgramBridgeEntry` with an honest empty manifest and a `[DEBUG]` seam note —
 /// never instantiating. `create_app` (`crate::kernel_runtime::KernelClient::create_app`) is the
 /// first point ANY wasm actually gets read/compiled, and only for the plugin the caller opens.
-pub fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Path) -> Result<Vec<ProgramBridgeEntry>, String> {
+pub async fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Path) -> Result<Vec<ProgramBridgeEntry>, String> {
     let space_mode = is_space_mode(plugin_filter);
     let plugin_ids: Vec<String> = if space_mode {
-        std::fs::read_dir(modules_root).map_err(|error| error.to_string())?.filter_map(|entry| entry.ok()).filter(|entry| entry.path().is_dir()).filter_map(|entry| entry.file_name().to_str().map(str::to_string)).collect()
+        match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ScanDirectory { path: modules_root.to_path_buf(), directories_only: true, extension: None, first_only: false }).await? {
+            semio_framework_os_services::NativeIoValue::Paths(paths) => paths.into_iter().filter_map(|path| path.file_name().and_then(|name| name.to_str()).map(str::to_string)).collect(),
+            _ => return Err("plugin scan returned the wrong native I/O value".into()),
+        }
     } else {
         vec![resolve_registry_plugin_id(plugin_filter).to_string()]
     };
@@ -701,7 +704,10 @@ pub fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Path) ->
         if !plugin_dir.is_dir() {
             continue;
         }
-        let wasm_path = std::fs::read_dir(&plugin_dir).map_err(|error| error.to_string())?.filter_map(|entry| entry.ok()).map(|entry| entry.path()).find(|path| path.extension().is_some_and(|ext| ext == "wasm"));
+        let wasm_path = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ScanDirectory { path: plugin_dir.clone(), directories_only: false, extension: Some("wasm".into()), first_only: true }).await? {
+            semio_framework_os_services::NativeIoValue::Paths(paths) => paths.into_iter().next(),
+            _ => return Err("plugin artifact scan returned the wrong native I/O value".into()),
+        };
         // 🧾️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END — discovered live: one stale
         // (pre-compose, never-adapted) `.core.wasm` artifact anywhere under a space-mode `modules_root`
         // (~54+ plugin directories — the "13 of 33 plugin crates still fail to build for wasm" attributed
@@ -719,7 +725,7 @@ pub fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Path) ->
             }
             return Err(format!("{}: no .wasm artifact found", plugin_dir.display()));
         };
-        let manifest = read_descriptor_manifest(&plugin_dir, &plugin_id);
+        let manifest = read_descriptor_manifest(&plugin_dir, &plugin_id).await;
         match ProgramBridgeEntry::from_wasm(plugin_id.clone(), path, manifest) {
             Ok(entry) => entries.push(entry),
             Err(error) if space_mode => eprintln!("[DEBUG] load_wasm_plugins: skipping {plugin_id}: {error}"),
@@ -739,9 +745,9 @@ pub fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Path) ->
 /// a plugin without a descriptor until E1 lands and W3 migrates real plugins to emit one; nothing in
 /// this repo does yet (`WasmtimeRuntime`'s own tests confirm no `.wasm` here exports `world actor`).
 #[cfg(not(target_arch = "wasm32"))]
-fn read_descriptor_manifest(plugin_dir: &std::path::Path, plugin_id: &str) -> PluginManifest {
+async fn read_descriptor_manifest(plugin_dir: &std::path::Path, plugin_id: &str) -> PluginManifest {
     let descriptor_path = plugin_dir.join("🔣️descriptor.json");
-    if let Ok(bytes) = std::fs::read(&descriptor_path) {
+    if let Ok(semio_framework_os_services::NativeIoValue::Bytes(bytes)) = crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(descriptor_path.clone())).await {
         if let Ok(descriptor) = serde_json::from_slice::<semio_framework::manifest::PackageDescriptor>(&bytes) {
             return descriptor.manifest;
         }

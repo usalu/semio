@@ -205,7 +205,7 @@ fn channel_spec_to_node_graph_record(spec: &ChannelSpec) -> ui_wgpu::wgpu::NodeG
         name: spec.name.clone(),
         full_name: spec.full_name.clone(),
         operators: spec.operators.clone(),
-        default: spec.default.as_ref().and_then(|value| serde_json::to_value(value).ok()),
+        default_json: spec.default.as_ref().and_then(|value| serde_json::to_string(value).ok()),
         label: spec.label.clone(),
         cardinality: spec.cardinality.symbol(),
     }
@@ -246,7 +246,7 @@ fn node_graph_record_to_channel_spec(record: &ui_wgpu::wgpu::NodeGraphOperatorCh
         name: record.name.clone(),
         full_name: record.full_name.clone(),
         operators: record.operators.clone(),
-        default: record.default.as_ref().and_then(|value| serde_json::from_value(value.clone()).ok()),
+        default: record.default_json.as_ref().and_then(|value| serde_json::from_str(value).ok()),
         label: record.label.clone(),
         cardinality: neural::Cardinality::from_symbol(&record.cardinality).unwrap_or_default(),
     }

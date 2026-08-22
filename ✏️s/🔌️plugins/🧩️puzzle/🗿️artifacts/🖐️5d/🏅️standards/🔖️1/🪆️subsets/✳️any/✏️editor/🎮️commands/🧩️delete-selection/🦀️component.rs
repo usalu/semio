@@ -3,7 +3,7 @@
 use crate::editor::puzzle5d::{remove_grips, remove_parts, Puzzle5dActionCtx};
 
 /// 🗑️ Removes every selected part (and its fasteners), grip and fastener.
-pub async fn delete_selection(ctx: &mut Puzzle5dActionCtx<'_>) {
+pub fn delete_selection(ctx: &mut Puzzle5dActionCtx<'_>) {
     let part_ids = ctx.selected_part_ids();
     let grip_ids = ctx.selected_grip_ids();
     let fastener_ids = ctx.selected_fastener_ids();

@@ -2,8 +2,7 @@
 /** @emoji 🎪️ Entwerfen mit Bestand demonstrator landing — general introduction, six live app panes, glass name overlay. */
 // #endregion 🧲️Header
 
-import { createRoot } from "react-dom/client";
-import { Component, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createUiErrorBoundary, mountUiRoot, useUiCallback as useCallback, useUiEffect as useEffect, useUiMemo as useMemo, useUiRef as useRef, useUiState as useState, type UiNode } from "@semio-tech/ui-react/runtime";
 import {
   Navbar,
   ShellBrandLogo,
@@ -356,28 +355,24 @@ function usePaneSuspension(bootedIds: ReadonlySet<string>, focusedId: string | n
 /** @emoji 🛟️ One pane crashing (a plugin boot failure, a render error) must never take down the other five
  * or the landing chrome around them — React error boundaries are the only mechanism that can catch a
  * render-phase throw, and they must be class components. */
-class PaneErrorBoundary extends Component<{ readonly paneLabel: string; readonly children: ReactNode }, { readonly error: Error | null }> {
-  constructor(props: { readonly paneLabel: string; readonly children: ReactNode }) {
-    super(props);
-    this.state = { error: null };
-  }
-  static getDerivedStateFromError(error: Error): { readonly error: Error } {
-    return { error };
-  }
-  override componentDidCatch(error: Error): void {
-    console.error(`[DEBUG] demonstrator pane "${this.props.paneLabel}" crashed`, error);
-  }
-  override render(): ReactNode {
-    if (this.state.error) {
+type PaneErrorBoundaryProps = { readonly paneLabel: string; readonly children: UiNode };
+type PaneErrorBoundaryState = { readonly error: Error | null };
+
+const PaneErrorBoundary = createUiErrorBoundary<PaneErrorBoundaryProps, PaneErrorBoundaryState>({
+  initialState: { error: null },
+  deriveState: (error) => ({ error }),
+  didCatch: (props, error) => console.error(`[DEBUG] demonstrator pane "${props.paneLabel}" crashed`, error),
+  render: (props, state) => {
+    if (state.error) {
       return (
         <div className="flex h-full w-full items-center justify-center bg-background p-double text-center text-sm text-muted-foreground">
-          {this.props.paneLabel} konnte nicht geladen werden.
+          {props.paneLabel} konnte nicht geladen werden.
         </div>
       );
     }
-    return this.props.children;
-  }
-}
+    return props.children;
+  },
+});
 //#endregion 🎪️PaneErrorBoundary
 
 //#region 🎪️DemonstratorPane
@@ -948,4 +943,4 @@ function DemonstratorLanding() {
 }
 //#endregion 🎪️DemonstratorLanding
 
-createRoot(document.getElementById("root")!).render(<DemonstratorLanding />);
+mountUiRoot(document.getElementById("root")!, <DemonstratorLanding />);

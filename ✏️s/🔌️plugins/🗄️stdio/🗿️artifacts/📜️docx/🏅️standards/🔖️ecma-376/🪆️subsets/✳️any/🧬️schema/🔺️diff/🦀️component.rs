@@ -294,7 +294,7 @@ fn wrap_body_diff(path: &DocxBlockPath, leaf: DocxBlockLeaf) -> DocxDiff {
             None => leaf.into_blocks_diff(index),
             Some((seg, rest)) => {
                 let inner = go(rest, index, leaf);
-                let cell_diff = DocxTableCellDiff { blocks: Some(Box::pin(inner)) };
+                let cell_diff = DocxTableCellDiff { blocks: Some(inner) };
                 let cells_diff = DocxTableCellsDiff { modified: vec![IndexModified { index: seg.cell, diff: cell_diff }], ..Default::default() };
                 let row_diff = DocxTableRowDiff { cells: Some(cells_diff) };
                 let rows_diff = DocxTableRowsDiff { modified: vec![IndexModified { index: seg.row, diff: row_diff }], ..Default::default() };
@@ -318,7 +318,7 @@ pub fn resolve_blocks<'a>(body: &'a [DocxBlock], segments: &[DocxPathSegment]) -
             let DocxBlock::Table(table) = body.get(seg.block_index)? else { return None };
             let row = table.rows.get(seg.row)?;
             let cell = row.cells.get(seg.cell)?;
-            Box::pin(resolve_blocks(&cell.blocks, rest))
+            resolve_blocks(&cell.blocks, rest)
         }
     }
 }

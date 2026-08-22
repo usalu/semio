@@ -10,7 +10,7 @@ use crate::engine_canvas;
 use crate::interpreter::{validate_component_scene, FrameworkWidgetContext, RENDER_PLAN_LIMITS};
 use crate::shell::{push_find_item, ShellFindItem};
 use base64::Engine;
-use infinite_world::{render_world_3d, World3dState};
+use infinite_world::world::{render_world_3d, World3dBuildContext, World3dState};
 use semio_framework::IconName;
 use serde::Deserialize;
 use serde_json::{json, Value};
@@ -113,6 +113,25 @@ pub struct PendingRasterUpload {
     pub height: u32,
 }
 
+#[cfg(not(target_arch = "wasm32"))]
+struct WorkerCell<T>(std::sync::OnceLock<std::sync::Mutex<RefCell<T>>>);
+
+#[cfg(not(target_arch = "wasm32"))]
+impl<T> WorkerCell<T> {
+    const fn new() -> Self {
+        Self(std::sync::OnceLock::new())
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl<T: Default> WorkerCell<T> {
+    fn with<R>(&self, f: impl FnOnce(&RefCell<T>) -> R) -> R {
+        let guard = self.0.get_or_init(|| std::sync::Mutex::new(RefCell::new(T::default()))).lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        f(&guard)
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
 thread_local! {
     static SCENE_STATE: RefCell<HashMap<String, SceneSurfaceState>> = RefCell::new(HashMap::new());
     static GRAPH_NODE_CTX: RefCell<HashMap<String, Option<String>>> = RefCell::new(HashMap::new());
@@ -123,6 +142,13 @@ thread_local! {
     /// mutators) only ever see a `&UiComponentSceneNode`, never `AppRuntime` itself.
     static SCENE_CAMERA_DISPATCH_DEADLINES_MS: RefCell<HashMap<String, f64>> = RefCell::new(HashMap::new());
 }
+
+#[cfg(not(target_arch = "wasm32"))]
+static SCENE_STATE: WorkerCell<HashMap<String, SceneSurfaceState>> = WorkerCell::new();
+#[cfg(not(target_arch = "wasm32"))]
+static GRAPH_NODE_CTX: WorkerCell<HashMap<String, Option<String>>> = WorkerCell::new();
+#[cfg(not(target_arch = "wasm32"))]
+static SCENE_CAMERA_DISPATCH_DEADLINES_MS: WorkerCell<HashMap<String, f64>> = WorkerCell::new();
 
 /** @emoji 🕸️ Clears per-frame graph node metadata used by context menus. */
 pub fn clear_graph_node_context() {
@@ -686,7 +712,8 @@ pub fn render_component_scene(
     scene: &UiComponentSceneNode,
     bounds: Rect,
     ctx: &mut FrameworkWidgetContext<'_>,
-    gpu: &mut ui_wgpu::wgpu::GpuContext,
+    engine_resources: &mut engine_canvas::EngineCanvasBuildContext,
+    world_resources: &mut World3dBuildContext,
     world3d_states: &mut HashMap<String, World3dState>,
     node_graph_states: &mut HashMap<String, NodeGraphSurface>,
     tiled_map_states: &mut HashMap<String, TiledMapSurface>,
@@ -704,20 +731,20 @@ pub fn render_component_scene(
     ctx.draw.set_screen_height(bounds.y + bounds.h);
     ctx.draw.push_rounded([bounds.x, bounds.y, bounds.w, bounds.h], theme.panel, theme.border_radius);
     match scene.component_kind {
-        SurfaceKind::Paint2d => render_paint_2d(scene, bounds, ctx, gpu),
+        SurfaceKind::Paint2d => render_paint_2d(scene, bounds, ctx),
         SurfaceKind::Table => render_table(scene, bounds, ctx),
         SurfaceKind::Canvas2d => render_canvas_2d(scene, bounds, ctx),
-        SurfaceKind::NodeGraph => render_node_graph(scene, bounds, ctx, gpu, node_graph_states),
-        SurfaceKind::TiledMap => render_tiled_map(scene, bounds, ctx, gpu, tiled_map_states),
+        SurfaceKind::NodeGraph => render_node_graph(scene, bounds, ctx, engine_resources, node_graph_states),
+        SurfaceKind::TiledMap => render_tiled_map(scene, bounds, ctx, engine_resources, tiled_map_states),
         SurfaceKind::VirtualFileSystem => render_vfs(scene, bounds, ctx),
-        SurfaceKind::TextEditor => render_text_editor(scene, bounds, ctx, gpu),
-        SurfaceKind::InkCanvas => render_ink_canvas(scene, bounds, ctx, gpu),
+        SurfaceKind::TextEditor => render_text_editor(scene, bounds, ctx, engine_resources),
+        SurfaceKind::InkCanvas => render_ink_canvas(scene, bounds, ctx),
         SurfaceKind::World3d => {
             let state = world3d_states.entry(scene.surface_id.clone()).or_insert_with(|| World3dState::new(scene.surface_id.clone(), scene.controller_id.clone()));
-            render_world_3d(scene, bounds, ctx, state, gpu);
+            render_world_3d(scene, bounds, ctx, state, world_resources);
         }
-        SurfaceKind::IconRender => render_icon_render(scene, bounds, ctx, gpu, icon_render_states),
-        SurfaceKind::Board2d => render_board2d(scene, bounds, ctx, gpu, board2d_states),
+        SurfaceKind::IconRender => render_icon_render(scene, bounds, ctx, world_resources, icon_render_states),
+        SurfaceKind::Board2d => render_board2d(scene, bounds, ctx, engine_resources, board2d_states),
         SurfaceKind::GraphTimeline => render_graph_timeline(scene, bounds, ctx),
         SurfaceKind::BlockList => render_block_list(scene, bounds, ctx),
         SurfaceKind::DiffView => render_diff_view(scene, bounds, ctx),
@@ -966,12 +993,11 @@ fn paint2d_navigator_overlay_rect(content_camera_json: &str, content_viewport_js
 //#endregion Paint2dNavigator
 
 /** 🖼️ Composites paint-2d document layers as textured quads; blend modes, masks and adjustment layers are not yet applied (see FIX-LOWPOLY-DEV-BOOT sibling ticket 26/07/11/WGPU-RENDERER-FULL-PARITY for follow-up scope). `viewMode === "navigator"` renders the same layer stack fit-to-view with a composite-viewport overlay instead of following the local/camera viewport. */
-fn render_paint_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, gpu: &mut ui_wgpu::wgpu::GpuContext) {
+fn render_paint_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let Some(paint_2d) = &scene.paint_2d else {
         return render_placeholder("paint-2d", bounds, ctx);
     };
-    let _ = gpu;
     let inner = bounds;
     ctx.draw.push_solid([inner.x, inner.y, inner.w, inner.h], theme.canvas_clear);
     let doc: Paint2dDocSyncJson = serde_json::from_str(&paint_2d.document_sync_json).unwrap_or_default();
@@ -4331,8 +4357,7 @@ fn draw_ink_selection_chrome(draw: &mut ui_wgpu::wgpu::DrawList, theme: &Theme, 
     }
 }
 
-fn render_ink_canvas(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, gpu: &mut ui_wgpu::wgpu::GpuContext) {
-    let _ = gpu;
+fn render_ink_canvas(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let Some(ink) = &scene.ink_canvas else {
         return render_placeholder("ink-canvas", bounds, ctx);
@@ -4782,7 +4807,7 @@ fn hit_graph_node(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> 
     None
 }
 
-fn render_node_graph(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, gpu: &mut ui_wgpu::wgpu::GpuContext, node_graph_states: &mut HashMap<String, NodeGraphSurface>) {
+fn render_node_graph(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, engine_resources: &mut engine_canvas::EngineCanvasBuildContext, node_graph_states: &mut HashMap<String, NodeGraphSurface>) {
     let Some(graph) = &scene.node_graph else {
         return render_placeholder("node-graph", bounds, ctx);
     };
@@ -4793,7 +4818,7 @@ fn render_node_graph(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
     }
     let inner = bounds;
     node_graph_states.insert(scene.surface_id.clone(), NodeGraphSurface { bounds: inner, controller_id: scene.controller_id.clone() });
-    engine_canvas::paint_node_graph(gpu, ctx, scene, inner);
+    engine_canvas::paint_node_graph(engine_resources, ctx, scene, inner);
     engine_canvas::paint_node_graph_labels(ctx, scene, inner);
     engine_canvas::paint_node_graph_overlays(ctx, scene, inner);
 }
@@ -4976,13 +5001,13 @@ pub fn tiled_map_drag_active(surface_id: &str) -> bool {
     scene_state(surface_id).drag.as_ref().is_some_and(|drag| matches!(drag.mode, SceneDragMode::MapMarquee { .. } | SceneDragMode::MapPan))
 }
 
-fn render_tiled_map(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, gpu: &mut ui_wgpu::wgpu::GpuContext, tiled_map_states: &mut HashMap<String, TiledMapSurface>) {
+fn render_tiled_map(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, engine_resources: &mut engine_canvas::EngineCanvasBuildContext, tiled_map_states: &mut HashMap<String, TiledMapSurface>) {
     let Some(map_scene) = &scene.tiled_map else {
         return render_placeholder("tiled-map", bounds, ctx);
     };
     let inner = bounds;
     tiled_map_states.insert(scene.surface_id.clone(), TiledMapSurface { bounds: inner, controller_id: scene.controller_id.clone(), selection_method: map_scene.selection_method.clone() });
-    engine_canvas::paint_tiled_map(gpu, ctx, scene, inner);
+    engine_canvas::paint_tiled_map(engine_resources, ctx, scene, inner);
     paint_tiled_map_marquee(ctx, &scene.surface_id, inner, ctx.theme);
 }
 //#endregion TiledMap
@@ -5116,7 +5141,7 @@ fn render_icon_render_empty(bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, 
 }
 
 /** @emoji 🖼️ Native counterpart of framework/renderer/react/components/icon-render-host.tsx: reframes the request into a synthetic World3dScene and delegates the actual GLB draw to infinite_world::render_world_3d, then paints the aspect-fit frame/badge/footer chrome on top. */
-fn render_icon_render(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, gpu: &mut ui_wgpu::wgpu::GpuContext, icon_render_states: &mut HashMap<String, World3dState>) {
+fn render_icon_render(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, world_resources: &mut World3dBuildContext, icon_render_states: &mut HashMap<String, World3dState>) {
     let Some(icon_render) = &scene.icon_render else {
         return render_icon_render_empty(bounds, ctx, "No shot");
     };
@@ -5145,7 +5170,7 @@ fn render_icon_render(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fram
         icon_render_camera_json(&request.camera),
         semio_framework_plugin::world3d_meshes_json_from_urls(std::slice::from_ref(&request.asset_url)),
         instances_json,
-        ui_wgpu::wgpu::world3d_default_selection_json(),
+        semio_framework_plugin::default_world3d_selection(),
         &semio_framework_plugin::WorldSunConfig::default(),
     );
     synthetic_world.environment_json = Some(icon_render_environment_json(&request));
@@ -5176,7 +5201,7 @@ fn render_icon_render(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fram
     };
 
     let state = icon_render_states.entry(scene.surface_id.clone()).or_insert_with(|| World3dState::new(scene.surface_id.clone(), scene.controller_id.clone()));
-    render_world_3d(&synthetic_scene, frame, ctx, state, gpu);
+    render_world_3d(&synthetic_scene, frame, ctx, state, world_resources);
 
     paint_icon_render_chrome(ctx, bounds, frame, &request, &shape, icon_render.footer.as_deref());
 }
@@ -5264,13 +5289,13 @@ pub struct Board2dSurface {
     pub fixture_json: String,
 }
 
-fn render_board2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, gpu: &mut ui_wgpu::wgpu::GpuContext, board2d_states: &mut HashMap<String, Board2dSurface>) {
+fn render_board2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, engine_resources: &mut engine_canvas::EngineCanvasBuildContext, board2d_states: &mut HashMap<String, Board2dSurface>) {
     let Some(board_scene) = &scene.board2d else {
         return render_placeholder("board-2d", bounds, ctx);
     };
     let inner = bounds;
     board2d_states.insert(scene.surface_id.clone(), Board2dSurface { bounds: inner, controller_id: scene.controller_id.clone(), fixture_json: board_scene.fixture_json.clone() });
-    engine_canvas::paint_puzzle_board(gpu, ctx, scene, inner);
+    engine_canvas::paint_puzzle_board(engine_resources, ctx, scene, inner);
 }
 
 pub fn puzzle_board_pointer_down(surface_id: &str, inner: Rect, x: f32, y: f32, button: i16, shift: bool, ctrl_or_meta: bool) {
@@ -5751,9 +5776,13 @@ struct TextEditorRenameInfo {
     occurrences: Vec<TextEditorSpan>,
 }
 
+#[cfg(target_arch = "wasm32")]
 thread_local! {
     static TEXT_EDITOR_UI_STATE: RefCell<HashMap<String, TextEditorUiState>> = RefCell::new(HashMap::new());
 }
+
+#[cfg(not(target_arch = "wasm32"))]
+static TEXT_EDITOR_UI_STATE: WorkerCell<HashMap<String, TextEditorUiState>> = WorkerCell::new();
 
 fn text_editor_ui_state(surface_id: &str) -> TextEditorUiState {
     TEXT_EDITOR_UI_STATE.with(|cell| cell.borrow().get(surface_id).cloned().unwrap_or_default())
@@ -5999,12 +6028,12 @@ fn line_col_at(text: &str, cursor: usize) -> (usize, usize) {
 //#endregion Geometry
 
 //#region Render
-fn render_text_editor(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, gpu: &mut ui_wgpu::wgpu::GpuContext) {
+fn render_text_editor(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, engine_resources: &mut engine_canvas::EngineCanvasBuildContext) {
     let Some(editor) = &scene.text_editor else {
         return render_placeholder("text-editor", bounds, ctx);
     };
     let inner = bounds;
-    engine_canvas::paint_text_editor(gpu, ctx, scene, inner);
+    engine_canvas::paint_text_editor(engine_resources, ctx, scene, inner);
     let editor_id = format!("{}.editor", scene.surface_id);
     let rename_id = format!("{}.editor.rename", scene.surface_id);
     let seed_focused = ctx.input.focused_id.as_deref() == Some(editor_id.as_str());

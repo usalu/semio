@@ -10,7 +10,7 @@
 
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectScrollUpButton, SelectSeparator, SelectTrigger, SelectValue } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "../../🧪️story";
 
 // 🔷️#region 🔎️Select
 const Box = createIconComponent("box");

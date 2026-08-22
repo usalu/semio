@@ -387,7 +387,7 @@ impl ArtifactEditor for Gis2dPlayApp {
 //#endregion 🔖️Gis2dPlayApp
 
 //#region 🔖️Manifest
-pub async fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::gismap::GISMAP_DIALECT).document(["semio", "gis", "2d"])
             .artifact_kind(artifact_kind())
             // 🔌️ Typed workflow ports (WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe) — same
@@ -439,15 +439,15 @@ pub async fn create_gis2d_app() -> semio_framework_plugin::AppDefinition {
             // 👁️ View actions — mutate ephemeral config state (camera, render config, layer
             // visibility, stroke weights), never the document.
             .view_action("toggleLayerVisibility", LocalizedLabel::native("Toggle Layer Visibility", "Ebenensichtbarkeit umschalten"))
-            .action_with(ActionDefinition::new_catalog("fitWorld", LocalizedLabel::native("Fit World", "Welt einpassen"), ActionKind::View).with_category("view"))
+            .action_with(ActionDefinition::bounded_catalog("fitWorld", LocalizedLabel::native("Fit World", "Welt einpassen"), ActionKind::View).with_category("view"))
             .view_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"))
             .view_action("setRenderMode", LocalizedLabel::native("Set Render Mode", "Darstellungsmodus festlegen"))
             .view_action("setVectorStyle", LocalizedLabel::native("Set Vector Style", "Vektorstil festlegen"))
             .view_action("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"))
-            .action_with(ActionDefinition::new_catalog("focusFeature", LocalizedLabel::native("Focus Feature", "Objekt fokussieren"), ActionKind::View).with_category("view"))
+            .action_with(ActionDefinition::bounded_catalog("focusFeature", LocalizedLabel::native("Focus Feature", "Objekt fokussieren"), ActionKind::View).with_category("view"))
             .view_action("setLayerStrokeScale", LocalizedLabel::native("Set Layer Stroke Scale", "Ebenenstrichstärke festlegen"))
             // 🌐️ Shell action — opens the picked feature's source URL through the host.
-            .action_with(ActionDefinition::new_catalog("openSource", LocalizedLabel::native("Open Source", "Quelle öffnen"), ActionKind::Shell).with_category("open"))
+            .action_with(ActionDefinition::bounded_catalog("openSource", LocalizedLabel::native("Open Source", "Quelle öffnen"), ActionKind::Shell).with_category("open"))
             // 📝️ Argument schemas for the discrete-choice actions so the command palette can stage them
             // and the registry validates the vocabulary. The arg id matches the key each handler reads.
             .action_args("setActiveExample", vec![

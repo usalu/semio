@@ -276,7 +276,7 @@ fn named_absorb_pair<T: DxfNamedElem>(
         }
     }
     let mut merged_modified: Vec<(String, T::Diff)> = d1_modified.iter().filter(|(k, _)| !merged_removed.contains(k)).cloned().collect();
-    let mut merged_added: Vec<(usize, T)> = d1_added.iter().filter(|(_, t)| !annihilated.contains(&t.key())).cloned().collect();
+    let mut merged_added: Vec<(usize, T)> = d1_added.iter().filter(|(_, t)| !annihilated.contains(t.key())).cloned().collect();
 
     for (key, d2d) in d2_modified {
         if added_keys.contains(key) {

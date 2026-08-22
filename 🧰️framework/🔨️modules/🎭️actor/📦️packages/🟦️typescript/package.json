@@ -2,7 +2,7 @@
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "name": "@semio-tech/framework-actor",
   "version": "0.1.0",
-  "description": "framework-actor · pooled actor/plugin runtime TS surface — ts-rs mirror (see 🤖️generated) plus ShardClient, the web ShardTransport (bounded worker pool, actorId multiplexing, SAB/postMessage heartbeat).",
+  "description": "framework-actor · pooled actor/plugin runtime TS surface — owned-schema mirror (see 🤖️generated) plus ShardClient, the web ShardTransport (bounded worker pool, actorId multiplexing, SAB/postMessage heartbeat).",
   "type": "module",
   "private": true,
   "exports": {

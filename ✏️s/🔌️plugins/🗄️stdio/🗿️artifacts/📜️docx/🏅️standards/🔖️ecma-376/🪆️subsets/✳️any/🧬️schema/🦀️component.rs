@@ -37,7 +37,7 @@ impl DocxArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub async fn from_snapshot(snapshot: DocxSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: DocxSnapshot) -> Self {
         Self { schema: snapshot.schema, opc: snapshot.opc, document: snapshot.document }
     }
 
@@ -52,7 +52,7 @@ impl DocxArtifact {
 
 //#region Descriptor
 /// 🧬️ Descriptor for `s.stdio.docx`.
-pub async fn docx_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn docx_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.docx",
         artifact: schema::FacetLeaves {
@@ -142,7 +142,7 @@ pub mod derived_construction {
     /// the first time a paragraph is added to an otherwise-empty builder.
     impl DocxBuilderConstruction {
         /// ➕️ Appends a paragraph.
-        pub async fn add_paragraph(mut self, paragraph: DocxParagraph) -> Self {
+        pub fn add_paragraph(mut self, paragraph: DocxParagraph) -> Self {
             self.snapshot.document.body.push(DocxBlock::Paragraph(paragraph));
             self.snapshot = crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_docx(self.snapshot.document);
             self
@@ -150,23 +150,23 @@ pub mod derived_construction {
 
         /// ➕️ Appends a single-run plain-text paragraph.
         pub async fn add_text_paragraph(self, text: impl Into<String>) -> Self {
-            self.add_paragraph(DocxParagraph::text(text.into())).await
+            self.add_paragraph(DocxParagraph::text(text.into()))
         }
 
         /// ➕️ Appends a paragraph made of the given runs (basic bold/italic/underline formatting).
         pub async fn add_runs(self, runs: Vec<DocxRun>) -> Self {
-            self.add_paragraph(DocxParagraph { runs, style: None, extra_paragraph_properties: Vec::new() }).await
+            self.add_paragraph(DocxParagraph { runs, style: None, extra_paragraph_properties: Vec::new() })
         }
 
         /// ➕️ Appends a table.
-        pub async fn add_table(mut self, table: DocxTable) -> Self {
+        pub fn add_table(mut self, table: DocxTable) -> Self {
             self.snapshot.document.body.push(DocxBlock::Table(table));
             self.snapshot = crate::artifacts::docx::standards::v_ecma_376::subsets::any::io::export::serializers::build_minimal_docx(self.snapshot.document);
             self
         }
 
         /// ➕️ Appends (or replaces, by `id`) a named style.
-        pub async fn add_style(mut self, style: DocxStyle) -> Self {
+        pub fn add_style(mut self, style: DocxStyle) -> Self {
             if let Some(existing) = self.snapshot.document.styles.iter_mut().find(|s| s.id == style.id) {
                 *existing = style;
             } else {

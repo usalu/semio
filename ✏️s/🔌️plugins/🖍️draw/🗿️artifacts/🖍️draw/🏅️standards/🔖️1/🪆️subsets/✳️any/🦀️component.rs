@@ -11,24 +11,24 @@ use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, 
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
 
-async fn examples() -> &'static [ExampleSource] {
+fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
     EXAMPLES.get_or_init(|| vec![crate::artifacts::draw::examples::demo::source()]).as_slice()
 }
 
-async fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
+fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
     static DESCRIPTORS: OnceLock<Vec<::schema::ArtifactInferenceDescriptor>> = OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::draw_artifact_inference_descriptor()]).as_slice()
 }
 
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.
-pub async fn subset() -> SubsetDeclaration {
+pub fn subset() -> SubsetDeclaration<crate::DrawApps> {
     SubsetDeclaration {
         dialect: DRAW_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::draw_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io::io(),
-        viewer: viewer_surface::<viewer::DrawViewer>(viewer::create_draw_viewer()),
-        editor: editor_surface::<editor::DrawPlayApp>(editor::create_draw_app()),
+        viewer: viewer_surface::<viewer::DrawViewer, crate::DrawApps>(viewer::create_draw_viewer()),
+        editor: editor_surface::<editor::DrawPlayApp, crate::DrawApps>(editor::create_draw_app()),
         examples: examples(),
     }
 }

@@ -17,22 +17,22 @@ pub struct MovePart3d {
 impl protocol::MutationKind<Puzzle5dSnapshot, Puzzle5dMutation> for MovePart3d {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "move", entity: "part", kind: "move-part3d", record: "MovedPart3d" };
 
-    async fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
+    fn diff(&self, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
+    fn inverse(&self, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Move part \"{}\" (3d)", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn move_part_3d(id: String, new_origin: [f64; 3]) -> Puzzle5dMutation {
+pub fn move_part_3d(id: String, new_origin: [f64; 3]) -> Puzzle5dMutation {
     Puzzle5dMutation::MovePart3d(MovePart3d { id, new_origin })
 }

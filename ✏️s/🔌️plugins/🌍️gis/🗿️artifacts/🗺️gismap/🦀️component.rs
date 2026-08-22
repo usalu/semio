@@ -173,7 +173,7 @@ pub async fn gis_map_snapshot_with_derived_children(mut document: GisMapSnapshot
 
 //#region 🔹ArtifactKind
 /// The `2d.map` artifact kind declaration.
-pub async fn artifact_kind() -> ArtifactKindSpec {
+pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.map".into(),
         name: "2D Map".into(),
@@ -198,7 +198,7 @@ pub async fn artifact_kind() -> ArtifactKindSpec {
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g2): `declaration()` describes the artifact
 /// (kind, schema, io ports, ownership), which is not engine behaviour.
 /// 🧾️ Defines s.gismap's immutable runtime capability leaves.
-pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     ArtifactDefinition::new(ArtifactIdentity::parse("s.gismap")?)
@@ -254,7 +254,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
 }
 
 /// 🔖️ Assembles s.gismap's typed runtime declaration.
-pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::gismap::schema::gismap_artifact_schema_descriptor())
         .inferences([crate::artifacts::gismap::standards::v1::subsets::any::schema::inferences::gismap_artifact_inference_descriptor()])

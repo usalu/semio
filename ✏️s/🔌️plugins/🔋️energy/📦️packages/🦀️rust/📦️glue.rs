@@ -494,6 +494,7 @@ pub mod artifacts {
                 #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
                 mod component;
                 pub use component::*;
+                #[cfg(test)]
                 #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🧪️tests/🦀️test.rs"]
                 mod tests;
             }
@@ -572,13 +573,12 @@ pub mod viewer {
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
 pub mod plugin;
-semio_framework_plugin::plugin_exports!(plugin::plugin);
+semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::EnergyApps);
 
 //#region 📚️Examples
 #[path = "."]
 pub mod examples {
-    #[path = "../../🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
-    pub mod art_model_demo;
+    pub use crate::artifacts::model::examples::demo as art_model_demo;
 }
 //#endregion 📚️Examples
 

@@ -142,8 +142,8 @@ pub fn decode_pdf(data: &[u8]) -> Result<PdfSnapshot, String> {
 #[cfg(not(target_arch = "wasm32"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_schema_specs() {
-    dsl::registry::register_schema_spec("stdio.pdf", PdfSnapshot::__dsl_spec);
-    dsl::registry::register_schema_spec("stdio.pdf#diff", PdfDiff::__dsl_diff_spec);
+    semio_framework_plugin::resolve_ready(dsl::registry::register_schema_spec("stdio.pdf", PdfSnapshot::__dsl_spec));
+    semio_framework_plugin::resolve_ready(dsl::registry::register_schema_spec("stdio.pdf#diff", PdfDiff::__dsl_diff_spec));
 }
 
 #[cfg(target_arch = "wasm32")]

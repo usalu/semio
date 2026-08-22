@@ -28,8 +28,8 @@ fn mutation() -> Fem3dMutation {
 }
 
 /// ▶️ `delete-element` drops the brace `b1` and carries `before` to exactly the committed `after`.
-#[semio_framework_async_macros::async_test]
-async fn applies_to_committed_after() {
+#[test]
+fn applies_to_committed_after() {
     let mut snapshot = before();
     apply_fem3d_mutation(&mut snapshot, &mutation()).expect("delete-element applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "delete-element/removes-the-bracing-bar-and-leaves-the-frame: applied state differs from committed after-snapshot");
@@ -39,8 +39,8 @@ async fn applies_to_committed_after() {
 }
 
 /// ↩️ The inverse is a `create-element` rebuilt from `base`, re-appending the bar with its variant intact.
-#[semio_framework_async_macros::async_test]
-async fn inverse_restores_before() {
+#[test]
+fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
     let inverse = inverse_fem3d_mutation(&base, &mutation);
@@ -53,8 +53,8 @@ async fn inverse_restores_before() {
 }
 
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
-#[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+#[test]
+fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: Fem3dSnapshot = serde_json::from_str(text).expect("snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
@@ -68,8 +68,8 @@ async fn committed_json_is_canonical() {
 }
 
 /// 🎯️ The declared outcome matches what the mutation actually produces.
-#[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+#[test]
+fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
     let mut snapshot = before();
@@ -85,8 +85,8 @@ async fn declared_outcome_holds() {
 }
 
 /// 🔺️ The delta must be a single `elements.removed` id — a deleted element frees nothing else.
-#[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+#[test]
+fn produces_committed_diff() {
     let base = before();
     let outcome = <Fem3dMutation as protocol::Mutation<Fem3dSnapshot>>::diff(&mutation(), &base);
     assert_eq!(outcome.diff().elements.as_ref().expect("elements delta").removed, vec!["b1".to_string()], "delete-element/removes-the-bracing-bar-and-leaves-the-frame: exactly b1 may be removed");
@@ -97,8 +97,8 @@ async fn produces_committed_diff() {
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to the artifact's own diff type.
-#[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+#[test]
+fn committed_diff_is_canonical() {
     let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
@@ -106,8 +106,8 @@ async fn committed_diff_is_canonical() {
 }
 
 /// 🩹 Replaying the committed `elements.removed` id on `before` must leave only the frame.
-#[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+#[test]
+fn committed_diff_applies_to_after() {
     let decoded: crate::artifacts::fem3d::diff::Fem3dDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let produced = <crate::artifacts::fem3d::diff::Fem3dDiff as protocol::MutationDiff<Fem3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "delete-element/removes-the-bracing-bar-and-leaves-the-frame: committed diff did not carry before to after");

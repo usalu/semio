@@ -54,7 +54,7 @@ impl MeshData {
     pub fn compute_normals(&mut self) {
         let count = self.vertex_count();
         self.normals = vec![0.0; count * 3];
-        for tri in self.indices.chunks_exact(3) {
+        for tri in self.indices.as_chunks::<3>().0 {
             let i0 = tri[0] as usize;
             let i1 = tri[1] as usize;
             let i2 = tri[2] as usize;
@@ -71,7 +71,7 @@ impl MeshData {
                 self.normals[i + 2] += n[2];
             }
         }
-        for chunk in self.normals.chunks_exact_mut(3) {
+        for chunk in self.normals.as_chunks_mut::<3>().0 {
             let len = (chunk[0] * chunk[0] + chunk[1] * chunk[1] + chunk[2] * chunk[2]).sqrt();
             if len > 1e-8 {
                 chunk[0] /= len;
@@ -84,7 +84,7 @@ impl MeshData {
     pub fn aabb(&self) -> ([f32; 3], [f32; 3]) {
         let mut min = [f32::INFINITY; 3];
         let mut max = [f32::NEG_INFINITY; 3];
-        for chunk in self.positions.chunks_exact(3) {
+        for chunk in self.positions.as_chunks::<3>().0 {
             for axis in 0..3 {
                 min[axis] = min[axis].min(chunk[axis]);
                 max[axis] = max[axis].max(chunk[axis]);
@@ -336,8 +336,8 @@ pub fn mesh_from_indexed_with_face_groups(positions: &[f32], normals: &[f32], in
         for &(face_id, start, count) in face_groups {
             let start_tri = (start / 3) as usize;
             let count_tri = (count / 3) as usize;
-            for tri in start_tri..(start_tri + count_tri).min(triangle_count) {
-                face_ids[tri] = face_id;
+            for slot in face_ids.iter_mut().take((start_tri + count_tri).min(triangle_count)).skip(start_tri) {
+                *slot = face_id;
             }
         }
         mesh.face_ids = face_ids;
@@ -349,15 +349,15 @@ pub fn mesh_from_indexed_with_face_groups(positions: &[f32], normals: &[f32], in
 //#region Obj
 pub fn mesh_to_obj(mesh: &MeshData, object_name: &str) -> String {
     let mut out = format!("o {object_name}\n");
-    for chunk in mesh.positions.chunks_exact(3) {
+    for chunk in mesh.positions.as_chunks::<3>().0 {
         out.push_str(&format!("v {} {} {}\n", chunk[0], chunk[1], chunk[2]));
     }
     if mesh.normals.len() == mesh.positions.len() {
-        for chunk in mesh.normals.chunks_exact(3) {
+        for chunk in mesh.normals.as_chunks::<3>().0 {
             out.push_str(&format!("vn {} {} {}\n", chunk[0], chunk[1], chunk[2]));
         }
     }
-    for tri in mesh.indices.chunks_exact(3) {
+    for tri in mesh.indices.as_chunks::<3>().0 {
         let a = tri[0] + 1;
         let b = tri[1] + 1;
         let c = tri[2] + 1;
@@ -578,13 +578,13 @@ fn glb_triangle_indices(mode: gltf::mesh::Mode, source: Vec<u32>) -> Vec<u32> {
     }
 }
 
-fn append_glb_primitive(mesh: &mut MeshData, primitive: gltf::Primitive<'_>, matrix: GlbMatrix, bin: &[u8]) -> Result<(), String> {
+fn append_glb_primitive(mesh: &mut MeshData, primitive: &gltf::Primitive<'_>, matrix: GlbMatrix, bin: &[u8]) -> Result<(), String> {
     if !matches!(primitive.mode(), gltf::mesh::Mode::Triangles | gltf::mesh::Mode::TriangleStrip | gltf::mesh::Mode::TriangleFan) {
         return Ok(());
     }
     let reader = primitive.reader(|buffer| (buffer.index() == 0).then_some(bin));
     let positions: Vec<[f32; 3]> = reader.read_positions().ok_or_else(|| "glb triangle primitive missing POSITION".to_string())?.collect();
-    let source_indices: Vec<u32> = reader.read_indices().map(|indices| indices.into_u32().collect()).unwrap_or_else(|| (0..positions.len() as u32).collect());
+    let source_indices: Vec<u32> = reader.read_indices().map_or_else(|| (0..positions.len() as u32).collect(), |indices| indices.into_u32().collect());
     let indices = glb_triangle_indices(primitive.mode(), source_indices);
     if indices.iter().any(|index| *index as usize >= positions.len()) {
         return Err("glb triangle index outside POSITION accessor".into());
@@ -610,20 +610,20 @@ fn append_glb_primitive(mesh: &mut MeshData, primitive: gltf::Primitive<'_>, mat
     Ok(())
 }
 
-fn append_glb_mesh(mesh: &mut MeshData, source: gltf::Mesh<'_>, matrix: GlbMatrix, bin: &[u8]) -> Result<(), String> {
+fn append_glb_mesh(mesh: &mut MeshData, source: &gltf::Mesh<'_>, matrix: GlbMatrix, bin: &[u8]) -> Result<(), String> {
     for primitive in source.primitives() {
-        append_glb_primitive(mesh, primitive, matrix, bin)?;
+        append_glb_primitive(mesh, &primitive, matrix, bin)?;
     }
     Ok(())
 }
 
-fn append_glb_node(mesh: &mut MeshData, node: gltf::Node<'_>, parent: GlbMatrix, bin: &[u8]) -> Result<(), String> {
+fn append_glb_node(mesh: &mut MeshData, node: &gltf::Node<'_>, parent: GlbMatrix, bin: &[u8]) -> Result<(), String> {
     let matrix = glb_matrix_mul(parent, node.transform().matrix());
     if let Some(source) = node.mesh() {
-        append_glb_mesh(mesh, source, matrix, bin)?;
+        append_glb_mesh(mesh, &source, matrix, bin)?;
     }
     for child in node.children() {
-        append_glb_node(mesh, child, matrix, bin)?;
+        append_glb_node(mesh, &child, matrix, bin)?;
     }
     Ok(())
 }
@@ -635,11 +635,11 @@ pub fn mesh_from_glb(bytes: &[u8]) -> Result<MeshData, String> {
     let mut mesh = MeshData::default();
     if let Some(scene) = gltf.default_scene().or_else(|| gltf.scenes().next()) {
         for node in scene.nodes() {
-            append_glb_node(&mut mesh, node, glb_identity(), bin)?;
+            append_glb_node(&mut mesh, &node, glb_identity(), bin)?;
         }
     } else {
         for source in gltf.meshes() {
-            append_glb_mesh(&mut mesh, source, glb_identity(), bin)?;
+            append_glb_mesh(&mut mesh, &source, glb_identity(), bin)?;
         }
     }
     if mesh.indices.is_empty() {
@@ -657,7 +657,7 @@ fn u32_slice_to_bytes(values: &[u32]) -> Vec<u8> {
 }
 
 fn pad_to_4(mut data: Vec<u8>) -> Vec<u8> {
-    while data.len() % 4 != 0 {
+    while !data.len().is_multiple_of(4) {
         data.push(0);
     }
     data
@@ -681,7 +681,7 @@ pub fn mesh_to_stl(mesh: &MeshData) -> Vec<u8> {
     let mut out = Vec::with_capacity(80 + 4 + triangle_count as usize * 50);
     out.extend_from_slice(&[0u8; 80]);
     out.extend_from_slice(&triangle_count.to_le_bytes());
-    for tri in mesh.indices.chunks_exact(3) {
+    for tri in mesh.indices.as_chunks::<3>().0 {
         let p0 = stl_vertex(&mesh.positions, tri[0]);
         let p1 = stl_vertex(&mesh.positions, tri[1]);
         let p2 = stl_vertex(&mesh.positions, tri[2]);
@@ -959,7 +959,7 @@ mod tests {
         assert_eq!(decoded.triangle_count(), mesh.triangle_count());
         // STL has no vertex sharing, so indices are trivially [0, 1, 2, 3, ...]; compare
         // per-triangle corner positions against the original indexed mesh instead.
-        for (triangle, decoded_tri) in mesh.indices.chunks_exact(3).zip(decoded.indices.chunks_exact(3)) {
+        for (triangle, decoded_tri) in mesh.indices.as_chunks::<3>().0.iter().zip(decoded.indices.as_chunks::<3>().0) {
             for (&original_index, &decoded_index) in triangle.iter().zip(decoded_tri.iter()) {
                 let original = &mesh.positions[original_index as usize * 3..original_index as usize * 3 + 3];
                 let decoded_position = &decoded.positions[decoded_index as usize * 3..decoded_index as usize * 3 + 3];

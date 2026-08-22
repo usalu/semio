@@ -122,7 +122,7 @@ impl TimeSeriesTable {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn time_series_average() {
         let mut ts = TimeSeries { key: "t".into(), timestamps_hours: Vec::new(), values: Vec::new(), unit: crate::units::Unit::Celsius };
         ts.push(0.0, 10.0);
@@ -130,7 +130,7 @@ mod tests {
         assert!((ts.average() - 15.0).abs() < 1e-9);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn time_series_sum_and_min_max() {
         let mut ts = TimeSeries { key: "t".into(), timestamps_hours: Vec::new(), values: Vec::new(), unit: crate::units::Unit::Watts };
         ts.push(0.0, 5.0);
@@ -142,13 +142,13 @@ mod tests {
         assert!((max - 8.0).abs() < 1e-9);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn time_series_average_of_empty_is_zero() {
         let ts = TimeSeries { key: "t".into(), timestamps_hours: Vec::new(), values: Vec::new(), unit: crate::units::Unit::Watts };
         assert_eq!(ts.average(), 0.0);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn registry_matches_exact_and_wildcard() {
         let mut reg = OutputRegistry::default();
         reg.register(OutputVariable { key: "Zone1 Temp".into(), unit: crate::units::Unit::Celsius, frequency: ReportingFrequency::Hourly, aggregation: Aggregation::Average });
@@ -158,7 +158,7 @@ mod tests {
         assert_eq!(reg.matches_wildcard("Nope").len(), 0);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn store_record_get_and_csv() {
         let mut store = TimeSeriesTable::default();
         store.record("Zone1 Temp", 0.0, 21.0, crate::units::Unit::Celsius);

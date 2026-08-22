@@ -592,7 +592,7 @@ pub fn compute_catalog_hash(tools: &[Tool]) -> String {
     let mut names: Vec<&str> = tools.iter().map(|tool| tool.name.as_str()).collect();
     names.sort_unstable();
     let joined = names.join("\u{0}");
-    blake3::hash(joined.as_bytes()).to_hex().to_string()
+    framework_hash::hash_bytes(joined.as_bytes())
 }
 //#endregion 🔖️CatalogHash
 
@@ -633,7 +633,7 @@ impl McpServer {
     /// 🏗️ `NullBackend` + empty in-memory registries — the default a bare `stdio` invocation boots
     /// with until a real backend is wired in.
     pub fn with_defaults() -> Self {
-        Self::new(Box::new(InMemoryToolRegistry::new()), Box::new(InMemoryResourceRegistry::new()), Box::new(InMemoryPromptRegistry::new()), Box::new(NullBackend))
+        Self::new(Box::new(InMemoryToolRegistry::new()), Box::new(InMemoryResourceRegistry::new()), Box::new(InMemoryPromptRegistry::new()), Box::new(GatewayBackends::Null(NullBackend)))
     }
 
     pub fn era(&self) -> Option<ProtocolEra> {
@@ -993,7 +993,7 @@ mod quick {
     fn a_registered_tool_reporting_failure_is_a_successful_response_with_is_error_true() {
         let mut tools = InMemoryToolRegistry::new();
         tools.register(Tool::new("flaky_tool", serde_json::json!({"type": "object"})), |_arguments| CallToolResult::tool_error(&GatewayError::new(GatewayErrorCode::PreconditionFailed, "not ready"))).unwrap();
-        let mut server = McpServer::new(Box::new(tools), Box::new(InMemoryResourceRegistry::new()), Box::new(InMemoryPromptRegistry::new()), Box::new(NullBackend));
+        let mut server = McpServer::new(Box::new(tools), Box::new(InMemoryResourceRegistry::new()), Box::new(InMemoryPromptRegistry::new()), Box::new(GatewayBackends::Null(NullBackend)));
         let response = server.dispatch(&request(Some(1), METHOD_TOOLS_CALL, Some(serde_json::json!({ "name": "flaky_tool", "arguments": {} })))).unwrap();
         assert!(!response.is_error(), "a tool's own failure must stay a JSON-RPC success envelope");
         let JsonRpcOutcome::Result { result } = response.outcome else { panic!("expected a result") };
@@ -1031,18 +1031,18 @@ mod long {
             Resource { uri: "semio://audit/log".to_string(), name: "audit-log".to_string(), title: None, description: None, mime_type: Some("text/plain".to_string()), size: None },
             vec![ResourceContent { uri: "semio://audit/log".to_string(), mime_type: Some("text/plain".to_string()), text: Some("hello".to_string()), blob: None }],
         );
-        let mut server = McpServer::new(Box::new(InMemoryToolRegistry::new()), Box::new(resources), Box::new(InMemoryPromptRegistry::new()), Box::new(NullBackend));
+        let mut server = McpServer::new(Box::new(InMemoryToolRegistry::new()), Box::new(resources), Box::new(InMemoryPromptRegistry::new()), Box::new(GatewayBackends::Null(NullBackend)));
 
-        let meta = serde_json::json!({ "_meta": { super::META_PROTOCOL_VERSION_KEY: "2026-07-28" } });
-        let list = server.dispatch(&super::tests_support::request_with(1, METHOD_RESOURCES_LIST, meta.clone())).unwrap();
+        let meta = serde_json::json!({ "_meta": { META_PROTOCOL_VERSION_KEY: "2026-07-28" } });
+        let list = server.dispatch(&tests_support::request_with(1, METHOD_RESOURCES_LIST, meta.clone())).unwrap();
         let JsonRpcOutcome::Result { result } = list.outcome else { panic!("expected a result") };
         assert_eq!(result["resources"].as_array().unwrap().len(), 1);
 
-        let read = server.dispatch(&super::tests_support::request_with(2, METHOD_RESOURCES_READ, serde_json::json!({ "uri": "semio://audit/log", "_meta": meta["_meta"] }))).unwrap();
+        let read = server.dispatch(&tests_support::request_with(2, METHOD_RESOURCES_READ, serde_json::json!({ "uri": "semio://audit/log", "_meta": meta["_meta"] }))).unwrap();
         let JsonRpcOutcome::Result { result } = read.outcome else { panic!("expected a result") };
         assert_eq!(result["contents"][0]["text"], "hello");
 
-        let subscribed = server.dispatch(&super::tests_support::request_with(3, METHOD_RESOURCES_SUBSCRIBE, serde_json::json!({ "uri": "semio://audit/log", "_meta": meta["_meta"] }))).unwrap();
+        let subscribed = server.dispatch(&tests_support::request_with(3, METHOD_RESOURCES_SUBSCRIBE, serde_json::json!({ "uri": "semio://audit/log", "_meta": meta["_meta"] }))).unwrap();
         assert!(!subscribed.is_error());
         assert_eq!(server.era(), Some(ProtocolEra::Modern));
     }

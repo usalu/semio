@@ -30,9 +30,15 @@ export type MutationEnvelope = {
   };
 };
 
+/** 📦️ Owned interface to the host-selected schema-less pack implementation. */
+export interface ReplicationPackCodec {
+  encode(value: unknown): Uint8Array;
+  decode(bytes: Uint8Array): unknown;
+}
+
 /** 🌉️ Maps the actor-protocol {@link MutationEnvelope} into a {@link WireMutationEnvelope}. */
-export function mutationEnvelopeToWire(envelope: MutationEnvelope, timestamp: WireMutationEnvelope["timestamp"]): WireMutationEnvelope {
-  const packPayload = (value: unknown) => Array.from(encodePackValue(value));
+export function mutationEnvelopeToWire(envelope: MutationEnvelope, timestamp: WireMutationEnvelope["timestamp"], codec: ReplicationPackCodec): WireMutationEnvelope {
+  const packPayload = (value: unknown): number[] => Array.from(codec.encode(value));
   return {
     mutation_id: envelope.id,
     document_id: envelope.document,
@@ -45,8 +51,8 @@ export function mutationEnvelopeToWire(envelope: MutationEnvelope, timestamp: Wi
 }
 
 /** 🌉️ Inverse of {@link mutationEnvelopeToWire}. */
-export function mutationEnvelopeFromWire(envelope: WireMutationEnvelope): MutationEnvelope {
-  const decodePayload = (bytes: readonly number[]) => decodePackValue(new Uint8Array(bytes));
+export function mutationEnvelopeFromWire(envelope: WireMutationEnvelope, codec: ReplicationPackCodec): MutationEnvelope {
+  const decodePayload = (bytes: readonly number[]) => codec.decode(new Uint8Array(bytes));
   const payload = decodePayload(envelope.diff.payload);
   const sequenceNumber = payload !== null && typeof payload === "object" && "sequenceNumber" in payload ? Number((payload as Record<string, unknown>).sequenceNumber) : 0;
   return {
@@ -630,14 +636,14 @@ function decodeFrontier(bytes: Uint8Array, pos: [number]): WireFrontierSummary {
   const chain_hash = readHash32(bytes, pos);
   return { document_id, head_edit_ordinal, head_edit_id, last_commit_seq, chain_hash };
 }
-export function decodeCausalEnvelopeBatch(bytes: readonly number[]): MutationEnvelope[] {
+export function decodeCausalEnvelopeBatch(bytes: readonly number[], codec: ReplicationPackCodec): MutationEnvelope[] {
   const pos: [number] = [0];
-  return readVecEnvelope(new Uint8Array(bytes), pos).map(mutationEnvelopeFromWire);
+  return readVecEnvelope(new Uint8Array(bytes), pos).map((envelope) => mutationEnvelopeFromWire(envelope, codec));
 }
 
-export function encodeCausalEnvelopeBatch(envelopes: readonly MutationEnvelope[]): readonly number[] {
+export function encodeCausalEnvelopeBatch(envelopes: readonly MutationEnvelope[], codec: ReplicationPackCodec): readonly number[] {
   const out: number[] = [];
-  writeVecEnvelope(out, envelopes.map((envelope, index) => mutationEnvelopeToWire(envelope, { actor: 0, physical_ms: 0, logical: index + 1 })));
+  writeVecEnvelope(out, envelopes.map((envelope, index) => mutationEnvelopeToWire(envelope, { actor: 0, physical_ms: 0, logical: index + 1 }, codec)));
   return out;
 }
 

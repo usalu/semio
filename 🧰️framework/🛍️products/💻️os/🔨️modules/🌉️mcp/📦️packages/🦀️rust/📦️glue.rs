@@ -20,6 +20,7 @@ pub mod errors;
 pub mod schema;
 
 #[path = "../../🧭️protocol/🦀️component.rs"]
+#[macro_use]
 pub mod protocol;
 
 #[path = "../../🚚️transport/🦀️component.rs"]
@@ -50,6 +51,7 @@ pub mod conformance;
 pub mod fixtures;
 
 #[path = "../../🔀️dispatch/🦀️component.rs"]
+#[macro_use]
 pub mod actions;
 
 #[path = "../../🛡️policy/🦀️component.rs"]

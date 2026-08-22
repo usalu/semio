@@ -49,15 +49,15 @@ mod tests {
     /// collapse to the SAME default model for every payload, making round-trip/absorb assertions
     /// meaningless. `Model` derives `Default`, so every field is always present in its own
     /// `serde_json` output.
-    async fn demo_model_json(name: &str) -> String {
+    fn demo_model_json(name: &str) -> String {
         serde_json::to_string(&crate::model::Model { name: name.into(), ..crate::model::Model::default() }).expect("Model serializes")
     }
 
-    async fn every_mutation() -> Vec<EnergyModelMutation> {
+    fn every_mutation() -> Vec<EnergyModelMutation> {
         vec![EnergyModelMutation::ReplaceModel(replace_model::mutation::ReplaceModel { new_model_json: demo_model_json("demo") })]
     }
 
-    async fn round_trip(base: &EnergyModelSnapshot, mutation: &EnergyModelMutation) -> EnergyModelSnapshot {
+    fn round_trip(base: &EnergyModelSnapshot, mutation: &EnergyModelMutation) -> EnergyModelSnapshot {
         let forward = mutation.diff(base).diff().apply(base).expect("valid mutation diff");
         let mut restored = forward.clone();
         for back in mutation.inverse(base) {
@@ -89,10 +89,10 @@ mod tests {
     async fn replace_model_satisfies_the_inverse_and_absorb_laws() {
         let base = EnergyModelSnapshot::default();
         let mutation = EnergyModelMutation::ReplaceModel(replace_model::mutation::ReplaceModel { new_model_json: demo_model_json("a") });
-        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation);
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
         let d1 = mutation.diff(&base).diff().clone();
         let d2 = EnergyModelMutation::ReplaceModel(replace_model::mutation::ReplaceModel { new_model_json: demo_model_json("b") }).diff(&base).diff().clone();
-        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
     //#endregion 🧪️MutationLaws
 

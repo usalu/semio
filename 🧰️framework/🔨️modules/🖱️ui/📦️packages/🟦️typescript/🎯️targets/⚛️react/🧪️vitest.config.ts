@@ -6,7 +6,7 @@ import { defineConfig } from "vitest/config";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-/** @emoji 🧪️ Vitest for `@semio-tech/ui-react` (inline tests in index.tsx). */
+/** @emoji 🧪️ Vitest for `@semio-tech/ui-react` and its owned React modules. */
 export default defineConfig({
   root,
   resolve: {
@@ -15,6 +15,7 @@ export default defineConfig({
   test: {
     name: "@semio-tech/ui-react",
     environment: "jsdom",
+    include: ["../../../../🔨️modules/⌨️control-keybinding-context/🧪️component.test.tsx", "../../../../🔨️modules/🏷️style-variants/🧪️component.test.ts"],
     includeSource: ["📦️index.tsx"],
     coverage: { include: ["📦️index.tsx"] },
     passWithNoTests: true,

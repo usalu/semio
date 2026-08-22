@@ -1,0 +1,8 @@
+E0425	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	10534	cannot find type `WindowEngagement` in this scope
+E0425	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	10537	cannot find type `WindowMeasure` in this scope
+E0425	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	10541	cannot find type `WindowMeasure` in this scope
+E0425	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	10550	cannot find type `ContextMenuRequest` in this scope
+E0425	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	10550	cannot find type `ContextMenuItemSpec` in this scope
+E0308	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	17648	mismatched types
+E0277	✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🦀️component.rs	32	`ArtifactDeclarationBuilder<DeclarationReady>` is not a future
+E0277	✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄️pdf/🦀️component.rs	32	`ArtifactDeclarationBuilder<DeclarationReady>` is not a future

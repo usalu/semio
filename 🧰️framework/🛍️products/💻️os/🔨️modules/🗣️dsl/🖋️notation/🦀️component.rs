@@ -104,12 +104,12 @@ impl Cursor {
         if self.peek().kind == kind {
             Ok(self.advance())
         } else {
-            Err(TextError::new(format!("expected {kind:?}, found {:?}", self.peek().kind), self.peek().span.clone()))
+            Err(TextError::new(format!("expected {kind:?}, found {:?}", self.peek().kind), self.peek().span))
         }
     }
 
     fn span(&self) -> TextSpan {
-        self.peek().span.clone()
+        self.peek().span
     }
 }
 
@@ -364,7 +364,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn parses_plain_directed_arrow() {
         let value = parse_edge_text("a->b").expect("parse_edge_text");
-        assert_eq!(value.link.as_ref().unwrap().directed, true);
+        assert!(value.link.as_ref().unwrap().directed);
         assert!(value.link.as_ref().unwrap().label.is_empty());
         assert_eq!(print_edge(&value), "a->b");
     }
@@ -372,7 +372,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn parses_plain_undirected_dash() {
         let value = parse_edge_text("a--b").expect("parse_edge_text");
-        assert_eq!(value.link.as_ref().unwrap().directed, false);
+        assert!(!value.link.as_ref().unwrap().directed);
         assert_eq!(print_edge(&value), "a--b");
     }
 
@@ -381,7 +381,7 @@ mod tests {
         let value = parse_edge_text("b<-a").expect("parse_edge_text");
         assert_eq!(value.from, node("a"));
         assert_eq!(value.link.as_ref().unwrap().to, node("b"));
-        assert_eq!(value.link.as_ref().unwrap().directed, true);
+        assert!(value.link.as_ref().unwrap().directed);
         // Canonical print never re-emits `<-`.
         assert_eq!(print_edge(&value), "a->b");
     }
@@ -390,7 +390,7 @@ mod tests {
     async fn parses_labeled_directed_edge_with_id_and_kind() {
         let value = parse_edge_text("a -e1:Connection>b").expect("parse_edge_text");
         let link = value.link.expect("link");
-        assert_eq!(link.directed, true);
+        assert!(link.directed);
         assert_eq!(link.label, EdgeLabel { id: Some("e1".to_string()), kind: Some("Connection".to_string()) });
         assert_eq!(link.to, node("b"));
         assert_eq!(print_edge(&EdgeValue { from: node("a"), link: Some(link) }), "a -e1:Connection>b");
@@ -400,7 +400,7 @@ mod tests {
     async fn parses_labeled_undirected_edge_id_only() {
         let value = parse_edge_text("a -e1-b").expect("parse_edge_text");
         let link = value.link.expect("link");
-        assert_eq!(link.directed, false);
+        assert!(!link.directed);
         assert_eq!(link.label, EdgeLabel { id: Some("e1".to_string()), kind: None });
         assert_eq!(print_edge(&EdgeValue { from: node("a"), link: Some(link) }), "a -e1-b");
     }
@@ -427,7 +427,7 @@ mod tests {
         let printed = print_edge(&value);
         let link = value.link.expect("link");
         assert_eq!(link.to, node("b"));
-        assert_eq!(link.directed, true);
+        assert!(link.directed);
         assert_eq!(link.label, EdgeLabel { id: Some("e1".to_string()), kind: Some("Connection".to_string()) });
         assert_eq!(printed, "a -e1:Connection>b");
     }

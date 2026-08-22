@@ -1,0 +1,110 @@
+11272:-    pub async fn assert_dsl_round_trip<P>(snapshot: &P)
+11273:+    pub fn assert_dsl_round_trip<P>(snapshot: &P)
+11275:-    pub async fn assert_config_round_trip<C>(snapshot: &C)
+11276:+    pub fn assert_config_round_trip<C>(snapshot: &C)
+11278:-        assert_dsl_round_trip(snapshot).await;
+11279:+        assert_dsl_round_trip(snapshot);
+11281:-    pub async fn check_dsl_fixture_text_laws<P>(text: &str) -> Result<(), String>
+11282:+    pub fn check_dsl_fixture_text_laws<P>(text: &str) -> Result<(), String>
+11284:-    pub async fn assert_pack_round_trip<P>(snapshot: &P)
+11285:+    pub fn assert_pack_round_trip<P>(snapshot: &P)
+11287:-    pub async fn assert_dsl_pack_equivalence<P>(snapshot: &P)
+11288:+    pub fn assert_dsl_pack_equivalence<P>(snapshot: &P)
+11290:-    pub async fn assert_op_line_round_trip<Op>(operation: &Op)
+11291:+    pub fn assert_op_line_round_trip<Op>(operation: &Op)
+11293:-    pub async fn assert_op_text_binary_equivalence<Op>(operation: &Op)
+11294:+    pub fn assert_op_text_binary_equivalence<Op>(operation: &Op)
+11296:-        assert_op_line_round_trip(operation).await;
+11297:+        assert_op_line_round_trip(operation);
+11302:-        assert_dsl_round_trip(&snapshot).await;
+11303:-        assert_pack_round_trip(&snapshot).await;
+11304:-        assert_dsl_pack_equivalence(&snapshot).await;
+11305:+        assert_dsl_round_trip(&snapshot);
+11306:+        assert_pack_round_trip(&snapshot);
+11307:+        assert_dsl_pack_equivalence(&snapshot);
+11309:-            assert_op_line_round_trip(mutation).await;
+11310:-            assert_op_text_binary_equivalence(mutation).await;
+11311:+            assert_op_line_round_trip(mutation);
+11312:+            assert_op_text_binary_equivalence(mutation);
+11545:-        test_support::assert_dsl_round_trip(&DemoSnapshot { n: 42 }).await;
+11546:+        test_support::assert_dsl_round_trip(&DemoSnapshot { n: 42 });
+11548:-        test_support::assert_dsl_pack_equivalence(&DemoSnapshot { n: 42 }).await;
+11549:+        test_support::assert_dsl_pack_equivalence(&DemoSnapshot { n: 42 });
+11551:-        test_support::assert_op_line_round_trip(&DemoMutation::SetN { n: 7 }).await;
+11552:+        test_support::assert_op_line_round_trip(&DemoMutation::SetN { n: 7 });
+12843:-        store::os_store::test_support::assert_dsl_pack_equivalence(&sample_workflow_snapshot().await).await;
+12844:-        store::os_store::test_support::assert_dsl_pack_equivalence(&empty_workflow_snapshot().await).await;
+12845:+        store::os_store::test_support::assert_dsl_pack_equivalence(&sample_workflow_snapshot().await);
+12846:+        store::os_store::test_support::assert_dsl_pack_equivalence(&empty_workflow_snapshot().await);
+12848:-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::AddNode { node: workflow_node("n1", Vec::new(), Vec::new()).await }).await;
+12849:-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveNode { node_id: "n1".into() }).await;
+12850:-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::ConnectPorts { edge: workflow_edge("e1", "a", "out", "b", "in").await }).await;
+12851:-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::DisconnectEdge { edge_id: "e1".into() }).await;
+12852:-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::MoveNode { node_id: "n1".into(), x: 5.5, y: -6.25 }).await;
+12853:-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::PatchNode { node_id: "n1".into(), label: "Renamed".into() }).await;
+12854:-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::AddParameter { parameter: WorkflowParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 10.0, min: None, max: None, step: None } }).await;
+12855:-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveParameter { parameter_id: "p1".into() }).await;
+12856:-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::PatchParameter { parameter_id: "p1".into(), parameter: WorkflowParameter::Toggle { id: "p1".into(), name: "Flag".into(), value: false } }).await;
+12857:-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindParameterField { binding: WorkflowParameterBinding { parameter_id: "p1".into(), node_id: "n1".into(), field_path: "/zoom".into() } }).await;
+12858:-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindParameterField { node_id: "n1".into(), field_path: "/zoom".into() }).await;
+12859:-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::SyncNodePorts).await;
+12860:+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::AddNode { node: workflow_node("n1", Vec::new(), Vec::new()).await });
+12861:+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveNode { node_id: "n1".into() });
+12862:+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::ConnectPorts { edge: workflow_edge("e1", "a", "out", "b", "in").await });
+12863:+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::DisconnectEdge { edge_id: "e1".into() });
+12864:+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::MoveNode { node_id: "n1".into(), x: 5.5, y: -6.25 });
+12865:+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::PatchNode { node_id: "n1".into(), label: "Renamed".into() });
+12866:+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::AddParameter { parameter: WorkflowParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 10.0, min: None, max: None, step: None } });
+12867:+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveParameter { parameter_id: "p1".into() });
+12868:+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::PatchParameter { parameter_id: "p1".into(), parameter: WorkflowParameter::Toggle { id: "p1".into(), name: "Flag".into(), value: false } });
+12869:+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindParameterField { binding: WorkflowParameterBinding { parameter_id: "p1".into(), node_id: "n1".into(), field_path: "/zoom".into() } });
+12870:+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindParameterField { node_id: "n1".into(), field_path: "/zoom".into() });
+12871:+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::SyncNodePorts);
+12874:-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveInput { input_id: "in-1".into() }).await;
+12875:-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindInput { binding: WorkflowInputBinding { input_id: "in-1".into(), node_id: "n1".into(), port_id: "n1:in:in".into() } }).await;
+12876:-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindInput { input_id: "in-1".into() }).await;
+12877:-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindOutput { binding: WorkflowOutputBinding { node_id: "n1".into(), port_id: "n1:out:out".into(), path_template: "out/{node}".into() } }).await;
+12878:-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindOutput { node_id: "n1".into(), port_id: "n1:out:out".into() }).await;
+12880:+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveInput { input_id: "in-1".into() });
+12881:+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindInput { binding: WorkflowInputBinding { input_id: "in-1".into(), node_id: "n1".into(), port_id: "n1:in:in".into() } });
+12882:+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindInput { input_id: "in-1".into() });
+12883:+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindOutput { binding: WorkflowOutputBinding { node_id: "n1".into(), port_id: "n1:out:out".into(), path_template: "out/{node}".into() } });
+12884:+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindOutput { node_id: "n1".into(), port_id: "n1:out:out".into() });
+12900:-        store::os_store::test_support::assert_dsl_pack_equivalence(&sample_run_document().await).await;
+12901:-        store::os_store::test_support::assert_dsl_pack_equivalence(&empty_run_document().await).await;
+12902:+        store::os_store::test_support::assert_dsl_pack_equivalence(&sample_run_document().await);
+12903:+        store::os_store::test_support::assert_dsl_pack_equivalence(&empty_run_document().await);
+12909:-        store::os_store::test_support::assert_op_line_round_trip(&RunMutation::NodeStarted { node_id: "a".into() }).await;
+12910:-        store::os_store::test_support::assert_op_line_round_trip(&RunMutation::NodeFinished { node_record: sample_run_node_record("a", RunNodeStatus::CacheHit).await }).await;
+12911:-        store::os_store::test_support::assert_op_line_round_trip(&RunMutation::Log { node_id: "a".into(), level: "info".into(), message: "computed".into(), at: "123".into() }).await;
+12912:-        store::os_store::test_support::assert_op_line_round_trip(&RunMutation::Seal { status: RunStatus::Succeeded }).await;
+12914:+        store::os_store::test_support::assert_op_line_round_trip(&RunMutation::NodeStarted { node_id: "a".into() });
+12915:+        store::os_store::test_support::assert_op_line_round_trip(&RunMutation::NodeFinished { node_record: sample_run_node_record("a", RunNodeStatus::CacheHit).await });
+12916:+        store::os_store::test_support::assert_op_line_round_trip(&RunMutation::Log { node_id: "a".into(), level: "info".into(), message: "computed".into(), at: "123".into() });
+12917:+        store::os_store::test_support::assert_op_line_round_trip(&RunMutation::Seal { status: RunStatus::Succeeded });
+12919:-        store::os_store::test_support::assert_dsl_pack_equivalence(&document).await;
+12920:+        store::os_store::test_support::assert_dsl_pack_equivalence(&document);
+16679:-        crate::os_store::test_support::assert_dsl_round_trip(&doc).await;
+16680:-        crate::os_store::test_support::assert_dsl_pack_equivalence(&doc).await;
+16681:+        crate::os_store::test_support::assert_dsl_round_trip(&doc);
+16682:+        crate::os_store::test_support::assert_dsl_pack_equivalence(&doc);
+16684:-        crate::os_store::test_support::assert_op_line_round_trip(&DerivedMutation::SetCategory { category: "wall".to_string() }).await;
+16685:+        crate::os_store::test_support::assert_op_line_round_trip(&DerivedMutation::SetCategory { category: "wall".to_string() });
+16687:-            crate::os_store::test_support::assert_op_text_binary_equivalence(&op).await;
+16688:+            crate::os_store::test_support::assert_op_text_binary_equivalence(&op);
+16728:-        crate::os_store::test_support::assert_dsl_pack_equivalence(&doc).await;
+16729:+        crate::os_store::test_support::assert_dsl_pack_equivalence(&doc);
+16770:-        crate::os_store::test_support::assert_dsl_pack_equivalence(&doc).await;
+16771:+        crate::os_store::test_support::assert_dsl_pack_equivalence(&doc);
+16811:-        crate::os_store::test_support::assert_dsl_pack_equivalence(&with_fill).await;
+16812:+        crate::os_store::test_support::assert_dsl_pack_equivalence(&with_fill);
+16819:-        crate::os_store::test_support::assert_dsl_pack_equivalence(&no_fill).await;
+16820:+        crate::os_store::test_support::assert_dsl_pack_equivalence(&no_fill);
+16860:-        crate::os_store::test_support::assert_dsl_pack_equivalence(&with_brush).await;
+16861:+        crate::os_store::test_support::assert_dsl_pack_equivalence(&with_brush);
+16869:-        crate::os_store::test_support::assert_dsl_pack_equivalence(&no_brush).await;
+16870:+        crate::os_store::test_support::assert_dsl_pack_equivalence(&no_brush);
+16948:-        crate::os_store::test_support::assert_dsl_pack_equivalence(&doc).await;
+16949:+        crate::os_store::test_support::assert_dsl_pack_equivalence(&doc);
+16990:-        crate::os_store::test_support::assert_dsl_pack_equivalence(&doc).await;
+16991:+        crate::os_store::test_support::assert_dsl_pack_equivalence(&doc);

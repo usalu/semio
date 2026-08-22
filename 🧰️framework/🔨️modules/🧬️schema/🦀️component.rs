@@ -12,6 +12,8 @@ pub use semio_framework_schema_derive::ArtifactSchema;
 pub enum SchemaError {
     UnknownSchema(String),
     Validation(String),
+    Cancelled,
+    LimitExceeded(usize),
 }
 
 impl std::fmt::Display for SchemaError {
@@ -19,6 +21,8 @@ impl std::fmt::Display for SchemaError {
         match self {
             Self::UnknownSchema(id) => write!(formatter, "unknown schema id: {id}"),
             Self::Validation(message) => write!(formatter, "validation failed: {message}"),
+            Self::Cancelled => formatter.write_str("validation cancelled"),
+            Self::LimitExceeded(limit) => write!(formatter, "validation node limit exceeded: {limit}"),
         }
     }
 }
@@ -31,148 +35,9 @@ include!("🤖️generated.rs");
 //#endregion 🔖️EntityCatalog
 
 //#region 🔖️SchemaCatalog
-#[derive(Clone)]
-struct Validator {
-    schema: Value,
-}
-
-impl Validator {
-    fn new(schema: &Value) -> Result<Self, SchemaError> {
-        validate_schema_node(schema, "$")?;
-        Ok(Self { schema: schema.clone() })
-    }
-
-    fn validate(&self, value: &Value) -> Result<(), SchemaError> {
-        validate_value(&self.schema, value, "$")
-    }
-}
-
-fn schema_object<'a>(schema: &'a Value, path: &str) -> Result<&'a pack::json::Object, SchemaError> {
-    schema.as_object().ok_or_else(|| SchemaError::Validation(format!("{path}: schema must be an object")))
-}
-
-fn validate_schema_node(schema: &Value, path: &str) -> Result<(), SchemaError> {
-    let object = schema_object(schema, path)?;
-    for (keyword, value) in object {
-        match keyword {
-            "$id" | "$schema" | "title" | "description" => {
-                if value.as_str().is_none() {
-                    return Err(SchemaError::Validation(format!("{path}.{keyword}: expected string")));
-                }
-            }
-            "type" => match value.as_str() {
-                Some("null" | "boolean" | "object" | "array" | "string" | "integer" | "number") => {}
-                _ => return Err(SchemaError::Validation(format!("{path}.type: unsupported JSON Schema type"))),
-            },
-            "properties" => {
-                let properties = value.as_object().ok_or_else(|| SchemaError::Validation(format!("{path}.properties: expected object")))?;
-                for (name, property) in properties {
-                    validate_schema_node(property, &format!("{path}.properties.{name}"))?;
-                }
-            }
-            "required" => {
-                let required = value.as_array().ok_or_else(|| SchemaError::Validation(format!("{path}.required: expected array")))?;
-                if required.iter().any(|entry| entry.as_str().is_none()) {
-                    return Err(SchemaError::Validation(format!("{path}.required: expected only strings")));
-                }
-            }
-            "additionalProperties" => {
-                if value.as_bool().is_none() {
-                    return Err(SchemaError::Validation(format!("{path}.additionalProperties: only a boolean is supported")));
-                }
-            }
-            "enum" => {
-                if value.as_array().is_none() {
-                    return Err(SchemaError::Validation(format!("{path}.enum: expected array")));
-                }
-            }
-            extension if extension.starts_with("x-") => {}
-            unsupported => return Err(SchemaError::Validation(format!("{path}: unsupported JSON Schema keyword `{unsupported}`"))),
-        }
-    }
-    Ok(())
-}
-
-fn validate_value(schema: &Value, value: &Value, path: &str) -> Result<(), SchemaError> {
-    let schema = schema_object(schema, path)?;
-    if let Some(allowed) = schema.get("enum").and_then(Value::as_array) {
-        if !allowed.iter().any(|allowed| schema_values_equal(allowed, value)) {
-            return Err(SchemaError::Validation(format!("{path}: value is not in enum")));
-        }
-    }
-    if let Some(expected) = schema.get("type").and_then(Value::as_str) {
-        let matches = match expected {
-            "null" => value.is_null(),
-            "boolean" => value.as_bool().is_some(),
-            "object" => value.as_object().is_some(),
-            "array" => value.as_array().is_some(),
-            "string" => value.as_str().is_some(),
-            "integer" => value.as_number().is_some_and(|number| match number {
-                pack::json::Number::UInt(_) | pack::json::Number::Int(_) => true,
-                pack::json::Number::Float(number) => number.is_finite() && number.fract() == 0.0,
-            }),
-            "number" => value.as_number().is_some(),
-            _ => false,
-        };
-        if !matches {
-            return Err(SchemaError::Validation(format!("{path}: expected {expected}")));
-        }
-    }
-    if let Some(object) = value.as_object() {
-        let properties = schema.get("properties").and_then(Value::as_object);
-        if let Some(required) = schema.get("required").and_then(Value::as_array) {
-            for key in required.iter().filter_map(Value::as_str) {
-                if !object.contains_key(key) {
-                    return Err(SchemaError::Validation(format!("{path}: missing required property `{key}`")));
-                }
-            }
-        }
-        if let Some(properties) = properties {
-            for (key, property_schema) in properties {
-                if let Some(property_value) = object.get(key) {
-                    validate_value(property_schema, property_value, &format!("{path}.{key}"))?;
-                }
-            }
-        }
-        if schema.get("additionalProperties").and_then(Value::as_bool) == Some(false) {
-            for (key, _) in object {
-                if properties.is_none_or(|properties| !properties.contains_key(key)) {
-                    return Err(SchemaError::Validation(format!("{path}: additional property `{key}` is not allowed")));
-                }
-            }
-        }
-    }
-    Ok(())
-}
-
-fn schema_values_equal(left: &Value, right: &Value) -> bool {
-    match (left, right) {
-        (Value::Null, Value::Null) => true,
-        (Value::Bool(left), Value::Bool(right)) => left == right,
-        (Value::String(left), Value::String(right)) => left == right,
-        (Value::Number(left), Value::Number(right)) => schema_numbers_equal(*left, *right),
-        (Value::Array(left), Value::Array(right)) => left.len() == right.len() && left.iter().zip(right).all(|(left, right)| schema_values_equal(left, right)),
-        (Value::Object(left), Value::Object(right)) => left.len() == right.len() && left.iter().all(|(key, left)| right.get(key).is_some_and(|right| schema_values_equal(left, right))),
-        _ => false,
-    }
-}
-
-fn schema_numbers_equal(left: pack::json::Number, right: pack::json::Number) -> bool {
-    match (left, right) {
-        (pack::json::Number::UInt(left), pack::json::Number::UInt(right)) => left == right,
-        (pack::json::Number::Int(left), pack::json::Number::Int(right)) => left == right,
-        (pack::json::Number::UInt(left), pack::json::Number::Int(right)) | (pack::json::Number::Int(right), pack::json::Number::UInt(left)) => u64::try_from(right) == Ok(left),
-        (pack::json::Number::Float(left), pack::json::Number::Float(right)) => left == right,
-        (pack::json::Number::UInt(integer), pack::json::Number::Float(float)) | (pack::json::Number::Float(float), pack::json::Number::UInt(integer)) => float >= 0.0 && float < u64::MAX as f64 && float.fract() == 0.0 && float as u64 == integer,
-        (pack::json::Number::Int(integer), pack::json::Number::Float(float)) | (pack::json::Number::Float(float), pack::json::Number::Int(integer)) => {
-            float >= i64::MIN as f64 && float < i64::MAX as f64 && float.fract() == 0.0 && float as i64 == integer
-        }
-    }
-}
-
 pub struct SchemaCatalog {
     schemas: HashMap<String, Value>,
-    validators: HashMap<String, Validator>,
+    validators: HashMap<String, crate::OwnedJsonSchemaValidator>,
 }
 
 impl Default for SchemaCatalog {
@@ -192,7 +57,7 @@ impl SchemaCatalog {
 
     // 🚫️async: R9 pure mutation — no I/O; same visit-closure consumers as `new()`.
     pub fn register_json(&mut self, id: &str, schema: Value) -> Result<(), SchemaError> {
-        let validator = Validator::new(&schema)?;
+        let validator = crate::OwnedJsonSchemaValidator::new(&schema)?;
         self.schemas.insert(id.to_string(), schema);
         self.validators.insert(id.to_string(), validator);
         Ok(())
@@ -238,10 +103,10 @@ directive @derived on FIELD_DEFINITION\
 /// separately by [`ArtifactSchemaFields::derived_fields`] — the Rust twin of JSON Schema's
 /// `x-semio-derived: true` and GraphQL's `@derived`.
 pub trait ArtifactSchemaFields {
-    async fn artifact_schema_id() -> &'static str;
-    async fn field_states() -> &'static [(&'static str, StateClass)];
-    async fn derived_fields() -> &'static [&'static str] {
-        &[]
+    fn artifact_schema_id() -> impl std::future::Future<Output = &'static str> + Send;
+    fn field_states() -> impl std::future::Future<Output = &'static [(&'static str, StateClass)]> + Send;
+    fn derived_fields() -> impl std::future::Future<Output = &'static [&'static str]> + Send {
+        async { &[] as &'static [&'static str] }
     }
 }
 
@@ -280,11 +145,11 @@ pub struct LinkSlotSpec {
 /// composition" behaviour. Leaf artifacts (no children, no links) get both methods for free via the
 /// default `&[]` — no boilerplate impl required.
 pub trait ArtifactCompositionFields {
-    async fn child_slots() -> &'static [ChildSlotSpec] {
-        &[]
+    fn child_slots() -> impl std::future::Future<Output = &'static [ChildSlotSpec]> + Send {
+        async { &[] as &'static [ChildSlotSpec] }
     }
-    async fn link_slots() -> &'static [LinkSlotSpec] {
-        &[]
+    fn link_slots() -> impl std::future::Future<Output = &'static [LinkSlotSpec]> + Send {
+        async { &[] as &'static [LinkSlotSpec] }
     }
 }
 
@@ -300,7 +165,7 @@ directive @link(roles: [String!]) on FIELD_DEFINITION\
 
 //#region 🔖️ArtifactSchemaDescriptor
 /// 🍃 Five handcrafted leaf bodies for one facet (`include_str!` at each artifact's registration site).
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct FacetLeaves {
     pub rust: &'static str,
     pub typescript: &'static str,
@@ -332,7 +197,7 @@ fn canonical_schema_value(value: Value) -> Value {
 }
 
 /// 🧬️ Registered descriptor for one artifact's four schema facets.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ArtifactSchemaDescriptor {
     pub id: &'static str,
     pub artifact: FacetLeaves,
@@ -407,6 +272,11 @@ impl ArtifactSchemaRegistry {
     pub fn len(&self) -> usize {
         self.by_id.len()
     }
+
+    /// 📭 Whether no artifact schema ids are registered.
+    pub fn is_empty(&self) -> bool {
+        self.by_id.is_empty()
+    }
 }
 //#endregion 🔖️ArtifactSchemaRegistry
 
@@ -441,7 +311,7 @@ fn facet_leaves_from_kernel(leaves: &KernelFacetLeaves) -> FacetLeaves {
     FacetLeaves { rust: leaves.rust, typescript: leaves.typescript, graphql: leaves.graphql, json_schema: leaves.json_schema, proto: leaves.proto }
 }
 
-async fn descriptor_to_kernel(descriptor: ArtifactSchemaDescriptor) -> KernelArtifactSchemaDescriptor {
+fn descriptor_to_kernel(descriptor: &ArtifactSchemaDescriptor) -> KernelArtifactSchemaDescriptor {
     KernelArtifactSchemaDescriptor {
         id: descriptor.id,
         artifact: facet_leaves_to_kernel(descriptor.artifact),
@@ -481,13 +351,12 @@ fn graphql_leaf_with_preamble(body: &str) -> String {
 }
 
 /// 📎 Registers one artifact's handcrafted descriptor into the OS-wide catalog (kernel descriptors + normative JSON + GraphQL SDL).
-pub async fn register_artifact_schema_descriptor(descriptor: ArtifactSchemaDescriptor) {
-    register_kernel_artifact_schema_descriptor(descriptor_to_kernel(descriptor).await);
+pub fn register_artifact_schema_descriptor(descriptor: ArtifactSchemaDescriptor) {
+    register_kernel_artifact_schema_descriptor(descriptor_to_kernel(&descriptor));
 }
 
 /// 🔬️ Verifies artifact schema descriptors against the established catalog without mutation.
-#[must_use]
-pub async fn preflight_artifact_schema_descriptors(descriptors: &[ArtifactSchemaDescriptor]) -> Result<(), SchemaDescriptorRegistryError> {
+pub fn preflight_artifact_schema_descriptors(descriptors: &[ArtifactSchemaDescriptor]) -> Result<(), SchemaDescriptorRegistryError> {
     let mut proposed = HashMap::new();
     for descriptor in descriptors {
         match proposed.insert(descriptor.id, descriptor) {
@@ -506,28 +375,26 @@ pub async fn preflight_artifact_schema_descriptors(descriptors: &[ArtifactSchema
         }
         Ok(())
     })
-    .await
 }
 
 /// 📌️ Registers an atomically prevalidated artifact schema batch.
-#[must_use]
-pub async fn register_artifact_schema_descriptors(descriptors: Vec<ArtifactSchemaDescriptor>) -> Result<(), SchemaDescriptorRegistryError> {
-    preflight_artifact_schema_descriptors(&descriptors).await?;
+pub fn register_artifact_schema_descriptors(descriptors: Vec<ArtifactSchemaDescriptor>) -> Result<(), SchemaDescriptorRegistryError> {
+    preflight_artifact_schema_descriptors(&descriptors)?;
     for descriptor in descriptors {
-        if !artifact_schema_descriptor_registered(descriptor.id).await {
-            register_artifact_schema_descriptor(descriptor).await;
+        if !artifact_schema_descriptor_registered(descriptor.id) {
+            register_artifact_schema_descriptor(descriptor);
         }
     }
     Ok(())
 }
 
 /// 🔎 Whether `id` is present in the OS-wide descriptor registry.
-pub async fn artifact_schema_descriptor_registered(id: &str) -> bool {
+pub fn artifact_schema_descriptor_registered(id: &str) -> bool {
     semio_framework_os_kernel::kernel_artifact_schema_descriptor_registered(id)
 }
 
 /// 📚 Invokes `visit` with the OS-wide [`ArtifactSchemaRegistry`] snapshot.
-pub async fn with_artifact_schema_registry<R>(visit: impl FnOnce(&ArtifactSchemaRegistry) -> R) -> R {
+pub fn with_artifact_schema_registry<R>(visit: impl FnOnce(&ArtifactSchemaRegistry) -> R) -> R {
     let mut registry = ArtifactSchemaRegistry::new();
     with_kernel_artifact_schema_catalog(|entries| {
         for entry in entries {
@@ -573,13 +440,13 @@ pub async fn artifact_schema_graphql_sdl(key: &str) -> Option<String> {
 /// 💡️ Registered descriptor for one artifact's 💡️inference schema facet — a SIBLING to
 /// [`ArtifactSchemaDescriptor`], not a field on it (see [`KernelArtifactInferenceDescriptor`]'s own
 /// doc for why). `id` is the inference schema's own id, `"{artifact_id}.inference"`.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ArtifactInferenceDescriptor {
     pub id: &'static str,
     pub inference: FacetLeaves,
 }
 
-async fn inference_descriptor_to_kernel(descriptor: ArtifactInferenceDescriptor) -> KernelArtifactInferenceDescriptor {
+fn inference_descriptor_to_kernel(descriptor: &ArtifactInferenceDescriptor) -> KernelArtifactInferenceDescriptor {
     KernelArtifactInferenceDescriptor { id: descriptor.id, inference: facet_leaves_to_kernel(descriptor.inference) }
 }
 
@@ -636,13 +503,12 @@ impl ArtifactInferenceRegistry {
 
 /// 📎 Registers one artifact's handcrafted inference descriptor into the OS-wide catalog. `id` on
 /// the descriptor must be `"{artifact_id}.inference"`, matching its owning `ArtifactSchemaDescriptor`'s id.
-pub async fn register_artifact_inference_descriptor(descriptor: ArtifactInferenceDescriptor) {
-    register_kernel_artifact_inference_descriptor(inference_descriptor_to_kernel(descriptor).await);
+pub fn register_artifact_inference_descriptor(descriptor: ArtifactInferenceDescriptor) {
+    register_kernel_artifact_inference_descriptor(inference_descriptor_to_kernel(&descriptor));
 }
 
 /// 🔬️ Verifies inference schema descriptors against the established catalog without mutation.
-#[must_use]
-pub async fn preflight_artifact_inference_descriptors(descriptors: &[ArtifactInferenceDescriptor]) -> Result<(), SchemaDescriptorRegistryError> {
+pub fn preflight_artifact_inference_descriptors(descriptors: &[ArtifactInferenceDescriptor]) -> Result<(), SchemaDescriptorRegistryError> {
     let mut proposed = HashMap::new();
     for descriptor in descriptors {
         match proposed.insert(descriptor.id, descriptor) {
@@ -661,28 +527,26 @@ pub async fn preflight_artifact_inference_descriptors(descriptors: &[ArtifactInf
         }
         Ok(())
     })
-    .await
 }
 
 /// 📌️ Registers an atomically prevalidated inference schema batch.
-#[must_use]
-pub async fn register_artifact_inference_descriptors(descriptors: Vec<ArtifactInferenceDescriptor>) -> Result<(), SchemaDescriptorRegistryError> {
-    preflight_artifact_inference_descriptors(&descriptors).await?;
+pub fn register_artifact_inference_descriptors(descriptors: Vec<ArtifactInferenceDescriptor>) -> Result<(), SchemaDescriptorRegistryError> {
+    preflight_artifact_inference_descriptors(&descriptors)?;
     for descriptor in descriptors {
-        if !artifact_inference_descriptor_registered(descriptor.id).await {
-            register_artifact_inference_descriptor(descriptor).await;
+        if !artifact_inference_descriptor_registered(descriptor.id) {
+            register_artifact_inference_descriptor(descriptor);
         }
     }
     Ok(())
 }
 
 /// 🔎 Whether `id` (the inference schema id) is present in the OS-wide inference descriptor registry.
-pub async fn artifact_inference_descriptor_registered(id: &str) -> bool {
+pub fn artifact_inference_descriptor_registered(id: &str) -> bool {
     semio_framework_os_kernel::kernel_artifact_inference_descriptor_registered(id)
 }
 
 /// 📚 Invokes `visit` with the OS-wide [`ArtifactInferenceRegistry`] snapshot.
-pub async fn with_artifact_inference_registry<R>(visit: impl FnOnce(&ArtifactInferenceRegistry) -> R) -> R {
+pub fn with_artifact_inference_registry<R>(visit: impl FnOnce(&ArtifactInferenceRegistry) -> R) -> R {
     let mut registry = ArtifactInferenceRegistry::new();
     with_kernel_artifact_inference_catalog(|entries| {
         for entry in entries {
@@ -713,7 +577,7 @@ pub async fn artifact_inference_graphql_sdl(key: &str) -> Option<String> {
 
 //#region 🔖️AppSchemaDescriptor
 /// 🧬️ Registered descriptor for one app owner's config + presence schema facets.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct AppSchemaDescriptor {
     pub id: &'static str,
     pub config: FacetLeaves,
@@ -784,7 +648,7 @@ impl AppSchemaRegistry {
 //#endregion 🔖️AppSchemaRegistry
 
 //#region 🔖️GlobalAppSchemaCatalog
-async fn app_descriptor_to_kernel(descriptor: AppSchemaDescriptor) -> KernelAppSchemaDescriptor {
+async fn app_descriptor_to_kernel(descriptor: &AppSchemaDescriptor) -> KernelAppSchemaDescriptor {
     KernelAppSchemaDescriptor { id: descriptor.id, config: facet_leaves_to_kernel(descriptor.config), presence: facet_leaves_to_kernel(descriptor.presence) }
 }
 
@@ -804,11 +668,10 @@ fn app_descriptor_from_kernel(kernel: &KernelAppSchemaDescriptor) -> AppSchemaDe
 /// - 🔗 [`app_schema_graphql_sdl`] resolves composed GraphQL SDL for an owner or `{id}.presence` key.
 /// - ✅ [`validate_registered_app_descriptor`] validates a descriptor's JSON Schema leaves and `x-semio-state` tagging before registering.
 pub async fn register_app_schema_descriptor(descriptor: AppSchemaDescriptor) {
-    register_kernel_app_schema_descriptor(app_descriptor_to_kernel(descriptor).await);
+    register_kernel_app_schema_descriptor(app_descriptor_to_kernel(&descriptor).await);
 }
 
 /// 🔬️ Verifies app schema descriptors against the established catalog without mutation.
-#[must_use]
 pub async fn preflight_app_schema_descriptors(descriptors: &[AppSchemaDescriptor]) -> Result<(), SchemaDescriptorRegistryError> {
     let mut proposed = HashMap::new();
     for descriptor in descriptors {
@@ -832,7 +695,6 @@ pub async fn preflight_app_schema_descriptors(descriptors: &[AppSchemaDescriptor
 }
 
 /// 📌️ Registers an atomically prevalidated app schema batch.
-#[must_use]
 pub async fn register_app_schema_descriptors(descriptors: Vec<AppSchemaDescriptor>) -> Result<(), SchemaDescriptorRegistryError> {
     preflight_app_schema_descriptors(&descriptors).await?;
     for descriptor in descriptors {
@@ -975,7 +837,7 @@ mod tests {
 
     async fn synthetic_descriptor() -> ArtifactSchemaDescriptor {
         let empty = FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: "", proto: "" };
-        ArtifactSchemaDescriptor { id: "s.wave3.synthetic", artifact: empty.clone(), snapshot: FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: SYNTHETIC_SNAPSHOT_JSON_SCHEMA, proto: "" }, diff: empty.clone(), mutations: empty }
+        ArtifactSchemaDescriptor { id: "s.wave3.synthetic", artifact: empty, snapshot: FacetLeaves { rust: "", typescript: "", graphql: "", json_schema: SYNTHETIC_SNAPSHOT_JSON_SCHEMA, proto: "" }, diff: empty, mutations: empty }
     }
 
     async fn expected_snapshot_title(id: &str) -> String {
@@ -998,6 +860,7 @@ mod tests {
     }
     struct ArtifactLink;
 
+    #[expect(dead_code, reason = "the derive test inspects the field declarations without constructing this schema-only fixture")]
     #[derive(ArtifactSchema)]
     #[artifact_schema(id = "s.wave3.composite")]
     struct CompositeArtifact {
@@ -1123,7 +986,7 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn owned_validator_matches_jsonschema_for_supported_keyword_corpus() {
+    async fn owned_validator_preserves_supported_keyword_corpus() {
         let schema_text = r#"{
             "type":"object",
             "additionalProperties":false,
@@ -1138,30 +1001,69 @@ mod tests {
         }"#;
         let mut owned = SchemaCatalog::new();
         owned.register_json("probe", parse_json(schema_text).expect("owned schema")).expect("owned compile");
-        let reference_schema: serde_json::Value = serde_json::from_str(schema_text).expect("reference schema");
-        let reference = jsonschema::Validator::new(&reference_schema).expect("reference compile");
         let corpus = [
-            r#"{"n":1}"#,
-            r#"{"n":1.0}"#,
-            r#"{"n":-2,"mode":"a","enabled":true}"#,
-            r#"{"n":7,"nested":{"label":"ok"}}"#,
-            r#"{"n":7,"rank":1.0}"#,
-            r#"{}"#,
-            r#"{"n":1.5}"#,
-            r#"{"n":"1"}"#,
-            r#"{"n":1,"mode":"c"}"#,
-            r#"{"n":1,"rank":1.5}"#,
-            r#"{"n":1,"enabled":0}"#,
-            r#"{"n":1,"extra":true}"#,
-            r#"{"n":1,"nested":{"extra":true}}"#,
-            r#"null"#,
-            r#"[]"#,
+            (r#"{"n":1}"#, true),
+            (r#"{"n":1.0}"#, true),
+            (r#"{"n":-2,"mode":"a","enabled":true}"#, true),
+            (r#"{"n":7,"nested":{"label":"ok"}}"#, true),
+            (r#"{"n":7,"rank":1.0}"#, true),
+            (r#"{}"#, false),
+            (r#"{"n":1.5}"#, false),
+            (r#"{"n":"1"}"#, false),
+            (r#"{"n":1,"mode":"c"}"#, false),
+            (r#"{"n":1,"rank":1.5}"#, false),
+            (r#"{"n":1,"enabled":0}"#, false),
+            (r#"{"n":1,"extra":true}"#, false),
+            (r#"{"n":1,"nested":{"extra":true}}"#, false),
+            (r#"null"#, false),
+            (r#"[]"#, false),
         ];
-        for text in corpus {
+        for (text, expected) in corpus {
             let owned_value = parse_json(text).expect("owned value");
-            let reference_value: serde_json::Value = serde_json::from_str(text).expect("reference value");
-            assert_eq!(owned.validate("probe", &owned_value).is_ok(), reference.is_valid(&reference_value), "validator divergence for {text}");
+            assert_eq!(owned.validate("probe", &owned_value).is_ok(), expected, "unexpected validator outcome for {text}");
         }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn owned_validator_preserves_every_exercised_keyword_family() {
+        let schemas = [
+            r##"{"$defs":{"name":{"type":"string","minLength":2,"maxLength":4}},"type":"object","properties":{"name":{"$ref":"#/$defs/name"}},"required":["name"],"additionalProperties":{"type":"integer"}}"##,
+            r#"{"type":"array","items":{"type":["string","null"]},"minItems":1,"maxItems":3,"uniqueItems":true}"#,
+            r#"{"allOf":[{"type":"number","minimum":0,"maximum":10},{"multipleOf":0.5}],"not":{"const":3.5}}"#,
+            r#"{"anyOf":[{"const":"automatic"},{"type":"integer","exclusiveMinimum":0,"exclusiveMaximum":4}]}"#,
+            r#"{"oneOf":[{"const":"left"},{"const":"right"}],"title":"side","description":"side choice","default":"left","examples":["right"],"readOnly":false,"writeOnly":false,"deprecated":false,"format":"semio-side","x-semio-kind":"choice"}"#,
+        ];
+        let corpora: [&[&str]; 5] = [
+            &[r#"{"name":"ab"}"#, r#"{"name":"abcd","rank":2}"#, r#"{"name":"a"}"#, r#"{"name":"abcde"}"#, r#"{"name":"ok","rank":"2"}"#, r#"{}"#],
+            &[r#"["a"]"#, r#"[null,"b"]"#, r#"[]"#, r#"["a","b","c","d"]"#, r#"["a","a"]"#, r#"[1]"#],
+            &["0", "2.5", "10", "-0.5", "10.5", "2.25", "3.5", r#""2.5""#],
+            &[r#""automatic""#, "1", "3", "0", "4", r#""manual""#],
+            &[r#""left""#, r#""right""#, r#""center""#, "null"],
+        ];
+        let outcomes: [&[bool]; 5] =
+            [&[true, true, false, false, false, false], &[true, true, false, false, false, false], &[true, true, true, false, false, false, false, false], &[true, true, true, false, false, false], &[true, true, false, false]];
+        for ((schema_text, corpus), expected) in schemas.into_iter().zip(corpora).zip(outcomes) {
+            let owned = crate::OwnedJsonSchemaValidator::compile(schema_text).expect("owned compile");
+            for (text, expected) in corpus.iter().zip(expected) {
+                assert_eq!(owned.is_valid_json(text), *expected, "unexpected validator outcome for schema {schema_text} and value {text}");
+            }
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn owned_validator_diagnostics_progress_and_cancellation_are_deterministic() {
+        let validator = crate::OwnedJsonSchemaValidator::compile(r#"{"type":"object","properties":{"n":{"type":"integer"}},"required":["n"],"additionalProperties":false}"#).expect("compile");
+        assert_eq!(validator.validate_json(r#"{"n":"wrong"}"#), Err(SchemaError::Validation("$.n: expected integer".to_string())));
+        assert_eq!(validator.validate_json("{}"), Err(SchemaError::Validation("$: missing required property `n`".to_string())));
+        assert_eq!(validator.validate_json(r#"{"n":1,"z":2}"#), Err(SchemaError::Validation("$: additional property `z` is not allowed".to_string())));
+
+        let progress = validator.validate_json(r#"{"n":2}"#).expect("valid");
+        assert_eq!(progress.visited_nodes, 2);
+        let limited = crate::ValidationControl::new(1);
+        assert_eq!(validator.validate_json_with_control(r#"{"n":2}"#, &limited), Err(SchemaError::LimitExceeded(1)));
+        let cancelled = crate::ValidationControl::default();
+        cancelled.cancel();
+        assert_eq!(validator.validate_json_with_control(r#"{"n":2}"#, &cancelled), Err(SchemaError::Cancelled));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1198,9 +1100,8 @@ mod tests {
         register_artifact_inference_descriptor(ArtifactInferenceDescriptor {
             id: "s.wave3.synthetic.sdl-probe.inference",
             inference: FacetLeaves { rust: "", typescript: "", graphql: "type SdlProbeInference { flag: Boolean }", json_schema: "", proto: "" },
-        })
-        .await;
-        assert!(artifact_inference_descriptor_registered("s.wave3.synthetic.sdl-probe.inference").await);
+        });
+        assert!(artifact_inference_descriptor_registered("s.wave3.synthetic.sdl-probe.inference"));
         let sdl = artifact_inference_graphql_sdl("s.wave3.synthetic.sdl-probe.inference").await.expect("registered inference sdl");
         assert!(sdl.contains("TRANSIENT"), "composed SDL must carry the shared @state preamble");
         assert!(sdl.contains("type SdlProbeInference"));
@@ -1232,7 +1133,7 @@ mod tests {
         let empty = empty_app_facet_leaves().await;
         registry.register(AppSchemaDescriptor {
             id: "s.wave.a3.placeholder",
-            config: empty.clone(),
+            config: empty,
             presence: FacetLeaves {
                 json_schema: r#"{
   "$id": "https://semio.tech/schema/app/placeholder/empty/presence.json",

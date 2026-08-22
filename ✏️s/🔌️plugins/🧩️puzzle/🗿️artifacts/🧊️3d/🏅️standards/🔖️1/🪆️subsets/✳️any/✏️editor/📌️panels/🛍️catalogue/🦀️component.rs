@@ -3,8 +3,10 @@
 //! rows the fixture's `meta.kindCatalogs` declares.
 
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
-use crate::editor::puzzle3d::{puzzle3d_action, Puzzle3dScene};
-use semio_framework_plugin::{Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use crate::editor::puzzle3d::{Puzzle3dScene, PUZZLE3D_PLAY_CONTROLLER_ID};
+use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, HasChildren, Trigger};
+use semio_framework_plugin::{ActionFactory, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_ui_contract as ui;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 
@@ -15,7 +17,7 @@ pub const PUZZLE3D_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-it
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -27,11 +29,11 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Rows
-async fn catalog_entry_label(entry: &Value) -> String {
+fn catalog_entry_label(entry: &Value) -> String {
     entry.get("label").and_then(|value| value.as_str()).or_else(|| entry.get("name").and_then(|value| value.as_str())).or_else(|| entry.get("id").and_then(|value| value.as_str())).unwrap_or("kind").into()
 }
 
-async fn object_kind_vortex_items(entry: &Value) -> Vec<UiTreeItemNode> {
+fn object_kind_vortex_items(entry: &Value) -> Vec<BuiltNode> {
     entry
         .get("vortices")
         .and_then(|value| value.as_array())
@@ -42,29 +44,14 @@ async fn object_kind_vortex_items(entry: &Value) -> Vec<UiTreeItemNode> {
                 .map(|(index, template)| {
                     let vortex_kind = template.get("vortexKind").and_then(|value| value.as_str()).unwrap_or("vortex");
                     let position = template.get("position").cloned().unwrap_or(json!([0.0, 0.0, 0.0]));
-                    UiTreeItemNode {
-                        presence: UiPresence::default(),
-                        id: format!("puzzle3d-kind-vortex.{index}.{vortex_kind}"),
-                        label: Label::data(vortex_kind),
-                        description: Some(position.to_string()),
-                        icon_id: Some("circle-dot".into()),
-                        default_open: None,
-                        action: None,
-                        actions: None,
-                        draggable: None,
-                        drag_data: None,
-                        items: None,
-                        control: None,
-                        dimmed: None,
-                        menu: None,
-                    }
+                    ui::tree_item(vortex_kind).id(format!("puzzle3d-kind-vortex.{index}.{vortex_kind}")).description(position.to_string()).icon("circle-dot").build()
                 })
                 .collect()
         })
         .unwrap_or_default()
 }
 
-async fn object_kind_item(entry: &Value) -> UiTreeItemNode {
+fn object_kind_item(entry: &Value) -> BuiltNode {
     let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind").to_string();
     let mesh_url = entry
         .get("meshUrl")
@@ -73,88 +60,42 @@ async fn object_kind_item(entry: &Value) -> UiTreeItemNode {
         .map(str::to_string)
         .or_else(|| entry.get("representations").and_then(Value::as_array).into_iter().flatten().filter_map(|rep| rep.get("url").and_then(Value::as_str)).find(|url| !url.is_empty()).map(str::to_string));
     let draggable = mesh_url.is_some();
-    UiTreeItemNode {
-        presence: UiPresence::default(),
-        id: kind_id.clone(),
-        label: Label::data(catalog_entry_label(entry)),
-        description: Some(kind_id.clone()),
-        icon_id: Some("box".into()),
-        default_open: Some(false),
-        action: Some(puzzle3d_action("addObjectKind", Some(json!({ "objectKind": kind_id })))),
-        actions: None,
-        draggable: draggable.then_some(true),
-        drag_data: draggable.then(|| {
-            let mut payload = json!({ "objectKind": kind_id });
-            if let Some(url) = mesh_url {
-                payload["meshUrl"] = json!(url);
-            }
-            HashMap::from([(PUZZLE3D_CATALOGUE_DRAG_MIME.to_string(), payload.to_string())])
-        }),
-        items: Some(object_kind_vortex_items(entry)),
-        control: None,
-        dimmed: None,
-        menu: None,
+    let (action, args) = ActionFactory::new(PUZZLE3D_PLAY_CONTROLLER_ID).action("addObjectKind", Some(json!({ "objectKind": kind_id })));
+    let mut builder = ui::tree_item(catalog_entry_label(entry)).id(kind_id.clone()).description(kind_id.clone()).icon("box").default_open(false).children(object_kind_vortex_items(entry));
+    builder = match args {
+        Some(args) => builder.on_with(Trigger::Activate, action, args),
+        None => builder.on(Trigger::Activate, action),
+    };
+    if draggable {
+        let mut payload = json!({ "objectKind": kind_id });
+        if let Some(url) = mesh_url {
+            payload["meshUrl"] = json!(url);
+        }
+        builder = builder.draggable(true).drag_data(HashMap::from([(PUZZLE3D_CATALOGUE_DRAG_MIME.to_string(), payload.to_string())]));
     }
+    builder.build()
 }
 
-async fn catalog_kind_item(entry: &Value, icon_id: &str) -> UiTreeItemNode {
+fn catalog_kind_item(entry: &Value, icon_id: &str) -> BuiltNode {
     let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind").to_string();
-    UiTreeItemNode {
-        presence: UiPresence::default(),
-        id: format!("puzzle3d-kind-entry:{kind_id}"),
-        label: Label::data(catalog_entry_label(entry)),
-        description: Some(kind_id),
-        icon_id: Some(icon_id.into()),
-        default_open: None,
-        action: None,
-        actions: None,
-        draggable: None,
-        drag_data: None,
-        items: None,
-        control: None,
-        dimmed: None,
-        menu: None,
-    }
+    ui::tree_item(catalog_entry_label(entry)).id(format!("puzzle3d-kind-entry:{kind_id}")).description(kind_id).icon(icon_id).build()
 }
 //#endregion 🔖️Rows
 
 //#region 🔖️Render
-pub async fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> UiNode {
+pub fn render(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> BuiltNode {
     let entries = |section: &str| crate::editor::puzzle3d::puzzle3d_catalog_entries(&envelope.fixture, section);
     let object_entries = entries("objects");
     let vortex_entries = entries("vortices");
     let cable_entries = entries("cables");
     let attraction_entries = entries("attractions");
-    UiNode::Tree(UiTreeNode {
-        presence: UiPresence::default(),
-        interaction_domain: Some(crate::editor::puzzle3d::PUZZLE3D_INTERACTION_DOMAIN.into()),
-        sections: vec![
-            UiTreeSectionNode { id: "puzzle3d-play-kinds.objects".into(), label: Some(labels.objects.into()), default_open: Some(false), presence: UiPresence::default(), items: object_entries.iter().map(object_kind_item).collect() },
-            UiTreeSectionNode {
-                id: "puzzle3d-play-kinds.vortices".into(),
-                label: Some(labels.vortices.into()),
-                default_open: Some(false),
-                presence: UiPresence::default(),
-                items: vortex_entries.iter().map(|entry| catalog_kind_item(entry, "circle-dot")).collect(),
-            },
-            UiTreeSectionNode {
-                id: "puzzle3d-play-kinds.cables".into(),
-                label: Some(labels.cables.into()),
-                default_open: Some(false),
-                presence: UiPresence::default(),
-                items: cable_entries.iter().map(|entry| catalog_kind_item(entry, "plug")).collect(),
-            },
-            UiTreeSectionNode {
-                id: "puzzle3d-play-kinds.attractions".into(),
-                label: Some(labels.attractions.into()),
-                default_open: Some(false),
-                presence: UiPresence::default(),
-                items: attraction_entries.iter().map(|entry| catalog_kind_item(entry, "link")).collect(),
-            },
-        ],
-        drop_action: None,
-        menu: None,
-    })
+    PanelTreeBuilder::new("puzzle3d-play-kinds")
+        .section("puzzle3d-play-kinds.objects", Some(labels.objects.as_str().into()), false, object_entries.iter().map(object_kind_item).collect())
+        .section("puzzle3d-play-kinds.vortices", Some(labels.vortices.as_str().into()), false, vortex_entries.iter().map(|entry| catalog_kind_item(entry, "circle-dot")).collect())
+        .section("puzzle3d-play-kinds.cables", Some(labels.cables.as_str().into()), false, cable_entries.iter().map(|entry| catalog_kind_item(entry, "plug")).collect())
+        .section("puzzle3d-play-kinds.attractions", Some(labels.attractions.as_str().into()), false, attraction_entries.iter().map(|entry| catalog_kind_item(entry, "link")).collect())
+        .interaction_domain(crate::editor::puzzle3d::PUZZLE3D_INTERACTION_DOMAIN)
+        .build()
 }
 //#endregion 🔖️Render
 
@@ -166,17 +107,21 @@ mod tests {
     use crate::editor::puzzle3d::terminology::puzzle3d_labels;
     use crate::editor::puzzle3d::{nakagin_fixture, Puzzle3dScene, PUZZLE3D_DEFAULT_UTILITY};
 
-    #[semio_framework_async_macros::async_test]
-    async fn kinds_tree_object_drag_data_carries_object_kind_and_mesh_url() {
+    #[test]
+    fn kinds_tree_object_drag_data_carries_object_kind_and_mesh_url() {
         let envelope = Puzzle3dScene { fixture: nakagin_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() };
         let labels = puzzle3d_labels(&Puzzle3dConfig::default());
         let node = render(&envelope, labels);
-        let tree = match node {
-            UiNode::Tree(tree) => tree,
-            _ => panic!("expected kinds tree"),
-        };
-        let objects = tree.sections.iter().find(|section| section.id == "puzzle3d-play-kinds.objects").expect("objects section");
-        let draggable = objects.items.iter().find(|item| item.draggable == Some(true)).expect("draggable object kind");
+        assert!(matches!(node.component, semio_framework_ui_contract::Component::Tree(_)));
+        let objects = node.children.iter().find(|section| section.key == "puzzle3d-play-kinds.objects").expect("objects section");
+        let draggable = objects
+            .children
+            .iter()
+            .find_map(|item| match &item.component {
+                semio_framework_ui_contract::Component::TreeItem(props) if props.draggable == Some(true) => Some(props),
+                _ => None,
+            })
+            .expect("draggable object kind");
         let drag_data = draggable.drag_data.as_ref().expect("drag data");
         let encoded = drag_data.get(PUZZLE3D_CATALOGUE_DRAG_MIME).expect("catalogue mime");
         let payload: Value = serde_json::from_str(encoded).expect("drag payload json");

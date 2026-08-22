@@ -17,27 +17,34 @@
 
 use std::collections::HashMap;
 
-use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
-use thiserror::Error;
-
 use crate::contract::{ActorKey, CommandEnvelope, CommandOutcome, CommandReceipt, EventRecord, HybridLogicalClock, IdempotencyKey, Notice, PolicyDecision, Principal, ProcessId, Rejection, Revision, Scope};
 use crate::storage::{AuthorityStore, Lease, OutboxEntry};
+use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 
 //#region 🔖️Error
 /// @emoji 💥️ What can go wrong inside a turn that is not a domain [`Rejection`]. A rejection is an
 /// answer the caller asked for; an [`AuthorityError`] is the authority failing to answer at all.
-#[derive(Debug, Error)]
+#[derive(Debug)]
 pub enum AuthorityError {
     /// 🔓️ The activation's fencing lease is no longer held — another epoch owns this actor.
-    #[error("lease lost for the requested actor")]
     LeaseLost,
     /// 👻️ No [`Decider`] is registered for this actor kind on this instance.
-    #[error("unknown actor kind: {0}")]
     UnknownActorKind(String),
     /// 🗄️ The durable store refused or failed the turn.
-    #[error("storage failure: {0}")]
     Storage(String),
 }
+
+impl std::fmt::Display for AuthorityError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::LeaseLost => formatter.write_str("lease lost for the requested actor"),
+            Self::UnknownActorKind(kind) => write!(formatter, "unknown actor kind: {kind}"),
+            Self::Storage(detail) => write!(formatter, "storage failure: {detail}"),
+        }
+    }
+}
+
+impl std::error::Error for AuthorityError {}
 //#endregion 🔖️Error
 
 //#region 🔖️Turn

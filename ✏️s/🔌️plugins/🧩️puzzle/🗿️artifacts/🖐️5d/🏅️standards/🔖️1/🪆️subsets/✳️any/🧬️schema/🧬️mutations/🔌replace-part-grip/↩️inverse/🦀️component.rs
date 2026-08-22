@@ -3,7 +3,7 @@ use crate::artifacts::puzzle5d::mutations::Puzzle5dMutation;
 use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &super::mutation::ReplacePartGrip, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
+pub fn inverse(payload: &super::mutation::ReplacePartGrip, base: &Puzzle5dSnapshot) -> Vec<Puzzle5dMutation> {
     let Some(part) = base.parts.iter().find(|entry| entry.id == payload.part_id) else {
         return Vec::new();
     };

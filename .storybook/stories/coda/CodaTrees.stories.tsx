@@ -14,7 +14,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { OntologyTreeNode, ValidationReport } from "@semio-tech/coda-desktop/renderer";
 import { OntologyTree, ValidationTree } from "@semio-tech/coda-desktop/renderer";
 import type { ComponentType, ReactNode } from "react";

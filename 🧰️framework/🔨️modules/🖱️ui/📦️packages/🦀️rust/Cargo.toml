@@ -19,7 +19,7 @@ path = "📦️glue.rs"
 [features]
 default = []
 # ⌨️ Terminal target: semio-styled scene/cell renderer, wasm-safe. Carries no platform I/O on its own.
-tui = ["dep:unicode-width", "dep:semio-framework-async"]
+tui = ["dep:semio-framework-async"]
 # 🖥️ Native terminal backend for `tui`: raw mode, alt screen, stdin ANSI input decoding.
 tui-terminal = ["tui", "dep:libc", "dep:windows-sys"]
 # 🌐️ wasm-bindgen exports of the tui `WasmHost` for browser hosts (xterm.js); never default.
@@ -36,7 +36,6 @@ wgpu-engine = [
     "dep:winit",
     "dep:wgpu",
     "dep:taffy",
-    "dep:pollster",
     "dep:js-sys",
     "dep:wasm-bindgen",
     "dep:wasm-bindgen-futures",
@@ -45,8 +44,8 @@ wgpu-engine = [
     "dep:semio-framework-geometry",
     "dep:semio-framework-job",
 ]
-# 🧬️ TypeScript mirror for boundary/protocol types on the `wgpu` target's `component` region.
-typegen = ["wgpu", "dep:ts-rs"]
+# 🧬️ Enables the owned TypeScript schema projection for the `wgpu` boundary types.
+typegen = ["wgpu"]
 
 [dependencies]
 ui_styling = { path = "../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
@@ -61,11 +60,9 @@ ui_scene = { path = "../../🎬️scene/📦️packages/🦀️rust", package = 
 semio-framework-geometry = { path = "../../../📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry", optional = true }
 semio-framework-job = { path = "../../../🧵️job/📦️packages/🦀️rust", optional = true }
 semio-framework-async = { path = "../../../⏳️async/📦️packages/🦀️rust", optional = true }
-unicode-width = { version = "0.2.2", optional = true }
 dsl = { path = "../../../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", optional = true }
 serde = { version = "1.0.219", features = ["derive"], optional = true }
 serde_json = { version = "1.0.140", optional = true }
-ts-rs = { version = "10", optional = true }
 # 🖋️ Text shaping/font-fallback (parley) + rasterization (swash) for the `text` region's glyph
 # atlas — versions match what `layout_rs` already resolves in the workspace lockfile (parley
 # pulls fontique 0.5.0 transitively; accessed here via `parley::fontique`, not a direct dep).
@@ -114,7 +111,6 @@ web-sys = { version = "0.3.98", optional = true, features = [
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 wgpu = { version = "27.0.1", default-features = false, features = ["metal", "vulkan", "dx12", "wgsl"], optional = true }
-pollster = { version = "0.4.0", optional = true }
 # 📋️ OS clipboard read/write for `host::clipboard_write_text`/`clipboard_read_text` — pure-Rust X11/
 # Wayland (Linux), NSPasteboard (macOS), Win32 (Windows) backends, no system dev headers required.
 arboard = { version = "3", optional = true }

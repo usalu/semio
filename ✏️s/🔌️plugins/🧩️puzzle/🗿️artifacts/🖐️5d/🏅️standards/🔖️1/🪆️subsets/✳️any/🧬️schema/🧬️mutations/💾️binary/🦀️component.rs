@@ -15,12 +15,12 @@ use protocol::OpBinary;
 use store::{ArtifactEnvelope, ArtifactStore};
 
 /// 📦️ Encodes a `Puzzle5dMutation` to its binary command form.
-pub async fn encode_op(operation: &Puzzle5dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &Puzzle5dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `Puzzle5dMutation` from its binary command form.
-pub async fn decode_op(bytes: &[u8]) -> Result<Puzzle5dMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<Puzzle5dMutation, protocol::ProtocolError> {
     Puzzle5dMutation::decode_op(bytes)
 }
 
@@ -34,16 +34,16 @@ pub type Puzzle5dStore = ArtifactStore<Puzzle5dSnapshot, Puzzle5dMutation>;
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn puzzle5d_document_vcs_replays_granular_operations() {
+    #[test]
+    fn puzzle5d_document_vcs_replays_granular_operations() {
         use crate::artifacts::puzzle5d::mutations::create_part;
         use crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::empty_puzzle5d_snapshot;
         use crate::artifacts::puzzle5d::{Puzzle5dPart, PUZZLE_5D_SCHEMA};
         use store::{create_document_envelope, ArtifactCommand};
 
-        let mut store = Puzzle5dStore::new(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", empty_puzzle5d_snapshot(), None));
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![create_part(Puzzle5dPart { id: "p1".into(), ..Default::default() }, None)], description: None }).expect("apply");
-        let projection = store.snapshot().expect("projection");
+        let mut store = semio_framework::io::resolve_ready(Puzzle5dStore::new(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", empty_puzzle5d_snapshot(), None))).expect("store");
+        semio_framework::io::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![create_part(Puzzle5dPart { id: "p1".into(), ..Default::default() }, None)], description: None })).expect("apply");
+        let projection = semio_framework::io::resolve_ready(store.snapshot()).expect("projection");
         assert_eq!(projection.parts.len(), 1);
         assert_eq!(projection.parts[0].id, "p1");
     }
@@ -64,7 +64,7 @@ mod wire_format_guard {
     use crate::artifacts::puzzle5d::Puzzle5dPart;
     use protocol::OpText;
 
-    async fn ops() -> Vec<Puzzle5dMutation> {
+    fn ops() -> Vec<Puzzle5dMutation> {
         let part = Puzzle5dPart { id: "p1".into(), part_kind: Some("Capsule".into()), ..Default::default() };
         vec![
             create_part(part, Some(0)),
@@ -77,8 +77,8 @@ mod wire_format_guard {
     }
 
     /// ⚖️ Every operation still prints, parses, encodes, and decodes back to an equal value.
-    #[semio_framework_async_macros::async_test]
-    async fn operations_round_trip_text_and_binary() {
+    #[test]
+    fn operations_round_trip_text_and_binary() {
         let operations = ops();
         assert!(!operations.is_empty());
         for operation in &operations {

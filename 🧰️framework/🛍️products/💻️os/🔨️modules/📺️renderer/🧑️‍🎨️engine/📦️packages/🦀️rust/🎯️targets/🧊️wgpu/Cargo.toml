@@ -64,7 +64,6 @@ base64 = "0.22.1"
 image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
 vello = { version = "0.7.0", default-features = false, features = ["wgpu"] }
 winit = { version = "0.30.12", default-features = false, features = ["rwh_06"] }
-pollster = "0.4.0"
 resvg = "0.45.1"
 tiny-skia = "0.11.4"
 usvg = "0.45.1"
@@ -89,12 +88,11 @@ semio-framework-actor = { workspace = true }
 # `TokioHostRuntime` (directory-client HTTP work) — "the global thread budget exists so no component
 # sizes itself per-CPU" (that fn's own doc), now literally one pool object rather than a per-caller
 # sizing formula.
-semio-framework-async = { workspace = true }
+semio-framework-async = { workspace = true, features = ["entrypoint"] }
 blake3 = "1"
-# 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C6 (lane 2-D): `ureq`
-# added alongside the pre-existing `sync` so `os_directory::client::native::NativeDirectoryTransport`
-# (gated `all(feature = "ureq", feature = "sync", not(wasm32))`) compiles — both features already
-# exist on this crate, no new dependency. `tokio`'s own `rt`/`net`/`time` are unified in from the
+# 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C6 (lane 2-D):
+# `os_directory::client::native::NativeDirectoryTransport` is supplied by the OS-kernel feature;
+# the renderer never names its HTTP implementation dependency. `tokio`'s own `rt`/`net`/`time` are unified in from the
 # kernel crate's own `sync` feature (`tokio-tungstenite`'s WS transport needs a real reactor), listed
 # explicitly here too so this crate's own directory-stream background thread doesn't rely on that
 # unification being implicit.
@@ -106,8 +104,6 @@ semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀�
 # module doc describes ("the ONE crate allowed to name tokio").
 semio-framework-os-services = { workspace = true }
 tokio = { version = "1", features = ["sync", "rt", "net", "time"], default-features = false }
-ureq = "2.12.1"
-rfd = "0.15.4"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 getrandom = { version = "0.3.4", features = ["wasm_js"] }
@@ -140,6 +136,3 @@ web-sys = { version = "0.3.98", features = [
     "console",
     "MediaQueryList",
 ] }
-
-[dev-dependencies]
-wasm-bindgen-test = "0.3.56"

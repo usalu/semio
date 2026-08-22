@@ -53,6 +53,18 @@ bun ./📜️script.ts verify dependencies
 bun nx run @semio-tech/framework-trace-rs:test
 ```
 
+## 2026-08-21 current-tree reverification
+
+| Command | Result |
+| --- | --- |
+| `bun nx run @semio-tech/framework-trace-rs:test-quick --skip-nx-cache` | PASS — 13/13 debug |
+| `bun nx run @semio-tech/framework-trace-rs:test-long --skip-nx-cache -- --release` | PASS — 12/12 release; the deliberate overrun test remains quick/debug-only |
+| `cargo clippy -p semio-framework-trace --all-targets -- -D warnings` | PASS |
+| `cargo rustc -p semio-framework-trace --lib --target wasm32-unknown-unknown -- -D warnings` | PASS |
+| `cargo rustc -p semio-framework-trace --lib --target wasm32-wasip2 -- -D warnings` | PASS |
+| `bun ./📜️script.ts verify interactivity` | PASS in DENY mode; one approved entrypoint bridge remains |
+| `bun ./📜️script.ts verify dependencies` | PASS — 209 current versus 238 baseline; no additions |
+
 ## Deliverable index
 
 Phase folder: `📓️p0a-trace-module.md`, `📓️p0b-guardrails.md`, `📝️p0b-audit-baseline.txt`, `📝️p0b-freeze-baseline.txt`, this report.

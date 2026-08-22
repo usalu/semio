@@ -1,0 +1,6 @@
+E0277	🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/../../🎯️sampling/🦀️component.rs	1055	`SplitMix64` is not a future
+E0277	🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/../../🎯️sampling/🦀️component.rs	1211	`geometry::random::Rng` is not a future
+E0277	🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/../../🎯️sampling/🦀️component.rs	1217	`u64` is not a future
+E0277	🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/../../🎯️sampling/🦀️component.rs	1221	`[u64; 4]` is not a future
+E0277	🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/../../🎯️sampling/🦀️component.rs	1227	`[u64; 4]` is not a future
+E0277	🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust/../../🎯️sampling/🦀️component.rs	1234	`geometry::random::Rng` is not a future

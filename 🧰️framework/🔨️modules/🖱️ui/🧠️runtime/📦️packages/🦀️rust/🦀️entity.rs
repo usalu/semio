@@ -22,7 +22,7 @@ use std::cell::RefCell;
 use std::marker::PhantomData;
 use std::rc::{Rc, Weak};
 
-use super::context::{Context, EffectQueues, PendingTask};
+use super::context::{Context, DeferredEffect, EffectQueues, PendingTask};
 use super::tracking::EntityId;
 
 //#region 🔖️Entity
@@ -235,7 +235,7 @@ impl EntityStore {
     /// closure takes `&mut EntityStore` — the caller invokes them at its own safe point, outside any
     /// lease.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn drain_deferred(&mut self) -> Vec<Box<dyn FnOnce(&mut EntityStore)>> {
+    pub fn drain_deferred(&mut self) -> Vec<DeferredEffect> {
         self.effects.defer.drain(..).collect()
     }
 

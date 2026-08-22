@@ -16,7 +16,7 @@ pub struct RemoveSelection {
 /// 🗂️ Each id is looked up against every collection in a fixed precedence (nodes, elements,
 /// materials, sections, supports, load cases, solids, combinations) and removed from the first one
 /// it matches — mirrors the pre-migration `handle_action`'s exact search order.
-pub async fn handle(payload: &RemoveSelection, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+pub fn handle(payload: &RemoveSelection, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
     let mut operations = Vec::new();
     for id in &payload.ids {
@@ -54,16 +54,18 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn remove_selection_covers_solids_3d() {
         let mut app = fem3d_app();
-        dispatch(&mut app, Fem3dCommand::AddSolid(crate::editor::fem3d::commands::add_solid::AddSolid { x: 0.0, y: 0.0, width: 1.0, depth: 1.0, height: 1.0, material_id: "concrete".into(), base_z: None, layers: None, mesh_size: None }));
-        let solid_id = app.snapshot().expect("snapshot").solids[0].id.clone();
-        dispatch(&mut app, Fem3dCommand::RemoveSelection(RemoveSelection { ids: vec![solid_id] }));
-        assert!(app.snapshot().expect("snapshot").solids.is_empty());
+        dispatch(&mut app, Fem3dCommand::AddMaterial(crate::editor::fem3d::commands::add_material::AddMaterial { name: "Concrete".into(), e: 3.0e10, g: 1.25e10 })).await;
+        let material_id = semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot").materials[0].id.clone();
+        dispatch(&mut app, Fem3dCommand::AddSolid(crate::editor::fem3d::commands::add_solid::AddSolid { x: 0.0, y: 0.0, width: 1.0, depth: 1.0, height: 1.0, material_id, base_z: None, layers: None, mesh_size: None })).await;
+        let solid_id = semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot").solids[0].id.clone();
+        dispatch(&mut app, Fem3dCommand::RemoveSelection(RemoveSelection { ids: vec![solid_id] })).await;
+        assert!(semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot").solids.is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn remove_selection_with_unknown_ids_is_a_no_op() {
         let mut app = fem3d_app();
-        dispatch(&mut app, Fem3dCommand::RemoveSelection(RemoveSelection { ids: vec!["missing".into()] }));
-        assert!(app.snapshot().expect("snapshot").nodes.is_empty());
+        dispatch(&mut app, Fem3dCommand::RemoveSelection(RemoveSelection { ids: vec!["missing".into()] })).await;
+        assert!(semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot").nodes.is_empty());
     }
 }

@@ -1,0 +1,37 @@
+warning: hidden lifetime parameters in types are deprecated
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/../../🦀️component.rs:379:21
+    |
+379 |     fn parse(input: ParseStream) -> syn::Result<Self> {
+    |                     ^^^^^^^^^^^ expected lifetime parameter
+    |
+    = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+    = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+    |
+379 |     fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+    |                                ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/../../🦀️component.rs:394:21
+    |
+394 |     fn parse(input: ParseStream) -> syn::Result<Self> {
+    |                     ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+394 |     fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+    |                                ++++
+
+warning: `semio-framework-dispatch-macros` (lib) generated 2 warnings
+   Compiling semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+error: mismatched closing delimiter: `}`
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/📡️spr/📜️history/🦀️component.rs:1335:20
+     |
+1334 |     for _ in 0..actor_count {
+     |                             - closing delimiter possibly meant for this
+1335 |         actors.push(read_id_field(input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?;
+     |                    ^ unclosed delimiter
+1336 |     }
+     |     ^ mismatched closing delimiter
+
+error: could not compile `semio-framework-os-kernel` (lib) due to 1 previous error

@@ -53,7 +53,7 @@ pub async fn draw_play_action(action: &str, args: Option<Value>) -> ActionDescri
 /// 🛠️ An internal (non-palette) action declaration — the pointer/gesture/inspector-bound vocabulary
 /// that is dispatched by the canvas/panels, never surfaced as a standalone command palette entry.
 async fn draw_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> semio_framework_plugin::ActionDefinition {
-    semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new_catalog(id, label, kind) }
+    semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog(id, label, kind) }
 }
 
 /// 🧰️ One canvas utility declaration (id/label/icon reused verbatim from the retired `utilities()` impl).
@@ -295,6 +295,7 @@ pub async fn create_draw_app() -> semio_framework_plugin::AppDefinition {
             .action_with(draw_internal_action("patchLayers", LocalizedLabel::native("Patch Layers", "Ebenen aktualisieren"), ActionKind::Mutation))
             // 🖱️ Internal pointer/gesture vocabulary — commit-time handlers emit operations, the rest are pure View.
             .action_with(draw_internal_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt"), ActionKind::Mutation))
+            .action_interactive_job("canvasPointerDown", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_with(draw_internal_action("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger losgelassen"), ActionKind::Mutation))
             .action_with(draw_internal_action("canvasDoubleClick", LocalizedLabel::native("Canvas Double Click", "Leinwand-Doppelklick"), ActionKind::Mutation))
             .action_with(draw_internal_action("canvasCommitDraft", LocalizedLabel::native("Canvas Commit Draft", "Leinwand-Entwurf übernehmen"), ActionKind::Mutation))

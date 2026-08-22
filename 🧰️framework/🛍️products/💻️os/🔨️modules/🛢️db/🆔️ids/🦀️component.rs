@@ -69,37 +69,28 @@ impl GenerationId {
 //#region 🔖️Errors
 /// @emoji 🚨️ The one error type every `db_*` public fn returns; never leaks `std::io::Error` (or
 /// any other foreign error type) — every crate below `db_artifact` wraps its own errors into this.
-#[derive(thiserror::Error, Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum DbError {
-    #[error("io error: {0}")]
     Io(String),
-    #[error("not found: {0}")]
     NotFound(String),
-    #[error("already exists: {0}")]
     AlreadyExists(String),
-    #[error("invalid argument: {0}")]
     InvalidArgument(String),
-    #[error("limit exceeded: {0}")]
     LimitExceeded(&'static str),
-    #[error("conflict: {0}")]
     Conflict(String),
-    #[error("fenced: expected epoch {expected}, got {actual}")]
-    Fenced { expected: u64, actual: u64 },
-    #[error("stale generation: expected {expected:?}, got {actual:?}")]
-    StaleGeneration { expected: GenerationId, actual: GenerationId },
-    #[error("unavailable: {0}")]
+    Fenced {
+        expected: u64,
+        actual: u64,
+    },
+    StaleGeneration {
+        expected: GenerationId,
+        actual: GenerationId,
+    },
     Unavailable(String),
-    #[error("timeout: {0}")]
     Timeout(String),
-    #[error("corrupt: {0}")]
     Corrupt(String),
-    #[error("closed")]
     Closed,
-    #[error("unauthorized: {0}")]
     Unauthorized(String),
-    #[error("not implemented: {0}")]
     Unimplemented(&'static str),
-    #[error("internal error: {0}")]
     Internal(String),
     /// @emoji ⚖️ `db_artifact::ArtifactEngine::submit`'s outcome-step gate (contract
     /// `MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C9): `policy` rejected the
@@ -108,9 +99,37 @@ pub enum DbError {
     /// carried end-to-end rather than flattened to a string (the one deliberate exception to this
     /// enum's usual protocol-free identity types, since a rejection's whole point is to surface the
     /// graded messages verbatim to the submitter).
-    #[error("submit rejected by merge policy: worst={worst:?}")]
-    Rejected { policy: protocol::MergePolicy, worst: protocol::Severity, messages: Vec<protocol::MutationMessage> },
+    Rejected {
+        policy: protocol::MergePolicy,
+        worst: protocol::Severity,
+        messages: Vec<protocol::MutationMessage>,
+    },
 }
+
+impl std::fmt::Display for DbError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Io(message) => write!(formatter, "io error: {message}"),
+            Self::NotFound(message) => write!(formatter, "not found: {message}"),
+            Self::AlreadyExists(message) => write!(formatter, "already exists: {message}"),
+            Self::InvalidArgument(message) => write!(formatter, "invalid argument: {message}"),
+            Self::LimitExceeded(message) => write!(formatter, "limit exceeded: {message}"),
+            Self::Conflict(message) => write!(formatter, "conflict: {message}"),
+            Self::Fenced { expected, actual } => write!(formatter, "fenced: expected epoch {expected}, got {actual}"),
+            Self::StaleGeneration { expected, actual } => write!(formatter, "stale generation: expected {expected:?}, got {actual:?}"),
+            Self::Unavailable(message) => write!(formatter, "unavailable: {message}"),
+            Self::Timeout(message) => write!(formatter, "timeout: {message}"),
+            Self::Corrupt(message) => write!(formatter, "corrupt: {message}"),
+            Self::Closed => formatter.write_str("closed"),
+            Self::Unauthorized(message) => write!(formatter, "unauthorized: {message}"),
+            Self::Unimplemented(message) => write!(formatter, "not implemented: {message}"),
+            Self::Internal(message) => write!(formatter, "internal error: {message}"),
+            Self::Rejected { worst, .. } => write!(formatter, "submit rejected by merge policy: worst={worst:?}"),
+        }
+    }
+}
+
+impl std::error::Error for DbError {}
 
 impl From<pack::PackError> for DbError {
     /// @emoji 🔀️ `db_wal`/`db_snapshot` sit directly on top of `pack`/`protocol`'s `.spr`/`.spk`

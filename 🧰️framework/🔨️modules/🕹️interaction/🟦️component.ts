@@ -178,7 +178,7 @@ const dedupPreservingOrder = (ids: readonly string[]): string[] => {
   return out;
 };
 
-const expandTarget = (spec: SelectionSpec, topo: DomainTopology, id: string): string[] => {
+const expandTarget = (spec: Pick<SelectionSpec, "transitive">, topo: DomainTopology, id: string): string[] => {
   if (!spec.transitive) return [id];
   const closure = domainTopologyDescendantClosure(topo, id);
   return closure.length === 0 ? [id] : closure;

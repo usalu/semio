@@ -12,7 +12,7 @@ use crate::artifacts::epw::{EpwMutation, EpwSnapshot, STDIO_EPW_DOCUMENT_SCHEMA}
 use crate::editor::epw::modes::edit;
 use crate::editor::epw::modes::edit::windows::main;
 use semio_framework_plugin::{
-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode,
+    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
 };
 use serde::{Deserialize, Serialize};
 use store::EngineHandles;

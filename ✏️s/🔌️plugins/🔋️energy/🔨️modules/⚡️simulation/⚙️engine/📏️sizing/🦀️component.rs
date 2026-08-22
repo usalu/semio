@@ -49,36 +49,62 @@ impl Default for SizingConfig {
 // #endregion 🔖️SizingConfig
 
 // #region 🔖️Sizing
+/// 🧭️ Cursor-owned sizing pass used by interactive simulation finalization.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct SizingBuilder {
+    config: SizingConfig,
+    zone_cursor: usize,
+    equipment_cursor: usize,
+    tables: SizingTables,
+}
+
+impl SizingBuilder {
+    pub fn new(config: SizingConfig) -> Self {
+        Self { config, zone_cursor: 0, equipment_cursor: 0, tables: SizingTables::default() }
+    }
+
+    pub fn is_complete(&self, model: &Model) -> bool {
+        self.zone_cursor >= model.zones.len() && self.equipment_cursor >= model.ideal_loads.len()
+    }
+
+    pub fn step(&mut self, model: &Model) {
+        let factor = self.config.sizing_factor * self.config.safety_factor;
+        if let Some(zone) = model.zones.get(self.zone_cursor) {
+            let area = model.surfaces_for_zone(zone.id).iter().map(|surface| crate::geometry::surface_area_m2(&surface.vertices_m)).sum::<f64>().max(1.0);
+            let heating_delta = (20.0 - self.config.heating_design_day.dry_bulb_max_c).max(0.0);
+            let cooling_delta = (self.config.cooling_design_day.dry_bulb_max_c - 24.0).max(0.0);
+            let heating_load = 0.3 * area * heating_delta * factor;
+            let cooling_load = 0.3 * area * cooling_delta * factor;
+            let ventilation = zone.volume_m3 * 0.5 * CP_DRY_AIR * 1.2 * cooling_delta / 3600.0;
+            self.tables.zone_loads.push(SizingResult { component: format!("{} heating", zone.name), design_load_w: heating_load, design_flow_m3_s: zone.volume_m3 * 0.01 / 3600.0, autosized: true });
+            self.tables.zone_loads.push(SizingResult { component: format!("{} cooling", zone.name), design_load_w: cooling_load + ventilation, design_flow_m3_s: zone.volume_m3 * 0.02 / 3600.0, autosized: true });
+            self.zone_cursor += 1;
+            return;
+        }
+        if let Some(ideal) = model.ideal_loads.get(self.equipment_cursor) {
+            if let Some(zone) = model.zone_by_id(ideal.zone_id) {
+                self.tables.equipment.push(SizingResult { component: format!("IdealLoads {}", zone.name), design_load_w: zone.volume_m3 * 50.0 * factor, design_flow_m3_s: zone.volume_m3 * 0.015 / 3600.0, autosized: true });
+            }
+            self.equipment_cursor += 1;
+        }
+    }
+
+    pub fn finish(self) -> SizingTables {
+        self.tables
+    }
+}
+
 /// 📐️ Sizing manager: compute design loads per zone and equipment.
 pub struct SizingManager;
 
 impl SizingManager {
     /// 📐️ Run sizing pass and populate sizing tables.
     pub fn size(model: &Model, config: &SizingConfig) -> SizingTables {
-        let mut tables = SizingTables::default();
-        let sf = config.sizing_factor * config.safety_factor;
-
-        for zone in &model.zones {
-            let area = model.surfaces_for_zone(zone.id).iter().map(|s| crate::geometry::surface_area_m2(&s.vertices_m)).sum::<f64>().max(1.0);
-
-            let u_avg = 0.3;
-            let delta_t_heat = 20.0 - config.heating_design_day.dry_bulb_max_c;
-            let delta_t_cool = config.cooling_design_day.dry_bulb_max_c - 24.0;
-            let heating_load = u_avg * area * delta_t_heat.max(0.0) * sf;
-            let cooling_load = u_avg * area * delta_t_cool.max(0.0) * sf;
-            let ventilation = zone.volume_m3 * 0.5 * CP_DRY_AIR * 1.2 * delta_t_cool.max(0.0) / 3600.0;
-
-            tables.zone_loads.push(SizingResult { component: format!("{} heating", zone.name), design_load_w: heating_load, design_flow_m3_s: zone.volume_m3 * 0.01 / 3600.0, autosized: true });
-            tables.zone_loads.push(SizingResult { component: format!("{} cooling", zone.name), design_load_w: cooling_load + ventilation, design_flow_m3_s: zone.volume_m3 * 0.02 / 3600.0, autosized: true });
+        let mut builder = SizingBuilder::new(config.clone());
+        while !builder.is_complete(model) {
+            builder.step(model);
         }
-
-        for ils in &model.ideal_loads {
-            if let Some(zone) = model.zone_by_id(ils.zone_id) {
-                tables.equipment.push(SizingResult { component: format!("IdealLoads {}", zone.name), design_load_w: zone.volume_m3 * 50.0 * sf, design_flow_m3_s: zone.volume_m3 * 0.015 / 3600.0, autosized: true });
-            }
-        }
-
-        tables
+        builder.finish()
     }
 
     /// 📐️ Coincident peak across zones.
@@ -99,7 +125,7 @@ mod tests {
     use crate::model::EntityId;
     use crate::model::{Model, Site, Zone};
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn sizes_zone_with_surfaces() {
         let model = Model {
             name: "Test".into(),
@@ -111,7 +137,7 @@ mod tests {
         assert!(!tables.zone_loads.is_empty());
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn sizes_equipment_for_ideal_loads_zone() {
         let model = crate::sim::test_model_single_zone();
         let tables = SizingManager::size(&model, &SizingConfig::default());
@@ -119,13 +145,13 @@ mod tests {
         assert!(tables.equipment[0].design_load_w > 0.0);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn coincident_peak_sums_all_loads() {
         assert!((SizingManager::coincident_peak(&[1000.0, 2000.0, 500.0]) - 3500.0).abs() < 1e-9);
         assert_eq!(SizingManager::coincident_peak(&[]), 0.0);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn non_coincident_peak_takes_maximum() {
         assert!((SizingManager::non_coincident_peak(&[1000.0, 2000.0, 500.0]) - 2000.0).abs() < 1e-9);
         assert_eq!(SizingManager::non_coincident_peak(&[]), 0.0);

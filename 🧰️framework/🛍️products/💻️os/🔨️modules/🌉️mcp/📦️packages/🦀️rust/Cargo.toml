@@ -38,6 +38,7 @@ semio-framework-dispatch-macros = { path = "../../../../../../🔨️modules/�
 # stays framework-free, per D8/`📓️terra-P1a-report.md` §5 — this dependency does not change that.
 semio-framework = { workspace = true }
 semio-framework-async = { workspace = true }
+semio-framework-schema = { path = "../../../../../../🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 # 🎫️ P2-catalog: `LocalizedLabel`/`SurfaceKind` are NOT re-exported at the `semio-framework` crate
 # root (only `IconName`/`Locale`/`Terminology`/`ArtifactDialect` are — `📦️glue.rs` lines 15-16, 91-92);
 # they live in `ui_wgpu::wgpu`, the same crate `🛂️manifest/🦀️component.rs` itself imports them from
@@ -46,14 +47,9 @@ semio-framework-async = { workspace = true }
 # SAME workspace-aliased crate manifest does, under its real Rust name (`semio_framework_ui`) — not a
 # new external dependency, an existing internal one already one hop away.
 semio-framework-ui = { workspace = true, features = ["wgpu"] }
-# 🚧️ Default features enable resolve-http/resolve-file, which fail to compile on wasm32 (same
-# rationale as 🧰️framework/🔨️modules/🧬️schema's own Cargo.toml).
-jsonschema = { version = "0.29.1", default-features = false }
 schemars = "0.8.22"
 serde = { workspace = true }
 serde_json = { workspace = true }
-thiserror = { workspace = true }
-blake3 = "1.8.2"
 # 🌐️ Streamable HTTP transport (P1b) — same version/feature style as 🌎️hub's own Cargo.toml, the
 # repo's other axum+tokio product crate.
 axum = { version = "0.8", features = ["ws"] }
@@ -86,11 +82,6 @@ framework_hash = { path = "../../../../../../🔨️modules/#⃣hash/📦️pack
 semio-framework-plugin-host = { path = "../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
 
 [dev-dependencies]
-tempfile = "3.14"
 # 🔌️ Drives the `🧵️bridge` `BridgeServer` skeleton's websocket upgrade end-to-end in tests — same
 # version hub already uses for its own `os-hub` websocket tests (`🌎️hub/📦️packages/🦀️rust/Cargo.toml`).
 tokio-tungstenite = "0.26"
-# 🧪️ `ServiceExt::oneshot` drives the real `axum::Router` in-process for every HTTP transport test —
-# already in this crate's dependency graph transitively via `axum`; declared directly (util feature
-# only) so tests can `use tower::ServiceExt`.
-tower = { version = "0.5", features = ["util"] }

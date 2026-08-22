@@ -1370,8 +1370,9 @@ pub mod viewer {
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
 mod plugin;
+pub use plugin::TrinityApps;
 #[cfg(feature = "plugin-entry")]
-semio_framework_plugin::plugin_exports!(plugin::plugin);
+semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::TrinityApps);
 
 //#region 📚️Examples
 #[path = "."]

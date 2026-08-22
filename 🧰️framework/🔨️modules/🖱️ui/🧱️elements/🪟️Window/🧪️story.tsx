@@ -12,7 +12,7 @@
 // #endregion 🧲️Header
 
 import { ButtonGroup, ButtonGroupItem, Canvas, createIconComponent, HorizontalWindows, Ribbon, RibbonGroup, RibbonItem, RibbonZone, ToggleGroup, VerticalWindows, Window, type RibbonRow } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "../../🧪️story";
 import { useState } from "react";
 
 // #region 🌊️Window

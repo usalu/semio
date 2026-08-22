@@ -28,9 +28,10 @@
 // #endregion ⚠️Why This Is Not A Plain Path List
 
 // #region 🔌️Adapters
-import { defineConfig, loadConfigFromFile, type UserWorkspaceConfig } from "vite";
 import { globSync } from "node:fs";
 import { dirname } from "node:path";
+import { defineOwnedTestConfig, type OwnedTestProjectConfig } from "./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️build-tooling.ts";
+import { loadOwnedTestProjectConfig } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/🟦️config-tooling.ts";
 // #endregion 🔌️Adapters
 
 // #region 🔍️Discovery
@@ -85,27 +86,25 @@ const discoveredProjects = (
     discoveredConfigPaths.map(async (relPath) => {
       const absPath = `${root}/${relPath}`;
       try {
-        const loaded = await loadConfigFromFile({ command: "serve", mode: "test" }, absPath, dirname(absPath));
+        const loaded = await loadOwnedTestProjectConfig(absPath, dirname(absPath));
         if (!loaded) {
           console.warn(`[🧪️vitest.config.ts] no config export found, skipping: ${relPath}`);
           return null;
         }
-        const config = loaded.config as UserWorkspaceConfig;
         // 🧭️ `loadConfigFromFile` does NOT backfill `root` onto the returned config object
         // even when several project configs rely on Vite's CLI default of "directory
         // containing the config file" (they never set `root:` themselves). Left as `undefined`,
         // Vitest falls back to the WORKSPACE root for that project, silently rebasing its
         // relative `include`/`coverage.include` patterns onto the whole monorepo — turning a
         // 2-file project into an accidental full-repo scan. Backfill explicitly here.
-        config.root ??= dirname(absPath);
-        return config;
+        return { ...loaded, root: loaded.root ?? dirname(absPath) };
       } catch (err) {
         console.warn(`[🧪️vitest.config.ts] failed to load, skipping: ${relPath} -> ${(err as Error).message.split("\n")[0]}`);
         return null;
       }
     }),
   )
-).filter((project): project is UserWorkspaceConfig => project !== null);
+).filter((project): project is OwnedTestProjectConfig => project !== null);
 
 /** 🧭️ `compose/**` keeps non-emoji-prefixed `vite(st)?.config.ts` filenames (a separate,
  * older technology stack — see CLAUDE.md's no-technology-mixing rule), so those pass the
@@ -118,7 +117,7 @@ const discoveredProjects = (
 const composeProjectPaths = ["./compose/client/lib/js/vite.config.ts"];
 // #endregion 🔍️Discovery
 
-export default defineConfig({
+export default defineOwnedTestConfig({
   test: {
     // 🚫️ Without an explicit empty `include`, Vitest's own implicit root/core project
     // additionally collects with its DEFAULT include glob (`**/*.{test,spec}.*`) across

@@ -1,7 +1,7 @@
 //! 👶️ `semio-shard` — MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (P1-process-shards): the `[[bin]]`
 //! `📓️design-runtime.md` §2 names ("in wave P1, the `semio-shard` `[[bin]]` runs over stdio").
 //! Hosts exactly ONE `🧵️shard/🦀️component.rs::ShardLoop`, driven by a real
-//! [`semio_framework_plugin_host::WasmtimeRuntime`] over
+//! [`semio_framework_plugin_host::OwnedRuntime`] over
 //! [`semio_framework_plugin_host::process_transport::StdioTransport`] — the child-process half of
 //! `ProcessTransport`'s duplex link (`../🚚️process-transport/🦀️component.rs`). One process per
 //! shard, one `semio-shard` invocation per process; multiple actors on the SAME shard register on
@@ -20,7 +20,7 @@ use semio_framework::kernel::Budget;
 use semio_framework_actor::ActorId;
 use semio_framework_plugin_host::process_transport::StdioTransport;
 use semio_framework_plugin_host::shard::{ShardLoop, ShardTransports};
-use semio_framework_plugin_host::{GuestRuntime, GuestRuntimes, PackageHash, PackageId, PackageRef, SharedEngineConfig, WasmtimeRuntime};
+use semio_framework_plugin_host::{GuestRuntime, GuestRuntimes, OwnedRuntime, PackageHash, PackageId, PackageRef};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -34,9 +34,7 @@ fn main() {
     // 🎚️ P1f: this process hosts exactly ONE `ShardLoop`, pumped directly on THIS thread (below) —
     // never submitted to `semio_framework_plugin_host::plugin_host_worker_pool()`. That pool's only
     // tenants here are the epoch ticker and `StdioTransport`'s heartbeat sender (two sub-millisecond
-    // periodic jobs), so it needs exactly one worker, not `available_parallelism()-1` — set BEFORE
-    // `WasmtimeRuntime::new` below, the first call that touches the pool (a `OnceLock`, read once).
-    std::env::set_var("SEMIO_PLUGIN_HOST_WORKER_COUNT", "1");
+    // periodic jobs), so it needs exactly one worker, not `available_parallelism()-1`.
     let args: Vec<String> = std::env::args().collect();
     let [_, wasm_path, package_id, actor_id_arg] = args.as_slice() else {
         eprintln!("[semio-shard] usage: semio-shard <component.wasm> <package-id> <actor-id>");
@@ -49,10 +47,7 @@ fn main() {
 
     // 👶️ host-dedyn: `fn main` (E3) is this process's thread root — every async startup step below
     // crosses the sync↔async boundary via its own `block_on`, same bridge the pump loop uses.
-    let runtime = Arc::new(GuestRuntimes::Wasmtime(semio_framework_async::block_on(WasmtimeRuntime::new(SharedEngineConfig::default())).unwrap_or_else(|error| {
-        eprintln!("[semio-shard] engine init failed: {error}");
-        std::process::exit(1);
-    })));
+    let runtime = Arc::new(GuestRuntimes::Owned(OwnedRuntime::new()));
     let bytes = std::fs::read(wasm_path).unwrap_or_else(|error| {
         eprintln!("[semio-shard] read {wasm_path}: {error}");
         std::process::exit(1);

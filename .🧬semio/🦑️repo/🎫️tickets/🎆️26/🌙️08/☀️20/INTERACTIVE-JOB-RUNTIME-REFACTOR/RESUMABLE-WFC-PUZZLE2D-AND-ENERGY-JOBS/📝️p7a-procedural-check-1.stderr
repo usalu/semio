@@ -402,3 +402,79 @@
    Compiling typst-macros v0.14.2
     Checking smol_str v0.2.2
     Checking winnow v1.0.3
+    Checking cursor-icon v1.2.0
+   Compiling io-lifetimes v2.0.4
+    Checking az v1.3.0
+    Checking glidesort v0.1.2
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+   Compiling wasmtime-internal-unwinder v47.0.3
+   Compiling io-lifetimes v3.0.1
+    Checking qcms v0.3.0
+   Compiling thiserror v1.0.69
+    Checking typst-assets v0.14.2
+    Checking typed-arena v2.0.2
+    Checking pollster v0.4.0
+    Checking lazy_static v1.5.0
+    Checking dpi v0.1.2
+    Checking toml_parser v1.1.2+spec-1.1.0
+    Checking wast v253.0.0
+    Checking typst-library v0.14.2
+    Checking gltf v1.4.1
+    Checking parley v0.5.0
+   Compiling ar_archive_writer v0.5.1
+    Checking arboard v3.6.1
+    Checking skrifa v0.37.0
+   Compiling wasm-metadata v0.247.0
+    Checking semio-framework-actor v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust)
+    Checking semio-framework-ui-scene v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust)
+   Compiling wit-parser v0.252.0
+    Checking hayro-font v0.3.0
+   Compiling wasmtime-internal-fiber v47.0.3
+   Compiling wasmtime-internal-jit-debug v47.0.3
+    Checking taffy v0.9.2
+    Checking moxcms v0.7.11
+   Compiling thiserror-impl v1.0.69
+    Checking dirs-sys-next v0.1.2
+    Checking toml_datetime v0.7.5+spec-1.1.0
+    Checking serde_spanned v1.1.1
+    Checking fixedbitset v0.4.2
+   Compiling leb128 v0.2.7
+    Checking toml_writer v1.1.2+spec-1.1.0
+   Compiling wasmtime-internal-cranelift v47.0.3
+   Compiling wit-bindgen-rust v0.57.1
+   Compiling io-extras v0.19.0
+   Compiling wasmtime-internal-cache v47.0.3
+    Checking uuid v1.23.4
+   Compiling wasmtime-internal-component-macro v47.0.3
+    Checking directories-next v2.0.0
+    Checking petgraph v0.6.5
+   Compiling wast v35.0.2
+    Checking toml v0.9.12+spec-1.1.0
+    Checking hayro-interpret v0.4.0
+    Checking debugid v0.8.0
+   Compiling wasmtime-internal-wit-bindgen v47.0.3
+   Compiling wit-component v0.247.0
+   Compiling psm v0.1.31
+    Checking semio-framework-mesh-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust)
+    Checking zstd v0.13.3
+    Checking wat v1.253.0
+   Compiling wit-bindgen-core v0.57.1
+    Checking cranelift-frontend v0.134.3
+    Checking cranelift-native v0.134.3
+   Compiling wasmtime v47.0.3
+    Checking itertools v0.14.0
+    Checking euclid v0.22.14
+    Checking svg_fmt v0.4.5
+   Compiling icu_segmenter_data v1.5.1
+   Compiling wit-bindgen-rust-macro v0.57.1
+   Compiling cap-primitives v4.0.2
+   Compiling heapless v0.8.0
+    Checking fs-set-times v0.20.3
+    Checking guillotiere v0.6.2
+    Checking wasm-compose v0.252.0
+   Compiling witx v0.9.1
+   Compiling vello_shaders v0.7.0
+    Checking fxprof-processed-profile v0.8.1
+    Checking semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+error: could not compile `semio-framework` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...

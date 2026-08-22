@@ -100,7 +100,7 @@ impl Default for Puzzle3dArtifact {
 
 impl Puzzle3dArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> Puzzle3dSnapshot {
+    pub fn to_snapshot(&self) -> Puzzle3dSnapshot {
         Puzzle3dSnapshot {
             schema: self.schema.clone(),
             domain: self.domain.clone(),
@@ -113,7 +113,7 @@ impl Puzzle3dArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub async fn from_snapshot(snapshot: Puzzle3dSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: Puzzle3dSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             domain: snapshot.domain,
@@ -158,7 +158,7 @@ impl Puzzle3dArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: Puzzle3dSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: Puzzle3dSnapshot) {
         self.schema = snapshot.schema;
         self.domain = snapshot.domain;
         self.meta = snapshot.meta;
@@ -172,7 +172,7 @@ impl Puzzle3dArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.puzzle.puzzle3d` — twenty handcrafted schema leaves.
-pub async fn puzzle3d_artifact_schema_descriptor() -> artifact_schema::ArtifactSchemaDescriptor {
+pub fn puzzle3d_artifact_schema_descriptor() -> artifact_schema::ArtifactSchemaDescriptor {
     artifact_schema::ArtifactSchemaDescriptor {
         id: "s.puzzle.puzzle3d",
         artifact: artifact_schema::FacetLeaves {
@@ -228,10 +228,10 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<Puzzle3dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self { snapshot: <Puzzle3dSnapshot as store::ArtifactDsl>::parse_dsl(text)?, diagnostics: Vec::new() })
         }
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<Puzzle3dSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self { snapshot: <Puzzle3dSnapshot as store::ArtifactPack>::decode_pack(bytes)?, diagnostics: Vec::new() })
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
@@ -344,11 +344,11 @@ pub struct BrushHostRules {
     pub(crate) door_capsule_max_abs_y: f64,
 }
 
-async fn default_door_capsule_min_abs_x() -> f64 {
+fn default_door_capsule_min_abs_x() -> f64 {
     0.9
 }
 
-async fn default_door_capsule_max_abs_y() -> f64 {
+fn default_door_capsule_max_abs_y() -> f64 {
     1.6
 }
 
@@ -643,23 +643,39 @@ pub struct BrushCollisionFreeResult {
     pub resume_candidate_index: usize,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FillBuildPreview {
+    #[serde(default)]
+    pub operation: u64,
+    #[serde(default)]
+    pub base_revision: u64,
     pub sequence: u64,
     pub generation: u64,
     pub stage: String,
     pub target_vortex_full_id: Option<String>,
     pub candidate_object_kind_id: Option<String>,
+    #[serde(default)]
+    pub candidate_ghost: Option<BrushPreviewState>,
     pub broad_phase_object_ids: Vec<String>,
     pub current_pair_object_id: Option<String>,
+    #[serde(default)]
+    pub colliding_object_ids: Vec<String>,
     pub sample_cursor: usize,
     pub inside_both: usize,
     pub last_sample: Option<[f32; 3]>,
+    #[serde(default)]
+    pub collision_samples: Vec<[f32; 3]>,
     pub rejection_reason: Option<String>,
     pub target_cursor: usize,
     pub candidate_cursor: usize,
     pub accepted_count: usize,
+    #[serde(default)]
+    pub accepted_prefix: Vec<BrushPlacePayload>,
+    #[serde(default)]
+    pub search_count: u64,
+    #[serde(default)]
+    pub rejected_count: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -697,7 +713,7 @@ pub(crate) fn puzzle3d_vortex_full_id(object_id: &str, vortex_id: &str) -> Strin
     }
 }
 
-pub async fn empty_puzzle3d_snapshot() -> Puzzle3dSnapshot {
+pub fn empty_puzzle3d_snapshot() -> Puzzle3dSnapshot {
     Puzzle3dSnapshot::default()
 }
 //#endregion 🔖️PrecomputeModel
@@ -729,7 +745,7 @@ pub enum Puzzle3dEngineCommand {
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl protocol::OpText for Puzzle3dEngineCommand {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -740,7 +756,7 @@ impl protocol::OpText for Puzzle3dEngineCommand {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -749,10 +765,10 @@ impl protocol::OpText for Puzzle3dEngineCommand {
 }
 
 impl protocol::OpBinary for Puzzle3dEngineCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
@@ -779,7 +795,7 @@ pub(crate) mod testkit {
 
     pub(crate) const DEFAULT_OVERLAP_BUDGET: f64 = 0.02;
 
-    pub(crate) async fn unit_cube_mesh_buffers() -> (Vec<f32>, Vec<u32>) {
+    pub(crate) fn unit_cube_mesh_buffers() -> (Vec<f32>, Vec<u32>) {
         (
             vec![-1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0],
             vec![0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6, 0, 4, 5, 0, 5, 1, 2, 6, 7, 2, 7, 3, 0, 3, 7, 0, 7, 4, 1, 5, 6, 1, 6, 2],
@@ -788,7 +804,7 @@ pub(crate) mod testkit {
 
     /// 🧊️ Same box as `unit_cube_mesh_buffers` but with outward-facing (CCW-from-outside) winding, needed
     /// for tests that rely on `CollisionShape::contains_point` actually reporting interior points as inside.
-    pub(crate) async fn outward_wound_unit_cube_mesh_buffers() -> (Vec<f32>, Vec<u32>) {
+    pub(crate) fn outward_wound_unit_cube_mesh_buffers() -> (Vec<f32>, Vec<u32>) {
         (
             vec![-1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0],
             vec![0, 2, 1, 0, 3, 2, 4, 5, 6, 4, 6, 7, 0, 5, 4, 0, 1, 5, 2, 7, 6, 2, 3, 7, 0, 7, 3, 0, 4, 7, 1, 6, 5, 1, 2, 6],
@@ -797,7 +813,7 @@ pub(crate) mod testkit {
 
     /// 🏗️ One `Host` object with a single free `port-a` vortex — the smallest scene that still schedules
     /// both precompute lanes.
-    pub(crate) async fn single_object_scene_json() -> String {
+    pub(crate) fn single_object_scene_json() -> String {
         let scene = SceneConfig {
             fixture: Fixture {
                 attractions: vec![],
@@ -835,7 +851,7 @@ pub(crate) mod testkit {
 
     /// 🪣️ One synthetic already-planned fill object / attraction / placement payload, for the fill-plan
     /// prefix-stability laws in the app's own precompute session tests.
-    pub(crate) async fn fill_plan_object(id: &str) -> FixtureObject {
+    pub(crate) fn fill_plan_object(id: &str) -> FixtureObject {
         FixtureObject {
             id: id.to_string(),
             object_kind: Some("Placed".to_string()),
@@ -849,11 +865,11 @@ pub(crate) mod testkit {
         }
     }
 
-    pub(crate) async fn fill_plan_attraction(index: usize) -> AttractionProps {
+    pub(crate) fn fill_plan_attraction(index: usize) -> AttractionProps {
         AttractionProps { id: format!("a{index}"), attracting: format!("p{index}:v0"), attracted: format!("p{}:v0", index + 1), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 }
     }
 
-    pub(crate) async fn fill_plan_payload(index: usize) -> BrushPlacePayload {
+    pub(crate) fn fill_plan_payload(index: usize) -> BrushPlacePayload {
         BrushPlacePayload { target_vortex_full_id: format!("p{index}:v0"), object_kind_id: "Placed".to_string(), source_vortex_index: 0, origin: [index as f64, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None }
     }
 }
@@ -866,8 +882,8 @@ mod precompute_model_tests {
 
     /// 🔗️ Keeps the example fixture's scene-authored kind catalog in sync with the compile-time
     /// `puzzle3d-default` manifest.
-    #[semio_framework_async_macros::async_test]
-    async fn concrete_forest_kind_catalog_matches_puzzle3d_default_manifest() {
+    #[test]
+    fn concrete_forest_kind_catalog_matches_puzzle3d_default_manifest() {
         let fixture = crate::artifacts::puzzle3d::dsl::parse_dsl(crate::artifacts::puzzle3d::dsl::PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT).expect("concrete-forest example parses as dsl");
         let catalogs: KindCatalogBundle = serde_json::from_value(serde_json::to_value(&fixture.meta.kind_catalogs).unwrap()).unwrap();
         let manifest = graph::manifest::manifest_by_id("puzzle3d-default").expect("puzzle3d-default manifest must be registered");
@@ -886,14 +902,14 @@ mod precompute_model_tests {
     }
 
     /// 🪪️ A vortex id that already carries its owner's prefix is passed through untouched.
-    #[semio_framework_async_macros::async_test]
-    async fn vortex_full_id_prefixes_only_bare_ids() {
+    #[test]
+    fn vortex_full_id_prefixes_only_bare_ids() {
         assert_eq!(puzzle3d_vortex_full_id("host", "v0"), "host:v0");
         assert_eq!(puzzle3d_vortex_full_id("host", "other:v0"), "other:v0");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn brush_preview_state_converts_into_a_placement_payload() {
+    #[test]
+    fn brush_preview_state_converts_into_a_placement_payload() {
         let preview = BrushPreviewState {
             target_vortex_full_id: "host:v0".into(),
             object_kind_id: "Kind".into(),

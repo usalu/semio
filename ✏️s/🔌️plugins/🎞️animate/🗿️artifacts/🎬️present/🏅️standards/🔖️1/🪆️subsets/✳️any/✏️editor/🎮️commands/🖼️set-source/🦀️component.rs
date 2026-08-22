@@ -1,9 +1,11 @@
 //! 🖼️ 🖼️ Animate present app commands command — `set-source`.
 
+#![allow(clippy::result_large_err)]
+
 use crate::artifacts::present::mutations::replace_source::mutation::ReplaceSource;
 use crate::artifacts::present::mutations::replace_tiles::mutation::ReplaceTiles;
 use crate::artifacts::present::op::PresentMutation;
-use crate::artifacts::present::{default_present_snapshot, FigureTileFrame, FigureTileSource, PresentSnapshot};
+use crate::artifacts::present::{FigureTileSource, PresentSnapshot};
 use crate::editor::animate::config::{PresentConfig, PresentConfigMutation};
 use crate::editor::animate::{interaction_select_effect, PresentDispatchCtx};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -16,7 +18,7 @@ pub struct SetSource {
     pub source: FigureTileSource,
 }
 
-pub async fn handle(payload: &SetSource, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+pub fn handle(payload: &SetSource, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     let deck = doc.snapshot;
     let (deck_source, _) = crate::artifacts::present::present_working_scene(deck);
     let replaced = payload.source.src != deck_source.src;
@@ -33,20 +35,21 @@ pub async fn handle(payload: &SetSource, doc: &ArtifactView<'_, PresentSnapshot>
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::present::{default_present_snapshot, FigureTileFrame};
     use crate::editor::animate::commands::{set_active_example, set_frame};
     use crate::editor::animate::testkit::{dispatch, present_app};
     use crate::editor::animate::PresentCommand;
 
     #[semio_framework_async_macros::async_test]
     async fn set_source_replaces_source_and_clears_tiles_when_src_changes() {
-        let mut app = present_app();
-        dispatch(&mut app, PresentCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 2, columns: 2 }));
-        assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.len(), 4);
+        let mut app = present_app().await;
+        dispatch(&mut app, PresentCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 2, columns: 2 })).await;
+        assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().await.expect("projection")).1.len(), 4);
         let mut source = crate::artifacts::present::default_figure_tile_source();
         source.src = "/new-figure.png".into();
         source.kind = "image".into();
-        dispatch(&mut app, PresentCommand::SetSource(SetSource { source }));
-        let deck = app.snapshot().expect("projection");
+        dispatch(&mut app, PresentCommand::SetSource(SetSource { source })).await;
+        let deck = app.snapshot().await.expect("projection");
         let (deck_source, deck_tiles) = crate::artifacts::present::present_working_scene(&deck);
         assert_eq!(deck_source.src, "/new-figure.png");
         assert_eq!(deck_source.kind, "image");
@@ -55,19 +58,19 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn set_source_with_same_src_keeps_existing_tiles() {
-        let mut app = present_app();
-        dispatch(&mut app, PresentCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 2, columns: 2 }));
-        let (mut source, _) = crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection"));
+        let mut app = present_app().await;
+        dispatch(&mut app, PresentCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 2, columns: 2 })).await;
+        let (mut source, _) = crate::artifacts::present::present_working_scene(&app.snapshot().await.expect("projection"));
         source.kind = "figure".into();
-        dispatch(&mut app, PresentCommand::SetSource(SetSource { source }));
-        assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.len(), 4, "unchanged src does not clear tiles");
+        dispatch(&mut app, PresentCommand::SetSource(SetSource { source })).await;
+        assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().await.expect("projection")).1.len(), 4, "unchanged src does not clear tiles");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn set_frame_updates_source_frame() {
-        let mut app = present_app();
-        dispatch(&mut app, PresentCommand::SetFrame(set_frame::SetFrame { frame: FigureTileFrame { x: 0.1, y: 0.2, width: 0.3, height: 0.4 } }));
-        let frame = crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).0.frame;
+        let mut app = present_app().await;
+        dispatch(&mut app, PresentCommand::SetFrame(set_frame::SetFrame { frame: FigureTileFrame { x: 0.1, y: 0.2, width: 0.3, height: 0.4 } })).await;
+        let frame = crate::artifacts::present::present_working_scene(&app.snapshot().await.expect("projection")).0.frame;
         assert_eq!(frame.x, 0.1);
         assert_eq!(frame.y, 0.2);
         assert_eq!(frame.width, 0.3);
@@ -82,11 +85,11 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn set_active_example_demo_emits_a_reset_effect() {
         use semio_framework_plugin::Effect;
-        let mut app = present_app();
-        dispatch(&mut app, PresentCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 2, columns: 2 }));
-        let deck = app.snapshot().expect("projection");
-        let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView::new(&deck, &history);
+        let mut app = present_app().await;
+        dispatch(&mut app, PresentCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 2, columns: 2 })).await;
+        let deck = app.snapshot().await.expect("projection");
+        let history = semio_framework_plugin::HistoryView::empty().await;
+        let doc = ArtifactView::new(&deck, &history).await;
         let cfg_snapshot = PresentConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let mut ctx = PresentDispatchCtx { selected_ids: Vec::new() };
@@ -101,8 +104,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn set_active_example_unknown_id_is_a_no_op() {
         let deck = default_present_snapshot();
-        let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView::new(&deck, &history);
+        let history = semio_framework_plugin::HistoryView::empty().await;
+        let doc = ArtifactView::new(&deck, &history).await;
         let cfg_snapshot = PresentConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let mut ctx = PresentDispatchCtx { selected_ids: Vec::new() };

@@ -3,7 +3,7 @@ use crate::artifacts::puzzle3d::mutations::Puzzle3dMutation;
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(_payload: &super::mutation::ChangeDomain, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
+pub fn inverse(_payload: &super::mutation::ChangeDomain, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
     vec![crate::artifacts::puzzle3d::mutations::change_domain::mutation::change_domain(base.domain.clone())]
 }
 //#endregion 🔖️Inverse

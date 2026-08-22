@@ -15,7 +15,6 @@ fn is_default<T: Default + PartialEq>(value: &T) -> bool {
 /// 🖌️ The chrome treatment a renderer paints a component with — independent of [`Tone`] (which color
 /// role) and [`Emphasis`] (how prominent).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum Variant {
     #[default]
@@ -29,7 +28,6 @@ pub enum Variant {
 /// `StyleSpec.size` (`"md"`); no dedicated component-size ramp exists in tokens.json yet — see the
 /// packet report.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum SizeToken {
     Xs,
@@ -44,7 +42,6 @@ pub enum SizeToken {
 /// package actually ships (`compact`, `touch`). `Standard` is the deliberate default occupying the gap
 /// between them — no dedicated token for the middle case exists yet.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum Density {
     Compact,
@@ -58,7 +55,6 @@ pub enum Density {
 /// `warning`, `info`, `success`). `Neutral` is the default: no explicit accent, inherit the
 /// surrounding surface/text color.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum Tone {
     #[default]
@@ -74,7 +70,6 @@ pub enum Tone {
 
 /// 🔆️ Visual prominence, orthogonal to [`Variant`] and [`Tone`].
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum Emphasis {
     Subtle,
@@ -87,7 +82,6 @@ pub enum Emphasis {
 /// renderer resolves every field against the active theme; this struct only names the tokens. Each
 /// field is omitted from the wire at its default, so a default-styled node costs nothing to encode.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct StyleSpec {
     #[serde(default, skip_serializing_if = "is_default")]

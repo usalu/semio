@@ -79,7 +79,7 @@ impl ArtifactViewer for NoteViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_note_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_note_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(NOTE_DIALECT).document(["semio", "note"]).icon_id("note").mode_def(view::definition()).default_mode_id(view::NOTE_VIEW_MODE_VIEW).window_kind_def(composite::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest

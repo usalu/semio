@@ -463,7 +463,7 @@ fn try_parse_bracket_paren(chars: &[char], start: usize) -> Option<((usize, usiz
 fn try_parse_link(chars: &[char], start: usize) -> Option<(MdInline, usize)> {
     let ((text_start, text_end), url, title, consumed) = try_parse_bracket_paren(chars, start)?;
     let text: String = chars[text_start..text_end].iter().collect();
-    Some((MdInline::Link { text: Box::pin(parse_inline(&text)), url, title }, consumed))
+    Some((MdInline::Link { text: parse_inline(&text), url, title }, consumed))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -537,7 +537,7 @@ pub fn parse_inline(text: &str) -> Vec<MdInline> {
             }
         }
         if chars[i] == '[' {
-            if let Some((link, consumed)) = Box::pin(try_parse_link(&chars, i)) {
+            if let Some((link, consumed)) = try_parse_link(&chars, i) {
                 if !buf.is_empty() {
                     nodes.push(MdInline::Text { text: std::mem::take(&mut buf) });
                 }
@@ -571,7 +571,7 @@ pub fn parse_inline(text: &str) -> Vec<MdInline> {
                 if !buf.is_empty() {
                     nodes.push(MdInline::Text { text: std::mem::take(&mut buf) });
                 }
-                nodes.push(MdInline::Strong { inlines: Box::pin(parse_inline(&inner)) });
+                nodes.push(MdInline::Strong { inlines: parse_inline(&inner) });
                 i += consumed;
                 continue;
             }
@@ -581,7 +581,7 @@ pub fn parse_inline(text: &str) -> Vec<MdInline> {
                 if !buf.is_empty() {
                     nodes.push(MdInline::Text { text: std::mem::take(&mut buf) });
                 }
-                nodes.push(MdInline::Emphasis { inlines: Box::pin(parse_inline(&inner)) });
+                nodes.push(MdInline::Emphasis { inlines: parse_inline(&inner) });
                 i += consumed;
                 continue;
             }

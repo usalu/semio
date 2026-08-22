@@ -2,41 +2,53 @@ syntax = "proto3";
 package semio.app.puzzle.puzzle2d;
 message Puzzle2dConfig {
   // @state config
-  repeated string selected_ids = 1;
+  double camera_x = 1;
   // @state config
-  double camera_x = 2;
+  double camera_y = 2;
   // @state config
-  double camera_y = 3;
+  double camera_zoom = 3;
   // @state config
-  double camera_zoom = 4;
+  map<string, string> lod_mode_by_pane = 4;
   // @state config
-  map<string, string> lod_mode_by_pane = 5;
+  map<string, string> engagement_input_by_pane = 5;
   // @state config
-  map<string, string> engagement_input_by_pane = 6;
+  uint64 brush_candidate_index = 6;
   // @state config
-  uint64 brush_candidate_index = 7;
+  repeated string brush_candidates = 7;
   // @state config
-  repeated string brush_candidates = 8;
+  string brush_candidate_source_handle_id = 8;
   // @state config
-  string brush_candidate_source_handle_id = 9;
+  uint32 fill_count = 9;
   // @state config
-  uint32 fill_count = 10;
+  optional bytes fill_job_checkpoint = 10;
   // @state config
-  string selection_method = 11;
+  uint64 fill_job_operation = 11;
   // @state config
-  bool grid_snap_enabled = 12;
+  uint64 fill_job_generation = 12;
   // @state config
-  double grid_factor = 13;
+  uint64 fill_job_seed = 13;
   // @state config
-  double suggestion_offset = 14;
+  uint64 fill_job_applied_count = 14;
   // @state config
-  map<string, double> node_kind_weights = 15;
+  optional string fill_job_preview = 15;
   // @state config
-  map<string, double> handle_kind_weights = 16;
+  bool grid_snap_enabled = 16;
   // @state config
-  map<string, string> active_utility_by_window_id = 17;
+  double grid_factor = 17;
   // @state config
-  string locale = 18;
+  double suggestion_offset = 18;
   // @state config
-  string terminology = 19;
+  map<string, double> node_kind_weights = 19;
+  // @state config
+  map<string, double> handle_kind_weights = 20;
+  // @state config
+  map<string, string> active_utility_by_window_id = 21;
+  // @state config
+  string locale = 22;
+  // @state config
+  string terminology = 23;
+  // @state config
+  uint64 example_load_generation = 24;
+  // @state config
+  optional string example_load_id = 25;
 }

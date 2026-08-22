@@ -34,8 +34,8 @@ fn expected_after() -> PresentSnapshot {
 
 /// ▶️ A wholly unsatisfiable `delete-tiles` leaves the document byte-identical to the committed
 /// `after`.
-#[semio_framework_async_macros::async_test]
-async fn rejection_leaves_the_document_at_the_committed_after() {
+#[test]
+fn rejection_leaves_the_document_at_the_committed_after() {
     let base = before();
     let snapshot = apply_present_mutation(&base, &mutation()).expect("an empty diff still applies cleanly");
     assert_eq!(snapshot, expected_after(), "delete-tiles/rejects-when-every-addressed-tile-is-missing: applied state differs from committed after-snapshot");
@@ -45,8 +45,8 @@ async fn rejection_leaves_the_document_at_the_committed_after() {
 /// 🚫️ Every addressed id is missing, so the threshold is crossed and the whole plural delete is one
 /// Error `mutation.target-missing` whose target lists the collection followed by EVERY missing id,
 /// in payload order — never the partial-success Warning.
-#[semio_framework_async_macros::async_test]
-async fn a_total_miss_is_one_error_listing_every_missing_id() {
+#[test]
+fn a_total_miss_is_one_error_listing_every_missing_id() {
     let produced = <PresentMutation as protocol::Mutation<PresentSnapshot>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &PresentDiff::default(), "a wholly rejecting delete-tiles must carry the identity diff");
     let messages = produced.messages();
@@ -58,8 +58,8 @@ async fn a_total_miss_is_one_error_listing_every_missing_id() {
 }
 
 /// 🚷 The diff is DECLARED absent, not an invented empty patch.
-#[semio_framework_async_macros::async_test]
-async fn the_committed_diff_is_declared_absent() {
+#[test]
+fn the_committed_diff_is_declared_absent() {
     assert!(DIFF_ABSENT.is_empty(), "🔺️diff/🚫️component.absent must be an empty marker, not a stand-in patch");
     let produced = <PresentMutation as protocol::Mutation<PresentSnapshot>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &PresentDiff::default(), "delete-tiles/rejects-when-every-addressed-tile-is-missing: a rejection must produce no delta at all");
@@ -67,8 +67,8 @@ async fn the_committed_diff_is_declared_absent() {
 
 /// 🔣️ Both committed snapshots and the committed mutation are already canonical — the payload's
 /// `ids` really carries two entries, which is what makes the threshold guard meaningful here.
-#[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+#[test]
+fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: PresentSnapshot = serde_json::from_str(text).expect("snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
@@ -83,8 +83,8 @@ async fn committed_json_is_canonical() {
 
 /// 🎯️ The declared rejection — status, code and variadic path — is exactly what the diff builder
 /// emits.
-#[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+#[test]
+fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("rejected"), "delete-tiles/rejects-when-every-addressed-tile-is-missing declares a rejected outcome");
     let produced = <PresentMutation as protocol::Mutation<PresentSnapshot>>::diff(&mutation(), &before());
@@ -97,16 +97,16 @@ async fn declared_outcome_holds() {
 
 /// ↩️ `delete-tiles`' inverse is BASE-derived and emits ONE `create-tile` per removed tile, so a
 /// total miss yields an EMPTY plan — not an empty `delete-tiles`, and not one step per requested id.
-#[semio_framework_async_macros::async_test]
-async fn inverse_of_a_total_miss_is_an_empty_plan() {
+#[test]
+fn inverse_of_a_total_miss_is_an_empty_plan() {
     let inverse = inverse_present_mutation(&before(), &mutation());
     assert!(inverse.is_empty(), "delete-tiles has nothing to re-create when every addressed tile is absent, got {inverse:?}");
 }
 
 /// 🪪️ The fixture is bound to `delete-tiles`' own PLURAL descriptor — a distinct verb row from the
 /// singular `delete-tile`, not an overload of it — and to its variadic address.
-#[semio_framework_async_macros::async_test]
-async fn semantics_bind_this_fixture_to_delete_tiles() {
+#[test]
+fn semantics_bind_this_fixture_to_delete_tiles() {
     let semantics = <PresentMutation as protocol::SemanticMutation<PresentSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("delete", "tiles", "delete-tiles", "DeletedTiles"), "the fixture must be bound to the plural delete-tiles descriptor");
     assert_eq!(<PresentMutation as protocol::SemanticMutation<PresentSnapshot>>::target(&mutation()), vec!["tiles".to_string(), "t-alpha".to_string(), "t-omega".to_string()], "delete-tiles addresses the collection then every id it was given");

@@ -65,6 +65,7 @@ import {
 import { createHash } from "node:crypto";
 import { existsSync, linkSync, mkdirSync, chmodSync, chownSync, copyFileSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
+import { builtinModules } from "node:module";
 import { dirname, extname, join, relative, resolve } from "node:path";
 import { createServer } from "node:net";
 import { stat } from "node:fs/promises";
@@ -812,6 +813,177 @@ function rustWarningTargetScope(root: string, target: string | undefined): { pac
   return { packages: ["semio-framework-actor", "semio-framework", "semio-framework-os-kernel", ...pluginCrateNames(root)], scopeArgs: ["--all-targets"], targetArgs: [] };
 }
 
+//#region 🎯️ToolJobCoverage
+type ToolJobCoverageReport = {
+  macroHostFiles: number;
+  macroInvocations: number;
+  commandRows: number;
+  uniqueCommandRows: number;
+  duplicateRows: { file: string; id: string }[];
+  fixtureMacroHostFiles: number;
+  fixtureMacroInvocations: number;
+  fixtureCommandRows: number;
+  boundedRows: number;
+  batchOnlyRows: number;
+  forbiddenRows: number;
+  deletedRows: number;
+  productionFactories: number;
+  productionRegistrations: number;
+  productionDispatches: number;
+  failures: string[];
+};
+
+/** 🎯️ Finds the matching Rust brace while ignoring quoted strings and comments. */
+function toolJobRustBlock(source: string, open: number): { body: string; end: number } | undefined {
+  let depth = 0;
+  let string = false;
+  let lineComment = false;
+  let blockComment = 0;
+  let escaped = false;
+  for (let index = open; index < source.length; index += 1) {
+    const char = source[index]!;
+    const next = source[index + 1] ?? "";
+    if (lineComment) {
+      if (char === "\n") lineComment = false;
+      continue;
+    }
+    if (blockComment > 0) {
+      if (char === "/" && next === "*") {
+        blockComment += 1;
+        index += 1;
+      } else if (char === "*" && next === "/") {
+        blockComment -= 1;
+        index += 1;
+      }
+      continue;
+    }
+    if (string) {
+      if (escaped) escaped = false;
+      else if (char === "\\") escaped = true;
+      else if (char === '"') {
+        string = false;
+      }
+      continue;
+    }
+    if (char === "/" && next === "/") {
+      lineComment = true;
+      index += 1;
+      continue;
+    }
+    if (char === "/" && next === "*") {
+      blockComment = 1;
+      index += 1;
+      continue;
+    }
+    if (char === '"') string = true;
+    else if (char === "{") depth += 1;
+    else if (char === "}" && --depth === 0) return { body: source.slice(open + 1, index), end: index + 1 };
+  }
+  return undefined;
+}
+
+/** 🎯️ Phase-8 source/runtime contract census used by `verify interactivity tool-jobs`. */
+function toolJobCoverageRun(root: string): ToolJobCoverageReport {
+  const macroFiles = new Set<string>();
+  const fixtureMacroFiles = new Set<string>();
+  const commandRows: { file: string; id: string }[] = [];
+  const fixtureCommandRows: { file: string; id: string }[] = [];
+  let macroInvocations = 0;
+  let fixtureMacroInvocations = 0;
+  const fixtureHost = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs";
+  for (const file of policyAllRustFiles(root)) {
+    const source = policyReadFileSafe(root, file);
+    const invocation = /^\s*(?:[A-Za-z_][A-Za-z0-9_]*::)*app_commands!\s*\{/gm;
+    let match: RegExpExecArray | null;
+    while ((match = invocation.exec(source))) {
+      const open = source.indexOf("{", match.index);
+      const block = toolJobRustBlock(source, open);
+      if (!block) break;
+      const fixture = file === fixtureHost;
+      (fixture ? fixtureMacroFiles : macroFiles).add(file);
+      if (fixture) fixtureMacroInvocations += 1;
+      else macroInvocations += 1;
+      const rows = /^\s*"([^"]+)"(?:\s+as\s+"[^"]+")?\s*=>/gm;
+      let row: RegExpExecArray | null;
+      while ((row = rows.exec(block.body))) (fixture ? fixtureCommandRows : commandRows).push({ file, id: row[1]! });
+      invocation.lastIndex = block.end;
+    }
+  }
+  const duplicateRows: { file: string; id: string }[] = [];
+  const seenRows = new Set<string>();
+  for (const row of commandRows) {
+    const key = `${row.file}\0${row.id}`;
+    if (seenRows.has(key)) duplicateRows.push(row);
+    seenRows.add(key);
+  }
+  const intentionalWriterDuplicates = duplicateRows.filter((row) => row.file.includes("✏️s/🔌️plugins/✒️writer/") && row.id === "setEditorSetting");
+  const dispositions = new Map<string, "BatchOnlyPendingRewrite" | "ForbiddenFromUi" | "Deleted">();
+  for (const file of macroFiles) {
+    const source = policyReadFileSafe(root, file);
+    const explicit = /\.action_interactive_job\(\s*"([^"]+)"\s*,\s*(?:semio_framework_plugin::)?InteractiveJobClassification::(BatchOnlyPendingRewrite|ForbiddenFromUi|Deleted)\s*\)/g;
+    let match: RegExpExecArray | null;
+    while ((match = explicit.exec(source))) dispositions.set(`${file}\0${match[1]!}`, match[2]! as "BatchOnlyPendingRewrite" | "ForbiddenFromUi" | "Deleted");
+  }
+  const batchOnlyRows = commandRows.filter((row) => dispositions.get(`${row.file}\0${row.id}`) === "BatchOnlyPendingRewrite").length;
+  const forbiddenRows = commandRows.filter((row) => dispositions.get(`${row.file}\0${row.id}`) === "ForbiddenFromUi").length;
+  const deletedRows = commandRows.filter((row) => dispositions.get(`${row.file}\0${row.id}`) === "Deleted").length;
+  const actionBus = policyReadFileSafe(root, "🧰️framework/🔨️modules/🎯️action-bus/🦀️component.rs");
+  const platform = policyReadFileSafe(root, "🧰️framework/🔨️modules/🖥️platform/🦀️component.rs");
+  const glue = policyReadFileSafe(root, "🧰️framework/📦️packages/🦀️rust/📦️glue.rs");
+  const plugin = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs");
+  const manifest = policyReadFileSafe(root, "🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs");
+  const failures: string[] = [];
+  for (const id of ["runReconstruction", "retryStage", "runStage", "canvasPointerDown", "duplicateWidget", "setTryValue"]) {
+    if (!commandRows.some((row) => row.id === id && dispositions.get(`${row.file}\0${row.id}`) === "BatchOnlyPendingRewrite")) failures.push(`opaque reducer ${id} is not explicitly batch-only pending rewrite`);
+  }
+  if (macroFiles.size < 50) failures.push(`expected at least 50 production app_commands! host files, found ${macroFiles.size}`);
+  if (commandRows.length < 771) failures.push(`expected at least 771 production generated command rows, found ${commandRows.length}`);
+  if (fixtureMacroFiles.size !== 1 || fixtureMacroInvocations !== 2 || fixtureCommandRows.length !== 4) failures.push(`expected 2 parser-fixture invocations / 4 rows in one test host, found ${fixtureMacroFiles.size} host(s), ${fixtureMacroInvocations} invocation(s), ${fixtureCommandRows.length} row(s)`);
+  if (duplicateRows.length !== 2 || intentionalWriterDuplicates.length !== 2) failures.push(`production duplicate rows must be exactly the three intentional Writer setEditorSetting variants, found ${JSON.stringify(duplicateRows)}`);
+  if (!plugin.includes("pub const TOOL_JOB_IDS: &'static [&'static str] = &[$($id),*];")) failures.push("app_commands! does not generate the exact ToolCommandCatalog row list");
+  if ((plugin.match(/const TOOL_JOB_IDS: &'static \[&'static str\] = Self::TOOL_JOB_IDS;/g) ?? []).length !== 6) failures.push("app_commands! does not publish every generated row list through both typed catalog traits");
+  if (!actionBus.includes("pub struct ActionBus {") || !actionBus.includes("trait ErasedToolJobFactory")) failures.push("ActionBus is not a heterogeneous erased-factory registry");
+  if (actionBus.includes("NoToolJobFactories") || actionBus.includes("NoInteractiveJobs") || platform.includes("NoToolJobFactories") || glue.includes("NoToolJobFactories")) failures.push("a hard-coded no-factory sentinel remains in production framework wiring");
+  if (!platform.includes("pub action_bus: ActionBus,") || !platform.includes("ActionBus::production()")) failures.push("Platform does not own the shared production heterogeneous ActionBus");
+  if (!plugin.includes("ActionBus::production()") || !plugin.includes(".register_once(AppCommandJobFactory::<A>")) failures.push("VcsArtifactApp activation does not register its typed command factory in the shared production bus");
+  if (!plugin.includes("<A::Command as ::protocol::OpBinary>::TOOL_JOB_IDS")) failures.push("production factory registration is not generated from the typed command schema");
+  if (!plugin.includes("ToolOperationSpec::new(") || !plugin.includes(".tool_jobs\n                .dispatch(")) failures.push("typed app commands do not dispatch a typed ToolOperationSpec through ActionBus");
+  const innerStart = plugin.indexOf("async fn dispatch_typed_command_inner");
+  const innerOpen = innerStart < 0 ? -1 : plugin.indexOf("{", innerStart);
+  const inner = innerOpen < 0 ? undefined : toolJobRustBlock(plugin, innerOpen);
+  if (!inner || inner.body.includes("A::handle(&command")) failures.push("dispatch_typed_command_inner still bypasses the job bus with a direct A::handle call");
+  if (!inner?.body.includes("run_on_worker_async") || inner.body.includes("run_to_completion") || inner.body.includes("thread_local!")) failures.push("production typed dispatch is not exclusively worker-scheduled with a Send-capable result channel");
+  const forKindStart = manifest.indexOf("pub fn for_kind(kind: ActionKind)");
+  const forKindOpen = forKindStart < 0 ? -1 : manifest.indexOf("{", forKindStart);
+  const forKind = forKindOpen < 0 ? undefined : toolJobRustBlock(manifest, forKindOpen);
+  if (!forKind || forKind.body.includes("InteractiveJobClassification::Migrated")) failures.push("ActionSemantics::for_kind still blanket-classifies declarations as Migrated");
+  if (!manifest.includes("pub fn bounded_catalog(") || !manifest.includes("definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;")) failures.push("bounded reducers lack an explicit declaration constructor");
+  if (!actionBus.includes("duplicate_key_inside_one_factory_is_rejected_atomically")) failures.push("factory key ownership lacks an atomic duplicate/bijection test");
+  if (!plugin.includes("generated_tool_job_catalog_is_an_exact_bijection_with_rows")) failures.push("generated command rows lack an exact catalog bijection test");
+  if (!plugin.includes("activated_tool_factory_keys_are_an_exact_bijection_with_migrated_declarations")) failures.push("activation lacks an exact migrated-declaration/factory-key bijection test");
+  if (!plugin.includes("platform.action_bus.dispatch_count()") || !plugin.includes("typed command traverses the shared production bus")) failures.push("activation lacks an executable Platform/shared-bus traversal proof");
+  if (!plugin.includes("bounded_reducer_registration_is_rejected_when_its_actual_step_exceeds_eight_milliseconds")) failures.push("bounded reducers lack executable actual-step watchdog coverage");
+  return {
+    macroHostFiles: macroFiles.size,
+    macroInvocations,
+    commandRows: commandRows.length,
+    uniqueCommandRows: seenRows.size,
+    duplicateRows,
+    fixtureMacroHostFiles: fixtureMacroFiles.size,
+    fixtureMacroInvocations,
+    fixtureCommandRows: fixtureCommandRows.length,
+    boundedRows: commandRows.length - batchOnlyRows - forbiddenRows - deletedRows,
+    batchOnlyRows,
+    forbiddenRows,
+    deletedRows,
+    productionFactories: (plugin.match(/impl<A: ArtifactApp> semio_framework::ToolJobFactory/g) ?? []).length,
+    productionRegistrations: (plugin.match(/\.register_once\(AppCommandJobFactory::<A>/g) ?? []).length,
+    productionDispatches: (plugin.match(/\.tool_jobs\s*\.dispatch\(/g) ?? []).length,
+    failures,
+  };
+}
+//#endregion 🎯️ToolJobCoverage
+
 /** 🧪️Aggregates lint + generated-catalog freshness + region/host-contract script lints (`gate`, the cheap pre-`ticket_close` step every refactor session runs), plus the full test suite for the top-level `verify` verb. */
 export class VerifyScript extends Script {
   async run(segments: string[]): Promise<void> {
@@ -825,6 +997,10 @@ export class VerifyScript extends Script {
     }
     if (segments[0] === "rust-warnings") {
       this.runRustWarnings(segments.slice(1));
+      return;
+    }
+    if (segments[0] === "interactivity" && segments[1] === "tool-jobs") {
+      this.runToolJobCoverage(segments.slice(2));
       return;
     }
     if (segments[0] === "interactivity") {
@@ -940,6 +1116,17 @@ export class VerifyScript extends Script {
     console.log("[verify interactivity] DENY mode — clean.");
   }
 
+  /** 🎯️ Permanent Phase-8 generated inventory, factory-registration, and no-bypass gate. */
+  private runToolJobCoverage(args: string[]): void {
+    const formatIndex = args.indexOf("--format");
+    const format = formatIndex >= 0 ? args[formatIndex + 1] : "text";
+    if (format !== "text" && format !== "json") throw new Error(`[verify interactivity tool-jobs] unsupported format ${JSON.stringify(format)}.`);
+    const report = toolJobCoverageRun(this.root);
+    if (format === "json") console.log(JSON.stringify(report, null, 2));
+    else console.log(`[verify interactivity tool-jobs] production-hosts=${report.macroHostFiles} production-invocations=${report.macroInvocations} production-rows=${report.commandRows} fixture-hosts=${report.fixtureMacroHostFiles} fixture-invocations=${report.fixtureMacroInvocations} fixture-rows=${report.fixtureCommandRows} bounded=${report.boundedRows} batch-only=${report.batchOnlyRows} forbidden=${report.forbiddenRows} deleted=${report.deletedRows} unique=${report.uniqueCommandRows} factories=${report.productionFactories} registrations=${report.productionRegistrations} dispatches=${report.productionDispatches}`);
+    if (report.failures.length > 0) throw new Error(`[verify interactivity tool-jobs] ${report.failures.join("; ")}`);
+  }
+
   /**
    * 🔒️ `verify dependencies [write-baseline]` — the Phase 0 dependency freeze. With no argument,
    * compares the current third-party dependency inventory (Rust `Cargo.toml` + JS `package.json`,
@@ -948,6 +1135,32 @@ export class VerifyScript extends Script {
    * current tree — the mechanism for deliberately approving a new dependency.
    */
   private runDependencyFreeze(args: string[]): void {
+    if (args[0] === "parity") {
+      if (args[1] !== "js") throw new Error("[verify dependencies] parity currently supports only the 'js' ecosystem.");
+      const formatIndex = args.indexOf("--format");
+      const format = formatIndex >= 0 ? args[formatIndex + 1] : "text";
+      if (format !== "text" && format !== "json") throw new Error(`[verify dependencies parity js] unsupported format ${JSON.stringify(format)}.`);
+      const report = dependencyJsParity(this.root);
+      if (format === "json") console.log(JSON.stringify(report, null, 2));
+      else console.log(`[verify dependencies parity js] manifests=${report.manifests} external-rows=${report.externalRows} evidenced=${report.evidencedRows} unowned=${report.unownedRows.length} undeclared-imports=${report.undeclaredImports.length}`);
+      if (report.undeclaredImports.length > 0) {
+        if (format === "text") for (const finding of report.undeclaredImports.slice(0, 100)) console.error(`  ${finding.file}:${finding.line}: ${finding.dependency} is not declared by ${finding.manifest}`);
+        throw new Error(`[verify dependencies parity js] ${report.undeclaredImports.length} external import(s) have no declaration in their owning package.`);
+      }
+      if (args.includes("--no-unowned-rows") && report.unownedRows.length > 0) {
+        if (format === "text") for (const finding of report.unownedRows.slice(0, 100)) console.error(`  ${finding.manifest}: ${finding.dependency} has no owned-scope source/config/script evidence`);
+        throw new Error(`[verify dependencies parity js] ${report.unownedRows.length} direct external row(s) have no owned-scope evidence.`);
+      }
+      console.log("[verify dependencies parity js] clean.");
+      return;
+    }
+    if (args[0] === "list") {
+      const ecosystem = args[1] as DependencyEcosystem | undefined;
+      if (ecosystem && ecosystem !== "rust" && ecosystem !== "js") throw new Error("[verify dependencies] list ecosystem must be 'rust' or 'js'.");
+      const current = dependencyFreezeCurrentThirdParty(this.root).filter((entry) => !ecosystem || entry.ecosystem === ecosystem);
+      console.log(JSON.stringify(current, null, 2));
+      return;
+    }
     if (args[0] === "write-baseline") {
       const baseline = dependencyFreezeWriteBaseline(this.root);
       console.log(`[verify dependencies] wrote ${DEPENDENCY_BASELINE_REL_PATH}: ${baseline.entries.length} third-party dependenc(y/ies) at commit ${baseline.commit}.`);
@@ -981,7 +1194,7 @@ export class VerifyScript extends Script {
     runCmd("bun", ["nx", "run", "@semio-tech/framework-renderer-react:lint"], { cwd: this.root, ...orchestratorBudgetOpts() });
     runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:plugin", "lint"], { cwd: this.root, ...orchestratorBudgetOpts() });
     runCmd("bun", ["nx", "run", "@semio-tech/ui-styling-tokens:check-no-px"], { cwd: this.root, ...orchestratorBudgetOpts() });
-    console.log("[verify] framework ts-rs binding freshness…");
+    console.log("[verify] framework owned-schema binding freshness…");
     runCmd("bun", ["nx", "run", "@semio-tech/framework-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] ui locale/terminology axes freshness…");
     runCmd("bun", ["nx", "run", "@semio-tech/ui-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
@@ -1315,7 +1528,7 @@ const INTERACTIVITY_AUDIT_RUNTIME_SANCTIONED_ROOTS = ["🧰️framework/🔨️m
  * Phase 3 packet P3c, "forbidden-call audit turns from warn to deny" per the master plan). ONE LINE
  * to flip.
  */
-const INTERACTIVITY_AUDIT_SEVERITY: "warn" | "deny" = "warn";
+const INTERACTIVITY_AUDIT_SEVERITY: "warn" | "deny" = "deny";
 
 type InteractivityAuditCategory = "blocking-bridge" | "sync-fs" | "sync-net" | "sync-clipboard" | "sync-process" | "sync-db" | "thread-pool";
 
@@ -1335,6 +1548,7 @@ const INTERACTIVITY_AUDIT_PATTERNS: readonly InteractivityAuditPatternDef[] = [
   { category: "thread-pool", re: /\b(?:std::)?thread::spawn\s*\(/, label: "thread::spawn(", scope: "runtime-repo-wide" },
   { category: "thread-pool", re: /\b(?:std::)?thread::Builder\b/, label: "thread::Builder", scope: "runtime-repo-wide" },
   { category: "thread-pool", re: /\b(?:std::)?thread::scope\s*\(/, label: "thread::scope(", scope: "runtime-repo-wide" },
+  { category: "thread-pool", re: /\bWorkerPool::new\s*\(/, label: "WorkerPool::new(", scope: "runtime-repo-wide" },
   { category: "thread-pool", re: /\brayon::/, label: "rayon::", scope: "runtime-repo-wide" },
   { category: "thread-pool", re: /\btokio::runtime::Builder\b/, label: "tokio::runtime::Builder", scope: "runtime-repo-wide" },
 ];
@@ -1356,6 +1570,14 @@ type InteractivityAllowlistEntry = { file: string; lineHint: number; pattern: "b
  */
 const INTERACTIVITY_AUDIT_ALLOWLIST: readonly InteractivityAllowlistEntry[] = [
   {
+    file: "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️bin.rs",
+    lineHint: 15,
+    pattern: "block_on",
+    reason: "Native process entry point — the single owned async driver for scale and headless smoke modes; never called by renderer/UI callbacks.",
+    phase: "PERMANENT",
+    inScope: true,
+  },
+  {
     file: "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️bin.rs",
     lineHint: 255,
     pattern: "block_on",
@@ -1371,14 +1593,6 @@ const INTERACTIVITY_AUDIT_ALLOWLIST: readonly InteractivityAllowlistEntry[] = [
     phase: "PERMANENT (test-only)",
     inScope: true,
     expectedNeverToMatch: true,
-  },
-  {
-    file: "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🦀️component.rs",
-    lineHint: 605,
-    pattern: "run_blocking",
-    reason: "CORRECTED PATH: the master ticket's anchor (…/🛎️services/📦️packages/🦀️rust/🦀️component.rs) does not exist; the real file is …/🛎️services/🦀️component.rs (no 📦️packages/🦀️rust segment). `ComputeScheduler::run_blocking` (line 605, `pub async fn run_blocking<T,R>`) and its production call sites become job submissions in Phase 1 (P1b).",
-    phase: "Phase 1 (P1b) — becomes job submission",
-    inScope: false, // 🛎️services/ is not under a current UI-reachable root; its thread creation is nevertheless scanned repo-wide.
   },
   {
     file: "🧰️framework/🔨️modules/⏳️async/✨️macros/🦀️component.rs",
@@ -1404,7 +1618,16 @@ function interactivityIsRuntimeSanctioned(relPath: string): boolean {
 
 /** ⏱️True for authored runtime sources; build scripts, fixtures, test trees, ticket scratch, and compose never execute in an interactive product process. */
 function interactivityIsRuntimeSource(relPath: string): boolean {
-  return !relPath.startsWith("compose/") && !relPath.startsWith(".🧬semio/") && !relPath.includes("/🧫️fixtures/") && !relPath.includes("/🧪️tests/") && !relPath.endsWith("/build.rs");
+  return (
+    !relPath.startsWith("compose/") &&
+    !relPath.startsWith(".🧬semio/") &&
+    !relPath.includes("/🧫️fixtures/") &&
+    !relPath.includes("/🧪️tests/") &&
+    !relPath.includes("/tests/") &&
+    !relPath.includes("/benches/") &&
+    !relPath.includes("/examples/") &&
+    !relPath.endsWith("/build.rs")
+  );
 }
 
 /** ⏱️Masks line and nested block comments after literals have been masked, preserving block depth across lines. */
@@ -1439,13 +1662,40 @@ function interactivityMaskComments(raw: string, initialDepth: number): { code: s
   return { code, depth };
 }
 
+/** 🧪️Brace-spans of any free item guarded by a `cfg` expression containing `test`. */
+function interactivityCfgTestItemSpans(lines: readonly string[]): PolicyModSpan[] {
+  const spans: PolicyModSpan[] = [];
+  const stack: { startLine: number; depth: number }[] = [];
+  let pendingStart: number | undefined;
+  let depth = 0;
+  lines.forEach((raw, i) => {
+    const codeOnly = policyMaskLiterals(raw).replace(/\/\/.*$/, "");
+    if (/#\[cfg\([^\]]*\btest\b[^\]]*\)\]/.test(raw)) pendingStart = i + 1;
+    if (pendingStart !== undefined && i + 1 > pendingStart && !/^\s*#\[/.test(raw)) {
+      const openCount = (codeOnly.match(/\{/g) ?? []).length;
+      if (openCount > 0) {
+        stack.push({ startLine: pendingStart, depth });
+        pendingStart = undefined;
+      } else if (/;\s*$/.test(codeOnly)) {
+        pendingStart = undefined;
+      }
+    }
+    depth += (codeOnly.match(/\{/g) ?? []).length - (codeOnly.match(/\}/g) ?? []).length;
+    while (stack.length > 0 && depth <= stack[stack.length - 1]!.depth) {
+      const top = stack.pop()!;
+      spans.push({ name: "cfg(test)", startLine: top.startLine, endLine: i + 1 });
+    }
+  });
+  return spans;
+}
+
 /** ⏱️Scans one file's lines for `patterns`, skipping `#[cfg(test)] mod … { … }` bodies — matches this repo's own R4 precedent that a test module is a sanctioned executor/blocking entry point, and keeps the audit signal free of unit-test noise unrelated to the UI-thread interactivity goal. */
 function interactivityScanFile(repoRoot: string, relPath: string, patterns: readonly InteractivityAuditPatternDef[]): InteractivityFinding[] {
   const content = policyReadFileSafe(repoRoot, relPath);
   if (!content) return [];
   const findings: InteractivityFinding[] = [];
   const lines = content.split(/\r?\n/);
-  const testSpans = policyTestModSpans(lines);
+  const testSpans = [...policyTestModSpans(lines), ...interactivityCfgTestItemSpans(lines)];
   let blockCommentDepth = 0;
   lines.forEach((raw, i) => {
     const lineNo = i + 1;
@@ -1531,6 +1781,10 @@ function dependencyParseWorkspaceDeps(repoRoot: string): Map<string, { path?: st
   for (let i = 0; i < lines.length; i += 1) {
     const trimmed = lines[i]!.trim();
     if (!trimmed || trimmed.startsWith("#")) continue;
+    if (trimmed.startsWith("[[")) {
+      inSection = false;
+      continue;
+    }
     const sectionMatch = trimmed.match(/^\[([^\]]+)\]$/);
     if (sectionMatch) {
       inSection = sectionMatch[1] === "workspace.dependencies";
@@ -1573,6 +1827,10 @@ function dependencyParseCargoToml(repoRoot: string, relPath: string, workspaceDe
   for (let i = 0; i < lines.length; i += 1) {
     const trimmed = lines[i]!.trim();
     if (!trimmed || trimmed.startsWith("#")) continue;
+    if (trimmed.startsWith("[[")) {
+      currentSection = null;
+      continue;
+    }
     const sectionMatch = trimmed.match(/^\[([^\]]+)\]$/);
     if (sectionMatch) {
       const depMatch = sectionMatch[1]!.match(DEPENDENCY_CARGO_SECTION_RE)?.[1] as CargoDepSection | undefined;
@@ -1620,6 +1878,313 @@ function dependencyParseCargoToml(repoRoot: string, relPath: string, workspaceDe
 
 type DependencyJsEntry = { name: string; version: string; kind: DependencyKind; internal: boolean };
 
+type DependencyJsParityEvidence = { file: string; line: number; kind: "config" | "import" | "script" };
+type DependencyJsParityRow = { dependency: string; manifest: string; scope: string; evidence: DependencyJsParityEvidence[] };
+type DependencyJsParityImport = { dependency: string; file: string; line: number; manifest: string };
+type DependencyJsParityReport = { manifests: number; externalRows: number; evidencedRows: number; unownedRows: DependencyJsParityRow[]; undeclaredImports: DependencyJsParityImport[] };
+
+const DEPENDENCY_JS_SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs", ".css", ".mdx"]);
+const DEPENDENCY_JS_BUILTIN_PREFIXES = ["node:", "bun:"];
+const DEPENDENCY_JS_BUILTINS = new Set(builtinModules.flatMap((name) => [name, name.replace(/^node:/, "")]));
+
+/** 🔎️ Resolves source ownership for a JavaScript manifest. A technology package owns its taxonomy unit; a nested target does too when no canonical technology manifest exists, and otherwise owns only its target directory. */
+function dependencyJsOwnershipScope(manifest: string, manifests: readonly string[]): string {
+  const marker = "/📦️packages/🟦️typescript/";
+  const markerIndex = manifest.indexOf(marker);
+  if (markerIndex >= 0) {
+    const taxonomyScope = manifest.slice(0, markerIndex);
+    const canonicalManifest = `${taxonomyScope}${marker}package.json`;
+    if (manifest === canonicalManifest || !manifests.includes(canonicalManifest)) return taxonomyScope;
+  }
+  const directory = dirname(manifest);
+  return directory === "." ? "" : directory;
+}
+
+/** 🔎️ Discovers JavaScript/config sources under the same exclusions as the dependency freeze. */
+function dependencyDiscoverJsSourceFiles(repoRoot: string): string[] {
+  const found: string[] = [];
+  const walk = (relDir: string): void => {
+    let entries: ReturnType<typeof readdirSync>;
+    try {
+      entries = readdirSync(join(repoRoot, relDir), { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const child = relDir ? `${relDir}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) {
+        if ((POLICY_SKIP_DIRS.has(entry.name) && entry.name !== ".storybook") || entry.name === "compose" || entry.name === ".🧬semio" || entry.name === ".🦑️repo") continue;
+        walk(child);
+      } else if (entry.name !== "package.json" && (DEPENDENCY_JS_SOURCE_EXTENSIONS.has(extname(entry.name)) || dependencyJsIsConfigFile(child))) {
+        found.push(child);
+      }
+    }
+  };
+  walk("");
+  return found.sort();
+}
+
+/** 🔧️ Recognizes executable or package-loading configuration without scanning arbitrary JSON fixtures as dependency evidence. */
+function dependencyJsIsConfigFile(file: string): boolean {
+  const name = file.slice(file.lastIndexOf("/") + 1);
+  return name === "nx.json" || name === "project.json" || /^tsconfig(?:\.[^.]+)*\.json$/u.test(name) || /(?:^|\/)\.storybook\//u.test(file) || /(?:^|[.\-🧰️⚙️])config\.[cm]?[jt]sx?$/u.test(name) || name === ".dependency-cruiser.cjs";
+}
+
+function dependencyJsPackageName(specifier: string): string {
+  if (specifier.startsWith("@")) return specifier.split("/").slice(0, 2).join("/");
+  return specifier.split("/", 1)[0]!;
+}
+
+function dependencyJsIsPackageName(name: string): boolean {
+  return /^(?:@[A-Za-z0-9][A-Za-z0-9._-]*\/)?[A-Za-z0-9][A-Za-z0-9._-]*$/u.test(name);
+}
+
+type DependencyJsToken = { kind: "identifier" | "string" | "punctuation"; value: string; line: number };
+
+function dependencyJsTokens(contents: string): DependencyJsToken[] {
+  const tokens: DependencyJsToken[] = [];
+  let index = 0;
+  let line = 1;
+  const advance = (): string => {
+    const character = contents[index++]!;
+    if (character === "\n") line += 1;
+    return character;
+  };
+  const skipQuoted = (quote: string): string => {
+    let value = "";
+    advance();
+    while (index < contents.length) {
+      const character = advance();
+      if (character === "\\" && index < contents.length) {
+        value += advance();
+      } else if (character === quote) {
+        break;
+      } else {
+        value += character;
+      }
+    }
+    return value;
+  };
+  function skipTemplate(): void {
+    advance();
+    while (index < contents.length) {
+      const character = contents[index]!;
+      if (character === "\\") {
+        advance();
+        if (index < contents.length) advance();
+      } else if (character === "`") {
+        advance();
+        return;
+      } else if (contents.startsWith("${", index)) {
+        advance();
+        advance();
+        let depth = 1;
+        while (index < contents.length && depth > 0) {
+          const expressionCharacter = contents[index]!;
+          if (expressionCharacter === "'" || expressionCharacter === '"') {
+            skipQuoted(expressionCharacter);
+          } else if (expressionCharacter === "`") {
+            skipTemplate();
+          } else if (contents.startsWith("//", index)) {
+            while (index < contents.length && advance() !== "\n") {}
+          } else if (contents.startsWith("/*", index)) {
+            advance();
+            advance();
+            let commentDepth = 1;
+            while (index < contents.length && commentDepth > 0) {
+              if (contents.startsWith("/*", index)) {
+                advance();
+                advance();
+                commentDepth += 1;
+              } else if (contents.startsWith("*/", index)) {
+                advance();
+                advance();
+                commentDepth -= 1;
+              } else {
+                advance();
+              }
+            }
+          } else {
+            const consumed = advance();
+            if (consumed === "{") depth += 1;
+            if (consumed === "}") depth -= 1;
+          }
+        }
+      } else {
+        advance();
+      }
+    }
+  }
+  while (index < contents.length) {
+    const character = contents[index]!;
+    if (/\s/u.test(character)) {
+      advance();
+    } else if (contents.startsWith("//", index)) {
+      while (index < contents.length && advance() !== "\n") {}
+    } else if (contents.startsWith("/*", index)) {
+      advance();
+      advance();
+      let depth = 1;
+      while (index < contents.length && depth > 0) {
+        if (contents.startsWith("/*", index)) {
+          advance();
+          advance();
+          depth += 1;
+        } else if (contents.startsWith("*/", index)) {
+          advance();
+          advance();
+          depth -= 1;
+        } else {
+          advance();
+        }
+      }
+    } else if (character === "'" || character === '"') {
+      const tokenLine = line;
+      tokens.push({ kind: "string", value: skipQuoted(character), line: tokenLine });
+    } else if (character === "`") {
+      skipTemplate();
+    } else if (/[A-Za-z_$]/u.test(character)) {
+      const tokenLine = line;
+      let value = advance();
+      while (index < contents.length && /[A-Za-z0-9_$]/u.test(contents[index]!)) value += advance();
+      tokens.push({ kind: "identifier", value, line: tokenLine });
+    } else {
+      tokens.push({ kind: "punctuation", value: advance(), line });
+    }
+  }
+  return tokens;
+}
+
+/** 🔎️ Extracts statically named bare module imports without mistaking fixture strings for code. */
+function dependencyJsImports(contents: string): { dependency: string; line: number }[] {
+  const tokens = dependencyJsTokens(contents);
+  const imports: { dependency: string; line: number }[] = [];
+  const record = (token: DependencyJsToken | undefined): void => {
+    if (!token || token.kind !== "string") return;
+    const specifier = token.value;
+    if (specifier.startsWith(".") || specifier.startsWith("/") || specifier.startsWith("#") || specifier.startsWith("@/") || DEPENDENCY_JS_BUILTIN_PREFIXES.some((prefix) => specifier.startsWith(prefix)) || DEPENDENCY_JS_BUILTINS.has(specifier)) return;
+    const dependency = dependencyJsPackageName(specifier);
+    if (dependencyJsIsPackageName(dependency)) imports.push({ dependency, line: token.line });
+  };
+  for (let index = 0; index < tokens.length; index += 1) {
+    const token = tokens[index]!;
+    if (token.kind !== "identifier") continue;
+    if (token.value === "require" && tokens[index + 1]?.value === "(") record(tokens[index + 2]);
+    if (token.value === "import") {
+      if (tokens[index + 1]?.kind === "string") record(tokens[index + 1]);
+      else if (tokens[index + 1]?.value === "(") record(tokens[index + 2]);
+      else {
+        for (let cursor = index + 1; cursor < Math.min(tokens.length, index + 64); cursor += 1) {
+          if (tokens[cursor]!.value === ";") break;
+          if (tokens[cursor]!.value === "from") {
+            record(tokens[cursor + 1]);
+            break;
+          }
+        }
+      }
+    }
+    if (token.value === "export") {
+      for (let cursor = index + 1; cursor < Math.min(tokens.length, index + 64); cursor += 1) {
+        if (tokens[cursor]!.value === ";") break;
+        if (tokens[cursor]!.value === "from") {
+          record(tokens[cursor + 1]);
+          break;
+        }
+      }
+    }
+  }
+  for (const [lineIndex, sourceLine] of contents.split(/\r?\n/u).entries()) {
+    const statement = sourceLine.match(/^\s*(?:import|export)\b.*\bfrom\s+["']([^"']+)["']\s*;?(?:\s*\/\/.*)?$/u) ?? sourceLine.match(/^\s*import\s+["']([^"']+)["']\s*;?(?:\s*\/\/.*)?$/u);
+    if (!statement) continue;
+    const specifier = statement[1]!;
+    if (specifier.startsWith(".") || specifier.startsWith("/") || specifier.startsWith("#") || specifier.startsWith("@/") || DEPENDENCY_JS_BUILTIN_PREFIXES.some((prefix) => specifier.startsWith(prefix)) || DEPENDENCY_JS_BUILTINS.has(specifier)) continue;
+    const dependency = dependencyJsPackageName(specifier);
+    const sourceLineNumber = lineIndex + 1;
+    if (dependencyJsIsPackageName(dependency) && !imports.some((item) => item.dependency === dependency && item.line === sourceLineNumber)) imports.push({ dependency, line: sourceLineNumber });
+  }
+  return imports;
+}
+
+/** 🔧️ Extracts exact package references from recognized config strings while retaining token line evidence and ignoring comments. */
+function dependencyJsConfigReferences(contents: string): { dependency: string; line: number }[] {
+  const references: { dependency: string; line: number }[] = [];
+  for (const token of dependencyJsTokens(contents)) {
+    if (token.kind !== "string" || token.value.startsWith(".") || token.value.startsWith("/") || token.value.startsWith("#")) continue;
+    const dependency = dependencyJsPackageName(token.value);
+    if (dependencyJsIsPackageName(dependency)) references.push({ dependency, line: token.line });
+  }
+  return references;
+}
+
+/** 🔎️ Audits direct JavaScript rows against taxonomy-owned source/import/script evidence. */
+function dependencyJsParity(repoRoot: string): DependencyJsParityReport {
+  const manifests = dependencyDiscoverPackageJsonFiles(repoRoot);
+  const internalNames = dependencyInternalJsPackageNames(repoRoot, manifests);
+  const sources = dependencyDiscoverJsSourceFiles(repoRoot);
+  const sourceContents = new Map(sources.map((file) => [file, policyReadFileSafe(repoRoot, file)]));
+  const sourceImports = new Map([...sourceContents].map(([file, contents]) => [file, dependencyJsImports(contents)]));
+  const configReferences = new Map([...sourceContents].filter(([file]) => dependencyJsIsConfigFile(file)).map(([file, contents]) => [file, dependencyJsConfigReferences(contents)]));
+  const owners = manifests.map((manifest) => ({ manifest, scope: dependencyJsOwnershipScope(manifest, manifests) })).sort((left, right) => right.scope.length - left.scope.length);
+  const sourceOwners = new Map(sources.map((file) => [file, owners.find(({ scope }) => !scope || file === scope || file.startsWith(`${scope}/`))?.manifest]));
+  const declared = new Map<string, Set<string>>();
+  const engineProvided = new Map<string, Set<string>>();
+  const rows: DependencyJsParityRow[] = [];
+  for (const manifest of manifests) {
+    const scope = dependencyJsOwnershipScope(manifest, manifests);
+    const dependencies = dependencyParsePackageJson(repoRoot, manifest, internalNames);
+    declared.set(manifest, new Set(dependencies.map((dependency) => dependency.name)));
+    let scripts: Record<string, string> = {};
+    try {
+      const packageManifest = JSON.parse(policyReadFileSafe(repoRoot, manifest)) as { engines?: Record<string, string>; scripts?: Record<string, string> };
+      scripts = packageManifest.scripts ?? {};
+      engineProvided.set(manifest, new Set(Object.keys(packageManifest.engines ?? {}).filter(dependencyJsIsPackageName)));
+    } catch {
+      scripts = {};
+      engineProvided.set(manifest, new Set());
+    }
+    for (const dependency of dependencies.filter((entry) => !entry.internal)) {
+      const evidence: DependencyJsParityEvidence[] = [];
+      for (const [file, imports] of sourceImports) {
+        if (sourceOwners.get(file) !== manifest) continue;
+        for (const imported of imports) {
+          if (imported.dependency === dependency.name) evidence.push({ file, line: imported.line, kind: "import" });
+          if (evidence.length >= 4) break;
+        }
+        if (evidence.length >= 4) break;
+      }
+      if (evidence.length < 4) {
+        for (const [file, references] of configReferences) {
+          if (sourceOwners.get(file) !== manifest) continue;
+          for (const reference of references) {
+            if (reference.dependency === dependency.name) evidence.push({ file, line: reference.line, kind: "config" });
+            if (evidence.length >= 4) break;
+          }
+          if (evidence.length >= 4) break;
+        }
+      }
+      if (evidence.length < 4) {
+        for (const [name, command] of Object.entries(scripts)) {
+          if (new RegExp(`(^|[^A-Za-z0-9@/_-])${dependency.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}($|[^A-Za-z0-9@/_-])`).test(command)) evidence.push({ file: manifest, line: 0, kind: "script" });
+          if (evidence.length >= 4) break;
+        }
+      }
+      rows.push({ dependency: dependency.name, manifest, scope, evidence });
+    }
+  }
+  const undeclaredImports: DependencyJsParityImport[] = [];
+  for (const [file, imports] of sourceImports) {
+    const owner = owners.find(({ scope }) => !scope || file === scope || file.startsWith(`${scope}/`));
+    if (!owner) continue;
+    for (const imported of imports) {
+      if (internalNames.has(imported.dependency) || imported.dependency.startsWith("@semio-tech/") || declared.get(owner.manifest)?.has(imported.dependency) || engineProvided.get(owner.manifest)?.has(imported.dependency)) continue;
+      undeclaredImports.push({ ...imported, file, manifest: owner.manifest });
+    }
+  }
+  undeclaredImports.sort((left, right) => left.file.localeCompare(right.file) || left.line - right.line || left.dependency.localeCompare(right.dependency));
+  const unownedRows = rows.filter((row) => row.evidence.length === 0).sort((left, right) => left.manifest.localeCompare(right.manifest) || left.dependency.localeCompare(right.dependency));
+  return { manifests: manifests.length, externalRows: rows.length, evidencedRows: rows.length - unownedRows.length, unownedRows, undeclaredImports };
+}
+
 /** 🔒️Every internal (workspace-owned) JS package name — the `"name"` field of every non-compose, non-node_modules `package.json`. Used to classify a dependency as first-party even when it isn't `@semio-tech/…`-scoped or `workspace:`-versioned. */
 function dependencyInternalJsPackageNames(repoRoot: string, manifests: readonly string[]): Set<string> {
   const names = new Set<string>();
@@ -1661,7 +2226,7 @@ function dependencyParsePackageJson(repoRoot: string, relPath: string, internalN
   return results;
 }
 
-/** 🔒️Repo-wide `package.json` file paths (repo-relative), skipping `POLICY_SKIP_DIRS` and `compose/` — same discovery shape as `policyDiscoverCargoTomlFiles`. */
+/** 🔒️Repo-wide `package.json` file paths (repo-relative), skipping policy, ticket, and composition trees. */
 function dependencyDiscoverPackageJsonFiles(repoRoot: string): string[] {
   const found: string[] = [];
   const walk = (relDir: string): void => {
@@ -1675,7 +2240,7 @@ function dependencyDiscoverPackageJsonFiles(repoRoot: string): string[] {
     for (const ent of entries) {
       const childRel = relDir ? `${relDir}/${ent.name}` : ent.name;
       if (ent.isDirectory()) {
-        if (POLICY_SKIP_DIRS.has(ent.name) || ent.name === "compose") continue;
+        if (POLICY_SKIP_DIRS.has(ent.name) || ent.name === "compose" || ent.name === ".🧬semio" || ent.name === ".🦑️repo") continue;
         walk(childRel);
         continue;
       }
@@ -3741,7 +4306,7 @@ function policyTestModSpans(lines: readonly string[]): PolicyModSpan[] {
     const codeOnly = policyMaskLiterals(raw).replace(/\/\/.*$/, "");
     const modMatch = raw.match(POLICY_MOD_ANY_OPEN_RE);
     if (modMatch) {
-      const isTest = lines.slice(Math.max(0, i - 2), i).some((l) => /#\[cfg\(test\)\]/.test(l)) || modMatch[1] === "tests";
+      const isTest = lines.slice(Math.max(0, i - 2), i).some((l) => /#\[cfg\([^\]]*\btest\b[^\]]*\)\]/.test(l)) || modMatch[1] === "tests";
       stack.push({ name: modMatch[1]!, startLine: i + 1, depth, isTest });
     }
     depth += (codeOnly.match(/\{/g) ?? []).length - (codeOnly.match(/\}/g) ?? []).length;

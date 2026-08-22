@@ -8,7 +8,7 @@ pub async fn register() {}
 /// 🌉 One header record (`payload`) + one data record carrying the DSL-printed snapshot as a
 /// single quoted field — `CsvSnapshot::records[0]` IS the header row (RFC 4180 draws no
 /// structural distinction; see csv's own snapshot module).
-pub async fn serialize(snapshot: &EnergyModelSnapshot) -> Result<CsvSnapshot, store::TextError> {
+pub fn serialize(snapshot: &EnergyModelSnapshot) -> Result<CsvSnapshot, store::TextError> {
     let field = |value: String| CsvField { value, quoted: true };
     Ok(CsvSnapshot {
         schema: STDIO_CSV_DOCUMENT_SCHEMA.into(),

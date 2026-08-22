@@ -125,7 +125,7 @@ pub async fn parse_chain_text(text: &str) -> Result<ChainValue, TextError> {
 // 🚫️async: E1 pure, consumed by `Option::ok_or_else` sync closures in `parse_node` below (as well
 // as directly, per `O1`, elsewhere in this file) — see R9
 fn node_error(message: &str, tokens: &[crate::os_dsl::SpannedToken], pos: usize) -> TextError {
-    let span = tokens.get(pos).or_else(|| tokens.last()).map(|t| t.span).unwrap_or(crate::os_dsl::TextSpan::at(1, 1));
+    let span = tokens.get(pos).or_else(|| tokens.last()).map_or(crate::os_dsl::TextSpan::at(1, 1), |t| t.span);
     TextError::new(message.to_string(), span)
 }
 

@@ -16,13 +16,10 @@ path = "📦️glue.rs"
 
 [features]
 default = ["booleans", "trace"]
-booleans = ["dep:geo"]
+booleans = []
 trace = []
 
 [dependencies]
-geo = { version = "0.29", optional = true }
-pollster = "0.4.0"
 semio-framework-os-kernel = { workspace = true }
 serde = { workspace = true }
-thiserror = { workspace = true }
 blake3 = "1"

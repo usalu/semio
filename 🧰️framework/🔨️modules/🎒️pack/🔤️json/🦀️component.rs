@@ -22,29 +22,38 @@ use std::fmt;
 
 //#region 🔖️Errors
 /// @emoji 🚨️ Every parse failure this crate can produce, with a byte offset into the input.
-#[derive(thiserror::Error, Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum JsonError {
-    #[error("unexpected end of input")]
     UnexpectedEof,
-    #[error("unexpected byte {found:?} at offset {offset}")]
     UnexpectedByte { found: u8, offset: usize },
-    #[error("invalid number literal at offset {0}")]
     InvalidNumber(usize),
-    #[error("invalid escape sequence at offset {0}")]
     InvalidEscape(usize),
-    #[error("invalid \\u escape at offset {0}")]
     InvalidUnicodeEscape(usize),
-    #[error("unpaired UTF-16 surrogate at offset {0}")]
     UnpairedSurrogate(usize),
-    #[error("control character 0x{byte:02x} in string at offset {offset}")]
     ControlCharacterInString { byte: u8, offset: usize },
-    #[error("invalid UTF-8 in input")]
     InvalidUtf8,
-    #[error("trailing data at offset {0}")]
     TrailingData(usize),
-    #[error("maximum nesting depth {0} exceeded")]
     MaxDepthExceeded(u32),
 }
+
+impl fmt::Display for JsonError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::UnexpectedEof => formatter.write_str("unexpected end of input"),
+            Self::UnexpectedByte { found, offset } => write!(formatter, "unexpected byte {found:?} at offset {offset}"),
+            Self::InvalidNumber(offset) => write!(formatter, "invalid number literal at offset {offset}"),
+            Self::InvalidEscape(offset) => write!(formatter, "invalid escape sequence at offset {offset}"),
+            Self::InvalidUnicodeEscape(offset) => write!(formatter, "invalid \\u escape at offset {offset}"),
+            Self::UnpairedSurrogate(offset) => write!(formatter, "unpaired UTF-16 surrogate at offset {offset}"),
+            Self::ControlCharacterInString { byte, offset } => write!(formatter, "control character 0x{byte:02x} in string at offset {offset}"),
+            Self::InvalidUtf8 => formatter.write_str("invalid UTF-8 in input"),
+            Self::TrailingData(offset) => write!(formatter, "trailing data at offset {offset}"),
+            Self::MaxDepthExceeded(depth) => write!(formatter, "maximum nesting depth {depth} exceeded"),
+        }
+    }
+}
+
+impl std::error::Error for JsonError {}
 
 /// @emoji 🛡️ Recursion ceiling for nested arrays/objects — matches `serde_json`'s own default
 /// (128), the value this repo's fixtures were authored against.

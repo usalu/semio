@@ -5,7 +5,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useMemo, useState, type ReactElement } from "react";
 
 import { parseUiTheme, resolveThemeAppearancePalettes, semioTheme, serializeUiTheme, builtinUiThemes, type ThemeAppearanceName, type ThemePaletteGroup, type UiTheme } from "@semio-tech/ui-styling";

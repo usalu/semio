@@ -24,14 +24,21 @@ pub mod compiler {
     use std::path::{Path, PathBuf};
 
     /// 🚨️ Static-site compilation failure.
-    #[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
-    #[error("{message}")]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub struct PresentCompileError {
         pub message: String,
     }
 
+    impl std::fmt::Display for PresentCompileError {
+        fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            formatter.write_str(&self.message)
+        }
+    }
+
+    impl std::error::Error for PresentCompileError {}
+
     impl PresentCompileError {
-        async fn new(message: impl Into<String>) -> Self {
+        fn new(message: impl Into<String>) -> Self {
             Self { message: message.into() }
         }
     }
@@ -55,7 +62,7 @@ pub mod compiler {
         fs::create_dir_all(&scene_dir).map_err(|error| PresentCompileError::new(error.to_string()))?;
         let config = AnimateConfig::from_quality(QualityPreset::Medium).with_output_dir(&scene_dir).with_media_dir(scene_dir.join("media")).with_subtitles_path(scene_dir.join("scene.srt"));
         let scene = scene_for_hash(config.clone(), scene_hash);
-        let outputs = render_scene(scene, &config, &[OutputFormat::Mp4, OutputFormat::LastFrame]).map_err(|error| PresentCompileError::new(error.to_string()))?;
+        let outputs = render_scene(scene, &config, &[OutputFormat::Mp4, OutputFormat::LastFrame]).await.map_err(|error| PresentCompileError::new(error.to_string()))?;
         Ok(SceneAssetBundle { scene_hash: scene_hash.into(), mp4: outputs.mp4, last_frame: outputs.last_frame, subtitles: Some(scene_dir.join("scene.srt")), sections: outputs.sections })
     }
 
@@ -65,7 +72,7 @@ pub mod compiler {
     /// replaced is deleted outright (`styles.css`/`player.js`/`manifest.json`/`deck.json` are plain
     /// CSS/JS/JSON sidecars, not HTML — no ad-hoc HTML codec logic lived at those sites, so they stay
     /// unchanged `fs::write`s).
-    pub async fn compile_present_site(deck: &PresentSnapshot, output_dir: &Path) -> Result<()> {
+    pub fn compile_present_site(deck: &PresentSnapshot, output_dir: &Path) -> Result<()> {
         fs::create_dir_all(output_dir).map_err(|error| PresentCompileError::new(error.to_string()))?;
         let deck_json = serde_json::to_string_pretty(deck).map_err(|error| PresentCompileError::new(format!("deck json: {error}")))?;
         fs::write(output_dir.join("deck.json"), &deck_json).map_err(|error| PresentCompileError::new(error.to_string()))?;
@@ -78,7 +85,7 @@ pub mod compiler {
         Ok(())
     }
 
-    async fn site_manifest(deck: &PresentSnapshot) -> serde_json::Value {
+    fn site_manifest(deck: &PresentSnapshot) -> serde_json::Value {
         let (_, tiles) = crate::artifacts::present::present_working_scene(deck);
         json!({
             "schema": "animate.present.site",
@@ -105,13 +112,13 @@ pub mod compiler {
     /// content, so this is MORE spec-correct than the deleted emitter's `&`/`<` string-replace,
     /// which would have literally corrupted any deck JSON string containing those characters once
     /// a real browser DOM read it back via `textContent`).
-    async fn index_html_snapshot(deck_json: &str) -> semio_s_plugin_stdio::artifacts::html::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot {
+    fn index_html_snapshot(deck_json: &str) -> semio_s_plugin_stdio::artifacts::html::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot {
         use semio_s_plugin_stdio::artifacts::html::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode, HtmlSnapshot, RawTextKind, STDIO_HTML_DOCUMENT_SCHEMA};
 
-        async fn el(name: &str, attrs: Vec<HtmlAttr>, children: Vec<HtmlNode>) -> HtmlNode {
+        fn el(name: &str, attrs: Vec<HtmlAttr>, children: Vec<HtmlNode>) -> HtmlNode {
             HtmlNode::Element { name: name.into(), attributes: attrs, children }
         }
-        async fn module_script(src: &str) -> HtmlNode {
+        fn module_script(src: &str) -> HtmlNode {
             el("script", vec![HtmlAttr::new("type", "module"), HtmlAttr::new("src", src)], Vec::new())
         }
 
@@ -140,7 +147,7 @@ pub mod compiler {
         HtmlSnapshot { schema: STDIO_HTML_DOCUMENT_SCHEMA.into(), doctype: Some("DOCTYPE html".into()), root: html }
     }
 
-    async fn styles_css() -> &'static str {
+    fn styles_css() -> &'static str {
         r#"html, body {
       margin: 0;
       height: 100%;
@@ -166,7 +173,7 @@ pub mod compiler {
     "#
     }
 
-    async fn player_boot_js() -> &'static str {
+    fn player_boot_js() -> &'static str {
         r#"const root = document.getElementById("animate-present-root");
     const canvas = document.getElementById("animate-present-canvas");
     const deckNode = document.getElementById("animate-present-deck");
@@ -263,7 +270,7 @@ pub mod compiler {
         async fn compile_scene_to_assets_writes_mp4() {
             let output = std::env::temp_dir().join(format!("animate-scene-assets-{}", std::process::id()));
             let _ = fs::remove_dir_all(&output);
-            let bundle = compile_scene_to_assets("demo123", &output).expect("compile scene");
+            let bundle = compile_scene_to_assets("demo123", &output).await.expect("compile scene");
             assert_eq!(bundle.scene_hash, "demo123");
             assert!(bundle.mp4.as_ref().is_some_and(|path| path.exists()));
             let _ = fs::remove_dir_all(&output);
@@ -313,16 +320,16 @@ pub mod slide {
     }
 
     impl PresentScene {
-        pub async fn empty(title: impl Into<String>) -> Self {
+        pub fn empty(title: impl Into<String>) -> Self {
             Self { schema: PRESENT_SCENE_SCHEMA.into(), title: title.into(), sections: Vec::new(), deck: None }
         }
 
-        pub async fn slide_count(&self) -> usize {
+        pub fn slide_count(&self) -> usize {
             self.sections.iter().map(|section| section.slides.len()).sum()
         }
 
         /// 🎬️ Collects unique scene hashes referenced by slides.
-        pub async fn scene_hashes(&self) -> Vec<String> {
+        pub fn scene_hashes(&self) -> Vec<String> {
             let mut hashes = Vec::new();
             for section in &self.sections {
                 for slide in &section.slides {
@@ -371,14 +378,36 @@ pub use slide::{PresentScene, PresentSection, PresentSlide, PRESENT_SCENE_SCHEMA
 /// with a schema-tier envelope-replay concern — see `crate::artifacts::present::schema::PresentError`
 /// for that half, kept where the artifact's own `materialize_present_projection_json` can reach it
 /// without an artifact-depends-on-app violation).
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum PresentVideoExportError {
     /// 🎬️ The scene had no scene hashes to render.
-    #[error("presentation has no scene hashes to export")]
     NoSceneHashes,
     /// 🎥️ A per-scene render/compile failed.
-    #[error(transparent)]
-    Compile(#[from] PresentCompileError),
+    Compile(PresentCompileError),
+}
+
+impl std::fmt::Display for PresentVideoExportError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::NoSceneHashes => formatter.write_str("presentation has no scene hashes to export"),
+            Self::Compile(error) => write!(formatter, "{error}"),
+        }
+    }
+}
+
+impl std::error::Error for PresentVideoExportError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::NoSceneHashes => None,
+            Self::Compile(error) => std::error::Error::source(error),
+        }
+    }
+}
+
+impl From<PresentCompileError> for PresentVideoExportError {
+    fn from(error: PresentCompileError) -> Self {
+        Self::Compile(error)
+    }
 }
 //#endregion 🔖️Error
 
@@ -389,6 +418,10 @@ pub async fn export_video_from_scene(scene: &PresentScene, output_dir: &std::pat
     if hashes.is_empty() {
         return Err(PresentVideoExportError::NoSceneHashes);
     }
-    hashes.into_iter().map(|hash| compile_scene_to_assets(&hash, output_dir).map_err(PresentVideoExportError::from)).collect()
+    let mut bundles = Vec::with_capacity(hashes.len());
+    for hash in hashes {
+        bundles.push(compile_scene_to_assets(&hash, output_dir).await.map_err(PresentVideoExportError::from)?);
+    }
+    Ok(bundles)
 }
 //#endregion 🔖️VideoExport

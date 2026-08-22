@@ -11,6 +11,6 @@ use crate::artifacts::fem2d::standards::v1::subsets;
 use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use semio_framework_plugin::StandardId;
 
-pub async fn standard() -> StandardDeclaration {
+pub fn standard() -> StandardDeclaration<crate::FemApps> {
     StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.fem2d+json"], extensions: &["fem2d"] }, subsets: vec![subsets::any::subset()] }
 }

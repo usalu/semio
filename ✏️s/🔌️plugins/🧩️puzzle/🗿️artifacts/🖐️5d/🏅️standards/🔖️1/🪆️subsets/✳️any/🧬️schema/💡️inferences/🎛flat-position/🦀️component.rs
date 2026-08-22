@@ -23,11 +23,11 @@ use std::collections::HashMap;
 pub use crate::artifacts::puzzle3d::schema::inferences::flatten::{FlattenPlane, FlattenPose};
 
 //#region 🔖️SnapshotToObjectGraph
-async fn parse_endpoint(endpoint: &str) -> Option<(&str, &str)> {
+fn parse_endpoint(endpoint: &str) -> Option<(&str, &str)> {
     endpoint.split_once(':')
 }
 
-async fn part_to_object(part: &Puzzle5dPart) -> Puzzle3dObject {
+fn part_to_object(part: &Puzzle5dPart) -> Puzzle3dObject {
     let anchor = match part.anchor {
         Puzzle5dPartAnchor::Fixed => Puzzle3dObjectAnchor::Fixed,
         Puzzle5dPartAnchor::Derived => Puzzle3dObjectAnchor::Derived,
@@ -50,7 +50,7 @@ async fn part_to_object(part: &Puzzle5dPart) -> Puzzle3dObject {
     }
 }
 
-async fn grip_to_vortex(grip: &Puzzle5dGrip) -> Puzzle3dVortex {
+fn grip_to_vortex(grip: &Puzzle5dGrip) -> Puzzle3dVortex {
     Puzzle3dVortex {
         id: grip.id.clone(),
         vortex_kind: grip.grip_kind.clone(),
@@ -63,7 +63,7 @@ async fn grip_to_vortex(grip: &Puzzle5dGrip) -> Puzzle3dVortex {
     }
 }
 
-async fn fastener_to_attraction(fastener: &Puzzle5dFastener) -> Puzzle3dAttraction {
+fn fastener_to_attraction(fastener: &Puzzle5dFastener) -> Puzzle3dAttraction {
     Puzzle3dAttraction {
         id: fastener.id.clone(),
         attracting: fastener.source.clone(),
@@ -79,14 +79,14 @@ async fn fastener_to_attraction(fastener: &Puzzle5dFastener) -> Puzzle3dAttracti
     }
 }
 
-async fn grip_t(grip: &Puzzle5dGrip) -> f64 {
+fn grip_t(grip: &Puzzle5dGrip) -> f64 {
     grip.grip_2d.angle / (2.0 * std::f64::consts::PI)
 }
 //#endregion 🔖️SnapshotToObjectGraph
 
 //#region 🔖️Flatten
 /// 🌤️ Flatten a 5d snapshot in place: updates part 3d origins/orientations and 2d x/y from the attraction graph.
-pub async fn flatten_snapshot_inplace(snapshot: &mut Puzzle5dSnapshot) {
+pub fn flatten_snapshot_inplace(snapshot: &mut Puzzle5dSnapshot) {
     let objects: Vec<Puzzle3dObject> = snapshot.parts.iter().map(part_to_object).collect();
     let attractions: Vec<Puzzle3dAttraction> = snapshot.fasteners.iter().map(fastener_to_attraction).collect();
     let seed_centers: HashMap<String, [f64; 2]> = snapshot.parts.iter().map(|part| (part.id.clone(), [part.part_2d.x, part.part_2d.y])).collect();
@@ -105,7 +105,7 @@ pub async fn flatten_snapshot_inplace(snapshot: &mut Puzzle5dSnapshot) {
 }
 
 /// 🌤️ Flatten a 5d snapshot, returning poses keyed by part id.
-pub async fn flatten_snapshot(snapshot: &Puzzle5dSnapshot) -> HashMap<String, FlattenPose> {
+pub fn flatten_snapshot(snapshot: &Puzzle5dSnapshot) -> HashMap<String, FlattenPose> {
     let objects: Vec<Puzzle3dObject> = snapshot.parts.iter().map(part_to_object).collect();
     let attractions: Vec<Puzzle3dAttraction> = snapshot.fasteners.iter().map(fastener_to_attraction).collect();
     let seed_centers: HashMap<String, [f64; 2]> = snapshot.parts.iter().map(|part| (part.id.clone(), [part.part_2d.x, part.part_2d.y])).collect();
@@ -119,7 +119,7 @@ pub async fn flatten_snapshot(snapshot: &Puzzle5dSnapshot) -> HashMap<String, Fl
     poses
 }
 
-async fn diagram_centers_with_grip_t(snapshot: &Puzzle5dSnapshot, seed_poses: &HashMap<String, FlattenPose>) -> HashMap<String, [f64; 2]> {
+fn diagram_centers_with_grip_t(snapshot: &Puzzle5dSnapshot, seed_poses: &HashMap<String, FlattenPose>) -> HashMap<String, [f64; 2]> {
     let part_map: HashMap<&str, &Puzzle5dPart> = snapshot.parts.iter().map(|part| (part.id.as_str(), part)).collect();
     let mut adjacency: HashMap<String, Vec<(String, usize)>> = HashMap::new();
     for (index, fastener) in snapshot.fasteners.iter().enumerate() {
@@ -193,8 +193,8 @@ mod tests {
     use super::*;
     use crate::artifacts::puzzle5d::{Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor, Puzzle5dSnapshot};
 
-    #[semio_framework_async_macros::async_test]
-    async fn flatten_writes_diagram_offsets_onto_part_2d() {
+    #[test]
+    fn flatten_writes_diagram_offsets_onto_part_2d() {
         let mut snapshot = Puzzle5dSnapshot {
             schema: "puzzle.5d".into(),
             domain: "architecture".into(),

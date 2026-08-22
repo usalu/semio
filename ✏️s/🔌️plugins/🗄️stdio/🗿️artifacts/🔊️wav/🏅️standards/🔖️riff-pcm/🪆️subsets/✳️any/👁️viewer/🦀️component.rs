@@ -9,7 +9,7 @@ use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::
 use crate::artifacts::wav::{STDIO_WAV_DOCUMENT_SCHEMA, WAV_DIALECT};
 use crate::viewer::wav::modes::view;
 use crate::viewer::wav::modes::view::windows::main;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command

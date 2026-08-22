@@ -22,19 +22,19 @@ pub struct ResizeTileCrop {
 impl MutationKind<PresentSnapshot, PresentMutation> for ResizeTileCrop {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "resize", entity: "tile-crop", kind: "resize-tile-crop", record: "ResizedTileCrop" };
 
-    async fn diff(&self, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
+    fn diff(&self, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
         super::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &PresentSnapshot) -> Vec<PresentMutation> {
+    fn inverse(&self, base: &PresentSnapshot) -> Vec<PresentMutation> {
         super::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Resize tile \"{}\" crop", self.id)
     }
 
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec!["tiles".into(), self.id.clone(), "crop".into()]
     }
 }

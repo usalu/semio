@@ -4,7 +4,7 @@ use crate::artifacts::puzzle2d::diff::{Puzzle2dDiff, Puzzle2dNodesDelta};
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::mutation::CreateNode, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+pub fn diff(payload: &super::mutation::CreateNode, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
     if base.nodes.iter().any(|entry| entry.id == payload.node.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("{} already exists", "node"), vec![payload.node.id.clone()]);
     }

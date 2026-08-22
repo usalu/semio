@@ -9,7 +9,7 @@ use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::snapshot::Svg
 use crate::artifacts::svg::{STDIO_SVG_DOCUMENT_SCHEMA, SVG_TINY_DIALECT};
 use crate::viewer::svg_tiny::modes::view;
 use crate::viewer::svg_tiny::modes::view::windows::main;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command

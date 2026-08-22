@@ -29,12 +29,10 @@ pub use protocol::{DomainHover, DomainSelection, DomainTopology, HierarchyProvid
 /// universe/hierarchy shared by both its hover and selection sub-specs. `AppDefinition.interactions`
 /// holds these; `WindowKindDefinition.interactions` references them via `InteractionRef`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct InteractionDefinition {
     pub id: String,
-    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub label: LocalizedLabel,
     /// 🪜️ Non-empty; the first entry is the domain's default granularity.
     pub granularities: Vec<GranularityDefinition>,
@@ -54,12 +52,10 @@ impl InteractionDefinition {
 
 /// 🔬️ One selectable/hoverable level of detail within a domain (e.g. mesh's object/face/edge/vertex).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct GranularityDefinition {
     pub id: String,
-    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub label: LocalizedLabel,
     pub icon_id: IconName,
 }
@@ -67,16 +63,15 @@ pub struct GranularityDefinition {
 /// 📇️ A validated reference into an app's `AppDefinition.interactions` registry — mirrors
 /// `ActionRef`/`UtilityRef` exactly.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(transparent)]
 pub struct InteractionRef(String);
 
 impl InteractionRef {
-    pub async fn new(id: impl Into<String>) -> Self {
+    pub fn new(id: impl Into<String>) -> Self {
         Self(id.into())
     }
 
-    pub async fn as_str(&self) -> &str {
+    pub fn as_str(&self) -> &str {
         &self.0
     }
 }

@@ -1,0 +1,4 @@
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	16067	`PluginManifest` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	16067	`PluginManifest` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	15186	can't compare `std::string::String` with `impl std::future::Future<Output = std::string::String>`
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	15189	`impl std::future::Future<Output = std::string::String>` doesn't implement `Debug`

@@ -626,8 +626,8 @@ impl std::task::Wake for ThreadWaker {
 }
 
 /// @emoji 🛑️ Drives `future` to completion on the calling thread — the "blocking" half of this
-/// crate's dual blocking/async futures, in the `pack_async` spirit but hand-rolled (no
-/// `futures-lite` dependency: `db_actor`'s only dependency is `db_core`, per the contract).
+/// crate's dual blocking/async futures, in the `pack_async` spirit but hand-rolled (no external
+/// executor dependency: `db_actor`'s only dependency is `db_core`, per the contract).
 ///
 /// 🚫️async: E5 executor bridge — the ONE such bridge in this crate (R2: "at most one per crate").
 /// Every other `db_*` module's thread-owning layer (`db_artifact::ArtifactEngine`,

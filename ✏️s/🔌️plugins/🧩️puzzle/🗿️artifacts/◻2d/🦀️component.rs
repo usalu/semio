@@ -387,7 +387,7 @@ pub const PUZZLE2D_DIALECT: semio_framework_plugin::Dialect = semio_framework_pl
 //#region 🔖️ArtifactKind
 /// 🗿️ The `2d.puzzle` artifact kind — lifted out of the pre-consolidation manifest builder chain so
 /// the artifact, not the app, owns its own identity.
-pub async fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "2d.puzzle".into(),
         name: "2D Puzzle".into(),
@@ -425,7 +425,7 @@ pub async fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// (`register_2d_export_handlers`/`register_mesh_exporter`/…) from the nine §6 registrars
 /// `ArtifactDeclaration` covers, keyed by a legacy OS-kind string this declaration's own `kind` isn't
 /// — see `🧩️puzzle/🦀️component.rs`'s `plugin()` doc for the full judgement.
-pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
@@ -473,7 +473,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
 /// .composers(...).languages(...).document_codec(...)` chain, deleted outright, no dual channel) as
 /// the ONLY registration channel for schema/io/viewer/editor rows. `definition()` (old
 /// `ArtifactDefinition`/capability rows, above) is kept per debt D1.
-pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::PuzzleApps> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.puzzle.puzzle2d").expect("canonical puzzle2d kind"), localization: &[], standards: vec![crate::artifacts::puzzle2d::standards::v1::standard()] }
@@ -481,7 +481,7 @@ pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDe
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`.
-pub async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -549,8 +549,8 @@ pub use crate::artifacts::puzzle2d::op::Puzzle2dPlaySnapshot;
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn puzzle2d_edge_connection_params_default_to_zero() {
+    #[test]
+    fn puzzle2d_edge_connection_params_default_to_zero() {
         let edge = Puzzle2dEdge::default();
         assert_eq!(edge.gap, 0.0);
         assert_eq!(edge.shift, 0.0);
@@ -562,14 +562,14 @@ mod tests {
         assert_eq!(edge.y, 0.0);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn puzzle2d_node_anchor_defaults_to_fixed() {
+    #[test]
+    fn puzzle2d_node_anchor_defaults_to_fixed() {
         let node = Puzzle2dNode::default();
         assert_eq!(node.anchor, Puzzle2dNodeAnchor::Fixed);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn puzzle2d_edge_serde_roundtrips_connection_params() {
+    #[test]
+    fn puzzle2d_edge_serde_roundtrips_connection_params() {
         let edge = Puzzle2dEdge { id: "e1".into(), source: "a".into(), target: "b".into(), gap: 1.0, shift: 2.0, rise: 3.0, rotation: 10.0, turn: 20.0, tilt: 30.0, x: 4.0, y: 5.0, ..Default::default() };
         let json = serde_json::to_string(&edge).expect("serialize");
         let back: Puzzle2dEdge = serde_json::from_str(&json).expect("deserialize");
@@ -578,8 +578,8 @@ mod tests {
         assert!(json.contains("\"rotation\":10"));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn puzzle2d_kind_compatibility_includes_important() {
+    #[test]
+    fn puzzle2d_kind_compatibility_includes_important() {
         let row = Puzzle2dKindCompatibility { source: "a".into(), target: "b".into(), bidirectional: true, important: true, specificity: Puzzle2dCompatSpecificity::Handle };
         let json = serde_json::to_value(&row).expect("serialize");
         assert_eq!(json["important"], true);
@@ -587,8 +587,8 @@ mod tests {
         assert_eq!(json["specificity"], "handle");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn puzzle2d_kind_catalogs_serde_roundtrip() {
+    #[test]
+    fn puzzle2d_kind_catalogs_serde_roundtrip() {
         let catalogs = Puzzle2dKindCatalogs {
             nodes: vec![Puzzle2dCatalogNodeKind {
                 id: "capsule".into(),

@@ -19,7 +19,7 @@ pub const VCS_DIALECT: Dialect = Dialect { artifact_kind: "s.vcs.vcs", standard:
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the editor manifest by
 /// `crate::editor::vcs::create_vcs_app`'s `🔖️Manifest` region.
-pub async fn artifact_kind() -> ArtifactKindSpec {
+pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "vcs.document".into(),
         name: "VCS Document".into(),
@@ -74,7 +74,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
 /// per debt D1, deleted repo-wide only in W6); wiring them into this field too is real follow-up
 /// work, not required for the tree to register or for any law to hold (mirrors the stdio pilot's
 /// own documented deviation, `📓️w2-p-report.md`).
-pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::VcsApps> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.vcs.vcs").expect("canonical vcs.vcs kind"), localization: &[], standards: vec![crate::artifacts::vcs::standards::v1::standard()] }

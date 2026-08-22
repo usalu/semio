@@ -59,11 +59,11 @@ mod tests {
         policy_version: 1,
     };
 
-    async fn echo_infer(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, crate::app::ArtifactInferenceExecutionError> {
+    fn echo_infer(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecution, crate::app::ArtifactInferenceExecutionError> {
         Ok(ArtifactInferenceExecution { canonical_payload: request.canonical_payload.to_vec(), diagnostics: Vec::new(), validity: "valid".into(), quality: "exact".into(), complete: true, actual_cache_mode: request.requested_cache_mode.clone() })
     }
 
-    async fn request_bytes() -> Vec<u8> {
+    fn request_bytes() -> Vec<u8> {
         let request = WireArtifactInferenceRequest {
             wire_version: crate::app::ARTIFACT_INFERENCE_WIRE_VERSION,
             owner: TEST_METADATA.owner.into(),
@@ -78,7 +78,7 @@ mod tests {
             policy_version: TEST_METADATA.policy_version,
             revision: 1,
             generation: 1,
-            source_dialect: "s.jobtest.widget@1/*".into(),
+            source_dialect: "s.jobtest.widget.standard.v1.dialect.canonical".into(),
             policy: Vec::new(),
             budgets: WireArtifactInferenceBudget { allocation_bytes: 1 << 20, work_units: 1000, recursion_depth: 4 },
             cancellation_id: "jobtest-cancel-1".into(),
@@ -96,7 +96,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn a_two_slice_infer_job_decodes_then_dispatches_to_the_registered_service() {
         let _ = crate::app::register_artifact_inference_service(ArtifactInferenceService::new(TEST_METADATA, echo_infer));
-        start_job(200, JOB_KIND_INFER, &request_bytes());
+        start_job(200, JOB_KIND_INFER, &request_bytes()).await;
 
         match step_job(200, JobBudget { fuel: 1, deadline_ms: 1 }).await {
             JobStep::Running(Some(progress)) => {
@@ -133,22 +133,22 @@ mod tests {
         let _ = crate::app::register_artifact_inference_service(ArtifactInferenceService::new(TEST_METADATA, echo_infer));
         let input = request_bytes();
 
-        start_job(201, JOB_KIND_INFER, &input);
-        step_job(201, JobBudget::default());
+        start_job(201, JOB_KIND_INFER, &input).await;
+        step_job(201, JobBudget::default()).await;
         let baseline = match step_job(201, JobBudget::default()).await {
             JobStep::Done(bytes) => bytes,
             _ => panic!("uninterrupted run must finish Done within 2 slices"),
         };
 
-        start_job(202, JOB_KIND_INFER, &input);
-        step_job(202, JobBudget::default());
-        let entries = checkpoint_jobs();
-        let entry = entries.await.iter().find(|entry| entry.job == 202).expect("job 202 must appear in checkpoint_jobs()");
+        start_job(202, JOB_KIND_INFER, &input).await;
+        step_job(202, JobBudget::default()).await;
+        let entries = checkpoint_jobs().await;
+        let entry = entries.iter().find(|entry| entry.job == 202).expect("job 202 must appear in checkpoint_jobs()");
         assert_eq!(entry.checkpoint.as_deref(), Some(PHASE_DECODED), "slice 1 must have checkpointed PHASE_DECODED");
         let checkpoint = entry.checkpoint.clone();
-        cancel_job(202);
+        cancel_job(202).await;
 
-        restore_job(202, JOB_KIND_INFER, &input, checkpoint);
+        restore_job(202, JOB_KIND_INFER, &input, checkpoint).await;
         let restored_final = match step_job(202, JobBudget::default()).await {
             JobStep::Done(bytes) => bytes,
             JobStep::Running(_) => panic!("a restore from PHASE_DECODED must finish Done on its FIRST step_job call (only the execute tick remains)"),
@@ -162,7 +162,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn infer_job_reports_a_named_decode_fault_on_garbage_input() {
-        start_job(203, JOB_KIND_INFER, b"not json");
+        start_job(203, JOB_KIND_INFER, b"not json").await;
         match step_job(203, JobBudget::default()).await {
             JobStep::Failed(bytes) => {
                 let fault = dsl::decode_fault_bytes(&bytes);

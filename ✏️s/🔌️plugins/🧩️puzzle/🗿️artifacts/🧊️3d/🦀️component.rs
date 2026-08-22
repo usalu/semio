@@ -8,14 +8,36 @@ use serde::{Deserialize, Serialize};
 
 //#region ⚠️ Errors
 /// 🧯️ Puzzle 3d precompute session errors — JSON (de)serialization and brush/fill session state failures.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum Puzzle3dError {
-    #[error(transparent)]
-    Json(#[from] serde_json::Error),
-    #[error("brush placement rejected")]
+    Json(serde_json::Error),
     BrushPlacementRejected,
-    #[error("fill session unavailable")]
     FillSessionUnavailable,
+}
+
+impl std::fmt::Display for Puzzle3dError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Json(error) => write!(formatter, "{error}"),
+            Self::BrushPlacementRejected => formatter.write_str("brush placement rejected"),
+            Self::FillSessionUnavailable => formatter.write_str("fill session unavailable"),
+        }
+    }
+}
+
+impl std::error::Error for Puzzle3dError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Json(error) => std::error::Error::source(error),
+            Self::BrushPlacementRejected | Self::FillSessionUnavailable => None,
+        }
+    }
+}
+
+impl From<serde_json::Error> for Puzzle3dError {
+    fn from(error: serde_json::Error) -> Self {
+        Self::Json(error)
+    }
 }
 //#endregion ⚠️ Errors
 
@@ -77,16 +99,16 @@ impl<'de> Deserialize<'de> for Puzzle3dScale {
 /// `Shape::List(Float)` instead: `scale=[2]` (uniform) / `scale=[2 3 4]` (per-axis) — the brackets
 /// make it self-delimiting regardless of item count.
 impl dsl::DslField for Puzzle3dScale {
-    async fn shape() -> dsl::Shape {
+    fn shape() -> dsl::Shape {
         dsl::Shape::List(Box::new(dsl::Shape::Float))
     }
-    async fn to_value(&self) -> dsl::FieldValue {
+    fn to_value(&self) -> dsl::FieldValue {
         match self {
             Puzzle3dScale::Uniform(scale) => dsl::FieldValue::List(vec![dsl::FieldValue::Float(*scale)]),
             Puzzle3dScale::Vec3(vec3) => dsl::FieldValue::List(vec3.iter().map(|axis| dsl::FieldValue::Float(*axis)).collect()),
         }
     }
-    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
             dsl::FieldValue::List(items) if items.len() == 1 => match &items[0] {
                 dsl::FieldValue::Float(scale) => Ok(Puzzle3dScale::Uniform(*scale)),
@@ -357,7 +379,7 @@ pub struct Puzzle3dCatalogVortexTemplate {
     pub radius: Option<f64>,
 }
 
-async fn puzzle3d_default_direction() -> [f64; 3] {
+fn puzzle3d_default_direction() -> [f64; 3] {
     [0.0, 0.0, 1.0]
 }
 
@@ -489,7 +511,7 @@ pub struct Puzzle3dMeta {
 //#region 🔖️ArtifactKind
 /// 🗿️ The `3d.puzzle` artifact kind — lifted out of the pre-consolidation manifest builder chain so
 /// the artifact, not the app, owns its own identity.
-pub async fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "3d.puzzle".into(),
         name: "3D Puzzle".into(),
@@ -520,7 +542,7 @@ pub async fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// on their ports, which is all a consumer ever needed. `🗄️stdio`'s own docstrings describe
 /// absorbing this kind into the shared vocabulary later — that move stays open and is not
 /// pre-empted here.
-pub async fn kit_catalog_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+pub fn kit_catalog_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "kit.catalog".into(),
         name: "Kit Catalog".into(),
@@ -547,7 +569,7 @@ pub async fn kit_catalog_artifact_kind() -> semio_framework_plugin::ArtifactKind
 /// field — it belongs to the same OS media-host 14-function family flagged on puzzle2d's
 /// `declaration()` doc, a different mechanism from the nine §6 registrars this struct covers — so it
 /// stays wired through `🧩️puzzle/🦀️component.rs`'s own `.setup()`, not here.
-pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
@@ -597,7 +619,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
 /// .composers(...).languages(...).document_codec(...)` chain, deleted outright, no dual channel) as
 /// the ONLY registration channel for schema/io/viewer/editor rows. `definition()` (old
 /// `ArtifactDefinition`/capability rows, above) is kept per debt D1.
-pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::PuzzleApps> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.puzzle.puzzle3d").expect("canonical puzzle3d kind"), localization: &[], standards: vec![crate::artifacts::puzzle3d::standards::v1::standard()] }
@@ -608,7 +630,7 @@ pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDe
 /// existed as a side-effecting `register_pilot_languages()` before M1 but was never called from
 /// anywhere (dead code, confirmed by grep) — wiring it into `declaration()`'s `.languages(...)` is
 /// this conversion's one real bug fix: puzzle3d's own grammars were never actually registered.
-pub async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -676,8 +698,8 @@ pub use crate::artifacts::puzzle3d::op::Puzzle3dPlaySnapshot;
 mod design_parity_schema_tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn attraction_exposes_eight_connection_parameters_with_zero_defaults() {
+    #[test]
+    fn attraction_exposes_eight_connection_parameters_with_zero_defaults() {
         let attraction = Puzzle3dAttraction { id: "a".into(), attracting: "o1:v0".into(), attracted: "o2:v0".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 };
         let json = serde_json::to_value(&attraction).expect("serialize");
         for key in ["gap", "shift", "rise", "rotation", "turn", "tilt", "x", "y"] {
@@ -693,8 +715,8 @@ mod design_parity_schema_tests {
         assert_eq!(parsed.gap, 0.0);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn object_anchor_defaults_to_fixed() {
+    #[test]
+    fn object_anchor_defaults_to_fixed() {
         let object: Puzzle3dObject = serde_json::from_value(serde_json::json!({
             "id": "o1"
         }))
@@ -703,8 +725,8 @@ mod design_parity_schema_tests {
         assert_eq!(serde_json::to_value(Puzzle3dObjectAnchor::Derived).unwrap(), serde_json::json!("derived"));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn object_kind_is_type_like_with_representations() {
+    #[test]
+    fn object_kind_is_type_like_with_representations() {
         let kind = Puzzle3dCatalogObjectKind {
             id: "Capsule".into(),
             name: "Capsule".into(),
@@ -742,8 +764,8 @@ mod design_parity_schema_tests {
         assert_eq!(round.representations[0].mime, "model/gltf-binary");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn vortex_kind_is_port_like() {
+    #[test]
+    fn vortex_kind_is_port_like() {
         let kind = Puzzle3dCatalogVortexKind {
             id: "c-t".into(),
             code: Some("CT".into()),
@@ -760,8 +782,8 @@ mod design_parity_schema_tests {
         assert_eq!(json["defaultCableKind"], "cable.link");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn kind_compatibility_uses_typed_specificity() {
+    #[test]
+    fn kind_compatibility_uses_typed_specificity() {
         let rule = Puzzle3dKindCompatibility { source: "c-t".into(), target: "c-b".into(), bidirectional: true, important: false, specificity: Puzzle3dCompatSpecificity::Vortex };
         let json = serde_json::to_value(&rule).expect("serialize");
         assert_eq!(json["specificity"], "vortex");

@@ -433,7 +433,7 @@ impl ArtifactEditor for Procedural3dPlayApp {
 //#region 🔖️Manifest
 pub async fn create_procedural3d_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::procedural3d::PROCEDURAL3D_DIALECT).document(["semio", "procedural", "3d"])
-            .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View) })
+            .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View) })
             .artifact_kind(artifact_kind())
             .icon_id("workflow")
             .mode_def(edit::definition())
@@ -454,18 +454,18 @@ pub async fn create_procedural3d_app() -> semio_framework_plugin::AppDefinition 
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             .mutation("nodeGraphEdit", LocalizedLabel::native("Edit Graph", "Graph bearbeiten"))
             .mutation("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"))
-            .action_with(ActionDefinition::new_catalog("removeWidget", LocalizedLabel::native("Remove Widget", "Element entfernen"), ActionKind::Mutation).with_category("targets"))
+            .action_with(ActionDefinition::bounded_catalog("removeWidget", LocalizedLabel::native("Remove Widget", "Element entfernen"), ActionKind::Mutation).with_category("targets"))
             .mutation("moveMediaNode", LocalizedLabel::native("Move Node", "Knoten verschieben"))
-            .action_with(ActionDefinition::new_catalog("addWidget", LocalizedLabel::native("Add Widget", "Element hinzufügen"), ActionKind::Mutation).with_category("create"))
-            .action_with(ActionDefinition::new_catalog("patchFlowWidgets", LocalizedLabel::native("Patch Flow Widgets", "Flow-Elemente aktualisieren"), ActionKind::Mutation).with_category("methods"))
-            .action_with(ActionDefinition::new_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation).with_category("transform"))
-            .action_with(ActionDefinition::new_catalog("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"), ActionKind::Mutation).with_category("transform"))
-            .action_with(ActionDefinition::new_catalog("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"), ActionKind::Mutation).with_category("transform"))
-            .action_with(ActionDefinition::new_catalog("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"), ActionKind::Mutation).with_category("transform"))
-            .action_with(ActionDefinition::new_catalog("addGeneration", LocalizedLabel::native("Add Generation", "Generation hinzufügen"), ActionKind::Mutation).with_category("create"))
-            .action_with(ActionDefinition::new_catalog("removeGeneration", LocalizedLabel::native("Remove Generation", "Generation entfernen"), ActionKind::Mutation).with_category("targets"))
-            .action_with(ActionDefinition::new_catalog("renameGeneration", LocalizedLabel::native("Rename Generation", "Generation umbenennen"), ActionKind::Mutation).with_category("methods"))
-            .action_with(ActionDefinition::new_catalog("updateGenerationValues", LocalizedLabel::native("Update Generation Values", "Generationswerte aktualisieren"), ActionKind::Mutation).with_category("methods"))
+            .action_with(ActionDefinition::bounded_catalog("addWidget", LocalizedLabel::native("Add Widget", "Element hinzufügen"), ActionKind::Mutation).with_category("create"))
+            .action_with(ActionDefinition::bounded_catalog("patchFlowWidgets", LocalizedLabel::native("Patch Flow Widgets", "Flow-Elemente aktualisieren"), ActionKind::Mutation).with_category("methods"))
+            .action_with(ActionDefinition::bounded_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation).with_category("transform"))
+            .action_with(ActionDefinition::bounded_catalog("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"), ActionKind::Mutation).with_category("transform"))
+            .action_with(ActionDefinition::bounded_catalog("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"), ActionKind::Mutation).with_category("transform"))
+            .action_with(ActionDefinition::bounded_catalog("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"), ActionKind::Mutation).with_category("transform"))
+            .action_with(ActionDefinition::bounded_catalog("addGeneration", LocalizedLabel::native("Add Generation", "Generation hinzufügen"), ActionKind::Mutation).with_category("create"))
+            .action_with(ActionDefinition::bounded_catalog("removeGeneration", LocalizedLabel::native("Remove Generation", "Generation entfernen"), ActionKind::Mutation).with_category("targets"))
+            .action_with(ActionDefinition::bounded_catalog("renameGeneration", LocalizedLabel::native("Rename Generation", "Generation umbenennen"), ActionKind::Mutation).with_category("methods"))
+            .action_with(ActionDefinition::bounded_catalog("updateGenerationValues", LocalizedLabel::native("Update Generation Values", "Generationswerte aktualisieren"), ActionKind::Mutation).with_category("methods"))
             // 👁️ Ephemeral view actions — world picking, graph camera, sun/LOD/show-mode display toggles, preview camera.
             // Selection/hover are the framework's `graph` interaction domain now (`.interaction(...)`
             // below) — the six framework verbs (`interactionSelect`/`interactionHover`/`clearSelection`/

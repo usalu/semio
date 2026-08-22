@@ -93,7 +93,7 @@ pub const JOB_KIND_MIGRATE: &str = "semio.migrate";
 /// `component-guest`/wasm32-wasip2 (it must compile and unit-test natively), so it cannot name the
 /// WIT-generated type directly; the WIT boundary conversion lives in the (leased) `JobsGuest` impl
 /// in `🔌️plugin/🦀️component.rs`, field-for-field.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
 pub struct JobBudget {
     pub fuel: u64,
     pub deadline_ms: u32,
@@ -101,6 +101,7 @@ pub struct JobBudget {
 
 /// ▶️ Plain-Rust mirror of `jobs.wit`'s `variant job-step` — see `JobBudget`'s doc for why this
 /// isn't the WIT-generated type itself.
+#[derive(serde::Deserialize, serde::Serialize)]
 pub enum JobStep {
     Running(Option<Vec<u8>>),
     Done(Vec<u8>),
@@ -144,7 +145,7 @@ fn builtin_registry() -> HashMap<&'static str, JobFn> {
 /// earlier one (including a builtin), matching `plugin_command`'s own last-writer convention one
 /// layer up minus the duplicate-id assertion (a plugin legitimately overriding `semio.io-run`'s
 /// default body is not an error here).
-pub async fn register_job_kind(kind: &'static str, run: JobFn) {
+pub fn register_job_kind(kind: &'static str, run: JobFn) {
     KIND_REGISTRY.with(|registry| {
         registry.borrow_mut().insert(kind, run);
     });
@@ -552,7 +553,7 @@ async fn run_io_run(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     let IoRunInput { source, target, payload } = serde_json::from_slice::<IoRunInput>(input).map_err(|_| fault("job.io-run.decode", format!("invalid {JOB_KIND_IO_RUN} input")))?;
     let source = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&source).map_err(|message| fault("job.io-run", message))?;
     let target = semio_framework::io_schema::ArtifactDialect::parse_coordinate(&target).map_err(|message| fault("job.io-run", message))?;
-    let descriptor = match semio_framework::io::io_mechanism::io_entries().await.into_iter().find(|entry| entry.from == source && entry.into == target) {
+    let descriptor = match semio_framework::io::io_mechanism::io_entries().into_iter().find(|entry| entry.from == source && entry.into == target) {
         Some(descriptor) => descriptor,
         None => return Err(fault("job.io-run", format!("no local io entry for hop {} -> {}", source.to_coordinate(), target.to_coordinate()))),
     };
@@ -597,8 +598,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn cancel_job_removes_a_pending_record_so_a_later_step_fails() {
-        start_job(1, JOB_KIND_IO_RUN, b"{}");
-        cancel_job(1);
+        start_job(1, JOB_KIND_IO_RUN, b"{}").await;
+        cancel_job(1).await;
         match step_job(1, JobBudget::default()).await {
             JobStep::Failed(_) => {}
             _ => panic!("a cancelled job must not still be steppable"),
@@ -607,7 +608,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn step_job_on_an_unknown_kind_fails_with_a_named_fault() {
-        start_job(2, "semio.not-a-real-kind", b"{}");
+        start_job(2, "semio.not-a-real-kind", b"{}").await;
         match step_job(2, JobBudget::default()).await {
             JobStep::Failed(bytes) => {
                 let fault = dsl::decode_fault_bytes(&bytes);
@@ -623,7 +624,7 @@ mod tests {
     /// integration tests), so this is the same scope the pre-rewrite suite actually had.
     #[semio_framework_async_macros::async_test]
     async fn io_run_dispatches_through_the_registry_and_keeps_its_decode_fault_code() {
-        start_job(3, JOB_KIND_IO_RUN, b"not json");
+        start_job(3, JOB_KIND_IO_RUN, b"not json").await;
         match step_job(3, JobBudget::default()).await {
             JobStep::Failed(bytes) => {
                 let fault = dsl::decode_fault_bytes(&bytes);
@@ -635,7 +636,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn io_sniff_dispatches_through_the_registry_and_keeps_its_decode_fault_code() {
-        start_job(4, JOB_KIND_IO_SNIFF, b"not json");
+        start_job(4, JOB_KIND_IO_SNIFF, b"not json").await;
         match step_job(4, JobBudget::default()).await {
             JobStep::Failed(bytes) => {
                 let fault = dsl::decode_fault_bytes(&bytes);
@@ -652,14 +653,14 @@ mod tests {
     /// 🧬️ Three ticks, three slices: waits for a grant, does one unit of work (`count += 1`,
     /// progress/checkpoint bytes = `count`), then loops until `count` reaches 3. Resumable from
     /// `restored` (a one-byte `count`), which is what the checkpoint/restore test below exercises.
-    async fn resumable_counter_job(ctx: JobCtx, input: Vec<u8>, restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
+    fn resumable_counter_job(ctx: JobCtx, input: Vec<u8>, restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
         Box::pin(async move {
             let mut count: u8 = restored.and_then(|bytes| bytes.first().copied()).unwrap_or(0);
             while count < 3 {
                 ctx.tick().await;
                 count += 1;
-                ctx.checkpoint(vec![count]);
-                ctx.progress(vec![count]);
+                ctx.checkpoint(vec![count]).await;
+                ctx.progress(vec![count]).await;
             }
             Ok(vec![count, input.first().copied().unwrap_or(0)])
         })
@@ -668,7 +669,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn a_three_slice_job_returns_running_running_done_with_progress_each_slice() {
         register_job_kind("test.resumable-counter", resumable_counter_job);
-        start_job(10, "test.resumable-counter", &[7]);
+        start_job(10, "test.resumable-counter", &[7]).await;
 
         match step_job(10, JobBudget { fuel: 1, deadline_ms: 1 }).await {
             JobStep::Running(Some(bytes)) => assert_eq!(bytes, vec![1]),
@@ -686,18 +687,18 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn the_budget_a_tick_observes_is_whatever_step_job_most_recently_passed() {
-        async fn budget_echo_job(ctx: JobCtx, _input: Vec<u8>, _restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
+        fn budget_echo_job(ctx: JobCtx, _input: Vec<u8>, _restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
             Box::pin(async move {
                 ctx.tick().await;
-                ctx.progress(vec![ctx.budget().await.fuel as u8]);
+                ctx.progress(vec![ctx.budget().await.fuel as u8]).await;
                 ctx.tick().await;
-                ctx.progress(vec![ctx.budget().await.fuel as u8]);
+                ctx.progress(vec![ctx.budget().await.fuel as u8]).await;
                 ctx.tick().await;
                 Ok(vec![0])
             })
         }
         register_job_kind("test.budget-echo", budget_echo_job);
-        start_job(11, "test.budget-echo", b"[]");
+        start_job(11, "test.budget-echo", b"[]").await;
 
         match step_job(11, JobBudget { fuel: 5, deadline_ms: 1 }).await {
             JobStep::Running(Some(bytes)) => assert_eq!(bytes, vec![5], "first tick must see the first budget"),
@@ -712,12 +713,12 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn cancelling_a_job_mid_slice_frees_its_slot_for_the_id() {
         register_job_kind("test.resumable-counter", resumable_counter_job);
-        start_job(12, "test.resumable-counter", b"[]");
+        start_job(12, "test.resumable-counter", b"[]").await;
         match step_job(12, JobBudget { fuel: 1, deadline_ms: 1 }).await {
             JobStep::Running(_) => {}
             _ => panic!("job must be mid-slice (parked) before cancelling"),
         }
-        cancel_job(12);
+        cancel_job(12).await;
         match step_job(12, JobBudget { fuel: 1, deadline_ms: 1 }).await {
             JobStep::Failed(bytes) => {
                 let fault = dsl::decode_fault_bytes(&bytes);
@@ -732,9 +733,9 @@ mod tests {
         register_job_kind("test.resumable-counter", resumable_counter_job);
 
         // Uninterrupted baseline.
-        start_job(20, "test.resumable-counter", &[42]);
-        step_job(20, JobBudget::default());
-        step_job(20, JobBudget::default());
+        start_job(20, "test.resumable-counter", &[42]).await;
+        step_job(20, JobBudget::default()).await;
+        step_job(20, JobBudget::default()).await;
         let baseline = match step_job(20, JobBudget::default()).await {
             JobStep::Done(bytes) => bytes,
             _ => panic!("uninterrupted run must finish Done within 3 slices"),
@@ -743,17 +744,17 @@ mod tests {
         // Interrupted: one real slice, capture the checkpoint pack, simulate the actor tearing
         // down (cancel_job — the same bookkeeping a trap-then-restart would leave behind), then
         // replay through restore_job exactly like the leased checkpoint::restore would.
-        start_job(21, "test.resumable-counter", &[42]);
-        step_job(21, JobBudget::default());
-        let entries = checkpoint_jobs();
-        let entry = entries.await.iter().find(|entry| entry.job == 21).expect("job 21 must appear in checkpoint_jobs()");
+        start_job(21, "test.resumable-counter", &[42]).await;
+        step_job(21, JobBudget::default()).await;
+        let entries = checkpoint_jobs().await;
+        let entry = entries.iter().find(|entry| entry.job == 21).expect("job 21 must appear in checkpoint_jobs()");
         assert_eq!(entry.kind, "test.resumable-counter");
         assert_eq!(entry.input, vec![42]);
         let checkpoint = entry.checkpoint.clone();
-        cancel_job(21);
+        cancel_job(21).await;
 
-        restore_job(21, "test.resumable-counter", &[42], checkpoint);
-        step_job(21, JobBudget::default());
+        restore_job(21, "test.resumable-counter", &[42], checkpoint).await;
+        step_job(21, JobBudget::default()).await;
         let restored_final = match step_job(21, JobBudget::default()).await {
             JobStep::Done(bytes) => bytes,
             _ => panic!("restored run must finish Done within 2 more slices"),
@@ -763,7 +764,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn the_stall_guard_fires_after_repeated_no_progress_static_budget_slices() {
-        async fn never_progresses_job(ctx: JobCtx, _input: Vec<u8>, _restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
+        fn never_progresses_job(ctx: JobCtx, _input: Vec<u8>, _restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
             Box::pin(async move {
                 loop {
                     ctx.tick().await;
@@ -771,7 +772,7 @@ mod tests {
             })
         }
         register_job_kind("test.never-progresses", never_progresses_job);
-        start_job(30, "test.never-progresses", b"[]");
+        start_job(30, "test.never-progresses", b"[]").await;
 
         let same_budget = JobBudget { fuel: 100, deadline_ms: 50 };
         for call in 0..STALL_LIMIT {

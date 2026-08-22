@@ -31,6 +31,7 @@ semio-framework-async = { workspace = true, features = ["entrypoint"] }
 # actor crate already owns. Pure crate (no tokio, no threads, builds for wasm32-unknown-unknown), so
 # this costs no platform coupling; `🔌️plugin/🖥️host` already depends on it the same way.
 semio-framework-actor = { workspace = true }
+semio-framework-job = { workspace = true }
 # 🧵️ INTERACTIVE-JOB-RUNTIME-REFACTOR Phase 1 packet P1b: this crate no longer builds a
 # `tokio::runtime::Runtime` of any flavor — `semio_framework_async::WorkerPool` (via
 # `global_worker_pool`) is now the ONE owner of real OS threads a `TokioHostRuntime` and every

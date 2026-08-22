@@ -184,7 +184,7 @@ mod tests {
         IdealLoadsConfig { max_heating_supply_air_temp_c: 50.0, min_cooling_supply_air_temp_c: 13.0, max_heating_capacity_w: None, max_cooling_capacity_w: None, outdoor_air_per_person_m3_s: 0.01, outdoor_air_per_area_m3_s_m2: 0.0 }
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn heating_meets_demand() {
         let system = unlimited_system();
         let input = IdealLoadsInput {
@@ -205,7 +205,7 @@ mod tests {
         assert!(out.sensible_delivered_w > 0.0);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn capacity_limits_cooling() {
         let system = IdealLoadsConfig { max_cooling_capacity_w: Some(1000.0), ..unlimited_system() };
         let input = IdealLoadsInput {
@@ -225,7 +225,7 @@ mod tests {
         assert!((out.unmet_cooling_w - 4000.0).abs() < 1e-6);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn economizer_active_when_oa_cooler() {
         let system = unlimited_system();
         let input = IdealLoadsInput {

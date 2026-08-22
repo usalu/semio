@@ -23,7 +23,7 @@ pub struct ImperativeInference {
 }
 
 impl protocol::Inference<ImperativeSnapshot> for ImperativeInference {
-    async fn infer(snapshot: &ImperativeSnapshot) -> Self {
+    fn infer(snapshot: &ImperativeSnapshot) -> Self {
         let path = crate::artifacts::imperative::imperative_working_scene(snapshot).path;
         Self { topology: compute_imperative_topology(&path) }
     }
@@ -42,13 +42,13 @@ impl Default for ImperativeInference {
 }
 
 impl protocol::InferenceSpec<ImperativeSnapshot> for ImperativeInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.imperative.imperative.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.imperative.imperative.inference.topology", reads: &["flow"] }]
     }
 }
@@ -65,7 +65,7 @@ impl ArtifactInferrer for crate::artifacts::imperative::standards::v1::subsets::
 /// 💡️ Registers `s.imperative.imperative.inference`'s facet leaves into the OS-wide inference
 /// catalog — call once at plugin init, alongside `imperative_artifact_schema_descriptor`'s
 /// registration.
-pub async fn imperative_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn imperative_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.imperative.imperative.inference",
         inference: schema::FacetLeaves {
@@ -87,7 +87,7 @@ mod tests {
     use protocol::Inference;
     use std::collections::BTreeMap;
 
-    async fn chain_snapshot() -> ImperativeSnapshot {
+    fn chain_snapshot() -> ImperativeSnapshot {
         let path = Path { steps: vec![Step { id: "a".into(), kind: "noop".into(), params: Default::default(), bodies: BTreeMap::new() }, Step { id: "b".into(), kind: "noop".into(), params: Default::default(), bodies: BTreeMap::new() }] };
         crate::artifacts::imperative::imperative_snapshot_with_content("imperative.document", &path, &BTreeMap::new())
     }

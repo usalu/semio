@@ -9,7 +9,7 @@
 // #endregion 🧲️Header
 
 import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "../../🧪️story";
 import { useState } from "react";
 
 // 💬️#region 🧸️Dialog

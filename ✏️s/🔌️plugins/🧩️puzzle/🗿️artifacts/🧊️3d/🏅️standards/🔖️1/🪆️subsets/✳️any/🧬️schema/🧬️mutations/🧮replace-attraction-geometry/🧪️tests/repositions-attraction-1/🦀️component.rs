@@ -30,8 +30,8 @@ fn mutation() -> Puzzle3dMutation {
 
 /// ▶️ The committed `replace-attraction-geometry` payload carries `before` to exactly the committed `after`, and
 /// lands the change this case is named for.
-#[semio_framework_async_macros::async_test]
-async fn applies_to_committed_after() {
+#[test]
+fn applies_to_committed_after() {
     let mut snapshot = before();
     apply_puzzle3d_mutation(&mut snapshot, &mutation()).expect("replace-attraction-geometry applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "replace-attraction-geometry/repositions-attraction-1: applied state differs from committed after-snapshot");
@@ -42,8 +42,8 @@ async fn applies_to_committed_after() {
 }
 
 /// ↩️ Applying `replace-attraction-geometry` then the inverse it derives from `before` restores `before` exactly.
-#[semio_framework_async_macros::async_test]
-async fn inverse_restores_before() {
+#[test]
+fn inverse_restores_before() {
     let base = before();
     let mutation = mutation();
     let inverse = inverse_puzzle3d_mutation(&base, &mutation);
@@ -57,8 +57,8 @@ async fn inverse_restores_before() {
 
 /// 🔣️ Both committed snapshots and the committed `replace-attraction-geometry` payload are already canonical:
 /// decode→encode is a fixed point.
-#[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+#[test]
+fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: Puzzle3dSnapshot = serde_json::from_str(text).expect("snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
@@ -72,8 +72,8 @@ async fn committed_json_is_canonical() {
 }
 
 /// 🎯️ The declared outcome matches what `replace-attraction-geometry` actually produces on this base.
-#[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+#[test]
+fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     let status = outcome.get("status").and_then(serde_json::Value::as_str).expect("outcome carries a status");
     let mut snapshot = before();
@@ -91,8 +91,8 @@ async fn declared_outcome_holds() {
 /// 🔺️ The sparse delta `replace-attraction-geometry` produces is exactly the committed diff — the single most
 /// load-bearing assertion in the fixture: it pins WHICH collections and fields this mutation is
 /// allowed to touch, not merely that the end state matches.
-#[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+#[test]
+fn produces_committed_diff() {
     let base = before();
     let outcome = <Puzzle3dMutation as protocol::Mutation<Puzzle3dSnapshot>>::diff(&mutation(), &base);
     let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
@@ -104,8 +104,8 @@ async fn produces_committed_diff() {
 }
 
 /// 🔣️ The committed `replace-attraction-geometry` diff is itself canonical and decodes to `Puzzle3dDiff`.
-#[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+#[test]
+fn committed_diff_is_canonical() {
     let decoded: crate::artifacts::puzzle3d::diff::Puzzle3dDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
@@ -114,8 +114,8 @@ async fn committed_diff_is_canonical() {
 
 /// 🩹 Applying the committed `replace-attraction-geometry` diff directly to `before` yields the committed `after` —
 /// the diff is a complete description of the change, not a summary of it.
-#[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+#[test]
+fn committed_diff_applies_to_after() {
     let decoded: crate::artifacts::puzzle3d::diff::Puzzle3dDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let produced = <crate::artifacts::puzzle3d::diff::Puzzle3dDiff as protocol::MutationDiff<Puzzle3dSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-attraction-geometry/repositions-attraction-1: committed diff did not carry before to after");

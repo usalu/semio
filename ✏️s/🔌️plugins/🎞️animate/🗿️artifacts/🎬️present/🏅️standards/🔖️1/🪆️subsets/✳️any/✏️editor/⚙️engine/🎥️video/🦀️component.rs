@@ -19,12 +19,12 @@ pub mod cache {
 
     impl PartialMovieLut {
         /// 📂️ Opens or creates a cache directory.
-        pub async fn open(root: impl Into<PathBuf>) -> Result<Self, VideoError> {
+        pub fn open(root: impl Into<PathBuf>) -> Result<Self, VideoError> {
             Self::open_with_limit(root, usize::MAX)
         }
 
         /// 📂️ Opens a cache directory enforcing `max_entries` LRU eviction.
-        pub async fn open_with_limit(root: impl Into<PathBuf>, max_entries: usize) -> Result<Self, VideoError> {
+        pub fn open_with_limit(root: impl Into<PathBuf>, max_entries: usize) -> Result<Self, VideoError> {
             let root = root.into();
             fs::create_dir_all(&root).map_err(VideoError::io("cache dir"))?;
             let mut entries = HashMap::new();
@@ -46,7 +46,7 @@ pub mod cache {
         }
 
         /// 🔍️ Returns a cached partial movie path and marks the entry recently used.
-        pub async fn get(&mut self, hash: &str) -> Option<&Path> {
+        pub fn get(&mut self, hash: &str) -> Option<&Path> {
             if self.entries.contains_key(hash) {
                 self.touch(hash);
                 self.entries.get(hash).map(PathBuf::as_path)
@@ -56,7 +56,7 @@ pub mod cache {
         }
 
         /// 💾️ Registers a rendered partial movie and evicts oldest entries when over capacity.
-        pub async fn insert(&mut self, hash: String, path: PathBuf) -> Result<(), VideoError> {
+        pub fn insert(&mut self, hash: String, path: PathBuf) -> Result<(), VideoError> {
             if !self.entries.contains_key(&hash) {
                 self.access_order.push(hash.clone());
             } else {
@@ -67,12 +67,12 @@ pub mod cache {
         }
 
         /// 📁️ Cache root directory.
-        pub async fn root(&self) -> &Path {
+        pub fn root(&self) -> &Path {
             &self.root
         }
 
         /// 🧾️ Records cache metadata on disk.
-        pub async fn write_index(&self) -> Result<(), VideoError> {
+        pub fn write_index(&self) -> Result<(), VideoError> {
             let index_path = self.root.join("index.json");
             let payload = serde_json::to_string_pretty(&self.access_order).map_err(VideoError::json("cache index"))?;
             fs::write(index_path, payload).map_err(VideoError::io("cache index"))?;
@@ -80,12 +80,12 @@ pub mod cache {
         }
 
         /// 🪪️ Hash helper for partial segments.
-        pub async fn segment_hash(animation_hash: &str, frame_start: u32, frame_end: u32) -> String {
+        pub fn segment_hash(animation_hash: &str, frame_start: u32, frame_end: u32) -> String {
             hash_bytes(format!("{animation_hash}:{frame_start}:{frame_end}").as_bytes())
         }
 
         /// 🧹️ Removes all cached partial movies from disk.
-        pub async fn flush(root: impl Into<PathBuf>) -> Result<usize, VideoError> {
+        pub fn flush(root: impl Into<PathBuf>) -> Result<usize, VideoError> {
             let root = root.into();
             if !root.exists() {
                 return Ok(0);
@@ -110,12 +110,12 @@ pub mod cache {
             Ok(removed)
         }
 
-        async fn touch(&mut self, hash: &str) {
+        fn touch(&mut self, hash: &str) {
             self.access_order.retain(|entry| entry != hash);
             self.access_order.push(hash.to_string());
         }
 
-        async fn evict_if_needed(&mut self) -> Result<(), VideoError> {
+        fn evict_if_needed(&mut self) -> Result<(), VideoError> {
             while self.access_order.len() > self.max_entries {
                 let oldest = self.access_order.first().cloned().ok_or(VideoError::CacheEvictionEmpty)?;
                 self.access_order.remove(0);
@@ -175,8 +175,11 @@ pub mod cache {
 
 pub mod preview {
     use crate::editor::animate::engine::config::config::AnimateConfig;
-    use crate::editor::animate::engine::scene::scene::{preview_scene_loop, Scene, SceneFrame};
+    use crate::editor::animate::engine::scene::scene::Scene;
+    #[cfg(not(feature = "preview-window"))]
+    use crate::editor::animate::engine::scene::scene::{preview_scene_loop, SceneFrame};
     use crate::editor::animate::engine::video::VideoError;
+    #[cfg(not(feature = "preview-window"))]
     use std::io::Write;
 
     /// 🪟️ Live preview outcome.
@@ -192,7 +195,7 @@ pub mod preview {
         scene.setup(config);
         #[cfg(feature = "preview-window")]
         {
-            return preview_scene_window_winit(scene, config, max_frames);
+            return preview_scene_window_winit(scene, config, max_frames).await;
         }
         #[cfg(not(feature = "preview-window"))]
         {
@@ -203,7 +206,8 @@ pub mod preview {
     }
 
     #[cfg(feature = "preview-window")]
-    async fn preview_scene_window_winit<S: Scene>(mut scene: S, config: &AnimateConfig, max_frames: Option<u64>) -> Result<PreviewOutcome, VideoError> {
+    async fn preview_scene_window_winit<S: Scene>(scene: S, config: &AnimateConfig, max_frames: Option<u64>) -> Result<PreviewOutcome, VideoError> {
+        use crate::editor::animate::engine::scene::sobject::Sobject;
         use crate::editor::animate::engine::video::renderer::{CapturedFrame, VelloRenderer};
         use std::sync::atomic::{AtomicBool, Ordering};
         use std::sync::Arc;
@@ -225,7 +229,7 @@ pub mod preview {
         }
 
         impl<S: Scene> PreviewApp<S> {
-            async fn fail(&mut self, error: VideoError) {
+            fn fail(&mut self, error: VideoError) {
                 self.error = Some(error);
             }
         }
@@ -243,14 +247,6 @@ pub mod preview {
                         return;
                     }
                 };
-                match VelloRenderer::new(self.config.width, self.config.height) {
-                    Ok(renderer) => self.renderer = Some(renderer),
-                    Err(err) => {
-                        self.fail(err);
-                        event_loop.exit();
-                        return;
-                    }
-                }
                 self.window = Some(window.clone());
                 if !self.constructed {
                     self.scene.construct();
@@ -292,7 +288,8 @@ pub mod preview {
         }
 
         let max = max_frames.unwrap_or(300);
-        let mut app = PreviewApp { scene, config: config.clone(), max_frames: max, frame_index: 0, renderer: None, window: None, closed: Arc::new(AtomicBool::new(false)), constructed: false, error: None };
+        let renderer = VelloRenderer::new(config.width, config.height).await?;
+        let mut app = PreviewApp { scene, config: config.clone(), max_frames: max, frame_index: 0, renderer: Some(renderer), window: None, closed: Arc::new(AtomicBool::new(false)), constructed: false, error: None };
         let event_loop = EventLoop::new().map_err(|err| VideoError::backend("preview event loop", err))?;
         event_loop.run_app(&mut app).map_err(|err| VideoError::backend("preview run", err))?;
         app.scene.tear_down();
@@ -308,7 +305,8 @@ pub mod preview {
         }
     }
 
-    async fn preview_scene_window_metadata<S: Scene>(scene: &mut S, max_frames: Option<u64>) -> PreviewOutcome {
+    #[cfg(not(feature = "preview-window"))]
+    fn preview_scene_window_metadata<S: Scene>(scene: &mut S, max_frames: Option<u64>) -> PreviewOutcome {
         let max = max_frames.unwrap_or(120);
         let mut stderr = std::io::stderr();
         preview_scene_loop(scene, max, |frame: &SceneFrame| {
@@ -319,7 +317,7 @@ pub mod preview {
 
     /// 🧪️ Headless preview used by CLI `--preview` flag.
     pub async fn preview_scene_headless<S: Scene>(scene: S, config: &AnimateConfig, max_frames: Option<u64>) -> Result<PreviewOutcome, VideoError> {
-        preview_scene_window(scene, config, max_frames)
+        preview_scene_window(scene, config, max_frames).await
     }
 
     #[cfg(test)]
@@ -336,44 +334,44 @@ pub mod preview {
         }
 
         impl DemoScene {
-            async fn new(config: AnimateConfig) -> Self {
+            fn new(config: AnimateConfig) -> Self {
                 Self { base: BasicStage::new(config) }
             }
         }
 
         impl Scene for DemoScene {
-            async fn construct(&mut self) {
+            fn construct(&mut self) {
                 self.add(VSobject::new().into());
                 self.wait(0.05);
             }
-            async fn config(&self) -> &AnimateConfig {
+            fn config(&self) -> &AnimateConfig {
                 self.base.config()
             }
-            async fn config_mut(&mut self) -> &mut AnimateConfig {
+            fn config_mut(&mut self) -> &mut AnimateConfig {
                 self.base.config_mut()
             }
-            async fn camera(&self) -> &Camera {
+            fn camera(&self) -> &Camera {
                 self.base.camera()
             }
-            async fn camera_mut(&mut self) -> &mut Camera {
+            fn camera_mut(&mut self) -> &mut Camera {
                 self.base.camera_mut()
             }
-            async fn mobjects(&self) -> &HashMap<u64, Sobjects> {
+            fn mobjects(&self) -> &HashMap<u64, Sobjects> {
                 self.base.mobjects()
             }
-            async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
+            fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
                 self.base.mobjects_mut()
             }
-            async fn sections(&self) -> &SectionList {
+            fn sections(&self) -> &SectionList {
                 self.base.sections()
             }
-            async fn sections_mut(&mut self) -> &mut SectionList {
+            fn sections_mut(&mut self) -> &mut SectionList {
                 self.base.sections_mut()
             }
-            async fn scene_time(&self) -> f64 {
+            fn scene_time(&self) -> f64 {
                 self.base.scene_time()
             }
-            async fn set_scene_time(&mut self, time: f64) {
+            fn set_scene_time(&mut self, time: f64) {
                 self.base.set_scene_time(time);
             }
         }
@@ -382,7 +380,7 @@ pub mod preview {
         async fn preview_scene_window_metadata_runs() {
             let config = AnimateConfig::default().with_resolution(64, 64).with_frame_rate(30.0);
             let scene = DemoScene::new(config.clone());
-            let outcome = preview_scene_headless(scene, &config, Some(2)).expect("preview");
+            let outcome = preview_scene_headless(scene, &config, Some(2)).await.expect("preview");
             assert_eq!(outcome, PreviewOutcome::MetadataOnly);
         }
     }
@@ -439,7 +437,7 @@ pub mod render {
         fs::write(&sections_path, serde_json::to_string_pretty(&sections).map_err(VideoError::json("sections json"))?).map_err(VideoError::io("sections write"))?;
 
         let camera = recorder.inner.camera().clone();
-        let mut renderer = VelloRenderer::new(config.width, config.height)?;
+        let mut renderer = VelloRenderer::new(config.width, config.height).await?;
         let mut writer = SceneFileWriter::new(config, formats)?;
         let mut cache = if config.cache.enabled { Some(PartialMovieLut::open_with_limit(config.cache.partial_movie_dir.clone(), config.cache.max_entries)?) } else { None };
 
@@ -497,65 +495,65 @@ pub mod render {
     }
 
     impl<S: Scene> FrameRecorder<S> {
-        async fn capture_now(&mut self) {
+        fn capture_now(&mut self) {
             self.captures.push(CapturedFrame { time: self.inner.scene_time(), mobjects: self.inner.mobjects().values().map(|m| m.clone_box()).collect() });
         }
     }
 
     impl<S: Scene> Scene for FrameRecorder<S> {
-        async fn construct(&mut self) {
+        fn construct(&mut self) {
             self.inner.construct();
         }
 
-        async fn setup(&mut self, config: &AnimateConfig) {
+        fn setup(&mut self, config: &AnimateConfig) {
             self.inner.setup(config);
         }
 
-        async fn tear_down(&mut self) {
+        fn tear_down(&mut self) {
             self.inner.tear_down();
         }
 
-        async fn config(&self) -> &AnimateConfig {
+        fn config(&self) -> &AnimateConfig {
             self.inner.config()
         }
 
-        async fn config_mut(&mut self) -> &mut AnimateConfig {
+        fn config_mut(&mut self) -> &mut AnimateConfig {
             self.inner.config_mut()
         }
 
-        async fn camera(&self) -> &Camera {
+        fn camera(&self) -> &Camera {
             self.inner.camera()
         }
 
-        async fn camera_mut(&mut self) -> &mut Camera {
+        fn camera_mut(&mut self) -> &mut Camera {
             self.inner.camera_mut()
         }
 
-        async fn mobjects(&self) -> &HashMap<u64, Sobjects> {
+        fn mobjects(&self) -> &HashMap<u64, Sobjects> {
             self.inner.mobjects()
         }
 
-        async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
+        fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
             self.inner.mobjects_mut()
         }
 
-        async fn sections(&self) -> &SectionList {
+        fn sections(&self) -> &SectionList {
             self.inner.sections()
         }
 
-        async fn sections_mut(&mut self) -> &mut SectionList {
+        fn sections_mut(&mut self) -> &mut SectionList {
             self.inner.sections_mut()
         }
 
-        async fn scene_time(&self) -> f64 {
+        fn scene_time(&self) -> f64 {
             self.inner.scene_time()
         }
 
-        async fn set_scene_time(&mut self, time: f64) {
+        fn set_scene_time(&mut self, time: f64) {
             self.inner.set_scene_time(time);
         }
 
-        async fn play(&mut self, mut animation: Animations) {
+        fn play(&mut self, mut animation: Animations) {
             animation.begin();
             let duration = animation.duration().max(0.0);
             let steps = (duration * self.config().frame_rate).ceil() as u64;
@@ -568,18 +566,18 @@ pub mod render {
             animation.finish();
         }
 
-        async fn wait(&mut self, seconds: f64) {
+        fn wait(&mut self, seconds: f64) {
             self.play(Wait::new(seconds).into());
         }
 
-        async fn compile_and_play(&mut self, animations: Vec<Animations>) {
+        fn compile_and_play(&mut self, animations: Vec<Animations>) {
             let _durations = compile_animations(&animations);
             for anim in animations {
                 self.play(anim);
             }
         }
 
-        async fn sample_frame(&mut self, dt: f64) {
+        fn sample_frame(&mut self, dt: f64) {
             self.inner.sample_frame(dt);
             self.capture_now();
         }
@@ -597,44 +595,44 @@ pub mod render {
         }
 
         impl DemoScene {
-            async fn new(config: AnimateConfig) -> Self {
+            fn new(config: AnimateConfig) -> Self {
                 Self { base: BasicStage::new(config) }
             }
         }
 
         impl Scene for DemoScene {
-            async fn construct(&mut self) {
+            fn construct(&mut self) {
                 self.add(VSobject::new().into());
                 self.wait(0.1);
             }
-            async fn config(&self) -> &AnimateConfig {
+            fn config(&self) -> &AnimateConfig {
                 self.base.config()
             }
-            async fn config_mut(&mut self) -> &mut AnimateConfig {
+            fn config_mut(&mut self) -> &mut AnimateConfig {
                 self.base.config_mut()
             }
-            async fn camera(&self) -> &Camera {
+            fn camera(&self) -> &Camera {
                 self.base.camera()
             }
-            async fn camera_mut(&mut self) -> &mut Camera {
+            fn camera_mut(&mut self) -> &mut Camera {
                 self.base.camera_mut()
             }
-            async fn mobjects(&self) -> &HashMap<u64, Sobjects> {
+            fn mobjects(&self) -> &HashMap<u64, Sobjects> {
                 self.base.mobjects()
             }
-            async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
+            fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
                 self.base.mobjects_mut()
             }
-            async fn sections(&self) -> &SectionList {
+            fn sections(&self) -> &SectionList {
                 self.base.sections()
             }
-            async fn sections_mut(&mut self) -> &mut SectionList {
+            fn sections_mut(&mut self) -> &mut SectionList {
                 self.base.sections_mut()
             }
-            async fn scene_time(&self) -> f64 {
+            fn scene_time(&self) -> f64 {
                 self.base.scene_time()
             }
-            async fn set_scene_time(&mut self, time: f64) {
+            fn set_scene_time(&mut self, time: f64) {
                 self.base.set_scene_time(time);
             }
         }
@@ -645,7 +643,7 @@ pub mod render {
             let dir = std::env::temp_dir().join(format!("animate_render_test_{stamp}"));
             let config = AnimateConfig::default().with_resolution(64, 64).with_frame_rate(15.0).with_output_dir(&dir).with_media_dir(dir.join("media"));
             let scene = DemoScene::new(config.clone());
-            let outputs = render_scene(scene, &config, &[OutputFormat::LastFrame]).expect("render");
+            let outputs = render_scene(scene, &config, &[OutputFormat::LastFrame]).await.expect("render");
             let last = outputs.last_frame.expect("last frame path");
             assert!(last.exists());
         }
@@ -716,7 +714,7 @@ pub mod renderer {
         }
 
         /// 🖼️ Renders captured mobjects to RGBA8 pixels.
-        pub async fn render_capture(&mut self, capture: &CapturedFrame, camera: &Camera, config: &AnimateConfig) -> Result<Vec<u8>, VideoError> {
+        pub fn render_capture(&mut self, capture: &CapturedFrame, camera: &Camera, config: &AnimateConfig) -> Result<Vec<u8>, VideoError> {
             let static_hash = static_layer_hash(capture, config);
             if self.static_cache.as_ref().is_some_and(|cache| cache.hash == static_hash) {
                 return Ok(self.static_cache.as_ref().expect("cache").pixels.clone());
@@ -728,14 +726,14 @@ pub mod renderer {
             Ok(pixels)
         }
 
-        async fn render_scene_to_pixels(&mut self, scene: &Scene, background: VelloColor) -> Result<Vec<u8>, VideoError> {
+        fn render_scene_to_pixels(&mut self, scene: &Scene, background: VelloColor) -> Result<Vec<u8>, VideoError> {
             let params = RenderParams { base_color: background, width: self.width, height: self.height, antialiasing_method: AaConfig::Area };
             self.renderer.render_to_texture(&self.device, &self.queue, scene, &self.target_view, &params).map_err(|err| VideoError::backend("vello render", format!("{err:?}")))?;
             read_pixels(&self.device, &self.queue, &self.target_texture, &self.readback_buffer, self.width, self.height)
         }
     }
 
-    async fn create_target_texture(device: &wgpu::Device, width: u32, height: u32) -> (wgpu::Texture, wgpu::TextureView) {
+    fn create_target_texture(device: &wgpu::Device, width: u32, height: u32) -> (wgpu::Texture, wgpu::TextureView) {
         let texture = device.create_texture(&wgpu::TextureDescriptor {
             label: Some("animate_video_target"),
             size: wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
@@ -750,7 +748,7 @@ pub mod renderer {
         (texture, view)
     }
 
-    async fn build_vello_scene(capture: &CapturedFrame, camera: &Camera, config: &AnimateConfig) -> Scene {
+    fn build_vello_scene(capture: &CapturedFrame, camera: &Camera, config: &AnimateConfig) -> Scene {
         let mut scene = Scene::new();
         let view = scene_affine(camera, config.width, config.height);
         let mut indices: Vec<usize> = (0..capture.mobjects.len()).collect();
@@ -761,13 +759,13 @@ pub mod renderer {
         scene
     }
 
-    async fn scene_affine(camera: &Camera, width: u32, height: u32) -> kurbo::Affine {
+    fn scene_affine(camera: &Camera, width: u32, height: u32) -> kurbo::Affine {
         let sx = width as f64 / camera.frame_width;
         let sy = height as f64 / camera.frame_height;
         kurbo::Affine::new([sx, 0.0, 0.0, -sy, width as f64 * 0.5 - camera.frame_center.x() * sx, height as f64 * 0.5 + camera.frame_center.y() * sy]) * camera.transform.to_kurbo()
     }
 
-    async fn paint_mobject(scene: &mut Scene, mobj: &Sobjects, view: kurbo::Affine) {
+    fn paint_mobject(scene: &mut Scene, mobj: &Sobjects, view: kurbo::Affine) {
         let transform = view * mobj.transform().to_kurbo();
         let style = mobj.style();
         let opacity = mobj.effective_opacity();
@@ -785,15 +783,15 @@ pub mod renderer {
         }
     }
 
-    async fn color_to_vello_array(rgba: [f64; 4]) -> VelloColor {
+    fn color_to_vello_array(rgba: [f64; 4]) -> VelloColor {
         VelloColor::new([rgba[0] as f32, rgba[1] as f32, rgba[2] as f32, rgba[3] as f32])
     }
 
-    async fn color_from_style(color: Color) -> [f64; 4] {
+    fn color_from_style(color: Color) -> [f64; 4] {
         color.to_array()
     }
 
-    pub(crate) async fn static_layer_hash(capture: &CapturedFrame, config: &AnimateConfig) -> String {
+    pub(crate) fn static_layer_hash(capture: &CapturedFrame, config: &AnimateConfig) -> String {
         use framework_hash::{format_number_for_hash, hash_parts};
         let mut parts = vec![format_number_for_hash(config.background[0]), format_number_for_hash(config.background[1]), format_number_for_hash(config.background[2]), format_number_for_hash(config.background[3]), capture.mobjects.len().to_string()];
         for mobj in &capture.mobjects {
@@ -813,12 +811,12 @@ pub mod renderer {
         hash_parts(&parts)
     }
 
-    pub(crate) async fn frame_hash(capture: &CapturedFrame, config: &AnimateConfig) -> String {
+    pub(crate) fn frame_hash(capture: &CapturedFrame, config: &AnimateConfig) -> String {
         use framework_hash::{format_number_for_hash, hash_parts};
         hash_parts(&[format_number_for_hash(capture.time), static_layer_hash(capture, config)])
     }
 
-    async fn read_pixels(device: &wgpu::Device, queue: &wgpu::Queue, texture: &wgpu::Texture, readback_buffer: &wgpu::Buffer, width: u32, height: u32) -> Result<Vec<u8>, VideoError> {
+    fn read_pixels(device: &wgpu::Device, queue: &wgpu::Queue, texture: &wgpu::Texture, readback_buffer: &wgpu::Buffer, width: u32, height: u32) -> Result<Vec<u8>, VideoError> {
         let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("animate_video_readback") });
         encoder.copy_texture_to_buffer(
             wgpu::TexelCopyTextureInfo { texture, mip_level: 0, origin: wgpu::Origin3d::ZERO, aspect: wgpu::TextureAspect::All },
@@ -850,7 +848,7 @@ pub mod renderer {
             let config = AnimateConfig::default().with_resolution(64, 64);
             let camera = Camera::new(config.width as f64 / 100.0, config.height as f64 / 100.0);
             let mut capture = CapturedFrame { time: 0.0, mobjects: vec![VSobject::new().into()] };
-            let mut renderer = VelloRenderer::new(config.width, config.height).expect("renderer");
+            let mut renderer = VelloRenderer::new(config.width, config.height).await.expect("renderer");
             let pixels = renderer.render_capture(&capture, &camera, &config).expect("frame");
             assert_eq!(pixels.len(), 64 * 64 * 4);
             capture.mobjects.clear();
@@ -868,7 +866,7 @@ pub mod scenes {
     use crate::editor::animate::engine::scene::scene::{BasicStage, Scene};
     use crate::editor::animate::engine::scene::section::Section;
     use crate::editor::animate::engine::scene::section::SectionList;
-    use crate::editor::animate::engine::scene::sobject::{Sobject, Sobjects, VSobject};
+    use crate::editor::animate::engine::scene::sobject::{Sobjects, VSobject};
     use std::collections::HashMap;
 
     /// 🧩️ Demo scene used when no bespoke scene is registered for a hash.
@@ -878,52 +876,52 @@ pub mod scenes {
     }
 
     impl HashDemoScene {
-        pub async fn new(config: AnimateConfig, hash: impl Into<String>) -> Self {
+        pub fn new(config: AnimateConfig, hash: impl Into<String>) -> Self {
             Self { base: BasicStage::new(config), hash: hash.into() }
         }
     }
 
     impl Scene for HashDemoScene {
-        async fn construct(&mut self) {
+        fn construct(&mut self) {
             self.add(VSobject::new().into());
             let label = format!("scene-{}", &self.hash[..self.hash.len().min(8)]);
             self.sections_mut().push(Section::new(label, 0.0, 0.2));
             self.wait(0.2);
         }
-        async fn config(&self) -> &AnimateConfig {
+        fn config(&self) -> &AnimateConfig {
             self.base.config()
         }
-        async fn config_mut(&mut self) -> &mut AnimateConfig {
+        fn config_mut(&mut self) -> &mut AnimateConfig {
             self.base.config_mut()
         }
-        async fn camera(&self) -> &Camera {
+        fn camera(&self) -> &Camera {
             self.base.camera()
         }
-        async fn camera_mut(&mut self) -> &mut Camera {
+        fn camera_mut(&mut self) -> &mut Camera {
             self.base.camera_mut()
         }
-        async fn mobjects(&self) -> &HashMap<u64, Sobjects> {
+        fn mobjects(&self) -> &HashMap<u64, Sobjects> {
             self.base.mobjects()
         }
-        async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
+        fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
             self.base.mobjects_mut()
         }
-        async fn sections(&self) -> &SectionList {
+        fn sections(&self) -> &SectionList {
             self.base.sections()
         }
-        async fn sections_mut(&mut self) -> &mut SectionList {
+        fn sections_mut(&mut self) -> &mut SectionList {
             self.base.sections_mut()
         }
-        async fn scene_time(&self) -> f64 {
+        fn scene_time(&self) -> f64 {
             self.base.scene_time()
         }
-        async fn set_scene_time(&mut self, time: f64) {
+        fn set_scene_time(&mut self, time: f64) {
             self.base.set_scene_time(time);
         }
     }
 
     /// 🔍️ Builds the default scene implementation for a scene hash.
-    pub async fn scene_for_hash(config: AnimateConfig, scene_hash: &str) -> HashDemoScene {
+    pub fn scene_for_hash(config: AnimateConfig, scene_hash: &str) -> HashDemoScene {
         HashDemoScene::new(config, scene_hash)
     }
 
@@ -958,39 +956,12 @@ pub mod writer {
     use std::path::{Path, PathBuf};
 
     //#region 🔖️Mp4RawCodec
-    use semio_s_plugin_stdio::artifacts::mp4::standards::isobmff::subsets::any::io::{boxes::write_box, decode_mp4, encode_mp4};
+    use semio_s_plugin_stdio::artifacts::mp4::standards::isobmff::subsets::any::io::{decode_mp4, encode_mp4};
     use semio_s_plugin_stdio::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4Sample, Mp4Snapshot, Mp4Track};
-
-    /// 🏷️ Escape-hatch fourcc for this plugin's own uncompressed-RGBA8 sample entry.
-    /// `Mp4Codec::Other` is the schema's documented boundary for a codec the mp4 engine doesn't
-    /// understand — stdio's own `⚙️engine/🎥️h264` doc comment confirms there is no real pixel
-    /// *encoder* there (only NAL/SPS bitstream framing utilities), so a compressed H.264 export
-    /// is not honestly buildable today; reported as a stdio_gap (see `w5a--report.md`) rather
-    /// than fabricated here. Frames are real, uncompressed, and round-trip exactly.
-    const RAW_RGBA8_FOURCC: [u8; 4] = *b"rgb8";
-
-    /// ✍️ A minimal, real ISO-BMFF `VisualSampleEntry` box (ISO/IEC 14496-12 §12.1.3) for the
-    /// `rgb8` escape-hatch codec — same fixed-field byte layout stdio's own AVC path builds
-    /// (mirrors that engine's `parse_visual_sample_entry` read-side skip pattern exactly), built
-    /// with stdio's own real `write_box` (box length/fourcc framing never hand-rolled here).
-    async fn raw_visual_sample_entry(width: u16, height: u16) -> Vec<u8> {
-        let mut payload = vec![0u8; 8];
-        payload.extend_from_slice(&[0u8; 16]);
-        payload.extend_from_slice(&width.to_be_bytes());
-        payload.extend_from_slice(&height.to_be_bytes());
-        payload.extend_from_slice(&0x0048_0000u32.to_be_bytes());
-        payload.extend_from_slice(&0x0048_0000u32.to_be_bytes());
-        payload.extend_from_slice(&[0u8; 4]);
-        payload.extend_from_slice(&[0, 1]);
-        payload.extend_from_slice(&[0u8; 32]);
-        payload.extend_from_slice(&[0, 0x18]);
-        payload.extend_from_slice(&[0xFF, 0xFF]);
-        write_box(&RAW_RGBA8_FOURCC, &payload)
-    }
 
     /// 🧬️ Builds one partial segment's real `Mp4Snapshot` from captured RGBA8 frames — real ISO-
     /// BMFF container structure via stdio's own `encode_mp4` below, never hand-rolled here.
-    async fn build_raw_mp4_snapshot(width: u32, height: u32, frame_rate: f64, frames: &[Vec<u8>]) -> Mp4Snapshot {
+    fn build_raw_mp4_snapshot(width: u32, height: u32, frame_rate: f64, frames: &[Vec<u8>]) -> Mp4Snapshot {
         let timescale = (frame_rate.round() as u32).max(1);
         let samples: Vec<Mp4Sample> = frames.iter().map(|pixels| Mp4Sample { data: pixels.clone(), duration: 1, cts_offset: 0, sync: true }).collect();
         let codec = Mp4Codec::default();
@@ -1012,7 +983,7 @@ pub mod writer {
     /// as real, expected on-disk bytes, not a modeling gap. No scaling/quantization logic is
     /// added to stdio's gif engine itself (out of scope per this plugin's extraction map) — this
     /// stays local, own domain code.
-    async fn gif_palette() -> Vec<GifRgb> {
+    fn gif_palette() -> Vec<GifRgb> {
         let mut palette = Vec::with_capacity(256);
         for &r in &GIF_CUBE_LEVELS {
             for &g in &GIF_CUBE_LEVELS {
@@ -1025,20 +996,20 @@ pub mod writer {
         palette
     }
 
-    async fn gif_cube_level(value: u8) -> u32 {
+    fn gif_cube_level(value: u8) -> u32 {
         (u32::from(value) * 5 + 127) / 255
     }
 
     /// 🔎️ Direct arithmetic nearest-color index into `gif_palette()`'s fixed uniform cube (no
     /// brute-force search needed since the cube's levels are evenly spaced).
-    async fn nearest_cube_index(r: u8, g: u8, b: u8) -> u8 {
+    fn nearest_cube_index(r: u8, g: u8, b: u8) -> u8 {
         (gif_cube_level(r) * 36 + gif_cube_level(g) * 6 + gif_cube_level(b)) as u8
     }
 
     /// 🔬️ Own simple nearest-neighbor spatial scaler — mirrors the old `scale=640:-1` ffmpeg
     /// filter's target width. Stdio's gif engine has no scaling logic and shouldn't grow any per
     /// this plugin's extraction-map recipe, so this stays local, own domain code.
-    async fn nearest_neighbor_scale(pixels: &[u8], src_w: u32, src_h: u32, dst_w: u32, dst_h: u32) -> Vec<u8> {
+    fn nearest_neighbor_scale(pixels: &[u8], src_w: u32, src_h: u32, dst_w: u32, dst_h: u32) -> Vec<u8> {
         let mut out = vec![0u8; (dst_w * dst_h * 4) as usize];
         for y in 0..dst_h {
             let sy = (y * src_h) / dst_h.max(1);
@@ -1052,19 +1023,19 @@ pub mod writer {
         out
     }
 
-    async fn rgba_to_gif_indices(pixels: &[u8]) -> Vec<u8> {
-        pixels.chunks_exact(4).map(|p| nearest_cube_index(p[0], p[1], p[2])).collect()
+    fn rgba_to_gif_indices(pixels: &[u8]) -> Vec<u8> {
+        pixels.as_chunks::<4>().0.iter().map(|p| nearest_cube_index(p[0], p[1], p[2])).collect()
     }
 
     /// 🎞️ Builds a real `GifSnapshot` from captured RGBA8 frames: own frame-rate decimation +
     /// nearest-neighbor downscale (mirrors the old `fps=15,scale=640:-1` ffmpeg filter), own
     /// fixed-cube color quantization, real GIF89a encode via stdio's `encode_gif` below.
-    async fn build_gif_snapshot(width: u32, height: u32, frame_rate: f64, frames: &[Vec<u8>]) -> Option<GifSnapshot> {
+    fn build_gif_snapshot(width: u32, height: u32, frame_rate: f64, frames: &[Vec<u8>]) -> Option<GifSnapshot> {
         if frames.is_empty() || width == 0 || height == 0 {
             return None;
         }
         let step = ((frame_rate / GIF_TARGET_FPS).round() as usize).max(1);
-        let dst_w = width.min(GIF_MAX_WIDTH).max(1);
+        let dst_w = width.clamp(1, GIF_MAX_WIDTH);
         let dst_h = ((dst_w as f64 * height as f64 / width as f64).round() as u32).max(1);
         let delay_cs = ((100.0 * step as f64 / frame_rate.max(1.0)).round() as u16).max(1);
         let mut gif_frames = Vec::new();
@@ -1078,12 +1049,12 @@ pub mod writer {
     //#endregion 🔖️GifQuantize
 
     /// 🧹️ Clears partial-movie cache directories from config.
-    pub async fn flush_partial_movie_cache(config: &AnimateConfig) -> Result<usize, VideoError> {
+    pub fn flush_partial_movie_cache(config: &AnimateConfig) -> Result<usize, VideoError> {
         crate::editor::animate::engine::video::cache::PartialMovieLut::flush(&config.cache.partial_movie_dir)
     }
 
     /// 📝️ Writes section timings as an SRT subtitle sidecar.
-    pub async fn write_sections_srt(sections: &SectionList, path: &Path) -> Result<(), VideoError> {
+    pub fn write_sections_srt(sections: &SectionList, path: &Path) -> Result<(), VideoError> {
         if let Some(parent) = path.parent() {
             fs::create_dir_all(parent).map_err(VideoError::io("subtitle dir"))?;
         }
@@ -1101,7 +1072,7 @@ pub mod writer {
         fs::write(path, body).map_err(VideoError::io("subtitle write"))
     }
 
-    async fn format_srt_timestamp(seconds: f64) -> String {
+    fn format_srt_timestamp(seconds: f64) -> String {
         let total_ms = (seconds.max(0.0) * 1000.0).round() as u64;
         let hours = total_ms / 3_600_000;
         let minutes = (total_ms % 3_600_000) / 60_000;
@@ -1125,7 +1096,7 @@ pub mod writer {
 
     impl SceneFileWriter {
         /// 🏗️ Prepares writer directories from config.
-        pub async fn new(config: &AnimateConfig, formats: &[OutputFormat]) -> Result<Self, VideoError> {
+        pub fn new(config: &AnimateConfig, formats: &[OutputFormat]) -> Result<Self, VideoError> {
             fs::create_dir_all(&config.output_dir).map_err(VideoError::io("output dir"))?;
             fs::create_dir_all(&config.media_dir).map_err(VideoError::io("media dir"))?;
             let partial_root = config.cache.partial_movie_dir.clone();
@@ -1142,7 +1113,7 @@ pub mod writer {
 
         /// 🎬️ Begins a new partial-movie segment for `hash`; the returned path is where the
         /// segment's own real `.mp4` (stdio-encoded) lands once `finalize_partial` runs.
-        pub async fn begin_partial(&mut self, hash: &str, frame_start: u32) -> Result<PathBuf, VideoError> {
+        pub fn begin_partial(&mut self, hash: &str, frame_start: u32) -> Result<PathBuf, VideoError> {
             self.pending_frames.clear();
             Ok(self.partial_root.join(format!("{}_{frame_start}.mp4", &hash[..hash.len().min(12)])))
         }
@@ -1150,7 +1121,7 @@ pub mod writer {
         /// 🖼️ Buffers one captured RGBA8 frame for the open partial and, if `PngSequence` output
         /// was requested, writes it into the flat frame sequence — the real `image` crate PNG
         /// encoder, unrelated to and unchanged by the mp4/gif codec rewiring above.
-        pub async fn push_frame(&mut self, pixels: &[u8], frame_index: u32) -> Result<(), VideoError> {
+        pub fn push_frame(&mut self, pixels: &[u8], frame_index: u32) -> Result<(), VideoError> {
             self.pending_frames.push(pixels.to_vec());
             if let Some(dir) = &self.png_sequence_dir {
                 let path = dir.join(format!("{frame_index:06}.png"));
@@ -1161,7 +1132,7 @@ pub mod writer {
 
         /// ✅️ Encodes the buffered frames into a real `.mp4` at `partial_path` via stdio's mp4
         /// engine and tracks it for the final concat pass.
-        pub async fn finalize_partial(&mut self, partial_path: &Path) -> Result<PathBuf, VideoError> {
+        pub fn finalize_partial(&mut self, partial_path: &Path) -> Result<PathBuf, VideoError> {
             let snapshot = build_raw_mp4_snapshot(self.config.width, self.config.height, self.config.frame_rate, &self.pending_frames);
             let bytes = encode_mp4(&snapshot);
             fs::write(partial_path, &bytes).map_err(VideoError::io("partial mp4 write"))?;
@@ -1171,7 +1142,7 @@ pub mod writer {
         }
 
         /// ♻️ Reuses a cached partial without re-encoding.
-        pub async fn register_cached_partial(&mut self, path: &Path) {
+        pub fn register_cached_partial(&mut self, path: &Path) {
             if path.exists() {
                 self.partial_paths.push(path.to_path_buf());
             }
@@ -1179,7 +1150,7 @@ pub mod writer {
 
         /// 🎞️ Concatenates partial `.mp4` segments (real decode → merge samples → encode via
         /// stdio's mp4 engine, never FFmpeg) and emits configured sidecar outputs.
-        pub async fn encode_outputs(&self, last_frame: Option<&[u8]>) -> Result<super::render::OutputPaths, VideoError> {
+        pub fn encode_outputs(&self, last_frame: Option<&[u8]>) -> Result<super::render::OutputPaths, VideoError> {
             let mut outputs = super::render::OutputPaths::default();
             let mut concatenated_frames: Vec<Vec<u8>> = Vec::new();
             if self.formats.contains(&OutputFormat::Mp4) && !self.partial_paths.is_empty() {
@@ -1212,7 +1183,7 @@ pub mod writer {
         }
     }
 
-    async fn write_png_file(path: &Path, pixels: &[u8], width: u32, height: u32) -> Result<(), VideoError> {
+    fn write_png_file(path: &Path, pixels: &[u8], width: u32, height: u32) -> Result<(), VideoError> {
         let image: ImageBuffer<Rgba<u8>, Vec<u8>> = ImageBuffer::from_raw(width, height, pixels.to_vec()).ok_or(VideoError::InvalidRgbaBuffer)?;
         image.save(path).map_err(|err| VideoError::backend("png write", err))
     }
@@ -1220,7 +1191,7 @@ pub mod writer {
     /// 🎞️ Decodes+merges partial `.mp4` segments' raw-frame samples into one final `.mp4` at
     /// `output` (real stdio decode/encode round trip, never FFmpeg) and returns the merged RGBA8
     /// frames so the gif path can reuse them without a second decode pass.
-    async fn concat_raw_partials(partials: &[PathBuf], output: &Path, width: u32, height: u32, timescale: u32) -> Result<Vec<Vec<u8>>, VideoError> {
+    fn concat_raw_partials(partials: &[PathBuf], output: &Path, width: u32, height: u32, timescale: u32) -> Result<Vec<Vec<u8>>, VideoError> {
         if partials.len() == 1 {
             fs::copy(&partials[0], output).map_err(VideoError::io("copy partial"))?;
             let bytes = fs::read(output).map_err(VideoError::io("read concatenated mp4"))?;
@@ -1253,7 +1224,7 @@ pub mod writer {
         use crate::editor::animate::engine::video::render::OutputFormat;
         use std::time::{SystemTime, UNIX_EPOCH};
 
-        async fn temp_config() -> AnimateConfig {
+        fn temp_config() -> AnimateConfig {
             let stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
             let dir = std::env::temp_dir().join(format!("animate_video_test_{stamp}"));
             AnimateConfig::default().with_resolution(16, 16).with_output_dir(&dir).with_media_dir(dir.join("media"))
@@ -1333,7 +1304,7 @@ pub mod writer {
 
         #[semio_framework_async_macros::async_test]
         async fn build_gif_snapshot_quantizes_and_downscales() {
-            let frames = vec![vec![255u8, 0, 0, 255].repeat(64 * 64)];
+            let frames = vec![[255u8, 0, 0, 255].repeat(64 * 64)];
             let snapshot = build_gif_snapshot(64, 64, 15.0, &frames).expect("gif snapshot");
             assert_eq!(snapshot.frames.len(), 1);
             assert_eq!(snapshot.width, 64);
@@ -1361,47 +1332,56 @@ pub use writer::{flush_partial_movie_cache, write_sections_srt, SceneFileWriter}
 
 //#region 🔖️Error
 /// 🎬️ Errors from headless video rendering, caching, and encoding.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum VideoError {
     /// 📁️ A filesystem operation (create/read/write/remove) failed.
-    #[error("{context}: {source}")]
-    Io {
-        context: &'static str,
-        #[source]
-        source: std::io::Error,
-    },
+    Io { context: &'static str, source: std::io::Error },
     /// 🧾️ JSON (de)serialization failed.
-    #[error("{context}: {source}")]
-    Json {
-        context: &'static str,
-        #[source]
-        source: serde_json::Error,
-    },
+    Json { context: &'static str, source: serde_json::Error },
     /// 🖼️ Pixel buffer length didn't match the declared RGBA8 dimensions.
-    #[error("invalid rgba buffer")]
     InvalidRgbaBuffer,
     /// 🗑️ Cache eviction found an empty access order (invariant violation).
-    #[error("cache eviction: empty order")]
     CacheEvictionEmpty,
     /// 📡️ GPU readback channel closed before a result arrived.
-    #[error("readback channel closed")]
     ReadbackChannelClosed,
     /// 🖥️ wgpu/vello/window subsystem failure, message from the underlying backend.
-    #[error("{context}: {message}")]
     Backend { context: &'static str, message: String },
+}
+
+impl std::fmt::Display for VideoError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Io { context, source } => write!(formatter, "{context}: {source}"),
+            Self::Json { context, source } => write!(formatter, "{context}: {source}"),
+            Self::InvalidRgbaBuffer => formatter.write_str("invalid rgba buffer"),
+            Self::CacheEvictionEmpty => formatter.write_str("cache eviction: empty order"),
+            Self::ReadbackChannelClosed => formatter.write_str("readback channel closed"),
+            Self::Backend { context, message } => write!(formatter, "{context}: {message}"),
+        }
+    }
+}
+
+impl std::error::Error for VideoError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Io { source, .. } => Some(source),
+            Self::Json { source, .. } => Some(source),
+            Self::InvalidRgbaBuffer | Self::CacheEvictionEmpty | Self::ReadbackChannelClosed | Self::Backend { .. } => None,
+        }
+    }
 }
 
 impl VideoError {
     /// 📁️ Curries an io::Error mapper tagged with `context` for `.map_err(...)`.
-    pub(crate) async fn io(context: &'static str) -> impl Fn(std::io::Error) -> Self {
+    pub(crate) fn io(context: &'static str) -> impl Fn(std::io::Error) -> Self {
         move |source| Self::Io { context, source }
     }
     /// 🧾️ Curries a serde_json::Error mapper tagged with `context` for `.map_err(...)`.
-    pub(crate) async fn json(context: &'static str) -> impl Fn(serde_json::Error) -> Self {
+    pub(crate) fn json(context: &'static str) -> impl Fn(serde_json::Error) -> Self {
         move |source| Self::Json { context, source }
     }
     /// 🖥️ Builds a backend-failure variant from any Display/Debug-formatted foreign error.
-    pub(crate) async fn backend(context: &'static str, message: impl std::fmt::Display) -> Self {
+    pub(crate) fn backend(context: &'static str, message: impl std::fmt::Display) -> Self {
         Self::Backend { context, message: message.to_string() }
     }
 }

@@ -7,7 +7,7 @@ use serde_json::Value;
 /// engine and remembered so `drive_precompute` never re-registers a box over it. Aborts (emitting
 /// nothing at all) because the session cache is not document or config state — the pre-migration
 /// `return Emit::default()`.
-pub async fn register_brush_mesh(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
+pub fn register_brush_mesh(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     if let (Some(url), Some(positions), Some(indices)) = (args.and_then(|v| v.get("url")).and_then(|v| v.as_str()), args.and_then(|v| v.get("positions")).and_then(|v| v.as_array()), args.and_then(|v| v.get("indices")).and_then(|v| v.as_array())) {
         let positions: Vec<f32> = positions.iter().filter_map(|v| v.as_f64().map(|n| n as f32)).collect();
         let indices: Vec<u32> = indices.iter().filter_map(|v| v.as_u64().map(|n| n as u32)).collect();

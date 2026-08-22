@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 📐️ `@semio-tech/cad-js` task router: `bun ./📜️script.ts test|generate|fixture [args…]`. Folds the former cad-js-{core,renderer,kernel-brepjs,query,machine-stately,runtime} package scripts into one. */
-import { join, resolve } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { join, resolve } from "node:path";
 import type { BundleLinter } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { dependencyBoundaryBreachesForBundleDir } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { getWorkspaceRoot } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";

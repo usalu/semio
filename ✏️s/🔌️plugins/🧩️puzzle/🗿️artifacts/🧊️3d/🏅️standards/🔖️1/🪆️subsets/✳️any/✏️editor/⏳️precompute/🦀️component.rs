@@ -25,13 +25,41 @@ use crate::artifacts::puzzle3d::schema::{
 };
 use crate::artifacts::puzzle3d::Puzzle3dError;
 use crate::editor::puzzle3d::precompute::brush::{
-    brush_candidate_suggestion_weight, brush_compatible_candidates, brush_preview_from_candidate, brush_target_vortex_allows_suggestion, enumerate_brush_fill_vortex_targets, order_brush_fill_compatible_candidates, resolve_object_kind_mesh_url,
-    vortex_world_from_object, weighted_order_fill_vortex_targets, AttractionVortexContext, TargetVortexWorld,
+    brush_candidate_suggestion_weight, brush_compatible_candidates, brush_preview_from_candidate, brush_target_vortex_allows_suggestion, enumerate_brush_fill_vortex_targets, resolve_object_kind_mesh_url, vortex_world_from_object,
+    AttractionVortexContext, TargetVortexWorld,
 };
-use crate::editor::puzzle3d::precompute::fill::{FillBuilder, FillJobStage, PlacedCollisionEntry};
+use crate::editor::puzzle3d::precompute::fill::{FillBuilder, PlacedCollisionEntry};
 use crate::editor::puzzle3d::precompute::geometry::{pose_isometry, world_bounds, CollisionBody, CollisionOverlapState, CollisionStepContext, CollisionStepResult};
 use semio_framework_job::{default_now_ms, drive_step, root_cancel_token, CancelToken, Generation, InteractiveStage, Operation, RevisionId, StepBudget, StepOutcome};
+use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
+use std::future::Future;
+use std::pin::Pin;
+
+//#region 💼️FillJobBridge
+pub(crate) const FILL_JOB_KIND: &str = "semio.puzzle3d.fill";
+
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+struct FillJobRequest {
+    job: u64,
+    operation: u64,
+    generation: u64,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+struct FillObservation {
+    generation: u64,
+    sequence: u64,
+    available: u32,
+    done: bool,
+}
+
+struct FillJobSlice {
+    progress: Option<Vec<u8>>,
+    checkpoint: Option<Vec<u8>>,
+    done: bool,
+}
+//#endregion 💼️FillJobBridge
 
 //#region 🔖️Clock
 /// ⏱️ Monotonic-enough wall clock in milliseconds for precompute step budgeting. WASI P2 program
@@ -57,7 +85,7 @@ fn puzzle3d_now_ms() -> f64 {
 /// search cost is otherwise unbounded per call, so this only caps how many *additional* tasks beyond
 /// the first are attempted once time runs out; the first task in a call always runs so a tick always
 /// makes forward progress.
-const PUZZLE3D_PRECOMPUTE_STEP_BUDGET_MS: f64 = 12.0;
+const PUZZLE3D_PRECOMPUTE_STEP_BUDGET_MS: f64 = 2.0;
 //#endregion 🔖️Clock
 
 //#region 🔖️Engine
@@ -291,7 +319,14 @@ impl Puzzle3dCollision {
     /// 🧊️ Recomputes and caches brush candidates for one vortex immediately (used when opening / accepting
     /// the suggestion popup so the UI does not wait on the background queue).
     pub(crate) fn refresh_brush_candidates(&mut self, vortex_full_id: &str) {
-        let result = self.compute_brush_cache_entry(vortex_full_id);
+        let prior = self.brush_cache.get(vortex_full_id).cloned();
+        let resume_from = prior.as_ref().map_or(0, |entry| entry.resume_candidate_index);
+        let prior_free = prior.map(|entry| entry.free).unwrap_or_default();
+        let deadline = puzzle3d_now_ms() + PUZZLE3D_PRECOMPUTE_STEP_BUDGET_MS;
+        let result = self.compute_brush_cache_entry_partial(vortex_full_id, resume_from, prior_free, deadline);
+        if result.unknown_pending && result.resume_candidate_index > 0 && !self.brush_queue.iter().any(|id| id == vortex_full_id) {
+            self.brush_queue.push_front(vortex_full_id.to_string());
+        }
         self.brush_cache.insert(vortex_full_id.to_string(), result);
     }
 
@@ -612,6 +647,9 @@ impl Puzzle3dCollision {
 //#region 🔖️Session
 pub struct Puzzle3dPrecomputeSession {
     engine: Puzzle3dCollision,
+    fill_job: Option<FillJobRequest>,
+    fill_observation: FillObservation,
+    last_emitted_fill_checkpoint: RefCell<Vec<u8>>,
 }
 
 impl Default for Puzzle3dPrecomputeSession {
@@ -622,7 +660,7 @@ impl Default for Puzzle3dPrecomputeSession {
 
 impl Puzzle3dPrecomputeSession {
     pub fn new() -> Self {
-        Self { engine: Puzzle3dCollision::new() }
+        Self { engine: Puzzle3dCollision::new(), fill_job: None, fill_observation: FillObservation::default(), last_emitted_fill_checkpoint: RefCell::new(Vec::new()) }
     }
 
     pub fn set_scene(&mut self, json: &str) -> Result<(), Puzzle3dError> {
@@ -689,6 +727,96 @@ impl Puzzle3dPrecomputeSession {
         self.engine.fill.as_ref().is_none_or(|fill| fill.stalled || fill.sequence.len() >= fill.max_count)
     }
 
+    pub fn fill_checkpoint_bytes(&self) -> Vec<u8> {
+        let checkpoint = self.engine.fill.as_ref().map_or_else(Vec::new, FillBuilder::checkpoint_bytes);
+        *self.last_emitted_fill_checkpoint.borrow_mut() = checkpoint.clone();
+        checkpoint
+    }
+
+    pub fn restore_persisted_fill(&mut self, checkpoint: &[u8]) -> bool {
+        if checkpoint.is_empty() {
+            return false;
+        }
+        if self.last_emitted_fill_checkpoint.borrow().as_slice() == checkpoint {
+            return true;
+        }
+        let Some(fixture) = self.engine.scene.as_ref().map(|scene| scene.fixture.clone()) else {
+            return false;
+        };
+        let restored = self.engine.fill.as_mut().is_some_and(|fill| fill.restore_checkpoint_for_fixture(checkpoint, &fixture).unwrap_or(false));
+        if restored {
+            self.engine.fill_steps_remaining = if self.fill_is_done() { 0 } else { FILL_COUNT_MAX };
+            *self.last_emitted_fill_checkpoint.borrow_mut() = checkpoint.to_vec();
+        }
+        restored
+    }
+
+    //#region 💼️FillJobBridge
+    pub fn enqueue_fill_job(&mut self) -> Option<(u64, Vec<u8>)> {
+        if self.fill_job.is_some() || !self.engine.fill_lane_active() {
+            return None;
+        }
+        let operation = self.engine.fill.as_ref()?.operation;
+        let request = FillJobRequest { job: semio_framework_job::allocate_operation_id().0, operation: operation.operation.0, generation: operation.generation.0 };
+        let input = serde_json::to_vec(&request).expect("fill job request is serializable");
+        self.fill_job = Some(request.clone());
+        Some((request.job, input))
+    }
+
+    pub fn poll_fill_job(&mut self) -> bool {
+        let preview = self.engine.fill.as_ref().map(|fill| &fill.preview);
+        let current = FillObservation { generation: preview.map_or(0, |value| value.generation), sequence: preview.map_or(0, |value| value.sequence), available: self.fill_available_count(), done: self.fill_is_done() };
+        let changed = current != self.fill_observation;
+        self.fill_observation = current;
+        changed
+    }
+
+    fn drive_fill_job(&mut self, request: &FillJobRequest) -> Option<FillJobSlice> {
+        let current = self.fill_job.as_ref()?;
+        let operation = self.engine.fill.as_ref()?.operation;
+        if current.job != request.job || operation.operation.0 != request.operation || operation.generation.0 != request.generation {
+            if current.job == request.job {
+                self.fill_job = None;
+            }
+            return None;
+        }
+        let prior_sequence = self.engine.fill.as_ref().map_or(0, |fill| fill.preview.sequence);
+        let prior_available = self.fill_available_count();
+        self.engine.precompute_step_lane(PrecomputeLane::Fill, 1);
+        let done = !self.engine.fill_lane_active();
+        let current_sequence = self.engine.fill.as_ref().map_or(0, |fill| fill.preview.sequence);
+        let current_available = self.fill_available_count();
+        let visible_change = prior_sequence != current_sequence || prior_available != current_available || done;
+        let stable_change = prior_available != current_available || done;
+        let progress = visible_change.then(|| serde_json::to_vec(&self.fill_progress()).expect("fill progress is serializable"));
+        let checkpoint = stable_change.then(|| self.engine.fill.as_ref().map_or_else(Vec::new, FillBuilder::checkpoint_bytes));
+        if done {
+            self.fill_job = None;
+        }
+        Some(FillJobSlice { progress, checkpoint, done })
+    }
+
+    #[cfg(test)]
+    pub(crate) fn drive_enqueued_fill_job_for_test(&mut self, slices: usize) {
+        for _ in 0..slices {
+            let Some(request) = self.fill_job.clone() else { break };
+            if self.drive_fill_job(&request).is_none() {
+                break;
+            }
+        }
+    }
+
+    fn restore_fill_job(&mut self, request: &FillJobRequest, checkpoint: &[u8]) -> bool {
+        let Some(current) = &self.fill_job else { return false };
+        let Some(fill) = &mut self.engine.fill else { return false };
+        if current.job != request.job || fill.operation.operation.0 != request.operation || fill.operation.generation.0 != request.generation {
+            return false;
+        }
+        fill.restore_checkpoint(checkpoint).is_ok()
+    }
+
+    //#endregion 💼️FillJobBridge
+
     /// 🪣️ Read-only prefix of the precomputed fill plan for live viewport show/hide — a query, so it
     /// stays a plain `&self` method rather than routing through `dispatch` (which is `&mut self`,
     /// uniform for the small number of genuinely mutating actions). `Puzzle3dEngineCommand::
@@ -732,12 +860,90 @@ impl Puzzle3dPrecomputeSession {
 }
 //#endregion 🔖️Session
 
+//#region 💼️SharedPluginJob
+pub(crate) fn fill_job(context: semio_framework_plugin::reactor::jobs::JobCtx, input: Vec<u8>, restored: Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>> {
+    Box::pin(async move {
+        let request: FillJobRequest = serde_json::from_slice(&input).map_err(|error| semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("puzzle3d.fill-job.decode"), error.to_string()))?;
+        if let Some(checkpoint) = restored {
+            crate::editor::puzzle3d::with_puzzle3d_app_mut(|app| app.precompute.borrow_mut().restore_fill_job(&request, &checkpoint));
+        }
+        loop {
+            context.tick().await;
+            let Some(slice) = crate::editor::puzzle3d::with_puzzle3d_app_mut(|app| app.precompute.borrow_mut().drive_fill_job(&request)) else {
+                return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("puzzle3d.fill-job.stale"), "fill job no longer matches the live operation"));
+            };
+            if let Some(progress) = slice.progress.clone() {
+                context.progress(progress).await;
+            }
+            if let Some(checkpoint) = slice.checkpoint {
+                context.checkpoint(checkpoint).await;
+            }
+            if slice.done {
+                return Ok(slice.progress.expect("completed fill slice has progress"));
+            }
+        }
+    })
+}
+//#endregion 💼️SharedPluginJob
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::artifacts::puzzle3d::schema::testkit::*;
     use crate::artifacts::puzzle3d::schema::{BrushHostRules, BrushKindWeights, CableKindCatalog, FixtureObject, KindCompatEntry, ObjectKind, ObjectKindRepresentation, ObjectKindVortexTemplate, VortexKindCatalog, VortexProps};
+    use semio_framework_job::{BatchDriveConfig, BatchJobParams, InteractiveStage, StepOutcome};
+    use std::time::{Duration, Instant};
+
+    fn fill_capable_engine() -> Puzzle3dCollision {
+        let mut engine = Puzzle3dCollision::new();
+        let (positions, indices) = unit_cube_mesh_buffers();
+        engine.register_mesh("/test/host.glb".to_string(), &positions, &indices);
+        engine.register_mesh("/test/candidate.glb".to_string(), &positions, &indices);
+        let scene = SceneConfig {
+            fixture: Fixture {
+                attractions: vec![],
+                target_volumes: vec![],
+                objects: vec![FixtureObject {
+                    id: "host".to_string(),
+                    object_kind: Some("Host".to_string()),
+                    anchor: Default::default(),
+                    mesh_url: Some("/test/host.glb".to_string()),
+                    origin: [0.0, 0.0, 0.0],
+                    orientation: Some([0.0, 0.0, 0.0, 1.0]),
+                    scale: None,
+                    vortices: vec![VortexProps { id: "v0".to_string(), vortex_kind: Some("port-a".to_string()), position: [4.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) }],
+                    reveal_index: None,
+                }],
+            },
+            kind_catalogs: Some(KindCatalogBundle {
+                objects: vec![
+                    ObjectKind {
+                        id: "Host".to_string(),
+                        representations: vec![ObjectKindRepresentation { id: "host".into(), name: String::new(), url: "/test/host.glb".to_string(), mime: String::new(), tags: vec![], lod: None, description: String::new() }],
+                        scale: None,
+                        vortices: vec![],
+                    },
+                    ObjectKind {
+                        id: "Candidate".to_string(),
+                        representations: vec![ObjectKindRepresentation { id: "candidate".into(), name: String::new(), url: "/test/candidate.glb".to_string(), mime: String::new(), tags: vec![], lod: None, description: String::new() }],
+                        scale: None,
+                        vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("port-b".to_string()), point: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, 1.0]), ..Default::default() }],
+                    },
+                ],
+                vortices: vec![VortexKindCatalog { id: "port-a".to_string(), default_cable_kind: None, ..Default::default() }, VortexKindCatalog { id: "port-b".to_string(), default_cable_kind: None, ..Default::default() }],
+                cables: vec![],
+            }),
+            kind_compatibility: vec![KindCompatEntry { source: "port-b".to_string(), target: "port-a".to_string(), bidirectional: true, important: false, specificity: Some("vortex".to_string()) }],
+            overlap_budget: DEFAULT_OVERLAP_BUDGET,
+            seed: 1,
+            host_rules: BrushHostRules::default(),
+            weights: BrushKindWeights::default(),
+        };
+        engine.set_scene(&serde_json::to_string(&scene).expect("fill scene")).expect("set fill scene");
+        engine.fill.as_mut().expect("fill").max_count = 1;
+        engine
+    }
 
     #[test]
     fn brush_candidates_allow_separated_boxes() {
@@ -844,11 +1050,9 @@ mod tests {
         let count_start = std::time::Instant::now();
         let _ = engine.apply_fill_count(5).expect("apply fill count");
         let count_ms = count_start.elapsed().as_secs_f64() * 1000.0;
-        println!("[DEBUG] apply_fill_count(5): {count_ms:.3}ms");
         assert!(count_ms < 5.0, "fill count apply took {count_ms}ms");
         assert_eq!(engine.fill.as_ref().expect("fill").applied_count, 5);
 
-        let queue_before = engine.work_pending_for_test();
         let weight_start = std::time::Instant::now();
         let mut object_weights = std::collections::BTreeMap::new();
         object_weights.insert("Placed".to_string(), 1.0);
@@ -857,7 +1061,6 @@ mod tests {
         vortex_weights.insert("b-s".to_string(), 0.5);
         engine.update_kind_weights(object_weights, vortex_weights);
         let weight_ms = weight_start.elapsed().as_secs_f64() * 1000.0;
-        println!("[DEBUG] update_kind_weights: {weight_ms:.3}ms queue_before={queue_before} queue_after={}", engine.work_pending_for_test());
         assert!(weight_ms < 50.0, "weight update took {weight_ms}ms");
         let fill = engine.fill.as_ref().expect("fill");
         let fill_steps = engine.fill_steps_pending_for_test();
@@ -1137,7 +1340,6 @@ mod tests {
             engine.precompute_step_lane(PrecomputeLane::Fill, 4);
         }
         let after = engine.fill_progress_summary().count;
-        println!("[DEBUG] fill_lane planning count before={before} after={after}");
         assert!(after > before || engine.fill_progress_summary().done, "fill lane must make planning progress without draining brush first");
     }
 
@@ -1240,19 +1442,23 @@ mod tests {
     }
 
     fn finish_fill_with_budget(step_budget: u32) -> Vec<u8> {
-        let mut engine = Puzzle3dCollision::new();
-        engine.set_scene(&single_object_scene_json()).expect("scene");
+        let mut engine = fill_capable_engine();
         for _ in 0..10_000 {
             if !engine.precompute_step_lane(PrecomputeLane::Fill, step_budget) {
                 return engine.fill.as_ref().expect("fill").checkpoint_bytes();
             }
         }
-        panic!("fill job did not terminate");
+        let fill = engine.fill.as_ref().expect("fill");
+        panic!("fill job did not terminate: stage={:?} count={} rejected={}", fill.stage, fill.sequence.len(), fill.preview.rejected_count);
+    }
+
+    fn normalized_fill_checkpoint(bytes: &[u8]) -> Vec<u8> {
+        FillBuilder::normalized_checkpoint_bytes(bytes)
     }
 
     #[test]
     fn fill_job_is_deterministic_across_drive_batch_sizes() {
-        let checkpoints = [1, 2, 4, 8].map(finish_fill_with_budget);
+        let checkpoints = [1, 2, 4, 8].map(finish_fill_with_budget).map(|checkpoint| normalized_fill_checkpoint(&checkpoint));
         assert_eq!(checkpoints[0], checkpoints[1]);
         assert_eq!(checkpoints[1], checkpoints[2]);
         assert_eq!(checkpoints[2], checkpoints[3]);
@@ -1260,13 +1466,11 @@ mod tests {
 
     #[test]
     fn fill_job_checkpoint_resume_matches_uninterrupted_execution() {
-        let mut uninterrupted = Puzzle3dCollision::new();
-        uninterrupted.set_scene(&single_object_scene_json()).expect("scene");
+        let mut uninterrupted = fill_capable_engine();
         uninterrupted.precompute_step_lane(PrecomputeLane::Fill, 3);
         let checkpoint = uninterrupted.fill.as_ref().expect("fill").checkpoint_bytes();
 
-        let mut resumed = Puzzle3dCollision::new();
-        resumed.set_scene(&single_object_scene_json()).expect("scene");
+        let mut resumed = fill_capable_engine();
         resumed.fill.as_mut().expect("fill").restore_checkpoint(&checkpoint).expect("restore");
         resumed.fill_preview_sequence = uninterrupted.fill_preview_sequence;
 
@@ -1279,6 +1483,74 @@ mod tests {
             }
         }
         assert_eq!(uninterrupted.fill.as_ref().expect("fill").checkpoint_bytes(), resumed.fill.as_ref().expect("fill").checkpoint_bytes());
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn fill_job_commit_is_byte_identical_at_one_two_four_and_default_workers() {
+        let template = fill_capable_engine();
+        let initial = template.fill.as_ref().expect("fill").checkpoint_bytes();
+        let default_workers = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
+        let mut outputs = Vec::new();
+        for worker_count in [1usize, 2, 4, default_workers] {
+            let mut engine = fill_capable_engine();
+            let mut job = engine.fill.take().expect("fill");
+            job.restore_checkpoint(&initial).expect("initial checkpoint");
+            let operation = job.operation;
+            let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, worker_count));
+            let params = BatchJobParams {
+                operation: operation.operation,
+                generation: operation.generation,
+                cancel: semio_framework_job::root_cancel_token(),
+                config: BatchDriveConfig { site: "puzzle3d.fill.workers", stage: InteractiveStage::BackgroundStep, fuel_per_step: 1, step_budget_ms: 7 },
+                now_ms: semio_framework_job::default_now_ms,
+            };
+            let receiver = semio_framework_job::run_on_worker(&pool, semio_framework_async::Lane::Background, job, params);
+            let outcome = receiver.recv_timeout(Duration::from_secs(20)).expect("fill worker did not finish");
+            pool.shutdown();
+            match outcome {
+                StepOutcome::Complete(candidate) => {
+                    eprintln!("[DEBUG] puzzle3d-fill-worker-parity workers={worker_count} commit-bytes={}", candidate.state.len());
+                    outputs.push(candidate.state);
+                }
+                other => panic!("worker_count={worker_count} ended with {other:?}"),
+            }
+        }
+        assert!(outputs.windows(2).all(|pair| pair[0] == pair[1]), "fill commit diverged across 1/2/4/default workers");
+        let mut verifier = fill_capable_engine();
+        verifier.fill.as_mut().expect("fill").restore_checkpoint(&outputs[0]).expect("worker commit checkpoint");
+        assert_eq!(verifier.fill.as_ref().expect("fill").sequence.len(), 1, "worker parity fixture must contain an accepted placement");
+    }
+
+    #[test]
+    fn fill_first_substantive_preview_arrives_below_fifty_ms_and_every_step_below_eight_ms() {
+        let mut engine = fill_capable_engine();
+        let started = Instant::now();
+        let mut first_preview = None;
+        let mut completed = false;
+        let mut max_step = Duration::ZERO;
+        for _ in 0..10_000 {
+            let step_started = Instant::now();
+            let active = engine.precompute_step_lane(PrecomputeLane::Fill, 1);
+            let step_elapsed = step_started.elapsed();
+            max_step = max_step.max(step_elapsed);
+            assert!(step_elapsed < Duration::from_millis(8), "fill resume step reached the 8ms ceiling");
+            if first_preview.is_none() && engine.fill.as_ref().is_some_and(|fill| fill.preview.candidate_ghost.is_some()) {
+                first_preview = Some(started.elapsed());
+            }
+            if !active {
+                completed = true;
+                break;
+            }
+        }
+        assert!(
+            first_preview.is_some_and(|elapsed| elapsed < Duration::from_millis(50)),
+            "first substantive fill preview exceeded 50ms: {first_preview:?}; stage={:?}; rejected={}",
+            engine.fill.as_ref().map(|fill| fill.stage),
+            engine.fill.as_ref().map_or(0, |fill| fill.preview.rejected_count)
+        );
+        assert!(completed, "fill did not complete within the bounded resume budget");
+        eprintln!("[DEBUG] puzzle3d-fill-preview first-preview-us={} max-step-us={}", first_preview.expect("first preview").as_micros(), max_step.as_micros());
     }
 }
 //#endregion 🧪️Tests

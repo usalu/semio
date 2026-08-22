@@ -2,27 +2,28 @@
 
 use crate::economics::{compute_lcca, LccaParameters, UtilityTariff};
 use crate::error::Error;
-use crate::kernel::{SimulationConfig, SimulationEnvironment, SimulationKernel, SimulationModel, SurfaceState, ZoneState};
+use crate::kernel::{SimulationConfig, SimulationEnvironment, SimulationKernel, SimulationModel, SurfaceState, TimestepWork, ZoneState};
 use crate::meters::{EndUse, FuelType, MeterTable};
-use crate::metrics::{compute_environmental, compute_resilience, EmissionFactors, SourceEnergyFactors};
+use crate::metrics::{compute_environmental, compute_resilience, EmissionFactors, EnvironmentalMetrics, ResilienceMetrics, SourceEnergyFactors};
 use crate::model::Model;
 use crate::output::TimeSeriesTable;
 use crate::precompute::{PrecomputeBuilder, PrecomputedModel};
-use crate::results::{Results, RunMetadata, SummaryTables};
+use crate::results::{Results, RunMetadata, SizingTables, SummaryTables};
 use crate::site::WeatherRecord;
-use crate::sizing::{SizingConfig, SizingManager};
+use crate::sizing::{SizingBuilder, SizingConfig};
 use crate::units::Unit;
 use crate::zone_air::ZoneAirState;
 use semio_framework_job::{
     allocate_operation_id, default_now_ms, run_to_completion, BatchDriveConfig, BatchJobParams, CancelToken, Checkpoint, CommitCandidate, Generation, InteractiveJob, InteractiveStage, JobFault, Operation, RevisionId, StepContext, StepOutcome,
 };
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Instant;
 
 // #region 🔖️EnergyJob
 /// ⚡️ Fidelity label carried by every preview so provisional fields cannot be mistaken for a
 /// validated final simulation.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum EnergyQualityTier {
     SteadyStateEstimate,
     DesignDay,
@@ -31,7 +32,7 @@ pub enum EnergyQualityTier {
 }
 
 /// 🧭️ Persistent stage of [`EnergyJob`].
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum EnergyJobStage {
     Validate,
     ResolveWeather,
@@ -45,13 +46,18 @@ pub enum EnergyJobStage {
     AggregateFacility,
     PublishTimestep,
     Finalize,
+    Size,
+    FinalizeSummaries,
+    FinalizeMetrics,
+    FinalizeEconomics,
+    BuildResults,
     PublishFinal,
     EncodeOutput,
     Complete,
 }
 
 /// 📸️ Typed view of the latest replaceable energy preview.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct EnergyJobPreview {
     pub sequence: u64,
     pub tier: EnergyQualityTier,
@@ -63,6 +69,48 @@ pub struct EnergyJobPreview {
     pub zone_heating_w: Vec<(u32, f64)>,
     pub zone_cooling_w: Vec<(u32, f64)>,
     pub facility_electricity_kwh: f64,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+struct EnergyCheckpointState {
+    base_revision: u64,
+    generation: u64,
+    seed: u64,
+    stage: EnergyJobStage,
+    tier: EnergyQualityTier,
+    weather: Vec<WeatherRecord>,
+    weather_cursor: usize,
+    weather_target: usize,
+    precompute: Option<PrecomputeBuilder>,
+    pre: Option<PrecomputedModel>,
+    state: Option<SimulationModel>,
+    initialize_cursor: usize,
+    warmup_hour: u32,
+    previous_temperatures: HashMap<crate::model::EntityId, f64>,
+    previous_loads: HashMap<crate::model::EntityId, f64>,
+    run_hours: Option<crate::calendar::RunPeriodHours>,
+    total_timesteps: u32,
+    hour_index: u32,
+    aggregate_zone_cursor: usize,
+    timestep_work: Option<TimestepWork>,
+    rng_state: u64,
+    checkpoint_due: bool,
+    time_series: TimeSeriesTable,
+    meters: MeterTable,
+    time_series_order: Vec<String>,
+    meter_order: Vec<String>,
+    zone_temperature_history: Vec<f64>,
+    last_preview: Option<EnergyJobPreview>,
+    result: Option<Results>,
+    sizing_builder: Option<SizingBuilder>,
+    final_sizing: Option<SizingTables>,
+    final_summaries: SummaryTables,
+    final_environmental: Option<EnvironmentalMetrics>,
+    final_resilience: Option<ResilienceMetrics>,
+    commit_output: Vec<u8>,
+    encode_section: u8,
+    encode_record_cursor: usize,
+    encode_sample_cursor: usize,
 }
 
 /// ⚡️ Resumable simulation operation. Weather decoding, model precomputation, initialization,
@@ -87,6 +135,8 @@ pub struct EnergyJob {
     total_timesteps: u32,
     hour_index: u32,
     aggregate_zone_cursor: usize,
+    timestep_work: Option<TimestepWork>,
+    rng_state: u64,
     checkpoint_due: bool,
     time_series: TimeSeriesTable,
     meters: MeterTable,
@@ -95,6 +145,11 @@ pub struct EnergyJob {
     zone_temperature_history: Vec<f64>,
     last_preview: Option<EnergyJobPreview>,
     result: Option<Results>,
+    sizing_builder: Option<SizingBuilder>,
+    final_sizing: Option<SizingTables>,
+    final_summaries: SummaryTables,
+    final_environmental: Option<EnvironmentalMetrics>,
+    final_resilience: Option<ResilienceMetrics>,
     commit_output: Vec<u8>,
     encode_section: u8,
     encode_record_cursor: usize,
@@ -124,6 +179,8 @@ impl EnergyJob {
             total_timesteps: 0,
             hour_index: 0,
             aggregate_zone_cursor: 0,
+            timestep_work: None,
+            rng_state: 0x9e37_79b9_7f4a_7c15 ^ operation.seed,
             checkpoint_due: false,
             time_series: TimeSeriesTable::default(),
             meters: MeterTable::default(),
@@ -132,6 +189,11 @@ impl EnergyJob {
             zone_temperature_history: Vec::new(),
             last_preview: None,
             result: None,
+            sizing_builder: None,
+            final_sizing: None,
+            final_summaries: SummaryTables::default(),
+            final_environmental: None,
+            final_resilience: None,
             commit_output: Vec::new(),
             encode_section: 0,
             encode_record_cursor: 0,
@@ -150,6 +212,56 @@ impl EnergyJob {
 
     pub fn take_results(&mut self) -> Option<Results> {
         self.result.take()
+    }
+
+    /// ♻️ Restores every mutable simulation accumulator and cursor from an owned checkpoint.
+    pub fn from_checkpoint(operation: Operation, model: Model, config: SimulationConfig, bytes: &[u8]) -> Result<Self, Error> {
+        let payload = bytes.strip_prefix(b"ENERGY2").ok_or_else(|| Error::severe("invalid energy checkpoint header"))?;
+        let checkpoint: EnergyCheckpointState = serde_json::from_slice(payload).map_err(|error| Error::severe(format!("invalid energy checkpoint: {error}")))?;
+        if checkpoint.base_revision != operation.base_revision.0 || checkpoint.generation != operation.generation.0 || checkpoint.seed != operation.seed {
+            return Err(Error::severe("energy checkpoint operation mismatch"));
+        }
+        Ok(Self {
+            operation,
+            model,
+            config,
+            stage: checkpoint.stage,
+            tier: checkpoint.tier,
+            weather: checkpoint.weather,
+            weather_cursor: checkpoint.weather_cursor,
+            weather_target: checkpoint.weather_target,
+            precompute: checkpoint.precompute,
+            pre: checkpoint.pre,
+            state: checkpoint.state,
+            initialize_cursor: checkpoint.initialize_cursor,
+            warmup_hour: checkpoint.warmup_hour,
+            previous_temperatures: checkpoint.previous_temperatures,
+            previous_loads: checkpoint.previous_loads,
+            run_hours: checkpoint.run_hours,
+            total_timesteps: checkpoint.total_timesteps,
+            hour_index: checkpoint.hour_index,
+            aggregate_zone_cursor: checkpoint.aggregate_zone_cursor,
+            timestep_work: checkpoint.timestep_work,
+            rng_state: checkpoint.rng_state,
+            checkpoint_due: checkpoint.checkpoint_due,
+            time_series: checkpoint.time_series,
+            meters: checkpoint.meters,
+            time_series_order: checkpoint.time_series_order,
+            meter_order: checkpoint.meter_order,
+            zone_temperature_history: checkpoint.zone_temperature_history,
+            last_preview: checkpoint.last_preview,
+            result: checkpoint.result,
+            sizing_builder: checkpoint.sizing_builder,
+            final_sizing: checkpoint.final_sizing,
+            final_summaries: checkpoint.final_summaries,
+            final_environmental: checkpoint.final_environmental,
+            final_resilience: checkpoint.final_resilience,
+            commit_output: checkpoint.commit_output,
+            encode_section: checkpoint.encode_section,
+            encode_record_cursor: checkpoint.encode_record_cursor,
+            encode_sample_cursor: checkpoint.encode_sample_cursor,
+            started: Instant::now(),
+        })
     }
 
     fn set_stage(&mut self, context: &mut StepContext<'_>, stage: EnergyJobStage) {
@@ -208,19 +320,52 @@ impl EnergyJob {
     }
 
     fn encode_state(&self, complete: bool) -> Vec<u8> {
-        let mut bytes = b"ENERGY1".to_vec();
-        bytes.push(complete as u8);
-        bytes.push(self.tier.code());
-        bytes.push(self.stage.code());
-        bytes.extend_from_slice(&self.operation.base_revision.0.to_le_bytes());
-        bytes.extend_from_slice(&self.operation.generation.0.to_le_bytes());
-        bytes.extend_from_slice(&self.warmup_hour.to_le_bytes());
-        bytes.extend_from_slice(&self.hour_index.to_le_bytes());
-        bytes.extend_from_slice(&self.total_timesteps.to_le_bytes());
+        let checkpoint = EnergyCheckpointState {
+            base_revision: self.operation.base_revision.0,
+            generation: self.operation.generation.0,
+            seed: self.operation.seed,
+            stage: if complete { EnergyJobStage::Complete } else { self.stage },
+            tier: self.tier,
+            weather: self.weather.clone(),
+            weather_cursor: self.weather_cursor,
+            weather_target: self.weather_target,
+            precompute: self.precompute.clone(),
+            pre: self.pre.clone(),
+            state: self.state.clone(),
+            initialize_cursor: self.initialize_cursor,
+            warmup_hour: self.warmup_hour,
+            previous_temperatures: self.previous_temperatures.clone(),
+            previous_loads: self.previous_loads.clone(),
+            run_hours: self.run_hours.clone(),
+            total_timesteps: self.total_timesteps,
+            hour_index: self.hour_index,
+            aggregate_zone_cursor: self.aggregate_zone_cursor,
+            timestep_work: self.timestep_work.clone(),
+            rng_state: self.rng_state,
+            checkpoint_due: self.checkpoint_due,
+            time_series: self.time_series.clone(),
+            meters: self.meters.clone(),
+            time_series_order: self.time_series_order.clone(),
+            meter_order: self.meter_order.clone(),
+            zone_temperature_history: self.zone_temperature_history.clone(),
+            last_preview: self.last_preview.clone(),
+            result: self.result.clone(),
+            sizing_builder: self.sizing_builder.clone(),
+            final_sizing: self.final_sizing.clone(),
+            final_summaries: self.final_summaries.clone(),
+            final_environmental: self.final_environmental.clone(),
+            final_resilience: self.final_resilience.clone(),
+            commit_output: self.commit_output.clone(),
+            encode_section: self.encode_section,
+            encode_record_cursor: self.encode_record_cursor,
+            encode_sample_cursor: self.encode_sample_cursor,
+        };
+        let mut bytes = b"ENERGY2".to_vec();
+        bytes.extend(serde_json::to_vec(&checkpoint).expect("energy checkpoint state is serializable"));
         bytes
     }
 
-    fn fault(error: Error) -> StepOutcome {
+    fn fault(error: &Error) -> StepOutcome {
         StepOutcome::Fault(JobFault { detail: error.to_string().into_bytes() })
     }
 
@@ -257,29 +402,39 @@ impl EnergyJob {
         self.meters.get_or_create("Facility PV", FuelType::OnSiteGeneration, EndUse::Generators).accumulate(-state.delivered_total.pv_generation_w, dt_s, self.hour_index as f64);
     }
 
-    fn finalize(&mut self) {
-        let sizing = SizingManager::size(&self.model, &SizingConfig::default());
-        let mut summaries = SummaryTables::default();
+    fn finalize_summaries(&mut self) {
         let electricity_kwh = self.meters.facility_total_kwh(FuelType::Electricity);
         let gas_kwh = self.meters.facility_total_kwh(FuelType::NaturalGas);
-        summaries.add_annual("Electricity", electricity_kwh, "kWh");
-        summaries.add_annual("Natural Gas", gas_kwh, "kWh");
+        self.final_summaries.add_annual("Electricity", electricity_kwh, "kWh");
+        self.final_summaries.add_annual("Natural Gas", gas_kwh, "kWh");
         let floor_area = self.model.zones.iter().map(|zone| zone.volume_m3 / 3.0).sum::<f64>().max(1.0);
-        summaries.add_annual("Energy Use Intensity", electricity_kwh / floor_area, "kWh/m²");
-        let environmental = compute_environmental(electricity_kwh, gas_kwh, &SourceEnergyFactors::default(), &EmissionFactors::default());
-        let resilience = compute_resilience(&self.zone_temperature_history, 20.0, 26.0, true);
+        self.final_summaries.add_annual("Energy Use Intensity", electricity_kwh / floor_area, "kWh/m²");
+    }
+
+    fn finalize_metrics(&mut self) {
+        let electricity_kwh = self.meters.facility_total_kwh(FuelType::Electricity);
+        let gas_kwh = self.meters.facility_total_kwh(FuelType::NaturalGas);
+        self.final_environmental = Some(compute_environmental(electricity_kwh, gas_kwh, &SourceEnergyFactors::default(), &EmissionFactors::default()));
+        self.final_resilience = Some(compute_resilience(&self.zone_temperature_history, 20.0, 26.0, true));
+    }
+
+    fn finalize_economics(&mut self) {
+        let electricity_kwh = self.meters.facility_total_kwh(FuelType::Electricity);
         let tariff = UtilityTariff { name: "Default".into(), fuel: FuelType::Electricity, periods: vec![], fixed_monthly_charge: 10.0, ratchet_percent: 0.0 };
         let annual_cost = tariff.energy_cost(electricity_kwh, 12, 6) * 12.0;
         let lcca = compute_lcca(annual_cost, &LccaParameters { study_period_years: 25, discount_rate: 0.03, inflation_rate: 0.02, initial_cost: 0.0, annual_maintenance: 0.0, replacement_cost: 0.0, replacement_interval_years: 15 });
-        summaries.add_annual("Annual Energy Cost", annual_cost, "USD");
-        summaries.add_annual("LCCA Present Value", lcca.present_value_total, "USD");
+        self.final_summaries.add_annual("Annual Energy Cost", annual_cost, "USD");
+        self.final_summaries.add_annual("LCCA Present Value", lcca.present_value_total, "USD");
+    }
+
+    fn build_results(&mut self) {
         self.result = Some(Results {
             time_series: std::mem::take(&mut self.time_series),
             meters: std::mem::take(&mut self.meters),
-            summaries,
-            sizing,
-            environmental,
-            resilience,
+            summaries: std::mem::take(&mut self.final_summaries),
+            sizing: self.final_sizing.take().unwrap_or_default(),
+            environmental: self.final_environmental.take().unwrap_or_default(),
+            resilience: self.final_resilience.take().unwrap_or_default(),
             diagnostics: Default::default(),
             run_metadata: RunMetadata {
                 model_name: self.model.name.clone(),
@@ -369,7 +524,7 @@ impl EnergyJob {
 impl InteractiveJob for EnergyJob {
     fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
-            return Self::fault(Error::severe("energy job operation or generation mismatch"));
+            return Self::fault(&Error::severe("energy job operation or generation mismatch"));
         }
         if context.is_cancelled() {
             return StepOutcome::Cancelled;
@@ -382,7 +537,7 @@ impl InteractiveJob for EnergyJob {
             EnergyJobStage::Validate => {
                 if let Err(diagnostics) = self.model.validate() {
                     let error = diagnostics.messages.into_iter().find(|message| message.severity == crate::error::Severity::Fatal).unwrap_or_else(|| Error::severe("model validation failed"));
-                    return Self::fault(error);
+                    return Self::fault(&error);
                 }
                 self.weather_target = self.config.weather.as_ref().map_or_else(
                     || match self.config.environment {
@@ -398,7 +553,7 @@ impl InteractiveJob for EnergyJob {
                 if self.weather_cursor < self.weather_target {
                     self.weather.push(self.weather_record(self.weather_cursor));
                     self.weather_cursor += 1;
-                    if self.weather_cursor % 256 == 0 {
+                    if self.weather_cursor.is_multiple_of(256) {
                         return self.publish_preview(context);
                     }
                     return StepOutcome::Yield;
@@ -456,13 +611,19 @@ impl InteractiveJob for EnergyJob {
                     self.set_stage(context, EnergyJobStage::StartRun);
                     return self.checkpoint();
                 }
-                let weather = self.weather[self.warmup_hour as usize % self.weather.len()];
-                let date = crate::calendar::SimDate::new(weather.year, weather.month, weather.day);
                 let pre = self.pre.as_ref().expect("precompute complete before warmup");
-                if let Err(error) = SimulationKernel::advance_timestep(&self.model, &self.config, pre, self.state.as_mut().expect("state initialized before warmup"), &weather, &date, self.warmup_hour as f64, pre.zone_timestep_s) {
-                    return Self::fault(error);
+                if self.timestep_work.is_none() {
+                    let weather = self.weather[self.warmup_hour as usize % self.weather.len()];
+                    let date = crate::calendar::SimDate::new(weather.year, weather.month, weather.day);
+                    self.timestep_work = Some(TimestepWork::new(&self.model, pre, weather, date, self.warmup_hour as f64, pre.zone_timestep_s));
                 }
-                if self.warmup_hour > 24 && self.warmup_hour % 24 == 0 {
+                self.timestep_work.as_mut().expect("warmup timestep work exists").step(&self.model, &self.config, pre, self.state.as_mut().expect("state initialized before warmup"));
+                self.rng_state = self.rng_state.rotate_left(17).wrapping_mul(0x94d0_49bb_1331_11eb);
+                if !self.timestep_work.as_ref().is_some_and(TimestepWork::is_complete) {
+                    return StepOutcome::Yield;
+                }
+                self.timestep_work = None;
+                if self.warmup_hour > 24 && self.warmup_hour.is_multiple_of(24) {
                     let state = self.state.as_ref().expect("state exists after warmup step");
                     let temperature_converged = state.zones.iter().all(|(id, zone)| self.previous_temperatures.get(id).is_some_and(|previous| (zone.air.temp_c - previous).abs() <= self.config.tolerances.temperature_k));
                     let load_converged = state.zones.iter().all(|(id, zone)| self.previous_loads.get(id).is_some_and(|previous| (zone.heating_demand_w + zone.cooling_demand_w - previous).abs() <= self.config.tolerances.energy_w));
@@ -477,7 +638,7 @@ impl InteractiveJob for EnergyJob {
                     }
                 }
                 self.warmup_hour = self.warmup_hour.saturating_add(1);
-                if self.warmup_hour % 24 == 0 {
+                if self.warmup_hour.is_multiple_of(24) {
                     return self.publish_preview(context);
                 }
                 StepOutcome::Yield
@@ -494,19 +655,25 @@ impl InteractiveJob for EnergyJob {
                 StepOutcome::Yield
             }
             EnergyJobStage::RunZoneTimestep => {
-                let Some((date, hour, _)) = self.run_hours.as_mut().and_then(|hours| hours.next()) else {
-                    self.set_stage(context, EnergyJobStage::Finalize);
-                    return StepOutcome::Yield;
-                };
-                let mut weather = self.weather[self.hour_index as usize % self.weather.len()];
-                weather.year = date.year;
-                weather.month = date.month;
-                weather.day = date.day;
-                weather.hour = hour;
                 let pre = self.pre.as_ref().expect("precompute complete before run");
-                if let Err(error) = SimulationKernel::advance_timestep(&self.model, &self.config, pre, self.state.as_mut().expect("state initialized before run"), &weather, &date, self.hour_index as f64, pre.zone_timestep_s) {
-                    return Self::fault(error);
+                if self.timestep_work.is_none() {
+                    let Some((date, hour, _)) = self.run_hours.as_mut().and_then(|hours| hours.next()) else {
+                        self.set_stage(context, EnergyJobStage::Finalize);
+                        return StepOutcome::Yield;
+                    };
+                    let mut weather = self.weather[self.hour_index as usize % self.weather.len()];
+                    weather.year = date.year;
+                    weather.month = date.month;
+                    weather.day = date.day;
+                    weather.hour = hour;
+                    self.timestep_work = Some(TimestepWork::new(&self.model, pre, weather, date, self.hour_index as f64, pre.zone_timestep_s));
                 }
+                self.timestep_work.as_mut().expect("run timestep work exists").step(&self.model, &self.config, pre, self.state.as_mut().expect("state initialized before run"));
+                self.rng_state = self.rng_state.rotate_left(17).wrapping_mul(0x94d0_49bb_1331_11eb);
+                if !self.timestep_work.as_ref().is_some_and(TimestepWork::is_complete) {
+                    return StepOutcome::Yield;
+                }
+                self.timestep_work = None;
                 self.aggregate_zone_cursor = 0;
                 self.set_stage(context, EnergyJobStage::AggregateZone);
                 StepOutcome::Yield
@@ -523,7 +690,7 @@ impl InteractiveJob for EnergyJob {
             EnergyJobStage::AggregateFacility => {
                 self.aggregate_facility();
                 self.hour_index = self.hour_index.saturating_add(1);
-                self.checkpoint_due = self.hour_index % 24 == 0;
+                self.checkpoint_due = self.hour_index.is_multiple_of(24);
                 self.set_stage(context, EnergyJobStage::PublishTimestep);
                 StepOutcome::Yield
             }
@@ -537,11 +704,41 @@ impl InteractiveJob for EnergyJob {
             }
             EnergyJobStage::Finalize => {
                 self.tier = EnergyQualityTier::Final;
+                self.sizing_builder = Some(SizingBuilder::new(SizingConfig::default()));
+                self.set_stage(context, EnergyJobStage::Size);
+                StepOutcome::Yield
+            }
+            EnergyJobStage::Size => {
+                let builder = self.sizing_builder.as_mut().expect("sizing builder exists");
+                if builder.is_complete(&self.model) {
+                    self.final_sizing = self.sizing_builder.take().map(SizingBuilder::finish);
+                    self.set_stage(context, EnergyJobStage::FinalizeSummaries);
+                } else {
+                    builder.step(&self.model);
+                }
+                StepOutcome::Yield
+            }
+            EnergyJobStage::FinalizeSummaries => {
+                self.finalize_summaries();
+                self.set_stage(context, EnergyJobStage::FinalizeMetrics);
+                StepOutcome::Yield
+            }
+            EnergyJobStage::FinalizeMetrics => {
+                self.finalize_metrics();
+                self.set_stage(context, EnergyJobStage::FinalizeEconomics);
+                StepOutcome::Yield
+            }
+            EnergyJobStage::FinalizeEconomics => {
+                self.finalize_economics();
+                self.set_stage(context, EnergyJobStage::BuildResults);
+                StepOutcome::Yield
+            }
+            EnergyJobStage::BuildResults => {
+                self.build_results();
                 self.set_stage(context, EnergyJobStage::PublishFinal);
                 self.publish_preview(context)
             }
             EnergyJobStage::PublishFinal => {
-                self.finalize();
                 self.set_stage(context, EnergyJobStage::EncodeOutput);
                 StepOutcome::Yield
             }
@@ -571,6 +768,11 @@ impl EnergyJobStage {
             EnergyJobStage::AggregateFacility => "energy.aggregate-facility",
             EnergyJobStage::PublishTimestep => "energy.publish-timestep",
             EnergyJobStage::Finalize => "energy.finalize",
+            EnergyJobStage::Size => "energy.size",
+            EnergyJobStage::FinalizeSummaries => "energy.finalize-summaries",
+            EnergyJobStage::FinalizeMetrics => "energy.finalize-metrics",
+            EnergyJobStage::FinalizeEconomics => "energy.finalize-economics",
+            EnergyJobStage::BuildResults => "energy.build-results",
             EnergyJobStage::PublishFinal => "energy.publish-final",
             EnergyJobStage::EncodeOutput => "energy.encode-output",
             EnergyJobStage::Complete => "energy.complete",
@@ -637,21 +839,6 @@ impl Engine {
             StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) => Err(Error::severe("energy batch adapter stopped before a terminal outcome")),
         }
     }
-
-    fn resolve_weather(config: &SimulationConfig) -> Vec<WeatherRecord> {
-        if let Some(epw) = &config.weather {
-            return epw.records.clone();
-        }
-        match config.environment {
-            SimulationEnvironment::HeatingDesignDay => design_day_weather(-10.0),
-            SimulationEnvironment::CoolingDesignDay => design_day_weather(35.0),
-            _ => Self::synthetic_weather_year(),
-        }
-    }
-
-    fn synthetic_weather_year() -> Vec<WeatherRecord> {
-        (0..8760).map(synthetic_hour).collect()
-    }
 }
 // #endregion 🔖️Engine
 
@@ -679,10 +866,6 @@ fn synthetic_hour(h: u32) -> WeatherRecord {
         precipitation_mm: 0.0,
         snow_depth_mm: 0.0,
     }
-}
-
-fn design_day_weather(dry_bulb_c: f64) -> Vec<WeatherRecord> {
-    (0..24).map(|hour| design_day_hour(hour, dry_bulb_c)).collect()
 }
 
 fn design_day_hour(hour: u32, dry_bulb_c: f64) -> WeatherRecord {
@@ -771,7 +954,11 @@ mod tests {
     use super::*;
     use crate::calendar::RunPeriod;
 
-    fn drive_energy_job(mut job: EnergyJob) -> (EnergyJob, Vec<EnergyJobPreview>, usize, Vec<u8>, std::time::Duration) {
+    fn drive_energy_job(job: EnergyJob) -> (EnergyJob, Vec<EnergyJobPreview>, usize, Vec<u8>, std::time::Duration) {
+        drive_energy_job_with_fuel(job, 1)
+    }
+
+    fn drive_energy_job_with_fuel(mut job: EnergyJob, fuel: u64) -> (EnergyJob, Vec<EnergyJobPreview>, usize, Vec<u8>, std::time::Duration) {
         let operation = job.operation.operation;
         let generation = job.operation.generation;
         let cancel = CancelToken::root_now();
@@ -781,9 +968,10 @@ mod tests {
         let mut worst = std::time::Duration::ZERO;
         for _ in 0..50_000 {
             let start = Instant::now();
-            let mut context = StepContext::new(operation, generation, semio_framework_job::StepBudget::new(1, u64::MAX), cancel.clone(), default_now_ms, &mut preview_sequence);
+            let mut context = StepContext::new(operation, generation, semio_framework_job::StepBudget::new(fuel, u64::MAX), cancel.clone(), default_now_ms, &mut preview_sequence);
             let outcome = job.step(&mut context);
-            worst = worst.max(start.elapsed());
+            let elapsed = start.elapsed();
+            worst = worst.max(elapsed);
             match outcome {
                 StepOutcome::PreviewReady(_) => previews.push(job.preview().expect("typed preview accompanies payload").clone()),
                 StepOutcome::CheckpointReady(_) => checkpoints += 1,
@@ -796,7 +984,7 @@ mod tests {
         panic!("energy job did not complete within the deterministic step bound")
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn engine_runs_single_zone() {
         let model = test_model_single_zone();
         let config = SimulationConfig { warmup_days: 1, run_period_end_month: 1, run_period_end_day: 3, environment: SimulationEnvironment::WeatherRunPeriod, ..Default::default() };
@@ -805,7 +993,7 @@ mod tests {
         assert!(results.meters.facility_total_kwh(FuelType::Electricity) >= 0.0);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn engine_deterministic_repeatability() {
         let model = test_model_single_zone();
         let config = SimulationConfig { warmup_days: 0, run_period_end_month: 1, run_period_end_day: 2, ..Default::default() };
@@ -815,7 +1003,7 @@ mod tests {
         assert!((r1.meters.facility_total_kwh(FuelType::Electricity) - r2.meters.facility_total_kwh(FuelType::Electricity)).abs() < 1e-3);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn ashrae_140_case600_base() {
         let model = test_model_single_zone();
         let config = SimulationConfig { warmup_days: 0, run_period_end_month: 1, run_period_end_day: 1, environment: SimulationEnvironment::HeatingDesignDay, ..Default::default() };
@@ -824,13 +1012,13 @@ mod tests {
         assert!(temps.is_some());
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn invalid_model_rejected() {
         let model = Model::default();
         assert!(Engine::run(&model, &SimulationConfig::default()).is_err());
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn energy_conservation_order_of_magnitude() {
         let model = test_model_single_zone();
         let config = SimulationConfig { warmup_days: 0, run_period_end_month: 1, run_period_end_day: 2, ..Default::default() };
@@ -839,7 +1027,7 @@ mod tests {
         assert!(total_kwh < 1_000_000.0);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn full_topology_e2e() {
         let model = test_model_full_topology();
         let config = SimulationConfig { warmup_days: 0, run_period_end_month: 1, run_period_end_day: 2, ..Default::default() };
@@ -848,7 +1036,7 @@ mod tests {
         assert!(results.summaries.annual_energy.len() >= 3);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn hvac_bestest_heating_day() {
         let model = test_model_single_zone();
         let config = SimulationConfig { warmup_days: 0, run_period_end_month: 1, run_period_end_day: 1, environment: SimulationEnvironment::HeatingDesignDay, ..Default::default() };
@@ -857,7 +1045,7 @@ mod tests {
         assert!(results.time_series.get("Zone Air Temperature [Zone1]").is_some());
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn run_period_honors_calendar() {
         let period = RunPeriod { start_month: 1, start_day: 1, end_month: 1, end_day: 7, year: 2026 };
         assert_eq!(period.total_hours(), 168);
@@ -867,7 +1055,7 @@ mod tests {
         assert_eq!(results.run_metadata.timesteps, 168);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn energy_job_previews_checkpoints_and_commits_bounded_steps() {
         let model = test_model_single_zone();
         let config = SimulationConfig { warmup_days: 1, run_period_end_month: 1, run_period_end_day: 1, environment: SimulationEnvironment::HeatingDesignDay, ..Default::default() };
@@ -883,7 +1071,7 @@ mod tests {
         assert_eq!(results.run_metadata.timesteps, 24);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn energy_job_cancellation_and_freshness_precede_mutation() {
         let model = test_model_single_zone();
         let config = SimulationConfig { warmup_days: 0, run_period_end_month: 1, run_period_end_day: 1, ..Default::default() };
@@ -901,5 +1089,59 @@ mod tests {
         let mut stale_context = StepContext::new(operation.operation, Generation(4), semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_ms, &mut stale_sequence);
         assert!(matches!(stale_job.step(&mut stale_context), StepOutcome::Fault(_)));
         assert_eq!(stale_job.stage(), EnergyJobStage::Validate);
+    }
+
+    #[test]
+    fn energy_job_checkpoint_restore_and_fuel_batches_are_deterministic() {
+        let model = test_model_full_topology();
+        let config = SimulationConfig { warmup_days: 0, run_period_end_month: 1, run_period_end_day: 1, environment: SimulationEnvironment::HeatingDesignDay, ..Default::default() };
+        let operation = Operation::new(allocate_operation_id(), RevisionId(9), Generation(4), 73);
+        let mut original = EnergyJob::new(operation, model.clone(), config.clone());
+        let mut preview_sequence = 0;
+        for _ in 0..128 {
+            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_ms, &mut preview_sequence);
+            let _ = original.step(&mut context);
+            if original.timestep_work.is_some() {
+                break;
+            }
+        }
+        assert!(original.timestep_work.is_some(), "checkpoint must capture an active timestep cursor");
+        let checkpoint_timestep_stage = original.timestep_work.as_ref().map(TimestepWork::stage);
+        let checkpoint = original.encode_state(false);
+        let restored = EnergyJob::from_checkpoint(operation, model.clone(), config.clone(), &checkpoint).expect("checkpoint restore");
+        assert_eq!(restored.timestep_work.as_ref().map(TimestepWork::stage), checkpoint_timestep_stage);
+        assert_eq!(restored.encode_state(false), checkpoint);
+        let (mut original, _, _, original_output, _) = drive_energy_job_with_fuel(original, 1);
+        let (mut restored, _, _, restored_output, _) = drive_energy_job_with_fuel(restored, 64);
+        assert_eq!(original_output, restored_output);
+        let original_results = original.take_results().expect("original results");
+        let restored_results = restored.take_results().expect("restored results");
+        assert_eq!(original_results.time_series, restored_results.time_series);
+        assert_eq!(original_results.meters, restored_results.meters);
+
+        let (_, _, _, one_output, _) = drive_energy_job_with_fuel(EnergyJob::new(operation, model.clone(), config.clone()), 1);
+        let (_, _, _, many_output, _) = drive_energy_job_with_fuel(EnergyJob::new(operation, model, config), 128);
+        assert_eq!(one_output, many_output);
+    }
+
+    #[test]
+    fn adversarial_timestep_work_unit_stays_below_watchdog() {
+        let mut model = test_model_single_zone();
+        let template = model.surfaces[0].clone();
+        model.surfaces = (0..16_384)
+            .map(|index| {
+                let mut surface = template.clone();
+                surface.id = crate::model::EntityId(1_000 + index);
+                surface
+            })
+            .collect();
+        let pre = PrecomputedModel::build(&model, 60, 15);
+        let weather = design_day_hour(12, 35.0);
+        let date = crate::calendar::SimDate::new(weather.year, weather.month, weather.day);
+        let mut state = SimulationKernel::initialize(&model, &pre, &weather);
+        let mut work = TimestepWork::new(&model, &pre, weather, date, 12.0, pre.zone_timestep_s);
+        let start = Instant::now();
+        work.step(&model, &SimulationConfig::default(), &pre, &mut state);
+        assert!(start.elapsed() < std::time::Duration::from_millis(8), "one adversarial energy work unit exceeded watchdog: {:?}", start.elapsed());
     }
 }

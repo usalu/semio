@@ -1,15 +1,10 @@
 //! 🪢️ The narrow interface that ends the renderer owning the actor kernel (ticket
 //! `26/08/20/SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY`, packet `os-host`). `submit_intents`/
-//! `drain_outcomes`/`set_waker` are implemented over the **existing** `kernel_runtime`
-//! statics/`spawn_app_task` plumbing already in `📦️glue.rs` — wrapping, not rewriting: no
-//! `kernel_runtime` code below the `//#region 🔖️AppKernelSeam` line is new, only reused.
+//! `drain_outcomes`/`set_waker` use the process worker pool and a capacity-bounded owned mailbox.
 //!
 //! **U3 (no `dyn KernelSeam`).** The seam's "one impl per platform" resolves to a SINGLE concrete
-//! type, [`AppKernelSeam`], not a cfg-selected pair: `crate::spawn_app_task` (this crate's existing
-//! `📦️glue.rs` root fn) already branches `kernel_runtime::spawn_task` (native) vs
-//! `wasm_bindgen_futures::spawn_local` (wasm) internally, so [`AppKernelSeam`] built on top of it
-//! needs no cfg branching of its own — a better outcome than the two-impl table in `📌️important.md`
-//! anticipated, per R11's own "note it produces a better design here anyway".
+//! type, [`AppKernelSeam`], not a cfg-selected pair. Native continuations run on the process pool;
+//! wasm continuations remain cooperative `spawn_local` tasks.
 //!
 //! **Honest gap — `submit_intents` has no real router yet.** [`ui_contract::UiIntent`] addresses a
 //! `surface: SurfaceId`, not a plugin instance `u32`; the existing `kernel_runtime::KernelClient`
@@ -23,22 +18,17 @@
 //! §3, "protocol flip"). `AppKernelSeam` itself is fully wired and tested independent of that stub —
 //! see this file's own tests, which pass a fake `exchange` fn.
 //!
-//! **Waker correctness this file exists to fix.** `kernel_runtime::poll_tasks()` today drives every
-//! queued future with `Waker::noop()` — harmless under the old `ControlFlow::Poll` loop (`poll_tasks`
-//! reruns every single tick regardless of any real wake signal) but a real bug once `winit_app.rs`
-//! switches to `WaitUntil`/`Wait`: a pending kernel round trip's `KernelFuture` would then only get
-//! re-polled to completion whenever some UNRELATED event/deadline happens to wake the loop, not
-//! promptly on its own completion. [`set_waker`][KernelSeam::set_waker] plus the surgical
-//! `📦️glue.rs` edit installing a real `std::task::Waker` (built from `ui_host::WakeProxy`, itself
-//! `Send + Sync` — exactly the cross-thread wake transport this needs) into `kernel_runtime` closes
-//! that gap; see `📓️terra-os-host-report.md`'s redraw audit for the exact edit.
+//! **Waker correctness.** Pool futures register their own `Send + Sync` wakers with awaited kernel
+//! work. Completion schedules the next pool turn and the finished outcome wakes winit through the
+//! host callback; no future is ever polled by a UI callback.
 
-use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::future::Future;
 use std::pin::Pin;
-use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 use ui_contract::UiIntent;
+
+const OUTCOME_CAPACITY: usize = 64;
 
 //#region 🔖️KernelSeam
 
@@ -46,17 +36,15 @@ use ui_contract::UiIntent;
 
 /// 📨️ A cheap, `Clone`-free handle the seam calls the instant an outcome lands, so the host's event
 /// loop wakes up even though it is sitting in `ControlFlow::WaitUntil`/`Wait`. Deliberately NOT the
-/// raw `std::task::Waker` `KernelFuture` itself needs (that one must be `Send + Sync` to be called
-/// from the kernel thread inside `ResponseSlot::deliver` — see `kernel_seam::install` in
-/// `os_host.rs`); this wrapper is the winit-thread-side "please redraw/re-check me" signal a
-/// [`KernelSeam`] implementation calls after pushing into its own outcome queue, always from the
-/// thread that owns that queue.
-pub struct HostWaker(Rc<dyn Fn()>);
+/// raw `std::task::Waker` the pool future itself needs. This wrapper is the host-side
+/// "please redraw/re-check me" signal and is safe to call from the completing worker.
+#[derive(Clone)]
+pub struct HostWaker(Arc<dyn Fn() + Send + Sync>);
 
 impl HostWaker {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn new(wake: impl Fn() + 'static) -> Self {
-        Self(Rc::new(wake))
+    pub fn new(wake: impl Fn() + Send + Sync + 'static) -> Self {
+        Self(Arc::new(wake))
     }
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -70,12 +58,12 @@ impl HostWaker {
 //#region 📤️KernelOutcome
 
 /// 📤️ What one completed kernel round trip hands back to the host. `detail` is deliberately opaque
-/// (`Box<dyn std::any::Any>` — U3's own `dyn Any` carve-out) until the protocol-flip packet lands
+/// (`Box<dyn std::any::Any + Send>` — U3's own `dyn Any` carve-out) until the protocol-flip packet lands
 /// `UiPatch`-shaped outcomes on the wire (master plan §3); see this file's own module docstring for
 /// the honest gap this papers over. A caller downcasts via `detail.downcast_ref::<T>()`.
 pub struct KernelOutcome {
     pub surface: String,
-    pub detail: Box<dyn std::any::Any>,
+    pub detail: Box<dyn std::any::Any + Send>,
 }
 
 //#endregion 📤️KernelOutcome
@@ -89,8 +77,9 @@ pub struct KernelOutcome {
 pub trait KernelSeam {
     /// 📮️ Enqueues `intents` for exchange with the kernel; returns immediately, never blocks the
     /// caller. Results surface later through [`Self::drain_outcomes`], after [`Self::set_waker`]'s
-    /// waker fires.
-    fn submit_intents(&self, intents: Vec<UiIntent>);
+    /// waker fires. Intents returned from this method did not fit the lossless mailbox and remain
+    /// owned by the caller for a later retry.
+    fn submit_intents(&self, intents: Vec<UiIntent>) -> Vec<UiIntent>;
 
     /// 📭️ Drains every outcome that has landed since the last call — called on wake, never per-frame.
     fn drain_outcomes(&self) -> Vec<KernelOutcome>;
@@ -108,6 +97,10 @@ pub trait KernelSeam {
 /// on file-scoped statics/thread-locals for the same reason `KernelClient::get()`'s `OnceLock` does)
 /// — the real implementation reaches for `kernel_runtime::KernelClient::get()` plus whatever
 /// surface→instance lookup eventually lands, rather than closing over captured state.
+#[cfg(not(target_arch = "wasm32"))]
+pub type IntentExchange = fn(UiIntent) -> Pin<Box<dyn Future<Output = KernelOutcome> + Send>>;
+
+#[cfg(target_arch = "wasm32")]
 pub type IntentExchange = fn(UiIntent) -> Pin<Box<dyn Future<Output = KernelOutcome>>>;
 
 /// 🕳️ The honest-gap stub — see this file's own module docstring. Echoes the intent's surface back
@@ -115,59 +108,97 @@ pub type IntentExchange = fn(UiIntent) -> Pin<Box<dyn Future<Output = KernelOutc
 /// before the real router lands.
 // 🚫️async: U1 — the fn itself is sync; only the future it returns awaits, at the boundary (U1's own
 // "async at boundaries only" rule), never inside a frame transaction.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn default_intent_exchange(intent: UiIntent) -> Pin<Box<dyn Future<Output = KernelOutcome> + Send>> {
+    Box::pin(async move { KernelOutcome { surface: intent.surface.0, detail: Box::new(()) } })
+}
+
+#[cfg(target_arch = "wasm32")]
 pub fn default_intent_exchange(intent: UiIntent) -> Pin<Box<dyn Future<Output = KernelOutcome>>> {
     Box::pin(async move { KernelOutcome { surface: intent.surface.0, detail: Box::new(()) } })
 }
 
 /// 🚀️ The one [`KernelSeam`] impl (U3: no `dyn`, and — per this file's own docstring — no cfg pair
-/// either). Outcomes accumulate in an `Rc<RefCell<VecDeque<_>>>` shared with every in-flight
-/// `spawn_app_task` future this seam spawned; `drain_outcomes` empties it, `set_waker` stores the
-/// wake callback each future's completion calls after pushing its result.
+/// either). Ready outcomes and in-flight exchanges share one fixed-capacity mailbox. Commands are
+/// never coalesced or evicted; callers retain and retry the returned overflow intents.
 pub struct AppKernelSeam {
-    outcomes: Rc<RefCell<VecDeque<KernelOutcome>>>,
-    waker: Rc<RefCell<Option<HostWaker>>>,
+    outcomes: Arc<Mutex<OutcomeMailbox>>,
+    waker: Arc<Mutex<Option<HostWaker>>>,
     exchange: IntentExchange,
 }
 
 impl AppKernelSeam {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new(exchange: IntentExchange) -> Self {
-        Self { outcomes: Rc::new(RefCell::new(VecDeque::new())), waker: Rc::new(RefCell::new(None)), exchange }
+        Self { outcomes: Arc::new(Mutex::new(OutcomeMailbox::new())), waker: Arc::new(Mutex::new(None)), exchange }
     }
 
     /// 🧪️ Test/host seam for inspecting queue depth without draining it.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn pending_len(&self) -> usize {
-        self.outcomes.borrow().len()
+        self.outcomes.lock().expect("kernel outcome mailbox lock").ready.len()
+    }
+}
+
+struct OutcomeMailbox {
+    ready: VecDeque<KernelOutcome>,
+    in_flight: usize,
+}
+
+impl OutcomeMailbox {
+    fn new() -> Self {
+        Self { ready: VecDeque::with_capacity(OUTCOME_CAPACITY), in_flight: 0 }
+    }
+
+    fn reserve(&mut self) -> bool {
+        if self.ready.len() + self.in_flight >= OUTCOME_CAPACITY {
+            return false;
+        }
+        self.in_flight += 1;
+        true
+    }
+
+    fn finish(&mut self, outcome: KernelOutcome) {
+        assert!(self.in_flight > 0, "kernel outcome without reservation");
+        self.in_flight -= 1;
+        self.ready.push_back(outcome);
     }
 }
 
 impl KernelSeam for AppKernelSeam {
     // 🚫️async: U1 — sync fn; the future it spawns is the boundary-async exception U1 itself carves
     // out ("await between frames, never halfway through a frame").
-    fn submit_intents(&self, intents: Vec<UiIntent>) {
+    fn submit_intents(&self, intents: Vec<UiIntent>) -> Vec<UiIntent> {
+        let mut rejected = Vec::new();
         for intent in intents {
+            if !self.outcomes.lock().expect("kernel outcome mailbox lock").reserve() {
+                rejected.push(intent);
+                continue;
+            }
             let outcomes = self.outcomes.clone();
             let waker = self.waker.clone();
             let pending = (self.exchange)(intent);
             crate::spawn_app_task(async move {
                 let outcome = pending.await;
-                outcomes.borrow_mut().push_back(outcome);
-                if let Some(host_waker) = waker.borrow().as_ref() {
+                let mut mailbox = outcomes.lock().expect("kernel outcome mailbox lock");
+                mailbox.finish(outcome);
+                drop(mailbox);
+                if let Some(host_waker) = waker.lock().expect("kernel host waker lock").as_ref() {
                     host_waker.wake();
                 }
             });
         }
+        rejected
     }
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn drain_outcomes(&self) -> Vec<KernelOutcome> {
-        self.outcomes.borrow_mut().drain(..).collect()
+        self.outcomes.lock().expect("kernel outcome mailbox lock").ready.drain(..).collect()
     }
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn set_waker(&self, waker: HostWaker) {
-        *self.waker.borrow_mut() = Some(waker);
+        *self.waker.lock().expect("kernel host waker lock") = Some(waker);
     }
 }
 
@@ -181,9 +212,15 @@ mod tests {
     use ui_contract::{ActionId, SurfaceId, Trigger, UiNodeId, UiRevision};
 
     fn fake_intent(surface: &str) -> UiIntent {
-        UiIntent { surface: SurfaceId(surface.to_string()), revision: UiRevision(1), node: UiNodeId(1), node_key: "root".to_string(), trigger: Trigger::Activate, action: ActionId::default(), args: None, input: None }
+        UiIntent { surface: SurfaceId(surface.to_string()), revision: UiRevision(1), seq: 1, node: UiNodeId(1), node_key: "root".to_string(), trigger: Trigger::Activate, action: ActionId::default(), args: None, input: None }
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
+    fn echo_exchange(intent: UiIntent) -> Pin<Box<dyn Future<Output = KernelOutcome> + Send>> {
+        Box::pin(async move { KernelOutcome { surface: intent.surface.0, detail: Box::new(intent.node_key) } })
+    }
+
+    #[cfg(target_arch = "wasm32")]
     fn echo_exchange(intent: UiIntent) -> Pin<Box<dyn Future<Output = KernelOutcome>>> {
         Box::pin(async move { KernelOutcome { surface: intent.surface.0, detail: Box::new(intent.node_key) } })
     }
@@ -191,22 +228,17 @@ mod tests {
     #[test]
     fn a_fake_seam_receives_submitted_intents_and_outcomes_reach_the_host_on_wake() {
         let seam = AppKernelSeam::new(echo_exchange);
-        let woken = Rc::new(RefCell::new(false));
-        let woken_clone = woken.clone();
-        seam.set_waker(HostWaker::new(move || *woken_clone.borrow_mut() = true));
+        let (woken, completion) = std::sync::mpsc::sync_channel(1);
+        seam.set_waker(HostWaker::new(move || {
+            let _ = woken.try_send(());
+        }));
 
-        seam.submit_intents(vec![fake_intent("surface-a")]);
-        assert_eq!(seam.pending_len(), 0, "the outcome has not landed yet — the future is still queued");
-
-        // 🌀️ `spawn_app_task` on native routes through `kernel_runtime::spawn_task`'s thread-local
-        // pool; polling it directly here (rather than via `about_to_wait`) is the same pattern this
-        // crate's own `poll_tasks` doc comment describes.
+        assert!(seam.submit_intents(vec![fake_intent("surface-a")]).is_empty());
         #[cfg(not(target_arch = "wasm32"))]
-        crate::kernel_runtime::poll_tasks();
+        completion.recv_timeout(std::time::Duration::from_secs(2)).expect("worker completion wake");
 
         #[cfg(not(target_arch = "wasm32"))]
         {
-            assert!(*woken.borrow(), "the waker must fire once the outcome lands");
             let outcomes = seam.drain_outcomes();
             assert_eq!(outcomes.len(), 1);
             assert_eq!(outcomes[0].surface, "surface-a");
@@ -218,5 +250,17 @@ mod tests {
     fn drain_outcomes_is_empty_with_nothing_submitted() {
         let seam = AppKernelSeam::new(default_intent_exchange);
         assert!(seam.drain_outcomes().is_empty());
+    }
+
+    #[test]
+    fn outcome_mailbox_is_fixed_capacity_and_returns_backpressure_without_eviction() {
+        let mut mailbox = OutcomeMailbox::new();
+        for _ in 0..OUTCOME_CAPACITY {
+            assert!(mailbox.reserve());
+        }
+        assert!(!mailbox.reserve());
+        mailbox.finish(KernelOutcome { surface: "surface-7".to_string(), detail: Box::new(999usize) });
+        assert_eq!(mailbox.ready.len() + mailbox.in_flight, OUTCOME_CAPACITY);
+        assert_eq!(*mailbox.ready.back().expect("lossless outcome").detail.downcast_ref::<usize>().expect("usize detail"), 999);
     }
 }

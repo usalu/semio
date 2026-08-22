@@ -14,24 +14,46 @@ pub mod fixture_layout {
 
     //#region ⚠️ Errors
     /// ⚠️ Errors from normal-undirected force/redraw fixture layout.
-    #[derive(Debug, thiserror::Error)]
+    #[derive(Debug)]
     pub enum UndirectedGraphError {
-        #[error("fixture root must be object")]
         FixtureRootNotObject,
-        #[error("schema must be one of: {0}")]
         UnsupportedSchema(String),
-        #[error("nodes array missing")]
         NodesMissing,
-        #[error("node must be object")]
         NodeNotObject,
-        #[error("node id missing")]
         NodeIdMissing,
-        #[error("normal undirected redraw does not support redrawHandlesAfter")]
         RedrawHandlesAfterUnsupported,
-        #[error("normal undirected redraw does not support mode: {0}")]
         UnsupportedRedrawMode(String),
-        #[error(transparent)]
-        Json(#[from] serde_json::Error),
+        Json(serde_json::Error),
+    }
+
+    impl std::fmt::Display for UndirectedGraphError {
+        fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                Self::FixtureRootNotObject => formatter.write_str("fixture root must be object"),
+                Self::UnsupportedSchema(schema) => write!(formatter, "schema must be one of: {schema}"),
+                Self::NodesMissing => formatter.write_str("nodes array missing"),
+                Self::NodeNotObject => formatter.write_str("node must be object"),
+                Self::NodeIdMissing => formatter.write_str("node id missing"),
+                Self::RedrawHandlesAfterUnsupported => formatter.write_str("normal undirected redraw does not support redrawHandlesAfter"),
+                Self::UnsupportedRedrawMode(mode) => write!(formatter, "normal undirected redraw does not support mode: {mode}"),
+                Self::Json(error) => write!(formatter, "{error}"),
+            }
+        }
+    }
+
+    impl std::error::Error for UndirectedGraphError {
+        fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+            match self {
+                Self::Json(error) => std::error::Error::source(error),
+                _ => None,
+            }
+        }
+    }
+
+    impl From<serde_json::Error> for UndirectedGraphError {
+        fn from(error: serde_json::Error) -> Self {
+            Self::Json(error)
+        }
     }
     //#endregion ⚠️ Errors
 

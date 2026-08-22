@@ -1,0 +1,96 @@
+semio-framework-2d v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻2d/📦️packages/🦀️rust)
+├── blake3 v1.8.5
+│   ├── arrayref v0.3.9
+│   ├── arrayvec v0.7.6
+│   ├── cfg-if v1.0.4
+│   └── constant_time_eq v0.4.2
+│   [build-dependencies]
+│   └── cc v1.2.62
+│       ├── find-msvc-tools v0.1.9
+│       └── shlex v1.3.0
+├── semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+│   ├── base64 v0.22.1
+│   ├── blake3 v1.8.5 (*)
+│   ├── futures-util v0.3.32
+│   │   ├── futures-core v0.3.32
+│   │   ├── futures-macro v0.3.32 (proc-macro)
+│   │   │   ├── proc-macro2 v1.0.106
+│   │   │   │   └── unicode-ident v1.0.24
+│   │   │   ├── quote v1.0.45
+│   │   │   │   └── proc-macro2 v1.0.106 (*)
+│   │   │   └── syn v2.0.117
+│   │   │       ├── proc-macro2 v1.0.106 (*)
+│   │   │       ├── quote v1.0.45 (*)
+│   │   │       └── unicode-ident v1.0.24
+│   │   ├── futures-sink v0.3.32
+│   │   ├── futures-task v0.3.32
+│   │   ├── pin-project-lite v0.2.17
+│   │   └── slab v0.4.12
+│   ├── miniz_oxide v0.8.9
+│   │   ├── adler2 v2.0.1
+│   │   └── simd-adler32 v0.3.9
+│   ├── semio-framework-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust)
+│   │   ├── semio-framework-trace v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust)
+│   │   └── serde v1.0.228
+│   │       ├── serde_core v1.0.228
+│   │       └── serde_derive v1.0.228 (proc-macro)
+│   │           ├── proc-macro2 v1.0.106 (*)
+│   │           ├── quote v1.0.45 (*)
+│   │           └── syn v2.0.117 (*)
+│   ├── semio-framework-hash v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust)
+│   │   └── blake3 v1.8.5 (*)
+│   ├── semio-framework-os-kernel-dsl-derive v0.1.0 (proc-macro) (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust)
+│   │   ├── proc-macro2 v1.0.106 (*)
+│   │   ├── quote v1.0.45 (*)
+│   │   └── syn v2.0.117 (*)
+│   ├── semio-framework-pack v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust)
+│   │   ├── blake3 v1.8.5 (*)
+│   │   ├── semio-framework-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust) (*)
+│   │   └── semio-framework-replication v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust)
+│   │       ├── blake3 v1.8.5 (*)
+│   │       ├── miniz_oxide v0.8.9 (*)
+│   │       ├── serde v1.0.228 (*)
+│   │       └── serde_json v1.0.149
+│   │           ├── itoa v1.0.18
+│   │           ├── memchr v2.8.0
+│   │           ├── serde_core v1.0.228
+│   │           └── zmij v1.0.21
+│   ├── semio-framework-replication v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust) (*)
+│   ├── serde v1.0.228 (*)
+│   ├── serde_json v1.0.149 (*)
+│   ├── tokio v1.52.3
+│   │   ├── libc v0.2.186
+│   │   ├── mio v1.2.1
+│   │   │   └── libc v0.2.186
+│   │   ├── pin-project-lite v0.2.17
+│   │   ├── socket2 v0.6.4
+│   │   │   └── libc v0.2.186
+│   │   └── tokio-macros v2.7.0 (proc-macro)
+│   │       ├── proc-macro2 v1.0.106 (*)
+│   │       ├── quote v1.0.45 (*)
+│   │       └── syn v2.0.117 (*)
+│   └── zip v2.4.2
+│       ├── crc32fast v1.5.0
+│       │   └── cfg-if v1.0.4
+│       ├── displaydoc v0.2.5 (proc-macro)
+│       │   ├── proc-macro2 v1.0.106 (*)
+│       │   ├── quote v1.0.45 (*)
+│       │   └── syn v2.0.117 (*)
+│       ├── flate2 v1.1.9
+│       │   ├── crc32fast v1.5.0 (*)
+│       │   └── miniz_oxide v0.8.9 (*)
+│       ├── indexmap v2.14.0
+│       │   ├── equivalent v1.0.2
+│       │   └── hashbrown v0.17.1
+│       ├── memchr v2.8.0
+│       ├── thiserror v2.0.18
+│       │   └── thiserror-impl v2.0.18 (proc-macro)
+│       │       ├── proc-macro2 v1.0.106 (*)
+│       │       ├── quote v1.0.45 (*)
+│       │       └── syn v2.0.117 (*)
+│       └── zopfli v0.8.3
+│           ├── bumpalo v3.20.2
+│           ├── crc32fast v1.5.0 (*)
+│           ├── log v0.4.29
+│           └── simd-adler32 v0.3.9
+└── serde v1.0.228 (*)

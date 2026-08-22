@@ -4,7 +4,7 @@ use crate::artifacts::fem3d::diff::{Fem3dDiff, Fem3dLoadCasesDelta, Fem3dLoadCas
 use crate::artifacts::fem3d::{load_id, Fem3dSnapshot};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &RemoveLoad, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {
+pub fn diff(payload: &RemoveLoad, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {
     let Some(existing) = base.load_cases.iter().find(|case| case.id == payload.case_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Load case \"{}\" does not exist.", payload.case_id), [payload.case_id.clone()]);
     };

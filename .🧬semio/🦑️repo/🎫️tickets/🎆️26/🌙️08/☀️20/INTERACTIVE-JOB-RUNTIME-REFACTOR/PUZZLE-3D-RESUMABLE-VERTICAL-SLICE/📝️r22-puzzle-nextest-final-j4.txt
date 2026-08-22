@@ -1,0 +1,110 @@
+   Compiling semio-framework-replication v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust)
+   Compiling semio-framework-hash v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust)
+   Compiling semio-framework-os-kernel-dsl-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust)
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+   Compiling semio-framework-mesh-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust)
+error[E0277]: the trait bound `[u8; 4]: TryFrom<&[u8; 4]>` is not satisfied
+  --> 🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust/../../🦀️component.rs:91:46
+   |
+91 |             *word = u32::from_be_bytes(bytes.try_into().expect("SHA-256 word width"));
+   |                                              ^^^^^^^^ the trait `From<&[u8; 4]>` is not implemented for `[u8; 4]`
+   |
+   = help: the following other types implement trait `From<T>`:
+             `[T; 1]` implements `From<(T,)>`
+             `[T; 2]` implements `From<(T, T)>`
+             `[T; 3]` implements `From<(T, T, T)>`
+             `[T; 4]` implements `From<(T, T, T, T)>`
+             `[T; 5]` implements `From<(T, T, T, T, T)>`
+             `[T; 6]` implements `From<(T, T, T, T, T, T)>`
+             `[T; 7]` implements `From<(T, T, T, T, T, T, T)>`
+             `[T; 8]` implements `From<(T, T, T, T, T, T, T, T)>`
+           and 8 others
+   = note: required for `&[u8; 4]` to implement `Into<[u8; 4]>`
+   = note: required for `[u8; 4]` to implement `TryFrom<&[u8; 4]>`
+   = note: required for `&[u8; 4]` to implement `TryInto<[u8; 4]>`
+
+For more information about this error, try `rustc --explain E0277`.
+error: could not compile `semio-framework-hash` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+error: cannot find attribute `default` in this scope
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:491:7
+    |
+491 |     #[default]
+    |       ^^^^^^^
+    |
+help: `default` is an attribute that can be used by the derive macro `Default`, you might be missing a `derive` attribute
+    |
+490 + #[derive(Default)]
+491 | pub enum MutationOrigin {
+    |
+help: consider adding a derive
+    |
+490 + #[derive(Default)]
+491 | pub enum MutationOrigin {
+    |
+
+error[E0277]: the trait bound `MutationOrigin: std::default::Default` is not satisfied
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:450:5
+    |
+450 | /     /// @emoji 🔀️ Provenance of this operation: `Owner` (default, omitted from wire — the
+451 | |     /// overwhelming common case, an edit authored by the artifact's own owner logic), `Contributed`
+452 | |     /// (synthesized by a contributor plugin's `contributor.artifact-mutation-plan` response), or
+453 | |     /// `Transaction` (applied as one member of a cross-artifact composite gesture initiated
+...   |
+457 | |     #[serde(default, skip_serializing_if = "MutationOrigin::is_owner")]
+458 | |     pub origin: MutationOrigin,
+    | |______________________________^ unsatisfied trait bound
+    |
+help: the trait `std::default::Default` is not implemented for `MutationOrigin`
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:490:1
+    |
+490 | pub enum MutationOrigin {
+    | ^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0277]: the trait bound `diagnostic::Severity: std::default::Default` is not satisfied
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:156:5
+    |
+153 | #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+    |                        ------- in this derive macro expansion
+...
+156 |     pub level: crate::diagnostic::Severity,
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `std::default::Default` is not implemented for `diagnostic::Severity`
+    |
+help: consider annotating `diagnostic::Severity` with `#[derive(Default)]`
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:77:1
+    |
+ 77 + #[derive(Default)]
+ 78 | pub enum Severity {
+    |
+
+error[E0277]: the trait bound `diagnostic::FaultCode: std::default::Default` is not satisfied
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:157:5
+    |
+153 | #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+    |                        ------- in this derive macro expansion
+...
+157 |     pub code: crate::diagnostic::FaultCode,
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `std::default::Default` is not implemented for `diagnostic::FaultCode`
+    |
+help: consider annotating `diagnostic::FaultCode` with `#[derive(Default)]`
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../../⚠️diagnostic/🦀️component.rs:42:1
+    |
+ 42 + #[derive(Default)]
+ 43 | pub struct FaultCode(pub String);
+    |
+
+error[E0277]: the trait bound `MutationOrigin: std::default::Default` is not satisfied
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:413:53
+    |
+413 | #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+    |                                                     ^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+    |
+help: the trait `std::default::Default` is not implemented for `MutationOrigin`
+   --> 🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/../../🎮️mutation/🦀️component.rs:490:1
+    |
+490 | pub enum MutationOrigin {
+    | ^^^^^^^^^^^^^^^^^^^^^^^
+    = note: this error originates in the derive macro `serde::Deserialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: could not compile `semio-framework-replication` (lib) due to 5 previous errors
+error: command `/Users/ueli/.rustup/toolchains/nightly-2026-07-07-aarch64-apple-darwin/bin/cargo test --no-run --message-format json-render-diagnostics --package semio-s-plugin-puzzle` exited with code 101

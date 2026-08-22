@@ -4,7 +4,7 @@
 
 // #region 🔌️Adapters
 import { App, Mode, reactHostPort } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 // #endregion 🔌️Adapters
 
 const meta = {

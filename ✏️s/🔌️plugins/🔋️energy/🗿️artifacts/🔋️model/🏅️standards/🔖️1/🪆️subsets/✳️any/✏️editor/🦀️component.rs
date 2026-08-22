@@ -13,7 +13,9 @@ use crate::artifacts::model::mutations::replace_model::mutation::ReplaceModel;
 use crate::artifacts::model::{EnergyModelMutation, EnergyModelSnapshot, ENERGY_MODEL_DOCUMENT_SCHEMA, MODEL_DIALECT};
 use crate::editor::model::modes::edit;
 use crate::editor::model::modes::edit::windows::{structure, zones};
-use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode};
+use semio_framework_plugin::{
+    ArtifactEditor, ArtifactView, ComponentTree, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation,
+};
 use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 
@@ -36,7 +38,7 @@ pub enum EnergyModelEditorCommand {
 /// handcrafted per artifact). Same shape as `📕️norm`'s `NormConfigMutation`/`🔱️trinity`'s
 /// `TrinityJackCommand`.
 impl protocol::OpText for EnergyModelEditorCommand {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -47,7 +49,7 @@ impl protocol::OpText for EnergyModelEditorCommand {
         }
         Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -56,7 +58,7 @@ impl protocol::OpText for EnergyModelEditorCommand {
 }
 
 impl protocol::OpBinary for EnergyModelEditorCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -69,7 +71,7 @@ impl protocol::OpBinary for EnergyModelEditorCommand {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -164,18 +166,18 @@ impl ArtifactEditor for EnergyModelEditor {
         Ok(Emit { artifact_mutations: vec![EnergyModelMutation::ReplaceModel(ReplaceModel { new_model_json })], description: Some(description), ..Default::default() })
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
-        match body_key {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> ComponentTree {
+        semio_framework_plugin::built_to_component_tree(match body_key {
             structure::BODY_KEY => structure::render(doc.snapshot),
             zones::BODY_KEY => zones::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
+        })
     }
 }
 //#endregion 🔖️Editor
 
 //#region 🔖️Manifest
-pub async fn create_energy_model_editor() -> semio_framework_plugin::AppDefinition {
+pub fn create_energy_model_editor() -> semio_framework_plugin::AppDefinition {
     Editor::builder(MODEL_DIALECT)
         .document(["semio", "energy", "model"])
         .icon_id("battery")

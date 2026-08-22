@@ -1,7 +1,7 @@
 //! 🐘️ `HubDirectory` over PostgreSQL — direct `sqlx-postgres`/`sqlx-core` (not the `sqlx` facade),
-//! matching the exact precedent in `compose/server/hub/rs/bin.rs`. The scale-out backend for
-//! multi-node self-hosted deployments. `#[cfg(feature = "postgres")]`-gated as a whole by the
-//! parent `directory` module (see `📇️directory/🦀️component.rs`'s `//#region 🔖️Backends`).
+//! avoiding the facade's optional SQLite resolver edge. The scale-out backend for multi-node
+//! self-hosted deployments. `#[cfg(feature = "postgres")]`-gated as a whole by the parent
+//! `directory` module (see `📇️directory/🦀️component.rs`'s `//#region 🔖️Backends`).
 //!
 //! 🌳️ `SCHEMA` is inlined as a `const` string rather than `include_str!`-ed from a sibling
 //! `.sql` file: Shape V2 tree purity allows only `component.<ext>` files, `📦️packages`, and plain
@@ -15,8 +15,7 @@ use crate::directory::model::*;
 use crate::directory::{kind_to_str, role_from_wire, visibility_to_str, HubClock, HubDirectory, NewDirectoryEvent};
 use directory::os_directory::{DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, Hlc};
 use directory::os_identity::time_ordered_id;
-pub use sqlx_core::row::Row;
-pub use sqlx_postgres::{PgPool, PgPoolOptions};
+use sqlx_postgres::{PgPool, PgPoolOptions};
 
 //#region 🔖️Schema
 // 🛢️ os-hub directory Postgres schema (identity/tenancy only) — idempotent bootstrap
@@ -617,17 +616,46 @@ fn event_from_row(row: (i64, String, i64, i64, String, String, Option<String>, O
 #[cfg(test)]
 mod tests {
     use super::*;
-    use testcontainers_modules::postgres::Postgres;
-    use testcontainers_modules::testcontainers;
-    use testcontainers_modules::testcontainers::runners::AsyncRunner;
+    use std::net::TcpListener;
+    use std::process::Command;
+    use std::sync::atomic::{AtomicU64, Ordering};
+    use std::time::Duration;
 
-    async fn test_directory() -> (PostgresDirectory, testcontainers::ContainerAsync<Postgres>) {
-        let container = Postgres::default().start().await.expect("start postgres container");
-        let port = container.get_host_port_ipv4(5432).await.expect("port");
-        let url = format!("postgres://postgres:postgres@127.0.0.1:{port}/postgres");
-        let directory = PostgresDirectory::connect(&url).await.expect("connect");
-        (directory, container)
+    //#region 🔖️PostgresFixture
+    static NEXT_CONTAINER: AtomicU64 = AtomicU64::new(1);
+
+    struct PostgresContainer {
+        name: String,
     }
+
+    impl Drop for PostgresContainer {
+        fn drop(&mut self) {
+            let _ = Command::new("docker").args(["rm", "--force", &self.name]).output();
+        }
+    }
+
+    /// 🐘️ Starts a disposable real Postgres behind a private fixture boundary, without a Rust
+    /// container-orchestration dependency.
+    async fn test_directory() -> (PostgresDirectory, PostgresContainer) {
+        let port = TcpListener::bind(("127.0.0.1", 0)).expect("reserve postgres fixture port").local_addr().expect("postgres fixture address").port();
+        let sequence = NEXT_CONTAINER.fetch_add(1, Ordering::Relaxed);
+        let name = format!("semio-hub-postgres-{}-{sequence}", std::process::id());
+        let mapping = format!("127.0.0.1:{port}:5432");
+        let output = Command::new("docker").args(["run", "--detach", "--rm", "--name", &name, "--env", "POSTGRES_PASSWORD=postgres", "--publish", &mapping, "postgres:16-alpine"]).output().expect("start docker for postgres fixture");
+        assert!(output.status.success(), "start postgres fixture: {}", String::from_utf8_lossy(&output.stderr));
+        let container = PostgresContainer { name };
+        let url = format!("postgres://postgres:postgres@127.0.0.1:{port}/postgres");
+        let mut last_error = None;
+        for _ in 0..300 {
+            match PostgresDirectory::connect(&url).await {
+                Ok(directory) => return (directory, container),
+                Err(error) => last_error = Some(error),
+            }
+            tokio::time::sleep(Duration::from_millis(100)).await;
+        }
+        panic!("connect to postgres fixture: {}", last_error.expect("postgres fixture must report a connection error"));
+    }
+    //#endregion 🔖️PostgresFixture
 
     fn actor(id: &str) -> DirectoryActor {
         DirectoryActor { kind: DirectoryActorKind::User, id: id.to_string() }

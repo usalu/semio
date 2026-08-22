@@ -8,7 +8,7 @@ use serde_json::Value;
 
 /// ⚖️ `setObjectKindWeight`/`setVortexKindWeight` share one arm: both re-normalize their whole group
 /// so the sliders always sum to 1.
-pub async fn set_kind_weight(ctx: &mut Puzzle5dActionCtx<'_>, action: &str, args: Option<&Value>) {
+pub fn set_kind_weight(ctx: &mut Puzzle5dActionCtx<'_>, action: &str, args: Option<&Value>) {
     let kind_id = args.and_then(|v| v.get("kindId")).and_then(|v| v.as_str()).unwrap_or("");
     let value = args.and_then(|v| v.get("value")).and_then(|v| v.as_f64()).unwrap_or(1.0).clamp(0.0, 1.0);
     let part_ids = puzzle5d_kind_ids(&ctx.scene.document, "parts");

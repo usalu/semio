@@ -17,7 +17,7 @@ pub async fn parse_slash_path_text(text: &str) -> Result<Vec<String>, TextError>
     let limits = Limits::default();
     let tokens: Vec<_> = lex(text, &limits, false)?.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();
     let [token] = tokens.as_slice() else {
-        return Err(TextError::new("expected a single slash-path ident", tokens.get(1).map(|t| t.span).unwrap_or(TextSpan::at(1, 1))));
+        return Err(TextError::new("expected a single slash-path ident", tokens.get(1).map_or(TextSpan::at(1, 1), |t| t.span)));
     };
     if token.kind != TokenKind::Ident {
         return Err(TextError::new(format!("expected an ident, found {:?}", token.kind), token.span));
@@ -45,7 +45,7 @@ pub async fn parse_count_text(text: &str) -> Result<u64, TextError> {
     let limits = Limits::default();
     let tokens: Vec<_> = lex(text, &limits, false)?.into_iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).collect();
     let [token] = tokens.as_slice() else {
-        return Err(TextError::new("expected a single count literal", tokens.get(1).map(|t| t.span).unwrap_or(TextSpan::at(1, 1))));
+        return Err(TextError::new("expected a single count literal", tokens.get(1).map_or(TextSpan::at(1, 1), |t| t.span)));
     };
     if token.kind != TokenKind::Ident {
         return Err(TextError::new(format!("expected an ident, found {:?}", token.kind), token.span));
@@ -117,7 +117,7 @@ mod tests {
         assert_eq!(value.from, EdgeNode { id: "b-l".to_string(), kind: None, port: None });
         let printed = print_edge(&value);
         let link = value.link.expect("link");
-        assert_eq!(link.directed, false);
+        assert!(!link.directed);
         assert_eq!(link.to, EdgeNode { id: "b-s".to_string(), kind: None, port: None });
         assert_eq!(printed, "b-l--b-s");
     }

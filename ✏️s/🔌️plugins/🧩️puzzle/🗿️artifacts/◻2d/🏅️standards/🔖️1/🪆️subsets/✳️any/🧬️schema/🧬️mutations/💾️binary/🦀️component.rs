@@ -15,12 +15,12 @@ use protocol::OpBinary;
 use store::{ArtifactEnvelope, ArtifactStore};
 
 /// 📦️ Encodes a `Puzzle2dMutation` to its binary command form.
-pub async fn encode_op(operation: &Puzzle2dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &Puzzle2dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `Puzzle2dMutation` from its binary command form.
-pub async fn decode_op(bytes: &[u8]) -> Result<Puzzle2dMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<Puzzle2dMutation, protocol::ProtocolError> {
     Puzzle2dMutation::decode_op(bytes)
 }
 
@@ -34,16 +34,16 @@ pub type Puzzle2dStore = ArtifactStore<Puzzle2dSnapshot, Puzzle2dMutation>;
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn puzzle2d_document_vcs_replays_granular_operations() {
+    #[test]
+    fn puzzle2d_document_vcs_replays_granular_operations() {
         use crate::artifacts::puzzle2d::mutations::create_node;
         use crate::artifacts::puzzle2d::schema::empty_puzzle2d_snapshot;
         use crate::artifacts::puzzle2d::{Puzzle2dNode, PUZZLE_2D_SCHEMA};
         use store::{create_document_envelope, ArtifactCommand};
 
-        let mut store = Puzzle2dStore::new(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", empty_puzzle2d_snapshot(), None));
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![create_node(Puzzle2dNode { id: "n1".into(), ..Default::default() }, None)], description: None }).expect("apply");
-        let projection = store.snapshot().expect("projection");
+        let mut store = semio_framework::io::resolve_ready(Puzzle2dStore::new(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", empty_puzzle2d_snapshot(), None))).expect("store");
+        semio_framework::io::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![create_node(Puzzle2dNode { id: "n1".into(), ..Default::default() }, None)], description: None })).expect("apply");
+        let projection = semio_framework::io::resolve_ready(store.snapshot()).expect("projection");
         assert_eq!(projection.nodes.len(), 1);
         assert_eq!(projection.nodes[0].id, "n1");
     }
@@ -64,7 +64,7 @@ mod wire_format_guard {
     use crate::artifacts::puzzle2d::Puzzle2dNode;
     use protocol::OpText;
 
-    async fn ops() -> Vec<Puzzle2dMutation> {
+    fn ops() -> Vec<Puzzle2dMutation> {
         let node = Puzzle2dNode {
             id: "n1".into(),
             node_kind: Some("Base".into()),
@@ -91,8 +91,8 @@ mod wire_format_guard {
     }
 
     /// ⚖️ Every operation still prints, parses, encodes, and decodes back to an equal value.
-    #[semio_framework_async_macros::async_test]
-    async fn operations_round_trip_text_and_binary() {
+    #[test]
+    fn operations_round_trip_text_and_binary() {
         let operations = ops();
         assert!(!operations.is_empty());
         for operation in &operations {

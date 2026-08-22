@@ -13,7 +13,7 @@ use std::collections::BTreeMap;
 /// `control.if` then/else) resolve correctly; falls back to the root path unless both are present and
 /// `owner` names a real top-level step, avoiding an unresolvable or unknown reference that would
 /// otherwise address nothing.
-async fn path_ref_from(owner: Option<&str>, slot: Option<&str>, document: &ImperativeSnapshot) -> PathRef {
+fn path_ref_from(owner: Option<&str>, slot: Option<&str>, document: &ImperativeSnapshot) -> PathRef {
     let path = crate::artifacts::imperative::imperative_working_scene(document).path;
     match (owner, slot) {
         (Some(owner), Some(slot)) if path.steps.iter().any(|step| step.id == owner) => PathRef { owner: Some(owner.to_string()), slot: Some(slot.to_string()) },
@@ -23,7 +23,7 @@ async fn path_ref_from(owner: Option<&str>, slot: Option<&str>, document: &Imper
 
 /// 🔎️ Resolves the step list a `PathRef` addresses — the root path, or a nested `control.*` step's slot
 /// (an unmaterialized slot reads as empty).
-async fn steps_at(document: &ImperativeSnapshot, path_ref: &PathRef) -> Vec<Step> {
+fn steps_at(document: &ImperativeSnapshot, path_ref: &PathRef) -> Vec<Step> {
     let path = crate::artifacts::imperative::imperative_working_scene(document).path;
     match (&path_ref.owner, &path_ref.slot) {
         (Some(owner), Some(slot)) => path.steps.iter().find(|step| &step.id == owner).and_then(|step| step.bodies.get(slot)).map(|body| body.steps.clone()).unwrap_or_default(),
@@ -33,7 +33,7 @@ async fn steps_at(document: &ImperativeSnapshot, path_ref: &PathRef) -> Vec<Step
 
 /// 🔎️ True when the step `id` exists in the list the `owner`/`slot` command fields address — the
 /// pre-state guard the operation arms share so a stale id never emits a no-operation edit into history.
-async fn resolve_contains(document: &ImperativeSnapshot, owner: Option<&str>, slot: Option<&str>, id: &str) -> bool {
+fn resolve_contains(document: &ImperativeSnapshot, owner: Option<&str>, slot: Option<&str>, id: &str) -> bool {
     let path_ref = path_ref_from(owner, slot, document);
     steps_at(document, &path_ref).iter().any(|step| step.id == id)
 }
@@ -72,7 +72,7 @@ pub struct SetStepParamsAt {
     pub params: BTreeMap<String, ValueDsl>,
 }
 
-pub async fn handle(payload: &SetStepParamsAt, doc: &ArtifactView<'_, ImperativeSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
+pub fn handle(payload: &SetStepParamsAt, doc: &ArtifactView<'_, ImperativeSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ImperativeMutation, ImperativeConfigMutation>, Fault> {
     let document = doc.snapshot;
     if resolve_contains(document, payload.owner.as_deref(), payload.slot.as_deref(), &payload.id) {
         let path_ref = path_ref_from(payload.owner.as_deref(), payload.slot.as_deref(), document);

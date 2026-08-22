@@ -32,12 +32,9 @@ neo4j = ["dep:neo4rs", "db/neo4j"]
 axum = { version = "0.8", features = ["ws"] }
 serde.workspace = true
 serde_json.workspace = true
-thiserror.workspace = true
 tokio = { workspace = true, features = ["full"] }
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 futures = "0.3"
-dashmap = "6"
+semio-framework-async = { workspace = true }
 protocol = { path = "../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 # 📇️ `os_directory` is hub domain vocabulary still mounted in the os kernel; Wave 3 relocates it here.
 directory = { path = "../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
@@ -53,4 +50,3 @@ neo4rs = { version = "0.8", optional = true }
 [dev-dependencies]
 tokio = { version = "1", features = ["full", "test-util"] }
 tokio-tungstenite = "0.26"
-testcontainers-modules = { version = "0.11", features = ["postgres"] }

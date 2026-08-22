@@ -101,19 +101,19 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn fan_laws_cubic_power() {
         assert!((fan_law_power(1000.0, 0.5) - 125.0).abs() < 1e-6);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn zero_flow_zero_power() {
         let fan = test_fan();
         let operating_point = FanOperatingPoint { volume_flow_m3_s: 0.0, pressure_rise_pa: 0.0, part_load_ratio: 0.0, speed_ratio: 0.0 };
         assert_eq!(fan_power_w(&fan, &operating_point), 0.0);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn full_load_positive_power() {
         let fan = test_fan();
         let operating_point = fan_operating_point(&fan, 2.0, 600.0);

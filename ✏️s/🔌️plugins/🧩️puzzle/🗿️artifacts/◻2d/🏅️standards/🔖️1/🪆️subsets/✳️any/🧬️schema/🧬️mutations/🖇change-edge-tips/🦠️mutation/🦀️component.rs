@@ -16,23 +16,23 @@ pub struct ChangeEdgeTips {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn change_edge_tips(id: String, new_source_tip: Option<String>, new_target_tip: Option<String>) -> Puzzle2dMutation {
+pub fn change_edge_tips(id: String, new_source_tip: Option<String>, new_target_tip: Option<String>) -> Puzzle2dMutation {
     Puzzle2dMutation::ChangeEdgeTips(ChangeEdgeTips { id, new_source_tip, new_target_tip })
 }
 
 impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ChangeEdgeTips {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "edge", kind: "change-edge-tips", record: "ChangedEdgeTips" };
 
-    async fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
+    fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change edge \"{}\" tips", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

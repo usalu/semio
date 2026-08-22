@@ -8,21 +8,21 @@ use serde::{Deserialize, Serialize};
 /// 🌱 Empty persisted snapshot. Relocated from `⚙️engine/🦀️component.rs` (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — a pure codec helper over the document
 /// type, not engine behaviour.
-pub async fn empty_energy_model_snapshot() -> EnergyModelSnapshot {
+pub fn empty_energy_model_snapshot() -> EnergyModelSnapshot {
     EnergyModelSnapshot::default()
 }
 
 /// 🏢️ The typed `Model` behind a snapshot's composed `structure`/`zones` children — reads through
 /// the working-scene cache (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM). Replaces the old
 /// `serde_json::from_str(&snapshot.model_json)` decode-on-demand now that `model_json` is gone.
-pub async fn model_from_snapshot(snapshot: &EnergyModelSnapshot) -> Result<crate::model::Model, String> {
+pub fn model_from_snapshot(snapshot: &EnergyModelSnapshot) -> Result<crate::model::Model, String> {
     Ok(crate::artifacts::model::energy_model(snapshot))
 }
 
 /// 📕️ Encode a typed `Model` into snapshot form — mints+caches its composed `structure`/`zones`
 /// children in one call via [`crate::artifacts::model::energy_snapshot_with_state`].
-pub async fn snapshot_from_model(model: &crate::model::Model) -> Result<EnergyModelSnapshot, String> {
-    Ok(crate::artifacts::model::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model.clone(), None))
+pub fn snapshot_from_model(model: &crate::model::Model) -> Result<EnergyModelSnapshot, String> {
+    Ok(crate::artifacts::model::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model, None))
 }
 //#endregion 🔖️DocumentHelpers
 
@@ -63,17 +63,17 @@ impl Default for EnergyModelArtifact {
 
 impl EnergyModelArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> EnergyModelSnapshot {
+    pub fn to_snapshot(&self) -> EnergyModelSnapshot {
         EnergyModelSnapshot { schema: self.schema.clone(), structure: self.structure.clone(), zones: self.zones.clone(), referenced_model: self.referenced_model.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving preview empty.
-    pub async fn from_snapshot(snapshot: EnergyModelSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: EnergyModelSnapshot) -> Self {
         Self { schema: snapshot.schema, structure: snapshot.structure, zones: snapshot.zones, referenced_model: snapshot.referenced_model, results_json: String::new() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: EnergyModelSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: EnergyModelSnapshot) {
         self.schema = snapshot.schema;
         self.structure = snapshot.structure;
         self.zones = snapshot.zones;
@@ -84,7 +84,7 @@ impl EnergyModelArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.energy.model` — twenty handcrafted schema leaves.
-pub async fn energy_model_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn energy_model_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: ENERGY_MODEL_ARTIFACT_SCHEMA_ID,
         artifact: schema::FacetLeaves {
@@ -140,10 +140,10 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<EnergyModelSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<EnergyModelSnapshot as store::ArtifactDsl>::parse_dsl(text)?).await)
         }
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<EnergyModelSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<EnergyModelSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);

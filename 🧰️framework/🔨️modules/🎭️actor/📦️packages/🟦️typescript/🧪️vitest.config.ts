@@ -1,13 +1,12 @@
 // #region 🔌️Adapters
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "vitest/config";
 // #endregion 🔌️Adapters
 
 const root = dirname(fileURLToPath(import.meta.url));
 
 /** @emoji 🧪️ Vitest for `@semio-tech/framework-actor` (inline `import.meta.vitest`). */
-export default defineConfig({
+export default {
   root,
   resolve: {
     alias: {
@@ -28,4 +27,4 @@ export default defineConfig({
     includeSource: ["🧵️shard-client.ts", "📬️mailbox.ts", "🧵️turn-scheduler.ts"],
     passWithNoTests: false,
   },
-});
+};

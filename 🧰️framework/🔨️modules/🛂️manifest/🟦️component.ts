@@ -15,7 +15,7 @@ import type { ContextMenuItemSpec } from "../🔺️mesh/🟦️component.ts";
 import type { Effect } from "../🎠️kernel/🟦️component.ts";
 
 // #region 🧬️GeneratedMirror
-/** 🧬️ Types generated from `framework/core/rs/lib.rs` via ts-rs (`bun nx run @semio-tech/framework:generate`); re-exported below alongside their hand-written neighbors so this stays the one import surface. */
+/** 🧬️ Types generated from `framework/core/rs/lib.rs` via the owned schema exporter (`bun nx run @semio-tech/framework:generate`); re-exported below alongside their hand-written neighbors so this stays the one import surface. */
 import type {
   ActionDescriptor as GeneratedActionDescriptor,
   ActionKind as GeneratedActionKind,
@@ -117,7 +117,7 @@ import type {
 // #region 🧬️GeneratedUiContract
 /** 🧬️ The semantic UI contract (`🖱️ui/🧬️contract/📦️packages/🦀️rust/📦️glue.rs`) — flat,
  * id-keyed replacement for the hand-written `UiNode` recursive-union mirror this file used to
- * carry, generated via ts-rs (`bun nx run @semio-tech/ui-contract-rs:generate`). Five names
+ * carry, generated via the owned schema exporter (`bun nx run @semio-tech/ui-contract-rs:generate`). Five names
  * collide with an unrelated existing export from a different module aggregated into this same
  * barrel (artifact-editor `SurfaceKind`; OS-shell `WindowLayout`/`WindowStackCorner`; the state
  * machine module's own `ActionId`/`Trigger`) and are re-exported `Ui`-prefixed instead of
@@ -612,7 +612,7 @@ export const TUTORIAL_CONVERGE_MS = 600;
 
 // 🚧️ TODO(core-rs): these seven `Tutorial*` types mirror `framework/core/rs/lib.rs`'s `//#region 🔖️Tutorial`
 // field-for-field (see that region's doc comments for the authoritative semantics) and are meant to be
-// ts-rs GENERATED like their `Introduction*` neighbors above. Regeneration is blocked right now by an
+// OWNED-SCHEMA GENERATED like their `Introduction*` neighbors above. Regeneration is blocked right now by an
 // unrelated, pre-existing `typegen`-feature compile break in a concurrent session's work (`IconName` is
 // missing its `TS` derive in `framework/ui/wgpu/rs/lib.rs`, breaking `cargo test --features typegen` workspace-wide).
 // Once that lands, run `bun nx run @semio-tech/framework:generate`, delete this hand-written block,
@@ -982,7 +982,7 @@ export function decodeSurfaceAppChoice(value: string): SurfaceAppChoice {
  * `ShellHelpers/🟦️component.tsx`'s `resolveManifestLabel` for the full terminology-aware resolver
  * used at render time). `artifactKindChoices` only ever needs the native cell, matching Rust
  * `encode_artifact_kind_choice` resolving under `Terminology::Native`. Takes `unknown` because
- * `AppDefinition.label` is `unknown` on the generated type (no ts-rs mirror for `LocalizedLabel` yet). */
+ * `AppDefinition.label` is `unknown` on the generated type (no owned schema mirror for `LocalizedLabel` yet). */
 function resolveNativeLabel(label: unknown): { readonly en: string; readonly de: string } {
   const native = (label as { readonly native?: { readonly en?: string; readonly de?: string } } | undefined)?.native;
   return { en: native?.en ?? "", de: native?.de ?? "" };
@@ -1129,8 +1129,8 @@ export function panelTabKindId(kind: PanelTabKind): string {
 /** 🌳️ Mirrors Rust `PanelTabDefinition` — a leaf carries `bodyKey`, a branch carries `children`; `group` is only meaningful on root entries. */
 export type AppPanelTabDefinition = GeneratedPanelTabDefinition;
 
-/** 📦️ Mirrors Rust `AppDefinition` — generated 1:1 from `framework/core/rs/lib.rs` via ts-rs, except
- * `defaultLayout`/`namedLayouts` which keep this file's narrower hand-refined `WindowLayout` (ts-rs
+/** 📦️ Mirrors Rust `AppDefinition` — generated 1:1 from `framework/core/rs/lib.rs` via the owned schema exporter, except
+ * `defaultLayout`/`namedLayouts` which keep this file's narrower hand-refined `WindowLayout` (owned schema exporter
  * widens `WindowLayoutAxisNode.kind`/`WindowLayoutStackNode.kind` to plain `string` since the Rust
  * field is a runtime `String`, not an enum — the narrower `"row" | "column" | "stack" | "window"`
  * literal unions here are domain knowledge worth keeping for exhaustive switches). */

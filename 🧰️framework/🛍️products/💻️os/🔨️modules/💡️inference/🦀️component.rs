@@ -20,7 +20,7 @@ pub struct DepHash(pub [u8; 32]);
 
 impl DepHash {
     /// 🏗️ Roots a chain: `blake3(field_id ‖ 0 ‖ schema_version ‖ 0 ‖ input)`, no parent hashes folded in.
-    pub async fn root(field_id: &str, schema_version: u32, input: &[u8]) -> Self {
+    pub fn root(field_id: &str, schema_version: u32, input: &[u8]) -> Self {
         let mut data = field_id.as_bytes().to_vec();
         data.push(0);
         data.extend_from_slice(&schema_version.to_le_bytes());
@@ -32,7 +32,7 @@ impl DepHash {
     /// 🔗 Extends a chain: folds `parents` (order-independent — sorted by their own bytes via
     /// `merkle_node`, so two entities with the same parent SET in different orders hash identically)
     /// into `input` under the same `(field_id, schema_version)` salt as [`root`](Self::root).
-    pub async fn chain(field_id: &str, schema_version: u32, input: &[u8], parents: &[DepHash]) -> Self {
+    pub fn chain(field_id: &str, schema_version: u32, input: &[u8], parents: &[DepHash]) -> Self {
         let mut own = field_id.as_bytes().to_vec();
         own.push(0);
         own.extend_from_slice(&schema_version.to_le_bytes());
@@ -43,20 +43,20 @@ impl DepHash {
         // hoisted into a plain loop instead (R10 residue #1).
         let mut parent_hexes: Vec<String> = Vec::with_capacity(parents.len());
         for parent in parents {
-            parent_hexes.push(hex::encode(parent.0).await);
+            parent_hexes.push(hex::encode(parent.0));
         }
         let folded = semio_framework_hash::merkle_node(&[&own_hex], parent_hexes);
         let mut bytes = [0u8; 32];
-        hex::decode_to_slice(&folded, &mut bytes).await.expect("merkle_node returns 64 hex chars");
+        hex::decode_to_slice(&folded, &mut bytes).expect("merkle_node returns 64 hex chars");
         Self(bytes)
     }
 }
 
 mod hex {
-    pub async fn encode(bytes: [u8; 32]) -> String {
+    pub fn encode(bytes: [u8; 32]) -> String {
         bytes.iter().map(|b| format!("{b:02x}")).collect()
     }
-    pub async fn decode_to_slice(s: &str, out: &mut [u8; 32]) -> Result<(), &'static str> {
+    pub fn decode_to_slice(s: &str, out: &mut [u8; 32]) -> Result<(), &'static str> {
         if s.len() != 64 {
             return Err("expected 64 hex chars");
         }
@@ -89,11 +89,11 @@ pub trait InferredField<P>: Send + Sync + 'static {
 
     /// 🗺️ Coarse tier-1 read-set — checked against a diff's [`crate::os_spr::command::DiffRegions::touches`]
     /// before this field's plan is even walked.
-    async fn reads() -> &'static [&'static str];
+    fn reads() -> &'static [&'static str];
 
     /// 🧭 Deterministic topological plan over `snapshot`'s entities (roots first — entries with no
     /// parents come before anything that depends on them).
-    async fn plan(snapshot: &P) -> Vec<InferenceStep<Self::Key>>;
+    fn plan(snapshot: &P) -> Vec<InferenceStep<Self::Key>>;
 
     /// 🔑 Canonical dependency-input bytes for `key` — EXACTLY the snapshot fields `compute` may
     /// read for this key (excluding parents' OWN upstream values, which are folded in separately
@@ -104,10 +104,10 @@ pub trait InferredField<P>: Send + Sync + 'static {
     /// re-derive "which edge connects to which parent" a second time. Honesty contract: this must
     /// cover everything `compute` reads, or a changed-but-uncovered input silently serves a stale
     /// cached value.
-    async fn dep_input(snapshot: &P, key: &Self::Key, parents: &[Self::Key]) -> Vec<u8>;
+    fn dep_input(snapshot: &P, key: &Self::Key, parents: &[Self::Key]) -> Vec<u8>;
 
     /// 🧮 Pure per-entity compute, given parents' already-computed values in `plan`'s parent order.
-    async fn compute(snapshot: &P, key: &Self::Key, parents: &[Self::Value]) -> Self::Value;
+    fn compute(snapshot: &P, key: &Self::Key, parents: &[Self::Value]) -> Self::Value;
 }
 //#endregion 🔖️InferredField
 
@@ -177,13 +177,13 @@ impl InferenceCache {
         self.used_bytes = 0;
     }
 
-    async fn get(&mut self, key: DepHash) -> Option<Vec<u8>> {
+    fn get(&mut self, key: DepHash) -> Option<Vec<u8>> {
         if !self.config.enabled {
             return None;
         }
         if let Some(entry) = self.entries.get(&key) {
             let bytes = entry.bytes.clone();
-            self.touch(key).await;
+            self.touch(key);
             if self.config.record_stats {
                 self.stats.hits += 1;
             }
@@ -195,26 +195,26 @@ impl InferenceCache {
         None
     }
 
-    async fn insert(&mut self, key: DepHash, bytes: Vec<u8>) {
+    fn insert(&mut self, key: DepHash, bytes: Vec<u8>) {
         if !self.config.enabled {
             return;
         }
         let byte_len = bytes.len();
-        self.ensure_budget(byte_len).await;
+        self.ensure_budget(byte_len);
         if self.entries.insert(key, CacheEntry { bytes, byte_len }).is_none() {
             self.lru.push_back(key);
             self.used_bytes = self.used_bytes.saturating_add(byte_len);
         }
     }
 
-    async fn touch(&mut self, key: DepHash) {
+    fn touch(&mut self, key: DepHash) {
         if let Some(pos) = self.lru.iter().position(|k| *k == key) {
             self.lru.remove(pos);
         }
         self.lru.push_back(key);
     }
 
-    async fn ensure_budget(&mut self, needed: usize) {
+    fn ensure_budget(&mut self, needed: usize) {
         while self.used_bytes.saturating_add(needed) > self.config.budget_bytes {
             let Some(old) = self.lru.pop_front() else { break };
             if let Some(entry) = self.entries.remove(&old) {
@@ -244,40 +244,40 @@ impl InferenceSession {
 //#endregion 🔖️Session
 
 //#region 🔖️Driver
-async fn encode<T: Serialize>(value: &T) -> Vec<u8> {
+fn encode<T: Serialize>(value: &T) -> Vec<u8> {
     serde_json::to_vec(value).expect("inference value serialization never fails")
 }
 
-async fn decode<T: DeserializeOwned>(bytes: &[u8]) -> T {
+fn decode<T: DeserializeOwned>(bytes: &[u8]) -> T {
     serde_json::from_slice(bytes).expect("cached inference bytes must decode as the field's own Value type")
 }
 
 /// ⏩ THE driver: walks `F::plan(snapshot)` in order, hashing each entity's dependency chain and
 /// consulting `cache` (if `Some`) before computing. `cache: None` ⇒ pure recompute — identical
 /// output to a warm-cache run (cache-transparency law, proven in tests below).
-pub async fn infer_field<P, F: InferredField<P>>(snapshot: &P, mut cache: Option<&mut InferenceCache>) -> BTreeMap<F::Key, F::Value> {
-    let plan = F::plan(snapshot).await;
+pub fn infer_field<P, F: InferredField<P>>(snapshot: &P, mut cache: Option<&mut InferenceCache>) -> BTreeMap<F::Key, F::Value> {
+    let plan = F::plan(snapshot);
     let mut hashes: HashMap<F::Key, DepHash> = HashMap::new();
     let mut values: BTreeMap<F::Key, F::Value> = BTreeMap::new();
 
     for step in plan {
         let parent_hashes: Vec<DepHash> = step.parents.iter().filter_map(|p| hashes.get(p).copied()).collect();
-        let input = F::dep_input(snapshot, &step.key, &step.parents).await;
-        let dep_hash = if step.parents.is_empty() { DepHash::root(F::FIELD_ID, F::SCHEMA_VERSION, &input).await } else { DepHash::chain(F::FIELD_ID, F::SCHEMA_VERSION, &input, &parent_hashes).await };
+        let input = F::dep_input(snapshot, &step.key, &step.parents);
+        let dep_hash = if step.parents.is_empty() { DepHash::root(F::FIELD_ID, F::SCHEMA_VERSION, &input) } else { DepHash::chain(F::FIELD_ID, F::SCHEMA_VERSION, &input, &parent_hashes) };
 
         let value = if let Some(cache) = cache.as_deref_mut() {
-            match cache.get(dep_hash).await {
-                Some(bytes) => decode::<F::Value>(&bytes).await,
+            match cache.get(dep_hash) {
+                Some(bytes) => decode::<F::Value>(&bytes),
                 None => {
                     let parent_values: Vec<F::Value> = step.parents.iter().filter_map(|p| values.get(p).cloned()).collect();
-                    let computed = F::compute(snapshot, &step.key, &parent_values).await;
-                    cache.insert(dep_hash, encode(&computed).await).await;
+                    let computed = F::compute(snapshot, &step.key, &parent_values);
+                    cache.insert(dep_hash, encode(&computed));
                     computed
                 }
             }
         } else {
             let parent_values: Vec<F::Value> = step.parents.iter().filter_map(|p| values.get(p).cloned()).collect();
-            F::compute(snapshot, &step.key, &parent_values).await
+            F::compute(snapshot, &step.key, &parent_values)
         };
 
         hashes.insert(step.key.clone(), dep_hash);
@@ -295,15 +295,15 @@ where
     F: InferredField<P>,
     D: crate::os_spr::command::DiffRegions,
 {
-    if !diff.touches().intersects_any(F::reads().await) {
+    if !diff.touches().intersects_any(F::reads()) {
         if let Some((_, bytes)) = session.roots.get(F::FIELD_ID) {
-            return decode::<BTreeMap<F::Key, F::Value>>(bytes).await;
+            return decode::<BTreeMap<F::Key, F::Value>>(bytes);
         }
     }
     // 🪡️ A future is consumed by a single `.await`; the original had `result`/`root` each awaited
     // more than once (R10 residue #2 — a bug the conversion exposed). Each is now awaited exactly
     // once, into a plain value reused by reference below.
-    let result = infer_field::<P, F>(snapshot, Some(cache)).await;
+    let result = infer_field::<P, F>(snapshot, Some(cache));
     let root = semio_framework_hash::merkle_collection(result.keys().enumerate().map(|(i, _)| i.to_string()).collect());
     let mut root_bytes = [0u8; 32];
     let _ = hex::decode_to_slice(
@@ -313,9 +313,8 @@ where
             padded
         },
         &mut root_bytes,
-    )
-    .await;
-    session.roots.insert(F::FIELD_ID, (DepHash(root_bytes), encode(&result).await));
+    );
+    session.roots.insert(F::FIELD_ID, (DepHash(root_bytes), encode(&result)));
     result
 }
 //#endregion 🔖️Driver
@@ -343,10 +342,10 @@ mod tests {
         type Value = i64;
         const FIELD_ID: &'static str = "test.dag.weight-sum";
         const SCHEMA_VERSION: u32 = 1;
-        async fn reads() -> &'static [&'static str] {
+        fn reads() -> &'static [&'static str] {
             &["weights"]
         }
-        async fn plan(_snapshot: &DagSnapshot) -> Vec<InferenceStep<Self::Key>> {
+        fn plan(_snapshot: &DagSnapshot) -> Vec<InferenceStep<Self::Key>> {
             vec![
                 InferenceStep { key: "root".to_string(), parents: vec![] },
                 InferenceStep { key: "leaf_a".to_string(), parents: vec!["root".to_string()] },
@@ -354,10 +353,10 @@ mod tests {
                 InferenceStep { key: "leaf_both".to_string(), parents: vec!["leaf_a".to_string(), "leaf_b".to_string()] },
             ]
         }
-        async fn dep_input(snapshot: &DagSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
+        fn dep_input(snapshot: &DagSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
             snapshot.weights.get(key.as_str()).copied().unwrap_or(0).to_le_bytes().to_vec()
         }
-        async fn compute(snapshot: &DagSnapshot, key: &Self::Key, parents: &[Self::Value]) -> Self::Value {
+        fn compute(snapshot: &DagSnapshot, key: &Self::Key, parents: &[Self::Value]) -> Self::Value {
             snapshot.weights.get(key.as_str()).copied().unwrap_or(0) + parents.iter().sum::<i64>()
         }
     }
@@ -371,7 +370,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn infer_field_computes_expected_values_over_the_dag() {
         let snapshot = base_snapshot().await;
-        let values = infer_field::<DagSnapshot, WeightSum>(&snapshot, None).await;
+        let values = infer_field::<DagSnapshot, WeightSum>(&snapshot, None);
         assert_eq!(values["root"], 1);
         assert_eq!(values["leaf_a"], 3); // 2 + root(1)
         assert_eq!(values["leaf_b"], 4); // 3 + root(1)
@@ -383,25 +382,25 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn disabled_cache_matches_pure_recompute() {
         let snapshot = base_snapshot().await;
-        let pure = infer_field::<DagSnapshot, WeightSum>(&snapshot, None).await;
+        let pure = infer_field::<DagSnapshot, WeightSum>(&snapshot, None);
 
         let mut disabled_cache = InferenceCache::new(InferenceCacheConfig { enabled: false, ..Default::default() }).await;
-        let via_disabled_cache = infer_field::<DagSnapshot, WeightSum>(&snapshot, Some(&mut disabled_cache)).await;
+        let via_disabled_cache = infer_field::<DagSnapshot, WeightSum>(&snapshot, Some(&mut disabled_cache));
         assert_eq!(pure, via_disabled_cache);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn cold_and_warm_cache_match_pure_recompute() {
         let snapshot = base_snapshot().await;
-        let pure = infer_field::<DagSnapshot, WeightSum>(&snapshot, None).await;
+        let pure = infer_field::<DagSnapshot, WeightSum>(&snapshot, None);
 
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }).await;
-        let cold = infer_field::<DagSnapshot, WeightSum>(&snapshot, Some(&mut cache)).await;
+        let cold = infer_field::<DagSnapshot, WeightSum>(&snapshot, Some(&mut cache));
         assert_eq!(pure, cold);
         assert_eq!(cache.stats().await.hits, 0);
         assert!(cache.stats().await.misses > 0);
 
-        let warm = infer_field::<DagSnapshot, WeightSum>(&snapshot, Some(&mut cache)).await;
+        let warm = infer_field::<DagSnapshot, WeightSum>(&snapshot, Some(&mut cache));
         assert_eq!(pure, warm);
         assert!(cache.stats().await.hits > 0, "second run over the same snapshot must hit the warm cache");
     }
@@ -409,9 +408,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn tiny_budget_eviction_storm_still_matches_pure_recompute() {
         let snapshot = base_snapshot().await;
-        let pure = infer_field::<DagSnapshot, WeightSum>(&snapshot, None).await;
+        let pure = infer_field::<DagSnapshot, WeightSum>(&snapshot, None);
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, budget_bytes: 1, ..Default::default() }).await;
-        let via_tiny_cache = infer_field::<DagSnapshot, WeightSum>(&snapshot, Some(&mut cache)).await;
+        let via_tiny_cache = infer_field::<DagSnapshot, WeightSum>(&snapshot, Some(&mut cache));
         assert_eq!(pure, via_tiny_cache, "an eviction storm must never change the computed result, only cache hit rate");
     }
     //#endregion 🧪️CacheTransparencyLaw
@@ -421,12 +420,12 @@ mod tests {
     async fn changing_a_leaf_weight_only_recomputes_that_leaf_and_its_descendants() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }).await;
         let base = base_snapshot().await;
-        let _ = infer_field::<DagSnapshot, WeightSum>(&base, Some(&mut cache)).await;
+        let _ = infer_field::<DagSnapshot, WeightSum>(&base, Some(&mut cache));
 
         let mut changed = base.clone();
         changed.weights.insert("leaf_a", 99);
         let before = cache.stats().await;
-        let values = infer_field::<DagSnapshot, WeightSum>(&changed, Some(&mut cache)).await;
+        let values = infer_field::<DagSnapshot, WeightSum>(&changed, Some(&mut cache));
         let after = cache.stats().await;
 
         // root is untouched by leaf_a's weight change (identical dep chain) => cache hit.
@@ -443,12 +442,12 @@ mod tests {
     async fn changing_the_root_weight_recomputes_the_entire_subtree() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }).await;
         let base = base_snapshot().await;
-        let _ = infer_field::<DagSnapshot, WeightSum>(&base, Some(&mut cache)).await;
+        let _ = infer_field::<DagSnapshot, WeightSum>(&base, Some(&mut cache));
 
         let mut changed = base.clone();
         changed.weights.insert("root", 999);
         let before = cache.stats().await;
-        let _ = infer_field::<DagSnapshot, WeightSum>(&changed, Some(&mut cache)).await;
+        let _ = infer_field::<DagSnapshot, WeightSum>(&changed, Some(&mut cache));
         let after = cache.stats().await;
 
         assert_eq!(after.misses - before.misses, 4, "changing the root must miss for every entity in the DAG (all four are its descendants, root included)");
@@ -458,9 +457,9 @@ mod tests {
     async fn identical_snapshot_recompute_is_all_cache_hits() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }).await;
         let base = base_snapshot().await;
-        let _ = infer_field::<DagSnapshot, WeightSum>(&base, Some(&mut cache)).await;
+        let _ = infer_field::<DagSnapshot, WeightSum>(&base, Some(&mut cache));
         let before = cache.stats().await;
-        let _ = infer_field::<DagSnapshot, WeightSum>(&base, Some(&mut cache)).await;
+        let _ = infer_field::<DagSnapshot, WeightSum>(&base, Some(&mut cache));
         let after = cache.stats().await;
         assert_eq!(after.misses, before.misses, "an unchanged snapshot must produce zero new misses");
         assert_eq!(after.hits - before.hits, 4);
@@ -474,17 +473,17 @@ mod tests {
         type Value = i64;
         const FIELD_ID: &'static str = "test.dag.weight-sum";
         const SCHEMA_VERSION: u32 = 2;
-        async fn reads() -> &'static [&'static str] {
-            WeightSum::reads().await
+        fn reads() -> &'static [&'static str] {
+            WeightSum::reads()
         }
-        async fn plan(snapshot: &DagSnapshot) -> Vec<InferenceStep<Self::Key>> {
-            WeightSum::plan(snapshot).await
+        fn plan(snapshot: &DagSnapshot) -> Vec<InferenceStep<Self::Key>> {
+            WeightSum::plan(snapshot)
         }
-        async fn dep_input(snapshot: &DagSnapshot, key: &Self::Key, parents: &[Self::Key]) -> Vec<u8> {
-            WeightSum::dep_input(snapshot, key, parents).await
+        fn dep_input(snapshot: &DagSnapshot, key: &Self::Key, parents: &[Self::Key]) -> Vec<u8> {
+            WeightSum::dep_input(snapshot, key, parents)
         }
-        async fn compute(snapshot: &DagSnapshot, key: &Self::Key, parents: &[Self::Value]) -> Self::Value {
-            WeightSum::compute(snapshot, key, parents).await
+        fn compute(snapshot: &DagSnapshot, key: &Self::Key, parents: &[Self::Value]) -> Self::Value {
+            WeightSum::compute(snapshot, key, parents)
         }
     }
 
@@ -492,9 +491,9 @@ mod tests {
     async fn schema_version_bump_yields_zero_hits_on_an_otherwise_warm_cache() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, record_stats: true, ..Default::default() }).await;
         let base = base_snapshot().await;
-        let _ = infer_field::<DagSnapshot, WeightSum>(&base, Some(&mut cache)).await;
+        let _ = infer_field::<DagSnapshot, WeightSum>(&base, Some(&mut cache));
         let before = cache.stats().await;
-        let _ = infer_field::<DagSnapshot, WeightSumV2>(&base, Some(&mut cache)).await;
+        let _ = infer_field::<DagSnapshot, WeightSumV2>(&base, Some(&mut cache));
         let after = cache.stats().await;
         assert_eq!(after.hits, before.hits, "a version-salted key must never collide with the prior version's entries");
         assert_eq!(after.misses - before.misses, 4);
@@ -504,26 +503,26 @@ mod tests {
     //#region 🧪️DepHash
     #[semio_framework_async_macros::async_test]
     async fn dep_hash_root_is_deterministic_and_input_sensitive() {
-        let a = DepHash::root("field", 1, b"input-a").await;
-        let b = DepHash::root("field", 1, b"input-a").await;
-        let c = DepHash::root("field", 1, b"input-b").await;
+        let a = DepHash::root("field", 1, b"input-a");
+        let b = DepHash::root("field", 1, b"input-a");
+        let c = DepHash::root("field", 1, b"input-b");
         assert_eq!(a, b);
         assert_ne!(a, c);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn dep_hash_chain_is_order_independent_over_parent_set() {
-        let p1 = DepHash::root("f", 1, b"p1").await;
-        let p2 = DepHash::root("f", 1, b"p2").await;
-        let forward = DepHash::chain("f", 1, b"self", &[p1, p2]).await;
-        let backward = DepHash::chain("f", 1, b"self", &[p2, p1]).await;
+        let p1 = DepHash::root("f", 1, b"p1");
+        let p2 = DepHash::root("f", 1, b"p2");
+        let forward = DepHash::chain("f", 1, b"self", &[p1, p2]);
+        let backward = DepHash::chain("f", 1, b"self", &[p2, p1]);
         assert_eq!(forward, backward, "two entities with the same parent SET in different orders must hash identically");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn dep_hash_chain_differs_from_root_for_the_same_input() {
-        let root = DepHash::root("f", 1, b"same").await;
-        let chained = DepHash::chain("f", 1, b"same", &[DepHash::root("f", 1, b"parent").await]).await;
+        let root = DepHash::root("f", 1, b"same");
+        let chained = DepHash::chain("f", 1, b"same", &[DepHash::root("f", 1, b"parent")]);
         assert_ne!(root, chained);
     }
     //#endregion 🧪️DepHash
@@ -537,7 +536,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn clear_drops_every_entry_and_resets_used_bytes() {
         let mut cache = InferenceCache::new(InferenceCacheConfig { enabled: true, ..Default::default() }).await;
-        let _ = infer_field::<DagSnapshot, WeightSum>(&base_snapshot().await, Some(&mut cache)).await;
+        let _ = infer_field::<DagSnapshot, WeightSum>(&base_snapshot().await, Some(&mut cache));
         assert!(!cache.entries.is_empty());
         cache.clear().await;
         assert!(cache.entries.is_empty());

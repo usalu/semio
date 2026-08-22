@@ -33,12 +33,12 @@ use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, 
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
 
-async fn examples() -> &'static [ExampleSource] {
+fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
     EXAMPLES.get_or_init(|| vec![crate::artifacts::fem2d::examples::demo::source()]).as_slice()
 }
 
-async fn inference_descriptors() -> &'static [::semio_framework_schema::ArtifactInferenceDescriptor] {
+fn inference_descriptors() -> &'static [::semio_framework_schema::ArtifactInferenceDescriptor] {
     static DESCRIPTORS: OnceLock<Vec<::semio_framework_schema::ArtifactInferenceDescriptor>> = OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::fem2d_artifact_inference_descriptor()]).as_slice()
 }
@@ -46,7 +46,7 @@ async fn inference_descriptors() -> &'static [::semio_framework_schema::Artifact
 /// 🚪️ See this file's own module doc for why this is not `io::io()`. `pilot_languages()` indices
 /// are fixed by that function's own literal `vec![document, op, diff, pack, spr]` order — the same
 /// role→slot mapping `🗒️note`'s `io()` uses for its own five-language array.
-async fn io_declaration() -> IoDeclaration {
+fn io_declaration() -> IoDeclaration {
     let langs = crate::artifacts::fem2d::pilot_languages();
     IoDeclaration {
         native: NativeCodecs {
@@ -61,13 +61,13 @@ async fn io_declaration() -> IoDeclaration {
 }
 
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.
-pub async fn subset() -> SubsetDeclaration {
+pub fn subset() -> SubsetDeclaration<crate::FemApps> {
     SubsetDeclaration {
         dialect: FEM2D_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::fem2d_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io_declaration(),
-        viewer: viewer_surface::<viewer::Fem2dViewer>(viewer::create_fem2d_viewer()),
-        editor: editor_surface::<editor::Fem2dPlayApp>(editor::create_fem2d_app()),
+        viewer: viewer_surface::<viewer::Fem2dViewer, crate::FemApps>(viewer::create_fem2d_viewer()),
+        editor: editor_surface::<editor::Fem2dPlayApp, crate::FemApps>(editor::create_fem2d_app()),
         examples: examples(),
     }
 }

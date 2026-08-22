@@ -13,12 +13,12 @@ pub struct DictBuilder {
 }
 
 impl DictBuilder {
-    pub async fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
     /// @emoji ➕️ Returns `s`'s existing index, or appends it and returns the new index.
-    pub async fn intern(&mut self, s: &str) -> u32 {
+    pub fn intern(&mut self, s: &str) -> u32 {
         if let Some(&idx) = self.index.get(s) {
             return idx;
         }
@@ -28,16 +28,16 @@ impl DictBuilder {
         idx
     }
 
-    pub async fn len(&self) -> u32 {
+    pub fn len(&self) -> u32 {
         self.entries.len() as u32
     }
 
-    pub async fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
     }
 
     /// @emoji ✂️ The entries appended since `base_count` — the delta a `REC_*_DICT` record stores.
-    pub async fn entries_since(&self, base_count: u32) -> &[String] {
+    pub fn entries_since(&self, base_count: u32) -> &[String] {
         &self.entries[base_count as usize..]
     }
 }
@@ -49,13 +49,13 @@ pub struct DictReader {
 }
 
 impl DictReader {
-    pub async fn new() -> Self {
+    pub fn new() -> Self {
         Self::default()
     }
 
     /// @emoji ➕️ Appends a dictionary delta. `base_count` must equal the reader's current length
     /// — a mismatch means the stream's dictionary deltas arrived out of order.
-    pub async fn extend(&mut self, base_count: u32, new_entries: impl IntoIterator<Item = String>) -> Result<(), ProtocolError> {
+    pub fn extend(&mut self, base_count: u32, new_entries: impl IntoIterator<Item = String>) -> Result<(), ProtocolError> {
         let expected = self.entries.len() as u32;
         if base_count != expected {
             return Err(ProtocolError::DictOutOfOrder { expected, actual: base_count });
@@ -64,15 +64,15 @@ impl DictReader {
         Ok(())
     }
 
-    pub async fn resolve(&self, index: u32) -> Result<&str, ProtocolError> {
+    pub fn resolve(&self, index: u32) -> Result<&str, ProtocolError> {
         self.entries.get(index as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(index))
     }
 
-    pub async fn len(&self) -> u32 {
+    pub fn len(&self) -> u32 {
         self.entries.len() as u32
     }
 
-    pub async fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
     }
 }

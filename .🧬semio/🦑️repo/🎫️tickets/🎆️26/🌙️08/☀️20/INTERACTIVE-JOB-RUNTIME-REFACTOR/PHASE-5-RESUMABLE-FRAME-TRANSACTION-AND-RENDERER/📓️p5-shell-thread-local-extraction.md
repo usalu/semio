@@ -101,6 +101,21 @@ Retries after concurrent repairs reduced the upstream failure first to 43 errors
 
 Result: failed before compiling the renderer. The wasm build reached the same concurrent OS-kernel/pack transition with 10 OS-kernel errors plus a pack value encoder mismatch, then Trunk exited with status 101. No Shell wasm result can be claimed.
 
+## 2026-08-22 Shell Compile Repair
+
+The final Shell compile sweep found two build-phase helpers whose receivers no longer matched their owned state after the thread-local extraction:
+
+- `render_footer` registers utility tooltips and advances footer collection expansion through `ShellChromeBuildState`.
+- `render_overlay` advances tooltip/dialog/tour state through `ShellChromeBuildState`.
+
+Both receivers are now `&mut self`. This is a build-state ownership correction only: the methods still receive draw lists, font/icon atlases, input, and theme explicitly, and no GPU, window, surface, or presentation state moves to a worker. The `ShellChromeBuildState: Send` assertion and present-side `render_chrome` wrapper remain intact.
+
+Verification command:
+
+`cargo check -p semio-framework-os-renderer-wgpu --message-format=short`
+
+Result after the receiver repair: all six prior Shell mutability diagnostics at the former lines 9553, 9566, 9974, and 10030-10032 are gone. The only two remaining Shell diagnostics, at `render_ui_node` call sites 9650 and 9880, are caused by a directly upstream Interpreter contract mismatch: `render_ui_node` accepts `HashMap<String, infinite_world::World3dState>`, while Shell and the current Infinite world handlers consistently own `HashMap<String, infinite_world::world::World3dState>`. The calls already have the correct arity and argument order; the Interpreter signature must converge on the world-module state type before a green mounted renderer result can be claimed.
+
 ### Renderer lint
 
 `bun nx run @semio-tech/framework-renderer-wgpu:lint`

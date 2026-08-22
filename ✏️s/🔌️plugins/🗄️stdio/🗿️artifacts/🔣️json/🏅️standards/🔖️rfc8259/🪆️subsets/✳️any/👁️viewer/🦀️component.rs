@@ -7,7 +7,7 @@
 use crate::artifacts::json::{JsonMutation, JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 use crate::viewer::json_any::modes::view;
 use crate::viewer::json_any::modes::view::windows::main;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, ViewEmit, Viewer};
 
 //#region 🔖️Dialect
 /// 🪪️ Same coordinate as the sibling editor surface's own `JSON_EDITOR_DIALECT` — duplicated here

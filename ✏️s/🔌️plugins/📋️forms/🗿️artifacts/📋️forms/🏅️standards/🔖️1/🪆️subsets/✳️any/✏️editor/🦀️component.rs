@@ -417,9 +417,9 @@ impl ArtifactEditor for FormsPlayApp {
 /// `"forms"` workflow tag the pre-migration `App`-based manifest carried are dropped here, not ported.
 /// The subset's own `📚️examples/🎬️demo` facet is the likely intended replacement mechanism; flagged
 /// for the coordinator, not fixed locally.
-pub async fn create_forms_app() -> AppDefinition {
+pub fn create_forms_app() -> AppDefinition {
     Editor::builder(crate::artifacts::forms::FORMS_DIALECT)
-        .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
+        .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
             .document(["semio", "forms"])
             .artifact_kind(ArtifactKindSpec {
                 id: "form.dictionary".into(),
@@ -463,8 +463,9 @@ pub async fn create_forms_app() -> AppDefinition {
             .mutation("dropQuestionKind", LocalizedLabel::native("Drop Question Kind", "Frageart ablegen"))
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             // 🛠️ Dev-only whole-spec import — kept out of the command palette, staged JSON form.
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setSpecJson", LocalizedLabel::native("Set Spec JSON", "Spezifikations-JSON festlegen"), ActionKind::Mutation) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("setSpecJson", LocalizedLabel::native("Set Spec JSON", "Spezifikations-JSON festlegen"), ActionKind::Mutation) })
             .view_action("setTryValue", LocalizedLabel::native("Set Try Value", "Testwert festlegen"))
+            .action_interactive_job("setTryValue", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
             .view_action("setTryValues", LocalizedLabel::native("Set Try Values", "Testwerte festlegen"))
             .view_action("resetTry", LocalizedLabel::native("Reset Try", "Test zurücksetzen"))
             .view_action("previousStep", LocalizedLabel::native("Previous Step", "Vorheriger Schritt"))

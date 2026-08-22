@@ -203,7 +203,7 @@ mod tests {
     use crate::fans::FanType;
     use crate::units::P_STD;
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn baseboard_delivers_heat() {
         let eq = ZoneEquipment::Baseboard { heating: HeatingCoil::Electric { capacity_w: 5000.0, efficiency: 1.0 } };
         let req = ZoneEquipmentRequest {
@@ -222,7 +222,7 @@ mod tests {
         assert!(out.delivered_heating_w > 0.0);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn vrf_respects_capacity() {
         let eq = ZoneEquipment::VrfTerminal { heating_cap_w: 2000.0, cooling_cap_w: 2500.0, cop_heating: 3.5, cop_cooling: 3.0 };
         let req = ZoneEquipmentRequest {
@@ -242,7 +242,7 @@ mod tests {
         assert!(out.compressor_power_w > 0.0);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn fan_coil_runs_coils_and_fan() {
         let eq = ZoneEquipment::FanCoil {
             heating: None,

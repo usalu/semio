@@ -1,0 +1,8 @@
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3364	`Result<dsl::os_io::ArtifactKindId, std::string::String>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	4233	`Result<dsl::os_io::ArtifactKindId, std::string::String>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	7392	`PluginBuilder<NeedsLabel, _>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	7421	`PluginBuilder<NeedsLabel, _>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	15162	`&str` is not a future
+E0308	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs	278	mismatched types
+E0308	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs	286	mismatched types
+E0308	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs	491	mismatched types

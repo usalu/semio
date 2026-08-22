@@ -8,7 +8,6 @@ use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, M
 pub use crate::artifacts::model::schema::EnergyModelArtifact;
 
 /// @emoji 🔖️ Document schema / DSL envelope id.
-
 pub const ENERGY_MODEL_DOCUMENT_SCHEMA: &str = "energy.model";
 
 /// @emoji 🧬️ Artifact schema descriptor id.
@@ -53,7 +52,6 @@ pub const MODEL_DIALECT: Dialect = Dialect { artifact_kind: ENERGY_MODEL_ARTIFAC
 /// migration recipe's §3 finding: `VcsArtifactApp.children` has zero live content behind it for
 /// any plugin yet) — a kernel-dissolution-scale change (DKM's own ticket), not a schema migration.
 /// `vertices_m` stays inside `structure`'s lossless `Model` tree, same as every other field.
-
 //#region 🔖️ChildTypes
 pub type EnergyStructureChild = store::ArtifactChild<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot>;
 pub type EnergyZonesChild = store::ArtifactChild<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot>;
@@ -66,7 +64,7 @@ pub type EnergyZonesChild = store::ArtifactChild<semio_s_plugin_stdio::artifacts
 /// `SemioValue::Bytes`/`::Ref` are never PRODUCED by `energy_structure_from_model` below — they are
 /// still handled (never a panic) for the theoretical case of a foreign composer writing one into
 /// this artifact's own `structure` child.
-async fn semio_value_from_json(value: &serde_json::Value) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue {
+fn semio_value_from_json(value: &serde_json::Value) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry};
     match value {
         serde_json::Value::Null => SemioValue::Null,
@@ -86,13 +84,13 @@ async fn semio_value_from_json(value: &serde_json::Value) -> semio_s_plugin_stdi
 
 /// 🌉 Inverse of [`semio_value_from_json`] — real reconstruction, not a stub. `Bytes`/`Ref` degrade
 /// honestly (documented above) since `Model` never produces either.
-async fn json_from_semio_value(value: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue) -> serde_json::Value {
+fn json_from_semio_value(value: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue) -> serde_json::Value {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     match value {
         SemioValue::Null => serde_json::Value::Null,
         SemioValue::Bool { value } => serde_json::Value::Bool(*value),
-        SemioValue::Int { lexeme } => lexeme.parse::<i64>().map(serde_json::Value::from).unwrap_or_else(|_| serde_json::Value::String(lexeme.clone())),
-        SemioValue::Float { lexeme } => lexeme.parse::<f64>().ok().and_then(serde_json::Number::from_f64).map(serde_json::Value::Number).unwrap_or_else(|| serde_json::Value::String(lexeme.clone())),
+        SemioValue::Int { lexeme } => lexeme.parse::<i64>().map_or_else(|_| serde_json::Value::String(lexeme.clone()), serde_json::Value::from),
+        SemioValue::Float { lexeme } => lexeme.parse::<f64>().ok().and_then(serde_json::Number::from_f64).map_or_else(|| serde_json::Value::String(lexeme.clone()), serde_json::Value::Number),
         SemioValue::Str { value } => serde_json::Value::String(value.clone()),
         SemioValue::Bytes { value } => serde_json::Value::Array(value.iter().map(|b| serde_json::Value::from(*b)).collect()),
         SemioValue::List { items } => serde_json::Value::Array(items.iter().map(json_from_semio_value).collect()),
@@ -103,7 +101,7 @@ async fn json_from_semio_value(value: &semio_s_plugin_stdio::artifacts::semio::s
 
 /// 🌉 REAL bidirectional converter: the whole `Model` <-> one `s.stdio.semio.value` tree — the SOLE
 /// lossless source of truth for this artifact's persisted content.
-pub async fn energy_structure_from_model(model: &crate::model::Model) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot {
+pub fn energy_structure_from_model(model: &crate::model::Model) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
     let value = serde_json::to_value(model).unwrap_or(serde_json::Value::Null);
     SemioValueSnapshot { schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root: semio_value_from_json(&value), nodes: Vec::new() }
@@ -112,7 +110,7 @@ pub async fn energy_structure_from_model(model: &crate::model::Model) -> semio_s
 /// 🌉 Inverse of [`energy_structure_from_model`]. Falls back to `Model::default()` if `structure`'s
 /// root doesn't decode into a full `Model` (e.g. a foreign composer wrote a partial/foreign tree) —
 /// documented, honest degradation, never a panic, matching the recipe's converter-honesty rule.
-pub async fn energy_model_from_structure(structure: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot) -> crate::model::Model {
+pub fn energy_model_from_structure(structure: &semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot) -> crate::model::Model {
     serde_json::from_value(json_from_semio_value(&structure.root)).unwrap_or_default()
 }
 
@@ -121,7 +119,7 @@ pub async fn energy_model_from_structure(structure: &semio_s_plugin_stdio::artif
 /// always regenerated alongside `structure` from the SAME model (never an independent source, so
 /// the two never diverge). `energy_model_from_structure` alone is authoritative on read; this table
 /// is never consulted for reconstruction, mirroring `forms`'s own `results` table exactly.
-pub async fn energy_zones_table_from_model(model: &crate::model::Model) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
+pub fn energy_zones_table_from_model(model: &crate::model::Model) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
     use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
     SemioTableSnapshot {
@@ -156,12 +154,12 @@ pub async fn energy_zones_table_from_model(model: &crate::model::Model) -> semio
 /// from `structure`'s handle). No render/export call site consumes this yet (energy is a headless
 /// engine with no document app — see `📦️glue.rs`'s own "Shape note"), matching `layout`'s honest
 /// framing for its own inert `referenced_model` slot: real, tested, not yet wired to a consumer.
-pub async fn energy_structure_content(snapshot: &EnergyModelSnapshot) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot {
+pub fn energy_structure_content(snapshot: &EnergyModelSnapshot) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot {
     energy_structure_from_model(&energy_model(snapshot))
 }
 
 /// 🔎️ Twin of [`energy_structure_content`] for the `zones` child.
-pub async fn energy_zones_content(snapshot: &EnergyModelSnapshot) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
+pub fn energy_zones_content(snapshot: &EnergyModelSnapshot) -> semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
     energy_zones_table_from_model(&energy_model(snapshot))
 }
 //#endregion 🔖️Converters
@@ -190,7 +188,7 @@ thread_local! {
     static ENERGY_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, EnergyWorkingScene>> = std::cell::RefCell::new(std::collections::HashMap::new());
 }
 
-async fn energy_scene_id(model: &crate::model::Model) -> String {
+fn energy_scene_id(model: &crate::model::Model) -> String {
     use std::hash::{Hash, Hasher};
     let content_json = serde_json::to_string(model).unwrap_or_default();
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -202,7 +200,7 @@ async fn energy_scene_id(model: &crate::model::Model) -> String {
 /// standard way this plugin's mutation-diff/fixture builders create `structure`/`zones` field
 /// values; never construct these handles without also caching, or [`energy_model`] will read back
 /// `Model::default()`.
-pub async fn energy_children_from_model(model: &crate::model::Model) -> (EnergyStructureChild, EnergyZonesChild) {
+pub fn energy_children_from_model(model: &crate::model::Model) -> (EnergyStructureChild, EnergyZonesChild) {
     let scene_id = energy_scene_id(model);
     ENERGY_SCRATCH.with(|cache| {
         cache.borrow_mut().insert(scene_id.clone(), EnergyWorkingScene { model: model.clone() });
@@ -214,22 +212,22 @@ pub async fn energy_children_from_model(model: &crate::model::Model) -> (EnergyS
 
 /// 🔎️ Reads the cached working scene behind a snapshot's composed children — `Model::default()`
 /// (never a panic) on a cache miss, per this region's own doc comment.
-pub async fn energy_scene(snapshot: &EnergyModelSnapshot) -> EnergyWorkingScene {
+pub fn energy_scene(snapshot: &EnergyModelSnapshot) -> EnergyWorkingScene {
     ENERGY_SCRATCH.with(|cache| cache.borrow().get(&snapshot.structure.child_id).map(|scene| EnergyWorkingScene { model: scene.model.clone() })).unwrap_or_else(|| EnergyWorkingScene { model: crate::model::Model::default() })
 }
 
 /// 🔎️ The live `Model` behind a snapshot's composed children — the single read call site every
 /// consumer in this plugin now uses instead of the old `.model_json` field (decode-on-demand
 /// through `model_from_snapshot`, below).
-pub async fn energy_model(snapshot: &EnergyModelSnapshot) -> crate::model::Model {
+pub fn energy_model(snapshot: &EnergyModelSnapshot) -> crate::model::Model {
     energy_scene(snapshot).model
 }
 
 /// 🏗️ Builds a full `EnergyModelSnapshot` from a literal `Model` — the standard fixture/import
 /// constructor replacing the old `model_json: String` struct literal now that `structure`/`zones`
 /// are composed child handles, not a plain field.
-pub async fn energy_snapshot_with_state(schema: impl Into<String>, model: crate::model::Model, referenced_model: Option<store::ArtifactLink>) -> EnergyModelSnapshot {
-    let (structure, zones) = energy_children_from_model(&model);
+pub fn energy_snapshot_with_state(schema: impl Into<String>, model: &crate::model::Model, referenced_model: Option<store::ArtifactLink>) -> EnergyModelSnapshot {
+    let (structure, zones) = energy_children_from_model(model);
     EnergyModelSnapshot { schema: schema.into(), structure, zones, referenced_model }
 }
 //#endregion 🔖️WorkingScene
@@ -237,7 +235,7 @@ pub async fn energy_snapshot_with_state(schema: impl Into<String>, model: crate:
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — Data × Value per owner-table (`data.🔋️model`).
-pub async fn artifact_kind() -> ArtifactKindSpec {
+pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "data.🔋️model".into(),
         name: "Energy Model".into(),
@@ -273,10 +271,11 @@ pub async fn artifact_kind() -> ArtifactKindSpec {
 /// headless library with ZERO apps — there is no `ArtifactApp` to name. `document_codec_bare` is the
 /// new sibling closing exactly that gap (see its own doc); the old free fn in `⚙️engine` is deleted
 /// with this — nothing else called it.
-pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
-    let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
+    type CapabilityRow<'a> = (&'a str, &'a str, &'a str, &'a [(&'a str, &'a str)], Option<(&'a str, &'a str)>);
+    let rows: &[CapabilityRow<'_>] = &[
         ("s.model.standard.v1", "standard", "1", &[], None),
         ("s.model.standard.v1.profile.any", "profile", "any", &[], None),
         ("s.model.schema.artifact", "schema", "s.energy.model", &[("schema", "s.energy.model")], None),
@@ -309,7 +308,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
     Ok(definition)
 }
 
-pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::model::standards::v1::subsets::any::schema::energy_model_artifact_schema_descriptor())
         .inferences([crate::artifacts::model::standards::v1::subsets::any::schema::inferences::energy_model_artifact_inference_descriptor()])
@@ -322,7 +321,7 @@ pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring the
 /// `🗒️note` exemplar's helper of the same shape.
-async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {

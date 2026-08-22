@@ -113,26 +113,48 @@ pub async fn dag_camera_from_sequence(value: &SequenceCamera) -> DagCamera {
 
 //#region ⚠️ Errors
 /// 🚨️ `SequenceHost`'s fallible operations.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum SequenceCoreError {
-    #[error(transparent)]
-    Json(#[from] serde_json::Error),
-    #[error("unsupported schema: {0}")]
+    Json(serde_json::Error),
     UnsupportedSchema(String),
-    #[error("cannot connect step to itself")]
     SelfConnect,
-    #[error("{0} not found")]
     StepNotFound(String),
-    #[error("steps must share the same slot scope")]
     MismatchedSlotScope,
-    #[error("connection would create cycle")]
     CycleDetected,
-    #[error("{0} already has outgoing flow")]
     OutgoingFlowExists(String),
-    #[error("unknown step: {0}")]
     UnknownStep(String),
-    #[error("{0}")]
     Dag(String),
+}
+
+impl std::fmt::Display for SequenceCoreError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Json(error) => write!(formatter, "{error}"),
+            Self::UnsupportedSchema(schema) => write!(formatter, "unsupported schema: {schema}"),
+            Self::SelfConnect => formatter.write_str("cannot connect step to itself"),
+            Self::StepNotFound(step) => write!(formatter, "{step} not found"),
+            Self::MismatchedSlotScope => formatter.write_str("steps must share the same slot scope"),
+            Self::CycleDetected => formatter.write_str("connection would create cycle"),
+            Self::OutgoingFlowExists(step) => write!(formatter, "{step} already has outgoing flow"),
+            Self::UnknownStep(step) => write!(formatter, "unknown step: {step}"),
+            Self::Dag(message) => formatter.write_str(message),
+        }
+    }
+}
+
+impl std::error::Error for SequenceCoreError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Json(error) => std::error::Error::source(error),
+            _ => None,
+        }
+    }
+}
+
+impl From<serde_json::Error> for SequenceCoreError {
+    fn from(error: serde_json::Error) -> Self {
+        Self::Json(error)
+    }
 }
 //#endregion ⚠️ Errors
 
@@ -958,24 +980,24 @@ pub async fn create_sequence_app() -> AppDefinition {
             .panel_tab_def(catalogue_panel::definition())
             .panel_tab_def(inspection_panel::definition())
             // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
-            .action_with(ActionDefinition::new_catalog("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"), ActionKind::Mutation).with_category("create"))
+            .action_with(ActionDefinition::bounded_catalog("addStep", LocalizedLabel::native("Add Step", "Schritt hinzufügen"), ActionKind::Mutation).with_category("create"))
             .mutation("addStepToSlot", LocalizedLabel::native("Add Step To Slot", "Schritt zu Slot hinzufügen"))
             .mutation("addStepDropped", LocalizedLabel::native("Add Step Dropped", "Schritt per Ablegen hinzufügen"))
             .mutation("removeStep", LocalizedLabel::native("Remove Step", "Schritt entfernen"))
-            .action_with(ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
+            .action_with(ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
             .mutation("moveStep", LocalizedLabel::native("Move Step", "Schritt verschieben"))
             .mutation("connectSteps", LocalizedLabel::native("Connect Steps", "Schritte verbinden"))
             .mutation("disconnectSteps", LocalizedLabel::native("Disconnect Steps", "Schritte trennen"))
             .mutation("setStepParams", LocalizedLabel::native("Set Step Params", "Schrittparameter festlegen"))
-            .action_with(ActionDefinition::new_catalog("setStepCollapsed", LocalizedLabel::native("Set Step Collapsed", "Schritt einklappen"), ActionKind::Mutation).with_category("selection"))
-            .action_with(ActionDefinition::new_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation).with_category("transform"))
+            .action_with(ActionDefinition::bounded_catalog("setStepCollapsed", LocalizedLabel::native("Set Step Collapsed", "Schritt einklappen"), ActionKind::Mutation).with_category("selection"))
+            .action_with(ActionDefinition::bounded_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation).with_category("transform"))
             .mutation("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"))
             .view_action("setViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"))
             // 👁️ Ephemeral view state — run output, layout orientation, locale. Selection is no
             // longer declared here: framework-owned, injected via `.interaction(...)` below.
             .view_action("setOrientation", LocalizedLabel::native("Set Orientation", "Ausrichtung festlegen"))
-            .action_with(ActionDefinition::new_catalog("run", LocalizedLabel::native("Run", "Ausführen"), ActionKind::View).with_category("actions"))
-            .action_with(ActionDefinition::new_catalog("stop", LocalizedLabel::native("Stop", "Stopp"), ActionKind::View).with_category("actions"))
+            .action_with(ActionDefinition::bounded_catalog("run", LocalizedLabel::native("Run", "Ausführen"), ActionKind::View).with_category("actions"))
+            .action_with(ActionDefinition::bounded_catalog("stop", LocalizedLabel::native("Stop", "Stopp"), ActionKind::View).with_category("actions"))
             .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
             // 📝️ Staged argument forms for the panel-visible create + layout actions.
             .action_args("addStep", vec![

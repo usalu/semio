@@ -8,7 +8,7 @@ use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::Tif
 use crate::artifacts::tiff::{STDIO_TIFF_DOCUMENT_SCHEMA, TIFF_ANY_DIALECT};
 use crate::editor::tiff_any::modes::edit;
 use crate::editor::tiff_any::modes::edit::windows::main;
-use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode};
+use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 
@@ -61,7 +61,7 @@ impl ArtifactEditor for TiffAnyEditor {
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
-            TiffAnyEditCommand::SetPixelRegion { pixels } => Ok(Emit::mutations(vec![TiffMutation::SetPixels { pixels: pixels.clone() }]).await),
+            TiffAnyEditCommand::SetPixelRegion { pixels } => Ok(Emit::mutations(vec![TiffMutation::SetPixels { pixels: pixels.clone() }])),
         }
     }
 

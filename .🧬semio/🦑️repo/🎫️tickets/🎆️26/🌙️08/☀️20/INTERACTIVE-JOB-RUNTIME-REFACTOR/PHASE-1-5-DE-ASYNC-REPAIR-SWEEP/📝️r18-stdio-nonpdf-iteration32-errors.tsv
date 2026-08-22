@@ -1,0 +1,12 @@
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/💼️jobs/🦀️component.rs	555	`Vec<dsl::io_schema::IoEntryDescriptor>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🛂️describe/🦀️component.rs	59	`Result<Vec<ArtifactInferenceServiceMetadata>, ArtifactInferenceExecutionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	7392	`bool` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	7394	`Vec<dsl::io_schema::IoEntryDescriptor>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	7416	`usize` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	7417	`Vec<dsl::io_schema::IoEntryDescriptor>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	7420	`usize` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	7421	`Vec<dsl::io_schema::IoEntryDescriptor>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	16067	`PluginManifest` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	16067	`PluginManifest` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	15186	can't compare `std::string::String` with `impl std::future::Future<Output = std::string::String>`
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	15189	`impl std::future::Future<Output = std::string::String>` doesn't implement `Debug`

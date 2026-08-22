@@ -15,6 +15,8 @@ export interface Puzzle3dConfig {
   /** @state config */
   fillCount: number;
   /** @state config */
+  fillCheckpoint: number[];
+  /** @state config */
   brushCandidateIndex: number;
   /** @state config */
   objectKindWeights: Record<string, number>;

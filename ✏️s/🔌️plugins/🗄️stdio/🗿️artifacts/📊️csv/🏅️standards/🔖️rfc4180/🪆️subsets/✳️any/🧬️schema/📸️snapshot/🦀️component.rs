@@ -7,7 +7,7 @@ use crate::artifacts::csv::STDIO_CSV_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
-async fn default_true() -> bool {
+fn default_true() -> bool {
     true
 }
 

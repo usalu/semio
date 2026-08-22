@@ -15,16 +15,13 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "pg": "^8.16.0",
-    "pg-boss": "^10.3.2",
-    "zod": "^3.25.67",
-    "jose": "^6.0.11"
+    "pg-boss": "^10.3.2"
   },
   "devDependencies": {
     "@types/node": "^22.19.6",
-    "@types/pg": "^8.15.4",
     "@types/react": "^19.2.8",
     "@types/react-dom": "^19.1.6",
-    "tsx": "^4.19.4",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^4.0.17"
   }
 }

@@ -13,12 +13,40 @@ use serde::Deserialize;
 /// `#[cfg(target_arch = "wasm32")] #[wasm_bindgen]` methods on `EditorSession` stay
 /// `Result<_, JsValue>` — that shape is dictated by the `wasm_bindgen` ABI, not this crate's own
 /// error handling, so it is not migrated here.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum EditorError {
-    #[error("json: {0}")]
-    Json(#[from] serde_json::Error),
-    #[error("pack: {0}")]
-    Pack(#[from] store::PackError),
+    Json(serde_json::Error),
+    Pack(store::PackError),
+}
+
+impl std::fmt::Display for EditorError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Json(error) => write!(formatter, "json: {error}"),
+            Self::Pack(error) => write!(formatter, "pack: {error}"),
+        }
+    }
+}
+
+impl std::error::Error for EditorError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Json(error) => Some(error),
+            Self::Pack(error) => Some(error),
+        }
+    }
+}
+
+impl From<serde_json::Error> for EditorError {
+    fn from(error: serde_json::Error) -> Self {
+        Self::Json(error)
+    }
+}
+
+impl From<store::PackError> for EditorError {
+    fn from(error: store::PackError) -> Self {
+        Self::Pack(error)
+    }
 }
 // #endregion ⚠️ Errors
 
@@ -1350,7 +1378,7 @@ impl EditorSession {
         }
         let canvas = canvas.clone();
         future_to_promise(async move {
-            let (render_ctx, renderer, surface) = gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).map_err(|e| JsValue::from_str(&e))?;
+            let (render_ctx, renderer, surface) = gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
             let mut g = inner.borrow_mut();
             g.set_logical_size(lw, lh, dpr, pw, ph);
             g.gpu.finish_attach(canvas, render_ctx, renderer, surface);

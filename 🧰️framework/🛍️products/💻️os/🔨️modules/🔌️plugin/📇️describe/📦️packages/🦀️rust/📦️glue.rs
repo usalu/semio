@@ -10,13 +10,19 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as store;
 
+/// 🧠️ The build-time descriptor emitter and the native plugin host share one owned interpreter
+/// implementation; Wasmtime remains only as the differential oracle until component parity closes.
+#[path = "../../../🧠️interpreter/🦀️component.rs"]
+pub mod interpreter;
+
 use std::fs;
 use std::path::{Path, PathBuf};
 
 use semio_framework::{PackageDescriptor, ASSEMBLY_FAILED_PLUGIN_ID};
-use sha2::{Digest, Sha256};
+use semio_framework_plugin_host::{GuestRuntime, OwnedRuntime, PackageHash, PackageId, PackageRef};
 
 //#region 🔖️ActorBindings
+#[cfg(test)]
 mod actor_bindings {
     // 🐛️ `additional_derives` intentionally omitted — see the identical note in
     // `🔌️plugin/🖥️host/🦀️component.rs`'s own `mod actor_bindings`: wasmtime-wit-bindgen 22.0.1
@@ -33,6 +39,7 @@ mod actor_bindings {
 /// needs to log, read the clock, or trace — a component that does so during `describe()` is doing
 /// something the descriptor contract does not ask for, but the calls are still satisfied (never
 /// trapped) so a component that calls them for its own bookkeeping still completes.
+#[cfg(test)]
 struct DescribeHostState {
     wasi_ctx: wasmtime_wasi::WasiCtx,
     resource_table: wasmtime::component::ResourceTable,
@@ -42,6 +49,7 @@ struct DescribeHostState {
 /// `wasm32-wasip2` build pulls `wasi:io/poll` and friends in transitively via the Rust target's own
 /// runtime shim, so `pure` alone leaves the linker short and instantiation fails. Sandboxed default
 /// ctx — `describe()` is a pure metadata read and is granted no stdio, filesystem or network.
+#[cfg(test)]
 impl wasmtime_wasi::WasiView for DescribeHostState {
     fn ctx(&mut self) -> wasmtime_wasi::WasiCtxView<'_> {
         wasmtime_wasi::WasiCtxView { ctx: &mut self.wasi_ctx, table: &mut self.resource_table }
@@ -51,6 +59,7 @@ impl wasmtime_wasi::WasiView for DescribeHostState {
 // 🚫️async: E1 — `wasmtime::component::bindgen!` generates this `Host` trait from the WIT, which
 // declares `log`/`now-ms`/`trace-span` sync; the signature is external and fixed, not chosen here.
 // See R9/R2 E1.
+#[cfg(test)]
 impl actor_bindings::semio::framework::pure::Host for DescribeHostState {
     fn log(&mut self, level: String, message: String) {
         eprintln!("[describe:{level}] {message}");
@@ -70,12 +79,18 @@ impl actor_bindings::semio::framework::pure::Host for DescribeHostState {
 /// the collapsed world requires) demands a `Host` impl for every interface `wit-parser` surfaces as
 /// an import, including those present ONLY because an exported signature references their types.
 /// Those traits declare no methods, so each impl is empty by construction.
+#[cfg(test)]
 impl actor_bindings::semio::framework::types::Host for DescribeHostState {}
+#[cfg(test)]
 impl actor_bindings::semio::framework::capabilities::Host for DescribeHostState {}
+#[cfg(test)]
 impl actor_bindings::semio::framework::effects::Host for DescribeHostState {}
+#[cfg(test)]
 impl actor_bindings::semio::framework::events::Host for DescribeHostState {}
+#[cfg(test)]
 impl actor_bindings::semio::framework::ui::Host for DescribeHostState {}
 
+#[cfg(test)]
 impl actor_bindings::semio::framework::ui::HostSurface for DescribeHostState {
     // 🚫️async: E1 — `bindgen!` fixes this resource-destructor signature. No host function here ever
     // hands a `surface` handle to the guest, so no handle exists to drop.
@@ -95,6 +110,7 @@ impl actor_bindings::semio::framework::ui::HostSurface for DescribeHostState {
 /// The world still has to be fully linked (`Actor::add_to_linker` defines `pure` AND `host-async`
 /// together, and an unresolved import fails instantiation outright), which is exactly why these
 /// exist as refusals rather than as omissions.
+#[cfg(test)]
 fn describe_must_be_pure(name: &str) -> Vec<u8> {
     dsl::encode_fault_bytes(&dsl::Fault::new(dsl::FaultOrigin::Os, dsl::FaultCode::new("describe.impure"), format!("host-async {name} is not available during describe() — the descriptor contract requires describe() to be pure")))
 }
@@ -102,6 +118,7 @@ fn describe_must_be_pure(name: &str) -> Vec<u8> {
 /// 🚪️ `emit`/`emit-patch`, the fire-and-forget doors. Dropped with a loud stderr line rather than
 /// silently: nothing consumes effects at describe time, and a `describe()` that emits one is the
 /// same contract violation the 24 refusals above cover.
+#[cfg(test)]
 impl actor_bindings::semio::framework::host_async::Host for DescribeHostState {
     // 🚫️async: E1 — the WIT declares both sync (deliberate one-way doors); `bindgen!` mirrors that.
     fn emit(&mut self, _value: actor_bindings::semio::framework::effects::Effect) {
@@ -113,6 +130,7 @@ impl actor_bindings::semio::framework::host_async::Host for DescribeHostState {
     }
 }
 
+#[cfg(test)]
 impl actor_bindings::semio::framework::host_async::HostWithStore<DescribeHostState> for wasmtime::component::HasSelf<DescribeHostState> {
     async fn storage_read(_accessor: &wasmtime::component::Accessor<DescribeHostState, Self>, _params: actor_bindings::semio::framework::effects::StorageReadParams) -> Result<Option<Vec<u8>>, Vec<u8>> {
         Err(describe_must_be_pure("storage-read"))
@@ -237,23 +255,38 @@ impl std::fmt::Display for DescribeError {
     }
 }
 
-/// #️⃣ Lowercase hex SHA-256 of `bytes` — the literal algorithm `PackageHashes`' field names name
-/// (`wasm_sha256`/`core_wasm_sha256`/`descriptor_sha256`), not this repo's usual `blake3`-based
-/// `semio-framework-hash` (a different, Merkle-oriented content-addressing scheme with a different
-/// hex alphabet) — package consumers outside this repo (registries, CI caches) expect literal
-/// SHA-256 for a `*_sha256`-named field.
-async fn sha256_hex(bytes: &[u8]) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(bytes);
-    hex_encode(&hasher.finalize()).await
+#[cfg(test)]
+async fn execute_describe_wasmtime(wasm_bytes: &[u8], source: &Path) -> Result<Vec<u8>, DescribeError> {
+    let execution_bytes = interpreter::wasm_execution_binary(wasm_bytes).map_err(|error| DescribeError(format!("normalizing {} for execution: {error}", source.display())))?;
+    let mut config = wasmtime::Config::new();
+    config.wasm_component_model_async(true);
+    config.consume_fuel(true);
+    let engine = wasmtime::Engine::new(&config).map_err(|error| DescribeError(format!("building wasmtime engine: {error}")))?;
+    let mut linker = wasmtime::component::Linker::<DescribeHostState>::new(&engine);
+    actor_bindings::Actor::add_to_linker::<DescribeHostState, wasmtime::component::HasSelf<DescribeHostState>>(&mut linker, |state: &mut DescribeHostState| state).map_err(|error| DescribeError(format!("linking `world actor` imports: {error}")))?;
+    wasmtime_wasi::p2::add_to_linker_async(&mut linker).map_err(|error| DescribeError(format!("linking wasi preview 2: {error}")))?;
+    let component = wasmtime::component::Component::from_binary(&engine, &execution_bytes).map_err(|error| DescribeError(format!("parsing {} as a wasm component: {error}", source.display())))?;
+    let mut store = wasmtime::Store::new(&engine, DescribeHostState { wasi_ctx: wasmtime_wasi::WasiCtxBuilder::new().build(), resource_table: wasmtime::component::ResourceTable::new() });
+    store.set_fuel(DESCRIBE_FUEL_BUDGET).map_err(|error| DescribeError(format!("setting fuel budget: {error}")))?;
+    let bindings = actor_bindings::Actor::instantiate_async(&mut store, &component, &linker).await.map_err(|error| DescribeError(format!("instantiating {}: {error}", source.display())))?;
+    store
+        .run_concurrent(async |accessor| bindings.semio_framework_describe().call_describe(accessor).await)
+        .await
+        .map_err(|error| DescribeError(format!("calling describe() on {}: {error}", source.display())))?
+        .map_err(|error| DescribeError(format!("calling describe() on {}: {error}", source.display())))
 }
 
-async fn hex_encode(bytes: &[u8]) -> String {
-    let mut out = String::with_capacity(bytes.len() * 2);
-    for byte in bytes {
-        out.push_str(&format!("{byte:02x}"));
-    }
-    out
+async fn execute_describe_owned(wasm_bytes: &[u8], source: &Path) -> Result<Vec<u8>, DescribeError> {
+    let runtime = OwnedRuntime::new();
+    let package = PackageRef { package: PackageId(source.display().to_string()), hash: PackageHash([0; 32]) };
+    let compiled = runtime.compile(&package, wasm_bytes).await.map_err(|error| DescribeError(format!("compiling {} with the owned interpreter: {error}", source.display())))?;
+    runtime
+        .describe(
+            &compiled,
+            semio_framework::kernel::Budget { fuel: DESCRIBE_FUEL_BUDGET, deadline_ms: 60_000, max_effects: 0, max_patch_bytes: 0, max_frames: 0 },
+        )
+        .await
+        .map_err(|error| DescribeError(format!("calling owned describe() on {}: {error}", source.display())))
 }
 
 /// 🛂️ Instantiates `wasm_path` once (fuel-capped, `pure`-only imports), calls its `describe()`
@@ -268,41 +301,12 @@ async fn hex_encode(bytes: &[u8]) -> String {
 /// `hashes.wasm_sha256` verification the only one ever meaningfully populated).
 pub async fn describe_component(wasm_path: &Path, out_dir: &Path) -> Result<PackageDescriptor, DescribeError> {
     let wasm_bytes = fs::read(wasm_path).map_err(|error| DescribeError(format!("reading {}: {error}", wasm_path.display())))?;
+    let descriptor_bytes = execute_describe_owned(&wasm_bytes, wasm_path).await?;
 
-    let mut config = wasmtime::Config::new();
-    // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): `describe()` is `async func`
-    // now and `world actor` imports `host-async`, so the Store MUST be component-model-async — a
-    // sync `func` export is uncallable on such a Store and an async one is uncallable without it.
-    config.wasm_component_model_async(true);
-    config.consume_fuel(true);
-    let engine = wasmtime::Engine::new(&config).map_err(|error| DescribeError(format!("building wasmtime engine: {error}")))?;
-
-    let mut linker = wasmtime::component::Linker::<DescribeHostState>::new(&engine);
-    // 🧬️ Whole-world linker call: defines `pure` AND `host-async` together. Linking only `pure`
-    // leaves 24 imports unresolved and every instantiation fails outright.
-    actor_bindings::Actor::add_to_linker::<DescribeHostState, wasmtime::component::HasSelf<DescribeHostState>>(&mut linker, |state: &mut DescribeHostState| state).map_err(|error| DescribeError(format!("linking `world actor` imports: {error}")))?;
-    wasmtime_wasi::p2::add_to_linker_async(&mut linker).map_err(|error| DescribeError(format!("linking wasi preview 2: {error}")))?;
-
-    let component = wasmtime::component::Component::from_binary(&engine, &wasm_bytes).map_err(|error| DescribeError(format!("parsing {} as a wasm component: {error}", wasm_path.display())))?;
-
-    let mut store = wasmtime::Store::new(&engine, DescribeHostState { wasi_ctx: wasmtime_wasi::WasiCtxBuilder::new().build(), resource_table: wasmtime::component::ResourceTable::new() });
-    store.set_fuel(DESCRIBE_FUEL_BUDGET).map_err(|error| DescribeError(format!("setting fuel budget: {error}")))?;
-
-    let bindings = actor_bindings::Actor::instantiate_async(&mut store, &component, &linker).await.map_err(|error| DescribeError(format!("instantiating {}: {error}", wasm_path.display())))?;
-
-    // 🧬️ `describe()` is `async func`, so it is driven through `Store::run_concurrent`'s `Accessor`
-    // — the only shape wasmtime offers for an async-lifted export. Two error layers: the outer one
-    // is `run_concurrent` itself, the inner one the call's own trap.
-    let descriptor_bytes = store
-        .run_concurrent(async |accessor| bindings.semio_framework_describe().call_describe(accessor).await)
-        .await
-        .map_err(|error| DescribeError(format!("calling describe() on {}: {error}", wasm_path.display())))?
-        .map_err(|error| DescribeError(format!("calling describe() on {}: {error}", wasm_path.display())))?;
-
-    let decoded = store::pack_rt::decode_wire_value(&descriptor_bytes).await.map_err(|error| DescribeError(format!("decoding describe() output as a pack: {error}")))?;
+    let decoded = store::pack_rt::decode_wire_value(&descriptor_bytes).map_err(|error| DescribeError(format!("decoding describe() output as a pack: {error}")))?;
     let mut descriptor: PackageDescriptor = dsl::from_dsl_value(decoded).map_err(|error| DescribeError(format!("decoding describe() output as a PackageDescriptor: {error}")))?;
 
-    let wasm_sha256 = sha256_hex(&wasm_bytes).await;
+    let wasm_sha256 = semio_framework_hash::sha256_hex(&wasm_bytes);
     descriptor.hashes.wasm_sha256 = wasm_sha256.clone();
     descriptor.hashes.core_wasm_sha256 = wasm_sha256;
     // 🪪️ `descriptor_sha256` self-hashes the descriptor's own encoded pack MINUS this very field
@@ -312,11 +316,11 @@ pub async fn describe_component(wasm_path: &Path, out_dir: &Path) -> Result<Pack
     // convention.
     descriptor.hashes.descriptor_sha256 = String::new();
     let prehash_value = dsl::to_dsl_value(&descriptor).map_err(|error| DescribeError(format!("encoding descriptor for hashing: {error}")))?;
-    let prehash_bytes = store::pack_rt::encode_wire_value(&prehash_value).await;
-    descriptor.hashes.descriptor_sha256 = sha256_hex(&prehash_bytes).await;
+    let prehash_bytes = store::pack_rt::encode_wire_value(&prehash_value);
+    descriptor.hashes.descriptor_sha256 = semio_framework_hash::sha256_hex(&prehash_bytes);
 
     let final_value = dsl::to_dsl_value(&descriptor).map_err(|error| DescribeError(format!("encoding final descriptor: {error}")))?;
-    let final_bytes = store::pack_rt::encode_wire_value(&final_value).await;
+    let final_bytes = store::pack_rt::encode_wire_value(&final_value);
     let final_json = serde_json::to_string_pretty(&descriptor).map_err(|error| DescribeError(format!("encoding descriptor as JSON: {error}")))?;
 
     // 🛡️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (registrar): refuse to write a descriptor whose
@@ -394,7 +398,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn sha256_hex_matches_known_vector() {
         // "" -> e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 (well-known empty-input SHA-256)
-        assert_eq!(sha256_hex(b"").await, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+        assert_eq!(semio_framework_hash::sha256_hex(b""), "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -416,5 +420,48 @@ mod tests {
     async fn run_describe_on_missing_file_returns_failure_exit_code() {
         let code = run(vec!["describe".to_string(), "/nonexistent/component.wasm".to_string(), "--out".to_string(), "/tmp/does-not-matter".to_string()]).await;
         assert_eq!(code, 1);
+    }
+
+    mod long {
+        use super::*;
+
+        #[semio_framework_async_macros::async_test]
+        async fn configured_real_component_suite_owned_descriptors_match_wasmtime() {
+            let Some(paths) = std::env::var_os("SEMIO_OWNED_DIFFERENTIAL_FIXTURES") else { return };
+            let paths = std::env::split_paths(&paths).collect::<Vec<_>>();
+            assert!(!paths.is_empty(), "differential component suite is empty");
+            for path in paths {
+                let bytes = fs::read(&path).unwrap_or_else(|error| panic!("read differential component {}: {error}", path.display()));
+                let oracle = execute_describe_wasmtime(&bytes, &path).await.unwrap_or_else(|error| panic!("execute Wasmtime descriptor oracle for {}: {error}", path.display()));
+                let artifact = interpreter::SemioActorArtifact::parse(&bytes).unwrap_or_else(|error| panic!("parse owned Semio actor {}: {error}", path.display()));
+                let mut session = interpreter::SemioDescribeSession::start(&artifact, 64 * 1024 * 1024).unwrap_or_else(|error| panic!("start owned describe session for {}: {error}", path.display()));
+                let mut total_fuel = 0;
+                let mut restored = false;
+                let owned = loop {
+                    match session.step(50_000, interpreter::StepControl::default()) {
+                        interpreter::SemioDescribeStepOutcome::Yield { fuel_used } => {
+                            total_fuel += fuel_used;
+                            assert!(total_fuel <= DESCRIBE_FUEL_BUDGET, "owned describe exceeded oracle fuel cap for {}", path.display());
+                            if !restored {
+                                let checkpoint = session.checkpoint();
+                                session = interpreter::SemioDescribeSession::restore(&artifact, &checkpoint).unwrap_or_else(|error| panic!("restore owned describe checkpoint for {}: {error}", path.display()));
+                                assert_eq!(session.checkpoint(), checkpoint, "checkpoint changed after restoring {}", path.display());
+                                restored = true;
+                            }
+                        }
+                        interpreter::SemioDescribeStepOutcome::Complete { fuel_used, descriptor } => {
+                            total_fuel += fuel_used;
+                            break descriptor;
+                        }
+                        interpreter::SemioDescribeStepOutcome::Cancelled { .. } => panic!("owned describe cancelled for {}", path.display()),
+                        interpreter::SemioDescribeStepOutcome::Fault { error, .. } => panic!("owned describe fault for {}: {error}", path.display()),
+                    }
+                };
+                assert_eq!(owned, oracle, "owned descriptor differs from Wasmtime for {}", path.display());
+                assert!(total_fuel > 0, "owned describe consumed no fuel for {}", path.display());
+                let mut cancelled = interpreter::SemioDescribeSession::start(&artifact, 64 * 1024 * 1024).unwrap_or_else(|error| panic!("start cancellation probe for {}: {error}", path.display()));
+                assert!(matches!(cancelled.step(1, interpreter::StepControl { cancelled: true }), interpreter::SemioDescribeStepOutcome::Cancelled { fuel_used: 0 }), "owned cancellation did not stop {} before its first instruction", path.display());
+            }
+        }
     }
 }

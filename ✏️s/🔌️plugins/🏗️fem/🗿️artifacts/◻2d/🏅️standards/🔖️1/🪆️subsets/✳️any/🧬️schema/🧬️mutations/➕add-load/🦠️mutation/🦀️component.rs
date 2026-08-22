@@ -18,16 +18,16 @@ pub struct AddLoad {
 impl MutationKind<Fem2dSnapshot, Fem2dMutation> for AddLoad {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "add", entity: "load", kind: "add-load", record: "AddedLoad" };
 
-    async fn diff(&self, base: &Fem2dSnapshot) -> protocol::MutationOutcome<crate::artifacts::fem2d::diff::Fem2dDiff> {
+    fn diff(&self, base: &Fem2dSnapshot) -> protocol::MutationOutcome<crate::artifacts::fem2d::diff::Fem2dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Fem2dSnapshot) -> Vec<Fem2dMutation> {
+    fn inverse(&self, base: &Fem2dSnapshot) -> Vec<Fem2dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Add load \"{}\" to case \"{}\"", load_id(&self.load), self.case_id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.case_id.clone()]
     }
 }

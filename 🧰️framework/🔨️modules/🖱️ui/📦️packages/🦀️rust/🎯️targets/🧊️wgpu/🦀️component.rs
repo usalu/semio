@@ -11,18 +11,15 @@ pub mod layout {
 
     //#region 🔖️Action
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct ActionDescriptor {
         pub controller_id: String,
         pub action: String,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
         pub args: Option<DslValue>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct StyleSpec {
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -40,7 +37,6 @@ pub mod layout {
     /// element is not rendered at all (no layout, no paint, no events) — renderers/reconcile must check
     /// this before doing anything with the rest of an element's `UiPresence`.
     #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub enum UiState {
         Introducing,
@@ -54,7 +50,6 @@ pub mod layout {
 
     /// 🧭️ The activity lifecycle of a UI element, orthogonal to [`UiState`] and composable with it.
     #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub enum UiStatus {
         Waiting,
@@ -81,7 +76,6 @@ pub mod layout {
     /// comment in the plugin crate); a renderer that has the full roster may substitute a friendlier
     /// name, but every renderer must always carry SOME text alongside color (never color alone).
     #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct UiPeerMark {
         pub actor: String,
@@ -104,7 +98,6 @@ pub mod layout {
     /// longer `Copy` — since `peers: Vec<UiPeerMark>` owns heap data; `UiNode::presence()`/
     /// `UiControlNode::presence()` therefore return `&UiPresence`, not a by-value copy.
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase", default)]
     pub struct UiPresence {
         #[serde(skip_serializing_if = "is_default")]
@@ -193,12 +186,10 @@ pub mod layout {
     /// asks the owning plugin's `context-menu` WIT export to compute rows fresh (see
     /// `ContextMenuRequest`/`ContextMenuResponse`); nothing here is cached across clicks.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct UiMenuRef {
         pub id: String,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
         pub args: Option<DslValue>,
     }
 
@@ -206,52 +197,38 @@ pub mod layout {
     /// (`framework/core/js/index.ts`). Plugins build these with `MenuBuilder`; the host maps them
     /// through `ContextMenuController` (React) / `render_context_menu` (wgpu) unchanged.
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct ContextMenuItemSpec {
         pub id: String,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub label: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub icon: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub color: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub shortcut: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub disabled: Option<bool>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub separator: Option<bool>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub checked: Option<bool>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub destructive: Option<bool>,
         /// 🎯️ An action id, dispatched via the surface's already-scoped `dispatch(action, args)` — NOT
         /// an `ActionDescriptor` (no separate `controllerId`); matches the pre-existing TS
         /// `ContextMenuItemSpec.action` shape (`framework/core/js/index.ts`), which every emitting
         /// plugin already produces this way.
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub action: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
         pub args: Option<DslValue>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub hover_action: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
         pub hover_args: Option<DslValue>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub children: Option<Vec<ContextMenuItemSpec>>,
     }
 
@@ -354,15 +331,15 @@ pub mod layout {
     fn context_menu_normalize_separators(items: Vec<ContextMenuItemSpec>) -> Vec<ContextMenuItemSpec> {
         let mut out: Vec<ContextMenuItemSpec> = Vec::with_capacity(items.len());
         for item in items {
-            if context_menu_is_bare_separator(&item) && out.last().map(context_menu_is_bare_separator).unwrap_or(false) {
+            if context_menu_is_bare_separator(&item) && out.last().is_some_and(context_menu_is_bare_separator) {
                 continue;
             }
             out.push(item);
         }
-        if out.first().map(context_menu_is_bare_separator).unwrap_or(false) {
+        if out.first().is_some_and(context_menu_is_bare_separator) {
             out.remove(0);
         }
-        while out.last().map(context_menu_is_bare_separator).unwrap_or(false) {
+        while out.last().is_some_and(context_menu_is_bare_separator) {
             out.pop();
         }
         out
@@ -504,10 +481,7 @@ pub mod layout {
     pub fn organize_context_menu(items: Vec<ContextMenuItemSpec>, category_of: &dyn Fn(&str) -> Option<String>) -> Vec<ContextMenuItemSpec> {
         let mut recursed: Vec<ContextMenuItemSpec> = Vec::with_capacity(items.len());
         for item in items {
-            let children = match item.children {
-                Some(children) => Some(organize_context_menu(children, category_of)),
-                None => None,
-            };
+            let children = item.children.map(|children| organize_context_menu(children, category_of));
             recursed.push(ContextMenuItemSpec { children, ..item });
         }
         let items = context_menu_normalize_separators(recursed);
@@ -569,18 +543,15 @@ pub mod layout {
     /// results); `menu` is the `UiMenuRef` the host resolved from `data-menu-id`/a scene surface
     /// convention id (`"world3d"`, `"nodeGraph"`, `"window"`, `"panel:<tabId>"`, ...).
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct ContextMenuHit {
         pub domain: String,
         pub id: String,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub label: Option<String>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct ContextMenuSelectionGroup {
         pub domain: String,
@@ -588,20 +559,17 @@ pub mod layout {
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct ContextMenuTextContext {
         pub caret: usize,
         pub has_selection: bool,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub word: Option<String>,
         pub can_rename: bool,
         pub has_completions: bool,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct ContextMenuSurfaceTarget {
         pub surface_id: String,
@@ -611,12 +579,10 @@ pub mod layout {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         pub selection: Vec<ContextMenuSelectionGroup>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub text: Option<ContextMenuTextContext>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct ContextMenuPoint {
         pub x: f64,
@@ -631,23 +597,18 @@ pub mod layout {
     /// carry `viewState`, matching the TS `PluginContextMenuRequest` wire shape) and splits it into this
     /// smaller struct plus a typed `ViewModel` before calling `ArtifactApp::context_menu`.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct ContextMenuRequest {
         pub menu: UiMenuRef,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub surface: Option<ContextMenuSurfaceTarget>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub window_instance_id: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub point: Option<ContextMenuPoint>,
     }
 
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct ContextMenuResponse {
         pub items: Vec<ContextMenuItemSpec>,
@@ -708,7 +669,6 @@ pub mod layout {
 
     /// 🧭️ Corner of a window stack where a tab chip docks.
     #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub enum WindowStackCorner {
         #[default]
@@ -719,54 +679,43 @@ pub mod layout {
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct WindowLayoutWindowNode {
         #[serde(default = "kind_window")]
         pub kind: String,
         pub window_kind_id: String,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub title: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub instance_id: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub template_id: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub corner: Option<WindowStackCorner>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct WindowLayoutStackNode {
         #[serde(default = "kind_stack")]
         pub kind: String,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub size: Option<f64>,
         #[serde(skip_serializing_if = "Option::is_none", alias = "activeId")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub active_window_kind_id: Option<String>,
         pub children: Vec<WindowLayoutWindowNode>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct WindowLayoutAxisNode {
         pub kind: String,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub size: Option<f64>,
         pub children: Vec<WindowLayoutChild>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(untagged)]
     pub enum WindowLayoutChild {
         Axis(WindowLayoutAxisNode),
@@ -774,7 +723,6 @@ pub mod layout {
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(untagged)]
     pub enum WindowLayoutRoot {
         Axis(WindowLayoutAxisNode),
@@ -782,25 +730,21 @@ pub mod layout {
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct WindowLayout {
         pub root: WindowLayoutRoot,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct NamedLayout {
         pub id: String,
         pub label: String,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub icon_id: Option<IconName>,
         pub layout: WindowLayout,
         pub origin: String,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub group_path: Option<Vec<String>>,
     }
 
@@ -896,7 +840,6 @@ pub mod layout {
 
     //#region 🔖️WindowMeasure
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct MeasureSelectItem {
         pub id: String,
@@ -905,102 +848,77 @@ pub mod layout {
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
     pub enum WindowMeasure {
         Select {
             id: String,
-            #[cfg_attr(feature = "typegen", ts(optional))]
             label: Option<String>,
             value: String,
             items: Vec<MeasureSelectItem>,
-            #[cfg_attr(feature = "typegen", ts(rename = "onChange"))]
             on_change: ActionDescriptor,
         },
         Slider {
             id: String,
-            #[cfg_attr(feature = "typegen", ts(optional))]
             label: Option<String>,
             value: f64,
             min: f64,
             max: f64,
-            #[cfg_attr(feature = "typegen", ts(optional))]
             step: Option<f64>,
             /// 🎚️ Absolute value on the fixed `[min, max]` range that is already preloaded/ready.
             /// Renderers keep `max` stable and draw a highlight from the knob to this extent.
             #[serde(default, skip_serializing_if = "Option::is_none")]
-            #[cfg_attr(feature = "typegen", ts(optional))]
             ready: Option<f64>,
             /// 🌀️ When true, the measure tree leaf shows a loading ring while preload continues.
             #[serde(default, skip_serializing_if = "Option::is_none")]
-            #[cfg_attr(feature = "typegen", ts(optional))]
             loading: Option<bool>,
             /// 🌀️ When true, the measure tree leaf shows a dashed, slower waiting ring; `loading` takes precedence when both are set.
             #[serde(default, skip_serializing_if = "Option::is_none")]
-            #[cfg_attr(feature = "typegen", ts(optional))]
             waiting: Option<bool>,
             /// 🚫️ When true, the slider is inert — used when a parent weight is zero so joint percentages cannot change anything.
             #[serde(default, skip_serializing_if = "Option::is_none")]
-            #[cfg_attr(feature = "typegen", ts(optional))]
             disabled: Option<bool>,
             /// 🪣️ When set, this is a reveal-group id: the host must NOT dispatch `onChange` on every drag
             /// value — only on gesture commit (pointer-up) — and while dragging must locally cut off
             /// instances tagged with this reveal group's id instead. See `WorldInstancesLayer`'s reveal
             /// cutoff store and `revealCutoffs` in `World3dScene.interaction_json`.
             #[serde(default, skip_serializing_if = "Option::is_none")]
-            #[cfg_attr(feature = "typegen", ts(optional))]
             reveal: Option<String>,
-            #[cfg_attr(feature = "typegen", ts(rename = "onChange"))]
             on_change: ActionDescriptor,
         },
         Toggle {
             id: String,
-            #[cfg_attr(feature = "typegen", ts(rename = "iconId"))]
             icon_id: IconName,
-            #[cfg_attr(feature = "typegen", ts(optional))]
             label: Option<String>,
             pressed: bool,
-            #[cfg_attr(feature = "typegen", ts(optional))]
             text: Option<String>,
-            #[cfg_attr(feature = "typegen", ts(rename = "onChange"))]
             on_change: ActionDescriptor,
         },
         Group {
             id: String,
             label: String,
-            #[cfg_attr(feature = "typegen", ts(optional, rename = "defaultOpen"))]
             default_open: Option<bool>,
             /// 🎯️ When `Some(utility_id)`, this group is *utility-scoped chrome*: the shell surfaces it only while
             /// `ViewModel.active_utility_id == utility_id`, and renders it in the dedicated "Utility Options" rail
             /// beside the utility bar — never in the always-on Measures overlay. When absent, the group is a
             /// general measure and stays in the Measures overlay exactly as before. See [`partition_window_measures`].
             #[serde(skip_serializing_if = "Option::is_none")]
-            #[cfg_attr(feature = "typegen", ts(optional, rename = "activeUtilityId"))]
             active_utility_id: Option<String>,
             /// 🎚️ Optional header slider — when set with `on_change`, the group row hosts a weight control (e.g. object-kind probability).
             #[serde(skip_serializing_if = "Option::is_none")]
-            #[cfg_attr(feature = "typegen", ts(optional))]
             value: Option<f64>,
             #[serde(skip_serializing_if = "Option::is_none")]
-            #[cfg_attr(feature = "typegen", ts(optional))]
             min: Option<f64>,
             #[serde(skip_serializing_if = "Option::is_none")]
-            #[cfg_attr(feature = "typegen", ts(optional))]
             max: Option<f64>,
             #[serde(skip_serializing_if = "Option::is_none")]
-            #[cfg_attr(feature = "typegen", ts(optional))]
             step: Option<f64>,
             #[serde(skip_serializing_if = "Option::is_none")]
-            #[cfg_attr(feature = "typegen", ts(optional))]
             ready: Option<f64>,
             #[serde(skip_serializing_if = "Option::is_none")]
-            #[cfg_attr(feature = "typegen", ts(optional))]
             loading: Option<bool>,
             #[serde(skip_serializing_if = "Option::is_none")]
-            #[cfg_attr(feature = "typegen", ts(optional))]
             waiting: Option<bool>,
             #[serde(skip_serializing_if = "Option::is_none")]
-            #[cfg_attr(feature = "typegen", ts(optional, rename = "onChange"))]
             on_change: Option<ActionDescriptor>,
             children: Vec<WindowMeasure>,
         },
@@ -1042,59 +960,43 @@ pub mod layout {
 
     //#region 🔖️WindowEngagement
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct WindowEngagementOption {
         pub id: String,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub label: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub icon_id: Option<IconName>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub pressed: Option<bool>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub disabled: Option<bool>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub action: Option<ActionDescriptor>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct WindowEngagementInput {
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub id: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub value: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub placeholder: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub disabled: Option<bool>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub on_change: Option<ActionDescriptor>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub on_submit: Option<ActionDescriptor>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub on_repeat_last: Option<ActionDescriptor>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub on_abort: Option<ActionDescriptor>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct WindowEngagementStatus {
         pub id: String,
@@ -1102,43 +1004,35 @@ pub mod layout {
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct WindowEngagementPossible {
         pub id: String,
         pub label: String,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub detail: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub action: Option<ActionDescriptor>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct WindowEngagementRingOption {
         pub id: String,
         pub label: String,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub disabled: Option<bool>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct WindowEngagementToggleGroupOption {
         pub id: String,
         pub label: String,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub disabled: Option<bool>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct WindowEngagementSelectItem {
         pub id: String,
@@ -1147,116 +1041,31 @@ pub mod layout {
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
     pub enum WindowEngagementControl {
-        Slider {
-            #[cfg_attr(feature = "typegen", ts(optional))]
-            id: Option<String>,
-            #[cfg_attr(feature = "typegen", ts(optional))]
-            label: Option<String>,
-            value: f64,
-            min: f64,
-            max: f64,
-            #[cfg_attr(feature = "typegen", ts(optional))]
-            step: Option<f64>,
-            #[cfg_attr(feature = "typegen", ts(optional))]
-            unit: Option<String>,
-            #[cfg_attr(feature = "typegen", ts(optional))]
-            disabled: Option<bool>,
-            #[cfg_attr(feature = "typegen", ts(optional, rename = "onChange"))]
-            on_change: Option<ActionDescriptor>,
-            #[cfg_attr(feature = "typegen", ts(optional, rename = "onCommit"))]
-            on_commit: Option<ActionDescriptor>,
-        },
-        Stepper {
-            #[cfg_attr(feature = "typegen", ts(optional))]
-            id: Option<String>,
-            #[cfg_attr(feature = "typegen", ts(optional))]
-            label: Option<String>,
-            value: f64,
-            #[cfg_attr(feature = "typegen", ts(optional))]
-            min: Option<f64>,
-            #[cfg_attr(feature = "typegen", ts(optional))]
-            max: Option<f64>,
-            #[cfg_attr(feature = "typegen", ts(optional))]
-            step: Option<f64>,
-            #[cfg_attr(feature = "typegen", ts(optional))]
-            unit: Option<String>,
-            #[cfg_attr(feature = "typegen", ts(optional))]
-            disabled: Option<bool>,
-            #[cfg_attr(feature = "typegen", ts(optional, rename = "onChange"))]
-            on_change: Option<ActionDescriptor>,
-            #[cfg_attr(feature = "typegen", ts(optional, rename = "onCommit"))]
-            on_commit: Option<ActionDescriptor>,
-        },
-        Ring {
-            #[cfg_attr(feature = "typegen", ts(optional))]
-            id: Option<String>,
-            #[cfg_attr(feature = "typegen", ts(optional))]
-            label: Option<String>,
-            #[cfg_attr(feature = "typegen", ts(optional))]
-            value: Option<String>,
-            options: Vec<WindowEngagementRingOption>,
-            #[cfg_attr(feature = "typegen", ts(optional))]
-            disabled: Option<bool>,
-            #[cfg_attr(feature = "typegen", ts(optional, rename = "onSelect"))]
-            on_select: Option<ActionDescriptor>,
-        },
-        ToggleGroup {
-            #[cfg_attr(feature = "typegen", ts(optional))]
-            id: Option<String>,
-            #[cfg_attr(feature = "typegen", ts(optional))]
-            label: Option<String>,
-            #[cfg_attr(feature = "typegen", ts(optional))]
-            value: Option<String>,
-            options: Vec<WindowEngagementToggleGroupOption>,
-            #[cfg_attr(feature = "typegen", ts(optional))]
-            disabled: Option<bool>,
-            #[cfg_attr(feature = "typegen", ts(optional, rename = "onSelect"))]
-            on_select: Option<ActionDescriptor>,
-        },
-        Select {
-            #[cfg_attr(feature = "typegen", ts(optional))]
-            id: Option<String>,
-            #[cfg_attr(feature = "typegen", ts(optional))]
-            label: Option<String>,
-            #[cfg_attr(feature = "typegen", ts(optional))]
-            value: Option<String>,
-            #[cfg_attr(feature = "typegen", ts(optional))]
-            placeholder: Option<String>,
-            items: Vec<WindowEngagementSelectItem>,
-            #[cfg_attr(feature = "typegen", ts(optional))]
-            disabled: Option<bool>,
-            #[cfg_attr(feature = "typegen", ts(optional, rename = "onChange"))]
-            on_change: Option<ActionDescriptor>,
-        },
+        Slider { id: Option<String>, label: Option<String>, value: f64, min: f64, max: f64, step: Option<f64>, unit: Option<String>, disabled: Option<bool>, on_change: Option<ActionDescriptor>, on_commit: Option<ActionDescriptor> },
+        Stepper { id: Option<String>, label: Option<String>, value: f64, min: Option<f64>, max: Option<f64>, step: Option<f64>, unit: Option<String>, disabled: Option<bool>, on_change: Option<ActionDescriptor>, on_commit: Option<ActionDescriptor> },
+        Ring { id: Option<String>, label: Option<String>, value: Option<String>, options: Vec<WindowEngagementRingOption>, disabled: Option<bool>, on_select: Option<ActionDescriptor> },
+        ToggleGroup { id: Option<String>, label: Option<String>, value: Option<String>, options: Vec<WindowEngagementToggleGroupOption>, disabled: Option<bool>, on_select: Option<ActionDescriptor> },
+        Select { id: Option<String>, label: Option<String>, value: Option<String>, placeholder: Option<String>, items: Vec<WindowEngagementSelectItem>, disabled: Option<bool>, on_change: Option<ActionDescriptor> },
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct WindowEngagement {
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub session_active: Option<bool>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub options: Option<Vec<WindowEngagementOption>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub input: Option<WindowEngagementInput>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub control: Option<WindowEngagementControl>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub controls: Option<Vec<WindowEngagementControl>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub status: Option<Vec<WindowEngagementStatus>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub possible_engagements: Option<Vec<WindowEngagementPossible>>,
     }
 
@@ -1267,7 +1076,6 @@ pub mod layout {
     /// site across ~30 plugins would need `Box::new`/deref updates), out of scope for a mechanical pass.
     #[allow(clippy::large_enum_variant, reason = "boxing is a breaking public API change, out of T1 scope")]
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase", tag = "kind", content = "value")]
     pub enum WindowEngagementSlot {
         #[default]
@@ -1300,7 +1108,6 @@ pub mod layout {
     /// empty collections/`WindowEngagementSlot::None` for windows that don't use a given facet.
     /// Replaces the previously separately-optional `measures`/`engagement` pair on `WindowKindDefinition`.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct WindowOptions {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -1507,7 +1314,6 @@ pub mod utilities {
     use serde::{Deserialize, Serialize};
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub enum UtilityCategory {
         Selection,
@@ -1643,7 +1449,7 @@ pub mod utilities {
         fn utility_toggle_node(controller_id: &str, utility: &DerivedUtilitySpec, active_utility_id: Option<&str>) -> UtilityNode {
             UtilityNode::Toggle {
                 id: utility.id.clone(),
-                icon_id: utility.icon_id.clone(),
+                icon_id: utility.icon_id,
                 label: Some(utility.label.clone()),
                 text: None,
                 title: Some(utility.label.clone()),
@@ -1670,7 +1476,7 @@ pub mod utilities {
                         group_positions.insert(group.clone(), nodes.len());
                         nodes.push(UtilityNode::Collection {
                             id: format!("group:{group}"),
-                            icon_id: utility.icon_id.clone(),
+                            icon_id: utility.icon_id,
                             label: Some(group.clone()),
                             text: None,
                             title: Some(group.clone()),
@@ -1796,7 +1602,6 @@ pub mod role_chrome {
     /// 👁️✏️ Wire-compatible with Rust `semio_framework::AppRole`/TS `AppRole` — exactly `"viewer"`/
     /// `"editor"`, contract freeze §1 C1.
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "lowercase")]
     pub enum ChromeRole {
         Viewer,
@@ -2134,121 +1939,92 @@ pub mod ui {
 
     /// 📥️ Hover-state copy for a `UiStackNode`'s `drop_overlay`: shown while a drag is over the stack, ahead of `drop_action` firing on release.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct UiDropOverlaySpec {
         pub title: Label,
         pub hint: Label,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub accept: Option<String>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct UiTextNode {
         pub value: Label,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub emphasize: Option<bool>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub data_attributes: Option<HashMap<String, String>>,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
-        #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub menu: Option<UiMenuRef>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct UiButtonNode {
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub id: Option<String>,
         pub icon_id: IconName,
         pub label: Label,
         pub action: ActionDescriptor,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub style: Option<StyleSpec>,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
-        #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub menu: Option<UiMenuRef>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct UiSeparatorNode {
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
-        #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub menu: Option<UiMenuRef>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct UiImageNode {
         pub id: String,
         pub src: String,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub alt: Option<Label>,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
-        #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub menu: Option<UiMenuRef>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct UiInputNode {
         pub id: String,
         pub input_kind: String,
         pub value: String,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub placeholder: Option<Label>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub commit: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub min: Option<f64>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub max: Option<f64>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub step: Option<f64>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub accept: Option<String>,
         pub on_change: ActionDescriptor,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
-        #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub menu: Option<UiMenuRef>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct UiSelectItem {
         pub value: String,
@@ -2256,39 +2032,31 @@ pub mod ui {
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct UiSelectNode {
         pub id: String,
         pub value: String,
         pub items: Vec<UiSelectItem>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub placeholder: Option<Label>,
         pub on_change: ActionDescriptor,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
-        #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub menu: Option<UiMenuRef>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct UiToggleNode {
         pub id: String,
         pub icon_id: IconName,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub text: Option<Label>,
         pub on_change: ActionDescriptor,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
-        #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub menu: Option<UiMenuRef>,
     }
 
@@ -2315,7 +2083,6 @@ pub mod ui {
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct UiKeyValueEntry {
         pub label: Label,
@@ -2323,20 +2090,16 @@ pub mod ui {
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct UiKeyValueNode {
         pub entries: Vec<UiKeyValueEntry>,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
-        #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub menu: Option<UiMenuRef>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct UiSliderNode {
         pub id: String,
@@ -2345,19 +2108,15 @@ pub mod ui {
         pub max: f64,
         pub step: f64,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub unit: Option<String>,
         pub on_change: ActionDescriptor,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
-        #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub menu: Option<UiMenuRef>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct UiNumberStepperNode {
         pub id: String,
@@ -2367,15 +2126,12 @@ pub mod ui {
         pub on_absolute: ActionDescriptor,
         pub on_delta: ActionDescriptor,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
-        #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub menu: Option<UiMenuRef>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct UiRingNode {
         pub id: String,
@@ -2383,15 +2139,12 @@ pub mod ui {
         pub t: f64,
         pub on_change: ActionDescriptor,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
-        #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub menu: Option<UiMenuRef>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct UiIconSelectNode {
         pub id: String,
@@ -2400,15 +2153,12 @@ pub mod ui {
         pub classifier_kind: String,
         pub on_change: ActionDescriptor,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
-        #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub menu: Option<UiMenuRef>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(tag = "type", rename_all = "camelCase")]
     pub enum UiControlNode {
         Input(UiInputNode),
@@ -2492,7 +2242,6 @@ pub mod ui {
     }
 
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub enum UiTreeActionPlacement {
         #[default]
@@ -2501,16 +2250,13 @@ pub mod ui {
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct UiTreeItemAction {
         pub icon_id: IconName,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub label: Option<Label>,
         pub action: ActionDescriptor,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub placement: Option<UiTreeActionPlacement>,
     }
 
@@ -2522,50 +2268,37 @@ pub mod ui {
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct UiTreeItemNode {
         pub id: String,
         pub label: Label,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub description: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none", alias = "icon")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub icon_id: Option<IconName>,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
-        #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
         pub presence: UiPresence,
         #[serde(skip_serializing_if = "Option::is_none", alias = "expanded")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub default_open: Option<bool>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub action: Option<ActionDescriptor>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub actions: Option<Vec<UiTreeItemAction>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub draggable: Option<bool>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub drag_data: Option<HashMap<String, String>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub items: Option<Vec<UiTreeItemNode>>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub control: Option<UiControlNode>,
         /// 👁️ Domain "eye toggle" flag: the row stays visible, dimmed, and clickable (to un-hide) —
         /// this is NOT `presence.state == Hidden`, which means not rendered at all.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub dimmed: Option<bool>,
         /// 🖱️ Row-level context-menu address — most rows share one `menu.id` across a tree with the row
         /// id carried in `args` (e.g. `{"id": row.id}`), rather than minting a unique menu id per row.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub menu: Option<UiMenuRef>,
     }
 
@@ -2592,42 +2325,33 @@ pub mod ui {
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct UiTreeSectionNode {
         pub id: String,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub label: Option<Label>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub default_open: Option<bool>,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
-        #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
         pub presence: UiPresence,
         pub items: Vec<UiTreeItemNode>,
     }
 
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct UiTreeNode {
         pub sections: Vec<UiTreeSectionNode>,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
-        #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
         pub presence: UiPresence,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub drop_action: Option<ActionDescriptor>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub menu: Option<UiMenuRef>,
         /// 🕹️ Binds this rendered tree to an app-declared `InteractionDefinition` domain — the framework
         /// (not the app) then owns the domain's selection/hover via `interactionSelect`/`interactionHover`,
         /// stamped back onto item `presence` by `ui_tree_stamp_presence`. Replaces the deleted per-app
         /// `selected_ids`/`highlighted_ids`/`selection_change` wire surface.
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub interaction_domain: Option<String>,
     }
 
@@ -3003,7 +2727,6 @@ pub mod ui {
 
     //#region 🔖️ComponentScenes
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     pub enum SurfaceKind {
         #[serde(rename = "canvas-2d")]
         Canvas2d,
@@ -3076,6 +2799,7 @@ pub mod ui {
     // own `🦀️scenes.rs` header for why (that crate is wasm-safe and depends on nothing beyond
     // `ui_contract`/`serde`, so it cannot carry either type).
     pub use ui_scene::{
+        decode as decode_surface_doc, encode as encode_surface_doc,
         BlockListScene, Board2dScene, Canvas2dScene, DiffViewScene, EventFeedScene, GraphTimelineScene, IconRenderScene, InkCanvasScene, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord,
         NodeGraphOperatorRecord, NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, Paint2dScene, SceneDoc, TableScene, TextEditorScene, TiledMapScene, VirtualFileSystemScene, World3dScene,
     };
@@ -3210,7 +2934,7 @@ pub mod ui {
     }
     //#endregion 🔖️TableCells
 
-    /** @emoji 🖼️ Paint-2d scene: WASM `RasterSession` sync channels for the composite/navigator windows, see framework/surface/paint/rs/lib.rs. */
+    /* @emoji 🖼️ Paint-2d scene: WASM `RasterSession` sync channels for the composite/navigator windows, see framework/surface/paint/rs/lib.rs. */
     // 🎬️ `Paint2dScene`, `IconRenderScene`, `VirtualFileSystemScene`, `TiledMapScene` (+ its default
     // fns and `base()`), `Board2dScene` (+ its default fns and `base()`), `InkCanvasScene` (+ its
     // default fn and `base()`), `GraphTimelineScene`, `DiffViewScene`, and `EventFeedScene` all moved
@@ -3230,7 +2954,6 @@ pub mod ui {
     // `BlockPaletteEntry` above stays — `palette_json` is an opaque string on the moved type.
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
     #[serde(rename_all = "camelCase")]
     pub struct UiExternalSlotNode {
         pub plugin_id: String,
@@ -3238,10 +2961,8 @@ pub mod ui {
         pub body_key: String,
         pub params_json: String,
         #[serde(default, skip_serializing_if = "UiPresence::is_default")]
-        #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
         pub presence: UiPresence,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pub menu: Option<UiMenuRef>,
     }
 
@@ -3686,6 +3407,11 @@ pub mod ui {
     pub fn build_graph_timeline_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: GraphTimelineScene) -> UiNode {
         let UiNode::ComponentScene(node) = component_scene(surface_id, controller_id, SurfaceKind::GraphTimeline, None, None, None, None, None, None, None, None, None, None, None) else { unreachable!() };
         UiNode::ComponentScene(UiComponentSceneNode { graph_timeline: Some(scene), ..node })
+    }
+
+    pub fn build_block_list_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: BlockListScene) -> UiNode {
+        let UiNode::ComponentScene(node) = component_scene(surface_id, controller_id, SurfaceKind::BlockList, None, None, None, None, None, None, None, None, None, None, None) else { unreachable!() };
+        UiNode::ComponentScene(UiComponentSceneNode { block_list: Some(scene), ..node })
     }
 
     pub fn build_diff_view_scene(surface_id: impl Into<String>, controller_id: impl Into<String>, scene: DiffViewScene) -> UiNode {

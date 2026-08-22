@@ -43,20 +43,29 @@ pub struct HttpResponse {
 /// ⚠️ A transport-layer failure (connection refused, DNS, closed socket, …) — distinct from an
 /// HTTP error status (that decodes to `DirectoryClientError::Http`/`Unauthorized`) or a JSON
 /// decode failure (`DirectoryClientError::Decode`).
-#[derive(Clone, Debug, thiserror::Error, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum TransportError {
-    #[error("transport io: {0}")]
     Io(String),
     /// 🛑️ The `OperationContext` handed to this call was already cancelled, or was cancelled
     /// before the call finished — a transport checks this itself (rather than relying solely on
     /// the caller's own pre-check) so an in-flight call started just before cancellation still
     /// surfaces it instead of returning a stale success.
-    #[error("cancelled")]
     Cancelled,
     /// ⏰️ `ctx.deadline_ms` elapsed before this call could complete.
-    #[error("deadline exceeded")]
     DeadlineExceeded,
 }
+
+impl std::fmt::Display for TransportError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Io(detail) => write!(formatter, "transport io: {detail}"),
+            Self::Cancelled => formatter.write_str("cancelled"),
+            Self::DeadlineExceeded => formatter.write_str("deadline exceeded"),
+        }
+    }
+}
+
+impl std::error::Error for TransportError {}
 
 /// 🧵️ Native transports cross worker turns; browser transports remain local to the wasm event loop.
 #[cfg(not(target_arch = "wasm32"))]
@@ -99,8 +108,6 @@ impl<T> DirectoryConnectionPlatform for T {}
 // runtime-chosen `DirectoryWsConnection` implementation, so the associated type `Ws` pushes that
 // choice to the implementor exactly per the `ResourceResolver` precedent, replacing
 // `Box<dyn DirectoryWsConnection>`.
-#[cfg_attr(not(target_arch = "wasm32"), async_trait::async_trait)]
-#[cfg_attr(target_arch = "wasm32", async_trait::async_trait(?Send))]
 pub trait DirectoryTransport: DirectoryTransportPlatform {
     type Ws: DirectoryWsConnection;
     async fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError>;
@@ -127,22 +134,54 @@ pub enum DirectoryWsPoll {
 //#endregion 🔖️Transport
 
 //#region 🔖️Errors
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum DirectoryClientError {
-    #[error(transparent)]
-    Transport(#[from] TransportError),
-    #[error("decode: {0}")]
-    Decode(#[from] serde_json::Error),
-    #[error("unauthorized")]
+    Transport(TransportError),
+    Decode(serde_json::Error),
     Unauthorized,
-    #[error("http {status}: {body}")]
-    Http { status: u16, body: String },
+    Http {
+        status: u16,
+        body: String,
+    },
     /// 🛑️ `ctx.cancel` was already cancelled BEFORE this call ever reached the transport — checked
     /// in `DirectoryClient::request_json`/`DirectoryStream::recv` up front, so a cancelled caller
     /// never even builds a request. `TransportError::Cancelled` (via the `Transport` variant above)
     /// is the other half: cancelled WHILE the transport call was in flight.
-    #[error("cancelled")]
     Cancelled,
+}
+
+impl std::fmt::Display for DirectoryClientError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Transport(error) => std::fmt::Display::fmt(error, formatter),
+            Self::Decode(error) => write!(formatter, "decode: {error}"),
+            Self::Unauthorized => formatter.write_str("unauthorized"),
+            Self::Http { status, body } => write!(formatter, "http {status}: {body}"),
+            Self::Cancelled => formatter.write_str("cancelled"),
+        }
+    }
+}
+
+impl std::error::Error for DirectoryClientError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Transport(error) => Some(error),
+            Self::Decode(error) => Some(error),
+            _ => None,
+        }
+    }
+}
+
+impl From<TransportError> for DirectoryClientError {
+    fn from(error: TransportError) -> Self {
+        Self::Transport(error)
+    }
+}
+
+impl From<serde_json::Error> for DirectoryClientError {
+    fn from(error: serde_json::Error) -> Self {
+        Self::Decode(error)
+    }
 }
 //#endregion 🔖️Errors
 
@@ -288,7 +327,7 @@ pub const HUB_RECONNECT_MAX_MS: u64 = 30_000;
 /// (contract §C2). Pure and independently testable, mirroring `🏪️store/🔄️sync`'s `hub_ws_url`.
 pub fn directory_ws_url(base_url: &str, token: &str, since: u64) -> String {
     let secure = base_url.starts_with("https://") || base_url.starts_with("wss://");
-    let authority = base_url.split_once("://").map(|(_, rest)| rest).unwrap_or(base_url).split('/').next().unwrap_or(base_url);
+    let authority = base_url.split_once("://").map_or(base_url, |(_, rest)| rest).split('/').next().unwrap_or(base_url);
     let scheme = if secure { "wss" } else { "ws" };
     let encoded_token = urlencoding_component(token);
     format!("{scheme}://{authority}/directory/ws?token={encoded_token}&since={since}")
@@ -449,7 +488,7 @@ pub mod native {
 
     /// 🐎️ The ONE place this crate still names `ureq` directly — a plain, SYNCHRONOUS
     /// `HttpTransport` for `HttpPool`. No thread spawn here anymore: `HttpPool::request` runs this
-    /// through `ComputePool::run_blocking`, which admits it onto a BOUNDED semaphore (replacing the
+    /// through `ComputePool::run_io`, which admits it onto a BOUNDED semaphore (replacing the
     /// old unbounded `std::thread::spawn` per call) and races it against `ctx.deadline_ms` via the
     /// shared `HostAsyncRuntime`.
     struct UreqHttpTransport {
@@ -534,13 +573,18 @@ pub mod native {
     /// itself cheap to clone — `Arc`/`ScopeHandle`/`PackageId`/`Copy` `ActorId`) so a host that
     /// wants several `DirectoryClient`s sharing the SAME pool/quota bucket can build one transport
     /// once and `.clone()` it per client, rather than re-deriving the pool per client.
-    #[derive(Clone)]
     pub struct NativeDirectoryTransport<R: HostAsyncRuntime> {
         runtime: Arc<R>,
         scope: ScopeHandle,
         http_pool: Arc<HttpPool>,
         package: PackageId,
         actor: ActorId,
+    }
+
+    impl<R: HostAsyncRuntime> Clone for NativeDirectoryTransport<R> {
+        fn clone(&self) -> Self {
+            Self { runtime: Arc::clone(&self.runtime), scope: self.scope.clone(), http_pool: Arc::clone(&self.http_pool), package: self.package.clone(), actor: self.actor }
+        }
     }
 
     impl<R: HostAsyncRuntime> NativeDirectoryTransport<R> {
@@ -565,7 +609,6 @@ pub mod native {
         }
     }
 
-    #[async_trait::async_trait]
     impl<R: HostAsyncRuntime + 'static> DirectoryTransport for NativeDirectoryTransport<R> {
         type Ws = TungsteniteConnection;
         async fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError> {
@@ -646,7 +689,6 @@ pub mod browser {
         }
     }
 
-    #[async_trait::async_trait(?Send)]
     impl DirectoryTransport for BrowserDirectoryTransport {
         type Ws = BrowserWsConnection;
         async fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError> {
@@ -787,7 +829,6 @@ pub mod test_support {
         fn close(&mut self) {}
     }
 
-    #[async_trait::async_trait]
     impl super::DirectoryTransport for FakeTransport {
         type Ws = FakeWs;
         async fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, _body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError> {
@@ -795,7 +836,7 @@ pub mod test_support {
                 if ctx.cancel.is_cancelled().await {
                     return Err(TransportError::Cancelled);
                 }
-                futures_lite::future::yield_now().await;
+                semio_framework_async::yield_once().await;
             }
             if ctx.cancel.is_cancelled().await {
                 return Err(TransportError::Cancelled);
@@ -948,7 +989,7 @@ mod tests {
     /// 🧪️ The property this ticket asks for: an IN-FLIGHT request — already past
     /// `request_json`'s up-front check, genuinely inside the transport call — is cancelled once its
     /// `OperationContext` is cancelled. `FakeTransport::yields_before_response` gives `http()` two
-    /// cooperative yield points (checking `ctx.cancel` at each); `futures_lite::future::zip` drives
+    /// cooperative yield points (checking `ctx.cancel` at each); `semio_framework_async::join2` drives
     /// the request future and a "canceller" future that cancels after ONE yield in lockstep on the
     /// SAME thread — no real time, no real thread, fully deterministic.
     #[semio_framework_async_macros::async_test]
@@ -961,10 +1002,10 @@ mod tests {
 
         let request_fut = client.spaces(&ctx);
         let canceller_fut = async {
-            futures_lite::future::yield_now().await;
+            semio_framework_async::yield_once().await;
             ctx.cancel.cancel().await;
         };
-        let (result, ()) = futures_lite::future::zip(request_fut, canceller_fut).await;
+        let (result, ()) = semio_framework_async::join2(request_fut, canceller_fut).await;
         assert!(matches!(result, Err(DirectoryClientError::Transport(TransportError::Cancelled))), "an in-flight request must observe cancellation, got {result:?}");
         assert!(transport.requests.lock().unwrap().is_empty(), "the cancelled call must never reach the scripted response — the response stays queued, unconsumed");
     }

@@ -8,7 +8,7 @@ use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::snapshot::Svg
 use crate::artifacts::svg::{STDIO_SVG_DOCUMENT_SCHEMA, SVG_TINY_DIALECT};
 use crate::editor::svg_tiny::modes::edit;
 use crate::editor::svg_tiny::modes::edit::windows::main;
-use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode};
+use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 
@@ -62,7 +62,7 @@ impl ArtifactEditor for SvgTinyEditor {
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             SvgTinyEditCommand::SetPixelRegion { source } => match <SvgSnapshot as store::ArtifactDsl>::parse_dsl(source) {
-                Ok(snapshot) => Ok(Emit::mutations(vec![SvgMutation::SetSnapshot { snapshot }]).await),
+                Ok(snapshot) => Ok(Emit::mutations(vec![SvgMutation::SetSnapshot { snapshot }])),
                 Err(_) => Ok(Emit::default()),
             },
         }

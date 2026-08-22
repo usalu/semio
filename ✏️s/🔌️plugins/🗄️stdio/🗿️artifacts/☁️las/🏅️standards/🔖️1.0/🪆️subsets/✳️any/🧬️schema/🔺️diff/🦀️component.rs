@@ -2220,7 +2220,7 @@ impl DiffCodec for LasDiff {
         Ok(out)
     }
     fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        async fn go(bytes: &[u8]) -> Result<LasDiff, String> {
+        fn go(bytes: &[u8]) -> Result<LasDiff, String> {
             let mut reader = store::ByteReader::new(bytes);
             let format = reader.read_u8().map_err(|e| e.to_string())?;
             if format != store::pack_rt::OP_BINARY_FORMAT {

@@ -1,7 +1,19 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
+use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
-use semio_framework_plugin::{ExecutionMode, Plugin};
+use semio_framework_plugin::plugin_app_close_prelude::*;
+use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+
+//#region 🗃️Apps
+/// 🗃️ Closed runtime app fleet for the sourcing editor and viewer surfaces.
+semio_framework_dispatch_macros::dyn_enum_close! {
+    pub enum SourcingApps: PluginApp {
+        Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::sourcing::SourcingCurateApp>>),
+        Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::sourcing::SourcingViewer>>),
+    }
+}
+//#endregion 🗃️Apps
 
 /// 🔌️ Builds the plugin surface for host registration. Atomic cutover (ticket
 /// 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM): `.declare_artifact(...)` (new declaration
@@ -18,8 +30,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// beyond the sandbox default — nothing in this crate's own effects, all UI-chrome/RPC `Effect`
 /// variants with no documented `CapabilityId`, justifies otherwise), and it asks the broker for
 /// document write access to persist edits.
-pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
-    Plugin::builder("sourcing")
+pub fn plugin() -> Result<Plugin<SourcingApps>, semio_framework_plugin::PluginAssemblyError> {
+    Plugin::<SourcingApps>::builder("sourcing")
         .label("Sourcing")
         .version("0.1.0")
         .declare_artifact(crate::artifacts::curate::artifact())

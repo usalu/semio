@@ -9,7 +9,7 @@
 use base64::Engine;
 use neural_engine::{Atom, Cardinality, ChannelSpec, Dictionary, EvalError, FieldSpec, Operator, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
 use semio_framework_3d::engine::{ParamDomain, PointClassification, Vec3};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{block_on, Brep, BrepKernel, GeometryHandle, GeometryKind};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle, GeometryKind};
 use std::collections::{HashMap, HashSet};
 use std::sync::{Mutex, OnceLock, RwLock};
 
@@ -76,7 +76,7 @@ pub fn kind_label(kind: GeometryKind) -> &'static str {
 }
 
 pub fn geometry_dict(kernel: &Brep, handle: &GeometryHandle) -> Result<Dictionary, EvalError> {
-    let kind = block_on(kernel.kind(handle)).map_err(map_kernel_error)?;
+    let kind = kernel.kind(handle).map_err(map_kernel_error)?;
     Ok(Dictionary::with_schema("geometry").insert("handle", Value::Atom(Atom::String(handle.as_str().to_string()))).insert("kind", Value::Atom(Atom::String(kind_label(kind).into()))))
 }
 
@@ -195,9 +195,9 @@ pub fn points_to_grid(points: &[Vec3], rows: usize) -> Result<Vec<Vec<Vec3>>, Ev
 
 pub fn wire_from_points(kernel: &mut Brep, points: &[Vec3]) -> Result<GeometryHandle, EvalError> {
     if points.len() >= 2 {
-        block_on(kernel.polyline_wire(points)).map_err(map_kernel_error)
+        kernel.polyline_wire(points).map_err(map_kernel_error)
     } else if let Some(point) = points.first() {
-        block_on(kernel.vertex(*point)).map_err(map_kernel_error)
+        kernel.vertex(*point).map_err(map_kernel_error)
     } else {
         Err(EvalError::InvalidInput("no intersection".into()))
     }
@@ -418,7 +418,7 @@ impl Operator for BrepDeconstruct {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let shape = read_geometry(input, "brep")?;
-            let topology = block_on(kernel.deconstruct(&shape)).map_err(map_kernel_error)?;
+            let topology = kernel.deconstruct(&shape).map_err(map_kernel_error)?;
             Ok(Dictionary::new()
                 .insert("brep", Value::Dictionary(geometry_dict(kernel, &shape)?))
                 .insert("vertex", Value::Dictionary(topology_list("vertex", topology.vertices)))
@@ -441,20 +441,49 @@ pub fn text_schema() -> Schema {
 
 // #region ⚠️ Errors
 /// 🧯️ Internal error type for the brep module's media import/export bridging helpers (`export_solid_json`/`import_solid_json` still surface it flattened to JSON `{"error"}` strings, matching prior behaviour byte-for-byte).
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum BrepModuleError {
-    #[error("brep kernel lock poisoned")]
     LockPoisoned,
-    #[error(transparent)]
-    Kernel(#[from] semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::BrepError),
-    #[error(transparent)]
-    Codec(#[from] EvalError),
-    #[error("{0}")]
+    Kernel(semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::BrepError),
+    Codec(EvalError),
     Mesh(String),
-    #[error("unsupported solid export format: {0}")]
     UnsupportedExportFormat(String),
-    #[error("unsupported solid import format: {0}")]
     UnsupportedImportFormat(String),
+}
+
+impl std::fmt::Display for BrepModuleError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::LockPoisoned => formatter.write_str("brep kernel lock poisoned"),
+            Self::Kernel(error) => std::fmt::Display::fmt(error, formatter),
+            Self::Codec(error) => std::fmt::Display::fmt(error, formatter),
+            Self::Mesh(detail) => formatter.write_str(detail),
+            Self::UnsupportedExportFormat(format) => write!(formatter, "unsupported solid export format: {format}"),
+            Self::UnsupportedImportFormat(format) => write!(formatter, "unsupported solid import format: {format}"),
+        }
+    }
+}
+
+impl std::error::Error for BrepModuleError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Kernel(error) => Some(error),
+            Self::Codec(error) => Some(error),
+            _ => None,
+        }
+    }
+}
+
+impl From<semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::BrepError> for BrepModuleError {
+    fn from(error: semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::BrepError) -> Self {
+        Self::Kernel(error)
+    }
+}
+
+impl From<EvalError> for BrepModuleError {
+    fn from(error: EvalError) -> Self {
+        Self::Codec(error)
+    }
 }
 // #endregion ⚠️ Errors
 
@@ -463,7 +492,7 @@ pub enum BrepModuleError {
 pub fn retain_geometry_handles(live: &[String]) {
     let live_set: HashSet<String> = live.iter().cloned().collect();
     if let Ok(mut guard) = kernel().write() {
-        block_on(guard.retain(&live_set));
+        guard.retain(&live_set);
     }
     evict_mesh_cache_for_handles(live);
 }
@@ -479,7 +508,7 @@ pub fn tessellate_geometry(handle: &str, tolerance: f64) -> Result<semio_framewo
     let guard = kernel().read().map_err(|_| "brep kernel lock poisoned".to_string())?;
     let mesh = {
         let geometry = GeometryHandle(handle.to_string());
-        block_on(guard.tessellate(&geometry, tolerance)).map_err(|error| error.to_string())?
+        guard.tessellate(&geometry, tolerance).map_err(|error| error.to_string())?
     };
     let data = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer(&mesh);
     if let Ok(mut cache) = mesh_cache().lock() {
@@ -499,7 +528,7 @@ pub fn tessellate_geometry_json_for_wasm(handle: &str, tolerance: f64) -> String
 pub fn dispose_geometry(handle: &str) {
     evict_mesh_cache_for_handle(handle);
     if let Ok(mut kernel) = kernel().write() {
-        block_on(kernel.dispose(&GeometryHandle(handle.to_string())));
+        kernel.dispose(&GeometryHandle(handle.to_string()));
     }
 }
 // #endregion 🔖️Tessellation
@@ -511,9 +540,9 @@ pub fn export_solid_json(handles: &[String], format: &str, deflection: f64) -> S
     let outcome: Result<(String, bool), BrepModuleError> = kernel().read().map_err(|_| BrepModuleError::LockPoisoned).and_then(|guard| {
         let guard = &**guard;
         match format {
-            "step" => block_on(guard.export_step(&shapes)).map(|text| (text, false)).map_err(BrepModuleError::from),
-            "obj" => block_on(guard.export_obj(&shapes, deflection)).map(|text| (text, false)).map_err(BrepModuleError::from),
-            "stl" => block_on(guard.export_stl(&shapes, deflection)).map(|data| (encode_base64(&data), true)).map_err(BrepModuleError::from),
+            "step" => guard.export_step(&shapes).map(|text| (text, false)).map_err(BrepModuleError::from),
+            "obj" => guard.export_obj(&shapes, deflection).map(|text| (text, false)).map_err(BrepModuleError::from),
+            "stl" => guard.export_stl(&shapes, deflection).map(|data| (encode_base64(&data), true)).map_err(BrepModuleError::from),
             "glb" => export_glb_via_tessellation(guard, &shapes, deflection).map(|data| (encode_base64(&data), true)),
             other => Err(BrepModuleError::UnsupportedExportFormat(other.to_string())),
         }
@@ -529,7 +558,7 @@ pub fn export_glb_via_tessellation(kernel: &Brep, shapes: &[GeometryHandle], def
     use semio_framework::MeshExporter;
     let mut merged = semio_framework::MeshData::default();
     for shape in shapes {
-        let transfer = block_on(kernel.tessellate(shape, deflection))?;
+        let transfer = kernel.tessellate(shape, deflection)?;
         let mesh = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::mesh_data_from_mesh_transfer(&transfer);
         let offset = (merged.positions.len() / 3) as u32;
         merged.positions.extend(mesh.positions);
@@ -544,9 +573,9 @@ pub fn import_solid_json(format: &str, data: &str, tolerance: f64) -> String {
     let outcome: Result<Vec<String>, BrepModuleError> = kernel().write().map_err(|_| BrepModuleError::LockPoisoned).and_then(|mut guard| {
         let guard = &mut **guard;
         match format {
-            "step" => block_on(guard.import_step(data)).map(|handles| handles.into_iter().map(|handle| handle.0).collect()).map_err(BrepModuleError::from),
-            "obj" => block_on(guard.import_obj(data, tolerance)).map(|handle| vec![handle.0]).map_err(BrepModuleError::from),
-            "stl" => decode_base64(data).map_err(BrepModuleError::from).and_then(|bytes| block_on(guard.import_stl(&bytes, tolerance)).map(|handle| vec![handle.0]).map_err(BrepModuleError::from)),
+            "step" => guard.import_step(data).map(|handles| handles.into_iter().map(|handle| handle.0).collect()).map_err(BrepModuleError::from),
+            "obj" => guard.import_obj(data, tolerance).map(|handle| vec![handle.0]).map_err(BrepModuleError::from),
+            "stl" => decode_base64(data).map_err(BrepModuleError::from).and_then(|bytes| guard.import_stl(&bytes, tolerance).map(|handle| vec![handle.0]).map_err(BrepModuleError::from)),
             "glb" => decode_base64(data).map_err(BrepModuleError::from).and_then(|bytes| import_glb_via_tessellation(guard, &bytes, tolerance)),
             other => Err(BrepModuleError::UnsupportedImportFormat(other.to_string())),
         }
@@ -562,6 +591,6 @@ pub fn import_glb_via_tessellation(kernel: &mut Brep, bytes: &[u8], tolerance: f
     use semio_framework::MeshImporter;
     let mesh = semio_framework::GlbImporter.import(bytes).map_err(BrepModuleError::Mesh)?;
     let obj_text = semio_framework::mesh_to_obj(&mesh, "glb-import");
-    block_on(kernel.import_obj(&obj_text, tolerance)).map(|handle| vec![handle.0]).map_err(BrepModuleError::from)
+    kernel.import_obj(&obj_text, tolerance).map(|handle| vec![handle.0]).map_err(BrepModuleError::from)
 }
 // #endregion 🔖️MediaExport

@@ -54,7 +54,7 @@ impl ArtifactInferrer for crate::artifacts::semio::standards::v1::subsets::brep:
 
     async fn infer_cached(snapshot: &Self::Snapshot, cache: &mut store::InferenceCache, session: &mut store::InferenceSession) -> Self::Inference {
         let _ = session;
-        let report = store::infer_field::<SemioBrepSnapshot, BrepValidationReport>(snapshot, Some(cache)).await.remove("document").unwrap_or_default();
+        let report = store::infer_field::<SemioBrepSnapshot, BrepValidationReport>(snapshot, Some(cache)).remove("document").unwrap_or_default();
         SemioBrepInference { validation_report: report }
     }
 }

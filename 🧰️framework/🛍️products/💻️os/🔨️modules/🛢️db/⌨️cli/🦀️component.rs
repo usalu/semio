@@ -149,6 +149,19 @@ async fn usage(message: &str) -> i32 {
 fn open_fs_storage(root: &Path) -> Result<db::storage::FsStorage, db::db_ids::DbError> {
     db::actor::block_on(db::storage::FsStorage::open_inline(root))
 }
+
+/// 🧵️ The CLI process's one headless worker pool, shared by every database authority the
+/// selected subcommand opens.
+fn cli_worker_pool() -> std::sync::Arc<db::semio_framework_async::WorkerPool> {
+    let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
+    let config = db::semio_framework_async::WorkerPoolConfig::new(db::semio_framework_async::ProcessKind::HeadlessBatch, cores);
+    std::sync::Arc::new(db::semio_framework_async::process_worker_pool(config))
+}
+
+/// 🗄️ Opens a database and injects the CLI process worker pool before any authority can spawn.
+async fn open_database(root: &Path, profile: db::Profile) -> Result<db::Database, db::db_ids::DbError> {
+    Ok(db::Database::open_at(root, profile).await?.with_pool(cli_worker_pool()))
+}
 //#endregion 🔖️AsyncBridge
 
 //#region 🔖️Health
@@ -182,7 +195,7 @@ async fn cmd_inspect(rest: &[String]) -> i32 {
         Ok(profile) => profile,
         Err(message) => return usage(&message).await,
     };
-    let database = match db::Database::open_at(Path::new(root), profile).await {
+    let database = match open_database(Path::new(root), profile).await {
         Ok(database) => database,
         Err(err) => return fail("open", err).await,
     };
@@ -225,7 +238,7 @@ async fn cmd_doc(rest: &[String]) -> i32 {
         Ok(profile) => profile,
         Err(message) => return usage(&message).await,
     };
-    let database = match db::Database::open_at(Path::new(root), profile).await {
+    let database = match open_database(Path::new(root), profile).await {
         Ok(database) => database,
         Err(err) => return fail("open", err).await,
     };
@@ -472,7 +485,7 @@ async fn cmd_verify(rest: &[String]) -> i32 {
     let ids: Vec<String> = match positional.get(1) {
         Some(id) => vec![id.clone()],
         None => {
-            let database = match db::Database::open_at(Path::new(root), profile).await {
+            let database = match open_database(Path::new(root), profile).await {
                 Ok(database) => database,
                 Err(err) => return fail("open", err).await,
             };
@@ -527,7 +540,7 @@ async fn cmd_query(rest: &[String]) -> i32 {
         Ok(profile) => profile,
         Err(message) => return usage(&message).await,
     };
-    let database = match db::Database::open_at(Path::new(root), profile).await {
+    let database = match open_database(Path::new(root), profile).await {
         Ok(database) => database,
         Err(err) => return fail("open", err).await,
     };
@@ -662,7 +675,7 @@ async fn cmd_compact(rest: &[String]) -> i32 {
         Ok(profile) => profile,
         Err(message) => return usage(&message).await,
     };
-    let database = match db::Database::open_at(Path::new(root), profile).await {
+    let database = match open_database(Path::new(root), profile).await {
         Ok(database) => database,
         Err(err) => return fail("open", err).await,
     };
@@ -700,7 +713,7 @@ async fn cmd_health(rest: &[String]) -> i32 {
         Ok(profile) => profile,
         Err(message) => return usage(&message).await,
     };
-    let database = match db::Database::open_at(Path::new(root), profile).await {
+    let database = match open_database(Path::new(root), profile).await {
         Ok(database) => database,
         Err(err) => return fail("open", err).await,
     };
@@ -724,7 +737,7 @@ fn describe_conflict_kind(kind: &db::conflict::ConflictKind) -> String {
 }
 
 fn touched_command(command_id: &str, actor: &str, kind: &str, hlc_actor: u64, paths: &str) -> db::conflict::CommandTouch {
-    let timestamp = db::actor::block_on(async { protocol::HybridLogicalTimestamp::new(hlc_actor, now_ms().await).await });
+    let timestamp = db::actor::block_on(async { protocol::HybridLogicalTimestamp::new(hlc_actor, now_ms().await) });
     let touch = db::conflict::CommandTouch::new(protocol::MutationId(command_id.to_string()), protocol::ActorId(actor.to_string()), db::conflict::CommandKind::from(kind), timestamp);
     paths.split(',').map(str::trim).filter(|path| !path.is_empty()).fold(touch, |touch, path| touch.touch(db::state::TouchedRegion::write(path)))
 }
@@ -898,7 +911,7 @@ async fn cmd_profile(rest: &[String]) -> i32 {
         Ok(profile) => profile,
         Err(message) => return usage(&message).await,
     };
-    let database = match db::Database::open_at(Path::new(root), profile).await {
+    let database = match open_database(Path::new(root), profile).await {
         Ok(database) => database,
         Err(err) => return fail("open", err).await,
     };
@@ -924,7 +937,7 @@ async fn cmd_profile(rest: &[String]) -> i32 {
             dependencies: Vec::new(),
             diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::Value::Object(forward)).await.unwrap_or_default() },
             inverse: protocol::InverseMutation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::Value::Object(backward)).await.unwrap_or_default() },
-            timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms().await).await,
+            timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms().await),
         };
         let batch = match db::document::CommandBatch::new(vec![envelope]).await {
             Ok(batch) => batch,
@@ -1028,14 +1041,14 @@ mod tests {
             dependencies: Vec::new(),
             diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::json!({"greeting": "hello"})).await.unwrap() },
             inverse: protocol::InverseMutation { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: db::document::encode_pathmap_json(&serde_json::json!({"greeting": null})).await.unwrap() },
-            timestamp: protocol::HybridLogicalTimestamp::new(0, 0).await,
+            timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         }
     }
 
     /// 🌱️ Seeds `doc-1` at `root` with one committed, `Fsync`-durable transaction through the real
     /// `Database::create_document`/`ArtifactHandle::submit` round trip, then cleanly shuts down.
     async fn seed_document(root: &Path) {
-        let database = db::Database::open_at(root, db::Profile::Test).await.unwrap();
+        let database = open_database(root, db::Profile::Test).await.unwrap();
         let document = protocol::ArtifactId("doc-1".to_string());
         let handle = database.create_document(db::ArtifactSpec::new(document.clone()).await).await.unwrap();
         let batch = db::document::CommandBatch::new(vec![test_envelope("op-1", &document).await]).await.unwrap();

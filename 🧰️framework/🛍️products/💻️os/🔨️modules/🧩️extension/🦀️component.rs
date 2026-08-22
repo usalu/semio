@@ -4,31 +4,72 @@
 use std::collections::BTreeMap;
 use std::io::{Cursor, Read, Seek, Write};
 
-use serde::{Deserialize, Serialize};
-use thiserror::Error;
-
 use crate::os_semio::{unwrap_binary, wrap_binary, Component, SemioEnvelope, SemioError};
+use serde::{Deserialize, Serialize};
 
 //#region 🔖️Errors
 /// ⚠️ Failures packing, unpacking, or verifying an `.sxt` extension package.
-#[derive(Debug, Error)]
+#[derive(Debug)]
 pub enum ExtensionPackageError {
-    #[error("semio envelope error: {0}")]
-    Envelope(#[from] SemioError),
-    #[error("unexpected extension package envelope: {0}")]
+    Envelope(SemioError),
     UnexpectedEnvelope(String),
-    #[error("zip error: {0}")]
-    Zip(#[from] zip::result::ZipError),
-    #[error("io error: {0}")]
-    Io(#[from] std::io::Error),
-    #[error("manifest json error: {0}")]
-    ManifestJson(#[from] serde_json::Error),
-    #[error("missing zip entry: {0}")]
+    Zip(zip::result::ZipError),
+    Io(std::io::Error),
+    ManifestJson(serde_json::Error),
     MissingEntry(String),
-    #[error("invalid package format version: {0}")]
     InvalidPackageFormat(u16),
-    #[error("empty component.wasm")]
     EmptyComponent,
+}
+
+impl std::fmt::Display for ExtensionPackageError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Envelope(error) => write!(formatter, "semio envelope error: {error}"),
+            Self::UnexpectedEnvelope(envelope) => write!(formatter, "unexpected extension package envelope: {envelope}"),
+            Self::Zip(error) => write!(formatter, "zip error: {error}"),
+            Self::Io(error) => write!(formatter, "io error: {error}"),
+            Self::ManifestJson(error) => write!(formatter, "manifest json error: {error}"),
+            Self::MissingEntry(entry) => write!(formatter, "missing zip entry: {entry}"),
+            Self::InvalidPackageFormat(version) => write!(formatter, "invalid package format version: {version}"),
+            Self::EmptyComponent => formatter.write_str("empty component.wasm"),
+        }
+    }
+}
+
+impl std::error::Error for ExtensionPackageError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Envelope(error) => Some(error),
+            Self::Zip(error) => Some(error),
+            Self::Io(error) => Some(error),
+            Self::ManifestJson(error) => Some(error),
+            _ => None,
+        }
+    }
+}
+
+impl From<SemioError> for ExtensionPackageError {
+    fn from(error: SemioError) -> Self {
+        Self::Envelope(error)
+    }
+}
+
+impl From<zip::result::ZipError> for ExtensionPackageError {
+    fn from(error: zip::result::ZipError) -> Self {
+        Self::Zip(error)
+    }
+}
+
+impl From<std::io::Error> for ExtensionPackageError {
+    fn from(error: std::io::Error) -> Self {
+        Self::Io(error)
+    }
+}
+
+impl From<serde_json::Error> for ExtensionPackageError {
+    fn from(error: serde_json::Error) -> Self {
+        Self::ManifestJson(error)
+    }
 }
 //#endregion 🔖️Errors
 

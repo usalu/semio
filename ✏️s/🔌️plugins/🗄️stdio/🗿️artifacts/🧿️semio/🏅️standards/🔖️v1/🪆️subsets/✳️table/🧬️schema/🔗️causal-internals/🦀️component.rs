@@ -17,30 +17,66 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 
 // #region 🔖️Errors
 /// ⚠️ Fallible-computation error type shared by every function in this crate.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum CausalError {
-    #[error("variable `{0}` not found")]
     VariableNotFound(String),
-    #[error("edges contain a cycle through node indices {0:?}")]
     NotADag(Vec<usize>),
-    #[error("column {0} has wrong type: expected {1}")]
     ColumnType(usize, &'static str),
-    #[error("dimension mismatch: {0}")]
     DimensionMismatch(String),
-    #[error("effect not identifiable: {0}")]
     NotIdentifiable(String),
-    #[error("singular linear system in {0}")]
     Singular(&'static str),
-    #[error("invalid query: {0}")]
     InvalidQuery(String),
-    #[error("inference too large: factor would have {0} entries (limit {1})")]
     InferenceTooLarge(usize, usize),
-    #[error(transparent)]
-    Stats(#[from] crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::StatisticsError),
-    #[error(transparent)]
-    Tabular(#[from] crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::TabularError),
-    #[error(transparent)]
-    Probability(#[from] crate::artifacts::semio::standards::v1::subsets::table::schema::probability_internals::ProbabilityError),
+    Stats(crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::StatisticsError),
+    Tabular(crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::TabularError),
+    Probability(crate::artifacts::semio::standards::v1::subsets::table::schema::probability_internals::ProbabilityError),
+}
+
+impl std::fmt::Display for CausalError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::VariableNotFound(name) => write!(formatter, "variable `{name}` not found"),
+            Self::NotADag(indices) => write!(formatter, "edges contain a cycle through node indices {indices:?}"),
+            Self::ColumnType(column, expected) => write!(formatter, "column {column} has wrong type: expected {expected}"),
+            Self::DimensionMismatch(message) => write!(formatter, "dimension mismatch: {message}"),
+            Self::NotIdentifiable(message) => write!(formatter, "effect not identifiable: {message}"),
+            Self::Singular(context) => write!(formatter, "singular linear system in {context}"),
+            Self::InvalidQuery(message) => write!(formatter, "invalid query: {message}"),
+            Self::InferenceTooLarge(entries, limit) => write!(formatter, "inference too large: factor would have {entries} entries (limit {limit})"),
+            Self::Stats(error) => std::fmt::Display::fmt(error, formatter),
+            Self::Tabular(error) => std::fmt::Display::fmt(error, formatter),
+            Self::Probability(error) => std::fmt::Display::fmt(error, formatter),
+        }
+    }
+}
+
+impl std::error::Error for CausalError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Stats(error) => Some(error),
+            Self::Tabular(error) => Some(error),
+            Self::Probability(error) => Some(error),
+            _ => None,
+        }
+    }
+}
+
+impl From<crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::StatisticsError> for CausalError {
+    fn from(error: crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::StatisticsError) -> Self {
+        Self::Stats(error)
+    }
+}
+
+impl From<crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::TabularError> for CausalError {
+    fn from(error: crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::TabularError) -> Self {
+        Self::Tabular(error)
+    }
+}
+
+impl From<crate::artifacts::semio::standards::v1::subsets::table::schema::probability_internals::ProbabilityError> for CausalError {
+    fn from(error: crate::artifacts::semio::standards::v1::subsets::table::schema::probability_internals::ProbabilityError) -> Self {
+        Self::Probability(error)
+    }
 }
 
 /// 🧮️ Normalizes an unordered pair so `a <= b`, the canonical key for undirected-edge sets.
@@ -1511,7 +1547,7 @@ fn bootstrap_ci(
     let n = data.n_rows();
     let mut estimates = Vec::with_capacity(opts.replicates);
     for _ in 0..opts.replicates {
-        let indices: Vec<usize> = (0..n).map(|_| semio_framework_plugin::resolve_ready(rng.next_range(0, n as u64)) as usize).collect();
+        let indices: Vec<usize> = (0..n).map(|_| rng.next_range(0, n as u64) as usize).collect();
         if let Ok(resampled) = data.select_rows(&indices) {
             if let Ok(estimate) = point_fn(&resampled) {
                 estimates.push(estimate);
@@ -1712,6 +1748,33 @@ impl LinearGaussianScm {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn causal_error_contract_preserves_transparent_sources_and_conversions() {
+        let simple = [
+            (CausalError::VariableNotFound("x".into()), "variable `x` not found".to_string()),
+            (CausalError::NotADag(vec![2, 0]), "edges contain a cycle through node indices [2, 0]".to_string()),
+            (CausalError::ColumnType(3, "continuous"), "column 3 has wrong type: expected continuous".to_string()),
+            (CausalError::DimensionMismatch("covariance".into()), "dimension mismatch: covariance".to_string()),
+            (CausalError::NotIdentifiable("backdoor".into()), "effect not identifiable: backdoor".to_string()),
+            (CausalError::Singular("regression"), "singular linear system in regression".to_string()),
+            (CausalError::InvalidQuery("empty".into()), "invalid query: empty".to_string()),
+            (CausalError::InferenceTooLarge(32, 16), "inference too large: factor would have 32 entries (limit 16)".to_string()),
+        ];
+        for (error, message) in simple {
+            assert_eq!(error.to_string(), message);
+            assert!(std::error::Error::source(&error).is_none());
+        }
+        let stats: CausalError = crate::artifacts::semio::standards::v1::subsets::table::schema::statistics_internals::StatisticsError::SingularMatrix.into();
+        let tabular: CausalError = crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::TabularError::IndexOutOfBounds(5).into();
+        let probability: CausalError = crate::artifacts::semio::standards::v1::subsets::table::schema::probability_internals::ProbabilityError::NoConvergence { what: "sample" }.into();
+        for error in [&stats, &tabular, &probability] {
+            assert!(std::error::Error::source(error).is_some());
+        }
+        assert_eq!(stats.to_string(), "singular matrix");
+        assert_eq!(tabular.to_string(), "column index 5 out of bounds");
+        assert_eq!(probability.to_string(), "no convergence in sample");
+    }
 
     // #region 🔖️Fixtures
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

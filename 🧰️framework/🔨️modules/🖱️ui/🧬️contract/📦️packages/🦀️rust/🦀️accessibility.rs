@@ -15,7 +15,6 @@ fn is_default<T: Default + PartialEq>(value: &T) -> bool {
 /// 📢️ An ARIA-live-region politeness level, translated by each renderer into its own live-announce
 /// mechanism (DOM `aria-live`, the GPU renderer's accessibility snapshot, ...).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum Liveness {
     #[default]
@@ -29,7 +28,6 @@ pub enum Liveness {
 /// button on every renderer, so naming the role again here would just be a second, driftable source
 /// of truth.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct AccessibilitySpec {
     #[serde(default, skip_serializing_if = "Option::is_none")]

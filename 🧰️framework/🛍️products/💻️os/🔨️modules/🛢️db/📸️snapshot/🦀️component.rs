@@ -95,113 +95,113 @@ impl SnapshotDescriptor {
     /// segment — a flat, versioned, varint-framed encoding (this crate's own choice; the contract
     /// fixes only the segment kind, not the payload layout).
     pub async fn encode(&self) -> Vec<u8> {
-        let mut w = pack::ByteWriter::new().await;
-        w.write_u8(DESCRIPTOR_FORMAT_VERSION).await;
+        let mut w = pack::ByteWriter::new();
+        w.write_u8(DESCRIPTOR_FORMAT_VERSION);
         write_string(&mut w, &self.document.0).await;
-        w.write_varint_u64(self.generation).await;
+        w.write_varint_u64(self.generation);
         write_option_u64(&mut w, self.parent_generation).await;
-        w.write_varint_u64(self.head_seq).await;
-        w.write_varint_u64(self.commit_seq).await;
-        w.write_varint_u64(self.epoch).await;
-        w.write_bytes(&self.chain_hash).await;
-        w.write_varint_u64(self.protocol_version as u64).await;
+        w.write_varint_u64(self.head_seq);
+        w.write_varint_u64(self.commit_seq);
+        w.write_varint_u64(self.epoch);
+        w.write_bytes(&self.chain_hash);
+        w.write_varint_u64(self.protocol_version as u64);
         match &self.vcs_head {
             Some(head) => {
-                w.write_u8(1).await;
+                w.write_u8(1);
                 write_string(&mut w, head).await;
             }
-            None => w.write_u8(0).await,
+            None => w.write_u8(0),
         }
         match &self.base_pack_hash {
             Some(hash) => {
-                w.write_u8(1).await;
-                w.write_bytes(&hash.0).await;
+                w.write_u8(1);
+                w.write_bytes(&hash.0);
             }
-            None => w.write_u8(0).await,
+            None => w.write_u8(0),
         }
         write_hash_list(&mut w, &self.roots).await;
         write_hash_list(&mut w, &self.new_pages).await;
-        w.write_varint_u64(self.created_at_ms).await;
-        w.into_bytes().await
+        w.write_varint_u64(self.created_at_ms);
+        w.into_bytes()
     }
 
     /// @emoji 📖️ Inverse of `encode`. Never panics on malformed input — every field read is
     /// bounds-checked by `pack::ByteReader` and every count is checked against
     /// `MAX_HASH_LIST_LEN`/`MAX_STRING_BYTES` before the corresponding `Vec`/`String` is allocated.
     pub async fn decode(bytes: &[u8]) -> Result<SnapshotDescriptor, DbError> {
-        let mut r = pack::ByteReader::new(bytes).await;
-        let version = r.read_u8().await?;
+        let mut r = pack::ByteReader::new(bytes);
+        let version = r.read_u8()?;
         if version != DESCRIPTOR_FORMAT_VERSION {
             return Err(DbError::Corrupt(format!("unsupported snapshot descriptor format version {version}")));
         }
         let document = ArtifactId(read_string(&mut r).await?);
-        let generation = r.read_varint_u64().await?;
+        let generation = r.read_varint_u64()?;
         let parent_generation = read_option_u64(&mut r).await?;
-        let head_seq = r.read_varint_u64().await?;
-        let commit_seq = r.read_varint_u64().await?;
-        let epoch = r.read_varint_u64().await?;
-        let chain_hash = r.read_array32().await?;
-        let protocol_version = r.read_varint_u64().await? as u32;
-        let vcs_head = match r.read_u8().await? {
+        let head_seq = r.read_varint_u64()?;
+        let commit_seq = r.read_varint_u64()?;
+        let epoch = r.read_varint_u64()?;
+        let chain_hash = r.read_array32()?;
+        let protocol_version = r.read_varint_u64()? as u32;
+        let vcs_head = match r.read_u8()? {
             0 => None,
             1 => Some(read_string(&mut r).await?),
             other => return Err(DbError::Corrupt(format!("bad option tag {other}"))),
         };
-        let base_pack_hash = match r.read_u8().await? {
+        let base_pack_hash = match r.read_u8()? {
             0 => None,
-            1 => Some(ContentHash(r.read_array32().await?)),
+            1 => Some(ContentHash(r.read_array32()?)),
             other => return Err(DbError::Corrupt(format!("bad option tag {other}"))),
         };
         let roots = read_hash_list(&mut r).await?;
         let new_pages = read_hash_list(&mut r).await?;
-        let created_at_ms = r.read_varint_u64().await?;
+        let created_at_ms = r.read_varint_u64()?;
         Ok(SnapshotDescriptor { document, generation, parent_generation, head_seq, commit_seq, epoch, chain_hash, protocol_version, vcs_head, base_pack_hash, roots, new_pages, created_at_ms })
     }
 }
 
 async fn write_string(w: &mut pack::ByteWriter, s: &str) {
-    w.write_varint_u64(s.len() as u64).await;
-    w.write_bytes(s.as_bytes()).await;
+    w.write_varint_u64(s.len() as u64);
+    w.write_bytes(s.as_bytes());
 }
 
 async fn read_string(r: &mut pack::ByteReader<'_>) -> Result<String, DbError> {
-    let len = r.read_varint_u64().await?;
+    let len = r.read_varint_u64()?;
     check_len(len, MAX_STRING_BYTES, "snapshot descriptor string")?;
-    let bytes = r.read_bytes(len as usize).await?;
+    let bytes = r.read_bytes(len as usize)?;
     String::from_utf8(bytes.to_vec()).map_err(|_| DbError::Corrupt("invalid utf8 in snapshot descriptor".to_string()))
 }
 
 async fn write_option_u64(w: &mut pack::ByteWriter, value: Option<u64>) {
     match value {
         Some(v) => {
-            w.write_u8(1).await;
-            w.write_varint_u64(v).await;
+            w.write_u8(1);
+            w.write_varint_u64(v);
         }
-        None => w.write_u8(0).await,
+        None => w.write_u8(0),
     }
 }
 
 async fn read_option_u64(r: &mut pack::ByteReader<'_>) -> Result<Option<u64>, DbError> {
-    match r.read_u8().await? {
+    match r.read_u8()? {
         0 => Ok(None),
-        1 => Ok(Some(r.read_varint_u64().await?)),
+        1 => Ok(Some(r.read_varint_u64()?)),
         other => Err(DbError::Corrupt(format!("bad option tag {other}"))),
     }
 }
 
 async fn write_hash_list(w: &mut pack::ByteWriter, hashes: &[ContentHash]) {
-    w.write_varint_u64(hashes.len() as u64).await;
+    w.write_varint_u64(hashes.len() as u64);
     for hash in hashes {
-        w.write_bytes(&hash.0).await;
+        w.write_bytes(&hash.0);
     }
 }
 
 async fn read_hash_list(r: &mut pack::ByteReader<'_>) -> Result<Vec<ContentHash>, DbError> {
-    let count = r.read_varint_u64().await?;
+    let count = r.read_varint_u64()?;
     check_len(count, MAX_HASH_LIST_LEN, "snapshot descriptor hash list")?;
     let mut out = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        out.push(ContentHash(r.read_array32().await?));
+        out.push(ContentHash(r.read_array32()?));
     }
     Ok(out)
 }
@@ -251,7 +251,7 @@ async fn decode_snapshot_segment(source: &SubSource<'_>) -> Result<Vec<u8>, DbEr
         return Err(DbError::Corrupt("snapshot descriptor segment must use the identity codec".to_string()));
     }
     let mut pos = 2usize;
-    let seg_len = pack::os_pack::read_varint_u64(&prefix[..read], &mut pos).await?;
+    let seg_len = pack::os_pack::read_varint_u64(&prefix[..read], &mut pos)?;
     check_len(seg_len, 64 * 1024 * 1024, "snapshot descriptor segment length")?;
     let header_len = pos as u64;
     let mut frame = vec![0u8; (header_len + seg_len) as usize];
@@ -259,7 +259,7 @@ async fn decode_snapshot_segment(source: &SubSource<'_>) -> Result<Vec<u8>, DbEr
     let mut crc_bytes = [0u8; 4];
     source.read_exact_at(offset + header_len + seg_len, &mut crc_bytes).await?;
     let stored_crc = u32::from_le_bytes(crc_bytes);
-    let computed_crc = pack::crc32c(&frame).await;
+    let computed_crc = pack::crc32c(&frame);
     if stored_crc != computed_crc {
         return Err(DbError::Corrupt("snapshot descriptor segment checksum mismatch".to_string()));
     }
@@ -336,7 +336,7 @@ async fn patch_prev_footer_offset(bytes: &mut [u8], parent_footer_offset: u64) -
     }
     let footer_start = bytes.len() - pack::FOOTER_SIZE;
     bytes[footer_start + 72..footer_start + 80].copy_from_slice(&parent_footer_offset.to_le_bytes());
-    let crc = pack::crc32c(&bytes[footer_start..footer_start + 80]).await;
+    let crc = pack::crc32c(&bytes[footer_start..footer_start + 80]);
     bytes[footer_start + 80..footer_start + 84].copy_from_slice(&crc.to_le_bytes());
     Ok(())
 }

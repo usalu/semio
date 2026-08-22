@@ -7,7 +7,7 @@ use serde_json::Value;
 
 /// 🔁️ `cycleBrushCandidate`/`cycleBrushCandidateBack` share one arm — the default step is the
 /// direction the action id names, and an explicit `delta` overrides it.
-pub async fn cycle_candidate(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args: Option<&Value>) {
+pub fn cycle_candidate(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args: Option<&Value>) {
     drive_precompute(&mut ctx.app.precompute.borrow_mut(), ctx.scene);
     let default_delta = if action == "cycleBrushCandidateBack" { -1 } else { 1 };
     let delta = args.and_then(|value| value.get("delta")).and_then(|value| value.as_i64()).unwrap_or(default_delta);

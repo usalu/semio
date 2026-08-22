@@ -1,0 +1,12 @@
+     Locking 1 package to latest compatible version
+      Adding semio-framework-dispatch-macros v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust)
+   Compiling semio-framework-replication v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust)
+   Compiling semio-framework-dispatch-macros v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust)
+   Compiling semio-framework-geometry v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust)
+   Compiling semio-framework-pack v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust)
+   Compiling semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+   Compiling semio-framework-graph v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust)
+   Compiling semio-wfc-focused v0.0.0 (/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/RESUMABLE-WFC-PUZZLE2D-AND-ENERGY-JOBS/🧪️wfc-focused)
+error: could not compile `semio-wfc-focused` (lib) due to 12 previous errors; 1 warning emitted
+warning: build failed, waiting for other jobs to finish...
+error: could not compile `semio-wfc-focused` (lib test) due to 12 previous errors; 1 warning emitted

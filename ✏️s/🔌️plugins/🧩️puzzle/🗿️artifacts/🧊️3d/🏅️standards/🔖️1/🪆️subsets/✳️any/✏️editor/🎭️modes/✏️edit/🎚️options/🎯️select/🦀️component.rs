@@ -12,7 +12,7 @@ use crate::editor::puzzle3d::{puzzle3d_action, PUZZLE3D_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::WindowMeasure;
 use serde_json::json;
 
-pub async fn measure(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeasure {
+pub fn measure(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeasure {
     WindowMeasure::Group {
         id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select"),
         label: labels.select.into(),

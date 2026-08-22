@@ -3,7 +3,6 @@
 
 use crate::artifacts::tiff::standards::v6_0::subsets::any::io::encode_tiff;
 use crate::artifacts::tiff::standards::v6_0::subsets::baseline::schema::snapshot::TiffSnapshot;
-use base64::Engine as _;
 use semio_framework_plugin::app::{ImageView, ImageWindowKit};
 use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
 
@@ -23,7 +22,7 @@ pub fn render(snapshot: &TiffSnapshot) -> BuiltNode {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn image_view(snapshot: &TiffSnapshot) -> ImageView {
     let bytes = encode_tiff(snapshot).ok().unwrap_or_default();
-    ImageView { width: 0, height: 0, mime: "image/tiff".into(), base64: base64::engine::general_purpose::STANDARD.encode(bytes) }
+    ImageView { width: 0, height: 0, mime: "image/tiff".into(), base64: crate::base64_standard(&bytes) }
 }
 
 #[cfg(test)]

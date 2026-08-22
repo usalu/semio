@@ -75,7 +75,7 @@ impl ArtifactViewer for Block3dViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_block3d_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_block3d_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(BLOCK3D_DIALECT).icon_id("box").mode_def(view::definition()).default_mode_id(view::BLOCK3D_VIEW_MODE_VIEW).window_kind_def(world::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest

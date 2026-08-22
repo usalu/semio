@@ -104,7 +104,7 @@ export function ShellScopeProvider({ scope, children }: { readonly scope: ShellS
  * silently falling back to page-global state, so a missing provider fails loudly during development. */
 export function useShellScope(): ShellScope {
   const scope = React.useContext(ShellScopeContext);
-  if (!scope) throw new Error("[DEBUG] useShellScope called outside a ShellScopeProvider");
+  if (!scope) throw new Error("useShellScope called outside a ShellScopeProvider");
   return scope;
 }
 

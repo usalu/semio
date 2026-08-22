@@ -1,0 +1,128 @@
+    Checking futures-util v0.3.32
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+    Checking futures-executor v0.3.32
+    Checking futures v0.3.32
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+    Checking wasmtime v47.0.3
+    Checking semio-framework-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust)
+    Checking semio-framework-3d v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust)
+    Checking semio-framework-graph v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust)
+    Checking semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+    Checking wiggle v47.0.3
+    Checking wasmtime-wasi-io v47.0.3
+    Checking wasmtime-wasi v47.0.3
+    Checking semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust)
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:8:44: warning: unused import: `HashMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10615:5: warning: unused doc comment
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:115:47: warning: unused import: `PresentCx`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:143:9: warning: unused import: `ui_wgpu::wgpu::UiMenuRef`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:150:67: warning: unused imports: `ContextMenuPoint` and `ContextMenuResponse`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:186:9: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5600:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5609:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5638:31: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5733:31: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5755:31: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5766:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5778:31: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5792:33: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5794:27: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5809:9: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7321:64: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7355:68: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7366:68: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9098:26: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9107:29: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9152:31: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9163:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9165:9: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10896:18: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13662:31: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13804:66: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13920:13: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13955:13: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14031:13: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14069:27: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14070:13: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14102:13: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14135:13: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14167:78: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14168:13: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21792:13: warning: ambiguous glob re-exports: the name `ActionId` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21795:13: warning: ambiguous glob re-exports: the name `tree_item` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21795:13: warning: ambiguous glob re-exports: the name `PeerMark` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:115:38: warning: unused import: `Present`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:110:5: warning: field `key` is never read
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:122:13: warning: field `0` is never read
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:123:12: warning: fields `artifact_ops`, `config_ops`, and `draft_ops` are never read
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:124:11: warning: field `0` is never read
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:133:5: warning: fields `instance`, `meta`, and `outcome` are never read
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:279:15: warning: function `cancel_instance_tasks` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🌐host/📖️body/🦀️component.rs:17:7: warning: constant `DIRECT_READ_CHUNK` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3031:119: warning: call to `.clone()` on a reference in this situation does nothing: help: remove this redundant call
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3065:119: warning: call to `.clone()` on a reference in this situation does nothing: help: remove this redundant call
+warning: `semio-framework-plugin` (lib) generated 49 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 37 suggestions)
+    Checking semio-s-plugin-stdio v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust)
+    Checking semio-framework-plugin-host v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust)
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/././../../../../../🎚️config/🧬️schema/🧬️mutations/🦀️component.rs:14:40: warning: unused import: `MutationKind`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../🧵️shard/🦀️component.rs:822:18: warning: type `SharedThreadTransport` is more private than the item `ShardTransports::SharedThread::0`: field `ShardTransports::SharedThread::0` is reachable at visibility `pub`
+warning: `semio-framework-plugin-host` (lib) generated 2 warnings
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:114:1: warning: unused doc comment
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:53:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:54:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:55:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:56:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:57:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:58:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:59:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:60:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:61:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:62:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:63:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:64:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:65:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:66:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:67:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:68:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:69:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:70:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:71:5: warning: unnecessary qualification
+warning: `semio-s-plugin-stdio` (lib) generated 20 warnings (run `cargo fix --lib -p semio-s-plugin-stdio` to apply 19 suggestions)
+    Checking semio-framework-os v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust)
+    Checking semio-s-plugin-animate v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust)
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/./././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs:8:110: error[E0432]: unresolved import `semio_framework_ui_contract::HasBindings`: no `HasBindings` in the root
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:295:61: error[E0433]: cannot find module or crate `commands` in this scope: use of unresolved module or unlinked crate `commands`
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/./././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎞️animation/🦀️component.rs:1040:9: warning: macro-expanded `macro_export` macros from the current crate cannot be referred to by absolute paths
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/././../../🗿️artifacts/🎬️present/🦀️component.rs:187:1: warning: unused doc comment
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs:13:68: warning: unused import: `PRESENT_DOCUMENT_SCHEMA`
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:5:26: warning: unused import: `SemanticMutation`
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/./././././././././././././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📝️md/🔖️commonmark/✳️any/🦀️component.rs:10:43: warning: unused import: `IoError`
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:97:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/./././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/🦀️component.rs:599:9: warning: unnecessary parentheses around block return value
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/./././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️component.rs:871:58: warning: unused import: `Sobject`
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/./././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs:27:12: warning: unnecessary braces around function argument
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/./././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🐚️copy-prompt/🦀️component.rs:9:56: warning: unused import: `Effect`
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/./././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖼️set-source/🦀️component.rs:6:33: warning: unused imports: `FigureTileFrame` and `default_present_snapshot`
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/./././././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🖊️main/🪟️windows/🖼️tile-editor/🦀️component.rs:5:5: warning: unused import: `crate::editor::animate::PRESENT_PLAY_APP_ID`
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/../../🦀️component.rs:9:1: warning: unused doc comment: rustdoc does not generate documentation for macro invocations
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/../../🦀️component.rs:21:48: warning: unnecessary qualification
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/./././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🐚️copy-prompt/🦀️component.rs:13:5: error[E0308]: mismatched types: expected `Result<Vec<SceneAssetBundle>, ...>`, found future
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/./././././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🖼️tile-editor/🦀️component.rs:101:96: error[E0599]: no method named `build` found for struct `SurfaceBuilder` in the current scope: method not found in `SurfaceBuilder`
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/./././././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🖊️main/🪟️windows/🖼️tile-editor/🦀️component.rs:82:111: error[E0599]: no method named `build` found for struct `SurfaceBuilder` in the current scope: method not found in `SurfaceBuilder`
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/./././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs:43:141: error[E0599]: no method named `build` found for struct `ButtonBuilder` in the current scope: method not found in `ButtonBuilder`
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/./././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs:44:114: error[E0599]: no method named `build` found for struct `ButtonBuilder` in the current scope: method not found in `ButtonBuilder`
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/./././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs:54:68: error[E0599]: no method named `build` found for struct `TextBuilder` in the current scope: method not found in `TextBuilder`
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/./././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs:60:10: error[E0599]: no method named `build` found for struct `ContainerBuilder` in the current scope: method not found in `ContainerBuilder`
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/./././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs:65:10: error[E0599]: no method named `build` found for struct `InputBuilder` in the current scope: method not found in `InputBuilder`
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/./././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs:76:141: error[E0599]: no method named `build` found for struct `ContainerBuilder` in the current scope: method not found in `ContainerBuilder`
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/./././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs:77:101: error[E0599]: no method named `build` found for struct `TextBuilder` in the current scope: method not found in `TextBuilder`
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/./././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs:79:10: error[E0599]: no method named `build` found for struct `ContainerBuilder` in the current scope: method not found in `ContainerBuilder`
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/./././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs:80:85: error[E0599]: no method named `build` found for struct `StackBuilder` in the current scope: method not found in `StackBuilder`
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/./././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs:38:59: error[E0599]: no method named `build` found for struct `TextBuilder` in the current scope: method not found in `TextBuilder`
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/./././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs:39:10: error[E0599]: no method named `build` found for struct `ContainerBuilder` in the current scope: method not found in `ContainerBuilder`
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/./././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs:42:59: error[E0599]: no method named `build` found for struct `TextBuilder` in the current scope: method not found in `TextBuilder`
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/./././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs:43:10: error[E0599]: no method named `build` found for struct `ContainerBuilder` in the current scope: method not found in `ContainerBuilder`
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/./././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs:48:10: error[E0599]: no method named `build` found for struct `ContainerBuilder` in the current scope: method not found in `ContainerBuilder`
+✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/./././../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs:49:66: error[E0599]: no method named `build` found for struct `StackBuilder` in the current scope: method not found in `StackBuilder`
+warning: `semio-s-plugin-animate` (lib) generated 14 warnings
+error: could not compile `semio-s-plugin-animate` (lib) due to 20 previous errors; 15 warnings emitted

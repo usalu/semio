@@ -1,0 +1,425 @@
+   Compiling syn v2.0.117
+   Compiling smallvec v1.15.1
+   Compiling hashbrown v0.17.1
+   Compiling cc v1.2.62
+   Compiling bumpalo v3.20.2
+   Compiling either v1.15.0
+   Compiling hashbrown v0.16.1
+   Compiling num-integer v0.1.46
+   Compiling approx v0.5.1
+   Compiling serde_derive v1.0.228
+   Compiling synstructure v0.13.2
+   Compiling displaydoc v0.2.5
+   Compiling bytemuck_derive v1.10.2
+   Compiling thiserror-impl v2.0.18
+   Compiling zerocopy-derive v0.8.48
+   Compiling indexmap v2.14.0
+   Compiling zerovec-derive v0.11.3
+   Compiling zerovec-derive v0.10.3
+   Compiling parking_lot_core v0.9.12
+   Compiling kurbo v0.13.1
+   Compiling serde v1.0.228
+   Compiling bytemuck v1.25.0
+   Compiling kurbo v0.11.3
+   Compiling thiserror v2.0.18
+   Compiling tinystr v0.8.3
+   Compiling zerocopy v0.8.48
+   Compiling zerofrom-derive v0.1.7
+   Compiling yoke-derive v0.8.2
+   Compiling yoke-derive v0.7.5
+   Compiling parking_lot v0.12.5
+   Compiling litemap v0.7.5
+   Compiling icu_provider_macros v1.5.0
+   Compiling phf_macros v0.13.1
+   Compiling cobs v0.3.0
+   Compiling unic-langid-impl v0.9.6
+   Compiling foreign-types-macros v0.2.3
+   Compiling rustybuzz v0.20.1
+   Compiling zerofrom v0.1.8
+   Compiling half v2.7.1
+   Compiling blake3 v1.8.5
+   Compiling kurbo v0.12.0
+   Compiling postcard v1.1.3
+   Compiling font-types v0.11.3
+   Compiling tiny-skia-path v0.11.4
+   Compiling phf v0.13.1
+   Compiling unic-langid-macros-impl v0.9.6
+   Compiling foreign-types v0.5.0
+   Compiling serde_spanned v0.6.9
+   Compiling toml_datetime v0.6.11
+   Compiling yoke v0.8.2
+   Compiling yoke v0.7.5
+   Compiling tiff v0.11.3
+   Compiling hayro-syntax v0.4.0
+   Compiling strum_macros v0.27.2
+   Compiling read-fonts v0.37.0
+   Compiling ciborium-ll v0.2.2
+   Compiling ppv-lite86 v0.2.21
+   Compiling toml_edit v0.22.27
+   Compiling zerovec v0.11.6
+   Compiling zerovec v0.10.4
+   Compiling zerotrie v0.2.4
+   Compiling image v0.25.10
+   Compiling strum v0.27.2
+   Compiling plist v1.9.0
+   Compiling quick-xml v0.38.4
+   Compiling bincode v1.3.3
+   Compiling semio-framework-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust)
+   Compiling rayon v1.12.0
+   Compiling enum-ordinalize-derive v4.3.2
+   Compiling tinystr v0.7.6
+   Compiling potential_utf v0.1.5
+   Compiling icu_collections v1.5.0
+   Compiling enum-ordinalize v4.3.2
+   Compiling zerotrie v0.1.3
+   Compiling toml v0.8.23
+   Compiling citationberg v0.6.1
+   Compiling syntect v5.3.0
+   Compiling typst-utils v0.14.2
+   Compiling icu_locale_core v2.2.0
+   Compiling icu_locid v1.5.0
+   Compiling icu_collections v2.2.0
+   Compiling rand_chacha v0.3.1
+   Compiling ciborium v0.2.2
+   Compiling skrifa v0.40.0
+   Compiling metal v0.32.0
+   Compiling naga v27.0.3
+   Compiling typst-timing v0.14.2
+   Compiling icu_provider v2.2.0
+   Compiling icu_provider v1.5.0
+   Compiling wgpu-types v27.0.1
+   Compiling unic-langid-macros v0.9.6
+   Compiling svgtypes v0.15.3
+   Compiling font-types v0.10.1
+   Compiling ecow v0.2.6
+   Compiling serde_yaml v0.9.34+deprecated
+   Compiling num-bigint v0.4.6
+   Compiling comemo-macros v0.5.1
+   Compiling icu_properties v2.2.0
+   Compiling icu_normalizer v2.2.0
+   Compiling icu_locid_transform v1.5.0
+   Compiling unic-langid v0.9.6
+   Compiling palette_derive v0.7.6
+   Compiling usvg v0.45.1
+   Compiling read-fonts v0.35.0
+   Compiling typst-syntax v0.14.2
+   Compiling comemo v0.5.1
+   Compiling chinese-number v0.7.8
+   Compiling palette v0.7.6
+   Compiling wgpu-hal v27.0.4
+   Compiling idna_adapter v1.2.2
+   Compiling icu_properties v1.5.1
+   Compiling biblatex v0.11.0
+   Compiling icu_provider_blob v1.5.0
+   Compiling lipsum v0.9.1
+   Compiling two-face v0.4.5
+   Compiling semio-framework-replication v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust)
+   Compiling zopfli v0.8.3
+   Compiling typst-macros v0.14.2
+   Compiling futures-macro v0.3.32
+   Compiling idna v1.1.0
+   Compiling tokio-macros v2.7.0
+   Compiling futures-sink v0.3.32
+   Compiling wgpu-core-deps-apple v27.0.0
+   Compiling semio-framework-pack v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust)
+   Compiling skrifa v0.37.0
+   Compiling semio-framework-hash v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust)
+   Compiling hayro-font v0.3.0
+   Compiling tokio v1.52.3
+   Compiling font-types v0.9.0
+   Compiling zip v2.4.2
+   Compiling url v2.5.8
+   Compiling futures-util v0.3.32
+   Compiling semio-framework-geometry v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust)
+   Compiling semio-framework-os-kernel-dsl-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust)
+   Compiling serde_core v1.0.228
+   Compiling psm v0.1.31
+   Compiling wgpu-core v27.0.3
+   Compiling gltf-derive v1.4.1
+   Compiling hayro-interpret v0.4.0
+   Compiling semio-framework-ui-contract v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust)
+   Compiling read-fonts v0.29.3
+   Compiling peniko v0.4.1
+   Compiling peniko v0.6.1
+   Compiling stacker v0.1.24
+   Compiling tracing-core v0.1.36
+   Compiling hayagriva v0.9.1
+   Compiling semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+   Compiling wgpu v27.0.1
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/⌨️cli/🦀️component.rs:83:5
+   |
+83 |     async fn resolve(&self, schema: &str) -> Option<crate::os_dsl::schema::RecordSpec>;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+   = note: `#[warn(async_fn_in_trait)]` on by default
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+83 -     async fn resolve(&self, schema: &str) -> Option<crate::os_dsl::schema::RecordSpec>;
+83 +     fn resolve(&self, schema: &str) -> impl std::future::Future<Output = Option<crate::os_dsl::schema::RecordSpec>> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/⌨️cli/🦀️component.rs:86:5
+   |
+86 |     async fn names(&self) -> Vec<String> {
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+86 ~     fn names(&self) -> impl std::future::Future<Output = Vec<String>> + Send {async {
+87 |         Vec::new()
+88 ~     } }
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2400:9
+     |
+2400 |         async fn serialize(from: &S) -> IoResult<IoPayload>;
+     |         ^^^^^
+     |
+     = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+     |
+2400 -         async fn serialize(from: &S) -> IoResult<IoPayload>;
+2400 +         fn serialize(from: &S) -> impl std::future::Future<Output = IoResult<IoPayload>> + Send;
+     |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2415:9
+     |
+2415 |         async fn sniff(_payload: &IoPayload) -> Confidence {
+     |         ^^^^^
+     |
+     = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+     |
+2415 ~         fn sniff(_payload: &IoPayload) -> impl std::future::Future<Output = Confidence> + Send {async {
+2416 |             Confidence::None
+2417 ~         } }
+     |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2418:9
+     |
+2418 |         async fn deserialize(payload: &IoPayload) -> IoResult<S>;
+     |         ^^^^^
+     |
+     = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+     |
+2418 -         async fn deserialize(payload: &IoPayload) -> IoResult<S>;
+2418 +         fn deserialize(payload: &IoPayload) -> impl std::future::Future<Output = IoResult<S>> + Send;
+     |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:501:5
+    |
+501 |     async fn len(&self) -> CodecResult<u64>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+501 -     async fn len(&self) -> CodecResult<u64>;
+501 +     fn len(&self) -> impl std::future::Future<Output = CodecResult<u64>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:502:5
+    |
+502 |     async fn read_at(&self, offset: u64, output: &mut [u8]) -> CodecResult<usize>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+502 -     async fn read_at(&self, offset: u64, output: &mut [u8]) -> CodecResult<usize>;
+502 +     fn read_at(&self, offset: u64, output: &mut [u8]) -> impl std::future::Future<Output = CodecResult<usize>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:513:5
+    |
+513 |     async fn span(&self) -> SourceSpan;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+513 -     async fn span(&self) -> SourceSpan;
+513 +     fn span(&self) -> impl std::future::Future<Output = SourceSpan> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:514:5
+    |
+514 |     async fn read_chunk(&mut self, output: &mut [u8]) -> CodecResult<usize>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+514 -     async fn read_chunk(&mut self, output: &mut [u8]) -> CodecResult<usize>;
+514 +     fn read_chunk(&mut self, output: &mut [u8]) -> impl std::future::Future<Output = CodecResult<usize>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:515:5
+    |
+515 |     async fn random_access(&self) -> Option<&Self::RandomAccess> {
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+515 ~     fn random_access(&self) -> impl std::future::Future<Output = Option<&Self::RandomAccess>> + Send {async {
+516 |         None
+517 ~     } }
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:522:5
+    |
+522 |     async fn write_chunk(&mut self, input: &[u8]) -> CodecResult<()>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+522 -     async fn write_chunk(&mut self, input: &[u8]) -> CodecResult<()>;
+522 +     fn write_chunk(&mut self, input: &[u8]) -> impl std::future::Future<Output = CodecResult<()>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:541:5
+    |
+541 |     async fn resolve_decode(&self, request: &ResourceRequest) -> CodecResult<Self::Source>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+541 -     async fn resolve_decode(&self, request: &ResourceRequest) -> CodecResult<Self::Source>;
+541 +     fn resolve_decode(&self, request: &ResourceRequest) -> impl std::future::Future<Output = CodecResult<Self::Source>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:542:5
+    |
+542 |     async fn resolve_encode(&self, request: &ResourceRequest) -> CodecResult<Self::Sink>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+542 -     async fn resolve_encode(&self, request: &ResourceRequest) -> CodecResult<Self::Sink>;
+542 +     fn resolve_encode(&self, request: &ResourceRequest) -> impl std::future::Future<Output = CodecResult<Self::Sink>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:720:5
+    |
+720 |     async fn sniff(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> CodecResult<PayloadSniff>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+720 -     async fn sniff(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> CodecResult<PayloadSniff>;
+720 +     fn sniff(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> impl std::future::Future<Output = CodecResult<PayloadSniff>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:721:5
+    |
+721 |     async fn decode_payload(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> CodecResult<Self::Payload>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+721 -     async fn decode_payload(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> CodecResult<Self::Payload>;
+721 +     fn decode_payload(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> impl std::future::Future<Output = CodecResult<Self::Payload>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:722:5
+    |
+722 |     async fn encode_payload(&self, payload: &Self::Payload, sink: &mut BoundedPayloadSink<'_, Self::Sink>) -> CodecResult<()>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+722 -     async fn encode_payload(&self, payload: &Self::Payload, sink: &mut BoundedPayloadSink<'_, Self::Sink>) -> CodecResult<()>;
+722 +     fn encode_payload(&self, payload: &Self::Payload, sink: &mut BoundedPayloadSink<'_, Self::Sink>) -> impl std::future::Future<Output = CodecResult<()>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:732:5
+    |
+732 |     async fn dialect(&self) -> &ArtifactDialect;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+732 -     async fn dialect(&self) -> &ArtifactDialect;
+732 +     fn dialect(&self) -> impl std::future::Future<Output = &ArtifactDialect> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:733:5
+    |
+733 |     async fn decode_artifact<R: ResourceResolver>(&self, payload: Self::Payload, context: &mut DecodeContext<R>) -> CodecResult<Sel...
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+733 -     async fn decode_artifact<R: ResourceResolver>(&self, payload: Self::Payload, context: &mut DecodeContext<R>) -> CodecResult<Self::Artifact>;
+733 +     fn decode_artifact<R: ResourceResolver>(&self, payload: Self::Payload, context: &mut DecodeContext<R>) -> impl std::future::Future<Output = CodecResult<Self::Artifact>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:734:5
+    |
+734 |     async fn encode_artifact<R: ResourceResolver>(&self, artifact: &Self::Artifact, context: &mut EncodeContext<R>) -> CodecResult<...
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+734 -     async fn encode_artifact<R: ResourceResolver>(&self, artifact: &Self::Artifact, context: &mut EncodeContext<R>) -> CodecResult<Self::Payload>;
+734 +     fn encode_artifact<R: ResourceResolver>(&self, artifact: &Self::Artifact, context: &mut EncodeContext<R>) -> impl std::future::Future<Output = CodecResult<Self::Payload>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:1212:5
+     |
+1212 |     async fn validate(payload: &IoPayload) -> Vec<Diagnostic>;
+     |     ^^^^^
+     |
+     = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+     |
+1212 -     async fn validate(payload: &IoPayload) -> Vec<Diagnostic>;
+1212 +     fn validate(payload: &IoPayload) -> impl std::future::Future<Output = Vec<Diagnostic>> + Send;
+     |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🔌️client/🦀️component.rs:113:5
+    |
+113 |     async fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> Res...
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+113 -     async fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError>;
+113 +     fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> impl std::future::Future<Output = Result<HttpResponse, TransportError>> + Send;
+    |
+

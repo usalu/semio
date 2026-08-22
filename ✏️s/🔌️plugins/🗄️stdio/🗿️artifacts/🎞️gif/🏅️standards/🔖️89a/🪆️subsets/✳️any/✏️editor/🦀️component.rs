@@ -8,7 +8,7 @@ use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifS
 use crate::artifacts::gif::{GIF_89A_DIALECT, STDIO_GIF_DOCUMENT_SCHEMA};
 use crate::editor::gif_89a::modes::edit;
 use crate::editor::gif_89a::modes::edit::windows::main;
-use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode};
+use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 
@@ -61,7 +61,7 @@ impl ArtifactEditor for Gif89aEditor {
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
-            Gif89aEditCommand::SetPixelRegion { indices } => Ok(Emit::mutations(vec![GifMutation::SetFramePixels { index: 0, indices: indices.clone() }]).await),
+            Gif89aEditCommand::SetPixelRegion { indices } => Ok(Emit::mutations(vec![GifMutation::SetFramePixels { index: 0, indices: indices.clone() }])),
         }
     }
 

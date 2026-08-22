@@ -54,10 +54,9 @@ impl GatewayErrorCode {
 //#region 🔖️GatewayError
 /// 🚧️ The one error shape every gateway operation returns internally, before a call site decides
 /// whether it becomes a JSON-RPC protocol error or a tool-result `isError:true` payload. Implements
-/// `std::error::Error` (via `thiserror`) so it composes with `?` in ordinary fallible Rust code, not
+/// `std::error::Error` so it composes with `?` in ordinary fallible Rust code, not
 /// only at the JSON-RPC/tool-result boundary.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, schemars::JsonSchema, thiserror::Error)]
-#[error("{code:?}: {message}")]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct GatewayError {
     pub code: GatewayErrorCode,
     pub message: String,
@@ -65,6 +64,14 @@ pub struct GatewayError {
     pub details: serde_json::Value,
     pub retryable: bool,
 }
+
+impl std::fmt::Display for GatewayError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(formatter, "{:?}: {}", self.code, self.message)
+    }
+}
+
+impl std::error::Error for GatewayError {}
 
 impl GatewayError {
     /// 🆕️ A fresh, non-retryable error with empty `details`.
@@ -128,7 +135,7 @@ mod quick {
     }
 
     #[test]
-    fn implements_std_error_via_thiserror() {
+    fn implements_std_error() {
         let error = GatewayError::new(GatewayErrorCode::Internal, "boom");
         let boxed: Box<dyn std::error::Error> = Box::new(error.clone());
         assert_eq!(boxed.to_string(), "Internal: boom");

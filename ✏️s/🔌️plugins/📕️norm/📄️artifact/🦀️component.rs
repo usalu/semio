@@ -452,15 +452,24 @@ pub enum OccupancyType {
 
 // #region 🔖️Error
 /// ⚠️ Norm computation error.
-#[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NormError {
-    #[error("incomplete input: {field}")]
     IncompleteInput { field: String },
-    #[error("out of scope: {clause}")]
     OutOfScope { clause: ClauseId },
-    #[error("invalid {field}: {reason}")]
     InvalidValue { field: String, reason: String },
 }
+
+impl std::fmt::Display for NormError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::IncompleteInput { field } => write!(formatter, "incomplete input: {field}"),
+            Self::OutOfScope { clause } => write!(formatter, "out of scope: {clause}"),
+            Self::InvalidValue { field, reason } => write!(formatter, "invalid {field}: {reason}"),
+        }
+    }
+}
+
+impl std::error::Error for NormError {}
 // #endregion 🔖️Error
 
 // #region 🔖️Family

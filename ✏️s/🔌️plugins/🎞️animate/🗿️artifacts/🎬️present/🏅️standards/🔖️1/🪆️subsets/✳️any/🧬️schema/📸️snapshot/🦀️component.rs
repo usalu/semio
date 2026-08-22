@@ -10,7 +10,7 @@
 //! `26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM` §1 CORRECTION) — this file keeps only the
 //! type + its pure transforms.
 
-use crate::artifacts::present::{AnimationChild, PresentationChild, PRESENT_DOCUMENT_SCHEMA};
+use crate::artifacts::present::{AnimationChild, PresentationChild};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
 
@@ -42,7 +42,7 @@ impl Default for PresentSnapshot {
 }
 
 /// 🌱 Canonical default document used by the play app and examples.
-pub async fn default_snapshot() -> PresentSnapshot {
+pub fn default_snapshot() -> PresentSnapshot {
     crate::artifacts::present::present_snapshot_with_tiles(&crate::artifacts::present::default_figure_tile_source(), &[])
 }
 //#endregion 🔖️Snapshot
@@ -52,24 +52,24 @@ pub async fn default_snapshot() -> PresentSnapshot {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn pack_round_trips() {
+    #[test]
+    fn pack_round_trips() {
         let snap = PresentSnapshot::default();
         let bytes = <PresentSnapshot as store::ArtifactPack>::encode_pack(&snap);
         let back = <PresentSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(snap, back);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn dsl_text_round_trips() {
+    #[test]
+    fn dsl_text_round_trips() {
         let snap = PresentSnapshot::default();
         let text = <PresentSnapshot as store::ArtifactDsl>::print_dsl(&snap);
         let back = <PresentSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
         assert_eq!(snap, back);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn populated_snapshot_pack_and_dsl_round_trip() {
+    #[test]
+    fn populated_snapshot_pack_and_dsl_round_trip() {
         let source = crate::artifacts::present::default_figure_tile_source();
         let tiles = vec![crate::artifacts::present::FigureTileDraft { id: "t1".into(), name: "Tile One".into(), crop: crate::artifacts::present::FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } }];
         let snap = crate::artifacts::present::present_snapshot_with_tiles(&source, &tiles);

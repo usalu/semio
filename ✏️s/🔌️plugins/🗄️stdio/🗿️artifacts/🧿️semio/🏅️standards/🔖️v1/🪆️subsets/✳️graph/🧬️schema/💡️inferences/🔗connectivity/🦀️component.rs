@@ -90,11 +90,11 @@ impl store::InferredField<SemioGraphSnapshot> for NodeConnectivity {
     const FIELD_ID: &'static str = "s.stdio.semio.graph.inference.connectivity";
     const SCHEMA_VERSION: u32 = 1;
 
-    async fn reads() -> &'static [&'static str] {
+    fn reads() -> &'static [&'static str] {
         &["nodes", "edges"]
     }
 
-    async fn plan(snapshot: &SemioGraphSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
+    fn plan(snapshot: &SemioGraphSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
         snapshot.nodes.iter().map(|n| store::InferenceStep { key: n.id.value.clone(), parents: Vec::new() }).collect()
     }
 
@@ -107,7 +107,7 @@ impl store::InferredField<SemioGraphSnapshot> for NodeConnectivity {
     /// node's value back for another. Keying every entry with its own `key` up front is therefore
     /// load-bearing correctness, not a style choice; `changing_the_key_alone_produces_a_different_hash`
     /// below is the regression test for exactly this trap.
-    async fn dep_input(snapshot: &SemioGraphSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
+    fn dep_input(snapshot: &SemioGraphSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
         let mut node_ids: Vec<&str> = snapshot.nodes.iter().map(|n| n.id.value.as_str()).collect();
         node_ids.sort_unstable();
         let mut edge_pairs: Vec<(&str, &str)> = snapshot.edges.iter().map(|e| (e.source.value.as_str(), e.target.value.as_str())).collect();
@@ -115,7 +115,7 @@ impl store::InferredField<SemioGraphSnapshot> for NodeConnectivity {
         serde_json::to_vec(&(key.as_str(), node_ids, edge_pairs)).unwrap_or_default()
     }
 
-    async fn compute(snapshot: &SemioGraphSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
+    fn compute(snapshot: &SemioGraphSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
         let (graph, id_of) = build_undirected(snapshot);
         let Some(&id) = id_of.get(key.as_str()) else {
             return SemioGraphNodeConnectivity::default();

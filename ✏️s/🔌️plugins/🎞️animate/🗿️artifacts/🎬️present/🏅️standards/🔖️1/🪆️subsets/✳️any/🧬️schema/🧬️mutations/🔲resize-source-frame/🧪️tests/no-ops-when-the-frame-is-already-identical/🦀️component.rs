@@ -38,15 +38,15 @@ fn before() -> PresentSnapshot {
         panic!("no-ops-when-the-frame-is-already-identical's committed mutation must be a resize-source-frame");
     };
     let mut source = default_figure_tile_source();
-    source.frame = payload.new_frame.clone();
+    source.frame = payload.new_frame;
     cache_present_working_scene(&snapshot.presentation.child_id, &source, &[]);
     snapshot
 }
 
 /// ▶️ Resizing the source frame to the rect it already has carries `before` to exactly the committed
 /// `after`, leaving the composed deck handle untouched.
-#[semio_framework_async_macros::async_test]
-async fn applies_to_committed_after() {
+#[test]
+fn applies_to_committed_after() {
     let base = before();
     let snapshot = apply_present_mutation(&base, &mutation()).expect("an empty diff still applies cleanly");
     assert_eq!(snapshot, expected_after(), "resize-source-frame/no-ops-when-the-frame-is-already-identical: applied state differs from committed after-snapshot");
@@ -56,8 +56,8 @@ async fn applies_to_committed_after() {
 /// 🔺️ The delta is exactly the committed all-null `PresentDiff` — the value-identity guard sits
 /// AFTER the two geometry invariants, so reaching an empty diff here proves the committed frame was
 /// accepted as valid and then recognised as unchanged, not rejected.
-#[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+#[test]
+fn produces_committed_diff() {
     let outcome = <PresentMutation as protocol::Mutation<PresentSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
@@ -66,8 +66,8 @@ async fn produces_committed_diff() {
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to present's own diff type.
-#[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+#[test]
+fn committed_diff_is_canonical() {
     let decoded: PresentDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
@@ -76,8 +76,8 @@ async fn committed_diff_is_canonical() {
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after`, with the deck
 /// slot never set.
-#[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+#[test]
+fn committed_diff_applies_to_after() {
     let decoded: PresentDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert!(decoded.presentation.is_none(), "a frame-identity resize must leave the composed deck slot unset");
     let produced = <PresentDiff as protocol::MutationDiff<PresentSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
@@ -87,8 +87,8 @@ async fn committed_diff_applies_to_after() {
 /// 🔣️ Both committed snapshots and the committed mutation are already canonical. The committed frame
 /// is finite with strictly positive extents, so it clears both invariant guards on the way to the
 /// identity branch.
-#[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+#[test]
+fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: PresentSnapshot = serde_json::from_str(text).expect("snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
@@ -106,8 +106,8 @@ async fn committed_json_is_canonical() {
 
 /// 🎯️ The declared outcome holds: `applied`, with one untargeted Warning `mutation.no-op` — not the
 /// Fatal `mutation.invariant` this same verb raises for a degenerate rect.
-#[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+#[test]
+fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "resize-source-frame/no-ops-when-the-frame-is-already-identical declares an applied outcome");
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("the declared outcome carries messages");
@@ -120,8 +120,8 @@ async fn declared_outcome_holds() {
 
 /// ↩️ `resize-source-frame`'s inverse ignores its payload and rebuilds from the BASE source's frame,
 /// so here it is the same rect — a value-identical resize is its own inverse.
-#[semio_framework_async_macros::async_test]
-async fn inverse_restores_the_base_frame() {
+#[test]
+fn inverse_restores_the_base_frame() {
     let base = before();
     let PresentMutation::ResizeSourceFrame(payload) = mutation() else {
         panic!("committed mutation must be a resize-source-frame");

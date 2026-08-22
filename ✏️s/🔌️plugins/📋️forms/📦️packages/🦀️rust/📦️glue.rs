@@ -554,7 +554,8 @@ pub mod viewer {
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
 mod plugin;
-semio_framework_plugin::plugin_exports!(plugin::plugin);
+pub use plugin::FormsApps;
+semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::FormsApps);
 
 //#region 📚️Examples
 #[path = "."]

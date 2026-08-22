@@ -3,7 +3,7 @@
 use crate::artifacts::imperative::ImperativeSnapshot;
 use crate::editor::imperative::terminology::ImperativeLabels;
 use crate::editor::imperative::IMPERATIVE_INTERACTION_STEPS;
-use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use semio_framework_plugin::{tree_item_desc, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
 pub const IMPERATIVE_PLAY_BODY_DOCUMENT: &str = "imperative.play.document";
@@ -16,13 +16,13 @@ const IMPERATIVE_PLAY_DOCUMENT_NAMESPACE: &str = "imperative-play-document";
 /// tree items to their live selection/hover state; also reused by
 /// `ImperativePlayApp::interaction_topology` so the topology walks the identical id space (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-pub async fn step_row_id(id: &str) -> String {
+pub fn step_row_id(id: &str) -> String {
     format!("{IMPERATIVE_PLAY_DOCUMENT_NAMESPACE}.step.{id}")
 }
 //#endregion 🔖️Interaction
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -39,11 +39,11 @@ pub async fn definition() -> PanelTabDefinition {
 /// the framework stamps this tree's selection/hover presence from that domain (`.interaction_domain`)
 /// and prunes stale ids through that same topology, so no per-item click action is declared here
 /// anymore (clicks are translated into `interactionSelect` generically).
-pub async fn render(document: &ImperativeSnapshot, labels: &ImperativeLabels) -> UiNode {
+pub fn render(document: &ImperativeSnapshot, labels: &ImperativeLabels) -> BuiltNode {
     let path = crate::artifacts::imperative::imperative_working_scene(document).path;
-    let step_items: Vec<UiTreeItemNode> = path.steps.iter().enumerate().map(|(index, step)| tree_item_desc(step_row_id(&step.id), Label::data(format!("{}. {}", index + 1, step.kind)), Some(step.id.clone()))).collect();
+    let step_items: Vec<BuiltNode> = path.steps.iter().enumerate().map(|(index, step)| tree_item_desc(step_row_id(&step.id), format!("{}. {}", index + 1, step.kind), Some(step.id.clone()))).collect();
     PanelTreeBuilder::new(IMPERATIVE_PLAY_DOCUMENT_NAMESPACE)
-        .section_or_placeholder("imperative-play-document.steps", Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, step_items, labels.document_empty)
+        .section_or_placeholder("imperative-play-document.steps", Some(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL.into()), true, step_items, labels.document_empty.as_str())
         .interaction_domain(IMPERATIVE_INTERACTION_STEPS)
         .build()
 }
@@ -57,8 +57,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn document_lists_steps() {
-        let mut app = imperative_app();
-        assert!(render_body(&mut app, IMPERATIVE_PLAY_BODY_DOCUMENT).contains("imperative-play-document.steps"));
+        let mut app = imperative_app().await;
+        assert!(render_body(&mut app, IMPERATIVE_PLAY_BODY_DOCUMENT).await.contains("imperative-play-document.steps"));
     }
 
     #[semio_framework_async_macros::async_test]

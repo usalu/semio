@@ -238,7 +238,7 @@ impl ArtifactEditor for Gis3dPlayApp {
 //#endregion 🔖️Gis3dPlayApp
 
 //#region 🔖️Manifest
-pub async fn create_gis3d_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_gis3d_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::gisterrain::GISTERRAIN_DIALECT)
             .document(["semio", "gis", "3d"])
             // 🔌️ Declared for clarity on both sides of the `map:in` edge (WORKFLOWS-END-TO-END-TYPED-PORTS

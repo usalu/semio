@@ -30,7 +30,7 @@ fn derive_seed(base_seed: u64, i: usize) -> u64 {
 /// so if attempt 0 exhausts its search tree, the model has no solution regardless of what other
 /// seeds found).
 ///
-pub(crate) fn multi_start<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, base_seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], attempts: usize) -> SolveOutcome {
+pub(crate) fn multi_start<T: Topology + Clone + Send>(model: &CompiledModel, topo: &T, config: &SearchConfig, base_seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], attempts: usize) -> SolveOutcome {
     let attempts = attempts.max(1);
     let mut first = None;
     for i in 0..attempts {

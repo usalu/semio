@@ -29,7 +29,7 @@ semio_framework_plugin::app_labels! {
 
 //#region 🔖️Resolvers
 /// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
-pub async fn imperative_labels(cfg: &ImperativeConfig) -> &'static ImperativeLabels {
+pub fn imperative_labels(cfg: &ImperativeConfig) -> &'static ImperativeLabels {
     semio_framework_plugin::resolve_labels_for_locale::<ImperativeLabels>(&cfg.locale)
 }
 //#endregion 🔖️Resolvers

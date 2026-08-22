@@ -240,11 +240,6 @@ mod renderer {
         pub fn path_count(&self) -> usize {
             self.0.encoding().path_tags.len()
         }
-        /// @emoji 🔓️ Escape hatch exposing the raw `vello` encoding for callers that need path-tag-level introspection (e.g. LOD/label test assertions) beyond `is_empty`/`path_count`.
-        pub fn encoding(&self) -> &vello_encoding::Encoding {
-            self.0.encoding()
-        }
-
         pub fn vello_scene(&self) -> &backend::Scene {
             &self.0
         }
@@ -277,12 +272,21 @@ pub use renderer::{append_svg_document, BlendMode, Cap, Color, FillRule, Paint, 
 
 // #region ⚠️ Errors
 /// @emoji 🚨️ SVG-parse failures raised by canvas icon/label rendering.
-#[derive(Clone, Debug, PartialEq, thiserror::Error)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum CanvasError {
     /// @emoji 🏷️ SVG source failed to parse into a `usvg` tree.
-    #[error("SVG parse failed: {0}")]
     SvgParse(String),
 }
+
+impl std::fmt::Display for CanvasError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::SvgParse(message) => write!(formatter, "SVG parse failed: {message}"),
+        }
+    }
+}
+
+impl std::error::Error for CanvasError {}
 // #endregion ⚠️ Errors
 
 pub mod theme {
@@ -377,7 +381,7 @@ pub mod svg_icon {
     /// @emoji 🔤️ Shared `usvg` parse options with bundled Noto Color Emoji so `<text>` in Typst `emoji:` SVG matches the Typst font book; avoids system fallback glyphs.
     pub fn usvg_options_icons() -> &'static usvg::Options<'static> {
         ICON_USVG_OPTIONS.get_or_init(|| {
-            let mut db = fontdb::Database::new();
+            let mut db = usvg::fontdb::Database::new();
             db.load_font_data(super::icon_assets::NOTO_COLOR_EMOJI_SUBSET_TTF.to_vec());
             usvg::Options { fontdb: Arc::new(db), font_family: ui_styling::canvas_fonts::NOTO_COLOR_EMOJI.into(), ..Default::default() }
         })
@@ -709,7 +713,7 @@ pub mod text {
     /// @emoji 🔤️ `usvg` options with bundled map label sans for place-name labels.
     pub fn usvg_options_map_labels() -> &'static usvg::Options<'static> {
         MAP_LABEL_USVG_OPTIONS.get_or_init(|| {
-            let mut db = fontdb::Database::new();
+            let mut db = usvg::fontdb::Database::new();
             db.load_font_data(super::icon_assets::MAP_LABEL_SANS_TTF.to_vec());
             let family = db.faces().next().and_then(|face| face.families.first().map(|(name, _)| name.clone())).unwrap_or_else(|| ui_styling::canvas_fonts::MAP_LABEL_SANS_FALLBACK.into());
             usvg::Options { fontdb: Arc::new(db), font_family: family, ..Default::default() }

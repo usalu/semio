@@ -114,11 +114,20 @@ pub type Construction = semio_framework_plugin::app::SnapshotBuilder<DagSnapshot
 /// ⚠️ Errors from DAG play app edge-connection building. Relocated from the deleted `⚙️engine`
 /// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — travels with `connect_edge`, the
 /// only function that returns it.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum DagPlayError {
-    #[error("connection would create cycle")]
     CycleDetected,
 }
+
+impl std::fmt::Display for DagPlayError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::CycleDetected => formatter.write_str("connection would create cycle"),
+        }
+    }
+}
+
+impl std::error::Error for DagPlayError {}
 //#endregion ⚠️ Errors
 
 //#region 🔖️DocumentHelpers

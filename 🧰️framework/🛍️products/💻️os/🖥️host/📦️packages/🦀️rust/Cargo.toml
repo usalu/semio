@@ -36,7 +36,6 @@ ui_wgpu = { path = "../../../../../🔨️modules/🖱️ui/📦️packages/🦀
 semio-s-plugin-stdio = { path = "../../../../../../✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-thiserror = "2.0.12"
 base64 = "0.22.1"
 png = "0.17.16"
 resvg = "0.45.1"
@@ -45,7 +44,6 @@ usvg = "0.45.1"
 zip = { version = "2.4", default-features = false, features = ["deflate"], optional = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-rusqlite = { version = "0.38.0", features = ["bundled"] }
 tokio = { version = "1", features = ["sync"], default-features = false }
 # 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): this crate did not depend
 # on the plugin-host runtime AT ALL before this packet, which is exactly why "native smoke" (33/33
@@ -59,9 +57,6 @@ semio-framework-async = { workspace = true }
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2.106"
 serde-wasm-bindgen = "0.6.5"
-
-[dev-dependencies]
-pretty_assertions = "1.4.1"
 
 [features]
 default = []

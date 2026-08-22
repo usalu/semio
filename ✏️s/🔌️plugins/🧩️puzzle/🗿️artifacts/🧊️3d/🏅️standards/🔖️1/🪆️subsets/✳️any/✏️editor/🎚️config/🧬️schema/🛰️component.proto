@@ -71,6 +71,8 @@ message Puzzle3dConfig {
   string locale = 34;
   // @state config
   repeated string window_ids = 35;
+  // @state config
+  bytes fill_checkpoint = 36;
 }
 
 message SelectionSet {

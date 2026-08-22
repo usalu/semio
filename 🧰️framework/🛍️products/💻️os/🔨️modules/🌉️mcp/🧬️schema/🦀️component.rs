@@ -232,11 +232,27 @@ pub fn schemas() -> Vec<(&'static str, serde_json::Value)> {
 }
 //#endregion 🔖️SchemaCatalog
 
+//#region ✅️Validation
+
+/// 🧬️ Compiles MCP's serde boundary through the repo-owned string contract without leaking either
+/// JSON implementation across the framework schema API.
+pub(crate) fn compile_validator(schema: &serde_json::Value) -> Result<semio_framework_schema::OwnedJsonSchemaValidator, String> {
+    let schema = serde_json::to_string(schema).map_err(|error| error.to_string())?;
+    semio_framework_schema::OwnedJsonSchemaValidator::compile(&schema).map_err(|error| error.to_string())
+}
+
+/// ✅️ Validates one MCP value and preserves the owned validator's deterministic first diagnostic.
+pub(crate) fn validate(validator: &semio_framework_schema::OwnedJsonSchemaValidator, value: &serde_json::Value) -> Result<semio_framework_schema::ValidationProgress, String> {
+    let value = serde_json::to_string(value).map_err(|error| error.to_string())?;
+    validator.validate_json(&value).map_err(|error| error.to_string())
+}
+
+//#endregion ✅️Validation
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod quick {
     use super::*;
-    use jsonschema::Validator;
 
     fn has_bare_boolean(value: &serde_json::Value) -> bool {
         match value {
@@ -343,8 +359,9 @@ mod quick {
         assert_eq!(catalog.len(), examples.len(), "every schema must have exactly one example in this test");
         for (name, schema) in &catalog {
             let (_, example) = examples.iter().find(|(example_name, _)| example_name == name).unwrap_or_else(|| panic!("missing example for {name}"));
-            let validator = Validator::new(schema).unwrap_or_else(|error| panic!("{name}: schema did not compile: {error}"));
-            validator.validate(example).unwrap_or_else(|error| panic!("{name}: example failed its own schema: {error}"));
+            let owned = compile_validator(schema).unwrap_or_else(|error| panic!("{name}: owned schema did not compile: {error}"));
+            validate(&owned, example).unwrap_or_else(|error| panic!("{name}: own example failed validation: {error}"));
+            assert!(validate(&owned, &serde_json::Value::Null).is_err(), "{name}: null must fail the object-root schema");
         }
     }
 

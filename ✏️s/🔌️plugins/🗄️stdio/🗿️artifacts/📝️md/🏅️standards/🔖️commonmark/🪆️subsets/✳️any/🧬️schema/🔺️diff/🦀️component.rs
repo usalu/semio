@@ -315,7 +315,7 @@ fn validate_md_block(base: &MdBlock, diff: &MdBlockDiff) -> MutationApplyResult<
         | (MdBlock::CodeBlock { .. }, MdBlockDiff::CodeBlock { .. })
         | (MdBlock::HtmlBlock { .. }, MdBlockDiff::HtmlBlock { .. })
         | (MdBlock::ThematicBreak, MdBlockDiff::ThematicBreak) => Ok(()),
-        (MdBlock::List { items, .. }, MdBlockDiff::List { items: Some(items_diff), .. }) => Box::pin(validate_md_list_items(items, items_diff)),
+        (MdBlock::List { items, .. }, MdBlockDiff::List { items: Some(items_diff), .. }) => validate_md_list_items(items, items_diff),
         (MdBlock::List { .. }, MdBlockDiff::List { items: None, .. }) => Ok(()),
         (MdBlock::BlockQuote { blocks }, MdBlockDiff::BlockQuote { blocks: Some(blocks_diff) }) => validate_md_blocks(blocks, blocks_diff),
         (MdBlock::BlockQuote { .. }, MdBlockDiff::BlockQuote { blocks: None }) => Ok(()),
@@ -329,7 +329,7 @@ fn apply_blocks_diff(blocks: &[MdBlock], diff: &MdBlocksDiff) -> Vec<MdBlock> {
     for m in &diff.modified {
         if let Some(Some(b)) = slots.get(m.index) {
             let patched = apply_block_diff(b, &m.diff);
-            slots[m.index] = Some(Box::pin(patched));
+            slots[m.index] = Some(patched);
         }
     }
     let mut removed_sorted = diff.removed.clone();
@@ -374,7 +374,7 @@ fn apply_block_diff(block: &MdBlock, diff: &MdBlockDiff) -> MdBlock {
         MdBlockDiff::BlockQuote { blocks } => match block {
             MdBlock::BlockQuote { blocks: b } => MdBlock::BlockQuote {
                 blocks: match blocks {
-                    Some(d) => Box::pin(apply_blocks_diff(b, d)),
+                    Some(d) => apply_blocks_diff(b, d),
                     None => b.clone(),
                 },
             },
@@ -525,7 +525,7 @@ fn between_blocks(base: &[MdBlock], other: &[MdBlock]) -> Option<MdBlocksDiff> {
     let mut modified = Vec::new();
     for i in 0..min_len {
         if base[i] != other[i] {
-            if let Some(d) = Box::pin(between_block(&base[i], &other[i])) {
+            if let Some(d) = between_block(&base[i], &other[i]) {
                 modified.push(MdBlockModified { index: i, diff: d });
             }
         }
@@ -564,7 +564,7 @@ fn between_block(base: &MdBlock, other: &MdBlock) -> Option<MdBlockDiff> {
             }
         }
         (MdBlock::ThematicBreak, MdBlock::ThematicBreak) => None,
-        (MdBlock::BlockQuote { blocks: bb }, MdBlock::BlockQuote { blocks: ob }) => Box::pin(between_blocks(bb, ob)).map(|bd| MdBlockDiff::BlockQuote { blocks: Some(bd) }),
+        (MdBlock::BlockQuote { blocks: bb }, MdBlock::BlockQuote { blocks: ob }) => between_blocks(bb, ob).map(|bd| MdBlockDiff::BlockQuote { blocks: Some(bd) }),
         (MdBlock::List { ordered: bo, start: bs, tight: bt, items: bi }, MdBlock::List { ordered: oo, start: os, tight: ot, items: oi }) => {
             let ordered = if bo != oo { Some(*oo) } else { None };
             let start = if bs != os { Some(*os) } else { None };
@@ -656,7 +656,7 @@ fn absorb_block_diff(a: MdBlockDiff, b: MdBlockDiff) -> MdBlockDiff {
             blocks: match (ba, bb) {
                 (None, x) => x,
                 (x, None) => x,
-                (Some(x), Some(y)) => Some(Box::pin(absorb_blocks_diff(x, y))),
+                (Some(x), Some(y)) => Some(absorb_blocks_diff(x, y)),
             },
         },
         (MdBlockDiff::List { ordered: oa, start: sa, tight: ta, items: ia }, MdBlockDiff::List { ordered: ob, start: sb, tight: tb, items: ib }) => MdBlockDiff::List {
@@ -717,7 +717,7 @@ fn absorb_blocks_diff(d1: MdBlocksDiff, d2: MdBlocksDiff) -> MdBlocksDiff {
                     continue;
                 }
                 match modified.iter_mut().find(|m| &m.index == bi) {
-                    Some(existing) => existing.diff = Box::pin(absorb_block_diff(existing.diff.clone(), m2.diff.clone())),
+                    Some(existing) => existing.diff = absorb_block_diff(existing.diff.clone(), m2.diff.clone()),
                     None => modified.push(MdBlockModified { index: *bi, diff: m2.diff.clone() }),
                 }
             }

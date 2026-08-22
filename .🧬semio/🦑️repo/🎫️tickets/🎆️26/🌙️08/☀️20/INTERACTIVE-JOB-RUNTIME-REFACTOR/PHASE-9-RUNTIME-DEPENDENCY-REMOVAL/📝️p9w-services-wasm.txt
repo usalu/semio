@@ -1,0 +1,39 @@
+   Compiling unicode-ident v1.0.24
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.45
+   Compiling wasm-bindgen-shared v0.2.126
+   Compiling rustversion v1.0.22
+   Compiling serde_core v1.0.228
+   Compiling bumpalo v3.20.2
+   Compiling serde v1.0.228
+    Checking pin-project-lite v0.2.17
+    Checking slab v0.4.12
+    Checking futures-core v0.3.32
+    Checking futures-task v0.3.32
+    Checking cfg-if v1.0.4
+    Checking once_cell v1.21.4
+    Checking semio-framework-trace v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust)
+    Checking futures-util v0.3.32
+   Compiling wasm-bindgen v0.2.126
+   Compiling syn v2.0.117
+   Compiling wasm-bindgen-macro-support v0.2.126
+   Compiling serde_derive v1.0.228
+   Compiling tokio-macros v2.7.0
+    Checking tokio v1.52.3
+   Compiling wasm-bindgen-macro v0.2.126
+    Checking semio-framework-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust)
+    Checking semio-framework-job v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust)
+    Checking js-sys v0.3.103
+    Checking wasm-bindgen-futures v0.4.76
+    Checking semio-framework-actor v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust)
+🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📦️glue.rs:35:22: warning: use of deprecated function `kernel_host::KernelHost::new::{closure#0}::_::constructor`: async constructors produce invalid TS code and support will be removed in the future
+warning: `semio-framework-actor` (lib) generated 1 warning
+    Checking semio-framework-os-services v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust)
+🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:226:36: error[E0599]: no method named `now_ms` found for struct `WorkerPool` in the current scope: method not found in `WorkerPool`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:248:54: error[E0599]: no method named `now_ms` found for struct `WorkerPool` in the current scope: method not found in `WorkerPool`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:251:44: error[E0599]: no method named `now_ms` found for struct `WorkerPool` in the current scope: method not found in `WorkerPool`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:333:19: error[E0599]: no method named `now_ms` found for struct `WorkerPool` in the current scope: method not found in `WorkerPool`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:96:64: error[E0599]: no method named `now_ms` found for reference `&WorkerPool` in the current scope: method not found in `&WorkerPool`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:559:43: error[E0599]: no method named `now_ms` found for struct `WorkerPool` in the current scope: method not found in `WorkerPool`
+🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:985:43: error[E0599]: no method named `now_ms` found for struct `WorkerPool` in the current scope: method not found in `WorkerPool`
+error: could not compile `semio-framework-os-services` (lib) due to 7 previous errors

@@ -6,8 +6,8 @@
 
 // #region 🔌️Adapters
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import { randomBytes } from "crypto";
+import { ownedSchema as z } from "../../../../🟦️validation";
 // #endregion 🔌️Adapters
 
 import { createApiKey, revokeApiKey, createDeveloper, getDeveloperByEmail, insertAuditLog } from "@/lib";

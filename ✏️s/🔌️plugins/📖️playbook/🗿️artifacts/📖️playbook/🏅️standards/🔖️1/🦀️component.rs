@@ -11,6 +11,6 @@ use crate::artifacts::playbook::standards::v1::subsets;
 use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use semio_framework_plugin::StandardId;
 
-pub async fn standard() -> StandardDeclaration {
+pub fn standard() -> StandardDeclaration<crate::PlaybookApps> {
     StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.playbook+json"], extensions: &["playbook"] }, subsets: vec![subsets::any::subset()] }
 }

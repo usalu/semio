@@ -777,7 +777,7 @@ mod tests {
             dependencies: Vec::new(),
             diff: protocol::ArtifactDiff { schema: protocol::SchemaId("test".to_string()), payload: Default::default() },
             inverse: protocol::InverseMutation { schema: protocol::SchemaId("test".to_string()), payload: Default::default() },
-            timestamp: protocol::HybridLogicalTimestamp::new(1, seq).await,
+            timestamp: protocol::HybridLogicalTimestamp::new(1, seq),
         }
     }
 

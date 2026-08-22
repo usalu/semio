@@ -14,7 +14,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#region 🔖️Apply
 impl ImperativeDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub async fn apply_to_artifact(&self, artifact: &ImperativeArtifact) -> protocol::MutationApplyResult<ImperativeArtifact> {
+    pub fn apply_to_artifact(&self, artifact: &ImperativeArtifact) -> protocol::MutationApplyResult<ImperativeArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -44,7 +44,7 @@ impl ImperativeDiff {
 }
 
 impl MutationDiff<ImperativeSnapshot> for ImperativeDiff {
-    async fn apply(&self, snapshot: &ImperativeSnapshot) -> protocol::MutationApplyResult<ImperativeSnapshot> {
+    fn apply(&self, snapshot: &ImperativeSnapshot) -> protocol::MutationApplyResult<ImperativeSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -62,7 +62,7 @@ impl MutationDiff<ImperativeSnapshot> for ImperativeDiff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -86,7 +86,7 @@ impl MutationDiff<ImperativeSnapshot> for ImperativeDiff {
 
 //#region 🔖️Helpers
 /// 📸️ Whole-snapshot replacement diff.
-pub async fn diff_set_snapshot(snapshot: ImperativeSnapshot) -> ImperativeDiff {
+pub fn diff_set_snapshot(snapshot: ImperativeSnapshot) -> ImperativeDiff {
     ImperativeDiff { artifact: Some(Box::new(ImperativeArtifact::from_snapshot(snapshot))), ..Default::default() }
 }
 //#endregion 🔖️Helpers

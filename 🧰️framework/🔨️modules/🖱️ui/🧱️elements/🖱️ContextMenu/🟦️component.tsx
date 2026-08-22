@@ -11,7 +11,7 @@ import { createPortal } from "react-dom";
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 import { type UiLabel, uiDataLabel } from "../🏷️UiLabel/🟦️component.tsx";
-import { Icon, type IconSource } from "../🔣️Icons/🟦️component.tsx";
+import { Icon, type ControlIcon, type IconSource } from "../🔣️Icons/🟦️component.tsx";
 import { useLabel } from "../🏷️Label/🟦️component.tsx";
 import { useShellScopeOptional } from "../🐚️ShellScope/🟦️component.tsx";
 import { useFlow } from "../../🔨️modules/🧭️flow-direction-context/🟦️component.tsx";
@@ -40,7 +40,7 @@ function contextMenuItemClassName(item: Pick<ContextMenuItem, "checked" | "destr
 export interface ContextMenuItem {
   id: string;
   label?: UiLabel;
-  icon?: IconSource | string;
+  icon?: ControlIcon;
   color?: string;
   shortcut?: string;
   disabled?: boolean;
@@ -65,6 +65,7 @@ function renderContextMenuIcon(icon: ContextMenuItem["icon"], required = false):
   if (!resolved) {
     return null;
   }
+  if (React.isValidElement(resolved)) return resolved;
   return <Icon icon={resolved as IconSource} size="small" className="shrink-0" />;
 }
 
@@ -905,7 +906,6 @@ export const TextSelectionContextMenuHost: React.FC = () => {
       );
       setPosition({ x: event.clientX, y: event.clientY });
       setOpen(true);
-      console.log("[DEBUG] TextSelectionContextMenuHost open", { editable, hasSelection, x: event.clientX, y: event.clientY });
     };
     document.addEventListener("contextmenu", onContextMenu, true);
     return () => document.removeEventListener("contextmenu", onContextMenu, true);

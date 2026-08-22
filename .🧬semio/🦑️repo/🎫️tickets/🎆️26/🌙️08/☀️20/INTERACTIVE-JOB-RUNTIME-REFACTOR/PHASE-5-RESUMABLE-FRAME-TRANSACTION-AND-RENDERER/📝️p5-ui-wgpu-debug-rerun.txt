@@ -1,0 +1,516 @@
+$ bun ./📜️script.ts nx run @semio-tech/ui-rs:test-wgpu-engine --skip-nx-cache
+
+> nx run @semio-tech/ui-rs:test-wgpu-engine
+
+> bun ./📜️script.ts test-wgpu-engine
+
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+   Compiling syn v2.0.117
+   Compiling serde_derive v1.0.228
+   Compiling semio-framework-async-macros v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust)
+   Compiling serde v1.0.228
+   Compiling semio-framework-geometry v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust)
+   Compiling semio-framework-ui-contract v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust)
+   Compiling semio-framework-ui-scene v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized] target(s) in 12.13s
+   Compiling bitflags v2.11.1
+   Compiling num-traits v0.2.19
+   Compiling log v0.4.29
+   Compiling simd-adler32 v0.3.9
+   Compiling bytemuck_derive v1.10.2
+   Compiling zerocopy-derive v0.8.48
+   Compiling foreign-types-macros v0.2.3
+   Compiling thiserror-impl v2.0.18
+   Compiling indexmap v2.14.0
+   Compiling displaydoc v0.2.5
+   Compiling objc2-core-foundation v0.3.2
+   Compiling miniz_oxide v0.8.9
+   Compiling bit-vec v0.8.0
+   Compiling bit-set v0.8.0
+   Compiling core-graphics-types v0.2.0
+   Compiling parking_lot_core v0.9.12
+   Compiling flate2 v1.1.9
+   Compiling once_cell v1.21.4
+   Compiling blake3 v1.8.5
+   Compiling parking_lot v0.12.5
+   Compiling serde_json v1.0.149
+   Compiling semio-framework-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust)
+   Compiling kurbo v0.11.3
+   Compiling wgpu-core v27.0.3
+   Compiling objc2-foundation v0.3.2
+   Compiling bumpalo v3.20.2
+   Compiling litemap v0.7.5
+   Compiling peniko v0.4.1
+   Compiling zopfli v0.8.3
+   Compiling moxcms v0.8.1
+   Compiling objc2-foundation v0.2.2
+   Compiling semio-framework-replication v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust)
+   Compiling objc2-core-graphics v0.3.2
+   Compiling objc2-core-text v0.3.2
+   Compiling futures-macro v0.3.32
+   Compiling tokio-macros v2.7.0
+   Compiling foreign-types v0.5.0
+   Compiling metal v0.32.0
+   Compiling wgpu v27.0.1
+   Compiling tinystr v0.7.6
+   Compiling icu_locid v1.5.0
+   Compiling tracing-core v0.1.36
+   Compiling slab v0.4.12
+   Compiling tracing v0.1.44
+   Compiling semio-framework-pack v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust)
+   Compiling objc2-app-kit v0.2.2
+   Compiling core-graphics v0.23.2
+   Compiling objc2-app-kit v0.3.2
+   Compiling semio-framework-hash v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust)
+   Compiling semio-framework-os-kernel-dsl-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust)
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+   Compiling taffy v0.9.2
+   Compiling semio-framework-job v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust)
+   Compiling futures-util v0.3.32
+   Compiling bytemuck v1.25.0
+   Compiling font-types v0.9.0
+   Compiling font-types v0.11.3
+   Compiling wgpu-types v27.0.1
+   Compiling read-fonts v0.37.0
+   Compiling read-fonts v0.29.3
+   Compiling tokio v1.52.3
+   Compiling winit v0.30.13
+   Compiling zerocopy v0.8.48
+   Compiling thiserror v2.0.18
+   Compiling zip v2.4.2
+   Compiling semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+   Compiling skrifa v0.40.0
+   Compiling half v2.7.1
+   Compiling skrifa v0.31.3
+   Compiling fontique v0.5.0
+   Compiling naga v27.0.3
+   Compiling tiff v0.11.3
+   Compiling swash v0.2.9
+   Compiling image v0.25.10
+   Compiling arboard v3.6.1
+   Compiling parley v0.5.0
+   Compiling wgpu-hal v27.0.4
+   Compiling wgpu-core-deps-apple v27.0.0
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/⌨️cli/🦀️component.rs:83:5
+   |
+83 |     async fn resolve(&self, schema: &str) -> Option<crate::os_dsl::schema::RecordSpec>;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+   = note: `#[warn(async_fn_in_trait)]` on by default
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+83 -     async fn resolve(&self, schema: &str) -> Option<crate::os_dsl::schema::RecordSpec>;
+83 +     fn resolve(&self, schema: &str) -> impl std::future::Future<Output = Option<crate::os_dsl::schema::RecordSpec>> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/⌨️cli/🦀️component.rs:86:5
+   |
+86 |     async fn names(&self) -> Vec<String> {
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+86 ~     fn names(&self) -> impl std::future::Future<Output = Vec<String>> + Send {async {
+87 |         Vec::new()
+88 ~     } }
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🔌️client/🦀️component.rs:113:5
+    |
+113 |     async fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> Res...
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+113 -     async fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError>;
+113 +     fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> impl std::future::Future<Output = Result<HttpResponse, TransportError>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:501:5
+    |
+501 |     async fn len(&self) -> CodecResult<u64>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+501 -     async fn len(&self) -> CodecResult<u64>;
+501 +     fn len(&self) -> impl std::future::Future<Output = CodecResult<u64>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:502:5
+    |
+502 |     async fn read_at(&self, offset: u64, output: &mut [u8]) -> CodecResult<usize>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+502 -     async fn read_at(&self, offset: u64, output: &mut [u8]) -> CodecResult<usize>;
+502 +     fn read_at(&self, offset: u64, output: &mut [u8]) -> impl std::future::Future<Output = CodecResult<usize>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:513:5
+    |
+513 |     async fn span(&self) -> SourceSpan;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+513 -     async fn span(&self) -> SourceSpan;
+513 +     fn span(&self) -> impl std::future::Future<Output = SourceSpan> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:514:5
+    |
+514 |     async fn read_chunk(&mut self, output: &mut [u8]) -> CodecResult<usize>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+514 -     async fn read_chunk(&mut self, output: &mut [u8]) -> CodecResult<usize>;
+514 +     fn read_chunk(&mut self, output: &mut [u8]) -> impl std::future::Future<Output = CodecResult<usize>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:515:5
+    |
+515 |     async fn random_access(&self) -> Option<&Self::RandomAccess> {
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+515 ~     fn random_access(&self) -> impl std::future::Future<Output = Option<&Self::RandomAccess>> + Send {async {
+516 |         None
+517 ~     } }
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:522:5
+    |
+522 |     async fn write_chunk(&mut self, input: &[u8]) -> CodecResult<()>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+522 -     async fn write_chunk(&mut self, input: &[u8]) -> CodecResult<()>;
+522 +     fn write_chunk(&mut self, input: &[u8]) -> impl std::future::Future<Output = CodecResult<()>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:541:5
+    |
+541 |     async fn resolve_decode(&self, request: &ResourceRequest) -> CodecResult<Self::Source>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+541 -     async fn resolve_decode(&self, request: &ResourceRequest) -> CodecResult<Self::Source>;
+541 +     fn resolve_decode(&self, request: &ResourceRequest) -> impl std::future::Future<Output = CodecResult<Self::Source>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:542:5
+    |
+542 |     async fn resolve_encode(&self, request: &ResourceRequest) -> CodecResult<Self::Sink>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+542 -     async fn resolve_encode(&self, request: &ResourceRequest) -> CodecResult<Self::Sink>;
+542 +     fn resolve_encode(&self, request: &ResourceRequest) -> impl std::future::Future<Output = CodecResult<Self::Sink>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:720:5
+    |
+720 |     async fn sniff(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> CodecResult<PayloadSniff>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+720 -     async fn sniff(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> CodecResult<PayloadSniff>;
+720 +     fn sniff(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> impl std::future::Future<Output = CodecResult<PayloadSniff>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:721:5
+    |
+721 |     async fn decode_payload(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> CodecResult<Self::Payload>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+721 -     async fn decode_payload(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> CodecResult<Self::Payload>;
+721 +     fn decode_payload(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> impl std::future::Future<Output = CodecResult<Self::Payload>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:722:5
+    |
+722 |     async fn encode_payload(&self, payload: &Self::Payload, sink: &mut BoundedPayloadSink<'_, Self::Sink>) -> CodecResult<()>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+722 -     async fn encode_payload(&self, payload: &Self::Payload, sink: &mut BoundedPayloadSink<'_, Self::Sink>) -> CodecResult<()>;
+722 +     fn encode_payload(&self, payload: &Self::Payload, sink: &mut BoundedPayloadSink<'_, Self::Sink>) -> impl std::future::Future<Output = CodecResult<()>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:732:5
+    |
+732 |     async fn dialect(&self) -> &ArtifactDialect;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+732 -     async fn dialect(&self) -> &ArtifactDialect;
+732 +     fn dialect(&self) -> impl std::future::Future<Output = &ArtifactDialect> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:733:5
+    |
+733 |     async fn decode_artifact<R: ResourceResolver>(&self, payload: Self::Payload, context: &mut DecodeContext<R>) -> CodecResult<Sel...
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+733 -     async fn decode_artifact<R: ResourceResolver>(&self, payload: Self::Payload, context: &mut DecodeContext<R>) -> CodecResult<Self::Artifact>;
+733 +     fn decode_artifact<R: ResourceResolver>(&self, payload: Self::Payload, context: &mut DecodeContext<R>) -> impl std::future::Future<Output = CodecResult<Self::Artifact>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:734:5
+    |
+734 |     async fn encode_artifact<R: ResourceResolver>(&self, artifact: &Self::Artifact, context: &mut EncodeContext<R>) -> CodecResult<...
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+734 -     async fn encode_artifact<R: ResourceResolver>(&self, artifact: &Self::Artifact, context: &mut EncodeContext<R>) -> CodecResult<Self::Payload>;
+734 +     fn encode_artifact<R: ResourceResolver>(&self, artifact: &Self::Artifact, context: &mut EncodeContext<R>) -> impl std::future::Future<Output = CodecResult<Self::Payload>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:1212:5
+     |
+1212 |     async fn validate(payload: &IoPayload) -> Vec<Diagnostic>;
+     |     ^^^^^
+     |
+     = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+     |
+1212 -     async fn validate(payload: &IoPayload) -> Vec<Diagnostic>;
+1212 +     fn validate(payload: &IoPayload) -> impl std::future::Future<Output = Vec<Diagnostic>> + Send;
+     |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2400:9
+     |
+2400 |         async fn serialize(from: &S) -> IoResult<IoPayload>;
+     |         ^^^^^
+     |
+     = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+     |
+2400 -         async fn serialize(from: &S) -> IoResult<IoPayload>;
+2400 +         fn serialize(from: &S) -> impl std::future::Future<Output = IoResult<IoPayload>> + Send;
+     |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2415:9
+     |
+2415 |         async fn sniff(_payload: &IoPayload) -> Confidence {
+     |         ^^^^^
+     |
+     = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+     |
+2415 ~         fn sniff(_payload: &IoPayload) -> impl std::future::Future<Output = Confidence> + Send {async {
+2416 |             Confidence::None
+2417 ~         } }
+     |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2418:9
+     |
+2418 |         async fn deserialize(payload: &IoPayload) -> IoResult<S>;
+     |         ^^^^^
+     |
+     = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+     |
+2418 -         async fn deserialize(payload: &IoPayload) -> IoResult<S>;
+2418 +         fn deserialize(payload: &IoPayload) -> impl std::future::Future<Output = IoResult<S>> + Send;
+     |
+
+warning: `semio-framework-os-kernel` (lib) generated 21 warnings
+    Finished `test` profile [unoptimized] target(s) in 33.52s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+────────────
+[32;1m Nextest run[0m ID [1m4d4e1cc0-d98b-4c8b-9c45-86c8e50b7877[0m with nextest profile: [1mfundamental[0m
+[32;1m    Starting[0m [1m264[0m tests across [1m1[0m binary
+[32;1m        PASS[0m [   0.021s] (  1/264) [35;1msemio-framework-ui[0m [36mwgpu::arena::tests[0m[36m::[0m[34;1miterates_over_live_slots_only[0m
+[32;1m        PASS[0m [   0.023s] (  2/264) [35;1msemio-framework-ui[0m [36mwgpu::component::layout::layout_wire_format_tests[0m[36m::[0m[34;1mpartition_window_measures_empty_input_roundtrips_to_empty[0m
+[32;1m        PASS[0m [   0.023s] (  3/264) [35;1msemio-framework-ui[0m [36mwgpu::component::layout::layout_wire_format_tests[0m[36m::[0m[34;1mwindow_engagement_serializes_to_golden_json[0m
+[32;1m        PASS[0m [   0.025s] (  4/264) [35;1msemio-framework-ui[0m [36mwgpu::arena::tests[0m[36m::[0m[34;1mremove_invalidates_the_old_node_id[0m
+[32;1m        PASS[0m [   0.026s] (  5/264) [35;1msemio-framework-ui[0m [36mwgpu::component::layout::layout_wire_format_tests[0m[36m::[0m[34;1mpartition_window_measures_drops_non_matching_utility_group_from_both_buckets[0m
+[32;1m        PASS[0m [   0.028s] (  6/264) [35;1msemio-framework-ui[0m [36mwgpu::component::layout::layout_wire_format_tests[0m[36m::[0m[34;1maction_descriptor_and_style_spec_serialize_to_golden_json[0m
+[32;1m        PASS[0m [   0.030s] (  7/264) [35;1msemio-framework-ui[0m [36mwgpu::arena::tests[0m[36m::[0m[34;1minsert_and_get_round_trip[0m
+[32;1m        PASS[0m [   0.030s] (  8/264) [35;1msemio-framework-ui[0m [36mwgpu::component::layout::layout_wire_format_tests[0m[36m::[0m[34;1mpartition_window_measures_keeps_untagged_group_and_non_group_in_general[0m
+[32;1m        PASS[0m [   0.029s] (  9/264) [35;1msemio-framework-ui[0m [36mwgpu::arena::tests[0m[36m::[0m[34;1mreused_slot_bumps_generation_so_old_id_does_not_alias_new_value[0m
+[32;1m        PASS[0m [   0.034s] ( 10/264) [35;1msemio-framework-ui[0m [36mwgpu::component::layout::layout_wire_format_tests[0m[36m::[0m[34;1mpartition_window_measures_unwraps_matching_utility_group_children_into_utility_options[0m
+[32;1m        PASS[0m [   0.024s] ( 11/264) [35;1msemio-framework-ui[0m [36mwgpu::component::role_chrome::role_chrome_tests[0m[36m::[0m[34;1mapply_role_to_utilities_disables_history_only_for_viewer[0m
+[32;1m        PASS[0m [   0.028s] ( 12/264) [35;1msemio-framework-ui[0m [36mwgpu::component::layout::layout_wire_format_tests[0m[36m::[0m[34;1mwindow_layout_serializes_to_golden_json[0m
+[32;1m        PASS[0m [   0.023s] ( 13/264) [35;1msemio-framework-ui[0m [36mwgpu::component::role_chrome::role_chrome_tests[0m[36m::[0m[34;1mfrom_boot_env_accepts_viewer_and_falls_back_to_editor[0m
+[32;1m        PASS[0m [   0.025s] ( 14/264) [35;1msemio-framework-ui[0m [36mwgpu::component::role_chrome::role_chrome_tests[0m[36m::[0m[34;1mopen_with_menu_item_groups_by_role_viewer_first_then_editor[0m
+[32;1m        PASS[0m [   0.027s] ( 15/264) [35;1msemio-framework-ui[0m [36mwgpu::component::role_chrome::role_chrome_tests[0m[36m::[0m[34;1mfilter_shell_menu_actions_drops_mutation_kind_for_viewer_only[0m
+[32;1m        PASS[0m [   0.023s] ( 16/264) [35;1msemio-framework-ui[0m [36mwgpu::component::role_chrome::role_chrome_tests[0m[36m::[0m[34;1mopen_with_menu_item_localizes_headers_and_label_to_german[0m
+[32;1m        PASS[0m [   0.031s] ( 17/264) [35;1msemio-framework-ui[0m [36mwgpu::component::layout::layout_wire_format_tests[0m[36m::[0m[34;1mwindow_measure_serializes_to_golden_json[0m
+[32;1m        PASS[0m [   0.033s] ( 18/264) [35;1msemio-framework-ui[0m [36mwgpu::component::role_chrome::role_chrome_tests[0m[36m::[0m[34;1mtitle_chip_text_covers_both_roles_in_both_locales[0m
+[32;1m        PASS[0m [   0.033s] ( 19/264) [35;1msemio-framework-ui[0m [36mwgpu::component::role_chrome::role_chrome_tests[0m[36m::[0m[34;1mopen_with_menu_item_toggle_sets_when_not_default_and_clears_when_default[0m
+[32;1m        PASS[0m [   0.017s] ( 20/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mdiff_view_and_event_feed_scenes_serialize_to_golden_json[0m
+[32;1m        PASS[0m [   0.039s] ( 21/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mbuild_shell_context_menu_specs_shapes_arg_carrying_actions_and_appends_the_palette[0m
+[32;1m        PASS[0m [   0.025s] ( 22/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mevery_ui_node_variant_serializes_a_non_default_presence[0m
+[32;1m        PASS[0m [   0.029s] ( 23/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mevery_ui_node_variant_serializes_a_set_menu_ref[0m
+[32;1m        PASS[0m [   0.025s] ( 24/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1morganize_context_menu_folds_overflow_groups_into_menu_group_more[0m
+[32;1m        PASS[0m [   0.026s] ( 25/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1morganize_context_menu_collapses_doubled_bare_separators_and_drops_leading_trailing_ones[0m
+[32;1m        PASS[0m [   0.027s] ( 26/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1morganize_context_menu_emits_as_is_within_budget[0m
+[32;1m        PASS[0m [   0.030s] ( 27/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1morganize_context_menu_buckets_overflow_leaves_by_category_of[0m
+[32;1m        PASS[0m [   0.020s] ( 28/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1morganize_context_menu_puts_destructive_leaves_last_after_a_separator[0m
+[32;1m        PASS[0m [   0.024s] ( 29/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1morganize_context_menu_merges_same_id_groups_and_dedupes_children_by_id[0m
+[32;1m        PASS[0m [   0.029s] ( 30/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1morganize_context_menu_keeps_a_labeled_separator_as_a_non_interactive_header[0m
+[32;1m        PASS[0m [   0.021s] ( 31/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mribbon_parent_label_covers_exactly_the_twenty_taxonomy_ids_and_rejects_unknown[0m
+[32;1m        PASS[0m [   0.020s] ( 32/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1msurface_kind_serializes_to_golden_json[0m
+[32;1m        PASS[0m [   0.034s] ( 33/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1morganize_context_menu_sorts_group_rows_in_taxonomy_order_unknown_last[0m
+[32;1m        PASS[0m [   0.027s] ( 34/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mui_menu_ref_and_context_menu_item_spec_roundtrip_camel_case[0m
+[32;1m        PASS[0m [   0.028s] ( 35/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mui_tree_item_hidden_state_roundtrips[0m
+[32;1m        PASS[0m [   0.020s] ( 36/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mui_tree_item_waiting_status_skips_when_default_and_roundtrips_when_set[0m
+[32;1m        PASS[0m [   0.031s] ( 37/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mui_tree_item_celebrating_state_roundtrips[0m
+[31;1m        FAIL[0m [   0.033s] ( 38/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mscene_records_serialize_to_golden_json[0m
+[31;1m [0m [31;1mstdout[0m [31;1m───[0m
+
+    running 1 test
+    test wgpu::component::ui::ui_node_wire_format_tests::scene_records_serialize_to_golden_json ... FAILED
+
+    failures:
+
+    failures:
+        wgpu::component::ui::ui_node_wire_format_tests::scene_records_serialize_to_golden_json
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 263 filtered out; finished in 0.00s
+    [0m
+[31;1m [0m [31;1mstderr[0m [31;1m───[0m
+
+    [0m[31;1mthread 'wgpu::component::ui::ui_node_wire_format_tests::scene_records_serialize_to_golden_json' (131567649) panicked at 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3923:13:[0m
+    [31;1massertion `left == right` failed[0m
+      left: "[{\"cameraX\":1.0,\"cameraY\":2.0,\"zoom\":1.5,\"layersJson\":\"[]\"},{\"columnsJson\":\"[]\",\"rowsJson\":\"[]\"},{\"documentSyncJson\":\"{}\",\"assetsJson\":\"[]\",\"cameraJson\":\"{}\",\"selectionJson\":\"[]\",\"hoveredId\":\"h1\",\"activeUtility\":\"brush\",\"brushSize\":4.0,\"brushOpacity\":1.0,\"viewMode\":\"composite\"},{\"requestJson\":\"{}\"},{\"schemaJson\":\"{}\",\"rowsJson\":\"[]\",\"emptyMessage\":\"Empty\",\"dragDropEnabled\":true},{\"mapFixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"renderMode\":\"combined\",\"vectorStyle\":\"colored\",\"lodMode\":\"automatic\",\"tileUrlTemplate\":\"/osm/{z}/{x}/{y}.png\",\"vectorTileUrlTemplate\":\"/vt/{z}/{x}/{y}.pbf\",\"layerVisibilityJson\":\"{}\",\"layerStrokeScaleJson\":\"{}\",\"selectionJson\":\"{}\",\"hoverJson\":\"null\",\"selectionMethod\":\"rectangle\",\"selectionMode\":\"default\"},{\"fixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"glyphCatalogsJson\":\"{}\",\"selectionJson\":\"[]\",\"interactive\":true,\"hoveredId\":null,\"activeUtility\":null,\"selectionMethod\":\"rectangle\",\"gridSnapEnabled\":false,\"gridFactor\":1.0,\"suggestionOffset\":0.0,\"brushWeightsJson\":\"{}\",\"placementCompatibilityJson\":\"[]\",\"lodMode\":\"automatic\"},{\"documentJson\":\"{}\",\"selectionJson\":\"[]\",\"activeUtility\":\"select\",\"viewMode\":\"edit\",\"interactive\":true},{\"columnsJson\":\"[]\"},{\"nodes\":[],\"edges\":[],\"viewport\":{\"x\":0.0,\"y\":0.0,\"zoom\":1.0}},{\"buffer\":\"buf\",\"language\":\"rust\"},{\"stepsJson\":\"[]\",\"paletteJson\":\"[]\"}]"
+     right: "[{\"cameraX\":1.0,\"cameraY\":2.0,\"zoom\":1.5,\"layersJson\":\"[]\"},{\"columnsJson\":\"[]\",\"rowsJson\":\"[]\"},{\"documentSyncJson\":\"{}\",\"assetsJson\":\"[]\",\"cameraJson\":\"{}\",\"selectionJson\":\"[]\",\"hoveredId\":\"h1\",\"activeUtility\":\"brush\",\"brushSize\":4.0,\"brushOpacity\":1.0,\"viewMode\":\"composite\"},{\"requestJson\":\"{}\"},{\"schemaJson\":\"{}\",\"rowsJson\":\"[]\",\"emptyMessage\":\"Empty\",\"dragDropEnabled\":true},{\"mapFixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"renderMode\":\"combined\",\"vectorStyle\":\"colored\",\"lodMode\":\"automatic\",\"tileUrlTemplate\":\"/osm/{z}/{x}/{y}.png\",\"vectorTileUrlTemplate\":\"/vt/{z}/{x}/{y}.pbf\",\"layerVisibilityJson\":\"{}\",\"layerStrokeScaleJson\":\"{}\",\"selectionJson\":\"{}\",\"hoverJson\":\"null\",\"selectionMethod\":\"rectangle\",\"selectionMode\":\"default\"},{\"fixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"glyphCatalogsJson\":\"{}\",\"selectionJson\":\"[]\",\"interactive\":true,\"selectionMethod\":\"rectangle\",\"gridSnapEnabled\":false,\"gridFactor\":1.0,\"suggestionOffset\":0.0,\"brushWeightsJson\":\"{}\",\"placementCompatibilityJson\":\"[]\",\"lodMode\":\"automatic\"},{\"documentJson\":\"{}\",\"selectionJson\":\"[]\",\"activeUtility\":\"select\",\"viewMode\":\"edit\",\"interactive\":true},{\"columnsJson\":\"[]\"},{\"nodes\":[],\"edges\":[],\"viewport\":{\"x\":0.0,\"y\":0.0,\"zoom\":1.0}},{\"buffer\":\"buf\",\"language\":\"rust\"},{\"stepsJson\":\"[]\",\"paletteJson\":\"[]\"}]"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace[0m
+
+[31;1m  Cancelling[0m due to [31;1mtest failure[0m: [1m9[0m tests still running
+[31;1m        FAIL[0m [   0.032s] ( 39/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mui_node_tree_serializes_to_golden_json[0m
+[31;1m [0m [31;1mstdout[0m [31;1m───[0m
+
+    running 1 test
+    test wgpu::component::ui::ui_node_wire_format_tests::ui_node_tree_serializes_to_golden_json ... FAILED
+
+    failures:
+
+    failures:
+        wgpu::component::ui::ui_node_wire_format_tests::ui_node_tree_serializes_to_golden_json
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 263 filtered out; finished in 0.00s
+    [0m
+[31;1m [0m [31;1mstderr[0m [31;1m───[0m
+
+    [0m[31;1mthread 'wgpu::component::ui::ui_node_wire_format_tests::ui_node_tree_serializes_to_golden_json' (131567647) panicked at 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3706:13:[0m
+    [31;1massertion `left == right` failed: UiNode wire format drifted — lock this in before moving the type into ui_wgpu[0m
+      left: "{\"type\":\"stack\",\"direction\":\"vertical\",\"gap\":\"md\",\"id\":\"root\",\"children\":[{\"type\":\"text\",\"value\":\"Hello\",\"emphasize\":true},{\"type\":\"button\",\"id\":\"btn1\",\"iconId\":\"save\",\"label\":\"Save\",\"action\":{\"controllerId\":\"ctrl\",\"action\":\"save\"}},{\"type\":\"separator\"},{\"type\":\"input\",\"id\":\"inp1\",\"inputKind\":\"text\",\"value\":\"abc\",\"placeholder\":\"type...\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"setValue\"}},{\"type\":\"select\",\"id\":\"sel1\",\"value\":\"a\",\"items\":[{\"value\":\"a\",\"label\":\"A\"},{\"value\":\"b\",\"label\":\"B\"}],\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"selectChange\"}},{\"type\":\"toggle\",\"id\":\"tog1\",\"iconId\":\"align-left\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"toggle\"},\"presence\":{\"selected\":true}},{\"type\":\"group\",\"id\":\"grp1\",\"label\":\"Group\",\"defaultOpen\":true,\"children\":[{\"type\":\"text\",\"value\":\"child\"}]},{\"type\":\"keyValue\",\"entries\":[{\"label\":\"K\",\"value\":\"V\"}]},{\"type\":\"slider\",\"id\":\"sl1\",\"value\":0.5,\"min\":0.0,\"max\":1.0,\"step\":0.1,\"unit\":\"%\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"sliderChange\"}},{\"type\":\"numberStepper\",\"id\":\"num1\",\"value\":2.0,\"step\":1.0,\"uniform\":true,\"onAbsolute\":{\"controllerId\":\"ctrl\",\"action\":\"setAbs\"},\"onDelta\":{\"controllerId\":\"ctrl\",\"action\":\"setDelta\"}},{\"type\":\"ring\",\"id\":\"ring1\",\"orbId\":\"orb1\",\"t\":0.25,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"ringChange\"}},{\"type\":\"iconSelect\",\"id\":\"icn1\",\"value\":\"star\",\"uniform\":true,\"classifierKind\":\"icon\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"iconChange\"}},{\"type\":\"field\",\"id\":\"field1\",\"label\":\"Field\",\"description\":\"desc\",\"required\":true,\"child\":{\"type\":\"text\",\"value\":\"child\"}},{\"type\":\"section\",\"id\":\"sec1\",\"label\":\"Section\",\"defaultOpen\":true,\"children\":[]},{\"type\":\"tree\",\"sections\":[{\"id\":\"treesec1\",\"label\":\"Items\",\"defaultOpen\":true,\"items\":[{\"id\":\"item1\",\"label\":\"Item 1\",\"presence\":{\"selected\":true}}]}]},{\"type\":\"image\",\"id\":\"img1\",\"src\":\"icon.png\",\"alt\":\"alt text\"},{\"type\":\"componentScene\",\"surfaceId\":\"surf1\",\"controllerId\":\"ctrl\",\"componentKind\":\"world-3d\",\"world3d\":{\"cameraJson\":\"{}\",\"meshesJson\":\"[]\",\"instancesJson\":\"[]\",\"selectionJson\":\"{}\",\"vorticesJson\":null,\"attractionsJson\":null,\"targetVolumesJson\":null,\"referencesJson\":null,\"brushPreviewJson\":null,\"interactionJson\":null,\"engagementPreviewJson\":null,\"lodJson\":null,\"chunkingJson\":null,\"environmentJson\":null,\"frameJson\":null,\"fitJson\":null,\"terrainJson\":null,\"pointsJson\":null,\"statusJson\":null,\"domainId\":null,\"domainGranularityId\":null}},{\"type\":\"externalSlot\",\"pluginId\":\"plugin1\",\"appId\":\"app1\",\"bodyKey\":\"body1\",\"paramsJson\":\"{}\"}]}"
+     right: "{\"type\":\"stack\",\"direction\":\"vertical\",\"gap\":\"md\",\"id\":\"root\",\"children\":[{\"type\":\"text\",\"value\":\"Hello\",\"emphasize\":true},{\"type\":\"button\",\"id\":\"btn1\",\"iconId\":\"save\",\"label\":\"Save\",\"action\":{\"controllerId\":\"ctrl\",\"action\":\"save\"}},{\"type\":\"separator\"},{\"type\":\"input\",\"id\":\"inp1\",\"inputKind\":\"text\",\"value\":\"abc\",\"placeholder\":\"type...\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"setValue\"}},{\"type\":\"select\",\"id\":\"sel1\",\"value\":\"a\",\"items\":[{\"value\":\"a\",\"label\":\"A\"},{\"value\":\"b\",\"label\":\"B\"}],\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"selectChange\"}},{\"type\":\"toggle\",\"id\":\"tog1\",\"iconId\":\"align-left\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"toggle\"},\"presence\":{\"selected\":true}},{\"type\":\"group\",\"id\":\"grp1\",\"label\":\"Group\",\"defaultOpen\":true,\"children\":[{\"type\":\"text\",\"value\":\"child\"}]},{\"type\":\"keyValue\",\"entries\":[{\"label\":\"K\",\"value\":\"V\"}]},{\"type\":\"slider\",\"id\":\"sl1\",\"value\":0.5,\"min\":0.0,\"max\":1.0,\"step\":0.1,\"unit\":\"%\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"sliderChange\"}},{\"type\":\"numberStepper\",\"id\":\"num1\",\"value\":2.0,\"step\":1.0,\"uniform\":true,\"onAbsolute\":{\"controllerId\":\"ctrl\",\"action\":\"setAbs\"},\"onDelta\":{\"controllerId\":\"ctrl\",\"action\":\"setDelta\"}},{\"type\":\"ring\",\"id\":\"ring1\",\"orbId\":\"orb1\",\"t\":0.25,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"ringChange\"}},{\"type\":\"iconSelect\",\"id\":\"icn1\",\"value\":\"star\",\"uniform\":true,\"classifierKind\":\"icon\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"iconChange\"}},{\"type\":\"field\",\"id\":\"field1\",\"label\":\"Field\",\"description\":\"desc\",\"required\":true,\"child\":{\"type\":\"text\",\"value\":\"child\"}},{\"type\":\"section\",\"id\":\"sec1\",\"label\":\"Section\",\"defaultOpen\":true,\"children\":[]},{\"type\":\"tree\",\"sections\":[{\"id\":\"treesec1\",\"label\":\"Items\",\"defaultOpen\":true,\"items\":[{\"id\":\"item1\",\"label\":\"Item 1\",\"presence\":{\"selected\":true}}]}]},{\"type\":\"image\",\"id\":\"img1\",\"src\":\"icon.png\",\"alt\":\"alt text\"},{\"type\":\"componentScene\",\"surfaceId\":\"surf1\",\"controllerId\":\"ctrl\",\"componentKind\":\"world-3d\",\"world3d\":{\"cameraJson\":\"{}\",\"meshesJson\":\"[]\",\"instancesJson\":\"[]\",\"selectionJson\":\"{}\"}},{\"type\":\"externalSlot\",\"pluginId\":\"plugin1\",\"appId\":\"app1\",\"bodyKey\":\"body1\",\"paramsJson\":\"{}\"}]}"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace[0m
+
+[32;1m        PASS[0m [   0.023s] ( 40/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mui_tree_item_loading_status_skips_when_default_and_roundtrips_when_set[0m
+[31;1m        FAIL[0m [   0.024s] ( 41/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mworld_3d_scene_points_json_skips_when_none_and_roundtrips_when_set[0m
+[31;1m [0m [31;1mstdout[0m [31;1m───[0m
+
+    running 1 test
+    test wgpu::component::ui::ui_node_wire_format_tests::world_3d_scene_points_json_skips_when_none_and_roundtrips_when_set ... FAILED
+
+    failures:
+
+    failures:
+        wgpu::component::ui::ui_node_wire_format_tests::world_3d_scene_points_json_skips_when_none_and_roundtrips_when_set
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 263 filtered out; finished in 0.00s
+    [0m
+[31;1m [0m [31;1mstderr[0m [31;1m───[0m
+
+    [0m[31;1mthread 'wgpu::component::ui::ui_node_wire_format_tests::world_3d_scene_points_json_skips_when_none_and_roundtrips_when_set' (131567667) panicked at 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️component.rs:3856:13:[0m
+    [31;1massertion failed: !serde_json::to_string(&bare).unwrap().contains("pointsJson")[0m
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace[0m
+
+[32;1m        PASS[0m [   0.024s] ( 42/264) [35;1msemio-framework-ui[0m [36mwgpu::component::utilities::utility_node_wire_format_tests[0m[36m::[0m[34;1mderive_utility_nodes_groups_shared_group_into_one_collection[0m
+[32;1m        PASS[0m [   0.020s] ( 43/264) [35;1msemio-framework-ui[0m [36mwgpu::component::utilities::utility_node_wire_format_tests[0m[36m::[0m[34;1mderive_utility_nodes_hoists_single_child_groups[0m
+[32;1m        PASS[0m [   0.018s] ( 44/264) [35;1msemio-framework-ui[0m [36mwgpu::component::utilities::utility_node_wire_format_tests[0m[36m::[0m[34;1mutility_node_serializes_to_golden_json[0m
+[32;1m        PASS[0m [   0.017s] ( 45/264) [35;1msemio-framework-ui[0m [36mwgpu::cursor::tests[0m[36m::[0m[34;1ma_vertical_scroll_thumb_capture_uses_the_ns_resize_cursor[0m
+[32;1m        PASS[0m [   0.025s] ( 46/264) [35;1msemio-framework-ui[0m [36mwgpu::component::utilities::utility_node_wire_format_tests[0m[36m::[0m[34;1mderive_utility_nodes_marks_the_active_utility_pressed[0m
+[32;1m        PASS[0m [   0.020s] ( 47/264) [35;1msemio-framework-ui[0m [36mwgpu::cursor::tests[0m[36m::[0m[34;1mactive_slider_drag_uses_grabbing[0m
+────────────
+[31;1m     Summary[0m [   0.135s] [1m47[0m/[1m264[0m tests run: [1m44[0m [32;1mpassed[0m, [1m3[0m [31;1mfailed[0m, [1m0[0m [33;1mskipped[0m
+[31;1m        FAIL[0m [   0.033s] ( 38/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mscene_records_serialize_to_golden_json[0m
+[31;1m        FAIL[0m [   0.032s] ( 39/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mui_node_tree_serializes_to_golden_json[0m
+[31;1m        FAIL[0m [   0.024s] ( 41/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mworld_3d_scene_points_json_skips_when_none_and_roundtrips_when_set[0m
+[33;1mwarning[0m: [1m217[0m/[1m264[0m tests were not run due to [33;1mtest failure[0m (run with [1m--no-fail-fast[0m to run all tests, or run with [1m--max-fail[0m)
+[31;1merror[0m: test run failed
+Warning: command "bun ./📜️script.ts test-wgpu-engine" exited with non-zero status code
+
+
+ NX   Running target test-wgpu-engine for project @semio-tech/ui-rs failed
+
+Failed tasks:
+
+- @semio-tech/ui-rs:test-wgpu-engine
+
+Hint: run the command with --verbose for more details.
+
+1434 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1435 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1436 |  */
+1437 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1438 |   const status = runCmdInternal(cmd, args, opts);
+1439 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: node /Users/ueli/Documents/semio/node_modules/nx/bin/nx.js run @semio-tech/ui-rs:test-wgpu-engine --skip-nx-cache exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1439:31)
+      at run (/Users/ueli/Documents/semio/📜️script.ts:587:11)
+      at run (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1248:15)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts:1294:23)
+
+Bun v1.3.14 (macOS arm64)
+error: script "nx" exited with code 1

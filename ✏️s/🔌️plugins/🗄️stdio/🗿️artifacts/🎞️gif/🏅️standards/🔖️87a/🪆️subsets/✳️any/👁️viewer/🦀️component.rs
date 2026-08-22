@@ -9,7 +9,7 @@ use crate::artifacts::gif::standards::v87a::subsets::any::schema::snapshot::GifS
 use crate::artifacts::gif::{GIF_87A_DIALECT, STDIO_GIF_DOCUMENT_SCHEMA};
 use crate::viewer::gif_87a::modes::view;
 use crate::viewer::gif_87a::modes::view::windows::main;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command

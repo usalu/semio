@@ -699,7 +699,7 @@ impl Default for Part21WriteOptions {
 
 /// 🏭️ Logical producer metadata capable of deterministic Part-21 header materialization.
 pub trait Part21Preamble {
-    async fn write_preamble(&self, out: &mut String, line_ending: &str);
+    fn write_preamble(&self, out: &mut String, line_ending: &str);
 }
 
 /// 🈳️ Zero-sized stand-in preamble type (O1 — R11(a): `write_part21_with`'s preamble is a
@@ -710,7 +710,7 @@ pub trait Part21Preamble {
 struct NoPreamble;
 
 impl Part21Preamble for NoPreamble {
-    async fn write_preamble(&self, _out: &mut String, _line_ending: &str) {}
+    fn write_preamble(&self, _out: &mut String, _line_ending: &str) {}
 }
 
 /// 📤️ Regenerates valid Part-21 text from the generic graph — round-trip losslessness is

@@ -26,10 +26,13 @@ use super::tracking::EntityId;
 
 //#region 📥️ Effect queues
 
+pub type DeferredEffect = Box<dyn FnOnce(&mut EntityStore)>;
+pub(crate) type ListenerCallback = Box<dyn FnMut(&mut EntityStore, Option<&dyn Any>)>;
+
 pub(crate) struct ListenerEntry {
     pub(crate) source: EntityId,
     pub(crate) alive: Weak<Handle>,
-    pub(crate) call: Box<dyn FnMut(&mut EntityStore, Option<&dyn Any>)>,
+    pub(crate) call: ListenerCallback,
 }
 
 /// ⏳️ A future queued by `Context::spawn_local`, handed to the embedder's own executor. This crate
@@ -76,7 +79,7 @@ impl Drop for Subscription {
 pub(crate) struct EffectQueues {
     pub(crate) notify: VecDeque<EntityId>,
     pub(crate) emit: VecDeque<(EntityId, Box<dyn Any>)>,
-    pub(crate) defer: VecDeque<Box<dyn FnOnce(&mut EntityStore)>>,
+    pub(crate) defer: VecDeque<DeferredEffect>,
     pub(crate) tasks: VecDeque<PendingTask>,
     pub(crate) listeners: HashMap<u64, ListenerEntry>,
     next_listener_id: u64,

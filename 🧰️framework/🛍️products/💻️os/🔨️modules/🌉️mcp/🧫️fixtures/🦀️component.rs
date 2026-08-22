@@ -28,7 +28,7 @@ use semio_framework_ui::wgpu::{LocalizedLabel, SurfaceKind};
 
 //#region 🔖️Helpers
 fn action(id: &str, en: &str, de: &str, kind: ActionKind) -> ActionDefinition {
-    ActionDefinition::new_catalog(id, LocalizedLabel::native(en, de), kind)
+    ActionDefinition::bounded_catalog(id, LocalizedLabel::native(en, de), kind)
 }
 
 fn string_array_arg(id: &str, en: &str, de: &str) -> ActionArgDef {

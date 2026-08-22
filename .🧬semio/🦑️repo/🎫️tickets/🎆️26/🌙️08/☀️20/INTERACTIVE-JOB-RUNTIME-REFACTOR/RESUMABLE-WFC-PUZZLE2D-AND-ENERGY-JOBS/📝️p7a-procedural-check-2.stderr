@@ -1,0 +1,66 @@
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+    Checking wasmtime-internal-jit-debug v47.0.3
+   Compiling psm v0.1.31
+    Checking tempfile v3.27.0
+    Checking hash32 v0.3.1
+    Checking addr2line v0.26.1
+    Checking peniko v0.6.1
+    Checking futures v0.3.32
+    Checking wasmtime-internal-jit-icache-coherence v47.0.3
+   Compiling stacker v0.1.24
+   Compiling macro-string v0.2.0
+   Compiling semio-framework-dispatch-macros v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust)
+    Checking encoding_rs v0.8.35
+    Checking semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+    Checking ipnet v2.12.0
+   Compiling cap-std v4.0.2
+    Checking maybe-owned v0.3.4
+   Compiling semio-framework-graph v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust)
+   Compiling wit-bindgen v0.57.1
+    Checking ambient-authority v0.0.2
+   Compiling semio-framework-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust)
+    Checking mach2 v0.6.0
+   Compiling wiggle-macro v47.0.3
+    Checking vello_encoding v0.7.0
+   Compiling libz-sys v1.1.29
+    Checking heapless v0.8.0
+   Compiling wit-bindgen-rust-macro v0.57.1
+   Compiling wiggle-generate v47.0.3
+   Compiling vello_shaders v0.7.0
+    Checking icu_segmenter_data v1.5.1
+    Checking hayro-svg v0.2.0
+    Checking hayro v0.4.0
+    Checking semio-framework-os-kernel-neural-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust)
+    Checking cap-primitives v4.0.2
+    Checking i_float v1.6.0
+    Checking wasmtime v47.0.3
+   Compiling semio-framework-schema-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust)
+   Compiling cap-fs-ext v4.0.2
+    Checking xmlparser v0.13.6
+    Checking semio-framework-number v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust)
+    Checking semio-framework-3d v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust)
+    Checking rstar v0.12.2
+    Checking icu_segmenter v1.5.0
+    Checking semio-framework-math v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust)
+    Checking i_shape v1.6.0
+    Checking chacha20 v0.10.1
+    Checking semio-framework-ui-runtime v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust)
+    Checking icu_provider_adapters v1.5.0
+    Checking typst-svg v0.14.2
+    Checking svgtypes v0.16.1
+    Checking futures-intrusive v0.5.0
+    Checking itertools v0.11.0
+    Checking roxmltree v0.21.1
+    Checking i_tree v0.8.3
+    Checking i_key_sort v0.2.0
+    Checking imagesize v0.14.0
+    Checking hypher v0.1.7
+    Checking robust v1.2.0
+    Checking typst-html v0.14.2
+    Checking rand v0.10.2
+    Checking vello v0.7.0
+    Checking earcutr v0.4.3
+    Checking semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust)
+error: could not compile `semio-framework-plugin` (lib) due to 106 previous errors; 37 warnings emitted
+warning: build failed, waiting for other jobs to finish...

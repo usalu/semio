@@ -2,16 +2,14 @@
 
 use crate::artifacts::imperative::ImperativeSnapshot;
 use crate::editor::imperative::terminology::ImperativeLabels;
-use semio_framework_plugin::{
-    ui_inspector_groups_to_tree, ui_inspector_readonly_field, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-};
+use semio_framework_plugin::{tree_item_desc, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
 pub const IMPERATIVE_PLAY_BODY_INSPECTOR: &str = "imperative.play.inspection";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -30,15 +28,10 @@ pub async fn definition() -> PanelTabDefinition {
 /// `handle`/`copy_fragment`/`cut_operations` are). Documented reduced-fidelity gap, same shape as
 /// `🖍️draw`'s `📌️panels/🔍️properties/🦀️component.rs`: falls through to a step-count summary until a
 /// resolved-selection render path exists.
-pub async fn render(document: &ImperativeSnapshot, labels: &ImperativeLabels) -> UiNode {
+pub fn render(document: &ImperativeSnapshot, labels: &ImperativeLabels) -> BuiltNode {
     let path = crate::artifacts::imperative::imperative_working_scene(document).path;
-    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
-        id: "imperative-play-inspector.summary".into(),
-        label: Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL),
-        default_open: Some(true),
-        presence: UiPresence::default(),
-        fields: vec![ui_inspector_readonly_field("imperative-play-inspector.steps", labels.inspector_steps, path.steps.len().to_string())],
-    }])
+    let field = tree_item_desc("imperative-play-inspector.steps", labels.inspector_steps.as_str(), Some(path.steps.len().to_string()));
+    PanelTreeBuilder::new("imperative-play-inspector").section("imperative-play-inspector.summary", Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()), true, vec![field]).build()
 }
 //#endregion 🔖️Render
 
@@ -50,8 +43,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn inspection_shows_step_count_summary() {
-        let mut app = imperative_app();
-        assert!(render_body(&mut app, IMPERATIVE_PLAY_BODY_INSPECTOR).contains("imperative-play-inspector.steps"));
+        let mut app = imperative_app().await;
+        assert!(render_body(&mut app, IMPERATIVE_PLAY_BODY_INSPECTOR).await.contains("imperative-play-inspector.steps"));
     }
 }
 //#endregion 🧪️Tests

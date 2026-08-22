@@ -31,6 +31,37 @@ pub trait SceneDoc: Clone + Serialize + serde::de::DeserializeOwned {
     /// `ui_contract`'s own `SurfaceKind` doc gives: a rename is a breaking wire change for a later
     /// packet to make on purpose, not a silent side effect of this move).
     const SCHEMA: &'static str;
+
+    /// 🧳️ Encodes the stable opaque scene payload independently of its human-readable JSON shape.
+    fn encode_pack(&self) -> Result<Vec<u8>, crate::pack::PackError> {
+        crate::pack::to_bytes(self)
+    }
+
+    /// 🧳️ Decodes the stable opaque scene payload independently of its human-readable JSON shape.
+    fn decode_pack(bytes: &[u8]) -> Result<Self, crate::pack::PackError> {
+        crate::pack::from_bytes(bytes)
+    }
+}
+
+macro_rules! scene_pack_wire {
+    ($wire:ident, $scene:ident { $($field:ident: $ty:ty),+ $(,)? }) => {
+        #[derive(Serialize, Deserialize)]
+        struct $wire {
+            $($field: $ty),+
+        }
+
+        impl From<&$scene> for $wire {
+            fn from(scene: &$scene) -> Self {
+                Self { $($field: scene.$field.clone()),+ }
+            }
+        }
+
+        impl From<$wire> for $scene {
+            fn from(wire: $wire) -> Self {
+                Self { $($field: wire.$field),+ }
+            }
+        }
+    };
 }
 //#endregion 🔖️SceneDoc
 
@@ -95,8 +126,40 @@ pub struct World3dScene {
     pub domain_granularity_id: Option<String>,
 }
 
+scene_pack_wire!(World3dScenePack, World3dScene {
+    camera_json: String,
+    meshes_json: String,
+    instances_json: String,
+    selection_json: String,
+    vortices_json: Option<String>,
+    attractions_json: Option<String>,
+    target_volumes_json: Option<String>,
+    references_json: Option<String>,
+    brush_preview_json: Option<String>,
+    interaction_json: Option<String>,
+    engagement_preview_json: Option<String>,
+    lod_json: Option<String>,
+    chunking_json: Option<String>,
+    environment_json: Option<String>,
+    frame_json: Option<String>,
+    fit_json: Option<String>,
+    terrain_json: Option<String>,
+    points_json: Option<String>,
+    status_json: Option<String>,
+    domain_id: Option<String>,
+    domain_granularity_id: Option<String>,
+});
+
 impl SceneDoc for World3dScene {
     const SCHEMA: &'static str = "world-3d@1";
+
+    fn encode_pack(&self) -> Result<Vec<u8>, crate::pack::PackError> {
+        crate::pack::to_bytes(&World3dScenePack::from(self))
+    }
+
+    fn decode_pack(bytes: &[u8]) -> Result<Self, crate::pack::PackError> {
+        crate::pack::from_bytes::<World3dScenePack>(bytes).map(Into::into)
+    }
 }
 
 // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
@@ -656,8 +719,33 @@ pub struct Board2dScene {
     pub lod_mode: String,
 }
 
+scene_pack_wire!(Board2dScenePack, Board2dScene {
+    fixture_json: String,
+    camera_json: String,
+    glyph_catalogs_json: String,
+    selection_json: String,
+    interactive: bool,
+    hovered_id: Option<String>,
+    active_utility: Option<String>,
+    selection_method: String,
+    grid_snap_enabled: bool,
+    grid_factor: f64,
+    suggestion_offset: f64,
+    brush_weights_json: String,
+    placement_compatibility_json: String,
+    lod_mode: String,
+});
+
 impl SceneDoc for Board2dScene {
     const SCHEMA: &'static str = "board-2d@1";
+
+    fn encode_pack(&self) -> Result<Vec<u8>, crate::pack::PackError> {
+        crate::pack::to_bytes(&Board2dScenePack::from(self))
+    }
+
+    fn decode_pack(bytes: &[u8]) -> Result<Self, crate::pack::PackError> {
+        crate::pack::from_bytes::<Board2dScenePack>(bytes).map(Into::into)
+    }
 }
 
 // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9

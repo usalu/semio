@@ -11,24 +11,24 @@ use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, 
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
 
-async fn examples() -> &'static [ExampleSource] {
+fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
     EXAMPLES.get_or_init(|| vec![crate::artifacts::vcs::examples::demo::source()]).as_slice()
 }
 
-async fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
+fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
     static DESCRIPTORS: OnceLock<Vec<::schema::ArtifactInferenceDescriptor>> = OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::vcs_artifact_inference_descriptor()]).as_slice()
 }
 
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.
-pub async fn subset() -> SubsetDeclaration {
+pub fn subset() -> SubsetDeclaration<crate::VcsApps> {
     SubsetDeclaration {
         dialect: VCS_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::vcs_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io::io(),
-        viewer: viewer_surface::<viewer::VcsViewer>(viewer::create_vcs_viewer()),
-        editor: editor_surface::<editor::VcsPlayApp>(editor::create_vcs_app()),
+        viewer: viewer_surface::<viewer::VcsViewer, crate::VcsApps>(viewer::create_vcs_viewer()),
+        editor: editor_surface::<editor::VcsPlayApp, crate::VcsApps>(editor::create_vcs_app()),
         examples: examples(),
     }
 }

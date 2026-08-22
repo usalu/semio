@@ -279,7 +279,7 @@ fn apply_node_diff(node: &HtmlNode, diff: &HtmlNodeDiff) -> HtmlNode {
                     None => attributes.clone(),
                 },
                 children: match &element_diff.children {
-                    Some(children_diff) => Box::pin(apply_children_diff(children, children_diff)),
+                    Some(children_diff) => apply_children_diff(children, children_diff),
                     None => children.clone(),
                 },
             },
@@ -313,7 +313,7 @@ fn apply_children_diff(children: &[HtmlNode], diff: &HtmlChildrenDiff) -> Vec<Ht
     for m in &diff.modified {
         if let Some(Some(node)) = slots.get(m.index) {
             let patched = apply_node_diff(node, &m.diff);
-            slots[m.index] = Some(Box::pin(patched));
+            slots[m.index] = Some(patched);
         }
     }
     let mut removed_sorted = diff.removed.clone();
@@ -429,7 +429,7 @@ fn node_diff_between(base: &HtmlNode, other: &HtmlNode) -> Option<HtmlNodeDiff> 
         (HtmlNode::Element { name: bn, attributes: ba, children: bc }, HtmlNode::Element { name: on, attributes: oa, children: oc }) => {
             let name = if bn != on { Some(on.clone()) } else { None };
             let attributes = attrs_diff_between(ba, oa);
-            let children = Box::pin(children_diff_between(bc, oc));
+            let children = children_diff_between(bc, oc);
             if name.is_none() && attributes.is_none() && children.is_none() {
                 None
             } else {
@@ -473,7 +473,7 @@ fn children_diff_between(base: &[HtmlNode], other: &[HtmlNode]) -> Option<HtmlCh
     let mut modified = Vec::new();
     for i in 0..min_len {
         if base[i] != other[i] {
-            if let Some(d) = Box::pin(node_diff_between(&base[i], &other[i])) {
+            if let Some(d) = node_diff_between(&base[i], &other[i]) {
                 modified.push(HtmlChildModified { index: i, diff: d });
             }
         }
@@ -539,7 +539,7 @@ fn absorb_node_diff(a: HtmlNodeDiff, b: HtmlNodeDiff) -> HtmlNodeDiff {
         (HtmlNodeDiff::Text { text: ta }, HtmlNodeDiff::Text { text: tb }) => HtmlNodeDiff::Text { text: tb.or(ta) },
         (HtmlNodeDiff::Comment { text: ta }, HtmlNodeDiff::Comment { text: tb }) => HtmlNodeDiff::Comment { text: tb.or(ta) },
         (HtmlNodeDiff::RawText { parent_kind: ka, text: ta }, HtmlNodeDiff::RawText { parent_kind: kb, text: tb }) => HtmlNodeDiff::RawText { parent_kind: kb.or(ka), text: tb.or(ta) },
-        (HtmlNodeDiff::Element(ea), HtmlNodeDiff::Element(eb)) => HtmlNodeDiff::Element(Box::pin(absorb_element_diff(ea, eb))),
+        (HtmlNodeDiff::Element(ea), HtmlNodeDiff::Element(eb)) => HtmlNodeDiff::Element(absorb_element_diff(ea, eb)),
         (_, b) => b,
     }
 }
@@ -557,7 +557,7 @@ fn absorb_element_diff(mut a: HtmlElementDiff, b: HtmlElementDiff) -> HtmlElemen
     a.children = match (a.children.take(), b.children) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ad), Some(bd)) => Some(Box::pin(absorb_children_diff(ad, bd))),
+        (Some(ad), Some(bd)) => Some(absorb_children_diff(ad, bd)),
     };
     a
 }
@@ -648,7 +648,7 @@ fn absorb_children_diff(d1: HtmlChildrenDiff, d2: HtmlChildrenDiff) -> HtmlChild
                     continue;
                 }
                 match modified.iter_mut().find(|m| &m.index == bi) {
-                    Some(existing) => existing.diff = Box::pin(absorb_node_diff(existing.diff.clone(), m2.diff.clone())),
+                    Some(existing) => existing.diff = absorb_node_diff(existing.diff.clone(), m2.diff.clone()),
                     None => modified.push(HtmlChildModified { index: *bi, diff: m2.diff.clone() }),
                 }
             }

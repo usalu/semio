@@ -1096,12 +1096,36 @@ pub mod host {
     /// SDK-side `assert!` (`ExtensionBundle::assert_extends_matches_primary_dependency`, which only
     /// fires when the extension is BUILT) — a hand-crafted or corrupted `.sxt` must still be rejected
     /// here, at the one place every runtime-installed extension actually passes through.
-    #[derive(Debug, thiserror::Error)]
+    #[derive(Debug)]
     pub enum ExtensionInstallError {
-        #[error("extension package: {0}")]
-        Package(#[from] store::extension::ExtensionPackageError),
-        #[error("extension {extension_id:?} declares extends={extends:?} but its first dependency is {actual:?} — contract freeze §4 requires extends == dependencies[0].plugin_id")]
+        Package(store::extension::ExtensionPackageError),
         ExtendsMismatch { extension_id: String, extends: String, actual: String },
+    }
+
+    impl std::fmt::Display for ExtensionInstallError {
+        fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                Self::Package(error) => write!(formatter, "extension package: {error}"),
+                Self::ExtendsMismatch { extension_id, extends, actual } => {
+                    write!(formatter, "extension {extension_id:?} declares extends={extends:?} but its first dependency is {actual:?} — contract freeze §4 requires extends == dependencies[0].plugin_id")
+                }
+            }
+        }
+    }
+
+    impl std::error::Error for ExtensionInstallError {
+        fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+            match self {
+                Self::Package(error) => Some(error),
+                Self::ExtendsMismatch { .. } => None,
+            }
+        }
+    }
+
+    impl From<store::extension::ExtensionPackageError> for ExtensionInstallError {
+        fn from(error: store::extension::ExtensionPackageError) -> Self {
+            Self::Package(error)
+        }
     }
 
     impl PluginHost {
@@ -2091,7 +2115,7 @@ pub mod backbone {
     use crate::host::{OsBackbonePort, OsBackbonePorts};
     use crate::space;
     #[cfg(not(target_arch = "wasm32"))]
-    use crate::store_sync::{FolderSqliteStorage, FolderTextStorage};
+    use crate::store_sync::{FolderEventLogStorage, FolderTextStorage};
     #[cfg(not(target_arch = "wasm32"))]
     use std::sync::Arc;
     use store::MemoryBackbonePort;
@@ -2112,7 +2136,7 @@ pub mod backbone {
         #[cfg(not(target_arch = "wasm32"))]
         File { uri: String, storage: FolderTextStorage, document_id: String, extension: String },
         #[cfg(not(target_arch = "wasm32"))]
-        Folder(String, FolderSqliteStorage),
+        Folder(String, FolderEventLogStorage),
     }
 
     pub struct SpaceBackbonePort {
@@ -2134,7 +2158,7 @@ pub mod backbone {
         #[cfg(not(target_arch = "wasm32"))]
         pub fn folder(folder_path: &str) -> Result<Self, VcsError> {
             let uri = format!("folder://{folder_path}");
-            Ok(Self { kind: Some(SpacePortKind::Folder(uri, FolderSqliteStorage::new(std::path::PathBuf::from(folder_path)))), memory: MemoryBackbonePort::new() })
+            Ok(Self { kind: Some(SpacePortKind::Folder(uri, FolderEventLogStorage::new(std::path::PathBuf::from(folder_path)))), memory: MemoryBackbonePort::new() })
         }
     }
 
@@ -2288,7 +2312,7 @@ pub mod host_runtime {
     use crate::store_sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactChannels, ArtifactEvent, ArtifactHost, PersistenceBinding};
 
     /// @emoji 📌️ The local persistence binding for a folder-backed document (one row per `document_id`
-    /// in the folder's `.semio` sqlite store — see `FolderSqliteStorage`).
+    /// in the folder's `.semio` append-only event log — see `FolderEventLogStorage`).
     pub fn folder_binding(folder_path: std::path::PathBuf) -> PersistenceBinding {
         PersistenceBinding::Folder { path: folder_path }
     }

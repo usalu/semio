@@ -40,6 +40,7 @@ semio-framework-actor = { workspace = true }
 # the same shape `ComputePool`/`TokioHostRuntime` bridges use, per `semio-framework-async`'s own
 # `block_on` gate doc.
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
+semio-framework-job = { workspace = true }
 semio-framework-os-services = { workspace = true }
 # 🐕️ P1c (one-pool-worker-runtime): `ShardLoop::execute_turn_for`/its job-step counterpart wrap each
 # guest call in a `semio_framework_trace::Watchdog` so an over-8ms turn is recorded as a contract
@@ -63,7 +64,6 @@ wasmtime = { version = "47.0.3", features = ["cranelift", "component-model", "co
 wasmtime-wasi = "47.0.3"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-thiserror = "2.0.12"
 # 🎯️ PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS (W2-A): `HostTransactionCoordinator`
 # hashes a `ForeignStep`'s payload into `protocol::PayloadHash` for `MutationOrigin::Contributed`, the
 # exact algorithm `📡️spr/🎮️command/🦀️component.rs`'s own `Planner` cycle-guard already uses.
@@ -71,11 +71,6 @@ blake3 = "1"
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
-# 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (async-worlds): `🧪️schema-parity/🦀️component.rs`
-# parses `🧬️schema/📜️component.wit` directly to keep `effects.effect` and `host-async` from
-# drifting. Pinned to the exact version `wasmtime = "47.0.3"` already pulls transitively (see
-# `Cargo.lock`'s `wasmtime -> wit-parser 0.252.0` edge) so this adds no second copy to the graph.
-wit-parser = "=0.252.0"
 # 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-effects-async): `testkit` (unions with the
 # plain dependency above for test builds only) brings in `semio-framework-async::testkit::
 # ManualRuntime`, this crate's own `#[cfg(test)]` double for `⚡️effects/🦀️component.rs`'s tests —

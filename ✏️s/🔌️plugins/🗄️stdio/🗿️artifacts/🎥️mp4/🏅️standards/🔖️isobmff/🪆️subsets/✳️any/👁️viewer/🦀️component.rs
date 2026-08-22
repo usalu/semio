@@ -9,7 +9,7 @@ use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::M
 use crate::artifacts::mp4::{MP4_DIALECT, STDIO_MP4_DOCUMENT_SCHEMA};
 use crate::viewer::mp4::modes::view;
 use crate::viewer::mp4::modes::view::windows::main;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command

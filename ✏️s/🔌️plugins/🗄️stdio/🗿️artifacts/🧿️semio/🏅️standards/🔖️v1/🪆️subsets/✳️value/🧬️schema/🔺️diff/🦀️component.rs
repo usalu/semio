@@ -269,14 +269,14 @@ pub fn apply_value_diff(diff: &SemioValueDiff, base: &SemioValue) -> SemioValue 
                 SemioValue::List { items } => items.as_slice(),
                 _ => &[],
             };
-            SemioValue::List { items: Box::pin(apply_list_diff(diff, items)) }
+            SemioValue::List { items: apply_list_diff(diff, items) }
         }
         SemioValueDiff::Map { diff } => {
             let entries: &[SemioValueEntry] = match base {
                 SemioValue::Map { entries } => entries.as_slice(),
                 _ => &[],
             };
-            SemioValue::Map { entries: Box::pin(apply_map_diff(diff, entries)) }
+            SemioValue::Map { entries: apply_map_diff(diff, entries) }
         }
         SemioValueDiff::Ref { id } => SemioValue::Ref { id: id.clone() },
     }
@@ -301,7 +301,7 @@ pub fn apply_list_diff(diff: &IndexedTripleDiff<SemioValueDiff, SemioValue>, bas
     for m in &diff.modified {
         if let Some(old) = base.get(m.index) {
             if let Some(slot) = items.get_mut(m.index) {
-                *slot = Box::pin(apply_value_diff(&m.diff, old));
+                *slot = apply_value_diff(&m.diff, old);
             }
         }
     }
@@ -332,7 +332,7 @@ pub fn apply_map_diff(diff: &NamedTripleDiff<String, SemioValueDiff, NamedAdded<
     for m in &diff.modified {
         if let Some(pos) = entries.iter().position(|e| e.key == m.key) {
             let old = entries[pos].value.clone();
-            entries[pos].value = Box::pin(apply_value_diff(&m.diff, &old));
+            entries[pos].value = apply_value_diff(&m.diff, &old);
         }
     }
     for key in &diff.removed {

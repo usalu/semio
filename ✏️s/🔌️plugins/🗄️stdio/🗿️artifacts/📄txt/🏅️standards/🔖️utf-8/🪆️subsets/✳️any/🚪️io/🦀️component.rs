@@ -72,8 +72,8 @@ pub fn register() {
 #[cfg(not(target_arch = "wasm32"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_schema_specs() {
-    dsl::registry::register_schema_spec("stdio.txt", TxtSnapshot::__dsl_spec);
-    dsl::registry::register_schema_spec("stdio.txt#diff", TxtDiff::__dsl_diff_spec);
+    semio_framework_plugin::resolve_ready(dsl::registry::register_schema_spec("stdio.txt", TxtSnapshot::__dsl_spec));
+    semio_framework_plugin::resolve_ready(dsl::registry::register_schema_spec("stdio.txt#diff", TxtDiff::__dsl_diff_spec));
 }
 
 #[cfg(target_arch = "wasm32")]

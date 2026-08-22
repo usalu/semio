@@ -54,27 +54,36 @@ pub enum StorageProfile {
 //#region 🔖️Error
 /// @emoji 💥️ Every way a storage role can refuse. Deliberately small: a backend translates its own
 /// driver errors into these, so an authority never matches on a driver type.
-#[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum StorageError {
     /// @emoji 🕳️ The addressed entry does not exist.
-    #[error("storage entry not found")]
     NotFound,
     /// @emoji 🪜️ An append was not contiguous with the stream's current head — the writer is
     /// working from a stale `last_seq` and must re-read before retrying.
-    #[error("sequence gap: expected {expected}, got {got}")]
     SequenceGap { expected: u64, got: u64 },
     /// @emoji 🎟️ The caller's [`Lease`] was fenced out by a newer epoch; its writes must be
     /// abandoned, not retried.
-    #[error("actor lease lost")]
     LeaseLost,
     /// @emoji ⚔️ The write contradicts what is already stored (a re-bound idempotency key, a
     /// backwards snapshot, a hash bound to different bytes).
-    #[error("storage conflict: {0}")]
     Conflict(String),
     /// @emoji 🔌️ The backend itself failed — disk, permissions, corruption.
-    #[error("storage backend failure: {0}")]
     Backend(String),
 }
+
+impl std::fmt::Display for StorageError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::NotFound => formatter.write_str("storage entry not found"),
+            Self::SequenceGap { expected, got } => write!(formatter, "sequence gap: expected {expected}, got {got}"),
+            Self::LeaseLost => formatter.write_str("actor lease lost"),
+            Self::Conflict(detail) => write!(formatter, "storage conflict: {detail}"),
+            Self::Backend(detail) => write!(formatter, "storage backend failure: {detail}"),
+        }
+    }
+}
+
+impl std::error::Error for StorageError {}
 //#endregion 🔖️Error
 
 //#region 🔖️Authority
@@ -376,8 +385,8 @@ dyn_enum_close! {
 /// @emoji #️⃣ The canonical content hash of `bytes`, computed with the same `blake3` primitive the
 /// replication format commits with — offered so a caller can address a blob without picking its own
 /// hash function, and so this crate needs no hashing dependency of its own.
-pub async fn content_hash(bytes: &[u8]) -> ContentHash {
-    ContentHash(Blake3Hasher.hash(bytes).await)
+pub fn content_hash(bytes: &[u8]) -> ContentHash {
+    ContentHash(Blake3Hasher.hash(bytes))
 }
 
 /// @emoji 🧱️ Immutable, content-addressed bytes. The caller supplies the hash (see [`content_hash`])
@@ -650,14 +659,14 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn blob_put_get_and_has_are_content_addressed() {
         let mut store = MemoryBlobStore::new();
-        let hash = content_hash(b"hello").await;
+        let hash = content_hash(b"hello");
         assert!(!store.has(&hash).await);
         assert_eq!(store.get(&hash).await, None);
         store.put(hash, b"hello").await.unwrap();
         store.put(hash, b"hello").await.unwrap();
         assert!(store.has(&hash).await);
         assert_eq!(store.get(&hash).await, Some(b"hello".to_vec()));
-        assert_ne!(content_hash(b"hello").await, content_hash(b"world").await);
+        assert_ne!(content_hash(b"hello"), content_hash(b"world"));
         assert!(matches!(store.put(hash, b"world").await, Err(StorageError::Conflict(_))));
     }
     //#endregion 🔖️Blob

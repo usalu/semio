@@ -77,7 +77,7 @@ impl ArtifactViewer for GisMapViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_gismap_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_gismap_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(GISMAP_DIALECT).document(["semio", "gis", "2d"]).icon_id("gis2d").mode_def(view::definition()).default_mode_id(view::GIS_MAP_VIEW_MODE_VIEW).window_kind_def(map::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest

@@ -10,12 +10,12 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 /// 📦️ Encodes a `Fem3dSnapshot` to its binary pack form.
-pub async fn encode(document: &Fem3dSnapshot) -> Vec<u8> {
+pub fn encode(document: &Fem3dSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `Fem3dSnapshot` from its binary pack form.
-pub async fn decode(bytes: &[u8]) -> Result<Fem3dSnapshot, PackError> {
+pub fn decode(bytes: &[u8]) -> Result<Fem3dSnapshot, PackError> {
     <Fem3dSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
@@ -27,7 +27,7 @@ mod tests {
     use std::collections::BTreeMap;
 
     // #region 🔖️Fixtures
-    async fn cantilever_fixture() -> Fem3dSnapshot {
+    fn cantilever_fixture() -> Fem3dSnapshot {
         Fem3dSnapshot {
             nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "n2".into(), x: 3.0, y: 0.0, z: 0.0 }],
             elements: vec![FemElement::Frame { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "hea200".into(), roll: 0.0 }],
@@ -41,7 +41,7 @@ mod tests {
         }
     }
 
-    async fn truss_fixture() -> Fem3dSnapshot {
+    fn truss_fixture() -> Fem3dSnapshot {
         Fem3dSnapshot {
             nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "n2".into(), x: 2.0, y: 0.0, z: 0.0 }, FemNode { id: "n3".into(), x: 1.0, y: 1.0, z: 2.0 }, FemNode { id: "n4".into(), x: 1.0, y: -1.0, z: 0.0 }],
             elements: vec![
@@ -63,7 +63,7 @@ mod tests {
         }
     }
 
-    async fn solid_slab_doc() -> Fem3dSnapshot {
+    fn solid_slab_doc() -> Fem3dSnapshot {
         Fem3dSnapshot {
             nodes: vec![FemNode { id: "sc0".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "sc1".into(), x: 2.0, y: 0.0, z: 0.0 }, FemNode { id: "sc2".into(), x: 2.0, y: 1.0, z: 0.0 }, FemNode { id: "sc3".into(), x: 0.0, y: 1.0, z: 0.0 }],
             elements: vec![],
@@ -83,14 +83,14 @@ mod tests {
     }
     // #endregion 🔖️Fixtures
 
-    #[semio_framework_async_macros::async_test]
-    async fn fem3d_pack_agrees_with_dsl_for_bundled_default_example() {
+    #[test]
+    fn fem3d_pack_agrees_with_dsl_for_bundled_default_example() {
         let document = crate::artifacts::fem3d::dsl::parse_dsl(crate::artifacts::fem3d::dsl::FEM3D_EXAMPLE_TEXT).expect("parse default example");
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&document);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn fem3d_pack_agrees_with_dsl_for_fixture_documents() {
+    #[test]
+    fn fem3d_pack_agrees_with_dsl_for_fixture_documents() {
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&Fem3dSnapshot::default());
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&cantilever_fixture());
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&truss_fixture());
@@ -106,15 +106,15 @@ mod tests {
 mod semio_protocol_conformance {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn component_protocol_semio_is_protocol_dialect() {
+    #[test]
+    fn component_protocol_semio_is_protocol_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Protocol);
         assert!(!COMPONENT_PROTOCOL_SEMIO.is_empty());
         let _ = COMPONENT_PROTOCOL_PATH;
     }
-    #[semio_framework_async_macros::async_test]
-    async fn verify_protocol_bytes_against_encoded_pack() {
+    #[test]
+    fn verify_protocol_bytes_against_encoded_pack() {
         use crate::artifacts::fem3d::Fem3dSnapshot;
         let document = Fem3dSnapshot::default();
         let bytes = encode(&document);

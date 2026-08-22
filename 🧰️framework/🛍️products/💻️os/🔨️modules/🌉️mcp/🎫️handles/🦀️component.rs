@@ -120,7 +120,7 @@ pub fn mint_id(kind: HandleKind, now_ms: u64) -> String {
     let counter = ID_COUNTER.fetch_add(1, Ordering::Relaxed);
     let entropy_marker = Box::new(counter);
     let entropy = format!("{now_ms}:{counter}:{:p}", entropy_marker.as_ref());
-    let digest = blake3::hash(entropy.as_bytes()).to_hex();
+    let digest = framework_hash::hash_bytes(entropy.as_bytes());
     format!("{}{}", kind.prefix(), &digest[..26])
 }
 //#endregion 🔖️IdGeneration

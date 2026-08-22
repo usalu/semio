@@ -1,7 +1,21 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
+use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
-use semio_framework_plugin::{ExecutionMode, Plugin};
+use semio_framework_plugin::plugin_app_close_prelude::*;
+use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+
+//#region 🗃️Apps
+/// 🗃️ Closed runtime app fleet for both Trinity artifact surfaces.
+semio_framework_dispatch_macros::dyn_enum_close! {
+    pub enum TrinityApps: PluginApp {
+        JackEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::jack::TrinityJackPlayApp>>),
+        JackViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::jack::TrinityJackViewer>>),
+        RewriteEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::rewrite::TrinityRewritePlayApp>>),
+        RewriteViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::rewrite::TrinityRewriteViewer>>),
+    }
+}
+//#endregion 🗃️Apps
 
 /// 🔌️ Builds the plugin surface for host registration. Atomic cutover (ticket
 /// 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM, fleet-trinity-recipe): `.declare_artifact(…)`
@@ -15,8 +29,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M6-remaining, `📓️design-abi.md` §3/§6) are this
 /// crate's migration proof: one `OnArtifactKind` event per owned kind, read live from each artifact's
 /// own `artifact_kind().id`, `Isolated` execution, one `documents.write` ask covering both editors.
-pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
-    Plugin::builder("trinity")
+pub fn plugin() -> Result<Plugin<TrinityApps>, semio_framework_plugin::PluginAssemblyError> {
+    Plugin::<TrinityApps>::builder("trinity")
         .label("Trinity")
         .version("0.1.0")
         .declare_artifact(crate::artifacts::jack::artifact())

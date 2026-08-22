@@ -6,7 +6,7 @@ use crate::artifacts::present::PresentSnapshot;
 //#region 🔹Inverse
 /// ↩️ Undo moves the tile back to its pre-reorder index, captured from `base` — missing target
 /// returns `Vec::new()`.
-pub async fn inverse(payload: &ReorderTiles, base: &PresentSnapshot) -> Vec<PresentMutation> {
+pub fn inverse(payload: &ReorderTiles, base: &PresentSnapshot) -> Vec<PresentMutation> {
     let (_, tiles) = crate::artifacts::present::present_working_scene(base);
     let Some(current_index) = tiles.iter().position(|tile| tile.id == payload.id) else {
         return Vec::new();

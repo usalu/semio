@@ -43,7 +43,7 @@ pub struct ValueDsl {
     dictionary: Option<BTreeMap<String, ValueDsl>>,
 }
 
-pub async fn value_to_value_dsl(value: &Value) -> ValueDsl {
+pub fn value_to_value_dsl(value: &Value) -> ValueDsl {
     let mut dsl_value = ValueDsl { null: None, boolean: None, integer: None, decimal: None, text: None, dictionary: None };
     match value {
         Value::Atom(Atom::Null) => dsl_value.null = Some(true),
@@ -56,7 +56,7 @@ pub async fn value_to_value_dsl(value: &Value) -> ValueDsl {
     dsl_value
 }
 
-pub async fn value_dsl_to_value(dsl_value: &ValueDsl) -> Value {
+pub fn value_dsl_to_value(dsl_value: &ValueDsl) -> Value {
     if dsl_value.null.is_some() {
         return Value::Atom(Atom::Null);
     }
@@ -78,20 +78,20 @@ pub async fn value_dsl_to_value(dsl_value: &ValueDsl) -> Value {
     }
 }
 
-pub async fn dictionary_to_value_dsl_map(dict: &Dictionary) -> BTreeMap<String, ValueDsl> {
+pub fn dictionary_to_value_dsl_map(dict: &Dictionary) -> BTreeMap<String, ValueDsl> {
     dict.keys().map(|key| (key.clone(), value_to_value_dsl(dict.get(key).expect("key came from dict.keys()")))).collect()
 }
 
-pub async fn value_dsl_map_to_dictionary(entries: &BTreeMap<String, ValueDsl>) -> Dictionary {
+pub fn value_dsl_map_to_dictionary(entries: &BTreeMap<String, ValueDsl>) -> Dictionary {
     entries.iter().fold(Dictionary::new(), |dict, (key, value)| dict.insert(key.clone(), value_dsl_to_value(value)))
 }
 
 /// 📦️ `None` when `dict` is empty, mirroring the old printer's "omit an empty dictionary section".
-pub async fn dictionary_to_option_dsl_map(dict: &Dictionary) -> Option<BTreeMap<String, ValueDsl>> {
+pub fn dictionary_to_option_dsl_map(dict: &Dictionary) -> Option<BTreeMap<String, ValueDsl>> {
     (!dict.is_empty()).then(|| dictionary_to_value_dsl_map(dict))
 }
 
-pub async fn option_dsl_map_to_dictionary(entries: Option<BTreeMap<String, ValueDsl>>) -> Dictionary {
+pub fn option_dsl_map_to_dictionary(entries: Option<BTreeMap<String, ValueDsl>>) -> Dictionary {
     entries.map(|entries| value_dsl_map_to_dictionary(&entries)).unwrap_or_default()
 }
 //#endregion 🔖️Value
@@ -119,20 +119,20 @@ pub struct PathDsl {
     steps: Vec<StepNodeDsl>,
 }
 
-pub async fn step_to_step_node_dsl(step: &Step) -> StepNodeDsl {
+pub fn step_to_step_node_dsl(step: &Step) -> StepNodeDsl {
     StepNodeDsl::Step { id: step.id.clone(), kind: step.kind.clone(), params: dictionary_to_option_dsl_map(&step.params), bodies: step.bodies.iter().map(|(slot, path)| (slot.clone(), path_to_path_dsl(path))).collect() }
 }
 
-pub async fn step_node_dsl_to_step(node: StepNodeDsl) -> Step {
+pub fn step_node_dsl_to_step(node: StepNodeDsl) -> Step {
     let StepNodeDsl::Step { id, kind, params, bodies } = node;
     Step { id, kind, params: option_dsl_map_to_dictionary(params), bodies: bodies.into_iter().map(|(slot, path)| (slot, path_dsl_to_path(path))).collect() }
 }
 
-pub async fn path_to_path_dsl(path: &Path) -> PathDsl {
+pub fn path_to_path_dsl(path: &Path) -> PathDsl {
     PathDsl { steps: path.steps.iter().map(step_to_step_node_dsl).collect() }
 }
 
-pub async fn path_dsl_to_path(path_dsl: PathDsl) -> Path {
+pub fn path_dsl_to_path(path_dsl: PathDsl) -> Path {
     Path { steps: path_dsl.steps.into_iter().map(step_node_dsl_to_step).collect() }
 }
 //#endregion 🔖️Step
@@ -142,12 +142,12 @@ pub async fn path_dsl_to_path(path_dsl: PathDsl) -> Path {
 pub const IMPERATIVE_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.imperative` DSL text into an `ImperativeSnapshot`.
-pub async fn parse_dsl(text: &str) -> Result<ImperativeSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<ImperativeSnapshot, store::TextError> {
     <ImperativeSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints an `ImperativeSnapshot` back to `.imperative` DSL text.
-pub async fn print_dsl(document: &ImperativeSnapshot) -> String {
+pub fn print_dsl(document: &ImperativeSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 //#endregion 🔖️Api
@@ -159,7 +159,7 @@ mod tests {
     use crate::artifacts::imperative::{Dictionary as DocDictionary, Step as DocStep};
     use std::collections::BTreeMap as StdBTreeMap;
 
-    async fn step(id: &str, kind: &str) -> DocStep {
+    fn step(id: &str, kind: &str) -> DocStep {
         DocStep { id: id.into(), kind: kind.into(), params: DocDictionary::new(), bodies: StdBTreeMap::new() }
     }
 

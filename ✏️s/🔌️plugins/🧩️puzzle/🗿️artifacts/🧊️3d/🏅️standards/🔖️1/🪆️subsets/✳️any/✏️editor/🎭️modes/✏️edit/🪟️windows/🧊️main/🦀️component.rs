@@ -19,9 +19,10 @@ use crate::editor::puzzle3d::{
     PUZZLE3D_FALLBACK_MESH_KIND, PUZZLE3D_VORTEX_SHOW_ALWAYS,
 };
 use semio_framework_plugin::{
-    build_world_3d_scene, world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene_extended, world3d_selection_json, SurfaceKind, UiNode,
-    WindowEngagement, WindowEngagementInput, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions,
+    world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene_extended, world3d_selection_json, SurfaceKind, WindowEngagement,
+    WindowEngagementInput, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, WindowOptions,
 };
+use semio_framework_ui_contract::{Buildable, BuiltNode, HasBase};
 use serde_json::{json, Value};
 use std::hash::{Hash, Hasher};
 
@@ -39,7 +40,7 @@ pub const TEMPLATE_PERSPECTIVE: &str = r#"world-projection:{"mode":{"kind":"thre
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::puzzle3d::create_puzzle3d_app`.
-pub async fn definition(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> WindowKindDefinition {
+pub fn definition(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: puzzle3d_localized(|l| l.window_main),
@@ -62,7 +63,7 @@ pub async fn definition(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> Wi
 
 /// 🎚️ The live chrome measures for one window instance, collected from the mode's `🎚️options/*`
 /// components plus this window's own `🪛️utilities/*` option groups.
-pub async fn window_measures(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
+pub fn window_measures(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
     vec![
         options::projection::measure(&envelope.runtime),
         options::vortex::show_measure(&envelope.runtime, labels),
@@ -81,7 +82,7 @@ pub async fn window_measures(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrec
 //#region 🔖️SceneMode
 /// 🧭️ The select/brush/fill interaction mode the world engine reads, derived from the flat active
 /// utility (the transform gumball and `worldRelocate` both present as `select`).
-pub async fn scene_mode(active_utility: &str) -> &str {
+pub fn scene_mode(active_utility: &str) -> &str {
     match active_utility {
         "brush" => "brush",
         "fill" => "fill",
@@ -91,7 +92,7 @@ pub async fn scene_mode(active_utility: &str) -> &str {
 }
 
 /// 🎚️ The gumball handle the world engine draws when a transform utility is active.
-pub async fn transform_handle(active_utility: &str) -> Option<&'static str> {
+pub fn transform_handle(active_utility: &str) -> Option<&'static str> {
     if active_utility == utilities::transform::UTILITY_ID {
         Some("transform")
     } else {
@@ -100,7 +101,7 @@ pub async fn transform_handle(active_utility: &str) -> Option<&'static str> {
 }
 
 /// 🧭️ Whether the active utility is a transform gumball mode.
-pub async fn transform_utility_active(active_utility: &str) -> bool {
+pub fn transform_utility_active(active_utility: &str) -> bool {
     transform_handle(active_utility).is_some()
 }
 
@@ -110,21 +111,21 @@ pub async fn transform_utility_active(active_utility: &str) -> bool {
 /// can no longer see whether anything is selected — see `panels::inspection::render`'s doc comment
 /// for the framework-level gap this is downstream of. Defaults to "never render an unattached
 /// gumball" rather than always-on.
-pub async fn gumball_active(_runtime: &Puzzle3dRuntime, _active_utility: &str) -> bool {
+pub fn gumball_active(_runtime: &Puzzle3dRuntime, _active_utility: &str) -> bool {
     false
 }
 //#endregion 🔖️SceneMode
 
 //#region 🔖️SceneJson
-pub async fn camera_json(runtime: &Puzzle3dRuntime) -> String {
+pub fn camera_json(runtime: &Puzzle3dRuntime) -> String {
     let camera = &runtime.camera;
-    world3d_camera_projection_json(camera.position, camera.target, camera.up, camera.zoom, &camera.projection)
+    semio_framework::io::resolve_ready(world3d_camera_projection_json(camera.position, camera.target, camera.up, camera.zoom, &camera.projection))
 }
 
 /// 🙈️ Hidden objects stay in the emitted array — `worldPick`'s `id` arg is the array index into it — but render at zero scale so they're effectively invisible without shifting any other object's index.
 /// `revealIndex` is omitted entirely for untagged objects rather than emitted as `null`: the host's reveal cutoff (`framework/renderer/react`'s `applyRevealCutoff`) only skips instances with no reveal index, and a JSON `null` would coerce to `0` and hide every ordinary object behind the boot cutoff.
 /// Selection/hover paint is driven by `selectionJson` on the host — never baked here so instance geometry stays stable across picks.
-pub async fn world_instances_geometry_json(fixture: &Puzzle3dFixture) -> String {
+pub fn world_instances_geometry_json(fixture: &Puzzle3dFixture) -> String {
     let instances: Vec<Value> = fixture
         .objects
         .iter()
@@ -157,14 +158,14 @@ pub async fn world_instances_geometry_json(fixture: &Puzzle3dFixture) -> String 
 }
 
 /// 🗄️ Cheap change key for everything the instance/mesh payloads (and the document tree) derive from.
-pub async fn fixture_geometry_fingerprint(fixture: &Puzzle3dFixture) -> u64 {
+pub fn fixture_geometry_fingerprint(fixture: &Puzzle3dFixture) -> u64 {
     let payload = serde_json::to_string(&(&fixture.objects, &fixture.references, &fixture.target_volumes, &fixture.meta)).unwrap_or_default();
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     payload.hash(&mut hasher);
     hasher.finish()
 }
 
-pub async fn world_meshes_json(fixture: &Puzzle3dFixture) -> String {
+pub fn world_meshes_json(fixture: &Puzzle3dFixture) -> String {
     let urls = collect_mesh_urls(fixture);
     let kinds = vec![PUZZLE3D_FALLBACK_MESH_KIND.into(), "vortex-marker".into()];
     if urls.is_empty() {
@@ -181,25 +182,25 @@ pub async fn world_meshes_json(fixture: &Puzzle3dFixture) -> String {
     meshes_json
 }
 
-async fn world_vortex_direction(object: &Puzzle3dObject, vortex: &Puzzle3dVortex) -> [f64; 3] {
+fn world_vortex_direction(object: &Puzzle3dObject, vortex: &Puzzle3dVortex) -> [f64; 3] {
     let direction = vortex.direction.unwrap_or([0.0, 0.0, -1.0]);
     quat_rotate_vector(object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), direction)
 }
 
-async fn vortex_color(meta: &Puzzle3dFixtureMeta, vortex_kind: Option<&str>) -> String {
+fn vortex_color(meta: &Puzzle3dFixtureMeta, vortex_kind: Option<&str>) -> String {
     catalog_entry_field(meta, "vortices", vortex_kind, &["color"], "#38bdf8")
 }
 
-async fn object_kind_color(meta: &Puzzle3dFixtureMeta, object_kind: Option<&str>) -> String {
+fn object_kind_color(meta: &Puzzle3dFixtureMeta, object_kind: Option<&str>) -> String {
     catalog_entry_field(meta, "objects", object_kind, &["color"], "#38bdf8")
 }
 
-async fn object_kind_icon(meta: &Puzzle3dFixtureMeta, object_kind: Option<&str>) -> String {
+fn object_kind_icon(meta: &Puzzle3dFixtureMeta, object_kind: Option<&str>) -> String {
     catalog_entry_field(meta, "objects", object_kind, &["icon", "iconId"], "box")
 }
 
 /// 🎨️ First present `fields` entry on the `section` catalog row whose `id` is `kind_id`, else `fallback`.
-async fn catalog_entry_field(meta: &Puzzle3dFixtureMeta, section: &str, kind_id: Option<&str>, fields: &[&str], fallback: &str) -> String {
+fn catalog_entry_field(meta: &Puzzle3dFixtureMeta, section: &str, kind_id: Option<&str>, fields: &[&str], fallback: &str) -> String {
     let Some(kind_id) = kind_id else {
         return fallback.into();
     };
@@ -222,11 +223,11 @@ async fn catalog_entry_field(meta: &Puzzle3dFixtureMeta, section: &str, kind_id:
 /// parent object (or any of its vortices) was hovered/selected, but `render` has no live
 /// selection/hover to check (see `gumball_active`'s doc comment) — `PUZZLE3D_VORTEX_SHOW_SELECTED`
 /// mode's markers are unreachable until that framework gap closes.
-async fn object_vortices_visible(_object: &Puzzle3dObject, runtime: &Puzzle3dRuntime) -> bool {
+fn object_vortices_visible(_object: &Puzzle3dObject, runtime: &Puzzle3dRuntime) -> bool {
     runtime.vortex_show == PUZZLE3D_VORTEX_SHOW_ALWAYS
 }
 
-pub async fn world_vortices_json(fixture: &Puzzle3dFixture, runtime: &Puzzle3dRuntime) -> String {
+pub fn world_vortices_json(fixture: &Puzzle3dFixture, runtime: &Puzzle3dRuntime) -> String {
     let mut records = Vec::new();
     for object in &fixture.objects {
         if !object_vortices_visible(object, runtime) {
@@ -251,7 +252,7 @@ pub async fn world_vortices_json(fixture: &Puzzle3dFixture, runtime: &Puzzle3dRu
     serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
 }
 
-pub async fn world_attractions_json(fixture: &Puzzle3dFixture) -> String {
+pub fn world_attractions_json(fixture: &Puzzle3dFixture) -> String {
     let records: Vec<Value> = fixture
         .attractions
         .iter()
@@ -269,7 +270,7 @@ pub async fn world_attractions_json(fixture: &Puzzle3dFixture) -> String {
     serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
 }
 
-pub async fn world_target_volumes_json(fixture: &Puzzle3dFixture) -> String {
+pub fn world_target_volumes_json(fixture: &Puzzle3dFixture) -> String {
     let records: Vec<Value> = fixture
         .target_volumes
         .iter()
@@ -288,7 +289,7 @@ pub async fn world_target_volumes_json(fixture: &Puzzle3dFixture) -> String {
     serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
 }
 
-pub async fn world_references_json(fixture: &Puzzle3dFixture) -> String {
+pub fn world_references_json(fixture: &Puzzle3dFixture) -> String {
     let records: Vec<Value> = fixture
         .references
         .iter()
@@ -306,7 +307,7 @@ pub async fn world_references_json(fixture: &Puzzle3dFixture) -> String {
     serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
 }
 
-pub async fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecomputeSession) -> String {
+pub fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecomputeSession) -> String {
     let runtime = &envelope.runtime;
     let suggestion_menu = runtime.suggestion_menu.as_ref().map(|menu| {
         let (pending, candidates) = (!menu.vortex_full_id.is_empty())
@@ -367,7 +368,7 @@ pub async fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3d
     .to_string()
 }
 
-pub async fn world3d_lod_json(runtime: &Puzzle3dRuntime) -> String {
+pub fn world3d_lod_json(runtime: &Puzzle3dRuntime) -> String {
     json!({
         "gridFactor": runtime.grid_spacing,
         "gridSnapEnabled": runtime.grid_snap_enabled,
@@ -381,7 +382,7 @@ pub async fn world3d_lod_json(runtime: &Puzzle3dRuntime) -> String {
 
 /// 👻️ Ghost placement for the brush utility, or for a one-shot context-menu / Alt+right-click
 /// suggestion popup (`suggestion_menu`) that must not switch the host-owned active utility into brush.
-pub async fn world_brush_preview_json(session: &Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) -> Option<String> {
+pub fn world_brush_preview_json(session: &Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) -> Option<String> {
     if envelope.active_utility != utilities::brush::UTILITY_ID && envelope.runtime.suggestion_menu.is_none() {
         return None;
     }
@@ -399,13 +400,31 @@ pub async fn world_brush_preview_json(session: &Puzzle3dPrecomputeSession, envel
     serde_json::to_string(&value).ok()
 }
 
+/// 🪣️ Latest-wins fill ghost: the renderer receives the same mesh/pose payload as a brush ghost,
+/// plus the complete typed fill preview for collision/search overlays and diagnostics.
+pub fn world_fill_preview_json(session: &Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) -> Option<String> {
+    if envelope.active_utility != "fill" {
+        return None;
+    }
+    let build = session.fill_progress().preview?;
+    let ghost = build.candidate_ghost.as_ref()?;
+    let color = object_kind_color(&envelope.fixture.meta, Some(ghost.object_kind_id.as_str()));
+    let mut value = serde_json::to_value(ghost).ok()?;
+    if let Some(object) = value.as_object_mut() {
+        object.insert("color".into(), json!(color));
+        object.insert("opacity".into(), json!(0.35));
+        object.insert("fillBuildPreview".into(), serde_json::to_value(build).ok()?);
+    }
+    serde_json::to_string(&value).ok()
+}
+
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: selection/hover ids,
 /// merge mode, active-object id, and the gumball target/active flag all used to come from
 /// `runtime.selection`/`hovered_*`, now dissolved into the framework-owned `vortex` interaction
 /// domain. `render` never gained an `InteractionView` parameter (see `gumball_active`'s doc comment),
 /// so this payload carries no live ids at all until that framework gap closes — the world-3d host
 /// renders an always-empty selection/hover overlay in the meantime.
-pub async fn world_selection_json(envelope: &Puzzle3dScene) -> String {
+pub fn world_selection_json(envelope: &Puzzle3dScene) -> String {
     let runtime = &envelope.runtime;
     let mut value: Value = serde_json::from_str(&world3d_selection_json("pick", &[], None)).unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
@@ -446,48 +465,45 @@ pub async fn world_selection_json(envelope: &Puzzle3dScene) -> String {
 //#region 🔖️Render
 /// 🖼️ The world-3d surface node for this window — `instances_json`/`meshes_json` come pre-computed
 /// from `Puzzle3dPlayApp`'s geometry cache (they only change with the fixture's geometry fingerprint).
-pub async fn render(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, instances_json: String, meshes_json: String) -> UiNode {
-    let brush_preview = world_brush_preview_json(precompute, envelope);
-    build_world_3d_scene(
-        SURFACE_VIEWPORT,
-        crate::editor::puzzle3d::PUZZLE3D_PLAY_APP_ID,
-        world3d_scene_extended(
-            camera_json(&envelope.runtime),
-            meshes_json,
-            instances_json,
-            world_selection_json(envelope),
-            Some(world_vortices_json(&envelope.fixture, &envelope.runtime)),
-            Some(world_attractions_json(&envelope.fixture)),
-            Some(world_target_volumes_json(&envelope.fixture)),
-            Some(world_references_json(&envelope.fixture)),
-            brush_preview,
-            Some(world_interaction_json(envelope, precompute)),
-            None,
-            Some(world3d_lod_json(&envelope.runtime)),
-            Some(world3d_chunking_json(envelope.runtime.chunk_size, 8000.0)),
-            Some(world3d_environment_json(&envelope.runtime.sun)),
-            None,
-            None,
-            None,
-            None,
-            None,
-            // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): not wired here — this app
-            // already emits its own `interactionSelect`/`interactionHover` for `PUZZLE3D_INTERACTION_DOMAIN`
-            // ("vortex") from bespoke vortex-fit pick logic elsewhere in this crate, independent of the
-            // OS `♾️infinite` surface's generic `pick_select_action`/`pick_hover_action`; binding this
-            // scene's plain-pick fallback to the same domain without first confirming the two paths
-            // can't double-emit is left as a follow-up, not attempted here.
-            None,
-            None,
-        ),
-    )
+pub fn render(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, instances_json: String, meshes_json: String) -> BuiltNode {
+    let brush_preview = world_fill_preview_json(precompute, envelope).or_else(|| world_brush_preview_json(precompute, envelope));
+    let scene = world3d_scene_extended(
+        camera_json(&envelope.runtime),
+        meshes_json,
+        instances_json,
+        world_selection_json(envelope),
+        Some(world_vortices_json(&envelope.fixture, &envelope.runtime)),
+        Some(world_attractions_json(&envelope.fixture)),
+        Some(world_target_volumes_json(&envelope.fixture)),
+        Some(world_references_json(&envelope.fixture)),
+        brush_preview,
+        Some(world_interaction_json(envelope, precompute)),
+        None,
+        Some(world3d_lod_json(&envelope.runtime)),
+        Some(world3d_chunking_json(envelope.runtime.chunk_size, 8000.0)),
+        Some(world3d_environment_json(&envelope.runtime.sun)),
+        None,
+        None,
+        None,
+        None,
+        None,
+        // 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): not wired here — this app
+        // already emits its own `interactionSelect`/`interactionHover` for `PUZZLE3D_INTERACTION_DOMAIN`
+        // ("vortex") from bespoke vortex-fit pick logic elsewhere in this crate, independent of the
+        // OS `♾️infinite` surface's generic `pick_select_action`/`pick_hover_action`; binding this
+        // scene's plain-pick fallback to the same domain without first confirming the two paths
+        // can't double-emit is left as a follow-up, not attempted here.
+        None,
+        None,
+    );
+    semio_framework_ui_contract::surface(semio_framework_ui_scene::encode(semio_framework_ui_contract::SurfaceKind::World3d, &scene)).id(SURFACE_VIEWPORT).build()
 }
 
 /// 🤝️ The engagement HUD for this window: the select/brush/fill switcher lives in the framework
 /// utility bar (declared via `.utility` + `.window_kind_utilities`); the fill-count slider, voxel
 /// steppers and brush placement picker are tagged [`WindowMeasure::Group`]s surfaced in the dedicated
 /// "Utility Options" rail, so what is left here is a bare command input plus a status line.
-pub async fn engagement(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> WindowEngagement {
+pub fn engagement(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> WindowEngagement {
     let object_count = envelope.fixture.objects.len();
     let attraction_count = envelope.fixture.attractions.len();
     let active_utility = envelope.active_utility.as_str();
@@ -514,7 +530,7 @@ pub async fn engagement(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> Wi
 }
 
 /// 🧭️ Whether the engagement HUD should mark an active session for the given utility.
-async fn engagement_session_active(active_utility: &str) -> bool {
+fn engagement_session_active(active_utility: &str) -> bool {
     matches!(active_utility, "brush" | "fill" | "worldRelocate")
 }
 //#endregion 🔖️Render

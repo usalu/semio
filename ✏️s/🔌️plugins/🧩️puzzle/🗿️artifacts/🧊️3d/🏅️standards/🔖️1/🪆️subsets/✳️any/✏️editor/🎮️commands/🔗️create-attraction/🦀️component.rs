@@ -4,7 +4,7 @@ use crate::editor::puzzle3d::{derive_attraction_params, puzzle3d_kinds_compatibl
 use serde_json::Value;
 use std::sync::atomic::Ordering;
 
-pub async fn create_attraction(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
+pub fn create_attraction(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     let attracting = args.and_then(|value| value.get("attracting")).and_then(|value| value.as_str()).unwrap_or("");
     let attracted = args.and_then(|value| value.get("attracted")).and_then(|value| value.as_str()).unwrap_or("");
     if attracting.is_empty() || attracted.is_empty() || attracting == attracted {

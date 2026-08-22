@@ -5,7 +5,7 @@
 // projection, csv import + xlsx + zip both directions are honest not-yet-implemented stubs, same
 // fidelity/sniffs shape either way). Shaped inline (no generated `IoEntryDescriptor` type checked
 // in anywhere yet in this repo) so this file has no fragile forward reference; swap for a real
-// import once ts-rs generation lands.
+// import once owned schema generation lands.
 export interface IoEntryDescriptorMirror {
   from: string;
   into: string;

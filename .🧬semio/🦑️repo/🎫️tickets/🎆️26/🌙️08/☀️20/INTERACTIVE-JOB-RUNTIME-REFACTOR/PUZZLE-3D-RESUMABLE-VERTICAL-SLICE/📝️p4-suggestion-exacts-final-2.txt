@@ -1,0 +1,2678 @@
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+warning: enum `LeafContext` is never used
+  --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:35:6
+   |
+35 | enum LeafContext {
+   |      ^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `style_for` is never used
+  --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:67:4
+   |
+67 | fn style_for(node: &UiNode) -> Style {
+   |    ^^^^^^^^^
+
+warning: function `apply_stack_metrics` is never used
+  --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:94:4
+   |
+94 | fn apply_stack_metrics(style: &mut Style, stack: &crate::wgpu::component::ui::UiStackNode, theme: &Theme) {
+   |    ^^^^^^^^^^^^^^^^^^^
+
+warning: function `apply_field_metrics` is never used
+   --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:107:4
+    |
+107 | fn apply_field_metrics(style: &mut Style, theme: &Theme) {
+    |    ^^^^^^^^^^^^^^^^^^^
+
+warning: function `apply_section_metrics` is never used
+   --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:125:4
+    |
+125 | fn apply_section_metrics(style: &mut Style, theme: &Theme) {
+    |    ^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `leaf_context` is never used
+   --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:130:4
+    |
+130 | fn leaf_context(node: &UiNode) -> LeafContext {
+    |    ^^^^^^^^^^^^
+
+warning: variants `SyncNodes`, `SolveLayout`, and `CollectResults` are never constructed
+   --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:170:5
+    |
+166 | pub(crate) enum LayoutJobStage {
+    |                 -------------- variants in this enum
+...
+170 |     SyncNodes,
+    |     ^^^^^^^^^
+171 |     SolveLayout,
+    |     ^^^^^^^^^^^
+...
+174 |     CollectResults,
+    |     ^^^^^^^^^^^^^^
+    |
+    = note: `LayoutJobStage` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: fields `prune_index`, `sync_index`, and `result_index` are never read
+   --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:232:5
+    |
+219 | pub(crate) struct LayoutJob {
+    |                   --------- fields in this struct
+...
+232 |     prune_index: usize,
+    |     ^^^^^^^^^^^
+233 |     sync_index: usize,
+    |     ^^^^^^^^^^
+234 |     result_index: usize,
+    |     ^^^^^^^^^^^^
+
+warning: constant `MAX_TAFFY_SLICE_NODES` is never used
+   --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:244:7
+    |
+244 | const MAX_TAFFY_SLICE_NODES: usize = 128;
+    |       ^^^^^^^^^^^^^^^^^^^^^
+
+   Compiling semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+warning: `semio-framework-ui` (lib) generated 9 warnings
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust)
+   Compiling semio-framework-plugin-host v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust)
+   Compiling semio-framework-os-infinite v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust)
+warning: unused import: `HashMap`
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:8:44
+  |
+8 | use std::collections::{BTreeMap, BTreeSet, HashMap};
+  |                                            ^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused doc comment
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10689:5
+      |
+10689 | /     /// 🗃️ sdk-dedyn (O1/§1.5): the default-composes-nothing case (design-dedyn.md §1.6's `NoMembers`
+10690 | |     /// pattern, applied here to `PluginApp`) — a zero-variant enum, `dyn_enum_close!`-generated
+10691 | |     /// (every method's body degenerates to `match *self {}` since there is no value to construct).
+10692 | |     /// The default `PA` for every generic in this file's declaration tree, so a library-only plugin
+10693 | |     /// (or a test that never actually instantiates an app) never has to name a real app enum.
+      | |_____-----------------------------------------------------------------------------------------^
+      |       |
+      |       rustdoc does not generate documentation for macro invocations
+      |
+      = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+      = note: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `PresentCx`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:189:47
+    |
+189 |     use semio_framework_ui_runtime::{Present, PresentCx};
+    |                                               ^^^^^^^^^
+
+warning: unused import: `ui_wgpu::wgpu::UiMenuRef`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:217:9
+    |
+217 |     use ui_wgpu::wgpu::UiMenuRef;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ContextMenuPoint` and `ContextMenuResponse`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:224:67
+    |
+224 | ...   collect_window_kind_ids_from_layout, ContextMenuItemSpec, ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextM...
+    |                                                                 ^^^^^^^^^^^^^^^^                      ^^^^^^^^^^^^^^^^^^^
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:260:9
+    |
+260 |         ui::text(label.to_string()).build()
+    |         ^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+260 -         ui::text(label.to_string()).build()
+260 +         text(label.to_string()).build()
+    |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5674:32
+     |
+5674 | ...   self.sections.push(ui::tree_section(label.unwrap_or_default()).id(id).default_open(default_open).children(items).build());
+     |                          ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5674 -             self.sections.push(ui::tree_section(label.unwrap_or_default()).id(id).default_open(default_open).children(items).build());
+5674 +             self.sections.push(tree_section(label.unwrap_or_default()).id(id).default_open(default_open).children(items).build());
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5683:32
+     |
+5683 | ...   self.sections.push(ui::tree_section(label.unwrap_or_default()).id(id).default_open(default_open).children(items).build());
+     |                          ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5683 -             self.sections.push(ui::tree_section(label.unwrap_or_default()).id(id).default_open(default_open).children(items).build());
+5683 +             self.sections.push(tree_section(label.unwrap_or_default()).id(id).default_open(default_open).children(items).build());
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5712:31
+     |
+5712 |             let mut builder = ui::tree().id(self.namespace).children(self.sections);
+     |                               ^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5712 -             let mut builder = ui::tree().id(self.namespace).children(self.sections);
+5712 +             let mut builder = tree().id(self.namespace).children(self.sections);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5807:31
+     |
+5807 |             let mut builder = ui::field(label).id(field_id).child(control);
+     |                               ^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5807 -             let mut builder = ui::field(label).id(field_id).child(control);
+5807 +             let mut builder = field(label).id(field_id).child(control);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5829:31
+     |
+5829 |                 let control = ui::input(InputKind::Text).id(field_id).value(value).on(Trigger::Change, on_change.clone()).build();
+     |                               ^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5829 -                 let control = ui::input(InputKind::Text).id(field_id).value(value).on(Trigger::Change, on_change.clone()).build();
+5829 +                 let control = input(InputKind::Text).id(field_id).value(value).on(Trigger::Change, on_change.clone()).build();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5840:32
+     |
+5840 |             self.submit = Some(ui::button(label).id(id).icon(IconName::CircleDot.as_str()).on(Trigger::Activate, action).build());
+     |                                ^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5840 -             self.submit = Some(ui::button(label).id(id).icon(IconName::CircleDot.as_str()).on(Trigger::Activate, action).build());
+5840 +             self.submit = Some(button(label).id(id).icon(IconName::CircleDot.as_str()).on(Trigger::Activate, action).build());
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5852:31
+     |
+5852 |             let mut builder = ui::column().id(self.namespace).children(self.fields);
+     |                               ^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5852 -             let mut builder = ui::column().id(self.namespace).children(self.fields);
+5852 +             let mut builder = column().id(self.namespace).children(self.fields);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5866:33
+     |
+5866 |         let mut children = vec![ui::text(title).build()];
+     |                                 ^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5866 -         let mut children = vec![ui::text(title).build()];
+5866 +         let mut children = vec![text(title).build()];
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5868:27
+     |
+5868 |             children.push(ui::text(subtitle).build());
+     |                           ^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5868 -             children.push(ui::text(subtitle).build());
+5868 +             children.push(text(subtitle).build());
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5883:9
+     |
+5883 |         ui::column().children(children).build()
+     |         ^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5883 -         ui::column().children(children).build()
+5883 +         column().children(children).build()
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7395:64
+     |
+7395 | ...   pub async fn assert_declaration_tree_registers_all<PA: super::PluginApp>(plugin_id: &str, declaration: declarations::Artifac...
+     |                                                              ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7395 -         pub async fn assert_declaration_tree_registers_all<PA: super::PluginApp>(plugin_id: &str, declaration: declarations::ArtifactDeclaration<PA>) {
+7395 +         pub async fn assert_declaration_tree_registers_all<PA: PluginApp>(plugin_id: &str, declaration: declarations::ArtifactDeclaration<PA>) {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7429:68
+     |
+7429 | ...   pub async fn assert_declaration_registration_is_atomic<PA: super::PluginApp>(plugin_id: &str, invalid: declarations::Artifac...
+     |                                                                  ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7429 -         pub async fn assert_declaration_registration_is_atomic<PA: super::PluginApp>(plugin_id: &str, invalid: declarations::ArtifactDeclaration<PA>) {
+7429 +         pub async fn assert_declaration_registration_is_atomic<PA: PluginApp>(plugin_id: &str, invalid: declarations::ArtifactDeclaration<PA>) {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7440:68
+     |
+7440 | ...   pub async fn assert_subset_declaration_ids_are_derived<PA: super::PluginApp>(declaration: &declarations::ArtifactDeclaration...
+     |                                                                  ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7440 -         pub async fn assert_subset_declaration_ids_are_derived<PA: super::PluginApp>(declaration: &declarations::ArtifactDeclaration<PA>) {
+7440 +         pub async fn assert_subset_declaration_ids_are_derived<PA: PluginApp>(declaration: &declarations::ArtifactDeclaration<PA>) {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9172:26
+     |
+9172 | ...   let button = ui::button(label).id(format!("{id}.run")).icon(icon_id.as_str()).on(Trigger::Activate, ActionId::v1(controller_...
+     |                    ^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+9172 -             let button = ui::button(label).id(format!("{id}.run")).icon(icon_id.as_str()).on(Trigger::Activate, ActionId::v1(controller_id, action)).disabled(!enabled).build();
+9172 +             let button = button(label).id(format!("{id}.run")).icon(icon_id.as_str()).on(Trigger::Activate, ActionId::v1(controller_id, action)).disabled(!enabled).build();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9181:29
+     |
+9181 |         let filter_select = ui::select(filter_value)
+     |                             ^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+9181 -         let filter_select = ui::select(filter_value)
+9181 +         let filter_select = select(filter_value)
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9226:31
+     |
+9226 |         let actions_section = ui::tree_section(if is_de { "Aktionen" } else { "Actions" })
+     |                               ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+9226 -         let actions_section = ui::tree_section(if is_de { "Aktionen" } else { "Actions" })
+9226 +         let actions_section = tree_section(if is_de { "Aktionen" } else { "Actions" })
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9237:32
+     |
+9237 | ...   let commands_section = ui::tree_section(if is_de { "Befehle" } else { "Commands" }).id("framework.history.commands").default...
+     |                              ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+9237 -         let commands_section = ui::tree_section(if is_de { "Befehle" } else { "Commands" }).id("framework.history.commands").default_open(true).children(command_items).build();
+9237 +         let commands_section = tree_section(if is_de { "Befehle" } else { "Commands" }).id("framework.history.commands").default_open(true).children(command_items).build();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9239:9
+     |
+9239 |         ui::tree().children(vec![actions_section, commands_section]).build()
+     |         ^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+9239 -         ui::tree().children(vec![actions_section, commands_section]).build()
+9239 +         tree().children(vec![actions_section, commands_section]).build()
+     |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10970:18
+      |
+10970 |             Fut: std::future::Future<Output = Menu<'a>>,
+      |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+10970 -             Fut: std::future::Future<Output = Menu<'a>>,
+10970 +             Fut: Future<Output = Menu<'a>>,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13736:31
+      |
+13736 |         apps: HashMap<String, crate::app::declarations::AppFactory<PA>>,
+      |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13736 -         apps: HashMap<String, crate::app::declarations::AppFactory<PA>>,
+13736 +         apps: HashMap<String, declarations::AppFactory<PA>>,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13878:66
+      |
+13878 |         pub fn register_app_factory(mut self, app: App, factory: crate::app::declarations::AppFactory<PA>) -> Self {
+      |                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13878 -         pub fn register_app_factory(mut self, app: App, factory: crate::app::declarations::AppFactory<PA>) -> Self {
+13878 +         pub fn register_app_factory(mut self, app: App, factory: declarations::AppFactory<PA>) -> Self {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13994:13
+      |
+13994 |             ui::surface(semio_framework_ui_scene::encode(SurfaceKind::TextEditor, &scene)).id(Self::KIND_ID).build()
+      |             ^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13994 -             ui::surface(semio_framework_ui_scene::encode(SurfaceKind::TextEditor, &scene)).id(Self::KIND_ID).build()
+13994 +             surface(semio_framework_ui_scene::encode(SurfaceKind::TextEditor, &scene)).id(Self::KIND_ID).build()
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14029:13
+      |
+14029 |             ui::surface(semio_framework_ui_scene::encode(SurfaceKind::Table, &scene)).id(Self::KIND_ID).build()
+      |             ^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+14029 -             ui::surface(semio_framework_ui_scene::encode(SurfaceKind::Table, &scene)).id(Self::KIND_ID).build()
+14029 +             surface(semio_framework_ui_scene::encode(SurfaceKind::Table, &scene)).id(Self::KIND_ID).build()
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14105:13
+      |
+14105 |             ui::surface(semio_framework_ui_scene::encode(SurfaceKind::Table, &scene)).id(Self::KIND_ID).build()
+      |             ^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+14105 -             ui::surface(semio_framework_ui_scene::encode(SurfaceKind::Table, &scene)).id(Self::KIND_ID).build()
+14105 +             surface(semio_framework_ui_scene::encode(SurfaceKind::Table, &scene)).id(Self::KIND_ID).build()
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14143:27
+      |
+14143 | ...   let section = ui::tree_section("").id(format!("{}-root", Self::KIND_ID)).default_open(true).children(view.roots.iter().map(...
+      |                     ^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+14143 -             let section = ui::tree_section("").id(format!("{}-root", Self::KIND_ID)).default_open(true).children(view.roots.iter().map(to_item)).build();
+14143 +             let section = tree_section("").id(format!("{}-root", Self::KIND_ID)).default_open(true).children(view.roots.iter().map(to_item)).build();
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14144:13
+      |
+14144 |             ui::tree().id(Self::KIND_ID).child(section).build()
+      |             ^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+14144 -             ui::tree().id(Self::KIND_ID).child(section).build()
+14144 +             tree().id(Self::KIND_ID).child(section).build()
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14176:13
+      |
+14176 |             ui::image(src).id(Self::KIND_ID).alt(format!("{}x{}", view.width, view.height)).build()
+      |             ^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+14176 -             ui::image(src).id(Self::KIND_ID).alt(format!("{}x{}", view.width, view.height)).build()
+14176 +             image(src).id(Self::KIND_ID).alt(format!("{}x{}", view.width, view.height)).build()
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14209:13
+      |
+14209 |             ui::surface(semio_framework_ui_scene::encode(SurfaceKind::World3d, &scene)).id(Self::KIND_ID).build()
+      |             ^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+14209 -             ui::surface(semio_framework_ui_scene::encode(SurfaceKind::World3d, &scene)).id(Self::KIND_ID).build()
+14209 +             surface(semio_framework_ui_scene::encode(SurfaceKind::World3d, &scene)).id(Self::KIND_ID).build()
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14241:78
+      |
+14241 | ...   let children = view.pages.iter().enumerate().map(|(index, page)| ui::text(page.text.clone()).id(format!("page-{index}")).bu...
+      |                                                                        ^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+14241 -             let children = view.pages.iter().enumerate().map(|(index, page)| ui::text(page.text.clone()).id(format!("page-{index}")).build());
+14241 +             let children = view.pages.iter().enumerate().map(|(index, page)| text(page.text.clone()).id(format!("page-{index}")).build());
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14242:13
+      |
+14242 |             ui::column().id(Self::KIND_ID).children(children).build()
+      |             ^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+14242 -             ui::column().id(Self::KIND_ID).children(children).build()
+14242 +             column().id(Self::KIND_ID).children(children).build()
+      |
+
+warning: ambiguous glob re-exports
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21955:13
+      |
+21955 |     pub use semio_framework::kernel::*;
+      |             ^^^^^^^^^^^^^^^^^^^^^^^^^^ the name `ActionId` in the type namespace is first re-exported here
+...
+21958 |     pub use semio_framework_ui_contract::*;
+      |             ------------------------------ but the name `ActionId` in the type namespace is also re-exported here
+      |
+      = note: `#[warn(ambiguous_glob_reexports)]` on by default
+
+warning: ambiguous glob re-exports
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21958:13
+      |
+21954 |     pub use crate::app::*;
+      |             ------------- but the name `tree_item` in the value namespace is also re-exported here
+...
+21958 |     pub use semio_framework_ui_contract::*;
+      |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the name `tree_item` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21958:13
+      |
+21954 |     pub use crate::app::*;
+      |             ------------- but the name `PeerMark` in the type namespace is also re-exported here
+...
+21958 |     pub use semio_framework_ui_contract::*;
+      |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the name `PeerMark` in the type namespace is first re-exported here
+
+warning: unused import: `Present`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:189:38
+    |
+189 |     use semio_framework_ui_runtime::{Present, PresentCx};
+    |                                      ^^^^^^^
+
+warning: field `key` is never read
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:110:5
+    |
+108 | struct TaskRecord {
+    |        ---------- field in this struct
+109 |     instance: u32,
+110 |     key: Option<String>,
+    |     ^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: field `0` is never read
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:122:13
+    |
+122 |     Command(Vec<u8>),
+    |     ------- ^^^^^^^
+    |     |
+    |     field in this variant
+    |
+help: consider changing the field to be of unit type to suppress this warning while preserving the field numbering, or remove the field
+    |
+122 -     Command(Vec<u8>),
+122 +     Command(()),
+    |
+
+warning: fields `artifact_ops`, `config_ops`, and `draft_ops` are never read
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:123:12
+    |
+123 |     Emit { artifact_ops: Vec<u8>, config_ops: Vec<u8>, draft_ops: Vec<u8> },
+    |     ----   ^^^^^^^^^^^^           ^^^^^^^^^^           ^^^^^^^^^
+    |     |
+    |     fields in this variant
+
+warning: field `0` is never read
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:124:11
+    |
+124 |     Fault(semio_framework::Fault),
+    |     ----- ^^^^^^^^^^^^^^^^^^^^^^
+    |     |
+    |     field in this variant
+    |
+help: consider changing the field to be of unit type to suppress this warning while preserving the field numbering, or remove the field
+    |
+124 -     Fault(semio_framework::Fault),
+124 +     Fault(()),
+    |
+
+warning: fields `instance`, `meta`, and `outcome` are never read
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:133:5
+    |
+132 | struct PendingResume {
+    |        ------------- fields in this struct
+133 |     instance: u32,
+    |     ^^^^^^^^
+134 |     meta: crate::app::ActionMeta,
+    |     ^^^^
+135 |     outcome: TaskResumeOutcome,
+    |     ^^^^^^^
+
+warning: function `cancel_instance_tasks` is never used
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:279:15
+    |
+279 | pub(crate) fn cancel_instance_tasks(instance: u32) {
+    |               ^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `DIRECT_READ_CHUNK` is never used
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🌐host/📖️body/🦀️component.rs:17:7
+   |
+17 | const DIRECT_READ_CHUNK: usize = 64 * 1024;
+   |       ^^^^^^^^^^^^^^^^^
+
+warning: call to `.clone()` on a reference in this situation does nothing
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3105:119
+     |
+3105 |                 Ok(schema) => match ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), codec.extension.clone()) {
+     |                                                                                                                       ^^^^^^^^ help: remove this redundant call
+     |
+     = note: the type `str` does not implement `Clone`, so calling `clone` on `&str` copies the reference, which does not do anything and can be removed
+     = note: `#[warn(noop_method_call)]` on by default
+
+warning: call to `.clone()` on a reference in this situation does nothing
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3139:119
+     |
+3139 |                 Ok(schema) => match ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), codec.extension.clone()) {
+     |                                                                                                                       ^^^^^^^^ help: remove this redundant call
+     |
+     = note: the type `str` does not implement `Clone`, so calling `clone` on `&str` copies the reference, which does not do anything and can be removed
+
+   Compiling semio-s-plugin-stdio v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust)
+warning: `semio-framework-plugin` (lib) generated 49 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 37 suggestions)
+warning: unused doc comment
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:114:1
+    |
+114 | / /// 🧬️ Closed set spanning `semio`'s 18 composable subsets — the O1 replacement for the deleted
+115 | | /// `Box<dyn SpaceMember>` `ChildStoreFactory` registry (`store::MemberFactory`'s own doc explains the
+116 | | /// general mechanism; `store::space_members!` generates the `SpaceMember`/`MemberFactory` delegation
+117 | | /// below). Generated exactly as any other family would be, EXCEPT the string fed to `MemberFactory::
+...   |
+121 | | /// BE an `ArtifactKindId`; it only ever compares it against string literals, so this reuse is exact,
+122 | | /// not approximate.
+    | |_-------------------^
+    |   |
+    |   rustdoc does not generate documentation for macro invocations
+    |
+    = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+    = note: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:53:5
+   |
+53 |     crate::artifacts::semio::standards::v1::subsets::brep::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+53 -     crate::artifacts::semio::standards::v1::subsets::brep::io::register();
+53 +     subsets::brep::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:54:5
+   |
+54 |     crate::artifacts::semio::standards::v1::subsets::mesh::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+54 -     crate::artifacts::semio::standards::v1::subsets::mesh::io::register();
+54 +     subsets::mesh::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:55:5
+   |
+55 |     crate::artifacts::semio::standards::v1::subsets::model::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+55 -     crate::artifacts::semio::standards::v1::subsets::model::io::register();
+55 +     subsets::model::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:56:5
+   |
+56 |     crate::artifacts::semio::standards::v1::subsets::value::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+56 -     crate::artifacts::semio::standards::v1::subsets::value::io::register();
+56 +     subsets::value::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:57:5
+   |
+57 |     crate::artifacts::semio::standards::v1::subsets::document::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+57 -     crate::artifacts::semio::standards::v1::subsets::document::io::register();
+57 +     subsets::document::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:58:5
+   |
+58 |     crate::artifacts::semio::standards::v1::subsets::cad::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+58 -     crate::artifacts::semio::standards::v1::subsets::cad::io::register();
+58 +     subsets::cad::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:59:5
+   |
+59 |     crate::artifacts::semio::standards::v1::subsets::drawing::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+59 -     crate::artifacts::semio::standards::v1::subsets::drawing::io::register();
+59 +     subsets::drawing::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:60:5
+   |
+60 |     crate::artifacts::semio::standards::v1::subsets::image::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+60 -     crate::artifacts::semio::standards::v1::subsets::image::io::register();
+60 +     subsets::image::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:61:5
+   |
+61 |     crate::artifacts::semio::standards::v1::subsets::video::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+61 -     crate::artifacts::semio::standards::v1::subsets::video::io::register();
+61 +     subsets::video::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:62:5
+   |
+62 |     crate::artifacts::semio::standards::v1::subsets::audio::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+62 -     crate::artifacts::semio::standards::v1::subsets::audio::io::register();
+62 +     subsets::audio::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:63:5
+   |
+63 |     crate::artifacts::semio::standards::v1::subsets::animation::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+63 -     crate::artifacts::semio::standards::v1::subsets::animation::io::register();
+63 +     subsets::animation::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:64:5
+   |
+64 |     crate::artifacts::semio::standards::v1::subsets::presentation::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+64 -     crate::artifacts::semio::standards::v1::subsets::presentation::io::register();
+64 +     subsets::presentation::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:65:5
+   |
+65 |     crate::artifacts::semio::standards::v1::subsets::flow::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+65 -     crate::artifacts::semio::standards::v1::subsets::flow::io::register();
+65 +     subsets::flow::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:66:5
+   |
+66 |     crate::artifacts::semio::standards::v1::subsets::text::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+66 -     crate::artifacts::semio::standards::v1::subsets::text::io::register();
+66 +     subsets::text::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:67:5
+   |
+67 |     crate::artifacts::semio::standards::v1::subsets::table::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+67 -     crate::artifacts::semio::standards::v1::subsets::table::io::register();
+67 +     subsets::table::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:68:5
+   |
+68 |     crate::artifacts::semio::standards::v1::subsets::graph::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+68 -     crate::artifacts::semio::standards::v1::subsets::graph::io::register();
+68 +     subsets::graph::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:69:5
+   |
+69 |     crate::artifacts::semio::standards::v1::subsets::object::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+69 -     crate::artifacts::semio::standards::v1::subsets::object::io::register();
+69 +     subsets::object::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:70:5
+   |
+70 |     crate::artifacts::semio::standards::v1::subsets::kit::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+70 -     crate::artifacts::semio::standards::v1::subsets::kit::io::register();
+70 +     subsets::kit::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:71:5
+   |
+71 |     crate::artifacts::semio::standards::v1::subsets::any::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+71 -     crate::artifacts::semio::standards::v1::subsets::any::io::register();
+71 +     subsets::any::io::register();
+   |
+
+warning: `semio-s-plugin-stdio` (lib) generated 20 warnings (run `cargo fix --lib -p semio-s-plugin-stdio` to apply 19 suggestions)
+   Compiling semio-framework-os v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust)
+   Compiling semio-s-plugin-puzzle v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust)
+warning: unused import: `protocol::SemanticMutation`
+   --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:392:9
+    |
+392 |     use protocol::SemanticMutation;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `protocol::SemanticMutation`
+   --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:460:9
+    |
+460 |     use protocol::SemanticMutation;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Puzzle3dCompatSpecificity` and `Puzzle3dObjectAnchor`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs:32:29
+   |
+32 | ...Attraction, Puzzle3dCompatSpecificity, Puzzle3dKindCompatibility, Puzzle3dMeta, Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dRef...
+   |                ^^^^^^^^^^^^^^^^^^^^^^^^^                                                           ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `InferredField`
+   --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🎛flat-position/🦀️component.rs:179:55
+    |
+179 |     use store::{InferenceCache, InferenceCacheConfig, InferredField};
+    |                                                       ^^^^^^^^^^^^^
+
+warning: unused import: `protocol::SemanticMutation`
+   --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:473:9
+    |
+473 |     use protocol::SemanticMutation;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `UiNode`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:36:52
+   |
+36 |     SelectionMethod, SelectionMode, SelectionSpec, UiNode, WindowEngagement, WindowMeasure, INTERACTION_SELECT_ACTION_ID, SET_ACTIVE...
+   |                                                    ^^^^^^
+
+warning: unnecessary braces around function argument
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs:28:12
+   |
+28 |         Ok({ self.clone() })
+   |            ^^            ^^
+   |
+   = note: `#[warn(unused_braces)]` (part of `#[warn(unused)]`) on by default
+help: remove these braces
+   |
+28 -         Ok({ self.clone() })
+28 +         Ok(self.clone())
+   |
+
+warning: unused import: `Label`
+ --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs:8:87
+  |
+8 |     tree_item_with_action, tree_item_with_action_draggable, ActionFactory, BuiltNode, Label, LocalizedLabel, PanelGroup, PanelTabDefi...
+  |                                                                                       ^^^^^
+
+warning: unused import: `puzzle2d_interaction_select`
+ --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs:7:61
+  |
+7 | use crate::editor::puzzle2d::{fixture_edges, fixture_nodes, puzzle2d_interaction_select, Puzzle2dScene, PUZZLE2D_GRANULARITY_NODE, PU...
+  |                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `UiNode`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️overview/🦀️component.rs:11:43
+   |
+11 | use semio_framework_plugin::{SurfaceKind, UiNode, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, Windo...
+   |                                           ^^^^^^
+
+warning: unused import: `UiNode`
+ --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🔍️detail/🦀️component.rs:9:43
+  |
+9 | use semio_framework_plugin::{SurfaceKind, UiNode, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, Window...
+  |                                           ^^^^^^
+
+warning: unused import: `UiNode`
+ --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎯️selection/🦀️component.rs:9:43
+  |
+9 | use semio_framework_plugin::{SurfaceKind, UiNode, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, Window...
+  |                                           ^^^^^^
+
+warning: unused import: `UiNode`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:40:14
+   |
+40 |     ToolRef, UiNode, WindowEngagement, WindowMeasure, INTERACTION_SELECT_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_AC...
+   |              ^^^^^^
+
+warning: unnecessary qualification
+    --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:1391:24
+     |
+1391 |         let mut queue: std::collections::VecDeque<String> = std::collections::VecDeque::new();
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+1391 -         let mut queue: std::collections::VecDeque<String> = std::collections::VecDeque::new();
+1391 +         let mut queue: VecDeque<String> = std::collections::VecDeque::new();
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:1391:61
+     |
+1391 |         let mut queue: std::collections::VecDeque<String> = std::collections::VecDeque::new();
+     |                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1391 -         let mut queue: std::collections::VecDeque<String> = std::collections::VecDeque::new();
+1391 +         let mut queue: std::collections::VecDeque<String> = VecDeque::new();
+     |
+
+warning: unused import: `testkit as framework_testkit`
+    --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:3211:34
+     |
+3211 |     use semio_framework_plugin::{testkit as framework_testkit, EditorApp, PluginApp};
+     |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `order_brush_fill_compatible_candidates` and `weighted_order_fill_vortex_targets`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🦀️component.rs:28:175
+   |
+28 | ...ion_weight, brush_compatible_candidates, brush_preview_from_candidate, brush_target_vortex_allows_suggestion, enumerate_brush_fill_vortex_targets, order_brush_fill_compatible_candidates, r...
+   |                                                                                                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+29 | ...t, weighted_order_fill_vortex_targets, AttractionVortexContext, TargetVortexWorld,
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `FillJobStage`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🦀️component.rs:31:62
+   |
+31 | use crate::editor::puzzle3d::precompute::fill::{FillBuilder, FillJobStage, PlacedCollisionEntry};
+   |                                                              ^^^^^^^^^^^^
+
+warning: unnecessary braces around function argument
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs:29:12
+   |
+29 |         Ok({ self.clone() })
+   |            ^^            ^^
+   |
+help: remove these braces
+   |
+29 -         Ok({ self.clone() })
+29 +         Ok(self.clone())
+   |
+
+warning: unused import: `UiNode`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:33:35
+   |
+33 |     SelectionMode, SelectionSpec, UiNode, UiTreeItemNode, WindowEngagement, WindowMeasure, INTERACTION_SELECT_ACTION_ID, SET_ACTIVE_...
+   |                                   ^^^^^^
+
+warning: unused import: `EngineHandles`
+    --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:2412:47
+     |
+2412 |         use store::{create_document_envelope, EngineHandles};
+     |                                               ^^^^^^^^^^^^^
+
+warning: unnecessary braces around function argument
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs:31:12
+   |
+31 |         Ok({ self.clone() })
+   |            ^^            ^^
+   |
+help: remove these braces
+   |
+31 -         Ok({ self.clone() })
+31 +         Ok(self.clone())
+   |
+
+warning: unused import: `LabelText`
+ --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs:7:80
+  |
+7 |     tree_item_desc, tree_item_with_action_draggable, ActionFactory, BuiltNode, LabelText, LocalizedLabel, PanelGroup, PanelTabDefinit...
+  |                                                                                ^^^^^^^^^
+
+warning: unused import: `HasChildren`
+ --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs:8:87
+  |
+8 | use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, HasChildren};
+  |                                                                                       ^^^^^^^^^^^
+
+warning: unused import: `PUZZLE5D_PLAY_CONTROLLER_ID`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/◻2d/🦀️component.rs:14:183
+   |
+14 | ...OARD_FIXTURE_SCHEMA, PUZZLE5D_DEFAULT_PART_RADIUS, PUZZLE5D_PLAY_CONTROLLER_ID};
+   |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `PUZZLE5D_PLAY_CONTROLLER_ID`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️3d/🦀️component.rs:18:88
+   |
+18 |     world_grip_position, Puzzle5dDocument, Puzzle5dScene, PUZZLE5D_FALLBACK_MESH_KIND, PUZZLE5D_PLAY_CONTROLLER_ID,
+   |                                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `UiNode`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:10:189
+   |
+10 | ...sence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+   |                                                                 ^^^^^^
+
+warning: unused import: `UiNode`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🎲️board/🦀️component.rs:11:116
+   |
+11 | use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, MeshView, MeshWindowKit, UiNode, WindowKin...
+   |                                                                                                                    ^^^^^^
+
+warning: unused import: `UiNode`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:11:189
+   |
+11 | ...sence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+   |                                                                 ^^^^^^
+
+warning: unused import: `UiNode`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️main/🦀️component.rs:10:145
+   |
+10 | ...d3d_meshes_json_from_kinds_and_urls, world3d_selection_json, UiNode, WindowKindDefinition};
+   |                                                                 ^^^^^^
+
+warning: unused import: `UiNode`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:17:180
+   |
+17 | ...sence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+   |                                                                 ^^^^^^
+
+warning: unused import: `UiNode`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️3d/🦀️component.rs:11:111
+   |
+11 | use semio_framework_plugin::{world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_selection_json, UiNode, WindowKindDefi...
+   |                                                                                                               ^^^^^^
+
+warning: unused doc comment
+ --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/../../🦀️component.rs:9:1
+  |
+9 | /// 🗃️ Closed runtime app fleet for the Puzzle 2D, 3D, and 5D surfaces.
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ rustdoc does not generate documentation for macro invocations
+  |
+  = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+  = note: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/../../🦀️component.rs:12:24
+   |
+12 | ...Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle2d::Puzzle2dPlayApp>>),
+   |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+12 -         Puzzle2dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle2d::Puzzle2dPlayApp>>),
+12 +         Puzzle2dEditor(VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle2d::Puzzle2dPlayApp>>),
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/../../🦀️component.rs:12:63
+   |
+12 | ...ork_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle2d::Puzzle2dPlayApp>>),
+   |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+12 -         Puzzle2dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle2d::Puzzle2dPlayApp>>),
+12 +         Puzzle2dEditor(semio_framework_plugin::VcsArtifactApp<EditorApp<crate::editor::puzzle2d::Puzzle2dPlayApp>>),
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/../../🦀️component.rs:13:24
+   |
+13 | ...Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle2d::Puzzle2dViewer>>),
+   |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+13 -         Puzzle2dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle2d::Puzzle2dViewer>>),
+13 +         Puzzle2dViewer(VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle2d::Puzzle2dViewer>>),
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/../../🦀️component.rs:13:63
+   |
+13 | ...ork_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle2d::Puzzle2dViewer>>),
+   |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+13 -         Puzzle2dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle2d::Puzzle2dViewer>>),
+13 +         Puzzle2dViewer(semio_framework_plugin::VcsArtifactApp<ViewerApp<crate::viewer::puzzle2d::Puzzle2dViewer>>),
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/../../🦀️component.rs:14:24
+   |
+14 | ...Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle3d::Puzzle3dPlayApp>>),
+   |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+14 -         Puzzle3dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle3d::Puzzle3dPlayApp>>),
+14 +         Puzzle3dEditor(VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle3d::Puzzle3dPlayApp>>),
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/../../🦀️component.rs:14:63
+   |
+14 | ...ork_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle3d::Puzzle3dPlayApp>>),
+   |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+14 -         Puzzle3dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle3d::Puzzle3dPlayApp>>),
+14 +         Puzzle3dEditor(semio_framework_plugin::VcsArtifactApp<EditorApp<crate::editor::puzzle3d::Puzzle3dPlayApp>>),
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/../../🦀️component.rs:15:24
+   |
+15 | ...Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle3d::Puzzle3dViewer>>),
+   |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+15 -         Puzzle3dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle3d::Puzzle3dViewer>>),
+15 +         Puzzle3dViewer(VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle3d::Puzzle3dViewer>>),
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/../../🦀️component.rs:15:63
+   |
+15 | ...ork_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle3d::Puzzle3dViewer>>),
+   |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+15 -         Puzzle3dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle3d::Puzzle3dViewer>>),
+15 +         Puzzle3dViewer(semio_framework_plugin::VcsArtifactApp<ViewerApp<crate::viewer::puzzle3d::Puzzle3dViewer>>),
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/../../🦀️component.rs:16:24
+   |
+16 | ...Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle5d::Puzzle5dPlayApp>>),
+   |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+16 -         Puzzle5dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle5d::Puzzle5dPlayApp>>),
+16 +         Puzzle5dEditor(VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle5d::Puzzle5dPlayApp>>),
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/../../🦀️component.rs:16:63
+   |
+16 | ...ork_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle5d::Puzzle5dPlayApp>>),
+   |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+16 -         Puzzle5dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle5d::Puzzle5dPlayApp>>),
+16 +         Puzzle5dEditor(semio_framework_plugin::VcsArtifactApp<EditorApp<crate::editor::puzzle5d::Puzzle5dPlayApp>>),
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/../../🦀️component.rs:17:24
+   |
+17 | ...Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle5d::Puzzle5dViewer>>),
+   |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+17 -         Puzzle5dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle5d::Puzzle5dViewer>>),
+17 +         Puzzle5dViewer(VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle5d::Puzzle5dViewer>>),
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/../../🦀️component.rs:17:63
+   |
+17 | ...ork_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle5d::Puzzle5dViewer>>),
+   |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+17 -         Puzzle5dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle5d::Puzzle5dViewer>>),
+17 +         Puzzle5dViewer(semio_framework_plugin::VcsArtifactApp<ViewerApp<crate::viewer::puzzle5d::Puzzle5dViewer>>),
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/../../🦀️component.rs:54:47
+   |
+54 | pub fn plugin() -> Result<Plugin<PuzzleApps>, semio_framework_plugin::PluginAssemblyError> {
+   |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+54 - pub fn plugin() -> Result<Plugin<PuzzleApps>, semio_framework_plugin::PluginAssemblyError> {
+54 + pub fn plugin() -> Result<Plugin<PuzzleApps>, PluginAssemblyError> {
+   |
+
+warning: unnecessary qualification
+    --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/📦️glue.rs:2867:57
+     |
+2867 | semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::PuzzleApps);
+     |                                                         ^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2867 - semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::PuzzleApps);
+2867 + semio_framework_plugin::plugin_exports!(plugin::plugin, PuzzleApps);
+     |
+
+warning: variable does not need to be mutable
+    --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:2456:13
+     |
+2456 |         let mut app = Puzzle3dPlayApp::default();
+     |             ----^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `app`
+    --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:2737:13
+     |
+2737 |         let app = Puzzle5dPlayApp::default();
+     |             ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `app`
+    --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:2791:13
+     |
+2791 |         let app = Puzzle5dPlayApp::default();
+     |             ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+
+warning: unused variable: `app`
+    --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:2821:13
+     |
+2821 |         let app = Puzzle5dPlayApp::default();
+     |             ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+
+warning: unused variable: `app`
+    --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:4755:13
+     |
+4755 |         let app = Puzzle3dPlayApp::default();
+     |             ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+
+warning: unused variable: `app`
+    --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:4801:13
+     |
+4801 |         let app = Puzzle3dPlayApp::default();
+     |             ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+
+warning: unused variable: `app`
+    --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:4830:13
+     |
+4830 |         let app = Puzzle3dPlayApp::default();
+     |             ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+
+warning: function `context_menu_direct` is never used
+    --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:3181:12
+     |
+3181 |     pub fn context_menu_direct(app: &mut Puzzle3dApp) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-s-plugin-puzzle` (lib test) generated 55 warnings (run `cargo fix --lib -p semio-s-plugin-puzzle --tests` to apply 53 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 46.35s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests 📦️glue.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PUZZLE-3D-RESUMABLE-VERTICAL-SLICE/🧪️target-p4/debug/deps/semio_s_plugin_puzzle-dc22081ae00757c2)
+
+running 1 test
+test editor::puzzle3d::component::tests::hover_suggestion_updates_the_brush_candidate_index_and_live_preview ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1123 filtered out; finished in 0.10s
+
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+warning: enum `LeafContext` is never used
+  --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:35:6
+   |
+35 | enum LeafContext {
+   |      ^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `style_for` is never used
+  --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:67:4
+   |
+67 | fn style_for(node: &UiNode) -> Style {
+   |    ^^^^^^^^^
+
+warning: function `apply_stack_metrics` is never used
+  --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:94:4
+   |
+94 | fn apply_stack_metrics(style: &mut Style, stack: &crate::wgpu::component::ui::UiStackNode, theme: &Theme) {
+   |    ^^^^^^^^^^^^^^^^^^^
+
+warning: function `apply_field_metrics` is never used
+   --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:107:4
+    |
+107 | fn apply_field_metrics(style: &mut Style, theme: &Theme) {
+    |    ^^^^^^^^^^^^^^^^^^^
+
+warning: function `apply_section_metrics` is never used
+   --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:125:4
+    |
+125 | fn apply_section_metrics(style: &mut Style, theme: &Theme) {
+    |    ^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `leaf_context` is never used
+   --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:130:4
+    |
+130 | fn leaf_context(node: &UiNode) -> LeafContext {
+    |    ^^^^^^^^^^^^
+
+warning: variants `SyncNodes`, `SolveLayout`, and `CollectResults` are never constructed
+   --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:170:5
+    |
+166 | pub(crate) enum LayoutJobStage {
+    |                 -------------- variants in this enum
+...
+170 |     SyncNodes,
+    |     ^^^^^^^^^
+171 |     SolveLayout,
+    |     ^^^^^^^^^^^
+...
+174 |     CollectResults,
+    |     ^^^^^^^^^^^^^^
+    |
+    = note: `LayoutJobStage` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: fields `prune_index`, `sync_index`, and `result_index` are never read
+   --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:232:5
+    |
+219 | pub(crate) struct LayoutJob {
+    |                   --------- fields in this struct
+...
+232 |     prune_index: usize,
+    |     ^^^^^^^^^^^
+233 |     sync_index: usize,
+    |     ^^^^^^^^^^
+234 |     result_index: usize,
+    |     ^^^^^^^^^^^^
+
+warning: constant `MAX_TAFFY_SLICE_NODES` is never used
+   --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️flex.rs:244:7
+    |
+244 | const MAX_TAFFY_SLICE_NODES: usize = 128;
+    |       ^^^^^^^^^^^^^^^^^^^^^
+
+   Compiling semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+warning: `semio-framework-ui` (lib) generated 9 warnings
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust)
+   Compiling semio-framework-plugin-host v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust)
+   Compiling semio-framework-os-infinite v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust)
+warning: unused import: `HashMap`
+ --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:8:44
+  |
+8 | use std::collections::{BTreeMap, BTreeSet, HashMap};
+  |                                            ^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused doc comment
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10689:5
+      |
+10689 | /     /// 🗃️ sdk-dedyn (O1/§1.5): the default-composes-nothing case (design-dedyn.md §1.6's `NoMembers`
+10690 | |     /// pattern, applied here to `PluginApp`) — a zero-variant enum, `dyn_enum_close!`-generated
+10691 | |     /// (every method's body degenerates to `match *self {}` since there is no value to construct).
+10692 | |     /// The default `PA` for every generic in this file's declaration tree, so a library-only plugin
+10693 | |     /// (or a test that never actually instantiates an app) never has to name a real app enum.
+      | |_____-----------------------------------------------------------------------------------------^
+      |       |
+      |       rustdoc does not generate documentation for macro invocations
+      |
+      = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+      = note: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `PresentCx`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:189:47
+    |
+189 |     use semio_framework_ui_runtime::{Present, PresentCx};
+    |                                               ^^^^^^^^^
+
+warning: unused import: `ui_wgpu::wgpu::UiMenuRef`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:217:9
+    |
+217 |     use ui_wgpu::wgpu::UiMenuRef;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ContextMenuPoint` and `ContextMenuResponse`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:224:67
+    |
+224 | ...   collect_window_kind_ids_from_layout, ContextMenuItemSpec, ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextM...
+    |                                                                 ^^^^^^^^^^^^^^^^                      ^^^^^^^^^^^^^^^^^^^
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:260:9
+    |
+260 |         ui::text(label.to_string()).build()
+    |         ^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+260 -         ui::text(label.to_string()).build()
+260 +         text(label.to_string()).build()
+    |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5674:32
+     |
+5674 | ...   self.sections.push(ui::tree_section(label.unwrap_or_default()).id(id).default_open(default_open).children(items).build());
+     |                          ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5674 -             self.sections.push(ui::tree_section(label.unwrap_or_default()).id(id).default_open(default_open).children(items).build());
+5674 +             self.sections.push(tree_section(label.unwrap_or_default()).id(id).default_open(default_open).children(items).build());
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5683:32
+     |
+5683 | ...   self.sections.push(ui::tree_section(label.unwrap_or_default()).id(id).default_open(default_open).children(items).build());
+     |                          ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5683 -             self.sections.push(ui::tree_section(label.unwrap_or_default()).id(id).default_open(default_open).children(items).build());
+5683 +             self.sections.push(tree_section(label.unwrap_or_default()).id(id).default_open(default_open).children(items).build());
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5712:31
+     |
+5712 |             let mut builder = ui::tree().id(self.namespace).children(self.sections);
+     |                               ^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5712 -             let mut builder = ui::tree().id(self.namespace).children(self.sections);
+5712 +             let mut builder = tree().id(self.namespace).children(self.sections);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5807:31
+     |
+5807 |             let mut builder = ui::field(label).id(field_id).child(control);
+     |                               ^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5807 -             let mut builder = ui::field(label).id(field_id).child(control);
+5807 +             let mut builder = field(label).id(field_id).child(control);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5829:31
+     |
+5829 |                 let control = ui::input(InputKind::Text).id(field_id).value(value).on(Trigger::Change, on_change.clone()).build();
+     |                               ^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5829 -                 let control = ui::input(InputKind::Text).id(field_id).value(value).on(Trigger::Change, on_change.clone()).build();
+5829 +                 let control = input(InputKind::Text).id(field_id).value(value).on(Trigger::Change, on_change.clone()).build();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5840:32
+     |
+5840 |             self.submit = Some(ui::button(label).id(id).icon(IconName::CircleDot.as_str()).on(Trigger::Activate, action).build());
+     |                                ^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5840 -             self.submit = Some(ui::button(label).id(id).icon(IconName::CircleDot.as_str()).on(Trigger::Activate, action).build());
+5840 +             self.submit = Some(button(label).id(id).icon(IconName::CircleDot.as_str()).on(Trigger::Activate, action).build());
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5852:31
+     |
+5852 |             let mut builder = ui::column().id(self.namespace).children(self.fields);
+     |                               ^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5852 -             let mut builder = ui::column().id(self.namespace).children(self.fields);
+5852 +             let mut builder = column().id(self.namespace).children(self.fields);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5866:33
+     |
+5866 |         let mut children = vec![ui::text(title).build()];
+     |                                 ^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5866 -         let mut children = vec![ui::text(title).build()];
+5866 +         let mut children = vec![text(title).build()];
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5868:27
+     |
+5868 |             children.push(ui::text(subtitle).build());
+     |                           ^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5868 -             children.push(ui::text(subtitle).build());
+5868 +             children.push(text(subtitle).build());
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5883:9
+     |
+5883 |         ui::column().children(children).build()
+     |         ^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5883 -         ui::column().children(children).build()
+5883 +         column().children(children).build()
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7395:64
+     |
+7395 | ...   pub async fn assert_declaration_tree_registers_all<PA: super::PluginApp>(plugin_id: &str, declaration: declarations::Artifac...
+     |                                                              ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7395 -         pub async fn assert_declaration_tree_registers_all<PA: super::PluginApp>(plugin_id: &str, declaration: declarations::ArtifactDeclaration<PA>) {
+7395 +         pub async fn assert_declaration_tree_registers_all<PA: PluginApp>(plugin_id: &str, declaration: declarations::ArtifactDeclaration<PA>) {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7429:68
+     |
+7429 | ...   pub async fn assert_declaration_registration_is_atomic<PA: super::PluginApp>(plugin_id: &str, invalid: declarations::Artifac...
+     |                                                                  ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7429 -         pub async fn assert_declaration_registration_is_atomic<PA: super::PluginApp>(plugin_id: &str, invalid: declarations::ArtifactDeclaration<PA>) {
+7429 +         pub async fn assert_declaration_registration_is_atomic<PA: PluginApp>(plugin_id: &str, invalid: declarations::ArtifactDeclaration<PA>) {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7440:68
+     |
+7440 | ...   pub async fn assert_subset_declaration_ids_are_derived<PA: super::PluginApp>(declaration: &declarations::ArtifactDeclaration...
+     |                                                                  ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7440 -         pub async fn assert_subset_declaration_ids_are_derived<PA: super::PluginApp>(declaration: &declarations::ArtifactDeclaration<PA>) {
+7440 +         pub async fn assert_subset_declaration_ids_are_derived<PA: PluginApp>(declaration: &declarations::ArtifactDeclaration<PA>) {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9172:26
+     |
+9172 | ...   let button = ui::button(label).id(format!("{id}.run")).icon(icon_id.as_str()).on(Trigger::Activate, ActionId::v1(controller_...
+     |                    ^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+9172 -             let button = ui::button(label).id(format!("{id}.run")).icon(icon_id.as_str()).on(Trigger::Activate, ActionId::v1(controller_id, action)).disabled(!enabled).build();
+9172 +             let button = button(label).id(format!("{id}.run")).icon(icon_id.as_str()).on(Trigger::Activate, ActionId::v1(controller_id, action)).disabled(!enabled).build();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9181:29
+     |
+9181 |         let filter_select = ui::select(filter_value)
+     |                             ^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+9181 -         let filter_select = ui::select(filter_value)
+9181 +         let filter_select = select(filter_value)
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9226:31
+     |
+9226 |         let actions_section = ui::tree_section(if is_de { "Aktionen" } else { "Actions" })
+     |                               ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+9226 -         let actions_section = ui::tree_section(if is_de { "Aktionen" } else { "Actions" })
+9226 +         let actions_section = tree_section(if is_de { "Aktionen" } else { "Actions" })
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9237:32
+     |
+9237 | ...   let commands_section = ui::tree_section(if is_de { "Befehle" } else { "Commands" }).id("framework.history.commands").default...
+     |                              ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+9237 -         let commands_section = ui::tree_section(if is_de { "Befehle" } else { "Commands" }).id("framework.history.commands").default_open(true).children(command_items).build();
+9237 +         let commands_section = tree_section(if is_de { "Befehle" } else { "Commands" }).id("framework.history.commands").default_open(true).children(command_items).build();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9239:9
+     |
+9239 |         ui::tree().children(vec![actions_section, commands_section]).build()
+     |         ^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+9239 -         ui::tree().children(vec![actions_section, commands_section]).build()
+9239 +         tree().children(vec![actions_section, commands_section]).build()
+     |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10970:18
+      |
+10970 |             Fut: std::future::Future<Output = Menu<'a>>,
+      |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+10970 -             Fut: std::future::Future<Output = Menu<'a>>,
+10970 +             Fut: Future<Output = Menu<'a>>,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13736:31
+      |
+13736 |         apps: HashMap<String, crate::app::declarations::AppFactory<PA>>,
+      |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13736 -         apps: HashMap<String, crate::app::declarations::AppFactory<PA>>,
+13736 +         apps: HashMap<String, declarations::AppFactory<PA>>,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13878:66
+      |
+13878 |         pub fn register_app_factory(mut self, app: App, factory: crate::app::declarations::AppFactory<PA>) -> Self {
+      |                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13878 -         pub fn register_app_factory(mut self, app: App, factory: crate::app::declarations::AppFactory<PA>) -> Self {
+13878 +         pub fn register_app_factory(mut self, app: App, factory: declarations::AppFactory<PA>) -> Self {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13994:13
+      |
+13994 |             ui::surface(semio_framework_ui_scene::encode(SurfaceKind::TextEditor, &scene)).id(Self::KIND_ID).build()
+      |             ^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13994 -             ui::surface(semio_framework_ui_scene::encode(SurfaceKind::TextEditor, &scene)).id(Self::KIND_ID).build()
+13994 +             surface(semio_framework_ui_scene::encode(SurfaceKind::TextEditor, &scene)).id(Self::KIND_ID).build()
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14029:13
+      |
+14029 |             ui::surface(semio_framework_ui_scene::encode(SurfaceKind::Table, &scene)).id(Self::KIND_ID).build()
+      |             ^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+14029 -             ui::surface(semio_framework_ui_scene::encode(SurfaceKind::Table, &scene)).id(Self::KIND_ID).build()
+14029 +             surface(semio_framework_ui_scene::encode(SurfaceKind::Table, &scene)).id(Self::KIND_ID).build()
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14105:13
+      |
+14105 |             ui::surface(semio_framework_ui_scene::encode(SurfaceKind::Table, &scene)).id(Self::KIND_ID).build()
+      |             ^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+14105 -             ui::surface(semio_framework_ui_scene::encode(SurfaceKind::Table, &scene)).id(Self::KIND_ID).build()
+14105 +             surface(semio_framework_ui_scene::encode(SurfaceKind::Table, &scene)).id(Self::KIND_ID).build()
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14143:27
+      |
+14143 | ...   let section = ui::tree_section("").id(format!("{}-root", Self::KIND_ID)).default_open(true).children(view.roots.iter().map(...
+      |                     ^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+14143 -             let section = ui::tree_section("").id(format!("{}-root", Self::KIND_ID)).default_open(true).children(view.roots.iter().map(to_item)).build();
+14143 +             let section = tree_section("").id(format!("{}-root", Self::KIND_ID)).default_open(true).children(view.roots.iter().map(to_item)).build();
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14144:13
+      |
+14144 |             ui::tree().id(Self::KIND_ID).child(section).build()
+      |             ^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+14144 -             ui::tree().id(Self::KIND_ID).child(section).build()
+14144 +             tree().id(Self::KIND_ID).child(section).build()
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14176:13
+      |
+14176 |             ui::image(src).id(Self::KIND_ID).alt(format!("{}x{}", view.width, view.height)).build()
+      |             ^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+14176 -             ui::image(src).id(Self::KIND_ID).alt(format!("{}x{}", view.width, view.height)).build()
+14176 +             image(src).id(Self::KIND_ID).alt(format!("{}x{}", view.width, view.height)).build()
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14209:13
+      |
+14209 |             ui::surface(semio_framework_ui_scene::encode(SurfaceKind::World3d, &scene)).id(Self::KIND_ID).build()
+      |             ^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+14209 -             ui::surface(semio_framework_ui_scene::encode(SurfaceKind::World3d, &scene)).id(Self::KIND_ID).build()
+14209 +             surface(semio_framework_ui_scene::encode(SurfaceKind::World3d, &scene)).id(Self::KIND_ID).build()
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14241:78
+      |
+14241 | ...   let children = view.pages.iter().enumerate().map(|(index, page)| ui::text(page.text.clone()).id(format!("page-{index}")).bu...
+      |                                                                        ^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+14241 -             let children = view.pages.iter().enumerate().map(|(index, page)| ui::text(page.text.clone()).id(format!("page-{index}")).build());
+14241 +             let children = view.pages.iter().enumerate().map(|(index, page)| text(page.text.clone()).id(format!("page-{index}")).build());
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14242:13
+      |
+14242 |             ui::column().id(Self::KIND_ID).children(children).build()
+      |             ^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+14242 -             ui::column().id(Self::KIND_ID).children(children).build()
+14242 +             column().id(Self::KIND_ID).children(children).build()
+      |
+
+warning: ambiguous glob re-exports
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21955:13
+      |
+21955 |     pub use semio_framework::kernel::*;
+      |             ^^^^^^^^^^^^^^^^^^^^^^^^^^ the name `ActionId` in the type namespace is first re-exported here
+...
+21958 |     pub use semio_framework_ui_contract::*;
+      |             ------------------------------ but the name `ActionId` in the type namespace is also re-exported here
+      |
+      = note: `#[warn(ambiguous_glob_reexports)]` on by default
+
+warning: ambiguous glob re-exports
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21958:13
+      |
+21954 |     pub use crate::app::*;
+      |             ------------- but the name `tree_item` in the value namespace is also re-exported here
+...
+21958 |     pub use semio_framework_ui_contract::*;
+      |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the name `tree_item` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21958:13
+      |
+21954 |     pub use crate::app::*;
+      |             ------------- but the name `PeerMark` in the type namespace is also re-exported here
+...
+21958 |     pub use semio_framework_ui_contract::*;
+      |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the name `PeerMark` in the type namespace is first re-exported here
+
+warning: unused import: `Present`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:189:38
+    |
+189 |     use semio_framework_ui_runtime::{Present, PresentCx};
+    |                                      ^^^^^^^
+
+warning: field `key` is never read
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:110:5
+    |
+108 | struct TaskRecord {
+    |        ---------- field in this struct
+109 |     instance: u32,
+110 |     key: Option<String>,
+    |     ^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: constant `DIRECT_READ_CHUNK` is never used
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🌐host/📖️body/🦀️component.rs:17:7
+   |
+17 | const DIRECT_READ_CHUNK: usize = 64 * 1024;
+   |       ^^^^^^^^^^^^^^^^^
+
+warning: field `0` is never read
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:122:13
+    |
+122 |     Command(Vec<u8>),
+    |     ------- ^^^^^^^
+    |     |
+    |     field in this variant
+    |
+help: consider changing the field to be of unit type to suppress this warning while preserving the field numbering, or remove the field
+    |
+122 -     Command(Vec<u8>),
+122 +     Command(()),
+    |
+
+warning: fields `artifact_ops`, `config_ops`, and `draft_ops` are never read
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:123:12
+    |
+123 |     Emit { artifact_ops: Vec<u8>, config_ops: Vec<u8>, draft_ops: Vec<u8> },
+    |     ----   ^^^^^^^^^^^^           ^^^^^^^^^^           ^^^^^^^^^
+    |     |
+    |     fields in this variant
+
+warning: field `0` is never read
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:124:11
+    |
+124 |     Fault(semio_framework::Fault),
+    |     ----- ^^^^^^^^^^^^^^^^^^^^^^
+    |     |
+    |     field in this variant
+    |
+help: consider changing the field to be of unit type to suppress this warning while preserving the field numbering, or remove the field
+    |
+124 -     Fault(semio_framework::Fault),
+124 +     Fault(()),
+    |
+
+warning: fields `instance`, `meta`, and `outcome` are never read
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:133:5
+    |
+132 | struct PendingResume {
+    |        ------------- fields in this struct
+133 |     instance: u32,
+    |     ^^^^^^^^
+134 |     meta: crate::app::ActionMeta,
+    |     ^^^^
+135 |     outcome: TaskResumeOutcome,
+    |     ^^^^^^^
+
+warning: function `cancel_instance_tasks` is never used
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:279:15
+    |
+279 | pub(crate) fn cancel_instance_tasks(instance: u32) {
+    |               ^^^^^^^^^^^^^^^^^^^^^
+
+warning: call to `.clone()` on a reference in this situation does nothing
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3105:119
+     |
+3105 |                 Ok(schema) => match ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), codec.extension.clone()) {
+     |                                                                                                                       ^^^^^^^^ help: remove this redundant call
+     |
+     = note: the type `str` does not implement `Clone`, so calling `clone` on `&str` copies the reference, which does not do anything and can be removed
+     = note: `#[warn(noop_method_call)]` on by default
+
+warning: call to `.clone()` on a reference in this situation does nothing
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3139:119
+     |
+3139 |                 Ok(schema) => match ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), codec.extension.clone()) {
+     |                                                                                                                       ^^^^^^^^ help: remove this redundant call
+     |
+     = note: the type `str` does not implement `Clone`, so calling `clone` on `&str` copies the reference, which does not do anything and can be removed
+
+   Compiling semio-s-plugin-stdio v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust)
+warning: `semio-framework-plugin` (lib) generated 49 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 37 suggestions)
+warning: unused doc comment
+   --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:114:1
+    |
+114 | / /// 🧬️ Closed set spanning `semio`'s 18 composable subsets — the O1 replacement for the deleted
+115 | | /// `Box<dyn SpaceMember>` `ChildStoreFactory` registry (`store::MemberFactory`'s own doc explains the
+116 | | /// general mechanism; `store::space_members!` generates the `SpaceMember`/`MemberFactory` delegation
+117 | | /// below). Generated exactly as any other family would be, EXCEPT the string fed to `MemberFactory::
+...   |
+121 | | /// BE an `ArtifactKindId`; it only ever compares it against string literals, so this reuse is exact,
+122 | | /// not approximate.
+    | |_-------------------^
+    |   |
+    |   rustdoc does not generate documentation for macro invocations
+    |
+    = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+    = note: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:53:5
+   |
+53 |     crate::artifacts::semio::standards::v1::subsets::brep::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+53 -     crate::artifacts::semio::standards::v1::subsets::brep::io::register();
+53 +     subsets::brep::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:54:5
+   |
+54 |     crate::artifacts::semio::standards::v1::subsets::mesh::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+54 -     crate::artifacts::semio::standards::v1::subsets::mesh::io::register();
+54 +     subsets::mesh::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:55:5
+   |
+55 |     crate::artifacts::semio::standards::v1::subsets::model::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+55 -     crate::artifacts::semio::standards::v1::subsets::model::io::register();
+55 +     subsets::model::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:56:5
+   |
+56 |     crate::artifacts::semio::standards::v1::subsets::value::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+56 -     crate::artifacts::semio::standards::v1::subsets::value::io::register();
+56 +     subsets::value::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:57:5
+   |
+57 |     crate::artifacts::semio::standards::v1::subsets::document::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+57 -     crate::artifacts::semio::standards::v1::subsets::document::io::register();
+57 +     subsets::document::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:58:5
+   |
+58 |     crate::artifacts::semio::standards::v1::subsets::cad::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+58 -     crate::artifacts::semio::standards::v1::subsets::cad::io::register();
+58 +     subsets::cad::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:59:5
+   |
+59 |     crate::artifacts::semio::standards::v1::subsets::drawing::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+59 -     crate::artifacts::semio::standards::v1::subsets::drawing::io::register();
+59 +     subsets::drawing::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:60:5
+   |
+60 |     crate::artifacts::semio::standards::v1::subsets::image::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+60 -     crate::artifacts::semio::standards::v1::subsets::image::io::register();
+60 +     subsets::image::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:61:5
+   |
+61 |     crate::artifacts::semio::standards::v1::subsets::video::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+61 -     crate::artifacts::semio::standards::v1::subsets::video::io::register();
+61 +     subsets::video::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:62:5
+   |
+62 |     crate::artifacts::semio::standards::v1::subsets::audio::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+62 -     crate::artifacts::semio::standards::v1::subsets::audio::io::register();
+62 +     subsets::audio::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:63:5
+   |
+63 |     crate::artifacts::semio::standards::v1::subsets::animation::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+63 -     crate::artifacts::semio::standards::v1::subsets::animation::io::register();
+63 +     subsets::animation::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:64:5
+   |
+64 |     crate::artifacts::semio::standards::v1::subsets::presentation::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+64 -     crate::artifacts::semio::standards::v1::subsets::presentation::io::register();
+64 +     subsets::presentation::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:65:5
+   |
+65 |     crate::artifacts::semio::standards::v1::subsets::flow::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+65 -     crate::artifacts::semio::standards::v1::subsets::flow::io::register();
+65 +     subsets::flow::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:66:5
+   |
+66 |     crate::artifacts::semio::standards::v1::subsets::text::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+66 -     crate::artifacts::semio::standards::v1::subsets::text::io::register();
+66 +     subsets::text::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:67:5
+   |
+67 |     crate::artifacts::semio::standards::v1::subsets::table::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+67 -     crate::artifacts::semio::standards::v1::subsets::table::io::register();
+67 +     subsets::table::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:68:5
+   |
+68 |     crate::artifacts::semio::standards::v1::subsets::graph::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+68 -     crate::artifacts::semio::standards::v1::subsets::graph::io::register();
+68 +     subsets::graph::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:69:5
+   |
+69 |     crate::artifacts::semio::standards::v1::subsets::object::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+69 -     crate::artifacts::semio::standards::v1::subsets::object::io::register();
+69 +     subsets::object::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:70:5
+   |
+70 |     crate::artifacts::semio::standards::v1::subsets::kit::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+70 -     crate::artifacts::semio::standards::v1::subsets::kit::io::register();
+70 +     subsets::kit::io::register();
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:71:5
+   |
+71 |     crate::artifacts::semio::standards::v1::subsets::any::io::register();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+71 -     crate::artifacts::semio::standards::v1::subsets::any::io::register();
+71 +     subsets::any::io::register();
+   |
+
+warning: `semio-s-plugin-stdio` (lib) generated 20 warnings (run `cargo fix --lib -p semio-s-plugin-stdio` to apply 19 suggestions)
+   Compiling semio-framework-os v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust)
+   Compiling semio-s-plugin-puzzle v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust)
+warning: unused import: `protocol::SemanticMutation`
+   --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:392:9
+    |
+392 |     use protocol::SemanticMutation;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `protocol::SemanticMutation`
+   --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:460:9
+    |
+460 |     use protocol::SemanticMutation;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Puzzle3dCompatSpecificity` and `Puzzle3dObjectAnchor`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📝️text/🦀️component.rs:32:29
+   |
+32 | ...Attraction, Puzzle3dCompatSpecificity, Puzzle3dKindCompatibility, Puzzle3dMeta, Puzzle3dObject, Puzzle3dObjectAnchor, Puzzle3dRef...
+   |                ^^^^^^^^^^^^^^^^^^^^^^^^^                                                           ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `InferredField`
+   --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🎛flat-position/🦀️component.rs:179:55
+    |
+179 |     use store::{InferenceCache, InferenceCacheConfig, InferredField};
+    |                                                       ^^^^^^^^^^^^^
+
+warning: unused import: `protocol::SemanticMutation`
+   --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:473:9
+    |
+473 |     use protocol::SemanticMutation;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `UiNode`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:36:52
+   |
+36 |     SelectionMethod, SelectionMode, SelectionSpec, UiNode, WindowEngagement, WindowMeasure, INTERACTION_SELECT_ACTION_ID, SET_ACTIVE...
+   |                                                    ^^^^^^
+
+warning: unnecessary braces around function argument
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs:28:12
+   |
+28 |         Ok({ self.clone() })
+   |            ^^            ^^
+   |
+   = note: `#[warn(unused_braces)]` (part of `#[warn(unused)]`) on by default
+help: remove these braces
+   |
+28 -         Ok({ self.clone() })
+28 +         Ok(self.clone())
+   |
+
+warning: unused import: `Label`
+ --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs:8:87
+  |
+8 |     tree_item_with_action, tree_item_with_action_draggable, ActionFactory, BuiltNode, Label, LocalizedLabel, PanelGroup, PanelTabDefi...
+  |                                                                                       ^^^^^
+
+warning: unused import: `puzzle2d_interaction_select`
+ --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs:7:61
+  |
+7 | use crate::editor::puzzle2d::{fixture_edges, fixture_nodes, puzzle2d_interaction_select, Puzzle2dScene, PUZZLE2D_GRANULARITY_NODE, PU...
+  |                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `UiNode`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️overview/🦀️component.rs:11:43
+   |
+11 | use semio_framework_plugin::{SurfaceKind, UiNode, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, Windo...
+   |                                           ^^^^^^
+
+warning: unused import: `UiNode`
+ --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🔍️detail/🦀️component.rs:9:43
+  |
+9 | use semio_framework_plugin::{SurfaceKind, UiNode, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, Window...
+  |                                           ^^^^^^
+
+warning: unused import: `UiNode`
+ --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎯️selection/🦀️component.rs:9:43
+  |
+9 | use semio_framework_plugin::{SurfaceKind, UiNode, WindowEngagement, WindowEngagementSlot, WindowKindDefinition, WindowMeasure, Window...
+  |                                           ^^^^^^
+
+warning: unused import: `UiNode`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:40:14
+   |
+40 |     ToolRef, UiNode, WindowEngagement, WindowMeasure, INTERACTION_SELECT_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_AC...
+   |              ^^^^^^
+
+warning: unnecessary qualification
+    --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:1391:24
+     |
+1391 |         let mut queue: std::collections::VecDeque<String> = std::collections::VecDeque::new();
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+1391 -         let mut queue: std::collections::VecDeque<String> = std::collections::VecDeque::new();
+1391 +         let mut queue: VecDeque<String> = std::collections::VecDeque::new();
+     |
+
+warning: unnecessary qualification
+    --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:1391:61
+     |
+1391 |         let mut queue: std::collections::VecDeque<String> = std::collections::VecDeque::new();
+     |                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1391 -         let mut queue: std::collections::VecDeque<String> = std::collections::VecDeque::new();
+1391 +         let mut queue: std::collections::VecDeque<String> = VecDeque::new();
+     |
+
+warning: unused import: `testkit as framework_testkit`
+    --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:3211:34
+     |
+3211 |     use semio_framework_plugin::{testkit as framework_testkit, EditorApp, PluginApp};
+     |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `order_brush_fill_compatible_candidates` and `weighted_order_fill_vortex_targets`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🦀️component.rs:28:175
+   |
+28 | ...ion_weight, brush_compatible_candidates, brush_preview_from_candidate, brush_target_vortex_allows_suggestion, enumerate_brush_fill_vortex_targets, order_brush_fill_compatible_candidates, r...
+   |                                                                                                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+29 | ...t, weighted_order_fill_vortex_targets, AttractionVortexContext, TargetVortexWorld,
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `FillJobStage`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🦀️component.rs:31:62
+   |
+31 | use crate::editor::puzzle3d::precompute::fill::{FillBuilder, FillJobStage, PlacedCollisionEntry};
+   |                                                              ^^^^^^^^^^^^
+
+warning: unnecessary braces around function argument
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs:29:12
+   |
+29 |         Ok({ self.clone() })
+   |            ^^            ^^
+   |
+help: remove these braces
+   |
+29 -         Ok({ self.clone() })
+29 +         Ok(self.clone())
+   |
+
+warning: unused import: `UiNode`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:33:35
+   |
+33 |     SelectionMode, SelectionSpec, UiNode, UiTreeItemNode, WindowEngagement, WindowMeasure, INTERACTION_SELECT_ACTION_ID, SET_ACTIVE_...
+   |                                   ^^^^^^
+
+warning: unused import: `EngineHandles`
+    --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:2412:47
+     |
+2412 |         use store::{create_document_envelope, EngineHandles};
+     |                                               ^^^^^^^^^^^^^
+
+warning: unnecessary braces around function argument
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs:31:12
+   |
+31 |         Ok({ self.clone() })
+   |            ^^            ^^
+   |
+help: remove these braces
+   |
+31 -         Ok({ self.clone() })
+31 +         Ok(self.clone())
+   |
+
+warning: unused import: `LabelText`
+ --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs:7:80
+  |
+7 |     tree_item_desc, tree_item_with_action_draggable, ActionFactory, BuiltNode, LabelText, LocalizedLabel, PanelGroup, PanelTabDefinit...
+  |                                                                                ^^^^^^^^^
+
+warning: unused import: `HasChildren`
+ --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️component.rs:8:87
+  |
+8 | use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, HasChildren};
+  |                                                                                       ^^^^^^^^^^^
+
+warning: unused import: `PUZZLE5D_PLAY_CONTROLLER_ID`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/◻2d/🦀️component.rs:14:183
+   |
+14 | ...OARD_FIXTURE_SCHEMA, PUZZLE5D_DEFAULT_PART_RADIUS, PUZZLE5D_PLAY_CONTROLLER_ID};
+   |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `PUZZLE5D_PLAY_CONTROLLER_ID`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️3d/🦀️component.rs:18:88
+   |
+18 |     world_grip_position, Puzzle5dDocument, Puzzle5dScene, PUZZLE5D_FALLBACK_MESH_KIND, PUZZLE5D_PLAY_CONTROLLER_ID,
+   |                                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `UiNode`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:10:189
+   |
+10 | ...sence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+   |                                                                 ^^^^^^
+
+warning: unused import: `UiNode`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🎲️board/🦀️component.rs:11:116
+   |
+11 | use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, MeshView, MeshWindowKit, UiNode, WindowKin...
+   |                                                                                                                    ^^^^^^
+
+warning: unused import: `UiNode`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:11:189
+   |
+11 | ...sence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+   |                                                                 ^^^^^^
+
+warning: unused import: `UiNode`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️main/🦀️component.rs:10:145
+   |
+10 | ...d3d_meshes_json_from_kinds_and_urls, world3d_selection_json, UiNode, WindowKindDefinition};
+   |                                                                 ^^^^^^
+
+warning: unused import: `UiNode`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:17:180
+   |
+17 | ...sence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+   |                                                                 ^^^^^^
+
+warning: unused import: `UiNode`
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️3d/🦀️component.rs:11:111
+   |
+11 | use semio_framework_plugin::{world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_selection_json, UiNode, WindowKindDefi...
+   |                                                                                                               ^^^^^^
+
+warning: unused doc comment
+ --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/../../🦀️component.rs:9:1
+  |
+9 | /// 🗃️ Closed runtime app fleet for the Puzzle 2D, 3D, and 5D surfaces.
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ rustdoc does not generate documentation for macro invocations
+  |
+  = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+  = note: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/../../🦀️component.rs:12:24
+   |
+12 | ...Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle2d::Puzzle2dPlayApp>>),
+   |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+12 -         Puzzle2dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle2d::Puzzle2dPlayApp>>),
+12 +         Puzzle2dEditor(VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle2d::Puzzle2dPlayApp>>),
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/../../🦀️component.rs:12:63
+   |
+12 | ...ork_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle2d::Puzzle2dPlayApp>>),
+   |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+12 -         Puzzle2dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle2d::Puzzle2dPlayApp>>),
+12 +         Puzzle2dEditor(semio_framework_plugin::VcsArtifactApp<EditorApp<crate::editor::puzzle2d::Puzzle2dPlayApp>>),
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/../../🦀️component.rs:13:24
+   |
+13 | ...Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle2d::Puzzle2dViewer>>),
+   |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+13 -         Puzzle2dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle2d::Puzzle2dViewer>>),
+13 +         Puzzle2dViewer(VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle2d::Puzzle2dViewer>>),
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/../../🦀️component.rs:13:63
+   |
+13 | ...ork_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle2d::Puzzle2dViewer>>),
+   |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+13 -         Puzzle2dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle2d::Puzzle2dViewer>>),
+13 +         Puzzle2dViewer(semio_framework_plugin::VcsArtifactApp<ViewerApp<crate::viewer::puzzle2d::Puzzle2dViewer>>),
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/../../🦀️component.rs:14:24
+   |
+14 | ...Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle3d::Puzzle3dPlayApp>>),
+   |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+14 -         Puzzle3dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle3d::Puzzle3dPlayApp>>),
+14 +         Puzzle3dEditor(VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle3d::Puzzle3dPlayApp>>),
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/../../🦀️component.rs:14:63
+   |
+14 | ...ork_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle3d::Puzzle3dPlayApp>>),
+   |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+14 -         Puzzle3dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle3d::Puzzle3dPlayApp>>),
+14 +         Puzzle3dEditor(semio_framework_plugin::VcsArtifactApp<EditorApp<crate::editor::puzzle3d::Puzzle3dPlayApp>>),
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/../../🦀️component.rs:15:24
+   |
+15 | ...Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle3d::Puzzle3dViewer>>),
+   |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+15 -         Puzzle3dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle3d::Puzzle3dViewer>>),
+15 +         Puzzle3dViewer(VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle3d::Puzzle3dViewer>>),
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/../../🦀️component.rs:15:63
+   |
+15 | ...ork_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle3d::Puzzle3dViewer>>),
+   |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+15 -         Puzzle3dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle3d::Puzzle3dViewer>>),
+15 +         Puzzle3dViewer(semio_framework_plugin::VcsArtifactApp<ViewerApp<crate::viewer::puzzle3d::Puzzle3dViewer>>),
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/../../🦀️component.rs:16:24
+   |
+16 | ...Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle5d::Puzzle5dPlayApp>>),
+   |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+16 -         Puzzle5dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle5d::Puzzle5dPlayApp>>),
+16 +         Puzzle5dEditor(VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle5d::Puzzle5dPlayApp>>),
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/../../🦀️component.rs:16:63
+   |
+16 | ...ork_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle5d::Puzzle5dPlayApp>>),
+   |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+16 -         Puzzle5dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::puzzle5d::Puzzle5dPlayApp>>),
+16 +         Puzzle5dEditor(semio_framework_plugin::VcsArtifactApp<EditorApp<crate::editor::puzzle5d::Puzzle5dPlayApp>>),
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/../../🦀️component.rs:17:24
+   |
+17 | ...Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle5d::Puzzle5dViewer>>),
+   |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+17 -         Puzzle5dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle5d::Puzzle5dViewer>>),
+17 +         Puzzle5dViewer(VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle5d::Puzzle5dViewer>>),
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/../../🦀️component.rs:17:63
+   |
+17 | ...ork_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle5d::Puzzle5dViewer>>),
+   |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+17 -         Puzzle5dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::puzzle5d::Puzzle5dViewer>>),
+17 +         Puzzle5dViewer(semio_framework_plugin::VcsArtifactApp<ViewerApp<crate::viewer::puzzle5d::Puzzle5dViewer>>),
+   |
+
+warning: unnecessary qualification
+  --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/../../🦀️component.rs:54:47
+   |
+54 | pub fn plugin() -> Result<Plugin<PuzzleApps>, semio_framework_plugin::PluginAssemblyError> {
+   |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+54 - pub fn plugin() -> Result<Plugin<PuzzleApps>, semio_framework_plugin::PluginAssemblyError> {
+54 + pub fn plugin() -> Result<Plugin<PuzzleApps>, PluginAssemblyError> {
+   |
+
+warning: unnecessary qualification
+    --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/📦️glue.rs:2867:57
+     |
+2867 | semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::PuzzleApps);
+     |                                                         ^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2867 - semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::PuzzleApps);
+2867 + semio_framework_plugin::plugin_exports!(plugin::plugin, PuzzleApps);
+     |
+
+warning: variable does not need to be mutable
+    --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:2456:13
+     |
+2456 |         let mut app = Puzzle3dPlayApp::default();
+     |             ----^^^
+     |             |
+     |             help: remove this `mut`
+     |
+     = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `app`
+    --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:2737:13
+     |
+2737 |         let app = Puzzle5dPlayApp::default();
+     |             ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `app`
+    --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:2791:13
+     |
+2791 |         let app = Puzzle5dPlayApp::default();
+     |             ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+
+warning: unused variable: `app`
+    --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:2821:13
+     |
+2821 |         let app = Puzzle5dPlayApp::default();
+     |             ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+
+warning: unused variable: `app`
+    --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:4755:13
+     |
+4755 |         let app = Puzzle3dPlayApp::default();
+     |             ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+
+warning: unused variable: `app`
+    --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:4801:13
+     |
+4801 |         let app = Puzzle3dPlayApp::default();
+     |             ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+
+warning: unused variable: `app`
+    --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:4830:13
+     |
+4830 |         let app = Puzzle3dPlayApp::default();
+     |             ^^^ help: if this is intentional, prefix it with an underscore: `_app`
+
+warning: function `context_menu_direct` is never used
+    --> ✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:3181:12
+     |
+3181 |     pub fn context_menu_direct(app: &mut Puzzle3dApp) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-s-plugin-puzzle` (lib test) generated 55 warnings (run `cargo fix --lib -p semio-s-plugin-puzzle --tests` to apply 53 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 42.60s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests 📦️glue.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PUZZLE-3D-RESUMABLE-VERTICAL-SLICE/🧪️target-p4/debug/deps/semio_s_plugin_puzzle-dc22081ae00757c2)
+
+running 1 test
+test editor::puzzle3d::component::tests::open_and_accept_vortex_suggestions_preserve_active_utility ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1123 filtered out; finished in 0.12s
+

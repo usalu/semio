@@ -9,7 +9,7 @@ use crate::wire::ProtocolError;
 
 /// @emoji 🔗️ Content-hashes raw bytes into a 32-byte digest (the commit chain's hash primitive).
 pub trait RecordHasher {
-    async fn hash(&self, bytes: &[u8]) -> [u8; 32];
+    fn hash(&self, bytes: &[u8]) -> [u8; 32];
 }
 
 /// @emoji ✍️ Produces a detached signature over a 32-byte message (a commit's `chain_hash`).

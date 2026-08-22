@@ -235,6 +235,88 @@ impl BrowserClipboard {
 
 //#endregion 📋️Clipboard
 
+//#region 📁️FileDialog
+
+/// 📁️ Platform-neutral request schema for a native file dialog.
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum NativeFileDialogRequest {
+    Open { extensions: Vec<String>, multiple: bool },
+    Save { filename: String, extensions: Vec<String> },
+    Folder,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl NativeFileDialogRequest {
+    pub fn open(extensions: impl IntoIterator<Item = impl Into<String>>, multiple: bool) -> Self {
+        Self::Open { extensions: normalize_dialog_extensions(extensions), multiple }
+    }
+
+    pub fn save(filename: impl Into<String>, extensions: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        Self::Save { filename: filename.into(), extensions: normalize_dialog_extensions(extensions) }
+    }
+
+    pub fn folder() -> Self {
+        Self::Folder
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn normalize_dialog_extensions(extensions: impl IntoIterator<Item = impl Into<String>>) -> Vec<String> {
+    let mut normalized: Vec<String> = extensions.into_iter().map(Into::into).map(|extension: String| extension.trim().trim_start_matches('.').to_ascii_lowercase()).filter(|extension| !extension.is_empty()).collect();
+    normalized.sort();
+    normalized.dedup();
+    normalized
+}
+
+/// 📂️ Runs the native picker behind an owned request/result boundary. The returned future is
+/// polled by the renderer's I/O-lane task seam; no renderer callback waits for user interaction.
+#[cfg(not(target_arch = "wasm32"))]
+pub async fn select_native_paths(request: NativeFileDialogRequest) -> Vec<std::path::PathBuf> {
+    use rfd::AsyncFileDialog;
+
+    match request {
+        NativeFileDialogRequest::Open { extensions, multiple } => {
+            let dialog = if extensions.is_empty() { AsyncFileDialog::new() } else { AsyncFileDialog::new().add_filter("import", &extensions) };
+            if multiple {
+                dialog.pick_files().await.unwrap_or_default().into_iter().map(|file| file.path().to_path_buf()).collect()
+            } else {
+                dialog.pick_file().await.into_iter().map(|file| file.path().to_path_buf()).collect()
+            }
+        }
+        NativeFileDialogRequest::Save { filename, extensions } => {
+            let dialog = AsyncFileDialog::new().set_file_name(filename);
+            let dialog = if extensions.is_empty() { dialog } else { dialog.add_filter("export", &extensions) };
+            dialog.save_file().await.into_iter().map(|file| file.path().to_path_buf()).collect()
+        }
+        NativeFileDialogRequest::Folder => AsyncFileDialog::new().pick_folder().await.into_iter().map(|folder| folder.path().to_path_buf()).collect(),
+    }
+}
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod native_file_dialog_tests {
+    use super::*;
+
+    #[test]
+    fn request_schema_normalizes_extensions_deterministically() {
+        assert_eq!(NativeFileDialogRequest::open([".JSON", " json ", "png", ""], true), NativeFileDialogRequest::Open { extensions: vec!["json".into(), "png".into()], multiple: true });
+    }
+
+    #[test]
+    fn save_and_folder_requests_preserve_owned_values() {
+        assert_eq!(NativeFileDialogRequest::save("studio.json", [".JSON"]), NativeFileDialogRequest::Save { filename: "studio.json".into(), extensions: vec!["json".into()] });
+        assert_eq!(NativeFileDialogRequest::folder(), NativeFileDialogRequest::Folder);
+    }
+
+    #[test]
+    fn selection_future_can_move_to_the_io_lane() {
+        fn assert_send<T: Send>(_: T) {}
+        assert_send(select_native_paths(NativeFileDialogRequest::folder()));
+    }
+}
+
+//#endregion 📁️FileDialog
+
 //#region 🈶️Ime
 
 /// 🈶️ Applies a [`ImeDirective`] to a real window — `Enable` positions the platform IME candidate

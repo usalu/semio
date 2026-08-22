@@ -28,7 +28,6 @@ brep = ["dep:semio-framework-os-kernel"]
 [dependencies]
 serde.workspace = true
 serde_json.workspace = true
-thiserror.workspace = true
 semio-framework-number = { workspace = true }
 semio-framework-geometry = { workspace = true }
 semio-framework-os-kernel = { workspace = true, optional = true }

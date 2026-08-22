@@ -1019,7 +1019,7 @@ export interface DiscoveredOwner {
 
 /** ⚠️ A discovery-time problem `discoverPackages` does not fail on but must not stay silent about — see `discoverPackageProblems`. */
 export interface DiscoveryProblem {
-  readonly kind: "ambiguous-lang-shape" | "target-without-manifest" | "manifest-without-marker" | "unknown-lang" | "unknown-role";
+  readonly kind: "ambiguous-lang-shape" | "target-without-manifest" | "manifest-without-marker" | "unknown-lang" | "unknown-role" | "packaging-violation";
   readonly path: string;
   readonly message: string;
 }

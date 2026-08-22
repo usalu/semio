@@ -13,7 +13,7 @@ use std::collections::HashMap;
 // #region 🔖️SolidMeshing
 /// 📐️ Unsigned area of triangle `(p0, p1, p2)` via the shoelace formula — mirrors `fem_2d`'s helper of
 /// the same purpose.
-async fn triangle_area_2d(p0: [f64; 2], p1: [f64; 2], p2: [f64; 2]) -> f64 {
+fn triangle_area_2d(p0: [f64; 2], p1: [f64; 2], p2: [f64; 2]) -> f64 {
     (0.5 * ((p1[0] - p0[0]) * (p2[1] - p0[1]) - (p2[0] - p0[0]) * (p1[1] - p0[1]))).abs()
 }
 
@@ -40,7 +40,7 @@ pub type ResolvedGeometry = (Vec<Node>, Vec<Elements>, Vec<MeshedSolid>, Vec<Sup
 /// buckling. A solid boundary point coinciding (within `1e-9`, all of x/y/z) with an existing document
 /// node reuses that node's id; otherwise a node is synthesized once per unique mesh point as
 /// `{solid_id}_m{point_index}`.
-pub async fn resolve_geometry(doc: &Fem3dSnapshot) -> Result<ResolvedGeometry, Fem3dError> {
+pub fn resolve_geometry(doc: &Fem3dSnapshot) -> Result<ResolvedGeometry, Fem3dError> {
     let mut nodes: Vec<Node> = doc.nodes.iter().map(|node| Node { id: node.id.clone(), pos: [node.x, node.y, node.z] }).collect();
     let node_exists = |id: &str| doc.nodes.iter().any(|n| n.id == id);
     let mut elements: Vec<Elements> = Vec::with_capacity(doc.elements.len());
@@ -116,7 +116,7 @@ pub async fn resolve_geometry(doc: &Fem3dSnapshot) -> Result<ResolvedGeometry, F
 /// 🌬️ Converts a `FemLoad::Area` (uniform pressure, Pa) into per-node global `-Z` nodal loads on a
 /// solid's TOP surface — `pressure * tributaryArea` at each top node, tributary area `(1/3)` of the
 /// summed area of every top-surface triangle touching that node. Mirrors `fem_2d::area_load_nodal_loads`.
-async fn area_load_nodal_loads_3d(solid: &MeshedSolid, pressure: f64) -> Vec<NodalLoad> {
+fn area_load_nodal_loads_3d(solid: &MeshedSolid, pressure: f64) -> Vec<NodalLoad> {
     let mut tributary: HashMap<String, f64> = HashMap::new();
     for tri in &solid.top_footprint_tris {
         let area = triangle_area_2d(solid.top_footprint_points[tri[0] as usize], solid.top_footprint_points[tri[1] as usize], solid.top_footprint_points[tri[2] as usize]);
@@ -143,7 +143,7 @@ async fn area_load_nodal_loads_3d(solid: &MeshedSolid, pressure: f64) -> Vec<Nod
 /// derived from them — they contribute no geometry here. A pure bar/frame model (no `solids`)
 /// yields an empty, still-structurally-valid mesh (and thus an empty .obj/.stl) rather than a
 /// fabricated shape.
-pub(crate) async fn build_semio_mesh_snapshot(doc: &Fem3dSnapshot) -> SemioMeshSnapshot {
+pub(crate) fn build_semio_mesh_snapshot(doc: &Fem3dSnapshot) -> SemioMeshSnapshot {
     let mut meshes = Vec::with_capacity(doc.solids.len());
     for solid in &doc.solids {
         let domain = crate::mesh::PlanarDomain { outer: solid.outline.clone(), holes: solid.holes.clone() };
@@ -163,7 +163,7 @@ pub(crate) async fn build_semio_mesh_snapshot(doc: &Fem3dSnapshot) -> SemioMeshS
 /// 🌬️ Translates one `FemLoadCase`'s loads into `(nodal_loads, member_loads)`, resolving `Area` loads
 /// against the already-meshed `solids` — shared by `build_model`, `fem3d_solve_all`, and buckling's
 /// reference-case resolution.
-pub async fn translate_loads(loads: &[FemLoad], solids: &[MeshedSolid]) -> Result<(Vec<NodalLoad>, Vec<(String, MemberUdl)>), Fem3dError> {
+pub fn translate_loads(loads: &[FemLoad], solids: &[MeshedSolid]) -> Result<(Vec<NodalLoad>, Vec<(String, MemberUdl)>), Fem3dError> {
     let mut nodal_loads = Vec::new();
     let mut member_loads = Vec::new();
     for load in loads {

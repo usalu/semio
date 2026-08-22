@@ -10,6 +10,6 @@ use crate::artifacts::note::standards::v1::subsets;
 use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use semio_framework_plugin::StandardId;
 
-pub async fn standard() -> StandardDeclaration {
+pub fn standard() -> StandardDeclaration<crate::NoteApps> {
     StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.note+json"], extensions: &["note"] }, subsets: vec![subsets::any::subset()] }
 }

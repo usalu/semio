@@ -769,7 +769,7 @@ function TreeReorderDropPreview(props: { readonly preview: { readonly targetId: 
       return;
     }
     const searchRoot: ParentNode = shellScope?.rootRef.current ?? document;
-    const row = searchRoot.querySelector(`[id="${CSS.escape(props.preview.targetId)}"]`);
+    const row = searchRoot.querySelector(`[id=${JSON.stringify(props.preview.targetId)}]`);
     setFrame(row?.getBoundingClientRect() ?? null);
   }, [props.preview, shellScope]);
   const portalTarget = shellScope?.portalLayerRef.current ?? (typeof document !== "undefined" ? document.body : null);
@@ -946,14 +946,16 @@ interface TreeSelectionComputationResult {
  * fixed granularity id when adapting to `🕹️interaction`'s domain-keyed machine below. */
 const TREE_INTERACTION_GRANULARITY = "item";
 const TREE_INTERACTION_DOMAIN = "tree";
+const TREE_INTERACTION_LABEL = { native: { en: "Tree", de: "Baum" }, reuse: { en: "Tree", de: "Baum" } } as const;
+const TREE_INTERACTION_ITEM_LABEL = { native: { en: "Item", de: "Element" }, reuse: { en: "Item", de: "Element" } } as const;
 
 /** 🕹️ Minimal `InteractionDefinition` wrapping `selectionMode` — only `granularities[0].id` and
  * `selection.modes[0]` are read by `nextSelection`/`validateState`; `hover`/`hierarchy`/`iconId` are
  * unused filler required by the type. */
 const treeInteractionDefinition = (selectionMode: TreeSelectionMode): InteractionDefinition => ({
   id: TREE_INTERACTION_DOMAIN,
-  label: "",
-  granularities: [{ id: TREE_INTERACTION_GRANULARITY, label: "", iconId: "circle" }],
+  label: TREE_INTERACTION_LABEL,
+  granularities: [{ id: TREE_INTERACTION_GRANULARITY, label: TREE_INTERACTION_ITEM_LABEL, iconId: "circle" }],
   hierarchy: { kind: "flat" },
   hover: { enabled: true, transitive: false, channels: ["pointer"], broadcast: false },
   selection: { modes: [selectionMode], methods: ["pick"], merges: ["replace", "additive", "subtractive", "invertive", "range"], transitive: false, broadcast: false },

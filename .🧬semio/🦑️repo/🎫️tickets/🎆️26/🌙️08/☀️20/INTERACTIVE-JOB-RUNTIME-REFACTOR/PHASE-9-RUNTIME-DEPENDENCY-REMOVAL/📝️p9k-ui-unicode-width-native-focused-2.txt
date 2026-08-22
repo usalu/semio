@@ -1,0 +1,59 @@
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui/../../../../⌨️tui/🦀️component.rs:4375:36
+     |
+4375 |                 std::thread::sleep(std::time::Duration::from_millis(80));
+     |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+4375 -                 std::thread::sleep(std::time::Duration::from_millis(80));
+4375 +                 std::thread::sleep(Duration::from_millis(80));
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui/../../../../⌨️tui/🦀️component.rs:4386:27
+     |
+4386 |             assert!(p99 < std::time::Duration::from_millis(2), "[DEBUG] clipboard poll callback p99 was {p99:?}");
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4386 -             assert!(p99 < std::time::Duration::from_millis(2), "[DEBUG] clipboard poll callback p99 was {p99:?}");
+4386 +             assert!(p99 < Duration::from_millis(2), "[DEBUG] clipboard poll callback p99 was {p99:?}");
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui/../../../../⌨️tui/🦀️component.rs:5557:29
+     |
+5557 |         assert_eq!(runs[0], crate::tui::cell::DiffRun { y: 0, x: 3, len: 1 });
+     |                             ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5557 -         assert_eq!(runs[0], crate::tui::cell::DiffRun { y: 0, x: 3, len: 1 });
+5557 +         assert_eq!(runs[0], DiffRun { y: 0, x: 3, len: 1 });
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui/../../../../⌨️tui/🦀️component.rs:5617:44
+     |
+5617 |         assert_eq!(events, vec![Event::Key(crate::tui::event::KeyEvent { key: Key::Esc, mods: 0 })]);
+     |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5617 -         assert_eq!(events, vec![Event::Key(crate::tui::event::KeyEvent { key: Key::Esc, mods: 0 })]);
+5617 +         assert_eq!(events, vec![Event::Key(KeyEvent { key: Key::Esc, mods: 0 })]);
+     |
+
+warning: `semio-framework-ui` (lib test) generated 4 warnings (run `cargo fix --lib -p semio-framework-ui --tests` to apply 4 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 0.79s
+     Running unittests 📦️glue.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL/🧪️target-p9k-ui-unicode/debug/deps/semio_framework_ui-7abeaa3830a13d23)
+
+running 1 test
+test tui::component::tests::text_cell_width_unicode_goldens ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 94 filtered out; finished in 0.00s
+

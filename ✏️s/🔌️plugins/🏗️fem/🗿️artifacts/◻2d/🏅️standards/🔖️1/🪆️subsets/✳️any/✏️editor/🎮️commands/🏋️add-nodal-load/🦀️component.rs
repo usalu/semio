@@ -13,14 +13,14 @@ type Fem2dSnapshot = crate::artifacts::fem2d::Fem2dSnapshot;
 /// found, else the document's first load case, else `None` — a missing case is not resolved here,
 /// the caller decides between `add-load` (existing case) and `create-load-case` (pre-seeded with the
 /// new load, synthesized `"case-1"`/`"Load Case 1"`) once it knows which branch it's in.
-async fn resolve_load_case(doc: &Fem2dSnapshot, case_id: Option<&str>) -> Option<FemLoadCase> {
+fn resolve_load_case(doc: &Fem2dSnapshot, case_id: Option<&str>) -> Option<FemLoadCase> {
     case_id.and_then(|id| doc.load_cases.iter().find(|lc| lc.id == id).cloned()).or_else(|| doc.load_cases.first().cloned())
 }
 
 /// 🌉️ Shared resolve-or-create gesture behind `add-nodal-load`/`add-member-udl`/`add-area-load`:
 /// attaches `load` to the named/first load case via `add-load` if one exists, else synthesizes a
 /// fresh `"case-1"`/`"Load Case 1"` case pre-seeded with `load` via `create-load-case`.
-async fn add_load_mutation(doc: &Fem2dSnapshot, case_id: Option<&str>, load: FemLoad) -> Fem2dMutation {
+fn add_load_mutation(doc: &Fem2dSnapshot, case_id: Option<&str>, load: FemLoad) -> Fem2dMutation {
     match resolve_load_case(doc, case_id) {
         Some(existing) => Fem2dMutation::AddLoad(add_load::mutation::AddLoad { case_id: existing.id, load: Box::new(load) }),
         None => Fem2dMutation::CreateLoadCase(create_load_case::mutation::CreateLoadCase { load_case: FemLoadCase { id: "case-1".into(), name: "Load Case 1".into(), loads: vec![load], self_weight: false } }),
@@ -29,7 +29,7 @@ async fn add_load_mutation(doc: &Fem2dSnapshot, case_id: Option<&str>, load: Fem
 
 /// 🌉️ The load id a new load on the (possibly not-yet-existing) target case should get — reads the
 /// existing case's loads for `next_id` continuity, or starts fresh for a synthesized case.
-async fn next_load_id(doc: &Fem2dSnapshot, case_id: Option<&str>) -> String {
+fn next_load_id(doc: &Fem2dSnapshot, case_id: Option<&str>) -> String {
     let loads = resolve_load_case(doc, case_id).map(|lc| lc.loads).unwrap_or_default();
     crate::app_surface::next_id(loads.iter().map(|l| crate::artifacts::fem2d::load_id(l).to_string()), "l")
 }
@@ -61,7 +61,7 @@ pub struct AddNodalLoad {
     pub case_id: Option<String>,
 }
 
-pub async fn handle(payload: &AddNodalLoad, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+pub fn handle(payload: &AddNodalLoad, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
     let load_id = next_load_id(doc.snapshot, payload.case_id.as_deref());
     let load = FemLoad::Nodal { id: load_id, node_id: payload.node_id.clone(), dof: payload.dof, value: payload.value };
     Ok(Emit::mutations(vec![add_load_mutation(doc.snapshot, payload.case_id.as_deref(), load)]))
@@ -71,31 +71,33 @@ pub async fn handle(payload: &AddNodalLoad, doc: &ArtifactView<'_, Fem2dSnapshot
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::editor::fem2d::commands::{add_area_load, add_combination, add_load_case, add_member_udl, set_self_weight};
+    use crate::editor::fem2d::commands::{add_area_load, add_combination, add_load_case, add_member_udl, add_node, set_self_weight};
     use crate::editor::fem2d::testkit::{dispatch, fem2d_app};
     use crate::editor::fem2d::Fem2dCommand;
 
     async fn with_dead_case(app: &mut crate::editor::fem2d::testkit::Fem2dApp) {
-        dispatch(app, Fem2dCommand::AddLoadCase(add_load_case::AddLoadCase { name: "Dead".into(), self_weight: false }));
+        dispatch(app, Fem2dCommand::AddLoadCase(add_load_case::AddLoadCase { name: "Dead".into(), self_weight: false })).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn add_load_case_and_combination_emit_ops_2d() {
         let mut app = fem2d_app();
-        with_dead_case(&mut app);
-        dispatch(&mut app, Fem2dCommand::AddLoadCase(add_load_case::AddLoadCase { name: "Live".into(), self_weight: false }));
-        assert_eq!(app.snapshot().expect("snapshot").load_cases.last().expect("case added").name, "Live");
+        with_dead_case(&mut app).await;
+        dispatch(&mut app, Fem2dCommand::AddLoadCase(add_load_case::AddLoadCase { name: "Live".into(), self_weight: false })).await;
+        assert_eq!(semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot").load_cases.last().expect("case added").name, "Live");
 
-        let dead_id = app.snapshot().expect("snapshot").load_cases[0].id.clone();
-        dispatch(&mut app, Fem2dCommand::AddCombination(add_combination::AddCombination { name: "ULS".into(), terms: vec![crate::artifacts::fem2d::FemCombinationTerm { case_id: dead_id.clone(), factor: 1.35 }] }));
-        assert_eq!(app.snapshot().expect("snapshot").combinations.last().expect("combination added").terms, vec![crate::artifacts::fem2d::FemCombinationTerm { case_id: dead_id, factor: 1.35 }]);
+        let dead_id = semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot").load_cases[0].id.clone();
+        dispatch(&mut app, Fem2dCommand::AddCombination(add_combination::AddCombination { name: "ULS".into(), terms: vec![crate::artifacts::fem2d::FemCombinationTerm { case_id: dead_id.clone(), factor: 1.35 }] })).await;
+        assert_eq!(semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot").combinations.last().expect("combination added").terms, vec![crate::artifacts::fem2d::FemCombinationTerm { case_id: dead_id, factor: 1.35 }]);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn add_nodal_load_with_no_existing_case_creates_one_2d() {
         let mut app = fem2d_app();
-        dispatch(&mut app, Fem2dCommand::AddNodalLoad(AddNodalLoad { node_id: "n1".into(), dof: FemDof::Ty, value: -5000.0, case_id: None }));
-        let snapshot = app.snapshot().expect("snapshot");
+        dispatch(&mut app, Fem2dCommand::AddNode(add_node::AddNode { x: 0.0, y: 0.0 })).await;
+        let node_id = semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot").nodes[0].id.clone();
+        dispatch(&mut app, Fem2dCommand::AddNodalLoad(AddNodalLoad { node_id, dof: FemDof::Ty, value: -5000.0, case_id: None })).await;
+        let snapshot = semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot");
         assert_eq!(snapshot.load_cases.len(), 1);
         assert_eq!(snapshot.load_cases[0].id, "case-1");
         assert!(matches!(snapshot.load_cases[0].loads[0], FemLoad::Nodal { .. }));
@@ -104,11 +106,11 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn add_area_load_targets_named_case_2d() {
         let mut app = fem2d_app();
-        with_dead_case(&mut app);
-        dispatch(&mut app, Fem2dCommand::AddLoadCase(add_load_case::AddLoadCase { name: "Live".into(), self_weight: false }));
-        let live_id = app.snapshot().expect("snapshot").load_cases[1].id.clone();
-        dispatch(&mut app, Fem2dCommand::AddAreaLoad(add_area_load::AddAreaLoad { region_id: "r1".into(), pressure: 5000.0, case_id: Some(live_id.clone()) }));
-        let load_case = app.snapshot().expect("snapshot").load_cases[1].clone();
+        with_dead_case(&mut app).await;
+        dispatch(&mut app, Fem2dCommand::AddLoadCase(add_load_case::AddLoadCase { name: "Live".into(), self_weight: false })).await;
+        let live_id = semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot").load_cases[1].id.clone();
+        dispatch(&mut app, Fem2dCommand::AddAreaLoad(add_area_load::AddAreaLoad { region_id: "r1".into(), pressure: 5000.0, case_id: Some(live_id.clone()) })).await;
+        let load_case = semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot").load_cases[1].clone();
         assert_eq!(load_case.id, live_id);
         assert!(matches!(load_case.loads[0], FemLoad::Area { .. }));
     }
@@ -116,28 +118,28 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn set_self_weight_toggles_case_2d() {
         let mut app = fem2d_app();
-        with_dead_case(&mut app);
-        let case_id = app.snapshot().expect("snapshot").load_cases[0].id.clone();
-        dispatch(&mut app, Fem2dCommand::SetSelfWeight(set_self_weight::SetSelfWeight { case_id, enabled: true }));
-        assert!(app.snapshot().expect("snapshot").load_cases[0].self_weight);
+        with_dead_case(&mut app).await;
+        let case_id = semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot").load_cases[0].id.clone();
+        dispatch(&mut app, Fem2dCommand::SetSelfWeight(set_self_weight::SetSelfWeight { case_id, enabled: true })).await;
+        assert!(semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot").load_cases[0].self_weight);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn set_self_weight_unknown_case_is_a_no_op_2d() {
         let mut app = fem2d_app();
-        with_dead_case(&mut app);
-        dispatch(&mut app, Fem2dCommand::SetSelfWeight(set_self_weight::SetSelfWeight { case_id: "missing".into(), enabled: true }));
-        assert!(!app.snapshot().expect("snapshot").load_cases[0].self_weight);
+        with_dead_case(&mut app).await;
+        dispatch(&mut app, Fem2dCommand::SetSelfWeight(set_self_weight::SetSelfWeight { case_id: "missing".into(), enabled: true })).await;
+        assert!(!semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot").load_cases[0].self_weight);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn add_nodal_load_action_targets_named_case_2d() {
         let mut app = fem2d_app();
-        with_dead_case(&mut app);
-        dispatch(&mut app, Fem2dCommand::AddLoadCase(add_load_case::AddLoadCase { name: "Live".into(), self_weight: false }));
-        let live_id = app.snapshot().expect("snapshot").load_cases[1].id.clone();
-        dispatch(&mut app, Fem2dCommand::AddNodalLoad(AddNodalLoad { node_id: "n1".into(), dof: FemDof::Ty, value: -5000.0, case_id: Some(live_id.clone()) }));
-        let load_case = app.snapshot().expect("snapshot").load_cases[1].clone();
+        with_dead_case(&mut app).await;
+        dispatch(&mut app, Fem2dCommand::AddLoadCase(add_load_case::AddLoadCase { name: "Live".into(), self_weight: false })).await;
+        let live_id = semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot").load_cases[1].id.clone();
+        dispatch(&mut app, Fem2dCommand::AddNodalLoad(AddNodalLoad { node_id: "n1".into(), dof: FemDof::Ty, value: -5000.0, case_id: Some(live_id.clone()) })).await;
+        let load_case = semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot").load_cases[1].clone();
         assert_eq!(load_case.id, live_id);
         assert!(matches!(load_case.loads[0], FemLoad::Nodal { .. }));
     }
@@ -145,9 +147,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn add_member_udl_action_emits_op_2d() {
         let mut app = fem2d_app();
-        with_dead_case(&mut app);
-        dispatch(&mut app, Fem2dCommand::AddMemberUdl(add_member_udl::AddMemberUdl { element_id: "e1".into(), wx: 0.0, wy: -500.0, case_id: None }));
-        assert!(matches!(app.snapshot().expect("snapshot").load_cases[0].loads[0], FemLoad::MemberUdl { .. }));
+        with_dead_case(&mut app).await;
+        dispatch(&mut app, Fem2dCommand::AddMemberUdl(add_member_udl::AddMemberUdl { element_id: "e1".into(), wx: 0.0, wy: -500.0, case_id: None })).await;
+        assert!(matches!(semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot").load_cases[0].loads[0], FemLoad::MemberUdl { .. }));
     }
 }
 //#endregion 🧪️Tests

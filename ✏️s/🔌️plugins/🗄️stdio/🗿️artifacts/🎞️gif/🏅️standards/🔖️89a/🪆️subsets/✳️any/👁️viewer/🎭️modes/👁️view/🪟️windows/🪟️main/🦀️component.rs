@@ -3,7 +3,6 @@
 
 use crate::artifacts::gif::standards::v89a::subsets::any::io::encode_gif;
 use crate::artifacts::gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot;
-use base64::Engine as _;
 use semio_framework_plugin::app::{ImageView, ImageWindowKit};
 use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
 
@@ -23,7 +22,7 @@ pub fn render(snapshot: &GifSnapshot) -> BuiltNode {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn image_view(snapshot: &GifSnapshot) -> ImageView {
     let bytes = encode_gif(snapshot).ok().unwrap_or_default();
-    ImageView { width: snapshot.width, height: snapshot.height, mime: "image/gif".into(), base64: base64::engine::general_purpose::STANDARD.encode(bytes) }
+    ImageView { width: snapshot.width, height: snapshot.height, mime: "image/gif".into(), base64: crate::base64_standard(&bytes) }
 }
 
 #[cfg(test)]

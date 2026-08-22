@@ -16,23 +16,23 @@ pub struct CreateStep {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn create_step(path_ref: PathRef, step: Step) -> ImperativeMutation {
+pub fn create_step(path_ref: PathRef, step: Step) -> ImperativeMutation {
     ImperativeMutation::CreateStep(CreateStep { path_ref, step })
 }
 
 impl protocol::MutationKind<ImperativeSnapshot, ImperativeMutation> for CreateStep {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "step", kind: "create-step", record: "CreatedStep" };
 
-    async fn diff(&self, base: &ImperativeSnapshot) -> protocol::MutationOutcome<ImperativeDiff> {
+    fn diff(&self, base: &ImperativeSnapshot) -> protocol::MutationOutcome<ImperativeDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &ImperativeSnapshot) -> Vec<ImperativeMutation> {
+    fn inverse(&self, base: &ImperativeSnapshot) -> Vec<ImperativeMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Create step \"{}\"", self.step.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.step.id.clone()]
     }
 }

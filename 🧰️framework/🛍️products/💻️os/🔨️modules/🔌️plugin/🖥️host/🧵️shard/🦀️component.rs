@@ -325,7 +325,7 @@ impl ShardLoop {
         // `unwrap_or_else` sync closure.
         match self.granted_budgets.get(&actor).copied() {
             Some(budget) => budget,
-            None => semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance).await,
+            None => semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance),
         }
     }
 
@@ -355,7 +355,7 @@ impl ShardLoop {
     /// `Kernel::activate` that lands on this shard. `actor.0` (the bit-packed `u64`) is the map key
     /// throughout this type: `Envelope.to`/`ShardOutcome`'s tag both carry the SAME raw id, so no
     /// `RuntimeActorId` round-trip is needed at the boundary.
-    pub async fn register(&mut self, actor: ActorId, instance: GuestInstance) {
+    pub fn register(&mut self, actor: ActorId, instance: GuestInstance) {
         self.instances.insert(actor.0, instance);
     }
 
@@ -903,9 +903,9 @@ impl From<LoopbackTransport> for ShardTransports {
 /// of `mod tests` (below) so [`ShardTransports`] can name it in its own `#[cfg(test)]` variant.
 #[cfg(test)]
 #[derive(Default)]
-pub(crate) struct LoopbackTransport {
-    inbound: Arc<std::sync::Mutex<Vec<Vec<u8>>>>,
-    outbound: Arc<std::sync::Mutex<Vec<Vec<u8>>>>,
+pub struct LoopbackTransport {
+    inbound: Arc<Mutex<Vec<Vec<u8>>>>,
+    outbound: Arc<Mutex<Vec<Vec<u8>>>>,
 }
 
 #[cfg(test)]
@@ -939,7 +939,7 @@ impl ShardTransport for LoopbackTransport {
 /// merely unused)". `pub(crate)`, not private — moved out of `mod tests` so `GuestRuntimes::
 /// Recording` (`🖥️host/🦀️component.rs`) can name it.
 #[cfg(test)]
-pub(crate) struct RecordingRuntime {
+pub struct RecordingRuntime {
     last_turn_budget: Mutex<Option<Budget>>,
     last_job_budget: Mutex<Option<JobBudget>>,
 }
@@ -954,7 +954,7 @@ impl RecordingRuntime {
 #[cfg(test)]
 impl GuestRuntime for RecordingRuntime {
     async fn compile(&self, package: &PackageRef, _bytes: &[u8]) -> Result<super::CompiledHandle, PluginHostError> {
-        Ok(super::CompiledHandle { package_hash: package.hash.0, component: None })
+        Ok(super::CompiledHandle { package_hash: package.hash.0, component: None, owned: None })
     }
     async fn instantiate(&self, _compiled: &super::CompiledHandle, actor: ActorId, _caps: &[super::BrokerCapabilityGrant], _budget: &Budget) -> Result<GuestInstance, PluginHostError> {
         Ok(GuestInstance { actor, state: GuestInstanceState::Mock(super::MockInstanceState::default()) })
@@ -1066,7 +1066,7 @@ mod tests {
         probe.push_inbound(encode_event_envelope(actor, 1, &Event::InstanceClose).await).await;
 
         let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport)).await;
-        shard.register(actor, instance).await;
+        shard.register(actor, instance);
         assert!(shard.is_registered(actor).await);
 
         let driven = pump(&mut shard).await.expect("pump succeeds");
@@ -1110,7 +1110,7 @@ mod tests {
         let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("mock instantiate");
         let (transport, _probe) = LoopbackTransport::paired().await;
         let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport)).await;
-        shard.register(actor, instance).await;
+        shard.register(actor, instance);
         assert_eq!(shard.actor_count().await, 1);
         shard.unregister(actor).await;
         assert_eq!(shard.actor_count().await, 0);
@@ -1153,7 +1153,7 @@ mod tests {
         probe.push_inbound(encode_payload_envelope(actor, 2, Payload::JobStep { turn: test_job_turn(actor, job_id, 0, 0) }).await).await;
 
         let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport)).await;
-        shard.register(actor, instance).await;
+        shard.register(actor, instance);
 
         // Pump 1: runs the spawning turn, admits `Effect::SpawnJob` (`start_job`), and — because
         // the job lands in `running_jobs` before the step phase runs — takes its FIRST step in
@@ -1221,7 +1221,7 @@ mod tests {
         probe.push_inbound(encode_event_envelope(actor, 1, &Event::InstanceClose).await).await;
         probe.push_inbound(encode_payload_envelope(actor, 2, Payload::JobStep { turn: test_job_turn(actor, job_id, 0, 0) }).await).await;
         let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport)).await;
-        shard.register(actor, instance).await;
+        shard.register(actor, instance);
 
         let driven = pump(&mut shard).await.expect("pump");
         assert_eq!(driven, 1, "only the turn itself — the job was cancelled before the step phase, so no step_job call happened");
@@ -1247,7 +1247,7 @@ mod tests {
         probe.push_inbound(encode_payload_envelope(actor, 1, Payload::Suspend { operation, applied_progress: 73 }).await).await;
 
         let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport)).await;
-        shard.register(actor, instance).await;
+        shard.register(actor, instance);
 
         let driven = pump(&mut shard).await.expect("pump");
         assert_eq!(driven, 0, "Suspend is handled entirely in the drain loop, not the turn/step phases");
@@ -1285,7 +1285,7 @@ mod tests {
         let operation = test_job_operation(actor, 0, 0);
         probe.push_inbound(encode_payload_envelope(actor, 1, Payload::Suspend { operation, applied_progress: 19 }).await).await;
         let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport)).await;
-        shard.register(actor, instance).await;
+        shard.register(actor, instance);
         pump(&mut shard).await.expect("pump suspend");
 
         let suspend_outbound = probe.take_outbound().await;
@@ -1328,7 +1328,7 @@ mod tests {
         probe.push_inbound(encode_event_envelope(actor, 1, &Event::InstanceClose).await).await;
         probe.push_inbound(encode_payload_envelope(actor, 2, Payload::JobStep { turn: test_job_turn(actor, job_id, 0, 0) }).await).await;
         let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport)).await;
-        shard.register(actor, instance).await;
+        shard.register(actor, instance);
 
         let driven1 = pump(&mut shard).await.expect("pump 1");
         assert_eq!(driven1, 2, "the spawning turn plus the job's first (only scripted) step");
@@ -1382,7 +1382,7 @@ mod tests {
         probe.push_inbound(encode_payload_envelope(actor, 2, Payload::JobStep { turn: test_job_turn(actor, inline_job, 0, 0) }).await).await;
         probe.push_inbound(encode_payload_envelope(actor, 3, Payload::JobStep { turn: test_job_turn(actor, exclusive_job, 0, 0) }).await).await;
         let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport)).await;
-        shard.register(actor, instance).await;
+        shard.register(actor, instance);
 
         let driven = pump(&mut shard).await.expect("pump");
         assert_eq!(driven, 2, "one actor turn plus exactly one bounded job step");
@@ -1426,7 +1426,7 @@ mod tests {
         shard_frame_round_trip_grant,
         ShardFrame::Grant {
             actor: ActorId(11),
-            budget: semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive).await,
+            budget: semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive),
             envelopes: vec![Envelope {
                 to: ActorId(11),
                 from: semio_framework_actor::Origin::Kernel,
@@ -1483,14 +1483,14 @@ mod tests {
         let compiled = mock.compile(&package, &[]).await.expect("mock compile");
         let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("mock instantiate");
         let (transport, probe) = LoopbackTransport::paired().await;
-        let mut budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive).await;
+        let mut budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
         budget.fuel = 123_456;
         let mut bytes = Vec::new();
         ShardFrame::Grant { actor, budget, envelopes: vec![] }.pack_encode(&mut bytes).await;
         probe.push_inbound(bytes).await;
 
         let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport)).await;
-        shard.register(actor, instance).await;
+        shard.register(actor, instance);
         let driven = pump(&mut shard).await.expect("pump");
         assert_eq!(driven, 0, "no envelopes bundled — nothing to drive yet");
         assert_eq!(shard.granted_budget(actor.0).await.fuel, 123_456, "the Grant's budget must be recorded even with no envelopes");
@@ -1516,9 +1516,9 @@ mod tests {
 
         let (transport, probe) = LoopbackTransport::paired().await;
         let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Recording(runtime.clone())), ShardTransports::Loopback(transport)).await;
-        shard.register(actor, instance).await;
+        shard.register(actor, instance);
 
-        let mut first_budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive).await;
+        let mut first_budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
         first_budget.fuel = 111_111;
         let envelope = Envelope {
             to: actor,
@@ -1536,7 +1536,7 @@ mod tests {
         pump(&mut shard).await.expect("pump 1");
         assert_eq!(runtime.last_turn_budget.lock().unwrap().expect("execute_turn must have been called").fuel, 111_111, "the FIRST Grant's own fuel must reach execute_turn, not a constant");
 
-        let mut second_budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Background).await;
+        let mut second_budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Background);
         second_budget.fuel = 222_222;
         let envelope2 = Envelope {
             to: actor,
@@ -1570,9 +1570,9 @@ mod tests {
 
         let (transport, probe) = LoopbackTransport::paired().await;
         let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Recording(runtime.clone())), ShardTransports::Loopback(transport)).await;
-        shard.register(actor, instance).await;
+        shard.register(actor, instance);
 
-        let mut budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance).await;
+        let mut budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance);
         budget.fuel = 333_333;
         let mut bytes = Vec::new();
         ShardFrame::Grant { actor, budget, envelopes: vec![] }.pack_encode(&mut bytes).await;
@@ -1610,7 +1610,7 @@ mod tests {
         let actor = ActorId(73);
         let shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(LoopbackTransport::default())).await;
         let expected = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Maintenance);
-        assert_eq!(shard.granted_budget(actor.0).await, expected.await);
+        assert_eq!(shard.granted_budget(actor.0).await, expected);
     }
     //#endregion 🔖️GrantBudgetExecution
 
@@ -1627,7 +1627,7 @@ mod tests {
         let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1, deadline_ms: 1, max_effects: 1, max_patch_bytes: 1, max_frames: 1 }).await.expect("mock instantiate");
         let (transport, probe) = LoopbackTransport::paired().await;
         let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock)), ShardTransports::Loopback(transport)).await;
-        shard.register(actor, instance).await;
+        shard.register(actor, instance);
         assert!(shard.is_registered(actor).await);
 
         let mut bytes = Vec::new();
@@ -1700,14 +1700,14 @@ mod tests {
 
         let package = PackageRef { package: PackageId("lane-priority".to_string()), hash: PackageHash([90u8; 32]) };
         let compiled = mock.compile(&package, &[]).await.expect("mock compile");
-        let background_budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Background).await;
+        let background_budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Background);
 
         // 🚦 Background actors first — queued on the wire ahead of the interactive one, the exact
         // arrival order that used to win under plain FIFO/HashMap-iteration-order draining.
         for offset in 0..BACKGROUND_ACTORS {
             let actor = ActorId(200 + offset);
             let instance = mock.instantiate(&compiled, actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
-            shard.register(actor, instance).await;
+            shard.register(actor, instance);
             mock.script_turn(actor, MockGuestRuntime::idle_turn().await).await;
             let envelope = Envelope {
                 to: actor,
@@ -1727,11 +1727,11 @@ mod tests {
         // 🚦 The interactive actor's own grant, queued LAST.
         let interactive_actor = ActorId(999);
         let interactive_instance = mock.instantiate(&compiled, interactive_actor, &[], &Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 }).await.expect("mock instantiate");
-        shard.register(interactive_actor, interactive_instance).await;
+        shard.register(interactive_actor, interactive_instance);
         let mut interactive_turn = MockGuestRuntime::idle_turn().await;
         interactive_turn.fuel_used = 4242;
         mock.script_turn(interactive_actor, interactive_turn).await;
-        let interactive_budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive).await;
+        let interactive_budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
         let interactive_envelope = Envelope {
             to: interactive_actor,
             from: semio_framework_actor::Origin::Kernel,
@@ -1778,7 +1778,7 @@ mod tests {
 
         let (transport, probe) = LoopbackTransport::paired().await;
         let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport)).await;
-        shard.register(actor, instance).await;
+        shard.register(actor, instance);
         probe.push_inbound(encode_payload_envelope(actor, 1, Payload::Event { bytes: serde_json::to_vec(&Event::InstanceClose).expect("encode") }).await).await;
 
         let driven = pump(&mut shard).await.expect("pump");

@@ -15,7 +15,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#region 🔖️Apply
 impl EnergyModelDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub async fn apply_to_artifact(&self, artifact: &EnergyModelArtifact) -> protocol::MutationApplyResult<EnergyModelArtifact> {
+    pub fn apply_to_artifact(&self, artifact: &EnergyModelArtifact) -> protocol::MutationApplyResult<EnergyModelArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -42,7 +42,7 @@ impl EnergyModelDiff {
 }
 
 impl MutationDiff<EnergyModelSnapshot> for EnergyModelDiff {
-    async fn apply(&self, snapshot: &EnergyModelSnapshot) -> protocol::MutationApplyResult<EnergyModelSnapshot> {
+    fn apply(&self, snapshot: &EnergyModelSnapshot) -> protocol::MutationApplyResult<EnergyModelSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -63,7 +63,7 @@ impl MutationDiff<EnergyModelSnapshot> for EnergyModelDiff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -86,7 +86,7 @@ impl MutationDiff<EnergyModelSnapshot> for EnergyModelDiff {
 
 //#region 🔖️Helpers
 /// 🖼️ Whole-snapshot replacement diff.
-pub async fn diff_set_snapshot(snapshot: &EnergyModelSnapshot) -> EnergyModelDiff {
+pub fn diff_set_snapshot(snapshot: &EnergyModelSnapshot) -> EnergyModelDiff {
     EnergyModelDiff { artifact: Some(Box::new(EnergyModelArtifact::from_snapshot(snapshot.clone()))), ..Default::default() }
 }
 
@@ -94,13 +94,13 @@ pub async fn diff_set_snapshot(snapshot: &EnergyModelSnapshot) -> EnergyModelDif
 /// [`crate::artifacts::model::energy_children_from_model`] (ticket
 /// 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM). Replaces the old `diff_set_model_json` (which set
 /// the now-removed `model_json` field directly).
-pub async fn diff_from_model(model: &crate::model::Model) -> EnergyModelDiff {
+pub fn diff_from_model(model: &crate::model::Model) -> EnergyModelDiff {
     let (structure, zones) = crate::artifacts::model::energy_children_from_model(model);
     EnergyModelDiff { structure: Some(structure), zones: Some(zones), ..Default::default() }
 }
 
 /// 📋️ Preview results-json field delta (not applied by MutationDiff).
-pub async fn diff_set_results_json(results_json: impl Into<String>) -> EnergyModelDiff {
+pub fn diff_set_results_json(results_json: impl Into<String>) -> EnergyModelDiff {
     EnergyModelDiff { results_json: Some(results_json.into()), ..Default::default() }
 }
 //#endregion 🔖️Helpers

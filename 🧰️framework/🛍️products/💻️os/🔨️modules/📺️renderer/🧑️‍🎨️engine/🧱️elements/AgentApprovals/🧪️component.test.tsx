@@ -9,7 +9,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { AgentApprovals, parseApprovalSummary } from "./🟦️component.tsx";
 import { type PendingAgentApproval } from "../AgentBridge/🟦️component.tsx";

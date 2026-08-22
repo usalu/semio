@@ -4,7 +4,8 @@
 //! normalization, and the `setResultDisplay` ephemeral view-state plumbing.
 
 use crate::model::Dof;
-use semio_framework_plugin::{ActionArgDef, ActionArgOption, LocalizedLabel};
+use semio_framework_plugin::{ActionArgDef, ActionArgOption, BuiltNode, LocalizedLabel};
+use semio_framework_ui_contract::{Buildable, HasBase};
 use serde_json::Value;
 use std::collections::HashMap;
 
@@ -19,8 +20,18 @@ pub const MODE_SHAPE_AMPLITUDE_RATIO: f64 = 0.1;
 //#endregion 🔖️Constants
 
 //#region 🔖️Shared
+/// 🎬️ Encodes one Canvas2d scene into the semantic UI contract.
+pub fn canvas_2d_surface(id: impl Into<String>, scene: semio_framework_ui_scene::Canvas2dScene) -> BuiltNode {
+    semio_framework_ui_contract::surface(semio_framework_ui_scene::encode(semio_framework_ui_contract::SurfaceKind::Canvas2d, &scene)).id(id).build()
+}
+
+/// 🌍️ Encodes one World3d scene into the semantic UI contract.
+pub fn world_3d_surface(id: impl Into<String>, scene: semio_framework_ui_scene::World3dScene) -> BuiltNode {
+    semio_framework_ui_contract::surface(semio_framework_ui_scene::encode(semio_framework_ui_contract::SurfaceKind::World3d, &scene)).id(id).build()
+}
+
 /// 🪪️ Finds the smallest `"{prefix}{n}"` id not already present in `existing`.
-pub async fn next_id(existing: impl Iterator<Item = String>, prefix: &str) -> String {
+pub fn next_id(existing: impl Iterator<Item = String>, prefix: &str) -> String {
     let ids: std::collections::HashSet<String> = existing.collect();
     let mut i = ids.len();
     loop {
@@ -33,7 +44,7 @@ pub async fn next_id(existing: impl Iterator<Item = String>, prefix: &str) -> St
 }
 
 /// 🎨️ Parses a `"#rrggbb"` hex color into 0..1 float components for a Canvas2d `fill.color` array.
-pub async fn hex_to_rgb01(hex: &str) -> (f64, f64, f64) {
+pub fn hex_to_rgb01(hex: &str) -> (f64, f64, f64) {
     let h = hex.trim_start_matches('#');
     let component = |slice: &str| u8::from_str_radix(slice, 16).unwrap_or(0) as f64 / 255.0;
     (component(&h[0..2]), component(&h[2..4]), component(&h[4..6]))
@@ -44,7 +55,7 @@ pub async fn hex_to_rgb01(hex: &str) -> (f64, f64, f64) {
 /// orthonormalized (arbitrary physical magnitude), so this gives a deterministic, comparable-across-
 /// modes amplitude before scaling by `MODE_SHAPE_AMPLITUDE_RATIO * model_extent`. A near-zero shape
 /// (degenerate/rigid mode) is left untouched rather than divided by a near-zero magnitude.
-pub async fn normalize_mode_shape(disp_map: &mut HashMap<String, [f64; 6]>) {
+pub fn normalize_mode_shape(disp_map: &mut HashMap<String, [f64; 6]>) {
     let peak = disp_map.values().map(|d| (d[Dof::Tx.index()].powi(2) + d[Dof::Ty.index()].powi(2) + d[Dof::Tz.index()].powi(2)).sqrt()).fold(0.0_f64, f64::max);
     if peak < 1e-12 {
         return;
@@ -57,7 +68,7 @@ pub async fn normalize_mode_shape(disp_map: &mut HashMap<String, [f64; 6]>) {
 }
 
 /// 🌡️ Maps `value` within `[min, max]` onto one of `VON_MISES_BANDS`' 8 hex colors, low to high.
-pub async fn von_mises_color(value: f64, min: f64, max: f64) -> &'static str {
+pub fn von_mises_color(value: f64, min: f64, max: f64) -> &'static str {
     let span = (max - min).max(1e-9);
     let t = ((value - min) / span).clamp(0.0, 1.0);
     let index = ((t * (VON_MISES_BANDS.len() - 1) as f64).round() as usize).min(VON_MISES_BANDS.len() - 1);
@@ -88,7 +99,7 @@ pub enum DisplayMode {
 
 /// 👁️ Parses `setResultDisplay`'s `{"sourceId"?, "mode": "static"|"modal"|"buckling", "modeIndex"?}`
 /// args into a `ResultDisplay` — unknown/missing `mode` falls back to `Static`.
-pub async fn parse_result_display(args: Option<&Value>) -> ResultDisplay {
+pub fn parse_result_display(args: Option<&Value>) -> ResultDisplay {
     let source_id = args.and_then(|v| v.get("sourceId")).and_then(Value::as_str).map(str::to_string);
     let mode_index = args.and_then(|v| v.get("modeIndex")).and_then(Value::as_u64).unwrap_or(0) as usize;
     let mode = match args.and_then(|v| v.get("mode")).and_then(Value::as_str) {
@@ -102,7 +113,7 @@ pub async fn parse_result_display(args: Option<&Value>) -> ResultDisplay {
 /// 📝️ Shared `setResultDisplay` arg declarations for both apps' builders — `sourceId` (a case/
 /// combination id), `mode` (static/modal/buckling), and `modeIndex` (0-based, only meaningful for
 /// modal/buckling).
-pub async fn result_display_action_args() -> Vec<ActionArgDef> {
+pub fn result_display_action_args() -> Vec<ActionArgDef> {
     vec![
         ActionArgDef::text("sourceId", LocalizedLabel::data("Source")),
         ActionArgDef::select(
@@ -120,21 +131,21 @@ pub async fn result_display_action_args() -> Vec<ActionArgDef> {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn next_id_retries_past_collisions() {
+    #[test]
+    fn next_id_retries_past_collisions() {
         let existing = vec!["n0".to_string(), "n2".to_string()];
         assert_eq!(next_id(existing.into_iter(), "n"), "n3");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn hex_to_rgb01_parses_pure_colors() {
+    #[test]
+    fn hex_to_rgb01_parses_pure_colors() {
         assert_eq!(hex_to_rgb01("#ffffff"), (1.0, 1.0, 1.0));
         assert_eq!(hex_to_rgb01("#000000"), (0.0, 0.0, 0.0));
         assert_eq!(hex_to_rgb01("#ff0000"), (1.0, 0.0, 0.0));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn von_mises_color_maps_extremes_midpoint_and_clamps() {
+    #[test]
+    fn von_mises_color_maps_extremes_midpoint_and_clamps() {
         assert_eq!(von_mises_color(0.0, 0.0, 100.0), VON_MISES_BANDS[0]);
         assert_eq!(von_mises_color(100.0, 0.0, 100.0), VON_MISES_BANDS[VON_MISES_BANDS.len() - 1]);
         assert_eq!(von_mises_color(50.0, 0.0, 100.0), VON_MISES_BANDS[VON_MISES_BANDS.len() / 2]);
@@ -142,13 +153,13 @@ mod tests {
         assert_eq!(von_mises_color(200.0, 0.0, 100.0), VON_MISES_BANDS[VON_MISES_BANDS.len() - 1]);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn parse_result_display_unknown_mode_falls_back_to_static() {
+    #[test]
+    fn parse_result_display_unknown_mode_falls_back_to_static() {
         assert_eq!(parse_result_display(Some(&serde_json::json!({ "mode": "bogus" }))).mode, DisplayMode::Static);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn parse_result_display_missing_args_defaults_to_static_with_no_source() {
+    #[test]
+    fn parse_result_display_missing_args_defaults_to_static_with_no_source() {
         let display = parse_result_display(None);
         assert_eq!(display.mode, DisplayMode::Static);
         assert!(display.source_id.is_none());

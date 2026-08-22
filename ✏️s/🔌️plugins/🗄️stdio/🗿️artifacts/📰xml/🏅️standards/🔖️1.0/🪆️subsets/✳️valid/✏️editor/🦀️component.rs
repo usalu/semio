@@ -11,7 +11,7 @@ use crate::artifacts::xml::{XmlMutation, XmlSnapshot, STDIO_XML_DOCUMENT_SCHEMA}
 use crate::editor::xml_valid::modes::edit;
 use crate::editor::xml_valid::modes::edit::windows::main;
 use semio_framework_plugin::{
-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode,
+    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
 };
 use serde::{Deserialize, Serialize};
 

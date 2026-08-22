@@ -5,7 +5,7 @@
 // pdf/png/dwg/dxf hop are honest not-yet-implemented stubs (pdf/png/dwg/dxf export previously
 // mislabeled this artifact's own DSL text as the target format — fixed to refuse honestly instead).
 // Shaped inline (no generated `IoEntryDescriptor` type checked in anywhere yet in this repo) so this
-// file has no fragile forward reference; swap for a real import once ts-rs generation lands.
+// file has no fragile forward reference; swap for a real import once owned schema generation lands.
 export interface IoEntryDescriptorMirror {
   from: string;
   into: string;

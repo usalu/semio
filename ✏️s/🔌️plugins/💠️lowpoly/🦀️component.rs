@@ -1,7 +1,19 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
+use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
-use semio_framework_plugin::{ExecutionMode, Plugin};
+use semio_framework_plugin::plugin_app_close_prelude::*;
+use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+
+//#region 🗃️Apps
+/// 🗃️ Closed runtime app fleet for the lowpoly editor and viewer surfaces.
+semio_framework_dispatch_macros::dyn_enum_close! {
+    pub enum LowpolyApps: PluginApp {
+        LowpolyEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::lowpoly::LowpolyPlayApp>>),
+        LowpolyViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::lowpoly::LowpolyViewer>>),
+    }
+}
+//#endregion 🗃️Apps
 
 /// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) replaces the old `.setup(engine::register)`
@@ -12,8 +24,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// is deleted, not deprecated. `.editor::<E>(…)` registers the mutation-capable surface (the former
 /// sole app), `.viewer::<V>(…)` the new genuinely read-only surface — see `👁️viewer/🦀️component.rs`
 /// for why it is not a thin wrapper around the editor.
-pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
-    Plugin::builder("lowpoly")
+pub async fn plugin() -> Result<Plugin<LowpolyApps>, semio_framework_plugin::PluginAssemblyError> {
+    Plugin::<LowpolyApps>::builder("lowpoly")
         .label("Lowpoly")
         .version("0.1.0")
         .artifact(crate::artifacts::lowpoly::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)

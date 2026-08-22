@@ -41,21 +41,30 @@ pub fn truncate_to_budget(value: serde_json::Value, max_tokens: u32) -> Truncate
     }
     let mut working = value;
     let mut omitted = Vec::new();
+    let mut empty = working.clone();
+    if let Some(entries) = empty.get_mut("entries").and_then(serde_json::Value::as_array_mut) {
+        entries.clear();
+    }
+    let empty_bytes = serde_json::to_vec(&empty).unwrap_or_default().len();
     if let Some(object) = working.as_object_mut() {
         if let Some(serde_json::Value::Array(entries)) = object.get_mut("entries") {
-            while !entries.is_empty() {
-                let current_bytes = serde_json::to_vec(entries).unwrap_or_default().len();
-                if current_bytes <= byte_budget {
+            let original_len = entries.len();
+            let mut current_bytes = empty_bytes;
+            let mut retained = 0;
+            for entry in entries.iter() {
+                let entry_bytes = serde_json::to_vec(entry).unwrap_or_default().len();
+                let separator_bytes = usize::from(retained > 0);
+                if current_bytes.saturating_add(separator_bytes).saturating_add(entry_bytes) > byte_budget {
                     break;
                 }
-                let index = entries.len() - 1;
-                entries.remove(index);
-                omitted.push(format!("/entries/{index}"));
+                current_bytes += separator_bytes + entry_bytes;
+                retained += 1;
             }
+            entries.truncate(retained);
+            omitted.extend((retained..original_len).map(|index| format!("/entries/{index}")));
         }
     }
     let final_bytes = serde_json::to_vec(&working).unwrap_or_default().len();
-    omitted.reverse();
     Truncated { value: working, omitted, token_estimate: estimate_tokens(final_bytes) }
 }
 //#endregion 🔖️TokenBudget
@@ -68,7 +77,7 @@ pub fn truncate_to_budget(value: serde_json::Value, max_tokens: u32) -> Truncate
 /// contract: a stable-looking id, not a persisted session record.
 pub fn mint_session_id(principal: &str, counter: u64) -> String {
     let now_ms = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|duration| duration.as_millis()).unwrap_or(0);
-    format!("sess_{}", blake3::hash(format!("{principal}:{now_ms}:{counter}").as_bytes()).to_hex())
+    format!("sess_{}", framework_hash::hash_bytes(format!("{principal}:{now_ms}:{counter}").as_bytes()))
 }
 
 /// 🪪️ `context.resolve` — the token-cheap summary every session opens with.

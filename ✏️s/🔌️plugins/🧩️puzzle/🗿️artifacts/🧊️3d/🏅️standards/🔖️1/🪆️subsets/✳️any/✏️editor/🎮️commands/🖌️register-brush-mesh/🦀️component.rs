@@ -5,7 +5,7 @@ use serde_json::Value;
 
 /// 🧊️ Real GLB geometry the browser round-tripped for one mesh url — installed into the collision
 /// engine and remembered for the mesh exporters.
-pub async fn register_brush_mesh(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
+pub fn register_brush_mesh(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     let (Some(url), Some(positions), Some(indices)) = (args.and_then(|v| v.get("url")).and_then(|v| v.as_str()), args.and_then(|v| v.get("positions")).and_then(|v| v.as_array()), args.and_then(|v| v.get("indices")).and_then(|v| v.as_array())) else {
         return;
     };

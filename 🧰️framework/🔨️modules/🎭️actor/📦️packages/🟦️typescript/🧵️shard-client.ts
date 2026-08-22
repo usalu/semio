@@ -16,13 +16,13 @@
  */
 
 //#region 🔌️WireTypes
-/** ⚖️ `Lane`/`CoalesceKey` taken from the now-clean ts-rs mirror — real wire types, same reasoning
+/** ⚖️ `Lane`/`CoalesceKey` taken from the owned-schema mirror — real wire types, same reasoning
  * `📬️mailbox.ts`'s own header doc already gives for importing rather than redeclaring them. */
 import type { Lane, CoalesceKey } from "../../🤖️generated/🟦️actor.ts";
 //#endregion 🔌️WireTypes
 
 //#region 🧬️Types
-/** ⚖️ Stand-in for the ts-rs mirror of Rust `semio_framework_actor::Budget` (same pattern as A1's own
+/** ⚖️ Stand-in for the generated mirror of Rust `semio_framework_actor::Budget` (same pattern as A1's own
  * `CapabilityGrant` stand-in — depending on the not-yet-emitted generated file would break every
  * consumer of this module until typegen lands). Field-for-field with design-runtime.md §1's `Budget`,
  * camelCased. */
@@ -69,7 +69,7 @@ export type ShardAsset = readonly [name: string, bytes: ArrayBuffer];
 
 export type ShardJobStep = { readonly status: "running"; readonly progress?: Uint8Array } | { readonly status: "done"; readonly value: Uint8Array } | { readonly status: "failed"; readonly value: Uint8Array };
 
-/** ⚖️ Stand-in for the ts-rs mirror of Rust `semio_framework_actor::ShardMetrics` (same "not-yet-
+/** ⚖️ Stand-in for the generated mirror of Rust `semio_framework_actor::ShardMetrics` (same "not-yet-
  * emitted `🤖️generated/🟦️actor.ts`" reason as `ShardBudget` above) — MICROKERNEL-POOLED-ACTOR-PLUGIN-
  * RUNTIME T1. Field-for-field with the Rust struct, camelCased. */
 export interface ShardMetrics {
@@ -226,7 +226,7 @@ export function interpretShardFrame(frame: ShardFrame, tracker: GrantedBudgetTra
 //#endregion 📨️ShardFrame
 
 //#region 🌉️HostEffect
-/** ⚖️ Stand-in for the ts-rs mirror of Rust `semio_framework_kernel::QuotaBreach` (same "hand-mirrored,
+/** ⚖️ Stand-in for the generated mirror of Rust `semio_framework_kernel::QuotaBreach` (same "hand-mirrored,
  * not-yet-emitted generated type" pattern as {@link ShardBudget} above) — describes ONE outstanding-
  * effects cap breach, mirroring `QuotaBreach { quota, limit, actual }` field-for-field rather than
  * inventing a parallel vocabulary. `design-abi.md`'s `QuotaSchema.outstanding_requests` is the host-side
@@ -890,11 +890,14 @@ if (import.meta.vitest) {
   const { describe, expect, it, vi } = import.meta.vitest;
 
   class FakeShardWorker implements ShardWorkerLike {
+    readonly index: number;
     onmessage: ((event: { readonly data: unknown }) => void) | null = null;
     onerror: ((event: unknown) => void) | null = null;
     readonly sent: unknown[] = [];
     terminated = false;
-    constructor(readonly index: number) {}
+    constructor(index: number) {
+      this.index = index;
+    }
     postMessage(message: unknown): void {
       this.sent.push(message);
     }

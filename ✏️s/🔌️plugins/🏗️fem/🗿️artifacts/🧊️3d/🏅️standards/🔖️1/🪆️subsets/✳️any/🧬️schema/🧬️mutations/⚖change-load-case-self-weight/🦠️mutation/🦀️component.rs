@@ -17,16 +17,16 @@ pub struct ChangeLoadCaseSelfWeight {
 impl MutationKind<Fem3dSnapshot, Fem3dMutation> for ChangeLoadCaseSelfWeight {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "load-case", kind: "change-load-case-self-weight", record: "ChangedLoadCaseSelfWeight" };
 
-    async fn diff(&self, base: &Fem3dSnapshot) -> protocol::MutationOutcome<crate::artifacts::fem3d::diff::Fem3dDiff> {
+    fn diff(&self, base: &Fem3dSnapshot) -> protocol::MutationOutcome<crate::artifacts::fem3d::diff::Fem3dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {
+    fn inverse(&self, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Set case \"{}\" self-weight to {}", self.case_id, self.new_self_weight)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.case_id.clone()]
     }
 }

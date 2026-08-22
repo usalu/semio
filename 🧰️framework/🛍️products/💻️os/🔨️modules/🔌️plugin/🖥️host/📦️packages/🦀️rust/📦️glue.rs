@@ -8,14 +8,19 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
+
 #[path = "../../🦀️component.rs"]
 mod component;
+/// 🧠️ Repository-owned, instruction-fuelled core execution boundary. Native component lifting is
+/// layered above this module; browser builds retain the platform WebAssembly boundary.
+#[path = "../../../🧠️interpreter/🦀️component.rs"]
+pub mod interpreter;
 pub use component::*;
 
 /// 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): the one world's contract-parity
 /// test (effect ↔ host-async import parity, plus the collapsed shape itself) — mounted here rather than inside `🦀️component.rs` (other packets are live
-/// in that file). `#[cfg(test)]`-gated so `wit-parser` (this crate's `[dev-dependencies]` pin) never
-/// enters a non-test build.
+/// in that file). The test uses a narrow owned WIT source inspector and adds no external parser to
+/// the test graph.
 #[cfg(test)]
 #[path = "../../🧪️schema-parity/🦀️component.rs"]
 mod schema_parity;

@@ -9,7 +9,7 @@
 // #endregion 🧲️Header
 
 import { Button, ContextMenu, ContextMenuController, uiDataLabel, type ContextMenuItem } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryObj } from "../../🧪️story";
 import { useState } from "react";
 
 // 🖱️#region 🖱️ContextMenu

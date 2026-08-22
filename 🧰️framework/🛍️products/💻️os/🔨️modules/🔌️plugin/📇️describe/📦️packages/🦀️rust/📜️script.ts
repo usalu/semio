@@ -64,8 +64,11 @@ export function pluginWasmArtifactPath(repoRoot: string, packageName: string): s
  * root, sibling of the tracked `🛂️manifest.json` — NOT `🤖️generated/`, which is gitignored). One
  * shared function so every migrated plugin crate's own `describe` command stays a thin two-line
  * wrapper around it rather than duplicating the build+emit sequence 33 times. */
-export function describePluginComponent(repoRoot: string, packageName: string, ownerRoot: string): number {
-  const buildStatus = runCmdStatus("cargo", ["build", "-p", packageName, "--target", "wasm32-wasip2"], { cwd: repoRoot, env: devToolingEnv() });
+export function describePluginComponent(repoRoot: string, packageName: string, ownerRoot: string, rootCdylib = false): number {
+  const buildArgs = rootCdylib
+    ? ["rustc", "-p", packageName, "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2"]
+    : ["build", "-p", packageName, "--target", "wasm32-wasip2"];
+  const buildStatus = runCmdStatus("cargo", buildArgs, { cwd: repoRoot, env: devToolingEnv() });
   if (buildStatus !== 0) return buildStatus;
   const bin = ensureBuiltBin(repoRoot);
   return runCmdStatus(bin, ["describe", pluginWasmArtifactPath(repoRoot, packageName), "--out", ownerRoot], { cwd: repoRoot, env: devToolingEnv() });

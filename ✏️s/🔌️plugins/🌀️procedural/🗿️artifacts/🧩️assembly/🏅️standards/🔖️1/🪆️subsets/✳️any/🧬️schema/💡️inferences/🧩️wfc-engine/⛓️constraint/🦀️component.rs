@@ -133,9 +133,9 @@ pub trait Constraint {
     fn validate_complete(&self, assignment: &[PatternId], adjacency: &AdjacencyView) -> Result<(), String>;
 }
 
-/// 🧷️ Every concrete [`Constraint`] this crate implements, closed here (bare `dyn_enum_close!`
-/// invocation — same module, trait declared first, see `dyn-enum-macro`'s recipe for why that
-/// avoids rustc#52234) rather than left `dyn`. Replaces every former `Box<dyn Constraint>` field.
+// 🧷️ Every concrete `Constraint` this crate implements, closed here (bare `dyn_enum_close!`
+// invocation — same module, trait declared first, see `dyn-enum-macro`'s recipe for why that
+// avoids rustc#52234) rather than left `dyn`. Replaces every former boxed constraint field.
 dyn_enum_close! {
     pub enum Constraints: Constraint {
         Flow(FlowConstraint),
@@ -144,6 +144,28 @@ dyn_enum_close! {
         Cardinality(CardinalityConstraint),
     }
 }
+
+// #region 🔖️Dispatch
+impl Constraints {
+    pub(crate) fn initialize(&self, domains: &DomainStore, weights: &WeightTable, adjacency: &AdjacencyView) -> Result<Vec<(NodeId, PatternSet)>, ConstraintError> {
+        match self {
+            Self::Flow(value) => Constraint::initialize(value, domains, weights, adjacency),
+            Self::Connectivity(value) => Constraint::initialize(value, domains, weights, adjacency),
+            Self::Reachability(value) => Constraint::initialize(value, domains, weights, adjacency),
+            Self::Cardinality(value) => Constraint::initialize(value, domains, weights, adjacency),
+        }
+    }
+
+    pub(crate) fn validate_complete(&self, assignment: &[PatternId], adjacency: &AdjacencyView) -> Result<(), String> {
+        match self {
+            Self::Flow(value) => Constraint::validate_complete(value, assignment, adjacency),
+            Self::Connectivity(value) => Constraint::validate_complete(value, assignment, adjacency),
+            Self::Reachability(value) => Constraint::validate_complete(value, assignment, adjacency),
+            Self::Cardinality(value) => Constraint::validate_complete(value, assignment, adjacency),
+        }
+    }
+}
+// #endregion 🔖️Dispatch
 
 /// 🧷️ A solver's constraints plus the adjacency view they read — bundled so `crate::wfc_engine::search`'s
 /// internals take one extra `Option<&ConstraintSet>` parameter instead of two.

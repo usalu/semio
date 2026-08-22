@@ -1,9 +1,8 @@
 // #region 🔌️Adapters
-import react from "@vitejs/plugin-react";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "vitest/config";
 import { createWorkspaceViteResolveConfig } from "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts";
+import { defineOwnedTestConfig, uiReactBuildPlugin } from "../../../../../../../../🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️build-tooling.ts";
 // #endregion 🔌️Adapters
 
 const configDir = dirname(fileURLToPath(import.meta.url));
@@ -17,9 +16,9 @@ const threePackageRoot = resolve(repoRoot, "node_modules/three");
 const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot);
 
 /** @emoji 🧪️ Vitest for `@semio-tech/infinite-world-r3f` — in-source `import.meta.vitest` on `🟦️component.tsx`. */
-export default defineConfig({
+export default defineOwnedTestConfig({
   root: configDir,
-  plugins: [react()],
+  plugins: [uiReactBuildPlugin()],
   assetsInclude: ["**/*.wasm"],
   server: workspaceResolve.server,
   resolve: {

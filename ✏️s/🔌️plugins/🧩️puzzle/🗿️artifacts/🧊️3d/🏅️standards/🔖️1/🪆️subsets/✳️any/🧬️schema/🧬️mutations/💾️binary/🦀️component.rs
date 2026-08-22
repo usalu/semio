@@ -16,12 +16,12 @@ use protocol::OpBinary;
 use store::{ArtifactEnvelope, ArtifactStore};
 
 /// 📦️ Encodes a `Puzzle3dMutation` to its binary command form.
-pub async fn encode_op(operation: &Puzzle3dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &Puzzle3dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `Puzzle3dMutation` from its binary command form.
-pub async fn decode_op(bytes: &[u8]) -> Result<Puzzle3dMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<Puzzle3dMutation, protocol::ProtocolError> {
     Puzzle3dMutation::decode_op(bytes)
 }
 
@@ -42,12 +42,12 @@ pub type Puzzle3dStore = ArtifactStore<Puzzle3dSnapshot, Puzzle3dMutation>;
 pub use crate::artifacts::puzzle3d::schema::{Puzzle3dEngineCommand, Puzzle3dEngineOutcome};
 
 /// 📦️ Encodes a `Puzzle3dEngineCommand` to its binary command form.
-pub async fn encode_engine_command(command: &Puzzle3dEngineCommand) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_engine_command(command: &Puzzle3dEngineCommand) -> Result<Vec<u8>, protocol::ProtocolError> {
     command.encode_op()
 }
 
 /// 📖️ Decodes a `Puzzle3dEngineCommand` from its binary command form.
-pub async fn decode_engine_command(bytes: &[u8]) -> Result<Puzzle3dEngineCommand, protocol::ProtocolError> {
+pub fn decode_engine_command(bytes: &[u8]) -> Result<Puzzle3dEngineCommand, protocol::ProtocolError> {
     Puzzle3dEngineCommand::decode_op(bytes)
 }
 //#endregion 🔖️Puzzle3dEngineCommand
@@ -57,23 +57,22 @@ pub async fn decode_engine_command(bytes: &[u8]) -> Result<Puzzle3dEngineCommand
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn puzzle3d_document_vcs_replays_granular_operations() {
+    #[test]
+    fn puzzle3d_document_vcs_replays_granular_operations() {
         use crate::artifacts::puzzle3d::schema::empty_puzzle3d_snapshot;
         use crate::artifacts::puzzle3d::{Puzzle3dObject, PUZZLE_3D_SCHEMA};
         use store::{create_document_envelope, ArtifactCommand};
 
-        let mut store = Puzzle3dStore::new(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", empty_puzzle3d_snapshot(), None));
-        store
-            .dispatch(ArtifactCommand::Apply {
-                mutations: vec![crate::artifacts::puzzle3d::mutations::create_object(
-                    Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false },
-                    None,
-                )],
-                description: None,
-            })
-            .expect("apply");
-        let projection = store.snapshot().expect("projection");
+        let mut store = semio_framework::io::resolve_ready(Puzzle3dStore::new(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", empty_puzzle3d_snapshot(), None))).expect("store");
+        semio_framework::io::resolve_ready(store.dispatch(ArtifactCommand::Apply {
+            mutations: vec![crate::artifacts::puzzle3d::mutations::create_object(
+                Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false },
+                None,
+            )],
+            description: None,
+        }))
+        .expect("apply");
+        let projection = semio_framework::io::resolve_ready(store.snapshot()).expect("projection");
         assert_eq!(projection.objects.len(), 1);
         assert_eq!(projection.objects[0].id, "o1");
     }
@@ -84,7 +83,7 @@ mod tests {
     /// fields, to carry it inside `Puzzle3dEngineCommand::SetScene`). A byte-identical copy of this
     /// helper also lives in `crate::editor::puzzle3d::precompute`'s own test module, for the two
     /// dispatch tests that moved there (a schema test file must not depend on the app).
-    pub(crate) async fn sample_scene_config() -> crate::artifacts::puzzle3d::schema::SceneConfig {
+    pub(crate) fn sample_scene_config() -> crate::artifacts::puzzle3d::schema::SceneConfig {
         let json = r#"{
             "fixture": {
                 "objects": [{"id": "host", "objectKind": "Host", "meshUrl": "/test/host.glb", "origin": [0,0,0], "orientation": [0,0,0,1], "vortices": [{"id": "v0", "vortexKind": "port-a", "position": [0,0,0], "direction": [0,0,-1]}]}],
@@ -99,24 +98,24 @@ mod tests {
         serde_json::from_str(json).expect("sample scene config parses")
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn engine_command_set_scene_binary_round_trips_and_agrees_with_text() {
+    #[test]
+    fn engine_command_set_scene_binary_round_trips_and_agrees_with_text() {
         let command = Puzzle3dEngineCommand::SetScene { scene: sample_scene_config() };
         semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
         let bytes = encode_engine_command(&command).expect("encode");
         assert_eq!(decode_engine_command(&bytes).expect("decode"), command);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn engine_command_brush_preview_binary_round_trips_and_agrees_with_text() {
+    #[test]
+    fn engine_command_brush_preview_binary_round_trips_and_agrees_with_text() {
         let command = Puzzle3dEngineCommand::BrushPreview { vortex_full_id: "host:v0".to_string(), candidate_index: 2 };
         semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&command);
         let bytes = encode_engine_command(&command).expect("encode");
         assert_eq!(decode_engine_command(&bytes).expect("decode"), command);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn engine_command_update_kind_weights_binary_round_trips_and_agrees_with_text() {
+    #[test]
+    fn engine_command_update_kind_weights_binary_round_trips_and_agrees_with_text() {
         let mut object_weights = std::collections::BTreeMap::new();
         object_weights.insert("Host".to_string(), 0.5);
         let command = Puzzle3dEngineCommand::UpdateKindWeights { object_weights, vortex_weights: std::collections::BTreeMap::new() };
@@ -148,7 +147,7 @@ mod wire_format_guard {
     use crate::artifacts::puzzle3d::mutations::{change_object_anchor, connect_vortices, create_object, delete_object};
     use protocol::OpText;
 
-    async fn ops() -> Vec<Puzzle3dMutation> {
+    fn ops() -> Vec<Puzzle3dMutation> {
         let object = puzzle_3d::Puzzle3dObject {
             id: "o1".into(),
             label: Some("L".into()),
@@ -170,7 +169,7 @@ mod wire_format_guard {
         ]
     }
 
-    async fn engine_commands() -> Vec<Puzzle3dEngineCommand> {
+    fn engine_commands() -> Vec<Puzzle3dEngineCommand> {
         let mut object_weights = std::collections::BTreeMap::new();
         object_weights.insert("Host".to_string(), 0.5);
         vec![
@@ -191,8 +190,8 @@ mod wire_format_guard {
 
     /// ⚖️ Every document-mutation operation prints, parses, encodes, and decodes back to an equal
     /// value.
-    #[semio_framework_async_macros::async_test]
-    async fn operations_round_trip_text_and_binary() {
+    #[test]
+    fn operations_round_trip_text_and_binary() {
         let operations = ops();
         assert!(!operations.is_empty());
         for operation in &operations {
@@ -222,8 +221,8 @@ mod wire_format_guard {
     }
 
     /// ⚖️ Same law for the engine-command codec.
-    #[semio_framework_async_macros::async_test]
-    async fn engine_command_rows_keep_their_pre_migration_wire_bytes() {
+    #[test]
+    fn engine_command_rows_keep_their_pre_migration_wire_bytes() {
         let commands = engine_commands();
         assert_eq!(commands.len(), PRE_MIGRATION_ENGINE_COMMAND_WIRE.len(), "every engine-command variant covered here must be in the frozen wire table");
         for (command, expected) in commands.iter().zip(PRE_MIGRATION_ENGINE_COMMAND_WIRE) {

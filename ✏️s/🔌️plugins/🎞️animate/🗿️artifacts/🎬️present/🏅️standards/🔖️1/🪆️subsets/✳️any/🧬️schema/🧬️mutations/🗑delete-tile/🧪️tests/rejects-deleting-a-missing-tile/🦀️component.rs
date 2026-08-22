@@ -33,8 +33,8 @@ fn expected_after() -> PresentSnapshot {
 }
 
 /// ▶️ A rejected `delete-tile` leaves the document byte-identical to the committed `after`.
-#[semio_framework_async_macros::async_test]
-async fn rejection_leaves_the_document_at_the_committed_after() {
+#[test]
+fn rejection_leaves_the_document_at_the_committed_after() {
     let base = before();
     let snapshot = apply_present_mutation(&base, &mutation()).expect("an empty diff still applies cleanly");
     assert_eq!(snapshot, expected_after(), "delete-tile/rejects-deleting-a-missing-tile: applied state differs from committed after-snapshot");
@@ -44,8 +44,8 @@ async fn rejection_leaves_the_document_at_the_committed_after() {
 /// 🚫️ Deleting a tile that is not in the deck is an Error-level `mutation.target-missing` — an
 /// Error, not the Fatal `create-tile` raises: a delete of something already gone breaks no
 /// invariant, so a merge policy is allowed to absorb it.
-#[semio_framework_async_macros::async_test]
-async fn a_missing_tile_is_an_error_target_missing() {
+#[test]
+fn a_missing_tile_is_an_error_target_missing() {
     let produced = <PresentMutation as protocol::Mutation<PresentSnapshot>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &PresentDiff::default(), "a rejecting delete-tile must carry the identity diff, never a half-built presentation handle");
     let messages = produced.messages();
@@ -56,16 +56,16 @@ async fn a_missing_tile_is_an_error_target_missing() {
 }
 
 /// 🚷 The diff is DECLARED absent, not an invented empty patch.
-#[semio_framework_async_macros::async_test]
-async fn the_committed_diff_is_declared_absent() {
+#[test]
+fn the_committed_diff_is_declared_absent() {
     assert!(DIFF_ABSENT.is_empty(), "🔺️diff/🚫️component.absent must be an empty marker, not a stand-in patch");
     let produced = <PresentMutation as protocol::Mutation<PresentSnapshot>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &PresentDiff::default(), "delete-tile/rejects-deleting-a-missing-tile: a rejection must produce no delta at all");
 }
 
 /// 🔣️ Both committed snapshots and the committed mutation are already canonical.
-#[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+#[test]
+fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: PresentSnapshot = serde_json::from_str(text).expect("snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
@@ -78,8 +78,8 @@ async fn committed_json_is_canonical() {
 }
 
 /// 🎯️ The declared rejection — status, code and path — is exactly what the diff builder emits.
-#[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+#[test]
+fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("rejected"), "delete-tile/rejects-deleting-a-missing-tile declares a rejected outcome");
     let produced = <PresentMutation as protocol::Mutation<PresentSnapshot>>::diff(&mutation(), &before());
@@ -91,15 +91,15 @@ async fn declared_outcome_holds() {
 
 /// ↩️ `delete-tile`'s inverse is BASE-derived — it re-creates the captured tile at its captured
 /// index — so a tile that was never in the deck yields NO undo step at all.
-#[semio_framework_async_macros::async_test]
-async fn inverse_of_a_missing_delete_is_empty() {
+#[test]
+fn inverse_of_a_missing_delete_is_empty() {
     let inverse = inverse_present_mutation(&before(), &mutation());
     assert!(inverse.is_empty(), "delete-tile has nothing to re-create when its target is absent, got {inverse:?}");
 }
 
 /// 🪪️ The fixture is bound to `delete-tile`'s own descriptor and its `tiles`-scoped address.
-#[semio_framework_async_macros::async_test]
-async fn semantics_bind_this_fixture_to_delete_tile() {
+#[test]
+fn semantics_bind_this_fixture_to_delete_tile() {
     let semantics = <PresentMutation as protocol::SemanticMutation<PresentSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("delete", "tile", "delete-tile", "DeletedTile"), "the fixture must be bound to delete-tile's own descriptor");
     assert_eq!(<PresentMutation as protocol::SemanticMutation<PresentSnapshot>>::target(&mutation()), vec!["tiles".to_string(), "t-ghost".to_string()], "delete-tile addresses the collection then exactly one tile id");

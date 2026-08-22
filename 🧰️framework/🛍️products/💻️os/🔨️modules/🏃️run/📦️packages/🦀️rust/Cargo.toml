@@ -28,27 +28,24 @@ semio-framework-plugin = { path = "../../../🔌️plugin/📦️packages/🦀�
 framework_hash = { path = "../../../../../../🔨️modules/#⃣hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-thiserror = "2.0.12"
 # 🪪️ `OperationContext`/`CancelToken`/`TraceId` — carried through `AppChannelHost::exchange` so a
 # run's cancellation/deadline propagate rather than being bolted on later (ticket
 # 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, packet terra-directory-and-run). Pure, no
 # tokio, so unconditional like every other dependency here.
 #
 # 🎠️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): also `📦️bin.rs`'s own
-# `block_on` bridge now (was `futures-lite`, moved to `[dev-dependencies]` below — see that crate's
+# `block_on` bridge now (was `external executor`, moved to `[dev-dependencies]` below — see that crate's
 # own doc for why the canonical bridge, not an incidental external one, belongs in production code).
-semio-framework-async = { workspace = true }
+semio-framework-async = { workspace = true, features = ["entrypoint"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-plugin-host = { path = "../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
 
 [dev-dependencies]
-pretty_assertions = "1.4.1"
 # 🌀️ async-first rewrite (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, packet
 # terra-directory-and-run) — `AppChannelHost::exchange`/`SpaceRunner::run` are `async fn`; this
 # crate's own `#[cfg(test)] mod tests` drives them with a plain single-poll executor (R4 clause 5: a
 # `#[test] fn` body is a sanctioned executor entry point). MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME
 # (packet `run-kernel-wiring`) moved this from `[dependencies]` to here: `📦️bin.rs`'s own production
 # bridge is now `semio_framework_async::block_on` (above), and a `grep` across this crate found zero
-# remaining non-test `futures_lite` call sites — see that file's own doc comment.
-futures-lite = "2"
+# remaining non-test `owned async` call sites — see that file's own doc comment.

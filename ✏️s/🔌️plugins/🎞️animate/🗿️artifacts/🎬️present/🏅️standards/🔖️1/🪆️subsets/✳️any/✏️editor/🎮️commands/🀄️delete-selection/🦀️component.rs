@@ -1,5 +1,7 @@
 //! 🀄️ 🀄️ Animate present app commands command — `delete-selection`.
 
+#![allow(clippy::result_large_err)]
+
 use crate::artifacts::present::mutations::delete_tiles::mutation::DeleteTiles;
 use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::PresentSnapshot;
@@ -18,7 +20,7 @@ pub struct DeleteSelection {}
 /// auto-prunes a Flat domain's selection (see the plugin SDK's `validate_state` doc); a deleted tile's
 /// stale id simply stays selected until the next real pick, a documented, accepted gap matching
 /// `🖍️draw`'s `delete-layer`.
-pub async fn handle(_payload: &DeleteSelection, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+pub fn handle(_payload: &DeleteSelection, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     let deck = doc.snapshot;
     let targets = valid_tile_ids(deck, ctx.selected_ids.clone());
     if targets.is_empty() {
@@ -43,21 +45,21 @@ mod tests {
     /// removes exactly that tile.
     #[semio_framework_async_macros::async_test]
     async fn delete_selection_removes_the_live_selected_tile() {
-        let mut app = present_app_with_registry();
-        dispatch(&mut app, PresentCommand::AddTile(add_tile::AddTile { crop: None }));
-        let tile_id = crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1[0].id.clone();
+        let mut app = present_app_with_registry().await;
+        dispatch(&mut app, PresentCommand::AddTile(add_tile::AddTile { crop: None })).await;
+        let tile_id = crate::artifacts::present::present_working_scene(&app.snapshot().await.expect("projection")).1[0].id.clone();
         let targets = serde_json::to_string(&vec![InteractionTarget { granularity: PRESENT_INTERACTION_GRANULARITY.into(), id: tile_id.clone() }]).expect("targets");
-        app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&json!({ "domainId": PRESENT_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })), &meta("local")).expect("interactionSelect");
-        dispatch(&mut app, PresentCommand::DeleteSelection(DeleteSelection {}));
-        assert!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.is_empty(), "selected tile must be deleted");
+        app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&json!({ "domainId": PRESENT_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })), &meta("local")).await.expect("interactionSelect");
+        dispatch(&mut app, PresentCommand::DeleteSelection(DeleteSelection {})).await;
+        assert!(crate::artifacts::present::present_working_scene(&app.snapshot().await.expect("projection")).1.is_empty(), "selected tile must be deleted");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn delete_selection_with_no_selection_is_a_no_op() {
-        let mut app = present_app_with_registry();
-        dispatch(&mut app, PresentCommand::AddTile(add_tile::AddTile { crop: None }));
-        dispatch(&mut app, PresentCommand::DeleteSelection(DeleteSelection {}));
-        assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.len(), 1, "nothing selected means nothing deleted");
+        let mut app = present_app_with_registry().await;
+        dispatch(&mut app, PresentCommand::AddTile(add_tile::AddTile { crop: None })).await;
+        dispatch(&mut app, PresentCommand::DeleteSelection(DeleteSelection {})).await;
+        assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().await.expect("projection")).1.len(), 1, "nothing selected means nothing deleted");
     }
 }
 //#endregion 🧪️Tests

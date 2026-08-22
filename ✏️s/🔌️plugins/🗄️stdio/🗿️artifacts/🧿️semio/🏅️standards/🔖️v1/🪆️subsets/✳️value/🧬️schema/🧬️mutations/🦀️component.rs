@@ -128,12 +128,12 @@ fn diff_at_path(path: &[SemioValuePathSegment], leaf: Option<SemioValueDiff>) ->
 fn wrap_at_path(path: &[SemioValuePathSegment], leaf: SemioValueDiff) -> SemioValueDiff {
     match path.split_first() {
         None => leaf,
-        Some((SemioValuePathSegment::Key { key }, rest)) => SemioValueDiff::Map { diff: NamedTripleDiff { removed: Vec::new(), added: Vec::new(), modified: vec![NamedModified { key: key.clone(), diff: Box::pin(wrap_at_path(rest, leaf)) }] } },
+        Some((SemioValuePathSegment::Key { key }, rest)) => SemioValueDiff::Map { diff: NamedTripleDiff { removed: Vec::new(), added: Vec::new(), modified: vec![NamedModified { key: key.clone(), diff: wrap_at_path(rest, leaf) }] } },
         Some((SemioValuePathSegment::Index { index }, rest)) => SemioValueDiff::List {
             diff: crate::artifacts::semio::standards::v1::subsets::any::schema::triples::IndexedTripleDiff {
                 removed: Vec::new(),
                 added: Vec::new(),
-                modified: vec![crate::artifacts::semio::standards::v1::subsets::any::schema::triples::IndexModified { index: *index, diff: Box::pin(wrap_at_path(rest, leaf)) }],
+                modified: vec![crate::artifacts::semio::standards::v1::subsets::any::schema::triples::IndexModified { index: *index, diff: wrap_at_path(rest, leaf) }],
             },
         },
     }

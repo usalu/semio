@@ -13,15 +13,24 @@ pub use crate::manifest::Manifest as GraphManifest;
 
 //#region ⚠️ Errors
 /// 🚨️ Compile-time `valueType` parsing failures.
-#[derive(Clone, Debug, PartialEq, thiserror::Error)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum GraphManifestError {
     /// 📦️ A single-key `valueType` object didn't carry a recognized `schema` key.
-    #[error("unsupported valueType object {0}")]
     UnsupportedValueTypeObject(serde_json::Value),
     /// 🔍️ A `valueType` value wasn't a string or a `{schema}` object.
-    #[error("unsupported valueType {0}")]
     UnsupportedValueType(serde_json::Value),
 }
+
+impl std::fmt::Display for GraphManifestError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::UnsupportedValueTypeObject(value) => write!(formatter, "unsupported valueType object {value}"),
+            Self::UnsupportedValueType(value) => write!(formatter, "unsupported valueType {value}"),
+        }
+    }
+}
+
+impl std::error::Error for GraphManifestError {}
 //#endregion ⚠️ Errors
 
 // #region 🔖️Property

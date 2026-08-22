@@ -12,7 +12,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 //#region 🔖️Apply
-async fn apply_identified_delta<T: Clone>(items: &[T], removed: &[String], added: &[T], patched: &[(String, Option<T>)], reordered: &Option<Vec<String>>, id_of: impl Fn(&T) -> &str) -> protocol::MutationApplyResult<Vec<T>> {
+fn apply_identified_delta<T: Clone>(items: &[T], removed: &[String], added: &[T], patched: &[(String, Option<T>)], reordered: &Option<Vec<String>>, id_of: impl Fn(&T) -> &str) -> protocol::MutationApplyResult<Vec<T>> {
     let mut next = items.to_vec();
     let mut seen = std::collections::HashSet::new();
     for id in removed {
@@ -66,19 +66,19 @@ async fn apply_identified_delta<T: Clone>(items: &[T], removed: &[String], added
     Ok(next)
 }
 
-pub async fn apply_parts_delta(parts: &[Puzzle5dPart], delta: &Puzzle5dPartsDelta) -> protocol::MutationApplyResult<Vec<Puzzle5dPart>> {
+pub fn apply_parts_delta(parts: &[Puzzle5dPart], delta: &Puzzle5dPartsDelta) -> protocol::MutationApplyResult<Vec<Puzzle5dPart>> {
     let patched: Vec<_> = delta.patched.iter().map(|entry| (entry.id.clone(), entry.patch.replacement.clone())).collect();
     apply_identified_delta(parts, &delta.removed, &delta.added, &patched, &delta.reordered, |p| &p.id)
 }
 
-pub async fn apply_fasteners_delta(fasteners: &[Puzzle5dFastener], delta: &Puzzle5dFastenersDelta) -> protocol::MutationApplyResult<Vec<Puzzle5dFastener>> {
+pub fn apply_fasteners_delta(fasteners: &[Puzzle5dFastener], delta: &Puzzle5dFastenersDelta) -> protocol::MutationApplyResult<Vec<Puzzle5dFastener>> {
     let patched: Vec<_> = delta.patched.iter().map(|entry| (entry.id.clone(), entry.patch.replacement.clone())).collect();
     apply_identified_delta(fasteners, &delta.removed, &delta.added, &patched, &delta.reordered, |f| &f.id)
 }
 
 impl Puzzle5dDiff {
     /// 🧬️ Applies every sparse entry onto a full artifact.
-    pub async fn apply_to_artifact(&self, artifact: &Puzzle5dArtifact) -> protocol::MutationApplyResult<Puzzle5dArtifact> {
+    pub fn apply_to_artifact(&self, artifact: &Puzzle5dArtifact) -> protocol::MutationApplyResult<Puzzle5dArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -195,7 +195,7 @@ impl Puzzle5dDiff {
 }
 
 impl MutationDiff<Puzzle5dSnapshot> for Puzzle5dDiff {
-    async fn apply(&self, snapshot: &Puzzle5dSnapshot) -> protocol::MutationApplyResult<Puzzle5dSnapshot> {
+    fn apply(&self, snapshot: &Puzzle5dSnapshot) -> protocol::MutationApplyResult<Puzzle5dSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -231,7 +231,7 @@ impl MutationDiff<Puzzle5dSnapshot> for Puzzle5dDiff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -283,7 +283,13 @@ impl MutationDiff<Puzzle5dSnapshot> for Puzzle5dDiff {
                         Some(existing) => {
                             existing.removed.extend(delta.removed);
                             existing.added.extend(delta.added);
-                            existing.patched.extend(delta.patched);
+                            for patch in delta.patched {
+                                if let Some(previous) = existing.patched.iter_mut().find(|entry| entry.id == patch.id) {
+                                    *previous = patch;
+                                } else {
+                                    existing.patched.push(patch);
+                                }
+                            }
                             if delta.reordered.is_some() {
                                 existing.reordered = delta.reordered;
                             }

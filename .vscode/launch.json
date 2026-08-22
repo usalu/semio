@@ -3900,39 +3900,6 @@
       }
     },
     {
-      "name": "📦️verify⏱️interactivity🚦️audit",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run workspace:verify-interactivity",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 209.16
-      }
-    },
-    {
-      "name": "📦️verify🔒️dependencies🚦️freeze",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run workspace:verify-dependencies-freeze",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 209.17
-      }
-    },
-    {
-      "name": "📦️verify🔒️dependencies📸️write-baseline",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run workspace:verify-dependencies-freeze-write-baseline",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 209.18
-      }
-    },
-    {
       "name": "📦️verify🏛️workspace🚦️gate",
       "type": "node-terminal",
       "request": "launch",

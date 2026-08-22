@@ -16,13 +16,13 @@ pub struct PptxIntoPresent;
 impl Deserializer<PresentSnapshot> for PptxIntoPresent {
     const FROM: Dialect = PPTX_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(payload: &IoPayload) -> IoResult<PresentSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<PresentSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "PptxIntoPresent: expected a binary pptx payload".to_string(), diagnostics: Vec::new() });
         };
         let wire = <PptxSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError { message: format!("PptxIntoPresent: {error}"), diagnostics: Vec::new() })?;
         let value = serde_json::to_value(&wire).map_err(|error| IoError { message: format!("PptxIntoPresent: {error}"), diagnostics: Vec::new() })?;
         let snapshot: PresentSnapshot = serde_json::from_value(value).map_err(|error| IoError { message: format!("PptxIntoPresent: {error}"), diagnostics: Vec::new() })?;
-        Ok(IoOutcome::clean(snapshot))
+        Ok(IoOutcome::clean(snapshot).await)
     }
 }

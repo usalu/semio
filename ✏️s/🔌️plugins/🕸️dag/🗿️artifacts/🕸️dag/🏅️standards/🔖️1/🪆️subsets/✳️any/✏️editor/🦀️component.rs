@@ -247,15 +247,15 @@ pub async fn create_dag_app() -> semio_framework_plugin::AppDefinition {
             .panel_tab_def(inspection_panel::definition())
             // ✏️ Document-mutating: dispatched as VCS operations with a true inverse.
             // 🗂️ Referenced by `dag_context_menu_items` — categorized for grouped-context-menu disclosure.
-            .action_with(ActionDefinition::new_catalog("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"), ActionKind::Mutation).with_category("create"))
+            .action_with(ActionDefinition::bounded_catalog("addNode", LocalizedLabel::native("Add Node", "Knoten hinzufügen"), ActionKind::Mutation).with_category("create"))
             .mutation("removeNode", LocalizedLabel::native("Remove Node", "Knoten entfernen"))
-            .action_with(ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
-            .action_with(ActionDefinition::new_catalog("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"), ActionKind::Mutation).with_category("selection"))
+            .action_with(ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
+            .action_with(ActionDefinition::bounded_catalog("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"), ActionKind::Mutation).with_category("selection"))
             .mutation("connectMediaPorts", LocalizedLabel::native("Connect Ports", "Ports verbinden"))
-            .action_with(ActionDefinition::new_catalog("disconnect", LocalizedLabel::native("Disconnect", "Trennen"), ActionKind::Mutation).with_category("transfer"))
+            .action_with(ActionDefinition::bounded_catalog("disconnect", LocalizedLabel::native("Disconnect", "Trennen"), ActionKind::Mutation).with_category("transfer"))
             .mutation("moveMediaNode", LocalizedLabel::native("Move Node", "Knoten verschieben"))
-            .action_with(ActionDefinition::new_catalog("renameDagNode", LocalizedLabel::native("Rename Node", "Knoten umbenennen"), ActionKind::Mutation).with_category("actions"))
-            .action_with(ActionDefinition::new_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation).with_category("transform"))
+            .action_with(ActionDefinition::bounded_catalog("renameDagNode", LocalizedLabel::native("Rename Node", "Knoten umbenennen"), ActionKind::Mutation).with_category("actions"))
+            .action_with(ActionDefinition::bounded_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation).with_category("transform"))
             .mutation("patchDagNodes", LocalizedLabel::native("Patch Nodes", "Knoten patchen"))
             // 👁️ Ephemeral view state — camera/viewport. Selection/hover no longer declared here: the
             // framework auto-injects interactionSelect/interactionHover/clearSelection/selectAll/

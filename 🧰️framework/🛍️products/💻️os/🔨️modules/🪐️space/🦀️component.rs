@@ -13,8 +13,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::io::{Cursor, Read as _, Seek, Write as _};
 use std::sync::{Arc, LazyLock, Mutex};
-use thiserror::Error;
-
 //#region 🔖️Roles
 /// 🏛️ A space's collaboration shape: `Atelier` (single-writer personal, reconcile-enforced exactly
 /// one `Author`), `Studio` (multi-writer group, any number of `Author`s), `Archive` (frozen, nobody
@@ -1321,13 +1319,22 @@ pub fn draft_uri(artifact_id: &str) -> String {
     format!("{DRAFT_URI_PREFIX}{artifact_id}")
 }
 
-#[derive(Debug, Error, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum SpaceError {
-    #[error("unknown draft: {0}")]
     UnknownDraft(String),
-    #[error("draft backbone error: {0}")]
     Backbone(String),
 }
+
+impl std::fmt::Display for SpaceError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::UnknownDraft(id) => write!(formatter, "unknown draft: {id}"),
+            Self::Backbone(detail) => write!(formatter, "draft backbone error: {detail}"),
+        }
+    }
+}
+
+impl std::error::Error for SpaceError {}
 
 //#region 🔖️DraftBackbone
 /// 🔌️ Byte-oriented backbone port for draft<->asset envelope relocation — mirrors os-core's
@@ -1545,16 +1552,45 @@ pub fn draft_catalog_for(port: &Arc<store::BackbonePorts>) -> Arc<DraftCatalog> 
 
 //#region 🔖️Zip
 /// 📦️ `export_collection_zip`/`import_collection_zip` errors.
-#[derive(Debug, Error)]
+#[derive(Debug)]
 pub enum SpaceZipError {
-    #[error("zip error: {0}")]
-    Zip(#[from] zip::result::ZipError),
-    #[error("io error: {0}")]
-    Io(#[from] std::io::Error),
-    #[error("pack error: {0}")]
+    Zip(zip::result::ZipError),
+    Io(std::io::Error),
     Pack(String),
-    #[error("missing path for entry {0}")]
     MissingPath(String),
+}
+
+impl std::fmt::Display for SpaceZipError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Zip(error) => write!(formatter, "zip error: {error}"),
+            Self::Io(error) => write!(formatter, "io error: {error}"),
+            Self::Pack(detail) => write!(formatter, "pack error: {detail}"),
+            Self::MissingPath(path) => write!(formatter, "missing path for entry {path}"),
+        }
+    }
+}
+
+impl std::error::Error for SpaceZipError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Zip(error) => Some(error),
+            Self::Io(error) => Some(error),
+            _ => None,
+        }
+    }
+}
+
+impl From<zip::result::ZipError> for SpaceZipError {
+    fn from(error: zip::result::ZipError) -> Self {
+        Self::Zip(error)
+    }
+}
+
+impl From<std::io::Error> for SpaceZipError {
+    fn from(error: std::io::Error) -> Self {
+        Self::Io(error)
+    }
 }
 
 /// 📤️ Everything `import_collection_zip` recovers from a zip byte stream: the collection snapshot

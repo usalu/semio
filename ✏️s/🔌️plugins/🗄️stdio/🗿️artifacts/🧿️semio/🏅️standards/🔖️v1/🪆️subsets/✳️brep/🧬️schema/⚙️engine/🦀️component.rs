@@ -26,7 +26,6 @@
 
 use std::collections::HashMap;
 
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
 #[path = "📦️mesh-io/🦀️component.rs"]
@@ -114,20 +113,28 @@ pub struct ClosestPoint {
 
 // #region ⚠️ Errors
 /// ⚠️ Kernel operation error.
-#[derive(Clone, Debug, PartialEq, thiserror::Error)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum BrepError {
-    #[error("invalid input: {0}")]
     InvalidInput(String),
-    #[error("missing handle: {0}")]
     MissingHandle(String),
-    #[error("operation failed: {0}")]
     Operation(String),
 }
+
+impl std::fmt::Display for BrepError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::InvalidInput(message) => write!(formatter, "invalid input: {message}"),
+            Self::MissingHandle(handle) => write!(formatter, "missing handle: {handle}"),
+            Self::Operation(message) => write!(formatter, "operation failed: {message}"),
+        }
+    }
+}
+
+impl std::error::Error for BrepError {}
 // #endregion ⚠️ Errors
 
 // #region 🔖️Kernel
-/// 🔌️ Model-free BREP kernel interface (fully async).
-#[async_trait(?Send)]
+/// 🔌️ Model-free synchronous BREP kernel interface.
 pub trait BrepKernel {
     // #region Primitives
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -473,8 +480,7 @@ impl Brep {
     fn mint(&mut self, kind: GeometryKind, entity: Entity) -> GeometryHandle {
         self.counter = self.counter.wrapping_add(1);
         let payload = format!("{kind:?}:{}:{}", self.counter, entity_tag(&entity));
-        let hash = blake3::hash(payload.as_bytes());
-        let handle = GeometryHandle(hash.as_bytes().iter().map(|b| format!("{b:02x}")).collect::<String>());
+        let handle = GeometryHandle(semio_framework_hash::hash_bytes(payload.as_bytes()));
         self.live.insert(handle.as_str().to_string(), entity);
         let _ = kind;
         handle
@@ -1387,7 +1393,6 @@ fn all_edges(body: &Body, solid: SolidId) -> Vec<EdgeId> {
 
 // #region 🔖️BrepKernelImpl
 
-#[async_trait(?Send)]
 impl BrepKernel for Brep {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn box_prim(&mut self, width: f64, depth: f64, height: f64) -> Result<GeometryHandle, BrepError> {
@@ -1856,6 +1861,15 @@ impl SolidImporter for GlbSolidImporter {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn brep_error_contract_is_owned_and_stable() {
+        let errors = [(BrepError::InvalidInput("mesh".into()), "invalid input: mesh"), (BrepError::MissingHandle("a1".into()), "missing handle: a1"), (BrepError::Operation("split".into()), "operation failed: split")];
+        for (error, message) in errors {
+            assert_eq!(error.to_string(), message);
+            assert!(std::error::Error::source(&error).is_none());
+        }
+    }
 
     #[semio_framework_async_macros::async_test]
     async fn native_box_volume() {

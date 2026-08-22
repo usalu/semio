@@ -1,5 +1,5 @@
 dialect protocol
-protocol 2d.snapshot
+protocol fem2d.snapshot
 version 1
 schema stdio.json
 start frame

@@ -97,7 +97,7 @@ pub async fn layout_clear_selection_effect() -> Effect {
 /// 🙈️ An internal (non-palette) action declaration — the pointer/inspector/DnD/engagement-bound
 /// vocabulary dispatched by the canvas and panels, never surfaced as a standalone palette command.
 async fn layout_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, kind) }
+    ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(id, label, kind) }
 }
 //#endregion 🔖️Constants
 
@@ -289,7 +289,7 @@ impl ArtifactEditor for LayoutPlayApp {
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
-pub async fn create_layout_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::layout::LAYOUT_DIALECT)
             .artifact_kind(ArtifactKindSpec {
                 id: "2d.layout".into(),

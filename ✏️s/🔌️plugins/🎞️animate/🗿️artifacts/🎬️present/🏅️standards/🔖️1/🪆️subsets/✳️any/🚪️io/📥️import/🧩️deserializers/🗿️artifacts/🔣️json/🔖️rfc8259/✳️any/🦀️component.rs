@@ -17,7 +17,7 @@ pub struct JsonIntoPresent;
 impl Deserializer<PresentSnapshot> for JsonIntoPresent {
     const FROM: Dialect = JSON_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    fn deserialize(payload: &IoPayload) -> IoResult<PresentSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<PresentSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "JsonIntoPresent: expected a binary json payload".to_string(), diagnostics: Vec::new() });
         };
@@ -28,6 +28,6 @@ impl Deserializer<PresentSnapshot> for JsonIntoPresent {
         if out.schema.is_empty() {
             out.schema = PRESENT_DOCUMENT_SCHEMA.into();
         }
-        Ok(IoOutcome::clean(out))
+        Ok(IoOutcome::clean(out).await)
     }
 }

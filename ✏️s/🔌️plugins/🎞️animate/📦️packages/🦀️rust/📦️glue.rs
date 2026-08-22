@@ -8,7 +8,7 @@
 //! `TaxonomyLibShape` policy lint both fail on it (see master ticket
 //! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard ruling).
 
-// 🌀️ R7 — `async fn` in public traits (`Sobject`, `Animation`) is deliberate under O1's universal-async
+// 🌀️ R7 — `fn` in public traits (`Sobject`, `Animation`) is deliberate under O1's universal-async
 // ruling; callers cannot assume `Send` from the lint's suggested fix, and R3 answers that structurally
 // (every dyn seam here is a `dyn_enum_close!`-generated enum, so `Send` falls out of the concrete
 // variant types). Never resolved by `+ Send` on the trait method or by making the method sync.
@@ -658,15 +658,14 @@ pub mod viewer {
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
 mod plugin;
-semio_framework_plugin::plugin_exports!(plugin::plugin);
+semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::AnimateApps);
 
 //#region 📚️Examples
 #[path = "."]
 pub mod examples {
     #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📚️examples/🎬️demo-session/🦀️component.rs"]
     pub mod app_present_demo_session;
-    #[path = "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs"]
-    pub mod art_present_demo;
+    pub use crate::artifacts::present::examples::demo as art_present_demo;
 }
 //#endregion 📚️Examples
 

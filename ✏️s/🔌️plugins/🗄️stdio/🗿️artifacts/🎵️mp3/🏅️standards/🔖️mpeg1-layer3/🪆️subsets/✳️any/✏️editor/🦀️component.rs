@@ -8,7 +8,7 @@ use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapsh
 use crate::artifacts::mp3::{MP3_DIALECT, STDIO_MP3_DOCUMENT_SCHEMA};
 use crate::editor::mp3::modes::edit;
 use crate::editor::mp3::modes::edit::windows::main;
-use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode};
+use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 

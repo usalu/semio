@@ -8,7 +8,7 @@ use crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::HtmlS
 use crate::artifacts::html::{HTML_DIALECT, STDIO_HTML_DOCUMENT_SCHEMA};
 use crate::editor::html::modes::edit;
 use crate::editor::html::modes::edit::windows::main;
-use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode};
+use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 
@@ -62,7 +62,7 @@ impl ArtifactEditor for HtmlEditor {
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             HtmlEditCommand::ReplaceText { text } => match <HtmlSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                Ok(snapshot) => Ok(Emit::mutations(vec![HtmlMutation::SetSnapshot { snapshot }]).await),
+                Ok(snapshot) => Ok(Emit::mutations(vec![HtmlMutation::SetSnapshot { snapshot }])),
                 Err(_) => Ok(Emit::default()),
             },
         }

@@ -1,12 +1,10 @@
 // #region 🧲️Header
-/** @emoji 🖼️ `@semio-tech/infinite-canvas-react-renderer` — r3f-style reconciler host for tile-based infinite canvases (WASM bridge supplied by leaf bundles). */
+/** @emoji 🖼️ `@semio-tech/infinite-canvas-react-renderer` — React host for tile-based infinite canvases (WASM bridge supplied by leaf bundles). */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
 import { ContextMenuController, decodeIcon, encodeIcon, resolveIconUrlsInBoardJson, reactHostPort, type ContextMenuItem, type Icon, type IconSelectorMode } from "@semio-tech/ui-react";
 import React from "react";
-import Reconciler from "react-reconciler";
-import { ContinuousEventPriority, DefaultEventPriority, DiscreteEventPriority, LegacyRoot, NoEventPriority } from "react-reconciler/constants";
 // #endregion 🔌️Adapters
 
 export {
@@ -19,12 +17,6 @@ export {
   type Icon,
   type IconSelectorMode,
   React,
-  Reconciler,
-  ContinuousEventPriority,
-  DefaultEventPriority,
-  DiscreteEventPriority,
-  LegacyRoot,
-  NoEventPriority,
 };
 
 // #region 🔖️EventBinding

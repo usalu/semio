@@ -85,15 +85,15 @@ const MAX_RUN_IDS: u64 = 1_000_000;
 /// @emoji ✍️ Writes a varint-length-prefixed byte field — this crate's one field encoding used by
 /// every string/id-shaped record field.
 async fn write_field(writer: &mut pack::ByteWriter, bytes: &[u8]) {
-    writer.write_varint_u64(bytes.len() as u64).await;
-    writer.write_bytes(bytes).await;
+    writer.write_varint_u64(bytes.len() as u64);
+    writer.write_bytes(bytes);
 }
 
 /// @emoji 📖️ Inverse of `write_field`.
 async fn read_field_bytes(reader: &mut pack::ByteReader<'_>) -> Result<Vec<u8>, DbError> {
-    let len = reader.read_varint_u64().await?;
+    let len = reader.read_varint_u64()?;
     check_len(len, MAX_FIELD_BYTES, "wal_record::field")?;
-    Ok(reader.read_bytes(len as usize).await?.to_vec())
+    Ok(reader.read_bytes(len as usize)?.to_vec())
 }
 
 /// @emoji 📖️ `read_field_bytes` plus a utf-8 validation, for text fields.
@@ -103,18 +103,18 @@ async fn read_field_string(reader: &mut pack::ByteReader<'_>) -> Result<String, 
 
 async fn encode_frontier(writer: &mut pack::ByteWriter, frontier: &Frontier) {
     write_field(writer, frontier.document.0.as_bytes()).await;
-    writer.write_u64_le(frontier.head_seq).await;
-    writer.write_u64_le(frontier.commit_seq).await;
-    writer.write_bytes(&frontier.chain_hash).await;
-    writer.write_u64_le(frontier.epoch).await;
+    writer.write_u64_le(frontier.head_seq);
+    writer.write_u64_le(frontier.commit_seq);
+    writer.write_bytes(&frontier.chain_hash);
+    writer.write_u64_le(frontier.epoch);
 }
 
 async fn decode_frontier(reader: &mut pack::ByteReader<'_>) -> Result<Frontier, DbError> {
     let document = ArtifactId(read_field_string(reader).await?);
-    let head_seq = reader.read_u64_le().await?;
-    let commit_seq = reader.read_u64_le().await?;
-    let chain_hash = reader.read_array32().await?;
-    let epoch = reader.read_u64_le().await?;
+    let head_seq = reader.read_u64_le()?;
+    let commit_seq = reader.read_u64_le()?;
+    let chain_hash = reader.read_array32()?;
+    let epoch = reader.read_u64_le()?;
     Ok(Frontier { document, head_seq, commit_seq, chain_hash, epoch })
 }
 
@@ -168,61 +168,61 @@ impl WalRecord {
     /// future reader), every `WAL_*` record is load-bearing for correct replay — there is no
     /// optional WAL record in this crate's design.
     pub async fn encode(&self) -> (u8, bool, Vec<u8>) {
-        let mut writer = pack::ByteWriter::new().await;
+        let mut writer = pack::ByteWriter::new();
         let kind = match self {
             WalRecord::SegmentHeader { document, segment_index, prev_chain_hash } => {
                 write_field(&mut writer, document.0.as_bytes()).await;
-                writer.write_u64_le(*segment_index).await;
+                writer.write_u64_le(*segment_index);
                 match prev_chain_hash {
                     Some(hash) => {
-                        writer.write_u8(1).await;
-                        writer.write_bytes(hash).await;
+                        writer.write_u8(1);
+                        writer.write_bytes(hash);
                     }
-                    None => writer.write_u8(0).await,
+                    None => writer.write_u8(0),
                 }
                 WAL_SEGMENT_HEADER
             }
             WalRecord::TxBegin { tx_id } => {
-                writer.write_u64_le(*tx_id).await;
+                writer.write_u64_le(*tx_id);
                 WAL_TX_BEGIN
             }
             WalRecord::TxCommit { tx_id, record_count } => {
-                writer.write_u64_le(*tx_id).await;
-                writer.write_u32_le(*record_count).await;
+                writer.write_u64_le(*tx_id);
+                writer.write_u32_le(*record_count);
                 WAL_TX_COMMIT
             }
             WalRecord::TxAbort { tx_id } => {
-                writer.write_u64_le(*tx_id).await;
+                writer.write_u64_le(*tx_id);
                 WAL_TX_ABORT
             }
             WalRecord::Command(bytes) => {
-                writer.write_bytes(bytes).await;
+                writer.write_bytes(bytes);
                 WAL_COMMAND
             }
             WalRecord::Payload(WalPayloadRef::Inline(bytes)) => {
-                writer.write_u8(0).await;
+                writer.write_u8(0);
                 write_field(&mut writer, bytes).await;
                 WAL_PAYLOAD
             }
             WalRecord::Payload(WalPayloadRef::CasRef(hash)) => {
-                writer.write_u8(1).await;
-                writer.write_bytes(&hash.0).await;
+                writer.write_u8(1);
+                writer.write_bytes(&hash.0);
                 WAL_PAYLOAD
             }
             WalRecord::Diff(bytes) => {
-                writer.write_bytes(bytes).await;
+                writer.write_bytes(bytes);
                 WAL_DIFF
             }
             WalRecord::Inverse(bytes) => {
-                writer.write_bytes(bytes).await;
+                writer.write_bytes(bytes);
                 WAL_INVERSE
             }
             WalRecord::Event(bytes) => {
-                writer.write_bytes(bytes).await;
+                writer.write_bytes(bytes);
                 WAL_EVENT
             }
             WalRecord::Outbox(bytes) => {
-                writer.write_bytes(bytes).await;
+                writer.write_bytes(bytes);
                 WAL_OUTBOX
             }
             WalRecord::Frontier(frontier) => {
@@ -234,51 +234,51 @@ impl WalRecord {
                 WAL_VCS_REF
             }
             WalRecord::SnapshotPub { generation, frontier } => {
-                writer.write_u64_le(*generation).await;
+                writer.write_u64_le(*generation);
                 encode_frontier(&mut writer, frontier).await;
                 WAL_SNAPSHOT_PUB
             }
             WalRecord::IndexCkpt { run_ids } => {
-                writer.write_varint_u64(run_ids.len() as u64).await;
+                writer.write_varint_u64(run_ids.len() as u64);
                 for run_id in run_ids {
-                    writer.write_u64_le(*run_id).await;
+                    writer.write_u64_le(*run_id);
                 }
                 WAL_INDEX_CKPT
             }
             WalRecord::Lease { resource, holder, fence, expires_at_ms } => {
                 write_field(&mut writer, resource.as_bytes()).await;
                 write_field(&mut writer, holder.as_bytes()).await;
-                writer.write_u64_le(*fence).await;
-                writer.write_u64_le(*expires_at_ms).await;
+                writer.write_u64_le(*fence);
+                writer.write_u64_le(*expires_at_ms);
                 WAL_LEASE
             }
             WalRecord::Migration(bytes) => {
-                writer.write_bytes(bytes).await;
+                writer.write_bytes(bytes);
                 WAL_MIGRATION
             }
         };
-        (kind, true, writer.into_bytes().await)
+        (kind, true, writer.into_bytes())
     }
 
     /// @emoji 📖️ Inverse of `encode`. Errors `DbError::Corrupt` on an unrecognized `kind` (a
     /// genuinely corrupt or future-version record) rather than silently dropping it — every
     /// `WAL_*` kind is critical (see `encode`'s doc).
     pub async fn decode(kind: u8, payload: &[u8]) -> Result<WalRecord, DbError> {
-        let mut reader = pack::ByteReader::new(payload).await;
+        let mut reader = pack::ByteReader::new(payload);
         let record = match kind {
             WAL_SEGMENT_HEADER => {
                 let document = ArtifactId(read_field_string(&mut reader).await?);
-                let segment_index = reader.read_u64_le().await?;
-                let prev_chain_hash = if reader.read_u8().await? == 1 { Some(reader.read_array32().await?) } else { None };
+                let segment_index = reader.read_u64_le()?;
+                let prev_chain_hash = if reader.read_u8()? == 1 { Some(reader.read_array32()?) } else { None };
                 WalRecord::SegmentHeader { document, segment_index, prev_chain_hash }
             }
-            WAL_TX_BEGIN => WalRecord::TxBegin { tx_id: reader.read_u64_le().await? },
-            WAL_TX_COMMIT => WalRecord::TxCommit { tx_id: reader.read_u64_le().await?, record_count: reader.read_u32_le().await? },
-            WAL_TX_ABORT => WalRecord::TxAbort { tx_id: reader.read_u64_le().await? },
+            WAL_TX_BEGIN => WalRecord::TxBegin { tx_id: reader.read_u64_le()? },
+            WAL_TX_COMMIT => WalRecord::TxCommit { tx_id: reader.read_u64_le()?, record_count: reader.read_u32_le()? },
+            WAL_TX_ABORT => WalRecord::TxAbort { tx_id: reader.read_u64_le()? },
             WAL_COMMAND => WalRecord::Command(payload.to_vec()),
-            WAL_PAYLOAD => match reader.read_u8().await? {
+            WAL_PAYLOAD => match reader.read_u8()? {
                 0 => WalRecord::Payload(WalPayloadRef::Inline(read_field_bytes(&mut reader).await?)),
-                1 => WalRecord::Payload(WalPayloadRef::CasRef(ContentHash(reader.read_array32().await?))),
+                1 => WalRecord::Payload(WalPayloadRef::CasRef(ContentHash(reader.read_array32()?))),
                 other => return Err(DbError::Corrupt(format!("unknown wal payload tag {other}"))),
             },
             WAL_DIFF => WalRecord::Diff(payload.to_vec()),
@@ -288,23 +288,23 @@ impl WalRecord {
             WAL_FRONTIER => WalRecord::Frontier(decode_frontier(&mut reader).await?),
             WAL_VCS_REF => WalRecord::VcsRef(read_field_string(&mut reader).await?),
             WAL_SNAPSHOT_PUB => {
-                let generation = reader.read_u64_le().await?;
+                let generation = reader.read_u64_le()?;
                 WalRecord::SnapshotPub { generation, frontier: decode_frontier(&mut reader).await? }
             }
             WAL_INDEX_CKPT => {
-                let count = reader.read_varint_u64().await?;
+                let count = reader.read_varint_u64()?;
                 check_len(count, MAX_RUN_IDS, "wal_record::index_ckpt run_ids")?;
                 let mut run_ids = Vec::with_capacity(count as usize);
                 for _ in 0..count {
-                    run_ids.push(reader.read_u64_le().await?);
+                    run_ids.push(reader.read_u64_le()?);
                 }
                 WalRecord::IndexCkpt { run_ids }
             }
             WAL_LEASE => {
                 let resource = read_field_string(&mut reader).await?;
                 let holder = read_field_string(&mut reader).await?;
-                let fence = reader.read_u64_le().await?;
-                let expires_at_ms = reader.read_u64_le().await?;
+                let fence = reader.read_u64_le()?;
+                let expires_at_ms = reader.read_u64_le()?;
                 WalRecord::Lease { resource, holder, fence, expires_at_ms }
             }
             WAL_MIGRATION => WalRecord::Migration(payload.to_vec()),

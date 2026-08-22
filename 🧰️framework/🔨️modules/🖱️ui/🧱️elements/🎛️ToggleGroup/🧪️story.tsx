@@ -10,7 +10,7 @@
 
 import { Action, ToggleGroup } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "../../🧪️story";
 
 // 🔷️#region 🧩️ToggleGroup
 const Box = createIconComponent("box");

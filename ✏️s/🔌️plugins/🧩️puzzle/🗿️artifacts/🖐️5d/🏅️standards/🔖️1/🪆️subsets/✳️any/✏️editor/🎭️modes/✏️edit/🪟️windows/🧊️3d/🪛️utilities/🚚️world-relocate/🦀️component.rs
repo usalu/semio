@@ -7,6 +7,6 @@ use semio_framework_plugin::{LocalizedLabel, UtilityDefinition};
 pub const UTILITY_ID: &str = "worldRelocate";
 
 /// 🧱️ Stitched into the app manifest by `crate::editor::puzzle5d::create_puzzle5d_app`.
-pub async fn definition() -> UtilityDefinition {
+pub fn definition() -> UtilityDefinition {
     UtilityDefinition::new(UTILITY_ID, LocalizedLabel::native("Relocate", "Verlagern"), "relocate-3d")
 }

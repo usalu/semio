@@ -15,13 +15,13 @@ pub struct PngIntoPresent;
 impl Deserializer<PresentSnapshot> for PngIntoPresent {
     const FROM: Dialect = PNG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(payload: &IoPayload) -> IoResult<PresentSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<PresentSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "PngIntoPresent: expected a binary png payload".to_string(), diagnostics: Vec::new() });
         };
         let snapshot = <PresentSnapshot as store::ArtifactPack>::decode_pack(bytes)
             .or_else(|_| <PresentSnapshot as store::ArtifactDsl>::parse_dsl(&String::from_utf8_lossy(bytes)))
             .map_err(|error| IoError { message: format!("PngIntoPresent: {error}"), diagnostics: Vec::new() })?;
-        Ok(IoOutcome::clean(snapshot))
+        Ok(IoOutcome::clean(snapshot).await)
     }
 }

@@ -40,6 +40,14 @@ import {
 
 // #endregion 🔌️Adapters
 
+// #region 🧪️OwnedExtensionHostTestContract
+type OwnedExtensionHostTestContext = { timeout(milliseconds: number): void };
+type OwnedExtensionHostTestBody = (this: OwnedExtensionHostTestContext) => void | Promise<void>;
+declare function suite(title: string, body: OwnedExtensionHostTestBody): void;
+declare function test(title: string, body: OwnedExtensionHostTestBody): void;
+declare function suiteSetup(body: OwnedExtensionHostTestBody): void;
+// #endregion 🧪️OwnedExtensionHostTestContract
+
 // 🔒️#region 🎞️Constants
 const EXPECTED_COMMANDS = [
   "compose.analyze",

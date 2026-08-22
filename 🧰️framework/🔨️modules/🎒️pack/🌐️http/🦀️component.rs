@@ -377,7 +377,7 @@ pub use ureq_transport::UreqRangeTransport;
 //#endregion 🔖️Ureq
 
 //#region 🧪️Tests
-// 🚫️async: every `futures_lite::future::block_on(...)` in this module drives one `#[test] fn` —
+// 🚫️async: every `semio_framework_async::block_on(...)` in this module drives one `#[test] fn` —
 // each is its own synchronous test-harness entry point, the same role `fn main` plays for a
 // binary (R4 item 1), so none are converted to `.await` here. See
 // `📓️terra-pack-waker-report.md` for the full site-by-site census.
@@ -441,7 +441,7 @@ mod tests {
     #[test]
     fn retry_runtime_sleep_resolves_via_worker_pool_timer_wheel() {
         let (runtime, pool) = retry_runtime();
-        futures_lite::future::block_on(runtime.sleep(Duration::from_millis(15)));
+        semio_framework_async::block_on(runtime.sleep(Duration::from_millis(15)));
         assert_eq!(pool.worker_count(), 2);
         pool.shutdown();
     }
@@ -453,7 +453,7 @@ mod tests {
         let (runtime, pool) = retry_runtime();
         let source = HttpPackSource::new("https://example.test/doc.pack".to_string(), transport, runtime);
 
-        let bytes = futures_lite::future::block_on(source.read_at(10, 20)).unwrap();
+        let bytes = semio_framework_async::block_on(source.read_at(10, 20)).unwrap();
         assert_eq!(bytes, data[10..30].to_vec());
         assert_eq!(source.len(), 64);
         pool.shutdown();
@@ -470,8 +470,8 @@ mod tests {
         // Sequential (not concurrent) reads: each completes and its coalescing group is
         // finalized before the next begins, so these must land as two separate physical fetches
         // rather than being coalesced by the internal `ReadScheduler`.
-        futures_lite::future::block_on(source.read_at(0, 8)).unwrap();
-        futures_lite::future::block_on(source.read_at(8, 8)).unwrap();
+        semio_framework_async::block_on(source.read_at(0, 8)).unwrap();
+        semio_framework_async::block_on(source.read_at(8, 8)).unwrap();
 
         let seen = inspector.requests_seen.lock().unwrap();
         assert_eq!(seen.len(), 2, "expected exactly two physical fetches, one per read_at call");
@@ -489,7 +489,7 @@ mod tests {
         let (runtime, pool) = retry_runtime();
         let source = HttpPackSource::with_retry_policy("https://example.test/doc.pack".to_string(), transport, RetryPolicy { max_retries: 5, initial_backoff: Duration::from_millis(1), max_backoff: Duration::from_millis(20) }, runtime);
 
-        let bytes = futures_lite::future::block_on(source.read_at(0, 16)).unwrap();
+        let bytes = semio_framework_async::block_on(source.read_at(0, 16)).unwrap();
         assert_eq!(bytes, data);
         assert_eq!(inspector.call_count.load(Ordering::SeqCst), 3, "two failures then one success = three calls");
         pool.shutdown();
@@ -502,7 +502,7 @@ mod tests {
         let (runtime, pool) = retry_runtime();
         let source = HttpPackSource::with_retry_policy("https://example.test/doc.pack".to_string(), transport, RetryPolicy { max_retries: 2, initial_backoff: Duration::from_millis(1), max_backoff: Duration::from_millis(5) }, runtime);
 
-        let result = futures_lite::future::block_on(source.read_at(0, 8));
+        let result = semio_framework_async::block_on(source.read_at(0, 8));
         assert!(result.is_err());
         assert_eq!(inspector.call_count.load(Ordering::SeqCst), 3, "initial attempt + 2 retries = three calls");
         pool.shutdown();

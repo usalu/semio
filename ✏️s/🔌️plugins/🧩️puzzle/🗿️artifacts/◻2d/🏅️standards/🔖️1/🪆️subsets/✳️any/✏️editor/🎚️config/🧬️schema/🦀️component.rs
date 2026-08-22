@@ -27,6 +27,18 @@ pub struct Puzzle2dConfig {
     #[state(config)]
     pub fill_count: u32,
     #[state(config)]
+    pub fill_job_checkpoint: Option<Vec<u8>>,
+    #[state(config)]
+    pub fill_job_operation: u64,
+    #[state(config)]
+    pub fill_job_generation: u64,
+    #[state(config)]
+    pub fill_job_seed: u64,
+    #[state(config)]
+    pub fill_job_applied_count: usize,
+    #[state(config)]
+    pub fill_job_preview: Option<Value>,
+    #[state(config)]
     pub grid_snap_enabled: bool,
     #[state(config)]
     pub grid_factor: f64,
@@ -42,6 +54,10 @@ pub struct Puzzle2dConfig {
     pub locale: String,
     #[state(config)]
     pub terminology: String,
+    #[state(config)]
+    pub example_load_generation: u64,
+    #[state(config)]
+    pub example_load_id: Option<String>,
 }
 
 //region 📎 App-schema descriptor
@@ -50,7 +66,7 @@ pub struct Puzzle2dConfig {
 /// `register_app_schema()` this file used to export); `ArtifactApp::app_schema` (on
 /// `Puzzle2dPlayApp`) hands it to `register_document_app` for registration, exactly like
 /// `🗒️note`'s own `app_schema_descriptor()`.
-pub async fn app_schema_descriptor() -> artifact_schema::AppSchemaDescriptor {
+pub fn app_schema_descriptor() -> artifact_schema::AppSchemaDescriptor {
     artifact_schema::AppSchemaDescriptor {
         id: "s.puzzle.puzzle2d",
         config: artifact_schema::FacetLeaves {

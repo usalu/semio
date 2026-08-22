@@ -338,7 +338,7 @@ mod tests {
         PerformanceCurve::Constant(1.0)
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn boiler_meets_partial_load() {
         let boiler = Boiler { rated_capacity_w: 100_000.0, combustion_efficiency: 0.9, part_load_curve: flat_curve(), standby_loss_w: 200.0, supply_temperature_c: 80.0 };
         let inlet = PlantStream::new(60.0, 2.0);
@@ -347,7 +347,7 @@ mod tests {
         assert!(out.gas_power_w > out.thermal_power_w);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn chiller_eir_cooling() {
         let chiller = ChillerEir { rated_capacity_w: 200_000.0, reference_cop: 5.0, eir_curve: PerformanceCurve::Constant(0.2), eir_f_t_curve: PerformanceCurve::Constant(1.0), leaving_water_c: 7.0, entering_condenser_c: 29.0 };
         let inlet = PlantStream::new(12.0, 10.0);
@@ -357,7 +357,7 @@ mod tests {
         assert!(out.heat_rejection_w > 100_000.0);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn cooling_tower_rejects_heat() {
         let tower = CoolingTower { design_range_k: 5.0, design_approach_k: 3.0, design_flow_kg_s: 20.0, fan_power_at_design_w: 15_000.0, fan_curve: flat_curve() };
         let inlet = PlantStream::new(35.0, 20.0);
@@ -366,7 +366,7 @@ mod tests {
         assert!(out.electrical_power_w > 0.0);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn heat_exchanger_transfers_positive() {
         let hx = HeatExchanger { ua_w_per_k: 10_000.0, effectiveness: 0.8 };
         let hot = PlantStream::new(70.0, 5.0);
@@ -378,7 +378,7 @@ mod tests {
         assert!(cold_out.outlet.temperature_c > cold.temperature_c);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn thermal_storage_changes_temperature() {
         let storage = ThermalStorage {
             volume_m3: 5.0,
@@ -394,7 +394,7 @@ mod tests {
         assert!(state.node_temperatures_c[0] > 50.0);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn pump_power_scales_with_flow() {
         let pump = Pump { design_head_pa: 200_000.0, design_flow_kg_s: 10.0, motor_efficiency: 0.85, part_load_curve: flat_curve() };
         let inlet = PlantStream::new(20.0, 0.0);
@@ -403,7 +403,7 @@ mod tests {
         assert!(high.electrical_power_w > low.electrical_power_w);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn gshp_penalty_increases_with_ground_load() {
         let gshp = Gshp {
             heat_pump: HeatPump { rated_heating_w: 50_000.0, rated_cooling_w: 50_000.0, rated_cop_heating: 4.0, rated_cop_cooling: 4.5, heating_curve: flat_curve(), cooling_curve: flat_curve() },

@@ -3,6 +3,6 @@
 use semio_framework_plugin::ActionRef;
 
 /// 🔄️ Returns the window-local selection rotation action reference.
-pub async fn reference() -> ActionRef {
+pub fn reference() -> ActionRef {
     "rotateSelection".into()
 }

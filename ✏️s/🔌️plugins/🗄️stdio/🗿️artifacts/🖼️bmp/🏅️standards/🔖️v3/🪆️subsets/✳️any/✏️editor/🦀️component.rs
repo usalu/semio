@@ -8,7 +8,7 @@ use crate::artifacts::bmp::standards::v_v3::subsets::any::schema::snapshot::BmpS
 use crate::artifacts::bmp::{BMP_DIALECT, STDIO_BMP_DOCUMENT_SCHEMA};
 use crate::editor::bmp::modes::edit;
 use crate::editor::bmp::modes::edit::windows::main;
-use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode};
+use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 
@@ -61,7 +61,7 @@ impl ArtifactEditor for BmpEditor {
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
-            BmpEditCommand::SetPixelRegion { pixels } => Ok(Emit::mutations(vec![BmpMutation::SetPixelData { pixels: pixels.clone() }]).await),
+            BmpEditCommand::SetPixelRegion { pixels } => Ok(Emit::mutations(vec![BmpMutation::SetPixelData { pixels: pixels.clone() }])),
         }
     }
 

@@ -18,23 +18,23 @@ pub struct ReplaceObjectVortex {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn replace_object_vortex(object_id: String, vortex_id: String, new_vortex: Puzzle3dVortex) -> Puzzle3dMutation {
+pub fn replace_object_vortex(object_id: String, vortex_id: String, new_vortex: Puzzle3dVortex) -> Puzzle3dMutation {
     Puzzle3dMutation::ReplaceObjectVortex(ReplaceObjectVortex { object_id, vortex_id, new_vortex })
 }
 
 impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for ReplaceObjectVortex {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "object-vortex", kind: "replace-object-vortex", record: "ReplacedObjectVortex" };
 
-    async fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
+    fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
+    fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Replace vortex \"{}\" on object \"{}\"", self.vortex_id, self.object_id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.object_id.clone(), self.vortex_id.clone()]
     }
 }

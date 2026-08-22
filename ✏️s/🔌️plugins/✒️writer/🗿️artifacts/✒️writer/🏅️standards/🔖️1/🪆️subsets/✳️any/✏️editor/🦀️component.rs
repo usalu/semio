@@ -53,13 +53,13 @@ pub async fn writer_action(action: &str, args: Option<Value>) -> ActionDescripto
 /// 🙈️ An internal document operation kept out of the command palette — editor events (text edits,
 /// camera, rename, engagement submit) and dev-only whole-document setters dispatched from chrome.
 async fn writer_hidden_operation(id: &str, label: LocalizedLabel) -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, ActionKind::Mutation) }
+    ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(id, label, ActionKind::Mutation) }
 }
 
 /// 🙈️ An internal View action kept out of the palette — ephemeral editor/selection/hover/setting events
 /// that mutate only runtime scratch and emit no document operations.
 async fn writer_hidden_view(id: &str, label: LocalizedLabel) -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, ActionKind::View) }
+    ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(id, label, ActionKind::View) }
 }
 //#endregion 🔖️Constants
 
@@ -399,8 +399,8 @@ pub async fn create_writer_app() -> semio_framework_plugin::AppDefinition {
             // 🔧️ Panel-visible P0 effects: format rewrites the buffer (Mutation), lint re-runs
             // diagnostics into runtime (View — an effect, not a document operation). Categorized for
             // `Menu::group`'s ribbon-parent taxonomy (GROUPED-PROGRESSIVELY-DISCLOSED-CONTEXT-MENUS).
-            .action_with(ActionDefinition::new_catalog("formatDocument", LocalizedLabel::native("Format Document", "Dokument formatieren"), ActionKind::Mutation).with_category("transform"))
-            .action_with(ActionDefinition::new_catalog("lintDocument", LocalizedLabel::native("Lint Document", "Dokument prüfen"), ActionKind::View).with_category("tools"))
+            .action_with(ActionDefinition::bounded_catalog("formatDocument", LocalizedLabel::native("Format Document", "Dokument formatieren"), ActionKind::Mutation).with_category("transform"))
+            .action_with(ActionDefinition::bounded_catalog("lintDocument", LocalizedLabel::native("Lint Document", "Dokument prüfen"), ActionKind::View).with_category("tools"))
             // 🔧️ P1 example switch (whole-document load) with a staged example choice.
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             // 🙈️ Internal document operations — text edits (coalesced), aliases, camera, rename, engagement,

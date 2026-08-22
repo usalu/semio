@@ -26,7 +26,6 @@ use crate::ArtifactDialect;
 
 //#region 🔖️Manifest
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct Keybinding {
     pub keys: String,
@@ -35,7 +34,6 @@ pub struct Keybinding {
 
 /// @emoji ⌨️ Operating system selector for a platform-specific keybinding.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum Platform {
     MacOs,
@@ -45,28 +43,25 @@ pub enum Platform {
 
 /// @emoji ⌨️ One command chord, optionally restricted to a host platform.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct PlatformKeybinding {
     pub chord: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub platform: Option<Platform>,
 }
 
 impl PlatformKeybinding {
-    pub async fn new(chord: impl Into<String>) -> Self {
+    pub fn new(chord: impl Into<String>) -> Self {
         Self { chord: chord.into(), platform: None }
     }
 
-    pub async fn for_platform(chord: impl Into<String>, platform: Platform) -> Self {
+    pub fn for_platform(chord: impl Into<String>, platform: Platform) -> Self {
         Self { chord: chord.into(), platform: Some(platform) }
     }
 }
 
 /// @emoji 🗂️ Classifies a declared action by how it interacts with VCS history.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum ActionKind {
     /// Mutates the document — dispatched as VCS mutations with a true inverse, recorded in history.
@@ -99,7 +94,6 @@ pub enum ActionKind {
 /// beyond "text". Orthogonal to `ArgPresentation` (which is about the WIDGET, not the value's
 /// semantics): a `Color` format could still render as free text in a minimal shell.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ArgFormat {
     ArtifactRef,
@@ -131,54 +125,42 @@ pub enum ArgFormat {
 /// @emoji 🌳️ The stored, engine-neutral shape of one action argument's value — see this region's
 /// header comment for the D6 stored/derived split.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ArgSchema {
     String {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         options: Vec<ActionArgOption>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         min_len: Option<u32>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         max_len: Option<u32>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         pattern: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         format: Option<ArgFormat>,
     },
     Number {
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         min: Option<f64>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         max: Option<f64>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         step: Option<f64>,
         #[serde(default)]
         integer: bool,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         unit: Option<String>,
     },
     Boolean,
     Vec3 {
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         unit: Option<String>,
     },
     Array {
         items: Box<ArgSchema>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         min_items: Option<u32>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         max_items: Option<u32>,
     },
     Object {
@@ -191,7 +173,6 @@ pub enum ArgSchema {
 /// `ActionArgDef::control()` (e.g. a bounded `Number` still renders `Slider` without this, but a
 /// single-bound one needs it to opt in).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ArgPresentation {
     Slider,
@@ -205,18 +186,16 @@ pub enum ArgPresentation {
 /// @emoji 🔘️ One selectable option of a `Select` argument control — the persisted `value` and its
 /// human `label`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ActionArgOption {
     pub value: String,
-    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel`. Not yet ts-rs-mirrored
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel`. Not yet owned-schema-mirrored
     /// (follow-up: `LocalizedLabel` itself has no `TS` impl).
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
     pub label: LocalizedLabel,
 }
 
 impl ActionArgOption {
-    pub async fn new(value: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
+    pub fn new(value: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self { value: value.into(), label: label.into() }
     }
 }
@@ -226,33 +205,26 @@ impl ActionArgOption {
 /// wiring). Renderers map each variant onto a staged form field. Tagged with `kind` to mirror the
 /// sibling `UtilityNode`/`UiControlNode` declarative-tree convention.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ActionArgControl {
     Text {
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         placeholder: Option<String>,
     },
     Number {
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         min: Option<f64>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         max: Option<f64>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         step: Option<f64>,
     },
     Slider {
         min: f64,
         max: f64,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         step: Option<f64>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         unit: Option<String>,
     },
     Toggle,
@@ -285,92 +257,87 @@ pub enum ActionArgControl {
 /// `required`, an optional `default` value, and an optional `description`. An empty
 /// `ActionDefinition.args` (the common case) means a no-argument action.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ActionArgDef {
     pub id: String,
-    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub label: LocalizedLabel,
     pub schema: ArgSchema,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub presentation: Option<ArgPresentation>,
     #[serde(default)]
     pub required: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
     pub default: Option<DslValue>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub description: Option<String>,
 }
 
 impl ActionArgDef {
-    async fn with_schema(id: impl Into<String>, label: impl Into<LocalizedLabel>, schema: ArgSchema) -> Self {
+    fn with_schema(id: impl Into<String>, label: impl Into<LocalizedLabel>, schema: ArgSchema) -> Self {
         Self { id: id.into(), label: label.into(), schema, presentation: None, required: false, default: None, description: None }
     }
 
-    async fn plain_string(format: Option<ArgFormat>) -> ArgSchema {
+    fn plain_string(format: Option<ArgFormat>) -> ArgSchema {
         ArgSchema::String { options: Vec::new(), min_len: None, max_len: None, pattern: None, format }
     }
 
     /// @emoji 🔤️ A free-text argument.
-    pub async fn text(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
-        Self::with_schema(id, label, Self::plain_string(None).await).await
+    pub fn text(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
+        Self::with_schema(id, label, Self::plain_string(None))
     }
 
     /// @emoji 🔢️ A numeric argument (unbounded stepper by default).
-    pub async fn number(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
-        Self::with_schema(id, label, ArgSchema::Number { min: None, max: None, step: None, integer: false, unit: None }).await
+    pub fn number(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
+        Self::with_schema(id, label, ArgSchema::Number { min: None, max: None, step: None, integer: false, unit: None })
     }
 
     /// @emoji 🎚️ A bounded slider argument.
-    pub async fn slider(id: impl Into<String>, label: impl Into<LocalizedLabel>, min: f64, max: f64) -> Self {
-        let mut def = Self::with_schema(id, label, ArgSchema::Number { min: Some(min), max: Some(max), step: None, integer: false, unit: None }).await;
+    pub fn slider(id: impl Into<String>, label: impl Into<LocalizedLabel>, min: f64, max: f64) -> Self {
+        let mut def = Self::with_schema(id, label, ArgSchema::Number { min: Some(min), max: Some(max), step: None, integer: false, unit: None });
         def.presentation = Some(ArgPresentation::Slider);
         def
     }
 
     /// @emoji 🔘️ A boolean toggle argument.
-    pub async fn toggle(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
-        Self::with_schema(id, label, ArgSchema::Boolean).await
+    pub fn toggle(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
+        Self::with_schema(id, label, ArgSchema::Boolean)
     }
 
     /// @emoji 🔽️ A single-choice select argument.
-    pub async fn select(id: impl Into<String>, label: impl Into<LocalizedLabel>, options: Vec<ActionArgOption>) -> Self {
-        Self::with_schema(id, label, ArgSchema::String { options, min_len: None, max_len: None, pattern: None, format: None }).await
+    pub fn select(id: impl Into<String>, label: impl Into<LocalizedLabel>, options: Vec<ActionArgOption>) -> Self {
+        Self::with_schema(id, label, ArgSchema::String { options, min_len: None, max_len: None, pattern: None, format: None })
     }
 
     /// @emoji 🧭️ A three-component vector argument.
-    pub async fn vec3(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
-        Self::with_schema(id, label, ArgSchema::Vec3 { unit: None }).await
+    pub fn vec3(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
+        Self::with_schema(id, label, ArgSchema::Vec3 { unit: None })
     }
 
     /// @emoji 🗂️ A host-resolved artifact-kind choice — see `ActionArgControl::ArtifactKind`.
-    pub async fn artifact_kind(id: impl Into<String>, label: impl Into<LocalizedLabel>, roles: Vec<AppRole>) -> Self {
-        Self::with_schema(id, label, Self::plain_string(Some(ArgFormat::ArtifactKind { roles })).await).await
+    pub fn artifact_kind(id: impl Into<String>, label: impl Into<LocalizedLabel>, roles: Vec<AppRole>) -> Self {
+        Self::with_schema(id, label, Self::plain_string(Some(ArgFormat::ArtifactKind { roles })))
     }
 
     /// @emoji 🎭️ A host-resolved `(pluginId, appId, role)` choice — see `ActionArgControl::SurfaceApp`.
-    pub async fn surface_app(id: impl Into<String>, label: impl Into<LocalizedLabel>, roles: Vec<AppRole>, dialect_arg: impl Into<String>) -> Self {
-        Self::with_schema(id, label, Self::plain_string(Some(ArgFormat::SurfaceApp { roles, dialect_arg: dialect_arg.into() })).await).await
+    pub fn surface_app(id: impl Into<String>, label: impl Into<LocalizedLabel>, roles: Vec<AppRole>, dialect_arg: impl Into<String>) -> Self {
+        Self::with_schema(id, label, Self::plain_string(Some(ArgFormat::SurfaceApp { roles, dialect_arg: dialect_arg.into() })))
     }
 
     /// @emoji ❗️ Marks the argument as required — execution is blocked until it has an effective value.
-    pub async fn required(mut self) -> Self {
+    pub fn required(mut self) -> Self {
         self.required = true;
         self
     }
 
     /// @emoji 🎁️ Sets the default effective value used when nothing is staged.
-    pub async fn default_value(mut self, value: impl Serialize) -> Self {
+    pub fn default_value(mut self, value: impl Serialize) -> Self {
         self.default = dsl::to_dsl_value(&value).ok();
         self
     }
 
     /// @emoji 💬️ Attaches a description shown alongside the field.
-    pub async fn describe(mut self, description: impl Into<String>) -> Self {
+    pub fn describe(mut self, description: impl Into<String>) -> Self {
         self.description = Some(description.into());
         self
     }
@@ -380,7 +347,7 @@ impl ActionArgDef {
     /// P3-manifest-schema): `schema` is the ONLY persisted truth, this is computed fresh on every
     /// call, never cached/stored. Order matters: a non-empty `options` list always wins Select over
     /// any format; a `Slider` presentation or a fully-bounded `Number` wins Slider over plain Number.
-    pub async fn control(&self) -> ActionArgControl {
+    pub fn control(&self) -> ActionArgControl {
         match &self.schema {
             ArgSchema::String { options, format, .. } => {
                 if !options.is_empty() {
@@ -409,8 +376,8 @@ impl ActionArgDef {
     /// @emoji 📐️ JSON Schema (2020-12 leaf, no `$schema`/`$id` — the catalog compiler wraps those at
     /// the whole-action envelope, `📋️master.md` §3.2) for this one argument's value, folding in
     /// `description`/`default`.
-    pub async fn json_schema(&self) -> serde_json::Value {
-        let mut schema = Box::pin(arg_schema_json_schema(&self.schema)).await;
+    pub fn json_schema(&self) -> serde_json::Value {
+        let mut schema = arg_schema_json_schema(&self.schema);
         if let Some(map) = schema.as_object_mut() {
             if let Some(description) = &self.description {
                 map.insert("description".into(), serde_json::Value::String(description.clone()));
@@ -427,7 +394,7 @@ impl ActionArgDef {
 /// (the vendor extension every format carries) plus, for the two host-resolved refinements, the
 /// `roles`/`dialect_arg` a host needs to resolve them (`x-semio-roles`/`x-semio-dialect-arg`) — and
 /// the standard `format: "uri"` keyword where JSON Schema already defines one.
-async fn apply_arg_format(map: &mut serde_json::Map<String, serde_json::Value>, format: &ArgFormat) {
+fn apply_arg_format(map: &mut serde_json::Map<String, serde_json::Value>, format: &ArgFormat) {
     let tag = match format {
         ArgFormat::ArtifactRef => "artifactRef",
         ArgFormat::WindowId => "windowId",
@@ -460,7 +427,7 @@ async fn apply_arg_format(map: &mut serde_json::Map<String, serde_json::Value>, 
 /// @emoji 📐️ JSON Schema 2020-12 for one `ArgSchema` node (recursive over `Array`/`Object`) — carries
 /// `Number.unit`/`Vec3.unit` as `x-semio-unit`, `String.format` via `apply_arg_format`. No
 /// `additionalProperties`/`$schema`/`$id` at this altitude; the catalog compiler owns the envelope.
-async fn arg_schema_json_schema(schema: &ArgSchema) -> serde_json::Value {
+fn arg_schema_json_schema(schema: &ArgSchema) -> serde_json::Value {
     match schema {
         ArgSchema::String { options, min_len, max_len, pattern, format } => {
             let mut value = serde_json::json!({ "type": "string" });
@@ -478,7 +445,7 @@ async fn arg_schema_json_schema(schema: &ArgSchema) -> serde_json::Value {
                 map.insert("pattern".into(), serde_json::Value::String(pattern.clone()));
             }
             if let Some(format) = format {
-                apply_arg_format(map, format).await;
+                apply_arg_format(map, format);
             }
             value
         }
@@ -508,7 +475,7 @@ async fn arg_schema_json_schema(schema: &ArgSchema) -> serde_json::Value {
             value
         }
         ArgSchema::Array { items, min_items, max_items } => {
-            let mut value = serde_json::json!({ "type": "array", "items": Box::pin(arg_schema_json_schema(items)).await });
+            let mut value = serde_json::json!({ "type": "array", "items": arg_schema_json_schema(items) });
             let map = value.as_object_mut().expect("object schema");
             if let Some(min_items) = min_items {
                 map.insert("minItems".into(), serde_json::json!(min_items));
@@ -522,7 +489,7 @@ async fn arg_schema_json_schema(schema: &ArgSchema) -> serde_json::Value {
             let mut properties = serde_json::Map::new();
             let mut required = Vec::new();
             for field in fields {
-                properties.insert(field.id.clone(), field.json_schema().await);
+                properties.insert(field.id.clone(), field.json_schema());
                 if field.required {
                     required.push(serde_json::Value::String(field.id.clone()));
                 }
@@ -663,7 +630,6 @@ pub fn catalog_command_icon_id(id: &str) -> IconName {
 /// `"ui:window"`, `"clipboard"`, `"fs:{arg.<id>}"`, `"net:{origin}"`), not a closed enum: a new
 /// resource family never needs a manifest schema change.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct ResourceSelector(pub String);
 
 impl ResourceSelector {
@@ -675,7 +641,6 @@ impl ResourceSelector {
 /// @emoji 🧮️ What one capability touches — read/write resource selectors plus the three coarse flags
 /// the gateway's policy/preview machinery gates on.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct CapabilityEffects {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -693,7 +658,6 @@ pub struct CapabilityEffects {
 /// @emoji 🚦️ When the gateway must pause for human approval before committing an invocation of this
 /// capability.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum ApprovalMode {
     #[default]
@@ -707,7 +671,6 @@ pub enum ApprovalMode {
 /// parallel string vocabulary: `ExtensionPointDeclaration.capability_allowance` already establishes
 /// that `kernel::CapabilityId` is reachable from this crate with no dependency cycle.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct CapabilityPolicy {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -718,7 +681,6 @@ pub struct CapabilityPolicy {
 
 /// @emoji 👁️ Whether/how the gateway can show the effect of an invocation before committing it.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum PreviewMode {
     #[default]
@@ -729,7 +691,6 @@ pub enum PreviewMode {
 
 /// @emoji ↩️ How a committed invocation of this capability can be undone.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum UndoMode {
     #[default]
@@ -744,7 +705,6 @@ pub enum UndoMode {
 
 /// @emoji 🔁️ Whether replaying the same invocation twice is safe, and how the gateway makes it so.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum IdempotencyMode {
     Natural,
@@ -756,7 +716,6 @@ pub enum IdempotencyMode {
 /// @emoji ⏱️ How long-running/interactive an invocation of this capability is — the gateway's job
 /// vs. interactive-call dispatch hint.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum ExecutionClass {
     #[default]
@@ -770,7 +729,6 @@ pub enum ExecutionClass {
 /// visible to audit tooling but are rejected by [`validate_interactive_job_classification`] before a
 /// release catalog can be activated.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum InteractiveJobClassification {
     #[default]
@@ -783,7 +741,6 @@ pub enum InteractiveJobClassification {
 
 /// @emoji ⚙️ Preview/undo/idempotency/cancellation shape of one capability invocation.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct CapabilityExecution {
     #[serde(default)]
@@ -810,7 +767,6 @@ pub struct CapabilityExecution {
 /// `ActionSemantics::default()`, the type-level default below — NOT re-derived from `kind`, since
 /// serde field defaults cannot see sibling fields).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ActionSemantics {
     #[serde(default)]
@@ -820,7 +776,6 @@ pub struct ActionSemantics {
     #[serde(default)]
     pub execution: CapabilityExecution,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
     pub description: Option<LocalizedLabel>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub use_when: Vec<String>,
@@ -835,7 +790,7 @@ impl ActionSemantics {
     /// (`documents.read` + `shell.observe`); `History` needs `documents.write`; `Clipboard` needs
     /// `shell.clipboard`; `Shell` is not reversible and needs `shell.navigate`.
     pub fn for_kind(kind: ActionKind) -> Self {
-        let mut semantics = match kind {
+        match kind {
             ActionKind::Mutation => Self {
                 effects: CapabilityEffects { writes: vec![ResourceSelector::new("artifact:{self}")], reversible: true, ..Default::default() },
                 policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("documents.write".into())], approval: ApprovalMode::WhenDestructive },
@@ -850,9 +805,7 @@ impl ActionSemantics {
             ActionKind::History => Self { policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("documents.write".into())], ..Default::default() }, ..Default::default() },
             ActionKind::Clipboard => Self { policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("shell.clipboard".into())], ..Default::default() }, ..Default::default() },
             ActionKind::Shell => Self { effects: CapabilityEffects { reversible: false, ..Default::default() }, policy: CapabilityPolicy { scopes: vec![kernel::CapabilityId("shell.navigate".into())], ..Default::default() }, ..Default::default() },
-        };
-        semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
-        semantics
+        }
     }
 }
 
@@ -898,24 +851,20 @@ pub fn validate_interactive_job_classification<'a>(actions: impl IntoIterator<It
 
 /// @emoji 📇️ Declares one action an app can receive via `ActionDescriptor.action`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ActionDefinition {
     pub id: String,
-    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub label: LocalizedLabel,
     pub kind: ActionKind,
     pub icon_id: IconName,
     /// 📝️ Typed argument declarations. Empty (the common case) = a no-argument action.
     pub args: Vec<ActionArgDef>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub keys: Option<String>,
     #[serde(default)]
     pub in_palette: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub category: Option<String>,
     /// 🎯️ Effects/policy/execution/use_when — see `🔖️ActionSemantics`. Defaulted per-`kind` by
     /// `ActionSemantics::for_kind` in `new`/`new_catalog`; every struct-update-syntax call site
@@ -936,21 +885,28 @@ impl ActionDefinition {
         Self::new(id.clone(), label, kind, catalog_action_icon_id(&id, kind))
     }
 
+    /// ⚡️ Explicitly declares a first-step reducer guarded by the interactive-step watchdog.
+    pub fn bounded_catalog(id: impl Into<String>, label: impl Into<LocalizedLabel>, kind: ActionKind) -> Self {
+        let mut definition = Self::new_catalog(id, label, kind);
+        definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
+        definition
+    }
+
     /// @emoji 📝️ Attaches typed argument declarations to this action.
-    pub async fn with_args(mut self, args: impl IntoIterator<Item = ActionArgDef>) -> Self {
+    pub fn with_args(mut self, args: impl IntoIterator<Item = ActionArgDef>) -> Self {
         self.args = args.into_iter().collect();
         self
     }
 
     /// @emoji 🎨️ Sets palette visibility for this action.
-    pub async fn with_in_palette(mut self, in_palette: bool) -> Self {
+    pub fn with_in_palette(mut self, in_palette: bool) -> Self {
         self.in_palette = in_palette;
         self
     }
 
     /// @emoji 🎨️ Sets palette visibility for this action.
-    pub async fn in_palette(self, in_palette: bool) -> Self {
-        self.with_in_palette(in_palette).await
+    pub fn in_palette(self, in_palette: bool) -> Self {
+        self.with_in_palette(in_palette)
     }
 
     /// @emoji 🗂️ Sets this action's ribbon-parent-taxonomy category (a `ui_wgpu::wgpu::RIBBON_PARENT_CATEGORIES`
@@ -985,7 +941,7 @@ impl ActionDefinition {
 
     /// @emoji 🗣️ Sets the natural-language phrases a capability search should match this action
     /// against (`ActionSemantics.use_when`).
-    pub async fn use_when(mut self, phrases: impl IntoIterator<Item = impl Into<String>>) -> Self {
+    pub fn use_when(mut self, phrases: impl IntoIterator<Item = impl Into<String>>) -> Self {
         self.semantics.use_when = phrases.into_iter().map(Into::into).collect();
         self
     }
@@ -1003,17 +959,19 @@ impl ActionDefinition {
 pub const REVERT_TO_COMMAND_ACTION_ID: &str = "revertToCommand";
 
 /// @emoji 🕹️ The seven framework-owned History actions, auto-injected into every `AppDefinition`.
-pub async fn history_action_definitions() -> Vec<ActionDefinition> {
+pub fn history_action_definitions() -> Vec<ActionDefinition> {
     vec![
-        ActionDefinition { keys: Some("mod+z".into()), ..ActionDefinition::new_catalog("undo", LocalizedLabel::native("Undo", "Rückgängig"), ActionKind::History) },
-        ActionDefinition { keys: Some("mod+shift+z".into()), ..ActionDefinition::new_catalog("redo", LocalizedLabel::native("Redo", "Wiederholen"), ActionKind::History) },
-        ActionDefinition::new_catalog("commitCheckpoint", LocalizedLabel::native("Commit Checkpoint", "Checkpoint festschreiben"), ActionKind::History),
-        ActionDefinition::new_catalog("createAlternative", LocalizedLabel::native("Create Alternative", "Alternative erstellen"), ActionKind::History),
-        ActionDefinition::new_catalog("switchAlternative", LocalizedLabel::native("Switch Alternative", "Alternative wechseln"), ActionKind::History),
-        ActionDefinition::new_catalog("checkoutCheckpoint", LocalizedLabel::native("Checkout Checkpoint", "Checkpoint auschecken"), ActionKind::History),
-        ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(REVERT_TO_COMMAND_ACTION_ID, LocalizedLabel::native("Revert to Command", "Auf Befehl zurücksetzen"), ActionKind::History) }
-            .with_args([ActionArgDef::number("entrySeq", LocalizedLabel::native("Entry", "Eintrag")).await.required().await])
-            .await,
+        ActionDefinition { keys: Some("mod+z".into()), ..ActionDefinition::bounded_catalog("undo", LocalizedLabel::native("Undo", "Rückgängig"), ActionKind::History) },
+        ActionDefinition { keys: Some("mod+shift+z".into()), ..ActionDefinition::bounded_catalog("redo", LocalizedLabel::native("Redo", "Wiederholen"), ActionKind::History) },
+        ActionDefinition::bounded_catalog("commitCheckpoint", LocalizedLabel::native("Commit Checkpoint", "Checkpoint festschreiben"), ActionKind::History),
+        ActionDefinition::bounded_catalog("createAlternative", LocalizedLabel::native("Create Alternative", "Alternative erstellen"), ActionKind::History),
+        ActionDefinition::bounded_catalog("switchAlternative", LocalizedLabel::native("Switch Alternative", "Alternative wechseln"), ActionKind::History),
+        ActionDefinition::bounded_catalog("checkoutCheckpoint", LocalizedLabel::native("Checkout Checkpoint", "Checkpoint auschecken"), ActionKind::History),
+        ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(REVERT_TO_COMMAND_ACTION_ID, LocalizedLabel::native("Revert to Command", "Auf Befehl zurücksetzen"), ActionKind::History) }.with_args([ActionArgDef::number(
+            "entrySeq",
+            LocalizedLabel::native("Entry", "Eintrag"),
+        )
+        .required()]),
     ]
 }
 
@@ -1026,15 +984,18 @@ pub const SET_HISTORY_COMMAND_FILTER_ACTION_ID: &str = "setHistoryCommandFilter"
 /// operation — `ActionKind::View`. Arg id is `"value"` (not `"filter"`) — a top-level `UiNode::Select`
 /// always dispatches its picked option merged into `args` under the `"value"` key (both renderers'
 /// `Select` interpreters hardcode that key; see `with_item_value_arg` in ui_wgpu).
-pub async fn set_history_command_filter_action_definition() -> ActionDefinition {
+pub fn set_history_command_filter_action_definition() -> ActionDefinition {
     let options = vec![
-        ActionArgOption::new("all", LocalizedLabel::native("All", "Alle")).await,
-        ActionArgOption::new("withoutOperations", LocalizedLabel::native("Without Operations", "Ohne Operationen")).await,
-        ActionArgOption::new("onlyOperations", LocalizedLabel::native("Only Operations", "Nur Operationen")).await,
+        ActionArgOption::new("all", LocalizedLabel::native("All", "Alle")),
+        ActionArgOption::new("withoutOperations", LocalizedLabel::native("Without Operations", "Ohne Operationen")),
+        ActionArgOption::new("onlyOperations", LocalizedLabel::native("Only Operations", "Nur Operationen")),
     ];
-    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(SET_HISTORY_COMMAND_FILTER_ACTION_ID, LocalizedLabel::native("Set History Filter", "Verlaufsfilter festlegen"), ActionKind::View) }
-        .with_args([ActionArgDef::select("value", LocalizedLabel::native("Filter", "Filter"), options).await.default_value(serde_json::json!("all")).await])
-        .await
+    ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(SET_HISTORY_COMMAND_FILTER_ACTION_ID, LocalizedLabel::native("Set History Filter", "Verlaufsfilter festlegen"), ActionKind::View) }.with_args([ActionArgDef::select(
+        "value",
+        LocalizedLabel::native("Filter", "Filter"),
+        options,
+    )
+    .default_value(serde_json::json!("all"))])
 }
 
 /// @emoji 🗒️ The framework-owned action id apps dispatch to note a shell effect (navigate, export,
@@ -1046,39 +1007,35 @@ pub const NOTE_SHELL_COMMAND_ACTION_ID: &str = "noteShellCommand";
 /// shell-kind effect that already happened into the session command log, for effects dispatched
 /// outside the normal `ActionDescriptor` path. `commandId` and `label` are required; `detail` is an
 /// optional free-text elaboration shown in the history panel.
-pub async fn note_shell_command_action_definition() -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(NOTE_SHELL_COMMAND_ACTION_ID, LocalizedLabel::native("Note Shell Command", "Shell-Befehl vermerken"), ActionKind::Shell) }
-        .with_args([
-            ActionArgDef::text("commandId", LocalizedLabel::native("Command", "Befehl")).await.required().await,
-            ActionArgDef::text("label", LocalizedLabel::native("Label", "Bezeichnung")).await.required().await,
-            ActionArgDef::text("detail", LocalizedLabel::native("Detail", "Detail")).await,
-        ])
-        .await
+pub fn note_shell_command_action_definition() -> ActionDefinition {
+    ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(NOTE_SHELL_COMMAND_ACTION_ID, LocalizedLabel::native("Note Shell Command", "Shell-Befehl vermerken"), ActionKind::Shell) }.with_args([
+        ActionArgDef::text("commandId", LocalizedLabel::native("Command", "Befehl")).required(),
+        ActionArgDef::text("label", LocalizedLabel::native("Label", "Bezeichnung")).required(),
+        ActionArgDef::text("detail", LocalizedLabel::native("Detail", "Detail")),
+    ])
 }
 
 //#region 🔖️Clipboard
 /// 🕹️ The three framework-owned Clipboard actions, auto-injected into every `AppDefinition` —
 /// mirrors `history_action_definitions`. `paste` carries a staged `anchoring` choice (defaulting to
 /// `original`) plus an optional `position` override, both consumed as a `PastePlacement`.
-pub async fn clipboard_action_definitions() -> Vec<ActionDefinition> {
+pub fn clipboard_action_definitions() -> Vec<ActionDefinition> {
     let anchoring_options = vec![
-        ActionArgOption::new("original", LocalizedLabel::native("Original", "Original")).await,
-        ActionArgOption::new("middle", LocalizedLabel::native("Middle", "Mitte")).await,
-        ActionArgOption::new("centroid", LocalizedLabel::native("Centroid", "Schwerpunkt")).await,
-        ActionArgOption::new("bottomLeft", LocalizedLabel::native("Bottom Left", "Unten links")).await,
-        ActionArgOption::new("bottomRight", LocalizedLabel::native("Bottom Right", "Unten rechts")).await,
-        ActionArgOption::new("topLeft", LocalizedLabel::native("Top Left", "Oben links")).await,
-        ActionArgOption::new("topRight", LocalizedLabel::native("Top Right", "Oben rechts")).await,
+        ActionArgOption::new("original", LocalizedLabel::native("Original", "Original")),
+        ActionArgOption::new("middle", LocalizedLabel::native("Middle", "Mitte")),
+        ActionArgOption::new("centroid", LocalizedLabel::native("Centroid", "Schwerpunkt")),
+        ActionArgOption::new("bottomLeft", LocalizedLabel::native("Bottom Left", "Unten links")),
+        ActionArgOption::new("bottomRight", LocalizedLabel::native("Bottom Right", "Unten rechts")),
+        ActionArgOption::new("topLeft", LocalizedLabel::native("Top Left", "Oben links")),
+        ActionArgOption::new("topRight", LocalizedLabel::native("Top Right", "Oben rechts")),
     ];
     vec![
-        ActionDefinition { keys: Some("mod+c".into()), ..ActionDefinition::new_catalog("copy", LocalizedLabel::native("Copy", "Kopieren"), ActionKind::Clipboard) },
-        ActionDefinition { keys: Some("mod+x".into()), ..ActionDefinition::new_catalog("cut", LocalizedLabel::native("Cut", "Ausschneiden"), ActionKind::Clipboard) },
-        ActionDefinition { keys: Some("mod+v".into()), ..ActionDefinition::new_catalog("paste", LocalizedLabel::native("Paste", "Einfügen"), ActionKind::Clipboard) }
-            .with_args([
-                ActionArgDef::select("anchor", LocalizedLabel::native("Anchoring", "Verankerung"), anchoring_options).await.default_value(serde_json::json!("original")).await,
-                ActionArgDef::vec3("position", LocalizedLabel::native("Position", "Position")).await,
-            ])
-            .await,
+        ActionDefinition { keys: Some("mod+c".into()), ..ActionDefinition::bounded_catalog("copy", LocalizedLabel::native("Copy", "Kopieren"), ActionKind::Clipboard) },
+        ActionDefinition { keys: Some("mod+x".into()), ..ActionDefinition::bounded_catalog("cut", LocalizedLabel::native("Cut", "Ausschneiden"), ActionKind::Clipboard) },
+        ActionDefinition { keys: Some("mod+v".into()), ..ActionDefinition::bounded_catalog("paste", LocalizedLabel::native("Paste", "Einfügen"), ActionKind::Clipboard) }.with_args([
+            ActionArgDef::select("anchor", LocalizedLabel::native("Anchoring", "Verankerung"), anchoring_options).default_value(serde_json::json!("original")),
+            ActionArgDef::vec3("position", LocalizedLabel::native("Position", "Position")),
+        ]),
     ]
 }
 //#endregion 🔖️Clipboard
@@ -1113,47 +1070,38 @@ pub const SET_INTERACTION_GRANULARITY_ACTION_ID: &str = "setInteractionGranulari
 /// `interactionHover` are the raw dispatch verbs renderers translate clicks/marquee/hover into
 /// (never in the palette); `clearSelection`/`selectAll`/`setSelectionMode`/`setInteractionGranularity`
 /// are user-facing and drive the per-domain Select controls.
-pub async fn interaction_action_definitions(app: &AppDefinition) -> Vec<ActionDefinition> {
+pub fn interaction_action_definitions(app: &AppDefinition) -> Vec<ActionDefinition> {
     if app.interactions.is_empty() {
         return Vec::new();
     }
     let merge_options = vec![
-        ActionArgOption::new("replace", LocalizedLabel::native("Replace", "Ersetzen")).await,
-        ActionArgOption::new("additive", LocalizedLabel::native("Additive", "Additiv")).await,
-        ActionArgOption::new("subtractive", LocalizedLabel::native("Subtractive", "Subtraktiv")).await,
-        ActionArgOption::new("invertive", LocalizedLabel::native("Invertive", "Invertierend")).await,
-        ActionArgOption::new("range", LocalizedLabel::native("Range", "Bereich")).await,
+        ActionArgOption::new("replace", LocalizedLabel::native("Replace", "Ersetzen")),
+        ActionArgOption::new("additive", LocalizedLabel::native("Additive", "Additiv")),
+        ActionArgOption::new("subtractive", LocalizedLabel::native("Subtractive", "Subtraktiv")),
+        ActionArgOption::new("invertive", LocalizedLabel::native("Invertive", "Invertierend")),
+        ActionArgOption::new("range", LocalizedLabel::native("Range", "Bereich")),
     ];
-    let method_options = vec![
-        ActionArgOption::new("pick", LocalizedLabel::native("Pick", "Auswahl")).await,
-        ActionArgOption::new("rectangle", LocalizedLabel::native("Rectangle", "Rechteck")).await,
-        ActionArgOption::new("lasso", LocalizedLabel::native("Lasso", "Lasso")).await,
-    ];
-    let mode_options = vec![ActionArgOption::new("single", LocalizedLabel::native("Single", "Einzeln")).await, ActionArgOption::new("multiple", LocalizedLabel::native("Multiple", "Mehrfach")).await];
+    let method_options =
+        vec![ActionArgOption::new("pick", LocalizedLabel::native("Pick", "Auswahl")), ActionArgOption::new("rectangle", LocalizedLabel::native("Rectangle", "Rechteck")), ActionArgOption::new("lasso", LocalizedLabel::native("Lasso", "Lasso"))];
+    let mode_options = vec![ActionArgOption::new("single", LocalizedLabel::native("Single", "Einzeln")), ActionArgOption::new("multiple", LocalizedLabel::native("Multiple", "Mehrfach"))];
     vec![
-        ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(INTERACTION_SELECT_ACTION_ID, LocalizedLabel::native("Select", "Auswählen"), ActionKind::Interaction) }
-            .with_args([
-                ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).await.required().await,
-                ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).await.required().await,
-                ActionArgDef::select("merge", LocalizedLabel::native("Merge", "Zusammenführen"), merge_options).await.required().await,
-                ActionArgDef::select("method", LocalizedLabel::native("Method", "Methode"), method_options).await.required().await,
-            ])
-            .await,
-        ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(INTERACTION_HOVER_ACTION_ID, LocalizedLabel::native("Hover", "Hover"), ActionKind::Interaction) }
-            .with_args([
-                ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).await.required().await,
-                ActionArgDef::text("channel", LocalizedLabel::native("Channel", "Kanal")).await.required().await,
-                ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).await.required().await,
-            ])
-            .await,
-        ActionDefinition { keys: Some("escape".into()), ..ActionDefinition::new_catalog(CLEAR_SELECTION_ACTION_ID, LocalizedLabel::native("Clear Selection", "Auswahl aufheben"), ActionKind::Interaction) },
-        ActionDefinition { keys: Some("mod+a".into()), ..ActionDefinition::new_catalog(SELECT_ALL_ACTION_ID, LocalizedLabel::native("Select All", "Alles auswählen"), ActionKind::Interaction) },
-        ActionDefinition::new_catalog(SET_SELECTION_MODE_ACTION_ID, LocalizedLabel::native("Set Selection Mode", "Auswahlmodus festlegen"), ActionKind::Interaction)
-            .with_args([ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).await.required().await, ActionArgDef::select("mode", LocalizedLabel::native("Mode", "Modus"), mode_options).await.required().await])
-            .await,
-        ActionDefinition::new_catalog(SET_INTERACTION_GRANULARITY_ACTION_ID, LocalizedLabel::native("Set Granularity", "Granularität festlegen"), ActionKind::Interaction)
-            .with_args([ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).await.required().await, ActionArgDef::text("granularityId", LocalizedLabel::native("Granularity", "Granularität")).await.required().await])
-            .await,
+        ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(INTERACTION_SELECT_ACTION_ID, LocalizedLabel::native("Select", "Auswählen"), ActionKind::Interaction) }.with_args([
+            ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(),
+            ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).required(),
+            ActionArgDef::select("merge", LocalizedLabel::native("Merge", "Zusammenführen"), merge_options).required(),
+            ActionArgDef::select("method", LocalizedLabel::native("Method", "Methode"), method_options).required(),
+        ]),
+        ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(INTERACTION_HOVER_ACTION_ID, LocalizedLabel::native("Hover", "Hover"), ActionKind::Interaction) }.with_args([
+            ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(),
+            ActionArgDef::text("channel", LocalizedLabel::native("Channel", "Kanal")).required(),
+            ActionArgDef::text("targets", LocalizedLabel::native("Targets", "Ziele")).required(),
+        ]),
+        ActionDefinition { keys: Some("escape".into()), ..ActionDefinition::bounded_catalog(CLEAR_SELECTION_ACTION_ID, LocalizedLabel::native("Clear Selection", "Auswahl aufheben"), ActionKind::Interaction) },
+        ActionDefinition { keys: Some("mod+a".into()), ..ActionDefinition::bounded_catalog(SELECT_ALL_ACTION_ID, LocalizedLabel::native("Select All", "Alles auswählen"), ActionKind::Interaction) },
+        ActionDefinition::bounded_catalog(SET_SELECTION_MODE_ACTION_ID, LocalizedLabel::native("Set Selection Mode", "Auswahlmodus festlegen"), ActionKind::Interaction)
+            .with_args([ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(), ActionArgDef::select("mode", LocalizedLabel::native("Mode", "Modus"), mode_options).required()]),
+        ActionDefinition::bounded_catalog(SET_INTERACTION_GRANULARITY_ACTION_ID, LocalizedLabel::native("Set Granularity", "Granularität festlegen"), ActionKind::Interaction)
+            .with_args([ActionArgDef::text("domainId", LocalizedLabel::native("Domain", "Domäne")).required(), ActionArgDef::text("granularityId", LocalizedLabel::native("Granularity", "Granularität")).required()]),
     ]
 }
 //#endregion 🔖️Interaction
@@ -1165,10 +1113,9 @@ pub const SET_ACTIVE_UTILITY_ACTION_ID: &str = "setActiveUtility";
 /// @emoji 🧰️ The framework-injected `setActiveUtility` View action (never in the palette): switches the
 /// host-owned active utility of a window kind. `utilityId` is required; `windowKindId` is contextual (the
 /// shell fills it from the focused window when absent).
-pub async fn set_active_utility_action_definition() -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(SET_ACTIVE_UTILITY_ACTION_ID, LocalizedLabel::native("Set Active Utility", "Aktives Hilfsmittel festlegen"), ActionKind::View) }
-        .with_args([ActionArgDef::text("utilityId", LocalizedLabel::native("Utility", "Hilfsmittel")).await.required().await, ActionArgDef::text("windowKindId", LocalizedLabel::native("Window", "Fenster")).await])
-        .await
+pub fn set_active_utility_action_definition() -> ActionDefinition {
+    ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(SET_ACTIVE_UTILITY_ACTION_ID, LocalizedLabel::native("Set Active Utility", "Aktives Hilfsmittel festlegen"), ActionKind::View) }
+        .with_args([ActionArgDef::text("utilityId", LocalizedLabel::native("Utility", "Hilfsmittel")).required(), ActionArgDef::text("windowKindId", LocalizedLabel::native("Window", "Fenster"))])
 }
 
 /// @emoji 🛠️ The framework-owned action id apps dispatch to activate a mode-level tool — auto-injected
@@ -1178,10 +1125,12 @@ pub const SET_ACTIVE_TOOL_ACTION_ID: &str = "setActiveTool";
 /// @emoji 🛠️ The framework-injected `setActiveTool` View action (never in the palette): switches the
 /// host-owned active tool of the active mode. Unlike `setActiveUtility` this takes no `windowKindId` —
 /// tools are windowless, scoped to the whole mode.
-pub async fn set_active_tool_action_definition() -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(SET_ACTIVE_TOOL_ACTION_ID, LocalizedLabel::native("Set Active Tool", "Aktives Werkzeug festlegen"), ActionKind::View) }
-        .with_args([ActionArgDef::text("toolId", LocalizedLabel::native("Tool", "Werkzeug")).await.required().await])
-        .await
+pub fn set_active_tool_action_definition() -> ActionDefinition {
+    ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(SET_ACTIVE_TOOL_ACTION_ID, LocalizedLabel::native("Set Active Tool", "Aktives Werkzeug festlegen"), ActionKind::View) }.with_args([ActionArgDef::text(
+        "toolId",
+        LocalizedLabel::native("Tool", "Werkzeug"),
+    )
+    .required()])
 }
 
 /// @emoji 🎓️ The framework-owned action id apps dispatch to (re)start an app's introduction —
@@ -1193,14 +1142,13 @@ pub const START_INTRODUCTION_ACTION_ID: &str = "startIntroduction";
 /// forwarded to the program), it resets playback to the first step of `AppDefinition.introduction`.
 /// Unlike ordinary app actions this stays out of the action palette because the shell exposes the
 /// dedicated `Introduce App` command.
-pub async fn start_introduction_action_definition() -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(START_INTRODUCTION_ACTION_ID, LocalizedLabel::native("Introduce App", "App vorstellen"), ActionKind::View) }
+pub fn start_introduction_action_definition() -> ActionDefinition {
+    ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(START_INTRODUCTION_ACTION_ID, LocalizedLabel::native("Introduce App", "App vorstellen"), ActionKind::View) }
 }
 
 /// 📇️ A relative action id used by declarations nested beneath an owning window kind.
 /// Distinct from `ActionAddress`, which qualifies a dispatched invocation down to a window instance.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(transparent)]
 pub struct ActionRef(String);
 
@@ -1232,7 +1180,6 @@ impl From<String> for ActionRef {
 
 /// @emoji 📍️ Fully qualified address of an action owned by one concrete window instance.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ActionAddress {
     pub plugin_id: String,
@@ -1245,11 +1192,9 @@ pub struct ActionAddress {
 
 /// @emoji 📨️ One addressed action invocation with named JSON arguments.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ActionInvocation {
     pub address: ActionAddress,
-    #[cfg_attr(feature = "typegen", ts(type = "Record<string, unknown>"))]
     pub arguments: BTreeMap<String, serde_json::Value>,
 }
 
@@ -1258,27 +1203,21 @@ pub struct ActionInvocation {
 /// an `ActionDefinition`: exactly one utility is active per window kind at a time, and activation is
 /// host-owned session view state (`ViewModel.active_utility_id`), never a document field or VCS operation.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UtilityDefinition {
     pub id: String,
-    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub label: LocalizedLabel,
     pub icon_id: IconName,
     /// 🧺️ Visual ribbon collection this utility groups into; `None` = a flat top-level ribbon entry.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub group: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub keys: Option<String>,
     /// 🖱️ CSS/winit cursor name applied to the window body while this utility is active.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub cursor: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub category: Option<ui_wgpu::wgpu::UtilityCategory>,
     /// 🚦️ Whether window-scoped actions stay enabled while this utility is active. Defaults to `false`
     /// (matching today's whitelist-based gating where an active utility suppresses the action panel);
@@ -1289,7 +1228,7 @@ pub struct UtilityDefinition {
 
 impl UtilityDefinition {
     /// @emoji 🧰️ A utility with sensible defaults (no group/keys/cursor/category, gates actions while active).
-    pub async fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>) -> Self {
+    pub fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, icon_id: impl Into<IconName>) -> Self {
         Self { id: id.into(), label: label.into(), icon_id: icon_id.into(), group: None, keys: None, cursor: None, category: None, allows_actions_while_active: false }
     }
 }
@@ -1297,16 +1236,15 @@ impl UtilityDefinition {
 /// @emoji 🧰️ A validated reference into an app's `AppDefinition.utilities` registry — the utility mirror of
 /// `ActionRef`, scoping utilities to window kinds/modes with a typed, resolvable id.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(transparent)]
 pub struct UtilityRef(String);
 
 impl UtilityRef {
-    pub async fn new(id: impl Into<String>) -> Self {
+    pub fn new(id: impl Into<String>) -> Self {
         Self(id.into())
     }
 
-    pub async fn as_str(&self) -> &str {
+    pub fn as_str(&self) -> &str {
         &self.0
     }
 }
@@ -1330,12 +1268,10 @@ impl From<String> for UtilityRef {
 /// Handling a command may emit VCS-tracked operations exactly like an operation-kind action — see
 /// `ArtifactApp::handle_command`/`ActionEmit`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct CommandDefinition {
     pub id: String,
-    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub label: LocalizedLabel,
     /// 🗂️ Footer category tab this command groups under (an open id, e.g. "document", "appearance").
     pub category: String,
@@ -1363,14 +1299,21 @@ impl CommandDefinition {
         Self::new(id.clone(), label, category, catalog_command_icon_id(&id), kind)
     }
 
+    /// ⚡️ Explicitly declares a first-step reducer guarded by the interactive-step watchdog.
+    pub fn bounded_catalog(id: impl Into<String>, label: impl Into<LocalizedLabel>, category: impl Into<String>, kind: ActionKind) -> Self {
+        let mut definition = Self::new_catalog(id, label, category, kind);
+        definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
+        definition
+    }
+
     /// @emoji 📝️ Attaches typed argument declarations to this command.
-    pub async fn with_args(mut self, args: impl IntoIterator<Item = ActionArgDef>) -> Self {
+    pub fn with_args(mut self, args: impl IntoIterator<Item = ActionArgDef>) -> Self {
         self.args = args.into_iter().collect();
         self
     }
 
     /// @emoji ⌨️ Attaches one platform-aware command keybinding.
-    pub async fn with_keybinding(mut self, keybinding: PlatformKeybinding) -> Self {
+    pub fn with_keybinding(mut self, keybinding: PlatformKeybinding) -> Self {
         self.keybindings.push(keybinding);
         self
     }
@@ -1405,7 +1348,6 @@ impl CommandDefinition {
 
 /// @emoji 📍️ Hierarchical owner of a command definition.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum CommandOwnerAddress {
     Os,
@@ -1416,7 +1358,6 @@ pub enum CommandOwnerAddress {
 
 /// @emoji 📍️ Fully qualified address of one command.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct CommandAddress {
     pub owner: CommandOwnerAddress,
@@ -1425,17 +1366,14 @@ pub struct CommandAddress {
 
 /// @emoji 📨️ One addressed command invocation with named JSON arguments.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct CommandInvocation {
     pub address: CommandAddress,
-    #[cfg_attr(feature = "typegen", ts(type = "Record<string, unknown>"))]
     pub arguments: BTreeMap<String, serde_json::Value>,
 }
 
 /// @emoji 💻️ Operating-system command catalog shared by every renderer.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct OsDefinition {
     #[serde(default)]
@@ -1451,16 +1389,13 @@ pub struct OsDefinition {
 /// field or VCS operation. A tool's live options are supplied dynamically via `ArtifactApp::tool_measures`,
 /// keyed by tool id — not part of this static declaration.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ToolDefinition {
     pub id: String,
-    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub label: LocalizedLabel,
     pub icon_id: IconName,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub keys: Option<String>,
 }
 
@@ -1474,7 +1409,6 @@ impl ToolDefinition {
 /// @emoji 🛠️ A validated reference into an app's `AppDefinition.tools` registry — the tool mirror of
 /// `UtilityRef`, scoping tools to modes with a typed, resolvable id.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(transparent)]
 pub struct ToolRef(String);
 
@@ -1510,7 +1444,7 @@ impl From<String> for ToolRef {
 /// integration key across i18n, tooltips, hotkeys, command origin tracking, tutorials, E2E selectors,
 /// and introduction anchors; each renderer maps it onto its own element (React → DOM `id` attribute,
 /// wgpu → hit-target `control_id`), so no renderer-specific shape leaks into the grammar itself.
-pub async fn is_element_id(id: &str) -> bool {
+pub fn is_element_id(id: &str) -> bool {
     if id.is_empty() {
         return false;
     }
@@ -1529,7 +1463,7 @@ pub async fn is_element_id(id: &str) -> bool {
 /// non-alphanumeric character. Idempotent on input that is already a valid segment. Used as the last
 /// resort by `child_element_id` when a child id is derived from something not already grammar-safe (e.g.
 /// a runtime label) — prefer a real semantic key first, then this, then a numeric index.
-pub async fn element_id_segment(raw: &str) -> String {
+pub fn element_id_segment(raw: &str) -> String {
     let mut segment = String::new();
     let mut capitalize_next = false;
     for ch in raw.chars() {
@@ -1554,12 +1488,12 @@ pub async fn element_id_segment(raw: &str) -> String {
 
 /// @emoji 🆔️ Derives a child element id by suffixing `parent` with one or more segments, each normalized
 /// through `element_id_segment` — the hierarchical mechanism every composite element uses to name its
-/// parts instead of a context/registry: `child_element_id("ui.chat", &["send"]).await` → `"ui.chat.send"`.
-pub async fn child_element_id(parent: &str, segments: &[&str]) -> String {
+/// parts instead of a context/registry: `child_element_id("ui.chat", &["send"])` → `"ui.chat.send"`.
+pub fn child_element_id(parent: &str, segments: &[&str]) -> String {
     let mut id = parent.to_string();
     for segment in segments {
         id.push('.');
-        id.push_str(&element_id_segment(segment).await);
+        id.push_str(&element_id_segment(segment));
     }
     id
 }
@@ -1570,21 +1504,21 @@ pub const UI_NAVBAR_ELEMENT_ID: &str = "ui.navbar";
 pub const UI_FOOTER_ELEMENT_ID: &str = "ui.footer";
 
 /// @emoji 🆔️ Element id of a window kind's body — `framework.window.{camelCased kind id}`.
-pub async fn window_element_id(kind_id: &str) -> String {
-    child_element_id("framework.window", &[kind_id]).await
+pub fn window_element_id(kind_id: &str) -> String {
+    child_element_id("framework.window", &[kind_id])
 }
 
 /// @emoji 🆔️ Element id of a panel tab's uncollapsed panel body. `tab_id` is already a dotted
 /// `PanelTabDefinition.id()` (e.g. `puzzle.catalogue`) — appended verbatim rather than through
 /// `child_element_id`, which would collapse its dots into camelCase.
-pub async fn panel_tab_element_id(tab_id: &str) -> String {
+pub fn panel_tab_element_id(tab_id: &str) -> String {
     format!("framework.panelTab.{tab_id}")
 }
 
 /// @emoji 🆔️ Alias id of the first draggable tree row inside a panel tab (document order within that
 /// uncollapsed panel) — stamped via `data-element-alias` since no single tree row has a stable semantic
 /// id at authoring time. Used to teach catalogue drag-and-drop without hardcoding a kind id.
-pub async fn panel_tab_first_draggable_element_id(tab_id: &str) -> String {
+pub fn panel_tab_first_draggable_element_id(tab_id: &str) -> String {
     format!("framework.panelTab.{tab_id}.firstDraggable")
 }
 //#endregion 🆔️ElementId
@@ -1595,11 +1529,9 @@ pub async fn panel_tab_first_draggable_element_id(tab_id: &str) -> String {
 /// glass veil; the shell owns playback (start/advance/skip) as ephemeral chrome state, never the
 /// document.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct IntroductionDefinition {
-    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub title: LocalizedLabel,
     pub steps: Vec<IntroductionStepDefinition>,
 }
@@ -1607,14 +1539,11 @@ pub struct IntroductionDefinition {
 /// @emoji 🪜️ One step of an `IntroductionDefinition`: an info box pointing at `introduce`, with `show`
 /// raising extra elements above the glass veil and `interactions` completing the step.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct IntroductionStepDefinition {
     pub id: String,
-    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub title: LocalizedLabel,
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
     pub body: LocalizedLabel,
     /// 🎯️ The single element id raised above the glass, pulsing `data-introduced`, that the info box
     /// anchors to. `None` = a screen-style step: full veil, centered info box.
@@ -1700,7 +1629,6 @@ impl IntroductionStepDefinition {
 /// @emoji 🏛️ One institution/partner logo shown in an `IntroductionStepDefinition`'s info box — a plain
 /// URL pair (no DOM/CSS types), optionally linking out when clicked.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct IntroductionLogo {
     pub src: String,
@@ -1713,7 +1641,6 @@ pub struct IntroductionLogo {
 
 /// @emoji 📍️ Where the info box is placed relative to its anchor.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum IntroductionPlacement {
     #[default]
@@ -1731,7 +1658,6 @@ pub enum IntroductionPlacement {
 /// 3D window named by the payload (a window-kind id) — classified from camera-state deltas by the shell
 /// that renders the window, so only shells that render a 3D world (the React shell) can complete them.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase", tag = "kind", content = "id")]
 pub enum IntroductionInteractionKind {
     /// 📇️ References an action owned by the active window kind.
@@ -1755,7 +1681,6 @@ pub enum IntroductionInteractionKind {
 /// @emoji ✅️ One thing the user must do to complete an interaction-gated `IntroductionStepDefinition` —
 /// rendered as a checklist row in the info box and celebrated individually on completion.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct IntroductionInteraction {
     pub on: IntroductionInteractionKind,
@@ -1763,7 +1688,6 @@ pub struct IntroductionInteraction {
     pub label: String,
     /// 🎉️ Element id stamped `data-celebrated` on completion; `None` falls back to the step's `introduce`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub celebrate: Option<String>,
 }
 
@@ -1779,7 +1703,7 @@ impl IntroductionInteraction {
 
     /// @emoji 🧰️ An interaction completing when the user activates utility `id`.
     pub async fn utility(id: impl Into<String>, label: impl Into<String>) -> Self {
-        Self::new(IntroductionInteractionKind::Utility(UtilityRef::new(id.into()).await), label).await
+        Self::new(IntroductionInteractionKind::Utility(UtilityRef::new(id.into())), label).await
     }
 
     /// @emoji 🛠️ An interaction completing when the user activates tool `id`.
@@ -1824,7 +1748,6 @@ impl IntroductionInteraction {
 /// element-relative, absolute/normalized screen space, absolute/normalized window(pane)-local space, and
 /// a 3D scene world position projected through that window's live camera.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 // 🐢️ `rename_all_fields` is required alongside `rename_all` — the latter only renames the *variant* tag
 // values; without the former, a future multi-word field inside a variant would silently serialize
 // snake_case and desync from the generated TS type (see `UiDirtyScope`'s comment for the full story).
@@ -1834,7 +1757,6 @@ pub enum IntroductionPoint {
     Element {
         id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         offset: Option<[f64; 2]>,
     },
     /// 🖥️ Absolute viewport pixel.
@@ -1861,7 +1783,6 @@ pub enum IntroductionPoint {
         domain: String,
         entity: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         offset: Option<[f64; 2]>,
     },
     /// 🪡️ A parametric point along an entity's curve geometry (an attraction segment, graph edge, ink
@@ -1901,7 +1822,6 @@ impl IntroductionPoint {
 
 /// @emoji 🖱️ Which mouse button a drag-like demonstration presses.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum IntroductionPointerButton {
     #[default]
@@ -1912,7 +1832,6 @@ pub enum IntroductionPointerButton {
 
 /// @emoji ⌨️ Keyboard modifier held during a drag-like demonstration.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum IntroductionKeyModifier {
     Alt,
@@ -1939,7 +1858,6 @@ fn introduction_orbit_default_modifiers() -> Vec<IntroductionKeyModifier> {
 /// @emoji 👆️ A gesture a demonstration plays: the ghost cursor travels to (or between) `IntroductionPoint`s
 /// and performs the visual press/release affordance for the gesture kind.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 // 🐢️ `rename_all_fields` required alongside `rename_all` so `Scroll`'s `delta_y` field actually
 // serializes/types as `deltaY` — see `IntroductionPoint`'s comment / `UiDirtyScope`'s for the full story.
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
@@ -1979,7 +1897,6 @@ pub enum IntroductionGesture {
 
 /// @emoji 🖱️ Ghost-cursor glyph, mirroring `🎨️ui.css`'s `--cursor-*` custom cursors.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum IntroductionCursor {
     #[default]
@@ -1997,12 +1914,10 @@ pub enum IntroductionCursor {
 /// active replays it from the beginning. `cursor` overrides the glyph shown over the target; omitted, it
 /// derives from `gesture` (clicks → pointer, drag → grab/grabbing).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct IntroductionDemonstration {
     pub gesture: IntroductionGesture,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub cursor: Option<IntroductionCursor>,
 }
 
@@ -2044,15 +1959,12 @@ impl IntroductionDemonstration {
 /// Distinct from the docs-tooltip `tutorial` link field in `ui/js/react`'s `UiLabelLeaf` (a URL into the
 /// manual) — this is the interactive playback mechanism.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TutorialDefinition {
     pub id: String,
-    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub title: LocalizedLabel,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
     pub description: Option<LocalizedLabel>,
     /// ⏱️ Total timeline length in milliseconds; every track entry's `at` (+ duration) must fit within.
     pub duration_ms: u64,
@@ -2064,7 +1976,6 @@ pub struct TutorialDefinition {
     pub tracks: TutorialTracks,
     /// 🧾️ Recorder provenance (ISO 8601 timestamp); `None` means hand-authored.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub recorded_at: Option<String>,
 }
 
@@ -2078,16 +1989,13 @@ impl TutorialDefinition {
 
 /// @emoji 📖️ One scrub-bar marker in a `TutorialDefinition`'s timeline.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TutorialChapter {
     pub id: String,
     pub at: u64,
-    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub title: LocalizedLabel,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
     pub body: Option<LocalizedLabel>,
 }
 
@@ -2095,16 +2003,13 @@ pub struct TutorialChapter {
 /// state. The player snapshots the user's live document, loads this in its place, and restores the
 /// snapshot on exit — a tutorial can never touch real work.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TutorialBase {
     /// 📂️ Full document DSL text (`ArtifactTextFiles.dsl`) to sandbox-load; `None` falls back to `example_id`, and both
     /// `None` falls back to the app's default/empty document.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub artifact_dsl: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub example_id: Option<String>,
     pub ui: TutorialUiSnapshot,
     /// 🎥️ Initial camera per window instance (every entry's `at` is `0`).
@@ -2116,7 +2021,6 @@ pub struct TutorialBase {
 /// millisecond offset from tutorial start, and each `Vec` is sorted ascending by `at`
 /// (`validate_tutorial` enforces this).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TutorialTracks {
     #[serde(default)]
@@ -2143,7 +2047,6 @@ pub struct TutorialTracks {
 /// `semio-vcs`, so the shape is mirrored rather than reused; conversion between the two is
 /// field-for-field.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum TutorialAssetSrc {
     /// 🌐️ Static asset route (a brand's `assetsDir` or the shared `ui/asset` mount).
@@ -2169,7 +2072,6 @@ fn tutorial_rate_is_default(rate: &f64) -> bool {
 /// utterance is cancelled at the next cue's `at`; audio assets are seeked and rate-matched to the
 /// playhead instead of played independently.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TutorialNarrationCue {
     pub id: String,
@@ -2177,15 +2079,12 @@ pub struct TutorialNarrationCue {
     /// ⏱️ Audio duration when `audio` is set (recorder-measured); a rough TTS estimate otherwise — used
     /// for scrub-bar layout only, never to gate playback.
     pub duration_ms: u64,
-    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub text: LocalizedLabel,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub audio: Option<TutorialAssetSrc>,
     /// 🗣️ Web Speech API voice-name hint; ignored once `audio` is set.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub voice: Option<String>,
     /// 🎚️ TTS/audio rate multiplier layered under the player's own playback-rate control.
     #[serde(default = "tutorial_narration_default_rate", skip_serializing_if = "tutorial_rate_is_default")]
@@ -2198,19 +2097,16 @@ pub struct TutorialNarrationCue {
 
 /// @emoji 💬️ One timed caption sub-segment of a `TutorialNarrationCue`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TutorialCaption {
     pub at: u64,
     pub duration_ms: u64,
-    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub text: LocalizedLabel,
 }
 
 /// @emoji 🖼️ Normalized 0–1 viewport rect for a `TutorialVideoCue` overlay.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TutorialOverlayRect {
     pub x: f64,
@@ -2228,7 +2124,6 @@ impl Default for TutorialOverlayRect {
 
 /// @emoji 📹️ A timed video overlay — e.g. a presenter webcam picture-in-picture, or an authored clip.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TutorialVideoCue {
     pub at: u64,
@@ -2246,7 +2141,6 @@ pub struct TutorialVideoCue {
 
 /// @emoji 🏷️ One recorded action/command/keypress, annotational only — see `TutorialTracks::events`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TutorialEvent {
     pub at: u64,
@@ -2255,21 +2149,18 @@ pub struct TutorialEvent {
 
 /// @emoji 🏷️ What one `TutorialEvent` annotates.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum TutorialEventKind {
     /// 📇️ A relative dispatch to an action owned by the active window kind, with its effective args.
     Action {
         action: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
         args: Option<DslValue>,
     },
     /// 🎛️ A `CommandDefinition` dispatch.
     Command {
         command: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
         args: Option<DslValue>,
     },
     /// ⌨️ A keybinding press, display-only over the action it triggered.
@@ -2279,7 +2170,6 @@ pub enum TutorialEventKind {
 /// @emoji 🧮️ One UI-state track entry: either a full restore-point snapshot (a valid seek anchor) or a
 /// sparse list of changes since the previous sample.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TutorialUiKeyframe {
     pub at: u64,
@@ -2288,10 +2178,9 @@ pub struct TutorialUiKeyframe {
 
 /// @emoji 🧮️ See `TutorialUiKeyframe`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum TutorialUiSample {
-    Snapshot { state: TutorialUiSnapshot },
+    Snapshot { state: Box<TutorialUiSnapshot> },
     Delta { changes: Vec<TutorialUiChange> },
 }
 
@@ -2300,37 +2189,30 @@ pub enum TutorialUiSample {
 /// shell's internal store: each shell implements its own `captureUiSnapshot`/`applyUiSnapshot` against
 /// this shape. Locale/terminology are excluded on purpose — a tutorial plays in the viewer's own locale.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TutorialUiSnapshot {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub active_mode_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub focused_window_id: Option<String>,
     /// 🧰️ Mirrors `ViewModel.active_utility_by_window_id`.
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub active_utility_by_window_id: std::collections::HashMap<String, String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub active_tool_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub layout: Option<WindowLayout>,
     /// 📑️ Active tab id per panel group; groups absent from the map are collapsed/closed.
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub active_panel_tab_by_group: std::collections::HashMap<String, String>,
     /// 🗂️ Opaque program vocabulary, verbatim `ViewModel.panel_json`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub panel_json: Option<String>,
     /// 🕹️ Per-domain selection state, keyed by `InteractionDefinition.id` — the framework-owned
     /// replacement for the deleted opaque `selection_json`; see `TutorialUiChange::Selection`.
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub interaction_selection: std::collections::HashMap<String, DomainSelection>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub open_dialog_id: Option<String>,
     #[serde(default)]
     pub expanded_tree_ids: Vec<String>,
@@ -2342,7 +2224,6 @@ pub struct TutorialUiSnapshot {
 /// `TutorialUiSnapshot` to reconstruct state at any timeline offset without shipping a full snapshot at
 /// every sample.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum TutorialUiChange {
     ActiveMode {
@@ -2350,19 +2231,16 @@ pub enum TutorialUiChange {
     },
     FocusedWindow {
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         id: Option<String>,
     },
     /// 🧰️ `utility_id: None` deactivates — mirrors `SetActiveUtility` semantics.
     ActiveUtility {
         window_id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         utility_id: Option<String>,
     },
     ActiveTool {
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         id: Option<String>,
     },
     Layout {
@@ -2372,7 +2250,6 @@ pub enum TutorialUiChange {
     PanelTab {
         group: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         tab_id: Option<String>,
     },
     PanelState {
@@ -2389,10 +2266,8 @@ pub enum TutorialUiChange {
     },
     Dialog {
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         id: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
         args: Option<DslValue>,
     },
     TreeExpansion {
@@ -2410,7 +2285,6 @@ pub enum TutorialUiChange {
 /// annotational only, never re-dispatched, because re-dispatching a plugin action is non-deterministic
 /// (fresh ids/timestamps) and would double-apply against this track.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TutorialArtifactEvent {
     pub at: u64,
@@ -2420,26 +2294,20 @@ pub struct TutorialArtifactEvent {
 /// @emoji 🖋️ See `TutorialArtifactEvent`. `Edit` carries both `forwards` and `backwards` operations
 /// verbatim from the vcs edit that produced it — the source of exact bidirectional scrubbing.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum TutorialArtifactEventKind {
     Edit {
-        #[cfg_attr(feature = "typegen", ts(type = "unknown[]"))]
         forwards: Vec<DslValue>,
-        #[cfg_attr(feature = "typegen", ts(type = "unknown[]"))]
         backwards: Vec<DslValue>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         description: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         coalesce_key: Option<String>,
     },
     Undo,
     Redo,
     Checkpoint {
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         message: Option<String>,
     },
     CheckoutCheckpoint {
@@ -2463,7 +2331,6 @@ fn tutorial_camera_up_z() -> [f64; 3] {
 
 /// @emoji 🎥️ One camera track keyframe for a specific window instance.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TutorialCameraKeyframe {
     pub at: u64,
@@ -2478,7 +2345,6 @@ pub struct TutorialCameraKeyframe {
 /// @emoji 🎥️ A camera pose — `Orbit` mirrors `World3dScene.camera_json`/`OrbitController`, `Canvas`
 /// mirrors `Canvas2dScene`'s `cameraX`/`cameraY`/`zoom`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum TutorialCameraState {
     Orbit {
@@ -2487,7 +2353,6 @@ pub enum TutorialCameraState {
         #[serde(default = "tutorial_camera_up_z")]
         up: [f64; 3],
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         fov: Option<f64>,
     },
     Canvas {
@@ -2499,7 +2364,6 @@ pub enum TutorialCameraState {
 
 /// @emoji 🪄️ Interpolation curve into a `TutorialCameraKeyframe` from its predecessor on the same window.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum TutorialEasing {
     Linear,
@@ -2512,14 +2376,12 @@ pub enum TutorialEasing {
 /// @emoji 👻️ One ghost-cursor gesture cue, reusing the introduction demonstration vocabulary verbatim —
 /// both shells already resolve/render `IntroductionGesture`/`IntroductionPoint`/`IntroductionCursor`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TutorialGestureCue {
     pub at: u64,
     pub duration_ms: u64,
     pub gesture: IntroductionGesture,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub cursor: Option<IntroductionCursor>,
 }
 
@@ -2534,11 +2396,14 @@ pub const START_TUTORIAL_ACTION_ID: &str = "startTutorial";
 pub async fn start_tutorial_action_definition(tutorials: &[TutorialDefinition]) -> ActionDefinition {
     let mut options = Vec::with_capacity(tutorials.len());
     for t in tutorials {
-        options.push(ActionArgOption::new(t.id.clone(), t.title.clone()).await);
+        options.push(ActionArgOption::new(t.id.clone(), t.title.clone()));
     }
-    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(START_TUTORIAL_ACTION_ID, LocalizedLabel::native("Play Tutorial", "Tutorial abspielen"), ActionKind::View) }
-        .with_args([ActionArgDef::select("tutorialId", LocalizedLabel::native("Tutorial", "Tutorial"), options).await.required().await])
-        .await
+    ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(START_TUTORIAL_ACTION_ID, LocalizedLabel::native("Play Tutorial", "Tutorial abspielen"), ActionKind::View) }.with_args([ActionArgDef::select(
+        "tutorialId",
+        LocalizedLabel::native("Tutorial", "Tutorial"),
+        options,
+    )
+    .required()])
 }
 
 /// @emoji ⏺️ The framework-owned action id that opens the tutorial recorder chrome — auto-injected into
@@ -2548,7 +2413,7 @@ pub const RECORD_TUTORIAL_ACTION_ID: &str = "recordTutorial";
 /// @emoji ⏺️ The framework-injected `recordTutorial` View action: fully shell-intercepted, arms the
 /// recorder against the live document (never a sandboxed copy — a recording IS the user's work).
 pub async fn record_tutorial_action_definition() -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(RECORD_TUTORIAL_ACTION_ID, LocalizedLabel::native("Record Tutorial", "Tutorial aufzeichnen"), ActionKind::View) }
+    ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(RECORD_TUTORIAL_ACTION_ID, LocalizedLabel::native("Record Tutorial", "Tutorial aufzeichnen"), ActionKind::View) }
 }
 
 /// ⏱️ Real-time (not timeline-time, not rate-scaled) duration of the camera glide the player performs
@@ -2607,7 +2472,7 @@ pub async fn validate_tutorial(def: &TutorialDefinition) -> Result<(), String> {
     Ok(())
 }
 
-async fn tutorial_ease_in_out(t: f64) -> f64 {
+fn tutorial_ease_in_out(t: f64) -> f64 {
     if t < 0.5 {
         2.0 * t * t
     } else {
@@ -2615,7 +2480,7 @@ async fn tutorial_ease_in_out(t: f64) -> f64 {
     }
 }
 
-async fn tutorial_lerp3(a: [f64; 3], b: [f64; 3], t: f64) -> [f64; 3] {
+fn tutorial_lerp3(a: [f64; 3], b: [f64; 3], t: f64) -> [f64; 3] {
     [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]
 }
 
@@ -2624,12 +2489,12 @@ async fn tutorial_lerp3(a: [f64; 3], b: [f64; 3], t: f64) -> [f64; 3] {
 /// space so zooming reads as constant visual speed. `next.easing` governs the curve; `Hold` snaps to
 /// `prev` until `next.at`, then jumps. Mismatched camera kinds between the two keyframes (`Orbit` vs
 /// `Canvas` on the same window) never interpolate — the result snaps to whichever side `t` is closer to.
-pub async fn interpolate_tutorial_camera(prev: &TutorialCameraKeyframe, next: &TutorialCameraKeyframe, at_ms: f64) -> TutorialCameraState {
+pub fn interpolate_tutorial_camera(prev: &TutorialCameraKeyframe, next: &TutorialCameraKeyframe, at_ms: f64) -> TutorialCameraState {
     let span = (next.at as f64 - prev.at as f64).max(1.0);
     let raw = ((at_ms - prev.at as f64) / span).clamp(0.0, 1.0);
     let t = match next.easing {
         TutorialEasing::Linear => raw,
-        TutorialEasing::EaseInOut => tutorial_ease_in_out(raw).await,
+        TutorialEasing::EaseInOut => tutorial_ease_in_out(raw),
         TutorialEasing::Hold => {
             if raw >= 1.0 {
                 1.0
@@ -2640,9 +2505,9 @@ pub async fn interpolate_tutorial_camera(prev: &TutorialCameraKeyframe, next: &T
     };
     match (&prev.camera, &next.camera) {
         (TutorialCameraState::Orbit { position: p0, target: t0, up: u0, fov: f0 }, TutorialCameraState::Orbit { position: p1, target: t1, up: u1, fov: f1 }) => TutorialCameraState::Orbit {
-            position: tutorial_lerp3(*p0, *p1, t).await,
-            target: tutorial_lerp3(*t0, *t1, t).await,
-            up: tutorial_lerp3(*u0, *u1, t).await,
+            position: tutorial_lerp3(*p0, *p1, t),
+            target: tutorial_lerp3(*t0, *t1, t),
+            up: tutorial_lerp3(*u0, *u1, t),
             fov: match (f0, f1) {
                 (Some(a), Some(b)) => Some(a + (b - a) * t),
                 (Some(a), None) => Some(*a),
@@ -2664,7 +2529,7 @@ pub async fn interpolate_tutorial_camera(prev: &TutorialCameraKeyframe, next: &T
 /// @emoji 🎥️ Finds the camera pose for `window_id` at `at_ms`: exact if `at_ms` lands on or before the
 /// first keyframe (falling back to `base.cameras`), interpolated between the bracketing pair otherwise,
 /// held at the last pose past the final keyframe. `None` when the window has no camera keyframes at all.
-pub async fn tutorial_camera_at(def: &TutorialDefinition, window_id: &str, at_ms: f64) -> Option<TutorialCameraState> {
+pub fn tutorial_camera_at(def: &TutorialDefinition, window_id: &str, at_ms: f64) -> Option<TutorialCameraState> {
     let keyframes: Vec<&TutorialCameraKeyframe> = def.base.cameras.iter().chain(def.tracks.camera.iter()).filter(|k| k.window_id == window_id).collect();
     let first = keyframes.first()?;
     if at_ms <= first.at as f64 {
@@ -2673,7 +2538,7 @@ pub async fn tutorial_camera_at(def: &TutorialDefinition, window_id: &str, at_ms
     for pair in keyframes.windows(2) {
         let (prev, next) = (pair[0], pair[1]);
         if at_ms <= next.at as f64 {
-            return Some(interpolate_tutorial_camera(prev, next, at_ms).await);
+            return Some(interpolate_tutorial_camera(prev, next, at_ms));
         }
     }
     Some(keyframes.last().unwrap().camera.clone())
@@ -2681,7 +2546,7 @@ pub async fn tutorial_camera_at(def: &TutorialDefinition, window_id: &str, at_ms
 
 /// @emoji 🩹️ Applies one `TutorialUiChange` onto a `TutorialUiSnapshot` in place — the pure core both
 /// `compose_tutorial_ui` and each shell's live director share.
-pub async fn apply_tutorial_ui_change(state: &mut TutorialUiSnapshot, change: &TutorialUiChange) {
+pub fn apply_tutorial_ui_change(state: &mut TutorialUiSnapshot, change: &TutorialUiChange) {
     match change {
         TutorialUiChange::ActiveMode { id } => state.active_mode_id = Some(id.clone()),
         TutorialUiChange::FocusedWindow { id } => state.focused_window_id = id.clone(),
@@ -2725,7 +2590,7 @@ pub async fn apply_tutorial_ui_change(state: &mut TutorialUiSnapshot, change: &T
 /// latest `Snapshot` sample with `at <= at_ms` (if any, replacing the base), then replays every `Delta`
 /// sample after that snapshot up to and including `at_ms`, in order. This is the one place seeking (and
 /// the deviation-then-play converge step) source their target UI state.
-pub async fn compose_tutorial_ui(def: &TutorialDefinition, at_ms: f64) -> TutorialUiSnapshot {
+pub fn compose_tutorial_ui(def: &TutorialDefinition, at_ms: f64) -> TutorialUiSnapshot {
     let mut state = def.base.ui.clone();
     let mut deltas: Vec<&TutorialUiChange> = Vec::new();
     for keyframe in &def.tracks.ui {
@@ -2734,7 +2599,7 @@ pub async fn compose_tutorial_ui(def: &TutorialDefinition, at_ms: f64) -> Tutori
         }
         match &keyframe.sample {
             TutorialUiSample::Snapshot { state: snapshot } => {
-                state = snapshot.clone();
+                state = snapshot.as_ref().clone();
                 deltas.clear();
             }
             TutorialUiSample::Delta { changes } => {
@@ -2743,7 +2608,7 @@ pub async fn compose_tutorial_ui(def: &TutorialDefinition, at_ms: f64) -> Tutori
         }
     }
     for change in deltas {
-        apply_tutorial_ui_change(&mut state, change).await;
+        apply_tutorial_ui_change(&mut state, change);
     }
     state
 }
@@ -2752,7 +2617,7 @@ pub async fn compose_tutorial_ui(def: &TutorialDefinition, at_ms: f64) -> Tutori
 /// events, document edits, and UI deltas within the half-open interval on the crossing direction (empty
 /// when `from_ms == to_ms`). Backward direction (scrubbing left) reverses entry order so callers apply
 /// each `TutorialArtifactEventKind::Edit`'s `backwards` ops from most-recent to least-recent. Plain Rust
-/// struct (not ts-rs mirrored) — the TS port lives in `framework/renderer/react/index.tsx` and is pinned
+/// struct (not owned schema mirrored) — the TS port lives in `framework/renderer/react/index.tsx` and is pinned
 /// to this one via shared golden fixtures, not a wasm call per frame.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct TutorialSlice {
@@ -2771,7 +2636,7 @@ pub struct TutorialSlice {
 /// in practice (ticks run far more often than the multi-second snapshot cadence); any caller that jumps
 /// across a snapshot boundary (a seek/scrub) should call `compose_tutorial_ui` wholesale instead of
 /// accumulating through this slice.
-pub async fn tutorial_slice(def: &TutorialDefinition, from_ms: f64, to_ms: f64) -> TutorialSlice {
+pub fn tutorial_slice(def: &TutorialDefinition, from_ms: f64, to_ms: f64) -> TutorialSlice {
     let forward = to_ms >= from_ms;
     let (lo, hi) = if forward { (from_ms, to_ms) } else { (to_ms, from_ms) };
     let in_range = |at: u64| (at as f64) > lo && (at as f64) <= hi;
@@ -2801,28 +2666,22 @@ pub async fn tutorial_slice(def: &TutorialDefinition, from_ms: f64, to_ms: f64) 
 /// args; empty `args` degenerates to a message/confirm dialog. Opened only via
 /// `Effect::OpenDialog`; the shell owns open/close as ephemeral chrome state, never the document.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct DialogDefinition {
     pub id: String,
-    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub title: LocalizedLabel,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
     pub body: Option<LocalizedLabel>,
     pub args: Vec<ActionArgDef>,
     /// 📇️ References an action owned by the active window kind, dispatched with merged args.
     pub submit_action: ActionRef,
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
     pub submit_label: LocalizedLabel,
     /// 📇️ Optional active-window action reference dispatched on any dismissal (Escape, veil
     /// click, or the Cancel button).
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub cancel_action: Option<ActionRef>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
     pub cancel_label: Option<LocalizedLabel>,
 }
 
@@ -2876,19 +2735,16 @@ impl DialogDefinition {
 //#endregion 🔖️Dialog
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ModeDefinition {
     pub id: String,
-    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub label: LocalizedLabel,
     pub icon_id: IconName,
     /// 🛠️ Tools available while this mode is active — references `AppDefinition.tools` ids.
     #[serde(default)]
     pub tools: Vec<ToolRef>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub layout_id: Option<String>,
     /// 🎛️ Commands owned by this mode and active only while it is active.
     #[serde(default)]
@@ -2991,16 +2847,13 @@ pub type Modes = NonEmptyVec<ModeDefinition>;
 pub type WindowKinds = NonEmptyVec<WindowKindDefinition>;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct WindowKindDefinition {
     pub id: String,
-    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub label: LocalizedLabel,
     pub body_key: String,
     pub surface_kind: SurfaceKind,
-    #[cfg_attr(feature = "typegen", ts(rename = "iconId"))]
     pub icon_id: IconName,
     /// 🎛️ Always-present chrome facets (was: separately-optional `measures`/`engagement`).
     #[serde(default)]
@@ -3016,23 +2869,18 @@ pub struct WindowKindDefinition {
     #[serde(default)]
     pub interactions: Vec<InteractionRef>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub params_schema: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub artifact_snapshot_schema: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub input_event_schema: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub output_schema: Option<String>,
     #[serde(default)]
     pub capabilities: Vec<kernel::CapabilityRequirement>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum PanelGroup {
     Workbench,
@@ -3045,7 +2893,7 @@ impl PanelGroup {
     /// 🧭️ The dock anchor this group defaults to. Groups only ever map to the four corner anchors —
     /// the four edge-middle anchors (`top-middle`/`right-middle`/`bottom-middle`/`left-middle`) start
     /// empty and are user-populated via drag-and-drop or a dock skeleton override, never via a `PanelGroup`.
-    pub async fn anchor(&self) -> &'static str {
+    pub fn anchor(&self) -> &'static str {
         match self {
             PanelGroup::Workbench => "top-left",
             PanelGroup::Details => "top-right",
@@ -3069,7 +2917,6 @@ impl PanelGroup {
 /// exhaustive) or an app-declared custom tab (open id, still required to be unique/non-empty,
 /// validated at construction by `AppBuilder`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase", tag = "kind", content = "id")]
 pub enum PanelTabKind {
     WorkbenchCategory,
@@ -3090,7 +2937,7 @@ pub enum PanelTabKind {
 
 impl PanelTabKind {
     /// 🔤️ Flat string key for code that needs one, e.g. React `key=` props.
-    pub async fn id_str(&self) -> &str {
+    pub fn id_str(&self) -> &str {
         match self {
             PanelTabKind::WorkbenchCategory => "framework.category.workbench",
             PanelTabKind::DisplayCategory => "framework.category.display",
@@ -3108,31 +2955,27 @@ impl PanelTabKind {
 
 /// 🌳️ A leaf carries `body_key` (its rendered panel); a branch carries `children` (the tab row shown below it). Exactly one of the two is set; `group` is only meaningful on root (non-nested) entries.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct PanelTabDefinition {
     pub kind: PanelTabKind,
-    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub label: LocalizedLabel,
     pub group: PanelGroup,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub body_key: Option<String>,
     #[serde(default)]
     pub children: Vec<PanelTabDefinition>,
 }
 
 impl PanelTabDefinition {
-    pub async fn id(&self) -> &str {
-        self.kind.id_str().await
+    pub fn id(&self) -> &str {
+        self.kind.id_str()
     }
 }
 
 //#region 🔖️Surface
 /// 👁️✏️ Whether a surface may change the artifact it is bound to.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum AppRole {
     Viewer,
@@ -3142,7 +2985,7 @@ pub enum AppRole {
 impl AppRole {
     /// 🔤️ Wire spelling — exactly `"viewer"`/`"editor"`, shared by serde, TS, JSON schema and the
     /// `SEMIO_APP_ROLE`/`VITE_SEMIO_APP_ROLE` env values.
-    pub async fn as_str(&self) -> &'static str {
+    pub fn as_str(&self) -> &'static str {
         match self {
             AppRole::Viewer => "viewer",
             AppRole::Editor => "editor",
@@ -3163,7 +3006,6 @@ impl std::str::FromStr for AppRole {
 
 /// 🎯️ A surface addressed across plugin boundaries.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct AppRef {
     pub plugin_id: String,
@@ -3171,8 +3013,8 @@ pub struct AppRef {
 }
 
 /// 🪪️ The one canonical spelling of a surface id: `<artifact_kind>@<standard>/<subset>#<role>`.
-pub async fn surface_app_id(dialect: &ArtifactDialect, role: AppRole) -> String {
-    format!("{}#{}", dialect.to_coordinate(), role.as_str().await)
+pub fn surface_app_id(dialect: &ArtifactDialect, role: AppRole) -> String {
+    format!("{}#{}", dialect.to_coordinate(), role.as_str())
 }
 
 /// 🪪️ Inverse of `surface_app_id`; rejects anything not matching the grammar.
@@ -3185,7 +3027,6 @@ pub async fn parse_surface_app_id(id: &str) -> Result<(ArtifactDialect, AppRole)
 //#endregion 🔖️Surface
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct AppDefinition {
     pub id: String,
@@ -3195,23 +3036,19 @@ pub struct AppDefinition {
     /// `ArtifactDialect`. Together with `role` this derives the canonical `id` via `surface_app_id`.
     pub dialect: ArtifactDialect,
     /// 🗣️ The app's own display name (e.g. "Puzzle 3D") — manifest-level, locale×terminology-checked,
-    /// see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    /// see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub label: LocalizedLabel,
     pub breadcrumb: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub icon_id: Option<IconName>,
     pub controller_id: String,
     /// 🚧️ `Modes` is `NonEmptyVec<ModeDefinition>`, whose `serde(try_from/into = "Vec<T>")` wire
-    /// format is a flat array — not the `{ first, rest }` shape ts-rs would infer from the struct
+    /// format is a flat array — not the `{ first, rest }` shape owned schema exporter would infer from the struct
     /// fields, so the wire-accurate array shape is supplied directly instead of deriving `TS` on
     /// `NonEmptyVec` itself.
-    #[cfg_attr(feature = "typegen", ts(type = "ModeDefinition[]"))]
     pub modes: Modes,
     pub default_mode_id: String,
     /// 🚧️ See `modes` above — `WindowKinds` is `NonEmptyVec<WindowKindDefinition>`.
-    #[cfg_attr(feature = "typegen", ts(type = "WindowKindDefinition[]"))]
     pub window_kinds: WindowKinds,
     pub panel_tabs: Vec<PanelTabDefinition>,
     pub keybindings: Vec<Keybinding>,
@@ -3231,7 +3068,6 @@ pub struct AppDefinition {
     #[serde(default)]
     pub named_layouts: Vec<NamedLayout>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub default_layout: Option<WindowLayout>,
     /// 🗣️ Terminology ids this app declares beyond the implicit "native" default.
     #[serde(default)]
@@ -3242,7 +3078,6 @@ pub struct AppDefinition {
     pub terminology_breadcrumbs: std::collections::HashMap<String, Vec<String>>,
     /// 🎓️ This app's first-run walkthrough, if it declares one — see `IntroductionDefinition`.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub introduction: Option<IntroductionDefinition>,
     /// 🎬️ Recorded, timed walkthroughs this app declares — see `TutorialDefinition`. A brand's own
     /// `tutorials` (if any) are shown alongside these, never replacing them (unlike `introduction`).
@@ -3277,7 +3112,7 @@ pub struct AppDefinition {
 }
 
 /// 🧭️ Resolves the dock layout a mode should present.
-pub async fn resolve_layout_for_mode(app: &AppDefinition, mode_id: &str) -> Option<WindowLayout> {
+pub fn resolve_layout_for_mode(app: &AppDefinition, mode_id: &str) -> Option<WindowLayout> {
     let mode = app.modes.iter().find(|mode| mode.id == mode_id)?;
     if let Some(layout_id) = &mode.layout_id {
         if let Some(named) = app.named_layouts.iter().find(|entry| entry.id == *layout_id) {
@@ -3299,7 +3134,7 @@ pub async fn resolve_layout_for_mode(app: &AppDefinition, mode_id: &str) -> Opti
 /// declared id that hasn't been staged yet acts as that field's initial value. A dialog with zero
 /// declared `defs` (a plain confirm/cancel, e.g. `deleteSpace`) passes `seed`+`staged` through
 /// wholesale — TS twin: {@link effectiveActionArgs} (`🧮️action-argument-resolution/🟦️component.ts`).
-pub async fn effective_action_args(defs: &[ActionArgDef], staged: &DslValue, seed: Option<&DslValue>) -> DslValue {
+pub fn effective_action_args(defs: &[ActionArgDef], staged: &DslValue, seed: Option<&DslValue>) -> DslValue {
     let seed_pairs: Vec<(String, DslValue)> = seed.and_then(DslValue::as_object).map(<[_]>::to_vec).unwrap_or_default();
     if defs.is_empty() {
         let mut effective = seed_pairs;
@@ -3335,7 +3170,7 @@ pub async fn effective_action_args(defs: &[ActionArgDef], staged: &DslValue, see
 /// `Null`, or an empty string (covers a blank Text/Select/IconSelect/ArtifactKind/SurfaceApp — the
 /// latter two resolve to a `String` effective value exactly like `Select`, contract §C8.1); `false`,
 /// `0`, and `[]` are valid values for Toggle/Number/Slider/Vec3 and never count as unset.
-pub async fn missing_required_args(defs: &[ActionArgDef], effective: &DslValue) -> Vec<String> {
+pub fn missing_required_args(defs: &[ActionArgDef], effective: &DslValue) -> Vec<String> {
     defs.iter()
         .filter(|def| def.required)
         .filter(|def| match effective.get(&def.id) {
@@ -3358,7 +3193,7 @@ fn action_is_panel_eligible(action: &ActionDefinition) -> bool {
 
 /// @emoji 📇️ Resolves the actions a window kind presents in its panel from its authoritative
 /// owned definitions, preserving declaration order and excluding framework-only rail actions.
-pub async fn resolve_window_actions<'a>(_app: &'a AppDefinition, window_kind: &'a WindowKindDefinition) -> Vec<&'a ActionDefinition> {
+pub fn resolve_window_actions<'a>(_app: &'a AppDefinition, window_kind: &'a WindowKindDefinition) -> Vec<&'a ActionDefinition> {
     window_kind.actions.iter().filter(|action| action_is_panel_eligible(action)).collect()
 }
 
@@ -3366,7 +3201,7 @@ pub async fn resolve_window_actions<'a>(_app: &'a AppDefinition, window_kind: &'
 /// `AppDefinition.tools` via `ModeDefinition.tools`. Unlike `resolve_window_actions`, unresolvable or
 /// unreferenced tools have no orphan fallback: tools are opt-in per mode, not automatically shown
 /// everywhere. Unresolvable refs are skipped (the builder validates them at construction time).
-pub async fn resolve_mode_tools<'a>(app: &'a AppDefinition, mode_id: &str) -> Vec<&'a ToolDefinition> {
+pub fn resolve_mode_tools<'a>(app: &'a AppDefinition, mode_id: &str) -> Vec<&'a ToolDefinition> {
     let Some(mode) = app.modes.iter().find(|mode| mode.id == mode_id) else {
         return Vec::new();
     };
@@ -3384,34 +3219,32 @@ pub async fn resolve_mode_tools<'a>(app: &'a AppDefinition, mode_id: &str) -> Ve
 //#endregion 🔖️action-args
 
 /// 🪜️ Formats a canonical app breadcrumb for chrome.
-pub async fn app_breadcrumb(breadcrumb: &[String]) -> String {
+pub fn app_breadcrumb(breadcrumb: &[String]) -> String {
     breadcrumb.join(" · ")
 }
 
 /// 🗺️ Resolves the breadcrumb effective under the active terminology; unknown/native ids fall back to the canonical breadcrumb.
-pub async fn resolve_app_breadcrumb<'a>(app: &'a AppDefinition, terminology: &str) -> &'a [String] {
-    app.terminology_breadcrumbs.get(terminology).map(Vec::as_slice).unwrap_or(&app.breadcrumb)
+pub fn resolve_app_breadcrumb<'a>(app: &'a AppDefinition, terminology: &str) -> &'a [String] {
+    app.terminology_breadcrumbs.get(terminology).map_or(&app.breadcrumb, Vec::as_slice)
 }
 
 /// 🗂️ Formats a window tab within its canonical app breadcrumb, resolved under the active terminology
 /// and `locale` (needed to resolve the now-`LocalizedLabel` `app.label` for the dedup comparison below).
-pub async fn app_window_label(app: &AppDefinition, terminology: &str, locale: Locale, window_label: &str) -> String {
-    let mut breadcrumb = resolve_app_breadcrumb(app, terminology).await.to_vec();
+pub fn app_window_label(app: &AppDefinition, terminology: &str, locale: Locale, window_label: &str) -> String {
+    let mut breadcrumb = resolve_app_breadcrumb(app, terminology).to_vec();
     let normalized_window = window_label.trim().to_lowercase();
-    let normalized_app = app.label.resolve(Terminology::parse(terminology).await.unwrap_or_default(), locale).trim().to_lowercase();
+    let normalized_app = app.label.resolve(Terminology::parse(terminology).unwrap_or_default(), locale).trim().to_lowercase();
     if !normalized_window.is_empty() && normalized_window != normalized_app && breadcrumb.last().is_none_or(|segment| segment.to_lowercase() != normalized_window) {
         breadcrumb.push(normalized_window);
     }
-    app_breadcrumb(&breadcrumb).await
+    app_breadcrumb(&breadcrumb)
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ExampleDefinition {
     pub id: String,
-    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no ts-rs mirror yet).
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
+    /// 🗣️ Manifest-level, locale×terminology-checked — see `LocalizedLabel` (follow-up: no owned schema mirror yet).
     pub label: LocalizedLabel,
     pub icon_id: IconName,
     pub artifact_json: String,
@@ -3420,7 +3253,6 @@ pub struct ExampleDefinition {
 
 /// 🧩️ One host-aggregated plugin contribution entry (`contributionsJson` wire shape).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ProgramContributionEntry {
     pub plugin_id: String,
@@ -3441,21 +3273,19 @@ pub fn parse_contributions(json: &str) -> Vec<ProgramContributionEntry> {
 /// own topic string; this type does not enumerate them. See `component.ts`'s `TopicContribution` for
 /// the mirror.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TopicContribution {
     pub topic: String,
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
     pub payload: serde_json::Value,
 }
 
 impl TopicContribution {
-    pub async fn new(topic: impl Into<String>, payload: serde_json::Value) -> Self {
+    pub fn new(topic: impl Into<String>, payload: serde_json::Value) -> Self {
         Self { topic: topic.into(), payload }
     }
 
     /// 📕️ Decodes `payload` into a caller-chosen typed shape.
-    pub async fn decode<T: serde::de::DeserializeOwned>(&self) -> Result<T, serde_json::Error> {
+    pub fn decode<T: serde::de::DeserializeOwned>(&self) -> Result<T, serde_json::Error> {
         serde_json::from_value(self.payload.clone())
     }
 }
@@ -3474,13 +3304,22 @@ pub struct Version {
 }
 
 /// 🚧️ Failure parsing a `Version` (`major.minor.patch`, all-numeric segments) or a `VersionReq`.
-#[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum VersionParseError {
-    #[error("expected `major.minor.patch`, got {0:?}")]
     Malformed(String),
-    #[error("non-numeric version segment {1:?} in {0:?}")]
     NonNumeric(String, String),
 }
+
+impl std::fmt::Display for VersionParseError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Malformed(input) => write!(formatter, "expected `major.minor.patch`, got {input:?}"),
+            Self::NonNumeric(input, segment) => write!(formatter, "non-numeric version segment {segment:?} in {input:?}"),
+        }
+    }
+}
+
+impl std::error::Error for VersionParseError {}
 
 impl Version {
     // 🚫️async: E1 transitive — `TryFrom<String>`/`FromStr` (external) construct this synchronously;
@@ -3592,7 +3431,7 @@ impl VersionReq {
     pub fn matches_raw(&self, raw: &str) -> bool {
         match self {
             VersionReq::Any => true,
-            _ => Version::parse(raw).map(|version| self.matches(&version)).unwrap_or(false),
+            _ => Version::parse(raw).is_ok_and(|version| self.matches(&version)),
         }
     }
 }
@@ -3610,12 +3449,34 @@ impl std::fmt::Display for VersionReq {
 }
 
 /// 🚧️ Failure parsing a `VersionReq` string.
-#[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum VersionReqParseError {
-    #[error("unknown version requirement operator in {0:?} (expected one of `=`,`^`,`~`,`>=`,`*`)")]
     UnknownOperator(String),
-    #[error(transparent)]
-    Version(#[from] VersionParseError),
+    Version(VersionParseError),
+}
+
+impl std::fmt::Display for VersionReqParseError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::UnknownOperator(input) => write!(formatter, "unknown version requirement operator in {input:?} (expected one of `=`,`^`,`~`,`>=`,`*`)"),
+            Self::Version(error) => error.fmt(formatter),
+        }
+    }
+}
+
+impl std::error::Error for VersionReqParseError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Version(error) => Some(error),
+            Self::UnknownOperator(_) => None,
+        }
+    }
+}
+
+impl From<VersionParseError> for VersionReqParseError {
+    fn from(error: VersionParseError) -> Self {
+        Self::Version(error)
+    }
 }
 
 impl Serialize for VersionReq {
@@ -3634,16 +3495,14 @@ impl<'de> Deserialize<'de> for VersionReq {
 /// 🔗️ One direct plugin dependency: the depended-on plugin id plus the version requirement it must
 /// satisfy — see `resolve_load_order`/`validate_dependency_graph`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct PluginDependency {
     pub plugin_id: String,
-    #[cfg_attr(feature = "typegen", ts(type = "string"))]
     pub version: VersionReq,
 }
 
 impl PluginDependency {
-    pub async fn new(plugin_id: impl Into<String>, version: VersionReq) -> Self {
+    pub fn new(plugin_id: impl Into<String>, version: VersionReq) -> Self {
         Self { plugin_id: plugin_id.into(), version }
     }
 }
@@ -3654,7 +3513,6 @@ impl PluginDependency {
 /// owned strings on the wire (the native `SemanticDescriptor` this mirrors lives in the os-kernel
 /// protocol crate, which `semio-framework` must not require plugin manifests to link against).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ContributedMutationSemantics {
     pub verb: String,
@@ -3666,7 +3524,6 @@ pub struct ContributedMutationSemantics {
 /// 🗂️ One mutation a plugin contributes onto an artifact kind it depends on — the manifest-declared
 /// counterpart of a `contributor.list-artifact-mutations` roster entry (contract freeze §3/§6).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ContributedMutationMetadata {
     /// 🪪️ `"<target-document-schema>#<contributor-plugin-id>:<kebab-kind>"` (contract freeze §3).
@@ -3681,7 +3538,6 @@ pub struct ContributedMutationMetadata {
 /// travels over the wire in a manifest), plus `contributor`/`depends_on` for the contribution's own
 /// identity and ordering (contract freeze §4: `owner == contributor`, `artifact_kind == target`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ContributedInferenceMetadata {
     pub owner: String,
@@ -3703,7 +3559,6 @@ pub struct ContributedInferenceMetadata {
 /// gates in contract freeze §4 (accepted only when `artifact_kind`'s owner is a direct
 /// `PluginManifest.dependencies` entry).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ArtifactContributionDescriptor {
     pub artifact_kind: String,
@@ -3715,7 +3570,6 @@ pub struct ArtifactContributionDescriptor {
 //#endregion 🔖️ArtifactContribution
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct PluginManifest {
     pub plugin_id: String,
@@ -3807,7 +3661,7 @@ pub async fn encode_surface_app_choice(choice: &SurfaceAppChoice) -> String {
     serde_json::json!({
         "pluginId": choice.app.plugin_id,
         "appId": choice.app.app_id,
-        "role": choice.role.as_str().await,
+        "role": choice.role.as_str(),
     })
     .to_string()
 }
@@ -3844,15 +3698,26 @@ pub async fn artifact_kind_choices(manifests: &[PluginManifest], roles: &[AppRol
 //#region 🔖️DependencyGraph
 /// 🚧️ Typed dependency-graph validation failures — contract freeze §4/§5: missing dependency,
 /// version mismatch, or a cycle (naming every plugin id on the cycle, in traversal order).
-#[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum DependencyGraphError {
-    #[error("plugin `{plugin_id}` depends on unknown plugin `{depends_on}`")]
     MissingDependency { plugin_id: String, depends_on: String },
-    #[error("plugin `{plugin_id}` requires `{depends_on}` `{required}` but the loaded version is `{actual}`")]
     VersionMismatch { plugin_id: String, depends_on: String, required: String, actual: String },
-    #[error("dependency cycle among plugins: {}", .members.join(" -> "))]
     Cycle { members: Vec<String> },
 }
+
+impl std::fmt::Display for DependencyGraphError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::MissingDependency { plugin_id, depends_on } => write!(formatter, "plugin `{plugin_id}` depends on unknown plugin `{depends_on}`"),
+            Self::VersionMismatch { plugin_id, depends_on, required, actual } => {
+                write!(formatter, "plugin `{plugin_id}` requires `{depends_on}` `{required}` but the loaded version is `{actual}`")
+            }
+            Self::Cycle { members } => write!(formatter, "dependency cycle among plugins: {}", members.join(" -> ")),
+        }
+    }
+}
+
+impl std::error::Error for DependencyGraphError {}
 
 /// ✅️ Checks every declared dependency resolves to a loaded plugin at a satisfying version —
 /// deterministic: manifests are checked in input order, each manifest's dependencies in declaration
@@ -4064,7 +3929,7 @@ mod plugin_dependency_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn plugin_dependency_serde_round_trips_as_a_plain_string() {
-        let dependency = PluginDependency::new("cad", VersionReq::parse("^1.0.0").unwrap()).await;
+        let dependency = PluginDependency::new("cad", VersionReq::parse("^1.0.0").unwrap());
         let json = serde_json::to_value(&dependency).unwrap();
         assert_eq!(json, serde_json::json!({ "pluginId": "cad", "version": "^1.0.0" }));
         let round_tripped: PluginDependency = serde_json::from_value(json).unwrap();
@@ -4078,9 +3943,9 @@ mod plugin_dependency_tests {
         // base <- {left, right} <- top: two valid topological orders exist; the tie-break must
         // deterministically pick `left` before `right`.
         let manifests = vec![
-            manifest("top", "1.0.0", vec![PluginDependency::new("left", VersionReq::Any).await, PluginDependency::new("right", VersionReq::Any).await]).await,
-            manifest("left", "1.0.0", vec![PluginDependency::new("base", VersionReq::Any).await]).await,
-            manifest("right", "1.0.0", vec![PluginDependency::new("base", VersionReq::Any).await]).await,
+            manifest("top", "1.0.0", vec![PluginDependency::new("left", VersionReq::Any), PluginDependency::new("right", VersionReq::Any)]).await,
+            manifest("left", "1.0.0", vec![PluginDependency::new("base", VersionReq::Any)]).await,
+            manifest("right", "1.0.0", vec![PluginDependency::new("base", VersionReq::Any)]).await,
             manifest("base", "1.0.0", vec![]).await,
         ];
         let order = resolve_load_order(&manifests).await.unwrap();
@@ -4089,7 +3954,7 @@ mod plugin_dependency_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn resolve_load_order_is_deterministic_regardless_of_input_order() {
-        let forward = vec![manifest("a", "1.0.0", vec![]).await, manifest("b", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any).await]).await, manifest("c", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any).await]).await];
+        let forward = vec![manifest("a", "1.0.0", vec![]).await, manifest("b", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any)]).await, manifest("c", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any)]).await];
         let mut shuffled = forward.clone();
         shuffled.reverse();
         assert_eq!(resolve_load_order(&forward).await.unwrap(), resolve_load_order(&shuffled).await.unwrap());
@@ -4098,14 +3963,14 @@ mod plugin_dependency_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn resolve_load_order_reports_missing_dependency() {
-        let manifests = vec![manifest("a", "1.0.0", vec![PluginDependency::new("ghost", VersionReq::Any).await]).await];
+        let manifests = vec![manifest("a", "1.0.0", vec![PluginDependency::new("ghost", VersionReq::Any)]).await];
         let error = resolve_load_order(&manifests).await.unwrap_err();
         assert_eq!(error, DependencyGraphError::MissingDependency { plugin_id: "a".into(), depends_on: "ghost".into() });
     }
 
     #[semio_framework_async_macros::async_test]
     async fn resolve_load_order_reports_version_mismatch() {
-        let manifests = vec![manifest("a", "1.0.0", vec![PluginDependency::new("b", VersionReq::parse("^2.0.0").unwrap()).await]).await, manifest("b", "1.0.0", vec![]).await];
+        let manifests = vec![manifest("a", "1.0.0", vec![PluginDependency::new("b", VersionReq::parse("^2.0.0").unwrap())]).await, manifest("b", "1.0.0", vec![]).await];
         let error = resolve_load_order(&manifests).await.unwrap_err();
         assert_eq!(error, DependencyGraphError::VersionMismatch { plugin_id: "a".into(), depends_on: "b".into(), required: "^2.0.0".into(), actual: "1.0.0".into() });
     }
@@ -4113,9 +3978,9 @@ mod plugin_dependency_tests {
     #[semio_framework_async_macros::async_test]
     async fn resolve_load_order_names_every_member_of_a_cycle() {
         let manifests = vec![
-            manifest("a", "1.0.0", vec![PluginDependency::new("b", VersionReq::Any).await]).await,
-            manifest("b", "1.0.0", vec![PluginDependency::new("c", VersionReq::Any).await]).await,
-            manifest("c", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any).await]).await,
+            manifest("a", "1.0.0", vec![PluginDependency::new("b", VersionReq::Any)]).await,
+            manifest("b", "1.0.0", vec![PluginDependency::new("c", VersionReq::Any)]).await,
+            manifest("c", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any)]).await,
         ];
         let error = resolve_load_order(&manifests).await.unwrap_err();
         match error {
@@ -4138,9 +4003,9 @@ mod plugin_dependency_tests {
     async fn dependents_returns_direct_dependents_sorted() {
         let manifests = vec![
             manifest("a", "1.0.0", vec![]).await,
-            manifest("b", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any).await]).await,
-            manifest("c", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any).await]).await,
-            manifest("d", "1.0.0", vec![PluginDependency::new("b", VersionReq::Any).await]).await,
+            manifest("b", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any)]).await,
+            manifest("c", "1.0.0", vec![PluginDependency::new("a", VersionReq::Any)]).await,
+            manifest("d", "1.0.0", vec![PluginDependency::new("b", VersionReq::Any)]).await,
         ];
         assert_eq!(dependents(&manifests, "a").await, vec!["b".to_string(), "c".to_string()]);
         assert_eq!(dependents(&manifests, "b").await, vec!["d".to_string()]);
@@ -4200,7 +4065,7 @@ mod plugin_dependency_tests {
     #[semio_framework_async_macros::async_test]
     async fn plugin_manifest_with_dependencies_and_contributions_round_trips() {
         let manifest = PluginManifest {
-            dependencies: vec![PluginDependency::new("cad", VersionReq::parse("^1.0.0").unwrap()).await],
+            dependencies: vec![PluginDependency::new("cad", VersionReq::parse("^1.0.0").unwrap())],
             contributions: vec![ArtifactContributionDescriptor { artifact_kind: "s.cad.building".into(), mutations: Vec::new(), inferences: Vec::new() }],
             ..manifest("aec-building", "0.1.0", Vec::new()).await
         };
@@ -4212,20 +4077,16 @@ mod plugin_dependency_tests {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ViewModel {
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub active_mode_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub active_window_kind_id: Option<String>,
     /// 🧰️ Per-call overlay: the host-owned active utility for the window targeted by this `render`/`handle_action`
     /// call (`window_id`). On batched `refresh-ui`, the plugin stamps this from
     /// `active_utility_by_window_id` per window entry — never from the focused window alone.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub active_utility_id: Option<String>,
     /// 🧰️ Host-owned active utility per window **instance** (never a document field, never a VCS operation). The shell
     /// sends the full map on every refresh so plugins can build per-pane scene state; tools stay mode-wide via
@@ -4236,13 +4097,10 @@ pub struct ViewModel {
     /// mutually exclusive with `active_utility_id`: activating one clears the other (see the React
     /// shell's `onAction` interceptors).
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub active_tool_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub panel_json: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub contributions_json: Option<String>,
     /// 🗣️ Active UI locale; plugins resolve their own label set from this via `resolve_labels`/
     /// `app_labels!`. Non-optional — the shell always resolves one (see `initUiLocaleSync`/
@@ -4256,7 +4114,6 @@ pub struct ViewModel {
     /// option state (grid, LOD, selection mode, …) off this, never off `active_window_kind_id`, so that
     /// two window instances of the same kind (e.g. split top/perspective panes) never share options.
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub window_id: Option<String>,
     /// 🪟️ The live set of open window instances (base + spawned/split), sent on every refresh/action so
     /// `window_engagements`/`window_measures` can return one entry per instance instead of per kind.
@@ -4267,7 +4124,6 @@ pub struct ViewModel {
 /// 🪟️ One live window instance, as seen by a plugin: `id` is the instance id (equal to `window_kind_id`
 /// for a base, unsplit window), `window_kind_id` is the `AppDefinition.windowKinds` entry it renders.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ViewWindowInstance {
     pub id: String,
@@ -4288,7 +4144,6 @@ pub mod kernel;
 //#region 🔖️PackageDescriptor
 /// 🎭️ Which actor-world role a package fills — `📓️design-abi.md` §3.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum PackageRole {
     Plugin,
@@ -4301,7 +4156,6 @@ pub enum PackageRole {
 /// the `semio-framework-os-flow` ↔ extension-crate cycle); `Exclusive` gets a dedicated actor
 /// (e.g. flow/brep tessellation); `Cold` runs as a bounded job, not a resident actor.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum ExecutionMode {
     Declarative,
@@ -4317,7 +4171,6 @@ pub enum ExecutionMode {
 /// `capability_allowance`/`quota_ceiling` bound what any extension attaching here can ever hold,
 /// regardless of what it requests — "a host can never delegate more than it holds".
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ExtensionPointDeclaration {
     pub id: String,
@@ -4327,7 +4180,6 @@ pub struct ExtensionPointDeclaration {
     pub capability_allowance: Vec<kernel::CapabilityId>,
     #[serde(default)]
     pub quota_ceiling: kernel::QuotaSchema,
-    #[cfg_attr(feature = "typegen", ts(type = "string"))]
     pub payload_schema: kernel::SchemaId,
     pub activation: kernel::ActivationEvent,
 }
@@ -4335,7 +4187,6 @@ pub struct ExtensionPointDeclaration {
 /// 📦️ One asset bundled with a package and preloaded into `kernel::Event::InstanceOpen.assets` —
 /// `📓️design-abi.md` §2's `read-asset` replacement.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct AssetDeclaration {
     pub name: String,
@@ -4347,7 +4198,6 @@ pub struct AssetDeclaration {
 /// #️⃣ Content hashes the registry's `check` gate verifies against the built wasm —
 /// `📓️design-abi.md` §3.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct PackageHashes {
     pub wasm_sha256: String,
@@ -4364,12 +4214,10 @@ pub struct PackageHashes {
 /// declared theme/palette contribution anywhere under `🖱️ui/🎨️styling`). Additive: nothing
 /// constructs one yet, and a future typed model can replace either category without a wire break.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct DescriptorEntry {
     pub id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
     pub payload: Option<serde_json::Value>,
 }
 
@@ -4379,7 +4227,6 @@ pub struct DescriptorEntry {
 /// own `document_media_type`, flattened to one row per format kind across every app the package
 /// declares.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct FileTypeContribution {
     pub format_kind: String,
@@ -4393,7 +4240,6 @@ pub struct FileTypeContribution {
 /// framework module" idiom `ContributedMutationMetadata`/`ContributedInferenceMetadata` already
 /// use for the os-kernel protocol crate.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum IoEntryDirection {
     Import,
@@ -4404,10 +4250,9 @@ pub enum IoEntryDirection {
 /// (`📓️design-abi.md` §2/§3's absorbed `io-dialects` routing table), an owned mirror of
 /// `io::IoKey`'s `(owner, counterpart, direction)` identity built from the already-in-scope
 /// `ArtifactDialect` (`🚪️io/🧬️schema/🦀️component.rs`) instead of `IoKey`'s seven flat fields —
-/// `IoKey` itself isn't `ts_rs`-derived and this crate must not add that derive to a module it
+/// `IoKey` itself isn't `owned schema exporter`-derived and this crate must not add that derive to a module it
 /// doesn't own.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct IoEntryDescriptor {
     pub owner: ArtifactDialect,
@@ -4420,7 +4265,6 @@ pub struct IoEntryDescriptor {
 /// identity (its third field, the `compose` fn pointer, is runtime-only and has no wire form —
 /// a descriptor is build-time, non-executable data).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ComposerEntryDescriptor {
     pub writes: ArtifactDialect,
@@ -4440,7 +4284,6 @@ pub struct ComposerEntryDescriptor {
 /// `io::ComposerEntry` — see each type's own doc. `menus`/`themes` stay `DescriptorEntry` — see
 /// its doc for why.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ContributionSet {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -4481,7 +4324,6 @@ pub const ASSEMBLY_FAILED_PLUGIN_ID: &str = "assembly-failed";
 /// Nothing constructs or reads one yet in this packet: additive contract only (packet
 /// A2-abi-sdk's builder wiring and E1-describe's emitter/registry `check` gate consume it next).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct PackageDescriptor {
     pub descriptor_version: u32,
@@ -4540,7 +4382,6 @@ pub struct PackageDescriptor {
 /// `AgentContributions` (the `Option` on `PackageDescriptor` stays `None`) means "not yet
 /// agent-enabled", never "agent-enabled with zero capabilities" (an empty-but-`Some` value).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct AgentContributions {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -4614,7 +4455,6 @@ mod agent_contributions_tests {
 /// what used to be duplicated verbatim in `framework/plugin/rs` and `framework/product/os/core/rs`; both
 /// now re-export this definition instead of declaring their own.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum OsMediaCapability {
     MeshOnly,
@@ -4630,7 +4470,6 @@ pub enum OsMediaCapability {
 /// — see `crate::media_types_compatible`. `OsArtifactDescriptor` (`framework/product/os/core`) threads
 /// `media_type` through so registry lookups return it alongside the rest of the descriptor.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ArtifactKindSpec {
     pub id: String,
@@ -4657,7 +4496,6 @@ pub struct ArtifactKindSpec {
 //#region MediaType
 /// 🧬️ Typed-media lattice: every port/wire in the workflow carries a `MediaType` (`class` × `form`) instead of the legacy string `artifact_kind`. `MediaType` is what a wire negotiates; a format kind id string is only how bytes are encoded once they actually cross a process boundary (see `MediaWireFormat`). Dependent tickets retire `OsMediaCapability` (see the `ArtifactKind` region above) onto `MediaForm::{Brep,Mesh}`, which already covers what `OsMediaCapability::{Brep,MeshOnly}` expresses.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum MediaClass {
     TwoD,
@@ -4672,7 +4510,6 @@ pub enum MediaClass {
 
 /// 🧬️ The shape/representation a `MediaClass` payload takes, orthogonal to `class` — e.g. `ThreeD` × `Brep` vs `ThreeD` × `Mesh`. `Any` only ever appears on the accepting side of a port (see `media_types_compatible`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum MediaForm {
     Any,
@@ -4695,7 +4532,6 @@ pub enum MediaForm {
 
 /// 🧬️ A port or wire's declared media type — the pair a producer offers or a consumer accepts.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct MediaType {
     pub class: MediaClass,
@@ -4707,7 +4543,6 @@ pub struct MediaType {
 /// SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6), structured payloads carry
 /// a schema id instead (see `ArtifactKindSpec::schema`).
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase", tag = "kind")]
 pub enum MediaWireFormat {
     Binary { format_kind: String },
@@ -4716,7 +4551,6 @@ pub enum MediaWireFormat {
 
 /// 🔀️ Which side of a wire a `MediaPortSpec` sits on.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum MediaPortDirection {
     In,
@@ -4725,7 +4559,6 @@ pub enum MediaPortDirection {
 
 /// 🔢️ Whether a `MediaPortSpec` accepts/produces exactly one media value or a stream/collection of them — e.g. a mesh-array input that fans in from several upstream producers.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum PortMultiplicity {
     One,
@@ -4734,7 +4567,6 @@ pub enum PortMultiplicity {
 
 /// 🔌️ A single port an app exposes on the workflow — `kind_id` optionally pins it to one `ArtifactKindSpec.id` when the port is more specific than its `media_type` alone conveys.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct MediaPortSpec {
     pub id: String,
@@ -4742,7 +4574,6 @@ pub struct MediaPortSpec {
     pub direction: MediaPortDirection,
     pub media_type: MediaType,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub kind_id: Option<String>,
     pub required: bool,
     pub multiplicity: PortMultiplicity,
@@ -4782,7 +4613,6 @@ pub async fn media_types_compatible(produced: &MediaType, accepted: &MediaType) 
 /// `import_formats` lists without duplicating `ArtifactKindSpec`'s full shape (which stays alive
 /// unchanged for now; later waves retire it onto `AppIo`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ArtifactPresentation {
     pub id: String,
@@ -4797,7 +4627,6 @@ pub struct ArtifactPresentation {
 /// surface (`AppDefinition.io`); apps don't populate this yet — later waves migrate `media_inputs`/
 /// `media_outputs`/`artifact_kinds` onto it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct AppIo {
     pub document_schema: String,
@@ -4860,18 +4689,14 @@ impl Default for AppIo {
 /// — and `semio-framework-core` doesn't depend on `dsl`/`dsl_schema` today, so wrapping it would add a
 /// new cross-crate dependency purely to reach a shape that can't round-trip over the wire anyway).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase", tag = "kind")]
 pub enum ConfigFieldShape {
     Number {
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         min: Option<f64>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         max: Option<f64>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        #[cfg_attr(feature = "typegen", ts(optional))]
         step: Option<f64>,
     },
     Toggle,
@@ -4879,27 +4704,26 @@ pub enum ConfigFieldShape {
     Select {
         options: Vec<String>,
     },
-    Record(Vec<ConfigFieldSpec>),
+    Record {
+        fields: Vec<ConfigFieldSpec>,
+    },
 }
 
 /// 🧮️ One field of an app's declared configuration record — the whole-app-settings counterpart to
 /// `ActionArgDef` (which scopes to a single action's arguments instead).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ConfigFieldSpec {
     pub key: String,
     pub label: String,
     pub shape: ConfigFieldShape,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
     pub default: Option<DslValue>,
 }
 
 /// 🧮️ An app's full typed configuration record — the manifest-level declaration
 /// `AppDefinition.config` carries. Empty until per-app waves populate it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ConfigSpec {
     #[serde(default)]
@@ -4920,7 +4744,6 @@ impl ConfigSpec {
 /// vocabulary (`ActionArgControl`: Text/Number/Slider/Toggle/Select/Vec3/IconSelect) has no array
 /// control either, so `ConfigFieldShape` doesn't invent one ahead of a real need.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct CommandFieldSpec {
     pub key: String,
@@ -4930,7 +4753,6 @@ pub struct CommandFieldSpec {
 
 /// 🎛️ One keyword-dispatched command variant (e.g. `move x=1 y=2`) and its field grammar.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct CommandVariantSpec {
     pub keyword: String,
@@ -4940,7 +4762,6 @@ pub struct CommandVariantSpec {
 /// 🎛️ An app's full typed binary command grammar — the manifest-level declaration
 /// `AppDefinition.command_grammar` carries. Empty until per-app waves populate it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct CommandGrammar {
     #[serde(default)]
@@ -4957,7 +4778,6 @@ impl CommandGrammar {
 //#region Media
 /// 🎞️ The value that actually flows over a workflow wire, produced by `ArtifactApp::export_media` and consumed by `ArtifactApp::import_media`. Kept separate from the `MediaType` lattice above (which only negotiates *compatibility*, never carries a value) so headless runners and the UI share one payload shape.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct Media {
     pub media_type: MediaType,
@@ -4966,7 +4786,6 @@ pub struct Media {
 
 /// 📦️ Structured payloads stay inline as canonical JSON (small, diffable); binary payloads are content-addressed through `store::BlobStore` so a `Media` value never carries megabytes across a WIT boundary.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase", tag = "kind")]
 pub enum MediaPayload {
     Structured { schema: String, json: String },
@@ -4975,7 +4794,6 @@ pub enum MediaPayload {
 
 /// 🔑️ A cheap identity for one port's current output, independent of serializing the full payload — the unit the `SpaceRunner` compares to decide whether a downstream node actually needs to see a new value.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct MediaFingerprint(pub String);
 
 impl MediaFingerprint {
@@ -4989,23 +4807,34 @@ impl MediaFingerprint {
 }
 
 /// 🚧️ Failure exporting, importing, or fingerprinting media on a declared port.
-#[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum MediaError {
-    #[error("unknown media port `{0}`")]
     UnknownPort(String),
-    #[error("port `{port}` produced {produced:?} but the wire accepts {accepted:?}")]
     Incompatible { port: String, produced: MediaType, accepted: MediaType },
-    #[error("media payload error on port `{0}`: {1}")]
     Payload(String, String),
-    #[error("media ports are not implemented for this app")]
     NotImplemented,
 }
 
+impl std::fmt::Display for MediaError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::UnknownPort(port) => write!(formatter, "unknown media port `{port}`"),
+            Self::Incompatible { port, produced, accepted } => {
+                write!(formatter, "port `{port}` produced {produced:?} but the wire accepts {accepted:?}")
+            }
+            Self::Payload(port, message) => write!(formatter, "media payload error on port `{port}`: {message}"),
+            Self::NotImplemented => formatter.write_str("media ports are not implemented for this app"),
+        }
+    }
+}
+
+impl std::error::Error for MediaError {}
+
 /// 🔀️ A registered one-way conversion the workflow may insert on a wire when `media_types_compatible` reports `MediaCompat::Convert`. Kept behind a trait (never a bare closure) so converters can be enumerated, tested, and swapped without touching the runner.
 pub trait MediaConverter: Send + Sync {
-    async fn from_form(&self) -> MediaForm;
-    async fn to_form(&self) -> MediaForm;
-    async fn convert(&self, media: &Media) -> Result<Media, MediaError>;
+    fn source_form(&self) -> impl std::future::Future<Output = MediaForm> + Send;
+    fn to_form(&self) -> impl std::future::Future<Output = MediaForm> + Send;
+    fn convert(&self, media: &Media) -> impl std::future::Future<Output = Result<Media, MediaError>> + Send;
 }
 //#endregion Media
 //#endregion 🔖️MediaVocabulary
@@ -5041,7 +4870,7 @@ mod media_vocabulary_tests {
         let fingerprint = MediaFingerprint::of(&structured);
         assert_eq!(fingerprint, MediaFingerprint::of(&structured), "fingerprint is deterministic");
 
-        let mut changed = structured.clone();
+        let mut changed = structured;
         if let MediaPayload::Structured { json, .. } = &mut changed.payload {
             *json = "{\"a\":1}".into();
         }
@@ -5099,7 +4928,7 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn formats_app_label_for_chrome() {
-        assert_eq!(app_breadcrumb(&["semio".into(), "puzzle".into(), "3d".into()]).await, "semio · puzzle · 3d");
+        assert_eq!(app_breadcrumb(&["semio".into(), "puzzle".into(), "3d".into()]), "semio · puzzle · 3d");
     }
 
     //#region 🔖️ActionArgsAndUtilitiesTests
@@ -5207,18 +5036,21 @@ mod app_label_tests {
     // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W1: the wave-0 interaction
     // definition family lives at the crate root, not under `crate::ui` — see the equivalent `use`
     // at this file's top.
-    use crate::{ArtifactDialect, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, MergeMode, SelectionMethod, SelectionMode, SelectionSpec};
+    use crate::{
+        validate_interactive_job_classification, ArtifactDialect, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractiveJobClassification, InteractiveJobClassificationError, MergeMode,
+        SelectionMethod, SelectionMode, SelectionSpec,
+    };
     use dsl::DslValue;
     use serde_json::json;
 
     #[semio_framework_async_macros::async_test]
     async fn action_arg_def_builder_chain() {
-        let arg = ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0).await.required().await.default_value(1.0).await.describe("scale factor").await;
+        let arg = ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0).required().default_value(1.0).describe("scale factor");
         assert_eq!(arg.id, "scale");
         assert!(arg.required);
         assert_eq!(arg.default, Some(dsl::to_dsl_value(&1.0f64).unwrap()));
         assert_eq!(arg.description.as_deref(), Some("scale factor"));
-        assert!(matches!(arg.control().await, ActionArgControl::Slider { min, max, .. } if min == 0.0 && max == 4.0));
+        assert!(matches!(arg.control(), ActionArgControl::Slider { min, max, .. } if min == 0.0 && max == 4.0));
     }
 
     /// @emoji 🧪️ D6 regression proof (ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet
@@ -5227,13 +5059,13 @@ mod app_label_tests {
     /// field — this is the whole refactor's regression guard for the ~236 call sites across 33 plugins.
     #[semio_framework_async_macros::async_test]
     async fn six_arg_builder_helpers_derive_the_pre_d6_control() {
-        assert_eq!(ActionArgDef::text("t", LocalizedLabel::data("T")).await.control().await, ActionArgControl::Text { placeholder: None });
-        assert_eq!(ActionArgDef::number("n", LocalizedLabel::data("N")).await.control().await, ActionArgControl::Number { min: None, max: None, step: None });
-        assert_eq!(ActionArgDef::slider("s", LocalizedLabel::data("S"), 0.0, 4.0).await.control().await, ActionArgControl::Slider { min: 0.0, max: 4.0, step: None, unit: None });
-        assert_eq!(ActionArgDef::toggle("b", LocalizedLabel::data("B")).await.control().await, ActionArgControl::Toggle);
-        let options = vec![ActionArgOption::new("x", LocalizedLabel::data("X")).await];
-        assert_eq!(ActionArgDef::select("o", LocalizedLabel::data("O"), options.clone()).await.control().await, ActionArgControl::Select { options });
-        assert_eq!(ActionArgDef::vec3("v", LocalizedLabel::data("V")).await.control().await, ActionArgControl::Vec3);
+        assert_eq!(ActionArgDef::text("t", LocalizedLabel::data("T")).control(), ActionArgControl::Text { placeholder: None });
+        assert_eq!(ActionArgDef::number("n", LocalizedLabel::data("N")).control(), ActionArgControl::Number { min: None, max: None, step: None });
+        assert_eq!(ActionArgDef::slider("s", LocalizedLabel::data("S"), 0.0, 4.0).control(), ActionArgControl::Slider { min: 0.0, max: 4.0, step: None, unit: None });
+        assert_eq!(ActionArgDef::toggle("b", LocalizedLabel::data("B")).control(), ActionArgControl::Toggle);
+        let options = vec![ActionArgOption::new("x", LocalizedLabel::data("X"))];
+        assert_eq!(ActionArgDef::select("o", LocalizedLabel::data("O"), options.clone()).control(), ActionArgControl::Select { options });
+        assert_eq!(ActionArgDef::vec3("v", LocalizedLabel::data("V")).control(), ActionArgControl::Vec3);
     }
 
     /// @emoji 🧪️ The two host-resolved builders (unused by any current call site, per the P3 reader
@@ -5242,14 +5074,14 @@ mod app_label_tests {
     #[semio_framework_async_macros::async_test]
     async fn host_resolved_arg_builders_derive_their_pre_d6_controls() {
         let roles = vec![AppRole::Viewer];
-        assert_eq!(ActionArgDef::artifact_kind("k", LocalizedLabel::data("K"), roles.clone()).await.control().await, ActionArgControl::ArtifactKind { roles: roles.clone() });
-        assert_eq!(ActionArgDef::surface_app("s", LocalizedLabel::data("S"), roles.clone(), "dialect").await.control().await, ActionArgControl::SurfaceApp { roles, dialect_arg: "dialect".to_string() });
+        assert_eq!(ActionArgDef::artifact_kind("k", LocalizedLabel::data("K"), roles.clone()).control(), ActionArgControl::ArtifactKind { roles: roles.clone() });
+        assert_eq!(ActionArgDef::surface_app("s", LocalizedLabel::data("S"), roles.clone(), "dialect").control(), ActionArgControl::SurfaceApp { roles, dialect_arg: "dialect".to_string() });
     }
 
     /// @emoji 🧪️ `ActionSemantics::for_kind` matches the `📋️master.md` §3.1 defaults table.
     #[semio_framework_async_macros::async_test]
     async fn action_semantics_for_kind_matches_the_defaults_table() {
-        let mutation = ActionSemantics::for_kind(ActionKind::Mutation).await;
+        let mutation = ActionSemantics::for_kind(ActionKind::Mutation);
         assert!(mutation.effects.reversible);
         assert_eq!(mutation.execution.preview, PreviewMode::Diff);
         assert_eq!(mutation.execution.undo, UndoMode::Inverse);
@@ -5257,32 +5089,31 @@ mod app_label_tests {
         assert_eq!(mutation.policy.approval, ApprovalMode::WhenDestructive);
         assert_eq!(mutation.policy.scopes, vec![kernel::CapabilityId("documents.write".into())]);
 
-        let view = ActionSemantics::for_kind(ActionKind::View).await;
-        let interaction = ActionSemantics::for_kind(ActionKind::Interaction).await;
+        let view = ActionSemantics::for_kind(ActionKind::View);
+        let interaction = ActionSemantics::for_kind(ActionKind::Interaction);
         assert_eq!(view, interaction, "View and Interaction share the config-lane defaults");
         assert_eq!(view.policy.scopes, vec![kernel::CapabilityId("documents.read".into()), kernel::CapabilityId("shell.observe".into())]);
 
-        assert_eq!(ActionSemantics::for_kind(ActionKind::History).await.policy.scopes, vec![kernel::CapabilityId("documents.write".into())]);
-        assert_eq!(ActionSemantics::for_kind(ActionKind::Clipboard).await.policy.scopes, vec![kernel::CapabilityId("shell.clipboard".into())]);
+        assert_eq!(ActionSemantics::for_kind(ActionKind::History).policy.scopes, vec![kernel::CapabilityId("documents.write".into())]);
+        assert_eq!(ActionSemantics::for_kind(ActionKind::Clipboard).policy.scopes, vec![kernel::CapabilityId("shell.clipboard".into())]);
 
-        let shell = ActionSemantics::for_kind(ActionKind::Shell).await;
+        let shell = ActionSemantics::for_kind(ActionKind::Shell);
         assert!(!shell.effects.reversible);
         assert_eq!(shell.policy.scopes, vec![kernel::CapabilityId("shell.navigate".into())]);
     }
 
-    /// @emoji 🧪️ `ActionDefinition::new`/`new_catalog` populate `semantics` from `kind` automatically,
-    /// and `.destructive()`/`.use_when()`/`.example()` compose on top of it.
+    /// @emoji 🧪️ `bounded_catalog` explicitly opts into worker dispatch while retaining kind defaults.
     #[semio_framework_async_macros::async_test]
     async fn action_definition_semantics_default_from_kind_and_builders_compose() {
-        let mutation = ActionDefinition::new_catalog("deleteThing", LocalizedLabel::data("Delete Thing"), ActionKind::Mutation).await;
-        assert_eq!(mutation.semantics, ActionSemantics::for_kind(ActionKind::Mutation).await);
+        let mutation = ActionDefinition::bounded_catalog("deleteThing", LocalizedLabel::data("Delete Thing"), ActionKind::Mutation);
+        let mut expected = ActionSemantics::for_kind(ActionKind::Mutation);
+        expected.execution.interactive_job = InteractiveJobClassification::Migrated;
+        assert_eq!(mutation.semantics, expected);
 
-        let action = ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::data("Delete"), ActionKind::Mutation)
-            .await
+        let action = ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::data("Delete"), ActionKind::Mutation)
             .destructive()
             .await
             .use_when(["delete the selected objects", "remove selection"])
-            .await
             .example("deleteSelection removes every currently selected object")
             .await;
         assert!(action.semantics.effects.destructive);
@@ -5293,49 +5124,49 @@ mod app_label_tests {
 
     #[test]
     fn interactive_job_classification_is_explicit_and_release_validated() {
-        let migrated_action = super::ActionDefinition::new_catalog("select", super::LocalizedLabel::data("Select"), super::ActionKind::Interaction);
-        let migrated_command = super::CommandDefinition::new_catalog("solve", super::LocalizedLabel::data("Solve"), "analysis", super::ActionKind::Mutation);
-        assert_eq!(migrated_action.semantics.execution.interactive_job, super::InteractiveJobClassification::Migrated);
-        assert!(super::validate_interactive_job_classification([("app", &migrated_action)], [("app", &migrated_command)]).is_ok());
+        let migrated_action = ActionDefinition::bounded_catalog("select", LocalizedLabel::data("Select"), ActionKind::Interaction);
+        let migrated_command = CommandDefinition::bounded_catalog("solve", LocalizedLabel::data("Solve"), "analysis", ActionKind::Mutation);
+        assert_eq!(migrated_action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
+        assert!(validate_interactive_job_classification([("app", &migrated_action)], [("app", &migrated_command)]).is_ok());
 
-        let mut unclassified = migrated_command.clone();
-        unclassified.semantics.execution.interactive_job = super::InteractiveJobClassification::Unclassified;
-        let errors = super::validate_interactive_job_classification(std::iter::empty(), [("app.mode", &unclassified)]).expect_err("unclassified command must block a release catalog");
-        assert_eq!(errors, vec![super::InteractiveJobClassificationError { owner: "app.mode".into(), id: "solve".into() }]);
+        let mut unclassified = migrated_command;
+        unclassified.semantics.execution.interactive_job = InteractiveJobClassification::Unclassified;
+        let errors = validate_interactive_job_classification(std::iter::empty(), [("app.mode", &unclassified)]).expect_err("unclassified command must block a release catalog");
+        assert_eq!(errors, vec![InteractiveJobClassificationError { owner: "app.mode".into(), id: "solve".into() }]);
     }
 
     /// @emoji 🧪️ `ActionArgDef::json_schema`/`arg_schema_json_schema` produce sane JSON Schema 2020-12
     /// leaves for the shapes P3-manifest-schema actually introduces.
     #[semio_framework_async_macros::async_test]
     async fn action_arg_def_json_schema_covers_the_core_shapes() {
-        let text = ActionArgDef::text("name", LocalizedLabel::data("Name")).await.describe("a name").await.json_schema().await;
+        let text = ActionArgDef::text("name", LocalizedLabel::data("Name")).describe("a name").json_schema();
         assert_eq!(text["type"], serde_json::json!("string"));
         assert_eq!(text["description"], serde_json::json!("a name"));
 
-        let options = vec![ActionArgOption::new("obj", LocalizedLabel::data("Object")).await, ActionArgOption::new("stl", LocalizedLabel::data("STL")).await];
-        let select = ActionArgDef::select("format", LocalizedLabel::data("Format"), options).await.json_schema().await;
+        let options = vec![ActionArgOption::new("obj", LocalizedLabel::data("Object")), ActionArgOption::new("stl", LocalizedLabel::data("STL"))];
+        let select = ActionArgDef::select("format", LocalizedLabel::data("Format"), options).json_schema();
         assert_eq!(select["type"], serde_json::json!("string"));
         assert_eq!(select["enum"], serde_json::json!(["obj", "stl"]));
 
-        let number = ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0).await.json_schema().await;
+        let number = ActionArgDef::slider("scale", LocalizedLabel::data("Scale"), 0.0, 4.0).json_schema();
         assert_eq!(number["type"], serde_json::json!("number"));
         assert_eq!(number["minimum"], serde_json::json!(0.0));
         assert_eq!(number["maximum"], serde_json::json!(4.0));
 
-        let vec3 = ActionArgDef::vec3("position", LocalizedLabel::data("Position")).await.json_schema().await;
+        let vec3 = ActionArgDef::vec3("position", LocalizedLabel::data("Position")).json_schema();
         assert_eq!(vec3["type"], serde_json::json!("array"));
         assert_eq!(vec3["minItems"], serde_json::json!(3));
         assert_eq!(vec3["maxItems"], serde_json::json!(3));
 
-        let toggle = ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")).await.json_schema().await;
+        let toggle = ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")).json_schema();
         assert_eq!(toggle["type"], serde_json::json!("boolean"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn effective_args_prefer_staged_then_default() {
-        let defs = vec![ActionArgDef::text("a", LocalizedLabel::data("A")).await.default_value("da").await, ActionArgDef::text("b", LocalizedLabel::data("B")).await.default_value("db").await, ActionArgDef::text("c", LocalizedLabel::data("C")).await];
+        let defs = vec![ActionArgDef::text("a", LocalizedLabel::data("A")).default_value("da"), ActionArgDef::text("b", LocalizedLabel::data("B")).default_value("db"), ActionArgDef::text("c", LocalizedLabel::data("C"))];
         let staged = dsl::to_dsl_value(&serde_json::json!({ "a": "staged-a" })).unwrap();
-        let effective = effective_action_args(&defs, &staged, None).await;
+        let effective = effective_action_args(&defs, &staged, None);
         assert_eq!(effective.get("a"), Some(&DslValue::String("staged-a".into())), "staged wins");
         assert_eq!(effective.get("b"), Some(&DslValue::String("db".into())), "default fills in");
         assert!(!effective.as_object().is_some_and(|o| o.iter().any(|(k, _)| k == "c")), "no staged, no default ⇒ omitted");
@@ -5346,10 +5177,10 @@ mod app_label_tests {
     /// it ever reached the dispatched descriptor, causing the hub to authorize against an empty id.
     #[semio_framework_async_macros::async_test]
     async fn effective_args_preserve_a_seeded_arg_not_declared_as_a_form_field() {
-        let defs = vec![ActionArgDef::text("email", LocalizedLabel::data("Email")).await, ActionArgDef::text("role", LocalizedLabel::data("Role")).await.default_value("author").await];
+        let defs = vec![ActionArgDef::text("email", LocalizedLabel::data("Email")), ActionArgDef::text("role", LocalizedLabel::data("Role")).default_value("author")];
         let staged = dsl::to_dsl_value(&serde_json::json!({ "email": "user2@semio.dev" })).unwrap();
         let seed = dsl::to_dsl_value(&serde_json::json!({ "spaceId": "sp-1" })).unwrap();
-        let effective = effective_action_args(&defs, &staged, Some(&seed)).await;
+        let effective = effective_action_args(&defs, &staged, Some(&seed));
         assert_eq!(effective.get("spaceId"), Some(&DslValue::String("sp-1".into())), "the seeded, non-declared arg must reach the dispatched descriptor");
         assert_eq!(effective.get("email"), Some(&DslValue::String("user2@semio.dev".into())), "the form's own staged field still resolves");
         assert_eq!(effective.get("role"), Some(&DslValue::String("author".into())), "declared defaults still fill in alongside a seed");
@@ -5359,12 +5190,12 @@ mod app_label_tests {
     /// into its own editable `name` field) until the form stages its own edit, which then wins.
     #[semio_framework_async_macros::async_test]
     async fn effective_args_seed_prefills_a_declared_field_until_staged_overrides_it() {
-        let defs = vec![ActionArgDef::text("name", LocalizedLabel::data("Name")).await];
+        let defs = vec![ActionArgDef::text("name", LocalizedLabel::data("Name"))];
         let seed = dsl::to_dsl_value(&serde_json::json!({ "spaceId": "sp-1", "name": "Old Name" })).unwrap();
-        let untouched = effective_action_args(&defs, &DslValue::Object(Vec::new()), Some(&seed)).await;
+        let untouched = effective_action_args(&defs, &DslValue::Object(Vec::new()), Some(&seed));
         assert_eq!(untouched.get("name"), Some(&DslValue::String("Old Name".into())), "seed pre-fills the declared field");
         let staged = dsl::to_dsl_value(&serde_json::json!({ "name": "New Name" })).unwrap();
-        let edited = effective_action_args(&defs, &staged, Some(&seed)).await;
+        let edited = effective_action_args(&defs, &staged, Some(&seed));
         assert_eq!(edited.get("name"), Some(&DslValue::String("New Name".into())), "staged still wins over the seed");
         assert_eq!(edited.get("spaceId"), Some(&DslValue::String("sp-1".into())), "the non-declared seed key survives regardless");
     }
@@ -5374,34 +5205,33 @@ mod app_label_tests {
     #[semio_framework_async_macros::async_test]
     async fn effective_args_pass_seed_through_wholesale_when_no_fields_are_declared() {
         let seed = dsl::to_dsl_value(&serde_json::json!({ "spaceId": "sp-1", "confirmed": true })).unwrap();
-        let effective = effective_action_args(&[], &DslValue::Object(Vec::new()), Some(&seed)).await;
+        let effective = effective_action_args(&[], &DslValue::Object(Vec::new()), Some(&seed));
         assert_eq!(effective.get("spaceId"), Some(&DslValue::String("sp-1".into())));
         assert_eq!(effective.get("confirmed"), Some(&DslValue::Bool(true)));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn missing_required_args_treats_unset_select_as_missing() {
-        let defs =
-            vec![ActionArgDef::select("mode", LocalizedLabel::data("Mode"), vec![ActionArgOption::new("x", LocalizedLabel::data("X")).await]).await.required().await, ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")).await.required().await];
+        let defs = vec![ActionArgDef::select("mode", LocalizedLabel::data("Mode"), vec![ActionArgOption::new("x", LocalizedLabel::data("X"))]).required(), ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")).required()];
         // Nothing staged, no defaults: both required ids are missing.
         let empty = DslValue::Object(Vec::new());
-        let effective = effective_action_args(&defs, &empty, None).await;
-        let missing = missing_required_args(&defs, &effective).await;
+        let effective = effective_action_args(&defs, &empty, None);
+        let missing = missing_required_args(&defs, &effective);
         assert!(missing.contains(&"mode".to_string()));
         assert!(missing.contains(&"flag".to_string()));
 
         let effective = dsl::to_dsl_value(&serde_json::json!({ "mode": "", "flag": false })).unwrap();
-        let missing = missing_required_args(&defs, &effective).await;
+        let missing = missing_required_args(&defs, &effective);
         assert_eq!(missing, vec!["mode".to_string()], "empty-string select is unset; false toggle is set");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn utility_definition_and_utility_ref_construction() {
-        let utility = UtilityDefinition::new("brush", LocalizedLabel::data("Brush"), "paintbrush").await;
+        let utility = UtilityDefinition::new("brush", LocalizedLabel::data("Brush"), "paintbrush");
         assert_eq!(utility.id, "brush");
         assert!(!utility.allows_actions_while_active, "default gates actions while active");
-        assert_eq!(UtilityRef::new("brush").await.as_str().await, "brush");
-        assert_eq!(UtilityRef::from("brush").as_str().await, "brush");
+        assert_eq!(UtilityRef::new("brush").as_str(), "brush");
+        assert_eq!(UtilityRef::from("brush").as_str(), "brush");
     }
 
     async fn app_with(actions: Vec<ActionDefinition>, window_actions: Vec<ActionRef>) -> AppDefinition {
@@ -5456,13 +5286,11 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn resolve_window_actions_explicit_scoping() {
-        let app = app_with(
-            vec![ActionDefinition::new_catalog("add", LocalizedLabel::data("Add"), ActionKind::Mutation).await, ActionDefinition::new_catalog("remove", LocalizedLabel::data("Remove"), ActionKind::Mutation).await],
-            vec![ActionRef::new("add")],
-        )
-        .await;
+        let app =
+            app_with(vec![ActionDefinition::bounded_catalog("add", LocalizedLabel::data("Add"), ActionKind::Mutation), ActionDefinition::bounded_catalog("remove", LocalizedLabel::data("Remove"), ActionKind::Mutation)], vec![ActionRef::new("add")])
+                .await;
         let window = app.window_kinds.first();
-        let resolved: Vec<&str> = resolve_window_actions(&app, window).await.iter().map(|a| a.id.as_str()).collect();
+        let resolved: Vec<&str> = resolve_window_actions(&app, window).iter().map(|a| a.id.as_str()).collect();
         assert_eq!(resolved, vec!["add"], "window ownership replaces app-level orphan fallback");
     }
 
@@ -5470,15 +5298,15 @@ mod app_label_tests {
     async fn resolve_window_actions_excludes_history_and_set_active_utility_orphans() {
         let app = app_with(
             vec![
-                ActionDefinition::new_catalog("undo", LocalizedLabel::data("Undo"), ActionKind::History).await,
-                crate::ui::set_active_utility_action_definition().await,
-                ActionDefinition::new_catalog("add", LocalizedLabel::data("Add"), ActionKind::Mutation).await,
+                ActionDefinition::bounded_catalog("undo", LocalizedLabel::data("Undo"), ActionKind::History),
+                crate::ui::set_active_utility_action_definition(),
+                ActionDefinition::bounded_catalog("add", LocalizedLabel::data("Add"), ActionKind::Mutation),
             ],
             vec![],
         )
         .await;
         let window = app.window_kinds.first();
-        let resolved: Vec<&str> = resolve_window_actions(&app, window).await.iter().map(|a| a.id.as_str()).collect();
+        let resolved: Vec<&str> = resolve_window_actions(&app, window).iter().map(|a| a.id.as_str()).collect();
         assert_eq!(resolved, vec!["add"], "history + setActiveUtility are never panel-eligible orphans");
         assert!(!resolved.contains(&SET_ACTIVE_UTILITY_ACTION_ID));
     }
@@ -5501,14 +5329,14 @@ mod app_label_tests {
     async fn interaction_action_definitions_empty_when_app_has_no_interactions() {
         let app = app_with(vec![], vec![]).await;
         assert!(app.interactions.is_empty());
-        assert!(interaction_action_definitions(&app).await.is_empty());
+        assert!(interaction_action_definitions(&app).is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn interaction_action_definitions_full_set_when_app_has_interactions() {
         let mut app = app_with(vec![], vec![]).await;
         app.interactions = vec![sample_interaction_definition("graph").await];
-        let defs = interaction_action_definitions(&app).await;
+        let defs = interaction_action_definitions(&app);
         let ids: Vec<&str> = defs.iter().map(|action| action.id.as_str()).collect();
         assert_eq!(ids, vec![INTERACTION_SELECT_ACTION_ID, INTERACTION_HOVER_ACTION_ID, CLEAR_SELECTION_ACTION_ID, SELECT_ALL_ACTION_ID, SET_SELECTION_MODE_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID,]);
         assert!(defs.iter().all(|action| action.kind == ActionKind::Interaction));
@@ -5528,9 +5356,9 @@ mod app_label_tests {
         let mut app = app_with(vec![], vec![]).await;
         app.interactions = vec![sample_interaction_definition("graph").await];
         let actions = interaction_action_definitions(&app);
-        app.window_kinds.first_mut().actions = actions.await;
+        app.window_kinds.first_mut().actions = actions;
         let window = app.window_kinds.first();
-        let resolved: Vec<&str> = resolve_window_actions(&app, window).await.iter().map(|a| a.id.as_str()).collect();
+        let resolved: Vec<&str> = resolve_window_actions(&app, window).iter().map(|a| a.id.as_str()).collect();
         for id in [INTERACTION_SELECT_ACTION_ID, INTERACTION_HOVER_ACTION_ID, CLEAR_SELECTION_ACTION_ID, SELECT_ALL_ACTION_ID, SET_SELECTION_MODE_ACTION_ID, SET_INTERACTION_GRANULARITY_ACTION_ID] {
             assert!(resolved.contains(&id), "{id} injected into the owning window but not resolved");
         }
@@ -5545,20 +5373,19 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn app_definition_and_window_kind_definition_serde_round_trip_interactions() {
-        let mut app = app_with(vec![ActionDefinition::new_catalog("noop", LocalizedLabel::data("No operation"), ActionKind::View).await], vec![ActionRef::new("noop")]).await;
+        let mut app = app_with(vec![ActionDefinition::bounded_catalog("noop", LocalizedLabel::data("No operation"), ActionKind::View)], vec![ActionRef::new("noop")]).await;
         app.interactions = vec![sample_interaction_definition("graph").await];
-        app.window_kinds.first_mut().interactions = vec![InteractionRef::new("graph").await];
+        app.window_kinds.first_mut().interactions = vec![InteractionRef::new("graph")];
         let json = serde_json::to_string(&app).unwrap();
         assert!(json.contains("\"interactions\":[{\"id\":\"graph\""), "{json}");
         let parsed: AppDefinition = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed, app);
-        assert_eq!(parsed.window_kinds.first().interactions, vec![InteractionRef::new("graph").await]);
+        assert_eq!(parsed.window_kinds.first().interactions, vec![InteractionRef::new("graph")]);
     }
     /// ⚖️ LAW: an EMPTY collection still reaches the wire as `[]`, never as an absent key.
     ///
     /// The generated TypeScript (`🤖️generated/🟦️manifest.ts`) declares these fields as **required**
     /// arrays — `commands: Array<CommandDefinition>`, not `commands?:` — because only
-    /// `#[cfg_attr(feature = "typegen", ts(optional))]` makes a field optional there, and no `Vec`
     /// field carries it. A `skip_serializing_if = "Vec::is_empty"` therefore handed the host
     /// `undefined` where its own types promised an array, and every unguarded `app.commands.some(…)`
     /// threw. That is not hypothetical: it is what emptied the Koordinator pane in ticket
@@ -5597,7 +5424,7 @@ mod app_label_tests {
             vec![crate::ui::ToolDefinition::new("brush", LocalizedLabel::data("Brush"), "paintbrush").await, crate::ui::ToolDefinition::new("fill", LocalizedLabel::data("Fill"), "paint-bucket").await],
         )
         .await;
-        let resolved: Vec<&str> = resolve_mode_tools(&app, "edit").await.iter().map(|t| t.id.as_str()).collect();
+        let resolved: Vec<&str> = resolve_mode_tools(&app, "edit").iter().map(|t| t.id.as_str()).collect();
         assert_eq!(resolved, vec!["fill", "brush"], "resolves in the mode's declared ref order, not registry order");
     }
 
@@ -5611,9 +5438,9 @@ mod app_label_tests {
             vec![crate::ui::ToolDefinition::new("fill", LocalizedLabel::data("Fill"), "paint-bucket").await],
         )
         .await;
-        assert_eq!(resolve_mode_tools(&app, "edit").await.iter().map(|t| t.id.as_str()).collect::<Vec<_>>(), vec!["fill"]);
-        assert!(resolve_mode_tools(&app, "view").await.is_empty(), "tools are opt-in per mode, no orphan fallback");
-        assert!(resolve_mode_tools(&app, "nonexistent").await.is_empty());
+        assert_eq!(resolve_mode_tools(&app, "edit").iter().map(|t| t.id.as_str()).collect::<Vec<_>>(), vec!["fill"]);
+        assert!(resolve_mode_tools(&app, "view").is_empty(), "tools are opt-in per mode, no orphan fallback");
+        assert!(resolve_mode_tools(&app, "nonexistent").is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -5623,7 +5450,7 @@ mod app_label_tests {
             vec![crate::ui::ToolDefinition::new("fill", LocalizedLabel::data("Fill"), "paint-bucket").await],
         )
         .await;
-        let resolved: Vec<&str> = resolve_mode_tools(&app, "edit").await.iter().map(|t| t.id.as_str()).collect();
+        let resolved: Vec<&str> = resolve_mode_tools(&app, "edit").iter().map(|t| t.id.as_str()).collect();
         assert_eq!(resolved, vec!["fill"]);
     }
 
@@ -5637,33 +5464,33 @@ mod app_label_tests {
         app.named_layouts.push(ui_wgpu::wgpu::NamedLayout { id: "named".into(), label: "Named".into(), icon_id: None, layout: stack_layout("main").await, origin: "app".into(), group_path: None });
         app.default_layout = Some(stack_layout("fallback").await);
 
-        assert_eq!(resolve_layout_for_mode(&app, "edit").await, Some(stack_layout("main").await), "named layout referenced by the mode wins");
+        assert_eq!(resolve_layout_for_mode(&app, "edit"), Some(stack_layout("main").await), "named layout referenced by the mode wins");
 
         app.modes.first_mut().layout_id = Some("missing".into());
-        assert_eq!(resolve_layout_for_mode(&app, "edit").await, Some(stack_layout("fallback").await), "unresolved named layout id falls back to default_layout");
+        assert_eq!(resolve_layout_for_mode(&app, "edit"), Some(stack_layout("fallback").await), "unresolved named layout id falls back to default_layout");
 
         app.default_layout = None;
-        assert_eq!(resolve_layout_for_mode(&app, "edit").await, None, "no named layout and no default_layout ⇒ none");
-        assert_eq!(resolve_layout_for_mode(&app, "nonexistent").await, None, "unknown mode id ⇒ none");
+        assert_eq!(resolve_layout_for_mode(&app, "edit"), None, "no named layout and no default_layout ⇒ none");
+        assert_eq!(resolve_layout_for_mode(&app, "nonexistent"), None, "unknown mode id ⇒ none");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn resolve_app_label_uses_terminology_override_else_falls_back_to_native_label() {
         let mut app = app_with(vec![], vec![]).await;
         app.terminology_breadcrumbs.insert("de".into(), vec!["semio".into(), "a-de".into()]);
-        assert_eq!(resolve_app_breadcrumb(&app, "de").await, ["semio".to_string(), "a-de".to_string()]);
-        assert_eq!(resolve_app_breadcrumb(&app, "native").await, app.breadcrumb.as_slice());
-        assert_eq!(resolve_app_breadcrumb(&app, "unregistered").await, app.breadcrumb.as_slice());
+        assert_eq!(resolve_app_breadcrumb(&app, "de"), ["semio".to_string(), "a-de".to_string()]);
+        assert_eq!(resolve_app_breadcrumb(&app, "native"), app.breadcrumb.as_slice());
+        assert_eq!(resolve_app_breadcrumb(&app, "unregistered"), app.breadcrumb.as_slice());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_window_label_skips_empty_app_named_and_duplicate_trailing_window_labels() {
         let mut app = app_with(vec![], vec![]).await;
         app.label = LocalizedLabel::data("Draw"); // document (from `app_with`) already ends in "a"
-        assert_eq!(app_window_label(&app, "native", Locale::En, "Layers").await, "semio · a · layers");
-        assert_eq!(app_window_label(&app, "native", Locale::En, "").await, "semio · a", "empty window label appends nothing");
-        assert_eq!(app_window_label(&app, "native", Locale::En, "Draw").await, "semio · a", "window label equal to the app label appends nothing");
-        assert_eq!(app_window_label(&app, "native", Locale::En, "A").await, "semio · a", "window label equal to the document's trailing segment appends nothing");
+        assert_eq!(app_window_label(&app, "native", Locale::En, "Layers"), "semio · a · layers");
+        assert_eq!(app_window_label(&app, "native", Locale::En, ""), "semio · a", "empty window label appends nothing");
+        assert_eq!(app_window_label(&app, "native", Locale::En, "Draw"), "semio · a", "window label equal to the app label appends nothing");
+        assert_eq!(app_window_label(&app, "native", Locale::En, "A"), "semio · a", "window label equal to the document's trailing segment appends nothing");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -5687,26 +5514,26 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn panel_group_anchor_and_as_str_cover_all_variants() {
-        assert_eq!(PanelGroup::Workbench.anchor().await, "top-left");
-        assert_eq!(PanelGroup::Details.anchor().await, "top-right");
-        assert_eq!(PanelGroup::Display.anchor().await, "bottom-left");
-        assert_eq!(PanelGroup::Settings.anchor().await, "bottom-right");
-        assert_eq!(PanelGroup::Workbench.as_str().await, "workbench");
-        assert_eq!(PanelGroup::Settings.as_str().await, "settings");
+        assert_eq!(PanelGroup::Workbench.anchor(), "top-left");
+        assert_eq!(PanelGroup::Details.anchor(), "top-right");
+        assert_eq!(PanelGroup::Display.anchor(), "bottom-left");
+        assert_eq!(PanelGroup::Settings.anchor(), "bottom-right");
+        assert_eq!(PanelGroup::Workbench.as_str(), "workbench");
+        assert_eq!(PanelGroup::Settings.as_str(), "settings");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn panel_tab_kind_id_str_covers_framework_and_app_variants() {
-        assert_eq!(PanelTabKind::WorkbenchCategory.id_str().await, "framework.category.workbench");
-        assert_eq!(PanelTabKind::DisplayWindows.id_str().await, "framework.display.windows");
-        assert_eq!(PanelTabKind::App("puzzle.catalogue".into()).id_str().await, "puzzle.catalogue");
+        assert_eq!(PanelTabKind::WorkbenchCategory.id_str(), "framework.category.workbench");
+        assert_eq!(PanelTabKind::DisplayWindows.id_str(), "framework.display.windows");
+        assert_eq!(PanelTabKind::App("puzzle.catalogue".into()).id_str(), "puzzle.catalogue");
         let tab = PanelTabDefinition { kind: PanelTabKind::App("puzzle.catalogue".into()), label: LocalizedLabel::data("Catalogue"), group: PanelGroup::Workbench, body_key: Some("puzzle.catalogue".into()), children: Vec::new() };
-        assert_eq!(tab.id().await, "puzzle.catalogue");
+        assert_eq!(tab.id(), "puzzle.catalogue");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn action_definition_requires_and_serializes_args_field() {
-        let action = ActionDefinition::new_catalog("x", LocalizedLabel::data("X"), ActionKind::Mutation).await;
+        let action = ActionDefinition::bounded_catalog("x", LocalizedLabel::data("X"), ActionKind::Mutation);
         let json = serde_json::to_value(&action).unwrap();
         assert_eq!(json["args"], json!([]));
         assert!(serde_json::from_value::<ActionDefinition>(json!({
@@ -5727,7 +5554,7 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn action_arg_control_serializes_tagged() {
-        let control = ActionArgControl::Select { options: vec![ActionArgOption::new("x", LocalizedLabel::data("X")).await] };
+        let control = ActionArgControl::Select { options: vec![ActionArgOption::new("x", LocalizedLabel::data("X"))] };
         let json = serde_json::to_string(&control).unwrap();
         assert!(json.contains("\"kind\":\"select\""), "tagged with kind: {json}");
         let round: ActionArgControl = serde_json::from_str(&json).unwrap();
@@ -5736,29 +5563,29 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn is_element_id_accepts_dotted_camel_case_and_rejects_the_rest() {
-        assert!(is_element_id("framework.navbar").await);
-        assert!(is_element_id("ui.window.main.action.addLayer").await);
-        assert!(is_element_id("brush").await);
-        assert!(!is_element_id("").await);
-        assert!(!is_element_id("framework.display.save-label").await);
-        assert!(!is_element_id("Framework.navbar").await);
-        assert!(!is_element_id("framework..navbar").await);
-        assert!(!is_element_id("framework.navbar.").await);
+        assert!(is_element_id("framework.navbar"));
+        assert!(is_element_id("ui.window.main.action.addLayer"));
+        assert!(is_element_id("brush"));
+        assert!(!is_element_id(""));
+        assert!(!is_element_id("framework.display.save-label"));
+        assert!(!is_element_id("Framework.navbar"));
+        assert!(!is_element_id("framework..navbar"));
+        assert!(!is_element_id("framework.navbar."));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn element_id_segment_normalizes_and_is_idempotent() {
-        assert_eq!(element_id_segment("world-orbit-projection").await, "worldOrbitProjection");
-        assert_eq!(element_id_segment("Some Name").await, "someName");
-        assert_eq!(element_id_segment("myUtilityId").await, "myUtilityId");
-        assert_eq!(element_id_segment("addLayer").await, element_id_segment(&element_id_segment("addLayer").await).await);
+        assert_eq!(element_id_segment("world-orbit-projection"), "worldOrbitProjection");
+        assert_eq!(element_id_segment("Some Name"), "someName");
+        assert_eq!(element_id_segment("myUtilityId"), "myUtilityId");
+        assert_eq!(element_id_segment("addLayer"), element_id_segment(&element_id_segment("addLayer")));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn child_element_id_suffixes_and_normalizes_segments() {
-        assert_eq!(child_element_id("ui.chat", &["send"]).await, "ui.chat.send");
-        assert_eq!(child_element_id("ui.chat", &["message-row"]).await, "ui.chat.messageRow");
-        assert_eq!(child_element_id("ui.tree", &["row", "3"]).await, "ui.tree.row.3");
+        assert_eq!(child_element_id("ui.chat", &["send"]), "ui.chat.send");
+        assert_eq!(child_element_id("ui.chat", &["message-row"]), "ui.chat.messageRow");
+        assert_eq!(child_element_id("ui.tree", &["row", "3"]), "ui.tree.row.3");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -5771,7 +5598,7 @@ mod app_label_tests {
         let round: IntroductionStepDefinition = serde_json::from_str(&json).unwrap();
         assert_eq!(round, step);
 
-        let with_targets = IntroductionStepDefinition::new("viewport", LocalizedLabel::data("The Viewport"), LocalizedLabel::data("…")).introduce(window_element_id("puzzle3d-main").await).show(vec![window_element_id("puzzle3d-secondary").await]);
+        let with_targets = IntroductionStepDefinition::new("viewport", LocalizedLabel::data("The Viewport"), LocalizedLabel::data("…")).introduce(window_element_id("puzzle3d-main")).show(vec![window_element_id("puzzle3d-secondary")]);
         let json = serde_json::to_string(&with_targets).unwrap();
         assert!(json.contains("\"introduce\":\"framework.window.puzzle3dMain\""), "{json}");
         let round: IntroductionStepDefinition = serde_json::from_str(&json).unwrap();
@@ -5780,21 +5607,21 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn element_id_authoring_helpers() {
-        assert_eq!(window_element_id("puzzle3d-main").await, "framework.window.puzzle3dMain");
-        assert_eq!(panel_tab_element_id("framework.panel.catalogue").await, "framework.panelTab.framework.panel.catalogue");
-        assert_eq!(panel_tab_first_draggable_element_id("framework.panel.catalogue").await, "framework.panelTab.framework.panel.catalogue.firstDraggable");
-        assert!(is_element_id(UI_NAVBAR_ELEMENT_ID).await);
-        assert!(is_element_id(UI_FOOTER_ELEMENT_ID).await);
-        assert!(is_element_id(&window_element_id("puzzle3d-main").await).await);
-        assert!(is_element_id(&panel_tab_element_id("framework.panel.catalogue").await).await);
-        assert!(is_element_id(&panel_tab_first_draggable_element_id("framework.panel.catalogue").await).await);
+        assert_eq!(window_element_id("puzzle3d-main"), "framework.window.puzzle3dMain");
+        assert_eq!(panel_tab_element_id("framework.panel.catalogue"), "framework.panelTab.framework.panel.catalogue");
+        assert_eq!(panel_tab_first_draggable_element_id("framework.panel.catalogue"), "framework.panelTab.framework.panel.catalogue.firstDraggable");
+        assert!(is_element_id(UI_NAVBAR_ELEMENT_ID));
+        assert!(is_element_id(UI_FOOTER_ELEMENT_ID));
+        assert!(is_element_id(&window_element_id("puzzle3d-main")));
+        assert!(is_element_id(&panel_tab_element_id("framework.panel.catalogue")));
+        assert!(is_element_id(&panel_tab_first_draggable_element_id("framework.panel.catalogue")));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn introduction_interaction_kind_round_trips_tagged() {
         for (kind, tag) in [
             (IntroductionInteractionKind::Action(ActionRef::new("add")), "action"),
-            (IntroductionInteractionKind::Utility(UtilityRef::new("brush").await), "utility"),
+            (IntroductionInteractionKind::Utility(UtilityRef::new("brush")), "utility"),
             (IntroductionInteractionKind::Tool(ToolRef::new("fill").await), "tool"),
             (IntroductionInteractionKind::Panel("framework.panel.catalogue".into()), "panel"),
             (IntroductionInteractionKind::Expand("puzzle3d-play-kinds.objects".into()), "expand"),
@@ -5818,7 +5645,7 @@ mod app_label_tests {
         let round: IntroductionInteraction = serde_json::from_str(&json).unwrap();
         assert_eq!(round, interaction);
 
-        let with_celebrate = IntroductionInteraction::pan("puzzle3d-main", "Pan").await.celebrate(window_element_id("puzzle3d-main").await).await;
+        let with_celebrate = IntroductionInteraction::pan("puzzle3d-main", "Pan").await.celebrate(window_element_id("puzzle3d-main")).await;
         let json = serde_json::to_string(&with_celebrate).unwrap();
         assert!(json.contains("\"celebrate\":\"framework.window.puzzle3dMain\""), "{json}");
         let round: IntroductionInteraction = serde_json::from_str(&json).unwrap();
@@ -5848,15 +5675,15 @@ mod app_label_tests {
             (IntroductionPoint::Element { id: "transform".into(), offset: Some([0.25, 0.75]) }, "element"),
             (IntroductionPoint::Screen { x: 10.0, y: 20.0 }, "screen"),
             (IntroductionPoint::ScreenNormalized { x: 0.5, y: 0.5 }, "screenNormalized"),
-            (IntroductionPoint::Window { id: window_element_id("puzzle3d-main").await, x: 40.0, y: 60.0 }, "window"),
-            (IntroductionPoint::WindowNormalized { id: window_element_id("puzzle3d-main").await, x: 0.5, y: 0.55 }, "windowNormalized"),
-            (IntroductionPoint::Scene { id: window_element_id("puzzle3d-main").await, position: [1.0, 2.0, 3.0] }, "scene"),
-            (IntroductionPoint::Canvas { id: window_element_id("puzzle3d-main").await, x: 12.0, y: 34.0 }, "canvas"),
-            (IntroductionPoint::entity(window_element_id("puzzle3d-main").await, "vortex", "seed-left-001:v0").await, "entity"),
-            (IntroductionPoint::any_entity(window_element_id("puzzle3d-main").await, "vortex").await, "entity"),
-            (IntroductionPoint::Entity { id: window_element_id("puzzle3d-main").await, domain: "node".into(), entity: "add".into(), offset: Some([0.25, 0.75]) }, "entity"),
-            (IntroductionPoint::curve(window_element_id("puzzle3d-main").await, "attraction", "a1", 0.5).await, "curve"),
-            (IntroductionPoint::domain_value(window_element_id("puzzle3d-main").await, "slider", "fillCount", 3.0).await, "domain"),
+            (IntroductionPoint::Window { id: window_element_id("puzzle3d-main"), x: 40.0, y: 60.0 }, "window"),
+            (IntroductionPoint::WindowNormalized { id: window_element_id("puzzle3d-main"), x: 0.5, y: 0.55 }, "windowNormalized"),
+            (IntroductionPoint::Scene { id: window_element_id("puzzle3d-main"), position: [1.0, 2.0, 3.0] }, "scene"),
+            (IntroductionPoint::Canvas { id: window_element_id("puzzle3d-main"), x: 12.0, y: 34.0 }, "canvas"),
+            (IntroductionPoint::entity(window_element_id("puzzle3d-main"), "vortex", "seed-left-001:v0").await, "entity"),
+            (IntroductionPoint::any_entity(window_element_id("puzzle3d-main"), "vortex").await, "entity"),
+            (IntroductionPoint::Entity { id: window_element_id("puzzle3d-main"), domain: "node".into(), entity: "add".into(), offset: Some([0.25, 0.75]) }, "entity"),
+            (IntroductionPoint::curve(window_element_id("puzzle3d-main"), "attraction", "a1", 0.5).await, "curve"),
+            (IntroductionPoint::domain_value(window_element_id("puzzle3d-main"), "slider", "fillCount", 3.0).await, "domain"),
         ] {
             let json = serde_json::to_string(&point).unwrap();
             assert!(json.contains(&format!("\"kind\":\"{tag}\"")), "{json}");
@@ -5864,7 +5691,7 @@ mod app_label_tests {
             assert_eq!(round, point);
         }
         // 🏷️ "*" (any-entity wildcard) must round-trip byte-for-byte, not get normalized away.
-        let wildcard = IntroductionPoint::any_entity(window_element_id("puzzle3d-main").await, "vortex").await;
+        let wildcard = IntroductionPoint::any_entity(window_element_id("puzzle3d-main"), "vortex").await;
         let json = serde_json::to_string(&wildcard).unwrap();
         assert!(json.contains("\"entity\":\"*\""), "{json}");
     }
@@ -5914,7 +5741,7 @@ mod app_label_tests {
         assert!(orbit_json.contains("\"button\":\"right\""), "{orbit_json}");
         assert!(orbit_json.contains("\"modifiers\":[\"alt\"]"), "{orbit_json}");
 
-        let middle_drag = IntroductionGesture::Drag { from: at.clone(), to: at.clone(), button: IntroductionPointerButton::Middle, modifiers: vec![] };
+        let middle_drag = IntroductionGesture::Drag { from: at.clone(), to: at, button: IntroductionPointerButton::Middle, modifiers: vec![] };
         let middle_json = serde_json::to_string(&middle_drag).unwrap();
         assert!(middle_json.contains("\"button\":\"middle\""), "{middle_json}");
         let round: IntroductionGesture = serde_json::from_str(&middle_json).unwrap();
@@ -6097,7 +5924,7 @@ mod app_label_tests {
     async fn tutorial_camera_interpolation_lerps_position_and_target() {
         let prev = TutorialCameraKeyframe { at: 0, window_id: "w".into(), camera: TutorialCameraState::Orbit { position: [0.0, 0.0, 0.0], target: [0.0, 0.0, 0.0], up: [0.0, 0.0, 1.0], fov: Some(40.0) }, easing: TutorialEasing::Linear };
         let next = TutorialCameraKeyframe { at: 1000, window_id: "w".into(), camera: TutorialCameraState::Orbit { position: [10.0, 0.0, 0.0], target: [0.0, 0.0, 0.0], up: [0.0, 0.0, 1.0], fov: Some(60.0) }, easing: TutorialEasing::Linear };
-        let mid = interpolate_tutorial_camera(&prev, &next, 500.0).await;
+        let mid = interpolate_tutorial_camera(&prev, &next, 500.0);
         match mid {
             TutorialCameraState::Orbit { position, fov, .. } => {
                 assert!((position[0] - 5.0).abs() < 1e-9, "expected midpoint lerp, got {position:?}");
@@ -6105,9 +5932,9 @@ mod app_label_tests {
             }
             other => panic!("expected Orbit, got {other:?}"),
         }
-        let start = interpolate_tutorial_camera(&prev, &next, 0.0).await;
+        let start = interpolate_tutorial_camera(&prev, &next, 0.0);
         assert_eq!(start, prev.camera);
-        let end = interpolate_tutorial_camera(&prev, &next, 1000.0).await;
+        let end = interpolate_tutorial_camera(&prev, &next, 1000.0);
         assert_eq!(end, next.camera);
     }
 
@@ -6115,7 +5942,7 @@ mod app_label_tests {
     async fn tutorial_camera_interpolation_zooms_in_log_space() {
         let prev = TutorialCameraKeyframe { at: 0, window_id: "w".into(), camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 }, easing: TutorialEasing::Linear };
         let next = TutorialCameraKeyframe { at: 1000, window_id: "w".into(), camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 4.0 }, easing: TutorialEasing::Linear };
-        let mid = interpolate_tutorial_camera(&prev, &next, 500.0).await;
+        let mid = interpolate_tutorial_camera(&prev, &next, 500.0);
         match mid {
             TutorialCameraState::Canvas { zoom, .. } => assert!((zoom - 2.0).abs() < 1e-9, "log-space midpoint of 1..4 is 2, got {zoom}"),
             other => panic!("expected Canvas, got {other:?}"),
@@ -6126,8 +5953,8 @@ mod app_label_tests {
     async fn tutorial_camera_interpolation_hold_snaps_at_keyframe() {
         let prev = TutorialCameraKeyframe { at: 0, window_id: "w".into(), camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 }, easing: TutorialEasing::Hold };
         let next = TutorialCameraKeyframe { at: 1000, window_id: "w".into(), camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 4.0 }, easing: TutorialEasing::Hold };
-        assert_eq!(interpolate_tutorial_camera(&prev, &next, 999.0).await, prev.camera);
-        assert_eq!(interpolate_tutorial_camera(&prev, &next, 1000.0).await, next.camera);
+        assert_eq!(interpolate_tutorial_camera(&prev, &next, 999.0), prev.camera);
+        assert_eq!(interpolate_tutorial_camera(&prev, &next, 1000.0), next.camera);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -6137,9 +5964,9 @@ mod app_label_tests {
             TutorialCameraKeyframe { at: 100, window_id: "w".into(), camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 }, easing: TutorialEasing::Linear },
             TutorialCameraKeyframe { at: 900, window_id: "w".into(), camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 9.0 }, easing: TutorialEasing::Linear },
         ];
-        assert_eq!(tutorial_camera_at(&def, "w", 0.0).await, Some(TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 }));
-        assert_eq!(tutorial_camera_at(&def, "w", 10_000.0).await, Some(TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 9.0 }));
-        assert_eq!(tutorial_camera_at(&def, "other-window", 500.0).await, None);
+        assert_eq!(tutorial_camera_at(&def, "w", 0.0), Some(TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 }));
+        assert_eq!(tutorial_camera_at(&def, "w", 10_000.0), Some(TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 9.0 }));
+        assert_eq!(tutorial_camera_at(&def, "other-window", 500.0), None);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -6147,28 +5974,28 @@ mod app_label_tests {
         let mut def = minimal_tutorial().await;
         def.base.ui.active_tool_id = Some("fill".into());
         def.tracks.ui = vec![
-            TutorialUiKeyframe { at: 100, sample: TutorialUiSample::Snapshot { state: TutorialUiSnapshot { active_mode_id: Some("edit".into()), ..Default::default() } } },
+            TutorialUiKeyframe { at: 100, sample: TutorialUiSample::Snapshot { state: Box::new(TutorialUiSnapshot { active_mode_id: Some("edit".into()), ..Default::default() }) } },
             TutorialUiKeyframe { at: 200, sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::ActiveTool { id: Some("brush".into()) }] } },
             TutorialUiKeyframe { at: 300, sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::PanelTab { group: "top-left".into(), tab_id: Some("catalogue".into()) }] } },
             TutorialUiKeyframe { at: 400, sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::Selection { domain_id: "mesh".into(), granularity: "face".into(), ids: vec!["f1".into()] }] } },
         ];
         // Before any sample: the base snapshot alone.
-        let at_0 = compose_tutorial_ui(&def, 0.0).await;
+        let at_0 = compose_tutorial_ui(&def, 0.0);
         assert_eq!(at_0.active_tool_id, Some("fill".into()));
         assert_eq!(at_0.active_mode_id, None);
         // After the snapshot but before its deltas.
-        let at_100 = compose_tutorial_ui(&def, 100.0).await;
+        let at_100 = compose_tutorial_ui(&def, 100.0);
         assert_eq!(at_100.active_mode_id, Some("edit".into()));
         assert_eq!(at_100.active_tool_id, None, "snapshot replaces the base wholesale");
         // After one delta.
-        let at_200 = compose_tutorial_ui(&def, 250.0).await;
+        let at_200 = compose_tutorial_ui(&def, 250.0);
         assert_eq!(at_200.active_tool_id, Some("brush".into()));
         // After both deltas.
-        let at_300 = compose_tutorial_ui(&def, 300.0).await;
+        let at_300 = compose_tutorial_ui(&def, 300.0);
         assert_eq!(at_300.active_tool_id, Some("brush".into()));
         assert_eq!(at_300.active_panel_tab_by_group.get("top-left"), Some(&"catalogue".to_string()));
         // After the selection delta: the framework-owned domain selection lands in `interaction_selection`.
-        let at_400 = compose_tutorial_ui(&def, 400.0).await;
+        let at_400 = compose_tutorial_ui(&def, 400.0);
         let selection = at_400.interaction_selection.get("mesh").expect("mesh domain selection");
         assert_eq!(selection.granularity, "face");
         assert_eq!(selection.ids, vec!["f1".to_string()]);
@@ -6197,19 +6024,19 @@ mod app_label_tests {
                 },
             },
         ];
-        let forward = tutorial_slice(&def, 0.0, 250.0).await;
+        let forward = tutorial_slice(&def, 0.0, 250.0);
         assert!(forward.forward);
         assert_eq!(forward.document.len(), 2);
         let TutorialArtifactEventKind::Edit { forwards, .. } = &forward.document[0].kind else { panic!("expected Edit") };
         assert_eq!(forwards[0].get("id").and_then(DslValue::as_str), Some("a"), "forward order applies oldest-first");
 
-        let backward = tutorial_slice(&def, 250.0, 0.0).await;
+        let backward = tutorial_slice(&def, 250.0, 0.0);
         assert!(!backward.forward);
         assert_eq!(backward.document.len(), 2);
         let TutorialArtifactEventKind::Edit { backwards, .. } = &backward.document[0].kind else { panic!("expected Edit") };
         assert_eq!(backwards[0].get("id").and_then(DslValue::as_str), Some("b"), "backward order unwinds newest-first");
 
-        let empty = tutorial_slice(&def, 250.0, 250.0).await;
+        let empty = tutorial_slice(&def, 250.0, 250.0);
         assert!(empty.document.is_empty());
     }
 
@@ -6218,7 +6045,7 @@ mod app_label_tests {
         let mut def = minimal_tutorial().await;
         def.tracks.events = vec![TutorialEvent { at: 50, kind: TutorialEventKind::Action { action: "setFillCount".into(), args: None } }];
         def.tracks.ui = vec![TutorialUiKeyframe { at: 50, sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::ActiveTool { id: Some("fill".into()) }] } }];
-        let slice = tutorial_slice(&def, 0.0, 100.0).await;
+        let slice = tutorial_slice(&def, 0.0, 100.0);
         assert_eq!(slice.events.len(), 1);
         assert_eq!(slice.ui_changes.len(), 1);
         assert!(slice.document.is_empty());
@@ -6231,7 +6058,7 @@ mod app_label_tests {
         assert!(!action.in_palette, "shell owns palette discovery via the dedicated Play Tutorial command");
         assert_eq!(action.args.len(), 1);
         assert!(action.args[0].required);
-        match action.args[0].control().await {
+        match action.args[0].control() {
             ActionArgControl::Select { options } => {
                 assert_eq!(options.len(), 1);
                 assert_eq!(options[0].value, "welcome-tour");
@@ -6265,7 +6092,7 @@ mod app_label_tests {
     async fn dialog_definition_builder_chain() {
         let dialog = DialogDefinition::new("addObject", LocalizedLabel::data("Add Object"), ActionRef::new("addObjectKind"))
             .body(LocalizedLabel::data("Choose a kind"))
-            .args(vec![ActionArgDef::text("objectKind", LocalizedLabel::data("Kind")).await])
+            .args(vec![ActionArgDef::text("objectKind", LocalizedLabel::data("Kind"))])
             .submit_label(LocalizedLabel::data("Add"))
             .cancel_label(LocalizedLabel::data("Nevermind"))
             .on_cancel(ActionRef::new("closeDialog"));
@@ -6278,7 +6105,7 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn command_definition_round_trips_camel_case_with_defaults() {
-        let command = CommandDefinition::new_catalog("setThemeId", LocalizedLabel::data("Set Theme"), "appearance", ActionKind::Shell).await.with_keybinding(PlatformKeybinding::for_platform("mod+shift+t", Platform::MacOs).await).await;
+        let command = CommandDefinition::bounded_catalog("setThemeId", LocalizedLabel::data("Set Theme"), "appearance", ActionKind::Shell).with_keybinding(PlatformKeybinding::for_platform("mod+shift+t", Platform::MacOs));
         let json = serde_json::to_string(&command).unwrap();
         assert!(json.contains("\"args\":[]"), "{json}");
         assert!(json.contains("\"category\":\"appearance\""), "{json}");
@@ -6308,7 +6135,7 @@ mod app_label_tests {
         assert!(action_json.contains("\"windowInstanceId\":\"main-1\""), "{action_json}");
         assert_eq!(serde_json::from_str::<ActionInvocation>(&action_json).unwrap(), action);
 
-        let os = OsDefinition { commands: vec![CommandDefinition::new_catalog("toggleFullscreen", LocalizedLabel::data("Toggle Full Screen"), "window", ActionKind::Shell).await] };
+        let os = OsDefinition { commands: vec![CommandDefinition::bounded_catalog("toggleFullscreen", LocalizedLabel::data("Toggle Full Screen"), "window", ActionKind::Shell)] };
         assert_eq!(serde_json::from_str::<OsDefinition>(&serde_json::to_string(&os).unwrap()).unwrap(), os);
     }
 
@@ -6421,7 +6248,7 @@ mod app_label_tests {
             (ArtifactDialect { artifact_kind: "s.stdio.dwg-2d".into(), standard: "1".into(), subset: "cc6".into() }, AppRole::Editor),
         ];
         for (dialect, role) in fixtures {
-            let id = surface_app_id(&dialect, role).await;
+            let id = surface_app_id(&dialect, role);
             let (parsed_dialect, parsed_role) = parse_surface_app_id(&id).await.unwrap_or_else(|err| panic!("{id}: {err}"));
             assert_eq!(parsed_dialect, dialect, "{id}");
             assert_eq!(parsed_role, role, "{id}");
@@ -6445,8 +6272,8 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn app_role_as_str_and_from_str_round_trip() {
-        assert_eq!(AppRole::Viewer.as_str().await, "viewer");
-        assert_eq!(AppRole::Editor.as_str().await, "editor");
+        assert_eq!(AppRole::Viewer.as_str(), "viewer");
+        assert_eq!(AppRole::Editor.as_str(), "editor");
         assert_eq!("viewer".parse::<AppRole>().unwrap(), AppRole::Viewer);
         assert_eq!("editor".parse::<AppRole>().unwrap(), AppRole::Editor);
         assert!("owner".parse::<AppRole>().is_err());
@@ -6454,7 +6281,7 @@ mod app_label_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn panel_tab_kind_settings_default_apps_id_str() {
-        assert_eq!(PanelTabKind::SettingsDefaultApps.id_str().await, "framework.settings.default-apps");
+        assert_eq!(PanelTabKind::SettingsDefaultApps.id_str(), "framework.settings.default-apps");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -6467,213 +6294,16 @@ mod app_label_tests {
     //#endregion 🔖️SurfaceTests
 
     #[cfg(feature = "typegen")]
-    #[semio_framework_async_macros::async_test]
-    async fn exports_typescript_bindings() {
-        use ts_rs::TS;
-        // 🧬️ `export_all`, not `export`: ts-rs' `export` writes ONLY the named type's own
-        // binding file, so a type reachable solely as a FIELD of an exported type silently
-        // never got one — 11 names (`ConfigSpec`, `UiMenuRef`, `TopicContribution`, …) were
-        // missing from the generated mirror for exactly that reason. `export_all` walks
-        // transitive dependencies, which is how the sibling `ui-contract` typegen test
-        // already avoids this whole class.
-        ui_wgpu::wgpu::IconName::export_all().unwrap();
-        ui_wgpu::wgpu::ActionDescriptor::export_all().unwrap();
-        ui_wgpu::wgpu::WindowLayoutWindowNode::export_all().unwrap();
-        ui_wgpu::wgpu::WindowLayoutStackNode::export_all().unwrap();
-        ui_wgpu::wgpu::WindowLayoutAxisNode::export_all().unwrap();
-        ui_wgpu::wgpu::WindowLayoutChild::export_all().unwrap();
-        ui_wgpu::wgpu::WindowLayoutRoot::export_all().unwrap();
-        ui_wgpu::wgpu::WindowLayout::export_all().unwrap();
-        ui_wgpu::wgpu::NamedLayout::export_all().unwrap();
-        ui_wgpu::wgpu::component::layout::MeasureSelectItem::export_all().unwrap();
-        ui_wgpu::wgpu::WindowMeasure::export_all().unwrap();
-        ui_wgpu::wgpu::component::layout::WindowEngagementOption::export_all().unwrap();
-        ui_wgpu::wgpu::component::layout::WindowEngagementInput::export_all().unwrap();
-        ui_wgpu::wgpu::component::layout::WindowEngagementStatus::export_all().unwrap();
-        ui_wgpu::wgpu::component::layout::WindowEngagementPossible::export_all().unwrap();
-        ui_wgpu::wgpu::component::layout::WindowEngagementRingOption::export_all().unwrap();
-        ui_wgpu::wgpu::component::layout::WindowEngagementToggleGroupOption::export_all().unwrap();
-        ui_wgpu::wgpu::component::layout::WindowEngagementSelectItem::export_all().unwrap();
-        ui_wgpu::wgpu::WindowEngagementControl::export_all().unwrap();
-        ui_wgpu::wgpu::WindowEngagement::export_all().unwrap();
-        ui_wgpu::wgpu::WindowEngagementSlot::export_all().unwrap();
-        ui_wgpu::wgpu::WindowOptions::export_all().unwrap();
-        ui_wgpu::wgpu::SurfaceKind::export_all().unwrap();
-        ui_wgpu::wgpu::UtilityCategory::export_all().unwrap();
-        // 🧭️ The shared element-state model + every `UiNode` variant struct (closing the gap that used
-        // to leave these hand-mirrored in `framework/core/js/index.ts` — see 🔖️Presence/🔖️UiNode).
-        // `UiNode`/`UiComponentSceneNode` themselves are NOT yet typegen-derived: the enum's
-        // `ComponentScene` variant nests ~15 scene payload types (`Canvas2dScene`, `World3dScene`, …)
-        // that would each need their own `ts_rs::TS` derive first — a large, separate mechanical pass,
-        // out of scope here. `framework/core/js/index.ts` hand-writes the `UiNode` union stitching
-        // these generated variant interfaces together until that follow-up lands.
-        ui_wgpu::wgpu::UiState::export_all().unwrap();
-        ui_wgpu::wgpu::UiStatus::export_all().unwrap();
-        ui_wgpu::wgpu::UiPresence::export_all().unwrap();
-        ui_wgpu::wgpu::UiPeerMark::export_all().unwrap();
-        ui_wgpu::wgpu::UiDropOverlaySpec::export_all().unwrap();
-        ui_wgpu::wgpu::UiTextNode::export_all().unwrap();
-        ui_wgpu::wgpu::UiButtonNode::export_all().unwrap();
-        ui_wgpu::wgpu::UiSeparatorNode::export_all().unwrap();
-        ui_wgpu::wgpu::UiImageNode::export_all().unwrap();
-        ui_wgpu::wgpu::UiInputNode::export_all().unwrap();
-        ui_wgpu::wgpu::UiSelectItem::export_all().unwrap();
-        ui_wgpu::wgpu::UiSelectNode::export_all().unwrap();
-        ui_wgpu::wgpu::UiToggleNode::export_all().unwrap();
-        ui_wgpu::wgpu::UiKeyValueEntry::export_all().unwrap();
-        ui_wgpu::wgpu::UiKeyValueNode::export_all().unwrap();
-        ui_wgpu::wgpu::UiSliderNode::export_all().unwrap();
-        ui_wgpu::wgpu::UiNumberStepperNode::export_all().unwrap();
-        ui_wgpu::wgpu::UiRingNode::export_all().unwrap();
-        ui_wgpu::wgpu::UiIconSelectNode::export_all().unwrap();
-        ui_wgpu::wgpu::UiControlNode::export_all().unwrap();
-        ui_wgpu::wgpu::UiTreeItemAction::export_all().unwrap();
-        ui_wgpu::wgpu::UiTreeItemNode::export_all().unwrap();
-        ui_wgpu::wgpu::UiTreeSectionNode::export_all().unwrap();
-        ui_wgpu::wgpu::UiTreeNode::export_all().unwrap();
-        ui_wgpu::wgpu::UiExternalSlotNode::export_all().unwrap();
-        // NOT exported (recursive through `UiNode`, itself not yet typegen-derived — see comment
-        // above): UiStackNode, UiGroupNode, UiFieldNode, UiSectionNode, UiInspectorFieldGroup.
-        crate::ui::Keybinding::export_all().unwrap();
-        crate::ui::Platform::export_all().unwrap();
-        crate::ui::PlatformKeybinding::export_all().unwrap();
-        crate::ui::ActionKind::export_all().unwrap();
-        crate::ui::ActionArgOption::export_all().unwrap();
-        crate::ui::ActionArgControl::export_all().unwrap();
-        // 🎫️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P3-manifest-schema, D6:
-        // `ArgSchema`/`ArgFormat`/`ArgPresentation` are the new stored-truth vocabulary behind
-        // `ActionArgDef.schema`/`.presentation`; `ActionArgControl` above stays exported unchanged
-        // (it is still the renderer's own vocabulary, now derived by `ActionArgDef::control()`).
-        crate::ui::ArgFormat::export_all().unwrap();
-        crate::ui::ArgSchema::export_all().unwrap();
-        crate::ui::ArgPresentation::export_all().unwrap();
-        crate::ui::ActionArgDef::export_all().unwrap();
-        // 🎯️ §3.1 `🔖️ActionSemantics` — effects/policy/execution + natural-language framing now
-        // carried on every `ActionDefinition`/`CommandDefinition`.
-        crate::ui::ResourceSelector::export_all().unwrap();
-        crate::ui::CapabilityEffects::export_all().unwrap();
-        crate::ui::ApprovalMode::export_all().unwrap();
-        crate::ui::CapabilityPolicy::export_all().unwrap();
-        crate::ui::PreviewMode::export_all().unwrap();
-        crate::ui::UndoMode::export_all().unwrap();
-        crate::ui::IdempotencyMode::export_all().unwrap();
-        crate::ui::ExecutionClass::export_all().unwrap();
-        crate::ui::InteractiveJobClassification::export_all().unwrap();
-        crate::ui::CapabilityExecution::export_all().unwrap();
-        crate::ui::ActionSemantics::export_all().unwrap();
-        crate::ui::ActionDefinition::export_all().unwrap();
-        crate::ui::ActionRef::export_all().unwrap();
-        crate::ui::ActionAddress::export_all().unwrap();
-        crate::ui::ActionInvocation::export_all().unwrap();
-        // 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM W1: the wave-0 interaction
-        // definition family, re-exported at the crate root (not under `crate::ui`) — see the `use
-        // crate::{InteractionDefinition, InteractionRef};` import above this file's 🔖️Manifest region.
-        crate::InteractionDefinition::export_all().unwrap();
-        crate::GranularityDefinition::export_all().unwrap();
-        crate::HierarchyProvider::export_all().unwrap();
-        crate::HoverSpec::export_all().unwrap();
-        crate::SelectionSpec::export_all().unwrap();
-        crate::SelectionMode::export_all().unwrap();
-        crate::SelectionMethod::export_all().unwrap();
-        crate::MergeMode::export_all().unwrap();
-        crate::InteractionRef::export_all().unwrap();
-        // 🕹️ W3a: `TutorialUiSnapshot.interaction_selection` carries this directly (see
-        // `TutorialUiChange::Selection`), so it needs its own top-level binding too.
-        crate::DomainSelection::export_all().unwrap();
-        crate::ui::UtilityDefinition::export_all().unwrap();
-        crate::ui::UtilityRef::export_all().unwrap();
-        crate::ui::ToolDefinition::export_all().unwrap();
-        crate::ui::ToolRef::export_all().unwrap();
-        crate::ui::CommandDefinition::export_all().unwrap();
-        crate::ui::CommandOwnerAddress::export_all().unwrap();
-        crate::ui::CommandAddress::export_all().unwrap();
-        crate::ui::CommandInvocation::export_all().unwrap();
-        crate::ui::OsDefinition::export_all().unwrap();
-        crate::ui::ModeDefinition::export_all().unwrap();
-        crate::ui::WindowKindDefinition::export_all().unwrap();
-        crate::ui::PanelGroup::export_all().unwrap();
-        crate::ui::PanelTabKind::export_all().unwrap();
-        crate::ui::PanelTabDefinition::export_all().unwrap();
-        crate::ui::IntroductionDefinition::export_all().unwrap();
-        crate::ui::IntroductionStepDefinition::export_all().unwrap();
-        crate::ui::IntroductionPlacement::export_all().unwrap();
-        crate::ui::IntroductionInteractionKind::export_all().unwrap();
-        crate::ui::IntroductionInteraction::export_all().unwrap();
-        crate::ui::IntroductionLogo::export_all().unwrap();
-        crate::ui::IntroductionPoint::export_all().unwrap();
-        crate::ui::IntroductionPointerButton::export_all().unwrap();
-        crate::ui::IntroductionKeyModifier::export_all().unwrap();
-        crate::ui::IntroductionGesture::export_all().unwrap();
-        crate::ui::IntroductionCursor::export_all().unwrap();
-        crate::ui::IntroductionDemonstration::export_all().unwrap();
-        crate::ui::TutorialDefinition::export_all().unwrap();
-        crate::ui::TutorialChapter::export_all().unwrap();
-        crate::ui::TutorialBase::export_all().unwrap();
-        crate::ui::TutorialTracks::export_all().unwrap();
-        crate::ui::TutorialAssetSrc::export_all().unwrap();
-        crate::ui::TutorialNarrationCue::export_all().unwrap();
-        crate::ui::TutorialCaption::export_all().unwrap();
-        crate::ui::TutorialOverlayRect::export_all().unwrap();
-        crate::ui::TutorialVideoCue::export_all().unwrap();
-        crate::ui::TutorialEvent::export_all().unwrap();
-        crate::ui::TutorialEventKind::export_all().unwrap();
-        crate::ui::TutorialUiKeyframe::export_all().unwrap();
-        crate::ui::TutorialUiSample::export_all().unwrap();
-        crate::ui::TutorialUiSnapshot::export_all().unwrap();
-        crate::ui::TutorialUiChange::export_all().unwrap();
-        crate::ui::TutorialArtifactEvent::export_all().unwrap();
-        crate::ui::TutorialArtifactEventKind::export_all().unwrap();
-        crate::ui::TutorialCameraKeyframe::export_all().unwrap();
-        crate::ui::TutorialCameraState::export_all().unwrap();
-        crate::ui::TutorialEasing::export_all().unwrap();
-        crate::ui::TutorialGestureCue::export_all().unwrap();
-        crate::ui::DialogDefinition::export_all().unwrap();
-        crate::ui::AppRole::export_all().unwrap();
-        crate::ArtifactDialect::export_all().unwrap();
-        crate::ui::AppRef::export_all().unwrap();
-        crate::ui::AppIo::export_all().unwrap();
-        crate::ui::AppDefinition::export_all().unwrap();
-        crate::ui::ExampleDefinition::export_all().unwrap();
-        crate::ui::ProgramContributionEntry::export_all().unwrap();
-        crate::ui::PluginManifest::export_all().unwrap();
-        crate::ui::PluginDependency::export_all().unwrap();
-        crate::ui::ContributedMutationSemantics::export_all().unwrap();
-        crate::ui::ContributedMutationMetadata::export_all().unwrap();
-        crate::ui::ContributedInferenceMetadata::export_all().unwrap();
-        crate::ui::ArtifactContributionDescriptor::export_all().unwrap();
-        crate::ui::ViewWindowInstance::export_all().unwrap();
-        crate::ui::ViewModel::export_all().unwrap();
-        // 🎗️ `AppLabelsOverlay` deleted — see the region comment at its former definition site.
-        crate::ui::kernel::CapabilityRequirement::export_all().unwrap();
-        crate::ui::kernel::Rights::export_all().unwrap();
-        crate::ui::kernel::ArtifactKind::export_all().unwrap();
-        crate::ui::kernel::Scope::export_all().unwrap();
-        // 🔖️Broker/🔖️PackageDescriptor (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME
-        // packet A3-kernel-types) — additive, nothing constructs these yet.
-        crate::ui::kernel::CapabilityId::export_all().unwrap();
-        crate::ui::kernel::CapabilityRequest::export_all().unwrap();
-        crate::ui::kernel::QuotaSchema::export_all().unwrap();
-        crate::ui::kernel::ActivationEvent::export_all().unwrap();
-        crate::ui::PackageRole::export_all().unwrap();
-        crate::ui::ExecutionMode::export_all().unwrap();
-        crate::ui::ExtensionPointDeclaration::export_all().unwrap();
-        crate::ui::AssetDeclaration::export_all().unwrap();
-        crate::ui::PackageHashes::export_all().unwrap();
-        crate::ui::DescriptorEntry::export_all().unwrap();
-        crate::ui::ContributionSet::export_all().unwrap();
-        crate::ui::PackageDescriptor::export_all().unwrap();
-        // 🤖️ ticket 26/08/17/LLM-FIRST-OS-VIA-THE-SEMIO-OS-MCP-GATEWAY packet P8-agent-spi —
-        // additive, attaches to `PackageDescriptor` via the lease bundle (see `🔖️AgentContributions`).
-        crate::ui::AgentContributions::export_all().unwrap();
-        crate::ui::OsMediaCapability::export_all().unwrap();
-        crate::ui::ArtifactKindSpec::export_all().unwrap();
-        crate::ui::MediaClass::export_all().unwrap();
-        crate::ui::MediaForm::export_all().unwrap();
-        crate::ui::MediaType::export_all().unwrap();
-        crate::ui::MediaWireFormat::export_all().unwrap();
-        crate::ui::MediaPortDirection::export_all().unwrap();
-        crate::ui::PortMultiplicity::export_all().unwrap();
-        crate::ui::MediaPortSpec::export_all().unwrap();
+    #[test]
+    fn exports_typescript_bindings() {
+        crate::schema_metadata::validate().unwrap();
+        assert_eq!(crate::schema_metadata::TYPES.len(), 184);
+        let rendered = crate::schema_metadata::render_typescript();
+        if let Some(path) = std::env::var_os("SEMIO_TYPEGEN_OUT") {
+            std::fs::write(path, &rendered).unwrap();
+        } else {
+            assert_eq!(rendered, include_str!("🤖️generated/🟦️manifest.ts"));
+        }
     }
 }
 //#endregion 🔖️Manifest

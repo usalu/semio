@@ -52,10 +52,10 @@ mod tests {
         value: i32,
     }
     impl ArtifactPack for JobTestSnapshot {
-        async fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
             serde_json::to_vec(self).map_err(|error| store::PackError::Schema(error.to_string()))
         }
-        async fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
             serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()))
         }
     }
@@ -65,10 +65,10 @@ mod tests {
         delta: i32,
     }
     impl protocol::MutationDiff<JobTestSnapshot> for JobTestDiff {
-        async fn apply(&self, base: &JobTestSnapshot) -> protocol::MutationApplyResult<JobTestSnapshot> {
+        fn apply(&self, base: &JobTestSnapshot) -> protocol::MutationApplyResult<JobTestSnapshot> {
             Ok(JobTestSnapshot { value: base.value + self.delta })
         }
-        async fn absorb(&mut self, other: Self) {
+        fn absorb(&mut self, other: Self) {
             self.delta += other.delta;
         }
     }
@@ -79,20 +79,20 @@ mod tests {
     }
     impl protocol::Mutation<JobTestSnapshot> for JobTestOp {
         type Diff = JobTestDiff;
-        async fn diff(&self, _base: &JobTestSnapshot) -> protocol::MutationOutcome<JobTestDiff> {
+        fn diff(&self, _base: &JobTestSnapshot) -> protocol::MutationOutcome<JobTestDiff> {
             let JobTestOp::Add(delta) = self;
-            protocol::MutationOutcome::new(JobTestDiff { delta: *delta }).await
+            protocol::MutationOutcome::new(JobTestDiff { delta: *delta })
         }
-        async fn inverse(&self, _base: &JobTestSnapshot) -> Vec<Self> {
+        fn inverse(&self, _base: &JobTestSnapshot) -> Vec<Self> {
             let JobTestOp::Add(delta) = self;
             vec![JobTestOp::Add(-delta)]
         }
     }
     impl OpBinary for JobTestOp {
-        async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
             Ok(serde_json::to_vec(self).expect("job test op always encodes"))
         }
-        async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
             serde_json::from_slice(bytes).map_err(|error| store::PackError::Schema(error.to_string()).into())
         }
     }
@@ -103,10 +103,10 @@ mod tests {
     }
     impl protocol::CompositeMutationKind<JobTestSnapshot, JobTestOp> for JobTestMutationKind {
         const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "value", kind: "add-value", record: "AddedValue" };
-        async fn plan(&self, _base: &JobTestSnapshot, planner: &mut protocol::Planner<JobTestSnapshot, JobTestOp>) -> Result<(), protocol::PlanError> {
-            planner.call(JobTestOp::Add(self.delta)).await
+        fn plan(&self, _base: &JobTestSnapshot, planner: &mut protocol::Planner<JobTestSnapshot, JobTestOp>) -> Result<(), protocol::PlanError> {
+            planner.call(JobTestOp::Add(self.delta))
         }
-        async fn label(&self) -> String {
+        fn label(&self) -> String {
             format!("Add {} to value", self.delta)
         }
     }
@@ -116,17 +116,16 @@ mod tests {
     /// `contributed_mutation_wire_tests::commit_test_contribution` fixture recipe (that helper is
     /// private to its own test module, so this is a from-scratch copy, not a shared import).
     async fn commit_job_test_contribution(artifact_kind: &str, target_document_schema: &str, contributor: &str) -> String {
-        let contribution = crate::app::ArtifactContribution::builder(artifact_kind).await.mutation::<JobTestSnapshot, JobTestOp, JobTestMutationKind>(target_document_schema, 1, 1).await.build().await;
-        let (descriptor, _inferences, mutation_runtime) = contribution.resolve(contributor).await;
+        let contribution = crate::app::ArtifactContribution::builder(artifact_kind).await.mutation::<JobTestSnapshot, JobTestOp, JobTestMutationKind>(target_document_schema, 1, 1).await.build();
+        let (descriptor, _inferences, mutation_runtime) = contribution.resolve(contributor);
         let mutation_id = descriptor.mutations[0].mutation_id.clone();
         crate::app::commit_contributed_mutation_services(mutation_runtime).await.expect("commit contributed mutation services");
         mutation_id
     }
 
     async fn request_wire_bytes(artifact_kind: &str, mutation_id: &str, payload: Vec<u8>) -> Vec<u8> {
-        let request =
-            crate::app::WireArtifactMutationPlanRequest { artifact_kind: artifact_kind.to_string(), mutation_id: mutation_id.to_string(), revision: 42, generation: 9, snapshot_pack: JobTestSnapshot { value: 10 }.encode_pack().await, payload };
-        store::pack_rt::encode_wire_value(&dsl::to_dsl_value(&request).expect("test request serializes to DslValue")).await
+        let request = crate::app::WireArtifactMutationPlanRequest { artifact_kind: artifact_kind.to_string(), mutation_id: mutation_id.to_string(), revision: 42, generation: 9, snapshot_pack: JobTestSnapshot { value: 10 }.encode_pack(), payload };
+        store::pack_rt::encode_wire_value(&dsl::to_dsl_value(&request).expect("test request serializes to DslValue"))
     }
 
     /// 🧬️ Registers a real contributed mutation kind (not mocked away) and drives
@@ -155,12 +154,12 @@ mod tests {
         }
         match step_job(300, JobBudget { fuel: 1, deadline_ms: 1 }).await {
             JobStep::Done(bytes) => {
-                let value = store::pack_rt::decode_wire_value(&bytes).await.expect("wire value decodes");
+                let value = store::pack_rt::decode_wire_value(&bytes).expect("wire value decodes");
                 let result: crate::app::WireArtifactMutationPlanResult = dsl::from_dsl_value(value).expect("result decodes");
                 assert_eq!(result.mutation_id, mutation_id);
                 assert_eq!(result.label, "Add 5 to value");
                 assert_eq!(result.owner_ops.len(), 1);
-                let op = JobTestOp::decode_op(&result.owner_ops[0]).await.expect("owner op decodes");
+                let op = JobTestOp::decode_op(&result.owner_ops[0]).expect("owner op decodes");
                 assert_eq!(op, JobTestOp::Add(5));
             }
             JobStep::Failed(bytes) => {

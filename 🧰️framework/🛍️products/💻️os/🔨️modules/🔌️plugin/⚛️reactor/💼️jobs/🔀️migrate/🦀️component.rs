@@ -62,7 +62,7 @@ async fn execute(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
 mod tests {
     use super::super::*;
 
-    async fn append_job_test_marker(bytes: &[u8]) -> Result<Vec<u8>, String> {
+    fn append_job_test_marker(bytes: &[u8]) -> Result<Vec<u8>, String> {
         let mut out = bytes.to_vec();
         out.push(0xAB);
         Ok(out)

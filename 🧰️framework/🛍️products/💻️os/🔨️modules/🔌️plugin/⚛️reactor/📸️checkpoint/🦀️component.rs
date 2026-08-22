@@ -71,10 +71,10 @@ impl CheckpointPack {
 /// is `store::encode_document_pack_bytes(files.pack, files.spr)` — the SAME wire codec
 /// `AppCommand::LoadDocument`/`ReadDocument` already use for a whole document as one binary blob;
 /// `files.ops` (a derived text mirror, never authoritative) is not carried.
-pub async fn checkpoint(instance_ids: &[(u32, String)], timers: Vec<u64>, pending_requests: Vec<u64>, task_restarts: Vec<TaskRestart>) -> Result<Vec<u8>, Fault> {
+pub async fn checkpoint<PA: crate::app::PluginApp>(runtime: &plugin_runtime::PluginRuntime<PA>, instance_ids: &[(u32, String)], timers: Vec<u64>, pending_requests: Vec<u64>, task_restarts: Vec<TaskRestart>) -> Result<Vec<u8>, Fault> {
     let mut instances = Vec::with_capacity(instance_ids.len());
     for (id, app_id) in instance_ids {
-        let files = plugin_runtime::plugin_document_pack(*id).await.unwrap_or_default();
+        let files = plugin_runtime::plugin_document_pack(runtime, *id).await.unwrap_or_default();
         let document_pack = store::encode_document_pack_bytes(&files.pack, &files.spr).await;
         instances.push(InstanceCheckpoint { id: *id, app_id: app_id.clone(), document_pack });
     }
@@ -85,15 +85,15 @@ pub async fn checkpoint(instance_ids: &[(u32, String)], timers: Vec<u64>, pendin
 /// 📸️ Restores every instance recorded in `state`, re-creating each and reloading its document
 /// pack — `⚛️reactor::poll`'s caller is responsible for re-arming `timers`/treating
 /// `pending_requests` as stale (design-abi.md §4).
-pub async fn restore(state: &[u8]) -> Result<CheckpointPack, Fault> {
+pub async fn restore<PA: crate::app::PluginApp>(runtime: &plugin_runtime::PluginRuntime<PA>, state: &[u8]) -> Result<CheckpointPack, Fault> {
     let pack: CheckpointPack = serde_json::from_slice(state).map_err(|error| Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.checkpoint.decode"), error.to_string()))?;
     for instance in &pack.instances {
-        let new_id = plugin_runtime::plugin_create_app(&instance.app_id).await?;
+        let new_id = plugin_runtime::plugin_create_app(runtime, &instance.app_id).await?;
         if !instance.document_pack.is_empty() {
             let (doc_pack, spr) =
                 store::decode_document_pack_bytes(&instance.document_pack).await.map_err(|error| Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.checkpoint.decode-document"), format!("{error:?}")))?;
             let files = store::ArtifactPackFiles { pack: doc_pack, spr, ops: String::new() };
-            plugin_runtime::plugin_load_document_pack(new_id, &files).await?;
+            plugin_runtime::plugin_load_document_pack(runtime, new_id, &files).await?;
         }
     }
     Ok(pack)
@@ -105,7 +105,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn checkpoint_of_no_instances_round_trips_through_json() {
-        let bytes = checkpoint(&[], vec![1, 2], vec![7], Vec::new()).await.expect("an empty instance list must still encode");
+        let runtime = plugin_runtime::PluginRuntime::<crate::app::NoPluginApp>::new();
+        let bytes = checkpoint(&runtime, &[], vec![1, 2], vec![7], Vec::new()).await.expect("an empty instance list must still encode");
         let pack: CheckpointPack = serde_json::from_slice(&bytes).expect("checkpoint bytes must be valid CheckpointPack json");
         assert!(pack.instances.is_empty());
         assert_eq!(pack.timers, vec![1, 2]);
@@ -115,9 +116,10 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn task_restarts_round_trip_through_json_and_are_exposed_by_the_accessor() {
+        let runtime = plugin_runtime::PluginRuntime::<crate::app::NoPluginApp>::new();
         let restarts = vec![TaskRestart { instance: 5, command: vec![1, 2, 3] }, TaskRestart { instance: 6, command: vec![4] }];
-        let bytes = checkpoint(&[], Vec::new(), Vec::new(), restarts.clone()).await.expect("must encode");
-        let pack = restore(&bytes).await.expect("must decode back");
+        let bytes = checkpoint(&runtime, &[], Vec::new(), Vec::new(), restarts.clone()).await.expect("must encode");
+        let pack = restore(&runtime, &bytes).await.expect("must decode back");
         assert_eq!(pack.task_restarts().await.len(), 2);
         assert_eq!(pack.task_restarts().await[0].instance, 5);
         assert_eq!(pack.task_restarts().await[0].command, vec![1, 2, 3]);

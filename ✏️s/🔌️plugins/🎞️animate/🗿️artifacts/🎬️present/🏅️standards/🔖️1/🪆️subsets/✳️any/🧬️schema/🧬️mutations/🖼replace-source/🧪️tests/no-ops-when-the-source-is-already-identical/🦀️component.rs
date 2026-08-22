@@ -41,8 +41,8 @@ fn before() -> PresentSnapshot {
 
 /// ▶️ Replacing the source with its own current value carries `before` to exactly the committed
 /// `after`, leaving the composed deck handle untouched.
-#[semio_framework_async_macros::async_test]
-async fn applies_to_committed_after() {
+#[test]
+fn applies_to_committed_after() {
     let base = before();
     let snapshot = apply_present_mutation(&base, &mutation()).expect("an empty diff still applies cleanly");
     assert_eq!(snapshot, expected_after(), "replace-source/no-ops-when-the-source-is-already-identical: applied state differs from committed after-snapshot");
@@ -52,8 +52,8 @@ async fn applies_to_committed_after() {
 /// 🔺️ The delta is exactly the committed all-null `PresentDiff`. This matters more here than
 /// anywhere else in the tree: source and tiles share ONE composed handle, so a careless
 /// source-identity replace would re-mint a deck handle and silently churn the tiles' addressing too.
-#[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+#[test]
+fn produces_committed_diff() {
     let outcome = <PresentMutation as protocol::Mutation<PresentSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
@@ -62,8 +62,8 @@ async fn produces_committed_diff() {
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to present's own diff type.
-#[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+#[test]
+fn committed_diff_is_canonical() {
     let decoded: PresentDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
@@ -72,8 +72,8 @@ async fn committed_diff_is_canonical() {
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after`, with the
 /// shared deck slot never set.
-#[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+#[test]
+fn committed_diff_applies_to_after() {
     let decoded: PresentDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert!(decoded.presentation.is_none(), "a source-identity replace must leave the shared deck slot unset");
     let produced = <PresentDiff as protocol::MutationDiff<PresentSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
@@ -83,8 +83,8 @@ async fn committed_diff_applies_to_after() {
 /// 🔣️ Both committed snapshots and the committed mutation are already canonical — `sourceAspect` is
 /// present, `pdfPage` is omitted: both are `skip_serializing_if = "Option::is_none"`, so an unset
 /// page must not appear as null.
-#[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+#[test]
+fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: PresentSnapshot = serde_json::from_str(text).expect("snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
@@ -100,8 +100,8 @@ async fn committed_json_is_canonical() {
 
 /// 🎯️ The declared outcome holds: `applied`, with one untargeted Warning `mutation.no-op`. Like
 /// `replace-tiles`, this singleton verb has no addressable target and therefore no error branch.
-#[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+#[test]
+fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "replace-source/no-ops-when-the-source-is-already-identical declares an applied outcome");
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("the declared outcome carries messages");
@@ -114,8 +114,8 @@ async fn declared_outcome_holds() {
 
 /// ↩️ `replace-source`'s inverse ignores its payload entirely and rebuilds from the BASE source, so
 /// here it is byte-identical to the forward payload — a value-identical replace is its own inverse.
-#[semio_framework_async_macros::async_test]
-async fn inverse_restores_the_whole_base_source() {
+#[test]
+fn inverse_restores_the_whole_base_source() {
     let base = before();
     let PresentMutation::ReplaceSource(payload) = mutation() else {
         panic!("committed mutation must be a replace-source");

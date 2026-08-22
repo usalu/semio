@@ -988,6 +988,7 @@ pub struct RenderPacket {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::mem::{offset_of, size_of};
 
     fn finish_params(viewport: [f32; 2], dpr: f32) -> FinishParams {
         FinishParams { viewport, dpr, time_seconds_origin: 0.0, resource_ops: Vec::new() }
@@ -1098,11 +1099,11 @@ mod tests {
 
     #[test]
     fn quad_instance_byte_layout_matches_the_wgpu_targets_ui_instance() {
-        assert_eq!(std::mem::size_of::<QuadInstance>(), 64);
-        assert_eq!(std::mem::offset_of!(QuadInstance, rect), 0);
-        assert_eq!(std::mem::offset_of!(QuadInstance, color), 16);
-        assert_eq!(std::mem::offset_of!(QuadInstance, params), 32);
-        assert_eq!(std::mem::offset_of!(QuadInstance, uv_rect), 48);
+        assert_eq!(size_of::<QuadInstance>(), 64);
+        assert_eq!(offset_of!(QuadInstance, rect), 0);
+        assert_eq!(offset_of!(QuadInstance, color), 16);
+        assert_eq!(offset_of!(QuadInstance, params), 32);
+        assert_eq!(offset_of!(QuadInstance, uv_rect), 48);
     }
 
     fn sample_builder() -> SceneBuilder {

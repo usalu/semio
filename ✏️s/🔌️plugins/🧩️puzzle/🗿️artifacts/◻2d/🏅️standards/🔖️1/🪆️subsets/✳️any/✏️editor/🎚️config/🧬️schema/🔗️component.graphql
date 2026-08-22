@@ -1,5 +1,4 @@
 type Puzzle2dConfig {
-  selectedIds: [String!]! @state(class: CONFIG)
   cameraX: Float! @state(class: CONFIG)
   cameraY: Float! @state(class: CONFIG)
   cameraZoom: Float! @state(class: CONFIG)
@@ -9,7 +8,12 @@ type Puzzle2dConfig {
   brushCandidates: [JsonValue!]! @state(class: CONFIG)
   brushCandidateSourceHandleId: String! @state(class: CONFIG)
   fillCount: Int! @state(class: CONFIG)
-  selectionMethod: String! @state(class: CONFIG)
+  fillJobCheckpoint: [Int!] @state(class: CONFIG)
+  fillJobOperation: Long! @state(class: CONFIG)
+  fillJobGeneration: Long! @state(class: CONFIG)
+  fillJobSeed: Long! @state(class: CONFIG)
+  fillJobAppliedCount: Long! @state(class: CONFIG)
+  fillJobPreview: JsonValue @state(class: CONFIG)
   gridSnapEnabled: Boolean! @state(class: CONFIG)
   gridFactor: Float! @state(class: CONFIG)
   suggestionOffset: Float! @state(class: CONFIG)
@@ -18,6 +22,8 @@ type Puzzle2dConfig {
   activeUtilityByWindowId: [StringEntry!]! @state(class: CONFIG)
   locale: String! @state(class: CONFIG)
   terminology: String! @state(class: CONFIG)
+  exampleLoadGeneration: Long! @state(class: CONFIG)
+  exampleLoadId: String @state(class: CONFIG)
 }
 
 type StringEntry {

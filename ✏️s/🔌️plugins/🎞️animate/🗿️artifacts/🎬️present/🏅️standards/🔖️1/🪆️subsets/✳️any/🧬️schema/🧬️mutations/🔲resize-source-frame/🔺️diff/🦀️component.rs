@@ -7,7 +7,7 @@ use crate::artifacts::present::PresentSnapshot;
 /// 🔺️ Reads the working-scene `(source, tiles)` off `base.presentation`, swaps in `payload.new_frame`
 /// on `source`, and mints a new content-addressed `presentation` handle for the result — real
 /// handcrafted construction from `(payload, base)`, never apply-then-capture.
-pub async fn diff(payload: &ResizeSourceFrame, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
+pub fn diff(payload: &ResizeSourceFrame, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
     let (mut source, tiles) = crate::artifacts::present::present_working_scene(base);
     let frame = &payload.new_frame;
     if !frame.x.is_finite() || !frame.y.is_finite() || !frame.width.is_finite() || !frame.height.is_finite() {

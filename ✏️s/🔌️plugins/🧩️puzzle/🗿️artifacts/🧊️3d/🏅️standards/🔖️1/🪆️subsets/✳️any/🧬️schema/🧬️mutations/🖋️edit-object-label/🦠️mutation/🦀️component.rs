@@ -17,22 +17,22 @@ pub struct EditObjectLabel {
 impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for EditObjectLabel {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "edit", entity: "object", kind: "edit-object-label", record: "EditedObjectLabel" };
 
-    async fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
+    fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
+    fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Edit object \"{}\" label", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn edit_object_label(id: String, new_label: Option<String>) -> Puzzle3dMutation {
+pub fn edit_object_label(id: String, new_label: Option<String>) -> Puzzle3dMutation {
     Puzzle3dMutation::EditObjectLabel(EditObjectLabel { id, new_label })
 }

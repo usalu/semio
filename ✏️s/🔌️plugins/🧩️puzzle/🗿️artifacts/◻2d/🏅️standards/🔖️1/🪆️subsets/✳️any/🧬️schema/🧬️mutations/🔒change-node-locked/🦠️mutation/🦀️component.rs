@@ -15,23 +15,23 @@ pub struct ChangeNodeLocked {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn change_node_locked(id: String, new_locked: Option<bool>) -> Puzzle2dMutation {
+pub fn change_node_locked(id: String, new_locked: Option<bool>) -> Puzzle2dMutation {
     Puzzle2dMutation::ChangeNodeLocked(ChangeNodeLocked { id, new_locked })
 }
 
 impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ChangeNodeLocked {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "node", kind: "change-node-locked", record: "ChangedNodeLocked" };
 
-    async fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
+    fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change node \"{}\" locked", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

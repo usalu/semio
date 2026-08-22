@@ -1,0 +1,3 @@
+E0433	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	17786	cannot find `semio_framework` in `io`
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	7392	`PluginBuilder<builder::Ready, _>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	7421	`PluginBuilder<builder::Ready, _>` is not a future

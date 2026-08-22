@@ -18,19 +18,19 @@ pub struct DeleteTile {
 impl MutationKind<PresentSnapshot, PresentMutation> for DeleteTile {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "tile", kind: "delete-tile", record: "DeletedTile" };
 
-    async fn diff(&self, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
+    fn diff(&self, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
         super::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &PresentSnapshot) -> Vec<PresentMutation> {
+    fn inverse(&self, base: &PresentSnapshot) -> Vec<PresentMutation> {
         super::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Delete tile \"{}\"", self.id)
     }
 
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec!["tiles".into(), self.id.clone()]
     }
 }

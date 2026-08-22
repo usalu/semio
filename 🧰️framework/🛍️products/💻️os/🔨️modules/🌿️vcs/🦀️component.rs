@@ -4,7 +4,6 @@
 //! which depends on this crate — see `26/07/28/EXTRACT-STORE-INTO-ITS-OWN-TECHNOLOGY`).
 
 use serde::{Deserialize, Serialize};
-use thiserror::Error;
 
 // This crate's own body spells the trait name bare (`self::Mutation<P>` in `apply_mutation`
 // below, disambiguating the trait from the same-named generic parameter) — a private (non-`pub`)
@@ -151,59 +150,42 @@ pub struct ArtifactVcs<P, Mutation> {
 }
 //#endregion 🔖️Schemas
 //#region 🔖️Errors
-// 🎞️ `Eq` dropped (was `#[derive(Debug, Error, PartialEq, Eq)]`): `Rejected` below carries
+// 🎞️ `Eq` dropped: `Rejected` below carries
 // `Vec<crate::os_spr::MutationMessage>`, and `MutationMessage` itself only derives `PartialEq`
 // (not `Eq`) — see `📡️spr/🎮️command`'s `🔖️Message` region.
-#[derive(Debug, Error, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum VcsError {
-    #[error("unknown edit id: {0}")]
     UnknownEdit(String),
-    #[error("unknown change id: {0}")]
     UnknownChange(String),
-    #[error("unknown alternative id: {0}")]
     UnknownAlternative(String),
-    #[error("no checkpoint for alternative")]
     NoCheckpoint,
-    #[error("empty apply command")]
     EmptyApply,
-    #[error("mutation diff rejected: {0}")]
-    MutationApply(#[from] MutationApplyError),
-    #[error("nothing to undo")]
+    MutationApply(MutationApplyError),
     NothingToUndo,
-    #[error("cannot undo edit authored by another actor: {0}")]
     ForeignEdit(String),
-    #[error("nothing to redo")]
     NothingToRedo,
-    #[error("serialize error: {0}")]
     Serialize(String),
-    #[error("deserialize error: {0}")]
     Deserialize(String),
-    #[error("backbone error: {0}")]
     Backbone(String),
     /// @emoji 🧬️ A migration/replay/merge was attempted across two envelopes/mutations whose
     /// `dialect` coordinates don't match (see `store::ArtifactEnvelope::dialect`, `26/08/10` D4
     /// evolution slice). Not yet raised by any call site in this pass — additive only.
-    #[error("dialect mismatch: {0}")]
     DialectMismatch(String),
     /// @emoji 🧬️ An operation needs a dialect migration to run first (see `store::migrate_document`)
     /// before it can proceed. Not yet raised by any call site in this pass — additive only.
-    #[error("migration required: {0}")]
     MigrationRequired(String),
     /// @emoji 🧬️ A registered dialect migration ran but failed. Not yet raised by any call site in
     /// this pass — additive only.
-    #[error("migration failed: {0}")]
     MigrationFailed(String),
     /// @emoji 🔁️ A composition-pin graph traversal (parent → child → …) found a cycle back to an
     /// ancestor — an owned-child forest must stay acyclic. Raised by `store::CompositionGraph::
     /// would_cycle_owns`/`would_cycle_links` via `store::CompositionCoordinator::dispatch_group`'s
     /// phase-1 validation (`UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` `🔖️CompositionCoordinator`, wave B2).
-    #[error("composition cycle: {0}")]
     CompositionCycle(String),
     /// @emoji 🚫️ An operation would violate composition's single-ownership invariant (e.g.
     /// adopting a child that already has a different owner, or dispatching to a child a group's
     /// stated parent does not actually own). Raised by `store::CompositionGraph::insert_owns` and
     /// `store::CompositionCoordinator::dispatch_group`'s phase-1 ownership check.
-    #[error("ownership violation: {0}")]
     OwnershipViolation(String),
     /// @emoji 🛂️ A structural failure rejected an operation during
     /// `store::CompositionCoordinator::dispatch_group`'s phase-1 pass (or the object-safe
@@ -213,7 +195,6 @@ pub enum VcsError {
     /// mutation-level rejection now travels as a `MutationMessage` on the op's own
     /// `MutationOutcome`, never through this variant. Additive; not raised anywhere else in this
     /// crate (every other command path reports its own more specific `VcsError` variant).
-    #[error("validation failed: {0}")]
     ValidationFailed(String),
     /// @emoji 🧯️ A `CompositionCoordinator::dispatch_group` call failed AFTER some members were
     /// already applied, and the reverse-order `Undo` compensation pass (see that method's doc
@@ -223,7 +204,6 @@ pub enum VcsError {
     /// than silently losing it. This is the one path in this crate where a command's Result can
     /// legitimately leave a multi-member gesture inconsistent — every other `VcsError` variant is
     /// raised BEFORE any mutation lands.
-    #[error("group dispatch failed and rollback also failed: {0}")]
     CompensationFailed(String),
     /// @emoji 🛑️ A command was rejected WHOLESALE by the authority's own `crate::os_spr::MergePolicy`
     /// — nothing in the command was applied (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-
@@ -231,15 +211,59 @@ pub enum VcsError {
     /// replay produced, so a caller can explain the rejection without re-running anything.
     /// `ValidationFailed` survives ONLY for structural failures now — an ordinary mutation-level
     /// rejection travels through this variant instead.
-    #[error("rejected by merge policy {policy:?}")]
-    Rejected { policy: crate::os_spr::MergePolicy, messages: Vec<crate::os_spr::MutationMessage> },
+    Rejected {
+        policy: crate::os_spr::MergePolicy,
+        messages: Vec<crate::os_spr::MutationMessage>,
+    },
     /// @emoji ❓️ `store::ArtifactStore::resolve_conflict` was called with an id that names no
     /// currently-`Open` conflict on this store.
-    #[error("unknown conflict id: {0}")]
     UnknownConflict(String),
 }
 
-protocol::fault_from_thiserror!(VcsError, crate::os_dsl::FaultOrigin::Module, "module.vcs");
+impl std::fmt::Display for VcsError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::UnknownEdit(id) => write!(formatter, "unknown edit id: {id}"),
+            Self::UnknownChange(id) => write!(formatter, "unknown change id: {id}"),
+            Self::UnknownAlternative(id) => write!(formatter, "unknown alternative id: {id}"),
+            Self::NoCheckpoint => formatter.write_str("no checkpoint for alternative"),
+            Self::EmptyApply => formatter.write_str("empty apply command"),
+            Self::MutationApply(error) => write!(formatter, "mutation diff rejected: {error}"),
+            Self::NothingToUndo => formatter.write_str("nothing to undo"),
+            Self::ForeignEdit(id) => write!(formatter, "cannot undo edit authored by another actor: {id}"),
+            Self::NothingToRedo => formatter.write_str("nothing to redo"),
+            Self::Serialize(message) => write!(formatter, "serialize error: {message}"),
+            Self::Deserialize(message) => write!(formatter, "deserialize error: {message}"),
+            Self::Backbone(message) => write!(formatter, "backbone error: {message}"),
+            Self::DialectMismatch(message) => write!(formatter, "dialect mismatch: {message}"),
+            Self::MigrationRequired(message) => write!(formatter, "migration required: {message}"),
+            Self::MigrationFailed(message) => write!(formatter, "migration failed: {message}"),
+            Self::CompositionCycle(message) => write!(formatter, "composition cycle: {message}"),
+            Self::OwnershipViolation(message) => write!(formatter, "ownership violation: {message}"),
+            Self::ValidationFailed(message) => write!(formatter, "validation failed: {message}"),
+            Self::CompensationFailed(message) => write!(formatter, "group dispatch failed and rollback also failed: {message}"),
+            Self::Rejected { policy, .. } => write!(formatter, "rejected by merge policy {policy:?}"),
+            Self::UnknownConflict(id) => write!(formatter, "unknown conflict id: {id}"),
+        }
+    }
+}
+
+impl std::error::Error for VcsError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::MutationApply(error) => Some(error),
+            _ => None,
+        }
+    }
+}
+
+impl From<MutationApplyError> for VcsError {
+    fn from(error: MutationApplyError) -> Self {
+        Self::MutationApply(error)
+    }
+}
+
+protocol::fault_from_error!(VcsError, crate::os_dsl::FaultOrigin::Module, "module.vcs");
 
 //#endregion 🔖️Errors
 //#region 🔖️CollectionDiff
@@ -308,7 +332,7 @@ pub enum CollectionMutation<TId, TItem, TPatch> {
 }
 
 /// @emoji ▶️ Applies a `CollectionMutation` to a `Vec` in place.
-pub async fn apply_collection_mutation<TId, TItem, TPatch>(items: &mut Vec<TItem>, operation: &CollectionMutation<TId, TItem, TPatch>)
+pub fn apply_collection_mutation<TId, TItem, TPatch>(items: &mut Vec<TItem>, operation: &CollectionMutation<TId, TItem, TPatch>)
 where
     TId: PartialEq + Clone,
     TItem: Identified<TId> + Clone + Patchable<TPatch>,
@@ -338,7 +362,7 @@ where
 
 /// @emoji ↩️ Computes the inverse `CollectionMutation` from the pre-state `items`. Panics if `operation` targets
 /// an id absent from `items` (Remove/Move/Patch always target an existing item by construction).
-pub async fn inverse_collection_mutation<TId, TItem, TPatch>(items: &[TItem], operation: &CollectionMutation<TId, TItem, TPatch>) -> CollectionMutation<TId, TItem, TPatch>
+pub fn inverse_collection_mutation<TId, TItem, TPatch>(items: &[TItem], operation: &CollectionMutation<TId, TItem, TPatch>) -> CollectionMutation<TId, TItem, TPatch>
 where
     TId: PartialEq + Clone,
     TItem: Identified<TId> + Clone + Patchable<TPatch>,
@@ -368,7 +392,7 @@ where
 /// `added`. `Add` → `added`, `Remove` → `removed`, `Patch` → `modified`. `CollectionDiff` has no
 /// positional-move channel, so `Move` is encoded as `removed` + `added` (delete then re-add by
 /// identity); a plugin that keeps items keyed by id reconstructs order from item identity.
-pub async fn collection_diff_from_mutation<TId, TItem, TPatch>(items: &[TItem], operation: &CollectionMutation<TId, TItem, TPatch>) -> CollectionDiff<TId, TPatch, TItem>
+pub fn collection_diff_from_mutation<TId, TItem, TPatch>(items: &[TItem], operation: &CollectionMutation<TId, TItem, TPatch>) -> CollectionDiff<TId, TPatch, TItem>
 where
     TId: PartialEq + Clone,
     TItem: Identified<TId> + Clone,
@@ -441,7 +465,7 @@ pub async fn content_addressed_checkpoint_id(parent_id: Option<&str>, change_ids
     input.extend_from_slice(parent_id.unwrap_or("").as_bytes());
     input.push(0);
     for change_id in change_ids {
-        let change_hash = changes.iter().find(|change| change.id == *change_id).map(|change| *blake3::hash(&serde_json::to_vec(change).unwrap_or_default()).as_bytes()).unwrap_or([0u8; 32]);
+        let change_hash = changes.iter().find(|change| change.id == *change_id).map_or([0u8; 32], |change| *blake3::hash(&serde_json::to_vec(change).unwrap_or_default()).as_bytes());
         input.extend_from_slice(&change_hash);
     }
     input.push(0);
@@ -498,32 +522,32 @@ mod tests {
     }
 
     impl Patchable<DemoItemPatch> for DemoItem {
-        async fn apply_patch(&mut self, patch: &DemoItemPatch) {
+        fn apply_patch(&mut self, patch: &DemoItemPatch) {
             if let Some(value) = patch.value {
                 self.value = value;
             }
         }
 
-        async fn diff_patch(&self, other: &Self) -> Option<DemoItemPatch> {
-            (self.value != other.value).then(|| DemoItemPatch { value: Some(other.value) })
+        fn diff_patch(&self, other: &Self) -> Option<DemoItemPatch> {
+            (self.value != other.value).then_some(DemoItemPatch { value: Some(other.value) })
         }
     }
 
     #[semio_framework_async_macros::async_test]
     async fn collection_diff_from_op_projects_each_variant() {
         let items: Vec<DemoItem> = vec![DemoItem { id: "a".into(), value: 1 }, DemoItem { id: "b".into(), value: 2 }];
-        let added = collection_diff_from_mutation::<String, DemoItem, DemoItemPatch>(&items, &CollectionMutation::Add { index: 0, item: DemoItem { id: "c".into(), value: 3 } }).await;
+        let added = collection_diff_from_mutation::<String, DemoItem, DemoItemPatch>(&items, &CollectionMutation::Add { index: 0, item: DemoItem { id: "c".into(), value: 3 } });
         assert_eq!(added.added.len(), 1);
         assert!(added.removed.is_empty() && added.modified.is_empty());
 
-        let removed = collection_diff_from_mutation::<String, DemoItem, DemoItemPatch>(&items, &CollectionMutation::Remove { id: "a".into() }).await;
+        let removed = collection_diff_from_mutation::<String, DemoItem, DemoItemPatch>(&items, &CollectionMutation::Remove { id: "a".into() });
         assert_eq!(removed.removed, vec!["a".to_string()]);
 
-        let patched = collection_diff_from_mutation(&items, &CollectionMutation::Patch { id: "b".into(), patch: DemoItemPatch { value: Some(9) } }).await;
+        let patched = collection_diff_from_mutation(&items, &CollectionMutation::Patch { id: "b".into(), patch: DemoItemPatch { value: Some(9) } });
         assert_eq!(patched.modified.len(), 1);
         assert_eq!(patched.modified[0].id, "b");
 
-        let moved = collection_diff_from_mutation::<String, DemoItem, DemoItemPatch>(&items, &CollectionMutation::Move { id: "a".into(), to_index: 1 }).await;
+        let moved = collection_diff_from_mutation::<String, DemoItem, DemoItemPatch>(&items, &CollectionMutation::Move { id: "a".into(), to_index: 1 });
         assert_eq!(moved.removed, vec!["a".to_string()], "move is encoded as remove + re-add by identity");
         assert_eq!(moved.added.len(), 1);
         assert_eq!(moved.added[0].id, "a");
@@ -534,11 +558,11 @@ mod tests {
         let items: Vec<DemoItem> = vec![DemoItem { id: "a".into(), value: 1 }];
         let operation = CollectionMutation::Add { index: 1, item: DemoItem { id: "b".into(), value: 2 } };
         let mut applied = items.clone();
-        apply_collection_mutation(&mut applied, &operation).await;
+        apply_collection_mutation(&mut applied, &operation);
         assert_eq!(applied.len(), 2);
         assert_eq!(applied[1].id, "b");
         let inverse = inverse_collection_mutation(&items, &operation);
-        apply_collection_mutation(&mut applied, &inverse.await).await;
+        apply_collection_mutation(&mut applied, &inverse);
         assert_eq!(applied, items);
     }
 
@@ -547,10 +571,10 @@ mod tests {
         let items: Vec<DemoItem> = vec![DemoItem { id: "a".into(), value: 1 }, DemoItem { id: "b".into(), value: 2 }, DemoItem { id: "c".into(), value: 3 }];
         let operation = CollectionMutation::Move { id: "a".into(), to_index: 2 };
         let mut applied = items.clone();
-        apply_collection_mutation(&mut applied, &operation).await;
+        apply_collection_mutation(&mut applied, &operation);
         assert_eq!(applied.iter().map(|i| i.id.clone()).collect::<Vec<_>>(), vec!["b", "c", "a"]);
         let inverse = inverse_collection_mutation(&items, &operation);
-        apply_collection_mutation(&mut applied, &inverse.await).await;
+        apply_collection_mutation(&mut applied, &inverse);
         assert_eq!(applied, items);
     }
 
@@ -559,10 +583,10 @@ mod tests {
         let items: Vec<DemoItem> = vec![DemoItem { id: "a".into(), value: 1 }];
         let operation = CollectionMutation::Patch { id: "a".into(), patch: DemoItemPatch { value: Some(9) } };
         let mut applied = items.clone();
-        apply_collection_mutation(&mut applied, &operation).await;
+        apply_collection_mutation(&mut applied, &operation);
         assert_eq!(applied[0].value, 9);
         let inverse = inverse_collection_mutation(&items, &operation);
-        apply_collection_mutation(&mut applied, &inverse.await).await;
+        apply_collection_mutation(&mut applied, &inverse);
         assert_eq!(applied, items);
     }
 
@@ -571,10 +595,10 @@ mod tests {
         let items: Vec<DemoItem> = vec![DemoItem { id: "a".into(), value: 1 }, DemoItem { id: "b".into(), value: 2 }];
         let operation = CollectionMutation::Remove { id: "a".into() };
         let mut applied = items.clone();
-        apply_collection_mutation(&mut applied, &operation).await;
+        apply_collection_mutation(&mut applied, &operation);
         assert_eq!(applied.len(), 1);
         let inverse = inverse_collection_mutation(&items, &operation);
-        apply_collection_mutation(&mut applied, &inverse.await).await;
+        apply_collection_mutation(&mut applied, &inverse);
         assert_eq!(applied, items);
     }
 
@@ -624,7 +648,7 @@ mod tests {
         legacy_input.extend_from_slice(args.0.unwrap_or("").as_bytes());
         legacy_input.push(0);
         for change_id in args.1 {
-            let change_hash = args.2.iter().find(|change| change.id == *change_id).map(|change| *blake3::hash(&serde_json::to_vec(change).unwrap_or_default()).as_bytes()).unwrap_or([0u8; 32]);
+            let change_hash = args.2.iter().find(|change| change.id == *change_id).map_or([0u8; 32], |change| *blake3::hash(&serde_json::to_vec(change).unwrap_or_default()).as_bytes());
             legacy_input.extend_from_slice(&change_hash);
         }
         legacy_input.push(0);

@@ -38,6 +38,9 @@ use semio_framework::kernel::{Effect, Event, MessageEndpoint, RequestId, Request
 use semio_framework::{DslValue, MediaType};
 use semio_framework_actor::{ActorId as RuntimeActorId, Envelope, Lane as ActorLane, Origin, PackageId, Payload};
 use semio_framework_async::{CancelToken, CapabilityTokenId, ChannelPolicy, HostAsyncRuntime, HostFuture, OperationContext, ScopeDrainReport, ScopeHandle, ScopeOwner, TraceId};
+#[cfg(test)]
+use semio_framework_job::CommitCandidate;
+use semio_framework_job::{InteractiveJob, JobFault, StepContext, StepOutcome};
 use semio_framework_os_services::{
     CompletionSink, ComputeError, ComputePool, EventRouter, HttpPool, HttpPoolError, HttpRequest as ServiceHttpRequest, HttpResponse as ServiceHttpResponse, PublishOutcome, StorageError, StorageScheduler, TimerError, TimerWheel, Topic,
 };
@@ -369,9 +372,9 @@ async fn emit_completed_err<I: EnvelopeInjector>(sink: &Arc<EnvelopeCompletionSi
 //#region 🌉️RouterEffectHandler
 /// 🌉️ Owned mirror of the six `Effect` variants design-runtime.md §2 routes through the EXISTING
 /// routers (`IoRouter`/`ArtifactInferenceRouter`/`ArtifactMutationRouter`/
-/// `HostTransactionCoordinator`/`AppRouter`), dispatched via [`RouterEffectHandler::handle`] inside
-/// `ComputePool::run_blocking` — off the async workers, per design-runtime.md §2, never
-/// re-entrantly against the turn that produced the effect.
+/// `HostTransactionCoordinator`/`AppRouter`), dispatched as an explicit [`InteractiveJob`] after
+/// the turn that produced the effect. The compute service drives exactly one bounded step per
+/// worker closure and resubmits only resumable outcomes.
 #[derive(Clone, Debug)]
 pub enum RouterEffect {
     BlobWrite { media_type: MediaType, bytes: Vec<u8> },
@@ -385,27 +388,16 @@ pub enum RouterEffect {
     DispatchAction { action: String, args: Option<DslValue>, delay_ms: u64 },
 }
 
-#[derive(Clone, Debug)]
-pub struct RouterEffectError(pub String);
-
-impl std::fmt::Display for RouterEffectError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-impl std::error::Error for RouterEffectError {}
-
-/// 🌉️ What `ComputePool::run_blocking` actually calls for [`RouterEffect`] — injected by the
+/// 🌉️ Produces the resumable job that performs one [`RouterEffect`] — injected by the
 /// caller. **Which concrete router (`IoRouter` vs `ArtifactInferenceRouter` vs
 /// `ArtifactMutationRouter` vs `HostTransactionCoordinator` vs `AppRouter`) answers which
 /// `RouterEffect` variant has no established mapping anywhere in this codebase today** — every
 /// router in `🖥️host/🦀️component.rs` is invoked from application-level orchestration
 /// (`WasmtimeNodeHost::run_transaction`, `resolve_open_artifact`, ...) today, never from a
 /// per-effect dispatch loop (see the packet report's `## honest gaps`). `AsyncEffectExecutor` only
-/// guarantees WHERE this runs (off the async workers, via `ComputePool::run_blocking`) and WHEN
-/// (strictly after the turn) — never re-implements the routers' own logic.
-// 🔀️ dedyn-fw-os-misc: DELIBERATELY left `dyn` — a reasoned exception, not an oversight. `handle`
-// is plain sync, so `dyn RouterEffectHandler` is not an E0038 violation and stays R1-legal.
+/// guarantees bounded scheduling, cancellation, deadline, and terminal propagation after the turn;
+/// it never re-implements the routers' own logic.
+// 🔀️ dedyn-fw-os-misc: DELIBERATELY left `dyn` — a reasoned exception, not an oversight.
 // `dyn_enum_close!` needs every implementor nameable from ONE always-compiled declaration site, but
 // two of the three (`RecordingRouterHandler`, `AlwaysOkRouterHandler`, this file's own `mod tests`)
 // are `#[cfg(test)]`-only while `AsyncEffectExecutor.router_handler: Arc<dyn RouterEffectHandler>`
@@ -415,15 +407,78 @@ impl std::error::Error for RouterEffectError {}
 // — genuinely not wired to a real router yet (see `UnwiredRouterEffectHandler`'s own doc), so there
 // is no live production seam to generic-ize either. Revisit once a real caller exists.
 pub trait RouterEffectHandler: Send + Sync {
-    fn handle(&self, effect: RouterEffect) -> Result<Vec<u8>, RouterEffectError>;
+    /// 🏭️ Constructs persistent job state only. Effect work belongs in
+    /// [`InteractiveJob::step`], where the runtime can bound, cancel, and resume it.
+    fn create_job(&self, effect: RouterEffect) -> Box<dyn InteractiveJob>;
+}
+
+struct DynRouterEffectJob(Box<dyn InteractiveJob>);
+
+impl InteractiveJob for DynRouterEffectJob {
+    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+        self.0.step(cx)
+    }
+}
+
+struct FaultRouterEffectJob(Option<Vec<u8>>);
+
+impl InteractiveJob for FaultRouterEffectJob {
+    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+        if cx.is_cancelled() {
+            return StepOutcome::Cancelled;
+        }
+        if cx.should_yield() {
+            return StepOutcome::Yield;
+        }
+        StepOutcome::Fault(JobFault { detail: self.0.take().unwrap_or_else(|| b"router effect job polled after completion".to_vec()) })
+    }
+}
+
+#[cfg(test)]
+struct CompleteRouterEffectJob(Option<Vec<u8>>);
+
+#[cfg(test)]
+impl InteractiveJob for CompleteRouterEffectJob {
+    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+        if cx.is_cancelled() {
+            return StepOutcome::Cancelled;
+        }
+        if cx.should_yield() {
+            return StepOutcome::Yield;
+        }
+        StepOutcome::Complete(CommitCandidate { state: Vec::new(), output: self.0.take().unwrap_or_default() })
+    }
+}
+
+pub enum RouterEffectJobOutcome {
+    Complete(Vec<u8>),
+    Cancelled,
+    DeadlineExceeded,
+    WorkerLost,
+    Fault(String),
+}
+
+pub async fn run_router_effect_job<R: HostAsyncRuntime>(compute: &ComputePool, runtime: &R, scope: &ScopeHandle, ctx: OperationContext, handler: &Arc<dyn RouterEffectHandler>, effect: RouterEffect) -> RouterEffectJobOutcome {
+    if ctx.cancel.is_cancelled().await {
+        return RouterEffectJobOutcome::Cancelled;
+    }
+    let job = DynRouterEffectJob(handler.create_job(effect));
+    match compute.run_job(runtime, scope, ctx, job).await {
+        Ok(StepOutcome::Complete(candidate)) => RouterEffectJobOutcome::Complete(candidate.output),
+        Ok(StepOutcome::Cancelled) => RouterEffectJobOutcome::Cancelled,
+        Ok(StepOutcome::Fault(fault)) => RouterEffectJobOutcome::Fault(String::from_utf8_lossy(&fault.detail).into_owned()),
+        Ok(StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_)) => RouterEffectJobOutcome::Fault("compute job driver returned a non-terminal router outcome".to_string()),
+        Err(ComputeError::DeadlineExceeded) => RouterEffectJobOutcome::DeadlineExceeded,
+        Err(ComputeError::WorkerLost) => RouterEffectJobOutcome::WorkerLost,
+    }
 }
 
 /// 🚧️ Default until a real handler is wired (mirrors `UnwiredHttpTransport`'s own honest-gap
 /// pattern in `semio-framework-os-services`) — every call fails loudly.
 pub struct UnwiredRouterEffectHandler;
 impl RouterEffectHandler for UnwiredRouterEffectHandler {
-    fn handle(&self, effect: RouterEffect) -> Result<Vec<u8>, RouterEffectError> {
-        Err(RouterEffectError(format!("AsyncEffectExecutor: no RouterEffectHandler wired yet for {effect:?} (see the packet report's honest gaps)")))
+    fn create_job(&self, effect: RouterEffect) -> Box<dyn InteractiveJob> {
+        Box::new(FaultRouterEffectJob(Some(format!("AsyncEffectExecutor: no RouterEffectHandler wired yet for {effect:?} (see the packet report's honest gaps)").into_bytes())))
     }
 }
 //#endregion 🌉️RouterEffectHandler
@@ -656,7 +711,7 @@ pub struct AsyncEffectExecutor<I: EnvelopeInjector, R: HostAsyncRuntime> {
 // Future<..> + Send + 'static>>` capturing `Arc<R>` inside an `async move` block, which needs `R:
 // 'static` to be nameable at all. `I: 'static` alongside it for the same reason — several of those
 // same boxed blocks also capture `sink: Arc<EnvelopeCompletionSink<I>>` (R15 unmasked this: it was
-// always required, but the `HostAsyncRuntime::sleep_until`/`run_blocking` Send gap these dispatch
+// always required, but the `HostAsyncRuntime::sleep_until`/compute-job Send gap these dispatch
 // methods hit first was reported before rustc's own outlives check on `I` had a chance to run).
 impl<I: EnvelopeInjector + 'static, R: HostAsyncRuntime + 'static> AsyncEffectExecutor<I, R> {
     #[allow(clippy::too_many_arguments)]
@@ -1016,13 +1071,13 @@ impl<I: EnvelopeInjector + 'static, R: HostAsyncRuntime + 'static> AsyncEffectEx
                 emit_completed_err(&sink, &ctx_for_task, req, "capability-revoked", "router effect cancelled before dispatch").await;
                 return;
             }
-            let ctx_for_compute = ctx_for_task.clone();
-            let result = compute.run_blocking(runtime.as_ref(), &scope_for_task, ctx_for_compute, move || handler.handle(effect)).await;
+            let result = run_router_effect_job(&compute, runtime.as_ref(), &scope_for_task, ctx_for_task.clone(), &handler, effect).await;
             match result {
-                Ok(Ok(bytes)) => emit_completed_ok(&sink, &ctx_for_task, req, bytes).await,
-                Ok(Err(router_error)) => emit_completed_err(&sink, &ctx_for_task, req, "router-error", router_error.to_string()).await,
-                Err(ComputeError::DeadlineExceeded) => emit_completed_err(&sink, &ctx_for_task, req, "deadline-exceeded", "router effect exceeded its deadline").await,
-                Err(ComputeError::WorkerLost) => emit_completed_err(&sink, &ctx_for_task, req, "worker-lost", "router effect worker lost").await,
+                RouterEffectJobOutcome::Complete(bytes) => emit_completed_ok(&sink, &ctx_for_task, req, bytes).await,
+                RouterEffectJobOutcome::Cancelled => emit_completed_err(&sink, &ctx_for_task, req, "capability-revoked", "router effect cancelled").await,
+                RouterEffectJobOutcome::Fault(router_error) => emit_completed_err(&sink, &ctx_for_task, req, "router-error", router_error).await,
+                RouterEffectJobOutcome::DeadlineExceeded => emit_completed_err(&sink, &ctx_for_task, req, "deadline-exceeded", "router effect exceeded its deadline").await,
+                RouterEffectJobOutcome::WorkerLost => emit_completed_err(&sink, &ctx_for_task, req, "worker-lost", "router effect worker lost").await,
             }
         });
         self.services.runtime.spawn_scoped(&scope, ctx, fut).await;
@@ -1106,11 +1161,34 @@ mod tests {
         }
     }
 
-    struct RecordingRouterHandler(AtomicUsize);
+    struct RecordingRouterHandler(Arc<AtomicUsize>);
+
+    struct RecordingRouterJob {
+        calls: Arc<AtomicUsize>,
+        yielded: bool,
+    }
+
+    impl InteractiveJob for RecordingRouterJob {
+        fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
+            if cx.is_cancelled() {
+                return StepOutcome::Cancelled;
+            }
+            if cx.should_yield() {
+                return StepOutcome::Yield;
+            }
+            cx.consume_fuel(1);
+            if !self.yielded {
+                self.yielded = true;
+                return StepOutcome::Yield;
+            }
+            self.calls.fetch_add(1, Ordering::SeqCst);
+            StepOutcome::Complete(CommitCandidate { state: Vec::new(), output: b"ok".to_vec() })
+        }
+    }
+
     impl RouterEffectHandler for RecordingRouterHandler {
-        fn handle(&self, _effect: RouterEffect) -> Result<Vec<u8>, RouterEffectError> {
-            self.0.fetch_add(1, Ordering::SeqCst);
-            Ok(b"ok".to_vec())
+        fn create_job(&self, _effect: RouterEffect) -> Box<dyn InteractiveJob> {
+            Box::new(RecordingRouterJob { calls: self.0.clone(), yielded: false })
         }
     }
 
@@ -1149,8 +1227,8 @@ mod tests {
         // always succeeds.
         struct AlwaysOkRouterHandler;
         impl RouterEffectHandler for AlwaysOkRouterHandler {
-            fn handle(&self, _effect: RouterEffect) -> Result<Vec<u8>, RouterEffectError> {
-                Ok(b"ok".to_vec())
+            fn create_job(&self, _effect: RouterEffect) -> Box<dyn InteractiveJob> {
+                Box::new(CompleteRouterEffectJob(Some(b"ok".to_vec())))
             }
         }
         executor.router_handler = Arc::new(AlwaysOkRouterHandler);
@@ -1337,12 +1415,12 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn router_effect_runs_through_compute_pool_and_completes_ok() {
+    async fn router_effect_runs_as_multiple_bounded_compute_steps_and_completes_ok() {
         let runtime = ManualRuntime::new(0).await;
         let runtime_dyn: Arc<ManualRuntime> = Arc::new(runtime.clone());
         let (mut executor, injector, actors) = executor(runtime_dyn.clone()).await;
         activate(&executor, &actors, runtime_dyn.as_ref(), 1, 0).await;
-        let recording_handler = Arc::new(RecordingRouterHandler(AtomicUsize::new(0)));
+        let recording_handler = Arc::new(RecordingRouterHandler(Arc::new(AtomicUsize::new(0))));
         executor.router_handler = recording_handler.clone();
         let dispatch = EffectDispatchContext { actor: 1, package: PackageId("pkg".to_string()), lane: 0, capability: None };
         executor.execute(&dispatch, &[Effect::CacheRead { req: RequestId(5), engine_id: "e".to_string(), key: "k".to_string() }]).await;

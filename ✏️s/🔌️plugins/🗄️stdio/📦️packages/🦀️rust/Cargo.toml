@@ -15,7 +15,7 @@ package = "semio:stdio"
 role = "plugin"
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+crate-type = ["rlib"]
 path = "📦️glue.rs"
 
 # 🔌️ Only the ROOT plugin of a component may emit `plugin_exports!`'s `#[no_mangle]` installer
@@ -30,14 +30,13 @@ plugin-root = []
 
 [dependencies]
 semio-framework-ui-contract = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
-async-trait = "0.1.88"
-base64 = "0.22"
-blake3 = "1"
-flate2 = { workspace = true }
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 semio-framework-3d = { path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust", package = "semio-framework-3d" }
 semio-framework-geometry = { path = "../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
 semio-framework-graph = { path = "../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
+semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-framework-job = { workspace = true }
 semio-framework-math = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
 semio-framework-mesh-engine = { path = "../../../../../🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust", package = "semio-framework-mesh-engine" }
 semio-framework-number = { path = "../../../../../🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust", package = "semio-framework-number" }
@@ -46,17 +45,11 @@ semio-framework-plugin = { workspace = true, features = ["component-guest"] }
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 serde = { workspace = true }
 serde_json = { workspace = true }
-thiserror = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-libz-sys = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
-criterion = { version = "0.5", default-features = false, features = ["html_reports"] }
-miniz_oxide = "=0.8.9"
-zlib-rs = "=0.6.3"
-zopfli = "=0.8.3"
 
 [[bench]]
 name = "brep_kernel"

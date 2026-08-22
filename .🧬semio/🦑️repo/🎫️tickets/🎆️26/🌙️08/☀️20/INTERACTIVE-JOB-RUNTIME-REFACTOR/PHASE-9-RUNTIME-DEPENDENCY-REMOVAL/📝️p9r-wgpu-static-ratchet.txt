@@ -1,0 +1,39 @@
+[DEBUG] library executor bridge census
+[DEBUG] binary executor bridge census
+15:        semio_framework_async::block_on(future)
+[DEBUG] retired manifest direct edge census
+[DEBUG] interactive async seams
+385:                    let task = KernelPoolFuture::spawn(crate::renderer_worker_pool(), Lane::Interactive, run_kernel_pool(queue.clone()));
+894:    //#region 🔖️TaskPool — the non-blocking executor for `spawn_app_task`
+895:    // 🌀️ `spawn_app_task` pushes onto a
+899:    // `about_to_wait`/`poll_tasks` never hold a `try_borrow_mut()` on `Rc<RefCell<AppRuntime>>`
+922:    /// event loop exists. Before that first install, `poll_tasks` falls back to `Waker::noop()`,
+928:    pub(crate) fn poll_tasks() {
+1822:fn spawn_app_task<F>(future: F)
+1942:        assert!(LIBRARY_SOURCE.contains("KernelPoolFuture::spawn"));
+1943:        assert!(LIBRARY_SOURCE.contains("spawn_app_task"));
+1944:        assert!(LIBRARY_SOURCE.contains("poll_tasks"));
+1963:/// `spawn_app_task` continuation needs to re-borrow the `AppRuntime` it was scheduled from, once its
+1968:/// call boundary (`OsHost::runtime`, or a `spawn_app_task` closure that already captured it) — so this
+2069:    /// dispatch closures below already use: `spawn_app_task` queues the future, and it
+2070:    /// only actually re-borrows from `about_to_wait`'s `poll_tasks()` tick — strictly AFTER `frame()`
+2093:        spawn_app_task(async move {
+2144:            // `about_to_wait`'s `poll_tasks()` tick. One tick of staleness on directory/sync events is
+2147:            spawn_app_task(async move {
+2171:        // board wheel-action dispatches just below reuse `spawn_app_task` for their own async hop.
+2186:                spawn_app_task(async move {
+2198:            spawn_app_task(async move {
+2222:        // isn't — same reason `scene_events` gets deferred through `spawn_app_task` just after).
+2228:            spawn_app_task(async move {
+2238:            spawn_app_task(async move {
+2272:                    spawn_app_task(async move {
+2288:                    spawn_app_task(async move {
+2304:                    spawn_app_task(async move {
+2348:    /// `spawn_app_task` deferral the wasm32 branch already used — the only platform difference left is
+2358:            spawn_app_task(async move {
+2369:        spawn_app_task(async move {
+2443:                spawn_app_task(async move {
+2462:        // `on_button`/`on_move` sibling callbacks above, and the `spawn_app_task` pattern this fn
+2471:        spawn_app_task(async move {
+2724:// pre-edit; `about_to_wait` called `kernel_runtime::poll_tasks()` then ALSO unconditionally
+2728:// scheduler.should_render(now)`, and `poll_tasks()` now runs once per real wake instead of every

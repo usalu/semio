@@ -1,0 +1,21 @@
+
+running 1 test
+test mesh::tests::mesh_job_large_boundary_never_runs_to_completion_in_one_step ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 754 filtered out; finished in 0.66s
+
+
+running 1 test
+test mesh::tests::mesh_job_large_boundary_never_runs_to_completion_in_one_step ... 
+thread 'mesh::tests::mesh_job_large_boundary_never_runs_to_completion_in_one_step' (103025116) panicked at ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️component.rs:1615:9:
+worst large-boundary mesh job step was 21.072083ms
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+FAILED
+
+failures:
+
+failures:
+    mesh::tests::mesh_job_large_boundary_never_runs_to_completion_in_one_step
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 754 filtered out; finished in 0.80s
+

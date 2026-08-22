@@ -63,11 +63,11 @@ impl store::InferredField<SemioBrepSnapshot> for BrepValidationReport {
     const FIELD_ID: &'static str = "s.stdio.semio.brep.inference.validationReport";
     const SCHEMA_VERSION: u32 = 1;
 
-    async fn reads() -> &'static [&'static str] {
+    fn reads() -> &'static [&'static str] {
         &["vertices", "edges", "loops", "faces", "shells", "solids"]
     }
 
-    async fn plan(_snapshot: &SemioBrepSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
+    fn plan(_snapshot: &SemioBrepSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
         vec![store::InferenceStep { key: "document".to_string(), parents: vec![] }]
     }
 
@@ -76,7 +76,7 @@ impl store::InferredField<SemioBrepSnapshot> for BrepValidationReport {
     /// snapshot's own already-`Serialize` collections is deterministic per snapshot value and
     /// covers every field the check touches — cheaper and less error-prone than hand-rolling a
     /// bespoke byte encoder for a root-only, single-key chain.
-    async fn dep_input(snapshot: &SemioBrepSnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
+    fn dep_input(snapshot: &SemioBrepSnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
         #[derive(Serialize)]
         struct DepInput<'a> {
             vertices: &'a [crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::BrepVertex],
@@ -89,7 +89,7 @@ impl store::InferredField<SemioBrepSnapshot> for BrepValidationReport {
         serde_json::to_vec(&DepInput { vertices: &snapshot.vertices, edges: &snapshot.edges, loops: &snapshot.loops, faces: &snapshot.faces, shells: &snapshot.shells, solids: &snapshot.solids }).unwrap_or_default()
     }
 
-    async fn compute(snapshot: &SemioBrepSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
+    fn compute(snapshot: &SemioBrepSnapshot, _key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
         check_brep_referential_integrity(snapshot).into_iter().map(|d| BrepValidationDiagnostic { code: d.code.0.clone(), message: d.message.clone() }).collect()
     }
 }

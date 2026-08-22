@@ -24,7 +24,6 @@ fn is_false(value: &bool) -> bool {
 /// old wgpu target's `UiPresence`. Lives on the document (`crate::UiNodeRecord::activity`) because it
 /// is genuinely part of what the node IS this revision, not an ephemeral input-frequency signal.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum Activity {
     Waiting,
@@ -39,7 +38,6 @@ pub enum Activity {
 /// SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION) — `label` is still the actor id's display form, not
 /// a free-text caption.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct PeerMark {
     pub actor: String,
@@ -55,7 +53,6 @@ pub struct PeerMark {
 /// 🙋️ This session's own hover/selection/preview state and palette color on a node — the local half
 /// of the presence channel; every OTHER session's equivalent arrives as a [`PeerMark`] in `peers`.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct OwnPresence {
     #[serde(default, skip_serializing_if = "is_false")]
@@ -76,7 +73,6 @@ pub struct OwnPresence {
 /// on a timer instead of leaving a stuck mark. Replaces the old `ui_tree_stamp_presence`, which
 /// mutated hover/selection/color/peers directly onto tree nodes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct PresenceUpdate {
     pub surface: crate::SurfaceId,

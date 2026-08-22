@@ -6,7 +6,7 @@
 
 use crate::artifacts::model::EnergyModelSnapshot;
 use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TreeWindowKit::KIND_ID;
@@ -15,7 +15,7 @@ pub const BODY_KEY: &str = TreeWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::model::create_energy_model_viewer`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Structure", "Struktur"), icon_id: "list-tree".into(), ..TreeWindowKit::window_kind() }
 }
 //#endregion 🔖️Definition
@@ -23,9 +23,9 @@ pub async fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Pure `EnergyModelSnapshot -> UiNode` read: `name`/`version` plus one leaf per collection on
 /// `crate::model::Model`, each labeled with its live element count — a real overview, no mutation.
-pub async fn render(document: &EnergyModelSnapshot) -> UiNode {
+pub fn render(document: &EnergyModelSnapshot) -> BuiltNode {
     let model = crate::artifacts::model::energy_model(document);
-    async fn leaf(id: &str, label: String) -> TreeNodeView {
+    fn leaf(id: &str, label: String) -> TreeNodeView {
         TreeNodeView { id: id.into(), label, children: Vec::new() }
     }
     let mut children = vec![
@@ -91,11 +91,11 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn render_lists_name_version_and_every_collection_count() {
         let document = EnergyModelSnapshot::default();
-        let UiNode::Tree(node) = render(&document) else { panic!("expected Tree") };
-        let root = &node.sections[0].items[0];
-        let root_children = root.items.as_ref().expect("root has children");
-        assert!(root_children.iter().any(|item| item.id == "name"));
-        assert!(root_children.iter().any(|item| item.id == "zones"));
+        let tree = render(&document);
+        assert_eq!(tree.key, WINDOW_KIND_ID);
+        let root = &tree.children[0].children[0];
+        assert!(root.children.iter().any(|item| item.key == "name"));
+        assert!(root.children.iter().any(|item| item.key == "zones"));
     }
 }
 //#endregion 🧪️Tests

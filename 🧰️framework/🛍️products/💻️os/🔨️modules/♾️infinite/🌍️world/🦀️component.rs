@@ -5,9 +5,46 @@ use base64::Engine;
 use ui_wgpu::wgpu::{
     aabb_intersects_frustum, axis_rotate_angle, draw_text, frustum_planes, grid_placement_anchor, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance, lod_progressive_grid_layers,
     marquee_is_crossing_from_path, mesh_content_version, paint_selection_marquee, pick_closest_mesh_url, quat_from_basis, ray_aabb_slab, ray_pick_instance, ray_pick_mesh_detail, ray_plane_point, ray_segment_distance, rotate_vector,
-    screen_select_components, screen_select_instances, transform_aabb, vec3_from_f64, widgets::gizmo, ActionDescriptor, Camera3d, GpuContext, HitKind, HitTarget, Instance3d, LineDraw3d, LineVertex3d, LocalizedLabel, Mat4, Mesh3d, OrbitController,
-    PointerModifiers, Rect, Rgba, SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d, UiComponentSceneNode, Vec3, WidgetContext,
+    screen_select_components, screen_select_instances, transform_aabb, vec3_from_f64, widgets::gizmo, ActionDescriptor, Camera3d, HitKind, HitTarget, Instance3d, LineDraw3d, LineVertex3d, LocalizedLabel, Mat4, Mesh3d, OrbitController,
+    PointerModifiers, PreparedRenderEviction, PreparedRenderUpload, Rect, Rgba, SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d, UiComponentSceneNode, Vec3, WidgetContext,
 };
+
+//#region 📦️PreparedWorldResources
+/// 📦️ Worker-owned World3d resource requests. It contains only CPU buffers and cache keys; device,
+/// queue, texture, and surface authority remain in the prepared renderer presenter.
+#[derive(Default)]
+pub struct World3dBuildContext {
+    uploads: Vec<PreparedRenderUpload>,
+    evictions: Vec<PreparedRenderEviction>,
+    mesh_requests: HashSet<(String, u64)>,
+    raster_requests: HashSet<String>,
+}
+
+impl World3dBuildContext {
+    pub fn ensure_mesh(&mut self, key: &str, version: u64, positions: &[f32], normals: &[f32], indices: &[u32]) {
+        if self.mesh_requests.insert((key.to_string(), version)) {
+            self.uploads.push(PreparedRenderUpload::Mesh { key: key.to_string(), version, positions: positions.to_vec(), normals: normals.to_vec(), indices: indices.to_vec() });
+        }
+    }
+
+    pub fn ensure_world_plane_texture(&mut self, key: &str, pixels: &[u8], width: u32, height: u32) {
+        if self.raster_requests.insert(key.to_string()) {
+            self.uploads.push(PreparedRenderUpload::Raster { key: key.to_string(), pixels: pixels.to_vec(), width, height });
+        }
+    }
+
+    pub fn evict_mesh(&mut self, key: &str) {
+        self.evictions.push(PreparedRenderEviction::Mesh { key: key.to_string() });
+    }
+
+    pub fn append_to(&mut self, input: &mut ui_wgpu::wgpu::PreparedRenderInput) {
+        input.uploads.append(&mut self.uploads);
+        input.evictions.append(&mut self.evictions);
+        self.mesh_requests.clear();
+        self.raster_requests.clear();
+    }
+}
+//#endregion 📦️PreparedWorldResources
 
 // 🚧️ `mesh_from_glb`/`MeshData` are the one remaining `semio_framework::` geometry import: real
 // GLB decoding, not reimplemented locally and not yet routed through stdio's gltf/mesh artifact
@@ -690,7 +727,7 @@ fn append_lod_grid_lines(line_vertices: &mut Vec<LineVertex3d>, lod: f64, grid_f
     }
 }
 
-fn sync_mesh_pool(state: &mut World3dState, needed_mesh_keys: &HashSet<String>, gpu: &mut GpuContext) {
+fn sync_mesh_pool(state: &mut World3dState, needed_mesh_keys: &HashSet<String>, gpu: &mut World3dBuildContext) {
     const PINNED: &[&str] = &["vortex-marker", "cylinder", "cone", "reference-plane", "vertex-marker"];
     for key in needed_mesh_keys {
         if !state.mesh_pool.contains(key) {
@@ -915,7 +952,7 @@ fn apply_terrain_style_if_changed_state(state: &mut World3dState) -> Vec<String>
     stale_keys
 }
 
-fn apply_terrain_style_if_changed(state: &mut World3dState, gpu: &mut GpuContext) {
+fn apply_terrain_style_if_changed(state: &mut World3dState, gpu: &mut World3dBuildContext) {
     for key in apply_terrain_style_if_changed_state(state) {
         gpu.evict_mesh(&key);
     }
@@ -993,7 +1030,7 @@ fn sync_terrain_state(state: &mut World3dState, camera: &Camera3d) -> (Vec<Terra
 /// 🏔️ Per-frame terrain sync entry point used by `render_world_3d` — see `sync_terrain_state` for
 /// the (unit-testable) tile-visibility/meshing/fetch-queueing logic this wraps with GPU upload and
 /// eviction calls.
-fn sync_terrain(state: &mut World3dState, gpu: &mut GpuContext, camera: &Camera3d) -> Vec<SceneDraw3d> {
+fn sync_terrain(state: &mut World3dState, gpu: &mut World3dBuildContext, camera: &Camera3d) -> Vec<SceneDraw3d> {
     let (band_draws, evicted_mesh_keys) = sync_terrain_state(state, camera);
     for key in evicted_mesh_keys {
         gpu.evict_mesh(&key);
@@ -1573,7 +1610,7 @@ fn append_component_overlays(state: &World3dState, lines: &mut Vec<LineVertex3d>
 /// 🪣️ Per-color accumulation bucket for translucent face overlays: fill color, interleaved positions, normals, and triangle indices.
 type FaceOverlayBucket = ([f32; 4], Vec<f32>, Vec<f32>, Vec<u32>);
 
-fn append_component_face_translucent_overlays(state: &mut World3dState, gpu: &mut GpuContext, translucent: &mut Vec<SceneDraw3d>) {
+fn append_component_face_translucent_overlays(state: &mut World3dState, gpu: &mut World3dBuildContext, translucent: &mut Vec<SceneDraw3d>) {
     if !face_component_mode_active(state) {
         return;
     }
@@ -2157,7 +2194,7 @@ fn apply_runtime_draw_flags(state: &mut World3dState) {
     }
 }
 
-pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut WidgetContext<'_, ActionDescriptor>, state: &mut World3dState, gpu: &mut GpuContext) {
+pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut WidgetContext<'_, ActionDescriptor>, state: &mut World3dState, gpu: &mut World3dBuildContext) {
     let theme = ctx.theme;
     state.pick_bounds = ctx.pick_clip.unwrap_or(bounds);
     sync_world3d_state(state, scene, bounds);
@@ -3439,7 +3476,7 @@ fn ensure_primitive_mesh(state: &mut World3dState, mesh_key: &str) {
     store_mesh(state, mesh_key.into(), Mesh3d::from_buffers(primitive.positions, primitive.normals, primitive.indices));
 }
 
-fn append_vortex_arrow_draws(state: &mut World3dState, gpu: &mut GpuContext, extra_draws: &mut Vec<SceneDraw3d>) {
+fn append_vortex_arrow_draws(state: &mut World3dState, gpu: &mut World3dBuildContext, extra_draws: &mut Vec<SceneDraw3d>) {
     if state.vortices.is_empty() {
         return;
     }
@@ -3791,6 +3828,23 @@ mod tests {
     use super::*;
     use ui_wgpu::wgpu::{SurfaceKind, UiComponentSceneNode, UiPresence, World3dScene};
 
+    fn assert_send<T: Send>() {}
+
+    #[test]
+    fn prepared_world_resources_are_send_and_deduplicate_uploads() {
+        assert_send::<World3dBuildContext>();
+        let mut resources = World3dBuildContext::default();
+        resources.ensure_mesh("mesh", 3, &[0.0, 1.0, 2.0], &[0.0, 0.0, 1.0], &[0, 1, 2]);
+        resources.ensure_mesh("mesh", 3, &[9.0], &[9.0], &[9]);
+        resources.ensure_world_plane_texture("image", &[1, 2, 3, 4], 1, 1);
+        resources.ensure_world_plane_texture("image", &[9, 9, 9, 9], 1, 1);
+        resources.evict_mesh("stale");
+        let mut input = ui_wgpu::wgpu::PreparedRenderInput::new(1, 2, ui_wgpu::wgpu::DrawList::default(), None, 0.0);
+        resources.append_to(&mut input);
+        assert_eq!(input.uploads.len(), 2);
+        assert_eq!(input.evictions, vec![PreparedRenderEviction::Mesh { key: "stale".into() }]);
+    }
+
     #[test]
     fn world_orbit_view_gizmo_placement_matches_react_bottom_right_insets() {
         assert_eq!(gizmo::orbit_view_gizmo_placement(Rect { x: 0.0, y: 0.0, w: 1280.0, h: 720.0 }), (32.0, 32.0));
@@ -3993,7 +4047,7 @@ mod tests {
         let action = pick_select_action(&state, screen[0], screen[1], inner, false, false).expect("pick action");
         assert_eq!(action.action, "worldPick");
         let args = action.args.expect("args");
-        assert_eq!(args["id"], json!(1));
+        assert_eq!(args["id"].as_f64(), Some(1.0));
     }
 
     #[test]

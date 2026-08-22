@@ -154,13 +154,13 @@ impl ArtifactEditor for Pdf14XEditor {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_pdf14_x_editor() -> semio_framework_plugin::AppDefinition {
     let builder = Editor::builder(PDF14X_DIALECT);
-    let builder = semio_framework_plugin::resolve_ready(builder.document(["stdio", "pdf", "1.4", "x"]));
-    let builder = semio_framework_plugin::resolve_ready(builder.icon_id("file-text"));
-    let builder = semio_framework_plugin::resolve_ready(builder.mode_def(edit::definition()));
-    let builder = semio_framework_plugin::resolve_ready(builder.default_mode_id(edit::PDF14X_EDIT_MODE_ID));
-    let builder = semio_framework_plugin::resolve_ready(builder.window_kind_def(main::definition()));
-    let builder = semio_framework_plugin::resolve_ready(builder.default_layout(edit::layout()));
-    semio_framework_plugin::resolve_ready(builder.build_definition())
+    let builder = builder.document(["stdio", "pdf", "1.4", "x"]);
+    let builder = builder.icon_id("file-text");
+    let builder = builder.mode_def(edit::definition());
+    let builder = builder.default_mode_id(edit::PDF14X_EDIT_MODE_ID);
+    let builder = builder.window_kind_def(main::definition());
+    let builder = builder.default_layout(edit::layout());
+    builder.build_definition()
 }
 //#endregion 🔖️Manifest
 

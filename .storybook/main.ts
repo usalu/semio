@@ -10,10 +10,10 @@ import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 
-import tailwindcss from "@tailwindcss/vite";
 import type { StorybookConfig } from "@storybook/react-vite";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import { semioAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, playgroundAssetVitePlugins } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts";
+import { uiTailwindBuildPlugins } from "../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️build-tooling.ts";
 import rehypeSlug from "rehype-slug";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkGfm from "remark-gfm";
@@ -126,7 +126,7 @@ const config: StorybookConfig = {
     config.plugins = config.plugins || [];
     const hasTailwindPlugin = config.plugins.some((plugin) => plugin && typeof plugin === "object" && "name" in plugin && plugin.name === "@tailwindcss/vite");
     if (!hasTailwindPlugin) {
-      config.plugins.push(...tailwindcss());
+      config.plugins.push(...uiTailwindBuildPlugins());
     }
     const hasUiAssetsPlugin = config.plugins.some((plugin) => plugin && typeof plugin === "object" && "name" in plugin && plugin.name === "ui-assets-serve");
     if (!hasUiAssetsPlugin) {

@@ -3,7 +3,6 @@
 
 use crate::artifacts::png::standards::v1_2::subsets::any::io::encode_png;
 use crate::artifacts::png::standards::v1_2::subsets::any::schema::snapshot::PngSnapshot;
-use base64::Engine as _;
 use semio_framework_plugin::app::{ImageView, ImageWindowKit};
 use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
 
@@ -23,7 +22,7 @@ pub fn render(snapshot: &PngSnapshot) -> BuiltNode {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn image_view(snapshot: &PngSnapshot) -> ImageView {
     let bytes = encode_png(snapshot).ok().unwrap_or_default();
-    ImageView { width: snapshot.width, height: snapshot.height, mime: "image/png".into(), base64: base64::engine::general_purpose::STANDARD.encode(bytes) }
+    ImageView { width: snapshot.width, height: snapshot.height, mime: "image/png".into(), base64: crate::base64_standard(&bytes) }
 }
 
 #[cfg(test)]

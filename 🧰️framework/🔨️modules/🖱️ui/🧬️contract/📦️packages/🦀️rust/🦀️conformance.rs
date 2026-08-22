@@ -183,7 +183,7 @@ mod tests {
                 let snapshot: crate::UiSnapshot = read_json(&dir.join(format!("{slug}.snapshot.json")));
                 let expectation: Expectation = read_json(&dir.join(format!("{slug}.expect.json")));
                 assert_eq!(expectation.outcome, "accept", "{group}/{slug}: this group is accept-only");
-                let case_limits = expectation.limits.clone().unwrap_or(limits);
+                let case_limits = expectation.limits.unwrap_or(limits);
                 crate::validate_snapshot(&snapshot, &case_limits).unwrap_or_else(|violations| panic!("{group}/{slug}: expected a valid snapshot, got violations {violations:?}"));
                 let state: crate::UiSnapshotState = snapshot.into();
                 assert_matches_expectation(&format!("{group}/{slug}"), &state, &expectation);
@@ -203,7 +203,7 @@ mod tests {
             let patch: crate::UiPatch = read_json(&dir.join(format!("{slug}.patch.json")));
             let expectation: Expectation = read_json(&dir.join(format!("{slug}.expect.json")));
             assert_eq!(expectation.outcome, "accept", "{group}/{slug}: 🩹️patch fixtures are always accept cases — rejections live in 🚫️rejection");
-            let limits = expectation.limits.clone().unwrap_or(default_limits);
+            let limits = expectation.limits.unwrap_or(default_limits);
             let mut state: crate::UiSnapshotState = snapshot.into();
             crate::apply_patch(&mut state, &patch, &limits).unwrap_or_else(|rejection| panic!("{group}/{slug}: expected the patch to apply, got {rejection:?}"));
             assert_matches_expectation(&format!("{group}/{slug}"), &state, &expectation);
@@ -225,7 +225,7 @@ mod tests {
             let patch: crate::UiPatch = read_json(&dir.join(format!("{slug}.patch.json")));
             let expectation: Expectation = read_json(&dir.join(format!("{slug}.expect.json")));
             assert_eq!(expectation.outcome, "reject", "{group}/{slug}: 🚫️rejection fixtures are always reject cases");
-            let limits = expectation.limits.clone().unwrap_or(default_limits);
+            let limits = expectation.limits.unwrap_or(default_limits);
             let before: crate::UiSnapshotState = snapshot.into();
             let mut after = before.clone();
             let rejection = crate::apply_patch(&mut after, &patch, &limits).expect_err(&format!("{group}/{slug}: expected the patch to be rejected, but it applied"));

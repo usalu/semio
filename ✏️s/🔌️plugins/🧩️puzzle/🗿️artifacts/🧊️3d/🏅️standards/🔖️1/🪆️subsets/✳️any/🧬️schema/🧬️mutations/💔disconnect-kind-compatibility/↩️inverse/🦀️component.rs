@@ -4,7 +4,7 @@ use crate::artifacts::puzzle3d::mutations::Puzzle3dMutation;
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &super::mutation::DisconnectKindCompatibility, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
+pub fn inverse(payload: &super::mutation::DisconnectKindCompatibility, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
     let Some(row) = base.meta.kind_compatibility.iter().find(|row| row.source == payload.source && row.target == payload.target) else {
         return Vec::new();
     };

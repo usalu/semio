@@ -39,7 +39,7 @@ fn walk(value: &JsonValue, depth: u32) -> (u32, u32) {
             let mut count = 1u32;
             let mut max_depth = depth;
             for item in items {
-                let (c, d) = Box::pin(walk(item, depth + 1));
+                let (c, d) = walk(item, depth + 1);
                 count += c;
                 max_depth = max_depth.max(d);
             }
@@ -49,7 +49,7 @@ fn walk(value: &JsonValue, depth: u32) -> (u32, u32) {
             let mut count = 1u32;
             let mut max_depth = depth;
             for member in members {
-                let (c, d) = Box::pin(walk(&member.value, depth + 1));
+                let (c, d) = walk(&member.value, depth + 1);
                 count += c;
                 max_depth = max_depth.max(d);
             }

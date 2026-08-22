@@ -49,7 +49,6 @@ pub struct Dialect {
 /// `'static` compile-time registration (document envelopes, the hub's multi-user pin, WIT
 /// `io-run`/`io-routes`, the io leaf generators) reads/writes THIS type.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ArtifactDialect {
     pub artifact_kind: String,
@@ -95,25 +94,25 @@ pub struct ArtifactKindId(String);
 impl ArtifactKindId {
     /// 🧵️ Parses and validates the canonical grammar, failing with a message that names which
     /// rule broke.
-    pub async fn parse(s: &str) -> Result<Self, String> {
-        if !is_canonical_artifact_kind(s).await {
+    pub fn parse(s: &str) -> Result<Self, String> {
+        if !is_canonical_artifact_kind(s) {
             return Err(format!("artifact kind {s:?} is not canonical grammar `s.<plugin>.<artifact>` (three dot-separated ASCII segments, first literally `s`, the rest lowercase-kebab)"));
         }
         Ok(ArtifactKindId(s.to_string()))
     }
 
     /// 🔍️ Borrowed access to the full `s.<plugin>.<artifact>` string.
-    pub async fn as_str(&self) -> &str {
+    pub fn as_str(&self) -> &str {
         &self.0
     }
 
     /// 🔌️ Second segment — the owning plugin slug.
-    pub async fn plugin(&self) -> &str {
+    pub fn plugin(&self) -> &str {
         self.0.split('.').nth(1).expect("ArtifactKindId invariant: exactly 3 dot-separated segments")
     }
 
     /// 🗿️ Third segment — the artifact slug within the plugin.
-    pub async fn artifact(&self) -> &str {
+    pub fn artifact(&self) -> &str {
         self.0.split('.').nth(2).expect("ArtifactKindId invariant: exactly 3 dot-separated segments")
     }
 }
@@ -125,7 +124,7 @@ impl std::fmt::Display for ArtifactKindId {
 }
 
 /// ✅️ Standalone canonical-grammar predicate behind `ArtifactKindId::parse`.
-pub async fn is_canonical_artifact_kind(kind: &str) -> bool {
+pub fn is_canonical_artifact_kind(kind: &str) -> bool {
     let mut segments = kind.split('.');
     let Some(first) = segments.next() else { return false };
     if first != "s" {
@@ -136,12 +135,12 @@ pub async fn is_canonical_artifact_kind(kind: &str) -> bool {
     if segments.next().is_some() {
         return false;
     }
-    is_kebab_segment(plugin).await && is_kebab_segment(artifact).await
+    is_kebab_segment(plugin) && is_kebab_segment(artifact)
 }
 
 /// 🔡️ One canonical-grammar segment: non-empty lowercase-ASCII `[a-z0-9-]`, no leading/trailing
 /// hyphen, no doubled hyphen.
-async fn is_kebab_segment(segment: &str) -> bool {
+fn is_kebab_segment(segment: &str) -> bool {
     if segment.is_empty() || segment.starts_with('-') || segment.ends_with('-') || segment.contains("--") {
         return false;
     }
@@ -186,7 +185,6 @@ impl ArtifactRef {
 /// D))`; **save a file** = `io_run(io_route(D → carrier))`. This is the rule that stops an export
 /// writing pack bytes into a `.gif`/`.png` file.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub enum IoPayload {
     Text(String),
     Binary(Vec<u8>),
@@ -205,7 +203,6 @@ pub const CARRIER_TEXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standa
 /// it is so the old registry's exhaustive matches never change; this 4-variant type is the new
 /// mechanism's own, dropped entirely (not surfaced) by `io_identify` when the value is `None`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub enum Confidence {
     None,
     Low,
@@ -231,7 +228,6 @@ impl Confidence {
 /// file's `IoFidelityClass` (same rank order, different name/type — that one stays a manifest
 /// declaration field for the old subset-validator machinery).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub enum IoFidelity {
     Exact,
     Canonical,
@@ -285,7 +281,6 @@ pub type IoResult<T> = Result<IoOutcome<T>, IoError>;
 /// 📇️ One registered `IoEntry`, erased to owned/wire data — the shape the WIT `list-io-entries`
 /// guest export and the TS `IoEntryDescriptor[]` mirror both use.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct IoEntryDescriptor {
     pub from: ArtifactDialect,
@@ -298,7 +293,6 @@ pub struct IoEntryDescriptor {
 /// `&'static IoEntry` pointers — so it can cross the WIT `io-routes` boundary; `io_run` re-resolves
 /// each hop's `(from, into)` pair against the live registry.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct IoRoute {
     pub hops: Vec<IoEntryDescriptor>,

@@ -1,0 +1,401 @@
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+warning: hidden lifetime parameters in types are deprecated
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/../../🦀️component.rs:379:21
+    |
+379 |     fn parse(input: ParseStream) -> syn::Result<Self> {
+    |                     ^^^^^^^^^^^ expected lifetime parameter
+    |
+    = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+    = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+    |
+379 |     fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+    |                                ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/../../🦀️component.rs:394:21
+    |
+394 |     fn parse(input: ParseStream) -> syn::Result<Self> {
+    |                     ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+394 |     fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+    |                                ++++
+
+warning: `semio-framework-dispatch-macros` (lib) generated 2 warnings
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13127:6
+      |
+13127 | impl crate::os_store::ArtifactPack for protocol::InteractionState {
+      |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+      = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+      |
+13127 - impl crate::os_store::ArtifactPack for protocol::InteractionState {
+13127 + impl ArtifactPack for protocol::InteractionState {
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13128:42
+      |
+13128 |     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+      |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13128 -     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+13128 +     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13128:97
+      |
+13128 |     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+      |                                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13128 -     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+13128 +     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13129:64
+      |
+13129 |         let value = serde_json::to_value(self).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))?;
+      |                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13129 -         let value = serde_json::to_value(self).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))?;
+13129 +         let value = serde_json::to_value(self).map_err(|error| PackError::Schema(error.to_string()))?;
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13130:9
+      |
+13130 |         crate::os_store::ArtifactPack::encode_pack_with(&value, options)
+      |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13130 -         crate::os_store::ArtifactPack::encode_pack_with(&value, options)
+13130 +         ArtifactPack::encode_pack_with(&value, options)
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13132:49
+      |
+13132 |     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+      |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13132 -     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+13132 +     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13132:101
+      |
+13132 |     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+      |                                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13132 -     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+13132 +     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, PackError> {
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13133:21
+      |
+13133 |         let value = <serde_json::Value as crate::os_store::ArtifactPack>::decode_pack_with(bytes, options)?;
+      |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13133 -         let value = <serde_json::Value as crate::os_store::ArtifactPack>::decode_pack_with(bytes, options)?;
+13133 +         let value = <serde_json::Value as ArtifactPack>::decode_pack_with(bytes, options)?;
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13134:55
+      |
+13134 |         serde_json::from_value(value).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))
+      |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13134 -         serde_json::from_value(value).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))
+13134 +         serde_json::from_value(value).map_err(|error| PackError::Schema(error.to_string()))
+      |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:501:5
+    |
+501 |     async fn len(&self) -> CodecResult<u64>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+    = note: `#[warn(async_fn_in_trait)]` on by default
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+501 -     async fn len(&self) -> CodecResult<u64>;
+501 +     fn len(&self) -> impl std::future::Future<Output = CodecResult<u64>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:502:5
+    |
+502 |     async fn read_at(&self, offset: u64, output: &mut [u8]) -> CodecResult<usize>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+502 -     async fn read_at(&self, offset: u64, output: &mut [u8]) -> CodecResult<usize>;
+502 +     fn read_at(&self, offset: u64, output: &mut [u8]) -> impl std::future::Future<Output = CodecResult<usize>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:513:5
+    |
+513 |     async fn span(&self) -> SourceSpan;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+513 -     async fn span(&self) -> SourceSpan;
+513 +     fn span(&self) -> impl std::future::Future<Output = SourceSpan> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:514:5
+    |
+514 |     async fn read_chunk(&mut self, output: &mut [u8]) -> CodecResult<usize>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+514 -     async fn read_chunk(&mut self, output: &mut [u8]) -> CodecResult<usize>;
+514 +     fn read_chunk(&mut self, output: &mut [u8]) -> impl std::future::Future<Output = CodecResult<usize>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:515:5
+    |
+515 |     async fn random_access(&self) -> Option<&Self::RandomAccess> {
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+515 ~     fn random_access(&self) -> impl std::future::Future<Output = Option<&Self::RandomAccess>> + Send {async {
+516 |         None
+517 ~     } }
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:522:5
+    |
+522 |     async fn write_chunk(&mut self, input: &[u8]) -> CodecResult<()>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+522 -     async fn write_chunk(&mut self, input: &[u8]) -> CodecResult<()>;
+522 +     fn write_chunk(&mut self, input: &[u8]) -> impl std::future::Future<Output = CodecResult<()>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:541:5
+    |
+541 |     async fn resolve_decode(&self, request: &ResourceRequest) -> CodecResult<Self::Source>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+541 -     async fn resolve_decode(&self, request: &ResourceRequest) -> CodecResult<Self::Source>;
+541 +     fn resolve_decode(&self, request: &ResourceRequest) -> impl std::future::Future<Output = CodecResult<Self::Source>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:542:5
+    |
+542 |     async fn resolve_encode(&self, request: &ResourceRequest) -> CodecResult<Self::Sink>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+542 -     async fn resolve_encode(&self, request: &ResourceRequest) -> CodecResult<Self::Sink>;
+542 +     fn resolve_encode(&self, request: &ResourceRequest) -> impl std::future::Future<Output = CodecResult<Self::Sink>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:720:5
+    |
+720 |     async fn sniff(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> CodecResult<PayloadSniff>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+720 -     async fn sniff(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> CodecResult<PayloadSniff>;
+720 +     fn sniff(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> impl std::future::Future<Output = CodecResult<PayloadSniff>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:721:5
+    |
+721 |     async fn decode_payload(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> CodecResult<Self::Payload>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+721 -     async fn decode_payload(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> CodecResult<Self::Payload>;
+721 +     fn decode_payload(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> impl std::future::Future<Output = CodecResult<Self::Payload>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:722:5
+    |
+722 |     async fn encode_payload(&self, payload: &Self::Payload, sink: &mut BoundedPayloadSink<'_, Self::Sink>) -> CodecResult<()>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+722 -     async fn encode_payload(&self, payload: &Self::Payload, sink: &mut BoundedPayloadSink<'_, Self::Sink>) -> CodecResult<()>;
+722 +     fn encode_payload(&self, payload: &Self::Payload, sink: &mut BoundedPayloadSink<'_, Self::Sink>) -> impl std::future::Future<Output = CodecResult<()>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:732:5
+    |
+732 |     async fn dialect(&self) -> &ArtifactDialect;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+732 -     async fn dialect(&self) -> &ArtifactDialect;
+732 +     fn dialect(&self) -> impl std::future::Future<Output = &ArtifactDialect> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:733:5
+    |
+733 |     async fn decode_artifact<R: ResourceResolver>(&self, payload: Self::Payload, context: &mut DecodeContext<R>) -> CodecResult<Sel...
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+733 -     async fn decode_artifact<R: ResourceResolver>(&self, payload: Self::Payload, context: &mut DecodeContext<R>) -> CodecResult<Self::Artifact>;
+733 +     fn decode_artifact<R: ResourceResolver>(&self, payload: Self::Payload, context: &mut DecodeContext<R>) -> impl std::future::Future<Output = CodecResult<Self::Artifact>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:734:5
+    |
+734 |     async fn encode_artifact<R: ResourceResolver>(&self, artifact: &Self::Artifact, context: &mut EncodeContext<R>) -> CodecResult<...
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+734 -     async fn encode_artifact<R: ResourceResolver>(&self, artifact: &Self::Artifact, context: &mut EncodeContext<R>) -> CodecResult<Self::Payload>;
+734 +     fn encode_artifact<R: ResourceResolver>(&self, artifact: &Self::Artifact, context: &mut EncodeContext<R>) -> impl std::future::Future<Output = CodecResult<Self::Payload>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:1212:5
+     |
+1212 |     async fn validate(payload: &IoPayload) -> Vec<Diagnostic>;
+     |     ^^^^^
+     |
+     = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+     |
+1212 -     async fn validate(payload: &IoPayload) -> Vec<Diagnostic>;
+1212 +     fn validate(payload: &IoPayload) -> impl std::future::Future<Output = Vec<Diagnostic>> + Send;
+     |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2400:9
+     |
+2400 |         async fn serialize(from: &S) -> IoResult<IoPayload>;
+     |         ^^^^^
+     |
+     = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+     |
+2400 -         async fn serialize(from: &S) -> IoResult<IoPayload>;
+2400 +         fn serialize(from: &S) -> impl std::future::Future<Output = IoResult<IoPayload>> + Send;
+     |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2415:9
+     |
+2415 |         async fn sniff(_payload: &IoPayload) -> Confidence {
+     |         ^^^^^
+     |
+     = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+     |
+2415 ~         fn sniff(_payload: &IoPayload) -> impl std::future::Future<Output = Confidence> + Send {async {
+2416 |             Confidence::None
+2417 ~         } }
+     |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2418:9
+     |
+2418 |         async fn deserialize(payload: &IoPayload) -> IoResult<S>;
+     |         ^^^^^
+     |
+     = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+     |
+2418 -         async fn deserialize(payload: &IoPayload) -> IoResult<S>;
+2418 +         fn deserialize(payload: &IoPayload) -> impl std::future::Future<Output = IoResult<S>> + Send;
+     |
+
+warning: `semio-framework-os-kernel` (lib) generated 27 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 9 suggestions)
+    Checking semio-framework-graph v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust)
+    Checking semio-wfc-focused v0.0.0 (/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/RESUMABLE-WFC-PUZZLE2D-AND-ENERGY-JOBS/🧪️wfc-focused)
+warning: unused doc comment
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/⛓️constraint/🦀️component.rs:136:1
+    |
+136 | / /// 🧷️ Every concrete [`Constraint`] this crate implements, closed here (bare `dyn_enum_close!`
+137 | | /// invocation — same module, trait declared first, see `dyn-enum-macro`'s recipe for why that
+138 | | /// avoids rustc#52234) rather than left `dyn`. Replaces every former `Box<dyn Constraint>` field.
+    | |_-------------------------------------------------------------------------------------------------^
+    |   |
+    |   rustdoc does not generate documentation for macro invocations
+    |
+    = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+    = note: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default
+
+warning: associated function `from_checkpoint` is never used
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧵️job/🦀️component.rs:255:12
+    |
+216 | impl<T: Topology + Clone> WfcJob<T> {
+    | ----------------------------------- associated function in this implementation
+...
+255 |     pub fn from_checkpoint(operation: Operation, model: CompiledModel, topology: T, config: WfcJobConfig, initial_domains: Option<V...
+    |            ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `semio-wfc-focused` (lib) generated 2 warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.24s

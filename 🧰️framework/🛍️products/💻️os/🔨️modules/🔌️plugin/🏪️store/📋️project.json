@@ -1,0 +1,25 @@
+{
+  "name": "@semio-tech/plugin-extension-store",
+  "$schema": "../../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store",
+        "forwardAllArgs": true
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test quick",
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store",
+        "forwardAllArgs": true
+      }
+    }
+  },
+  "tags": ["scope:framework", "type:plugin"]
+}

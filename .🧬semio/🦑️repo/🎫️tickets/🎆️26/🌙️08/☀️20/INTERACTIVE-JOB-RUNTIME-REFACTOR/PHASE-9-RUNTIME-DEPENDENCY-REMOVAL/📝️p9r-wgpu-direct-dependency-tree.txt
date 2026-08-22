@@ -1,0 +1,37 @@
+semio-framework-os-renderer-wgpu v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu)
+├── base64 v0.22.1
+├── blake3 v1.8.5
+│   [build-dependencies]
+├── image v0.25.10
+├── resvg v0.45.1
+├── rfd v0.15.4
+├── semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+├── semio-framework-3d v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust)
+├── semio-framework-actor v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust)
+├── semio-framework-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust)
+├── semio-framework-editor v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust)
+├── semio-framework-job v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust)
+├── semio-framework-os-flow v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust)
+├── semio-framework-os-infinite v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust)
+│   [build-dependencies]
+├── semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+├── semio-framework-os-services v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust)
+├── semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust)
+├── semio-framework-plugin-host v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust)
+├── semio-framework-surface v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust)
+├── semio-framework-trace v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust)
+├── semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+├── semio-framework-ui-contract v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust)
+├── semio-framework-ui-host v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust)
+├── semio-framework-ui-render v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🖼️render/📦️packages/🦀️rust)
+├── semio-s-plugin-puzzle v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust)
+│   [build-dependencies]
+├── serde v1.0.228
+├── serde_json v1.0.149
+├── tiny-skia v0.11.4
+├── tokio v1.52.3
+├── ureq v2.12.1
+├── usvg v0.45.1
+├── vello v0.7.0
+└── winit v0.30.13
+    [build-dependencies]

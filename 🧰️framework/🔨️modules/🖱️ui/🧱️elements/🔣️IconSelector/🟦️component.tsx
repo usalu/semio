@@ -14,6 +14,7 @@ import { Textarea } from "../📄️Textarea/🟦️component.tsx";
 import { useLabel } from "../🏷️Label/🟦️component.tsx";
 import { type IconSelectorMode, decodeIcon, encodeIcon, classifyIconSelectorMode, Icon } from "../🔣️Icons/🟦️component.tsx";
 import { Button } from "../🔘️Button/🟦️component.tsx";
+import { isIconName } from "@semio-tech/assets";
 // #endregion 🔌️Adapters
 
 // #region 🖼️IconSelector
@@ -71,7 +72,7 @@ function emitIconKindFromSelectorMode(mode: IconSelectorMode, inner: string): st
     case "text":
       return encodeIcon({ kind: "text", text: i });
     case "vector":
-      return i.includes("<svg") || i.startsWith("<?xml") ? i : encodeIcon({ kind: "catalog", key: i });
+      return i.includes("<svg") || i.startsWith("<?xml") || !isIconName(i) ? i : encodeIcon({ kind: "catalog", key: i });
   }
 }
 

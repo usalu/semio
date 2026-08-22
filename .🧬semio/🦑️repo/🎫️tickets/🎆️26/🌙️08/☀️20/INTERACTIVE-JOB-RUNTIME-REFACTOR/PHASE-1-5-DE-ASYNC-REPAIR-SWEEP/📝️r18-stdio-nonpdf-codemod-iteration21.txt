@@ -1,0 +1,4 @@
+[run r13-oac8c062] crate=semio-s-plugin-stdio dryRun=false target=(host) excludePath=artifacts/📄️pdf/
+[run r13-oac8c062] iteration 1: total errors=54, async-class=36
+[run r13-oac8c062] iteration 1: planned 14 edits (27 residue)
+[run r13-oac8c062] reached max-iterations=1 without reaching a fixpoint.

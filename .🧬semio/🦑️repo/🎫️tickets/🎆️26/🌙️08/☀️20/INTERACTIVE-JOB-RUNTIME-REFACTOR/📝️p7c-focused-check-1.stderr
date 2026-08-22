@@ -1,0 +1,6 @@
+error: current package believes it's in a workspace when it's not:
+current:   /Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/RESUMABLE-WFC-PUZZLE2D-AND-ENERGY-JOBS/🧪️energy-focused/Cargo.toml
+workspace: /Users/ueli/Documents/semio/Cargo.toml
+
+this may be fixable by adding `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/RESUMABLE-WFC-PUZZLE2D-AND-ENERGY-JOBS/🧪️energy-focused` to the `workspace.members` array of the manifest located at: /Users/ueli/Documents/semio/Cargo.toml
+Alternatively, to keep it out of the workspace, add the package to the `workspace.exclude` array, or add an empty `[workspace]` table to the package's manifest.

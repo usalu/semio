@@ -12,6 +12,13 @@ struct DocumentEntry {
     cmd_tx: tokio::sync::mpsc::UnboundedSender<ArtifactActorMsg>,
 }
 
+fn install_worker_panic_hook() {
+    static INSTALLED: std::sync::Once = std::sync::Once::new();
+    INSTALLED.call_once(|| {
+        std::panic::set_hook(Box::new(|panic| eprintln!("[semio-worker panic] {panic}")));
+    });
+}
+
 #[wasm_bindgen]
 pub struct BackboneWorkerHost {
     host: ArtifactHost,
@@ -23,8 +30,8 @@ pub struct BackboneWorkerHost {
 impl BackboneWorkerHost {
     #[wasm_bindgen(constructor)]
     pub async fn new() -> Self {
-        console_error_panic_hook::set_once();
-        let pool = std::sync::Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+        install_worker_panic_hook();
+        let pool = std::sync::Arc::new(semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
         Self { host: ArtifactHost::new(pool.clone()), pool, documents: std::collections::HashMap::new() }
     }
 
@@ -61,7 +68,7 @@ impl BackboneWorkerHost {
             }
             BackboneWorkerRequest::Send { document_id, message } => {
                 if let Some(entry) = self.documents.get(&document_id) {
-                    let _ = entry.cmd_tx.send(message);
+                    let _ = entry.cmd_tx.send(*message);
                 }
             }
         }

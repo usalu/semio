@@ -8,7 +8,7 @@ use crate::artifacts::avi::standards::v1_0::subsets::any::schema::snapshot::AviS
 use crate::artifacts::avi::{AVI_DIALECT, STDIO_AVI_DOCUMENT_SCHEMA};
 use crate::editor::avi::modes::edit;
 use crate::editor::avi::modes::edit::windows::main;
-use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode};
+use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 

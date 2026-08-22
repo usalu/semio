@@ -77,7 +77,7 @@ impl ArtifactViewer for Block2dViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_block2d_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_block2d_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(BLOCK2D_DIALECT)
         .document(["semio", "block", "2d"])
         .icon_id("layout-grid")

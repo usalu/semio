@@ -14,16 +14,16 @@ use std::collections::BTreeMap;
 /// 📶️ Mirrors `ui_styling::metrics::board::SUGGESTION_OFFSET`; kept local since the plugin crate has no styling dependency.
 pub const PUZZLE2D_DEFAULT_SUGGESTION_OFFSET: f64 = 80.0;
 
-async fn default_grid_factor() -> f64 {
+fn default_grid_factor() -> f64 {
     1.0
 }
 
-async fn default_suggestion_offset() -> f64 {
+fn default_suggestion_offset() -> f64 {
     PUZZLE2D_DEFAULT_SUGGESTION_OFFSET
 }
 
 /// 📶️ Overview/selection default to automatic LOD; detail defaults to a fixed "detail" tier, matching the pre-migration triptych.
-async fn default_lod_mode_by_pane() -> BTreeMap<String, String> {
+fn default_lod_mode_by_pane() -> BTreeMap<String, String> {
     use crate::editor::puzzle2d::modes::edit::windows::{detail, overview, selection};
     BTreeMap::from([
         (overview::WINDOW_KIND_ID.to_string(), crate::editor::puzzle2d::PUZZLE2D_LOD_MODE_AUTOMATIC.to_string()),
@@ -32,15 +32,15 @@ async fn default_lod_mode_by_pane() -> BTreeMap<String, String> {
     ])
 }
 
-async fn default_camera_zoom() -> f64 {
+fn default_camera_zoom() -> f64 {
     1.0
 }
 
-async fn default_locale() -> String {
+fn default_locale() -> String {
     "en-US".into()
 }
 
-async fn default_terminology() -> String {
+fn default_terminology() -> String {
     "native".into()
 }
 //#endregion 🔖️Defaults
@@ -107,6 +107,10 @@ pub struct Puzzle2dConfig {
     /// 🗣️ B1: terminology id ("native" default, or "reuse") — was host-pushed `view_state.terminology`.
     #[serde(default = "default_terminology")]
     pub terminology: String,
+    #[serde(default)]
+    pub example_load_generation: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub example_load_id: Option<String>,
 }
 
 /// ⚠️ Explicit impl (not `#[derive(Default)]`) so Rust construction matches the serde field defaults above.
@@ -136,6 +140,8 @@ impl Default for Puzzle2dConfig {
             active_utility_by_window_id: BTreeMap::new(),
             locale: default_locale(),
             terminology: default_terminology(),
+            example_load_generation: 0,
+            example_load_id: None,
         }
     }
 }
@@ -146,21 +152,21 @@ pub type Puzzle2dPlayRuntime = Puzzle2dConfig;
 impl store::ArtifactDsl for Puzzle2dConfig {
     const EXTENSION: &'static str = "puzzle2dcfg";
 
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
     }
 
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         serde_json::to_string_pretty(self).unwrap_or_default()
     }
 }
 
 impl store::ArtifactPack for Puzzle2dConfig {
-    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         dsl::to_dsl_value(self).map_err(store::PackError::Schema)?.encode_pack_with(options)
     }
 
-    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let value = dsl::DslValue::decode_pack_with(bytes, options)?;
         dsl::from_dsl_value(value).map_err(store::PackError::Schema)
     }
@@ -182,31 +188,31 @@ pub enum Puzzle2dConfigMutation {
 impl protocol::Mutation<Puzzle2dConfig> for Puzzle2dConfigMutation {
     type Diff = Puzzle2dConfig;
 
-    async fn diff(&self, _base: &Puzzle2dConfig) -> protocol::MutationOutcome<Puzzle2dConfig> {
+    fn diff(&self, _base: &Puzzle2dConfig) -> protocol::MutationOutcome<Puzzle2dConfig> {
         protocol::MutationOutcome::new(match self {
             Puzzle2dConfigMutation::Snapshot { config } => config.clone(),
         })
     }
 
-    async fn inverse(&self, base: &Puzzle2dConfig) -> Vec<Self> {
+    fn inverse(&self, base: &Puzzle2dConfig) -> Vec<Self> {
         vec![Puzzle2dConfigMutation::Snapshot { config: base.clone() }]
     }
 }
 
 impl protocol::OpBinary for Puzzle2dConfigMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
     }
 }
 
 impl protocol::OpText for Puzzle2dConfigMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         serde_json::to_string(self).unwrap_or_default()
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         serde_json::from_str(line).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
     }
 }

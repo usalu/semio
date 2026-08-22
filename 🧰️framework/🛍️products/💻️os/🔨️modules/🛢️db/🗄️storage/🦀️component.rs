@@ -1484,32 +1484,24 @@ mod fs_storage {
 
     /// @emoji ✍️ `epoch(8 LE) || expires_at_ms(8 LE) || holder_len(varint) || holder` — the lease
     /// file wire encoding, built on `pack`'s own byte writer rather than hand-rolled offsets.
-    // 🚫️async: E5 executor bridge — every caller is a sync `run_blocking_op` closure, but
-    // `pack::ByteWriter`'s methods are genuinely async (out-of-scope crate); bridged via
-    // `db_actor::block_on` rather than making this fn itself async — see R9
     fn encode_lease(fence: EpochFence, expires_at_ms: u64, holder: &str) -> Vec<u8> {
-        crate::db_actor::block_on(async {
-            let mut writer = pack::ByteWriter::new().await;
-            writer.write_u64_le(fence.epoch).await;
-            writer.write_u64_le(expires_at_ms).await;
-            writer.write_varint_u64(holder.len() as u64).await;
-            writer.write_bytes(holder.as_bytes()).await;
-            writer.into_bytes().await
-        })
+        let mut writer = pack::ByteWriter::new();
+        writer.write_u64_le(fence.epoch);
+        writer.write_u64_le(expires_at_ms);
+        writer.write_varint_u64(holder.len() as u64);
+        writer.write_bytes(holder.as_bytes());
+        writer.into_bytes()
     }
 
-    // 🚫️async: E5 executor bridge, same rationale as `encode_lease` — see R9
     fn decode_lease(bytes: &[u8]) -> Result<(EpochFence, u64, String), DbError> {
-        crate::db_actor::block_on(async {
-            let mut reader = pack::ByteReader::new(bytes).await;
-            let epoch = reader.read_u64_le().await?;
-            let expires_at_ms = reader.read_u64_le().await?;
-            let holder_len = reader.read_varint_u64().await?;
-            check_len(holder_len, MAX_READ_BYTES, "lease_storage::decode holder")?;
-            let holder_bytes = reader.read_bytes(holder_len as usize).await?;
-            let holder = String::from_utf8(holder_bytes.to_vec()).map_err(|_| DbError::Corrupt("lease holder is not valid utf-8".to_string()))?;
-            Ok((EpochFence { epoch }, expires_at_ms, holder))
-        })
+        let mut reader = pack::ByteReader::new(bytes);
+        let epoch = reader.read_u64_le()?;
+        let expires_at_ms = reader.read_u64_le()?;
+        let holder_len = reader.read_varint_u64()?;
+        check_len(holder_len, MAX_READ_BYTES, "lease_storage::decode holder")?;
+        let holder_bytes = reader.read_bytes(holder_len as usize)?;
+        let holder = String::from_utf8(holder_bytes.to_vec()).map_err(|_| DbError::Corrupt("lease holder is not valid utf-8".to_string()))?;
+        Ok((EpochFence { epoch }, expires_at_ms, holder))
     }
 
     // 🚫️async: E1 pure-shaped accessor, every caller is a sync `run_blocking_op` closure — see R9

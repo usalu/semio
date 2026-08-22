@@ -17,22 +17,22 @@ pub struct ChangeObjectMesh {
 impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for ChangeObjectMesh {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "object", kind: "change-object-mesh", record: "ChangedObjectMesh" };
 
-    async fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
+    fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
+    fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change object \"{}\" mesh", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn change_object_mesh(id: String, new_mesh_url: Option<String>) -> Puzzle3dMutation {
+pub fn change_object_mesh(id: String, new_mesh_url: Option<String>) -> Puzzle3dMutation {
     Puzzle3dMutation::ChangeObjectMesh(ChangeObjectMesh { id, new_mesh_url })
 }

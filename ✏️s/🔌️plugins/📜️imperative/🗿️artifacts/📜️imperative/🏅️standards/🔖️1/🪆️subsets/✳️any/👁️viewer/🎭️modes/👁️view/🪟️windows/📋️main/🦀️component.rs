@@ -5,7 +5,7 @@
 
 use crate::artifacts::imperative::ImperativeSnapshot;
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
@@ -17,7 +17,7 @@ pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 /// window's own label stays "Steps" — `TableWindowKit::window_kind()`'s generic "Table" label is
 /// overridden here the same way every kit consumer is expected to (contract §2.6 gives the kit's id/
 /// body-key/surface-kind, not a fixed per-app label).
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Steps", "Schritte"), icon_id: "list".into(), ..TableWindowKit::window_kind() }
 }
 //#endregion 🔖️Definition
@@ -26,7 +26,7 @@ pub async fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `ImperativeSnapshot -> UiNode` read: one row per top-level step (`index`, `id`, `kind`),
 /// English-only headers (a viewer has no persisted locale — `Config = NoConfig`), no run-output row
 /// (the editor's own `run` view-action is a `Command`, and the viewer declares none).
-pub async fn render(document: &ImperativeSnapshot) -> UiNode {
+pub fn render(document: &ImperativeSnapshot) -> BuiltNode {
     let path = crate::artifacts::imperative::imperative_working_scene(document).path;
     let rows = path.steps.iter().enumerate().map(|(index, step)| vec![(index + 1).to_string(), step.id.clone(), step.kind.clone()]).collect();
     TableWindowKit::render(&TableView { columns: vec!["#".into(), "Id".into(), "Kind".into()], rows })
@@ -49,10 +49,8 @@ mod tests {
     async fn render_lists_one_row_per_top_level_step() {
         let document = crate::artifacts::imperative::schema::default_snapshot();
         let expected = crate::artifacts::imperative::imperative_working_scene(&document).path.steps.len();
-        let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
-        let scene = node.table.expect("table scene");
-        let rows: Vec<Vec<String>> = serde_json::from_str(&scene.rows_json).expect("rows json");
-        assert_eq!(rows.len(), expected);
+        let json = serde_json::to_string(&semio_framework_plugin::built_to_component_tree(render(&document))).expect("component tree json");
+        assert_eq!(json.matches("\"cells\"").count(), expected);
     }
 }
 //#endregion 🧪️Tests

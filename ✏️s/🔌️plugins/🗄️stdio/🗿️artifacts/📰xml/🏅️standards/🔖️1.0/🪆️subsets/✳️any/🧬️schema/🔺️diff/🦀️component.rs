@@ -315,7 +315,7 @@ fn apply_node_diff(node: &XmlNode, diff: &XmlNodeDiff) -> XmlNode {
                     None => attrs.clone(),
                 },
                 children: match &element_diff.children {
-                    Some(children_diff) => Box::pin(apply_children_diff(children, children_diff)),
+                    Some(children_diff) => apply_children_diff(children, children_diff),
                     None => children.clone(),
                 },
             },
@@ -349,7 +349,7 @@ fn apply_children_diff(children: &[XmlNode], diff: &XmlChildrenDiff) -> Vec<XmlN
     for m in &diff.modified {
         if let Some(Some(node)) = slots.get(m.index) {
             let patched = apply_node_diff(node, &m.diff);
-            slots[m.index] = Some(Box::pin(patched));
+            slots[m.index] = Some(patched);
         }
     }
     let mut removed_sorted = diff.removed.clone();
@@ -477,7 +477,7 @@ fn between_node(base: &XmlNode, other: &XmlNode) -> Option<XmlNodeDiff> {
         (XmlNode::Element { name: bn, attrs: ba, children: bc }, XmlNode::Element { name: on, attrs: oa, children: oc }) => {
             let name = if bn != on { Some(on.clone()) } else { None };
             let attributes = between_attrs(ba, oa);
-            let children = Box::pin(between_children(bc, oc));
+            let children = between_children(bc, oc);
             if name.is_none() && attributes.is_none() && children.is_none() {
                 None
             } else {
@@ -522,7 +522,7 @@ fn between_children(base: &[XmlNode], other: &[XmlNode]) -> Option<XmlChildrenDi
     let mut modified = Vec::new();
     for i in 0..min_len {
         if base[i] != other[i] {
-            if let Some(d) = Box::pin(between_node(&base[i], &other[i])) {
+            if let Some(d) = between_node(&base[i], &other[i]) {
                 modified.push(XmlChildModified { index: i, diff: d });
             }
         }
@@ -592,7 +592,7 @@ fn absorb_node_diff(a: XmlNodeDiff, b: XmlNodeDiff) -> XmlNodeDiff {
         (_, XmlNodeDiff::Replace { node: None }) => XmlNodeDiff::Replace { node: None },
         (XmlNodeDiff::Replace { node: None }, _) => XmlNodeDiff::Replace { node: None },
         (XmlNodeDiff::Text { text: ta }, XmlNodeDiff::Text { text: tb }) => XmlNodeDiff::Text { text: tb.or(ta) },
-        (XmlNodeDiff::Element(ea), XmlNodeDiff::Element(eb)) => XmlNodeDiff::Element(Box::pin(absorb_element_diff(ea, eb))),
+        (XmlNodeDiff::Element(ea), XmlNodeDiff::Element(eb)) => XmlNodeDiff::Element(absorb_element_diff(ea, eb)),
         (_, b) => b,
     }
 }
@@ -610,7 +610,7 @@ fn absorb_element_diff(mut a: XmlElementDiff, b: XmlElementDiff) -> XmlElementDi
     a.children = match (a.children.take(), b.children) {
         (None, x) => x,
         (x, None) => x,
-        (Some(ad), Some(bd)) => Some(Box::pin(absorb_children_diff(ad, bd))),
+        (Some(ad), Some(bd)) => Some(absorb_children_diff(ad, bd)),
     };
     a
 }
@@ -702,7 +702,7 @@ fn absorb_children_diff(d1: XmlChildrenDiff, d2: XmlChildrenDiff) -> XmlChildren
                     continue;
                 }
                 match modified.iter_mut().find(|m| &m.index == bi) {
-                    Some(existing) => existing.diff = Box::pin(absorb_node_diff(existing.diff.clone(), m2.diff.clone())),
+                    Some(existing) => existing.diff = absorb_node_diff(existing.diff.clone(), m2.diff.clone()),
                     None => modified.push(XmlChildModified { index: *bi, diff: m2.diff.clone() }),
                 }
             }

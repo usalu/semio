@@ -298,7 +298,7 @@ mod native {
         /// used here only to compute a valid `doc_span.len` for a hand-built `Manifest`.
         async fn uncompressed_segment_wire_len(payload_len: usize) -> u64 {
             let mut len_bytes = Vec::new();
-            crate::write_varint_u64(&mut len_bytes, payload_len as u64).await;
+            crate::write_varint_u64(&mut len_bytes, payload_len as u64);
             (1 + 1 + len_bytes.len() + payload_len + 4) as u64
         }
 

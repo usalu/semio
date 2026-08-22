@@ -11,24 +11,24 @@ use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, 
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
 
-async fn examples() -> &'static [ExampleSource] {
+fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
     EXAMPLES.get_or_init(|| vec![crate::artifacts::curate::examples::demo::source()]).as_slice()
 }
 
-async fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
+fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
     static DESCRIPTORS: OnceLock<Vec<::schema::ArtifactInferenceDescriptor>> = OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::curate_artifact_inference_descriptor()]).as_slice()
 }
 
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.
-pub async fn subset() -> SubsetDeclaration {
+pub fn subset() -> SubsetDeclaration<crate::SourcingApps> {
     SubsetDeclaration {
         dialect: SOURCING_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::curate_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io::io(),
-        viewer: viewer_surface::<viewer::SourcingViewer>(viewer::create_sourcing_viewer()),
-        editor: editor_surface::<editor::SourcingCurateApp>(editor::create_sourcing_curate_app()),
+        viewer: viewer_surface::<viewer::SourcingViewer, crate::SourcingApps>(viewer::create_sourcing_viewer()),
+        editor: editor_surface::<editor::SourcingCurateApp, crate::SourcingApps>(editor::create_sourcing_curate_app()),
         examples: examples(),
     }
 }

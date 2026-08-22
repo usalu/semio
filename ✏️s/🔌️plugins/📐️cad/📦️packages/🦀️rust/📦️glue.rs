@@ -773,7 +773,7 @@ pub mod viewer {
 #[path = "../../🦀️component.rs"]
 mod plugin;
 #[cfg(feature = "plugin-entry")]
-semio_framework_plugin::plugin_exports!(plugin::plugin);
+semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::CadApps);
 
 //#region 📚️Examples
 #[path = "."]

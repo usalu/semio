@@ -145,28 +145,25 @@ dsl::space_members! {
 
 /// 🏭️ Mints a new subset-typed `semio` child — the `create` half of the removed `ChildStoreFactory`.
 /// Dispatch key is `dialect.subset` (see [`SemioMembers`]'s doc).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn create_semio_member(id: &str, dialect: &dsl::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<SemioMembers, dsl::VcsError> {
-    <SemioMembers as dsl::MemberFactory>::create(dialect.subset.as_str(), id, dialect, initial_pack)
+pub async fn create_semio_member(id: &str, dialect: &dsl::os_io::ArtifactDialect, initial_pack: &[u8]) -> Result<SemioMembers, dsl::VcsError> {
+    <SemioMembers as dsl::MemberFactory>::create(dialect.subset.as_str(), id, dialect, initial_pack).await
 }
 
 /// 📤️ Reopens a persisted subset-typed `semio` child — the `open` half. The subset is recovered from
 /// the envelope itself (`subset_of_persisted_envelope`), exactly as the removed `ChildStoreFactory::
 /// open` did — `open` gets no dialect argument, so it has to; this only works because the `.spr`
 /// composition overlay carries `dialect` (see this ticket's `REC_COMPOSITION`).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn open_semio_member(envelope_pack: &[u8]) -> Result<SemioMembers, dsl::VcsError> {
-    let subset = subset_of_persisted_envelope(envelope_pack)?;
-    <SemioMembers as dsl::MemberFactory>::open(subset.as_str(), envelope_pack)
+pub async fn open_semio_member(envelope_pack: &[u8]) -> Result<SemioMembers, dsl::VcsError> {
+    let subset = subset_of_persisted_envelope(envelope_pack).await?;
+    <SemioMembers as dsl::MemberFactory>::open(subset.as_str(), envelope_pack).await
 }
 
 /// 🎯️ Reads a persisted child's subset out of its own `.spr` composition overlay — deliberately
 /// snapshot-type-agnostic (it decodes only the history log, never the document body), because
 /// choosing the snapshot type is exactly what this answer is needed FOR.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn subset_of_persisted_envelope(envelope_pack: &[u8]) -> Result<String, dsl::VcsError> {
-    let (_, spr) = dsl::decode_document_pack_bytes(envelope_pack)?;
-    let log = dsl::decode_history(&spr, &dsl::os_spr::DecodeOptions::default()).map_err(|error| dsl::VcsError::Deserialize(error.to_string()))?;
+async fn subset_of_persisted_envelope(envelope_pack: &[u8]) -> Result<String, dsl::VcsError> {
+    let (_, spr) = dsl::decode_document_pack_bytes(envelope_pack).await?;
+    let log = dsl::decode_history(&spr, &dsl::os_spr::DecodeOptions::default()).await.map_err(|error| dsl::VcsError::Deserialize(error.to_string()))?;
     log.composition.and_then(|composition| composition.dialect).map(|(_, _, subset)| subset).ok_or_else(|| dsl::VcsError::Deserialize("semio child store: persisted child carries no dialect, so its subset is unknowable".to_string()))
 }
 //#endregion 🔖️Members

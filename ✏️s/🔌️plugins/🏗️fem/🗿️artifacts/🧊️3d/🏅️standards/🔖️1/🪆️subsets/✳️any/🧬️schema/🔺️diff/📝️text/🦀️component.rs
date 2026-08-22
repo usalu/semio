@@ -13,7 +13,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 
 //#region 🔖️Collections
 pub(crate) trait HasId {
-    async fn id(&self) -> &str;
+    fn id(&self) -> &str;
 }
 
 impl HasId for FemNode {
@@ -57,7 +57,7 @@ impl HasId for FemSolid {
     }
 }
 
-async fn apply_delta<T: HasId + Clone, P>(items: &[T], delta: &P) -> protocol::MutationApplyResult<Vec<T>>
+fn apply_delta<T: HasId + Clone, P>(items: &[T], delta: &P) -> protocol::MutationApplyResult<Vec<T>>
 where
     P: DeltaAccess<T>,
 {
@@ -124,25 +124,25 @@ where
 }
 
 trait DeltaAccess<T: HasId + Clone> {
-    async fn added(&self) -> &[T];
-    async fn removed(&self) -> &[String];
-    async fn patched(&self) -> Vec<(String, T)>;
-    async fn reordered(&self) -> Option<&[String]>;
+    fn added(&self) -> &[T];
+    fn removed(&self) -> &[String];
+    fn patched(&self) -> Vec<(String, T)>;
+    fn reordered(&self) -> Option<&[String]>;
 }
 
 macro_rules! impl_delta_access {
     ($delta:ty, $item:ty, $entry:ty) => {
         impl DeltaAccess<$item> for $delta {
-            async fn added(&self) -> &[$item] {
+            fn added(&self) -> &[$item] {
                 &self.added
             }
-            async fn removed(&self) -> &[String] {
+            fn removed(&self) -> &[String] {
                 &self.removed
             }
-            async fn patched(&self) -> Vec<(String, $item)> {
+            fn patched(&self) -> Vec<(String, $item)> {
                 self.patched.iter().map(|e| (e.id.clone(), e.item.clone())).collect()
             }
-            async fn reordered(&self) -> Option<&[String]> {
+            fn reordered(&self) -> Option<&[String]> {
                 self.reordered.as_deref()
             }
         }
@@ -162,7 +162,7 @@ impl_delta_access!(Fem3dCombinationsDelta, FemCombination, Fem3dCombinationsPatc
 //#region 🔖️Apply
 impl Fem3dDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
-    pub async fn apply_to_artifact(&self, artifact: &Fem3dArtifact) -> protocol::MutationApplyResult<Fem3dArtifact> {
+    pub fn apply_to_artifact(&self, artifact: &Fem3dArtifact) -> protocol::MutationApplyResult<Fem3dArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -219,7 +219,7 @@ impl Fem3dDiff {
 }
 
 impl MutationDiff<Fem3dSnapshot> for Fem3dDiff {
-    async fn apply(&self, snapshot: &Fem3dSnapshot) -> protocol::MutationApplyResult<Fem3dSnapshot> {
+    fn apply(&self, snapshot: &Fem3dSnapshot) -> protocol::MutationApplyResult<Fem3dSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -255,7 +255,7 @@ impl MutationDiff<Fem3dSnapshot> for Fem3dDiff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -285,7 +285,7 @@ impl MutationDiff<Fem3dSnapshot> for Fem3dDiff {
     }
 }
 
-async fn merge_delta<D: DeltaMerge>(dst: &mut Option<D>, src: Option<D>) {
+fn merge_delta<D: DeltaMerge>(dst: &mut Option<D>, src: Option<D>) {
     match (dst.as_mut(), src) {
         (Some(d), Some(s)) => d.merge_from(s),
         (None, Some(s)) => *dst = Some(s),
@@ -294,13 +294,13 @@ async fn merge_delta<D: DeltaMerge>(dst: &mut Option<D>, src: Option<D>) {
 }
 
 trait DeltaMerge {
-    async fn merge_from(&mut self, other: Self);
+    fn merge_from(&mut self, other: Self);
 }
 
 macro_rules! impl_merge {
     ($t:ty) => {
         impl DeltaMerge for $t {
-            async fn merge_from(&mut self, other: Self) {
+            fn merge_from(&mut self, other: Self) {
                 self.added.extend(other.added);
                 self.removed.extend(other.removed);
                 self.patched.extend(other.patched);
@@ -324,7 +324,7 @@ impl_merge!(Fem3dCombinationsDelta);
 //#region 🔖️Constructors
 
 /// 🏗️ Set-node field delta.
-pub async fn diff_set_node(index: usize, item: FemNode, base: &Fem3dSnapshot) -> Fem3dDiff {
+pub fn diff_set_node(index: usize, item: FemNode, base: &Fem3dSnapshot) -> Fem3dDiff {
     use crate::artifacts::fem3d::schema::diff::Fem3dNodesPatchEntry;
     let id = item.id().to_string();
     let delta = if base.nodes.iter().any(|existing| existing.id() == id) {
@@ -339,12 +339,12 @@ pub async fn diff_set_node(index: usize, item: FemNode, base: &Fem3dSnapshot) ->
 }
 
 /// 🏗️ Remove-node field delta.
-pub async fn diff_remove_node(id: String) -> Fem3dDiff {
+pub fn diff_remove_node(id: String) -> Fem3dDiff {
     Fem3dDiff { nodes: Some(Fem3dNodesDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
 }
 
 /// 🏗️ Set-element field delta.
-pub async fn diff_set_element(index: usize, item: FemElement, base: &Fem3dSnapshot) -> Fem3dDiff {
+pub fn diff_set_element(index: usize, item: FemElement, base: &Fem3dSnapshot) -> Fem3dDiff {
     use crate::artifacts::fem3d::schema::diff::Fem3dElementsPatchEntry;
     let id = item.id().to_string();
     let delta = if base.elements.iter().any(|existing| existing.id() == id) {
@@ -359,12 +359,12 @@ pub async fn diff_set_element(index: usize, item: FemElement, base: &Fem3dSnapsh
 }
 
 /// 🏗️ Remove-element field delta.
-pub async fn diff_remove_element(id: String) -> Fem3dDiff {
+pub fn diff_remove_element(id: String) -> Fem3dDiff {
     Fem3dDiff { elements: Some(Fem3dElementsDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
 }
 
 /// 🏗️ Set-material field delta.
-pub async fn diff_set_material(index: usize, item: FemMaterial, base: &Fem3dSnapshot) -> Fem3dDiff {
+pub fn diff_set_material(index: usize, item: FemMaterial, base: &Fem3dSnapshot) -> Fem3dDiff {
     use crate::artifacts::fem3d::schema::diff::Fem3dMaterialsPatchEntry;
     let id = item.id().to_string();
     let delta = if base.materials.iter().any(|existing| existing.id() == id) {
@@ -379,12 +379,12 @@ pub async fn diff_set_material(index: usize, item: FemMaterial, base: &Fem3dSnap
 }
 
 /// 🏗️ Remove-material field delta.
-pub async fn diff_remove_material(id: String) -> Fem3dDiff {
+pub fn diff_remove_material(id: String) -> Fem3dDiff {
     Fem3dDiff { materials: Some(Fem3dMaterialsDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
 }
 
 /// 🏗️ Set-section field delta.
-pub async fn diff_set_section(index: usize, item: FemSection, base: &Fem3dSnapshot) -> Fem3dDiff {
+pub fn diff_set_section(index: usize, item: FemSection, base: &Fem3dSnapshot) -> Fem3dDiff {
     use crate::artifacts::fem3d::schema::diff::Fem3dSectionsPatchEntry;
     let id = item.id().to_string();
     let delta = if base.sections.iter().any(|existing| existing.id() == id) {
@@ -399,12 +399,12 @@ pub async fn diff_set_section(index: usize, item: FemSection, base: &Fem3dSnapsh
 }
 
 /// 🏗️ Remove-section field delta.
-pub async fn diff_remove_section(id: String) -> Fem3dDiff {
+pub fn diff_remove_section(id: String) -> Fem3dDiff {
     Fem3dDiff { sections: Some(Fem3dSectionsDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
 }
 
 /// 🏗️ Set-solid field delta.
-pub async fn diff_set_solid(index: usize, item: FemSolid, base: &Fem3dSnapshot) -> Fem3dDiff {
+pub fn diff_set_solid(index: usize, item: FemSolid, base: &Fem3dSnapshot) -> Fem3dDiff {
     use crate::artifacts::fem3d::schema::diff::Fem3dSolidsPatchEntry;
     let id = item.id().to_string();
     let delta = if base.solids.iter().any(|existing| existing.id() == id) {
@@ -419,12 +419,12 @@ pub async fn diff_set_solid(index: usize, item: FemSolid, base: &Fem3dSnapshot) 
 }
 
 /// 🏗️ Remove-solid field delta.
-pub async fn diff_remove_solid(id: String) -> Fem3dDiff {
+pub fn diff_remove_solid(id: String) -> Fem3dDiff {
     Fem3dDiff { solids: Some(Fem3dSolidsDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
 }
 
 /// 🏗️ Set-support field delta.
-pub async fn diff_set_support(index: usize, item: FemSupport, base: &Fem3dSnapshot) -> Fem3dDiff {
+pub fn diff_set_support(index: usize, item: FemSupport, base: &Fem3dSnapshot) -> Fem3dDiff {
     use crate::artifacts::fem3d::schema::diff::Fem3dSupportsPatchEntry;
     let id = item.id().to_string();
     let delta = if base.supports.iter().any(|existing| existing.id() == id) {
@@ -439,12 +439,12 @@ pub async fn diff_set_support(index: usize, item: FemSupport, base: &Fem3dSnapsh
 }
 
 /// 🏗️ Remove-support field delta.
-pub async fn diff_remove_support(id: String) -> Fem3dDiff {
+pub fn diff_remove_support(id: String) -> Fem3dDiff {
     Fem3dDiff { supports: Some(Fem3dSupportsDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
 }
 
 /// 🏗️ Set-load_case field delta.
-pub async fn diff_set_load_case(index: usize, item: FemLoadCase, base: &Fem3dSnapshot) -> Fem3dDiff {
+pub fn diff_set_load_case(index: usize, item: FemLoadCase, base: &Fem3dSnapshot) -> Fem3dDiff {
     use crate::artifacts::fem3d::schema::diff::Fem3dLoadCasesPatchEntry;
     let id = item.id().to_string();
     let delta = if base.load_cases.iter().any(|existing| existing.id() == id) {
@@ -459,12 +459,12 @@ pub async fn diff_set_load_case(index: usize, item: FemLoadCase, base: &Fem3dSna
 }
 
 /// 🏗️ Remove-load_case field delta.
-pub async fn diff_remove_load_case(id: String) -> Fem3dDiff {
+pub fn diff_remove_load_case(id: String) -> Fem3dDiff {
     Fem3dDiff { load_cases: Some(Fem3dLoadCasesDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
 }
 
 /// 🏗️ Set-combination field delta.
-pub async fn diff_set_combination(index: usize, item: FemCombination, base: &Fem3dSnapshot) -> Fem3dDiff {
+pub fn diff_set_combination(index: usize, item: FemCombination, base: &Fem3dSnapshot) -> Fem3dDiff {
     use crate::artifacts::fem3d::schema::diff::Fem3dCombinationsPatchEntry;
     let id = item.id().to_string();
     let delta = if base.combinations.iter().any(|existing| existing.id() == id) {
@@ -479,17 +479,17 @@ pub async fn diff_set_combination(index: usize, item: FemCombination, base: &Fem
 }
 
 /// 🏗️ Remove-combination field delta.
-pub async fn diff_remove_combination(id: String) -> Fem3dDiff {
+pub fn diff_remove_combination(id: String) -> Fem3dDiff {
     Fem3dDiff { combinations: Some(Fem3dCombinationsDelta { removed: vec![id], ..Default::default() }), ..Default::default() }
 }
 
 /// 🏗️ Analysis settings field delta.
-pub async fn diff_set_analysis(settings: FemAnalysisSettings) -> Fem3dDiff {
+pub fn diff_set_analysis(settings: FemAnalysisSettings) -> Fem3dDiff {
     Fem3dDiff { analysis: Some(settings), ..Default::default() }
 }
 
 /// 🏗️ Whole-snapshot replacement field delta.
-pub async fn diff_set_snapshot(snapshot: Fem3dSnapshot) -> Fem3dDiff {
+pub fn diff_set_snapshot(snapshot: Fem3dSnapshot) -> Fem3dDiff {
     Fem3dDiff { artifact: Some(Box::new(Fem3dArtifact::from_snapshot(snapshot))), ..Default::default() }
 }
 //#endregion 🔖️Constructors

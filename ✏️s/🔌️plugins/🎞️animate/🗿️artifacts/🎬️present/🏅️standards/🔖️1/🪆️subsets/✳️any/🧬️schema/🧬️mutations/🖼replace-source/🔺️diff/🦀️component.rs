@@ -7,7 +7,7 @@ use crate::artifacts::present::PresentSnapshot;
 /// 🔺️ Reads the working-scene `tiles` off `base.presentation` (unchanged by this mutation) and
 /// mints a new content-addressed `presentation` handle for `(payload.new_source, tiles)` — real
 /// handcrafted construction from `(payload, base)`, never apply-then-capture.
-pub async fn diff(payload: &ReplaceSource, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
+pub fn diff(payload: &ReplaceSource, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
     let (source, tiles) = crate::artifacts::present::present_working_scene(base);
     if source == payload.new_source {
         return protocol::MutationOutcome::empty().warn("mutation.no-op", "Source is already unchanged.".to_string());

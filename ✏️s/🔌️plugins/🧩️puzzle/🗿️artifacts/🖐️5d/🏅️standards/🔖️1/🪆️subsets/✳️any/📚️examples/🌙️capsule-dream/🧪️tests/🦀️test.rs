@@ -1,7 +1,7 @@
 //! ️tests for example `🌙️capsule-dream`.
 
-#[semio_framework_async_macros::async_test]
-async fn dsl_asset_parses_and_round_trips() {
+#[test]
+fn dsl_asset_parses_and_round_trips() {
     let text = include_str!("../🖼️assets/🗣️dream.dsl.semio");
     assert!(text.len() > 64, "dsl fixture must carry real payload");
     let projection = crate::artifacts::puzzle5d::dsl::parse_dsl(text).expect("example dsl parses");
@@ -10,8 +10,8 @@ async fn dsl_asset_parses_and_round_trips() {
     semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
 }
 
-#[semio_framework_async_macros::async_test]
-async fn flatten_matches_golden_poses_to_1e4() {
+#[test]
+fn flatten_matches_golden_poses_to_1e4() {
     let text = include_str!("../🖼️assets/🗣️dream.dsl.semio");
     let mut projection = crate::artifacts::puzzle5d::dsl::parse_dsl(text).expect("example dsl parses");
     crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::inferences::flat_position::flatten_snapshot_inplace(&mut projection);
@@ -38,22 +38,22 @@ async fn flatten_matches_golden_poses_to_1e4() {
     assert_eq!(origin_mismatches, 0, "{origin_mismatches} origin mismatches");
 }
 
-#[semio_framework_async_macros::async_test]
-async fn op_pack_and_spr_assets_are_nonempty() {
+#[test]
+fn op_pack_and_spr_assets_are_nonempty() {
     assert!(include_str!("../🖼️assets/🔧️dream.op.semio").len() > 64);
     assert!(include_bytes!("../🖼️assets/🎒️dream.pack.semio").len() > 64);
     assert!(include_bytes!("../🖼️assets/📡️dream.spr.semio").len() > 64);
 }
 
-#[semio_framework_async_macros::async_test]
-async fn inference_default_law() {
+#[test]
+fn inference_default_law() {
     use crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::inferences::Puzzle5dInference;
     use protocol::Inference;
     assert_eq!(Puzzle5dInference::infer(&crate::artifacts::puzzle5d::Puzzle5dSnapshot::default()), Puzzle5dInference::default());
 }
 
-#[semio_framework_async_macros::async_test]
-async fn inference_determinism_law() {
+#[test]
+fn inference_determinism_law() {
     use crate::artifacts::puzzle5d::standards::v1::subsets::any::schema::inferences::Puzzle5dInference;
     use protocol::Inference;
     let text = include_str!("../🖼️assets/🗣️dream.dsl.semio");

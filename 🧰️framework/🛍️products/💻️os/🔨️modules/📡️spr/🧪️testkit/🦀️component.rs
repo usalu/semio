@@ -570,7 +570,7 @@ where
 pub async fn assert_diff_algebra_between_law<P, D>(a: &P, b: &P)
 where
     P: Clone + PartialEq + std::fmt::Debug,
-    D: crate::os_spr::DiffAlgebra<P> + crate::os_spr::MutationDiff<P> + std::future::Future,
+    D: crate::os_spr::DiffAlgebra<P> + crate::os_spr::MutationDiff<P>,
 {
     let delta = D::between(a, b);
     assert_eq!(delta.apply(a).as_ref(), Ok(b), "DiffAlgebra::between(a, b).apply(a) must equal b");
@@ -582,7 +582,7 @@ where
 pub async fn assert_diff_algebra_inverse_law<P, D>(base: &P, d: &D)
 where
     P: Clone + PartialEq + std::fmt::Debug,
-    D: crate::os_spr::DiffAlgebra<P> + crate::os_spr::MutationDiff<P> + std::future::Future,
+    D: crate::os_spr::DiffAlgebra<P> + crate::os_spr::MutationDiff<P>,
 {
     let after = d.apply(base).expect("valid diff must apply");
     let restored = d.inverse(base).apply(&after);
@@ -1088,10 +1088,10 @@ mod tests {
         delta: i64,
     }
     impl crate::os_spr::MutationDiff<i64> for AddDiff {
-        async fn apply(&self, base: &i64) -> crate::os_spr::MutationApplyResult<i64> {
+        fn apply(&self, base: &i64) -> crate::os_spr::MutationApplyResult<i64> {
             Ok(base + self.delta)
         }
-        async fn absorb(&mut self, other: Self) {
+        fn absorb(&mut self, other: Self) {
             self.delta += other.delta;
         }
     }
@@ -1102,18 +1102,18 @@ mod tests {
     }
     impl crate::os_spr::Mutation<i64> for AddOp {
         type Diff = AddDiff;
-        async fn diff(&self, _base: &i64) -> crate::os_spr::MutationOutcome<AddDiff> {
-            crate::os_spr::MutationOutcome::new(AddDiff { delta: self.delta }).await
+        fn diff(&self, _base: &i64) -> crate::os_spr::MutationOutcome<AddDiff> {
+            crate::os_spr::MutationOutcome::new(AddDiff { delta: self.delta })
         }
-        async fn inverse(&self, _base: &i64) -> Vec<Self> {
+        fn inverse(&self, _base: &i64) -> Vec<Self> {
             vec![AddOp { delta: -self.delta }]
         }
     }
     impl crate::os_spr::OpText for AddOp {
-        async fn print_op(&self) -> String {
+        fn print_op(&self) -> String {
             format!("add {}", self.delta)
         }
-        async fn parse_op(line: &str) -> Result<Self, crate::os_dsl::TextError> {
+        fn parse_op(line: &str) -> Result<Self, crate::os_dsl::TextError> {
             let rest = line.strip_prefix("add ").ok_or_else(|| crate::os_dsl::TextError::new("expected 'add <n>'", crate::os_dsl::TextSpan::at(1, 1)))?;
             let delta: i64 = rest.trim().parse().map_err(|_| crate::os_dsl::TextError::new("invalid integer", crate::os_dsl::TextSpan::at(1, 1)))?;
             Ok(AddOp { delta })
@@ -1121,13 +1121,13 @@ mod tests {
     }
 
     impl crate::os_spr::DiffAlgebra<i64> for AddDiff {
-        async fn inverse(&self, _base: &i64) -> Self {
+        fn inverse(&self, _base: &i64) -> Self {
             AddDiff { delta: -self.delta }
         }
-        async fn between(base: &i64, other: &i64) -> Self {
+        fn between(base: &i64, other: &i64) -> Self {
             AddDiff { delta: other - base }
         }
-        async fn is_empty(&self) -> bool {
+        fn is_empty(&self) -> bool {
             self.delta == 0
         }
     }
@@ -1139,10 +1139,10 @@ mod tests {
     struct MissingTargetOp;
     impl crate::os_spr::Mutation<i64> for MissingTargetOp {
         type Diff = AddDiff;
-        async fn diff(&self, _base: &i64) -> crate::os_spr::MutationOutcome<AddDiff> {
-            crate::os_spr::MutationOutcome::error("mutation.target-missing", "target absent", ["thing"]).await
+        fn diff(&self, _base: &i64) -> crate::os_spr::MutationOutcome<AddDiff> {
+            crate::os_spr::MutationOutcome::error("mutation.target-missing", "target absent", ["thing"])
         }
-        async fn inverse(&self, _base: &i64) -> Vec<Self> {
+        fn inverse(&self, _base: &i64) -> Vec<Self> {
             Vec::new()
         }
     }
@@ -1151,10 +1151,10 @@ mod tests {
     struct BuggyMissingTargetOp;
     impl crate::os_spr::Mutation<i64> for BuggyMissingTargetOp {
         type Diff = AddDiff;
-        async fn diff(&self, _base: &i64) -> crate::os_spr::MutationOutcome<AddDiff> {
-            crate::os_spr::MutationOutcome::new(AddDiff { delta: 1 }).await
+        fn diff(&self, _base: &i64) -> crate::os_spr::MutationOutcome<AddDiff> {
+            crate::os_spr::MutationOutcome::new(AddDiff { delta: 1 })
         }
-        async fn inverse(&self, _base: &i64) -> Vec<Self> {
+        fn inverse(&self, _base: &i64) -> Vec<Self> {
             vec![BuggyMissingTargetOp]
         }
     }
@@ -1166,12 +1166,12 @@ mod tests {
     }
     impl crate::os_spr::Mutation<i64> for NondeterministicOp {
         type Diff = AddDiff;
-        async fn diff(&self, _base: &i64) -> crate::os_spr::MutationOutcome<AddDiff> {
+        fn diff(&self, _base: &i64) -> crate::os_spr::MutationOutcome<AddDiff> {
             let count = self.calls.get();
             self.calls.set(count + 1);
-            crate::os_spr::MutationOutcome::new(AddDiff { delta: count }).await
+            crate::os_spr::MutationOutcome::new(AddDiff { delta: count })
         }
-        async fn inverse(&self, _base: &i64) -> Vec<Self> {
+        fn inverse(&self, _base: &i64) -> Vec<Self> {
             Vec::new()
         }
     }
@@ -1180,16 +1180,16 @@ mod tests {
     struct RejectedForwardOp;
     impl crate::os_spr::Mutation<i64> for RejectedForwardOp {
         type Diff = AddDiff;
-        async fn diff(&self, _base: &i64) -> crate::os_spr::MutationOutcome<AddDiff> {
-            crate::os_spr::MutationOutcome::fatal("mutation.invariant", "boom", ["x"]).await
+        fn diff(&self, _base: &i64) -> crate::os_spr::MutationOutcome<AddDiff> {
+            crate::os_spr::MutationOutcome::fatal("mutation.invariant", "boom", ["x"])
         }
-        async fn inverse(&self, _base: &i64) -> Vec<Self> {
+        fn inverse(&self, _base: &i64) -> Vec<Self> {
             Vec::new()
         }
     }
 
     async fn sample_conflict(id: &str, kind: crate::os_spr::ConflictKind) -> crate::os_spr::Conflict {
-        crate::os_spr::Conflict { id: crate::os_spr::ConflictId(id.to_string()), kind, status: crate::os_spr::ConflictStatus::Open, messages: Vec::new(), actors: Vec::new(), timestamp: crate::os_spr::HybridLogicalTimestamp::new(1, 100).await }
+        crate::os_spr::Conflict { id: crate::os_spr::ConflictId(id.to_string()), kind, status: crate::os_spr::ConflictStatus::Open, messages: Vec::new(), actors: Vec::new(), timestamp: crate::os_spr::HybridLogicalTimestamp::new(1, 100) }
     }
     //#endregion 🧸️Fixtures
 
@@ -1205,10 +1205,10 @@ mod tests {
         use crate::os_spr::{Mutation, MutationDiff};
         let base: i64 = 10;
         let op = AddOp { delta: 5 };
-        let forward = op.diff(&base).await.diff().await.apply(&base).await.expect("valid forward diff");
+        let forward = op.diff(&base).diff().apply(&base).expect("valid forward diff");
         assert_eq!(forward, 15);
-        let [undo] = <[AddOp; 1]>::try_from(op.inverse(&base).await).unwrap();
-        assert_eq!(undo.diff(&forward).await.diff().await.apply(&forward).await, Ok(base));
+        let [undo] = <[AddOp; 1]>::try_from(op.inverse(&base)).unwrap();
+        assert_eq!(undo.diff(&forward).diff().apply(&forward), Ok(base));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1245,10 +1245,10 @@ mod tests {
             delta: i64,
         }
         impl crate::os_spr::OpText for LossyOp {
-            async fn print_op(&self) -> String {
+            fn print_op(&self) -> String {
                 "lossy".to_string()
             }
-            async fn parse_op(_line: &str) -> Result<Self, crate::os_dsl::TextError> {
+            fn parse_op(_line: &str) -> Result<Self, crate::os_dsl::TextError> {
                 Ok(LossyOp { delta: 0 })
             }
         }
@@ -1290,14 +1290,14 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn fatal_never_applies_holds_for_a_correct_outcome() {
-        let outcome: crate::os_spr::MutationOutcome<AddDiff> = crate::os_spr::MutationOutcome::fatal("mutation.invariant", "boom", ["x"]).await;
+        let outcome: crate::os_spr::MutationOutcome<AddDiff> = crate::os_spr::MutationOutcome::fatal("mutation.invariant", "boom", ["x"]);
         assert_fatal_never_applies(&outcome).await;
     }
 
     #[semio_framework_async_macros::async_test]
     #[should_panic(expected = "Fatal outcome must carry diff == D::default()")]
     async fn fatal_never_applies_panics_on_a_non_empty_diff() {
-        let outcome = crate::os_spr::MutationOutcome::new(AddDiff { delta: 3 }).await.absorb_messages([crate::os_spr::MutationMessage::fatal("mutation.invariant", "boom").await]).await;
+        let outcome = crate::os_spr::MutationOutcome::new(AddDiff { delta: 3 }).absorb_messages([crate::os_spr::MutationMessage::fatal("mutation.invariant", "boom")]);
         assert_fatal_never_applies(&outcome).await;
     }
 
@@ -1316,20 +1316,20 @@ mod tests {
     //#region 🔖️Policy
     async fn message_at_level(level: crate::os_dsl::Severity) -> crate::os_spr::MutationMessage {
         match level {
-            crate::os_dsl::Severity::Info => crate::os_spr::MutationMessage::info("mutation.cascade", "probe").await,
-            crate::os_dsl::Severity::Warning => crate::os_spr::MutationMessage::warn("mutation.no-op", "probe").await,
-            crate::os_dsl::Severity::Error => crate::os_spr::MutationMessage::error("mutation.target-missing", "probe").await,
-            crate::os_dsl::Severity::Fatal => crate::os_spr::MutationMessage::fatal("mutation.invariant", "probe").await,
+            crate::os_dsl::Severity::Info => crate::os_spr::MutationMessage::info("mutation.cascade", "probe"),
+            crate::os_dsl::Severity::Warning => crate::os_spr::MutationMessage::warn("mutation.no-op", "probe"),
+            crate::os_dsl::Severity::Error => crate::os_spr::MutationMessage::error("mutation.target-missing", "probe"),
+            crate::os_dsl::Severity::Fatal => crate::os_spr::MutationMessage::fatal("mutation.invariant", "probe"),
         }
     }
 
     #[semio_framework_async_macros::async_test]
     async fn policy_matrix_holds_for_the_real_apis() {
         assert_policy_matrix(
-            async |policy, level| policy.rejects(level).await,
+            async |policy, level| policy.rejects(level),
             async |policy, level| {
-                let outcome: crate::os_spr::MutationOutcome<()> = crate::os_spr::MutationOutcome::new(()).await.absorb_messages([message_at_level(level).await]).await;
-                outcome.is_applicable(policy).await
+                let outcome: crate::os_spr::MutationOutcome<()> = crate::os_spr::MutationOutcome::new(()).absorb_messages([message_at_level(level).await]);
+                outcome.is_applicable(policy)
             },
         )
         .await;
@@ -1392,7 +1392,7 @@ mod tests {
             policy: crate::os_spr::MergePolicy::LaissezFaire,
             accepted: true,
             insertion_index: 0,
-            replayed: vec![crate::os_spr::EditMessages { edit_id: "e1".to_string(), messages: vec![crate::os_spr::MutationMessage::error("mutation.target-missing", "part gone").await] }],
+            replayed: vec![crate::os_spr::EditMessages { edit_id: "e1".to_string(), messages: vec![crate::os_spr::MutationMessage::error("mutation.target-missing", "part gone")] }],
             worst: Some(crate::os_dsl::Severity::Error),
             conflict: Some(conflict.id.clone()),
         };
@@ -1409,7 +1409,7 @@ mod tests {
             policy: crate::os_spr::MergePolicy::LaissezFaire,
             accepted: true,
             insertion_index: 0,
-            replayed: vec![crate::os_spr::EditMessages { edit_id: "e1".to_string(), messages: vec![crate::os_spr::MutationMessage::error("mutation.target-missing", "part gone").await] }],
+            replayed: vec![crate::os_spr::EditMessages { edit_id: "e1".to_string(), messages: vec![crate::os_spr::MutationMessage::error("mutation.target-missing", "part gone")] }],
             worst: Some(crate::os_dsl::Severity::Error),
             conflict: Some(conflict.id.clone()),
         };
@@ -1463,7 +1463,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn ledger_matches_replay_holds_when_equal() {
         let mut ledger = std::collections::HashMap::new();
-        ledger.insert("e1".to_string(), vec![crate::os_spr::MutationMessage::info("mutation.cascade", "note").await]);
+        ledger.insert("e1".to_string(), vec![crate::os_spr::MutationMessage::info("mutation.cascade", "note")]);
         let replayed = ledger.clone();
         assert_ledger_matches_replay(&ledger, &replayed).await;
     }
@@ -1472,7 +1472,7 @@ mod tests {
     #[should_panic(expected = "must equal a fresh replay")]
     async fn ledger_matches_replay_panics_when_unequal() {
         let mut ledger = std::collections::HashMap::new();
-        ledger.insert("e1".to_string(), vec![crate::os_spr::MutationMessage::info("mutation.cascade", "note").await]);
+        ledger.insert("e1".to_string(), vec![crate::os_spr::MutationMessage::info("mutation.cascade", "note")]);
         let mut replayed = std::collections::HashMap::new();
         replayed.insert("e1".to_string(), Vec::new());
         assert_ledger_matches_replay(&ledger, &replayed).await;

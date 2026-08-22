@@ -8,8 +8,6 @@ use semio_framework_job::{CommitCandidate, InteractiveJob, JobFault, Operation, 
 use crate::wfc_engine::bitset::PatternSet;
 use crate::wfc_engine::ids::{NodeId, PatternId, RelationId};
 use crate::wfc_engine::model::CompiledModel;
-use crate::wfc_engine::sample::ValueSampler;
-use crate::wfc_engine::search::SearchConfig;
 use crate::wfc_engine::topology::Topology;
 
 //#region 🧭️Protocol
@@ -63,6 +61,18 @@ pub struct WfcCommit {
     pub observations: u64,
     pub compatibility_edges: u64,
     pub backtracks: u64,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum WfcSampler {
+    #[default]
+    WeightedRoulette,
+    Uniform,
+}
+
+#[derive(Clone, Copy, Debug, Default)]
+pub struct WfcJobConfig {
+    pub sampler: WfcSampler,
 }
 //#endregion 🧭️Protocol
 
@@ -188,6 +198,7 @@ struct WfcState {
     observations: u64,
     compatibility_edges: u64,
     backtracks: u64,
+    observed: Vec<(NodeId, PatternId)>,
 }
 //#endregion 📚️PersistentState
 
@@ -196,14 +207,14 @@ pub(crate) struct WfcJob<T> {
     operation: Operation,
     model: CompiledModel,
     topology: T,
-    config: SearchConfig,
+    config: WfcJobConfig,
     initial_domains: Option<Vec<PatternSet>>,
     fixed: Vec<(NodeId, PatternId)>,
     state: WfcState,
 }
 
 impl<T: Topology + Clone> WfcJob<T> {
-    pub fn new(operation: Operation, model: CompiledModel, topology: T, config: SearchConfig, initial_domains: Option<Vec<PatternSet>>, fixed: Vec<(NodeId, PatternId)>) -> Self {
+    pub fn new(operation: Operation, model: CompiledModel, topology: T, config: WfcJobConfig, initial_domains: Option<Vec<PatternSet>>, fixed: Vec<(NodeId, PatternId)>) -> Self {
         let node_count = topology.node_count();
         assert!(initial_domains.as_ref().is_none_or(|domains| domains.len() == node_count));
         Self {
@@ -230,6 +241,7 @@ impl<T: Topology + Clone> WfcJob<T> {
                 observations: 0,
                 compatibility_edges: 0,
                 backtracks: 0,
+                observed: Vec::new(),
             },
             operation,
             model,
@@ -240,7 +252,7 @@ impl<T: Topology + Clone> WfcJob<T> {
         }
     }
 
-    pub fn from_checkpoint(operation: Operation, model: CompiledModel, topology: T, config: SearchConfig, initial_domains: Option<Vec<PatternSet>>, fixed: Vec<(NodeId, PatternId)>, bytes: &[u8]) -> Result<Self, String> {
+    pub fn from_checkpoint(operation: Operation, model: CompiledModel, topology: T, config: WfcJobConfig, initial_domains: Option<Vec<PatternSet>>, fixed: Vec<(NodeId, PatternId)>, bytes: &[u8]) -> Result<Self, String> {
         let state: WfcState = serde_json::from_slice(bytes).map_err(|error| error.to_string())?;
         if state.model_fingerprint != model.fingerprint() || state.domains.len() > topology.node_count() {
             return Err("wfc-checkpoint-input-mismatch".into());
@@ -250,6 +262,11 @@ impl<T: Topology + Clone> WfcJob<T> {
 
     pub fn checkpoint_bytes(&self) -> Vec<u8> {
         serde_json::to_vec(&self.state).expect("WFC checkpoint state is serializable")
+    }
+
+    /// 🪪️ Exposes the immutable runtime identity required by the shared batch driver.
+    pub(crate) fn operation(&self) -> Operation {
+        self.operation
     }
 
     pub fn preview(&self, sequence: u64) -> WfcPreview {
@@ -278,6 +295,18 @@ impl<T: Topology + Clone> WfcJob<T> {
             compatibility_edges: self.state.compatibility_edges,
             backtracks: self.state.backtracks,
         })
+    }
+
+    pub(crate) fn domain_masks(&self) -> Vec<PatternSet> {
+        self.state.domains.clone()
+    }
+
+    pub(crate) fn metrics(&self) -> (u64, u64, u64) {
+        (self.state.observations, self.state.compatibility_edges, self.state.backtracks)
+    }
+
+    pub(crate) fn observed(&self) -> &[(NodeId, PatternId)] {
+        &self.state.observed
     }
 
     fn push_queue(&mut self, node: NodeId) {
@@ -346,8 +375,8 @@ impl<T: Topology + Clone> WfcJob<T> {
         let node = self.state.active_slot.expect("choose stage has active slot");
         let domain = &self.state.domains[node.index()];
         let candidate = match self.config.sampler {
-            ValueSampler::Uniform => domain.iter_ones().nth(self.state.rng.range(domain.count_ones() as u64) as usize).expect("unresolved domain"),
-            ValueSampler::WeightedRoulette => {
+            WfcSampler::Uniform => domain.iter_ones().nth(self.state.rng.range(domain.count_ones() as u64) as usize).expect("unresolved domain"),
+            WfcSampler::WeightedRoulette => {
                 let total: f64 = domain.iter_ones().map(|pattern| self.model.weights().w(pattern)).sum();
                 let target = self.state.rng.next_f64() * total;
                 let mut sum = 0.0;
@@ -370,6 +399,7 @@ impl<T: Topology + Clone> WfcJob<T> {
         }
         self.state.revisions[node.index()] += 1;
         self.state.observations += 1;
+        self.state.observed.push((node, candidate));
         self.state.queue.clear();
         self.state.queued.fill(false);
         self.push_queue(node);
@@ -390,6 +420,10 @@ impl<T: Topology + Clone> WfcJob<T> {
             let mut arcs = Vec::new();
             self.topology.for_each_out_arc(source, |target, relation| arcs.push((target, relation)));
             self.state.propagation_wave.push(source);
+            if arcs.is_empty() {
+                self.state.arc_cursor = None;
+                return;
+            }
             self.state.arc_cursor = Some(ArcCursor { source, arcs, index: 0 });
         }
         let cursor = self.state.arc_cursor.as_mut().expect("arc cursor initialized");
@@ -508,7 +542,7 @@ impl<T: Topology + Clone + Send> InteractiveJob for WfcJob<T> {
                 return StepOutcome::Cancelled;
             }
             if context.should_yield() {
-                return StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: self.checkpoint_bytes(), applied_progress: self.state.domains.iter().filter(|domain| domain.count_ones() == 1).count() as u64 });
+                return StepOutcome::Yield;
             }
         }
     }
@@ -539,7 +573,7 @@ mod tests {
             topology.arc(NodeId::from_index(node + 1), NodeId::from_index(node), adjacent);
         }
         let operation = Operation::new(allocate_operation_id(), RevisionId(3), Generation(5), seed);
-        WfcJob::new(operation, model, topology.build().expect("topology"), SearchConfig::default(), None, Vec::new())
+        WfcJob::new(operation, model, topology.build().expect("topology"), WfcJobConfig::default(), None, Vec::new())
     }
 
     fn drive(job: &mut WfcJob<GraphTopology>, fuel: u64) -> StepOutcome {
@@ -572,16 +606,7 @@ mod tests {
             assert!(!original.step(&mut context).is_terminal());
         }
         let checkpoint = original.checkpoint_bytes();
-        let mut restored = WfcJob::from_checkpoint(
-            original.operation,
-            original.model.clone(),
-            original.topology.clone(),
-            original.config,
-            original.initial_domains.clone(),
-            original.fixed.clone(),
-            &checkpoint,
-        )
-        .expect("restore");
+        let mut restored = WfcJob::from_checkpoint(original.operation, original.model.clone(), original.topology.clone(), original.config, original.initial_domains.clone(), original.fixed.clone(), &checkpoint).expect("restore");
         assert_eq!(restored.checkpoint_bytes(), checkpoint);
         assert!(matches!(drive(&mut original, 3), StepOutcome::Complete(_)));
         assert!(matches!(drive(&mut restored, 11), StepOutcome::Complete(_)));

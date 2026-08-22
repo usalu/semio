@@ -654,7 +654,7 @@ use crate::editor::rewrite::modes::edit;
 /// 🎯️ `create_rewrite_app` → `Editor::builder(TRINITY_REWRITE_DIALECT)…build_definition()` (contract
 /// §2.4). The old `.example("label-core", …)`/`.workflow("trinity-rewrite", …)` calls are DROPPED,
 /// not ported — same SDK gap `jack`'s `create_trinity_jack_app` doc comment records.
-pub async fn create_rewrite_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_rewrite_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(TRINITY_REWRITE_DIALECT).document(["semio", "trinity", "rewrite"])
             .icon_id("trinity-rewrite")
             .mode_def(edit::definition())
@@ -691,19 +691,19 @@ pub async fn create_rewrite_app() -> semio_framework_plugin::AppDefinition {
                 TRINITY_REWRITE_PLAY_BODY_INSPECTION,
             )
             // ✏️ Document-mutating actions — dispatched as VCS operations with true inverses.
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("addRuleClause", LocalizedLabel::native("Add Rule Clause", "Regelklausel hinzufügen"), ActionKind::Mutation).with_category("create"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("resetRule", LocalizedLabel::native("Reset Rule", "Regel zurücksetzen"), ActionKind::Mutation).with_category("history"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("setParameter", LocalizedLabel::native("Set Parameter", "Parameter festlegen"), ActionKind::Mutation).with_category("settings"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("patchNodes", LocalizedLabel::native("Patch Nodes", "Knoten aktualisieren"), ActionKind::Mutation).with_category("transform"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("nodeGraphEdit", LocalizedLabel::native("Edit Graph", "Graph bearbeiten"), ActionKind::Mutation).with_category("transform"))
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("addRuleClause", LocalizedLabel::native("Add Rule Clause", "Regelklausel hinzufügen"), ActionKind::Mutation).with_category("create"))
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("resetRule", LocalizedLabel::native("Reset Rule", "Regel zurücksetzen"), ActionKind::Mutation).with_category("history"))
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("setParameter", LocalizedLabel::native("Set Parameter", "Parameter festlegen"), ActionKind::Mutation).with_category("settings"))
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("patchNodes", LocalizedLabel::native("Patch Nodes", "Knoten aktualisieren"), ActionKind::Mutation).with_category("transform"))
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("nodeGraphEdit", LocalizedLabel::native("Edit Graph", "Graph bearbeiten"), ActionKind::Mutation).with_category("transform"))
             // 🛠️ Dev-only raw rule editors — kept out of the command palette.
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new_catalog("setLhsJson", LocalizedLabel::native("Set LHS Json", "LHS-JSON festlegen"), ActionKind::Mutation).with_category("tools") })
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new_catalog("setRhsJson", LocalizedLabel::native("Set RHS Json", "RHS-JSON festlegen"), ActionKind::Mutation).with_category("tools") })
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog("setLhsJson", LocalizedLabel::native("Set LHS Json", "LHS-JSON festlegen"), ActionKind::Mutation).with_category("tools") })
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog("setRhsJson", LocalizedLabel::native("Set RHS Json", "RHS-JSON festlegen"), ActionKind::Mutation).with_category("tools") })
             // 👁️ Ephemeral view state — viewport, recompute/layout, LOD. Selection/hover/text-cursor
             // cross-highlighting is framework-owned now (domain "graph") — no app-declared verbs.
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("setViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansicht festlegen"), ActionKind::View).with_category("view"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::View).with_category("view"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"), ActionKind::View).with_category("mode"))
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("setViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansicht festlegen"), ActionKind::View).with_category("view"))
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::View).with_category("view"))
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"), ActionKind::View).with_category("mode"))
             // 🕹️ Domain "graph": before/after/lhs/rhs graph nodes plus rule-clause nodes plus variable
             // references, transitive over each node's first incoming connection / variable binding
             // (see `interaction_topology`). Selection/hover, modes and merges are ALL

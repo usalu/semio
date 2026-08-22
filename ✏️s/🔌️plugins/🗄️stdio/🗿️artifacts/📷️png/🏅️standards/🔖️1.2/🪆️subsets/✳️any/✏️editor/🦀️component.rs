@@ -8,7 +8,7 @@ use crate::artifacts::png::standards::v1_2::subsets::any::schema::snapshot::PngS
 use crate::artifacts::png::{PNG_DIALECT, STDIO_PNG_DOCUMENT_SCHEMA};
 use crate::editor::png::modes::edit;
 use crate::editor::png::modes::edit::windows::main;
-use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode};
+use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 
@@ -61,7 +61,7 @@ impl ArtifactEditor for PngEditor {
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
-            PngEditCommand::SetPixelRegion { pixels } => Ok(Emit::mutations(vec![PngMutation::SetPixels { pixels: pixels.clone() }]).await),
+            PngEditCommand::SetPixelRegion { pixels } => Ok(Emit::mutations(vec![PngMutation::SetPixels { pixels: pixels.clone() }])),
         }
     }
 

@@ -459,31 +459,31 @@ pub struct Query {
 }
 
 impl Query {
-    pub async fn new() -> Query {
+    pub fn new() -> Query {
         Query::default()
     }
 
-    pub async fn select(mut self, select: Select) -> Query {
+    pub fn select(mut self, select: Select) -> Query {
         self.select = select;
         self
     }
 
-    pub async fn filter(mut self, predicate: Predicate) -> Query {
+    pub fn filter(mut self, predicate: Predicate) -> Query {
         self.filter = Some(predicate);
         self
     }
 
-    pub async fn sort(mut self, sort: Vec<SortKey>) -> Query {
+    pub fn sort(mut self, sort: Vec<SortKey>) -> Query {
         self.sort = sort;
         self
     }
 
-    pub async fn limit(mut self, limit: u64) -> Query {
+    pub fn limit(mut self, limit: u64) -> Query {
         self.limit = Some(limit);
         self
     }
 
-    pub async fn offset(mut self, offset: u64) -> Query {
+    pub fn offset(mut self, offset: u64) -> Query {
         self.offset = Some(offset);
         self
     }
@@ -991,15 +991,15 @@ impl<'a> pack::InferredField<QuerySnapshot<'a>> for QueryResultField {
     /// list is honest here — `infer_field_after_diff`'s tier-1 `DiffRegions` gate is deliberately
     /// never used by `LiveQuery::refresh` (below) for the same reason `plan` can't own `execute`'s
     /// error paths: a wildcard is the honest declaration, not a narrowed guess.
-    async fn reads() -> &'static [&'static str] {
+    fn reads() -> &'static [&'static str] {
         &["*"]
     }
 
-    async fn plan(snapshot: &QuerySnapshot<'a>) -> Vec<pack::InferenceStep<RowId>> {
+    fn plan(snapshot: &QuerySnapshot<'a>) -> Vec<pack::InferenceStep<RowId>> {
         snapshot.rows.keys().map(|id| pack::InferenceStep { key: *id, parents: Vec::new() }).collect()
     }
 
-    async fn dep_input(snapshot: &QuerySnapshot<'a>, key: &RowId, _parents: &[RowId]) -> Vec<u8> {
+    fn dep_input(snapshot: &QuerySnapshot<'a>, key: &RowId, _parents: &[RowId]) -> Vec<u8> {
         let mut bytes = Vec::new();
         if let Some(value) = snapshot.rows.get(key) {
             encode_value(value, &mut bytes);
@@ -1007,7 +1007,7 @@ impl<'a> pack::InferredField<QuerySnapshot<'a>> for QueryResultField {
         bytes
     }
 
-    async fn compute(snapshot: &QuerySnapshot<'a>, key: &RowId, _parents: &[Value]) -> Value {
+    fn compute(snapshot: &QuerySnapshot<'a>, key: &RowId, _parents: &[Value]) -> Value {
         snapshot.rows.get(key).cloned().unwrap_or(Value::Null)
     }
 }
@@ -1058,7 +1058,7 @@ impl LiveQuery {
         let result = execute(&self.spec.query, source, fulltext, limits).await?;
         let rows: BTreeMap<RowId, Value> = result.rows.into_iter().collect();
         let query_snapshot = QuerySnapshot { rows: &rows };
-        let new_snapshot = pack::infer_field::<QuerySnapshot<'_>, QueryResultField>(&query_snapshot, Some(&mut self.cache)).await;
+        let new_snapshot = pack::infer_field::<QuerySnapshot<'_>, QueryResultField>(&query_snapshot, Some(&mut self.cache));
 
         let mut diff = QueryDiff::default();
         for (id, value) in &new_snapshot {
@@ -1274,7 +1274,7 @@ mod tests {
             let state_bytes = ProjectionState::encode(&rows).await;
 
             let source = projection_query_source(&state_bytes).await.expect("decodes");
-            let query = Query::new().await.filter(Predicate::Gte(Path::field("age"), Value::Int(30)));
+            let query = Query::new().filter(Predicate::Gte(Path::field("age"), Value::Int(30)));
             let result = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("query succeeds");
             assert_eq!(result.rows.len(), 1);
             assert_eq!(Path::field("name").get(&result.rows[0].1), Some(&Value::Text("alice".to_string())));
@@ -1294,7 +1294,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn full_scan_filters_sorts_and_paginates() {
             let source = sample_source().await;
-            let query = Query::new().await.filter(Predicate::Gte(Path::field("age"), Value::Int(25))).sort(vec![SortKey::descending(Path::field("age"))]).await.limit(2).await;
+            let query = Query::new().filter(Predicate::Gte(Path::field("age"), Value::Int(25))).sort(vec![SortKey::descending(Path::field("age"))]).limit(2);
             let result = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("query succeeds");
             assert_eq!(result.diagnostics.plan, QueryPlanKind::FullScan);
             assert_eq!(result.diagnostics.rows_matched, 3);
@@ -1313,7 +1313,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn offset_skips_matched_rows_before_limit_applies() {
             let source = sample_source().await;
-            let query = Query::new().await.sort(vec![SortKey::ascending(Path::field("age"))]).await.offset(1).await.limit(1).await;
+            let query = Query::new().sort(vec![SortKey::ascending(Path::field("age"))]).offset(1).limit(1);
             let result = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("query succeeds");
             assert_eq!(result.rows.len(), 1);
             assert_eq!(Path::field("name").get(&result.rows[0].1), Some(&Value::Text("alice".to_string())));
@@ -1323,14 +1323,14 @@ mod tests {
         async fn max_result_rows_limit_is_enforced() {
             let source = sample_source().await;
             let limits = QueryLimits { max_result_rows: 1, ..QueryLimits::default() };
-            let error = db_actor::block_on(execute(&Query::new().await, &source, None::<&db_query::NoFullTextLookup>, &limits)).unwrap_err();
+            let error = db_actor::block_on(execute(&Query::new(), &source, None::<&db_query::NoFullTextLookup>, &limits)).unwrap_err();
             assert!(matches!(error, DbError::LimitExceeded(_)));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn into_stream_yields_the_same_rows_as_the_result() {
             let source = sample_source().await;
-            let result = db_actor::block_on(execute(&Query::new().await, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("query succeeds");
+            let result = db_actor::block_on(execute(&Query::new(), &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).expect("query succeeds");
             let expected_len = result.rows.len();
             let stream = result.into_stream().await;
             assert_eq!(stream.count(), expected_len);
@@ -1348,7 +1348,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn full_text_pushdown_without_a_lookup_is_an_error() {
             let source = sample_source().await;
-            let query = Query::new().await.filter(Predicate::FullText(Path::empty(), "alice".to_string()));
+            let query = Query::new().filter(Predicate::FullText(Path::empty(), "alice".to_string()));
             let error = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default())).unwrap_err();
             assert!(matches!(error, DbError::InvalidArgument(_)));
         }
@@ -1362,13 +1362,13 @@ mod tests {
 
         #[semio_framework_async_macros::async_test]
         async fn plan_recognizes_bare_and_conjoined_full_text_predicates() {
-            let bare = Query::new().await.filter(Predicate::FullText(Path::empty(), "x".to_string()));
+            let bare = Query::new().filter(Predicate::FullText(Path::empty(), "x".to_string()));
             assert_eq!(plan(&bare), QueryPlan::FullTextPushdown { term: "x".to_string() });
 
-            let conjoined = Query::new().await.filter(Predicate::And(vec![Predicate::Eq(Path::field("age"), Value::Int(1)), Predicate::FullText(Path::empty(), "y".to_string())]));
+            let conjoined = Query::new().filter(Predicate::And(vec![Predicate::Eq(Path::field("age"), Value::Int(1)), Predicate::FullText(Path::empty(), "y".to_string())]));
             assert_eq!(plan(&conjoined), QueryPlan::FullTextPushdown { term: "y".to_string() });
 
-            let disjoined = Query::new().await.filter(Predicate::Or(vec![Predicate::FullText(Path::empty(), "z".to_string())]));
+            let disjoined = Query::new().filter(Predicate::Or(vec![Predicate::FullText(Path::empty(), "z".to_string())]));
             assert_eq!(plan(&disjoined), QueryPlan::FullScan);
         }
 
@@ -1378,7 +1378,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn pushdown_matches_full_scan_when_the_index_is_exhaustive() {
             let source = sample_source().await;
-            let query = Query::new().await.filter(Predicate::FullText(Path::empty(), "admin".to_string()));
+            let query = Query::new().filter(Predicate::FullText(Path::empty(), "admin".to_string()));
 
             let full_scan_result = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &QueryLimits::default()));
             assert!(matches!(full_scan_result, Err(DbError::InvalidArgument(_))));
@@ -1492,7 +1492,7 @@ mod tests {
         /// the vector's length changes and value changes at distinct positions.
         #[semio_framework_async_macros::async_test]
         async fn refresh_reports_added_removed_and_updated_rows() {
-            let spec = LiveQuerySpec { query: Query::new().await, consistency: Consistency::Canonical };
+            let spec = LiveQuerySpec { query: Query::new(), consistency: Consistency::Canonical };
             let mut live = LiveQuery::new(spec).await;
 
             let first = source_with(vec![sample_row("alice", 30, vec!["admin"]).await, sample_row("bob", 25, vec!["eng"]).await]).await;
@@ -1518,7 +1518,7 @@ mod tests {
         /// snapshot, exactly.
         #[semio_framework_async_macros::async_test]
         async fn diff_applied_to_old_snapshot_reconstructs_new_snapshot() {
-            let spec = LiveQuerySpec { query: Query::new().await, consistency: Consistency::Canonical };
+            let spec = LiveQuerySpec { query: Query::new(), consistency: Consistency::Canonical };
             let mut live = LiveQuery::new(spec).await;
 
             let first = source_with(vec![sample_row("alice", 30, vec!["admin"]).await, sample_row("bob", 25, vec!["eng"]).await]).await;
@@ -1551,7 +1551,7 @@ mod tests {
         /// real public `refresh` path, not a hand-assembled `QuerySnapshot`.
         #[semio_framework_async_macros::async_test]
         async fn refresh_leaves_unrelated_rows_cache_warm_and_misses_only_the_changed_row() {
-            let spec = LiveQuerySpec { query: Query::new().await, consistency: Consistency::Canonical };
+            let spec = LiveQuerySpec { query: Query::new(), consistency: Consistency::Canonical };
             let mut live = LiveQuery::new(spec).await;
 
             let first = source_with(vec![sample_row("alice", 30, vec!["admin"]).await, sample_row("bob", 25, vec!["eng"]).await, sample_row("cara", 40, vec!["admin"]).await]).await;
@@ -1593,7 +1593,7 @@ mod tests {
         async fn max_scan_rows_is_enforced_even_when_nothing_matches() {
             let source = sample_source().await;
             let limits = QueryLimits { max_scan_rows: 1, ..QueryLimits::default() };
-            let query = Query::new().await.filter(Predicate::Eq(Path::field("age"), Value::Int(999)));
+            let query = Query::new().filter(Predicate::Eq(Path::field("age"), Value::Int(999)));
             let error = db_actor::block_on(execute(&query, &source, None::<&db_query::NoFullTextLookup>, &limits)).unwrap_err();
             assert!(matches!(error, DbError::LimitExceeded(_)));
         }

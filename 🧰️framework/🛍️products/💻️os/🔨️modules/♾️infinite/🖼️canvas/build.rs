@@ -41,7 +41,7 @@ fn main() {
 
     let mut catalog_arms = String::new();
     for id in &spec.catalog {
-        let svg_path = icons_dir.join(format!("{id}.svg"));
+        let svg_path = icons_dir.join(format!("🔣️{id}.svg"));
         if !svg_path.is_file() {
             continue;
         }
@@ -59,7 +59,7 @@ fn main() {
             if path.extension().and_then(|x| x.to_str()) != Some("svg") {
                 continue;
             }
-            let stem = path.file_stem().and_then(|s| s.to_str()).expect("svg stem");
+            let stem = path.file_stem().and_then(|s| s.to_str()).expect("svg stem").trim_start_matches("🔣️");
             let safe = stem.chars().map(|c| if c.is_ascii_alphanumeric() { c } else { '_' }).collect::<String>();
             let dest = out_dir.join(format!("shortcode_metabolism_{safe}.svg"));
             fs::copy(&path, &dest).unwrap_or_else(|e| panic!("copy {:?} -> {:?}: {e}", path, dest));

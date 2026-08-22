@@ -7,7 +7,7 @@
 use crate::artifacts::model::{EnergyModelMutation, EnergyModelSnapshot, ENERGY_MODEL_DOCUMENT_SCHEMA, MODEL_DIALECT};
 use crate::viewer::model::modes::view;
 use crate::viewer::model::modes::view::windows::{structure, zones};
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has
@@ -21,10 +21,10 @@ pub enum EnergyModelViewCommand {
 }
 
 impl protocol::OpBinary for EnergyModelViewCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(EnergyModelViewCommand::Noop)
     }
 }
@@ -65,18 +65,18 @@ impl ArtifactViewer for EnergyModelViewer {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
-        match body_key {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> ComponentTree {
+        semio_framework_plugin::built_to_component_tree(match body_key {
             structure::BODY_KEY => structure::render(doc.snapshot),
             zones::BODY_KEY => zones::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
+        })
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_energy_model_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_energy_model_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(MODEL_DIALECT)
         .document(["semio", "energy", "model"])
         .icon_id("battery")

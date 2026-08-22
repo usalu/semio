@@ -12,7 +12,6 @@ use std::borrow::Cow;
 /// 🎗️ A display-ready UI string. No `From<&str>`/`From<String>` on purpose.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct Label(String);
 
 impl Label {
@@ -86,7 +85,7 @@ impl From<LabelText> for String {
 /// 🗺️ Full locale×terminology matrix for a manifest label, resolved shell-side per active axes —
 /// the multilingual replacement for `AppLabelsOverlay`'s stringly-typed per-id maps. TS mirror is
 /// the hand-generated `LocalizedLabel` type in `framework/⚡️implementations/🟦️typescript/🤖️generated/🟦️ui-axes.ts`
-/// (not ts-rs-derived — the wire shape below is manually kept in sync with that type).
+/// (the wire shape below is explicitly kept in sync with that type by the owned schema metadata).
 #[derive(Clone, Debug, PartialEq)]
 pub struct LocalizedLabel {
     cells: [[Cow<'static, str>; Locale::COUNT]; Terminology::COUNT],
@@ -154,5 +153,5 @@ impl<'de> Deserialize<'de> for LocalizedLabel {
 /// an exhaustive `match (terminology, locale)` with no catch-all, so a `Locale`/`Terminology` variant
 /// added to the generated axes fails every implementor's build until covered.
 pub trait AppLabels: Sized + 'static {
-    async fn labels(locale: Locale, terminology: Terminology) -> &'static Self;
+    fn labels(locale: Locale, terminology: Terminology) -> &'static Self;
 }

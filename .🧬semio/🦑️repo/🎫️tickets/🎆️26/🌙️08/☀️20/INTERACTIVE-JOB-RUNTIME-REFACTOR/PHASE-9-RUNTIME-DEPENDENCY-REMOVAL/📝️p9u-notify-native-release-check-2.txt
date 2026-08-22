@@ -1,0 +1,34 @@
+    Checking semio-framework-os-services v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust)
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13178:6: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13179:42: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13179:97: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13180:64: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13181:9: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13183:49: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13183:101: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13184:21: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13185:55: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/⌨️cli/🦀️component.rs:83:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/⌨️cli/🦀️component.rs:86:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2400:9: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2415:9: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2418:9: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:501:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:502:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:513:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:514:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:515:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:522:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:541:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:542:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:720:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:721:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:722:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:732:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:733:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:734:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:1212:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🔌️client/🦀️component.rs:113:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+warning: `semio-framework-os-kernel` (lib) generated 30 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 9 suggestions)
+    Finished `release` profile [optimized] target(s) in 30.84s

@@ -91,7 +91,7 @@ pub async fn puzzle2d_manifest_fragment(definition: &Block2dSnapshot) -> Value {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.block.block2d.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `block2d_artifact_schema_descriptor`'s registration.
-pub async fn block2d_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn block2d_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.block.block2d.inference",
         inference: schema::FacetLeaves {

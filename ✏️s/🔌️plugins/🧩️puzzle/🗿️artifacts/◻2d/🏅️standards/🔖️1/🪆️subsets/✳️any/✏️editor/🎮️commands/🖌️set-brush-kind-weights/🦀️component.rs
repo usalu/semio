@@ -4,7 +4,7 @@ use crate::editor::puzzle2d::{puzzle2d_kind_ids, puzzle2d_window_and_measures_sc
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 
-pub async fn puzzle2d_uniform_kind_weights(ids: &[String]) -> BTreeMap<String, f64> {
+pub fn puzzle2d_uniform_kind_weights(ids: &[String]) -> BTreeMap<String, f64> {
     if ids.is_empty() {
         return BTreeMap::new();
     }
@@ -13,7 +13,7 @@ pub async fn puzzle2d_uniform_kind_weights(ids: &[String]) -> BTreeMap<String, f
 }
 /// ⚖️ Redistributes the remaining probability mass over the untouched kinds so the group still sums
 /// to 1 after `changed_id` is pinned to `new_value`.
-pub async fn puzzle2d_normalize_kind_weight_group(weights: &BTreeMap<String, f64>, kind_ids: &[String], changed_id: &str, new_value: f64) -> BTreeMap<String, f64> {
+pub fn puzzle2d_normalize_kind_weight_group(weights: &BTreeMap<String, f64>, kind_ids: &[String], changed_id: &str, new_value: f64) -> BTreeMap<String, f64> {
     if kind_ids.is_empty() {
         return BTreeMap::new();
     }
@@ -45,7 +45,7 @@ pub async fn puzzle2d_normalize_kind_weight_group(weights: &BTreeMap<String, f64
     }
     next
 }
-async fn puzzle2d_ensure_catalog_kind_weights(weights: &mut BTreeMap<String, f64>, kind_ids: &[String]) {
+fn puzzle2d_ensure_catalog_kind_weights(weights: &mut BTreeMap<String, f64>, kind_ids: &[String]) {
     if kind_ids.is_empty() {
         return;
     }
@@ -63,7 +63,7 @@ async fn puzzle2d_ensure_catalog_kind_weights(weights: &mut BTreeMap<String, f64
     }
 }
 
-pub async fn set_brush_kind_weights(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
+pub fn set_brush_kind_weights(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
     let node_ids = puzzle2d_kind_ids(&ctx.scene.fixture, "nodes");
     let handle_ids = puzzle2d_kind_ids(&ctx.scene.fixture, "handles");
     puzzle2d_ensure_catalog_kind_weights(&mut ctx.scene.runtime.node_kind_weights, &node_ids);
@@ -94,8 +94,8 @@ pub async fn set_brush_kind_weights(ctx: &mut Puzzle2dActionCtx<'_>, args: Optio
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn kind_weight_group_normalizes_to_sum_one() {
+    #[test]
+    fn kind_weight_group_normalizes_to_sum_one() {
         let ids = vec!["a".into(), "b".into(), "c".into()];
         let initial = puzzle2d_uniform_kind_weights(&ids);
         let next = puzzle2d_normalize_kind_weight_group(&initial, &ids, "a", 0.5);

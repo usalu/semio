@@ -26,12 +26,12 @@ path = "📦️glue.rs"
 semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-os = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["component-guest"] }
+semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 semio-framework = { workspace = true }
 semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", default-features = false }
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 serde.workspace = true
 serde_json.workspace = true
-blake3 = "1"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen.workspace = true

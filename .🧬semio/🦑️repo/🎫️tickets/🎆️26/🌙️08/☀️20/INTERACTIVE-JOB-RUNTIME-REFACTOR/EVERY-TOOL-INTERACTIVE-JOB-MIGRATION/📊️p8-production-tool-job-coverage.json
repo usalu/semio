@@ -1,0 +1,70 @@
+{
+  "scope": {
+    "excluded": ["compose/**", "**/target/**", "cfg(test) fixtures from production totals"],
+    "mode": "permanent static gate plus executable runtime integration"
+  },
+  "productionInventory": {
+    "macroHostFiles": 50,
+    "macroInvocations": 50,
+    "commandRows": 771,
+    "uniqueFileIdRows": 769,
+    "boundedRows": 765,
+    "batchOnlyPendingRewriteRows": 6,
+    "forbiddenRows": 0,
+    "deletedRows": 0,
+    "intentionalDuplicateOccurrences": [
+      {
+        "plugin": "writer",
+        "id": "setEditorSetting",
+        "occurrences": 3,
+        "duplicateRows": 2,
+        "reason": "three intentional action variants share the command ID"
+      }
+    ]
+  },
+  "parserFixtures": {
+    "macroHostFiles": 1,
+    "macroInvocations": 2,
+    "commandRows": 4,
+    "contributesToProductionCoverage": false
+  },
+  "batchOnlyPendingRewrite": [
+    ["remodel", "runReconstruction"],
+    ["remodel", "retryStage"],
+    ["remodel", "runStage"],
+    ["draw", "canvasPointerDown"],
+    ["flow", "duplicateWidget"],
+    ["forms", "setTryValue"]
+  ],
+  "architecture": {
+    "productionFactoryImplementations": 1,
+    "productionRegistrationPaths": 1,
+    "productionWorkerDispatchPaths": 1,
+    "platformOwnsSharedActionBus": true,
+    "typedPayloadsBoxedBeforeErasure": true,
+    "threadLocalOutput": false,
+    "directUiHandleBypass": false,
+    "synchronousUiRunToCompletion": false,
+    "actualStepWatchdogMilliseconds": 8
+  },
+  "runtimeEvidence": {
+    "actionBusUnitTests": "6 passed",
+    "schemaRowBijection": "passed",
+    "platformVisibleFactoryBijectionAndDispatch": "passed",
+    "nonMigratedUiRejection": "passed",
+    "stepOverrunRejection": "passed",
+    "energyDescribe": {
+      "result": "passed",
+      "wasmSha256": "f5682b07f9aba3dce74baae1b880aaf70dc6681a307d6e0348a526bac8f88b8e"
+    },
+    "energyDefaultStackLibTests": "292 passed; 0 failed",
+    "nativeReleaseFrameworkJobAndPlugin": "passed",
+    "wasm32Wasip2FrameworkJob": "passed",
+    "wasm32UnknownUnknownWarningDeniedActorJob": "passed",
+    "nativeWarningDeniedFrameworkJob": "passed",
+    "nativeWarningDeniedFrameworkPlugin": "blocked before plugin by 24 dependency lints: hash 2, mesh-engine 13, OS kernel DSL derive 2, replication 7",
+    "phase8OwnedDebugMarkers": 0
+  },
+  "gate": "bun ./📜️script.ts verify interactivity tool-jobs --format json",
+  "failures": []
+}

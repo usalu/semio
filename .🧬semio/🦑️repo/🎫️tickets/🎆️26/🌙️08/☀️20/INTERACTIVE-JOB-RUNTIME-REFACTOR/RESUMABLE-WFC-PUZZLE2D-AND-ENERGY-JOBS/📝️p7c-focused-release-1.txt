@@ -1,0 +1,64 @@
+    Blocking waiting for file lock on package cache
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.47
+   Compiling serde_core v1.0.229
+   Compiling serde v1.0.229
+   Compiling arrayvec v0.7.8
+   Compiling zmij v1.0.23
+   Compiling smallvec v1.15.2
+   Compiling semio-framework-trace v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust)
+   Compiling serde_json v1.0.151
+   Compiling itoa v1.0.18
+   Compiling memchr v2.8.3
+   Compiling polycool v0.4.0
+   Compiling kurbo v0.13.1
+   Compiling syn v3.0.3
+   Compiling syn v2.0.119
+   Compiling serde_derive v1.0.229
+   Compiling semio-framework-async-macros v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust)
+   Compiling semio-framework-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust)
+   Compiling semio-framework-geometry v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust)
+   Compiling semio-s-plugin-stdio v0.0.0 (/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/RESUMABLE-WFC-PUZZLE2D-AND-ENERGY-JOBS/🧪️energy-focused/stdio-stub)
+   Compiling semio-framework-job v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust)
+   Compiling semio-energy-focused v0.0.0 (/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/RESUMABLE-WFC-PUZZLE2D-AND-ENERGY-JOBS/🧪️energy-focused)
+warning: associated functions `resolve_weather` and `synthetic_weather_year` are never used
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🦀️component.rs:847:8
+    |
+824 | impl Engine {
+    | ----------- associated functions in this implementation
+...
+847 |     fn resolve_weather(config: &SimulationConfig) -> Vec<WeatherRecord> {
+    |        ^^^^^^^^^^^^^^^
+...
+858 |     fn synthetic_weather_year() -> Vec<WeatherRecord> {
+    |        ^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `design_day_weather` is never used
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🦀️component.rs:890:4
+    |
+890 | fn design_day_weather(dry_bulb_c: f64) -> Vec<WeatherRecord> {
+    |    ^^^^^^^^^^^^^^^^^^
+
+warning: `semio-energy-focused` (lib test) generated 2 warnings
+    Finished `release` profile [optimized] target(s) in 4m 35s
+     Running unittests lib.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/RESUMABLE-WFC-PUZZLE2D-AND-ENERGY-JOBS/🧪️target-p7-energy-focused/release/deps/semio_energy_focused-9ca7d2c1de3b5624)
+
+running 12 tests
+test sim::tests::energy_job_cancellation_and_freshness_precede_mutation ... ok
+test sim::tests::ashrae_140_case600_base ... ok
+test sim::tests::invalid_model_rejected ... ok
+test sim::tests::hvac_bestest_heating_day ... ok
+test sim::tests::energy_job_checkpoint_restore_and_fuel_batches_are_deterministic ... ok
+test sim::tests::energy_job_previews_checkpoints_and_commits_bounded_steps ... ok
+test sim::tests::adversarial_timestep_work_unit_stays_below_watchdog ... ok
+test sim::tests::energy_conservation_order_of_magnitude ... ok
+test sim::tests::full_topology_e2e ... ok
+test sim::tests::engine_runs_single_zone ... ok
+test sim::tests::run_period_honors_calendar ... ok
+test sim::tests::engine_deterministic_repeatability ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 229 filtered out; finished in 0.10s
+

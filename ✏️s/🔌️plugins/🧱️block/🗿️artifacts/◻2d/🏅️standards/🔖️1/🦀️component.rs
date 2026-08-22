@@ -11,6 +11,6 @@ use semio_framework_plugin::StandardId;
 /// extension `block2d`, never a mime type), matching `🗒️note`/`🖍️draw`/`🔱️trinity`'s identical
 /// documented deviation. `extensions: ["block2d"]` is the real, carried-over value (`definition()`'s
 /// own `s.block2d.codec.document-1` row's `extension` claim, D2-capability-claim-repairs comment).
-pub async fn standard() -> StandardDeclaration {
+pub fn standard() -> StandardDeclaration<crate::BlockApps> {
     StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.block2d+json"], extensions: &["block2d"] }, subsets: vec![subsets::any::subset()] }
 }

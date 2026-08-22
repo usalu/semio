@@ -1,0 +1,473 @@
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🗜️dynamic/🦀️component.rs:1:
+-use super::{build_codes, distance_symbol, fixed_dist_lengths, fixed_lit_lengths, length_symbol, BitWriter, MAX_MATCH, MIN_MATCH};
++use super::{BitWriter, MAX_MATCH, MIN_MATCH, build_codes, distance_symbol, fixed_dist_lengths, fixed_lit_lengths, length_symbol};
+ 
+ const BL_ORDER: [usize; 19] = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
+ const HEAP_SIZE: usize = 573;
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🗜️dynamic/🦀️component.rs:686:
+         }
+         candidate = previous[candidate_position];
+     }
+-    if length < MIN_MATCH || distance == 0 || (length == MIN_MATCH && distance >= 8 * 1024) {
+-        None
+-    } else {
+-        Some((length, distance))
+-    }
++    if length < MIN_MATCH || distance == 0 || (length == MIN_MATCH && distance >= 8 * 1024) { None } else { Some((length, distance)) }
+ }
+ 
+ fn miniz_tree(frequencies: &[u32], maximum_bits: usize) -> Tree {
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:2:
+ //! (called once from 🔌️plugin/🔧️setup via ⚙️engine::register), not per-leaf register().
+ //#region 🎹️DerivedComposition
+ pub mod derived_composition {
+-    use crate::artifacts::deflate::standards::v_rfc1950::subsets::any::schema::DeflateAnalyzer;
+     use crate::artifacts::deflate::DeflateSnapshot;
++    use crate::artifacts::deflate::standards::v_rfc1950::subsets::any::schema::DeflateAnalyzer;
+     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
+ 
+     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.deflate", standard: StandardId("rfc1950"), subset: SubsetId("*") };
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:55:
+ // — PNG IDAT, PDF stream objects — which have never gone through a `DeflateSnapshot` and must not
+ // start doing so here); `encode_deflate_snapshot`/`decode_deflate_snapshot` are the RFC1950
+ // container<->typed-snapshot pair `DeflateSnapshot`'s `ArtifactDsl`/`ArtifactPack` impls call.
+-use crate::artifacts::deflate::schema::snapshot::{DeflateLevelHint, DeflateSnapshot};
+ use crate::artifacts::deflate::STDIO_DEFLATE_DOCUMENT_SCHEMA;
++use crate::artifacts::deflate::schema::snapshot::{DeflateLevelHint, DeflateSnapshot};
+ 
+ //#region Adler32
+ /// 🧮 Adler-32 (RFC1950).
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:308:
+         candidate = prev[cpos & (WINDOW - 1)];
+         chain += 1;
+     }
+-    if best_len >= MIN_MATCH {
+-        Some((best_len, best_dist))
+-    } else {
+-        None
+-    }
++    if best_len >= MIN_MATCH { Some((best_len, best_dist)) } else { None }
+ }
+ 
+ fn length_symbol(len: usize) -> (usize, u32, u8) {
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:1086:
+     }
+ 
+     fn drive_encode_job(mut job: DeflateEncodeJob, fuel: u64) -> Vec<u8> {
+-        use semio_framework_job::{root_cancel_token, Generation, InteractiveJob, OperationId, StepBudget, StepContext, StepOutcome};
++        use semio_framework_job::{Generation, InteractiveJob, OperationId, StepBudget, StepContext, StepOutcome, root_cancel_token};
+         let cancel = root_cancel_token();
+         let mut sequence = 0;
+         loop {
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:1115:
+ 
+     #[test]
+     fn streaming_checkpoint_restore_is_byte_identical() {
+-        use semio_framework_job::{root_cancel_token, Generation, InteractiveJob, OperationId, StepBudget, StepContext, StepOutcome};
++        use semio_framework_job::{Generation, InteractiveJob, OperationId, StepBudget, StepContext, StepOutcome, root_cancel_token};
+         let payload = b"checkpointed owned compression ".repeat(256);
+         let expected = deflate_raw(&payload);
+         let mut job = DeflateEncodeJob::new(payload, 31);
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:1133:
+ 
+     #[test]
+     fn streaming_encode_observes_cancellation_without_progress() {
+-        use semio_framework_job::{root_cancel_token, Generation, InteractiveJob, OperationId, StepBudget, StepContext, StepOutcome};
++        use semio_framework_job::{Generation, InteractiveJob, OperationId, StepBudget, StepContext, StepOutcome, root_cancel_token};
+         let mut job = DeflateEncodeJob::new(vec![7; 4096], 64);
+         let before = job.checkpoint_bytes();
+         let cancel = root_cancel_token();
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:1146:
+ 
+     #[test]
+     fn adversarial_streaming_transition_stays_below_watchdog_ceiling() {
+-        use semio_framework_job::{root_cancel_token, Generation, InteractiveJob, OperationId, StepBudget, StepContext};
++        use semio_framework_job::{Generation, InteractiveJob, OperationId, StepBudget, StepContext, root_cancel_token};
+         let mut input = Vec::with_capacity(256 * 1024);
+         for index in 0..256 * 1024 {
+             input.push(((index * 31) ^ (index >> 5)) as u8);
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:1251:
+ /// `&'static [ComposerEntry]`); a bare `io_registry::entries()` silently rebinds to the wrong one.
+ pub mod io_registry {
+     use crate::artifacts::deflate::standards::v_rfc1950::subsets::any::schema::DeflateComposer as DeflateRawAnyComposer;
+-    use semio_framework_plugin::{composer_entry_of, ComposerEntry};
++    use semio_framework_plugin::{ComposerEntry, composer_entry_of};
+     use std::sync::OnceLock;
+ 
+     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🗜️dynamic/🦀️component.rs:1:
+-use super::{build_codes, distance_symbol, fixed_dist_lengths, fixed_lit_lengths, length_symbol, BitWriter, MAX_MATCH, MIN_MATCH};
++use super::{BitWriter, MAX_MATCH, MIN_MATCH, build_codes, distance_symbol, fixed_dist_lengths, fixed_lit_lengths, length_symbol};
+ 
+ const BL_ORDER: [usize; 19] = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
+ const HEAP_SIZE: usize = 573;
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🗜️dynamic/🦀️component.rs:686:
+         }
+         candidate = previous[candidate_position];
+     }
+-    if length < MIN_MATCH || distance == 0 || (length == MIN_MATCH && distance >= 8 * 1024) {
+-        None
+-    } else {
+-        Some((length, distance))
+-    }
++    if length < MIN_MATCH || distance == 0 || (length == MIN_MATCH && distance >= 8 * 1024) { None } else { Some((length, distance)) }
+ }
+ 
+ fn miniz_tree(frequencies: &[u32], maximum_bits: usize) -> Tree {
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:
+ //! granular typed operation delta (`puzzle2d_document_delta_operations`) turning the old fixture into
+ //! the new one.
+ 
+-use crate::artifacts::puzzle2d::op::{puzzle2d_document_delta_operations, Puzzle2dMutation, Puzzle2dPlaySnapshot};
+ use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
++use crate::artifacts::puzzle2d::op::{Puzzle2dMutation, Puzzle2dPlaySnapshot, puzzle2d_document_delta_operations};
+ use crate::editor::puzzle2d::commands::{
+     add_node, apply_board_events, cancel_slot, commit_slot, cycle_candidate, delete_selection, duplicate_selection, engagement_abort, engagement_control_select, engagement_input, engagement_submit, fill_session_begin, fill_session_clear,
+     fill_session_step, focus_selection, force_layout, lod_scale_json, open_slot, patch_inspector, redraw_handles, select_same_kind, set_active_example, set_active_utility, set_brush_kind_weights, set_brush_node_size, set_camera, set_candidate_index,
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:27:
+ use crate::editor::puzzle2d::modes::edit::windows::{detail, overview, selection};
+ use crate::editor::puzzle2d::panels::{catalogue, document, inspection};
+ use crate::editor::puzzle2d::presence::{Puzzle2dPresence, Puzzle2dPresenceMutation};
+-use crate::editor::puzzle2d::terminology::{is_de_locale, puzzle2d_labels, Puzzle2dLabels};
++use crate::editor::puzzle2d::terminology::{Puzzle2dLabels, is_de_locale, puzzle2d_labels};
+ use semio_framework::kernel::UiDirtyScope;
+ use semio_framework_plugin::kernel::Effect;
+ use semio_framework_plugin::{
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:34:
+     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, AppLabels, ArtifactEditor, ArtifactPresentation, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider,
+-    HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity,
+-    SelectionMethod, SelectionMode, SelectionSpec, UiNode, WindowEngagement, WindowMeasure, INTERACTION_SELECT_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
++    HoverSpec, INTERACTION_SELECT_ACTION_ID, InteractionDefinition, InteractionRef, InteractionTarget, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft,
++    NoDraftMutation, PortMultiplicity, SET_ACTIVE_UTILITY_ACTION_ID, SelectionMethod, SelectionMode, SelectionSpec, UiNode, WindowEngagement, WindowMeasure,
+ };
+ // 🕹️ `InteractionView` — see puzzle3d's identical import comment (missing top-level re-export from
+ // `semio_framework_plugin`, flagged to the coordinator, not fixed here).
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:40:
+ use semio_framework_plugin::app::InteractionView;
+ use serde::{Deserialize, Serialize};
+-use serde_json::{json, Value};
++use serde_json::{Value, json};
+ use std::cell::RefCell;
+ use std::collections::{BTreeSet, HashMap, HashSet};
+ use store::EngineHandles;
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:501:
+ 
+ /// 🎲️ Re-mints a node id when it collides with an existing one — client-side brush serials restart every session.
+ fn unique_node_id(fixture: &Value, candidate: String) -> String {
+-    if fixture_nodes(fixture).iter().any(|node| node.get("id").and_then(|value| value.as_str()) == Some(candidate.as_str())) {
+-        new_node_id("node")
+-    } else {
+-        candidate
+-    }
++    if fixture_nodes(fixture).iter().any(|node| node.get("id").and_then(|value| value.as_str()) == Some(candidate.as_str())) { new_node_id("node") } else { candidate }
+ }
+ 
+ fn unique_edge_id(fixture: &Value, candidate: String) -> String {
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:512:
+-    if fixture_edges(fixture).iter().any(|edge| edge.get("id").and_then(|value| value.as_str()) == Some(candidate.as_str())) {
+-        new_node_id("edge")
+-    } else {
+-        candidate
+-    }
++    if fixture_edges(fixture).iter().any(|edge| edge.get("id").and_then(|value| value.as_str()) == Some(candidate.as_str())) { new_node_id("edge") } else { candidate }
+ }
+ 
+ /// 🖌️ Splices one brush placement (a node, plus the edge back to its source handle) into the fixture.
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:824:
+ /// `VcsArtifactApp::context_menu` funnel) sorts groups into `RIBBON_PARENT_CATEGORIES` order and
+ /// inserts the pre-destructive separator itself, so no manual `.separator()` calls are needed here.
+ async fn puzzle2d_context_menu_items(registry: &semio_framework_plugin::AppActionRegistry, fixture: &Value, selected: &[String], is_de: bool) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+-    use semio_framework_plugin::{selection_count_phrase, ContextMenuItemSpec, Menu};
++    use semio_framework_plugin::{ContextMenuItemSpec, Menu, selection_count_phrase};
+     // 🧩️ Bespoke-row helper (dynamic label/icon/args/disabled per selection state — not a plain
+     // declared-action lookup) — appended via `Menu::item(...)`, the documented escape hatch.
+     let item = |id: &str, label: &str, icon: &str, action: &str, args: Option<Value>, destructive: bool, disabled: bool| ContextMenuItemSpec {
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:1408:
+ mod tests {
+     use super::testkit::*;
+     use super::*;
+-    use semio_framework_plugin::{PluginApp, FRAMEWORK_HISTORY_BODY_KEY};
++    use semio_framework_plugin::{FRAMEWORK_HISTORY_BODY_KEY, PluginApp};
+     use store::{Backbone, BackboneMessage, MemoryBackbone};
+ 
+     /// 🎥️ Recovers the rendered pane camera `(x, y, zoom)` from a rendered `UiNode`'s embedded
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:1487:
+     #[test]
+     fn command_envelope_round_trip_holds_for_an_applied_operation() {
+         use crate::artifacts::puzzle2d::spr::Puzzle2dStore;
+-        use crate::artifacts::puzzle2d::{Puzzle2dNode, PUZZLE_2D_SCHEMA};
++        use crate::artifacts::puzzle2d::{PUZZLE_2D_SCHEMA, Puzzle2dNode};
+         use protocol::{ArtifactId, Edit, SchemaId};
+-        use store::{create_document_envelope, ArtifactCommand};
++        use store::{ArtifactCommand, create_document_envelope};
+ 
+         let mut store = semio_framework::io::resolve_ready(Puzzle2dStore::new(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dSnapshot::default(), None))).expect("store");
+         let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:1677:
+     /// 🛠️ Fill is a mode-level tool (a whole-document generator), not a window utility.
+     #[test]
+     fn tool_registry_declares_fill_tool() {
+-        use semio_framework_plugin::{ToolRef, SET_ACTIVE_TOOL_ACTION_ID};
++        use semio_framework_plugin::{SET_ACTIVE_TOOL_ACTION_ID, ToolRef};
+         let definition = create_puzzle2d_app();
+         let tool_ids: Vec<&str> = definition.tools.iter().map(|tool| tool.id.as_str()).collect();
+         assert_eq!(tool_ids, vec![fill::TOOL_ID]);
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:12:
+ //! and each action emits the granular typed operation delta
+ //! (`puzzle3d_operations_from_fixture_change`) turning the old fixture into the new one.
+ 
+-use crate::artifacts::puzzle3d::op::{puzzle3d_document_delta_operations, Puzzle3dMutation, Puzzle3dPlaySnapshot};
+-use crate::artifacts::puzzle3d::schema::{Puzzle3dEngineCommand, Puzzle3dEngineOutcome};
+ use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
++use crate::artifacts::puzzle3d::op::{Puzzle3dMutation, Puzzle3dPlaySnapshot, puzzle3d_document_delta_operations};
++use crate::artifacts::puzzle3d::schema::{Puzzle3dEngineCommand, Puzzle3dEngineOutcome};
+ use crate::editor::puzzle3d::commands::{
+     accept_suggestion, add_brush_object, add_object_kind, add_target_volume, apply_sun, close_vortex_suggestions, create_attraction, cycle_candidate, delete_attraction, delete_selection, delete_target_volume, duplicate_selection, engagement_abort,
+     engagement_control_select, engagement_input, engagement_repeat_last, engagement_submit, fill_build_tick, focus_selection, hover_suggestion, open_vortex_suggestions, patch_inspector, register_brush_mesh, relocate_target_volume, rotate_selection,
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:30:
+ use crate::editor::puzzle3d::panels::{catalogue, document, inspection, settings as settings_panel};
+ use crate::editor::puzzle3d::precompute::Puzzle3dPrecomputeSession;
+ use crate::editor::puzzle3d::presence::{Puzzle3dPresence, Puzzle3dPresenceMutation};
+-use crate::editor::puzzle3d::terminology::{puzzle3d_labels, puzzle3d_localized, puzzle3d_localized_phrase, Puzzle3dLabels};
++use crate::editor::puzzle3d::terminology::{Puzzle3dLabels, puzzle3d_labels, puzzle3d_localized, puzzle3d_localized_phrase};
+ use semio_framework::kernel::UiDirtyScope;
+ use semio_framework_plugin::kernel::Effect;
+ use semio_framework_plugin::{
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:37:
+-    mesh_from_kind, panel_tab_element_id, panel_tab_first_draggable_element_id, window_element_id, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ActionRef, AppIo, ArtifactEditor, ArtifactView, BuiltNode, ConfigView,
+-    Dialect, DialogDefinition, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, IntroductionDefinition, IntroductionInteraction, IntroductionPlacement,
+-    IntroductionStepDefinition, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity, SelectionMethod, SelectionMode, SelectionSpec,
+-    ToolRef, UiNode, WindowEngagement, WindowMeasure, INTERACTION_SELECT_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
++    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ActionRef, AppIo, ArtifactEditor, ArtifactView, BuiltNode, ConfigView, Dialect, DialogDefinition, DraftView, Editor, Emit, Fault, GranularityDefinition,
++    HierarchyProvider, HoverSpec, INTERACTION_SELECT_ACTION_ID, InteractionDefinition, InteractionRef, InteractionTarget, IntroductionDefinition, IntroductionInteraction, IntroductionPlacement, IntroductionStepDefinition, Label, LocalizedLabel,
++    Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID, SelectionMethod, SelectionMode,
++    SelectionSpec, ToolRef, UiNode, WindowEngagement, WindowMeasure, mesh_from_kind, panel_tab_element_id, panel_tab_first_draggable_element_id, window_element_id,
+ };
+ use store::EngineHandles;
+ // 🎭️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET (contract §2.1): `ArtifactEditor`
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:51:
+ // `pub`, so the full path below still resolves.
+ use semio_framework_plugin::app::InteractionView;
+ use serde::{Deserialize, Serialize};
+-use serde_json::{json, Value};
++use serde_json::{Value, json};
+ use std::collections::{HashMap, HashSet};
+ use std::sync::atomic::{AtomicU32, Ordering};
+ use std::sync::{LazyLock, Mutex};
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:350:
+ /// callers expect). puzzle3d has one window KIND that may be split into several INSTANCES, all
+ /// recorded flat in `window_ids`, so there is no per-kind filtering left to do.
+ fn window_instance_ids(config: &Puzzle3dConfig, kind_id: &str) -> Vec<String> {
+-    if config.window_ids.is_empty() {
+-        vec![kind_id.to_string()]
+-    } else {
+-        config.window_ids.clone()
+-    }
++    if config.window_ids.is_empty() { vec![kind_id.to_string()] } else { config.window_ids.clone() }
+ }
+ 
+ pub fn mesh_selection_ids(args: Option<&Value>, fallback: &[String]) -> Vec<String> {
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:479:
+ }
+ 
+ pub fn puzzle3d_vortex_full_id(object_id: &str, vortex_id: &str) -> String {
+-    if vortex_id.contains(':') {
+-        vortex_id.to_string()
+-    } else {
+-        format!("{object_id}:{vortex_id}")
+-    }
++    if vortex_id.contains(':') { vortex_id.to_string() } else { format!("{object_id}:{vortex_id}") }
+ }
+ 
+ pub fn world_vortex_position(object: &Puzzle3dObject, vortex: &Puzzle3dVortex) -> [f64; 3] {
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:1131:
+ 
+ fn vec3_normalize(a: [f64; 3]) -> [f64; 3] {
+     let len = vec3_len(a);
+-    if len < 1e-12 {
+-        a
+-    } else {
+-        vec3_scale(a, 1.0 / len)
+-    }
++    if len < 1e-12 { a } else { vec3_scale(a, 1.0 / len) }
+ }
+ 
+ fn deg_to_rad(deg: f64) -> f64 {
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:1152:
+ 
+ fn quat_normalize(q: [f64; 4]) -> [f64; 4] {
+     let len = (q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3]).sqrt();
+-    if len < 1e-12 {
+-        [0.0, 0.0, 0.0, 1.0]
+-    } else {
+-        [q[0] / len, q[1] / len, q[2] / len, q[3] / len]
+-    }
++    if len < 1e-12 { [0.0, 0.0, 0.0, 1.0] } else { [q[0] / len, q[1] / len, q[2] / len, q[3] / len] }
+ }
+ 
+ /// 🧭️ The quaternion rotating unit vector `from` onto unit vector `to`.
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:1163:
+ fn puzzle3d_quaternion_from_unit_vectors(from: [f64; 3], to: [f64; 3]) -> [f64; 4] {
+     let r = vec3_dot(from, to) + 1.0;
+     let quat = if r < 0.000_001 {
+-        if from[0].abs() > from[2].abs() {
+-            [-from[1], from[0], 0.0, 0.0]
+-        } else {
+-            [0.0, -from[2], from[1], 0.0]
+-        }
++        if from[0].abs() > from[2].abs() { [-from[1], from[0], 0.0, 0.0] } else { [0.0, -from[2], from[1], 0.0] }
+     } else {
+         let c = vec3_cross(from, to);
+         [c[0], c[1], c[2], r]
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:1789:
+     /// `DomainSelection` only ever carries one active granularity at a time.
+     fn selected_ids(&self, granularity_id: &str) -> Vec<String> {
+         let selection = semio_framework::io::resolve_ready(self.interaction.selection(PUZZLE3D_INTERACTION_DOMAIN));
+-        if selection.granularity == granularity_id {
+-            selection.ids.clone()
+-        } else {
+-            Vec::new()
+-        }
++        if selection.granularity == granularity_id { selection.ids.clone() } else { Vec::new() }
+     }
+     pub fn selected_object_ids(&self) -> Vec<String> {
+         self.selected_ids(PUZZLE3D_GRANULARITY_OBJECT)
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:2087:
+         puzzle3d_rederive_moved_attractions(&mut scratch, object_ids, &incoming);
+         resolve_puzzle3d_attractions(&mut scratch);
+         let operations = puzzle3d_operations_from_fixture_change(projection, &scratch);
+-        if operations.is_empty() {
+-            Emit { ui_scope: puzzle3d_transform_drag_scope(), ..Default::default() }
+-        } else {
+-            semio_framework::io::resolve_ready(Emit::commit(operations, "Transform selection"))
+-        }
++        if operations.is_empty() { Emit { ui_scope: puzzle3d_transform_drag_scope(), ..Default::default() } } else { semio_framework::io::resolve_ready(Emit::commit(operations, "Transform selection")) }
+     }
+ 
+     /// 🖼️ Fixture used for world render — live scratch while a gumball drag is in progress.
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:2796:
+ #[cfg(test)]
+ pub(crate) mod testkit {
+     use super::*;
+-    use semio_framework_plugin::{testkit, ActionMeta, App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
++    use semio_framework_plugin::{ActionMeta, App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, testkit};
+ 
+     pub type Puzzle3dApp = VcsArtifactApp<EditorApp<Puzzle3dPlayApp>>;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:3061:
+     use super::*;
+     use crate::editor::puzzle3d::config::Puzzle3dCamera;
+     use protocol::MutationDiff;
+-    use semio_framework_plugin::{testkit as framework_testkit, PluginApp, FRAMEWORK_HISTORY_BODY_KEY};
++    use semio_framework_plugin::{FRAMEWORK_HISTORY_BODY_KEY, PluginApp, testkit as framework_testkit};
+ 
+     //#region 🔖️Operations
+     #[test]
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:3139:
+     #[test]
+     fn command_envelope_round_trip_holds_for_an_applied_operation() {
+         use crate::artifacts::puzzle3d::spr::Puzzle3dStore;
+-        use crate::artifacts::puzzle3d::{Puzzle3dObject as TypedObject, PUZZLE_3D_SCHEMA};
++        use crate::artifacts::puzzle3d::{PUZZLE_3D_SCHEMA, Puzzle3dObject as TypedObject};
+         use protocol::{ArtifactId, Edit, SchemaId};
+-        use store::{create_document_envelope, ArtifactCommand};
++        use store::{ArtifactCommand, create_document_envelope};
+ 
+         let mut store = semio_framework::io::resolve_ready(Puzzle3dStore::new(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", Puzzle3dSnapshot::default(), None))).expect("store");
+         let object = TypedObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:12:
+ //! of it, and each action emits the granular typed operation delta
+ //! (`puzzle5d_operations_from_document_change`) turning the old document into the new one.
+ 
+-use crate::artifacts::puzzle5d::op::{puzzle5d_document_delta_operations, Puzzle5dMutation, Puzzle5dPlaySnapshot};
+ use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
++use crate::artifacts::puzzle5d::op::{Puzzle5dMutation, Puzzle5dPlaySnapshot, puzzle5d_document_delta_operations};
+ use crate::editor::puzzle5d::commands::{
+     add_brush_part, add_node, add_part_kind, apply_board_events, apply_sun, create_fastener, cycle_brush_candidate, delete_fastener, delete_selection, duplicate_selection, edit_fastener, engagement_abort, engagement_control_select, engagement_input,
+     engagement_submit, patch_fastener, patch_grip, patch_part, proximity_connect, register_brush_mesh, retarget_fastener, rotate_selection, scale_selection, select_same_kind, set_active, set_active_example, set_brush_placement_overlap_budget,
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:25:
+ use crate::editor::puzzle5d::panels::{catalogue, document as document_panel, inspection};
+ use crate::editor::puzzle5d::precompute::{BrushPlacePayload, Puzzle5dPrecomputeSession};
+ use crate::editor::puzzle5d::presence::{Puzzle5dPresence, Puzzle5dPresenceMutation};
+-use crate::editor::puzzle5d::terminology::{puzzle5d_is_de_locale, puzzle5d_labels, puzzle5d_localized, Puzzle5dLabels};
++use crate::editor::puzzle5d::terminology::{Puzzle5dLabels, puzzle5d_is_de_locale, puzzle5d_labels, puzzle5d_localized};
+ use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, Effect, PasteAnchor, PastePlacement};
+ use semio_framework_plugin::{
+-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, ArtifactEditor, ArtifactPresentation, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, IconName,
+-    InteractionDefinition, InteractionRef, InteractionTarget, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity, SelectionMethod,
+-    SelectionMode, SelectionSpec, UiNode, UiTreeItemNode, WindowEngagement, WindowMeasure, INTERACTION_SELECT_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
++    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, ArtifactEditor, ArtifactPresentation, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
++    INTERACTION_SELECT_ACTION_ID, IconName, InteractionDefinition, InteractionRef, InteractionTarget, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation,
++    PortMultiplicity, SET_ACTIVE_UTILITY_ACTION_ID, SelectionMethod, SelectionMode, SelectionSpec, UiNode, UiTreeItemNode, WindowEngagement, WindowMeasure,
+ };
+ // 🕹️ `InteractionView` — see 🧊️3d/🦀️component.rs's identical import comment (missing top-level
+ // re-export from `semio_framework_plugin`, flagged to the coordinator, not fixed here).
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:37:
+ use semio_framework_plugin::app::InteractionView;
+ use serde::{Deserialize, Serialize};
+-use serde_json::{json, Value};
++use serde_json::{Value, json};
+ use std::cell::RefCell;
+ use std::collections::{HashMap, HashSet};
+-use std::sync::atomic::{AtomicU32, Ordering};
+ use std::sync::LazyLock;
++use std::sync::atomic::{AtomicU32, Ordering};
+ use store::EngineHandles;
+ 
+ //#region 🔖️Constants
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:293:
+ }
+ 
+ pub fn puzzle5d_grip_full_id(part_id: &str, grip_id: &str) -> String {
+-    if grip_id.contains(':') {
+-        grip_id.to_string()
+-    } else {
+-        format!("{part_id}:{grip_id}")
+-    }
++    if grip_id.contains(':') { grip_id.to_string() } else { format!("{part_id}:{grip_id}") }
+ }
+ 
+ /// 📐️ Resolves one numeric-field edit: an absolute `value` (typed entry) wins when present,
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:1098:
+ /// trailing destructive row. `organize_context_menu`, run automatically at the `VcsArtifactApp::context_menu`
+ /// funnel, handles taxonomy ordering/separator placement — this function only needs to emit the rows.
+ fn puzzle5d_context_menu_items(envelope: &Puzzle5dScene, part_ids: &[String], labels: &Puzzle5dLabels, is_de: bool, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+-    use semio_framework_plugin::{selection_count_phrase, ContextMenuItemSpec, Menu};
++    use semio_framework_plugin::{ContextMenuItemSpec, Menu, selection_count_phrase};
+     if part_ids.is_empty() {
+         return Vec::new();
+     }
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:1282:
+ impl<'a> Puzzle5dActionCtx<'a> {
+     fn selected_ids(&self, granularity_id: &str) -> Vec<String> {
+         let selection = semio_framework::io::resolve_ready(self.interaction.selection(PUZZLE5D_INTERACTION_DOMAIN));
+-        if selection.granularity == granularity_id {
+-            selection.ids.clone()
+-        } else {
+-            Vec::new()
+-        }
++        if selection.granularity == granularity_id { selection.ids.clone() } else { Vec::new() }
+     }
+     pub fn selected_part_ids(&self) -> Vec<String> {
+         self.selected_ids(PUZZLE5D_GRANULARITY_PART)
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:2086:
+ #[cfg(test)]
+ pub(crate) mod testkit {
+     use super::*;
+-    use semio_framework_plugin::{testkit, ActionMeta, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
++    use semio_framework_plugin::{ActionMeta, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel, testkit};
+ 
+     /// ✏️ `Puzzle5dPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
+     /// `ArtifactApp` — `EditorApp<Puzzle5dPlayApp>` (SDK adapter, contract §2.1) is the real
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:2305:
+     #[test]
+     fn command_envelope_round_trip_holds_for_an_applied_operation() {
+         use crate::artifacts::puzzle5d::spr::Puzzle5dStore;
+-        use crate::artifacts::puzzle5d::{Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, PUZZLE_5D_SCHEMA};
++        use crate::artifacts::puzzle5d::{PUZZLE_5D_SCHEMA, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d};
+         use protocol::{ArtifactId, Edit, SchemaId};
+-        use store::{create_document_envelope, EngineHandles};
++        use store::{EngineHandles, create_document_envelope};
+ 
+         let mut store = semio_framework::io::resolve_ready(Puzzle5dStore::new(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None))).expect("store");
+         let part = Puzzle5dPart { id: "p1".into(), part_kind: None, anchor: Default::default(), part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };

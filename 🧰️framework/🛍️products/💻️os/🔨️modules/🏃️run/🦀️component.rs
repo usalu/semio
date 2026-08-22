@@ -59,40 +59,96 @@ use store::{BlobStore, NoBlobStore};
 use workflow::{MediaContract, PortFingerprint, RunMutation, RunNodeRecord, RunNodeStatus, RunOutputArtifact, RunParameterValue, Workflow, WorkflowEdge, WorkflowNode, WorkflowParameterBinding};
 
 /// 🚧️ A failure computing a studio's workflow headlessly.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum RunError {
-    #[error("unknown workflow node {0}")]
     UnknownNode(String),
-    #[error("workflow edge {edge_id} references unknown port `{port_id}` on node `{node_id}`")]
-    UnknownPort { edge_id: String, node_id: String, port_id: String },
-    #[error("workflow edge {edge_id} type mismatch: producer offers {produced:?}, consumer accepts {accepted:?}")]
-    Incompatible { edge_id: String, produced: MediaType, accepted: MediaType },
-    #[error("workflow edge {edge_id} negotiated a conversion {from:?} -> {to:?} but no converter is registered for it")]
-    UnregisteredConversion { edge_id: String, from: MediaForm, to: MediaForm },
-    #[error("input port `{port_id}` on node `{node_id}` is required but has no incoming edge")]
-    MissingRequiredInput { node_id: String, port_id: String },
-    #[error("input port `{port_id}` on node `{node_id}` accepts at most one connection but has {count}")]
-    MultiplicityViolation { node_id: String, port_id: String, count: usize },
-    #[error("no media converter registered for {class:?}: {from:?} -> {to:?}")]
-    NoConverter { class: MediaClass, from: MediaForm, to: MediaForm },
-    #[error("workflow has a cycle (unreachable nodes: {0:?})")]
+    UnknownPort {
+        edge_id: String,
+        node_id: String,
+        port_id: String,
+    },
+    Incompatible {
+        edge_id: String,
+        produced: MediaType,
+        accepted: MediaType,
+    },
+    UnregisteredConversion {
+        edge_id: String,
+        from: MediaForm,
+        to: MediaForm,
+    },
+    MissingRequiredInput {
+        node_id: String,
+        port_id: String,
+    },
+    MultiplicityViolation {
+        node_id: String,
+        port_id: String,
+        count: usize,
+    },
+    NoConverter {
+        class: MediaClass,
+        from: MediaForm,
+        to: MediaForm,
+    },
     Cycle(Vec<String>),
-    #[error("host error: {0}")]
     Host(String),
-    #[error("media error: {0}")]
-    Media(#[from] MediaError),
-    #[error("io error at {path}: {source}")]
-    Io { path: PathBuf, source: std::io::Error },
-    #[error("(de)serialization error: {0}")]
-    Serde(#[from] serde_json::Error),
-    #[error("run document rejected an operation: {0}")]
+    Media(MediaError),
+    Io {
+        path: PathBuf,
+        source: std::io::Error,
+    },
+    Serde(serde_json::Error),
     Sealed(String),
     /// 🛑️ `SpaceRunner`'s `OperationContext.cancel` was cancelled — checked at the top of
     /// `compute_node`, before that node's `open`/`exchange`, so a cancelled run stops before its
     /// NEXT node rather than mid-exchange (an in-flight `exchange` future is not itself
     /// preemptible — same honest limitation `semio-framework-os-services::ComputePool` documents).
-    #[error("run cancelled")]
     Cancelled,
+}
+
+impl std::fmt::Display for RunError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::UnknownNode(node) => write!(formatter, "unknown workflow node {node}"),
+            Self::UnknownPort { edge_id, node_id, port_id } => write!(formatter, "workflow edge {edge_id} references unknown port `{port_id}` on node `{node_id}`"),
+            Self::Incompatible { edge_id, produced, accepted } => write!(formatter, "workflow edge {edge_id} type mismatch: producer offers {produced:?}, consumer accepts {accepted:?}"),
+            Self::UnregisteredConversion { edge_id, from, to } => write!(formatter, "workflow edge {edge_id} negotiated a conversion {from:?} -> {to:?} but no converter is registered for it"),
+            Self::MissingRequiredInput { node_id, port_id } => write!(formatter, "input port `{port_id}` on node `{node_id}` is required but has no incoming edge"),
+            Self::MultiplicityViolation { node_id, port_id, count } => write!(formatter, "input port `{port_id}` on node `{node_id}` accepts at most one connection but has {count}"),
+            Self::NoConverter { class, from, to } => write!(formatter, "no media converter registered for {class:?}: {from:?} -> {to:?}"),
+            Self::Cycle(nodes) => write!(formatter, "workflow has a cycle (unreachable nodes: {nodes:?})"),
+            Self::Host(message) => write!(formatter, "host error: {message}"),
+            Self::Media(error) => write!(formatter, "media error: {error}"),
+            Self::Io { path, source } => write!(formatter, "io error at {}: {source}", path.display()),
+            Self::Serde(error) => write!(formatter, "(de)serialization error: {error}"),
+            Self::Sealed(message) => write!(formatter, "run document rejected an operation: {message}"),
+            Self::Cancelled => formatter.write_str("run cancelled"),
+        }
+    }
+}
+
+impl std::error::Error for RunError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Media(error) => Some(error),
+            Self::Io { source, .. } => Some(source),
+            Self::Serde(error) => Some(error),
+            _ => None,
+        }
+    }
+}
+
+impl From<MediaError> for RunError {
+    fn from(error: MediaError) -> Self {
+        Self::Media(error)
+    }
+}
+
+impl From<serde_json::Error> for RunError {
+    fn from(error: serde_json::Error) -> Self {
+        Self::Serde(error)
+    }
 }
 
 //#endregion 🔖️Types
@@ -943,7 +999,7 @@ pub fn plan(
 /// fingerprints feed straight into its consumers. `run()` is READONLY over `documents`/`configs` — see
 /// this crate's module doc — every byte it produces lands in the caller-supplied `RunSink` instead.
 // 🔀️ `B` is the pluggable `BlobStore` backend — dedyn-fw-os-misc, R11(a): `BlobStore` has 5 impls
-// spread across independently-owned modules/crates (`🏪️store::NoBlobStore`/`FolderSqliteStorage`,
+// spread across independently-owned modules/crates (`🏪️store::NoBlobStore`/`FolderEventLogStorage`,
 // `🪐️space::TestBlobStore`, this crate's own `FileBlobStore`/`InMemoryBlobStore`) — a genuinely open,
 // cross-crate extension point (`🏃️run` cannot name a `🪐️space`/`🏪️store::sync` type without a reverse
 // dependency), so `dyn_enum_close!` cannot close it; every caller already supplies a concrete value
@@ -1418,7 +1474,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     /// shard thread would sit idle. The type stays general (same `shard_count` parameter
     /// `ParallelRuntime::new` takes) for a future caller that does want more.
     pub async fn new(plugin_path_for_plugin: HashMap<String, PathBuf>, descriptor_path_for_plugin: HashMap<String, PathBuf>, blob_store: Arc<B>) -> Self {
-        let guest_runtime = Arc::new(semio_framework_plugin_host::GuestRuntimes::Wasmtime(semio_framework_plugin_host::WasmtimeRuntime::new(semio_framework_plugin_host::SharedEngineConfig::default()).expect("shared wasmtime engine builds")));
+        let guest_runtime = Arc::new(semio_framework_plugin_host::GuestRuntimes::Owned(semio_framework_plugin_host::OwnedRuntime::new()));
         let kernel = NativeKernelRuntime::new(guest_runtime.clone(), 1, 0, 64).await;
         Self {
             guest_runtime,
@@ -2227,7 +2283,7 @@ mod tests {
         let configs = empty_configs(&graph);
 
         let mut sink_1 = fresh_sink();
-        let report_1 = futures_lite::future::block_on(runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink_1)).expect("first run");
+        let report_1 = semio_framework_async::block_on(runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink_1)).expect("first run");
         assert_eq!(report_1.recomputed, vec!["node-a".to_string(), "node-b".to_string()]);
         assert!(report_1.clean.is_empty());
         sink_1.record(RunMutation::Seal { status: workflow::RunStatus::Succeeded }).expect("seal first run");
@@ -2239,7 +2295,7 @@ mod tests {
 
         let prior = prior_node_records_from(&sink_1.document);
         let mut sink_2 = fresh_sink();
-        let report_2 = futures_lite::future::block_on(runner.run(&graph, &documents, &configs, &[], &[], &prior, &mut cache, &mut sink_2)).expect("second run");
+        let report_2 = semio_framework_async::block_on(runner.run(&graph, &documents, &configs, &[], &[], &prior, &mut cache, &mut sink_2)).expect("second run");
         assert!(report_2.recomputed.is_empty(), "unchanged documents must not re-trigger recompute: {:?}", report_2.recomputed);
         assert_eq!(report_2.clean, vec!["node-a".to_string(), "node-b".to_string()]);
         assert!(sink_2.document.node_records.iter().all(|record| record.status == RunNodeStatus::CacheHit), "every node on the second run must be a CacheHit: {:?}", sink_2.document.node_records);
@@ -2255,7 +2311,7 @@ mod tests {
         let documents = empty_documents(&graph);
         let configs = empty_configs(&graph);
         let mut sink_1 = fresh_sink();
-        futures_lite::future::block_on(runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink_1)).expect("first run");
+        semio_framework_async::block_on(runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink_1)).expect("first run");
         sink_1.record(RunMutation::Seal { status: workflow::RunStatus::Succeeded }).expect("seal first run");
 
         let mut documents_2 = documents.clone();
@@ -2266,7 +2322,7 @@ mod tests {
         documents_2.insert("artifacts/node-a".to_string(), (Vec::new(), b"edited".to_vec()));
         let prior = prior_node_records_from(&sink_1.document);
         let mut sink_2 = fresh_sink();
-        let report_2 = futures_lite::future::block_on(runner.run(&graph, &documents_2, &configs, &[], &[], &prior, &mut cache, &mut sink_2)).expect("second run");
+        let report_2 = semio_framework_async::block_on(runner.run(&graph, &documents_2, &configs, &[], &[], &prior, &mut cache, &mut sink_2)).expect("second run");
         assert_eq!(report_2.recomputed, vec!["node-a".to_string()], "node-a's own document changed, so node-a must recompute");
         assert_eq!(report_2.clean, vec!["node-b".to_string()], "node-a's FakeHost output is fixed, so its output fingerprint is unchanged — node-b must stay clean (the early-cutoff this whole design exists for)");
     }
@@ -2285,7 +2341,7 @@ mod tests {
         let documents = empty_documents(&graph);
         let configs_1 = empty_configs(&graph);
         let mut sink_1 = fresh_sink();
-        futures_lite::future::block_on(runner.run(&graph, &documents, &configs_1, &[], &[], &BTreeMap::new(), &mut cache, &mut sink_1)).expect("first run");
+        semio_framework_async::block_on(runner.run(&graph, &documents, &configs_1, &[], &[], &BTreeMap::new(), &mut cache, &mut sink_1)).expect("first run");
         sink_1.record(RunMutation::Seal { status: workflow::RunStatus::Succeeded }).expect("seal first run");
         let prior = prior_node_records_from(&sink_1.document);
 
@@ -2298,7 +2354,7 @@ mod tests {
         assert_eq!(plan_changed.recomputed, vec!["node-a".to_string()], "only node-a's own config changed, so only node-a should be recomputed by the plan");
 
         let mut sink_2 = fresh_sink();
-        let report_2 = futures_lite::future::block_on(runner.run(&graph, &documents, &configs_2, &[], &[], &prior, &mut cache, &mut sink_2)).expect("second run with changed config");
+        let report_2 = semio_framework_async::block_on(runner.run(&graph, &documents, &configs_2, &[], &[], &prior, &mut cache, &mut sink_2)).expect("second run with changed config");
         assert_eq!(report_2.recomputed, vec!["node-a".to_string()], "node-a's config changed, so node-a must recompute even though its document and inputs did not");
         assert_eq!(report_2.clean, vec!["node-b".to_string()], "node-a's FakeHost output is fixed regardless of config, so node-b must stay clean");
     }
@@ -2319,7 +2375,7 @@ mod tests {
         let bindings = vec![WorkflowParameterBinding { parameter_id: "p1".into(), node_id: "node-a".into(), field_path: "/threshold".into() }];
 
         let mut sink_1 = fresh_sink();
-        futures_lite::future::block_on(runner.run(&graph, &documents, &configs, &[], &bindings, &BTreeMap::new(), &mut cache, &mut sink_1)).expect("first run");
+        semio_framework_async::block_on(runner.run(&graph, &documents, &configs, &[], &bindings, &BTreeMap::new(), &mut cache, &mut sink_1)).expect("first run");
         sink_1.record(RunMutation::Seal { status: workflow::RunStatus::Succeeded }).expect("seal first run");
         let prior = prior_node_records_from(&sink_1.document);
 
@@ -2331,7 +2387,7 @@ mod tests {
         assert_eq!(plan_changed.recomputed, vec!["node-a".to_string()], "the bound node's fingerprint must change purely from the parameter overlay: {:?}", plan_changed);
 
         let mut sink_2 = fresh_sink();
-        let report_2 = futures_lite::future::block_on(runner.run(&graph, &documents, &configs, &parameter_values, &bindings, &prior, &mut cache, &mut sink_2)).expect("second run with a param override");
+        let report_2 = semio_framework_async::block_on(runner.run(&graph, &documents, &configs, &parameter_values, &bindings, &prior, &mut cache, &mut sink_2)).expect("second run with a param override");
         assert_eq!(report_2.recomputed, vec!["node-a".to_string()]);
         assert_eq!(sink_2.node_configs.get("node-a"), Some(&configs["config/node-a"]), "raw config bytes sent to the app are untouched by the overlay — only the fingerprint changes");
     }
@@ -2345,7 +2401,7 @@ mod tests {
     /// `space_runner_never_overlaps_exchange_for_the_same_node_across_a_real_run`'s "never overlaps"
     /// isn't a vacuous pass: it shares its bookkeeping through an `Rc<RefCell<_>>`, so cloning it
     /// (unlike sharing one owned `H`) genuinely CAN be driven concurrently, and `exchange` yields
-    /// once mid-call (`futures_lite::future::yield_now`) so an interleaving executor has a real
+    /// once mid-call (`semio_framework_async::yield_once`) so an interleaving executor has a real
     /// chance to expose overlap.
     #[derive(Default)]
     struct RecorderState {
@@ -2388,7 +2444,7 @@ mod tests {
                     state.overlap_detected = true;
                 }
             }
-            futures_lite::future::yield_now().await;
+            semio_framework_async::yield_once().await;
             let frames = commands.iter().map(reply_for).collect();
             {
                 let mut state = self.0.borrow_mut();
@@ -2419,7 +2475,7 @@ mod tests {
         let ctx = root_ctx();
         let fut_a = a.exchange(&ctx, 7, vec![AppCommand::ReadDocument { seq: 1 }]);
         let fut_b = b.exchange(&ctx, 7, vec![AppCommand::ReadDocument { seq: 2 }]);
-        let (_a, _b) = futures_lite::future::block_on(futures_lite::future::zip(fut_a, fut_b));
+        let (_a, _b) = semio_framework_async::block_on(semio_framework_async::join2(fut_a, fut_b));
         assert!(recorder.0.borrow().overlap_detected, "two callers racing the same node id with no ownership guard must overlap");
     }
 
@@ -2438,7 +2494,7 @@ mod tests {
         let configs = empty_configs(&graph);
         let mut sink = fresh_sink();
 
-        futures_lite::future::block_on(runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink)).expect("both solo nodes compute cleanly against RecorderHost");
+        semio_framework_async::block_on(runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink)).expect("both solo nodes compute cleanly against RecorderHost");
 
         let state = recorder.0.borrow();
         assert!(!state.overlap_detected, "SpaceRunner must never issue two exchange calls for the same node concurrently");
@@ -2465,7 +2521,7 @@ mod tests {
         // 🛑️ Cancel BEFORE the run even starts — deterministic, no real sleep/race needed: the very
         // first `compute_node` call (node-a) must already observe `Cancelled`.
         cancel.cancel();
-        let result = futures_lite::future::block_on(runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink));
+        let result = semio_framework_async::block_on(runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink));
         assert!(matches!(result, Err(RunError::Cancelled)), "a run cancelled before its first node must fail with RunError::Cancelled, got {result:?}");
         assert!(recorder.0.borrow().completed_in_order.is_empty(), "no node's exchange should run once the token is cancelled before the run starts");
     }
@@ -2481,7 +2537,7 @@ mod tests {
         let documents = empty_documents(&graph);
         let configs = empty_configs(&graph);
         let mut sink = fresh_sink();
-        let result = futures_lite::future::block_on(runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink));
+        let result = semio_framework_async::block_on(runner.run(&graph, &documents, &configs, &[], &[], &BTreeMap::new(), &mut cache, &mut sink));
         assert!(matches!(result, Err(RunError::Incompatible { .. })));
     }
 
@@ -2628,12 +2684,12 @@ mod tests {
         // 🚫️async: this `#[test] fn` body is a sanctioned executor entry point (R4 clause 5) — the
         // one thread root driving `WasmtimeNodeHost::new`/`manifest_for`, both `async fn` now that
         // they build/drive the real `NativeKernelRuntime` (packet `run-kernel-wiring`). Same
-        // `futures_lite::future::block_on` convention every other test in this module already uses
+        // `semio_framework_async::block_on` convention every other test in this module already uses
         // (see this crate's own `Cargo.toml` doc comment on why: a plain single-poll executor, not
         // tokio).
-        let mut host = futures_lite::future::block_on(WasmtimeNodeHost::new(plugin_paths, descriptor_paths, Arc::new(InMemoryBlobStore::default())));
+        let mut host = semio_framework_async::block_on(WasmtimeNodeHost::new(plugin_paths, descriptor_paths, Arc::new(InMemoryBlobStore::default())));
 
-        let manifest = futures_lite::future::block_on(host.manifest_for("note")).expect("note must load natively from its committed descriptor, zero live describe() calls");
+        let manifest = semio_framework_async::block_on(host.manifest_for("note")).expect("note must load natively from its committed descriptor, zero live describe() calls");
         assert_eq!(manifest.plugin_id, "note");
         assert!(!manifest.apps.is_empty(), "note's real manifest declares at least one app");
         assert!(manifest.dependencies.is_empty(), "note's committed descriptor declares zero PluginManifest.dependencies");

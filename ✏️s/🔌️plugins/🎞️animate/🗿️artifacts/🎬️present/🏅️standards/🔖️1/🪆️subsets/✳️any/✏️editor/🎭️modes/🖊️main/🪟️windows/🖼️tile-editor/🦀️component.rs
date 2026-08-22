@@ -2,8 +2,9 @@
 //! backdrop plus its crop tiles.
 
 use crate::artifacts::present::{FigureTileFrame, PresentSnapshot};
-use crate::editor::animate::PRESENT_PLAY_APP_ID;
-use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
+use semio_framework_ui_contract::{surface, Buildable, BuiltNode, HasBase};
+use semio_framework_ui_scene::{encode, Canvas2dScene};
 
 //#region 🔖️Constants
 pub const PRESENT_PLAY_WINDOW_MAIN: &str = "tile-editor";
@@ -13,7 +14,7 @@ const PRESENT_PLAY_SURFACE_MAIN: &str = "animate.present.play";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::animate::create_animate_present_app`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: PRESENT_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Tile editor", "Kacheleditor"),
@@ -49,7 +50,7 @@ struct TileCanvasLayer {
     data_url: Option<String>,
 }
 
-async fn frame_to_canvas(frame: &FigureTileFrame, scale: f64) -> (f64, f64, f64, f64) {
+fn frame_to_canvas(frame: &FigureTileFrame, scale: f64) -> (f64, f64, f64, f64) {
     (frame.x * scale, frame.y * scale, frame.width * scale, frame.height * scale)
 }
 
@@ -59,7 +60,7 @@ async fn frame_to_canvas(frame: &FigureTileFrame, scale: f64) -> (f64, f64, f64,
 /// `InteractionView`) — the selection overlay this used to bake into every tile's `kind` is gone; the
 /// client renders that highlight itself from the framework's own interaction state now (matches
 /// `🖍️draw`'s canvas render, same reason).
-async fn deck_to_canvas_layers(deck: &PresentSnapshot) -> String {
+fn deck_to_canvas_layers(deck: &PresentSnapshot) -> String {
     const SCALE: f64 = 1000.0;
     let (source, tiles) = crate::artifacts::present::present_working_scene(deck);
     let mut layers = Vec::new();
@@ -75,8 +76,9 @@ async fn deck_to_canvas_layers(deck: &PresentSnapshot) -> String {
 //#endregion 🔖️CanvasLayers
 
 //#region 🔖️Render
-pub async fn render(deck: &PresentSnapshot) -> UiNode {
-    build_canvas_2d_scene(PRESENT_PLAY_SURFACE_MAIN, PRESENT_PLAY_APP_ID, Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: deck_to_canvas_layers(deck) })
+pub fn render(deck: &PresentSnapshot) -> BuiltNode {
+    let scene = Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: deck_to_canvas_layers(deck) };
+    surface(encode(semio_framework_ui_contract::SurfaceKind::Canvas2d, &scene)).id(PRESENT_PLAY_SURFACE_MAIN).build()
 }
 //#endregion 🔖️Render
 
@@ -91,8 +93,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_canvas_2d_scene() {
-        let mut app = present_app();
-        assert!(render_body(&mut app, PRESENT_PLAY_BODY_MAIN).contains("canvas-2d") || render_body(&mut app, PRESENT_PLAY_BODY_MAIN).contains("Canvas2d"));
+        let mut app = present_app().await;
+        let rendered = render_body(&mut app, PRESENT_PLAY_BODY_MAIN).await;
+        assert!(rendered.contains("canvas-2d") || rendered.contains("Canvas2d"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -105,9 +108,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn source_frame_renders_as_actual_image_layer_behind_tiles() {
-        let mut app = present_app();
-        app.dispatch_typed(PresentCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 1, columns: 2 }), &meta("local")).expect("seed grid");
-        let deck = app.snapshot().expect("projection");
+        let mut app = present_app().await;
+        app.dispatch_typed(PresentCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 1, columns: 2 }), &meta("local")).await.expect("seed grid");
+        let deck = app.snapshot().await.expect("projection");
         let layers_json = deck_to_canvas_layers(&deck);
         let layers: Vec<Value> = serde_json::from_str(&layers_json).unwrap();
         let (source, _) = crate::artifacts::present::present_working_scene(&deck);

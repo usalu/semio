@@ -9,7 +9,7 @@
 //! `26/08/20/INTERACTIVE-JOB-RUNTIME-REFACTOR`, this is packet P0a) depends on this module to answer
 //! "did this stay interactive" instead of instrumenting its own ad hoc timers.
 //!
-//! 🧬 **Zero dependencies**: pure `std`, no `serde`/`thiserror`/`ts-rs`/anything else — this is a leaf
+//! 🧬 **Zero dependencies**: pure `std`, no `serde`/`thiserror`/`owned schema exporter`/anything else — this is a leaf
 //! instrumentation primitive every other crate may end up depending on, so it must never widen anyone
 //! else's dependency graph.
 //!
@@ -134,7 +134,7 @@ impl InteractiveStage {
 /// `ActorMetrics::wall_us_ring`/[`PercentileRing`] generalized over `T: Copy` so it isn't duplicated
 /// per event type — shared by [`Watchdog`]'s violation store and the [`TraceEvent`] store below.
 struct BoundedRing<T: Copy, const N: usize> {
-    entries: [Option<T>; N],
+    entries: Box<[Option<T>]>,
     pos: usize,
     len: usize,
     total: u64,
@@ -142,7 +142,7 @@ struct BoundedRing<T: Copy, const N: usize> {
 
 impl<T: Copy, const N: usize> BoundedRing<T, N> {
     fn new() -> BoundedRing<T, N> {
-        BoundedRing { entries: [None; N], pos: 0, len: 0, total: 0 }
+        BoundedRing { entries: vec![None; N].into_boxed_slice(), pos: 0, len: 0, total: 0 }
     }
 
     fn push(&mut self, value: T) {

@@ -695,7 +695,7 @@ pub async fn recover<S: PackSource>(source: &S, limits: &ProtocolLimits, mode: R
 pub struct Blake3Hasher;
 
 impl RecordHasher for Blake3Hasher {
-    async fn hash(&self, bytes: &[u8]) -> [u8; 32] {
+    fn hash(&self, bytes: &[u8]) -> [u8; 32] {
         *blake3::hash(bytes).as_bytes()
     }
 }
@@ -892,7 +892,7 @@ mod tests {
         assert_eq!(frame.raw_len, Some(payload.len() as u64));
         assert!(frame.stored.len() < payload.len());
 
-        let decompressed = crate::codec::DeflateCodec.decompress(frame.stored, frame.raw_len.unwrap(), 1024).await.unwrap();
+        let decompressed = crate::codec::DeflateCodec.decompress(frame.stored, frame.raw_len.unwrap(), 1024).unwrap();
         assert_eq!(decompressed, payload);
     }
     //#endregion 🔖️Frame
@@ -1068,7 +1068,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn blake3_hasher_matches_direct_blake3_call() {
         let hasher = Blake3Hasher;
-        assert_eq!(hasher.hash(b"hello").await, *blake3::hash(b"hello").as_bytes());
+        assert_eq!(hasher.hash(b"hello"), *blake3::hash(b"hello").as_bytes());
     }
     //#endregion 🔖️Crypto
 

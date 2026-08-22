@@ -1,0 +1,24 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.45
+   Compiling serde_core v1.0.228
+   Compiling serde v1.0.228
+   Compiling arrayvec v0.7.6
+   Compiling smallvec v1.15.1
+   Compiling serde_json v1.0.149
+   Compiling memchr v2.8.0
+   Compiling polycool v0.4.0
+   Compiling kurbo v0.13.1
+   Compiling syn v2.0.117
+   Compiling serde_derive v1.0.228
+   Compiling semio-framework-ui-contract v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust)
+   Compiling semio-framework-geometry v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust)
+   Compiling semio-framework-ui-scene v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 1m 37s
+     Running unittests 📦️glue.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PUZZLE-3D-RESUMABLE-VERTICAL-SLICE/🧪️target-p4/debug/deps/semio_framework_ui_scene-b4020ea298e1f7b8)
+
+running 2 tests
+test surface::tests::world_scene_round_trips_with_absent_optional_fields ... ok
+test surface::tests::board_scene_round_trips_with_absent_optional_fields ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 82 filtered out; finished in 0.00s
+

@@ -71,7 +71,7 @@ pub const SENSITIVE_KEYS: &[&str] = &["password", "token", "secret", "apikey", "
 /// callers that always build args the same way get a stable hash; this is a correlation id, not a
 /// content-addressed guarantee.
 pub fn hash_input(input: &serde_json::Value) -> String {
-    blake3::hash(input.to_string().as_bytes()).to_hex().to_string()
+    framework_hash::hash_bytes(input.to_string().as_bytes())
 }
 
 /// 🧼️ Recursively replaces the VALUE of any object key matching `sensitive_keys`
@@ -271,7 +271,7 @@ mod quick {
 
     //#region 🔖️FileSink
     fn scratch_dir(label: &str) -> PathBuf {
-        std::env::temp_dir().join(format!("semio-mcp-audit-test-{label}-{}-{}", std::process::id(), blake3::hash(label.as_bytes()).to_hex()))
+        std::env::temp_dir().join(format!("semio-mcp-audit-test-{label}-{}-{}", std::process::id(), framework_hash::hash_bytes(label.as_bytes())))
     }
 
     #[test]

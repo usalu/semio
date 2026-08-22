@@ -1,5 +1,27 @@
 # Refactor Status Dashboard
 
+## 2026-08-22 Live Gate Checkpoint
+
+This checkpoint supersedes the older progress table below without deleting its diagnostic history.
+
+| Phase | Current gate state |
+| --- | --- |
+| 0 — Observability and freeze | Met; deny-mode audits and dependency ratchet are installed. |
+| 1 — One-pool runtime | Implementation gate met; the process-wide pool, finite timer turns, admission ledger, and interactive compute job boundary are in place. |
+| 1.5 — De-async repair | Open; Animate native library and `wasm32-wasip2` compilation are clean, with canonical descriptor/native runtime/strict-warning/release/`wasm32-unknown-unknown` gates still running. The framework strict-warning cohort and 164 tests pass; the exact plugin gate now reaches the distinct OS-plugin cohort. |
+| 2 — Job and progress protocol | Met; bounded torture-job, cancellation, checkpoint, replay, and worker-count gates are green. |
+| 3 — UI-thread isolation | Open; the static deny audit is green, but the mounted native renderer still builds product/domain frame work from `redraw`. |
+| 4 — Puzzle 3D | Open; the exact unchanged 8 ms fill-build watchdog passes with retained cross-worker sessions. The full `j4` suite then exposed cross-document serialization in the first process-wide mutex design; per-app sharded sessions plus persistence/equality and two-document isolation regressions are now implemented and awaiting a stable shared-plugin rerun. |
+| 5 — Frame transaction and renderer | Core transaction/layout/prepared-packet jobs are green; final mounted renderer isolation remains coupled to Phase 3. |
+| 6 — FEM | Native job graph, numerical, timing, release, WASI-P2 compilation, and the official composite descriptor assembly are green. |
+| 7 — WFC, Puzzle 2D, Energy | Implemented and evidenced by the three packet reports; final integration is retained in the master gate run. |
+| 8 — Every tool | Production coverage/classification is complete; the exact plugin all-target warning-denial gate remains open upstream. |
+| 9 — Runtime dependencies | Open at 63 Rust identities. Owned replacements include triangulation, planar booleans, codecs/compression pieces, schema/error pieces, shader-contract validation, and a bounded WASM interpreter; the owned WASM production-host/default/deletion packet is active, but the retained runtime boundary is not empty. |
+| 10 — UI and tooling dependencies | Open at 122 JavaScript identities plus the native UI/render dependency cohort. The ownership-aware parity gate now covers root fallback ownership, nested technology targets, recognized config, re-exports, and template-safe lexical scanning. |
+
+The live freeze gate is **185** third-party identities, down 53 from the 238 baseline, and rejects
+additions. This is progress evidence only: zero is still the Phase 9/10 exit condition.
+
 ## ⚠️ ACTIVE COLLISION — a second large refactor is running in this tree
 
 A peer Claude session is executing ticket `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION` **concurrently**, with its own parallel "lanes", and it is rewriting the plugin tree wholesale. Identified from the content of its own edits (its diffs reference that ticket by name and say "this lane's agent owns `📦️glue.rs`" and "the other artifact lanes running concurrently"), not inferred from file timestamps.

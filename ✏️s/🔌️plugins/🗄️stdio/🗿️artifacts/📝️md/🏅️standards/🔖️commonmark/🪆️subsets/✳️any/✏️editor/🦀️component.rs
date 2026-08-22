@@ -8,7 +8,7 @@ use crate::artifacts::md::standards::v_commonmark::subsets::any::schema::snapsho
 use crate::artifacts::md::{MD_DIALECT, STDIO_MD_DOCUMENT_SCHEMA};
 use crate::editor::md::modes::edit;
 use crate::editor::md::modes::edit::windows::main;
-use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode};
+use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 
@@ -62,7 +62,7 @@ impl ArtifactEditor for MdEditor {
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
             MdEditCommand::ReplaceText { text } => match <MdSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-                Ok(snapshot) => Ok(Emit::mutations(vec![MdMutation::SetSnapshot { snapshot }]).await),
+                Ok(snapshot) => Ok(Emit::mutations(vec![MdMutation::SetSnapshot { snapshot }])),
                 Err(_) => Ok(Emit::default()),
             },
         }

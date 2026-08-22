@@ -16,20 +16,20 @@ pub struct ReplaceKindCatalogs {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn replace_kind_catalogs(new_catalogs: Option<Puzzle2dKindCatalogs>) -> Puzzle2dMutation {
+pub fn replace_kind_catalogs(new_catalogs: Option<Puzzle2dKindCatalogs>) -> Puzzle2dMutation {
     Puzzle2dMutation::ReplaceKindCatalogs(ReplaceKindCatalogs { new_catalogs })
 }
 
 impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ReplaceKindCatalogs {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "kind-catalogs", kind: "replace-kind-catalogs", record: "ReplacedKindCatalogs" };
 
-    async fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
+    fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         "Replace kind catalogs".to_string()
     }
 }

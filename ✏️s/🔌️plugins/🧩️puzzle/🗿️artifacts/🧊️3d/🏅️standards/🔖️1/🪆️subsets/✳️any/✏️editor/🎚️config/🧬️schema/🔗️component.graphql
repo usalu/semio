@@ -6,6 +6,7 @@ type Puzzle3dConfig {
   suggestionMenu: Puzzle3dSuggestionMenu @state(class: CONFIG)
   overlapBudget: Float! @state(class: CONFIG)
   fillCount: Int! @state(class: CONFIG)
+  fillCheckpoint: [Int!]! @state(class: CONFIG)
   brushCandidateIndex: Int! @state(class: CONFIG)
   objectKindWeights: [FloatEntry!]! @state(class: CONFIG)
   vortexKindWeights: [FloatEntry!]! @state(class: CONFIG)

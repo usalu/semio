@@ -7,7 +7,7 @@ use crate::artifacts::imperative::ImperativeSnapshot;
 //#region 🔖️Diff
 /// 🔺️ Fatal `invariant` when `path_ref.owner` names a step that doesn't exist in `base` (unknown
 /// container); Fatal `duplicate-id` when `step.id` already names a step within the target list.
-pub async fn diff(payload: &super::mutation::CreateStep, base: &ImperativeSnapshot) -> protocol::MutationOutcome<ImperativeDiff> {
+pub fn diff(payload: &super::mutation::CreateStep, base: &ImperativeSnapshot) -> protocol::MutationOutcome<ImperativeDiff> {
     if let Some(owner) = &payload.path_ref.owner {
         let path = crate::artifacts::imperative::imperative_working_scene(base).path;
         if !path.steps.iter().any(|step| &step.id == owner) {

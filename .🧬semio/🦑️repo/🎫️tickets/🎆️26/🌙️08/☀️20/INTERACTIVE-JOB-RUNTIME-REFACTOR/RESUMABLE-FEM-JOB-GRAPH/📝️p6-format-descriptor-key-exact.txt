@@ -1,0 +1,2342 @@
+   Compiling serde_json v1.0.149
+   Compiling futures-util v0.3.32
+   Compiling semio-framework-hash v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust)
+   Compiling semio-framework-os-kernel-dsl-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust)
+   Compiling semio-framework-ui-scene v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust)
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+   Compiling semio-framework-actor v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust)
+   Compiling semio-framework-schema-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust)
+   Compiling semio-framework-ui-runtime v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust)
+   Compiling semio-framework-replication v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust)
+   Compiling gltf-json v1.4.1
+   Compiling semio-framework-pack v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust)
+   Compiling futures-executor v0.3.32
+   Compiling gltf v1.4.1
+   Compiling futures v0.3.32
+   Compiling semio-framework-mesh-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust)
+   Compiling semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+   Compiling semio-framework-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust)
+   Compiling semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust)
+warning: macro-expanded `macro_export` macros from the current crate cannot be referred to by absolute paths
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15960:17
+      |
+15960 |             use crate::__semio_dispatch_PluginApp;
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+note: the macro is defined here
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10453:5
+      |
+10453 |     #[dyn_enum]
+      |     ^^^^^^^^^^^
+      = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+      = note: for more information, see issue #52234 <https://github.com/rust-lang/rust/issues/52234>
+      = note: `-W macro-expanded-macro-exports-accessed-by-absolute-paths` implied by `-W future-incompatible`
+      = help: to override `-W future-incompatible` add `#[allow(macro_expanded_macro_exports_accessed_by_absolute_paths)]`
+      = note: this warning originates in the attribute macro `dyn_enum` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: macro-expanded `macro_export` macros from the current crate cannot be referred to by absolute paths
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19223:13
+      |
+19223 |         use crate::__semio_dispatch_PluginApp;
+      |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+note: the macro is defined here
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10453:5
+      |
+10453 |     #[dyn_enum]
+      |     ^^^^^^^^^^^
+      = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+      = note: for more information, see issue #52234 <https://github.com/rust-lang/rust/issues/52234>
+      = note: this warning originates in the attribute macro `dyn_enum` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: macro-expanded `macro_export` macros from the current crate cannot be referred to by absolute paths
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:959:9
+      |
+  959 |     use crate::__semio_dispatch_PluginApp;
+      |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+note: the macro is defined here
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10453:5
+      |
+10453 |     #[dyn_enum]
+      |     ^^^^^^^^^^^
+      = warning: this was previously accepted by the compiler but is being phased out; it will become a hard error in a future release!
+      = note: for more information, see issue #52234 <https://github.com/rust-lang/rust/issues/52234>
+      = note: this warning originates in the attribute macro `dyn_enum` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning: unused import: `SurfaceKind`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:876:41
+    |
+876 |     use ui_wgpu::wgpu::{LocalizedLabel, SurfaceKind};
+    |                                         ^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:914:113
+    |
+914 | ...nfig>, _cfg: &ConfigView<'_, NoConfig>) -> semio_framework_ui_runtime::ComponentTree {
+    |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+914 -         async fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>) -> semio_framework_ui_runtime::ComponentTree {
+914 +         async fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>) -> ComponentTree {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:915:13
+    |
+915 |             semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+915 -             semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
+915 +             ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:915:60
+    |
+915 |             semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
+    |                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+915 -             semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
+915 +             semio_framework_ui_runtime::ComponentTree::new(TreeNode::new(
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:917:17
+    |
+917 | ...   semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Lab...
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+917 -                 semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from("schema-stamp-editor".to_string()), emphasize: None, data_attributes: None }),
+917 +                 Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from("schema-stamp-editor".to_string()), emphasize: None, data_attributes: None }),
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:917:62
+    |
+917 | ...   semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Lab...
+    |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+917 -                 semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from("schema-stamp-editor".to_string()), emphasize: None, data_attributes: None }),
+917 +                 semio_framework_ui_contract::Component::Text(TextProps { value: semio_framework_ui_contract::Label::from("schema-stamp-editor".to_string()), emphasize: None, data_attributes: None }),
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:917:110
+    |
+917 | ...o_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from("schema-stamp-editor".to_string()), emphasi...
+    |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+917 -                 semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from("schema-stamp-editor".to_string()), emphasize: None, data_attributes: None }),
+917 +                 semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: Label::from("schema-stamp-editor".to_string()), emphasize: None, data_attributes: None }),
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:946:113
+    |
+946 | ...nfig>, _cfg: &ConfigView<'_, NoConfig>) -> semio_framework_ui_runtime::ComponentTree {
+    |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+946 -         async fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>) -> semio_framework_ui_runtime::ComponentTree {
+946 +         async fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>) -> ComponentTree {
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:947:13
+    |
+947 |             semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+947 -             semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
+947 +             ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:947:60
+    |
+947 |             semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
+    |                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+947 -             semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
+947 +             semio_framework_ui_runtime::ComponentTree::new(TreeNode::new(
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:949:17
+    |
+949 | ...   semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Lab...
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+949 -                 semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from("schema-stamp-viewer".to_string()), emphasize: None, data_attributes: None }),
+949 +                 Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from("schema-stamp-viewer".to_string()), emphasize: None, data_attributes: None }),
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:949:62
+    |
+949 | ...   semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Lab...
+    |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+949 -                 semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from("schema-stamp-viewer".to_string()), emphasize: None, data_attributes: None }),
+949 +                 semio_framework_ui_contract::Component::Text(TextProps { value: semio_framework_ui_contract::Label::from("schema-stamp-viewer".to_string()), emphasize: None, data_attributes: None }),
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:949:110
+    |
+949 | ...o_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from("schema-stamp-viewer".to_string()), emphasi...
+    |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+949 -                 semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from("schema-stamp-viewer".to_string()), emphasize: None, data_attributes: None }),
+949 +                 semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: Label::from("schema-stamp-viewer".to_string()), emphasize: None, data_attributes: None }),
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:963:20
+    |
+963 |             Editor(crate::app::VcsArtifactApp<crate::app::EditorApp<SchemaStampEditorFixture>>),
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+963 -             Editor(crate::app::VcsArtifactApp<crate::app::EditorApp<SchemaStampEditorFixture>>),
+963 +             Editor(VcsArtifactApp<crate::app::EditorApp<SchemaStampEditorFixture>>),
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:963:47
+    |
+963 |             Editor(crate::app::VcsArtifactApp<crate::app::EditorApp<SchemaStampEditorFixture>>),
+    |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+963 -             Editor(crate::app::VcsArtifactApp<crate::app::EditorApp<SchemaStampEditorFixture>>),
+963 +             Editor(crate::app::VcsArtifactApp<EditorApp<SchemaStampEditorFixture>>),
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:964:20
+    |
+964 |             Viewer(crate::app::VcsArtifactApp<crate::app::ViewerApp<SchemaStampViewerFixture>>),
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+964 -             Viewer(crate::app::VcsArtifactApp<crate::app::ViewerApp<SchemaStampViewerFixture>>),
+964 +             Viewer(VcsArtifactApp<crate::app::ViewerApp<SchemaStampViewerFixture>>),
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:964:47
+    |
+964 |             Viewer(crate::app::VcsArtifactApp<crate::app::ViewerApp<SchemaStampViewerFixture>>),
+    |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+964 -             Viewer(crate::app::VcsArtifactApp<crate::app::ViewerApp<SchemaStampViewerFixture>>),
+964 +             Viewer(crate::app::VcsArtifactApp<ViewerApp<SchemaStampViewerFixture>>),
+    |
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:968:64
+    |
+968 |     fn minimal_surface_def(dialect: Dialect, role: AppRole) -> crate::app::AppDefinition {
+    |                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+968 -     fn minimal_surface_def(dialect: Dialect, role: AppRole) -> crate::app::AppDefinition {
+968 +     fn minimal_surface_def(dialect: Dialect, role: AppRole) -> AppDefinition {
+    |
+
+warning: unused doc comment
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10689:5
+      |
+10689 | /     /// 🗃️ sdk-dedyn (O1/§1.5): the default-composes-nothing case (design-dedyn.md §1.6's `NoMembers`
+10690 | |     /// pattern, applied here to `PluginApp`) — a zero-variant enum, `dyn_enum_close!`-generated
+10691 | |     /// (every method's body degenerates to `match *self {}` since there is no value to construct).
+10692 | |     /// The default `PA` for every generic in this file's declaration tree, so a library-only plugin
+10693 | |     /// (or a test that never actually instantiates an app) never has to name a real app enum.
+      | |_____-----------------------------------------------------------------------------------------^
+      |       |
+      |       rustdoc does not generate documentation for macro invocations
+      |
+      = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+      = note: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `PresentCx` and `Present`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:189:38
+    |
+189 |     use semio_framework_ui_runtime::{Present, PresentCx};
+    |                                      ^^^^^^^  ^^^^^^^^^
+
+warning: unused import: `ui_wgpu::wgpu::UiMenuRef`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:217:9
+    |
+217 |     use ui_wgpu::wgpu::UiMenuRef;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ContextMenuPoint` and `ContextMenuResponse`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:224:67
+    |
+224 | ...   collect_window_kind_ids_from_layout, ContextMenuItemSpec, ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextM...
+    |                                                                 ^^^^^^^^^^^^^^^^                      ^^^^^^^^^^^^^^^^^^^
+
+warning: unnecessary qualification
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:260:9
+    |
+260 |         ui::text(label.to_string()).build()
+    |         ^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+260 -         ui::text(label.to_string()).build()
+260 +         text(label.to_string()).build()
+    |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5674:32
+     |
+5674 | ...   self.sections.push(ui::tree_section(label.unwrap_or_default()).id(id).default_open(default_open).children(items).build());
+     |                          ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5674 -             self.sections.push(ui::tree_section(label.unwrap_or_default()).id(id).default_open(default_open).children(items).build());
+5674 +             self.sections.push(tree_section(label.unwrap_or_default()).id(id).default_open(default_open).children(items).build());
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5683:32
+     |
+5683 | ...   self.sections.push(ui::tree_section(label.unwrap_or_default()).id(id).default_open(default_open).children(items).build());
+     |                          ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5683 -             self.sections.push(ui::tree_section(label.unwrap_or_default()).id(id).default_open(default_open).children(items).build());
+5683 +             self.sections.push(tree_section(label.unwrap_or_default()).id(id).default_open(default_open).children(items).build());
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5712:31
+     |
+5712 |             let mut builder = ui::tree().id(self.namespace).children(self.sections);
+     |                               ^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5712 -             let mut builder = ui::tree().id(self.namespace).children(self.sections);
+5712 +             let mut builder = tree().id(self.namespace).children(self.sections);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5807:31
+     |
+5807 |             let mut builder = ui::field(label).id(field_id).child(control);
+     |                               ^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5807 -             let mut builder = ui::field(label).id(field_id).child(control);
+5807 +             let mut builder = field(label).id(field_id).child(control);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5829:31
+     |
+5829 |                 let control = ui::input(InputKind::Text).id(field_id).value(value).on(Trigger::Change, on_change.clone()).build();
+     |                               ^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5829 -                 let control = ui::input(InputKind::Text).id(field_id).value(value).on(Trigger::Change, on_change.clone()).build();
+5829 +                 let control = input(InputKind::Text).id(field_id).value(value).on(Trigger::Change, on_change.clone()).build();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5840:32
+     |
+5840 |             self.submit = Some(ui::button(label).id(id).icon(IconName::CircleDot.as_str()).on(Trigger::Activate, action).build());
+     |                                ^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5840 -             self.submit = Some(ui::button(label).id(id).icon(IconName::CircleDot.as_str()).on(Trigger::Activate, action).build());
+5840 +             self.submit = Some(button(label).id(id).icon(IconName::CircleDot.as_str()).on(Trigger::Activate, action).build());
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5852:31
+     |
+5852 |             let mut builder = ui::column().id(self.namespace).children(self.fields);
+     |                               ^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5852 -             let mut builder = ui::column().id(self.namespace).children(self.fields);
+5852 +             let mut builder = column().id(self.namespace).children(self.fields);
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5866:33
+     |
+5866 |         let mut children = vec![ui::text(title).build()];
+     |                                 ^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5866 -         let mut children = vec![ui::text(title).build()];
+5866 +         let mut children = vec![text(title).build()];
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5868:27
+     |
+5868 |             children.push(ui::text(subtitle).build());
+     |                           ^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5868 -             children.push(ui::text(subtitle).build());
+5868 +             children.push(text(subtitle).build());
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5883:9
+     |
+5883 |         ui::column().children(children).build()
+     |         ^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5883 -         ui::column().children(children).build()
+5883 +         column().children(children).build()
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5894:27
+     |
+5894 |             let control = ui::input(InputKind::Text).id("ns-play-form.field.name").on(Trigger::Change, on_change).build();
+     |                           ^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5894 -             let control = ui::input(InputKind::Text).id("ns-play-form.field.name").on(Trigger::Change, on_change).build();
+5894 +             let control = input(InputKind::Text).id("ns-play-form.field.name").on(Trigger::Change, on_change).build();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5926:159
+     |
+5926 | ...abel: Label::from("Kind"), value: "gizmo".into() }], vec![ui::button("Edit").icon("edit").on(Trigger::Activate, action).build()...
+     |                                                              ^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5926 -             let node = entity_detail("Widget", Some(Label::from("A widget")), vec![KeyValueEntry { label: Label::from("Kind"), value: "gizmo".into() }], vec![ui::button("Edit").icon("edit").on(Trigger::Activate, action).build()]).await;
+5926 +             let node = entity_detail("Widget", Some(Label::from("A widget")), vec![KeyValueEntry { label: Label::from("Kind"), value: "gizmo".into() }], vec![button("Edit").icon("edit").on(Trigger::Activate, action).build()]).await;
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6171:27
+     |
+6171 |             let mut map = std::collections::BTreeMap::new();
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+6171 -             let mut map = std::collections::BTreeMap::new();
+6171 +             let mut map = BTreeMap::new();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6190:32
+     |
+6190 |             let mut args_map = std::collections::BTreeMap::new();
+     |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+6190 -             let mut args_map = std::collections::BTreeMap::new();
+6190 +             let mut args_map = BTreeMap::new();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6193:33
+     |
+6193 |             let mut input_map = std::collections::BTreeMap::new();
+     |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+6193 -             let mut input_map = std::collections::BTreeMap::new();
+6193 +             let mut input_map = BTreeMap::new();
+     |
+
+warning: unused import: `ui_wgpu::wgpu::Label`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6444:17
+     |
+6444 |             use ui_wgpu::wgpu::Label;
+     |                 ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ui_wgpu::wgpu::Label`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:6682:17
+     |
+6682 |             use ui_wgpu::wgpu::Label;
+     |                 ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ui_wgpu::wgpu::Label`
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7050:17
+     |
+7050 |             use ui_wgpu::wgpu::Label;
+     |                 ^^^^^^^^^^^^^^^^^^^^
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7395:64
+     |
+7395 | ...   pub async fn assert_declaration_tree_registers_all<PA: super::PluginApp>(plugin_id: &str, declaration: declarations::Artifac...
+     |                                                              ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7395 -         pub async fn assert_declaration_tree_registers_all<PA: super::PluginApp>(plugin_id: &str, declaration: declarations::ArtifactDeclaration<PA>) {
+7395 +         pub async fn assert_declaration_tree_registers_all<PA: PluginApp>(plugin_id: &str, declaration: declarations::ArtifactDeclaration<PA>) {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7429:68
+     |
+7429 | ...   pub async fn assert_declaration_registration_is_atomic<PA: super::PluginApp>(plugin_id: &str, invalid: declarations::Artifac...
+     |                                                                  ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7429 -         pub async fn assert_declaration_registration_is_atomic<PA: super::PluginApp>(plugin_id: &str, invalid: declarations::ArtifactDeclaration<PA>) {
+7429 +         pub async fn assert_declaration_registration_is_atomic<PA: PluginApp>(plugin_id: &str, invalid: declarations::ArtifactDeclaration<PA>) {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7440:68
+     |
+7440 | ...   pub async fn assert_subset_declaration_ids_are_derived<PA: super::PluginApp>(declaration: &declarations::ArtifactDeclaration...
+     |                                                                  ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7440 -         pub async fn assert_subset_declaration_ids_are_derived<PA: super::PluginApp>(declaration: &declarations::ArtifactDeclaration<PA>) {
+7440 +         pub async fn assert_subset_declaration_ids_are_derived<PA: PluginApp>(declaration: &declarations::ArtifactDeclaration<PA>) {
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9172:26
+     |
+9172 | ...   let button = ui::button(label).id(format!("{id}.run")).icon(icon_id.as_str()).on(Trigger::Activate, ActionId::v1(controller_...
+     |                    ^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+9172 -             let button = ui::button(label).id(format!("{id}.run")).icon(icon_id.as_str()).on(Trigger::Activate, ActionId::v1(controller_id, action)).disabled(!enabled).build();
+9172 +             let button = button(label).id(format!("{id}.run")).icon(icon_id.as_str()).on(Trigger::Activate, ActionId::v1(controller_id, action)).disabled(!enabled).build();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9181:29
+     |
+9181 |         let filter_select = ui::select(filter_value)
+     |                             ^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+9181 -         let filter_select = ui::select(filter_value)
+9181 +         let filter_select = select(filter_value)
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9226:31
+     |
+9226 |         let actions_section = ui::tree_section(if is_de { "Aktionen" } else { "Actions" })
+     |                               ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+9226 -         let actions_section = ui::tree_section(if is_de { "Aktionen" } else { "Actions" })
+9226 +         let actions_section = tree_section(if is_de { "Aktionen" } else { "Actions" })
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9237:32
+     |
+9237 | ...   let commands_section = ui::tree_section(if is_de { "Befehle" } else { "Commands" }).id("framework.history.commands").default...
+     |                              ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+9237 -         let commands_section = ui::tree_section(if is_de { "Befehle" } else { "Commands" }).id("framework.history.commands").default_open(true).children(command_items).build();
+9237 +         let commands_section = tree_section(if is_de { "Befehle" } else { "Commands" }).id("framework.history.commands").default_open(true).children(command_items).build();
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9239:9
+     |
+9239 |         ui::tree().children(vec![actions_section, commands_section]).build()
+     |         ^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+9239 -         ui::tree().children(vec![actions_section, commands_section]).build()
+9239 +         tree().children(vec![actions_section, commands_section]).build()
+     |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10970:18
+      |
+10970 |             Fut: std::future::Future<Output = Menu<'a>>,
+      |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+10970 -             Fut: std::future::Future<Output = Menu<'a>>,
+10970 +             Fut: Future<Output = Menu<'a>>,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13736:31
+      |
+13736 |         apps: HashMap<String, crate::app::declarations::AppFactory<PA>>,
+      |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13736 -         apps: HashMap<String, crate::app::declarations::AppFactory<PA>>,
+13736 +         apps: HashMap<String, declarations::AppFactory<PA>>,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13878:66
+      |
+13878 |         pub fn register_app_factory(mut self, app: App, factory: crate::app::declarations::AppFactory<PA>) -> Self {
+      |                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13878 -         pub fn register_app_factory(mut self, app: App, factory: crate::app::declarations::AppFactory<PA>) -> Self {
+13878 +         pub fn register_app_factory(mut self, app: App, factory: declarations::AppFactory<PA>) -> Self {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13994:13
+      |
+13994 |             ui::surface(semio_framework_ui_scene::encode(SurfaceKind::TextEditor, &scene)).id(Self::KIND_ID).build()
+      |             ^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13994 -             ui::surface(semio_framework_ui_scene::encode(SurfaceKind::TextEditor, &scene)).id(Self::KIND_ID).build()
+13994 +             surface(semio_framework_ui_scene::encode(SurfaceKind::TextEditor, &scene)).id(Self::KIND_ID).build()
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14029:13
+      |
+14029 |             ui::surface(semio_framework_ui_scene::encode(SurfaceKind::Table, &scene)).id(Self::KIND_ID).build()
+      |             ^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+14029 -             ui::surface(semio_framework_ui_scene::encode(SurfaceKind::Table, &scene)).id(Self::KIND_ID).build()
+14029 +             surface(semio_framework_ui_scene::encode(SurfaceKind::Table, &scene)).id(Self::KIND_ID).build()
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14105:13
+      |
+14105 |             ui::surface(semio_framework_ui_scene::encode(SurfaceKind::Table, &scene)).id(Self::KIND_ID).build()
+      |             ^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+14105 -             ui::surface(semio_framework_ui_scene::encode(SurfaceKind::Table, &scene)).id(Self::KIND_ID).build()
+14105 +             surface(semio_framework_ui_scene::encode(SurfaceKind::Table, &scene)).id(Self::KIND_ID).build()
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14143:27
+      |
+14143 | ...   let section = ui::tree_section("").id(format!("{}-root", Self::KIND_ID)).default_open(true).children(view.roots.iter().map(...
+      |                     ^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+14143 -             let section = ui::tree_section("").id(format!("{}-root", Self::KIND_ID)).default_open(true).children(view.roots.iter().map(to_item)).build();
+14143 +             let section = tree_section("").id(format!("{}-root", Self::KIND_ID)).default_open(true).children(view.roots.iter().map(to_item)).build();
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14144:13
+      |
+14144 |             ui::tree().id(Self::KIND_ID).child(section).build()
+      |             ^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+14144 -             ui::tree().id(Self::KIND_ID).child(section).build()
+14144 +             tree().id(Self::KIND_ID).child(section).build()
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14176:13
+      |
+14176 |             ui::image(src).id(Self::KIND_ID).alt(format!("{}x{}", view.width, view.height)).build()
+      |             ^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+14176 -             ui::image(src).id(Self::KIND_ID).alt(format!("{}x{}", view.width, view.height)).build()
+14176 +             image(src).id(Self::KIND_ID).alt(format!("{}x{}", view.width, view.height)).build()
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14209:13
+      |
+14209 |             ui::surface(semio_framework_ui_scene::encode(SurfaceKind::World3d, &scene)).id(Self::KIND_ID).build()
+      |             ^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+14209 -             ui::surface(semio_framework_ui_scene::encode(SurfaceKind::World3d, &scene)).id(Self::KIND_ID).build()
+14209 +             surface(semio_framework_ui_scene::encode(SurfaceKind::World3d, &scene)).id(Self::KIND_ID).build()
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14241:78
+      |
+14241 | ...   let children = view.pages.iter().enumerate().map(|(index, page)| ui::text(page.text.clone()).id(format!("page-{index}")).bu...
+      |                                                                        ^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+14241 -             let children = view.pages.iter().enumerate().map(|(index, page)| ui::text(page.text.clone()).id(format!("page-{index}")).build());
+14241 +             let children = view.pages.iter().enumerate().map(|(index, page)| text(page.text.clone()).id(format!("page-{index}")).build());
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14242:13
+      |
+14242 |             ui::column().id(Self::KIND_ID).children(children).build()
+      |             ^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+14242 -             ui::column().id(Self::KIND_ID).children(children).build()
+14242 +             column().id(Self::KIND_ID).children(children).build()
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14419:64
+      |
+14419 |             assert_eq!(props, semio_framework_ui_scene::encode(semio_framework_ui_contract::SurfaceKind::TextEditor, &expected));
+      |                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+14419 -             assert_eq!(props, semio_framework_ui_scene::encode(semio_framework_ui_contract::SurfaceKind::TextEditor, &expected));
+14419 +             assert_eq!(props, semio_framework_ui_scene::encode(SurfaceKind::TextEditor, &expected));
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:14445:64
+      |
+14445 |             assert_eq!(props, semio_framework_ui_scene::encode(semio_framework_ui_contract::SurfaceKind::TextEditor, &expected));
+      |                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+14445 -             assert_eq!(props, semio_framework_ui_scene::encode(semio_framework_ui_contract::SurfaceKind::TextEditor, &expected));
+14445 +             assert_eq!(props, semio_framework_ui_scene::encode(SurfaceKind::TextEditor, &expected));
+      |
+
+warning: unused import: `crate::__semio_dispatch_PluginApp`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:15960:17
+      |
+15960 |             use crate::__semio_dispatch_PluginApp;
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused doc comment
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19598:9
+      |
+19598 | /         /// 🧬️ dedyn-fw-os-spacemember: the closed-set `M` these composition tests register/open
+19599 | |         /// children through — `store::space_members!`'s generated `SpaceMember`/`MemberFactory`
+19600 | |         /// match-delegation over ONE variant, replacing the old `Box<dyn SpaceMember>` erasure (see
+19601 | |         /// `📓️terra-dedyn-fw-os-spacemember-report.md`).
+      | |_________------------------------------------------------^
+      |           |
+      |           rustdoc does not generate documentation for macro invocations
+      |
+      = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+
+warning: unused import: `Label`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:18573:29
+      |
+18573 |         use ui_wgpu::wgpu::{Label, LocalizedLabel};
+      |                             ^^^^^
+
+warning: unused import: `SurfaceKind`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:18582:78
+      |
+18582 |         use crate::{selection_count_phrase, IconName, MediaClass, MediaType, SurfaceKind, ViewModel};
+      |                                                                              ^^^^^^^^^^^
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:18611:13
+      |
+18611 |             semio_framework::surface_app_id(&TEST_APP_DIALECT.into(), semio_framework::AppRole::Editor)
+      |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+18611 -             semio_framework::surface_app_id(&TEST_APP_DIALECT.into(), semio_framework::AppRole::Editor)
+18611 +             surface_app_id(&TEST_APP_DIALECT.into(), semio_framework::AppRole::Editor)
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:18611:71
+      |
+18611 |             semio_framework::surface_app_id(&TEST_APP_DIALECT.into(), semio_framework::AppRole::Editor)
+      |                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+18611 -             semio_framework::surface_app_id(&TEST_APP_DIALECT.into(), semio_framework::AppRole::Editor)
+18611 +             semio_framework::surface_app_id(&TEST_APP_DIALECT.into(), AppRole::Editor)
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:18624:54
+      |
+18624 |             fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+      |                                                      ^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+18624 -             fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+18624 +             fn parse_dsl(text: &str) -> Result<Self, TextError> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:18628:60
+      |
+18628 |                 serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+      |                                                            ^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+18628 -                 serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+18628 +                 serde_json::from_str(text).map_err(|error| TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:18628:101
+      |
+18628 |                 serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+      |                                                                                                     ^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+18628 -                 serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+18628 +                 serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), TextSpan::at(1, 1)))
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:18824:54
+      |
+18824 |             fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+      |                                                      ^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+18824 -             fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+18824 +             fn parse_dsl(text: &str) -> Result<Self, TextError> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:18828:60
+      |
+18828 |                 serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+      |                                                            ^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+18828 -                 serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+18828 +                 serde_json::from_str(text).map_err(|error| TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:18828:101
+      |
+18828 |                 serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+      |                                                                                                     ^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+18828 -                 serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
+18828 +                 serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), TextSpan::at(1, 1)))
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19025:30
+      |
+19025 |             type Transient = crate::app::NoTransient;
+      |                              ^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19025 -             type Transient = crate::app::NoTransient;
+19025 +             type Transient = NoTransient;
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19026:38
+      |
+19026 |             type TransientMutation = crate::app::NoTransientMutation;
+      |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19026 -             type TransientMutation = crate::app::NoTransientMutation;
+19026 +             type TransientMutation = NoTransientMutation;
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19042:29
+      |
+19042 |                 _presence: &crate::app::PresenceView<'_, NoPresence>,
+      |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19042 -                 _presence: &crate::app::PresenceView<'_, NoPresence>,
+19042 +                 _presence: &PresenceView<'_, NoPresence>,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19043:30
+      |
+19043 |                 _transient: &crate::app::TransientView<'_, crate::app::NoTransient>,
+      |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19043 -                 _transient: &crate::app::TransientView<'_, crate::app::NoTransient>,
+19043 +                 _transient: &TransientView<'_, crate::app::NoTransient>,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19043:60
+      |
+19043 |                 _transient: &crate::app::TransientView<'_, crate::app::NoTransient>,
+      |                                                            ^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19043 -                 _transient: &crate::app::TransientView<'_, crate::app::NoTransient>,
+19043 +                 _transient: &crate::app::TransientView<'_, NoTransient>,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19044:18
+      |
+19044 |             ) -> crate::app::EphemeralEmit<Self> {
+      |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19044 -             ) -> crate::app::EphemeralEmit<Self> {
+19044 +             ) -> EphemeralEmit<Self> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19046:47
+      |
+19046 | ...   TestCommand::Increment => crate::app::EphemeralEmit { presence: vec![NoPresenceMutation::Noop], transient: vec![crate::app:...
+      |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19046 -                     TestCommand::Increment => crate::app::EphemeralEmit { presence: vec![NoPresenceMutation::Noop], transient: vec![crate::app::NoTransientMutation::Noop] },
+19046 +                     TestCommand::Increment => EphemeralEmit { presence: vec![NoPresenceMutation::Noop], transient: vec![crate::app::NoTransientMutation::Noop] },
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19046:133
+      |
+19046 | ...[NoPresenceMutation::Noop], transient: vec![crate::app::NoTransientMutation::Noop] },
+      |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19046 -                     TestCommand::Increment => crate::app::EphemeralEmit { presence: vec![NoPresenceMutation::Noop], transient: vec![crate::app::NoTransientMutation::Noop] },
+19046 +                     TestCommand::Increment => crate::app::EphemeralEmit { presence: vec![NoPresenceMutation::Noop], transient: vec![NoTransientMutation::Noop] },
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19047:26
+      |
+19047 |                     _ => crate::app::EphemeralEmit::default(),
+      |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19047 -                     _ => crate::app::EphemeralEmit::default(),
+19047 +                     _ => EphemeralEmit::default(),
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19073:70
+      |
+19073 |             async fn command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+      |                                                                      ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19073 -             async fn command_from_action(action: &str, args: Option<&serde_json::Value>) -> Result<Self::Command, Fault> {
+19073 +             async fn command_from_action(action: &str, args: Option<&Value>) -> Result<Self::Command, Fault> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19076:140
+      |
+19076 | ...rgs.and_then(|value| value.get("value")).and_then(serde_json::Value::as_str).unwrap_or_default().to_string() }),
+      |                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19076 -                     "setLabelViaCommand" => Ok(TestCommand::SetLabelViaCommand { value: args.and_then(|value| value.get("value")).and_then(serde_json::Value::as_str).unwrap_or_default().to_string() }),
+19076 +                     "setLabelViaCommand" => Ok(TestCommand::SetLabelViaCommand { value: args.and_then(|value| value.get("value")).and_then(Value::as_str).unwrap_or_default().to_string() }),
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19077:137
+      |
+19077 | ....and_then(|value| value.get("windowId")).and_then(serde_json::Value::as_str).unwrap_or_default().to_string() }),
+      |                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19077 -                     "targetWindow" => Ok(TestCommand::SetLabelViaCommand { value: args.and_then(|value| value.get("windowId")).and_then(serde_json::Value::as_str).unwrap_or_default().to_string() }),
+19077 +                     "targetWindow" => Ok(TestCommand::SetLabelViaCommand { value: args.and_then(|value| value.get("windowId")).and_then(Value::as_str).unwrap_or_default().to_string() }),
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19110:135
+      |
+19110 | ...nt(AppEvent { kind: "active-utility".into(), payload: dsl::to_dsl_value(&json!({ "utilityId": utility_id.clone() })).unwrap_or...
+      |                                                          ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19110 -                     TestCommand::SetActiveUtility { utility_id } => Ok(Emit::event(AppEvent { kind: "active-utility".into(), payload: dsl::to_dsl_value(&json!({ "utilityId": utility_id.clone() })).unwrap_or(dsl::DslValue::Null) }).await),
+19110 +                     TestCommand::SetActiveUtility { utility_id } => Ok(Emit::event(AppEvent { kind: "active-utility".into(), payload: to_dsl_value(&json!({ "utilityId": utility_id.clone() })).unwrap_or(dsl::DslValue::Null) }).await),
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19110:208
+      |
+19110 | ...son!({ "utilityId": utility_id.clone() })).unwrap_or(dsl::DslValue::Null) }).await),
+      |                                                         ^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19110 -                     TestCommand::SetActiveUtility { utility_id } => Ok(Emit::event(AppEvent { kind: "active-utility".into(), payload: dsl::to_dsl_value(&json!({ "utilityId": utility_id.clone() })).unwrap_or(dsl::DslValue::Null) }).await),
+19110 +                     TestCommand::SetActiveUtility { utility_id } => Ok(Emit::event(AppEvent { kind: "active-utility".into(), payload: dsl::to_dsl_value(&json!({ "utilityId": utility_id.clone() })).unwrap_or(DslValue::Null) }).await),
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19141:122
+      |
+19141 | ...t>, _cfg: &ConfigView<'_, TestConfig>) -> semio_framework_ui_runtime::ComponentTree {
+      |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19141 -             async fn render(_body_key: &str, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> semio_framework_ui_runtime::ComponentTree {
+19141 +             async fn render(_body_key: &str, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> ComponentTree {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19142:17
+      |
+19142 |                 semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19142 -                 semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
+19142 +                 ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19142:64
+      |
+19142 |                 semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
+      |                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19142 -                 semio_framework_ui_runtime::ComponentTree::new(semio_framework_ui_runtime::TreeNode::new(
+19142 +                 semio_framework_ui_runtime::ComponentTree::new(TreeNode::new(
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19144:21
+      |
+19144 | ...   semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::L...
+      |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19144 -                     semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from(format!("count={}", doc.snapshot.count)), emphasize: None, data_attributes: None }),
+19144 +                     Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from(format!("count={}", doc.snapshot.count)), emphasize: None, data_attributes: None }),
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19144:66
+      |
+19144 | ...   semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::L...
+      |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19144 -                     semio_framework_ui_contract::Component::Text(semio_framework_ui_contract::TextProps { value: semio_framework_ui_contract::Label::from(format!("count={}", doc.snapshot.count)), emphasize: None, data_attributes: None }),
+19144 +                     semio_framework_ui_contract::Component::Text(TextProps { value: semio_framework_ui_contract::Label::from(format!("count={}", doc.snapshot.count)), emphasize: None, data_attributes: None }),
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19215:119
+      |
+19215 | ...napshot>, _cfg: &ConfigView<'_, TestConfig>) -> protocol::InteractionTopology {
+      |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19215 -             async fn interaction_topology(doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> protocol::InteractionTopology {
+19215 +             async fn interaction_topology(doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>) -> InteractionTopology {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19217:91
+      |
+19217 | ...   let ordered = if doc.snapshot.label.is_empty() { Vec::new() } else { vec![protocol::TopologyNode { id: "item-1".into(), gra...
+      |                                                                                 ^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19217 -                 let ordered = if doc.snapshot.label.is_empty() { Vec::new() } else { vec![protocol::TopologyNode { id: "item-1".into(), granularity: "item".into(), parent: None }] };
+19217 +                 let ordered = if doc.snapshot.label.is_empty() { Vec::new() } else { vec![TopologyNode { id: "item-1".into(), granularity: "item".into(), parent: None }] };
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19218:53
+      |
+19218 |                 domains.insert("items".to_string(), protocol::DomainTopology { ordered });
+      |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19218 -                 domains.insert("items".to_string(), protocol::DomainTopology { ordered });
+19218 +                 domains.insert("items".to_string(), DomainTopology { ordered });
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19219:17
+      |
+19219 |                 protocol::InteractionTopology { domains }
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19219 -                 protocol::InteractionTopology { domains }
+19219 +                 InteractionTopology { domains }
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19286:28
+      |
+19286 |             let platform = semio_framework::Platform::new(None).await;
+      |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19286 -             let platform = semio_framework::Platform::new(None).await;
+19286 +             let platform = Platform::new(None).await;
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19327:34
+      |
+19327 |                     .interaction(semio_framework::InteractionDefinition {
+      |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19327 -                     .interaction(semio_framework::InteractionDefinition {
+19327 +                     .interaction(InteractionDefinition {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19330:45
+      |
+19330 | ...   granularities: vec![semio_framework::GranularityDefinition { id: "item".into(), label: LocalizedLabel::data("Item"), icon_i...
+      |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19330 -                         granularities: vec![semio_framework::GranularityDefinition { id: "item".into(), label: LocalizedLabel::data("Item"), icon_id: IconName::AppWindow }],
+19330 +                         granularities: vec![GranularityDefinition { id: "item".into(), label: LocalizedLabel::data("Item"), icon_id: IconName::AppWindow }],
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19331:36
+      |
+19331 |                         hierarchy: protocol::HierarchyProvider::Topology,
+      |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19331 -                         hierarchy: protocol::HierarchyProvider::Topology,
+19331 +                         hierarchy: HierarchyProvider::Topology,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19332:32
+      |
+19332 |                         hover: protocol::HoverSpec::default(),
+      |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19332 -                         hover: protocol::HoverSpec::default(),
+19332 +                         hover: HoverSpec::default(),
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19333:36
+      |
+19333 |                         selection: protocol::SelectionSpec {
+      |                                    ^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19333 -                         selection: protocol::SelectionSpec {
+19333 +                         selection: SelectionSpec {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19334:41
+      |
+19334 | ...                   modes: vec![protocol::SelectionMode::Multiple, protocol::SelectionMode::Single],
+      |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19334 -                             modes: vec![protocol::SelectionMode::Multiple, protocol::SelectionMode::Single],
+19334 +                             modes: vec![SelectionMode::Multiple, protocol::SelectionMode::Single],
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19334:76
+      |
+19334 | ...                   modes: vec![protocol::SelectionMode::Multiple, protocol::SelectionMode::Single],
+      |                                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19334 -                             modes: vec![protocol::SelectionMode::Multiple, protocol::SelectionMode::Single],
+19334 +                             modes: vec![protocol::SelectionMode::Multiple, SelectionMode::Single],
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19335:43
+      |
+19335 | ...                   methods: vec![protocol::SelectionMethod::Pick],
+      |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19335 -                             methods: vec![protocol::SelectionMethod::Pick],
+19335 +                             methods: vec![SelectionMethod::Pick],
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19336:42
+      |
+19336 | ...   merges: vec![protocol::MergeMode::Replace, protocol::MergeMode::Additive, protocol::MergeMode::Subtractive, protocol::Merge...
+      |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19336 -                             merges: vec![protocol::MergeMode::Replace, protocol::MergeMode::Additive, protocol::MergeMode::Subtractive, protocol::MergeMode::Invertive, protocol::MergeMode::Range],
+19336 +                             merges: vec![MergeMode::Replace, protocol::MergeMode::Additive, protocol::MergeMode::Subtractive, protocol::MergeMode::Invertive, protocol::MergeMode::Range],
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19336:72
+      |
+19336 | ...   merges: vec![protocol::MergeMode::Replace, protocol::MergeMode::Additive, protocol::MergeMode::Subtractive, protocol::Merge...
+      |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19336 -                             merges: vec![protocol::MergeMode::Replace, protocol::MergeMode::Additive, protocol::MergeMode::Subtractive, protocol::MergeMode::Invertive, protocol::MergeMode::Range],
+19336 +                             merges: vec![protocol::MergeMode::Replace, MergeMode::Additive, protocol::MergeMode::Subtractive, protocol::MergeMode::Invertive, protocol::MergeMode::Range],
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19336:103
+      |
+19336 | ...   merges: vec![protocol::MergeMode::Replace, protocol::MergeMode::Additive, protocol::MergeMode::Subtractive, protocol::Merge...
+      |                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19336 -                             merges: vec![protocol::MergeMode::Replace, protocol::MergeMode::Additive, protocol::MergeMode::Subtractive, protocol::MergeMode::Invertive, protocol::MergeMode::Range],
+19336 +                             merges: vec![protocol::MergeMode::Replace, protocol::MergeMode::Additive, MergeMode::Subtractive, protocol::MergeMode::Invertive, protocol::MergeMode::Range],
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19336:137
+      |
+19336 | ...de::Additive, protocol::MergeMode::Subtractive, protocol::MergeMode::Invertive, protocol::MergeMode::Range],
+      |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19336 -                             merges: vec![protocol::MergeMode::Replace, protocol::MergeMode::Additive, protocol::MergeMode::Subtractive, protocol::MergeMode::Invertive, protocol::MergeMode::Range],
+19336 +                             merges: vec![protocol::MergeMode::Replace, protocol::MergeMode::Additive, protocol::MergeMode::Subtractive, MergeMode::Invertive, protocol::MergeMode::Range],
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19336:169
+      |
+19336 | ...ode::Subtractive, protocol::MergeMode::Invertive, protocol::MergeMode::Range],
+      |                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19336 -                             merges: vec![protocol::MergeMode::Replace, protocol::MergeMode::Additive, protocol::MergeMode::Subtractive, protocol::MergeMode::Invertive, protocol::MergeMode::Range],
+19336 +                             merges: vec![protocol::MergeMode::Replace, protocol::MergeMode::Additive, protocol::MergeMode::Subtractive, protocol::MergeMode::Invertive, MergeMode::Range],
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19342:60
+      |
+19342 |                     .window_kind_interactions("main", vec![semio_framework::InteractionRef::new("items")])
+      |                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19342 -                     .window_kind_interactions("main", vec![semio_framework::InteractionRef::new("items")])
+19342 +                     .window_kind_interactions("main", vec![InteractionRef::new("items")])
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19356:43
+      |
+19356 |         fn interaction_target_args(extra: serde_json::Value, id: &str) -> serde_json::Value {
+      |                                           ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19356 -         fn interaction_target_args(extra: serde_json::Value, id: &str) -> serde_json::Value {
+19356 +         fn interaction_target_args(extra: Value, id: &str) -> serde_json::Value {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19356:75
+      |
+19356 |         fn interaction_target_args(extra: serde_json::Value, id: &str) -> serde_json::Value {
+      |                                                                           ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19356 -         fn interaction_target_args(extra: serde_json::Value, id: &str) -> serde_json::Value {
+19356 +         fn interaction_target_args(extra: serde_json::Value, id: &str) -> Value {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19357:55
+      |
+19357 | ...   let targets = serde_json::to_string(&vec![protocol::InteractionTarget { granularity: "item".into(), id: id.into() }]).expec...
+      |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19357 -             let targets = serde_json::to_string(&vec![protocol::InteractionTarget { granularity: "item".into(), id: id.into() }]).expect("targets serialize");
+19357 +             let targets = serde_json::to_string(&vec![InteractionTarget { granularity: "item".into(), id: id.into() }]).expect("targets serialize");
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19363:52
+      |
+19363 |         async fn __semio_plugin_bundle() -> Result<crate::Plugin<TestRuntimeApps>, crate::PluginAssemblyError> {
+      |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19363 -         async fn __semio_plugin_bundle() -> Result<crate::Plugin<TestRuntimeApps>, crate::PluginAssemblyError> {
+19363 +         async fn __semio_plugin_bundle() -> Result<Plugin<TestRuntimeApps>, crate::PluginAssemblyError> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19363:84
+      |
+19363 |         async fn __semio_plugin_bundle() -> Result<crate::Plugin<TestRuntimeApps>, crate::PluginAssemblyError> {
+      |                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19363 -         async fn __semio_plugin_bundle() -> Result<crate::Plugin<TestRuntimeApps>, crate::PluginAssemblyError> {
+19363 +         async fn __semio_plugin_bundle() -> Result<crate::Plugin<TestRuntimeApps>, PluginAssemblyError> {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19364:13
+      |
+19364 | ...   crate::Plugin::<TestRuntimeApps>::builder("synthetic").label("Synthetic").version("0.0.1").document_app::<TestApp>(syntheti...
+      |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19364 -             crate::Plugin::<TestRuntimeApps>::builder("synthetic").label("Synthetic").version("0.0.1").document_app::<TestApp>(synthetic_play_app().await).document_app_mutation_roster::<TestApp>().try_build()
+19364 +             Plugin::<TestRuntimeApps>::builder("synthetic").label("Synthetic").version("0.0.1").document_app::<TestApp>(synthetic_play_app().await).document_app_mutation_roster::<TestApp>().try_build()
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19411:29
+      |
+19411 |             let timestamp = protocol::HybridLogicalTimestamp::new(1, u64::MAX);
+      |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19411 -             let timestamp = protocol::HybridLogicalTimestamp::new(1, u64::MAX);
+19411 +             let timestamp = HybridLogicalTimestamp::new(1, u64::MAX);
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19412:35
+      |
+19412 | ...   let mutation_ids: Vec<protocol::MutationId> = envelope.vcs.edits.iter().flat_map(|edit| edit.mutation_meta.iter().filter_ma...
+      |                             ^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19412 -             let mutation_ids: Vec<protocol::MutationId> = envelope.vcs.edits.iter().flat_map(|edit| edit.mutation_meta.iter().filter_map(|meta| meta.mutation_id.clone())).collect();
+19412 +             let mutation_ids: Vec<MutationId> = envelope.vcs.edits.iter().flat_map(|edit| edit.mutation_meta.iter().filter_map(|meta| meta.mutation_id.clone())).collect();
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19413:65
+      |
+19413 | ...   let conflict_id = protocol::ConflictId::new(&kind, &protocol::ArtifactId(envelope.id.clone()), &mutation_ids, &timestamp).a...
+      |                                                           ^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19413 -             let conflict_id = protocol::ConflictId::new(&kind, &protocol::ArtifactId(envelope.id.clone()), &mutation_ids, &timestamp).await;
+19413 +             let conflict_id = protocol::ConflictId::new(&kind, &ArtifactId(envelope.id.clone()), &mutation_ids, &timestamp).await;
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19419:30
+      |
+19419 |                 actors: vec![protocol::ActorId("local".into())],
+      |                              ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19419 -                 actors: vec![protocol::ActorId("local".into())],
+19419 +                 actors: vec![ActorId("local".into())],
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19506:31
+      |
+19506 | ...   app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items",...
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19506 -             app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
+19506 +             app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19520:85
+      |
+19520 |         fn sample_presence_peer(actor: &str, color: Option<u8>, with_pack: bool) -> protocol::PresencePeer {
+      |                                                                                     ^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19520 -         fn sample_presence_peer(actor: &str, color: Option<u8>, with_pack: bool) -> protocol::PresencePeer {
+19520 +         fn sample_presence_peer(actor: &str, color: Option<u8>, with_pack: bool) -> PresencePeer {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19521:13
+      |
+19521 |             protocol::PresencePeer {
+      |             ^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19521 -             protocol::PresencePeer {
+19521 +             PresencePeer {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19569:22
+      |
+19569 |                 Some(protocol::PresenceInteraction {
+      |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19569 -                 Some(protocol::PresenceInteraction {
+19569 +                 Some(PresenceInteraction {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19571:35
+      |
+19571 | ...   domains: vec![protocol::PresenceDomain { domain: "items".to_string(), granularity: "item".to_string(), selected: selected.i...
+      |                     ^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19571 -                     domains: vec![protocol::PresenceDomain { domain: "items".to_string(), granularity: "item".to_string(), selected: selected.iter().map(|id| id.to_string()).collect(), hovered: hovered.iter().map(|id| id.to_string()).collect() }],
+19571 +                     domains: vec![PresenceDomain { domain: "items".to_string(), granularity: "item".to_string(), selected: selected.iter().map(|id| id.to_string()).collect(), hovered: hovered.iter().map(|id| id.to_string()).collect() }],
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19578:25
+      |
+19578 |             let state = protocol::InteractionState::default();
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19578 -             let state = protocol::InteractionState::default();
+19578 +             let state = InteractionState::default();
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19619:42
+      |
+19619 |         async fn test_child_dialect() -> store::os_io::ArtifactDialect {
+      |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19619 -         async fn test_child_dialect() -> store::os_io::ArtifactDialect {
+19619 +         async fn test_child_dialect() -> ArtifactDialect {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19620:13
+      |
+19620 |             store::os_io::ArtifactDialect { artifact_kind: "s.test.child".into(), standard: "native".into(), subset: "*".into() }
+      |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19620 -             store::os_io::ArtifactDialect { artifact_kind: "s.test.child".into(), standard: "native".into(), subset: "*".into() }
+19620 +             ArtifactDialect { artifact_kind: "s.test.child".into(), standard: "native".into(), subset: "*".into() }
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19635:32
+      |
+19635 |             let child_handle = crate::app::artifact_handle_of("child-1").await;
+      |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19635 -             let child_handle = crate::app::artifact_handle_of("child-1").await;
+19635 +             let child_handle = artifact_handle_of("child-1").await;
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19678:31
+      |
+19678 |                 let dialect = store::os_io::ArtifactDialect::parse_coordinate(&entry.dialect).expect("dialect round trips");
+      |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19678 -                 let dialect = store::os_io::ArtifactDialect::parse_coordinate(&entry.dialect).expect("dialect round trips");
+19678 +                 let dialect = ArtifactDialect::parse_coordinate(&entry.dialect).expect("dialect round trips");
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19716:24
+      |
+19716 |             let view = crate::app::ChildContentView::new(&app.children).await;
+      |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19716 -             let view = crate::app::ChildContentView::new(&app.children).await;
+19716 +             let view = ChildContentView::new(&app.children).await;
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19838:125
+      |
+19838 | ... { action_id: "os.setThemeId".into(), args: semio_framework::optional_json_to_dsl(Some(json!({ "themeId": "light" }))) }]);
+      |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19838 -             assert_eq!(result.requested_effects, vec![Effect::ReplayShellCommand { action_id: "os.setThemeId".into(), args: semio_framework::optional_json_to_dsl(Some(json!({ "themeId": "light" }))) }]);
+19838 +             assert_eq!(result.requested_effects, vec![Effect::ReplayShellCommand { action_id: "os.setThemeId".into(), args: optional_json_to_dsl(Some(json!({ "themeId": "light" }))) }]);
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20089:17
+      |
+20089 | ...   let semio_framework_ui_contract::Component::TreeSection(actions_props) = &all_panel.children[0].component else { panic!("ex...
+      |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20089 -             let semio_framework_ui_contract::Component::TreeSection(actions_props) = &all_panel.children[0].component else { panic!("expected a TreeSection") };
+20089 +             let Component::TreeSection(actions_props) = &all_panel.children[0].component else { panic!("expected a TreeSection") };
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20093:17
+      |
+20093 | ...   let semio_framework_ui_contract::Component::TreeSection(commands_props) = &all_panel.children[1].component else { panic!("e...
+      |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20093 -             let semio_framework_ui_contract::Component::TreeSection(commands_props) = &all_panel.children[1].component else { panic!("expected a TreeSection") };
+20093 +             let Component::TreeSection(commands_props) = &all_panel.children[1].component else { panic!("expected a TreeSection") };
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20096:17
+      |
+20096 | ...   let semio_framework_ui_contract::Component::TreeItem(revertible_props) = &all_panel.children[1].children[0].component else ...
+      |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20096 -             let semio_framework_ui_contract::Component::TreeItem(revertible_props) = &all_panel.children[1].children[0].component else { panic!("expected a TreeItem") };
+20096 +             let Component::TreeItem(revertible_props) = &all_panel.children[1].children[0].component else { panic!("expected a TreeItem") };
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20098:17
+      |
+20098 | ...   let semio_framework_ui_contract::Component::TreeItem(non_revertible_props) = &all_panel.children[1].children[1].component e...
+      |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20098 -             let semio_framework_ui_contract::Component::TreeItem(non_revertible_props) = &all_panel.children[1].children[1].component else { panic!("expected a TreeItem") };
+20098 +             let Component::TreeItem(non_revertible_props) = &all_panel.children[1].children[1].component else { panic!("expected a TreeItem") };
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20494:39
+      |
+20494 |             assert_eq!(event.payload, dsl::to_dsl_value(&json!({ "utilityId": "brush" })).unwrap());
+      |                                       ^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20494 -             assert_eq!(event.payload, dsl::to_dsl_value(&json!({ "utilityId": "brush" })).unwrap());
+20494 +             assert_eq!(event.payload, to_dsl_value(&json!({ "utilityId": "brush" })).unwrap());
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20625:25
+      |
+20625 |             let plugin: crate::Plugin = crate::Plugin::new("fixture", "Fixture", "0.1.0").plugin_command(
+      |                         ^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20625 -             let plugin: crate::Plugin = crate::Plugin::new("fixture", "Fixture", "0.1.0").plugin_command(
+20625 +             let plugin: Plugin = crate::Plugin::new("fixture", "Fixture", "0.1.0").plugin_command(
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20625:41
+      |
+20625 |             let plugin: crate::Plugin = crate::Plugin::new("fixture", "Fixture", "0.1.0").plugin_command(
+      |                                         ^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20625 -             let plugin: crate::Plugin = crate::Plugin::new("fixture", "Fixture", "0.1.0").plugin_command(
+20625 +             let plugin: crate::Plugin = Plugin::new("fixture", "Fixture", "0.1.0").plugin_command(
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20630:33
+      |
+20630 |                         output: dsl::DslValue::Null,
+      |                                 ^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20630 -                         output: dsl::DslValue::Null,
+20630 +                         output: DslValue::Null,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20670:31
+      |
+20670 | ...   app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items",...
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20670 -             app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
+20670 +             app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20680:31
+      |
+20680 | ...   app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items",...
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20680 -             app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
+20680 +             app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20683:31
+      |
+20683 | ...   app.handle_action(semio_framework::INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", ...
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20683 -             app.handle_action(semio_framework::INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1")), &meta()).await.expect("interactionHover");
+20683 +             app.handle_action(INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1")), &meta()).await.expect("interactionHover");
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20689:31
+      |
+20689 | ...   app.handle_action(semio_framework::INTERACTION_HOVER_ACTION_ID, Some(&json!({ "domainId": "items", "channel": "pointer", "t...
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20689 -             app.handle_action(semio_framework::INTERACTION_HOVER_ACTION_ID, Some(&json!({ "domainId": "items", "channel": "pointer", "targets": "[]" })), &meta()).await.expect("clear hover");
+20689 +             app.handle_action(INTERACTION_HOVER_ACTION_ID, Some(&json!({ "domainId": "items", "channel": "pointer", "targets": "[]" })), &meta()).await.expect("clear hover");
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20697:31
+      |
+20697 | ...   app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items",...
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20697 -             app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
+20697 +             app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20710:31
+      |
+20710 | ...   app.handle_action(semio_framework::SET_SELECTION_MODE_ACTION_ID, Some(&json!({ "domainId": "items", "mode": "single" })), &...
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20710 -             app.handle_action(semio_framework::SET_SELECTION_MODE_ACTION_ID, Some(&json!({ "domainId": "items", "mode": "single" })), &meta()).await.expect("setSelectionMode");
+20710 +             app.handle_action(SET_SELECTION_MODE_ACTION_ID, Some(&json!({ "domainId": "items", "mode": "single" })), &meta()).await.expect("setSelectionMode");
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20711:94
+      |
+20711 |             assert_eq!(app.interaction_state().await.active_mode.get("items").copied(), Some(protocol::SelectionMode::Single));
+      |                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20711 -             assert_eq!(app.interaction_state().await.active_mode.get("items").copied(), Some(protocol::SelectionMode::Single));
+20711 +             assert_eq!(app.interaction_state().await.active_mode.get("items").copied(), Some(SelectionMode::Single));
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20713:31
+      |
+20713 | ...   app.handle_action(semio_framework::SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&json!({ "domainId": "items", "granularityId...
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20713 -             app.handle_action(semio_framework::SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&json!({ "domainId": "items", "granularityId": "item" })), &meta()).await.expect("setInteractionGranularity");
+20713 +             app.handle_action(SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&json!({ "domainId": "items", "granularityId": "item" })), &meta()).await.expect("setInteractionGranularity");
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20717:43
+      |
+20717 | ...   let error = app.handle_action(semio_framework::SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&json!({ "domainId": "items", "g...
+      |                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20717 -             let error = app.handle_action(semio_framework::SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&json!({ "domainId": "items", "granularityId": "bogus" })), &meta()).await.expect_err("undeclared granularity must be rejected");
+20717 +             let error = app.handle_action(SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&json!({ "domainId": "items", "granularityId": "bogus" })), &meta()).await.expect_err("undeclared granularity must be rejected");
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20726:31
+      |
+20726 |             app.handle_action(semio_framework::SELECT_ALL_ACTION_ID, None, &meta()).await.expect("selectAll");
+      |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20726 -             app.handle_action(semio_framework::SELECT_ALL_ACTION_ID, None, &meta()).await.expect("selectAll");
+20726 +             app.handle_action(SELECT_ALL_ACTION_ID, None, &meta()).await.expect("selectAll");
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20729:31
+      |
+20729 |             app.handle_action(semio_framework::CLEAR_SELECTION_ACTION_ID, None, &meta()).await.expect("clearSelection");
+      |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20729 -             app.handle_action(semio_framework::CLEAR_SELECTION_ACTION_ID, None, &meta()).await.expect("clearSelection");
+20729 +             app.handle_action(CLEAR_SELECTION_ACTION_ID, None, &meta()).await.expect("clearSelection");
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20737:31
+      |
+20737 | ...   app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items",...
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20737 -             app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
+20737 +             app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20751:31
+      |
+20751 | ...   app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items",...
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20751 -             app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
+20751 +             app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20754:39
+      |
+20754 |             assert_eq!(row.action_id, semio_framework::INTERACTION_SELECT_ACTION_ID);
+      |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20754 -             assert_eq!(row.action_id, semio_framework::INTERACTION_SELECT_ACTION_ID);
+20754 +             assert_eq!(row.action_id, INTERACTION_SELECT_ACTION_ID);
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20769:64
+      |
+20769 |                 let builder = resolve_ready(__base.interaction(semio_framework::InteractionDefinition {
+      |                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20769 -                 let builder = resolve_ready(__base.interaction(semio_framework::InteractionDefinition {
+20769 +                 let builder = resolve_ready(__base.interaction(InteractionDefinition {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20772:41
+      |
+20772 | ...   granularities: vec![semio_framework::GranularityDefinition { id: "item".into(), label: LocalizedLabel::data("Item"), icon_i...
+      |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20772 -                     granularities: vec![semio_framework::GranularityDefinition { id: "item".into(), label: LocalizedLabel::data("Item"), icon_id: IconName::AppWindow }],
+20772 +                     granularities: vec![GranularityDefinition { id: "item".into(), label: LocalizedLabel::data("Item"), icon_id: IconName::AppWindow }],
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20773:32
+      |
+20773 |                     hierarchy: protocol::HierarchyProvider::Flat,
+      |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20773 -                     hierarchy: protocol::HierarchyProvider::Flat,
+20773 +                     hierarchy: HierarchyProvider::Flat,
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20774:28
+      |
+20774 |                     hover: protocol::HoverSpec { transitive: true, ..protocol::HoverSpec::default() },
+      |                            ^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20774 -                     hover: protocol::HoverSpec { transitive: true, ..protocol::HoverSpec::default() },
+20774 +                     hover: HoverSpec { transitive: true, ..protocol::HoverSpec::default() },
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20774:70
+      |
+20774 |                     hover: protocol::HoverSpec { transitive: true, ..protocol::HoverSpec::default() },
+      |                                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20774 -                     hover: protocol::HoverSpec { transitive: true, ..protocol::HoverSpec::default() },
+20774 +                     hover: protocol::HoverSpec { transitive: true, ..HoverSpec::default() },
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20775:32
+      |
+20775 | ...   selection: protocol::SelectionSpec { modes: vec![protocol::SelectionMode::Single], methods: vec![protocol::SelectionMethod:...
+      |                  ^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20775 -                     selection: protocol::SelectionSpec { modes: vec![protocol::SelectionMode::Single], methods: vec![protocol::SelectionMethod::Pick], merges: vec![protocol::MergeMode::Replace], transitive: false, broadcast: true },
+20775 +                     selection: SelectionSpec { modes: vec![protocol::SelectionMode::Single], methods: vec![protocol::SelectionMethod::Pick], merges: vec![protocol::MergeMode::Replace], transitive: false, broadcast: true },
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20775:70
+      |
+20775 | ...   selection: protocol::SelectionSpec { modes: vec![protocol::SelectionMode::Single], methods: vec![protocol::SelectionMethod:...
+      |                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20775 -                     selection: protocol::SelectionSpec { modes: vec![protocol::SelectionMode::Single], methods: vec![protocol::SelectionMethod::Pick], merges: vec![protocol::MergeMode::Replace], transitive: false, broadcast: true },
+20775 +                     selection: protocol::SelectionSpec { modes: vec![SelectionMode::Single], methods: vec![protocol::SelectionMethod::Pick], merges: vec![protocol::MergeMode::Replace], transitive: false, broadcast: true },
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20775:118
+      |
+20775 | ...rotocol::SelectionMode::Single], methods: vec![protocol::SelectionMethod::Pick], merges: vec![protocol::MergeMode::Replace], t...
+      |                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20775 -                     selection: protocol::SelectionSpec { modes: vec![protocol::SelectionMode::Single], methods: vec![protocol::SelectionMethod::Pick], merges: vec![protocol::MergeMode::Replace], transitive: false, broadcast: true },
+20775 +                     selection: protocol::SelectionSpec { modes: vec![protocol::SelectionMode::Single], methods: vec![SelectionMethod::Pick], merges: vec![protocol::MergeMode::Replace], transitive: false, broadcast: true },
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20775:165
+      |
+20775 | ...![protocol::SelectionMethod::Pick], merges: vec![protocol::MergeMode::Replace], transitive: false, broadcast: true },
+      |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20775 -                     selection: protocol::SelectionSpec { modes: vec![protocol::SelectionMode::Single], methods: vec![protocol::SelectionMethod::Pick], merges: vec![protocol::MergeMode::Replace], transitive: false, broadcast: true },
+20775 +                     selection: protocol::SelectionSpec { modes: vec![protocol::SelectionMode::Single], methods: vec![protocol::SelectionMethod::Pick], merges: vec![MergeMode::Replace], transitive: false, broadcast: true },
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20786:31
+      |
+20786 | ...   app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items",...
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20786 -             app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
+20786 +             app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &meta()).await.expect("interactionSelect");
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20796:39
+      |
+20796 |                     interaction: Some(protocol::PresenceInteraction {
+      |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20796 -                     interaction: Some(protocol::PresenceInteraction {
+20796 +                     interaction: Some(PresenceInteraction {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20798:39
+      |
+20798 | ...   domains: vec![protocol::PresenceDomain { domain: "items".to_string(), granularity: "item".to_string(), selected: vec!["item...
+      |                     ^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20798 -                         domains: vec![protocol::PresenceDomain { domain: "items".to_string(), granularity: "item".to_string(), selected: vec!["item-1".to_string()], hovered: Vec::new() }],
+20798 +                         domains: vec![PresenceDomain { domain: "items".to_string(), granularity: "item".to_string(), selected: vec!["item-1".to_string()], hovered: Vec::new() }],
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20808:24
+      |
+20808 |             let item = semio_framework_ui_runtime::TreeNode::new(
+      |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20808 -             let item = semio_framework_ui_runtime::TreeNode::new(
+20808 +             let item = TreeNode::new(
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20810:17
+      |
+20810 |                 semio_framework_ui_contract::Component::TreeItem(semio_framework_ui_contract::TreeItemProps {
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20810 -                 semio_framework_ui_contract::Component::TreeItem(semio_framework_ui_contract::TreeItemProps {
+20810 +                 Component::TreeItem(semio_framework_ui_contract::TreeItemProps {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20810:66
+      |
+20810 |                 semio_framework_ui_contract::Component::TreeItem(semio_framework_ui_contract::TreeItemProps {
+      |                                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20810 -                 semio_framework_ui_contract::Component::TreeItem(semio_framework_ui_contract::TreeItemProps {
+20810 +                 semio_framework_ui_contract::Component::TreeItem(TreeItemProps {
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20821:27
+      |
+20821 | ...   let section = semio_framework_ui_runtime::TreeNode::new("sec", semio_framework_ui_contract::Component::TreeSection(semio_fr...
+      |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20821 -             let section = semio_framework_ui_runtime::TreeNode::new("sec", semio_framework_ui_contract::Component::TreeSection(semio_framework_ui_contract::TreeSectionProps { label: None, default_open: None })).with_children([item]);
+20821 +             let section = TreeNode::new("sec", semio_framework_ui_contract::Component::TreeSection(semio_framework_ui_contract::TreeSectionProps { label: None, default_open: None })).with_children([item]);
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20821:76
+      |
+20821 | ...   let section = semio_framework_ui_runtime::TreeNode::new("sec", semio_framework_ui_contract::Component::TreeSection(semio_fr...
+      |                                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20821 -             let section = semio_framework_ui_runtime::TreeNode::new("sec", semio_framework_ui_contract::Component::TreeSection(semio_framework_ui_contract::TreeSectionProps { label: None, default_open: None })).with_children([item]);
+20821 +             let section = semio_framework_ui_runtime::TreeNode::new("sec", Component::TreeSection(semio_framework_ui_contract::TreeSectionProps { label: None, default_open: None })).with_children([item]);
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20821:128
+      |
+20821 | ...ork_ui_contract::Component::TreeSection(semio_framework_ui_contract::TreeSectionProps { label: None, default_open: None })).wi...
+      |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20821 -             let section = semio_framework_ui_runtime::TreeNode::new("sec", semio_framework_ui_contract::Component::TreeSection(semio_framework_ui_contract::TreeSectionProps { label: None, default_open: None })).with_children([item]);
+20821 +             let section = semio_framework_ui_runtime::TreeNode::new("sec", semio_framework_ui_contract::Component::TreeSection(TreeSectionProps { label: None, default_open: None })).with_children([item]);
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20822:28
+      |
+20822 |             let mut tree = semio_framework_ui_runtime::ComponentTree::new(
+      |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20822 -             let mut tree = semio_framework_ui_runtime::ComponentTree::new(
+20822 +             let mut tree = ComponentTree::new(
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20823:17
+      |
+20823 | ...   semio_framework_ui_runtime::TreeNode::new("root", semio_framework_ui_contract::Component::Tree(semio_framework_ui_contract:...
+      |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20823 -                 semio_framework_ui_runtime::TreeNode::new("root", semio_framework_ui_contract::Component::Tree(semio_framework_ui_contract::TreeProps { interaction_domain: Some("items".into()) })).with_children([section]),
+20823 +                 TreeNode::new("root", semio_framework_ui_contract::Component::Tree(semio_framework_ui_contract::TreeProps { interaction_domain: Some("items".into()) })).with_children([section]),
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20823:67
+      |
+20823 | ...   semio_framework_ui_runtime::TreeNode::new("root", semio_framework_ui_contract::Component::Tree(semio_framework_ui_contract:...
+      |                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20823 -                 semio_framework_ui_runtime::TreeNode::new("root", semio_framework_ui_contract::Component::Tree(semio_framework_ui_contract::TreeProps { interaction_domain: Some("items".into()) })).with_children([section]),
+20823 +                 semio_framework_ui_runtime::TreeNode::new("root", Component::Tree(semio_framework_ui_contract::TreeProps { interaction_domain: Some("items".into()) })).with_children([section]),
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20823:112
+      |
+20823 | ...emio_framework_ui_contract::Component::Tree(semio_framework_ui_contract::TreeProps { interaction_domain: Some("items".into()) ...
+      |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20823 -                 semio_framework_ui_runtime::TreeNode::new("root", semio_framework_ui_contract::Component::Tree(semio_framework_ui_contract::TreeProps { interaction_domain: Some("items".into()) })).with_children([section]),
+20823 +                 semio_framework_ui_runtime::TreeNode::new("root", semio_framework_ui_contract::Component::Tree(TreeProps { interaction_domain: Some("items".into()) })).with_children([section]),
+      |
+
+warning: unnecessary qualification
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20908:65
+      |
+20908 | ...   crate::plugin_runtime::test_push_instance(&runtime, crate::plugin_runtime::AppInstance { id: resumed_instance, app: TestRun...
+      |                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20908 -             crate::plugin_runtime::test_push_instance(&runtime, crate::plugin_runtime::AppInstance { id: resumed_instance, app: TestRuntimeApps::from(app) }).await;
+20908 +             crate::plugin_runtime::test_push_instance(&runtime, AppInstance { id: resumed_instance, app: TestRuntimeApps::from(app) }).await;
+      |
+
+warning: ambiguous glob re-exports
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21969:13
+      |
+21969 |     pub use semio_framework::kernel::*;
+      |             ^^^^^^^^^^^^^^^^^^^^^^^^^^ the name `ActionId` in the type namespace is first re-exported here
+...
+21972 |     pub use semio_framework_ui_contract::*;
+      |             ------------------------------ but the name `ActionId` in the type namespace is also re-exported here
+      |
+      = note: `#[warn(ambiguous_glob_reexports)]` on by default
+
+warning: ambiguous glob re-exports
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21972:13
+      |
+21968 |     pub use crate::app::*;
+      |             ------------- but the name `tree_item` in the value namespace is also re-exported here
+...
+21972 |     pub use semio_framework_ui_contract::*;
+      |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the name `tree_item` in the value namespace is first re-exported here
+
+warning: ambiguous glob re-exports
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21972:13
+      |
+21968 |     pub use crate::app::*;
+      |             ------------- but the name `PeerMark` in the type namespace is also re-exported here
+...
+21972 |     pub use semio_framework_ui_contract::*;
+      |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the name `PeerMark` in the type namespace is first re-exported here
+
+warning: variable does not need to be mutable
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:20236:17
+      |
+20236 |             let mut app = VcsArtifactApp::<TestApp>::new(TestApp::default());
+      |                 ----^^^
+      |                 |
+      |                 help: remove this `mut`
+      |
+      = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `restart_command`
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21039:21
+      |
+21039 |                 let restart_command = restart_command.clone();
+      |                     ^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_restart_command`
+      |
+      = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19864:17
+      |
+19864 |             let mut app = VcsArtifactApp::<TestApp>::new(TestApp::default());
+      |                 ----^^^
+      |                 |
+      |                 help: remove this `mut`
+
+warning: type `SchemaStampEditorFixture` is more private than the item `SchemaStampApps::Editor::0`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:963:20
+    |
+963 |             Editor(crate::app::VcsArtifactApp<crate::app::EditorApp<SchemaStampEditorFixture>>),
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ field `SchemaStampApps::Editor::0` is reachable at visibility `pub(in crate::component::builder)`
+    |
+note: but type `SchemaStampEditorFixture` is only usable at visibility `pub(self)`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:882:5
+    |
+882 |     struct SchemaStampEditorFixture;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: `#[warn(private_interfaces)]` on by default
+
+warning: type `SchemaStampViewerFixture` is more private than the item `SchemaStampApps::Viewer::0`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:964:20
+    |
+964 |             Viewer(crate::app::VcsArtifactApp<crate::app::ViewerApp<SchemaStampViewerFixture>>),
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ field `SchemaStampApps::Viewer::0` is reachable at visibility `pub(in crate::component::builder)`
+    |
+note: but type `SchemaStampViewerFixture` is only usable at visibility `pub(self)`
+   --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:923:5
+    |
+923 |     struct SchemaStampViewerFixture;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused implementer of `std::future::Future` that must be used
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:22598:5
+      |
+22598 | /     subset! {
+22599 | |         pub derived dialect "s.test.subset-macro" / "1" / "derived" {
+22600 | |             validator: MacroDerivedValidator,
+22601 | |         }
+22602 | |     }
+      | |_____^
+      |
+      = note: futures do nothing unless you `.await` or poll them
+      = note: `#[warn(unused_must_use)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused implementer of `std::future::Future` that must be used
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:22606:9
+      |
+22606 |         register_subset();
+      |         ^^^^^^^^^^^^^^^^^
+      |
+      = note: futures do nothing unless you `.await` or poll them
+
+warning: unused implementer of `std::future::Future` that must be used
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:22607:9
+      |
+22607 |         register_subset();
+      |         ^^^^^^^^^^^^^^^^^
+      |
+      = note: futures do nothing unless you `.await` or poll them
+
+warning: call to `.clone()` on a reference in this situation does nothing
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3105:119
+     |
+3105 |                 Ok(schema) => match ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), codec.extension.clone()) {
+     |                                                                                                                       ^^^^^^^^ help: remove this redundant call
+     |
+     = note: the type `str` does not implement `Clone`, so calling `clone` on `&str` copies the reference, which does not do anything and can be removed
+     = note: `#[warn(noop_method_call)]` on by default
+
+warning: call to `.clone()` on a reference in this situation does nothing
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3139:119
+     |
+3139 |                 Ok(schema) => match ArtifactIdentityClaim::new(ArtifactIdentityNamespace::extension(), codec.extension.clone()) {
+     |                                                                                                                       ^^^^^^^^ help: remove this redundant call
+     |
+     = note: the type `str` does not implement `Clone`, so calling `clone` on `&str` copies the reference, which does not do anything and can be removed
+
+warning: constant `DIRECT_READ_CHUNK` is never used
+  --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🌐host/📖️body/🦀️component.rs:17:7
+   |
+17 | const DIRECT_READ_CHUNK: usize = 64 * 1024;
+   |       ^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused implementer of `std::future::Future` that must be used
+    --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7294:17
+     |
+7294 |                 assert_viewer_never_mutates::<SurfaceViewerFixture>();
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: futures do nothing unless you `.await` or poll them
+
+warning: unused implementer of `std::future::Future` that must be used
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21048:13
+      |
+21048 |             crate::reactor::test_support::run_until_idle(8); // parks — still in flight when checkpointed
+      |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+      = note: futures do nothing unless you `.await` or poll them
+
+warning: unused implementer of `std::future::Future` that must be used
+     --> 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21056:13
+      |
+21056 |             crate::reactor::test_support::cancel_instance_registry_requests(instance);
+      |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+      = note: futures do nothing unless you `.await` or poll them
+
+warning: `semio-framework-plugin` (lib test) generated 200 warnings (run `cargo fix --lib -p semio-framework-plugin --tests` to apply 183 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 45.15s
+warning: the following packages contain code that will be rejected by a future version of Rust: semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 2`
+     Running unittests 📦️glue.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PUZZLE-3D-RESUMABLE-VERTICAL-SLICE/🧪️target-p4/debug/deps/semio_framework_plugin-5b77dc12687f4aef)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 308 filtered out; finished in 0.00s
+

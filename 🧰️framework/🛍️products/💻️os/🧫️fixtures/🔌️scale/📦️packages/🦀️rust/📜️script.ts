@@ -17,12 +17,18 @@ class CheckWasmScript extends BundleScript {
   }
 }
 
+class BuildWasmScript extends BundleScript {
+  run(): void {
+    runCargo(["rustc", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-scale-fixture", "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2", "--features", "component-guest"], this.root);
+  }
+}
+
 class TestScript extends BundleScript {
   run(): void {
     runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-scale-fixture", "--lib"], this.root);
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("check-wasm", CheckWasmScript).register("test", TestScript);
+const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("check-wasm", CheckWasmScript).register("build-wasm", BuildWasmScript).register("test", TestScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "check" });

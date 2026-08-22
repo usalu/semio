@@ -382,7 +382,7 @@ function coerceIconSource(source: IconSource): Icon {
     if (alias) {
       return { kind: "catalog", key: alias };
     }
-    if ((ICONS as Record<string, string>)[key]) {
+    if (isIconName(key)) {
       return { kind: "catalog", key };
     }
     const emoji = shortcodeEmoji(key.toLowerCase());

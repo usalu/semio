@@ -1044,7 +1044,7 @@ function gumballWorldAxis(localAxis: GumballVec3, quat: THREE.Quaternion): Gumba
  * perspective uses the pinhole from `camera.position`. Duck-types `isOrthographicCamera` (not `instanceof`) so
  * R3F-swapped cameras from a duplicate `three` copy stay correct (otherwise ortho drags fly away from the cursor). */
 export function gumballRayFromNdc(ndcX: number, ndcY: number, camera: THREE.Camera): { origin: GumballVec3; dir: GumballVec3 } {
-  camera.updateMatrixWorld(true);
+  (camera as THREE.Camera & { updateMatrixWorld?: (force?: boolean) => void }).updateMatrixWorld?.(true);
   const ortho = camera as THREE.OrthographicCamera & { readonly isOrthographicCamera?: boolean };
   if (ortho.isOrthographicCamera) {
     const origin = new THREE.Vector3(ndcX, ndcY, -1).unproject(camera);

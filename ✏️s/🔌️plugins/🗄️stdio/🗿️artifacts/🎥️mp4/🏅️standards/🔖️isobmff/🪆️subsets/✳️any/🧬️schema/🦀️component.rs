@@ -102,7 +102,7 @@ pub mod derived_construction {
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let diff = apply_mp4_mutation(&mut self.snapshot, &mutation);
-            (self, diff.await)
+            (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
             self.snapshot = <Mp4Diff as protocol::MutationDiff<Mp4Snapshot>>::apply(&diff, &self.snapshot)?;
@@ -136,7 +136,7 @@ pub mod derived_analysis {
         async fn sniff(source: &AnalyzeSource<'_>) -> IoConfidence {
             match source {
                 AnalyzeSource::Binary(bytes) => {
-                    if io::sniff_real_bytes(bytes).await {
+                    if io::sniff_real_bytes(bytes) {
                         return IoConfidence::High;
                     }
                     let marker = STDIO_MP4_DOCUMENT_SCHEMA.as_bytes();
@@ -147,7 +147,7 @@ pub mod derived_analysis {
                     }
                 }
                 AnalyzeSource::Text(text) => {
-                    if io::sniff_real_bytes(text.as_bytes()).await || text.contains(STDIO_MP4_DOCUMENT_SCHEMA) {
+                    if io::sniff_real_bytes(text.as_bytes()) || text.contains(STDIO_MP4_DOCUMENT_SCHEMA) {
                         IoConfidence::High
                     } else {
                         IoConfidence::Low

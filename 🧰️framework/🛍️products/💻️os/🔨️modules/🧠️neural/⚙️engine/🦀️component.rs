@@ -263,44 +263,66 @@ impl Schema {
 
 //#region ⚠️ Errors
 /// 🚨️ Schema field/channel conversion, instance-read, and cardinality-parse failures.
-#[derive(Clone, Debug, PartialEq, thiserror::Error)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum NeuralEngineError {
     /// 🔢️ Atom value doesn't match the scalar type a schema field declares.
-    #[error("{kind} field is not {reason}")]
     FieldTypeMismatch { kind: &'static str, reason: &'static str },
     /// 📦️ Field value isn't a dictionary where a list/schema/any field required one.
-    #[error("field is not a dictionary")]
     FieldNotDictionary,
     /// 🕳️ Channel value is null where a value was required.
-    #[error("channel value is null")]
     ChannelNull,
     /// 📦️ Channel value isn't the wrapping dictionary its scalar type expects.
-    #[error("{kind} channel is not a dictionary")]
     ChannelTypeMismatch { kind: &'static str },
     /// 📦️ Channel value isn't a dictionary where a list/schema/any channel required one.
-    #[error("channel is not a dictionary")]
     ChannelNotDictionary,
     /// 🕳️ Channel dictionary is missing its `value` entry.
-    #[error("{kind} channel is missing value")]
     ChannelMissingValue { kind: &'static str },
     /// 🔍️ A schema instance or field channel is absent from the input dictionary.
-    #[error("missing {0}")]
     Missing(String),
     /// ⚠️ A schema instance dictionary carries the wrong `$schema` tag.
-    #[error("invalid {0}")]
     Invalid(String),
     /// 🔍️ A declared schema field is absent from the constructed dictionary.
-    #[error("missing field {0}")]
     MissingField(String),
     /// 🚫️ Neither an instance nor any field inputs were provided to a schema component.
-    #[error("no instance or field inputs provided")]
     NoInputProvided,
     /// 🔢️ A cardinality symbol string didn't parse to a known cardinality.
-    #[error("invalid cardinality: {0}")]
     InvalidCardinality(String),
     /// 🧬️ The constructed/modified dictionary failed schema validation.
-    #[error(transparent)]
-    Validation(#[from] EvalError),
+    Validation(EvalError),
+}
+
+impl std::fmt::Display for NeuralEngineError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::FieldTypeMismatch { kind, reason } => write!(formatter, "{kind} field is not {reason}"),
+            Self::FieldNotDictionary => formatter.write_str("field is not a dictionary"),
+            Self::ChannelNull => formatter.write_str("channel value is null"),
+            Self::ChannelTypeMismatch { kind } => write!(formatter, "{kind} channel is not a dictionary"),
+            Self::ChannelNotDictionary => formatter.write_str("channel is not a dictionary"),
+            Self::ChannelMissingValue { kind } => write!(formatter, "{kind} channel is missing value"),
+            Self::Missing(detail) => write!(formatter, "missing {detail}"),
+            Self::Invalid(detail) => write!(formatter, "invalid {detail}"),
+            Self::MissingField(field) => write!(formatter, "missing field {field}"),
+            Self::NoInputProvided => formatter.write_str("no instance or field inputs provided"),
+            Self::InvalidCardinality(value) => write!(formatter, "invalid cardinality: {value}"),
+            Self::Validation(error) => std::fmt::Display::fmt(error, formatter),
+        }
+    }
+}
+
+impl std::error::Error for NeuralEngineError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Validation(error) => Some(error),
+            _ => None,
+        }
+    }
+}
+
+impl From<EvalError> for NeuralEngineError {
+    fn from(error: EvalError) -> Self {
+        Self::Validation(error)
+    }
 }
 //#endregion ⚠️ Errors
 

@@ -178,10 +178,10 @@ async fn read_run_header(body: &[u8], expected_kind: IndexKind) -> Result<RunHea
     if kind_tag != expected_kind.tag() {
         return Err(DbError::Corrupt(format!("index run kind mismatch: expected {expected_kind:?} (tag {}), found tag {kind_tag}", expected_kind.tag())));
     }
-    let mut reader = ByteReader::new(&body[RUN_MAGIC.len() + 2..]).await;
-    let entry_count = reader.read_varint_u64().await?;
+    let mut reader = ByteReader::new(&body[RUN_MAGIC.len() + 2..]);
+    let entry_count = reader.read_varint_u64()?;
     check_len(entry_count, MAX_RUN_ENTRIES, "db_index::entries")?;
-    Ok(RunHeader { entry_count, header_len: RUN_MAGIC.len() + 2 + reader.position().await })
+    Ok(RunHeader { entry_count, header_len: RUN_MAGIC.len() + 2 + reader.position() })
 }
 
 /// @emoji 👀️ Reads just a run's `entry_count` (no checksum verification, no entry decode) — the
@@ -202,11 +202,11 @@ async fn peek_entry_count(bytes: &[u8], expected_kind: IndexKind) -> Result<u64,
 /// a caller with unsorted/duplicate entries should go through `build_run` first.
 async fn encode_run(kind: IndexKind, entries: &[RunEntry]) -> Result<Vec<u8>, DbError> {
     check_len(entries.len() as u64, MAX_RUN_ENTRIES, "db_index::entries")?;
-    let mut writer = ByteWriter::new().await;
-    writer.write_bytes(&RUN_MAGIC).await;
-    writer.write_u8(RUN_VERSION).await;
-    writer.write_u8(kind.tag()).await;
-    writer.write_varint_u64(entries.len() as u64).await;
+    let mut writer = ByteWriter::new();
+    writer.write_bytes(&RUN_MAGIC);
+    writer.write_u8(RUN_VERSION);
+    writer.write_u8(kind.tag());
+    writer.write_varint_u64(entries.len() as u64);
     let mut previous_key: Option<&[u8]> = None;
     for entry in entries {
         if let Some(previous) = previous_key {
@@ -216,20 +216,20 @@ async fn encode_run(kind: IndexKind, entries: &[RunEntry]) -> Result<Vec<u8>, Db
         }
         previous_key = Some(entry.key.as_slice());
         check_len(entry.key.len() as u64, MAX_KEY_LEN, "db_index::key")?;
-        writer.write_varint_u64(entry.key.len() as u64).await;
-        writer.write_bytes(&entry.key).await;
+        writer.write_varint_u64(entry.key.len() as u64);
+        writer.write_bytes(&entry.key);
         match &entry.value {
-            RunValue::Tombstone => writer.write_u8(0).await,
+            RunValue::Tombstone => writer.write_u8(0),
             RunValue::Put(value) => {
                 check_len(value.len() as u64, MAX_VALUE_LEN, "db_index::value")?;
-                writer.write_u8(1).await;
-                writer.write_varint_u64(value.len() as u64).await;
-                writer.write_bytes(value).await;
+                writer.write_u8(1);
+                writer.write_varint_u64(value.len() as u64);
+                writer.write_bytes(value);
             }
         }
     }
-    let mut bytes = writer.into_bytes().await;
-    let checksum = crc32c(&bytes).await;
+    let mut bytes = writer.into_bytes();
+    let checksum = crc32c(&bytes);
     bytes.extend_from_slice(&checksum.to_le_bytes());
     Ok(bytes)
 }
@@ -247,29 +247,29 @@ async fn decode_run(bytes: &[u8], expected_kind: IndexKind) -> Result<Vec<RunEnt
     let (body, checksum_bytes) = bytes.split_at(bytes.len() - 4);
     let mut checksum_array = [0u8; 4];
     checksum_array.copy_from_slice(checksum_bytes);
-    if crc32c(body).await != u32::from_le_bytes(checksum_array) {
+    if crc32c(body) != u32::from_le_bytes(checksum_array) {
         return Err(DbError::Corrupt("index run checksum mismatch".to_string()));
     }
     let header = read_run_header(body, expected_kind).await?;
-    let mut reader = ByteReader::new(&body[header.header_len..]).await;
+    let mut reader = ByteReader::new(&body[header.header_len..]);
     let mut entries = Vec::with_capacity(usize::try_from(header.entry_count).unwrap_or(0));
     let mut previous_key: Option<Vec<u8>> = None;
     for _ in 0..header.entry_count {
-        let key_len = reader.read_varint_u64().await?;
+        let key_len = reader.read_varint_u64()?;
         check_len(key_len, MAX_KEY_LEN, "db_index::key")?;
-        let key = reader.read_bytes(key_len as usize).await?.to_vec();
+        let key = reader.read_bytes(key_len as usize)?.to_vec();
         if let Some(previous) = &previous_key {
             if key.as_slice() <= previous.as_slice() {
                 return Err(DbError::Corrupt("index run entries are not strictly ascending by key".to_string()));
             }
         }
-        let tag = reader.read_u8().await?;
+        let tag = reader.read_u8()?;
         let value = match tag {
             0 => RunValue::Tombstone,
             1 => {
-                let value_len = reader.read_varint_u64().await?;
+                let value_len = reader.read_varint_u64()?;
                 check_len(value_len, MAX_VALUE_LEN, "db_index::value")?;
-                RunValue::Put(reader.read_bytes(value_len as usize).await?.to_vec())
+                RunValue::Put(reader.read_bytes(value_len as usize)?.to_vec())
             }
             other => return Err(DbError::Corrupt(format!("index run entry has unknown value tag {other}"))),
         };
@@ -538,18 +538,18 @@ pub struct RecordLocation {
 }
 
 async fn encode_location(location: RecordLocation) -> Vec<u8> {
-    let mut writer = ByteWriter::new().await;
-    writer.write_varint_u64(location.segment).await;
-    writer.write_varint_u64(location.offset).await;
-    writer.write_varint_u64(location.len).await;
-    writer.into_bytes().await
+    let mut writer = ByteWriter::new();
+    writer.write_varint_u64(location.segment);
+    writer.write_varint_u64(location.offset);
+    writer.write_varint_u64(location.len);
+    writer.into_bytes()
 }
 
 async fn decode_location(bytes: &[u8]) -> Result<RecordLocation, DbError> {
-    let mut reader = ByteReader::new(bytes).await;
-    let segment = reader.read_varint_u64().await?;
-    let offset = reader.read_varint_u64().await?;
-    let len = reader.read_varint_u64().await?;
+    let mut reader = ByteReader::new(bytes);
+    let segment = reader.read_varint_u64()?;
+    let offset = reader.read_varint_u64()?;
+    let len = reader.read_varint_u64()?;
     Ok(RecordLocation { segment, offset, len })
 }
 
@@ -720,27 +720,27 @@ pub struct FrontierIndex<'a, S: IndexStorage> {
 }
 
 async fn encode_frontier(frontier: &Frontier) -> Vec<u8> {
-    let mut writer = ByteWriter::new().await;
+    let mut writer = ByteWriter::new();
     let document_bytes = frontier.document.0.as_bytes();
-    writer.write_varint_u64(document_bytes.len() as u64).await;
-    writer.write_bytes(document_bytes).await;
-    writer.write_varint_u64(frontier.head_seq).await;
-    writer.write_varint_u64(frontier.commit_seq).await;
-    writer.write_bytes(&frontier.chain_hash).await;
-    writer.write_varint_u64(frontier.epoch).await;
-    writer.into_bytes().await
+    writer.write_varint_u64(document_bytes.len() as u64);
+    writer.write_bytes(document_bytes);
+    writer.write_varint_u64(frontier.head_seq);
+    writer.write_varint_u64(frontier.commit_seq);
+    writer.write_bytes(&frontier.chain_hash);
+    writer.write_varint_u64(frontier.epoch);
+    writer.into_bytes()
 }
 
 async fn decode_frontier(bytes: &[u8]) -> Result<Frontier, DbError> {
-    let mut reader = ByteReader::new(bytes).await;
-    let document_len = reader.read_varint_u64().await?;
+    let mut reader = ByteReader::new(bytes);
+    let document_len = reader.read_varint_u64()?;
     check_len(document_len, MAX_KEY_LEN, "db_index::frontier_document")?;
-    let document_bytes = reader.read_bytes(document_len as usize).await?.to_vec();
+    let document_bytes = reader.read_bytes(document_len as usize)?.to_vec();
     let document = ArtifactId(String::from_utf8(document_bytes).map_err(|_| DbError::Corrupt("frontier document id is not valid utf-8".to_string()))?);
-    let head_seq = reader.read_varint_u64().await?;
-    let commit_seq = reader.read_varint_u64().await?;
-    let chain_hash = reader.read_array32().await?;
-    let epoch = reader.read_varint_u64().await?;
+    let head_seq = reader.read_varint_u64()?;
+    let commit_seq = reader.read_varint_u64()?;
+    let chain_hash = reader.read_array32()?;
+    let epoch = reader.read_varint_u64()?;
     Ok(Frontier { document, head_seq, commit_seq, chain_hash, epoch })
 }
 
@@ -779,21 +779,21 @@ pub struct TouchedRegionIndex<'a, S: IndexStorage> {
 }
 
 async fn encode_postings(postings: &[u64]) -> Vec<u8> {
-    let mut writer = ByteWriter::new().await;
-    writer.write_varint_u64(postings.len() as u64).await;
+    let mut writer = ByteWriter::new();
+    writer.write_varint_u64(postings.len() as u64);
     for posting in postings {
-        writer.write_varint_u64(*posting).await;
+        writer.write_varint_u64(*posting);
     }
-    writer.into_bytes().await
+    writer.into_bytes()
 }
 
 async fn decode_postings(bytes: &[u8]) -> Result<Vec<u64>, DbError> {
-    let mut reader = ByteReader::new(bytes).await;
-    let count = reader.read_varint_u64().await?;
+    let mut reader = ByteReader::new(bytes);
+    let count = reader.read_varint_u64()?;
     check_len(count, MAX_RUN_ENTRIES, "db_index::postings")?;
     let mut postings = Vec::with_capacity(usize::try_from(count).unwrap_or(0));
     for _ in 0..count {
-        postings.push(reader.read_varint_u64().await?);
+        postings.push(reader.read_varint_u64()?);
     }
     Ok(postings)
 }
@@ -900,24 +900,24 @@ impl<'a, S: IndexStorage> FullTextIndex<'a, S> {
 /// `TouchedRegionIndex`/`FullTextIndex` use for their posting lists, generalized to arbitrary-size
 /// values instead of `u64` postings.
 async fn encode_blob_list(blobs: &[Vec<u8>]) -> Vec<u8> {
-    let mut writer = ByteWriter::new().await;
-    writer.write_varint_u64(blobs.len() as u64).await;
+    let mut writer = ByteWriter::new();
+    writer.write_varint_u64(blobs.len() as u64);
     for blob in blobs {
-        writer.write_varint_u64(blob.len() as u64).await;
-        writer.write_bytes(blob).await;
+        writer.write_varint_u64(blob.len() as u64);
+        writer.write_bytes(blob);
     }
-    writer.into_bytes().await
+    writer.into_bytes()
 }
 
 async fn decode_blob_list(bytes: &[u8]) -> Result<Vec<Vec<u8>>, DbError> {
-    let mut reader = ByteReader::new(bytes).await;
-    let count = reader.read_varint_u64().await?;
+    let mut reader = ByteReader::new(bytes);
+    let count = reader.read_varint_u64()?;
     check_len(count, MAX_RUN_ENTRIES, "db_index::blob_list")?;
     let mut blobs = Vec::with_capacity(usize::try_from(count).unwrap_or(0));
     for _ in 0..count {
-        let len = reader.read_varint_u64().await?;
+        let len = reader.read_varint_u64()?;
         check_len(len, MAX_VALUE_LEN, "db_index::blob_list_entry")?;
-        blobs.push(reader.read_bytes(len as usize).await?.to_vec());
+        blobs.push(reader.read_bytes(len as usize)?.to_vec());
     }
     Ok(blobs)
 }
@@ -1145,20 +1145,20 @@ mod tests {
     async fn decode_run_rejects_non_ascending_entries() {
         // Hand-build a malformed body bypassing `encode_run`'s own ordering check, to exercise
         // `decode_run`'s independent defensive re-validation.
-        let mut writer = ByteWriter::new().await;
-        writer.write_bytes(&RUN_MAGIC).await;
-        writer.write_u8(RUN_VERSION).await;
-        writer.write_u8(IndexKind::Command.tag()).await;
-        writer.write_varint_u64(2).await;
+        let mut writer = ByteWriter::new();
+        writer.write_bytes(&RUN_MAGIC);
+        writer.write_u8(RUN_VERSION);
+        writer.write_u8(IndexKind::Command.tag());
+        writer.write_varint_u64(2);
         for key in [b"b".as_slice(), b"a".as_slice()] {
-            writer.write_varint_u64(key.len() as u64).await;
-            writer.write_bytes(key).await;
-            writer.write_u8(1).await;
-            writer.write_varint_u64(1).await;
-            writer.write_bytes(b"x").await;
+            writer.write_varint_u64(key.len() as u64);
+            writer.write_bytes(key);
+            writer.write_u8(1);
+            writer.write_varint_u64(1);
+            writer.write_bytes(b"x");
         }
-        let mut bytes = writer.into_bytes().await;
-        let checksum = crc32c(&bytes).await;
+        let mut bytes = writer.into_bytes();
+        let checksum = crc32c(&bytes);
         bytes.extend_from_slice(&checksum.to_le_bytes());
         assert!(matches!(decode_run(&bytes, IndexKind::Command).await, Err(DbError::Corrupt(_))));
     }

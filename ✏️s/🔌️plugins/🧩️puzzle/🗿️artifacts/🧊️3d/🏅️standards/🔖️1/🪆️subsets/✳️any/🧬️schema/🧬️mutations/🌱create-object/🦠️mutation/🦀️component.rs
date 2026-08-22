@@ -17,23 +17,23 @@ pub struct CreateObject {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn create_object(object: Puzzle3dObject, index: Option<usize>) -> Puzzle3dMutation {
+pub fn create_object(object: Puzzle3dObject, index: Option<usize>) -> Puzzle3dMutation {
     Puzzle3dMutation::CreateObject(CreateObject { object, index })
 }
 
 impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for CreateObject {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "object", kind: "create-object", record: "CreatedObject" };
 
-    async fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
+    fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
+    fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Create object \"{}\"", self.object.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.object.id.clone()]
     }
 }

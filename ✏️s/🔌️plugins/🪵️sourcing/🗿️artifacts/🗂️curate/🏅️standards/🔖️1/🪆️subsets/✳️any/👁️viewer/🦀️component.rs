@@ -81,7 +81,7 @@ impl ArtifactViewer for SourcingViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_sourcing_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_sourcing_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(SOURCING_DIALECT)
         .document(["semio", "sourcing", "curate"])
         .icon_id("library")

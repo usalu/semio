@@ -7,7 +7,7 @@
 //! that lives in the editor's separate results window, which this viewer does not (yet) mirror.
 
 use crate::artifacts::fem2d::{element_id, Fem2dSnapshot, FemCamera, FemElement};
-use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, UiNode};
+use semio_framework_plugin::{BuiltNode, Canvas2dScene};
 use serde_json::json;
 
 //#region 🔖️Constants
@@ -30,15 +30,15 @@ const MESH_EDGE_COLOR: &str = "#475569";
 //#region 🔖️DrawHelpers
 /// 👁️ Pure, self-contained duplicate of the sibling editor's `screen_2d` — a viewer window must not
 /// import through the sibling editor module.
-async fn screen_2d(x: f64, y: f64) -> (f64, f64) {
+fn screen_2d(x: f64, y: f64) -> (f64, f64) {
     (x * SCALE_2D + ORIGIN_2D, -y * SCALE_2D + ORIGIN_2D)
 }
 
-async fn find_node_2d<'a>(nodes: &'a [crate::artifacts::fem2d::FemNode], id: &str) -> Option<&'a crate::artifacts::fem2d::FemNode> {
+fn find_node_2d<'a>(nodes: &'a [crate::artifacts::fem2d::FemNode], id: &str) -> Option<&'a crate::artifacts::fem2d::FemNode> {
     nodes.iter().find(|n| n.id == id)
 }
 
-async fn fem2d_element_endpoints(element: &FemElement) -> (&str, &str) {
+fn fem2d_element_endpoints(element: &FemElement) -> (&str, &str) {
     match element {
         FemElement::Bar { start, end, .. } | FemElement::Beam { start, end, .. } => (start.as_str(), end.as_str()),
     }
@@ -46,7 +46,7 @@ async fn fem2d_element_endpoints(element: &FemElement) -> (&str, &str) {
 
 /// 🖼️ Nodes/members/supports as Canvas2d layers — read-only duplicate of the sibling editor's
 /// `fem2d_structure_layers`.
-async fn fem2d_structure_layers(doc: &Fem2dSnapshot, node_color: &str, line_color: &str, support_color: &str) -> Vec<serde_json::Value> {
+fn fem2d_structure_layers(doc: &Fem2dSnapshot, node_color: &str, line_color: &str, support_color: &str) -> Vec<serde_json::Value> {
     let mut layers = Vec::new();
     for node in &doc.nodes {
         let (sx, sy) = screen_2d(node.x, node.y);
@@ -73,7 +73,7 @@ async fn fem2d_structure_layers(doc: &Fem2dSnapshot, node_color: &str, line_colo
 /// duplicate of the sibling editor's `fem2d_region_triangles`. Calls
 /// `crate::fem2d_engine::mesh_preview::fem2d_mesh_preview` directly (crate-root, shared compute — safe
 /// to call from either surface, not a duplication concern for THAT call).
-async fn fem2d_region_triangles(doc: &Fem2dSnapshot) -> Vec<(String, [(f64, f64); 3])> {
+fn fem2d_region_triangles(doc: &Fem2dSnapshot) -> Vec<(String, [(f64, f64); 3])> {
     let mut out = Vec::new();
     let Ok(meshes) = crate::fem2d_engine::mesh_preview::fem2d_mesh_preview(doc) else { return out };
     for mesh in &meshes {
@@ -94,7 +94,7 @@ async fn fem2d_region_triangles(doc: &Fem2dSnapshot) -> Vec<(String, [(f64, f64)
 /// overlay, hardcoded `FemCamera::default()` (a viewer has no persisted per-session camera —
 /// `Config = NoConfig`). No results overlay, no selection, no gumball — a viewer has no utilities
 /// that edit and emits no mutations by construction (`ViewEmit`).
-pub async fn render(doc: &Fem2dSnapshot) -> UiNode {
+pub fn render(doc: &Fem2dSnapshot) -> BuiltNode {
     let camera = FemCamera::default();
     let mut layers = fem2d_structure_layers(doc, "#38bdf8", "#94a3b8", "#f97316");
     for (tri_index, (_, tri)) in fem2d_region_triangles(doc).iter().enumerate() {
@@ -107,7 +107,7 @@ pub async fn render(doc: &Fem2dSnapshot) -> UiNode {
         }));
     }
     let layers_json = serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into());
-    build_canvas_2d_scene(BODY_KEY, FEM2D_VIEW_CONTROLLER_ID, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json })
+    crate::app_surface::canvas_2d_surface(BODY_KEY, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json })
 }
 //#endregion 🔖️Render
 
@@ -116,19 +116,21 @@ pub async fn render(doc: &Fem2dSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn renders_a_canvas_2d_scene_for_the_default_document() {
+    #[test]
+    fn renders_a_canvas_2d_scene_for_the_default_document() {
         let document = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
         let json = serde_json::to_string(&render(&document)).expect("render json");
         assert!(json.contains("canvas-2d"), "expected a valid canvas-2d scene, got: {json}");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn renders_mesh_edge_preview_for_the_default_example() {
+    #[test]
+    fn renders_mesh_edge_preview_for_the_default_example() {
         use store::ArtifactDsl;
         let document = Fem2dSnapshot::parse_dsl(crate::artifacts::fem2d::dsl::FEM2D_EXAMPLE_TEXT).expect("parse default example");
-        let json = serde_json::to_string(&render(&document)).expect("render json");
-        assert!(json.contains("mesh-edge-"), "expected mesh-edge preview layers in the view scene: {json}");
+        let node = render(&document);
+        let semio_framework_ui_contract::Component::Surface(props) = &node.component else { panic!("expected canvas surface") };
+        let scene: Canvas2dScene = semio_framework_ui_scene::decode(props).expect("decode canvas scene");
+        assert!(scene.layers_json.contains("mesh-edge-"), "expected mesh-edge preview layers in the view scene: {}", scene.layers_json);
     }
 }
 //#endregion 🧪️Tests

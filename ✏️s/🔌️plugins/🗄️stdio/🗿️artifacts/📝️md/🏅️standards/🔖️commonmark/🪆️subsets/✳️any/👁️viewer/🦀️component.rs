@@ -9,7 +9,7 @@ use crate::artifacts::md::standards::v_commonmark::subsets::any::schema::snapsho
 use crate::artifacts::md::{MD_DIALECT, STDIO_MD_DOCUMENT_SCHEMA};
 use crate::viewer::md::modes::view;
 use crate::viewer::md::modes::view::windows::main;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command

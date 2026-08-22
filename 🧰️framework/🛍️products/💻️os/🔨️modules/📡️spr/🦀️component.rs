@@ -130,9 +130,9 @@ async fn slice_content_chain(slice: &[u8]) -> Result<[u8; 32], ProtocolError> {
     let mut concat = Vec::new();
     while let Some(frame) = cursor.next_frame().await? {
         let frame_bytes = &slice[frame.offset as usize..(frame.offset + frame.frame_len().await) as usize];
-        concat.extend_from_slice(&hasher.hash(frame_bytes).await);
+        concat.extend_from_slice(&hasher.hash(frame_bytes));
     }
-    Ok(hasher.hash(&concat).await)
+    Ok(hasher.hash(&concat))
 }
 
 /// 🧭️ Decodes just enough of a `.spr` file (trusted prefix + a full `HistoryLog` decode) to report
@@ -157,7 +157,7 @@ pub async fn content_frontier(protocol_bytes: &[u8]) -> Result<FrontierSummary, 
     };
 
     let chain_hash = if recovery.last_commit_seq == 0 {
-        crate::os_spr::format::Blake3Hasher.hash(&protocol_bytes[..crate::os_spr::format::HEADER_SIZE]).await
+        crate::os_spr::format::Blake3Hasher.hash(&protocol_bytes[..crate::os_spr::format::HEADER_SIZE])
     } else {
         let mut cursor = FrameCursor::new(protocol_bytes, recovery.last_commit_offset).await;
         let frame = cursor.next_frame().await?.ok_or_else(|| ProtocolError::Malformed { what: "commit frame", offset: recovery.last_commit_offset, detail: "expected a commit frame at the recovered offset".to_string() })?;
@@ -220,7 +220,7 @@ mod tests {
         let limits = ProtocolLimits::default();
         assert!(limits.max_file_len > 0);
         let hlt = HybridLogicalTimestamp::new(1, 1000);
-        assert_eq!(hlt.await.physical_ms, 1000);
+        assert_eq!(hlt.physical_ms, 1000);
         let _ = ActorId("actor-1".to_string());
         let _ = ArtifactId("doc-1".to_string());
     }

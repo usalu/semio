@@ -325,7 +325,7 @@ pub async fn raster_composite_media(document: &RasterSnapshot) -> Result<Media, 
 /// 🛠️ An internal (non-palette) action declaration — the panel/pointer/gesture-bound vocabulary
 /// dispatched by the layer tree, catalogue drops and inspector, never a palette command.
 async fn raster_internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> semio_framework_plugin::ActionDefinition {
-    semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new_catalog(id, label, kind) }
+    semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog(id, label, kind) }
 }
 
 /// 🧰️ One composite-window utility declaration; ids must stay host-compatible (`paint*` prefix paints,

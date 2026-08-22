@@ -1,11 +1,25 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
+use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
-use semio_framework_plugin::{ExecutionMode, FlowExtensionDeclaration, FlowExtensionExecutableIdentity, FlowExtensionManifest, HostMediaHandlerDeclaration, Plugin};
+use semio_framework_plugin::plugin_app_close_prelude::*;
+use semio_framework_plugin::{ExecutionMode, FlowExtensionDeclaration, FlowExtensionExecutableIdentity, FlowExtensionManifest, HostMediaHandlerDeclaration, Plugin, PluginApp};
+
+//#region 🗃️Apps
+/// 🗃️ Closed runtime app fleet for the procedural 2D and 3D surfaces.
+semio_framework_dispatch_macros::dyn_enum_close! {
+    pub enum ProceduralApps: PluginApp {
+        Procedural2dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::procedural2d::Procedural2dPlayApp>>),
+        Procedural2dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::procedural2d::Procedural2dViewer>>),
+        Procedural3dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::procedural3d::Procedural3dPlayApp>>),
+        Procedural3dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::procedural3d::Procedural3dViewer>>),
+    }
+}
+//#endregion 🗃️Apps
 
 /// 🔌️ Builds the plugin surface for host registration.
-pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
-    Plugin::builder("procedural")
+pub async fn plugin() -> Result<Plugin<ProceduralApps>, semio_framework_plugin::PluginAssemblyError> {
+    Plugin::<ProceduralApps>::builder("procedural")
         .label("Procedural")
         .version("0.1.0")
         .artifact(crate::artifacts::procedural2d::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)

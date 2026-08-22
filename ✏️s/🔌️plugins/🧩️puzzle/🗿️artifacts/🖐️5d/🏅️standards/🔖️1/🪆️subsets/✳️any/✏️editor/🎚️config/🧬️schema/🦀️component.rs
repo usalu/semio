@@ -73,7 +73,7 @@ pub struct Puzzle5dConfig {
 /// `register_app_schema()` this file used to export); `ArtifactApp::app_schema` (on
 /// `Puzzle5dPlayApp`) hands it to `register_document_app` for registration, exactly like
 /// `🗒️note`'s own `app_schema_descriptor()`.
-pub async fn app_schema_descriptor() -> artifact_schema::AppSchemaDescriptor {
+pub fn app_schema_descriptor() -> artifact_schema::AppSchemaDescriptor {
     artifact_schema::AppSchemaDescriptor {
         id: "s.puzzle.puzzle5d",
         config: artifact_schema::FacetLeaves {

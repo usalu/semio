@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "../../../../../../../../../../../../🧪️artifact.ts";
 const here = dirname(fileURLToPath(import.meta.url));
 describe("face-sweep-extrude", () => {
   it("ships primary asset", () => {

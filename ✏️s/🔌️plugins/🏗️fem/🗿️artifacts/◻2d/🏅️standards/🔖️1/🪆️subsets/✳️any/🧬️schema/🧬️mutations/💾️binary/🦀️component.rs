@@ -14,12 +14,12 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 /// 📦️ Encodes a `Fem2dMutation` to its binary command form.
-pub async fn encode_op(operation: &Fem2dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &Fem2dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `Fem2dMutation` from its binary command form.
-pub async fn decode_op(bytes: &[u8]) -> Result<Fem2dMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<Fem2dMutation, protocol::ProtocolError> {
     Fem2dMutation::decode_op(bytes)
 }
 
@@ -27,11 +27,12 @@ pub async fn decode_op(bytes: &[u8]) -> Result<Fem2dMutation, protocol::Protocol
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::fem2d::mutations::update_analysis_settings;
     use crate::artifacts::fem2d::schema;
     use crate::artifacts::fem2d::{FemAnalysisSettings, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSupport};
     use store::{create_document_envelope, ArtifactCommand};
 
-    async fn simply_supported_beam_doc() -> crate::artifacts::fem2d::Fem2dSnapshot {
+    fn simply_supported_beam_doc() -> crate::artifacts::fem2d::Fem2dSnapshot {
         crate::artifacts::fem2d::Fem2dSnapshot {
             nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0 }, FemNode { id: "n2".into(), x: 6.0, y: 0.0 }],
             elements: vec![FemElement::Beam { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "ipe300".into() }],
@@ -45,8 +46,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn op_binary_round_trips_and_agrees_with_text() {
+    #[test]
+    fn op_binary_round_trips_and_agrees_with_text() {
         let operation = Fem2dMutation::UpdateAnalysisSettings(update_analysis_settings::mutation::UpdateAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } });
         semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
@@ -60,7 +61,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn fem2d_document_text_round_trips_through_the_store() {
         let fixture = simply_supported_beam_doc();
-        let mut store = crate::artifacts::fem2d::schema::mutations::Fem2dStore::new(create_document_envelope(crate::artifacts::fem2d::FEM_2D_SCHEMA, "fem2d", schema::empty_fem2d_snapshot(), None)).expect("valid store");
+        let mut store =
+            semio_framework_plugin::resolve_ready(crate::artifacts::fem2d::schema::mutations::Fem2dStore::new(create_document_envelope(crate::artifacts::fem2d::FEM_2D_SCHEMA, "fem2d", schema::empty_fem2d_snapshot(), None))).expect("valid store");
         let mutations = vec![
             Fem2dMutation::CreateMaterial(crate::artifacts::fem2d::schema::mutations::create_material::mutation::CreateMaterial { material: fixture.materials[0].clone() }),
             Fem2dMutation::CreateSection(crate::artifacts::fem2d::schema::mutations::create_section::mutation::CreateSection { section: fixture.sections[0].clone() }),
@@ -71,10 +73,10 @@ mod tests {
             Fem2dMutation::CreateSupport(crate::artifacts::fem2d::schema::mutations::create_support::mutation::CreateSupport { support: fixture.supports[1].clone() }),
             Fem2dMutation::CreateLoadCase(crate::artifacts::fem2d::schema::mutations::create_load_case::mutation::CreateLoadCase { load_case: fixture.load_cases[0].clone() }),
         ];
-        store.dispatch(ArtifactCommand::Apply { mutations, description: None }).expect("apply");
-        assert_eq!(store.snapshot().expect("snapshot"), fixture);
-        semio_framework_os_kernel::os_store::test_support::assert_document_text_round_trip(&store);
-        semio_framework_os_kernel::os_store::test_support::assert_document_pack_round_trip(&store);
+        store.dispatch(ArtifactCommand::Apply { mutations, description: None }).await.expect("apply");
+        assert_eq!(semio_framework_plugin::resolve_ready(store.snapshot()).expect("snapshot"), fixture);
+        semio_framework_os_kernel::os_store::test_support::assert_document_text_round_trip(&store).await;
+        semio_framework_os_kernel::os_store::test_support::assert_document_pack_round_trip(&store).await;
     }
 }
 // #endregion 🧪️Tests
@@ -82,17 +84,18 @@ mod tests {
 #[cfg(test)]
 mod semio_protocol_conformance {
     use super::*;
+    use crate::artifacts::fem2d::mutations::update_analysis_settings;
 
-    #[semio_framework_async_macros::async_test]
-    async fn component_protocol_semio_is_protocol_dialect() {
+    #[test]
+    fn component_protocol_semio_is_protocol_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Protocol);
         assert!(!COMPONENT_PROTOCOL_SEMIO.is_empty());
         let _ = COMPONENT_PROTOCOL_PATH;
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn verify_protocol_bytes_against_encoded_spr() {
+    #[test]
+    fn verify_protocol_bytes_against_encoded_spr() {
         let operation = Fem2dMutation::UpdateAnalysisSettings(update_analysis_settings::mutation::UpdateAnalysisSettings { settings: crate::artifacts::fem2d::FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } });
         let bytes = encode_op(&operation).expect("encode op");
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");

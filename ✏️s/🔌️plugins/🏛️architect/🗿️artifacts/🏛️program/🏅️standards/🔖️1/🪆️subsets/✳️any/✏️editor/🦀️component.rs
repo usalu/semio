@@ -1246,7 +1246,7 @@ pub async fn create_architect_app() -> semio_framework_plugin::AppDefinition {
             .view_action("search", LocalizedLabel::native("Search", "Suchen"))
             .shell_action("exportProgram", LocalizedLabel::native("Export ProgramSnapshot", "Programm exportieren"))
             .shell_action("exportRegistersCsv", LocalizedLabel::native("Export Registers CSV", "Register CSV exportieren"))
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setAdjacencyFilter", LocalizedLabel::native("Set Adjacency Filter", "Adjazenzfilter setzen"), ActionKind::View) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("setAdjacencyFilter", LocalizedLabel::native("Set Adjacency Filter", "Adjazenzfilter setzen"), ActionKind::View) })
             .action_args("selectRegister", vec![ActionArgDef::select("registerId", LocalizedLabel::native("Register", "Register"), REGISTER_IDS.iter().map(|register| ActionArgOption::new(*register, LocalizedLabel::data(*register))).collect())])
             .action_args(
                 "addRegisterItem",

@@ -21,6 +21,94 @@ use serde::{Deserialize, Serialize};
 
 pub use semio_framework_job as job;
 
+//#region 🧬️SchemaMetadata
+#[cfg(feature = "typegen")]
+pub mod schema_metadata {
+    use std::collections::HashSet;
+
+    /// 🧬️ One versioned wire type and its owned TypeScript projection.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub struct SchemaMetadata {
+        pub name: &'static str,
+        pub version: u16,
+        pub typescript: &'static str,
+    }
+
+    pub const TYPES: &[SchemaMetadata] = &[
+        SchemaMetadata { name: "ActivationEvent", version: 1, typescript: r#"export type ActivationEvent = { "kind": "manual" } | { "kind": "windowOpen", window: WindowId, } | { "kind": "restart" };"# },
+        SchemaMetadata { name: "ActorId", version: 1, typescript: "export type ActorId = bigint;" },
+        SchemaMetadata { name: "ActorKind", version: 1, typescript: r#"export type ActorKind = { "kind": "pluginApp", plugin: PackageId, appId: string, instanceId: number, } | { "kind": "extension", plugin: PackageId, extensionId: string, } | { "kind": "job", owner: ActorId, jobId: bigint, };"# },
+        SchemaMetadata { name: "ActorMetrics", version: 1, typescript: "export type ActorMetrics = { turns: bigint, fuel_total: bigint, wall_us_total: bigint, wall_us_ring: Array<number>, wall_us_ring_len: number, wall_us_ring_pos: number, memory_bytes: bigint, mailbox_len: number, mailbox_lag_ms: number, coalesced: bigint, dropped: bigint, traps: number, restarts: number, stage: FailureStage, shard: ShardId, };" },
+        SchemaMetadata { name: "ActorMetricsSample", version: 1, typescript: "export type ActorMetricsSample = { id: ActorId, package: PackageId, lane: Lane, status: ActorStatus, metrics: ActorMetrics, };" },
+        SchemaMetadata { name: "ActorRecord", version: 1, typescript: "export type ActorRecord = { id: ActorId, kind: ActorKind, package: PackageId, shard: ShardId, capabilities: Array<CapabilityGrant>, budget: Budget, mailbox: Mailbox, status: ActorStatus, failure: FailureState, metrics: ActorMetrics, };" },
+        SchemaMetadata { name: "ActorStatus", version: 1, typescript: r#"export type ActorStatus = { "kind": "cold" } | { "kind": "activating" } | { "kind": "active" } | { "kind": "suspended", checkpoint: Array<number> | null, } | { "kind": "draining" } | { "kind": "trapped" } | { "kind": "quarantined" } | { "kind": "disabled" };"# },
+        SchemaMetadata { name: "Backpressure", version: 1, typescript: r#"export type Backpressure = { "kind": "accept" } | { "kind": "coalesced" } | { "kind": "dropped", lane: Lane, } | { "kind": "rejected" };"# },
+        SchemaMetadata { name: "Budget", version: 1, typescript: "export type Budget = { fuel: bigint, wall_ms: number, memory_bytes: bigint, ui_nodes: number, mailbox_len: number, max_effects: number, max_patch_bytes: number, };" },
+        SchemaMetadata { name: "CapabilityGrant", version: 1, typescript: "export type CapabilityGrant = { capability: string, scope: Array<number> | null, };" },
+        SchemaMetadata { name: "CoalesceKey", version: 1, typescript: "export type CoalesceKey = string;" },
+        SchemaMetadata { name: "Decision", version: 1, typescript: "export type Decision = { run: Array<TurnGrant>, wake_at: bigint | null, };" },
+        SchemaMetadata { name: "Envelope", version: 1, typescript: "export type Envelope = { to: ActorId, from: Origin, lane: Lane, seq: bigint, deadline_ms: bigint | null, coalesce: CoalesceKey | null, cancel_of: bigint | null, payload: Payload, };" },
+        SchemaMetadata { name: "FailureSignal", version: 1, typescript: r#"export type FailureSignal = { "kind": "deadlineOverrun", ratio: number, } | { "kind": "fuelExhausted" } | { "kind": "memoryLimit" } | { "kind": "mailboxOverflow" } | { "kind": "uiQuota" } | { "kind": "trap", detail: string, } | { "kind": "heartbeatMissed", count: number, } | { "kind": "manualReset" };"# },
+        SchemaMetadata { name: "FailureStage", version: 1, typescript: r#"export type FailureStage = { "kind": "healthy" } | { "kind": "warned" } | { "kind": "throttled", factor: number, } | { "kind": "suspended", until: bigint, } | { "kind": "cancelled" } | { "kind": "trapped", restarts: number, } | { "kind": "quarantined", until: bigint, } | { "kind": "disabled" };"# },
+        SchemaMetadata { name: "FailureState", version: 1, typescript: "export type FailureState = { stage: FailureStage, clean_turns: number, warn_count: number, restart_count: number, last_signal_ms: bigint, };" },
+        SchemaMetadata { name: "JobCheckpoint", version: 1, typescript: "export type JobCheckpoint = { state: Array<number>, applied_progress: bigint, };" },
+        SchemaMetadata { name: "JobCommitCandidate", version: 1, typescript: "export type JobCommitCandidate = { state: Array<number>, output: Array<number>, };" },
+        SchemaMetadata { name: "JobOperation", version: 1, typescript: "export type JobOperation = { operation: bigint, base_revision: bigint, generation: bigint, preview_sequence: bigint, seed: bigint, };" },
+        SchemaMetadata { name: "JobPublication", version: 1, typescript: "export type JobPublication = { turn: JobTurn, outcome: JobStepOutcome, };" },
+        SchemaMetadata { name: "JobReplayLog", version: 1, typescript: "export type JobReplayLog = { entries: Array<JobPublication>, };" },
+        SchemaMetadata { name: "JobStepOutcome", version: 1, typescript: r#"export type JobStepOutcome = { "kind": "yield" } | { "kind": "previewReady", preview: Array<number>, } | { "kind": "checkpointReady", checkpoint: JobCheckpoint, } | { "kind": "complete", candidate: JobCommitCandidate, } | { "kind": "cancelled" } | { "kind": "fault", detail: Array<number>, };"# },
+        SchemaMetadata { name: "JobTurn", version: 1, typescript: "export type JobTurn = { job: bigint, operation: JobOperation, step_sequence: bigint, };" },
+        SchemaMetadata { name: "KernelMetrics", version: 1, typescript: "export type KernelMetrics = { actors: number, shards: number, packages: number, };" },
+        SchemaMetadata { name: "Lane", version: 1, typescript: r#"export type Lane = "Interactive" | "UserVisible" | "Background" | "Maintenance";"# },
+        SchemaMetadata { name: "Mailbox", version: 1, typescript: "export type Mailbox = { capacity: number, len: number, };" },
+        SchemaMetadata { name: "Origin", version: 1, typescript: r#"export type Origin = { "kind": "ui", window: WindowId, } | { "kind": "actor", id: ActorId, } | { "kind": "kernel" } | { "kind": "bus", topic: string, };"# },
+        SchemaMetadata { name: "PackageHash", version: 1, typescript: "export type PackageHash = number[];" },
+        SchemaMetadata { name: "PackageId", version: 1, typescript: "export type PackageId = string;" },
+        SchemaMetadata { name: "Payload", version: 1, typescript: r#"export type Payload = { "kind": "event", bytes: Array<number>, } | { "kind": "suspend", operation: JobOperation, appliedProgress: bigint, } | { "kind": "resume", operation: JobOperation, checkpoint: JobCheckpoint, } | { "kind": "cancel", seq: bigint, } | { "kind": "jobStep", turn: JobTurn, };"# },
+        SchemaMetadata { name: "RuntimeMetricsSnapshot", version: 1, typescript: "export type RuntimeMetricsSnapshot = { kernel: KernelMetrics, actors: Array<ActorMetricsSample>, shards: Array<ShardMetricsSample>, sampled_at_ms: bigint, };" },
+        SchemaMetadata { name: "SceneSnapshot", version: 1, typescript: "export type SceneSnapshot = { revision: bigint, committed_ms: bigint, patches: Array<number>, node_count: number, };" },
+        SchemaMetadata { name: "ShardId", version: 1, typescript: "export type ShardId = number;" },
+        SchemaMetadata { name: "ShardKind", version: 1, typescript: r#"export type ShardKind = "Native" | "WebWorker" | "Process";"# },
+        SchemaMetadata { name: "ShardMetrics", version: 1, typescript: "export type ShardMetrics = { actors: number, busy_ratio: number, heartbeat_age_ms: number, };" },
+        SchemaMetadata { name: "ShardMetricsSample", version: 1, typescript: "export type ShardMetricsSample = { shard: ShardId, metrics: ShardMetrics, };" },
+        SchemaMetadata { name: "ShardTable", version: 1, typescript: "export type ShardTable = { kind: ShardKind, shard_count: number, exclusive_reserve: number, assignment: Record<string, ShardId>, exclusive_leases: Record<string, ActorId>, };" },
+        SchemaMetadata { name: "TurnGrant", version: 1, typescript: "export type TurnGrant = { actor: ActorId, shard: ShardId, budget: Budget, envelopes: Array<Envelope>, };" },
+        SchemaMetadata { name: "TurnResult", version: 1, typescript: "export type TurnResult = { ui_patches: Array<number>, effects: Array<number>, next_wake: bigint | null, status: TurnStatus, usage: Usage, };" },
+        SchemaMetadata { name: "TurnStatus", version: 1, typescript: r#"export type TurnStatus = { "kind": "idle" } | { "kind": "moreWork" } | { "kind": "checkpointReady", checkpoint: JobCheckpoint, } | { "kind": "faulted", detail: Array<number>, } | { "kind": "previewReady", preview: Array<number>, sequence: bigint, } | { "kind": "commitReady", candidate: JobCommitCandidate, } | { "kind": "cancelled" };"# },
+        SchemaMetadata { name: "Usage", version: 1, typescript: "export type Usage = { fuel: bigint, wall_us: bigint, memory_bytes: bigint, };" },
+        SchemaMetadata { name: "WindowId", version: 1, typescript: "export type WindowId = number;" },
+    ];
+
+    /// 🔍️ Rejects unversioned, duplicate, or name-mismatched schema rows before generation.
+    pub fn validate() -> Result<(), String> {
+        let mut names = HashSet::with_capacity(TYPES.len());
+        for metadata in TYPES {
+            if metadata.version == 0 {
+                return Err(format!("schema `{}` has version zero", metadata.name));
+            }
+            if !names.insert(metadata.name) {
+                return Err(format!("duplicate schema `{}`", metadata.name));
+            }
+            let prefix = format!("export type {} = ", metadata.name);
+            if !metadata.typescript.starts_with(&prefix) {
+                return Err(format!("schema `{}` declaration has a mismatched name", metadata.name));
+            }
+        }
+        Ok(())
+    }
+
+    /// 🟦️ Renders the stable language projection consumed by the TypeScript package.
+    pub fn render_typescript() -> String {
+        let mut output = String::from("/** @generated by `bun nx run @semio-tech/framework-actor-rs:typegen` from 🎭️actor owned schema metadata. Do not edit. */\n\n");
+        for metadata in TYPES {
+            output.push_str(metadata.typescript);
+            output.push_str("\n\n");
+        }
+        output
+    }
+}
+//#endregion 🧬️SchemaMetadata
+
 //#region 🧵️Pack
 /// 🧵️ Hand-rolled binary codec primitives shared by every type's `pack_encode`/`pack_decode` pair
 /// below — LEB128 varints, length-prefixed bytes/strings, fixed 32-byte hashes, option/vec
@@ -224,7 +312,6 @@ pub mod pack {
 //#region 📦️PackageId
 /// 📦️ Stable identity of an installed plugin or plugin+extension pair: `<plugin>` or `<plugin>/<extension>`.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct PackageId(pub String);
 
 impl PackageId {
@@ -238,8 +325,7 @@ impl PackageId {
 
 /// 🧬️ Blake3 hash of a compiled component's bytes — the compiled-cache key (`~/.semio/cache/wasmtime/...`).
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
-pub struct PackageHash(#[cfg_attr(feature = "typegen", ts(type = "number[]"))] pub [u8; 32]);
+pub struct PackageHash(pub [u8; 32]);
 
 impl std::fmt::Debug for PackageHash {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -266,7 +352,6 @@ impl PackageHash {
 /// Generation makes restart-after-trap addressable without id reuse. The kernel re-exports this
 /// type as `RuntimeActorId` (`kernel::ActorId` already names the presence/collab actor — never shadow).
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct ActorId(pub u64);
 
 const ACTOR_ID_GENERATION_BITS: u32 = 14;
@@ -330,7 +415,6 @@ impl std::fmt::Debug for ActorId {
 /// 🎭️ What an actor slot represents: a running app instance, an activated extension, or a
 /// background job spawned by another actor. Discriminant order matches `ActorId`'s `kind:u2` tag.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ActorKind {
     PluginApp { plugin: PackageId, app_id: String, instance_id: u32 },
@@ -384,7 +468,6 @@ impl ActorKind {
 /// 🛣️ Scheduling priority class. Ordered highest-to-lowest priority by declaration order — see
 /// [`Lane::priority_rank`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub enum Lane {
     Interactive,
     UserVisible,
@@ -444,7 +527,6 @@ impl Lane {
 //#region ⚖️Budget
 /// ⚖️ Per-turn resource ceilings enforced host-side. Replaces `PLUGIN_FUEL_BUDGET`.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct Budget {
     pub fuel: u64,
     pub wall_ms: u32,
@@ -502,7 +584,7 @@ impl Budget {
 pub mod lane_defaults {
     use super::{Budget, Lane};
 
-    pub async fn budget_for(lane: Lane) -> Budget {
+    pub fn budget_for(lane: Lane) -> Budget {
         match lane {
             Lane::Interactive => Budget { fuel: 2_000_000, wall_ms: 4, memory_bytes: 64 * 1024 * 1024, ui_nodes: 20_000, mailbox_len: 256, max_effects: 64, max_patch_bytes: 262_144 },
             Lane::UserVisible => Budget { fuel: 6_000_000, wall_ms: 16, memory_bytes: 96 * 1024 * 1024, ui_nodes: 20_000, mailbox_len: 256, max_effects: 128, max_patch_bytes: 524_288 },
@@ -517,7 +599,6 @@ pub mod lane_defaults {
 //#region 🪪️JobBridge
 /// 🪪️ Stable operation identity carried by every actor job turn and publication.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct JobOperation {
     pub operation: u64,
     pub base_revision: u64,
@@ -556,7 +637,6 @@ impl JobOperation {
 
 /// 📸️ Opaque resumable state plus the committed progress boundary it represents.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct JobCheckpoint {
     pub state: Vec<u8>,
     pub applied_progress: u64,
@@ -583,7 +663,6 @@ impl JobCheckpoint {
 
 /// 🏁️ Final persisted job state and its authoritative output candidate.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct JobCommitCandidate {
     pub state: Vec<u8>,
     pub output: Vec<u8>,
@@ -610,7 +689,6 @@ impl JobCommitCandidate {
 
 /// 🚦️ Lossless actor-wire mirror of one universal `StepOutcome`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum JobStepOutcome {
     Yield,
@@ -682,7 +760,6 @@ impl JobStepOutcome {
 
 /// 🎫️ One explicitly-addressed bounded job turn.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct JobTurn {
     pub job: u64,
     pub operation: JobOperation,
@@ -703,7 +780,6 @@ impl JobTurn {
 
 /// 📡️ One validated, replay-addressable publication from a bounded job turn.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct JobPublication {
     pub turn: JobTurn,
     pub outcome: JobStepOutcome,
@@ -733,7 +809,6 @@ impl JobPublication {
 
 /// 📜️ Ordered actor job publications forming the deterministic replay wire log.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct JobReplayLog {
     pub entries: Vec<JobPublication>,
 }
@@ -841,7 +916,6 @@ impl JobTurnBridge {
 /// 🪟 Local, opaque window identifier ([`Origin::Ui`]'s target) — the concrete `WindowHandle`
 /// lives in the kernel crate; this crate only ever routes by this bare numeric id.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct WindowId(pub u32);
 
 impl WindowId {
@@ -855,7 +929,6 @@ impl WindowId {
 
 /// ✉️ Who sent an [`Envelope`].
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum Origin {
     Ui {
@@ -909,7 +982,6 @@ impl Origin {
 /// ✉️ The message body an [`Envelope`] carries. `Event` is an opaque pack-encoded blob of the
 /// kernel crate's concrete `Event` type — see the module-level seam docstring.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum Payload {
     /// 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-shard-grants, Part A): struct variant, not
@@ -984,7 +1056,6 @@ impl Payload {
 /// 🔑️ Latest-wins-per-`(actor, key)` coalescing key. Pointer-move, resize, presence, refresh all
 /// coalesce under this — 200 stale mouse-moves must never queue.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct CoalesceKey(pub String);
 
 impl CoalesceKey {
@@ -1001,7 +1072,6 @@ impl CoalesceKey {
 /// short-circuits DRR ordering, an optional coalescing key, an optional envelope-seq this cancels,
 /// and its payload.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct Envelope {
     pub to: ActorId,
     pub from: Origin,
@@ -1044,7 +1114,6 @@ impl Envelope {
 //#region 🔁️TurnResult
 /// 🔁️ How a turn left the actor.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum TurnStatus {
     Idle,
@@ -1109,7 +1178,6 @@ impl TurnStatus {
 
 /// 📊️ What one turn actually spent.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct Usage {
     pub fuel: u64,
     pub wall_us: u64,
@@ -1130,7 +1198,6 @@ impl Usage {
 /// 🔁️ What a `GuestRuntime::execute_turn` (packet B1) hands back to the kernel. `ui_patches`/
 /// `effects` are opaque pack-encoded `Vec<UiPatch>`/`Vec<Effect>` blobs — see the module seam docstring.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct TurnResult {
     pub ui_patches: Vec<u8>,
     pub effects: Vec<u8>,
@@ -1163,7 +1230,6 @@ impl TurnResult {
 /// 🚦 What `Mailbox::enqueue` reports back — `Rejected` must always surface as a busy badge, never
 /// a silent drop of a user action.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum Backpressure {
     Accept,
@@ -1206,15 +1272,13 @@ impl Backpressure {
 /// 📬️ Bounded ring per actor: one `VecDeque` per lane (so pop honors lane priority for free), a
 /// coalescing scan on enqueue, and eviction of the lowest-priority nonempty lane before a hard reject.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct Mailbox {
     pub capacity: u16,
-    /// 🚫️ Excluded from the TS mirror: `ts-rs` has no `TS` impl for `VecDeque`, and this field is
+    /// 🚫️ Excluded from the TS mirror because this field is internal runtime state, and it is
     /// module-private — no TypeScript consumer can reach the per-lane rings, which cross to the web
     /// shard as pack bytes via [`Mailbox::pack_encode`], never as a structural JSON object. Emitting
     /// them would describe a shape the wire never carries. Found the first time typegen was ever run
     /// for this crate (MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, T1's lease).
-    #[cfg_attr(feature = "typegen", ts(skip))]
     lanes: [VecDeque<Envelope>; 4],
     len: u16,
 }
@@ -1319,7 +1383,6 @@ impl Mailbox {
 //#region 🔐️CapabilityGrant
 /// 🔐️ Minimal local stand-in for `kernel::CapabilityGrant` — see the module-level seam docstring.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct CapabilityGrant {
     pub capability: String,
     pub scope: Option<Vec<u8>>,
@@ -1350,7 +1413,6 @@ pub async fn intersect_capabilities(granted: &[CapabilityGrant], requested: &[Ca
 //#region 🚑️FailurePolicy
 /// 🚑️ What triggered a failure-ladder transition.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum FailureSignal {
     DeadlineOverrun {
@@ -1417,7 +1479,6 @@ impl FailureSignal {
 
 /// 🪜️ Rungs of the failure ladder, worst-consequence order.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum FailureStage {
     Healthy,
@@ -1493,7 +1554,6 @@ async fn lane_escalation_thresholds(lane: Lane) -> [u32; 2] {
 /// 🚑️ Per-actor failure ladder state: current [`FailureStage`], warn/restart counters, and the
 /// clean-turn counter that drives decay.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct FailureState {
     pub stage: FailureStage,
     pub clean_turns: u32,
@@ -1647,7 +1707,6 @@ async fn quarantine_duration_ms(restart_count: u32) -> u64 {
 //#region 🗂️ActorRecord
 /// 🗂️ Actor lifecycle state, driven by [`Kernel::activate`]/`suspend`/`resume` and the failure ladder.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ActorStatus {
     Cold,
@@ -1695,7 +1754,6 @@ impl ActorStatus {
 /// 🗂️ Full snapshot of one actor — assembled on demand by [`Kernel::actor_record`] from the
 /// scheduler's live entry plus this actor's kind/capabilities/status/failure/metrics bookkeeping.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct ActorRecord {
     pub id: ActorId,
     pub kind: ActorKind,
@@ -1754,7 +1812,6 @@ impl ActorRecord {
 /// worker, an OS process) unaffected by this distinction — `Native` is the one variant whose meaning
 /// narrows from "a thread" to "this process, pool-scheduled."
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub enum ShardKind {
     /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (P1c): renamed from `Thread` — same process,
     /// same address space, `wasmtime::Store` instances pinned by `ShardTable::pin`'s least-loaded
@@ -1787,7 +1844,6 @@ impl ShardKind {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct ShardId(pub u16);
 
 impl ShardId {
@@ -1814,7 +1870,6 @@ pub async fn clamp_web_shard_count(hardware_concurrency: u16) -> u16 {
 /// via application-level checkpoint (never a raw linear-memory snapshot). The last `exclusive_reserve`
 /// shards are reserved for [`ShardTable::request_exclusive`] leases.
 #[derive(Clone, Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct ShardTable {
     pub kind: ShardKind,
     shard_count: u16,
@@ -2000,7 +2055,6 @@ struct ScheduledActor {
 /// ⏱️ Result of one [`Scheduler::tick`] call: the turns granted this call, and (if nothing ran) the
 /// earliest future timestamp worth ticking again for.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct Decision {
     pub run: Vec<TurnGrant>,
     pub wake_at: Option<u64>,
@@ -2019,7 +2073,6 @@ impl Decision {
 /// ⏱️ One granted turn: which actor, on which shard, with what (possibly throttle-scaled) budget,
 /// and the envelopes drained from its mailbox for this turn.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct TurnGrant {
     pub actor: ActorId,
     pub shard: ShardId,
@@ -2226,7 +2279,6 @@ impl Scheduler {
 /// `Vec<UiPatch>` blob — see the module seam docstring; `node_count` is the host-tracked total used
 /// only for [`Budget::ui_nodes`] quota accounting.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct SceneSnapshot {
     pub revision: u64,
     pub committed_ms: u64,
@@ -2337,7 +2389,6 @@ const SATURATION_MIN_TURNS: u64 = 2;
 const SATURATION_THRESHOLD_PERCENT: u64 = 70;
 
 #[derive(Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct ActorMetrics {
     pub turns: u64,
     pub fuel_total: u64,
@@ -2485,7 +2536,6 @@ impl ActorMetrics {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct ShardMetrics {
     pub actors: u32,
     pub busy_ratio: f32,
@@ -2505,7 +2555,6 @@ impl ShardMetrics {
 
 /// 📈️ Sampled by `Kernel::metrics()`; the host publishes this as bus topic `os.runtime.metrics` at 2Hz.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct KernelMetrics {
     pub actors: u32,
     pub shards: u32,
@@ -2528,7 +2577,6 @@ impl KernelMetrics {
 /// publication — [`ActorMetrics`] joined with the kernel-level bookkeeping ([`PackageId`]/[`Lane`]/
 /// [`ActorStatus`]) it doesn't itself carry. Built by [`Kernel::actor_metrics_samples`].
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct ActorMetricsSample {
     pub id: ActorId,
     pub package: PackageId,
@@ -2561,7 +2609,6 @@ impl ActorMetricsSample {
 /// its own (`important.md`'s purity rule), so a host overlays the real value from its own
 /// `ShardTransport::heartbeat()` reading before publishing.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct ShardMetricsSample {
     pub shard: ShardId,
     pub metrics: ShardMetrics,
@@ -2582,7 +2629,6 @@ impl ShardMetricsSample {
 /// `sampled_at_ms` as a parameter rather than reading a clock — the crate core has none (transports
 /// and time are injected, per this crate's own `Cargo.toml` description).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct RuntimeMetricsSnapshot {
     pub kernel: KernelMetrics,
     pub actors: Vec<ActorMetricsSample>,
@@ -2720,7 +2766,6 @@ pub use thread_transport::ThreadTransport;
 //#region 🏛️Kernel
 /// 🏛️ What activated an actor.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ActivationEvent {
     Manual,
@@ -2799,7 +2844,7 @@ impl Kernel {
         let ordinal = self.next_ordinal.entry(package.clone()).or_insert(0);
         let id = ActorId::new(plugin_ordinal, kind.tag().await, *ordinal, 0).await;
         *ordinal += 1;
-        let budget = lane_defaults::budget_for(lane).await;
+        let budget = lane_defaults::budget_for(lane);
         let shard = if lane == Lane::Interactive {
             let avoid = self.saturated_shards().await;
             self.shards.pin_avoiding(id, &avoid).await
@@ -3049,7 +3094,7 @@ impl Kernel {
         let ordinal = self.next_ordinal.entry(package.clone()).or_insert(0);
         let id = ActorId::new(plugin_ordinal, kind.tag().await, *ordinal, 0).await;
         *ordinal += 1;
-        let budget = lane_defaults::budget_for(lane).await;
+        let budget = lane_defaults::budget_for(lane);
         let shard = self.shards.pin_to(id, shard).await;
         self.scheduler.register_actor(id, package.clone(), lane, budget, shard).await;
         let capabilities = match parent {
@@ -3491,7 +3536,7 @@ mod tests {
         round_trip!(pack_round_trip_actor_id, ActorId, ActorId::new(42, 1, 99, 3).await);
         round_trip!(pack_round_trip_actor_kind, ActorKind, ActorKind::PluginApp { plugin: PackageId("s.cad".into()), app_id: "s.cad.editor".into(), instance_id: 7 });
         round_trip!(pack_round_trip_lane, Lane, Lane::UserVisible);
-        round_trip!(pack_round_trip_budget, Budget, lane_defaults::budget_for(Lane::Interactive).await);
+        round_trip!(pack_round_trip_budget, Budget, lane_defaults::budget_for(Lane::Interactive));
         round_trip!(pack_round_trip_window_id, WindowId, WindowId(5));
         round_trip!(pack_round_trip_origin, Origin, Origin::Bus { topic: "os.runtime.metrics".into() });
         round_trip!(pack_round_trip_job_operation, JobOperation, JobOperation { operation: 11, base_revision: 7, generation: 3, preview_sequence: 2, seed: 99 });
@@ -3528,11 +3573,11 @@ mod tests {
         round_trip!(pack_round_trip_actor_status, ActorStatus, ActorStatus::Suspended { checkpoint: Some(vec![1, 2, 3]) });
         round_trip!(pack_round_trip_shard_id, ShardId, ShardId(3));
         round_trip!(pack_round_trip_shard_kind, ShardKind, ShardKind::WebWorker);
-        round_trip!(pack_round_trip_decision, Decision, Decision { run: vec![TurnGrant { actor: ActorId::new(1, 0, 0, 0).await, shard: ShardId(0), budget: lane_defaults::budget_for(Lane::Background).await, envelopes: vec![] }], wake_at: Some(10) });
+        round_trip!(pack_round_trip_decision, Decision, Decision { run: vec![TurnGrant { actor: ActorId::new(1, 0, 0, 0).await, shard: ShardId(0), budget: lane_defaults::budget_for(Lane::Background), envelopes: vec![] }], wake_at: Some(10) });
         round_trip!(
             pack_round_trip_turn_grant,
             TurnGrant,
-            TurnGrant { actor: ActorId::new(2, 1, 3, 0).await, shard: ShardId(1), budget: lane_defaults::budget_for(Lane::Maintenance).await, envelopes: vec![env(ActorId::new(2, 1, 3, 0).await, Lane::Maintenance, 1).await] }
+            TurnGrant { actor: ActorId::new(2, 1, 3, 0).await, shard: ShardId(1), budget: lane_defaults::budget_for(Lane::Maintenance), envelopes: vec![env(ActorId::new(2, 1, 3, 0).await, Lane::Maintenance, 1).await] }
         );
         round_trip!(pack_round_trip_scene_snapshot, SceneSnapshot, SceneSnapshot { revision: 3, committed_ms: 12, patches: vec![9, 9], node_count: 40 });
         round_trip!(pack_round_trip_shard_metrics, ShardMetrics, ShardMetrics { actors: 3, busy_ratio: 0.5, heartbeat_age_ms: 12 });
@@ -3805,7 +3850,7 @@ mod tests {
             let mut scheduler = Scheduler::new(4).await;
             let busy_package = PackageId("s.busy".into());
             let quiet_package = PackageId("s.quiet".into());
-            let budget = lane_defaults::budget_for(Lane::Background).await;
+            let budget = lane_defaults::budget_for(Lane::Background);
             let mut busy_actors = Vec::new();
             for i in 0..50u32 {
                 let id = ActorId::new(1, 0, i, 0).await;
@@ -3846,11 +3891,11 @@ mod tests {
         async fn deadline_preemption_runs_before_background_drr_deficit() {
             let mut scheduler = Scheduler::new(1).await;
             let package = PackageId("s.mixed".into());
-            let budget = lane_defaults::budget_for(Lane::Background).await;
+            let budget = lane_defaults::budget_for(Lane::Background);
             let bg_actor = ActorId::new(1, 0, 0, 0).await;
             let interactive_actor = ActorId::new(1, 0, 1, 0).await;
             scheduler.register_actor(bg_actor, package.clone(), Lane::Background, budget, ShardId(0)).await;
-            scheduler.register_actor(interactive_actor, package, Lane::Interactive, lane_defaults::budget_for(Lane::Interactive).await, ShardId(0)).await;
+            scheduler.register_actor(interactive_actor, package, Lane::Interactive, lane_defaults::budget_for(Lane::Interactive), ShardId(0)).await;
             scheduler.submit(Envelope { to: bg_actor, from: Origin::Kernel, lane: Lane::Background, seq: 1, deadline_ms: None, coalesce: None, cancel_of: None, payload: Payload::Event { bytes: vec![] } }).await;
             scheduler.submit(Envelope { to: interactive_actor, from: Origin::Kernel, lane: Lane::Interactive, seq: 2, deadline_ms: Some(5), coalesce: None, cancel_of: None, payload: Payload::Event { bytes: vec![] } }).await;
             let decision = scheduler.tick(10).await;
@@ -3913,7 +3958,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn scene_revision_is_monotonic_and_reuses_snapshot_on_empty_commit() {
             let mut store = SceneStore::new();
-            let budget = lane_defaults::budget_for(Lane::Interactive).await;
+            let budget = lane_defaults::budget_for(Lane::Interactive);
             let actor = ActorId::new(1, 0, 0, 0).await;
             let first = store.commit_frame(0).await;
             assert_eq!(first.revision, 0, "no pending patches yet -> initial empty snapshot, revision 0");
@@ -3931,7 +3976,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn scene_ui_node_quota_truncates_and_signals() {
             let mut store = SceneStore::new();
-            let mut budget = lane_defaults::budget_for(Lane::Interactive).await;
+            let mut budget = lane_defaults::budget_for(Lane::Interactive);
             budget.ui_nodes = 100;
             let actor = ActorId::new(1, 0, 0, 0).await;
             let err = store.apply_patch(actor, vec![1], 150, &budget).await.unwrap_err();
@@ -3943,7 +3988,7 @@ mod tests {
         #[semio_framework_async_macros::async_test]
         async fn scene_max_patch_bytes_rejects_oversized_patch() {
             let mut store = SceneStore::new();
-            let mut budget = lane_defaults::budget_for(Lane::Interactive).await;
+            let mut budget = lane_defaults::budget_for(Lane::Interactive);
             budget.max_patch_bytes = 4;
             let actor = ActorId::new(1, 0, 0, 0).await;
             let err = store.apply_patch(actor, vec![0; 100], 1, &budget).await.unwrap_err();
@@ -4258,50 +4303,13 @@ mod tests {
     #[cfg(feature = "typegen")]
     #[semio_framework_async_macros::async_test]
     async fn exports_typescript_bindings() {
-        use crate::*;
-        use ts_rs::TS;
-        PackageId::export().unwrap();
-        PackageHash::export().unwrap();
-        ActorId::export().unwrap();
-        ActorKind::export().unwrap();
-        Lane::export().unwrap();
-        Budget::export().unwrap();
-        JobOperation::export().unwrap();
-        JobCheckpoint::export().unwrap();
-        JobCommitCandidate::export().unwrap();
-        JobStepOutcome::export().unwrap();
-        JobTurn::export().unwrap();
-        JobPublication::export().unwrap();
-        JobReplayLog::export().unwrap();
-        WindowId::export().unwrap();
-        Origin::export().unwrap();
-        Payload::export().unwrap();
-        CoalesceKey::export().unwrap();
-        Envelope::export().unwrap();
-        TurnStatus::export().unwrap();
-        Usage::export().unwrap();
-        TurnResult::export().unwrap();
-        Backpressure::export().unwrap();
-        Mailbox::export().unwrap();
-        CapabilityGrant::export().unwrap();
-        FailureSignal::export().unwrap();
-        FailureStage::export().unwrap();
-        FailureState::export().unwrap();
-        ActorStatus::export().unwrap();
-        ActorRecord::export().unwrap();
-        ShardKind::export().unwrap();
-        ShardId::export().unwrap();
-        ShardTable::export().unwrap();
-        Decision::export().unwrap();
-        TurnGrant::export().unwrap();
-        SceneSnapshot::export().unwrap();
-        ActorMetrics::export().unwrap();
-        ShardMetrics::export().unwrap();
-        KernelMetrics::export().unwrap();
-        ActivationEvent::export().unwrap();
-        ActorMetricsSample::export().unwrap();
-        ShardMetricsSample::export().unwrap();
-        RuntimeMetricsSnapshot::export().unwrap();
+        crate::schema_metadata::validate().unwrap();
+        let rendered = crate::schema_metadata::render_typescript();
+        if let Some(path) = std::env::var_os("SEMIO_TYPEGEN_OUT") {
+            std::fs::write(path, &rendered).unwrap();
+        } else {
+            assert_eq!(rendered, include_str!("🤖️generated/🟦️actor.ts"));
+        }
     }
     //#endregion 🔖️Typegen
 }

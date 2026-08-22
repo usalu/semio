@@ -113,8 +113,8 @@ fn diff_at_path(path: &[JsonPathSegment], leaf: Option<JsonValueDiff>) -> JsonDi
 fn wrap_at_path(path: &[JsonPathSegment], leaf: JsonValueDiff) -> JsonValueDiff {
     match path.split_first() {
         None => leaf,
-        Some((JsonPathSegment::Key(key), rest)) => JsonValueDiff::Object { diff: JsonObjectDiff { removed: Vec::new(), added: Vec::new(), modified: vec![JsonObjectModified { key: key.clone(), diff: Box::pin(wrap_at_path(rest, leaf)) }] } },
-        Some((JsonPathSegment::Index(index), rest)) => JsonValueDiff::Array { diff: JsonArrayDiff { removed: Vec::new(), added: Vec::new(), modified: vec![JsonArrayModified { index: *index, diff: Box::pin(wrap_at_path(rest, leaf)) }] } },
+        Some((JsonPathSegment::Key(key), rest)) => JsonValueDiff::Object { diff: JsonObjectDiff { removed: Vec::new(), added: Vec::new(), modified: vec![JsonObjectModified { key: key.clone(), diff: wrap_at_path(rest, leaf) }] } },
+        Some((JsonPathSegment::Index(index), rest)) => JsonValueDiff::Array { diff: JsonArrayDiff { removed: Vec::new(), added: Vec::new(), modified: vec![JsonArrayModified { index: *index, diff: wrap_at_path(rest, leaf) }] } },
     }
 }
 //#endregion 🔖️DiffAtPath

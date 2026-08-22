@@ -897,7 +897,7 @@ pub mod engine {
 
 //#region 🔖️Manifest
 
-semio_framework_plugin::plugin_exports!(plugin);
+semio_framework_plugin::plugin_exports!(plugin, SpaceApps);
 //#endregion 🔖️Manifest
 
 //#region 📚️Examples

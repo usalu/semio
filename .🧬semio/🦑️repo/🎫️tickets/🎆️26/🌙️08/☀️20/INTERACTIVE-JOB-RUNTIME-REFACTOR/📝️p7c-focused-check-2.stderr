@@ -1,0 +1,24 @@
+    Updating crates.io index
+     Locking 24 packages to latest compatible versions
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.24
+   Compiling serde_core v1.0.229
+   Compiling serde v1.0.229
+    Checking arrayvec v0.7.8
+   Compiling zmij v1.0.23
+    Checking semio-framework-trace v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust)
+   Compiling serde_json v1.0.151
+    Checking smallvec v1.15.2
+    Checking itoa v1.0.18
+    Checking memchr v2.8.3
+    Checking polycool v0.4.0
+    Checking kurbo v0.13.1
+   Compiling syn v3.0.3
+   Compiling serde_derive v1.0.229
+    Checking semio-framework-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust)
+    Checking semio-s-plugin-stdio v0.0.0 (/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/RESUMABLE-WFC-PUZZLE2D-AND-ENERGY-JOBS/🧪️energy-focused/stdio-stub)
+    Checking semio-framework-geometry v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust)
+    Checking semio-framework-job v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust)
+    Checking semio-energy-focused v0.0.0 (/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/RESUMABLE-WFC-PUZZLE2D-AND-ENERGY-JOBS/🧪️energy-focused)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 12.02s

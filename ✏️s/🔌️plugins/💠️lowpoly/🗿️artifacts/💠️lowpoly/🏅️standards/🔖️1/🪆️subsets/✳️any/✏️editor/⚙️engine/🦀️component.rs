@@ -14,29 +14,58 @@ use std::collections::HashMap;
 
 //#region ⚠️ Errors
 /// ⚠️ `LowpolyDocument` compute-session and mesh-mutation / compute-session failure.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum LowpolyCoreError {
-    #[error(transparent)]
-    Mesh(#[from] MeshKernelError),
-    #[error(transparent)]
-    Json(#[from] serde_json::Error),
-    #[error("unknown primitive: {0}")]
+    Mesh(MeshKernelError),
+    Json(serde_json::Error),
     UnknownPrimitive(String),
-    #[error("layer index out of range")]
     LayerIndexOutOfRange,
-    #[error("no active object")]
     NoActiveObject,
-    #[error("mesh missing")]
     MeshMissing,
-    #[error("object not found")]
     ObjectNotFound,
     /// 🕸️ The session-local `mesh_workspace` cache (`🖌️session::LowpolyScratch`) has no entry for an
     /// object, or its cached JSON no longer matches the object's persisted `mesh` handle — e.g. after
     /// an undo/redo of a `create-mesh`/`delete-mesh` (store-level undo/redo bypass `ArtifactApp::handle`
     /// entirely, so this cache is never resynced by them). Fails closed rather than silently editing
     /// stale geometry and re-deriving a WRONG handle from it via `sync_meshes_to_snapshot`.
-    #[error("mesh workspace missing or stale for object {0}")]
     StaleMeshWorkspace(String),
+}
+
+impl std::fmt::Display for LowpolyCoreError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Mesh(error) => write!(formatter, "{error}"),
+            Self::Json(error) => write!(formatter, "{error}"),
+            Self::UnknownPrimitive(primitive) => write!(formatter, "unknown primitive: {primitive}"),
+            Self::LayerIndexOutOfRange => formatter.write_str("layer index out of range"),
+            Self::NoActiveObject => formatter.write_str("no active object"),
+            Self::MeshMissing => formatter.write_str("mesh missing"),
+            Self::ObjectNotFound => formatter.write_str("object not found"),
+            Self::StaleMeshWorkspace(object) => write!(formatter, "mesh workspace missing or stale for object {object}"),
+        }
+    }
+}
+
+impl std::error::Error for LowpolyCoreError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Mesh(error) => std::error::Error::source(error),
+            Self::Json(error) => std::error::Error::source(error),
+            _ => None,
+        }
+    }
+}
+
+impl From<MeshKernelError> for LowpolyCoreError {
+    fn from(error: MeshKernelError) -> Self {
+        Self::Mesh(error)
+    }
+}
+
+impl From<serde_json::Error> for LowpolyCoreError {
+    fn from(error: serde_json::Error) -> Self {
+        Self::Json(error)
+    }
 }
 //#endregion ⚠️ Errors
 

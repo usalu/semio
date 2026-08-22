@@ -6,31 +6,65 @@ use serde::{Deserialize, Serialize};
 
 //#region ⚠️ Errors
 /// ⚠️ Trinity rewrite-engine errors.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum TrinityRewriteError {
     /// 🧩️ Trinity graph fixture load/validation/mutation failure.
-    #[error(transparent)]
-    Graph(#[from] crate::artifacts::jack::TrinityRamError),
+    Graph(crate::artifacts::jack::TrinityRamError),
     /// 🧭️ VCS store/dispatch failure.
-    #[error(transparent)]
-    Vcs(#[from] vcs::VcsError),
+    Vcs(vcs::VcsError),
     /// 🧬️ JSON (de)serialization failure.
-    #[error(transparent)]
-    Json(#[from] serde_json::Error),
+    Json(serde_json::Error),
     /// 🔤️ Jack query parse/execute failure (the shared `🫀️core` jack-query kernel's own API is not
-    /// yet thiserror-migrated).
-    #[error("{0}")]
+    /// yet expressed as an owned error type).
     Jack(String),
     /// 📐️ Force-directed layout failure (`infinite_board_port_directed`'s own API is not yet
-    /// thiserror-migrated).
-    #[error("{0}")]
+    /// expressed as an owned error type).
     Layout(String),
     /// 🎨️ Canvas theme merge failure (`infinite_board_port_directed`'s own API is not yet
-    /// thiserror-migrated).
-    #[error("{0}")]
+    /// expressed as an owned error type).
     CanvasTheme(String),
-    #[error("force layout fixture missing nodes")]
     ForceLayoutFixtureMissingNodes,
+}
+
+impl std::fmt::Display for TrinityRewriteError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Graph(error) => write!(formatter, "{error}"),
+            Self::Vcs(error) => write!(formatter, "{error}"),
+            Self::Json(error) => write!(formatter, "{error}"),
+            Self::Jack(message) | Self::Layout(message) | Self::CanvasTheme(message) => formatter.write_str(message),
+            Self::ForceLayoutFixtureMissingNodes => formatter.write_str("force layout fixture missing nodes"),
+        }
+    }
+}
+
+impl std::error::Error for TrinityRewriteError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Graph(error) => std::error::Error::source(error),
+            Self::Vcs(error) => std::error::Error::source(error),
+            Self::Json(error) => std::error::Error::source(error),
+            Self::Jack(_) | Self::Layout(_) | Self::CanvasTheme(_) | Self::ForceLayoutFixtureMissingNodes => None,
+        }
+    }
+}
+
+impl From<crate::artifacts::jack::TrinityRamError> for TrinityRewriteError {
+    fn from(error: crate::artifacts::jack::TrinityRamError) -> Self {
+        Self::Graph(error)
+    }
+}
+
+impl From<vcs::VcsError> for TrinityRewriteError {
+    fn from(error: vcs::VcsError) -> Self {
+        Self::Vcs(error)
+    }
+}
+
+impl From<serde_json::Error> for TrinityRewriteError {
+    fn from(error: serde_json::Error) -> Self {
+        Self::Json(error)
+    }
 }
 //#endregion ⚠️ Errors
 
@@ -80,7 +114,7 @@ pub const TRINITY_REWRITE_DIALECT: semio_framework_plugin::Dialect = semio_frame
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — Text × Document per owner-table (`text.♻️rewrite`).
-pub async fn artifact_kind() -> ArtifactKindSpec {
+pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "text.♻️rewrite".into(),
         name: "Trinity Rewrite Rule".into(),
@@ -106,7 +140,7 @@ pub async fn artifact_kind() -> ArtifactKindSpec {
 /// declaration tree's `🪆️subsets/✳️any/🦀️component.rs` reads these same five `LanguageSpec`s to build
 /// its `NativeCodecs` `LanguagePair`s (see that file's own doc for why it does not delegate to a
 /// sibling `io::io()` the way `🗒️note`/`🖍️draw` do).
-pub async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -219,7 +253,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
 /// for schema/io/viewer/editor rows. `definition()` (old `ArtifactDefinition`/capability rows, above)
 /// is kept per debt D1, and `artifact_kind()` is kept because this crate's own plugin-root
 /// `.activation(...)` still reads `artifact_kind().id`; neither has any caller left in this function.
-pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::TrinityApps> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.trinity.rewrite").expect("canonical rewrite kind"), localization: &[], standards: vec![crate::artifacts::rewrite::standards::v1::standard()] }

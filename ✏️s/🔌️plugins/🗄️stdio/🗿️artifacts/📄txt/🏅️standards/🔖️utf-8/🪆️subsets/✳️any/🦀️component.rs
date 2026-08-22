@@ -27,13 +27,13 @@ fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
 /// 🌳️ `standard utf-8 / subset any`'s complete declaration — carrier pilot: `io.entries` is
 /// empty by the carrier law (see `🚪️io/🦀️component.rs`'s `io()` doc comment).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn subset() -> SubsetDeclaration {
+pub fn subset() -> SubsetDeclaration<crate::plugin::StdioApps> {
     SubsetDeclaration {
         dialect: DIALECT,
         schema: SchemaDeclaration { descriptor: schema::txt_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io::io(),
-        viewer: viewer_surface::<viewer::TxtViewer>(viewer::create_txt_viewer()),
-        editor: editor_surface::<editor::TxtEditor>(editor::create_txt_editor()),
+        viewer: viewer_surface::<viewer::TxtViewer, crate::plugin::StdioApps>(viewer::create_txt_viewer()),
+        editor: editor_surface::<editor::TxtEditor, crate::plugin::StdioApps>(editor::create_txt_editor()),
         examples: examples(),
     }
 }

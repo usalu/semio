@@ -21,7 +21,7 @@ const PUZZLE3D_VIEW_FALLBACK_MESH_KIND: &str = "box";
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::puzzle3d::create_puzzle3d_viewer` — the
 /// framework kit's own read-only `WindowKindDefinition`, unmodified.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     MeshWindowKit::window_kind()
 }
 //#endregion 🔖️Definition
@@ -29,7 +29,7 @@ pub async fn definition() -> WindowKindDefinition {
 //#region 🔖️SceneJson
 /// 👁️ Read-only twin of the editor's `object_scale_json`, over the real typed `Puzzle3dScale` (a
 /// scalar-or-`[x,y,z]` closed union) instead of a `serde_json::Value` scratch fixture.
-async fn puzzle3d_view_object_scale(object: &Puzzle3dObject) -> [f64; 3] {
+fn puzzle3d_view_object_scale(object: &Puzzle3dObject) -> [f64; 3] {
     match &object.scale {
         Some(Puzzle3dScale::Uniform(scale)) => [*scale, *scale, *scale],
         Some(Puzzle3dScale::Vec3(vec3)) => *vec3,
@@ -39,7 +39,7 @@ async fn puzzle3d_view_object_scale(object: &Puzzle3dObject) -> [f64; 3] {
 
 /// 👁️ Real object instances read straight off the document — no selection/hover paint, no reveal
 /// cutoff (a viewer has no fill-planning session to reveal against).
-async fn puzzle3d_view_instances_json(document: &Puzzle3dSnapshot) -> String {
+fn puzzle3d_view_instances_json(document: &Puzzle3dSnapshot) -> String {
     let instances: Vec<serde_json::Value> = document
         .objects
         .iter()
@@ -64,7 +64,7 @@ async fn puzzle3d_view_instances_json(document: &Puzzle3dSnapshot) -> String {
 /// objects. A viewer never had a browser-registered GLB round-trip (`registerBrushMesh` is an editor
 /// action), so every url-backed mesh resolves through the same `world3d_mesh_id_from_url` id scheme
 /// the host renderer already knows how to fetch.
-async fn puzzle3d_view_meshes_json(document: &Puzzle3dSnapshot) -> String {
+fn puzzle3d_view_meshes_json(document: &Puzzle3dSnapshot) -> String {
     let mut urls: Vec<String> = document.objects.iter().filter_map(|object| object.mesh_url.clone()).filter(|url| !url.is_empty()).collect();
     urls.sort();
     urls.dedup();
@@ -76,8 +76,13 @@ async fn puzzle3d_view_meshes_json(document: &Puzzle3dSnapshot) -> String {
 /// 👁️ Pure `Puzzle3dSnapshot -> UiNode` read: default camera (a viewer has no persisted per-session
 /// camera — `Config = NoConfig`), no selection/gumball/engagement overlay, real objects read straight
 /// off the document through the framework `MeshWindowKit`.
-pub async fn render(document: &Puzzle3dSnapshot) -> UiNode {
-    let view = MeshView { camera_json: world3d_default_camera(), meshes_json: puzzle3d_view_meshes_json(document), instances_json: puzzle3d_view_instances_json(document), selection_json: world3d_selection_json("pick", &[], None) };
+pub fn render(document: &Puzzle3dSnapshot) -> semio_framework_plugin::plugin_app_close_prelude::BuiltNode {
+    let view = MeshView {
+        camera_json: semio_framework::io::resolve_ready(world3d_default_camera()),
+        meshes_json: puzzle3d_view_meshes_json(document),
+        instances_json: puzzle3d_view_instances_json(document),
+        selection_json: world3d_selection_json("pick", &[], None),
+    };
     MeshWindowKit::render(&view)
 }
 //#endregion 🔖️Render
@@ -87,21 +92,21 @@ pub async fn render(document: &Puzzle3dSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn definition_declares_the_framework_mesh_window() {
+    #[test]
+    fn definition_declares_the_framework_mesh_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
         assert_eq!(def.id, "framework.window.mesh");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn render_produces_a_scene_node_for_the_default_document() {
+    #[test]
+    fn render_produces_a_scene_node_for_the_default_document() {
         let document = Puzzle3dSnapshot::default();
         let _node = render(&document);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn instances_json_carries_one_entry_per_object() {
+    #[test]
+    fn instances_json_carries_one_entry_per_object() {
         let mut document = Puzzle3dSnapshot::default();
         document.objects.push(Puzzle3dObject {
             id: "o1".into(),

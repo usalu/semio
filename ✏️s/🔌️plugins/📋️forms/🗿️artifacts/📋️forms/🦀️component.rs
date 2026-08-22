@@ -445,7 +445,7 @@ pub async fn forms_snapshot_with_state(schema: String, id: String, version: Stri
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
 /// `crate::editor::forms::create_forms_app`'s `🔖️Manifest` region.
-pub async fn artifact_kind() -> ArtifactKindSpec {
+pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "form.dictionary".into(),
         name: "Form Dictionary".into(),
@@ -511,7 +511,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
 /// (`any`). Sole registration channel (plugin root `.declare_artifact(artifact())`); the old
 /// `.artifact(declaration())`/`.editor::<>()`/`.viewer::<>()` triad is deleted, not kept alongside
 /// it (a second parallel registration channel is the compatibility layer CLAUDE.md forbids).
-pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::FormsApps> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
 

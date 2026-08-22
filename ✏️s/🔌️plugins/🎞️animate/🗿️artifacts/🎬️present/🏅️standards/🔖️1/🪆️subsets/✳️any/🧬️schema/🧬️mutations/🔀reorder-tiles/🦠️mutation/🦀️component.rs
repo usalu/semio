@@ -20,19 +20,19 @@ pub struct ReorderTiles {
 impl MutationKind<PresentSnapshot, PresentMutation> for ReorderTiles {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "reorder", entity: "tiles", kind: "reorder-tiles", record: "ReorderedTiles" };
 
-    async fn diff(&self, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
+    fn diff(&self, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
         super::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &PresentSnapshot) -> Vec<PresentMutation> {
+    fn inverse(&self, base: &PresentSnapshot) -> Vec<PresentMutation> {
         super::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Reorder tile \"{}\" to position {}", self.id, self.to_index)
     }
 
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec!["tiles".into(), self.id.clone()]
     }
 }

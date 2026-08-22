@@ -5,7 +5,7 @@ use crate::artifacts::imperative::mutations::ImperativeMutation;
 use crate::artifacts::imperative::ImperativeSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &super::mutation::ReorderSteps, base: &ImperativeSnapshot) -> Vec<ImperativeMutation> {
+pub fn inverse(payload: &super::mutation::ReorderSteps, base: &ImperativeSnapshot) -> Vec<ImperativeMutation> {
     let steps = crate::artifacts::imperative::mutations::resolve_steps(base, &payload.path_ref);
     match steps.iter().position(|step| step.id == payload.id) {
         Some(orig_index) => vec![crate::artifacts::imperative::mutations::reorder_steps::mutation::reorder_steps(payload.path_ref.clone(), payload.id.clone(), orig_index)],

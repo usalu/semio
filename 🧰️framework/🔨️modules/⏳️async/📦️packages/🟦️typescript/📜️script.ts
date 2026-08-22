@@ -7,7 +7,7 @@ import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../�
 class InfoScript extends BundleScript {
   run(): void {
     console.log(
-      "@semio-tech/framework-async: pure ts-rs mirror + the documented (unimplemented) WebAsyncScope seam. " +
+      "@semio-tech/framework-async: owned-schema mirror + the documented (unimplemented) WebAsyncScope seam. " +
         "The concrete HostAsyncRuntime lives in Rust only (semio-framework-async, packet R2's tokio-backed " +
         "implementation). Nothing to build or test on the TS side yet — see 🟦️component.ts.",
     );

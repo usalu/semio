@@ -9,17 +9,16 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { Scene, UnifiedGumball, type GumballConfig } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "@storybook/react";
+import { Scene, UnifiedGumball, type GumballConfig, type UnifiedGumballProps } from "@semio-tech/ui-react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import type * as THREE from "three";
 // #endregion 🔌️Adapters
 
 // 🎛️#region 🔖️UnifiedGumball
 /** @emoji 📦️ `UnifiedGumball` needs a live `THREE.Object3D` target — this mounts a box, captures its ref
  * once R3F assigns it, and only then renders the gumball attached to it. */
 function GumballTargetDemo({ config }: { readonly config?: GumballConfig }) {
-  const [target, setTarget] = useState<THREE.Object3D | null>(null);
+  const [target, setTarget] = useState<UnifiedGumballProps["target"] | null>(null);
   return (
     <Scene showGrid>
       <mesh

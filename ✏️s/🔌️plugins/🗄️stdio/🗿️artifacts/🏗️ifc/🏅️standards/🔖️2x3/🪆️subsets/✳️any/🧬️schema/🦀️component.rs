@@ -201,7 +201,7 @@ pub mod derived_analysis {
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match if text.trim_start().starts_with("ISO-10303-21") {
-                        crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(text.as_bytes()).await.map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
+                        crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(text.as_bytes()).map_err(|error| store::TextError::new(error, dsl::TextSpan::at(1, 1)))
                     } else {
                         <Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text)
                     } {
@@ -211,15 +211,13 @@ pub mod derived_analysis {
                             diagnostics.push(dsl::Diagnostic::error("stdio.analyze.text", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => {
-                        match <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes).or_else(|_| semio_framework_plugin::resolve_ready(crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(bytes)).map_err(store::PackError::Schema)) {
-                            Ok(snapshot) => parts.snapshot = Some(snapshot),
-                            Err(err) => {
-                                confidence = IoConfidence::Low;
-                                diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
-                            }
+                    AnalyzeSource::Binary(bytes) => match <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes).or_else(|_| crate::artifacts::ifc::standards::v2x3::engine::decode_ifc2x3(bytes).map_err(store::PackError::Schema)) {
+                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Err(err) => {
+                            confidence = IoConfidence::Low;
+                            diagnostics.push(dsl::Diagnostic::error("stdio.analyze.binary", dsl::TextSpan::at(1, 1), err.to_string()));
                         }
-                    }
+                    },
                 }
             }
             Analysis { parts, dialect: Self::DIALECT, confidence, diagnostics }

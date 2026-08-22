@@ -7,12 +7,12 @@ pub struct SplitMix64(u64);
 
 impl SplitMix64 {
     /// 🌱️ Starts a mixing stream from a raw seed.
-    pub async fn new(seed: u64) -> Self {
+    pub fn new(seed: u64) -> Self {
         Self(seed)
     }
 
     /// 🌱️ Advances the stream and returns the next mixed 64-bit word.
-    pub async fn next_u64(&mut self) -> u64 {
+    pub fn next_u64(&mut self) -> u64 {
         self.0 = self.0.wrapping_add(0x9E37_79B9_7F4A_7C15);
         let mut z = self.0;
         z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
@@ -24,7 +24,7 @@ impl SplitMix64 {
 
 // #region 🔖️Rng
 #[inline]
-async fn rotl(x: u64, k: u32) -> u64 {
+fn rotl(x: u64, k: u32) -> u64 {
     x.rotate_left(k)
 }
 
@@ -39,38 +39,38 @@ pub struct Rng {
 
 impl Rng {
     /// 🌱️ Seeds all four state words via [`SplitMix64`] so even adjacent seeds decorrelate immediately.
-    pub async fn from_seed(seed: u64) -> Self {
-        let mut sm = SplitMix64::new(seed).await;
+    pub fn from_seed(seed: u64) -> Self {
+        let mut sm = SplitMix64::new(seed);
         let mut s = [0u64; 4];
         for slot in s.iter_mut() {
-            *slot = sm.next_u64().await;
+            *slot = sm.next_u64();
         }
         Self { s }
     }
 
     /// 🎲️ Next raw 64-bit word (the xoshiro256** `scramble` output), advancing the state.
-    pub async fn next_u64(&mut self) -> u64 {
-        let result = rotl(self.s[1].wrapping_mul(5), 7).await.wrapping_mul(9);
+    pub fn next_u64(&mut self) -> u64 {
+        let result = rotl(self.s[1].wrapping_mul(5), 7).wrapping_mul(9);
         let t = self.s[1] << 17;
         self.s[2] ^= self.s[0];
         self.s[3] ^= self.s[1];
         self.s[1] ^= self.s[2];
         self.s[0] ^= self.s[3];
         self.s[2] ^= t;
-        self.s[3] = rotl(self.s[3], 45).await;
+        self.s[3] = rotl(self.s[3], 45);
         result
     }
 
     /// 🎯️ Uniform `f64` in `[0, 1)`, built from the top 53 bits of a raw draw (the mantissa width of `f64`).
-    pub async fn next_f64(&mut self) -> f64 {
-        (self.next_u64().await >> 11) as f64 * (1.0 / (1u64 << 53) as f64)
+    pub fn next_f64(&mut self) -> f64 {
+        (self.next_u64() >> 11) as f64 * (1.0 / (1u64 << 53) as f64)
     }
 
     /// 🎯️ Uniform `u64` in `[lo, hi)`. Rejects draws that fall in the trailing partial bucket of
     /// `u64::MAX / range` instead of using `% range` directly: naive modulo keeps that partial bucket,
     /// which over-weights the low end of the range by a hair — rejection sampling discards it so every
     /// remaining value maps to exactly the same number of raw draws.
-    pub async fn next_range(&mut self, lo: u64, hi: u64) -> u64 {
+    pub fn next_range(&mut self, lo: u64, hi: u64) -> u64 {
         debug_assert!(hi >= lo, "next_range: hi must be >= lo");
         let range = hi - lo;
         if range == 0 {
@@ -78,7 +78,7 @@ impl Rng {
         }
         let limit = u64::MAX - (u64::MAX % range);
         loop {
-            let x = self.next_u64().await;
+            let x = self.next_u64();
             if x < limit {
                 return lo + x % range;
             }
@@ -86,37 +86,37 @@ impl Rng {
     }
 
     /// 🪙️ `true` with probability `p` (clamped semantics: `p <= 0.0` never fires, `p >= 1.0` always fires).
-    pub async fn next_bool(&mut self, p: f64) -> bool {
-        self.next_f64().await < p
+    pub fn next_bool(&mut self, p: f64) -> bool {
+        self.next_f64() < p
     }
 
     /// 🔀️ In-place Fisher-Yates shuffle: uniform over all `n!` permutations.
-    pub async fn shuffle<T>(&mut self, items: &mut [T]) {
+    pub fn shuffle<T>(&mut self, items: &mut [T]) {
         let n = items.len();
         for i in (1..n).rev() {
-            let j = self.next_range(0, (i + 1) as u64).await as usize;
+            let j = self.next_range(0, (i + 1) as u64) as usize;
             items.swap(i, j);
         }
     }
 
     /// 🎯️ Picks one uniformly random element, or `None` for an empty slice.
-    pub async fn choose<'a, T>(&mut self, items: &'a [T]) -> Option<&'a T> {
+    pub fn choose<'a, T>(&mut self, items: &'a [T]) -> Option<&'a T> {
         if items.is_empty() {
             return None;
         }
-        let idx = self.next_range(0, items.len() as u64).await as usize;
+        let idx = self.next_range(0, items.len() as u64) as usize;
         items.get(idx)
     }
 
     /// 🎲️ Raw 256-bit state words, for external snapshot/restore of a generator mid-stream.
-    pub async fn state(&self) -> [u64; 4] {
+    pub fn state(&self) -> [u64; 4] {
         self.s
     }
 
     /// 🌱️ Rebuilds a generator from previously captured state words (inverse of [`Rng::state`]).
     /// The all-zero state is xoshiro256**'s fixed point (every subsequent draw is also zero), so
     /// callers must never pass it; debug builds catch the mistake immediately.
-    pub async fn from_state(s: [u64; 4]) -> Self {
+    pub fn from_state(s: [u64; 4]) -> Self {
         debug_assert!(s != [0u64; 4], "from_state: all-zero state is the xoshiro256** fixed point");
         Self { s }
     }
@@ -124,12 +124,12 @@ impl Rng {
     /// 🎯️ `k` distinct indices drawn uniformly from `0..n`, via Floyd's O(k)-time, O(k)-space partial
     /// sampling algorithm — it never materializes the full `0..n` universe, which matters once `n` is a
     /// graph's node count and `k` is a small subsample. Order is not itself a uniform permutation.
-    pub async fn sample_without_replacement(&mut self, n: usize, k: usize) -> Vec<usize> {
+    pub fn sample_without_replacement(&mut self, n: usize, k: usize) -> Vec<usize> {
         assert!(k <= n, "sample_without_replacement: k must not exceed n");
         let mut selected: std::collections::HashSet<usize> = std::collections::HashSet::with_capacity(k);
         let mut result = Vec::with_capacity(k);
         for j in (n - k)..n {
-            let t = self.next_range(0, (j + 1) as u64).await as usize;
+            let t = self.next_range(0, (j + 1) as u64) as usize;
             let picked = if selected.contains(&t) { j } else { t };
             selected.insert(picked);
             result.push(picked);
@@ -153,7 +153,7 @@ impl AliasTable {
     /// degenerate (no valid probability distribution exists), so both are defined to always sample
     /// index `0` rather than panic — callers that pass a plain degree/weight vector don't need to
     /// special-case the all-zero graph before building a table.
-    pub async fn new(weights: &[f64]) -> Self {
+    pub fn new(weights: &[f64]) -> Self {
         let n = weights.len();
         if n == 0 {
             return Self { prob: vec![1.0], alias: vec![0] };
@@ -200,10 +200,10 @@ impl AliasTable {
     }
 
     /// ⚖️ Draws one index in O(1): pick a bucket uniformly, then coin-flip between its own item and its alias.
-    pub async fn sample(&self, rng: &mut Rng) -> usize {
+    pub fn sample(&self, rng: &mut Rng) -> usize {
         let n = self.prob.len();
-        let i = rng.next_range(0, n as u64).await as usize;
-        if rng.next_f64().await < self.prob[i] {
+        let i = rng.next_range(0, n as u64) as usize;
+        if rng.next_f64() < self.prob[i] {
             i
         } else {
             self.alias[i]
@@ -215,35 +215,35 @@ impl AliasTable {
 // #region 🔖️Distributions
 /// 🔔️ Standard normal via the Box-Muller transform, scaled to `(mean, std_dev)`. Draws `u1` from
 /// `(0, 1]` (not `[0, 1)`) so `ln(u1)` never sees an exact zero.
-pub async fn normal(rng: &mut Rng, mean: f64, std_dev: f64) -> f64 {
-    let u1 = 1.0 - rng.next_f64().await;
-    let u2 = rng.next_f64().await;
+pub fn normal(rng: &mut Rng, mean: f64, std_dev: f64) -> f64 {
+    let u1 = 1.0 - rng.next_f64();
+    let u2 = rng.next_f64();
     let z0 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
     mean + std_dev * z0
 }
 
 /// 🎲️ Number of Bernoulli(`p`) trials up to and including the first success (support `1, 2, 3, ...`),
 /// sampled by inverse-CDF transform.
-pub async fn geometric(rng: &mut Rng, p: f64) -> u64 {
+pub fn geometric(rng: &mut Rng, p: f64) -> u64 {
     debug_assert!(p > 0.0 && p <= 1.0, "geometric: p must be in (0, 1]");
     if p >= 1.0 {
         return 1;
     }
-    let u = 1.0 - rng.next_f64().await;
+    let u = 1.0 - rng.next_f64();
     (u.ln() / (1.0 - p).ln()).floor() as u64 + 1
 }
 
 /// 🎲️ Poisson(`lambda`) via Knuth's product-of-uniforms algorithm: O(lambda) draws per sample, so it
 /// stays fast for moderate `lambda` (roughly up to a few dozen) but degrades for very large `lambda`,
 /// where a transformed-rejection method would be preferable.
-pub async fn poisson(rng: &mut Rng, lambda: f64) -> u64 {
+pub fn poisson(rng: &mut Rng, lambda: f64) -> u64 {
     debug_assert!(lambda >= 0.0, "poisson: lambda must be non-negative");
     let l = (-lambda).exp();
     let mut k = 0u64;
     let mut p = 1.0;
     loop {
         k += 1;
-        p *= rng.next_f64().await;
+        p *= rng.next_f64();
         if p <= l {
             break;
         }
@@ -253,11 +253,11 @@ pub async fn poisson(rng: &mut Rng, lambda: f64) -> u64 {
 
 /// 📐️ `n` samples from a Pareto-like power-law distribution with the given `exponent`, matching
 /// NetworkX `utils.powerlaw_sequence`'s `random() ** (-1 / (exponent - 1))` inverse-transform.
-pub async fn powerlaw_sequence(rng: &mut Rng, n: usize, exponent: f64) -> Vec<f64> {
+pub fn powerlaw_sequence(rng: &mut Rng, n: usize, exponent: f64) -> Vec<f64> {
     debug_assert!(exponent != 1.0, "powerlaw_sequence: exponent must not be 1.0");
     let mut out = Vec::with_capacity(n);
     for _ in 0..n {
-        let u = 1.0 - rng.next_f64().await;
+        let u = 1.0 - rng.next_f64();
         out.push(u.powf(-1.0 / (exponent - 1.0)));
     }
     out
@@ -266,14 +266,14 @@ pub async fn powerlaw_sequence(rng: &mut Rng, n: usize, exponent: f64) -> Vec<f6
 /// 📊️ Samples a rank in `1..=n` from a Zipf distribution via rejection sampling: draws from the
 /// unbounded-support Zipf algorithm (Devroye) and re-rejects any draw landing outside `1..=n`, so no
 /// O(n) setup is needed even when `n` is huge. Requires `exponent > 1.0`.
-pub async fn zipf(rng: &mut Rng, n: usize, exponent: f64) -> u64 {
+pub fn zipf(rng: &mut Rng, n: usize, exponent: f64) -> u64 {
     debug_assert!(exponent > 1.0, "zipf: exponent must be > 1.0");
     debug_assert!(n >= 1, "zipf: n must be >= 1");
     let am1 = exponent - 1.0;
     let b = 2f64.powf(am1);
     loop {
-        let u = 1.0 - rng.next_f64().await;
-        let v = rng.next_f64().await;
+        let u = 1.0 - rng.next_f64();
+        let v = rng.next_f64();
         let x = u.powf(-1.0 / am1).floor();
         if x < 1.0 {
             continue;
@@ -287,18 +287,18 @@ pub async fn zipf(rng: &mut Rng, n: usize, exponent: f64) -> u64 {
 
 /// 🎯️ `n` draws from a discrete distribution given as a weight vector, matching NetworkX
 /// `utils.discrete_sequence`; builds one [`AliasTable`] and draws from it `n` times.
-pub async fn discrete_sequence(rng: &mut Rng, n: usize, distribution: &[f64]) -> Vec<usize> {
-    let table = AliasTable::new(distribution).await;
+pub fn discrete_sequence(rng: &mut Rng, n: usize, distribution: &[f64]) -> Vec<usize> {
+    let table = AliasTable::new(distribution);
     let mut out = Vec::with_capacity(n);
     for _ in 0..n {
-        out.push(table.sample(rng).await);
+        out.push(table.sample(rng));
     }
     out
 }
 
 /// ➕️ Running sum of `weights`, normalized so the last entry is `1.0` (a no-operation on an all-zero or
 /// empty input, returned unnormalized since there is no meaningful scale to normalize to).
-pub async fn cumulative_distribution(weights: &[f64]) -> Vec<f64> {
+pub fn cumulative_distribution(weights: &[f64]) -> Vec<f64> {
     let mut cumulative = Vec::with_capacity(weights.len());
     let mut running = 0.0;
     for &w in weights {

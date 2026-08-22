@@ -22,10 +22,10 @@ pub enum Fem2dViewCommand {
 }
 
 impl protocol::OpBinary for Fem2dViewCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(Fem2dViewCommand::Noop)
     }
 }
@@ -65,23 +65,23 @@ impl ArtifactViewer for Fem2dViewer {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
-        match body_key {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::ComponentTree {
+        semio_framework_plugin::built_to_component_tree(match body_key {
             model::BODY_KEY => model::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
+        })
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_fem2d_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_fem2d_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(FEM2D_DIALECT)
         .document(["semio", "fem", "fem2d"])
         .icon_id("fem-app")
         .mode(view::FEM2D_VIEW_MODE_VIEW, semio_framework_plugin::LocalizedLabel::native("View", "Ansicht"), "eye")
         .default_mode_id(view::FEM2D_VIEW_MODE_VIEW)
-        .window_kind(model::WINDOW_KIND_ID, semio_framework_plugin::LocalizedLabel::native("Model", "Modell"), model::BODY_KEY, semio_framework_plugin::SurfaceKind::Canvas2d, "fem-model")
+        .window_kind(model::WINDOW_KIND_ID, semio_framework_plugin::LocalizedLabel::native("Model", "Modell"), model::BODY_KEY, semio_framework_ui_contract::SurfaceKind::Canvas2d, "fem-model")
         .default_layout(semio_framework_plugin::create_default_layout(&[model::WINDOW_KIND_ID.into()], "row", None, None))
         .build_definition()
 }
@@ -92,21 +92,21 @@ pub async fn create_fem2d_viewer() -> semio_framework_plugin::AppDefinition {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn create_fem2d_viewer_builds_a_definition_for_the_viewer_role() {
+    #[test]
+    fn create_fem2d_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_fem2d_viewer();
         assert_eq!(def.role, semio_framework::AppRole::Viewer);
         assert_eq!(def.dialect, FEM2D_DIALECT.into());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn viewer_dialect_matches_the_artifact_coordinate() {
+    #[test]
+    fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<Fem2dViewer as ArtifactViewer>::DIALECT, FEM2D_DIALECT);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn initial_snapshot_is_non_empty() {
-        let snapshot = <Fem2dViewer as ArtifactViewer>::initial_snapshot();
+    #[test]
+    fn initial_snapshot_is_non_empty() {
+        let snapshot = semio_framework_plugin::resolve_ready(<Fem2dViewer as ArtifactViewer>::initial_snapshot());
         assert!(!snapshot.nodes.is_empty(), "expected the bundled example fixture's nodes");
     }
 }

@@ -7,7 +7,7 @@ use semio_s_plugin_stdio::artifacts::json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SC
 /// own key-order/lexeme-preserving model, not `serde_json::Value` — see json's snapshot module).
 pub async fn register() {}
 
-pub async fn deserialize(from: &JsonSnapshot) -> Result<EnergyModelSnapshot, store::TextError> {
+pub fn deserialize(from: &JsonSnapshot) -> Result<EnergyModelSnapshot, store::TextError> {
     let _ = STDIO_JSON_DOCUMENT_SCHEMA;
     let out: EnergyModelSnapshot = serde_json::from_value(from.to_serde_value()).map_err(|e| store::TextError::new(format!("energy_model<-json: {e}"), dsl::TextSpan::at(1, 1)))?;
     Ok(out)

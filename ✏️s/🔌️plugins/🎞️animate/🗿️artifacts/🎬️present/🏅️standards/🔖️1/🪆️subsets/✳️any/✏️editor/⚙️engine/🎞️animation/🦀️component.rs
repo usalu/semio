@@ -3,6 +3,7 @@
 
 #![allow(clippy::too_many_arguments, clippy::type_complexity)]
 
+#[allow(clippy::module_inception)]
 pub mod animation {
     //! 🎞️ Animation trait, leaf animations, composites, and `.animate()` builder.
 
@@ -24,36 +25,36 @@ pub mod animation {
     /// 🎬️ Core animation contract with recursive alpha propagation.
     #[dyn_enum]
     pub trait Animation: Send {
-        async fn duration(&self) -> f64;
-        async fn rate_func(&self) -> RateFunc;
-        async fn begin(&mut self);
-        async fn finish(&mut self);
-        async fn interpolate_mobject(&mut self, alpha: f64);
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn duration(&self) -> f64;
+        fn rate_func(&self) -> RateFunc;
+        fn begin(&mut self);
+        fn finish(&mut self);
+        fn interpolate_mobject(&mut self, alpha: f64);
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let rate = self.rate_func();
             let alpha = rate(parent_alpha.clamp(0.0, 1.0));
             let _ = mobjects;
             self.interpolate_mobject(alpha);
         }
-        async fn get_all_mobjects(&self) -> Vec<u64>;
-        async fn is_introducer(&self) -> bool {
+        fn get_all_mobjects(&self) -> Vec<u64>;
+        fn is_introducer(&self) -> bool {
             false
         }
-        async fn is_remover(&self) -> bool {
+        fn is_remover(&self) -> bool {
             false
         }
     }
 
-    async fn eased_alpha(animation: &Animations, alpha: f64) -> f64 {
+    fn eased_alpha<A: Animation + ?Sized>(animation: &A, alpha: f64) -> f64 {
         (animation.rate_func())(alpha.clamp(0.0, 1.0))
     }
 
-    pub(crate) async fn eased_alpha_for(animation: &Animations, alpha: f64) -> f64 {
+    pub(crate) fn eased_alpha_for<A: Animation + ?Sized>(animation: &A, alpha: f64) -> f64 {
         eased_alpha(animation, alpha)
     }
 
     /// 🎯️ Resolve a VSobject by id and run a closure on it.
-    pub async fn with_vsobject<F>(mobjects: &mut HashMap<u64, Sobjects>, id: u64, f: F)
+    pub fn with_vsobject<F>(mobjects: &mut HashMap<u64, Sobjects>, id: u64, f: F)
     where
         F: FnOnce(&mut VSobject),
     {
@@ -65,7 +66,7 @@ pub mod animation {
     }
 
     /// ▶️ Drive an animation to a parent alpha in [0,1], mutating scene mobjects.
-    pub async fn interpolate_at(mobjects: &mut HashMap<u64, Sobjects>, animation: &mut Animations, parent_alpha: f64) {
+    pub fn interpolate_at(mobjects: &mut HashMap<u64, Sobjects>, animation: &mut Animations, parent_alpha: f64) {
         animation.apply(mobjects, parent_alpha);
     }
 
@@ -79,41 +80,41 @@ pub mod animation {
     }
 
     impl Create {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::linear, started: false, snapshot_ratio: 1.0 }
         }
 
-        pub async fn with_rate(mut self, rate: RateFunc) -> Self {
+        pub fn with_rate(mut self, rate: RateFunc) -> Self {
             self.rate = rate;
             self
         }
     }
 
     impl Animation for Create {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.started = true;
             self.snapshot_ratio = 1.0;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, alpha: f64) {
             let _ = (self.target_id, alpha, self.started, self.snapshot_ratio);
         }
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             with_vsobject(mobjects, self.target_id, |v| {
                 v.set_point_ratio(alpha * self.snapshot_ratio);
             });
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
-        async fn is_introducer(&self) -> bool {
+        fn is_introducer(&self) -> bool {
             true
         }
     }
@@ -129,26 +130,26 @@ pub mod animation {
     }
 
     impl FadeIn {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::smooth, target_opacity: 1.0, start_opacity: 0.0, primed: false }
         }
     }
 
     impl Animation for FadeIn {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.primed = false;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, alpha: f64) {
             let _ = (self.target_id, alpha * self.target_opacity);
         }
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             with_vsobject(mobjects, self.target_id, |v| {
                 if !self.primed {
@@ -159,10 +160,10 @@ pub mod animation {
                 v.set_opacity(opacity);
             });
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
-        async fn is_introducer(&self) -> bool {
+        fn is_introducer(&self) -> bool {
             true
         }
     }
@@ -177,26 +178,26 @@ pub mod animation {
     }
 
     impl FadeOut {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::smooth, start_opacity: 1.0, primed: false }
         }
     }
 
     impl Animation for FadeOut {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.primed = false;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, alpha: f64) {
             let _ = (self.target_id, 1.0 - alpha);
         }
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             with_vsobject(mobjects, self.target_id, |v| {
                 if !self.primed {
@@ -206,10 +207,10 @@ pub mod animation {
                 v.set_opacity(self.start_opacity * (1.0 - alpha));
             });
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
-        async fn is_remover(&self) -> bool {
+        fn is_remover(&self) -> bool {
             true
         }
     }
@@ -223,26 +224,26 @@ pub mod animation {
     }
 
     impl Transform {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::smooth, primed: false }
         }
     }
 
     impl Animation for Transform {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.primed = false;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, alpha: f64) {
             let _ = (self.target_id, alpha);
         }
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             with_vsobject(mobjects, self.target_id, |v| {
                 if !self.primed {
@@ -255,7 +256,7 @@ pub mod animation {
                 v.interpolate_saved_to_target(alpha);
             });
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
     }
@@ -270,26 +271,26 @@ pub mod animation {
     }
 
     impl Rotate {
-        pub async fn new(target_id: u64, angle: f64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, angle: f64, run_time: f64) -> Self {
             Self { target_id, angle, run_time, rate: crate::editor::animate::engine::rate::rate::smooth, start_transform: None }
         }
     }
 
     impl Animation for Rotate {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.start_transform = None;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, alpha: f64) {
             let _ = (self.target_id, self.angle * alpha);
         }
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             with_vsobject(mobjects, self.target_id, |v| {
                 if self.start_transform.is_none() {
@@ -301,7 +302,7 @@ pub mod animation {
                 }
             });
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
     }
@@ -315,35 +316,35 @@ pub mod animation {
     }
 
     impl MoveAlongPath {
-        pub async fn new(target_id: u64, path: CubicBez, run_time: f64) -> Self {
+        pub fn new(target_id: u64, path: CubicBez, run_time: f64) -> Self {
             Self { target_id, path, run_time, rate: crate::editor::animate::engine::rate::rate::linear }
         }
 
-        pub async fn position_at(&self, alpha: f64) -> Point {
+        pub fn position_at(&self, alpha: f64) -> Point {
             cubic_point_at(self.path, alpha)
         }
     }
 
     impl Animation for MoveAlongPath {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {}
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, alpha: f64) {
+        fn begin(&mut self) {}
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, alpha: f64) {
             let _ = self.position_at(alpha);
         }
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             let point = self.position_at(alpha);
             with_vsobject(mobjects, self.target_id, |v| {
                 v.move_to(point);
             });
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
     }
@@ -357,24 +358,24 @@ pub mod animation {
     }
 
     impl AnimationGroup {
-        pub async fn new(animations: Vec<Animations>) -> Self {
+        pub fn new(animations: Vec<Animations>) -> Self {
             let n = animations.len();
             Self { animations, run_time: None, rate: crate::editor::animate::engine::rate::rate::linear, begun: vec![false; n] }
         }
 
-        pub async fn with_lag_ratio(self, lag_ratio: f64) -> LaggedStart {
+        pub fn with_lag_ratio(self, lag_ratio: f64) -> LaggedStart {
             LaggedStart::from_group(self, lag_ratio)
         }
     }
 
     impl Animation for AnimationGroup {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time.unwrap_or_else(|| self.animations.iter().map(|a| a.duration()).fold(0.0, f64::max))
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             for (i, a) in self.animations.iter_mut().enumerate() {
                 if !self.begun[i] {
                     a.begin();
@@ -382,24 +383,24 @@ pub mod animation {
                 }
             }
         }
-        async fn finish(&mut self) {
+        fn finish(&mut self) {
             for a in &mut self.animations {
                 a.finish();
             }
         }
-        async fn interpolate_mobject(&mut self, parent_alpha: f64) {
+        fn interpolate_mobject(&mut self, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             for a in &mut self.animations {
                 interpolate_at(&mut HashMap::new(), a, alpha);
             }
         }
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             for a in &mut self.animations {
                 interpolate_at(mobjects, a, alpha);
             }
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             self.animations.iter().flat_map(|a| a.get_all_mobjects()).collect()
         }
     }
@@ -415,14 +416,14 @@ pub mod animation {
     }
 
     impl Succession {
-        pub async fn new(animations: Vec<Animations>) -> Self {
+        pub fn new(animations: Vec<Animations>) -> Self {
             let durations: Vec<f64> = animations.iter().map(|a| a.duration()).collect();
             let total = durations.iter().sum();
             let n = animations.len();
             Self { animations, rate: crate::editor::animate::engine::rate::rate::linear, active_index: None, begun: vec![false; n], durations, total }
         }
 
-        async fn slot_bounds(&self, index: usize) -> (f64, f64) {
+        fn slot_bounds(&self, index: usize) -> (f64, f64) {
             if self.total <= 0.0 {
                 return (0.0, 1.0);
             }
@@ -433,24 +434,24 @@ pub mod animation {
     }
 
     impl Animation for Succession {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.total
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.active_index = None;
         }
-        async fn finish(&mut self) {
+        fn finish(&mut self) {
             for a in &mut self.animations {
                 a.finish();
             }
         }
-        async fn interpolate_mobject(&mut self, parent_alpha: f64) {
+        fn interpolate_mobject(&mut self, parent_alpha: f64) {
             self.apply(&mut HashMap::new(), parent_alpha);
         }
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             if self.animations.is_empty() {
                 return;
@@ -485,7 +486,7 @@ pub mod animation {
                 }
             }
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             self.animations.iter().flat_map(|a| a.get_all_mobjects()).collect()
         }
     }
@@ -497,15 +498,15 @@ pub mod animation {
     }
 
     impl LaggedStart {
-        pub async fn new(animations: Vec<Animations>, lag_ratio: f64) -> Self {
+        pub fn new(animations: Vec<Animations>, lag_ratio: f64) -> Self {
             Self { group: AnimationGroup::new(animations), lag_ratio: lag_ratio.clamp(0.0, 1.0) }
         }
 
-        async fn from_group(group: AnimationGroup, lag_ratio: f64) -> Self {
+        fn from_group(group: AnimationGroup, lag_ratio: f64) -> Self {
             Self { group, lag_ratio }
         }
 
-        async fn child_start(&self, index: usize, count: usize) -> f64 {
+        fn child_start(&self, index: usize, count: usize) -> f64 {
             if count <= 1 {
                 return 0.0;
             }
@@ -514,7 +515,7 @@ pub mod animation {
     }
 
     impl Animation for LaggedStart {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             let base = self.group.duration();
             let n = self.group.animations.len();
             if n <= 1 {
@@ -523,19 +524,19 @@ pub mod animation {
                 base + self.lag_ratio * base
             }
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.group.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.group.begin();
         }
-        async fn finish(&mut self) {
+        fn finish(&mut self) {
             self.group.finish();
         }
-        async fn interpolate_mobject(&mut self, parent_alpha: f64) {
+        fn interpolate_mobject(&mut self, parent_alpha: f64) {
             self.apply(&mut HashMap::new(), parent_alpha);
         }
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             let n = self.group.animations.len();
             let starts: Vec<f64> = (0..n).map(|i| self.child_start(i, n)).collect();
@@ -551,7 +552,7 @@ pub mod animation {
                 }
             }
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             self.group.get_all_mobjects()
         }
     }
@@ -576,28 +577,28 @@ pub mod animation {
     }
 
     impl LaggedStartMap {
-        pub async fn new(count: usize, lag_ratio: f64, run_time: f64, factory: impl Fn(usize) -> Animations + Send + 'static) -> Self {
+        pub fn new(count: usize, lag_ratio: f64, run_time: f64, factory: impl Fn(usize) -> Animations + Send + 'static) -> Self {
             Self { count, lag_ratio, factory: Box::new(factory), run_time, cache: (0..count).map(|_| None).collect(), begun: vec![false; count] }
         }
     }
 
     impl Animation for LaggedStartMap {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time * (1.0 + self.lag_ratio)
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             crate::editor::animate::engine::rate::rate::linear
         }
-        async fn begin(&mut self) {}
-        async fn finish(&mut self) {
+        fn begin(&mut self) {}
+        fn finish(&mut self) {
             for a in self.cache.iter_mut().flatten() {
                 a.finish();
             }
         }
-        async fn interpolate_mobject(&mut self, parent_alpha: f64) {
+        fn interpolate_mobject(&mut self, parent_alpha: f64) {
             self.apply(&mut HashMap::new(), parent_alpha);
         }
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             for i in 0..self.count {
                 let start = if self.count <= 1 { 0.0 } else { i as f64 / (self.count - 1) as f64 * self.lag_ratio };
@@ -619,7 +620,7 @@ pub mod animation {
                 }
             }
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             self.cache.iter().flatten().flat_map(|a| a.get_all_mobjects()).collect()
         }
     }
@@ -630,22 +631,22 @@ pub mod animation {
     }
 
     impl Wait {
-        pub async fn new(run_time: f64) -> Self {
+        pub fn new(run_time: f64) -> Self {
             Self { run_time }
         }
     }
 
     impl Animation for Wait {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             crate::editor::animate::engine::rate::rate::linear
         }
-        async fn begin(&mut self) {}
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn begin(&mut self) {}
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn get_all_mobjects(&self) -> Vec<u64> {
             Vec::new()
         }
     }
@@ -664,36 +665,36 @@ pub mod animation {
     }
 
     impl<'a, S: Sobject> AnimateBuilder<'a, S> {
-        pub async fn new(target: &'a mut S, run_time: f64) -> Self {
+        pub fn new(target: &'a mut S, run_time: f64) -> Self {
             Self { target, run_time, rate: crate::editor::animate::engine::rate::rate::smooth }
         }
 
-        pub async fn with_rate(mut self, rate: RateFunc) -> Self {
+        pub fn with_rate(mut self, rate: RateFunc) -> Self {
             self.rate = rate;
             self
         }
 
-        pub async fn fade_in(self) -> FadeIn {
+        pub fn fade_in(self) -> FadeIn {
             FadeIn { target_id: self.target.id(), run_time: self.run_time, rate: self.rate, target_opacity: 1.0, start_opacity: 0.0, primed: false }
         }
 
-        pub async fn fade_out(self) -> FadeOut {
+        pub fn fade_out(self) -> FadeOut {
             FadeOut { target_id: self.target.id(), run_time: self.run_time, rate: self.rate, start_opacity: 1.0, primed: false }
         }
 
-        pub async fn create(self) -> Create {
+        pub fn create(self) -> Create {
             Create::new(self.target.id(), self.run_time).with_rate(self.rate)
         }
 
-        pub async fn transform(self) -> Transform {
+        pub fn transform(self) -> Transform {
             Transform { target_id: self.target.id(), run_time: self.run_time, rate: self.rate, primed: false }
         }
 
-        pub async fn rotate(self, angle: f64) -> Rotate {
+        pub fn rotate(self, angle: f64) -> Rotate {
             Rotate::new(self.target.id(), angle, self.run_time)
         }
 
-        pub async fn shift(self, delta: Vec2) -> Shift {
+        pub fn shift(self, delta: Vec2) -> Shift {
             Shift::new(self.target.id(), delta, self.run_time)
         }
     }
@@ -708,24 +709,24 @@ pub mod animation {
     }
 
     impl Shift {
-        pub async fn new(target_id: u64, delta: Vec2, run_time: f64) -> Self {
+        pub fn new(target_id: u64, delta: Vec2, run_time: f64) -> Self {
             Self { target_id, delta, run_time, rate: crate::editor::animate::engine::rate::rate::smooth, start_transform: None }
         }
     }
 
     impl Animation for Shift {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.start_transform = None;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             let target_id = self.target_id;
             let delta = self.delta * alpha;
@@ -742,7 +743,7 @@ pub mod animation {
                 });
             }
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
     }
@@ -757,24 +758,24 @@ pub mod animation {
     }
 
     impl ApplyMethod {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::smooth, scale_factor: 1.2, start_transform: None }
         }
     }
 
     impl Animation for ApplyMethod {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.start_transform = None;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             let target_id = self.target_id;
             let factor = self.scale_factor;
@@ -792,7 +793,7 @@ pub mod animation {
                 });
             }
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
     }
@@ -806,24 +807,24 @@ pub mod animation {
     }
 
     impl FocusOn {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::there_and_back, start_transform: None }
         }
     }
 
     impl Animation for FocusOn {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.start_transform = None;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             let target_id = self.target_id;
             let mut start = self.start_transform;
@@ -841,7 +842,7 @@ pub mod animation {
                 });
             }
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
     }
@@ -856,24 +857,24 @@ pub mod animation {
     }
 
     impl Blink {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::there_and_back, start_opacity: 1.0, primed: false }
         }
     }
 
     impl Animation for Blink {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.primed = false;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             let target_id = self.target_id;
             if !self.primed {
@@ -888,7 +889,7 @@ pub mod animation {
                 v.set_opacity(self.start_opacity * (1.0 - alpha * 0.9));
             });
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
     }
@@ -902,24 +903,24 @@ pub mod animation {
     }
 
     impl TracedPath {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::linear, primed: false }
         }
     }
 
     impl Animation for TracedPath {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.primed = false;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha(self, parent_alpha);
             let target_id = self.target_id;
             if !self.primed {
@@ -928,60 +929,60 @@ pub mod animation {
             }
             with_vsobject(mobjects, target_id, |v| v.set_point_ratio(alpha));
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
-        async fn is_introducer(&self) -> bool {
+        fn is_introducer(&self) -> bool {
             true
         }
     }
 
     /// ⏩️ Remap playback speed of a nested animation.
     pub struct ChangeSpeed {
-        pub animation: Animations,
+        pub animation: Box<Animations>,
         pub speed_factor: f64,
     }
 
     impl ChangeSpeed {
-        pub async fn new(animation: Animations, speed_factor: f64) -> Self {
-            Self { animation, speed_factor: speed_factor.max(1e-9) }
+        pub fn new(animation: Animations, speed_factor: f64) -> Self {
+            Self { animation: Box::new(animation), speed_factor: speed_factor.max(1e-9) }
         }
     }
 
     impl Animation for ChangeSpeed {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.animation.duration() / self.speed_factor
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.animation.rate_func()
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.animation.begin();
         }
-        async fn finish(&mut self) {
+        fn finish(&mut self) {
             self.animation.finish();
         }
-        async fn interpolate_mobject(&mut self, alpha: f64) {
+        fn interpolate_mobject(&mut self, alpha: f64) {
             self.animation.interpolate_mobject(alpha);
         }
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let remapped = (parent_alpha * self.speed_factor).clamp(0.0, 1.0);
             self.animation.apply(mobjects, remapped);
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             self.animation.get_all_mobjects()
         }
-        async fn is_introducer(&self) -> bool {
+        fn is_introducer(&self) -> bool {
             self.animation.is_introducer()
         }
-        async fn is_remover(&self) -> bool {
+        fn is_remover(&self) -> bool {
             self.animation.is_remover()
         }
     }
 
     /// 🪄️ Extension trait for `.animate()` on Sobjects.
     pub trait AnimateExt: Sobject + Sized {
-        async fn animate(&mut self, run_time: f64) -> AnimateBuilder<'_, Self> {
+        fn animate(&mut self, run_time: f64) -> AnimateBuilder<'_, Self> {
             AnimateBuilder::new(self, run_time)
         }
     }
@@ -989,14 +990,64 @@ pub mod animation {
     impl<T: Sobject + Sized> AnimateExt for T {}
 
     /// 🧮️ Apply parent opacity recursively to an Sobject tree (Manim parity).
-    pub async fn apply_parent_opacity_tree(root: &mut Sobjects, parent_opacity: f64) {
+    pub fn apply_parent_opacity_tree(root: &mut Sobjects, parent_opacity: f64) {
         root.set_parent_opacity(parent_opacity);
         let eff = root.effective_opacity();
         root.visit_children_mut(&mut |child| apply_parent_opacity_tree(child, eff));
     }
 
+    //#region 🔖️Animations
+    dyn_enum_close! {
+        pub enum Animations: Animation {
+            Create(Create),
+            FadeIn(FadeIn),
+            FadeOut(FadeOut),
+            Transform(Transform),
+            Rotate(Rotate),
+            MoveAlongPath(MoveAlongPath),
+            AnimationGroup(AnimationGroup),
+            Succession(Succession),
+            LaggedStart(LaggedStart),
+            LaggedStartMap(LaggedStartMap),
+            Wait(Wait),
+            Shift(Shift),
+            ApplyMethod(ApplyMethod),
+            FocusOn(FocusOn),
+            Blink(Blink),
+            TracedPath(TracedPath),
+            ChangeSpeed(ChangeSpeed),
+            DrawBorderThenFill(super::animations_catalog::DrawBorderThenFill),
+            FadeTransform(super::animations_catalog::FadeTransform),
+            ReplacementTransform(super::animations_catalog::ReplacementTransform),
+            TransformFromCopy(super::animations_catalog::TransformFromCopy),
+            MoveToTarget(super::animations_catalog::MoveToTarget),
+            Restore(super::animations_catalog::Restore),
+            Flash(super::animations_catalog::Flash),
+            Circumscribe(super::animations_catalog::Circumscribe),
+            GrowFromPoint(super::animations_catalog::GrowFromPoint),
+            ShrinkToCenter(super::animations_catalog::ShrinkToCenter),
+            SpinInFromNothing(super::animations_catalog::SpinInFromNothing),
+            ChangeDecimalToValue(super::animations_catalog::ChangeDecimalToValue),
+            Broadcast(super::animations_catalog::Broadcast),
+            ApplyWave(super::animations_catalog::ApplyWave),
+            Wiggle(super::animations_catalog::Wiggle),
+            CyclicReplace(super::animations_catalog::CyclicReplace),
+            Swap(super::animations_catalog::Swap),
+            TransformMatchingShapes(super::animations_catalog::TransformMatchingShapes),
+            Homotopy(super::animations_catalog::Homotopy),
+            ShowPassingFlash(super::animations_catalog::ShowPassingFlash),
+            SpiralIn(super::animations_catalog::SpiralIn),
+            Uncreate(super::animations_catalog::Uncreate),
+            Write(super::animations_catalog::Write),
+            GrowFromCenter(super::animations_catalog::GrowFromCenter),
+            Indicate(super::animations_catalog::Indicate),
+            Rotating(super::animations_catalog::Rotating),
+        }
+    }
+    //#endregion 🔖️Animations
+
     /// 🎞️ Compile animations into a flat timeline with durations.
-    pub async fn compile_animations(animations: &[Animations]) -> Vec<Duration> {
+    pub fn compile_animations(animations: &[Animations]) -> Vec<Duration> {
         animations.iter().map(|a| Duration::from_secs_f64(a.duration().max(0.0))).collect()
     }
 
@@ -1006,8 +1057,8 @@ pub mod animation {
         use crate::editor::animate::engine::animation::animation::AnimateExt;
         use crate::editor::animate::engine::scene::sobject::VSobject;
 
-        #[semio_framework_async_macros::async_test]
-        async fn succession_lazy_activation_order() {
+        #[test]
+        fn succession_lazy_activation_order() {
             let a1: Animations = Wait::new(1.0).into();
             let a2: Animations = Wait::new(1.0).into();
             let mut s = Succession::new(vec![a1, a2]);
@@ -1016,14 +1067,14 @@ pub mod animation {
             assert!(s.active_index.is_some());
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn animation_group_parallel_duration_is_max() {
+        #[test]
+        fn animation_group_parallel_duration_is_max() {
             let g = AnimationGroup::new(vec![Wait::new(2.0).into(), Wait::new(5.0).into()]);
             assert!((g.duration() - 5.0).abs() < 1e-9);
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn animate_builder_reads_target_id() {
+        #[test]
+        fn animate_builder_reads_target_id() {
             let mut v = VSobject::new();
             let id = v.id();
             let anim = v.animate(1.0).fade_in();
@@ -1037,21 +1088,21 @@ pub mod animations_catalog {
 
     use crate::editor::animate::engine::animation::animation::{eased_alpha_for, with_vsobject, Animation};
     use crate::editor::animate::engine::rate::rate::RateFunc;
-    use crate::editor::animate::engine::scene::sobject::Sobject;
+    use crate::editor::animate::engine::scene::sobject::{Sobject, Sobjects};
     use geometry::{Affine, Point, Vec2};
     use std::collections::HashMap;
 
-    async fn scale_about_center(base: Affine, center: Point, factor: f64) -> Affine {
+    fn scale_about_center(base: Affine, center: Point, factor: f64) -> Affine {
         let t = Affine::IDENTITY.translate((center.x(), center.y())) * Affine::IDENTITY.scale(factor) * Affine::IDENTITY.translate((-center.x(), -center.y()));
         base * t
     }
 
-    async fn rotate_about_center(base: Affine, center: Point, angle: f64) -> Affine {
+    fn rotate_about_center(base: Affine, center: Point, angle: f64) -> Affine {
         let t = Affine::IDENTITY.translate((center.x(), center.y())) * Affine::IDENTITY.rotate(angle) * Affine::IDENTITY.translate((-center.x(), -center.y()));
         base * t
     }
 
-    async fn lerp_point(a: Point, b: Point, t: f64) -> Point {
+    fn lerp_point(a: Point, b: Point, t: f64) -> Point {
         Point::new(a.x() + (b.x() - a.x()) * t, a.y() + (b.y() - a.y()) * t)
     }
 
@@ -1064,24 +1115,24 @@ pub mod animations_catalog {
     }
 
     impl DrawBorderThenFill {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::smooth, primed: false, fill_opacity: 1.0 }
         }
     }
 
     impl Animation for DrawBorderThenFill {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.primed = false;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             if !self.primed {
@@ -1106,10 +1157,10 @@ pub mod animations_catalog {
                 });
             }
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
-        async fn is_introducer(&self) -> bool {
+        fn is_introducer(&self) -> bool {
             true
         }
     }
@@ -1122,24 +1173,24 @@ pub mod animations_catalog {
     }
 
     impl FadeTransform {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::smooth, primed: false }
         }
     }
 
     impl Animation for FadeTransform {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.primed = false;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let mut primed = self.primed;
@@ -1159,7 +1210,7 @@ pub mod animations_catalog {
                 v.set_opacity(0.5 + 0.5 * (1.0 - fade * 0.5));
             });
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
     }
@@ -1172,26 +1223,26 @@ pub mod animations_catalog {
     }
 
     impl ReplacementTransform {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::smooth, primed: false }
         }
     }
 
     impl Animation for ReplacementTransform {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.primed = false;
         }
-        async fn finish(&mut self) {
+        fn finish(&mut self) {
             let _ = self.target_id;
         }
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let mut primed = self.primed;
@@ -1209,7 +1260,7 @@ pub mod animations_catalog {
                 v.interpolate_saved_to_target(alpha);
             });
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
     }
@@ -1223,25 +1274,25 @@ pub mod animations_catalog {
     }
 
     impl TransformFromCopy {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::smooth, primed: false, start_transform: None }
         }
     }
 
     impl Animation for TransformFromCopy {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.primed = false;
             self.start_transform = None;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let mut primed = self.primed;
@@ -1271,10 +1322,10 @@ pub mod animations_catalog {
                 v.set_opacity(alpha);
             });
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
-        async fn is_introducer(&self) -> bool {
+        fn is_introducer(&self) -> bool {
             true
         }
     }
@@ -1287,24 +1338,24 @@ pub mod animations_catalog {
     }
 
     impl MoveToTarget {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::smooth, primed: false }
         }
     }
 
     impl Animation for MoveToTarget {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.primed = false;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let mut primed = self.primed;
@@ -1322,7 +1373,7 @@ pub mod animations_catalog {
                 v.interpolate_saved_to_target(alpha);
             });
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
     }
@@ -1335,24 +1386,24 @@ pub mod animations_catalog {
     }
 
     impl Restore {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::smooth, primed: false }
         }
     }
 
     impl Animation for Restore {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.primed = false;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let mut primed = self.primed;
@@ -1371,7 +1422,7 @@ pub mod animations_catalog {
                 });
             }
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
     }
@@ -1385,24 +1436,24 @@ pub mod animations_catalog {
     }
 
     impl Flash {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::there_and_back, start_opacity: 1.0, primed: false }
         }
     }
 
     impl Animation for Flash {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.primed = false;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             if !self.primed {
@@ -1420,7 +1471,7 @@ pub mod animations_catalog {
                 *v.transform_mut() = scale_about_center(v.transform(), center, pulse);
             });
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
     }
@@ -1433,24 +1484,24 @@ pub mod animations_catalog {
     }
 
     impl Circumscribe {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::there_and_back, start_transform: None }
         }
     }
 
     impl Animation for Circumscribe {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.start_transform = None;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let mut start = self.start_transform;
@@ -1469,7 +1520,7 @@ pub mod animations_catalog {
                 });
             }
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
     }
@@ -1483,24 +1534,24 @@ pub mod animations_catalog {
     }
 
     impl GrowFromPoint {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::smooth, grow_point: Point::ZERO, start_transform: None }
         }
     }
 
     impl Animation for GrowFromPoint {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.start_transform = None;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let grow_point = self.grow_point;
@@ -1518,10 +1569,10 @@ pub mod animations_catalog {
                 });
             }
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
-        async fn is_introducer(&self) -> bool {
+        fn is_introducer(&self) -> bool {
             true
         }
     }
@@ -1536,25 +1587,25 @@ pub mod animations_catalog {
     }
 
     impl ShrinkToCenter {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::smooth, start_transform: None, start_opacity: 1.0, primed: false }
         }
     }
 
     impl Animation for ShrinkToCenter {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.start_transform = None;
             self.primed = false;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             if !self.primed {
@@ -1581,10 +1632,10 @@ pub mod animations_catalog {
                 });
             }
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
-        async fn is_remover(&self) -> bool {
+        fn is_remover(&self) -> bool {
             true
         }
     }
@@ -1598,24 +1649,24 @@ pub mod animations_catalog {
     }
 
     impl SpinInFromNothing {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::smooth, angle: std::f64::consts::TAU, start_transform: None }
         }
     }
 
     impl Animation for SpinInFromNothing {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.start_transform = None;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let angle = self.angle;
@@ -1635,10 +1686,10 @@ pub mod animations_catalog {
                 });
             }
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
-        async fn is_introducer(&self) -> bool {
+        fn is_introducer(&self) -> bool {
             true
         }
     }
@@ -1653,24 +1704,24 @@ pub mod animations_catalog {
     }
 
     impl ChangeDecimalToValue {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::smooth, value: 0.0, start_opacity: 1.0, primed: false }
         }
     }
 
     impl Animation for ChangeDecimalToValue {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.primed = false;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             if !self.primed {
@@ -1690,7 +1741,7 @@ pub mod animations_catalog {
                 let _ = self.value;
             });
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
     }
@@ -1703,24 +1754,24 @@ pub mod animations_catalog {
     }
 
     impl Broadcast {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::there_and_back, start_transform: None }
         }
     }
 
     impl Animation for Broadcast {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.start_transform = None;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let mut start = self.start_transform;
@@ -1739,7 +1790,7 @@ pub mod animations_catalog {
                 });
             }
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
     }
@@ -1753,24 +1804,24 @@ pub mod animations_catalog {
     }
 
     impl ApplyWave {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::smooth, amplitude: 0.2, start_transform: None }
         }
     }
 
     impl Animation for ApplyWave {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.start_transform = None;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let amplitude = self.amplitude;
@@ -1788,7 +1839,7 @@ pub mod animations_catalog {
                 });
             }
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
     }
@@ -1802,24 +1853,24 @@ pub mod animations_catalog {
     }
 
     impl Wiggle {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::there_and_back, angle: 0.1, start_transform: None }
         }
     }
 
     impl Animation for Wiggle {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.start_transform = None;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let angle = self.angle;
@@ -1838,7 +1889,7 @@ pub mod animations_catalog {
                 });
             }
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
     }
@@ -1851,24 +1902,24 @@ pub mod animations_catalog {
     }
 
     impl CyclicReplace {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { cycle_ids: vec![target_id], run_time, rate: crate::editor::animate::engine::rate::rate::smooth, start_centers: Vec::new() }
         }
     }
 
     impl Animation for CyclicReplace {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.start_centers.clear();
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let n = self.cycle_ids.len();
             if n == 0 {
@@ -1907,7 +1958,7 @@ pub mod animations_catalog {
                 }
             }
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             self.cycle_ids.clone()
         }
     }
@@ -1922,25 +1973,25 @@ pub mod animations_catalog {
     }
 
     impl Swap {
-        pub async fn new(target_id: u64, swap_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, swap_id: u64, run_time: f64) -> Self {
             Self { target_id, swap_id, run_time, rate: crate::editor::animate::engine::rate::rate::smooth, a_center: None, b_center: None }
         }
     }
 
     impl Animation for Swap {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.a_center = None;
             self.b_center = None;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let swap_id = self.swap_id;
@@ -1969,7 +2020,7 @@ pub mod animations_catalog {
                 });
             }
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id, self.swap_id]
         }
     }
@@ -1982,24 +2033,24 @@ pub mod animations_catalog {
     }
 
     impl TransformMatchingShapes {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::smooth, primed: false }
         }
     }
 
     impl Animation for TransformMatchingShapes {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.primed = false;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let mut primed = self.primed;
@@ -2017,7 +2068,7 @@ pub mod animations_catalog {
                 v.interpolate_saved_to_target(alpha);
             });
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
     }
@@ -2030,24 +2081,24 @@ pub mod animations_catalog {
     }
 
     impl Homotopy {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::smooth, start_transform: None }
         }
     }
 
     impl Animation for Homotopy {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.start_transform = None;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let mut start = self.start_transform;
@@ -2066,7 +2117,7 @@ pub mod animations_catalog {
                 });
             }
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
     }
@@ -2079,24 +2130,24 @@ pub mod animations_catalog {
     }
 
     impl ShowPassingFlash {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::linear, primed: false }
         }
     }
 
     impl Animation for ShowPassingFlash {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.primed = false;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             if !self.primed {
@@ -2110,7 +2161,7 @@ pub mod animations_catalog {
                 v.set_opacity(0.3 + 0.7 * (1.0 - (alpha - 0.5).abs() * 2.0).max(0.0));
             });
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
     }
@@ -2125,24 +2176,24 @@ pub mod animations_catalog {
     }
 
     impl SpiralIn {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::smooth, angle: std::f64::consts::TAU * 2.0, origin: Point::ZERO, start_transform: None }
         }
     }
 
     impl Animation for SpiralIn {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.start_transform = None;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let origin = self.origin;
@@ -2162,10 +2213,10 @@ pub mod animations_catalog {
                 });
             }
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
-        async fn is_introducer(&self) -> bool {
+        fn is_introducer(&self) -> bool {
             true
         }
     }
@@ -2178,24 +2229,24 @@ pub mod animations_catalog {
     }
 
     impl Uncreate {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::smooth, primed: false }
         }
     }
 
     impl Animation for Uncreate {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.primed = false;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             if !self.primed {
                 with_vsobject(mobjects, self.target_id, |v| v.set_point_ratio(1.0));
@@ -2203,7 +2254,7 @@ pub mod animations_catalog {
             }
             with_vsobject(mobjects, self.target_id, |v| v.set_point_ratio(1.0 - alpha));
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
     }
@@ -2216,24 +2267,24 @@ pub mod animations_catalog {
     }
 
     impl Write {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::smooth, primed: false }
         }
     }
 
     impl Animation for Write {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.primed = false;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             if !self.primed {
                 with_vsobject(mobjects, self.target_id, |v| v.set_point_ratio(0.0));
@@ -2241,10 +2292,10 @@ pub mod animations_catalog {
             }
             with_vsobject(mobjects, self.target_id, |v| v.set_point_ratio(alpha));
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
-        async fn is_introducer(&self) -> bool {
+        fn is_introducer(&self) -> bool {
             true
         }
     }
@@ -2257,24 +2308,24 @@ pub mod animations_catalog {
     }
 
     impl GrowFromCenter {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::smooth, start_transform: None }
         }
     }
 
     impl Animation for GrowFromCenter {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.start_transform = None;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let mut start = self.start_transform;
@@ -2292,10 +2343,10 @@ pub mod animations_catalog {
                 });
             }
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
-        async fn is_introducer(&self) -> bool {
+        fn is_introducer(&self) -> bool {
             true
         }
     }
@@ -2308,24 +2359,24 @@ pub mod animations_catalog {
     }
 
     impl Indicate {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::there_and_back, start_transform: None }
         }
     }
 
     impl Animation for Indicate {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.start_transform = None;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let mut start = self.start_transform;
@@ -2343,7 +2394,7 @@ pub mod animations_catalog {
                 });
             }
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
         }
     }
@@ -2357,24 +2408,24 @@ pub mod animations_catalog {
     }
 
     impl Rotating {
-        pub async fn new(target_id: u64, run_time: f64) -> Self {
+        pub fn new(target_id: u64, run_time: f64) -> Self {
             Self { target_id, run_time, rate: crate::editor::animate::engine::rate::rate::linear, angle: std::f64::consts::TAU, start_transform: None }
         }
     }
 
     impl Animation for Rotating {
-        async fn duration(&self) -> f64 {
+        fn duration(&self) -> f64 {
             self.run_time
         }
-        async fn rate_func(&self) -> RateFunc {
+        fn rate_func(&self) -> RateFunc {
             self.rate
         }
-        async fn begin(&mut self) {
+        fn begin(&mut self) {
             self.start_transform = None;
         }
-        async fn finish(&mut self) {}
-        async fn interpolate_mobject(&mut self, _alpha: f64) {}
-        async fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
+        fn finish(&mut self) {}
+        fn interpolate_mobject(&mut self, _alpha: f64) {}
+        fn apply(&mut self, mobjects: &mut HashMap<u64, Sobjects>, parent_alpha: f64) {
             let alpha = eased_alpha_for(self, parent_alpha);
             let target_id = self.target_id;
             let mut start = self.start_transform;
@@ -2391,73 +2442,21 @@ pub mod animations_catalog {
                 });
             }
         }
-        async fn get_all_mobjects(&self) -> Vec<u64> {
+        fn get_all_mobjects(&self) -> Vec<u64> {
             vec![self.target_id]
-        }
-    }
-
-    // 🔀️ R11 "closed set" case — the largest family in this plugin: 43 impls, all in this crate (leaf
-    // tweens, composites `AnimationGroup`/`Succession`/`LaggedStart`/`LaggedStartMap`, every builder
-    // returned from `.animate()` below). `dyn_enum_close!` generates the enum + match-delegating
-    // `impl Animation for Animations` (O1). Bare invocation is legal — same module as `#[dyn_enum] pub
-    // trait Animation` above (dyn-enum-macro finding 1).
-    dyn_enum_close! {
-        pub enum Animations: Animation {
-            Create(Create),
-            FadeIn(FadeIn),
-            FadeOut(FadeOut),
-            Transform(Transform),
-            Rotate(Rotate),
-            MoveAlongPath(MoveAlongPath),
-            AnimationGroup(AnimationGroup),
-            Succession(Succession),
-            LaggedStart(LaggedStart),
-            LaggedStartMap(LaggedStartMap),
-            Wait(Wait),
-            Shift(Shift),
-            ApplyMethod(ApplyMethod),
-            FocusOn(FocusOn),
-            Blink(Blink),
-            TracedPath(TracedPath),
-            ChangeSpeed(ChangeSpeed),
-            DrawBorderThenFill(DrawBorderThenFill),
-            FadeTransform(FadeTransform),
-            ReplacementTransform(ReplacementTransform),
-            TransformFromCopy(TransformFromCopy),
-            MoveToTarget(MoveToTarget),
-            Restore(Restore),
-            Flash(Flash),
-            Circumscribe(Circumscribe),
-            GrowFromPoint(GrowFromPoint),
-            ShrinkToCenter(ShrinkToCenter),
-            SpinInFromNothing(SpinInFromNothing),
-            ChangeDecimalToValue(ChangeDecimalToValue),
-            Broadcast(Broadcast),
-            ApplyWave(ApplyWave),
-            Wiggle(Wiggle),
-            CyclicReplace(CyclicReplace),
-            Swap(Swap),
-            TransformMatchingShapes(TransformMatchingShapes),
-            Homotopy(Homotopy),
-            ShowPassingFlash(ShowPassingFlash),
-            SpiralIn(SpiralIn),
-            Uncreate(Uncreate),
-            Write(Write),
-            GrowFromCenter(GrowFromCenter),
-            Indicate(Indicate),
-            Rotating(Rotating),
         }
     }
 
     #[cfg(test)]
     mod tests {
         use super::*;
+        use crate::editor::animate::engine::animation::animation::Animations;
         use crate::editor::animate::engine::geometry::geometry::circle;
         use crate::editor::animate::engine::scene::sobject::VSobject;
         use crate::editor::animate::engine::text::color::Color;
 
-        #[semio_framework_async_macros::async_test]
-        async fn catalog_stubs_compile_and_apply() {
+        #[test]
+        fn catalog_stubs_compile_and_apply() {
             let mut map: HashMap<u64, Sobjects> = HashMap::new();
             let v = VSobject::new();
             let id = v.id();
@@ -2508,8 +2507,8 @@ pub mod animations_catalog {
             });
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn write_reveals_point_ratio() {
+        #[test]
+        fn write_reveals_point_ratio() {
             let mut map: HashMap<u64, Sobjects> = HashMap::new();
             let v = circle(Point::ZERO, 1.0, Color::WHITE, None, 1.0);
             let id = v.id();

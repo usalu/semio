@@ -14,7 +14,7 @@
 
 import type { OntologyTreeNode } from "@semio-tech/coda-desktop/renderer";
 import { OntologyTree } from "@semio-tech/coda-desktop/renderer";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import React from "react";
 
 // #region 🏷️CodaThemeWrapper

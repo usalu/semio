@@ -7,15 +7,15 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { cva } from "class-variance-authority";
 // 🧱️core: reactHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
 // reactHostPort.createContext at module top level, which requires a non-circular import (see
 // 🧱️elements/🔌️Ports/🟦️component.tsx's header comment for why the barrel import caused a real bug).
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
 // 🧱️core: cn imported directly from its presentation module, NOT via the barrel — this component calls
-// cn(...) at module top level (inside a top-level cva(cn(...)) call), which requires a non-circular
+// cn(...) at module top level (inside a top-level styleVariants(cn(...)) call), which requires a non-circular
 // import because the barrel imports this component.
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
+import { styleVariants } from "../../🔨️modules/🏷️style-variants/🟦️component.ts";
 import { type UiLabel } from "../🏷️UiLabel/🟦️component.tsx";
 import { Popover, PopoverTrigger, PopoverContent } from "../🗨️Popover/🟦️component.tsx";
 import { interactiveHoverClass, interactiveActiveFillClass } from "../../🔨️modules/🖱️interaction-presentation/🟦️component.ts";
@@ -36,7 +36,7 @@ import { type ControlIcon, renderControlIcon, CheckIcon } from "../🔣️Icons/
 /**
  * actionGroupItemVariants holds the data fields for a actionGroupItemVariants record.
  **/
-const actionGroupItemVariants = cva(cn(chromeControlItemBaseClass, interactiveHoverClass, "shrink-0 [&_svg]:size-tiny aspect-square h-small p-single"));
+const actionGroupItemVariants = styleVariants(cn(chromeControlItemBaseClass, interactiveHoverClass, "shrink-0 [&_svg]:size-tiny aspect-square h-small p-single"));
 
 /**
  * ActionGroupContext holds the data fields for a ActionGroupContext record.

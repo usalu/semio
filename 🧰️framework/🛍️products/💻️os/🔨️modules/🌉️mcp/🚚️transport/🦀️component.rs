@@ -211,7 +211,7 @@ impl HttpTransport {
     }
 
     /// 🧪️ Builds the real axum [`Router`] WITHOUT binding a socket — the foreground, deterministic
-    /// entry point every `/mcp` HTTP test in this crate drives via `tower::ServiceExt::oneshot` (no
+    /// entry point every `/mcp` HTTP test in this crate drives through an owned one-shot adapter (no
     /// port allocation, no background process, no timing races). `/bridge` is a real websocket
     /// upgrade, which `oneshot` cannot drive (it never performs a genuine hyper connection upgrade) —
     /// tests exercising `/bridge` bind a real ephemeral (`:0`) socket instead (`mod long` in this file
@@ -384,10 +384,11 @@ async fn handle_get(State(state): State<HttpState>, headers: HeaderMap) -> Respo
 mod quick {
     use super::*;
     use crate::protocol::{InMemoryPromptRegistry, InMemoryResourceRegistry, InMemoryToolRegistry, NullBackend};
+    use crate::workspace::GatewayBackends;
     use std::io::Cursor;
 
     fn fresh_server() -> McpServer {
-        McpServer::new(Box::new(InMemoryToolRegistry::new()), Box::new(InMemoryResourceRegistry::new()), Box::new(InMemoryPromptRegistry::new()), Box::new(NullBackend))
+        McpServer::new(Box::new(InMemoryToolRegistry::new()), Box::new(InMemoryResourceRegistry::new()), Box::new(InMemoryPromptRegistry::new()), Box::new(GatewayBackends::Null(NullBackend)))
     }
 
     //#region 🔖️Stdio
@@ -483,22 +484,49 @@ mod quick {
     //#endregion 🔖️OriginAndBearerUnit
 }
 
-/// 🌐️ HTTP integration tests — every one drives the REAL `axum::Router` via `oneshot`, in-process, no
-/// bound socket, no background process (`📌️important.md` rule 5: foreground only).
+/// 🌐️ HTTP handler integration tests use the owned in-process request driver; websocket upgrade
+/// coverage below continues to bind the real `axum::Router` on an ephemeral socket.
 #[cfg(test)]
 mod long {
     use super::*;
     use crate::protocol::{InMemoryPromptRegistry, InMemoryResourceRegistry, InMemoryToolRegistry, McpServer, NullBackend, Tool, META_PROTOCOL_VERSION_KEY};
+    use crate::workspace::GatewayBackends;
     use axum::body::Body;
     use axum::http::Request;
-    use tower::ServiceExt;
+
+    #[derive(Clone)]
+    struct HttpTestDriver {
+        state: HttpState,
+    }
+
+    impl HttpTestDriver {
+        async fn request(&self, request: Request<Body>) -> Response {
+            let (parts, body) = request.into_parts();
+            match (parts.method, parts.uri.path()) {
+                (axum::http::Method::POST, "/mcp") => match axum::body::to_bytes(body, usize::MAX).await {
+                    Ok(body) => handle_post(State(self.state.clone()), parts.headers, body).await,
+                    Err(error) => (StatusCode::BAD_REQUEST, error.to_string()).into_response(),
+                },
+                (axum::http::Method::GET, "/mcp") => handle_get(State(self.state.clone()), parts.headers).await,
+                (_, "/mcp") => StatusCode::METHOD_NOT_ALLOWED.into_response(),
+                _ => StatusCode::NOT_FOUND.into_response(),
+            }
+        }
+    }
 
     fn fresh_server() -> McpServer {
-        McpServer::new(Box::new(InMemoryToolRegistry::new()), Box::new(InMemoryResourceRegistry::new()), Box::new(InMemoryPromptRegistry::new()), Box::new(NullBackend))
+        McpServer::new(Box::new(InMemoryToolRegistry::new()), Box::new(InMemoryResourceRegistry::new()), Box::new(InMemoryPromptRegistry::new()), Box::new(GatewayBackends::Null(NullBackend)))
     }
 
     fn transport() -> HttpTransport {
         HttpTransport::new(HttpTransportOptions::new("test-token", "bridge-token"))
+    }
+
+    fn test_driver(server: McpServer) -> (HttpTestDriver, HttpEventPublisher) {
+        let transport = transport();
+        let events = Arc::new(Mutex::new(EventLog::default()));
+        let state = HttpState { server: Arc::new(Mutex::new(server)), bearer_token: Arc::from(transport.options.bearer_token.as_str()), allowed_origins: Arc::new(transport.options.allowed_origins.clone()), events: events.clone() };
+        (HttpTestDriver { state }, HttpEventPublisher { events })
     }
 
     fn post_request(body: serde_json::Value, headers: &[(&str, &str)]) -> Request<Body> {
@@ -509,13 +537,17 @@ mod long {
         builder.body(Body::from(serde_json::to_vec(&body).unwrap())).unwrap()
     }
 
+    async fn one_shot(driver: HttpTestDriver, request: Request<Body>) -> Response {
+        driver.request(request).await
+    }
+
     //#region 🔖️PostModern
     #[tokio::test]
     async fn modern_tools_list_over_http_returns_200_with_the_json_rpc_result() {
-        let (router, _events, _bridge) = transport().router(fresh_server());
+        let (router, _events) = test_driver(fresh_server());
         let body = serde_json::json!({ "jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": { "_meta": { META_PROTOCOL_VERSION_KEY: "2026-07-28" } } });
         let request = post_request(body, &[("MCP-Protocol-Version", "2026-07-28")]);
-        let response = router.oneshot(request).await.unwrap();
+        let response = one_shot(router, request).await;
         assert_eq!(response.status(), StatusCode::OK);
         let bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
         let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
@@ -524,10 +556,10 @@ mod long {
 
     #[tokio::test]
     async fn legacy_initialize_over_http_returns_200_and_negotiates_legacy() {
-        let (router, _events, _bridge) = transport().router(fresh_server());
+        let (router, _events) = test_driver(fresh_server());
         let body = serde_json::json!({ "jsonrpc": "2.0", "id": 1, "method": "initialize", "params": { "protocolVersion": "2025-11-25", "capabilities": {}, "clientInfo": { "name": "t", "version": "0" } } });
         let request = post_request(body, &[]);
-        let response = router.oneshot(request).await.unwrap();
+        let response = one_shot(router, request).await;
         assert_eq!(response.status(), StatusCode::OK);
         let bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
         let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
@@ -536,10 +568,10 @@ mod long {
 
     #[tokio::test]
     async fn a_notification_over_http_is_202_accepted_with_no_body() {
-        let (router, _events, _bridge) = transport().router(fresh_server());
+        let (router, _events) = test_driver(fresh_server());
         let body = serde_json::json!({ "jsonrpc": "2.0", "method": "notifications/cancelled" });
         let request = post_request(body, &[]);
-        let response = router.oneshot(request).await.unwrap();
+        let response = one_shot(router, request).await;
         assert_eq!(response.status(), StatusCode::ACCEPTED);
         let bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
         assert!(bytes.is_empty());
@@ -549,10 +581,10 @@ mod long {
     //#region 🔖️ProtocolVersionHeader
     #[tokio::test]
     async fn missing_protocol_version_header_on_a_modern_request_is_400_header_mismatch() {
-        let (router, _events, _bridge) = transport().router(fresh_server());
+        let (router, _events) = test_driver(fresh_server());
         let body = serde_json::json!({ "jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": { "_meta": { META_PROTOCOL_VERSION_KEY: "2026-07-28" } } });
         let request = post_request(body, &[]);
-        let response = router.oneshot(request).await.unwrap();
+        let response = one_shot(router, request).await;
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
         let bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
         let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
@@ -561,10 +593,10 @@ mod long {
 
     #[tokio::test]
     async fn mismatched_protocol_version_header_and_body_is_400_header_mismatch() {
-        let (router, _events, _bridge) = transport().router(fresh_server());
+        let (router, _events) = test_driver(fresh_server());
         let body = serde_json::json!({ "jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": { "_meta": { META_PROTOCOL_VERSION_KEY: "2026-07-28" } } });
         let request = post_request(body, &[("MCP-Protocol-Version", "2025-11-25")]);
-        let response = router.oneshot(request).await.unwrap();
+        let response = one_shot(router, request).await;
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
         let bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
         let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
@@ -573,10 +605,10 @@ mod long {
 
     #[tokio::test]
     async fn unsupported_protocol_version_is_400_with_the_supported_list() {
-        let (router, _events, _bridge) = transport().router(fresh_server());
+        let (router, _events) = test_driver(fresh_server());
         let body = serde_json::json!({ "jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": { "_meta": { META_PROTOCOL_VERSION_KEY: "1999-01-01" } } });
         let request = post_request(body, &[("MCP-Protocol-Version", "1999-01-01")]);
-        let response = router.oneshot(request).await.unwrap();
+        let response = one_shot(router, request).await;
         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
         let bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
         let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
@@ -588,39 +620,39 @@ mod long {
     //#region 🔖️Security
     #[tokio::test]
     async fn an_evil_origin_is_rejected_with_403() {
-        let (router, _events, _bridge) = transport().router(fresh_server());
+        let (router, _events) = test_driver(fresh_server());
         let body = serde_json::json!({ "jsonrpc": "2.0", "id": 1, "method": "ping" });
         let request =
             Request::builder().method("POST").uri("/mcp").header("content-type", "application/json").header("authorization", "Bearer test-token").header("origin", "https://evil.example").body(Body::from(serde_json::to_vec(&body).unwrap())).unwrap();
-        let response = router.oneshot(request).await.unwrap();
+        let response = one_shot(router, request).await;
         assert_eq!(response.status(), StatusCode::FORBIDDEN);
     }
 
     #[tokio::test]
     async fn a_loopback_origin_is_accepted() {
-        let (router, _events, _bridge) = transport().router(fresh_server());
+        let (router, _events) = test_driver(fresh_server());
         let body = serde_json::json!({ "jsonrpc": "2.0", "id": 1, "method": "ping" });
         let request =
             Request::builder().method("POST").uri("/mcp").header("content-type", "application/json").header("authorization", "Bearer test-token").header("origin", "http://127.0.0.1:6300").body(Body::from(serde_json::to_vec(&body).unwrap())).unwrap();
-        let response = router.oneshot(request).await.unwrap();
+        let response = one_shot(router, request).await;
         assert_eq!(response.status(), StatusCode::OK);
     }
 
     #[tokio::test]
     async fn missing_bearer_token_is_401() {
-        let (router, _events, _bridge) = transport().router(fresh_server());
+        let (router, _events) = test_driver(fresh_server());
         let body = serde_json::json!({ "jsonrpc": "2.0", "id": 1, "method": "ping" });
         let request = Request::builder().method("POST").uri("/mcp").header("content-type", "application/json").body(Body::from(serde_json::to_vec(&body).unwrap())).unwrap();
-        let response = router.oneshot(request).await.unwrap();
+        let response = one_shot(router, request).await;
         assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
     }
 
     #[tokio::test]
     async fn incorrect_bearer_token_is_401() {
-        let (router, _events, _bridge) = transport().router(fresh_server());
+        let (router, _events) = test_driver(fresh_server());
         let body = serde_json::json!({ "jsonrpc": "2.0", "id": 1, "method": "ping" });
         let request = Request::builder().method("POST").uri("/mcp").header("content-type", "application/json").header("authorization", "Bearer wrong-token").body(Body::from(serde_json::to_vec(&body).unwrap())).unwrap();
-        let response = router.oneshot(request).await.unwrap();
+        let response = one_shot(router, request).await;
         assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
     }
     //#endregion 🔖️Security
@@ -630,17 +662,17 @@ mod long {
     async fn both_eras_are_served_over_the_same_http_endpoint_by_the_same_server() {
         let mut tools = InMemoryToolRegistry::new();
         tools.register(Tool::new("ping_tool", serde_json::json!({"type":"object"})), |_arguments| crate::protocol::CallToolResult::ok(vec![], None)).unwrap();
-        let server = McpServer::new(Box::new(tools), Box::new(InMemoryResourceRegistry::new()), Box::new(InMemoryPromptRegistry::new()), Box::new(NullBackend));
-        let (router, _events, _bridge) = transport().router(server);
+        let server = McpServer::new(Box::new(tools), Box::new(InMemoryResourceRegistry::new()), Box::new(InMemoryPromptRegistry::new()), Box::new(GatewayBackends::Null(NullBackend)));
+        let (router, _events) = test_driver(server);
 
         let modern_body = serde_json::json!({ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "ping_tool", "arguments": {}, "_meta": { META_PROTOCOL_VERSION_KEY: "2026-07-28" } } });
         let modern_request = post_request(modern_body, &[("MCP-Protocol-Version", "2026-07-28")]);
-        let modern_response = router.clone().oneshot(modern_request).await.unwrap();
+        let modern_response = one_shot(router.clone(), modern_request).await;
         assert_eq!(modern_response.status(), StatusCode::OK);
 
         let legacy_body = serde_json::json!({ "jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": { "name": "ping_tool", "arguments": {} } });
         let legacy_request = post_request(legacy_body, &[]);
-        let legacy_response = router.oneshot(legacy_request).await.unwrap();
+        let legacy_response = one_shot(router, legacy_request).await;
         assert_eq!(legacy_response.status(), StatusCode::OK);
         let bytes = axum::body::to_bytes(legacy_response.into_body(), usize::MAX).await.unwrap();
         let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
@@ -651,12 +683,12 @@ mod long {
     //#region 🔖️GetSseResumption
     #[tokio::test]
     async fn get_with_no_last_event_id_replays_every_buffered_notification() {
-        let (router, events, _bridge) = transport().router(fresh_server());
+        let (router, events) = test_driver(fresh_server());
         events.push(JsonRpcNotification::new("notifications/tools/list_changed", None));
         events.push(JsonRpcNotification::new("notifications/resources/list_changed", None));
 
         let request = Request::builder().method("GET").uri("/mcp").header("authorization", "Bearer test-token").body(Body::empty()).unwrap();
-        let response = router.oneshot(request).await.unwrap();
+        let response = one_shot(router, request).await;
         assert_eq!(response.status(), StatusCode::OK);
         assert_eq!(response.headers().get(axum::http::header::CONTENT_TYPE).unwrap(), "text/event-stream");
         let bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
@@ -668,13 +700,13 @@ mod long {
 
     #[tokio::test]
     async fn get_with_last_event_id_resumes_after_that_id_only() {
-        let (router, events, _bridge) = transport().router(fresh_server());
+        let (router, events) = test_driver(fresh_server());
         events.push(JsonRpcNotification::new("notifications/tools/list_changed", None));
         let second_id = events.push(JsonRpcNotification::new("notifications/resources/list_changed", None));
         let _ = second_id;
 
         let request = Request::builder().method("GET").uri("/mcp").header("authorization", "Bearer test-token").header("Last-Event-ID", "1").body(Body::empty()).unwrap();
-        let response = router.oneshot(request).await.unwrap();
+        let response = one_shot(router, request).await;
         let bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
         let text = String::from_utf8(bytes.to_vec()).unwrap();
         assert!(!text.contains("tools/list_changed"), "must not replay an event at-or-before Last-Event-ID");

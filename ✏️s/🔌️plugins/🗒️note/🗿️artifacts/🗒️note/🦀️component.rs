@@ -76,7 +76,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
 /// en/de localized names (`"Note"`/`"Notiz"`) still live on `definition()`'s kept
 /// `ArtifactCapability` rows (debt D1) — wiring them into this field is real follow-up work, not
 /// required for this pass (`📓️recipe-subset.md` §4c, matches the stdio pilot's identical deviation).
-pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::NoteApps> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.note.note").expect("canonical note kind"), localization: &[], standards: vec![crate::artifacts::note::standards::v1::standard()] }
@@ -86,7 +86,7 @@ pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDe
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
 /// `crate::editor::note::create_note_app`'s `🔖️Manifest` region.
-pub async fn artifact_kind() -> ArtifactKindSpec {
+pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "2d.note".into(),
         name: "2D Note".into(),

@@ -408,7 +408,7 @@ pub(crate) fn bodies_intersect(a: &CollisionBody, world_a: &Pose3d, b: &Collisio
 }
 
 //#region 🗺️BroadPhase
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub(crate) struct CollisionAabb {
     pub(crate) min: [f32; 3],
     pub(crate) max: [f32; 3],
@@ -492,6 +492,10 @@ impl CollisionSpatialIndex {
             candidates.extend(self.entries.keys().cloned());
         }
         candidates.into_iter().filter(|id| self.entries.get(id).is_some_and(|candidate| candidate.intersects(&bounds))).collect()
+    }
+
+    pub(crate) fn entry_intersects(&self, id: &str, bounds: CollisionAabb) -> bool {
+        self.entries.get(id).is_some_and(|candidate| candidate.intersects(&bounds))
     }
 
     fn covered_cells(&self, bounds: CollisionAabb) -> Option<Vec<(i32, i32, i32)>> {

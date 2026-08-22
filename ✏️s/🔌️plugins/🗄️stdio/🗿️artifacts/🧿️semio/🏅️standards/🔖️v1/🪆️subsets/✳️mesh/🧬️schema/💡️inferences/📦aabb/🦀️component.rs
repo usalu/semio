@@ -70,11 +70,11 @@ impl store::InferredField<SemioMeshSnapshot> for MeshAabb {
     const FIELD_ID: &'static str = "s.stdio.semio.mesh.inference.aabb";
     const SCHEMA_VERSION: u32 = 1;
 
-    async fn reads() -> &'static [&'static str] {
+    fn reads() -> &'static [&'static str] {
         &["meshes"]
     }
 
-    async fn plan(snapshot: &SemioMeshSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
+    fn plan(snapshot: &SemioMeshSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
         snapshot.meshes.iter().flat_map(|mesh| mesh.primitives.iter().map(move |p| store::InferenceStep { key: aabb_key(&mesh.id, &p.id), parents: Vec::new() })).collect()
     }
 
@@ -82,14 +82,14 @@ impl store::InferredField<SemioMeshSnapshot> for MeshAabb {
     /// nothing else (not `normals`/`uvs`/`colors`/`indices`/`material_id`, none of which affect an
     /// AABB) — an unrelated field touch on the SAME primitive must still hit the cache, proven by
     /// the incrementality-law test below.
-    async fn dep_input(snapshot: &SemioMeshSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
+    fn dep_input(snapshot: &SemioMeshSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
         match find_primitive_by_key(snapshot, key) {
             Some((_, primitive)) => serde_json::to_vec(&primitive.positions).unwrap_or_default(),
             None => Vec::new(),
         }
     }
 
-    async fn compute(snapshot: &SemioMeshSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
+    fn compute(snapshot: &SemioMeshSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
         let Some((_, primitive)) = find_primitive_by_key(snapshot, key) else {
             return SemioAabb::default();
         };

@@ -21,8 +21,8 @@ use crate::editor::fem2d::modes::edit::windows::results as results_window;
 use crate::model::{Dof, ElementResult};
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_plugin::{
-    create_default_layout, ui_text, ActionArgDef, ActionArgOption, AppIo, ArtifactEditor, ArtifactView, ConfigSpec, ConfigView, DraftView, Editor, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType,
-    NoDraft, NoDraftMutation, SurfaceKind, UiNode,
+    built_text_node, create_default_layout, ActionArgDef, ActionArgOption, AppIo, ArtifactEditor, ArtifactView, ConfigSpec, ConfigView, DraftView, Editor, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
+    MediaType, NoDraft, NoDraftMutation,
 };
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -76,7 +76,7 @@ semio_framework_plugin::app_commands! {
 /// 👁️ B1: `cfg`-driven counterpart of the deleted `ResultDisplay` `RefCell` — converts the flat
 /// `Fem2dConfig` result-display fields back into `crate::app_surface::ResultDisplay`/`DisplayMode` so
 /// the results window's render pipeline (built around those shared types) needs no changes.
-async fn config_result_display(cfg: &Fem2dConfig) -> ResultDisplay {
+fn config_result_display(cfg: &Fem2dConfig) -> ResultDisplay {
     let mode = match cfg.result_mode.as_str() {
         "modal" => DisplayMode::Modal(cfg.result_mode_index as usize),
         "buckling" => DisplayMode::Buckling(cfg.result_mode_index as usize),
@@ -90,11 +90,11 @@ async fn config_result_display(cfg: &Fem2dConfig) -> ResultDisplay {
 /// scope: `🫀️core` is a shared crate), so this hand-rolls the same shape `serde_json::to_string` would
 /// have produced, using `Dof`'s existing `{:?}` formatting (already used for the reaction-label layers
 /// in the results window's render).
-async fn dof_json(dof: Dof) -> Value {
+fn dof_json(dof: Dof) -> Value {
     json!(format!("{dof:?}"))
 }
 
-async fn element_result_json(result: &ElementResult) -> Value {
+fn element_result_json(result: &ElementResult) -> Value {
     match result {
         ElementResult::Bar { n } => json!({ "kind": "bar", "n": n }),
         ElementResult::Beam { stations } => {
@@ -117,7 +117,7 @@ async fn element_result_json(result: &ElementResult) -> Value {
     }
 }
 
-async fn static_result_json(result: &crate::model::StaticResult) -> Value {
+fn static_result_json(result: &crate::model::StaticResult) -> Value {
     json!({
         "displacements": result.displacements.iter().map(|d| json!({ "nodeId": d.node_id, "values": d.values })).collect::<Vec<_>>(),
         "reactions": result.reactions.iter().map(|r| json!({ "nodeId": r.node_id, "dof": dof_json(r.dof), "value": r.value })).collect::<Vec<_>>(),
@@ -126,7 +126,7 @@ async fn static_result_json(result: &crate::model::StaticResult) -> Value {
     })
 }
 
-async fn results_map_json(results: &HashMap<String, crate::model::StaticResult>) -> Value {
+fn results_map_json(results: &HashMap<String, crate::model::StaticResult>) -> Value {
     Value::Object(results.iter().map(|(id, result)| (id.clone(), static_result_json(result))).collect())
 }
 //#endregion 🔖️ExportImportHelpers
@@ -138,7 +138,7 @@ async fn results_map_json(results: &HashMap<String, crate::model::StaticResult>)
 /// `crate::model::StaticResult`, pinned to the `computation.fem2d` artifact kind declared in
 /// `crate::artifacts::fem2d::computation_artifact_kind` — see `export_media` above). Moved out of the
 /// (now deleted) artifact `⚙️engine`: it returns `AppIo`, an app type, so it belongs here.
-pub async fn fem2d_io() -> AppIo {
+pub fn fem2d_io() -> AppIo {
     AppIo {
         document_schema: crate::artifacts::fem2d::FEM_2D_SCHEMA.into(),
         document_media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
@@ -151,7 +151,7 @@ pub async fn fem2d_io() -> AppIo {
 
 /// 🔌️ `geometry:in` — an externally authored 2D polygon-with-holes outline, imported as a new
 /// `FemRegion`.
-pub async fn fem2d_geometry_in_port() -> semio_framework_plugin::MediaPortSpec {
+pub fn fem2d_geometry_in_port() -> semio_framework_plugin::MediaPortSpec {
     semio_framework_plugin::MediaPortSpec {
         id: "geometry:in".into(),
         label: "Geometry".into(),
@@ -165,7 +165,7 @@ pub async fn fem2d_geometry_in_port() -> semio_framework_plugin::MediaPortSpec {
 
 /// 🔌️ `results:out` — every load case/combination's solved `crate::model::StaticResult`, pinned to the
 /// `computation.fem2d` artifact kind.
-pub async fn fem2d_results_out_port() -> semio_framework_plugin::MediaPortSpec {
+pub fn fem2d_results_out_port() -> semio_framework_plugin::MediaPortSpec {
     semio_framework_plugin::MediaPortSpec {
         id: "results:out".into(),
         label: "Results".into(),
@@ -226,7 +226,7 @@ impl ArtifactEditor for Fem2dPlayApp {
     async fn export_media(port: &str, doc: &ArtifactView<'_, Fem2dSnapshot>) -> Result<Media, MediaError> {
         match port {
             "document:out" => {
-                let media_type = Self::io().map(|io| io.document_media_type).unwrap_or(MediaType { class: MediaClass::Data, form: MediaForm::Value });
+                let media_type = fem2d_io().document_media_type;
                 let bytes = <Fem2dSnapshot as store::ArtifactPack>::encode_pack(doc.snapshot);
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
@@ -303,16 +303,16 @@ impl ArtifactEditor for Fem2dPlayApp {
     /// settings) — declaring `ConfigSpec::empty()` explicitly keeps the typed channel surface
     /// consistent with the sibling apps' convention.
     async fn config_spec() -> ConfigSpec {
-        ConfigSpec::empty()
+        semio_framework_plugin::resolve_ready(ConfigSpec::empty())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, Fem2dConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, Fem2dConfig>) -> semio_framework_plugin::ComponentTree {
         let camera = &cfg.snapshot.camera;
-        match body_key {
+        semio_framework_plugin::built_to_component_tree(match body_key {
             model_window::BODY_KEY => model_window::render(doc.snapshot, camera),
             results_window::BODY_KEY => results_window::render(doc.snapshot, &config_result_display(cfg.snapshot), camera),
-            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => built_text_node(Label::data(format!("Unknown body: {body_key}"))),
+        })
     }
 }
 //#endregion 🔖️Fem2dPlayApp
@@ -325,10 +325,10 @@ impl ArtifactEditor for Fem2dPlayApp {
 /// former "replace the whole document" gesture in this package (`import_media`'s `"document:in"`,
 /// `commands::set_active_example`) builds this effect instead of an `Emit::mutations([...])`.
 /// The spr is a fresh, edit-free op-log for `scene` — a genesis envelope with no history to encode.
-pub async fn reset_document_effect(scene: &Fem2dSnapshot) -> semio_framework::kernel::Effect {
+pub fn reset_document_effect(scene: &Fem2dSnapshot) -> semio_framework::kernel::Effect {
     let pack = <Fem2dSnapshot as store::ArtifactPack>::encode_pack(scene);
     let envelope = store::create_document_envelope::<Fem2dSnapshot, Fem2dMutation>(crate::artifacts::fem2d::FEM_2D_SCHEMA, "fem2d", scene.clone(), None);
-    let spr = store::print_document_spr(&envelope).expect("fem2d document spr encode is infallible for a fresh, edit-free envelope");
+    let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("fem2d document spr encode is infallible for a fresh, edit-free envelope");
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️ResetDocument
@@ -341,7 +341,7 @@ pub async fn reset_document_effect(scene: &Fem2dSnapshot) -> semio_framework::ke
 /// consumer of the bundled example DSL (`setActiveExample`'s handler, every test fixture) still reads
 /// `FEM2D_EXAMPLE_DSL` directly, so no behavior beyond the manifest-level example/workflow listing is
 /// lost.
-pub async fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::fem2d::FEM2D_DIALECT)
             .document(["semio", "fem", "fem2d"])
             // 🔌️ The computed-results output artifact (`results:out`'s `kind_id`, see
@@ -351,8 +351,8 @@ pub async fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
             .icon_id("fem-app")
             .mode(edit::MODE_ID, LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
             .default_mode_id(edit::MODE_ID)
-            .window_kind(model_window::WINDOW_KIND_ID, LocalizedLabel::native("Model", "Modell"), model_window::BODY_KEY, SurfaceKind::Canvas2d, "fem-model")
-            .window_kind(results_window::WINDOW_KIND_ID, LocalizedLabel::native("Results", "Ergebnisse"), results_window::BODY_KEY, SurfaceKind::Canvas2d, "bar-chart-3")
+            .window_kind(model_window::WINDOW_KIND_ID, LocalizedLabel::native("Model", "Modell"), model_window::BODY_KEY, semio_framework_ui_contract::SurfaceKind::Canvas2d, "fem-model")
+            .window_kind(results_window::WINDOW_KIND_ID, LocalizedLabel::native("Results", "Ergebnisse"), results_window::BODY_KEY, semio_framework_ui_contract::SurfaceKind::Canvas2d, "bar-chart-3")
             .default_layout(create_default_layout(
                 &[model_window::WINDOW_KIND_ID.into(), results_window::WINDOW_KIND_ID.into()],
                 "row",
@@ -422,7 +422,7 @@ pub async fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
             .view_action("setLocale", LocalizedLabel::native("Set Locale", "Sprache festlegen"))
             // 🎯️ Typed channel surface — `config_spec()`/`fem2d_io()` are this same information's single
             // source of truth, reused here rather than duplicated.
-            .config(Fem2dPlayApp::config_spec())
+            .config(semio_framework_plugin::resolve_ready(Fem2dPlayApp::config_spec()))
             .io(fem2d_io())
             .build_definition()
 }
@@ -440,29 +440,36 @@ pub(crate) mod testkit {
     pub type Fem2dApp = VcsArtifactApp<EditorApp<Fem2dPlayApp>>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub async fn fem2d_app() -> Fem2dApp {
-        new_app::<EditorApp<Fem2dPlayApp>>()
+    pub fn fem2d_app() -> Fem2dApp {
+        semio_framework_plugin::resolve_ready(new_app::<EditorApp<Fem2dPlayApp>>())
     }
 
     /// 🧪️ Adapts `create_fem2d_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
     /// examples }` shape `testkit::new_app_with_registry` still expects (SDK gap — mirrors the cad
     /// pilot's identical `cad_app_manifest_for_testkit` wrapper; `🧰️framework/**` is outside this
     /// packet's lease).
-    async fn fem2d_app_manifest_for_testkit() -> semio_framework_plugin::App {
+    fn fem2d_app_manifest_for_testkit() -> semio_framework_plugin::App {
         semio_framework_plugin::App { definition: create_fem2d_app(), examples: Vec::new() }
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub async fn fem2d_app_with_registry() -> Fem2dApp {
-        new_app_with_registry::<EditorApp<Fem2dPlayApp>>(fem2d_app_manifest_for_testkit)
+    pub fn fem2d_app_with_registry() -> Fem2dApp {
+        semio_framework_plugin::resolve_ready(new_app_with_registry::<EditorApp<Fem2dPlayApp>>(fem2d_app_manifest_for_testkit))
     }
 
     pub async fn dispatch(app: &mut Fem2dApp, command: Fem2dCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).expect("dispatch")
+        let result = app.dispatch_typed(command, &meta("local")).await.expect("dispatch");
+        for effect in &result.requested_effects {
+            if let semio_framework_plugin::Effect::LoadDocument { pack, spr } = effect {
+                let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
+                app.load_document_pack(&files).await.expect("test host applies load-document effect");
+            }
+        }
+        result
     }
 
-    pub async fn render(app: &mut Fem2dApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
+    pub fn render(app: &mut Fem2dApp, body_key: &str) -> String {
+        serde_json::to_string(&semio_framework_plugin::resolve_ready(app.render(body_key, None, &ViewModel::default())).expect("render")).expect("render json")
     }
 }
 //#endregion 🧪️Testkit
@@ -477,7 +484,7 @@ mod tests {
 
     //#region 🔖️CommandSurface
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-    pub(super) async fn every_command() -> Vec<Fem2dCommand> {
+    pub(super) fn every_command() -> Vec<Fem2dCommand> {
         vec![
             Fem2dCommand::AddNode(add_node::AddNode { x: 1.0, y: 2.0 }),
             Fem2dCommand::AddBar(add_bar::AddBar { start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "rod".into() }),
@@ -593,7 +600,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn config_spec_declares_no_fields() {
-        assert!(Fem2dPlayApp::config_spec().fields.is_empty());
+        assert!(semio_framework_plugin::resolve_ready(Fem2dPlayApp::config_spec()).fields.is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -608,7 +615,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn app_io_forwards_the_engine_declared_ports() {
-        let io = Fem2dPlayApp::io().expect("io declared");
+        let io = semio_framework_plugin::resolve_ready(Fem2dPlayApp::io()).expect("io declared");
         assert!(io.ports.iter().any(|port| port.id == "geometry:in"));
         assert!(io.ports.iter().any(|port| port.id == "results:out"));
     }
@@ -662,8 +669,15 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn undo_restores_document_after_add_node() {
         let mut app = fem2d_app();
-        let before = app.snapshot().expect("snapshot").nodes.len();
-        semio_framework_plugin::testkit::assert_undo_redo_round_trip(&mut app, Fem2dCommand::AddNode(add_node::AddNode { x: 1.0, y: 1.0 }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1);
+        let before = semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot").nodes.len();
+        semio_framework_plugin::testkit::assert_undo_redo_round_trip(
+            &mut app,
+            Fem2dCommand::AddNode(add_node::AddNode { x: 1.0, y: 1.0 }),
+            |app| semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot").nodes.len(),
+            before,
+            before + 1,
+        )
+        .await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -674,17 +688,17 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn two_instances_converge_on_disjoint_edits() {
-        let (mut instance_a, mut instance_b) = semio_framework_plugin::testkit::paired_apps::<EditorApp<Fem2dPlayApp>>("mem://fem2d-convergence");
+        let (mut instance_a, mut instance_b) = semio_framework_plugin::resolve_ready(semio_framework_plugin::testkit::paired_apps::<EditorApp<Fem2dPlayApp>>("mem://fem2d-convergence"));
 
-        instance_a.dispatch_typed(Fem2dCommand::AddMaterial(add_material::AddMaterial { name: "Steel".into(), e: 2.1e11 }), &semio_framework_plugin::testkit::meta("actor-a")).expect("a adds a material");
-        instance_b.dispatch_typed(Fem2dCommand::AddNode(add_node::AddNode { x: 5.0, y: 5.0 }), &semio_framework_plugin::testkit::meta("actor-b")).expect("b adds a node");
+        instance_a.dispatch_typed(Fem2dCommand::AddMaterial(add_material::AddMaterial { name: "Steel".into(), e: 2.1e11 }), &semio_framework_plugin::testkit::meta("actor-a")).await.expect("a adds a material");
+        instance_b.dispatch_typed(Fem2dCommand::AddNode(add_node::AddNode { x: 5.0, y: 5.0 }), &semio_framework_plugin::testkit::meta("actor-b")).await.expect("b adds a node");
 
         // A neutral history action always dispatches through the store, which pumps inbound operations first.
-        instance_a.handle_action("commitCheckpoint", None, &semio_framework_plugin::testkit::meta("actor-a")).expect("pump a");
-        instance_b.handle_action("commitCheckpoint", None, &semio_framework_plugin::testkit::meta("actor-b")).expect("pump b");
+        semio_framework_plugin::resolve_ready(instance_a.handle_action("commitCheckpoint", None, &semio_framework_plugin::testkit::meta("actor-a"))).expect("pump a");
+        semio_framework_plugin::resolve_ready(instance_b.handle_action("commitCheckpoint", None, &semio_framework_plugin::testkit::meta("actor-b"))).expect("pump b");
 
-        let projection_a = instance_a.snapshot().expect("snapshot a");
-        let projection_b = instance_b.snapshot().expect("snapshot b");
+        let projection_a = semio_framework_plugin::resolve_ready(instance_a.snapshot()).expect("snapshot a");
+        let projection_b = semio_framework_plugin::resolve_ready(instance_b.snapshot()).expect("snapshot b");
         assert!(projection_a.materials.iter().any(|m| m.name == "Steel"), "A keeps its material");
         assert!(projection_a.nodes.iter().any(|n| n.x == 5.0), "A absorbs B's node");
         assert_eq!(projection_a.nodes.len(), projection_b.nodes.len(), "both instances converge to the same node set");
@@ -704,20 +718,20 @@ mod tests {
     async fn export_media_document_out_round_trips_via_import_media_document_in() {
         let _app = Fem2dPlayApp;
         let snapshot: Fem2dSnapshot = Fem2dSnapshot::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
-        let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView::new(&snapshot, &history);
+        let history = semio_framework_plugin::resolve_ready(semio_framework_plugin::HistoryView::empty());
+        let doc = semio_framework_plugin::resolve_ready(ArtifactView::new(&snapshot, &history));
         let media = semio_framework_plugin::resolve_ready(Fem2dPlayApp::export_media("document:out", &doc)).expect("document:out exports");
         assert_eq!(media.media_type.class, MediaClass::TwoD);
         assert_eq!(media.media_type.form, MediaForm::Vector);
         let empty_projection = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
-        let empty_history = semio_framework_plugin::HistoryView::empty();
-        let empty_doc = ArtifactView::new(&empty_projection, &empty_history);
-        let emit = Fem2dPlayApp::import_media("document:in", &media, &empty_doc).expect("document:in imports");
+        let empty_history = semio_framework_plugin::resolve_ready(semio_framework_plugin::HistoryView::empty());
+        let empty_doc = semio_framework_plugin::resolve_ready(ArtifactView::new(&empty_projection, &empty_history));
+        let emit = semio_framework_plugin::resolve_ready(Fem2dPlayApp::import_media("document:in", &media, &empty_doc)).expect("document:in imports");
         assert!(emit.artifact_mutations.is_empty(), "whole-document replace must not be an artifact_mutations entry");
         let semio_framework::kernel::Effect::LoadDocument { pack, .. } = emit.effects.first().expect("document:in must emit a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
         };
-        let loaded = <Fem2dSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+        let loaded = <Fem2dSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode loaded document pack");
         assert_eq!(loaded, snapshot);
     }
 
@@ -725,8 +739,8 @@ mod tests {
     async fn export_media_results_out_returns_json_with_every_case_and_combination() {
         let _app = Fem2dPlayApp;
         let snapshot: Fem2dSnapshot = Fem2dSnapshot::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
-        let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView::new(&snapshot, &history);
+        let history = semio_framework_plugin::resolve_ready(semio_framework_plugin::HistoryView::empty());
+        let doc = semio_framework_plugin::resolve_ready(ArtifactView::new(&snapshot, &history));
         let media = semio_framework_plugin::resolve_ready(Fem2dPlayApp::export_media("results:out", &doc)).expect("results:out exports");
         assert_eq!(media.media_type.class, MediaClass::Data);
         assert_eq!(media.media_type.form, MediaForm::Value);
@@ -749,8 +763,8 @@ mod tests {
     async fn export_media_results_out_errors_when_no_load_cases_are_defined() {
         let _app = Fem2dPlayApp;
         let snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
-        let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView::new(&snapshot, &history);
+        let history = semio_framework_plugin::resolve_ready(semio_framework_plugin::HistoryView::empty());
+        let doc = semio_framework_plugin::resolve_ready(ArtifactView::new(&snapshot, &history));
         let error = semio_framework_plugin::resolve_ready(Fem2dPlayApp::export_media("results:out", &doc)).expect_err("no load cases means no results to export");
         match error {
             MediaError::Payload(port, _) => assert_eq!(port, "results:out"),
@@ -762,8 +776,8 @@ mod tests {
     async fn export_media_unknown_port_is_not_implemented() {
         let _app = Fem2dPlayApp;
         let snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
-        let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView::new(&snapshot, &history);
+        let history = semio_framework_plugin::resolve_ready(semio_framework_plugin::HistoryView::empty());
+        let doc = semio_framework_plugin::resolve_ready(ArtifactView::new(&snapshot, &history));
         assert!(matches!(semio_framework_plugin::resolve_ready(Fem2dPlayApp::export_media("bogus:out", &doc)), Err(MediaError::NotImplemented)));
     }
 
@@ -772,11 +786,11 @@ mod tests {
         let _app = Fem2dPlayApp;
         let mut snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
         snapshot.materials.push(crate::artifacts::fem2d::FemMaterial { id: "steel".into(), name: "Steel".into(), e: 2.1e11, nu: 0.3, rho: 7850.0 });
-        let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView::new(&snapshot, &history);
+        let history = semio_framework_plugin::resolve_ready(semio_framework_plugin::HistoryView::empty());
+        let doc = semio_framework_plugin::resolve_ready(ArtifactView::new(&snapshot, &history));
         let payload = json!({ "outline": [[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]], "holes": [] }).to_string();
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "geometry".into(), json: payload } };
-        let emit = Fem2dPlayApp::import_media("geometry:in", &media, &doc).expect("geometry:in imports");
+        let emit = semio_framework_plugin::resolve_ready(Fem2dPlayApp::import_media("geometry:in", &media, &doc)).expect("geometry:in imports");
         assert_eq!(emit.artifact_mutations.len(), 1);
         match &emit.artifact_mutations[0] {
             Fem2dMutation::CreateRegion(crate::artifacts::fem2d::mutations::create_region::mutation::CreateRegion { region }) => {
@@ -792,11 +806,11 @@ mod tests {
     async fn import_media_geometry_in_falls_back_to_unassigned_material_when_none_exists() {
         let _app = Fem2dPlayApp;
         let snapshot = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
-        let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView::new(&snapshot, &history);
+        let history = semio_framework_plugin::resolve_ready(semio_framework_plugin::HistoryView::empty());
+        let doc = semio_framework_plugin::resolve_ready(ArtifactView::new(&snapshot, &history));
         let payload = json!({ "outline": [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]] }).to_string();
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: "geometry".into(), json: payload } };
-        let emit = Fem2dPlayApp::import_media("geometry:in", &media, &doc).expect("geometry:in imports");
+        let emit = semio_framework_plugin::resolve_ready(Fem2dPlayApp::import_media("geometry:in", &media, &doc)).expect("geometry:in imports");
         match &emit.artifact_mutations[0] {
             Fem2dMutation::CreateRegion(crate::artifacts::fem2d::mutations::create_region::mutation::CreateRegion { region }) => assert_eq!(region.material_id, "unassigned"),
             _ => panic!("expected CreateRegion"),

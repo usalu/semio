@@ -512,7 +512,7 @@ async fn render_drawing_to_svg(drawing: &SemioDrawingSnapshot) -> Result<(String
 /// 🗺️ Builds a real `SemioDrawingSnapshot` from the map document (positions/routes/regions →
 /// markers/polylines, `gis_map_snapshot_to_drawing`) and renders it through stdio's real
 /// drawing↔svg bridge (`io_dispatch`) — replaces the old hand-rolled `map_points_svg` delegate.
-pub async fn gis2d_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
+pub fn gis2d_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
     let document: GisMapSnapshot = serde_json::from_value(value.clone()).unwrap_or_default();
     let drawing = gis_map_snapshot_to_drawing(&document);
     render_drawing_to_svg(&drawing)

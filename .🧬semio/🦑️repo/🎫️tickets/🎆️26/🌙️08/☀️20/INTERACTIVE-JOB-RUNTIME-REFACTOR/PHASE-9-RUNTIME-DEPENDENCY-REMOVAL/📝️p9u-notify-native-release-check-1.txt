@@ -1,0 +1,120 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.45
+   Compiling unicode-ident v1.0.24
+    Checking cfg-if v1.0.4
+   Compiling libc v0.2.186
+   Compiling serde_core v1.0.228
+   Compiling version_check v0.9.5
+   Compiling serde v1.0.228
+    Checking zeroize v1.9.0
+    Checking typenum v1.20.1
+   Compiling getrandom v0.3.4
+   Compiling generic-array v0.14.7
+   Compiling zerocopy v0.8.48
+   Compiling shlex v1.3.0
+   Compiling find-msvc-tools v0.1.9
+    Checking bytes v1.12.1
+    Checking rustls-pki-types v1.15.0
+    Checking simd-adler32 v0.3.9
+    Checking itoa v1.0.18
+   Compiling crc32fast v1.5.0
+   Compiling cc v1.2.62
+   Compiling zmij v1.0.21
+   Compiling rustls v0.23.41
+    Checking semio-framework-trace v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust)
+    Checking untrusted v0.9.0
+   Compiling thiserror v2.0.18
+    Checking adler2 v2.0.1
+    Checking pin-project-lite v0.2.17
+    Checking crypto-common v0.1.7
+    Checking ppv-lite86 v0.2.21
+   Compiling blake3 v1.8.5
+    Checking block-buffer v0.10.4
+    Checking rand_core v0.9.5
+    Checking rustls-webpki v0.103.13
+    Checking miniz_oxide v0.8.9
+    Checking mio v1.2.1
+    Checking socket2 v0.6.4
+    Checking constant_time_eq v0.4.2
+    Checking arrayvec v0.7.6
+   Compiling syn v2.0.117
+    Checking log v0.4.29
+   Compiling httparse v1.10.1
+    Checking once_cell v1.21.4
+    Checking memchr v2.8.0
+    Checking arrayref v0.3.9
+   Compiling serde_json v1.0.149
+    Checking subtle v2.6.1
+    Checking rand_chacha v0.9.0
+    Checking digest v0.10.7
+   Compiling serde_derive v1.0.228
+   Compiling thiserror-impl v2.0.18
+   Compiling tokio-macros v2.7.0
+    Checking cpufeatures v0.2.17
+    Checking tokio v1.52.3
+    Checking rand v0.9.5
+   Compiling futures-macro v0.3.32
+    Checking http v1.4.2
+    Checking sha1 v0.10.7
+    Checking webpki-roots v1.0.8
+    Checking futures-task v0.3.32
+    Checking futures-core v0.3.32
+    Checking slab v0.4.12
+    Checking base64 v0.22.1
+    Checking semio-framework-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust)
+    Checking hashbrown v0.17.1
+    Checking equivalent v1.0.2
+    Checking bumpalo v3.20.2
+    Checking futures-sink v0.3.32
+   Compiling zip v2.4.2
+    Checking data-encoding v2.11.0
+    Checking utf-8 v0.7.6
+    Checking webpki-roots v0.26.11
+    Checking tokio-rustls v0.26.4
+    Checking semio-framework-replication v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust)
+    Checking semio-framework-job v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust)
+    Checking flate2 v1.1.9
+    Checking indexmap v2.14.0
+    Checking zopfli v0.8.3
+    Checking futures-util v0.3.32
+   Compiling displaydoc v0.2.5
+    Checking tungstenite v0.26.2
+    Checking semio-framework-hash v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust)
+   Compiling semio-framework-os-kernel-dsl-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust)
+    Checking semio-framework-pack v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust)
+    Checking semio-framework-actor v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust)
+    Checking semio-framework-os-services v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust)
+    Checking tokio-tungstenite v0.26.2
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13178:6: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13179:42: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13179:97: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13180:64: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13181:9: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13183:49: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13183:101: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13184:21: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13185:55: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/⌨️cli/🦀️component.rs:83:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/⌨️cli/🦀️component.rs:86:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🔌️client/🦀️component.rs:113:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:501:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:502:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:513:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:514:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:515:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:522:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:541:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:542:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:720:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:721:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:722:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:732:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:733:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:734:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:1212:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2400:9: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2415:9: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2418:9: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+warning: `semio-framework-os-kernel` (lib) generated 30 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 9 suggestions)
+    Finished `release` profile [optimized] target(s) in 1m 48s

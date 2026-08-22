@@ -2,7 +2,9 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET) plus its six foreign plugins' surface
 //! registrations (eight surfaces: four editor-only, two editor+viewer pairs).
 
-use semio_framework_plugin::Plugin;
+use semio_framework_plugin::__semio_dispatch_PluginApp;
+use semio_framework_plugin::plugin_app_close_prelude::*;
+use semio_framework_plugin::{Plugin, PluginApp};
 
 // 🎫️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: `cad`'s W2 packet dissolved
 // `apps::cad` into `editor::cad`/`viewer::cad` (module path read off `cad`'s OWN
@@ -23,11 +25,27 @@ const PLUGIN_LABEL: &str = "Entwerfen mit Bestand";
 const PLUGIN_VERSION: &str = "0.1.0";
 
 //#region 🔌️Plugin
+/// 🗃️ Closed runtime app fleet for the demonstrator's owned and bundled surfaces.
+semio_framework_dispatch_macros::dyn_enum_close! {
+    pub enum DemonstratorApps: PluginApp {
+        PlaygroundEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::playground::PlaygroundEditor>>),
+        PlaygroundViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::playground::PlaygroundViewer>>),
+        Procedural3dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<Procedural3dPlayApp>>),
+        CadEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<CadPlayApp>>),
+        Puzzle3dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<Puzzle3dPlayApp>>),
+        SourcingEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<SourcingCurateApp>>),
+        SourcingViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<SourcingViewer>>),
+        ProcessEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<Process3dPlayApp>>),
+        ProcessViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<Process3dViewer>>),
+        GisEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<Gis2dPlayApp>>),
+    }
+}
+
 /// 🔌️ Builds the concrete demonstrator bundle: declares its owned playground artifact, registers
 /// its own native editor+viewer surfaces over that artifact, then registers the six foreign plugins'
 /// surfaces in their preserved order (`sourcing`/`process` each contribute an editor+viewer pair).
-pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
-    Plugin::builder(PLUGIN_ID)
+pub async fn plugin() -> Result<Plugin<DemonstratorApps>, semio_framework_plugin::PluginAssemblyError> {
+    Plugin::<DemonstratorApps>::builder(PLUGIN_ID)
         .label(PLUGIN_LABEL)
         .version(PLUGIN_VERSION)
         .artifact(crate::artifacts::playground::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)

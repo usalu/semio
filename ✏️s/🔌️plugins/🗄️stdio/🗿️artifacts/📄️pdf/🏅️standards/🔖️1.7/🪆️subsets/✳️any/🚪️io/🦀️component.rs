@@ -2435,8 +2435,7 @@ pub fn encode_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
     let mut objects: Vec<(u32, Vec<u8>)> = Vec::new();
 
     if let (Some(fnum), Some(cnum)) = (font_num, cmap_num) {
-        let compressed =
-            crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(TOUNICODE_IDENTITY_CMAP.as_bytes()).map_err(|e| PdfEngineError::Malformed(format!("cmap compress: {e}")))?;
+        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(TOUNICODE_IDENTITY_CMAP.as_bytes()).map_err(|e| PdfEngineError::Malformed(format!("cmap compress: {e}")))?;
         let mut cbytes = Vec::new();
         cbytes.extend_from_slice(format!("{cnum} 0 obj\n<< /Length {} /Filter /FlateDecode >>\nstream\n", compressed.len()).as_bytes());
         cbytes.extend_from_slice(&compressed);

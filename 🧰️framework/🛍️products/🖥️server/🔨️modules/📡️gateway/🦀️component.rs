@@ -32,8 +32,8 @@ use axum::http::{header, HeaderMap, HeaderValue, Method, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use dashmap::DashMap;
 use futures::{Sink, SinkExt, StreamExt};
+use semio_framework_async::ShardedMap;
 use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 use serde::{Deserialize, Serialize};
 use tokio::sync::{broadcast, Mutex, Notify};
@@ -58,27 +58,36 @@ pub use axum::Json as GatewayJson;
 //#region 🔖️Error
 /// 💥️ The one error every transport surface answers with. An instance maps its own domain errors
 /// into these six shapes; the status code is derived here so no handler ever picks one by hand.
-#[derive(Clone, Debug, thiserror::Error)]
+#[derive(Clone, Debug)]
 pub enum ServerError {
     /// 🔒️ The caller could not be authenticated — 401.
-    #[error("unauthorized: {0}")]
     Unauthorized(String),
     /// ⛔️ The caller is known and policy still says no — 403.
-    #[error("forbidden: {0}")]
     Forbidden(String),
     /// 🕳️ Nothing is addressed by this path — 404.
-    #[error("not found: {0}")]
     NotFound(String),
     /// ⚔️ The write contradicts what is already stored — 409.
-    #[error("conflict: {0}")]
     Conflict(String),
     /// 🚧️ The request itself is malformed — 400.
-    #[error("bad request: {0}")]
     BadRequest(String),
     /// 🔥️ The server failed to answer at all — 500.
-    #[error("internal error: {0}")]
     Internal(String),
 }
+
+impl std::fmt::Display for ServerError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Unauthorized(detail) => write!(formatter, "unauthorized: {detail}"),
+            Self::Forbidden(detail) => write!(formatter, "forbidden: {detail}"),
+            Self::NotFound(detail) => write!(formatter, "not found: {detail}"),
+            Self::Conflict(detail) => write!(formatter, "conflict: {detail}"),
+            Self::BadRequest(detail) => write!(formatter, "bad request: {detail}"),
+            Self::Internal(detail) => write!(formatter, "internal error: {detail}"),
+        }
+    }
+}
+
+impl std::error::Error for ServerError {}
 
 impl ServerError {
     /// 🔢️ The HTTP status this error is answered with.
@@ -266,7 +275,7 @@ const FANOUT_CAPACITY: usize = 256;
 /// subscribe and dropped when the last subscriber goes, so an idle instance holds no lanes at all.
 #[derive(Clone, Default)]
 pub struct Fanout {
-    channels: Arc<DashMap<String, broadcast::Sender<Vec<u8>>>>,
+    channels: Arc<ShardedMap<String, broadcast::Sender<Vec<u8>>>>,
 }
 
 impl Fanout {
@@ -278,14 +287,14 @@ impl Fanout {
     /// 🔔️ Subscribe to `lane`, creating it if nobody holds it yet. The returned [`Subscription`] is
     /// the lane's lifetime: dropping the last one removes the sender.
     pub fn subscribe(&self, lane: &str) -> Subscription {
-        let sender = self.channels.entry(lane.to_string()).or_insert_with(|| broadcast::channel(FANOUT_CAPACITY).0).clone();
+        let sender = self.channels.get_or_insert_with_cloned(lane.to_string(), || broadcast::channel(FANOUT_CAPACITY).0);
         Subscription { lane: lane.to_string(), channels: Arc::clone(&self.channels), receiver: sender.subscribe() }
     }
 
     /// 📢️ Publish `bytes` on `lane` and report how many subscribers received it. Publishing to a
     /// lane nobody holds is a no-op — a fan-out never creates a lane, only a subscriber does.
     pub fn publish(&self, lane: &str, bytes: Vec<u8>) -> usize {
-        match self.channels.get(lane) {
+        match self.channels.get_cloned(lane) {
             Some(sender) => sender.send(bytes).unwrap_or(0),
             None => 0,
         }
@@ -301,7 +310,7 @@ impl Fanout {
 /// other subscriber remains.
 pub struct Subscription {
     lane: String,
-    channels: Arc<DashMap<String, broadcast::Sender<Vec<u8>>>>,
+    channels: Arc<ShardedMap<String, broadcast::Sender<Vec<u8>>>>,
     receiver: broadcast::Receiver<Vec<u8>>,
 }
 
@@ -327,7 +336,7 @@ impl Subscription {
 
 impl Drop for Subscription {
     fn drop(&mut self) {
-        self.channels.remove_if(&self.lane, |_, sender| sender.receiver_count() <= 1);
+        self.channels.remove_if(&self.lane, |sender| sender.receiver_count() <= 1);
     }
 }
 
@@ -381,8 +390,8 @@ pub struct PresenceSession {
 /// each of them holds.
 #[derive(Default)]
 pub struct Presence {
-    colours: DashMap<String, ScopeColours>,
-    sessions: DashMap<(String, String), PresenceSession>,
+    colours: ShardedMap<String, ScopeColours>,
+    sessions: ShardedMap<(String, String), PresenceSession>,
 }
 
 impl Presence {
@@ -394,35 +403,38 @@ impl Presence {
     /// 🎨️ The lowest palette slot not currently held in `scope`, or the actor's existing slot with
     /// one more reference on it. Wraps once all 256 slots are taken.
     pub fn acquire_colour(&self, scope: &str, actor: &str) -> u8 {
-        let mut colours = self.colours.entry(scope.to_string()).or_default();
-        if let Some(lease) = colours.by_actor.get_mut(actor) {
-            lease.refs += 1;
-            return lease.index;
-        }
-        let taken: Vec<u8> = colours.by_actor.values().map(|lease| lease.index).collect();
-        let index = (0..=u8::MAX).find(|candidate| !taken.contains(candidate)).unwrap_or((colours.by_actor.len() % 256) as u8);
-        colours.by_actor.insert(actor.to_string(), ColourLease { index, refs: 1 });
-        index
+        self.colours.mutate_or_default(scope.to_string(), |colours| {
+            if let Some(lease) = colours.by_actor.get_mut(actor) {
+                lease.refs += 1;
+                return lease.index;
+            }
+            let taken: Vec<u8> = colours.by_actor.values().map(|lease| lease.index).collect();
+            let index = (0..=u8::MAX).find(|candidate| !taken.contains(candidate)).unwrap_or((colours.by_actor.len() % 256) as u8);
+            colours.by_actor.insert(actor.to_string(), ColourLease { index, refs: 1 });
+            index
+        })
     }
 
     /// 🧹️ Drop one reference on the actor's slot, freeing it on the last disconnect.
     pub fn release_colour(&self, scope: &str, actor: &str) {
-        let Some(mut colours) = self.colours.get_mut(scope) else { return };
-        let exhausted = match colours.by_actor.get_mut(actor) {
-            Some(lease) => {
-                lease.refs = lease.refs.saturating_sub(1);
-                lease.refs == 0
+        self.colours.with_mut(scope, |colours| {
+            let Some(colours) = colours else { return };
+            let exhausted = match colours.by_actor.get_mut(actor) {
+                Some(lease) => {
+                    lease.refs = lease.refs.saturating_sub(1);
+                    lease.refs == 0
+                }
+                None => false,
+            };
+            if exhausted {
+                colours.by_actor.remove(actor);
             }
-            None => false,
-        };
-        if exhausted {
-            colours.by_actor.remove(actor);
-        }
+        });
     }
 
     /// 🔎️ The slot this actor currently holds in `scope`, if any.
     pub fn colour_of(&self, scope: &str, actor: &str) -> Option<u8> {
-        self.colours.get(scope).and_then(|colours| colours.by_actor.get(actor).map(|lease| lease.index))
+        self.colours.with(scope, |colours| colours.and_then(|colours| colours.by_actor.get(actor).map(|lease| lease.index)))
     }
 
     /// 🚪️ Register a session and lease it a colour.
@@ -435,9 +447,11 @@ impl Presence {
 
     /// 📤️ Record the opaque payload an actor last published.
     pub fn publish_peer(&self, scope: &str, actor: &str, peer: Vec<u8>) {
-        if let Some(mut session) = self.sessions.get_mut(&(scope.to_string(), actor.to_string())) {
-            session.peer = Some(peer);
-        }
+        self.sessions.with_mut(&(scope.to_string(), actor.to_string()), |session| {
+            if let Some(session) = session {
+                session.peer = Some(peer);
+            }
+        });
     }
 
     /// 🚶️ Remove the session and release its colour.
@@ -448,7 +462,12 @@ impl Presence {
 
     /// 📋️ Everyone currently present in `scope`, ordered by actor.
     pub fn roster(&self, scope: &str) -> Vec<PresenceSession> {
-        let mut roster: Vec<PresenceSession> = self.sessions.iter().filter(|entry| entry.key().0 == scope).map(|entry| entry.value().clone()).collect();
+        let mut roster = Vec::new();
+        self.sessions.for_each(|(entry_scope, _), session| {
+            if entry_scope == scope {
+                roster.push(session.clone());
+            }
+        });
         roster.sort_by(|left, right| left.actor.cmp(&right.actor));
         roster
     }
@@ -460,7 +479,7 @@ impl Presence {
 /// session observes it and closes itself. Nothing here ever touches a socket.
 #[derive(Default)]
 pub struct KickMap {
-    signals: DashMap<String, Arc<Notify>>,
+    signals: ShardedMap<String, Arc<Notify>>,
 }
 
 impl KickMap {
@@ -492,7 +511,7 @@ impl KickMap {
     }
 
     fn signal(&self, session: &str) -> Arc<Notify> {
-        self.signals.entry(session.to_string()).or_default().clone()
+        self.signals.get_or_insert_with_cloned(session.to_string(), || Arc::new(Notify::new()))
     }
 }
 //#endregion 🔖️Kick
@@ -583,7 +602,7 @@ pub struct ServerState {
     /// 🧩️ The static apps this instance hosts.
     pub apps: Arc<AppRegistry>,
     /// ❓️ The registered read handlers, keyed by query kind.
-    pub queries: Arc<DashMap<String, Arc<QueryHandlers>>>,
+    pub queries: Arc<ShardedMap<String, Arc<QueryHandlers>>>,
     /// 📄️ The replication engine, when the instance supplied one.
     pub documents: Option<Arc<DocumentAuthorities>>,
     /// 🏗️ Where this instance's durable state lives.
@@ -656,7 +675,7 @@ pub async fn put_blob(Path(hash): Path<String>, headers: HeaderMap, ConnectInfo(
     let resolved = state.identify(&headers, Some(peer)).await;
     state.authorize(&PolicyRequest { point: PolicyPoint::BlobWrite, principal: resolved.principal, scope: None, resource: hash.clone(), action: "write".to_string() })?;
     let addressed = parse_content_hash(&hash).ok_or_else(|| ServerError::BadRequest("blob address is not 64 hex characters".to_string()))?;
-    let computed = content_hash(&body).await;
+    let computed = content_hash(&body);
     if computed != addressed {
         return Err(ServerError::Conflict(format!("blob address {hash} does not match the content hash {computed} of the uploaded bytes")));
     }
@@ -796,7 +815,7 @@ pub fn scan_installs(root: &FsPath) -> Vec<AppInstall> {
 /// 🗃️ The static surfaces this instance hosts, one [`StaticAppHost`] per registered name.
 #[derive(Default)]
 pub struct AppRegistry {
-    apps: DashMap<String, StaticAppHost>,
+    apps: ShardedMap<String, StaticAppHost>,
 }
 
 impl AppRegistry {
@@ -812,12 +831,13 @@ impl AppRegistry {
 
     /// 🔎️ The host registered under `name`.
     pub fn host(&self, name: &str) -> Option<StaticAppHost> {
-        self.apps.get(name).map(|entry| entry.value().clone())
+        self.apps.get_cloned(name)
     }
 
     /// 📋️ Every registered app name, ordered.
     pub fn names(&self) -> Vec<String> {
-        let mut names: Vec<String> = self.apps.iter().map(|entry| entry.key().clone()).collect();
+        let mut names = Vec::new();
+        self.apps.for_each(|name, _| names.push(name.clone()));
         names.sort();
         names
     }
@@ -857,7 +877,7 @@ pub async fn post_query(headers: HeaderMap, ConnectInfo(peer): ConnectInfo<Socke
     let mut envelope = envelope;
     envelope.principal = resolved.principal;
     state.authorize(&PolicyRequest { point: PolicyPoint::QueryAccess, principal: envelope.principal.clone(), scope: Some(envelope.scope.clone()), resource: envelope.kind.clone(), action: "read".to_string() })?;
-    let handler = state.queries.get(&envelope.kind).map(|entry| Arc::clone(entry.value())).ok_or_else(|| ServerError::NotFound(format!("no handler for query kind '{}'", envelope.kind)))?;
+    let handler = state.queries.get_cloned(&envelope.kind).ok_or_else(|| ServerError::NotFound(format!("no handler for query kind '{}'", envelope.kind)))?;
     let projections = state.projections.lock().await;
     Ok(Json(handler.handle(&envelope, &projections).await?))
 }
@@ -1237,7 +1257,7 @@ impl ServerBuilder {
         for (name, dir) in &self.apps {
             apps.register(name, dir.clone());
         }
-        let queries: DashMap<String, Arc<QueryHandlers>> = DashMap::new();
+        let queries: ShardedMap<String, Arc<QueryHandlers>> = ShardedMap::new();
         for handler in self.queries {
             queries.insert(handler.kind().await.to_string(), Arc::new(handler));
         }
@@ -1537,16 +1557,16 @@ mod tests {
         grant(&state, PolicyPoint::BlobWrite, "write");
         grant(&state, PolicyPoint::BlobRead, "read");
 
-        let honest = content_hash(b"hello").await.to_string();
+        let honest = content_hash(b"hello").to_string();
         let receipt = put_blob(Path(honest.clone()), HeaderMap::new(), ConnectInfo(loopback()), State(state.clone()), Bytes::from_static(b"hello")).await.expect("an honest address is accepted");
         assert_eq!(receipt.0.size, 5);
 
-        let lie = content_hash(b"world").await.to_string();
+        let lie = content_hash(b"world").to_string();
         let error = put_blob(Path(lie), HeaderMap::new(), ConnectInfo(loopback()), State(state.clone()), Bytes::from_static(b"hello")).await.expect_err("a mismatched address is refused");
         assert_eq!(error.status(), StatusCode::CONFLICT);
 
         assert_eq!(head_blob(Path(honest.clone()), HeaderMap::new(), ConnectInfo(loopback()), State(state.clone())).await, StatusCode::OK);
-        let missing = content_hash(b"world").await.to_string();
+        let missing = content_hash(b"world").to_string();
         assert_eq!(head_blob(Path(missing), HeaderMap::new(), ConnectInfo(loopback()), State(state.clone())).await, StatusCode::NOT_FOUND);
         let short = put_blob(Path("beef".to_string()), HeaderMap::new(), ConnectInfo(loopback()), State(state), Bytes::from_static(b"hello")).await;
         assert_eq!(short.err().map(|error| error.status()), Some(StatusCode::BAD_REQUEST));
@@ -1555,7 +1575,7 @@ mod tests {
     #[tokio::test]
     async fn a_blob_write_without_a_grant_is_forbidden() {
         let state = state().await;
-        let hash = content_hash(b"hello").await.to_string();
+        let hash = content_hash(b"hello").to_string();
         let error = put_blob(Path(hash), HeaderMap::new(), ConnectInfo(loopback()), State(state), Bytes::from_static(b"hello")).await.expect_err("closed by default");
         assert_eq!(error.status(), StatusCode::FORBIDDEN);
     }

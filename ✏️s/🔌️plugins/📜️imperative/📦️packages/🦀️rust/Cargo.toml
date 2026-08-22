@@ -35,11 +35,11 @@ neural_engine = { path = "../../../../../🧰️framework/🛍️products/💻�
 imperative_engine = { path = "../../../../../✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust", package = "semio-s-imperative" }
 imperative_extension_sdk = { path = "../../../../../✏️s/🔨️modules/📜️imperative/🧩️extension_sdk/📦️packages/🦀️rust", package = "semio-s-imperative-extension-sdk" }
 semio-framework-plugin = { workspace = true, features = ["component-guest"] }
+semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 semio-framework.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-thiserror.workspace = true
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

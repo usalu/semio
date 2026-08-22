@@ -70,6 +70,7 @@ upstream blocker below.
 ## Files changed
 
 - `🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml`
+- `🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📦️glue.rs`
 - `🧰️framework/🔨️modules/🎭️actor/🦀️component.rs`
 - `🧰️framework/🔨️modules/🧵️job/🦀️component.rs`
 - `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️component.rs`
@@ -84,15 +85,17 @@ by the coordinated Phase 3 owner; they are not attributed to this packet.
 
 | Command | Result |
 |---|---|
-| `bun nx run @semio-tech/framework-actor-rs:test-quick` | 88/88 passed, debug |
-| `bun nx run @semio-tech/framework-actor-rs:test-long -- --release` | 88/88 passed, release |
-| `bun nx run @semio-tech/framework-job-rs:test-quick` | 16/16 passed, debug |
-| `bun nx run @semio-tech/framework-job-rs:test-long -- --release` | 16/16 passed, release |
+| `bun nx run @semio-tech/framework-actor-rs:test-quick` | 89/89 passed, debug |
+| `bun nx run @semio-tech/framework-actor-rs:test-long -- --release` | 89/89 passed, release |
+| `bun nx run @semio-tech/framework-job-rs:test-quick` | 17/17 passed, debug |
+| `bun nx run @semio-tech/framework-job-rs:test-long -- --release` | 17/17 passed, release |
 | `bun nx run @semio-tech/framework-actor-rs:typegen` | export test 1/1 passed; mirror refreshed |
 | `cargo clippy -p semio-framework-job --all-targets -- -D warnings` | clean |
 | `cargo clippy -p semio-framework-actor --all-targets -- -D warnings` | clean |
 | `cargo check -p semio-framework-job --target wasm32-unknown-unknown` | clean |
 | `cargo check -p semio-framework-job --target wasm32-wasip2` | clean |
+| `cargo rustc -p semio-framework-actor --lib --target wasm32-unknown-unknown -- -D warnings` | clean |
+| `cargo rustc -p semio-framework-actor --lib --target wasm32-wasip2 -- -D warnings` | clean |
 | `bun ./📜️script.ts verify dependencies` | 238 baseline, 238 current; clean |
 | `cargo fmt -p semio-framework-actor -p semio-framework-job -p semio-framework-plugin-host` | completed |
 
@@ -102,18 +105,12 @@ native mounted check used direct cargo for the same reason.
 
 ## Exact remaining blockers
 
-### Actor wasm glue
+### Actor wasm glue resolved
 
-Both of these were attempted and failed before reaching this packet's actor component:
-
-- `cargo check -p semio-framework-actor --target wasm32-unknown-unknown --message-format=short`
-- `cargo check -p semio-framework-actor --target wasm32-wasip2 --message-format=short`
-
-The failures are in the pre-existing
-`🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/📦️glue.rs`: missing `pack::read_opt`, async actor
-methods used without awaiting (`Kernel::new`, decode/encode, activate, submit, tick, complete,
-metrics), and missing `wasm_bindgen_futures`. This packet did not edit glue because its repair is a
-separate async/reachability ownership surface.
+The earlier actor WASM glue errors are resolved on both portable targets. The final warning was an
+async `wasm_bindgen` constructor, a shape which cannot produce valid TypeScript. Because this is a
+greenfield API, `KernelHost` now exposes the explicit async `create` factory and both targets compile
+with warnings denied.
 
 ### Plugin-host mounted native/test/clippy gate
 

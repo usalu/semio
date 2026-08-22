@@ -1,0 +1,108 @@
+$ bun ./📜️script.ts nx run @semio-tech/ui-runtime-rs:test-quick --skip-nx-cache -- --release
+
+> nx run @semio-tech/ui-runtime-rs:test-quick --release
+
+> bun ./📜️script.ts test quick --release
+
+    Finished `dev` profile [unoptimized] target(s) in 0.24s
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.45
+   Compiling unicode-ident v1.0.24
+   Compiling serde_core v1.0.228
+   Compiling serde v1.0.228
+   Compiling zmij v1.0.21
+   Compiling semio-framework-trace v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust)
+   Compiling serde_json v1.0.149
+   Compiling semio-framework-ui-styling v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust)
+   Compiling memchr v2.8.0
+   Compiling itoa v1.0.18
+   Compiling syn v2.0.117
+   Compiling serde_derive v1.0.228
+   Compiling semio-framework-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust)
+   Compiling semio-framework-ui-contract v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust)
+   Compiling semio-framework-job v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust)
+   Compiling semio-framework-ui-runtime v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust)
+    Finished `release` profile [optimized] target(s) in 16.32s
+────────────
+[32;1m Nextest run[0m ID [1m617650e5-c592-46f5-b403-a3169c23facb[0m with nextest profile: [1mquick[0m
+[32;1m    Starting[0m [1m72[0m tests across [1m1[0m binary
+[32;1m        PASS[0m [   0.071s] ( 1/72) [35;1msemio-framework-ui-runtime[0m [36mdispatch::tests[0m[36m::[0m[34;1man_intent_exactly_at_the_tolerance_is_not_yet_stale[0m
+[32;1m        PASS[0m [   0.075s] ( 2/72) [35;1msemio-framework-ui-runtime[0m [36mdispatch::tests[0m[36m::[0m[34;1ma_zero_tolerance_makes_any_trailing_revision_stale[0m
+[32;1m        PASS[0m [   0.076s] ( 3/72) [35;1msemio-framework-ui-runtime[0m [36mentity::tests[0m[36m::[0m[34;1meffects_queue_rather_than_run_inline[0m
+[32;1m        PASS[0m [   0.080s] ( 4/72) [35;1msemio-framework-ui-runtime[0m [36mentity::tests[0m[36m::[0m[34;1mdropped_subscription_stops_delivering[0m
+[32;1m        PASS[0m [   0.080s] ( 5/72) [35;1msemio-framework-ui-runtime[0m [36mentity::tests[0m[36m::[0m[34;1mread_during_lease_is_rejected[0m
+[32;1m        PASS[0m [   0.089s] ( 6/72) [35;1msemio-framework-ui-runtime[0m [36mdispatch::tests[0m[36m::[0m[34;1man_intent_at_or_ahead_of_the_current_revision_is_never_stale[0m
+[32;1m        PASS[0m [   0.087s] ( 7/72) [35;1msemio-framework-ui-runtime[0m [36mentity::tests[0m[36m::[0m[34;1mrelease_is_queued_until_flush_releases[0m
+[32;1m        PASS[0m [   0.089s] ( 8/72) [35;1msemio-framework-ui-runtime[0m [36mdispatch::tests[0m[36m::[0m[34;1man_intent_trailing_by_more_than_the_tolerance_is_stale[0m
+[32;1m        PASS[0m [   0.090s] ( 9/72) [35;1msemio-framework-ui-runtime[0m [36mentity::tests[0m[36m::[0m[34;1mdefer_effects_queue_rather_than_run_inline[0m
+[32;1m        PASS[0m [   0.101s] (10/72) [35;1msemio-framework-ui-runtime[0m [36mentity::tests[0m[36m::[0m[34;1mnested_lease_is_rejected_not_aliased[0m
+[32;1m        PASS[0m [   0.068s] (11/72) [35;1msemio-framework-ui-runtime[0m [36mgateway::tests[0m[36m::[0m[34;1mfull_local_capacity_returns_full_synchronously_without_dropping_the_command[0m
+[32;1m        PASS[0m [   0.083s] (12/72) [35;1msemio-framework-ui-runtime[0m [36mentity::tests[0m[36m::[0m[34;1mstale_entity_id_never_resolves_to_new_occupant[0m
+[32;1m        PASS[0m [   0.087s] (13/72) [35;1msemio-framework-ui-runtime[0m [36mentity::tests[0m[36m::[0m[34;1mspawn_local_queues_future_for_the_embedder[0m
+[32;1m        PASS[0m [   0.090s] (14/72) [35;1msemio-framework-ui-runtime[0m [36mentity::tests[0m[36m::[0m[34;1mvalue_restored_after_panicking_closure[0m
+[32;1m        PASS[0m [   0.075s] (15/72) [35;1msemio-framework-ui-runtime[0m [36minbox::tests[0m[36m::[0m[34;1mdrain_into_on_an_empty_inbox_is_a_no_op[0m
+[32;1m        PASS[0m [   0.093s] (16/72) [35;1msemio-framework-ui-runtime[0m [36mentity::tests[0m[36m::[0m[34;1mweak_entity_upgrade_fails_after_last_strong_drops[0m
+[32;1m        PASS[0m [   0.087s] (17/72) [35;1msemio-framework-ui-runtime[0m [36mgateway::tests[0m[36m::[0m[34;1mfull_backing_sink_returns_full_synchronously_without_dropping_the_command[0m
+[32;1m        PASS[0m [   0.081s] (18/72) [35;1msemio-framework-ui-runtime[0m [36mgateway::tests[0m[36m::[0m[34;1mresolving_a_ticket_frees_capacity_for_a_new_submission[0m
+[32;1m        PASS[0m [   0.092s] (19/72) [35;1msemio-framework-ui-runtime[0m [36mgateway::tests[0m[36m::[0m[34;1mticket_round_trips_to_acknowledged_and_to_rejected[0m
+[32;1m        PASS[0m [   0.016s] (20/72) [35;1msemio-framework-ui-runtime[0m [36mpresence::tests[0m[36m::[0m[34;1mown_presence_never_expires[0m
+[32;1m        PASS[0m [   0.094s] (21/72) [35;1msemio-framework-ui-runtime[0m [36minbox::tests[0m[36m::[0m[34;1mdrain_into_respects_limit_and_leaves_the_remainder_queued[0m
+[32;1m        PASS[0m [   0.037s] (22/72) [35;1msemio-framework-ui-runtime[0m [36minbox::tests[0m[36m::[0m[34;1msame_key_pushes_coalesce_to_the_newest_value[0m
+[32;1m        PASS[0m [   0.032s] (23/72) [35;1msemio-framework-ui-runtime[0m [36mpresence::tests[0m[36m::[0m[34;1mdistinct_peers_on_one_key_are_all_reported_and_expire_independently[0m
+[32;1m        PASS[0m [   0.034s] (24/72) [35;1msemio-framework-ui-runtime[0m [36mpresence::tests[0m[36m::[0m[34;1mpresence_entries_expire_exactly_at_their_ttl_and_a_flush_after_expiry_omits_them[0m
+[32;1m        PASS[0m [   0.047s] (25/72) [35;1msemio-framework-ui-runtime[0m [36mpresence::tests[0m[36m::[0m[34;1ma_burst_of_same_key_peer_writes_coalesces_to_one_update[0m
+[32;1m        PASS[0m [   0.056s] (26/72) [35;1msemio-framework-ui-runtime[0m [36minbox::tests[0m[36m::[0m[34;1mpush_beyond_capacity_returns_overflow_without_dropping_existing_entries[0m
+[32;1m        PASS[0m [   0.034s] (27/72) [35;1msemio-framework-ui-runtime[0m [36mpresent::tests[0m[36m::[0m[34;1ma_stateless_fn_item_satisfies_present_generically[0m
+[32;1m        PASS[0m [   0.054s] (28/72) [35;1msemio-framework-ui-runtime[0m [36mpresence::tests[0m[36m::[0m[34;1ma_burst_of_same_key_own_presence_writes_coalesces_to_the_newest_value[0m
+[32;1m        PASS[0m [   0.030s] (29/72) [35;1msemio-framework-ui-runtime[0m [36mpresent::tests[0m[36m::[0m[34;1mcomponent_tree_three_levels_builds_and_compares[0m
+[32;1m        PASS[0m [   0.030s] (30/72) [35;1msemio-framework-ui-runtime[0m [36mpresent::tests[0m[36m::[0m[34;1mduplicate_sibling_keys_via_with_children_panic[0m
+[32;1m        PASS[0m [   0.027s] (31/72) [35;1msemio-framework-ui-runtime[0m [36mpresent::tests[0m[36m::[0m[34;1mposition_derived_keys_are_stable_and_ergonomic[0m
+[32;1m        PASS[0m [   0.039s] (32/72) [35;1msemio-framework-ui-runtime[0m [36mpresent::tests[0m[36m::[0m[34;1mduplicate_sibling_keys_nested_in_the_tree_are_detected[0m
+[32;1m        PASS[0m [   0.020s] (33/72) [35;1msemio-framework-ui-runtime[0m [36mreconcile::tests[0m[36m::[0m[34;1mchanging_one_leaf_text_emits_exactly_one_op_naming_exactly_that_node[0m
+[32;1m        PASS[0m [   0.036s] (34/72) [35;1msemio-framework-ui-runtime[0m [36mreconcile::tests[0m[36m::[0m[34;1mchanged_component_with_unchanged_layout_emits_set_component_not_upsert[0m
+[32;1m        PASS[0m [   0.042s] (35/72) [35;1msemio-framework-ui-runtime[0m [36mreconcile::tests[0m[36m::[0m[34;1mchanging_only_accessibility_emits_exactly_one_set_accessibility_not_upsert[0m
+[32;1m        PASS[0m [   0.049s] (36/72) [35;1msemio-framework-ui-runtime[0m [36mreconcile::tests[0m[36m::[0m[34;1mabandoned_large_tree_cursor_leaves_the_retained_shadow_and_revision_unchanged[0m
+[32;1m        PASS[0m [   0.046s] (37/72) [35;1msemio-framework-ui-runtime[0m [36mreconcile::tests[0m[36m::[0m[34;1mchanging_only_bindings_emits_exactly_one_set_bindings_not_upsert[0m
+[32;1m        PASS[0m [   0.033s] (38/72) [35;1msemio-framework-ui-runtime[0m [36mreconcile::tests[0m[36m::[0m[34;1mduplicate_sibling_keys_are_reported_even_when_component_tree_new_is_bypassed[0m
+[32;1m        PASS[0m [   0.043s] (39/72) [35;1msemio-framework-ui-runtime[0m [36mreconcile::tests[0m[36m::[0m[34;1mchanging_only_style_emits_exactly_one_set_style_not_upsert[0m
+[32;1m        PASS[0m [   0.048s] (40/72) [35;1msemio-framework-ui-runtime[0m [36mreconcile::tests[0m[36m::[0m[34;1mchanging_only_menu_emits_exactly_one_set_menu_not_upsert[0m
+[32;1m        PASS[0m [   0.031s] (41/72) [35;1msemio-framework-ui-runtime[0m [36mreconcile::tests[0m[36m::[0m[34;1mfirst_reconcile_emits_set_root_and_one_upsert_per_node_then_is_idempotent[0m
+[32;1m        PASS[0m [   0.041s] (42/72) [35;1msemio-framework-ui-runtime[0m [36mreconcile::tests[0m[36m::[0m[34;1mchanging_several_groups_at_once_prefers_a_single_upsert_over_many_targeted_ops[0m
+[32;1m        PASS[0m [   0.042s] (43/72) [35;1msemio-framework-ui-runtime[0m [36mreconcile::tests[0m[36m::[0m[34;1mevery_large_tree_cursor_slice_stays_below_eight_milliseconds[0m
+[32;1m        PASS[0m [   0.023s] (44/72) [35;1msemio-framework-ui-runtime[0m [36mreconcile::tests[0m[36m::[0m[34;1mmark_rejected_then_reconcile_emits_a_full_resend[0m
+[32;1m        PASS[0m [   0.033s] (45/72) [35;1msemio-framework-ui-runtime[0m [36mreconcile::tests[0m[36m::[0m[34;1mids_are_never_reused_after_removal[0m
+[32;1m        PASS[0m [   0.026s] (46/72) [35;1msemio-framework-ui-runtime[0m [36mreconcile::tests[0m[36m::[0m[34;1mremoving_a_subtree_emits_one_remove_and_leaves_no_orphan_in_retained[0m
+[32;1m        PASS[0m [   0.034s] (47/72) [35;1msemio-framework-ui-runtime[0m [36mreconcile::tests[0m[36m::[0m[34;1minserting_a_middle_sibling_preserves_the_others_ids[0m
+[32;1m        PASS[0m [   0.029s] (48/72) [35;1msemio-framework-ui-runtime[0m [36mtracking::tests[0m[36m::[0m[34;1mfinish_rejects_mismatched_surface[0m
+[32;1m        PASS[0m [   0.032s] (49/72) [35;1msemio-framework-ui-runtime[0m [36mtracking::tests[0m[36m::[0m[34;1mn_notifications_of_one_surface_coalesce_to_one_dirty_mark[0m
+[32;1m        PASS[0m [   0.034s] (50/72) [35;1msemio-framework-ui-runtime[0m [36mreconcile::tests[0m[36m::[0m[34;1mround_trip_property_every_emitted_patch_applies_cleanly_and_reproduces_the_snapshot[0m
+[32;1m        PASS[0m [   0.035s] (51/72) [35;1msemio-framework-ui-runtime[0m [36mreconcile::tests[0m[36m::[0m[34;1mreordering_siblings_preserves_every_id_and_emits_only_set_children[0m
+[32;1m        PASS[0m [   0.041s] (52/72) [35;1msemio-framework-ui-runtime[0m [36mreconcile::tests[0m[36m::[0m[34;1mresumable_cursor_matches_the_existing_keyed_diff_and_revision_semantics[0m
+[32;1m        PASS[0m [   0.033s] (53/72) [35;1msemio-framework-ui-runtime[0m [36mtracking::tests[0m[36m::[0m[34;1mnested_present_scopes_attribute_reads_to_the_right_surface[0m
+[32;1m        PASS[0m [   0.026s] (54/72) [35;1msemio-framework-ui-runtime[0m [36mtracking::tests[0m[36m::[0m[34;1mpresenter_reading_a_not_b_wakes_only_on_a[0m
+[32;1m        PASS[0m [   0.027s] (55/72) [35;1msemio-framework-ui-runtime[0m [36mtracking::tests[0m[36m::[0m[34;1mreads_outside_a_present_scope_are_not_recorded[0m
+[32;1m        PASS[0m [   0.021s] (56/72) [35;1msemio-framework-ui-runtime[0m [36mtracking::tests[0m[36m::[0m[34;1mstale_edge_disappears_after_next_present_without_the_read[0m
+[32;1m        PASS[0m [   0.024s] (57/72) [35;1msemio-framework-ui-runtime[0m [36mtransaction::tests[0m[36m::[0m[34;1ma_full_command_mailbox_surfaces_backpressure_without_blocking_the_transaction[0m
+[32;1m        PASS[0m [   0.026s] (58/72) [35;1msemio-framework-ui-runtime[0m [36mtransaction::tests[0m[36m::[0m[34;1man_entity_notified_but_not_read_by_any_surface_produces_no_patch[0m
+[32;1m        PASS[0m [   0.035s] (59/72) [35;1msemio-framework-ui-runtime[0m [36mtransaction::tests[0m[36m::[0m[34;1ma_bulk_projection_update_touching_one_surface_many_times_yields_exactly_one_patch[0m
+[32;1m        PASS[0m [   0.025s] (60/72) [35;1msemio-framework-ui-runtime[0m [36mtransaction::tests[0m[36m::[0m[34;1man_expired_wall_clock_budget_returns_before_consuming_input[0m
+[32;1m        PASS[0m [   0.033s] (61/72) [35;1msemio-framework-ui-runtime[0m [36mtransaction::tests[0m[36m::[0m[34;1man_effect_storm_remains_resumable_and_retains_the_cycle_fault_semantics[0m
+[32;1m        PASS[0m [   0.036s] (62/72) [35;1msemio-framework-ui-runtime[0m [36mtransaction::tests[0m[36m::[0m[34;1ma_stale_revision_intent_is_dropped_and_produces_no_patch_and_no_command[0m
+[32;1m        PASS[0m [   0.027s] (63/72) [35;1msemio-framework-ui-runtime[0m [36mtransaction::tests[0m[36m::[0m[34;1mhard_credits_fault_before_any_candidate_snapshot_is_published[0m
+[32;1m        PASS[0m [   0.029s] (64/72) [35;1msemio-framework-ui-runtime[0m [36mtransaction::tests[0m[36m::[0m[34;1mdeterministic_surface_order_is_independent_of_hash_map_insertion_order[0m
+[32;1m        PASS[0m [   0.029s] (65/72) [35;1msemio-framework-ui-runtime[0m [36mtransaction::tests[0m[36m::[0m[34;1mcancellation_discards_an_active_node_cursor_without_advancing_the_surface_revision[0m
+[32;1m        PASS[0m [   0.030s] (66/72) [35;1msemio-framework-ui-runtime[0m [36mtransaction::tests[0m[36m::[0m[34;1man_intent_mutates_entity_state_and_the_following_transact_emits_a_patch[0m
+[32;1m        PASS[0m [   0.020s] (67/72) [35;1msemio-framework-ui-runtime[0m [36mtransaction::tests[0m[36m::[0m[34;1mnext_wake_ms_is_none_when_idle_and_some_earliest_when_a_deadline_is_pending[0m
+[32;1m        PASS[0m [   0.014s] (68/72) [35;1msemio-framework-ui-runtime[0m [36mtransaction::tests[0m[36m::[0m[34;1mpresence_flushes_on_its_own_channel_and_never_appears_in_a_patch[0m
+[32;1m        PASS[0m [   0.020s] (69/72) [35;1msemio-framework-ui-runtime[0m [36mtransaction::tests[0m[36m::[0m[34;1mone_fuel_slices_bound_an_intent_storm_and_preserve_fifo_output[0m
+[32;1m        PASS[0m [   0.019s] (70/72) [35;1msemio-framework-ui-runtime[0m [36mtransaction::tests[0m[36m::[0m[34;1mrepeated_new_input_supersedes_staged_presentation_without_losing_an_accepted_command[0m
+[32;1m        PASS[0m [   0.018s] (71/72) [35;1msemio-framework-ui-runtime[0m [36mtransaction::tests[0m[36m::[0m[34;1mthe_effect_fixpoint_terminates_and_a_pathological_observer_hits_the_storm_budget[0m
+[32;1m        PASS[0m [   0.019s] (72/72) [35;1msemio-framework-ui-runtime[0m [36mtransaction::tests[0m[36m::[0m[34;1mtwo_surfaces_are_independent_dirtying_one_does_not_re_present_the_other[0m
+────────────
+[32;1m     Summary[0m [   0.355s] [1m72[0m tests run: [1m72[0m [32;1mpassed[0m, [1m0[0m [33;1mskipped[0m
+
+
+
+ NX   Successfully ran target test-quick for project @semio-tech/ui-runtime-rs
+
+

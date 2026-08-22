@@ -30,14 +30,14 @@ impl Default for ImperativeTopology {
 /// scope-key iteration order is already deterministic); `cycle_free` is always `true` — a
 /// `Path`/`Step` tree cannot contain a cycle by construction (no step ever references another
 /// step's id, only owns nested `Path`s).
-pub async fn compute_imperative_topology(path: &Path) -> ImperativeTopology {
+pub fn compute_imperative_topology(path: &Path) -> ImperativeTopology {
     let mut topo_order = Vec::new();
     let mut depth = BTreeMap::new();
     walk(path, 0, &mut topo_order, &mut depth);
     ImperativeTopology { node_count: topo_order.len() as u32, topo_order, depth, cycle_free: true }
 }
 
-async fn walk(path: &Path, level: u32, topo_order: &mut Vec<String>, depth: &mut BTreeMap<String, u32>) {
+fn walk(path: &Path, level: u32, topo_order: &mut Vec<String>, depth: &mut BTreeMap<String, u32>) {
     for step in &path.steps {
         topo_order.push(step.id.clone());
         depth.insert(step.id.clone(), level);
@@ -55,7 +55,7 @@ mod tests {
     use crate::artifacts::imperative::Step;
     use std::collections::BTreeMap as StdBTreeMap;
 
-    async fn step(id: &str, bodies: StdBTreeMap<String, Path>) -> Step {
+    fn step(id: &str, bodies: StdBTreeMap<String, Path>) -> Step {
         Step { id: id.into(), kind: "noop".into(), params: Default::default(), bodies }
     }
 

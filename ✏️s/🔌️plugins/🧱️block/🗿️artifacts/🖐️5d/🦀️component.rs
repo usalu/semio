@@ -91,7 +91,7 @@ pub struct Block5dGripTemplate {
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — the canonical `5d.block` declaration, stitched into
 /// `crate::editor::block5d::create_block5d_app`.
-pub async fn artifact_kind() -> ArtifactKindSpec {
+pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "5d.block".into(),
         name: "Part Kind".into(),
@@ -178,7 +178,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
 /// data (schema/inference descriptors, editor/viewer, native codec) is read from
 /// `standards::v1::subsets::any::subset()` instead. Mirrors `🗒️note`/`🖍️draw`/`🔱️trinity`'s own
 /// migration exactly.
-pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::BlockApps> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.block.block5d").expect("canonical block5d kind"), localization: &[], standards: vec![crate::artifacts::block5d::standards::v1::standard()] }
@@ -188,7 +188,7 @@ pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDe
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`. `pub` (was
 /// private): the new `🪆️subsets/✳️any/🦀️component.rs` reads it to build `io_declaration()`'s native
 /// codec pairs.
-pub async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {

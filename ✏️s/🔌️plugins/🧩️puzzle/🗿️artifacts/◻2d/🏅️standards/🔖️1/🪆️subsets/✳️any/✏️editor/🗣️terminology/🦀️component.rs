@@ -53,7 +53,7 @@ semio_framework_plugin::app_labels! {
 /// 🗣️ Resolves the active label set from `Puzzle2dConfig`'s own persisted locale/terminology
 /// strings (B1: was `view_state.locale`/`view_state.terminology`) through the generated
 /// `Puzzle2dLabels::labels` (`AppLabels`) exhaustive resolver.
-pub async fn puzzle2d_labels(config: &Puzzle2dConfig) -> &'static Puzzle2dLabels {
+pub fn puzzle2d_labels(config: &Puzzle2dConfig) -> &'static Puzzle2dLabels {
     let locale = if is_de_locale(config) { Locale::De } else { Locale::En };
     let terminology = if config.terminology.as_str() == "reuse" { Terminology::Reuse } else { Terminology::Native };
     Puzzle2dLabels::labels(locale, terminology)
@@ -63,7 +63,7 @@ pub async fn puzzle2d_labels(config: &Puzzle2dConfig) -> &'static Puzzle2dLabels
 
 //#region 🔖️Locale
 /// 🗣️ B1: local replacement for the deleted `semio_framework_plugin::is_de_locale(&ViewModel)`.
-pub async fn is_de_locale(config: &Puzzle2dConfig) -> bool {
+pub fn is_de_locale(config: &Puzzle2dConfig) -> bool {
     config.locale.starts_with("de")
 }
 //#endregion 🔖️Locale

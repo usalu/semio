@@ -5,10 +5,17 @@
 
 // #region 🔌️Adapters
 import { ephemeralBox } from "@semio-tech/framework";
-import { Pool, type PoolClient } from "pg";
 import { createHash } from "crypto";
-import { NextRequest, NextResponse } from "next/server";
-import PgBoss from "pg-boss";
+import {
+  createOwnedDatabasePool,
+  createOwnedJsonResponse,
+  createOwnedServerJobQueue,
+  isOwnedServerResponse,
+  type OwnedDatabasePool,
+  type OwnedServerJob,
+  type OwnedServerRequest,
+  type OwnedServerResponse,
+} from "../../../🎛️coordinator/📦️packages/🟦️typescript/🟦️server-implementations.ts";
 // #endregion 🔌️Adapters
 
 // #region 🔖️db
@@ -16,11 +23,11 @@ import PgBoss from "pg-boss";
 // 🗄️Database configuration from environment variables.
 const DATABASE_URL = process.env.DATABASE_URL || "postgresql://compose:compose@localhost:5432/compose_repo";
 
-const pool = ephemeralBox<Pool | null>("framework.products.repo.modules.server.lib.packages.typescript.index.ts.pool", null);
+const pool = ephemeralBox<OwnedDatabasePool | null>("framework.products.repo.modules.server.lib.packages.typescript.index.ts.pool", null);
 
-export function getPool(): Pool {
+export function getPool(): OwnedDatabasePool {
   if (!pool.current) {
-    pool.current = new Pool({ connectionString: DATABASE_URL, max: 20 });
+    pool.current = createOwnedDatabasePool(DATABASE_URL, 20);
   }
   return pool.current;
 }
@@ -742,7 +749,7 @@ export function hashApiKey(key: string): string {
 // #region 📎️Auth
 // Authenticate a request by extracting the Bearer token and resolving to a developer.
 
-export async function authenticateRequest(request: NextRequest): Promise<Developer | null> {
+export async function authenticateRequest(request: OwnedServerRequest): Promise<Developer | null> {
   const authHeader = request.headers.get("Authorization");
   if (!authHeader) return null;
   const parts = authHeader.split(" ");
@@ -756,23 +763,23 @@ export async function authenticateRequest(request: NextRequest): Promise<Develop
   return developer;
 }
 
-export function unauthorizedResponse(message: string = "unauthorized"): NextResponse {
-  return NextResponse.json({ error: message }, { status: 401 });
+export function unauthorizedResponse(message: string = "unauthorized"): OwnedServerResponse {
+  return createOwnedJsonResponse({ error: message }, 401);
 }
 
-export function forbiddenResponse(message: string = "forbidden"): NextResponse {
-  return NextResponse.json({ error: message }, { status: 403 });
+export function forbiddenResponse(message: string = "forbidden"): OwnedServerResponse {
+  return createOwnedJsonResponse({ error: message }, 403);
 }
 
 // 🔐️Require authentication and trusted developer status.
-export async function requireAuth(request: NextRequest): Promise<{ developer: Developer } | NextResponse> {
+export async function requireAuth(request: OwnedServerRequest): Promise<{ developer: Developer } | OwnedServerResponse> {
   const developer = await authenticateRequest(request);
   if (!developer) return unauthorizedResponse();
   return { developer };
 }
 
 // 👑️Require admin or owner role.
-export async function requireAdmin(request: NextRequest): Promise<{ developer: Developer } | NextResponse> {
+export async function requireAdmin(request: OwnedServerRequest): Promise<{ developer: Developer } | OwnedServerResponse> {
   const developer = await authenticateRequest(request);
   if (!developer) return unauthorizedResponse();
   if (developer.role !== "admin" && developer.role !== "owner") {
@@ -782,8 +789,8 @@ export async function requireAdmin(request: NextRequest): Promise<{ developer: D
 }
 
 // 📩️Type guard to check if auth result is an error response.
-export function isAuthError(result: { developer: Developer } | NextResponse): result is NextResponse {
-  return result instanceof NextResponse;
+export function isAuthError(result: { developer: Developer } | OwnedServerResponse): result is OwnedServerResponse {
+  return isOwnedServerResponse(result);
 }
 // #endregion 📎️Auth
 // #endregion 🔖️auth
@@ -853,7 +860,7 @@ interface DiscordSendJob {
   attempt: number;
 }
 
-async function handleDiscordSend(jobs: PgBoss.Job<DiscordSendJob>[]) {
+async function handleDiscordSend(jobs: OwnedServerJob<DiscordSendJob>[]) {
   for (const job of jobs) {
     const { deliveryId, title, body, attempt } = job.data;
     const success = await sendDiscordMessage(title, body);
@@ -869,7 +876,7 @@ interface ReindexJob {
   repoRoot: string;
 }
 
-async function handleReindex(jobs: PgBoss.Job<ReindexJob>[]) {
+async function handleReindex(jobs: OwnedServerJob<ReindexJob>[]) {
   for (const job of jobs) {
     console.log(`[worker] reindex job for ${job.data.repoRoot}`);
   }
@@ -879,7 +886,7 @@ async function handleReindex(jobs: PgBoss.Job<ReindexJob>[]) {
 // #region 🌩️Main
 /** @emoji 🌩️ Starts pg-boss workers (separate process entry via `🟦️worker.ts`). */
 export async function runRepoServerWorker(): Promise<void> {
-  const boss = new PgBoss(DATABASE_URL);
+  const boss = createOwnedServerJobQueue(DATABASE_URL);
 
   boss.on("error", (error) => console.error("[pg-boss error]", error));
 

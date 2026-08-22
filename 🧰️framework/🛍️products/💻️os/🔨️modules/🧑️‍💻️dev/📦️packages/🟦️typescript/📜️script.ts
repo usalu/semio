@@ -2,6 +2,7 @@
 /** @emoji 🧭️ `@semio-tech/framework-os-dev` task router — Rust plugin OS dev host. */
 import { createWriteStream, copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
 import { EventEmitter } from "node:events";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -55,8 +56,18 @@ import {
   EXTENSION_INSTALL_META,
   EXTENSION_WATCH_MARKER,
 } from "../../../🔌️plugin/🏪️store/📜️store.ts";
-import { PNG } from "pngjs";
 import pixelmatch from "pixelmatch";
+
+type OwnedPng = { readonly width: number; readonly height: number; readonly data: Uint8Array };
+type OwnedPngConstructor = {
+  new (options: { width: number; height: number }): OwnedPng;
+  bitblt(source: OwnedPng, target: OwnedPng, sourceX: number, sourceY: number, width: number, height: number, targetX: number, targetY: number): void;
+  readonly sync: {
+    read(input: Uint8Array): OwnedPng;
+    write(image: OwnedPng): Uint8Array;
+  };
+};
+const { PNG } = createRequire(import.meta.url)("pngjs") as { PNG: OwnedPngConstructor };
 
 const repoRoot = getWorkspaceRoot();
 const pluginOutRoot = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🔌️plugin-modules");
@@ -3490,7 +3501,7 @@ function parityPixelThreshold(kind: string): number {
   return PARITY_SCENE_LEAF_KINDS.has(kind) ? PARITY_PIXEL_THRESHOLD_SCENE : PARITY_PIXEL_THRESHOLD_DEFAULT;
 }
 
-function compareParityRegion(reactPng: PNG, wgpuPng: PNG, node: ParityNode, outDir: string, variant: string): PixelRegionResult {
+function compareParityRegion(reactPng: OwnedPng, wgpuPng: OwnedPng, node: ParityNode, outDir: string, variant: string): PixelRegionResult {
   const [rx, ry, rw, rh] = node.rect;
   const width = Math.max(1, Math.min(Math.round(rw), reactPng.width - Math.round(rx), wgpuPng.width - Math.round(rx)));
   const height = Math.max(1, Math.min(Math.round(rh), reactPng.height - Math.round(ry), wgpuPng.height - Math.round(ry)));

@@ -11,7 +11,7 @@ use crate::artifacts::zip::{ZipMutation, ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA}
 use crate::editor::zip::iso21320::modes::edit;
 use crate::editor::zip::iso21320::modes::edit::windows::main;
 use semio_framework_plugin::{
-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode,
+    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
 };
 use serde::{Deserialize, Serialize};
 use store::EngineHandles;

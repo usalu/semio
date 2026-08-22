@@ -244,9 +244,9 @@ fn persist_run(bundle: &SpaceBundle, sink: &RunSink) -> Result<(), Box<dyn std::
 /// deep inside `SpaceRunner::run`) are now `async fn` themselves, building/driving the real
 /// `NativeKernelRuntime` (`semio-framework-os`'s `🎠️activation.rs`) instead of the old ad hoc actor-id
 /// minting. Uses `semio_framework_async::block_on` — the canonical bridge — rather than
-/// `futures_lite::future::block_on` (what this file used before this packet): a single genuine
+/// `semio_framework_async::block_on` (what this file used before this packet): a single genuine
 /// thread-root bridge should be the one this repo ships, not an incidental external crate; this
-/// crate's own tests (and `SpaceRunner`'s internal test module) keep `futures_lite::future::block_on`
+/// crate's own tests (and `SpaceRunner`'s internal test module) keep `semio_framework_async::block_on`
 /// as their own SEPARATE, `#[cfg(test)]`-sanctioned bridge (R4 clause 5), so nothing there changes.
 fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     semio_framework_async::block_on(run_async(args))

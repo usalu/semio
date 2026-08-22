@@ -722,7 +722,7 @@ pub enum UiCommand {
 /// milestone, same as this struct's own precedent (`Button` was the only concretely-wired variant
 /// before M5).
 /// 🎯️ A `set_drop_accept` predicate — see `EventRouter::drop_accept`.
-type DropAcceptPredicate = Box<dyn Fn(&DragPayload) -> bool>;
+type DropAcceptPredicate = Box<dyn Fn(&DragPayload) -> bool + Send + Sync>;
 
 pub(crate) struct EventRouter {
     window_id: String,
@@ -940,7 +940,7 @@ impl EventRouter {
     }
 
     #[allow(dead_code, reason = "drag-drop registry accessor, not yet called; likely wired by a later events-integration milestone")]
-    pub(crate) fn set_drop_accept(&mut self, node: NodeId, predicate: impl Fn(&DragPayload) -> bool + 'static) {
+    pub(crate) fn set_drop_accept(&mut self, node: NodeId, predicate: impl Fn(&DragPayload) -> bool + Send + Sync + 'static) {
         self.drop_accept.insert(node, Box::new(predicate));
     }
 

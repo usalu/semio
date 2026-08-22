@@ -85,7 +85,7 @@ impl ArtifactViewer for TrinityRewriteViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_trinity_rewrite_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_trinity_rewrite_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(TRINITY_REWRITE_DIALECT)
         .document(["semio", "trinity", "rewrite"])
         .icon_id("trinity-rewrite")

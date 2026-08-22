@@ -6,11 +6,12 @@ use crate::material::{construction_thermal_mass, construction_u_value, R_FILM_EX
 use crate::model::{EntityId, Model, SurfaceClass};
 use crate::site::solar_position;
 use crate::solar::beam_incidence_cosine;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 // #region 🔖️ZoneGeometry
 /// 📐️ Precomputed zone geometry.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct ZoneGeometry {
     pub floor_area_m2: f64,
     pub exterior_area_m2: f64,
@@ -18,7 +19,7 @@ pub struct ZoneGeometry {
 }
 
 /// 📐️ Precomputed surface geometry and thermal properties.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SurfacePrecompute {
     pub area_m2: f64,
     pub u_value_w_m2k: f64,
@@ -36,7 +37,7 @@ pub struct SurfacePrecompute {
 
 // #region 🔖️FenestrationPrecompute
 /// 🪟️ Precomputed fenestration properties.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct FenestrationPrecompute {
     pub surface_id: EntityId,
     pub area_m2: f64,
@@ -51,7 +52,7 @@ pub struct FenestrationPrecompute {
 
 // #region 🔖️ThermostatLookup
 /// 🌡️ Resolved thermostat setpoints for a zone.
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, Serialize, Deserialize)]
 pub struct ResolvedSetpoints {
     pub heating_c: f64,
     pub cooling_c: f64,
@@ -62,7 +63,7 @@ pub struct ResolvedSetpoints {
 
 // #region 🔖️PrecomputedModel
 /// 🧮️ All precomputed data for a simulation run.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct PrecomputedModel {
     pub zone_geometry: HashMap<EntityId, ZoneGeometry>,
     pub surfaces: HashMap<EntityId, SurfacePrecompute>,
@@ -98,7 +99,7 @@ impl PrecomputedModel {
 // #region 🔖️PrecomputeBuilder
 /// 🧮️ Persistent one-record-at-a-time precomputation used by interactive energy jobs and
 /// by [`PrecomputedModel::build`]'s batch adapter.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum PrecomputeStage {
     Zones,
     Surfaces,
@@ -109,6 +110,7 @@ pub enum PrecomputeStage {
 }
 
 /// 🧮️ Cursor state for deterministic, resumable model precomputation.
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PrecomputeBuilder {
     output: PrecomputedModel,
     stage: PrecomputeStage,
@@ -247,7 +249,7 @@ mod tests {
     use super::*;
     use crate::model::*;
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn precompute_builds_surface_ctf() {
         let model = crate::sim::test_model_single_zone();
         let pre = PrecomputedModel::build(&model, 60, 60);
@@ -255,14 +257,14 @@ mod tests {
         assert!(pre.zone_geometry.contains_key(&EntityId(1)));
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn surface_incidence_is_zero_for_unknown_surface() {
         let model = crate::sim::test_model_single_zone();
         let pre = PrecomputedModel::build(&model, 60, 60);
         assert_eq!(pre.surface_incidence(EntityId(999), 45.0, 180.0), 0.0);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn surface_incidence_matches_known_surface_normal() {
         let model = crate::sim::test_model_single_zone();
         let pre = PrecomputedModel::build(&model, 60, 60);
@@ -270,7 +272,7 @@ mod tests {
         assert!((-1.0..=1.0).contains(&incidence));
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn solar_at_returns_altitude_and_azimuth() {
         let model = crate::sim::test_model_single_zone();
         let pre = PrecomputedModel::build(&model, 60, 60);
@@ -279,7 +281,7 @@ mod tests {
         assert!((0.0..360.0).contains(&az));
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn thermostat_overrides_default_setpoints() {
         let mut model = crate::sim::test_model_single_zone();
         model.thermostats.push(Thermostat { id: EntityId(50), zone_id: EntityId(1), heating_setpoint_schedule_id: ScheduleId(1), cooling_setpoint_schedule_id: ScheduleId(1), heating_throttle_range_k: 3.0, cooling_throttle_range_k: 4.0 });
@@ -289,7 +291,7 @@ mod tests {
         assert!((sp.cooling_throttle_k - 4.0).abs() < 1e-9);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn fenestration_precompute_derives_from_host_surface() {
         let mut model = crate::sim::test_model_single_zone();
         model.fenestrations.push(Fenestration { id: EntityId(40), name: "Win".into(), surface_id: EntityId(30), u_value_w_m2k: 2.0, shgc: 0.4, vlt: 0.6, area_m2: 2.0, frame_conductance_w_k: 0.0, divider_conductance_w_k: 0.0 });

@@ -1,0 +1,56 @@
+   Compiling serde_core v1.0.228
+    Checking futures-core v0.3.32
+    Checking futures-sink v0.3.32
+    Checking once_cell v1.21.4
+    Checking smallvec v1.15.1
+    Checking bytes v1.12.1
+    Checking futures-io v0.3.32
+   Compiling serde_json v1.0.149
+   Compiling parking_lot_core v0.9.12
+    Checking scopeguard v1.2.0
+   Compiling version_check v0.9.5
+    Checking mio v1.2.1
+    Checking futures-channel v0.3.32
+    Checking wasm-bindgen v0.2.126
+   Compiling zerocopy v0.8.48
+    Checking http v1.4.2
+    Checking typenum v1.20.1
+    Checking lock_api v0.4.14
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/lib.rs:44:1: error: This wasm target is unsupported by mio. If using Tokio, disable the net feature.
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/io_source.rs:14:5: error[E0432]: unresolved import `crate::sys::IoSourceState`
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/net/tcp/listener.rs:23:17: error[E0432]: unresolved import `crate::sys::tcp`: could not find `tcp` in `sys`
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/net/tcp/stream.rs:17:17: error[E0432]: unresolved import `crate::sys::tcp`: could not find `tcp` in `sys`
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/poll.rs:324:18: error[E0433]: cannot find `Selector` in `sys`: could not find `Selector` in `sys`
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/event/event.rs:24:14: error[E0433]: cannot find `event` in `sys`: could not find `event` in `sys`
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/event/event.rs:38:14: error[E0433]: cannot find `event` in `sys`: could not find `event` in `sys`
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/event/event.rs:43:14: error[E0433]: cannot find `event` in `sys`: could not find `event` in `sys`
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/event/event.rs:68:14: error[E0433]: cannot find `event` in `sys`: could not find `event` in `sys`
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/event/event.rs:99:14: error[E0433]: cannot find `event` in `sys`: could not find `event` in `sys`
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/event/event.rs:129:14: error[E0433]: cannot find `event` in `sys`: could not find `event` in `sys`
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/event/event.rs:151:14: error[E0433]: cannot find `event` in `sys`: could not find `event` in `sys`
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/event/event.rs:173:14: error[E0433]: cannot find `event` in `sys`: could not find `event` in `sys`
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/event/event.rs:183:14: error[E0433]: cannot find `event` in `sys`: could not find `event` in `sys`
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/event/event.rs:221:26: error[E0433]: cannot find `event` in `sys`: could not find `event` in `sys`
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/net/tcp/listener.rs:120:18: error[E0433]: cannot find `tcp` in `sys`: could not find `tcp` in `sys`
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/net/udp.rs:128:14: error[E0433]: cannot find `udp` in `sys`: could not find `udp` in `sys`
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/net/udp.rs:554:14: error[E0433]: cannot find `udp` in `sys`: could not find `udp` in `sys`
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/poll.rs:275:20: error[E0425]: cannot find type `Selector` in module `sys`: not found in `sys`
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/poll.rs:738:44: error[E0425]: cannot find type `Selector` in module `sys`: not found in `sys`
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/waker.rs:79:17: error[E0425]: cannot find type `Waker` in module `sys`: not found in `sys`
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/waker.rs:87:14: error[E0433]: cannot find `Waker` in `sys`: could not find `Waker` in `sys`
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/event/event.rs:18:17: error[E0425]: cannot find type `Event` in module `sys`: not found in `sys`
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/event/event.rs:187:55: error[E0425]: cannot find type `Event` in module `sys`: not found in `sys`
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/event/event.rs:191:41: error[E0425]: cannot find type `Event` in module `sys`: not found in `sys`
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/event/event.rs:217:46: error[E0425]: cannot find type `Event` in module `sys`: not found in `sys`
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/event/events.rs:43:17: error[E0425]: cannot find type `Events` in module `sys`: not found in `sys`
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/event/events.rs:94:25: error[E0433]: cannot find `Events` in `sys`: could not find `Events` in `sys`
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/event/events.rs:189:47: error[E0425]: cannot find type `Events` in module `sys`: not found in `sys`
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/net/tcp/listener.rs:82:24: error[E0425]: cannot find value `listener` in this scope: not found in this scope
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/net/tcp/listener.rs:84:15: error[E0425]: cannot find value `listener` in this scope: not found in this scope
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/net/tcp/listener.rs:94:17: error[E0425]: cannot find value `listener` in this scope: not found in this scope
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/net/tcp/listener.rs:95:12: error[E0425]: cannot find value `listener` in this scope: not found in this scope
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/net/tcp/stream.rs:97:18: error[E0425]: cannot find value `stream` in this scope: not found in this scope
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/net/tcp/stream.rs:98:12: error[E0425]: cannot find value `stream` in this scope: not found in this scope
+/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/mio-1.2.1/src/net/tcp/listener.rs:82:9: error[E0425]: cannot find function `set_reuseaddr` in this scope: not found in this scope
+error: could not compile `mio` (lib) due to 36 previous errors
+warning: build failed, waiting for other jobs to finish...

@@ -17,22 +17,22 @@ pub struct ResizeReference {
 impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for ResizeReference {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "resize", entity: "reference", kind: "resize-reference", record: "ResizedReference" };
 
-    async fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
+    fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
+    fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Resize reference \"{}\"", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn resize_reference(id: String, new_width_world: f64) -> Puzzle3dMutation {
+pub fn resize_reference(id: String, new_width_world: f64) -> Puzzle3dMutation {
     Puzzle3dMutation::ResizeReference(ResizeReference { id, new_width_world })
 }

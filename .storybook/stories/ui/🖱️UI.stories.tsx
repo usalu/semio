@@ -4,7 +4,7 @@
 
 // #region 🔌️Adapters
 import { App, Mode, Ui, reactHostPort } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 // #endregion 🔌️Adapters
 
 // `Mode` mounts each `windows[].children` inside a `mode-dock-stack-body` (level="base") wrapping

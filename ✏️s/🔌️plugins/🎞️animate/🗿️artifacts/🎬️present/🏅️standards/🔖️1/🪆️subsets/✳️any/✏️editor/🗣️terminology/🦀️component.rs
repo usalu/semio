@@ -31,7 +31,7 @@ semio_framework_plugin::app_labels! {
 /// 🗣️ B1: resolves the active label set from `cfg.locale` (was the host-pushed `ViewModel.locale`);
 /// unknown/absent locales fall back to native English. `PresentConfig` carries no terminology axis,
 /// so this app is always `Terminology::Native` — mirrors `sequence_ui`'s identical pair.
-pub async fn animate_present_locale(config: &PresentConfig) -> Locale {
+pub fn animate_present_locale(config: &PresentConfig) -> Locale {
     if config.locale.starts_with("de") {
         Locale::De
     } else {
@@ -39,7 +39,7 @@ pub async fn animate_present_locale(config: &PresentConfig) -> Locale {
     }
 }
 
-pub async fn animate_present_labels(config: &PresentConfig) -> &'static AnimatePresentLabels {
+pub fn animate_present_labels(config: &PresentConfig) -> &'static AnimatePresentLabels {
     AnimatePresentLabels::labels(animate_present_locale(config), Terminology::Native)
 }
 //#endregion 🔖️Resolvers
@@ -49,8 +49,8 @@ pub async fn animate_present_labels(config: &PresentConfig) -> &'static AnimateP
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn labels_resolve_native_english_and_german_from_the_config_locale() {
+    #[test]
+    fn labels_resolve_native_english_and_german_from_the_config_locale() {
         assert_eq!(animate_present_labels(&PresentConfig::default()).tiles_section.as_str(), "Tiles");
         assert_eq!(animate_present_labels(&PresentConfig { locale: "de-DE".into(), ..PresentConfig::default() }).tiles_section.as_str(), "Kacheln");
     }
@@ -62,8 +62,8 @@ mod tests {
     async fn animate_present_labels_resolve_native_by_default() {
         use crate::editor::animate::testkit::{present_app, render};
         use crate::editor::animate::{PRESENT_PLAY_BODY_CATALOGUE, PRESENT_PLAY_BODY_DETAILS};
-        let mut app = present_app();
-        let catalogue = render(&mut app, PRESENT_PLAY_BODY_CATALOGUE);
+        let mut app = present_app().await;
+        let catalogue = render(&mut app, PRESENT_PLAY_BODY_CATALOGUE).await;
         assert!(catalogue.contains("Tile templates"));
         assert!(catalogue.contains("Split 2×2 grid"));
         assert!(catalogue.contains("Active source"));
@@ -76,15 +76,15 @@ mod tests {
         use crate::editor::animate::commands::set_locale;
         use crate::editor::animate::testkit::{dispatch, present_app, render};
         use crate::editor::animate::{PresentCommand, PRESENT_PLAY_BODY_CATALOGUE, PRESENT_PLAY_BODY_DOCUMENT};
-        let mut app = present_app();
-        dispatch(&mut app, PresentCommand::SetLocale(set_locale::SetLocale { value: "de".into() }));
-        let catalogue_json = render(&mut app, PRESENT_PLAY_BODY_CATALOGUE);
+        let mut app = present_app().await;
+        dispatch(&mut app, PresentCommand::SetLocale(set_locale::SetLocale { value: "de".into() })).await;
+        let catalogue_json = render(&mut app, PRESENT_PLAY_BODY_CATALOGUE).await;
         assert!(catalogue_json.contains("Kachelvorlagen"));
         assert!(catalogue_json.contains("2×2-Raster teilen"));
         assert!(catalogue_json.contains("Aktive Quelle"));
         assert!(!catalogue_json.contains("Tile templates"));
 
-        let document_json = render(&mut app, PRESENT_PLAY_BODY_DOCUMENT);
+        let document_json = render(&mut app, PRESENT_PLAY_BODY_DOCUMENT).await;
         assert!(document_json.contains("Kacheln"));
     }
 }

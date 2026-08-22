@@ -12,14 +12,18 @@ import {
 } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 
 class CheckScript extends BundleScript {
-  run(): void {
-    runCargo(["check", "--manifest-path", "Cargo.toml"], this.root);
+  run(segments: string[]): void {
+    runCargo(["check", "--manifest-path", "Cargo.toml", ...segments], this.root);
   }
 }
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
+    if (rest[0] === "rust") {
+      runCargo(["test", "--manifest-path", "Cargo.toml", ...rest.slice(1)], this.root);
+      return;
+    }
     const legacyTs = join(
       this.repoRoot,
       "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🧪️vitest.config.ts",

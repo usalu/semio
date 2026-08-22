@@ -19,16 +19,14 @@ use crate::editor::imperative::presence::{ImperativePresence, ImperativePresence
 use crate::editor::imperative::terminology::imperative_labels;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, ArtifactEditor, ArtifactView, CommandDefinition, ConfigView, DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition,
-    InteractionRef, InteractionTopology, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode,
+    ActionArgDef, ActionArgOption, ActionKind, ArtifactEditor, ArtifactView, CommandDefinition, ComponentTree, ConfigView, DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition,
+    InteractionTopology, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
 };
 // 🚧️ Dialect/StandardId/SubsetId are not yet in the crate-root re-export list (w0-f gap 1 closed
 // ArtifactEditor/Editor/etc but left these three under `app::`, already reachable via
 // `semio_framework::*` elsewhere) — see `crate::artifacts::imperative::IMPERATIVE_DIALECT`'s own
 // definition for the qualified form this file only reads back through that constant.
-use serde_json::Value;
-use store::ArtifactPack;
-use store::EngineHandles;
+use store::{ArtifactPack, EngineHandles};
 
 //#region 🔖️Constants
 pub const IMPERATIVE_PLAY_APP_ID: &str = "imperative-play";
@@ -38,11 +36,6 @@ pub use inspection_panel::IMPERATIVE_PLAY_BODY_INSPECTOR;
 pub use main::{IMPERATIVE_PLAY_BODY_MAIN, IMPERATIVE_PLAY_WINDOW_MAIN};
 pub use script::IMPERATIVE_PLAY_BODY_SCRIPT;
 
-/// 🎯️ An `ActionDescriptor` addressed at this app — the single factory `📌️panels/*` builds its item
-/// actions with.
-pub async fn imperative_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: IMPERATIVE_PLAY_APP_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
-}
 //#endregion 🔖️Constants
 
 //#region 🔖️Interaction
@@ -56,8 +49,8 @@ pub const IMPERATIVE_INTERACTION_STEPS: &str = "steps";
 /// (matching the document panel tree's own item ids, see `document_panel::step_row_id`'s doc comment),
 /// so `validate_state` prunes deleted steps and range/transitive selection walk the real control-flow
 /// tree, including steps nested inside `control.if`/`control.while` bodies.
-async fn imperative_steps_topology(document: &ImperativeSnapshot) -> DomainTopology {
-    async fn visit(steps: &[Step], parent: Option<&str>, out: &mut Vec<TopologyNode>) {
+fn imperative_steps_topology(document: &ImperativeSnapshot) -> DomainTopology {
+    fn visit(steps: &[Step], parent: Option<&str>, out: &mut Vec<TopologyNode>) {
         for step in steps {
             let id = document_panel::step_row_id(&step.id);
             out.push(TopologyNode { id: id.clone(), granularity: "step".into(), parent: parent.map(str::to_string) });
@@ -175,7 +168,7 @@ impl ArtifactEditor for ImperativePlayApp {
                 Ok(Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "computation.imperative".into(), json } })
             }
             "document:out" => {
-                let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.document_media_type);
+                let media_type = imperative_io().document_media_type;
                 let bytes = doc.snapshot.encode_pack();
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
@@ -183,19 +176,19 @@ impl ArtifactEditor for ImperativePlayApp {
         }
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, ImperativeSnapshot>, cfg: &ConfigView<'_, ImperativeConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, ImperativeSnapshot>, cfg: &ConfigView<'_, ImperativeConfig>) -> ComponentTree {
         imperative_engine::sync_imperative_module_contributions(&cfg.snapshot.contributions_json);
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let labels = imperative_labels(config);
-        match body_key {
+        semio_framework_plugin::built_to_component_tree(match body_key {
             IMPERATIVE_PLAY_BODY_MAIN => main::render(document, &config.run_output_json, labels),
             IMPERATIVE_PLAY_BODY_SCRIPT => script::render(document),
             IMPERATIVE_PLAY_BODY_DOCUMENT => document_panel::render(document, labels),
             IMPERATIVE_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             IMPERATIVE_PLAY_BODY_INSPECTOR => inspection_panel::render(document, labels),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
+        })
     }
 }
 //#endregion 🔖️ImperativePlayApp
@@ -204,9 +197,13 @@ impl ArtifactEditor for ImperativePlayApp {
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
-pub async fn create_imperative_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_imperative_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::imperative::IMPERATIVE_DIALECT)
-            .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
+            .command(CommandDefinition {
+                args: vec![ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))],
+                in_palette: false,
+                ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View)
+            })
             .document(["semio", "imperative"])
             .artifact_kind(crate::artifacts::imperative::artifact_kind())
             .icon_id("imperative")
@@ -263,7 +260,7 @@ pub async fn create_imperative_app() -> semio_framework_plugin::AppDefinition {
                     broadcast: true,
                 },
             })
-            .window_kind_interactions(IMPERATIVE_PLAY_WINDOW_MAIN, vec![InteractionRef::new(IMPERATIVE_INTERACTION_STEPS)])
+            .window_kind_interactions(IMPERATIVE_PLAY_WINDOW_MAIN, vec![IMPERATIVE_INTERACTION_STEPS.into()])
             // 🎯️ Typed channel surface (HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS /
             // WORKFLOWS-END-TO-END-TYPED-PORTS) — `imperative_io()` is this port information's single
             // source of truth, reused here rather than duplicated.
@@ -284,6 +281,7 @@ pub async fn create_imperative_app() -> semio_framework_plugin::AppDefinition {
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
+    use semio_framework_plugin::app::App;
     use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
@@ -295,29 +293,29 @@ pub(crate) mod testkit {
     /// `PluginBuilder::editor::<ImperativePlayApp>` builds it.
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     pub async fn imperative_app() -> ImperativeApp {
-        new_app::<EditorApp<ImperativePlayApp>>()
+        new_app::<EditorApp<ImperativePlayApp>>().await
     }
 
     /// 🧪️ Adapts `create_imperative_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
     /// examples }` shape `testkit::new_app_with_registry`/`assert_declared_actions_bridge_to_commands`
     /// still expect — framework testkit gap (w2-cad-report "SDK gaps found" #3), not modifiable here
     /// (`🧰️framework/**` is outside this packet's lease).
-    pub async fn imperative_app_manifest_for_testkit() -> App {
+    pub fn imperative_app_manifest_for_testkit() -> App {
         App { definition: create_imperative_app(), examples: Vec::new() }
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline and materializes
     /// declared action-arg defaults (e.g. `addStep`'s `kind`).
     pub async fn imperative_app_with_registry() -> ImperativeApp {
-        new_app_with_registry::<EditorApp<ImperativePlayApp>>(imperative_app_manifest_for_testkit)
+        new_app_with_registry::<EditorApp<ImperativePlayApp>>(imperative_app_manifest_for_testkit).await
     }
 
     pub async fn dispatch(app: &mut ImperativeApp, command: ImperativeCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).expect("dispatch")
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
     }
 
     pub async fn render(app: &mut ImperativeApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
     }
 }
 //#endregion 🧪️Testkit
@@ -327,8 +325,10 @@ pub(crate) mod testkit {
 mod tests {
     use super::*;
     use crate::editor::imperative::testkit::{dispatch, imperative_app, imperative_app_with_registry, render};
-    use semio_framework_plugin::testkit::{assert_undo_redo_round_trip, meta};
+    use semio_framework_plugin::testkit::meta;
+    use semio_framework_plugin::PluginApp;
     use std::collections::BTreeMap;
+    use store::{Backbone, BackboneMessage, MemoryBackbone};
 
     #[semio_framework_async_macros::async_test]
     async fn app_definition_builds_without_panicking() {
@@ -402,7 +402,7 @@ mod tests {
     }
 
     /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
-    pub(super) async fn every_command() -> Vec<ImperativeCommand> {
+    pub(super) fn every_command() -> Vec<ImperativeCommand> {
         let mut params = BTreeMap::new();
         params.insert("message".to_string(), crate::artifacts::imperative::dsl::value_to_value_dsl(&neural_engine::Value::Atom(neural_engine::Atom::String("updated".into()))));
         vec![
@@ -456,16 +456,16 @@ mod tests {
     /// owner's own row id.
     #[semio_framework_async_macros::async_test]
     async fn interaction_topology_walks_nested_control_bodies_into_parent_links() {
-        let mut app = imperative_app();
-        dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "control.if".into(), index: None }));
-        let owner_id = crate::artifacts::imperative::imperative_working_scene(&app.snapshot().expect("projection")).path.steps.last().expect("owner").id.clone();
-        dispatch(&mut app, ImperativeCommand::AddStepAt(add_step_at::AddStepAt { kind: "log.print".into(), index: None, owner: Some(owner_id.clone()), slot: Some("then".into()) }));
-        let document = app.snapshot().expect("projection");
+        let mut app = imperative_app().await;
+        dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "control.if".into(), index: None })).await;
+        let owner_id = crate::artifacts::imperative::imperative_working_scene(&app.snapshot().await.expect("projection")).path.steps.last().expect("owner").id.clone();
+        dispatch(&mut app, ImperativeCommand::AddStepAt(add_step_at::AddStepAt { kind: "log.print".into(), index: None, owner: Some(owner_id.clone()), slot: Some("then".into()) })).await;
+        let document = app.snapshot().await.expect("projection");
         let config = ImperativeConfig::default();
-        let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView::new(&document, &history);
+        let history = semio_framework_plugin::HistoryView::empty().await;
+        let doc = ArtifactView::new(&document, &history).await;
         let cfg = ConfigView { snapshot: &config };
-        let topology = ImperativePlayApp::interaction_topology(&doc, &cfg);
+        let topology = ImperativePlayApp::interaction_topology(&doc, &cfg).await;
         let steps = topology.domains.get(IMPERATIVE_INTERACTION_STEPS).expect("steps domain present in topology");
         let owner_row_id = document_panel::step_row_id(&owner_id);
         let owner_node = steps.ordered.iter().find(|node| node.id == owner_row_id).expect("owner node present");
@@ -480,10 +480,10 @@ mod tests {
     async fn interaction_topology_is_empty_for_a_document_with_no_steps() {
         let document = ImperativeSnapshot::default();
         let config = ImperativeConfig::default();
-        let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView::new(&document, &history);
+        let history = semio_framework_plugin::HistoryView::empty().await;
+        let doc = ArtifactView::new(&document, &history).await;
         let cfg = ConfigView { snapshot: &config };
-        let topology = ImperativePlayApp::interaction_topology(&doc, &cfg);
+        let topology = ImperativePlayApp::interaction_topology(&doc, &cfg).await;
         assert!(topology.domains.get(IMPERATIVE_INTERACTION_STEPS).expect("steps domain present in topology").ordered.is_empty());
     }
     //#endregion 🔖️Interaction
@@ -491,41 +491,41 @@ mod tests {
     //#region 🔖️CrossCutting
     #[semio_framework_async_macros::async_test]
     async fn add_step_materializes_kind_default_and_run_emits_no_artifact_mutations() {
-        let mut app = imperative_app_with_registry();
+        let mut app = imperative_app_with_registry().await;
         // AddStep fired with no explicit kind: the declared `kind` default ("log.print") must be
         // materialized by the registry's action-arg default resolution.
-        app.dispatch_typed(ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }), &meta("local")).expect("add step");
-        let document = app.snapshot().expect("materialize projection");
+        app.dispatch_typed(ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }), &meta("local")).await.expect("add step");
+        let document = app.snapshot().await.expect("materialize projection");
         let path = crate::artifacts::imperative::imperative_working_scene(&document).path;
         assert_eq!(path.steps.last().unwrap().kind, "log.print");
         // `run` is a View-kind command: under registry enforcement it must not emit document operations.
-        let result = app.dispatch_typed(ImperativeCommand::Run(run::Run {}), &meta("local")).expect("run");
+        let result = app.dispatch_typed(ImperativeCommand::Run(run::Run {}), &meta("local")).await.expect("run");
         assert!(result.mutations.is_empty(), "run evaluates into config, never the document");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn default_snapshot_has_steps() {
-        let app = imperative_app();
-        let path = crate::artifacts::imperative::imperative_working_scene(&app.snapshot().expect("projection")).path;
+        let app = imperative_app().await;
+        let path = crate::artifacts::imperative::imperative_working_scene(&app.snapshot().await.expect("projection")).path;
         assert_eq!(path.steps.len(), 2);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn add_step_command_appends_step() {
-        let mut app = imperative_app();
-        dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }));
-        let path = crate::artifacts::imperative::imperative_working_scene(&app.snapshot().expect("projection")).path;
+        let mut app = imperative_app().await;
+        dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None })).await;
+        let path = crate::artifacts::imperative::imperative_working_scene(&app.snapshot().await.expect("projection")).path;
         assert!(path.steps.len() > 2);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn add_step_at_owner_slot_nests_into_control_body() {
-        let mut app = imperative_app();
-        dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "control.if".into(), index: None }));
-        let owner_id = crate::artifacts::imperative::imperative_working_scene(&app.snapshot().expect("projection")).path.steps.last().expect("owner").id.clone();
-        let root_len = crate::artifacts::imperative::imperative_working_scene(&app.snapshot().expect("projection")).path.steps.len();
-        dispatch(&mut app, ImperativeCommand::AddStepAt(add_step_at::AddStepAt { kind: "log.print".into(), index: None, owner: Some(owner_id.clone()), slot: Some("then".into()) }));
-        let document = app.snapshot().expect("projection");
+        let mut app = imperative_app().await;
+        dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "control.if".into(), index: None })).await;
+        let owner_id = crate::artifacts::imperative::imperative_working_scene(&app.snapshot().await.expect("projection")).path.steps.last().expect("owner").id.clone();
+        let root_len = crate::artifacts::imperative::imperative_working_scene(&app.snapshot().await.expect("projection")).path.steps.len();
+        dispatch(&mut app, ImperativeCommand::AddStepAt(add_step_at::AddStepAt { kind: "log.print".into(), index: None, owner: Some(owner_id.clone()), slot: Some("then".into()) })).await;
+        let document = app.snapshot().await.expect("projection");
         let path = crate::artifacts::imperative::imperative_working_scene(&document).path;
         let owner_step = path.steps.iter().find(|step| step.id == owner_id).expect("owner step");
         assert_eq!(owner_step.bodies.get("then").map(|body| body.steps.len()), Some(1));
@@ -534,9 +534,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn add_step_at_falls_back_to_root_for_unknown_owner() {
-        let mut app = imperative_app();
-        dispatch(&mut app, ImperativeCommand::AddStepAt(add_step_at::AddStepAt { kind: "log.print".into(), index: None, owner: Some("missing-step".into()), slot: Some("then".into()) }));
-        let document = app.snapshot().expect("projection");
+        let mut app = imperative_app().await;
+        dispatch(&mut app, ImperativeCommand::AddStepAt(add_step_at::AddStepAt { kind: "log.print".into(), index: None, owner: Some("missing-step".into()), slot: Some("then".into()) })).await;
+        let document = app.snapshot().await.expect("projection");
         let path = crate::artifacts::imperative::imperative_working_scene(&document).path;
         let added_id = path.steps.last().expect("added").id.clone();
         assert!(path.steps.iter().any(|step| step.id == added_id));
@@ -544,22 +544,27 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn undo_after_add_step_restores_original_document_exactly() {
-        let mut app = imperative_app();
+        let mut app = imperative_app().await;
         let base = default_snapshot();
         let mut path = crate::artifacts::imperative::imperative_working_scene(&base).path;
         path.steps.push(Step { id: "step-3".into(), kind: "log.print".into(), params: crate::artifacts::imperative::Dictionary::new(), bodies: BTreeMap::new() });
         let expected_after = crate::artifacts::imperative::imperative_snapshot_with_content(&base.schema, &path, &crate::artifacts::imperative::imperative_working_scene(&base).seed);
-        assert_undo_redo_round_trip(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }), |app| app.snapshot().expect("projection"), default_snapshot(), expected_after);
+        app.dispatch_typed(ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }), &meta("local")).await.expect("apply command");
+        assert_eq!(app.snapshot().await.expect("projection"), expected_after);
+        app.handle_action("undo", None, &meta("local")).await.expect("undo");
+        assert_eq!(app.snapshot().await.expect("projection"), default_snapshot());
+        app.handle_action("redo", None, &meta("local")).await.expect("redo");
+        assert_eq!(app.snapshot().await.expect("projection"), expected_after);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn remove_step_command_is_exact_inverse_of_add() {
-        let mut app = imperative_app();
-        let original = app.snapshot().expect("projection");
-        dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None }));
-        let added_id = crate::artifacts::imperative::imperative_working_scene(&app.snapshot().expect("projection")).path.steps.last().expect("added").id.clone();
-        dispatch(&mut app, ImperativeCommand::RemoveStep(remove_step::RemoveStep { id: added_id }));
-        assert_eq!(app.snapshot().expect("projection"), original);
+        let mut app = imperative_app().await;
+        let original = app.snapshot().await.expect("projection");
+        dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None })).await;
+        let added_id = crate::artifacts::imperative::imperative_working_scene(&app.snapshot().await.expect("projection")).path.steps.last().expect("added").id.clone();
+        dispatch(&mut app, ImperativeCommand::RemoveStep(remove_step::RemoveStep { id: added_id })).await;
+        assert_eq!(app.snapshot().await.expect("projection"), original);
     }
 
     /// 🧪️ The definitional regression proof: two independent instances start from the same document,
@@ -570,25 +575,38 @@ mod tests {
     async fn two_instances_converge_disjoint_edits_via_backbone() {
         let mut params = BTreeMap::new();
         params.insert("key".to_string(), crate::artifacts::imperative::dsl::value_to_value_dsl(&neural_engine::Value::Atom(neural_engine::Atom::String("renamed".into()))));
-        semio_framework_plugin::testkit::assert_two_instances_converge::<semio_framework_plugin::EditorApp<ImperativePlayApp>, _>(
-            "mem://imperative-convergence",
-            ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None }),
-            ImperativeCommand::SetStepParams(set_step_params::SetStepParams { id: "step-1".into(), params }),
-            |app| app.snapshot().expect("projection"),
-        );
+        let (mut instance_a, mut instance_b) = semio_framework_plugin::testkit::paired_apps::<semio_framework_plugin::EditorApp<ImperativePlayApp>>("mem://imperative-convergence").await;
+        instance_a.dispatch_typed(ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None }), &meta("actor-a")).await.expect("a applies its edit");
+        instance_b.dispatch_typed(ImperativeCommand::SetStepParams(set_step_params::SetStepParams { id: "step-1".into(), params }), &meta("actor-b")).await.expect("b applies its edit");
+        instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).await.expect("pump a");
+        instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).await.expect("pump b");
+        assert_eq!(instance_a.snapshot().await.expect("a projection"), instance_b.snapshot().await.expect("b projection"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn ingest_operations_is_idempotent_for_imperative() {
-        semio_framework_plugin::testkit::assert_ingest_idempotent::<semio_framework_plugin::EditorApp<ImperativePlayApp>, _>(ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None }), |app| {
-            crate::artifacts::imperative::imperative_working_scene(&app.snapshot().expect("projection")).path.steps.len()
-        });
+        let mut sender = imperative_app().await;
+        let (near, mut far) = MemoryBackbone::pair("mem://imperative-idempotent", "mem://imperative-idempotent").await;
+        sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach sender");
+        sender.dispatch_typed(ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None }), &meta("local")).await.expect("apply command");
+        let mut envelopes = Vec::new();
+        for message in far.receive().await.expect("receive") {
+            if let BackboneMessage::Mutations { envelopes: operations } = message {
+                envelopes.extend(protocol::decode_envelopes(&operations).expect("decode envelopes"));
+            }
+        }
+        let operations = protocol::encode_envelopes(&envelopes);
+        let mut receiver = imperative_app().await;
+        receiver.ingest_operations(&operations).await.expect("ingest once");
+        let once = receiver.snapshot().await.expect("projection");
+        receiver.ingest_operations(&operations).await.expect("ingest twice");
+        assert_eq!(receiver.snapshot().await.expect("projection"), once);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
-        let mut app = imperative_app();
-        assert!(render(&mut app, "imperative.play.nope").contains("Unknown body"));
+        let mut app = imperative_app().await;
+        assert!(render(&mut app, "imperative.play.nope").await.contains("Unknown body"));
     }
     //#endregion 🔖️CrossCutting
 }

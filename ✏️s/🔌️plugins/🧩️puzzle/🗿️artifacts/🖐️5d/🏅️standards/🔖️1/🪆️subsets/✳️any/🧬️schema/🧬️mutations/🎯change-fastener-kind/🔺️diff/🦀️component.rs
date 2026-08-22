@@ -3,7 +3,7 @@ use crate::artifacts::puzzle5d::diff::{Puzzle5dDiff, Puzzle5dFastenerPatch, Puzz
 use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::mutation::ChangeFastenerKind, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
+pub fn diff(payload: &super::mutation::ChangeFastenerKind, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
     let Some(item) = base.fasteners.iter().find(|entry| entry.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "fastener", payload.id), vec![payload.id.clone()]);
     };

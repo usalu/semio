@@ -3,7 +3,6 @@
 
 use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::snapshot::write_svg_xml;
 use crate::artifacts::svg::standards::v1_1::subsets::tiny::schema::snapshot::SvgSnapshot;
-use base64::Engine as _;
 use semio_framework_plugin::app::{ImageView, ImageWindowKit};
 use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
 
@@ -25,7 +24,7 @@ pub fn render(snapshot: &SvgSnapshot) -> BuiltNode {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn image_view(snapshot: &SvgSnapshot) -> ImageView {
     let xml = write_svg_xml(&snapshot.doc);
-    ImageView { width: 300, height: 150, mime: "image/svg+xml".into(), base64: base64::engine::general_purpose::STANDARD.encode(xml.as_bytes()) }
+    ImageView { width: 300, height: 150, mime: "image/svg+xml".into(), base64: crate::base64_standard(xml.as_bytes()) }
 }
 
 #[cfg(test)]

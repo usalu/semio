@@ -1124,8 +1124,9 @@ pub mod viewer {
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
 mod plugin;
+pub use plugin::GisApps;
 #[cfg(feature = "plugin-entry")]
-semio_framework_plugin::plugin_exports!(plugin::plugin);
+semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::GisApps);
 
 //#region 📚️Examples
 #[path = "."]

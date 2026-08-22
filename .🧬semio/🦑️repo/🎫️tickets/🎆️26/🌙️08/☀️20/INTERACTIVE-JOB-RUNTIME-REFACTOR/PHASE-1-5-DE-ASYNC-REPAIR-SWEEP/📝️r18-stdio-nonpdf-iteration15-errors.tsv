@@ -1,0 +1,99 @@
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs	558	`ArtifactDefinitionRegistry` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	1604	`Result<ArtifactIdentity, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	1629	`Result<ArtifactIdentity, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	2926	`ArtifactCapabilityKind` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	2927	`ArtifactIdentityNamespace` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	2927	`Result<ArtifactIdentityClaim, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	2929	`()` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	2967	`ArtifactCapabilityKind` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	2968	`ArtifactIdentityNamespace` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	2968	`Result<ArtifactIdentityClaim, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	2970	`()` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	2986	`ArtifactCapabilityKind` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	2987	`ArtifactIdentityNamespace` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	2987	`Result<ArtifactIdentityClaim, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	2989	`()` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3007	`ArtifactCapabilityKind` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3008	`ArtifactIdentityNamespace` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3008	`Result<ArtifactIdentityClaim, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3010	`()` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3027	`ArtifactIdentityNamespace` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3027	`Result<ArtifactIdentityClaim, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3029	`()` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3045	`ArtifactIdentityNamespace` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3045	`Result<ArtifactIdentityClaim, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3055	`ArtifactIdentityNamespace` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3055	`Result<ArtifactIdentityClaim, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3068	`ArtifactCapabilityKind` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3068	`()` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3085	`ArtifactIdentityNamespace` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3085	`Result<ArtifactIdentityClaim, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3087	`()` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3103	`ArtifactCapabilityKind` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3104	`ArtifactIdentityNamespace` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3104	`Result<ArtifactIdentityClaim, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3106	`()` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3121	`ArtifactIdentityNamespace` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3122	`Result<ArtifactIdentityClaim, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3123	`ArtifactIdentityNamespace` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3123	`Result<ArtifactIdentityClaim, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3129	`ArtifactCapabilityKind` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3129	`()` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3155	`ArtifactIdentityNamespace` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3156	`Result<ArtifactIdentityClaim, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3157	`ArtifactIdentityNamespace` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3157	`Result<ArtifactIdentityClaim, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3163	`ArtifactCapabilityKind` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3163	`()` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3298	`ArtifactCapabilityKind` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3298	`ArtifactIdentityNamespace` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3298	`Result<ArtifactIdentityClaim, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3301	`ArtifactCapabilityKind` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3301	`ArtifactIdentityNamespace` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3301	`Result<ArtifactIdentityClaim, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3304	`ArtifactCapabilityKind` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3304	`ArtifactIdentityNamespace` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3304	`Result<ArtifactIdentityClaim, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3307	`ArtifactIdentityNamespace` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3307	`Result<ArtifactIdentityClaim, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3312	`ArtifactIdentityNamespace` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3312	`Result<ArtifactIdentityClaim, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3315	`ArtifactIdentityNamespace` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3315	`Result<ArtifactIdentityClaim, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3317	`ArtifactCapabilityKind` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3321	`ArtifactIdentityNamespace` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3321	`Result<ArtifactIdentityClaim, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3325	`ArtifactCapabilityKind` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3325	`ArtifactIdentityNamespace` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3325	`Result<ArtifactIdentityClaim, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3330	`ArtifactCapabilityKind` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3331	`ArtifactIdentityNamespace` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3331	`Result<ArtifactIdentityClaim, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3331	`ArtifactIdentityNamespace` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3331	`Result<ArtifactIdentityClaim, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3357	`Result<(), ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3474	`Result<ArtifactIdentity, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3488	`Result<ArtifactIdentity, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3501	`&str` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3519	`&str` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3529	`Result<ArtifactIdentity, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3531	`&str` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3536	`&str` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3543	`&str` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3614	`Result<ArtifactIdentity, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3641	`Result<ArtifactIdentity, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3674	`Result<ArtifactIdentity, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3680	`Result<ArtifactIdentity, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3714	`Result<ArtifactIdentity, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3714	`Result<ArtifactIdentity, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3721	`&str` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3729	`Result<ArtifactIdentity, ArtifactDefinitionError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3735	`&str` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3739	`&str` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3979	`ArtifactDefinitionRegistry` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	8377	`component::app::ExampleSource` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	8280	`semio_framework::ExampleDefinition` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	8280	`semio_framework::ExampleDefinition` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	2710	`ArtifactDefinitionRegistry` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	2710	`ArtifactDefinitionRegistry` is not a future
+E0308	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	2779	mismatched types

@@ -10,12 +10,12 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 /// 📦️ Encodes a `Fem2dSnapshot` to its binary pack form.
-pub async fn encode(document: &Fem2dSnapshot) -> Vec<u8> {
+pub fn encode(document: &Fem2dSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `Fem2dSnapshot` from its binary pack form.
-pub async fn decode(bytes: &[u8]) -> Result<Fem2dSnapshot, PackError> {
+pub fn decode(bytes: &[u8]) -> Result<Fem2dSnapshot, PackError> {
     <Fem2dSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
@@ -26,7 +26,7 @@ mod tests {
     use crate::artifacts::fem2d::{FemAnalysisSettings, FemCombination, FemCombinationTerm, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
 
     // #region 🔖️Fixtures
-    async fn simply_supported_beam_doc() -> Fem2dSnapshot {
+    fn simply_supported_beam_doc() -> Fem2dSnapshot {
         Fem2dSnapshot {
             nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0 }, FemNode { id: "n2".into(), x: 6.0, y: 0.0 }],
             elements: vec![FemElement::Beam { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "ipe300".into() }],
@@ -40,7 +40,7 @@ mod tests {
         }
     }
 
-    async fn truss_doc() -> Fem2dSnapshot {
+    fn truss_doc() -> Fem2dSnapshot {
         Fem2dSnapshot {
             nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0 }, FemNode { id: "n2".into(), x: 4.0, y: 0.0 }, FemNode { id: "n3".into(), x: 4.0, y: 3.0 }],
             elements: vec![
@@ -62,7 +62,7 @@ mod tests {
         }
     }
 
-    async fn rectangle_region_doc() -> Fem2dSnapshot {
+    fn rectangle_region_doc() -> Fem2dSnapshot {
         Fem2dSnapshot {
             nodes: vec![FemNode { id: "c0".into(), x: 0.0, y: 0.0 }, FemNode { id: "c1".into(), x: 4.0, y: 0.0 }, FemNode { id: "c2".into(), x: 4.0, y: 2.0 }, FemNode { id: "c3".into(), x: 0.0, y: 2.0 }],
             elements: vec![],
@@ -76,21 +76,21 @@ mod tests {
         }
     }
 
-    async fn rectangle_with_hole_region_doc() -> Fem2dSnapshot {
+    fn rectangle_with_hole_region_doc() -> Fem2dSnapshot {
         let mut doc = rectangle_region_doc();
         doc.regions[0].holes = vec![vec![[1.5, 0.75], [2.5, 0.75], [2.5, 1.25], [1.5, 1.25]]];
         doc
     }
     // #endregion 🔖️Fixtures
 
-    #[semio_framework_async_macros::async_test]
-    async fn fem2d_pack_agrees_with_dsl_for_bundled_default_example() {
+    #[test]
+    fn fem2d_pack_agrees_with_dsl_for_bundled_default_example() {
         let document = crate::artifacts::fem2d::dsl::parse_dsl(crate::artifacts::fem2d::dsl::FEM2D_EXAMPLE_TEXT).expect("parse default example");
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&document);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn fem2d_pack_agrees_with_dsl_for_fixture_documents() {
+    #[test]
+    fn fem2d_pack_agrees_with_dsl_for_fixture_documents() {
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&Fem2dSnapshot::default());
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&simply_supported_beam_doc());
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&truss_doc());
@@ -106,16 +106,16 @@ mod tests {
 mod semio_protocol_conformance {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn component_protocol_semio_is_protocol_dialect() {
+    #[test]
+    fn component_protocol_semio_is_protocol_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Protocol);
         assert!(!COMPONENT_PROTOCOL_SEMIO.is_empty());
         let _ = COMPONENT_PROTOCOL_PATH;
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn verify_protocol_bytes_against_encoded_pack() {
+    #[test]
+    fn verify_protocol_bytes_against_encoded_pack() {
         let document = Fem2dSnapshot::default();
         let bytes = encode(&document);
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");

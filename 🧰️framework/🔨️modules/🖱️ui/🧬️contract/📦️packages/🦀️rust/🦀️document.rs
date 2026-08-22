@@ -1,7 +1,7 @@
 //! @emoji 📄️ `UiSnapshot` / `UiNodeRecord` / `UiNodeId` / `UiPatch` / `UiPatchOp` and the revision
 //! model — the flat, id-keyed document every renderer reads and every reconciler writes. No type in
 //! this file nests another node inline; a node only ever refers to a child by [`UiNodeId`], which is
-//! what keeps the whole surface `ts-rs`-derivable (see the crate's `📦️glue.rs` header).
+//! what keeps the whole surface schema-projectable (see the crate's `📦️glue.rs` header).
 //!
 //! 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md. Every `fn`
 //! below is plain sync by owner ruling U1, which supersedes this program's general async-everything
@@ -15,7 +15,6 @@ use std::collections::HashMap;
 //#region 🆔️Ids
 /// 🪧️ A render surface address — today's dotted strings, e.g. `"note.play.navigator"`.
 #[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(transparent)]
 pub struct SurfaceId(pub String);
 
@@ -34,20 +33,18 @@ impl From<&str> for SurfaceId {
 /// 🔢️ A node's identity within one [`SurfaceId`] — monotonic per surface, never reused, so a stale
 /// reference to a removed node is always distinguishable from a fresh node at the same tree position.
 ///
-/// The TypeScript type is pinned to `number`, not ts-rs's default `bigint` for `u64`: serde writes
+/// The TypeScript type is pinned to `number`, not a Rust-centric `bigint` projection for `u64`: serde writes
 /// this as a plain JSON number, so `JSON.parse` hands JavaScript a `number` at runtime and a `bigint`
 /// declaration would be a type that never actually occurs. Ids are per-surface and monotonic, so the
 /// 2^53 exact-integer ceiling is unreachable in practice — a surface would have to mint nine
 /// quadrillion nodes to reach it.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS), ts(type = "number"))]
 #[serde(transparent)]
 pub struct UiNodeId(pub u64);
 
 /// 🔢️ A snapshot's wire revision — advances by one per accepted [`UiPatch`]; a patch whose
 /// `base_revision` does not match the receiver's current revision is rejected whole.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS), ts(type = "number"))]
 #[serde(transparent)]
 pub struct UiRevision(pub u64);
 
@@ -79,7 +76,6 @@ impl UiNodeIdAllocator {
 /// 🎞️ The transient visual emphasis a node is entering — orthogonal to `activity`/`disabled`. A node
 /// carrying neither is in its steady state; the renderer clears this once the transition has played.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum TransitionHint {
     Introducing,
@@ -95,7 +91,6 @@ fn is_false(value: &bool) -> bool {
 /// [`UiNodeId`] only, so a patch can `Upsert` or `Remove` exactly one node without touching its
 /// neighbours or ancestors.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiNodeRecord {
     pub id: UiNodeId,
@@ -122,7 +117,6 @@ pub struct UiNodeRecord {
 /// subscriber receives before any [`UiPatch`] applies. `nodes` is an unordered flat table; tree shape
 /// lives entirely in `root` plus each record's own `children`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiSnapshot {
     pub surface: SurfaceId,
@@ -139,7 +133,7 @@ pub struct UiSnapshot {
 //#region 🩹️Patch
 /// 🩹️ One mutation to a single node (or the root pointer) in an already-received [`UiSnapshot`].
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[allow(clippy::large_enum_variant)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum UiPatchOp {
     Upsert(UiNodeRecord),
@@ -191,7 +185,6 @@ pub enum UiPatchOp {
 /// receiver's current revision or the whole batch is rejected (never partially applied), and success
 /// advances the receiver to `revision`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiPatch {
     pub surface: SurfaceId,
@@ -239,7 +232,7 @@ impl UiSnapshotState {
     /// 👶️ A node's direct children, or an empty slice for an unknown or childless id.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn children_of(&self, id: UiNodeId) -> &[UiNodeId] {
-        self.nodes.get(&id).map(|record| record.children.as_slice()).unwrap_or(&[])
+        self.nodes.get(&id).map_or(&[], |record| record.children.as_slice())
     }
 
     /// 🌲️ Depth-first ids rooted at `id` (`id` itself first), via an explicit stack — no recursive
@@ -362,6 +355,7 @@ mod tests {
         assert_eq!(state.revision(), UiRevision(0));
     }
 
+    #[allow(clippy::needless_pass_by_value)]
     fn patch_op_round_trips(op: UiPatchOp) {
         let first = serde_json::to_string(&op).expect("serialize");
         let deserialized: UiPatchOp = serde_json::from_str(&first).expect("deserialize");
@@ -388,17 +382,16 @@ mod tests {
 
     /// 🪞️ Locks the TypeScript rendering of every wire-critical newtype against what serde actually
     /// puts on the wire. These two are generated by different machinery from the same struct, so
-    /// nothing but an assertion keeps them honest — and they have already disagreed once: ts-rs
-    /// renders a bare `u64` as `bigint`, while serde writes a JSON number that `JSON.parse` returns
-    /// as a JavaScript `number`. A mirror that says `bigint` describes a value that never occurs.
+    /// nothing but an assertion keeps them honest. The owned projection records the transparent
+    /// wire payloads explicitly so a `u64` cannot silently become a JavaScript `bigint`.
     #[cfg(feature = "typegen")]
     #[test]
     fn wire_critical_newtypes_render_as_their_transparent_payload() {
-        use ts_rs::TS;
-        assert_eq!(SurfaceId::inline(), "string");
-        assert_eq!(UiNodeId::inline(), "number");
-        assert_eq!(UiRevision::inline(), "number");
-        assert_eq!(crate::Label::inline(), "string");
+        let rendered = crate::schema_metadata::render_typescript();
+        assert!(rendered.contains("export type SurfaceId = string;"));
+        assert!(rendered.contains("export type UiNodeId = number;"));
+        assert!(rendered.contains("export type UiRevision = number;"));
+        assert!(rendered.contains("export type Label = string;"));
     }
 }
 //#endregion 🧪️Tests

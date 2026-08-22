@@ -32,13 +32,13 @@ fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
 /// empty by the carrier law (see `🚪️io/🦀️component.rs`'s `io()` doc comment), `examples` carries
 /// the one `demo` example, `inferences` carries the `extent` inference descriptor.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn subset() -> SubsetDeclaration {
+pub fn subset() -> SubsetDeclaration<crate::plugin::StdioApps> {
     SubsetDeclaration {
         dialect: DIALECT,
         schema: SchemaDeclaration { descriptor: schema::binary_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io::io(),
-        viewer: viewer_surface::<viewer::BinaryViewer>(viewer::create_binary_viewer()),
-        editor: editor_surface::<editor::BinaryEditor>(editor::create_binary_editor()),
+        viewer: viewer_surface::<viewer::BinaryViewer, crate::plugin::StdioApps>(viewer::create_binary_viewer()),
+        editor: editor_surface::<editor::BinaryEditor, crate::plugin::StdioApps>(editor::create_binary_editor()),
         examples: examples(),
     }
 }

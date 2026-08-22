@@ -1,7 +1,21 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
+use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
-use semio_framework_plugin::{ExecutionMode, Plugin};
+use semio_framework_plugin::plugin_app_close_prelude::*;
+use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+
+//#region 🗃️Apps
+/// 🗃️ Closed runtime app fleet for the FEM 2D and 3D surfaces.
+semio_framework_dispatch_macros::dyn_enum_close! {
+    pub enum FemApps: PluginApp {
+        Fem2dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::fem2d::Fem2dPlayApp>>),
+        Fem2dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::fem2d::Fem2dViewer>>),
+        Fem3dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::fem3d::Fem3dPlayApp>>),
+        Fem3dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::fem3d::Fem3dViewer>>),
+    }
+}
+//#endregion 🗃️Apps
 
 /// 🔌️ Builds the plugin surface for host registration. `.declare_artifact(…)` (ticket
 /// `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME`, `terra-descriptors` packet, following the
@@ -17,8 +31,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// `🗄️stdio`'s own shape: one `OnArtifactKind` event per owned kind, read live from each subset's own
 /// `computation_artifact_kind().id` (never hardcoded), `Isolated` execution (nothing here justifies a
 /// publisher-trusted mode), and one `documents.write` ask covering both editors' persisted mutations.
-pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
-    Plugin::builder("fem")
+pub fn plugin() -> Result<Plugin<FemApps>, semio_framework_plugin::PluginAssemblyError> {
+    Plugin::<FemApps>::builder("fem")
         .label("FEM")
         .version("0.1.0")
         .declare_artifact(crate::artifacts::fem2d::artifact())
@@ -44,22 +58,22 @@ mod surface_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn fem2d_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::fem2d::Fem2dViewer>();
+        assert_viewer_never_mutates::<crate::viewer::fem2d::Fem2dViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn fem2d_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::fem2d::Fem2dPlayApp, crate::viewer::fem2d::Fem2dViewer>();
+        assert_editor_and_viewer_share_dialect::<crate::editor::fem2d::Fem2dPlayApp, crate::viewer::fem2d::Fem2dViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn fem3d_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::fem3d::Fem3dViewer>();
+        assert_viewer_never_mutates::<crate::viewer::fem3d::Fem3dViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn fem3d_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::fem3d::Fem3dPlayApp, crate::viewer::fem3d::Fem3dViewer>();
+        assert_editor_and_viewer_share_dialect::<crate::editor::fem3d::Fem3dPlayApp, crate::viewer::fem3d::Fem3dViewer>().await;
     }
 }
 //#endregion 🧪️SurfaceTests

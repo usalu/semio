@@ -70,7 +70,7 @@ pub async fn note_action(action: &str, args: Option<serde_json::Value>) -> Actio
 /// 🛠️ An internal (non-palette) action declaration — the pointer/gesture/inspector/keybound vocabulary
 /// dispatched by the canvas/panels, never surfaced as a standalone command palette entry.
 async fn note_internal_action(id: &str, label: LocalizedLabel, kind: ActionKind) -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, kind) }
+    ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(id, label, kind) }
 }
 
 /// 🧰️ One canvas utility declaration (id/label/icon reused verbatim from the retired `utilities()`/
@@ -259,7 +259,7 @@ impl ArtifactEditor for NotePlayApp {
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
-pub async fn create_note_app() -> AppDefinition {
+pub fn create_note_app() -> AppDefinition {
     let document = empty_note_snapshot();
     let mut app = Editor::builder(crate::artifacts::note::NOTE_DIALECT)
             .document(["semio", "note"])

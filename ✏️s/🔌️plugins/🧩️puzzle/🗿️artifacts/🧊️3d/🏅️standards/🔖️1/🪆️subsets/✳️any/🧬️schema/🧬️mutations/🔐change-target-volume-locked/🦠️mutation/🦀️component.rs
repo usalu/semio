@@ -17,22 +17,22 @@ pub struct ChangeTargetVolumeLocked {
 impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for ChangeTargetVolumeLocked {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "target-volume", kind: "change-target-volume-locked", record: "ChangedTargetVolumeLocked" };
 
-    async fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
+    fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
+    fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change target volume \"{}\" locked", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn change_target_volume_locked(id: String, new_locked: bool) -> Puzzle3dMutation {
+pub fn change_target_volume_locked(id: String, new_locked: bool) -> Puzzle3dMutation {
     Puzzle3dMutation::ChangeTargetVolumeLocked(ChangeTargetVolumeLocked { id, new_locked })
 }

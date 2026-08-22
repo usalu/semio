@@ -65,7 +65,7 @@ impl ArtifactInferrer for crate::artifacts::jack::standards::v1::subsets::any::s
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.trinity.jack.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `jack_artifact_schema_descriptor`'s registration.
-pub async fn jack_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn jack_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.trinity.jack.inference",
         inference: schema::FacetLeaves {

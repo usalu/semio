@@ -2,35 +2,57 @@
 
 //#region 🔖️Errors
 /// @emoji 🚨️ The one error type every `protocol_*` public fn returns; never leaks `std::io::Error`.
-#[derive(thiserror::Error, Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ProtocolError {
-    #[error(transparent)]
-    Pack(#[from] crate::codec::PackError),
-    #[error("chain mismatch at commit {commit_seq}")]
+    Pack(crate::codec::PackError),
     ChainMismatch { commit_seq: u64 },
-    #[error("torn tail at offset {0}")]
     TornTail(u64),
-    #[error("unknown critical record kind {0:#x}")]
     UnknownCriticalRecord(u8),
-    #[error("dictionary index out of range: {0}")]
     DictMiss(u32),
-    #[error("dictionary out of order: expected base_count {expected}, got {actual}")]
     DictOutOfOrder { expected: u32, actual: u32 },
-    #[error("signature verification required but no verifier supplied")]
     VerifierRequired,
-    #[error("signature invalid for commit {commit_seq}")]
     SignatureInvalid { commit_seq: u64 },
-    #[error("frame back_len mismatch at offset {0}")]
     FrameFraming(u64),
-    #[error("limit exceeded: {0}")]
     LimitExceeded(&'static str),
-    #[error("malformed {what} at offset {offset}: {detail}")]
     Malformed { what: &'static str, offset: u64, detail: String },
-    #[error("io error: {0}")]
     Io(String),
 }
 
-crate::fault_from_thiserror!(ProtocolError, crate::diagnostic::FaultOrigin::Module, "module.protocol");
+impl std::fmt::Display for ProtocolError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Pack(error) => error.fmt(formatter),
+            Self::ChainMismatch { commit_seq } => write!(formatter, "chain mismatch at commit {commit_seq}"),
+            Self::TornTail(offset) => write!(formatter, "torn tail at offset {offset}"),
+            Self::UnknownCriticalRecord(kind) => write!(formatter, "unknown critical record kind {kind:#x}"),
+            Self::DictMiss(index) => write!(formatter, "dictionary index out of range: {index}"),
+            Self::DictOutOfOrder { expected, actual } => write!(formatter, "dictionary out of order: expected base_count {expected}, got {actual}"),
+            Self::VerifierRequired => formatter.write_str("signature verification required but no verifier supplied"),
+            Self::SignatureInvalid { commit_seq } => write!(formatter, "signature invalid for commit {commit_seq}"),
+            Self::FrameFraming(offset) => write!(formatter, "frame back_len mismatch at offset {offset}"),
+            Self::LimitExceeded(limit) => write!(formatter, "limit exceeded: {limit}"),
+            Self::Malformed { what, offset, detail } => write!(formatter, "malformed {what} at offset {offset}: {detail}"),
+            Self::Io(message) => write!(formatter, "io error: {message}"),
+        }
+    }
+}
+
+impl std::error::Error for ProtocolError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Pack(error) => Some(error),
+            _ => None,
+        }
+    }
+}
+
+impl From<crate::codec::PackError> for ProtocolError {
+    fn from(error: crate::codec::PackError) -> Self {
+        Self::Pack(error)
+    }
+}
+
+crate::fault_from_error!(ProtocolError, crate::diagnostic::FaultOrigin::Module, "module.protocol");
 
 //#endregion 🔖️Errors
 
@@ -559,7 +581,7 @@ mod tests {
     //#region 🔖️Scalars
     mod scalars {
         use crate::codec::{ByteReader, ByteWriter};
-        use crate::scalar::scalar::{read_id, read_timestamp, write_id, write_timestamp};
+        use crate::scalar::{read_id, read_timestamp, write_id, write_timestamp};
 
         #[test]
         fn timestamp_round_trips_canonical_utc_no_fraction() {
@@ -641,11 +663,11 @@ mod tests {
         #[test]
         fn id_round_trips_via_edit_ordinal_tag() {
             let mut out = ByteWriter::new();
-            write_id(&mut out, "edit-7", async |_| unreachable!("must not intern"), |id| (id == "edit-7").then_some(7)).unwrap();
+            write_id(&mut out, "edit-7", |_| unreachable!("must not intern"), |id| (id == "edit-7").then_some(7)).unwrap();
             let bytes = out.into_bytes();
             assert_eq!(bytes[0], 3, "tag byte must be 3 (edit-ordinal)");
             let mut reader = ByteReader::new(&bytes);
-            let decoded = read_id(&mut reader, async |_| unreachable!("must not resolve"), |ordinal| if ordinal == 7 { Ok("edit-7") } else { Err(crate::codec::PackError::Truncated(0)) }).unwrap();
+            let decoded = read_id(&mut reader, |_| unreachable!("must not resolve"), |ordinal| if ordinal == 7 { Ok("edit-7") } else { Err(crate::codec::PackError::Truncated(0)) }).unwrap();
             assert_eq!(decoded, "edit-7");
         }
 
@@ -656,7 +678,7 @@ mod tests {
             write_id(
                 &mut out,
                 id,
-                async |s| {
+                |s| {
                     assert_eq!(s, "actor");
                     0
                 },
@@ -666,7 +688,7 @@ mod tests {
             let bytes = out.into_bytes();
             assert_eq!(bytes[0], 2, "tag byte must be 2 (prefix+uuid)");
             let mut reader = ByteReader::new(&bytes);
-            let decoded = read_id(&mut reader, async |idx| if idx == 0 { Ok("actor") } else { Err(crate::codec::PackError::Truncated(0)) }, |_| unreachable!("must not resolve ordinal")).unwrap();
+            let decoded = read_id(&mut reader, |idx| if idx == 0 { Ok("actor") } else { Err(crate::codec::PackError::Truncated(0)) }, |_| unreachable!("must not resolve ordinal")).unwrap();
             assert_eq!(decoded, id);
         }
 
@@ -676,7 +698,7 @@ mod tests {
             write_id(
                 &mut out,
                 "hello-world",
-                async |s| {
+                |s| {
                     assert_eq!(s, "hello-world");
                     42
                 },
@@ -686,7 +708,7 @@ mod tests {
             let bytes = out.into_bytes();
             assert_eq!(bytes[0], 1, "tag byte must be 1 (dictref)");
             let mut reader = ByteReader::new(&bytes);
-            let decoded = read_id(&mut reader, async |idx| if idx == 42 { Ok("hello-world") } else { Err(crate::codec::PackError::Truncated(0)) }, |_| unreachable!("must not resolve ordinal")).unwrap();
+            let decoded = read_id(&mut reader, |idx| if idx == 42 { Ok("hello-world") } else { Err(crate::codec::PackError::Truncated(0)) }, |_| unreachable!("must not resolve ordinal")).unwrap();
             assert_eq!(decoded, "hello-world");
         }
 
@@ -698,7 +720,7 @@ mod tests {
             out.write_bytes(b"hello");
             let bytes = out.into_bytes();
             let mut reader = ByteReader::new(&bytes);
-            let decoded = read_id(&mut reader, async |_| unreachable!(), |_| unreachable!()).unwrap();
+            let decoded = read_id(&mut reader, |_| unreachable!(), |_| unreachable!()).unwrap();
             assert_eq!(decoded, "hello");
         }
 
@@ -707,7 +729,7 @@ mod tests {
             let mut dict: Vec<String> = Vec::new();
             let mut out = ByteWriter::new();
             {
-                let mut intern = async |s: &str| {
+                let mut intern = |s: &str| {
                     if let Some(pos) = dict.iter().position(|e| e == s) {
                         pos as u32
                     } else {

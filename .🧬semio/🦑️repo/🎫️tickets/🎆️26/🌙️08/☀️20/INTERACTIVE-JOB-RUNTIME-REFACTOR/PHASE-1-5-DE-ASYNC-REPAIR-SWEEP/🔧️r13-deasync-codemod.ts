@@ -2833,29 +2833,49 @@ function stripStackedAwaits(dryRun: boolean): void {
 
 //#region Audited pure-file de-async
 
-function deasyncPureFile(file: string, crate: string, dryRun: boolean, startLine = 1, endLine = Number.MAX_SAFE_INTEGER): void {
+function deasyncPureFile(file: string, crate: string, dryRun: boolean, startLine = 1, endLine = Number.MAX_SAFE_INTEGER, stripBoxPin = false): void {
   const absPath = resolveFilePath(file);
   if (!isEditableFile(absPath) || !existsSync(absPath)) throw new Error(`pure-file target is not an editable repo file: ${absPath}`);
   const runId = randomRunId();
   const { src, clean } = loadFile(absPath);
   const edits: PlannedEdit[] = [];
+  const lineStarts = [0];
+  for (let index = 0; index < src.length; index++) if (src[index] === "\n") lineStarts.push(index + 1);
+  const rangeStart = lineStarts[Math.max(0, startLine - 1)] ?? src.length;
+  const rangeEnd = lineStarts[Math.min(lineStarts.length, endLine)] ?? src.length;
   for (const match of clean.matchAll(/\basync\s+fn\b/g)) {
     const start = match.index!;
-    const line = lineOfOffset(src, start);
-    if (line < startLine || line > endLine) continue;
+    if (start < rangeStart || start >= rangeEnd) continue;
     edits.push({ file: absPath, start, end: start + "async ".length, before: "async ", after: "", kind: "def-remove-async", diagnosticCode: null, diagnosticMessage: "audited pure-file de-async: exact async-fn declaration token" });
   }
   for (const match of clean.matchAll(/\.await\b/g)) {
     const start = match.index!;
-    const line = lineOfOffset(src, start);
-    if (line < startLine || line > endLine) continue;
+    if (start < rangeStart || start >= rangeEnd) continue;
     edits.push({ file: absPath, start, end: start + ".await".length, before: ".await", after: "", kind: "call-remove-await", diagnosticCode: null, diagnosticMessage: "audited pure-file de-async: exact await-expression token" });
   }
   for (const match of src.matchAll(/#\[semio_framework_async_macros::async_test\]/g)) {
     const start = match.index!;
-    const line = lineOfOffset(src, start);
-    if (line < startLine || line > endLine) continue;
+    if (start < rangeStart || start >= rangeEnd) continue;
     edits.push({ file: absPath, start, end: start + match[0].length, before: match[0], after: "#[test]", kind: "test-sync-attribute", diagnosticCode: null, diagnosticMessage: "audited pure-file de-async: sync test attribute" });
+  }
+  if (stripBoxPin) {
+    for (const match of clean.matchAll(/Box::pin\(/g)) {
+      const start = match.index!;
+      if (start < rangeStart || start >= rangeEnd) continue;
+      const open = start + "Box::pin".length;
+      let depth = 0;
+      let close = -1;
+      for (let index = open; index < clean.length; index++) {
+        if (clean[index] === "(") depth++;
+        else if (clean[index] === ")" && --depth === 0) {
+          close = index;
+          break;
+        }
+      }
+      if (close < 0) throw new Error(`pure-file target has an unmatched Box::pin wrapper at ${absPath}:${start}`);
+      edits.push({ file: absPath, start, end: open + 1, before: "Box::pin(", after: "", kind: "call-remove-box-pin-wrapper", diagnosticCode: null, diagnosticMessage: "audited pure-file de-async: remove recursive-future Box::pin opener" });
+      edits.push({ file: absPath, start: close, end: close + 1, before: ")", after: "", kind: "call-remove-box-pin-wrapper", diagnosticCode: null, diagnosticMessage: "audited pure-file de-async: remove recursive-future Box::pin closer" });
+    }
   }
   const byFile = dedupeAndOrderEdits(edits);
   console.log(`[pure-file ${runId}] ${absPath}: ${edits.length} exact syntax-token edits (dryRun=${dryRun})`);
@@ -2910,7 +2930,7 @@ async function main(): Promise<void> {
     const file = String(opts.file ?? "");
     const crate = String(opts.crate ?? "");
     if (!file || !crate) throw new Error("--file=<repo-relative-path> and --crate=<package-name> required");
-    deasyncPureFile(file, crate, !!opts["dry-run"], opts["start-line"] ? Number(opts["start-line"]) : 1, opts["end-line"] ? Number(opts["end-line"]) : Number.MAX_SAFE_INTEGER);
+    deasyncPureFile(file, crate, !!opts["dry-run"], opts["start-line"] ? Number(opts["start-line"]) : 1, opts["end-line"] ? Number(opts["end-line"]) : Number.MAX_SAFE_INTEGER, !!opts["strip-box-pin"]);
     return;
   }
   if (cmd === "revert") {

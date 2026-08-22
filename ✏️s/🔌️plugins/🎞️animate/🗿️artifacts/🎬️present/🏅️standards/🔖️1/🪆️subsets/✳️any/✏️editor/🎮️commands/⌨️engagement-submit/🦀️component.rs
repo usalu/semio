@@ -1,5 +1,7 @@
 //! ⌨️ ⌨️ Animate present app commands command — `engagement-submit`.
 
+#![allow(clippy::result_large_err)]
+
 use crate::artifacts::present::mutations::create_tile::mutation::CreateTile;
 use crate::artifacts::present::mutations::replace_tiles::mutation::ReplaceTiles;
 use crate::artifacts::present::op::PresentMutation;
@@ -16,7 +18,7 @@ pub struct EngagementSubmit {
     pub value: String,
 }
 
-pub async fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+pub fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     let deck = doc.snapshot;
     let trimmed = payload.value.trim();
     let (deck_source, deck_tiles) = crate::artifacts::present::present_working_scene(deck);
@@ -63,32 +65,32 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn engagement_input_stores_draft_and_submit_parses_grid_pattern() {
-        let mut app = present_app();
-        dispatch(&mut app, PresentCommand::EngagementInput(engagement_input::EngagementInput { value: "2x3".into() }));
-        dispatch(&mut app, PresentCommand::EngagementSubmit(EngagementSubmit { value: "2x3".into() }));
-        assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.len(), 6, "2x3 grid pattern seeds 6 tiles");
+        let mut app = present_app().await;
+        dispatch(&mut app, PresentCommand::EngagementInput(engagement_input::EngagementInput { value: "2x3".into() })).await;
+        dispatch(&mut app, PresentCommand::EngagementSubmit(EngagementSubmit { value: "2x3".into() })).await;
+        assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().await.expect("projection")).1.len(), 6, "2x3 grid pattern seeds 6 tiles");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn engagement_submit_add_clear_and_copy_keywords() {
         use semio_framework_plugin::testkit::meta;
-        let mut app = present_app();
-        dispatch(&mut app, PresentCommand::EngagementSubmit(EngagementSubmit { value: "add".into() }));
-        assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.len(), 1);
+        let mut app = present_app().await;
+        dispatch(&mut app, PresentCommand::EngagementSubmit(EngagementSubmit { value: "add".into() })).await;
+        assert_eq!(crate::artifacts::present::present_working_scene(&app.snapshot().await.expect("projection")).1.len(), 1);
 
-        dispatch(&mut app, PresentCommand::EngagementSubmit(EngagementSubmit { value: "clear".into() }));
-        assert!(crate::artifacts::present::present_working_scene(&app.snapshot().expect("projection")).1.is_empty());
+        dispatch(&mut app, PresentCommand::EngagementSubmit(EngagementSubmit { value: "clear".into() })).await;
+        assert!(crate::artifacts::present::present_working_scene(&app.snapshot().await.expect("projection")).1.is_empty());
 
-        app.dispatch_typed(PresentCommand::AddTile(crate::editor::animate::commands::add_tile::AddTile { crop: None }), &meta("local")).expect("seed for copy");
-        let copy_result = app.dispatch_typed(PresentCommand::EngagementSubmit(EngagementSubmit { value: "copy prompt".into() }), &meta("local")).expect("copy keyword");
+        app.dispatch_typed(PresentCommand::AddTile(crate::editor::animate::commands::add_tile::AddTile { crop: None }), &meta("local")).await.expect("seed for copy");
+        let copy_result = app.dispatch_typed(PresentCommand::EngagementSubmit(EngagementSubmit { value: "copy prompt".into() }), &meta("local")).await.expect("copy keyword");
         assert!(matches!(copy_result.requested_effects.as_slice(), [Effect::DownloadMediaExport { .. }]));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn engagement_submit_unrecognized_input_is_a_no_op() {
         use semio_framework_plugin::testkit::meta;
-        let mut app = present_app();
-        let result = app.dispatch_typed(PresentCommand::EngagementSubmit(EngagementSubmit { value: "gibberish".into() }), &meta("local")).expect("unrecognized");
+        let mut app = present_app().await;
+        let result = app.dispatch_typed(PresentCommand::EngagementSubmit(EngagementSubmit { value: "gibberish".into() }), &meta("local")).await.expect("unrecognized");
         assert!(result.mutations.is_empty());
         assert!(result.requested_effects.is_empty());
     }

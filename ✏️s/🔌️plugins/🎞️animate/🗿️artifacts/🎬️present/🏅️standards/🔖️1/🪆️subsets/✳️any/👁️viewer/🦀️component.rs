@@ -9,7 +9,7 @@ use crate::viewer::animate::modes::view;
 use crate::viewer::animate::modes::view::windows::tile_editor;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::ArtifactViewer;
-use semio_framework_plugin::{ArtifactView, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ComponentTree, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command
@@ -23,10 +23,10 @@ pub enum AnimateViewCommand {
 }
 
 impl protocol::OpBinary for AnimateViewCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(AnimateViewCommand::Noop)
     }
 }
@@ -62,17 +62,17 @@ impl ArtifactViewer for AnimatePresentViewer {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
-        match body_key {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> ComponentTree {
+        semio_framework_plugin::built_to_component_tree(match body_key {
             tile_editor::BODY_KEY => tile_editor::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
+        })
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_animate_present_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_animate_present_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(ANIMATE_DIALECT)
         .document(["semio", "animate"])
         .icon_id("animate")
@@ -89,15 +89,15 @@ pub async fn create_animate_present_viewer() -> semio_framework_plugin::AppDefin
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn create_animate_present_viewer_builds_a_definition_for_the_viewer_role() {
+    #[test]
+    fn create_animate_present_viewer_builds_a_definition_for_the_viewer_role() {
         let def = create_animate_present_viewer();
         assert_eq!(def.role, semio_framework::AppRole::Viewer);
         assert_eq!(def.dialect, ANIMATE_DIALECT.into());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn viewer_dialect_matches_the_artifact_coordinate() {
+    #[test]
+    fn viewer_dialect_matches_the_artifact_coordinate() {
         assert_eq!(<AnimatePresentViewer as ArtifactViewer>::DIALECT, ANIMATE_DIALECT);
     }
 }

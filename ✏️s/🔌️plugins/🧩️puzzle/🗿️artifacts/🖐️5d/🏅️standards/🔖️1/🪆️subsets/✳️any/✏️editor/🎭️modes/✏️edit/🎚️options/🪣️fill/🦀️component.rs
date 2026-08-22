@@ -12,7 +12,7 @@ use semio_framework_plugin::WindowMeasure;
 
 /// 🪣️ Fill-count slider measure — the fill-utility's core parameter (`setFillCount` reads
 /// `count`-or-`value`, so the slider's `{value}` payload preserves the action semantics).
-async fn fill_count_measure(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowMeasure {
+fn fill_count_measure(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowMeasure {
     WindowMeasure::Slider {
         id: "puzzle5d-fill-count".into(),
         label: Some(labels.count.into()),
@@ -30,7 +30,7 @@ async fn fill_count_measure(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -
 }
 
 /// 🪣️ The Fill utility's Utility Options group, collected by both windows' `window_measures()`.
-pub async fn measure(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowMeasure {
+pub fn measure(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowMeasure {
     WindowMeasure::Group {
         id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-utility-options-fill"),
         label: labels.fill.into(),

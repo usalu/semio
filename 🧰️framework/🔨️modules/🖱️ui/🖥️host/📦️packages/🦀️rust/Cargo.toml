@@ -24,6 +24,7 @@ raw-window-handle = "0.6"
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 winit = { version = "0.30.12", default-features = false, features = ["rwh_06"] }
 arboard = "3"
+rfd = "0.15.4"
 semio-framework-job = { path = "../../../../🧵️job/📦️packages/🦀️rust" }
 
 [target.'cfg(target_os = "macos")'.dependencies]

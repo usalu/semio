@@ -10,7 +10,7 @@
 
 import { Toggle } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "../../🧪️story";
 
 // 🔷️#region 🗡️Toggle
 const Box = createIconComponent("box");

@@ -13,25 +13,8 @@
 //! a genuinely generic geometry-kernel working type shared by `booleans`/`trace` and unrelated
 //! plugins (e.g. `🖍️draw`'s own boolean/trace bridging), not the drawing artifact's own schema.
 
-pub mod compute {
-    // #region compute
-    //! ⏳️ Synchronously wait for async kernel calls.
-
-    use std::future::Future;
-
-    /// ⏳️ Block the current thread until an async kernel call completes.
-    pub async fn block_on<F>(future: F) -> F::Output
-    where
-        F: Future,
-    {
-        pollster::block_on(future)
-    }
-    // #endregion compute
-}
-
-pub use compute::block_on;
-
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 // #region 🔖️Types
 /// 📐️ Column vector `[x,y]`.
@@ -51,14 +34,23 @@ pub enum PathSegment {
 
 // #region ⚠️ Errors
 /// ⚠️ Geometry-kernel operation error.
-#[derive(Clone, Debug, PartialEq, thiserror::Error)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum DrawingError {
-    #[error("invalid input: {0}")]
     InvalidInput(String),
-    #[error("missing handle: {0}")]
     MissingHandle(String),
-    #[error("operation failed: {0}")]
     Operation(String),
 }
+
+impl fmt::Display for DrawingError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::InvalidInput(message) => write!(formatter, "invalid input: {message}"),
+            Self::MissingHandle(handle) => write!(formatter, "missing handle: {handle}"),
+            Self::Operation(message) => write!(formatter, "operation failed: {message}"),
+        }
+    }
+}
+
+impl std::error::Error for DrawingError {}
 // #endregion ⚠️ Errors
 // #endregion 🔖️Types

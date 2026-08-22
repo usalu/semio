@@ -361,7 +361,7 @@ impl ArtifactEditor for Procedural2dPlayApp {
 pub async fn create_procedural2d_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(PROCEDURAL2D_DIALECT)
         .document(["semio", "procedural", "2d"])
-        .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View) })
+        .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View) })
         .artifact_kind(artifact_kind())
         .icon_id("procedural2d")
         .mode_def(edit::definition())
@@ -380,13 +380,13 @@ pub async fn create_procedural2d_app() -> semio_framework_plugin::AppDefinition 
         .panel_tab_def(inspection_panel::definition())
         // ✏️ Document-mutating operations — dispatched as VCS operations with a true inverse.
         // 🗂️ Referenced by `Procedural2dPlayApp::context_menu` — categorized for grouped-context-menu disclosure.
-        .action_with(ActionDefinition::new_catalog("nodeGraphEdit", LocalizedLabel::native("Edit Graph", "Graph bearbeiten"), ActionKind::Mutation).with_category("selection"))
+        .action_with(ActionDefinition::bounded_catalog("nodeGraphEdit", LocalizedLabel::native("Edit Graph", "Graph bearbeiten"), ActionKind::Mutation).with_category("selection"))
         .mutation("moveMediaNode", LocalizedLabel::native("Move Node", "Knoten verschieben"))
-        .action_with(ActionDefinition::new_catalog("addWidget", LocalizedLabel::native("Add Widget", "Element hinzufügen"), ActionKind::Mutation).with_category("create"))
+        .action_with(ActionDefinition::bounded_catalog("addWidget", LocalizedLabel::native("Add Widget", "Element hinzufügen"), ActionKind::Mutation).with_category("create"))
         .mutation("removeWidget", LocalizedLabel::native("Remove Widget", "Element entfernen"))
         .mutation("connectMediaPorts", LocalizedLabel::native("Connect Ports", "Ports verbinden"))
-        .action_with(ActionDefinition::new_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation).with_category("transform"))
-        .action_with(ActionDefinition::new_catalog("addGeneration", LocalizedLabel::native("Add Generation", "Generation hinzufügen"), ActionKind::Mutation).with_category("create"))
+        .action_with(ActionDefinition::bounded_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation).with_category("transform"))
+        .action_with(ActionDefinition::bounded_catalog("addGeneration", LocalizedLabel::native("Add Generation", "Generation hinzufügen"), ActionKind::Mutation).with_category("create"))
         .mutation("removeGeneration", LocalizedLabel::native("Remove Generation", "Generation entfernen"))
         .mutation("renameGeneration", LocalizedLabel::native("Rename Generation", "Generation umbenennen"))
         .mutation("updateGenerationValues", LocalizedLabel::native("Update Generation Values", "Generationswerte aktualisieren"))
@@ -394,14 +394,14 @@ pub async fn create_procedural2d_app() -> semio_framework_plugin::AppDefinition 
         // (emit no operations). Selection/hover are the framework's `graph` interaction domain now
         // (`.interaction(...)` below) — the six framework verbs auto-inject.
         .view_action("nodeGraphViewport", LocalizedLabel::native("Set Viewport", "Ansicht festlegen"))
-        .action_with(ActionDefinition::new_catalog("setShowMode", LocalizedLabel::native("Set Show Mode", "Anzeigemodus festlegen"), ActionKind::View).with_category("mode"))
-        .action_with(ActionDefinition::new_catalog("generate", LocalizedLabel::native("Generate", "Generieren"), ActionKind::View).with_category("actions"))
+        .action_with(ActionDefinition::bounded_catalog("setShowMode", LocalizedLabel::native("Set Show Mode", "Anzeigemodus festlegen"), ActionKind::View).with_category("mode"))
+        .action_with(ActionDefinition::bounded_catalog("generate", LocalizedLabel::native("Generate", "Generieren"), ActionKind::View).with_category("actions"))
         .view_action("setEvalOutputs", LocalizedLabel::native("Set Eval Outputs", "Auswertungsausgaben festlegen"))
         .view_action("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Canvas-Zeiger gedrückt"))
         .view_action("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Canvas-Zeiger bewegt"))
         .view_action("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Canvas-Zeiger losgelassen"))
         .view_action("canvasWheel", LocalizedLabel::native("Canvas Wheel", "Canvas-Mausrad"))
-        .action_with(ActionDefinition::new_catalog("selectGeneration", LocalizedLabel::native("Select Generation", "Generation auswählen"), ActionKind::View).with_category("methods"))
+        .action_with(ActionDefinition::bounded_catalog("selectGeneration", LocalizedLabel::native("Select Generation", "Generation auswählen"), ActionKind::View).with_category("methods"))
         // 📝️ Staged argument form for the palette-visible add-widget action (default materialized host-side).
         .action_args("addWidget", vec![
             ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![

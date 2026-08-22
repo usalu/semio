@@ -32,12 +32,12 @@ use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, 
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
 
-async fn examples() -> &'static [ExampleSource] {
+fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
     EXAMPLES.get_or_init(|| vec![crate::examples::puzzle3d::nakagin_capsule_tower::SOURCE.clone(), crate::examples::puzzle3d::concrete_forest::SOURCE.clone()]).as_slice()
 }
 
-async fn inference_descriptors() -> &'static [::semio_framework_schema::ArtifactInferenceDescriptor] {
+fn inference_descriptors() -> &'static [::semio_framework_schema::ArtifactInferenceDescriptor] {
     static DESCRIPTORS: OnceLock<Vec<::semio_framework_schema::ArtifactInferenceDescriptor>> = OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::puzzle3d_artifact_inference_descriptor()]).as_slice()
 }
@@ -45,7 +45,7 @@ async fn inference_descriptors() -> &'static [::semio_framework_schema::Artifact
 /// 🚪️ See this file's own module doc for why this is not `io::io()`. `pilot_languages()` indices
 /// are fixed by that function's own literal `vec![document, op, diff, pack, spr]` order — the same
 /// role→slot mapping `🗒️note`'s `io()` uses for its own five-language array.
-async fn io_declaration() -> IoDeclaration {
+fn io_declaration() -> IoDeclaration {
     let langs = crate::artifacts::puzzle3d::pilot_languages();
     IoDeclaration {
         native: NativeCodecs {
@@ -60,13 +60,13 @@ async fn io_declaration() -> IoDeclaration {
 }
 
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.
-pub async fn subset() -> SubsetDeclaration {
+pub fn subset() -> SubsetDeclaration<crate::PuzzleApps> {
     SubsetDeclaration {
         dialect: PUZZLE3D_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::puzzle3d_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io_declaration(),
-        viewer: viewer_surface::<viewer::Puzzle3dViewer>(viewer::create_puzzle3d_viewer()),
-        editor: editor_surface::<editor::Puzzle3dPlayApp>(editor::create_puzzle3d_app()),
+        viewer: viewer_surface::<viewer::Puzzle3dViewer, crate::PuzzleApps>(viewer::create_puzzle3d_viewer()),
+        editor: editor_surface::<editor::Puzzle3dPlayApp, crate::PuzzleApps>(editor::create_puzzle3d_app()),
         examples: examples(),
     }
 }

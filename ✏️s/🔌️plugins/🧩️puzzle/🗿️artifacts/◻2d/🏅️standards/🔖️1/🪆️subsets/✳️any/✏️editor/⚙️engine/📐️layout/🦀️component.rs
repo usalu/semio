@@ -4,13 +4,13 @@
 
 use crate::editor::puzzle2d::engine::{apply_normal_undirected_redraw_layout_to_fixture_v1_json, apply_ported_redraw_layout_to_fixture_v1_json};
 
-async fn is_undirected_fixture_schema(schema: &str) -> bool {
+fn is_undirected_fixture_schema(schema: &str) -> bool {
     matches!(schema, "reasoning.mindmap.fixture" | "reasoning.wires.fixture")
 }
 
 /// 🔀️ Picks the undirected-force-graph vs. ported-redraw layout path for a fixture — pure compute,
 /// called by the `framework/surface/board-2d` wasm session's `boardRedrawLayoutFixtureJson` export.
-pub async fn redraw_layout_fixture_json(fixture_json: &str, options_json: &str) -> Result<String, String> {
+pub fn redraw_layout_fixture_json(fixture_json: &str, options_json: &str) -> Result<String, String> {
     let fixture: serde_json::Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
     let schema = fixture.get("schema").and_then(|v| v.as_str()).unwrap_or("");
     let opts: serde_json::Value = serde_json::from_str(options_json).map_err(|e| e.to_string())?;
@@ -35,8 +35,8 @@ mod tests {
     use serde_json::json;
     use std::collections::HashMap;
 
-    #[semio_framework_async_macros::async_test]
-    async fn force_graph_spreads_two_linked_circles_along_x() {
+    #[test]
+    fn force_graph_spreads_two_linked_circles_along_x() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -74,8 +74,8 @@ mod tests {
         assert!((bx - ax).abs() > 80.0, "expected horizontal separation, got a={ax} b={bx}");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn force_graph_pins_locked_node_positions() {
+    #[test]
+    fn force_graph_pins_locked_node_positions() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -116,8 +116,8 @@ mod tests {
         assert!((bx - 40.0).abs() > 25.0, "expected free node to move, bx={bx}");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn redraw_force_graph_top_level_locked_node_ids_pins() {
+    #[test]
+    fn redraw_force_graph_top_level_locked_node_ids_pins() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -159,8 +159,8 @@ mod tests {
         assert!((nodes[0]["y"].as_f64().unwrap() - 0.0).abs() < 1e-9);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn redraw_force_graph_mindmap_schema_uses_undirected_layout() {
+    #[test]
+    fn redraw_force_graph_mindmap_schema_uses_undirected_layout() {
         let fixture = json!({
             "schema": "reasoning.mindmap.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -189,8 +189,8 @@ mod tests {
         assert!((bx - ax).abs() > 80.0, "expected mindmap undirected springs, got a={ax} b={bx}");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn force_graph_normal_mode_node_id_edges_apply_spring_forces() {
+    #[test]
+    fn force_graph_normal_mode_node_id_edges_apply_spring_forces() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -216,14 +216,14 @@ mod tests {
         assert!((bx - ax).abs() > 80.0, "expected node-id edge springs to spread nodes, got a={ax} b={bx}");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn force_graph_rejects_bad_schema() {
+    #[test]
+    fn force_graph_rejects_bad_schema() {
         let err = apply_force_graph_layout_to_fixture_v1_json(r#"{"schema":"x","nodes":[],"edges":[]}"#, "{}").unwrap_err();
         assert!(err.contains("schema"));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn force_graph_barnes_hut_many_bodies_yields_finite_coordinates() {
+    #[test]
+    fn force_graph_barnes_hut_many_bodies_yields_finite_coordinates() {
         let mut nodes = Vec::new();
         let mut edges = Vec::new();
         for k in 0..64 {
@@ -274,8 +274,8 @@ mod tests {
         assert!(x_span > 40.0 && y_span > 35.0, "expected BH layout to spread graph, x_span={x_span} y_span={y_span}");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn force_graph_bh_layout_is_deterministic_for_fixed_seed() {
+    #[test]
+    fn force_graph_bh_layout_is_deterministic_for_fixed_seed() {
         let mut nodes = Vec::new();
         let mut edges = Vec::new();
         for k in 0..36 {
@@ -319,8 +319,8 @@ mod tests {
         assert_eq!(out_a, out_b, "BH path must be bitwise reproducible for identical inputs");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn force_graph_pairwise_layout_is_deterministic_for_fixed_seed() {
+    #[test]
+    fn force_graph_pairwise_layout_is_deterministic_for_fixed_seed() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -350,8 +350,8 @@ mod tests {
         assert_eq!(out_a, out_b);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn force_graph_clamped_barnes_hut_theta_runs_without_error() {
+    #[test]
+    fn force_graph_clamped_barnes_hut_theta_runs_without_error() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -383,8 +383,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn redraw_force_graph_wraps_flat_options() {
+    #[test]
+    fn redraw_force_graph_wraps_flat_options() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -425,8 +425,8 @@ mod tests {
         assert!((bx - ax).abs() > 80.0);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn edge_handle_snap_sets_circle_handle_angles_on_center_line() {
+    #[test]
+    fn edge_handle_snap_sets_circle_handle_angles_on_center_line() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -457,8 +457,8 @@ mod tests {
         assert!((ang_b - std::f64::consts::PI).abs() < 1e-6, "expected west on b, got {ang_b}");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn redraw_force_graph_with_snap_sets_handle_angles() {
+    #[test]
+    fn redraw_force_graph_with_snap_sets_handle_angles() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -514,8 +514,8 @@ mod tests {
         assert!(wrap_diff(ang_b, exp_b) < 0.03, "b angle {ang_b} vs exp {exp_b}");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn force_graph_accepts_logical_nodes_without_xy() {
+    #[test]
+    fn force_graph_accepts_logical_nodes_without_xy() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -548,8 +548,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn hierarchical_tree_normal_mode_node_id_edges_stacks_by_depth() {
+    #[test]
+    fn hierarchical_tree_normal_mode_node_id_edges_stacks_by_depth() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -584,8 +584,8 @@ mod tests {
         assert!((c1y - c2y).abs() < 1e-3, "siblings share row");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn hierarchical_tree_stacks_by_depth() {
+    #[test]
+    fn hierarchical_tree_stacks_by_depth() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -633,8 +633,8 @@ mod tests {
         assert!((c1y - c2y).abs() < 1e-3, "siblings share row");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn hierarchical_tree_pins_locked_root_coordinates() {
+    #[test]
+    fn hierarchical_tree_pins_locked_root_coordinates() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -689,8 +689,8 @@ mod tests {
         assert!((c1y - ry).abs() > 40.0, "children laid relative to tree, root stayed pinned");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn redraw_hierarchical_tree_nested_locked_node_ids_pins() {
+    #[test]
+    fn redraw_hierarchical_tree_nested_locked_node_ids_pins() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -735,8 +735,8 @@ mod tests {
         assert!((rx - 77.0).abs() < 1e-3 && (ry - 12.0).abs() < 1e-3, "nested locked list ignored: {rx},{ry}");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn hierarchical_tree_right_places_children_larger_x_than_root() {
+    #[test]
+    fn hierarchical_tree_right_places_children_larger_x_than_root() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -773,8 +773,8 @@ mod tests {
         assert!(c1x > rx + 40.0, "expected child to the right of root");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn hierarchical_tree_upwards_places_children_smaller_y_than_root() {
+    #[test]
+    fn hierarchical_tree_upwards_places_children_smaller_y_than_root() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -811,8 +811,8 @@ mod tests {
         assert!(c1y < ry - 40.0, "expected child above root (smaller y)");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn hierarchical_tree_rejects_unknown_direction() {
+    #[test]
+    fn hierarchical_tree_rejects_unknown_direction() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
@@ -834,8 +834,8 @@ mod tests {
         assert!(err.contains("unknown hierarchical tree direction"));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn redraw_rejects_unknown_mode() {
+    #[test]
+    fn redraw_rejects_unknown_mode() {
         let fixture = json!({
             "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },

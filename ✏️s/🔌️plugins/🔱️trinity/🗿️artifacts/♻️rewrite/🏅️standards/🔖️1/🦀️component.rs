@@ -11,6 +11,6 @@ use semio_framework_plugin::StandardId;
 /// codec id `trinity.rewrite.rule:rewrite` and an extension `rewrite`, never a mime type), matching
 /// `🗒️note`/`🖍️draw`'s identical documented deviation. `extensions: ["rewrite"]` is the real,
 /// carried-over value (the codec row's own claim).
-pub async fn standard() -> StandardDeclaration {
+pub fn standard() -> StandardDeclaration<crate::TrinityApps> {
     StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.rewrite+json"], extensions: &["rewrite"] }, subsets: vec![subsets::any::subset()] }
 }

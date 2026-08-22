@@ -77,7 +77,7 @@ impl ArtifactViewer for TrinityJackViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_trinity_jack_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_trinity_jack_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(TRINITY_JACK_DIALECT)
         .document(["semio", "trinity", "jack"])
         .icon_id("trinity")

@@ -47,7 +47,7 @@ function CommandDialog({
   description?: string;
   className?: string;
   showCloseButton?: boolean;
-  /** @emoji 🔍️ When false, host filters items (e.g. Fuse) and cmdk must not re-filter. */
+  /** @emoji 🔍️ When false, the host ranks items and cmdk must not re-filter. */
   shouldFilter?: boolean;
 }) {
   const commandPaletteLabel = useLabel("ui.common.commandPalette");

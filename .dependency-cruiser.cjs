@@ -1,8 +1,21 @@
 /** @type {import('dependency-cruiser').IConfiguration} */
 const fs = require("fs");
+const { builtinModules } = require("module");
 const path = require("path");
 
 const TECHNOLOGIES = ["compose", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand"];
+const BOOTSTRAP_TOOLING_ENTRY_PATH = "(^|/)(?:📜️script\\.ts|(?:⚙️|🧪️)?(?:vite|vitest)\\.config\\.[cm]?[jt]s)$";
+const RENDERER_HOST_ROOT = "^🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/(📦️packages/🟦️typescript/🎯️targets/⚛️react|🧱️elements)/";
+const RESOLVED_NODE_BUILTIN_PATH = `^(?:${[...new Set(builtinModules.map((name) => name.replace(/^node:/, "")))].map(escapeRegex).join("|")})(?:$|/)`;
+const RENDERER_HOST_ALLOWED_RESOLVED_PATHS = [
+  RENDERER_HOST_ROOT,
+  "^🧰️framework/🔨️modules/🖱️ui/",
+  "^🧰️framework/📦️packages/",
+  "^node_modules/react(?:-dom)?/",
+  "^(?:node:|vitest/)",
+  "^node_modules/(?:vite|vitest)/",
+  RESOLVED_NODE_BUILTIN_PATH,
+];
 
 /** 🔌️ Derived from the live `✏️s/🔌️plugins` directory listing rather than hardcoded, so the
  * cross-plugin isolation matrix below self-corrects as plugins are added, renamed, or removed. */
@@ -23,6 +36,62 @@ const TAXONOMY = JSON.parse(
 function escapeRegex(literal) {
   return literal.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
+
+/** 🧪️ Fails config loading if the two resolver-boundary allowlists regress into broad source or vendor exclusions. */
+function assertFocusedBoundarySemantics() {
+  const bootstrap = new RegExp(BOOTSTRAP_TOOLING_ENTRY_PATH, "u");
+  const approvedBootstrap = [
+    "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/📜️script.ts",
+    "compose/client/lib/sketchpad/doc/js/vite.config.ts",
+    "♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts",
+    "♻️mit-bestand/🎤️präsentation/📦️packages/🟦️typescript/🧪️vitest.config.ts",
+  ];
+  const runtimeSources = [
+    "compose/client/lib/sketchpad/js/boot.tsx",
+    "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/📦️index.ts",
+    "🌎️hub/🔨️modules/example/🟦️component.ts",
+    "♻️mit-bestand/🧺️demonstrator/🤖️generated/🟦️plugins.ts",
+    "♻️mit-bestand/🧺️demonstrator/runtime.config.ts",
+  ];
+  if (approvedBootstrap.some((candidate) => !bootstrap.test(candidate)) || runtimeSources.some((candidate) => bootstrap.test(candidate))) {
+    throw new Error("dependency-cruiser bootstrap-tooling boundary is broader or narrower than its approved entry points");
+  }
+  const crossRules = crossTechnologyRules();
+  if (crossRules.length !== TECHNOLOGIES.length * (TECHNOLOGIES.length - 1) || crossRules.some((rule) => rule.from.pathNot !== BOOTSTRAP_TOOLING_ENTRY_PATH)) {
+    throw new Error("dependency-cruiser bootstrap-tooling boundary is not applied to every cross-technology direction");
+  }
+
+  const rendererRule = rendererHostsOnlyUiRule();
+  if (rendererRule.from.path !== RENDERER_HOST_ROOT || rendererRule.to.pathNot !== RENDERER_HOST_ALLOWED_RESOLVED_PATHS) {
+    throw new Error("dependency-cruiser renderer-host rule is not wired to its resolved-path allowlist");
+  }
+  const rendererAllows = rendererRule.to.pathNot.map((pattern) => new RegExp(pattern, "u"));
+  const allowedRendererTargets = [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx",
+    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts",
+    "🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts",
+    "node_modules/react/index.js",
+    "node_modules/react-dom/client.js",
+    "node_modules/vitest/dist/index.js",
+    "vitest/importMeta",
+    "fs",
+    "node:path",
+  ];
+  const forbiddenRendererTargets = [
+    "node_modules/three/build/three.module.js",
+    "🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts",
+    "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️glue.ts",
+    "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts",
+    "♻️mit-bestand/🧺️demonstrator/🟦️brand.ts",
+  ];
+  const allowed = (candidate) => rendererAllows.some((pattern) => pattern.test(candidate));
+  if (allowedRendererTargets.some((candidate) => !allowed(candidate)) || forbiddenRendererTargets.some(allowed)) {
+    throw new Error("dependency-cruiser renderer-host allowlist no longer distinguishes presentation dependencies from runtime ownership breaches");
+  }
+}
+
+assertFocusedBoundarySemantics();
 
 /** 📦️ Recursively scans a directory for `package.json` files, skipping the same build-artifact/vendor
  * directories `options.doNotFollow` below already excludes (plus `pkg/`, a wasm-pack output dir that
@@ -63,6 +132,7 @@ const S_PACKAGES = scanPackageJsonFiles(path.join(__dirname, "✏️s"));
  * (etc.) import trips the rule even where dependency-cruiser doesn't resolve it down to the real file path. */
 const FRAMEWORK_PACKAGES = scanPackageJsonFiles(path.join(__dirname, "🧰️framework"));
 
+/** 🥾️ Keeps product-runtime technology edges forbidden while exempting only executable bootstrap and Vite/Vitest configuration entry points. */
 function crossTechnologyRules() {
   const rules = [];
   for (const from of TECHNOLOGIES) {
@@ -71,8 +141,8 @@ function crossTechnologyRules() {
       rules.push({
         name: `no-cross-technology-${from}-to-${to}`,
         severity: "error",
-        comment: "Relative imports must not cross top-level technology folders; use @semio-tech packages",
-        from: { path: `^${from}/` },
+        comment: "Runtime relative imports must not cross top-level technology folders; bootstrap scripts and approved Vite/Vitest config entry points may consume repo tooling",
+        from: { path: `^${from}/`, pathNot: BOOTSTRAP_TOOLING_ENTRY_PATH },
         to: {
           path: `^${to}/`,
           dependencyTypes: ["local"],
@@ -285,6 +355,17 @@ function pluginsFrameworkSdkOnlyRule() {
   };
 }
 
+/** 🖥️ Enforces the renderer host's presentation-only dependency boundary against dependency-cruiser's canonical resolved paths. */
+function rendererHostsOnlyUiRule() {
+  return {
+    name: "renderer-hosts-only-ui",
+    severity: "error",
+    comment: "the react renderer host may depend only on ui/styling, framework-core protocol types, react, and itself — never os-shell, ui-interpreter, or app packages",
+    from: { path: RENDERER_HOST_ROOT },
+    to: { pathNot: RENDERER_HOST_ALLOWED_RESOLVED_PATHS },
+  };
+}
+
 module.exports = {
   forbidden: [
     {
@@ -338,32 +419,7 @@ module.exports = {
         pathNot: ["^🧰️framework/🔨️modules/🖱️ui/", "^@semio-tech/ui-"],
       },
     },
-    {
-      // 🧭️ Was stale since before this rule's own introduction: it matched
-      // `📺️renderer/⚡️implementations/🟦️typescript/🧑️‍🎨️engine/⚛️react/`, but the real dir order has always
-      // been `🧑️‍🎨️engine/⚛️react/⚡️implementations/🟦️typescript/` — zero paths ever matched `from`, so
-      // this rule has never fired. Repointed (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE) at the
-      // FUTURE co-located shape (`📦️packages/🟦️typescript/🎯️targets/⚛️react/` + `🧱️elements/`) rather
-      // than the current dead path — stays a deliberate no-op until that restructure's W4 move lands,
-      // at which point it starts enforcing for real. Do not "fix" it back to the current dir; that would
-      // just trade one dead path for another about to be deleted.
-      name: "renderer-hosts-only-ui",
-      severity: "error",
-      comment: "the react renderer host may depend only on ui/styling, framework-core protocol types, react, and itself — never os-shell, ui-interpreter, or app packages",
-      from: { path: "^🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/(📦️packages/🟦️typescript/🎯️targets/⚛️react|🧱️elements)/" },
-      to: {
-        pathNot: [
-          "^🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/(📦️packages/🟦️typescript/🎯️targets/⚛️react|🧱️elements)/",
-          "^@semio-tech/ui-",
-          "^@semio-tech/framework-core",
-          "^react$",
-          "^react/",
-          "^react-dom$",
-          "^react-dom/",
-          "^node:",
-        ],
-      },
-    },
+    rendererHostsOnlyUiRule(),
     {
       name: "no-generated-edits-upstream",
       severity: "error",

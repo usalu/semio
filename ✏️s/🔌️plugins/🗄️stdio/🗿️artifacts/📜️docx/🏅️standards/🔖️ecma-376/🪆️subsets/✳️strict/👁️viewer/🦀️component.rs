@@ -8,7 +8,7 @@
 use crate::artifacts::docx::{DocxMutation, DocxSnapshot, STDIO_DOCX_DOCUMENT_SCHEMA};
 use crate::viewer::docx::standards::v_ecma_376::subsets::strict::modes::view;
 use crate::viewer::docx::standards::v_ecma_376::subsets::strict::modes::view::windows::main;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, ViewEmit, Viewer};
 
 //#region 🔖️Dialect
 /// 🪪️ Artifact coordinate — `s.stdio.docx@ecma-376/strict`. Duplicated (not imported) from the

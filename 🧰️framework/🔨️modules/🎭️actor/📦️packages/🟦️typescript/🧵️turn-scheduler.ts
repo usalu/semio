@@ -72,9 +72,12 @@ export class TurnScheduler<TPayload, TBudget = unknown> {
   private readonly mailboxes = new Map<string, BoundedMailbox<TPayload>>();
   private readonly laneCounts = new Map<string, Record<Lane, number>>();
   private readonly busyActors = new Set<string>();
+  private readonly options: TurnSchedulerOptions<TPayload, TBudget>;
   private pumpScheduled = false;
 
-  constructor(private readonly options: TurnSchedulerOptions<TPayload, TBudget>) {}
+  constructor(options: TurnSchedulerOptions<TPayload, TBudget>) {
+    this.options = options;
+  }
 
   //#region 📨️Enqueue
   /** 📨️ Offers one turn for `actorId`, returning the same {@link Backpressure} `📬️mailbox.ts`'s

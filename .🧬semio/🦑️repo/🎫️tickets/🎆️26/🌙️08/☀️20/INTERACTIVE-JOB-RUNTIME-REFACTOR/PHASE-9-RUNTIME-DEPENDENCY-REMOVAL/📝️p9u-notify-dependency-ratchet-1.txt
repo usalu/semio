@@ -1,0 +1,31 @@
+[verify dependencies] baseline: 238 third-party dependenc(y/ies) (commit 95b8688ee2f62f4056b6403c282bf0c76172c37c); current: 210.
+[verify dependencies] 28 dependenc(y/ies) removed since baseline (always passes — ratchet only tightens):
+  rust:anyhow
+  rust:async-trait
+  rust:console_error_panic_hook
+  rust:criterion
+  rust:dashmap
+  rust:futures-lite
+  rust:harness
+  rust:name
+  rust:notify
+  rust:path
+  rust:pollster
+  rust:pretty_assertions
+  rust:prost
+  rust:rayon
+  rust:reqwest
+  rust:sha2
+  rust:spade
+  rust:tempfile
+  rust:thiserror
+  rust:tracing
+  rust:tracing-subscriber
+  rust:ts-rs
+  rust:unicode-width
+  rust:uuid
+  rust:wasm-bindgen-test
+  rust:wit-parser
+  rust:zlib-rs
+  rust:zopfli
+[verify dependencies] clean — no new third-party dependencies.

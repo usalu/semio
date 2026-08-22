@@ -19,29 +19,37 @@ use crate::artifacts::semio::standards::v1::subsets::value::schema::algebra_inte
 use semio_framework_geometry::random::Rng;
 use serde::{Deserialize, Serialize};
 use std::f64::consts::E;
-use thiserror::Error;
 
 // #region 🔖️FuzzyError
 /// ⚠️ Recoverable fuzzy-logic failures: invalid domains, empty rule bases, singular least-squares systems.
-#[derive(Debug, Error, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum FuzzyError {
-    #[error("invalid domain: {0}")]
     InvalidDomain(String),
-    #[error("empty rule base")]
     EmptyRuleBase,
-    #[error("empty universe")]
     EmptyUniverse,
-    #[error("singular linear system")]
     SingularSystem,
-    #[error("dimension mismatch: {0}")]
     DimensionMismatch(String),
-    #[error("invalid intuitionistic set: membership + non-membership exceeds 1")]
     InvalidIntuitionistic,
-    #[error("no fired rules")]
     NoFiredRules,
-    #[error("invalid parameter count: expected {expected}, got {got}")]
     InvalidParameterCount { expected: usize, got: usize },
 }
+
+impl std::fmt::Display for FuzzyError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::InvalidDomain(message) => write!(formatter, "invalid domain: {message}"),
+            Self::EmptyRuleBase => formatter.write_str("empty rule base"),
+            Self::EmptyUniverse => formatter.write_str("empty universe"),
+            Self::SingularSystem => formatter.write_str("singular linear system"),
+            Self::DimensionMismatch(message) => write!(formatter, "dimension mismatch: {message}"),
+            Self::InvalidIntuitionistic => formatter.write_str("invalid intuitionistic set: membership + non-membership exceeds 1"),
+            Self::NoFiredRules => formatter.write_str("no fired rules"),
+            Self::InvalidParameterCount { expected, got } => write!(formatter, "invalid parameter count: expected {expected}, got {got}"),
+        }
+    }
+}
+
+impl std::error::Error for FuzzyError {}
 
 pub type FuzzyResult<T> = Result<T, FuzzyError>;
 // #endregion 🔖️FuzzyError
@@ -1370,7 +1378,7 @@ impl GeneticOptimizer {
     pub fn optimize<F: Fn(&[f64]) -> f64>(&self, fitness: F) -> (Vec<f64>, f64) {
         let mut rng = Rng::from_seed(self.seed);
         let dim = self.bounds.len();
-        let mut population: Vec<Vec<f64>> = (0..self.population_size).map(|_| (0..dim).map(|d| self.bounds[d].0 + semio_framework_plugin::resolve_ready(rng.next_f64()) * (self.bounds[d].1 - self.bounds[d].0)).collect()).collect();
+        let mut population: Vec<Vec<f64>> = (0..self.population_size).map(|_| (0..dim).map(|d| self.bounds[d].0 + rng.next_f64() * (self.bounds[d].1 - self.bounds[d].0)).collect()).collect();
         let mut best = population[0].clone();
         let mut best_fit = fitness(&best);
         for _ in 0..self.generations {
@@ -1385,7 +1393,7 @@ impl GeneticOptimizer {
             while population.len() < self.population_size {
                 let p1 = &population[rng.next_range(0, population.len() as u64) as usize];
                 let p2 = &population[rng.next_range(0, population.len() as u64) as usize];
-                let mut child: Vec<f64> = if rng.next_bool(self.crossover_rate) { (0..dim).map(|d| if semio_framework_plugin::resolve_ready(rng.next_bool(0.5)) { p1[d] } else { p2[d] }).collect() } else { p1.clone() };
+                let mut child: Vec<f64> = if rng.next_bool(self.crossover_rate) { (0..dim).map(|d| if rng.next_bool(0.5) { p1[d] } else { p2[d] }).collect() } else { p1.clone() };
                 for d in 0..dim {
                     if rng.next_bool(self.mutation_rate) {
                         child[d] = self.bounds[d].0 + rng.next_f64() * (self.bounds[d].1 - self.bounds[d].0);
@@ -1413,7 +1421,7 @@ impl PsoOptimizer {
     pub fn optimize<F: Fn(&[f64]) -> f64>(&self, fitness: F) -> (Vec<f64>, f64) {
         let mut rng = Rng::from_seed(self.seed);
         let dim = self.bounds.len();
-        let mut positions: Vec<Vec<f64>> = (0..self.swarm_size).map(|_| (0..dim).map(|d| self.bounds[d].0 + semio_framework_plugin::resolve_ready(rng.next_f64()) * (self.bounds[d].1 - self.bounds[d].0)).collect()).collect();
+        let mut positions: Vec<Vec<f64>> = (0..self.swarm_size).map(|_| (0..dim).map(|d| self.bounds[d].0 + rng.next_f64() * (self.bounds[d].1 - self.bounds[d].0)).collect()).collect();
         let mut velocities = vec![vec![0.0; dim]; self.swarm_size];
         let mut personal_best = positions.clone();
         let mut personal_fit: Vec<f64> = positions.iter().map(|p| fitness(p)).collect();
@@ -1846,6 +1854,24 @@ impl FanController {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn fuzzy_error_contract_is_owned_and_stable() {
+        let errors = [
+            (FuzzyError::InvalidDomain("range".into()), "invalid domain: range".to_string()),
+            (FuzzyError::EmptyRuleBase, "empty rule base".to_string()),
+            (FuzzyError::EmptyUniverse, "empty universe".to_string()),
+            (FuzzyError::SingularSystem, "singular linear system".to_string()),
+            (FuzzyError::DimensionMismatch("matrix".into()), "dimension mismatch: matrix".to_string()),
+            (FuzzyError::InvalidIntuitionistic, "invalid intuitionistic set: membership + non-membership exceeds 1".to_string()),
+            (FuzzyError::NoFiredRules, "no fired rules".to_string()),
+            (FuzzyError::InvalidParameterCount { expected: 4, got: 2 }, "invalid parameter count: expected 4, got 2".to_string()),
+        ];
+        for (error, message) in errors {
+            assert_eq!(error.to_string(), message);
+            assert!(std::error::Error::source(&error).is_none());
+        }
+    }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn temp_speed_system() -> MimoSystem {

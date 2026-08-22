@@ -9,7 +9,7 @@ use crate::artifacts::mp3::standards::mpeg1_layer3::subsets::any::schema::snapsh
 use crate::artifacts::mp3::{MP3_DIALECT, STDIO_MP3_DOCUMENT_SCHEMA};
 use crate::viewer::mp3::modes::view;
 use crate::viewer::mp3::modes::view::windows::main;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command

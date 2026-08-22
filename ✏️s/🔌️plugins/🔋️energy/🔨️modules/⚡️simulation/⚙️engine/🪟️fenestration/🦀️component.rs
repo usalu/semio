@@ -177,7 +177,7 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn double_glazing_u_below_single() {
         let win = double_glazing();
         let u_double = win.center_u_value_w_m2k();
@@ -185,20 +185,20 @@ mod tests {
         assert!(u_double < single.center_u_value_w_m2k());
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn shade_reduces_shgc() {
         let mut win = double_glazing();
         win.interior_shade = ShadeState { deployed: true, solar_transmittance: 0.1, solar_reflectance: 0.5, visible_transmittance: 0.1, ir_transmittance: 0.2 };
         assert!(win.center_shgc() < 0.2);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn conduction_cold_outside_negative_into_zone() {
         let q = window_conduction_w(-10.0, 20.0, 1.2, 2.0);
         assert!(q < 0.0);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn condensation_when_surface_cold() {
         let risk = condensation_risk(5.0, 22.0, 0.012, 101_325.0);
         assert!(matches!(risk, CondensationRisk::Condensing | CondensationRisk::Risk { .. }));

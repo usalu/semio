@@ -498,8 +498,14 @@ pub struct PayloadSniff {
 
 /// 🧭️ Optional random-access view over a streaming source.
 pub trait RandomAccessPayload: Send + Sync {
-    async fn len(&self) -> CodecResult<u64>;
-    async fn read_at(&self, offset: u64, output: &mut [u8]) -> CodecResult<usize>;
+    fn len(&self) -> impl std::future::Future<Output = CodecResult<u64>> + Send;
+    fn is_empty(&self) -> impl std::future::Future<Output = CodecResult<bool>> + Send {
+        async {
+            let output = self.len().await?;
+            Ok(CodecOutput { value: output.value == 0, diagnostics: output.diagnostics })
+        }
+    }
+    fn read_at(&self, offset: u64, output: &mut [u8]) -> impl std::future::Future<Output = CodecResult<usize>> + Send;
 }
 
 /// 🌊️ A forward-only source which may additionally expose random access. `RandomAccess` is an
@@ -510,16 +516,16 @@ pub trait RandomAccessPayload: Send + Sync {
 pub trait PayloadSource: Send {
     type RandomAccess: RandomAccessPayload;
 
-    async fn span(&self) -> SourceSpan;
-    async fn read_chunk(&mut self, output: &mut [u8]) -> CodecResult<usize>;
-    async fn random_access(&self) -> Option<&Self::RandomAccess> {
-        None
+    fn span(&self) -> impl std::future::Future<Output = SourceSpan> + Send;
+    fn read_chunk(&mut self, output: &mut [u8]) -> impl std::future::Future<Output = CodecResult<usize>> + Send;
+    fn random_access(&self) -> impl std::future::Future<Output = Option<&Self::RandomAccess>> + Send {
+        async { None }
     }
 }
 
 /// 🚰️ A streaming output sink.
 pub trait PayloadSink: Send {
-    async fn write_chunk(&mut self, input: &[u8]) -> CodecResult<()>;
+    fn write_chunk(&mut self, input: &[u8]) -> impl std::future::Future<Output = CodecResult<()>> + Send;
 }
 
 /// 🔗️ Resource request expressed without tying codecs to a filesystem, HTTP client, or host API.
@@ -538,8 +544,8 @@ pub trait ResourceResolver: Send + Sync {
     type Source: PayloadSource;
     type Sink: PayloadSink;
 
-    async fn resolve_decode(&self, request: &ResourceRequest) -> CodecResult<Self::Source>;
-    async fn resolve_encode(&self, request: &ResourceRequest) -> CodecResult<Self::Sink>;
+    fn resolve_decode(&self, request: &ResourceRequest) -> impl std::future::Future<Output = CodecResult<Self::Source>> + Send;
+    fn resolve_encode(&self, request: &ResourceRequest) -> impl std::future::Future<Output = CodecResult<Self::Sink>> + Send;
 }
 
 /// 🔒️ Host-owned bounded random-access view exposed to codecs. Borrows the invocation's budget
@@ -717,9 +723,9 @@ pub trait PayloadCodec: Send + Sync {
     type Source: PayloadSource;
     type Sink: PayloadSink;
 
-    async fn sniff(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> CodecResult<PayloadSniff>;
-    async fn decode_payload(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> CodecResult<Self::Payload>;
-    async fn encode_payload(&self, payload: &Self::Payload, sink: &mut BoundedPayloadSink<'_, Self::Sink>) -> CodecResult<()>;
+    fn sniff(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> impl std::future::Future<Output = CodecResult<PayloadSniff>> + Send;
+    fn decode_payload(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> impl std::future::Future<Output = CodecResult<Self::Payload>> + Send;
+    fn encode_payload(&self, payload: &Self::Payload, sink: &mut BoundedPayloadSink<'_, Self::Sink>) -> impl std::future::Future<Output = CodecResult<()>> + Send;
 }
 
 /// 🗿️ Semantic artifact codec layered over a transport `PayloadCodec` implementation.
@@ -729,9 +735,9 @@ pub trait PayloadCodec: Send + Sync {
 pub trait ArtifactCodec: PayloadCodec {
     type Artifact;
 
-    async fn dialect(&self) -> &ArtifactDialect;
-    async fn decode_artifact<R: ResourceResolver>(&self, payload: Self::Payload, context: &mut DecodeContext<R>) -> CodecResult<Self::Artifact>;
-    async fn encode_artifact<R: ResourceResolver>(&self, artifact: &Self::Artifact, context: &mut EncodeContext<R>) -> CodecResult<Self::Payload>;
+    fn dialect(&self) -> impl std::future::Future<Output = &ArtifactDialect> + Send;
+    fn decode_artifact<R: ResourceResolver>(&self, payload: Self::Payload, context: &mut DecodeContext<R>) -> impl std::future::Future<Output = CodecResult<Self::Artifact>> + Send;
+    fn encode_artifact<R: ResourceResolver>(&self, artifact: &Self::Artifact, context: &mut EncodeContext<R>) -> impl std::future::Future<Output = CodecResult<Self::Payload>> + Send;
 }
 //#endregion 🧬️Codecs
 //#endregion 🔐️CodecContracts
@@ -926,7 +932,7 @@ pub struct IoKey {
 impl IoKey {
     /// 🗝️ Build a key from an (owner, counterpart) pair already resolved to the right
     /// perspective by the caller -- see the two call sites in `register_composer_entries`.
-    async fn from_owner_counterpart(owner: Dialect, counterpart: Dialect, direction: IoDirection) -> Self {
+    fn from_owner_counterpart(owner: Dialect, counterpart: Dialect, direction: IoDirection) -> Self {
         IoKey {
             artifact_kind: owner.artifact_kind.to_string(),
             standard: owner.standard.0.to_string(),
@@ -941,7 +947,7 @@ impl IoKey {
 
 static IO_REGISTRY: std::sync::OnceLock<RwLock<BTreeMap<IoKey, &'static ComposerEntry>>> = std::sync::OnceLock::new();
 
-async fn io_registry() -> &'static RwLock<BTreeMap<IoKey, &'static ComposerEntry>> {
+fn io_registry() -> &'static RwLock<BTreeMap<IoKey, &'static ComposerEntry>> {
     IO_REGISTRY.get_or_init(|| RwLock::new(BTreeMap::new()))
 }
 
@@ -960,7 +966,7 @@ pub struct IoRegistryUnavailable {
 /// ⚠️ A composer registration either conflicts or cannot safely acquire its registry.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum IoRegistryRegistrationError {
-    Conflict(IoRegistryConflict),
+    Conflict(Box<IoRegistryConflict>),
     Unavailable(IoRegistryUnavailable),
 }
 
@@ -978,15 +984,15 @@ fn same_composer_entry(left: &ComposerEntry, right: &ComposerEntry) -> bool {
     left.writes == right.writes && left.reads == right.reads && std::ptr::fn_addr_eq(left.compose, right.compose)
 }
 
-async fn composer_entries_by_key<'entry>(entries: impl IntoIterator<Item = &'entry ComposerEntry>) -> Result<BTreeMap<IoKey, &'entry ComposerEntry>, IoRegistryRegistrationError> {
+fn composer_entries_by_key<'entry>(entries: impl IntoIterator<Item = &'entry ComposerEntry>) -> Result<BTreeMap<IoKey, &'entry ComposerEntry>, IoRegistryRegistrationError> {
     let mut proposed: BTreeMap<IoKey, &'entry ComposerEntry> = BTreeMap::new();
     for entry in entries {
         for &source in entry.reads {
-            let keys = [IoKey::from_owner_counterpart(entry.writes, source, IoDirection::Import).await, IoKey::from_owner_counterpart(source, entry.writes, IoDirection::Export).await];
+            let keys = [IoKey::from_owner_counterpart(entry.writes, source, IoDirection::Import), IoKey::from_owner_counterpart(source, entry.writes, IoDirection::Export)];
             for key in keys {
                 if let Some(existing) = proposed.get(&key) {
                     if !same_composer_entry(existing, entry) {
-                        return Err(IoRegistryRegistrationError::Conflict(IoRegistryConflict { key }));
+                        return Err(IoRegistryRegistrationError::Conflict(Box::new(IoRegistryConflict { key })));
                     }
                 } else {
                     proposed.insert(key, entry);
@@ -997,11 +1003,11 @@ async fn composer_entries_by_key<'entry>(entries: impl IntoIterator<Item = &'ent
     Ok(proposed)
 }
 
-async fn validate_composer_entries(registry: &BTreeMap<IoKey, &'static ComposerEntry>, proposed: &BTreeMap<IoKey, &'static ComposerEntry>) -> Result<(), IoRegistryRegistrationError> {
+fn validate_composer_entries(registry: &BTreeMap<IoKey, &'static ComposerEntry>, proposed: &BTreeMap<IoKey, &'static ComposerEntry>) -> Result<(), IoRegistryRegistrationError> {
     for (key, entry) in proposed {
         if let Some(existing) = registry.get(key) {
             if !same_composer_entry(existing, entry) {
-                return Err(IoRegistryRegistrationError::Conflict(IoRegistryConflict { key: key.clone() }));
+                return Err(IoRegistryRegistrationError::Conflict(Box::new(IoRegistryConflict { key: key.clone() })));
             }
         }
     }
@@ -1009,46 +1015,40 @@ async fn validate_composer_entries(registry: &BTreeMap<IoKey, &'static ComposerE
 }
 
 /// 🔬️ Verifies a static composer table against all established keys without mutating the registry.
-#[must_use]
 pub async fn preflight_composer_entries(entries: &'static [ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
     preflight_composer_entry_refs(&entries.iter().collect::<Vec<_>>()).await
 }
 
 /// 🔬️ Verifies independently declared static composers as one atomic candidate set.
-#[must_use]
 pub async fn preflight_composer_entry_refs(entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
-    let assembly = store::begin_artifact_assembly().await.map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
+    let assembly = store::begin_artifact_assembly().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
     preflight_composer_entry_refs_in_assembly(&assembly, entries).await
 }
 
 /// 🔬️ Verifies composers while one artifact assembly owns the shared publication barrier.
-#[must_use]
 pub async fn preflight_composer_entry_refs_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
-    let proposed = composer_entries_by_key(entries.iter().copied()).await?;
-    let registry = io_registry().await.read().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "io-composer" }))?;
-    validate_composer_entries(&registry, &proposed).await
+    let proposed = composer_entries_by_key(entries.iter().copied())?;
+    let registry = io_registry().read().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "io-composer" }))?;
+    validate_composer_entries(&registry, &proposed)
 }
 
 /// 📌️ Registers one artifact's composer entries atomically. Re-registering the exact static entry
 /// is idempotent; a different entry for any exact key fails and leaves the registry unchanged.
-#[must_use]
 pub async fn register_composer_entries(entries: &'static [ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
     register_composer_entry_refs(&entries.iter().collect::<Vec<_>>()).await
 }
 
 /// 📌️ Registers independently declared static composers as one all-or-nothing candidate set.
-#[must_use]
 pub async fn register_composer_entry_refs(entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
-    let assembly = store::begin_artifact_assembly().await.map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
+    let assembly = store::begin_artifact_assembly().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
     register_composer_entry_refs_in_assembly(&assembly, entries).await
 }
 
 /// 📌️ Publishes preflighted composers while one artifact assembly owns the shared barrier.
-#[must_use]
 pub async fn register_composer_entry_refs_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, entries: &[&'static ComposerEntry]) -> Result<(), IoRegistryRegistrationError> {
-    let proposed = composer_entries_by_key(entries.iter().copied()).await?;
-    let mut reg = io_registry().await.write().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "io-composer" }))?;
-    validate_composer_entries(&reg, &proposed).await?;
+    let proposed = composer_entries_by_key(entries.iter().copied())?;
+    let mut reg = io_registry().write().map_err(|_| IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "io-composer" }))?;
+    validate_composer_entries(&reg, &proposed)?;
     for (key, entry) in proposed {
         reg.entry(key).or_insert(entry);
     }
@@ -1066,7 +1066,7 @@ pub struct IoResolveError {
 /// format/standard/subset) coordinate. No silent defaulting — callers with a partially-specified
 /// query (unknown standard/subset) must enumerate `dialects_for` first and choose explicitly.
 pub async fn resolve(key: &IoKey) -> Result<&'static ComposerEntry, IoResolveError> {
-    let reg = io_registry().await.read().map_err(|_| IoResolveError { message: "io composer registry unavailable".to_string(), candidates: Vec::new(), unavailable: Some(IoRegistryUnavailable { registry: "io-composer" }) })?;
+    let reg = io_registry().read().map_err(|_| IoResolveError { message: "io composer registry unavailable".to_string(), candidates: Vec::new(), unavailable: Some(IoRegistryUnavailable { registry: "io-composer" }) })?;
     reg.get(key).copied().ok_or_else(|| IoResolveError {
         message: format!("no composer registered for {}/{}/{} {:?} {}/{}/{}", key.artifact_kind, key.standard, key.subset, key.direction, key.format_kind, key.format_standard, key.format_subset),
         candidates: reg.keys().filter(|k| k.artifact_kind == key.artifact_kind).cloned().collect(),
@@ -1075,9 +1075,8 @@ pub async fn resolve(key: &IoKey) -> Result<&'static ComposerEntry, IoResolveErr
 }
 
 /// 📚️ Lists every dialect one artifact can move data through in a given direction.
-#[must_use]
 pub async fn dialects_for(artifact_kind: &str, direction: IoDirection) -> Result<Vec<Dialect>, IoRegistryUnavailable> {
-    let reg = io_registry().await.read().map_err(|_| IoRegistryUnavailable { registry: "io-composer" })?;
+    let reg = io_registry().read().map_err(|_| IoRegistryUnavailable { registry: "io-composer" })?;
     let mut dialects: Vec<Dialect> = reg.iter().filter(|(k, _)| k.artifact_kind == artifact_kind && k.direction == direction).map(|(_, entry)| entry.writes).collect();
     dialects.sort_by_key(|dialect| ArtifactDialect::from(*dialect).to_coordinate());
     dialects.dedup();
@@ -1088,18 +1087,16 @@ pub async fn dialects_for(artifact_kind: &str, direction: IoDirection) -> Result
 /// standard/subset (not a hardcoded default) -- callers that used to build a key by hand and
 /// guess `standard: "1", subset: "*"` should enumerate this instead and pick explicitly, the same
 /// "no silent defaulting" policy `resolve` already documents.
-#[must_use]
 pub async fn io_keys_for(artifact_kind: &str, direction: IoDirection) -> Result<Vec<IoKey>, IoRegistryUnavailable> {
-    let reg = io_registry().await.read().map_err(|_| IoRegistryUnavailable { registry: "io-composer" })?;
+    let reg = io_registry().read().map_err(|_| IoRegistryUnavailable { registry: "io-composer" })?;
     Ok(reg.keys().filter(|key| key.artifact_kind == artifact_kind && key.direction == direction).cloned().collect())
 }
 
 /// 📇️ Every registered composer entry, erased to owned dialects -- the shape the WIT
 /// `list-artifact-dialects` guest export mirrors verbatim (one row per distinct `writes` entry
 /// registered locally, each carrying the full `reads` list).
-#[must_use]
 pub async fn list_composer_entries() -> Result<Vec<(ArtifactDialect, Vec<ArtifactDialect>)>, IoRegistryUnavailable> {
-    let reg = io_registry().await.read().map_err(|_| IoRegistryUnavailable { registry: "io-composer" })?;
+    let reg = io_registry().read().map_err(|_| IoRegistryUnavailable { registry: "io-composer" })?;
     let mut seen: BTreeMap<String, &'static ComposerEntry> = BTreeMap::new();
     for entry in reg.values() {
         seen.entry(ArtifactDialect::from(entry.writes).to_coordinate()).or_insert(*entry);
@@ -1142,7 +1139,6 @@ pub struct IoFallbackRegistrationError {
 /// 🔌️ Install the fallback dispatcher. Call exactly once, before any `io_dispatch` call that
 /// should reach it (host boot / guest `ensure_plugin_initialized`). Re-registration is idempotent
 /// only for the same descriptor and executable identity; every other race is a typed conflict.
-#[must_use]
 pub async fn set_io_fallback_dispatcher(dispatcher: IoFallbackDispatcher) -> Result<(), IoFallbackRegistrationError> {
     match IO_FALLBACK.get() {
         Some(existing) if existing.identity == dispatcher.identity && std::sync::Arc::ptr_eq(&existing.dispatch, &dispatcher.dispatch) => Ok(()),
@@ -1209,7 +1205,7 @@ pub async fn io_compose_via(hub: &IoKey, target: &IoKey, sources: &[ErasedCompos
 /// erasure already does one layer up), so this module never needs to know the concrete type.
 pub trait SubsetValidator {
     const DIALECT: Dialect;
-    async fn validate(payload: &IoPayload) -> Vec<Diagnostic>;
+    fn validate(payload: &IoPayload) -> impl std::future::Future<Output = Vec<Diagnostic>> + Send;
 }
 
 /// 🧾️ Type-erased subset-validator vtable row -- the registry stores this, mirroring how
@@ -1233,7 +1229,7 @@ pub fn subset_validator_entry_of<V: SubsetValidator>() -> SubsetValidatorEntry {
 
 static SUBSET_VALIDATOR_REGISTRY: std::sync::OnceLock<RwLock<BTreeMap<ArtifactDialect, &'static SubsetValidatorEntry>>> = std::sync::OnceLock::new();
 
-async fn subset_validator_registry() -> &'static RwLock<BTreeMap<ArtifactDialect, &'static SubsetValidatorEntry>> {
+fn subset_validator_registry() -> &'static RwLock<BTreeMap<ArtifactDialect, &'static SubsetValidatorEntry>> {
     SUBSET_VALIDATOR_REGISTRY.get_or_init(|| RwLock::new(BTreeMap::new()))
 }
 
@@ -1267,22 +1263,21 @@ pub enum SubsetValidationError {
     Unavailable(IoRegistryUnavailable),
 }
 
-async fn same_subset_validator_entry(left: &SubsetValidatorEntry, right: &SubsetValidatorEntry) -> bool {
+fn same_subset_validator_entry(left: &SubsetValidatorEntry, right: &SubsetValidatorEntry) -> bool {
     left.dialect == right.dialect && std::ptr::fn_addr_eq(left.validate, right.validate)
 }
 
 /// 📌️ Registers one subset validator without replacing an established dialect owner.
-#[must_use]
 pub async fn register_subset_validator(entry: &'static SubsetValidatorEntry) -> Result<(), SubsetValidatorRegistryError> {
     register_subset_validators(&[entry]).await
 }
 
-async fn validate_subset_validators(registry: &BTreeMap<ArtifactDialect, &'static SubsetValidatorEntry>, entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
+fn validate_subset_validators(registry: &BTreeMap<ArtifactDialect, &'static SubsetValidatorEntry>, entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
     let mut proposed: BTreeMap<ArtifactDialect, &'static SubsetValidatorEntry> = BTreeMap::new();
     for entry in entries {
         let dialect = ArtifactDialect::from(entry.dialect);
         if let Some(existing) = proposed.get(&dialect) {
-            if same_subset_validator_entry(existing, entry).await {
+            if same_subset_validator_entry(existing, entry) {
                 continue;
             }
             return Err(SubsetValidatorRegistryError::Conflict(SubsetValidatorRegistryConflict { dialect }));
@@ -1291,7 +1286,7 @@ async fn validate_subset_validators(registry: &BTreeMap<ArtifactDialect, &'stati
     }
     for (dialect, entry) in &proposed {
         if let Some(existing) = registry.get(dialect) {
-            if !same_subset_validator_entry(existing, entry).await {
+            if !same_subset_validator_entry(existing, entry) {
                 return Err(SubsetValidatorRegistryError::Conflict(SubsetValidatorRegistryConflict { dialect: dialect.clone() }));
             }
         }
@@ -1300,44 +1295,37 @@ async fn validate_subset_validators(registry: &BTreeMap<ArtifactDialect, &'stati
 }
 
 /// 🔬️ Verifies subset-validator entries without changing their established owners.
-#[must_use]
 pub async fn preflight_subset_validators(entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
-    let assembly = store::begin_artifact_assembly().await.map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
+    let assembly = store::begin_artifact_assembly().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
     preflight_subset_validators_in_assembly(&assembly, entries).await
 }
 
 /// 🔬️ Verifies subset validators while one artifact assembly owns the shared publication barrier.
-#[must_use]
 pub async fn preflight_subset_validators_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
-    let registry = subset_validator_registry().await.read().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" }))?;
-    validate_subset_validators(&registry, entries).await
+    let registry = subset_validator_registry().read().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" }))?;
+    validate_subset_validators(&registry, entries)
 }
 
 /// 📌️ Registers subset-validator entries only when the entire candidate set is conflict-free.
-#[must_use]
 pub async fn register_subset_validators(entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
-    let assembly = store::begin_artifact_assembly().await.map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
+    let assembly = store::begin_artifact_assembly().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
     register_subset_validators_in_assembly(&assembly, entries).await
 }
 
 /// 📌️ Publishes preflighted subset validators while one artifact assembly owns the shared barrier.
-#[must_use]
 pub async fn register_subset_validators_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, entries: &[&'static SubsetValidatorEntry]) -> Result<(), SubsetValidatorRegistryError> {
-    let mut reg = subset_validator_registry().await.write().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" }))?;
-    validate_subset_validators(&reg, entries).await?;
+    let mut reg = subset_validator_registry().write().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" }))?;
+    validate_subset_validators(&reg, entries)?;
     for entry in entries {
         let dialect = ArtifactDialect::from(entry.dialect);
-        if !reg.contains_key(&dialect) {
-            reg.insert(dialect, entry);
-        }
+        reg.entry(dialect).or_insert(entry);
     }
     Ok(())
 }
 
 /// 📚️ Every dialect key currently registered in `SUBSET_VALIDATOR_REGISTRY`.
-#[must_use]
 pub async fn list_registered_subset_validator_dialects() -> Result<Vec<Dialect>, SubsetValidatorRegistryError> {
-    let registry = subset_validator_registry().await.read().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" }))?;
+    let registry = subset_validator_registry().read().map_err(|_| SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" }))?;
     Ok(registry.values().map(|entry| entry.dialect).collect())
 }
 
@@ -1364,7 +1352,7 @@ async fn run_subset_validation(dialect: Dialect, payload: &IoPayload, diagnostic
     if dialect.subset == SubsetId::ANY {
         return Ok(());
     }
-    let reg = subset_validator_registry().await.read().map_err(|_| SubsetValidationError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" }))?;
+    let reg = subset_validator_registry().read().map_err(|_| SubsetValidationError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" }))?;
     match reg.get(&ArtifactDialect::from(dialect)) {
         Some(entry) => diagnostics.extend((entry.validate)(payload)),
         None => return Err(SubsetValidationError::Missing { dialect: ArtifactDialect::from(dialect) }),
@@ -1606,7 +1594,6 @@ async fn intern_dialect(dialect: &ArtifactDialect) -> Result<Dialect, IoWireErro
 /// 🌉️ Decodes a wire `WireComposedArtifact` (JSON bytes) into a native `ComposedArtifact`,
 /// interning its dialect via `intern_dialect`. The receiving-side half of `wire_artifact_compose`
 /// — used by a guest's `io_dispatch` fallback hook once `host.io-compose` returns.
-#[must_use]
 pub async fn wire_decode_composed_artifact(bytes: &[u8]) -> Result<ComposedArtifact, IoWireError> {
     ensure_wire_bytes("composed-artifact", bytes)?;
     let wire: WireComposedArtifact = serde_json::from_slice(bytes).map_err(|error| IoWireError::Decode { operation: "composed-artifact", message: error.to_string() })?;
@@ -1624,7 +1611,6 @@ pub async fn wire_decode_composed_artifact(bytes: &[u8]) -> Result<ComposedArtif
 /// is a deliberate simplification for this first cut: the WIT signature is an opaque `list<u8>`
 /// either way, so swapping the wire encoding later needs no ABI change, and this module has no
 /// existing dependency on `store`/`dsl`'s pack machinery worth introducing just for this.
-#[must_use]
 pub async fn wire_list_composer_entries() -> Result<Vec<u8>, IoWireError> {
     let entries = list_composer_entries().await.map_err(IoWireError::Registry)?;
     encode_wire_json("composer-entry-list", &entries).await
@@ -1638,7 +1624,6 @@ pub async fn wire_list_composer_entries() -> Result<Vec<u8>, IoWireError> {
 /// `artifact-compose` guest export. Errors are flattened to a message string, matching how every
 /// other fallible call on this ABI surfaces errors (a `Fault`, not structured data) — see
 /// `migrate-artifact`'s `plugin-error` for the existing precedent.
-#[must_use]
 pub async fn wire_artifact_compose(key_bytes: &[u8], sources_bytes: &[u8]) -> Result<Vec<u8>, IoWireError> {
     ensure_wire_bytes("io-key", key_bytes)?;
     ensure_wire_bytes("compose-source", sources_bytes)?;
@@ -1648,7 +1633,7 @@ pub async fn wire_artifact_compose(key_bytes: &[u8], sources_bytes: &[u8]) -> Re
     if wire_sources.len() > MAX_IO_WIRE_SOURCES {
         return Err(IoWireError::Limit { operation: "compose-source", detail: format!("{} sources exceeds {MAX_IO_WIRE_SOURCES}", wire_sources.len()) });
     }
-    let entry = resolve(&key).await.map_err(|error| error.unavailable.map(IoWireError::Registry).unwrap_or_else(|| IoWireError::Resolve(error.message)))?;
+    let entry = resolve(&key).await.map_err(|error| error.unavailable.map_or_else(|| IoWireError::Resolve(error.message), IoWireError::Registry))?;
     let mut sources = Vec::with_capacity(wire_sources.len());
     for wire in wire_sources {
         validate_wire_dialect("compose-source", &wire.dialect).await?;
@@ -1739,18 +1724,16 @@ fn format_catalog() -> &'static RwLock<BTreeMap<String, FormatDescriptor>> {
 
 /// 📌️ Registers format rows atomically. Identity, extension, and non-empty MIME claims are each
 /// globally singular; equal duplicate rows are idempotent and never replace an established owner.
-#[must_use]
 pub async fn register_format_descriptors(descriptors: impl IntoIterator<Item = FormatDescriptor>) -> Result<(), FormatRegistryError> {
-    let assembly = store::begin_artifact_assembly().await.map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
-    register_format_descriptors_in_assembly(&assembly, descriptors).await
+    let assembly = store::begin_artifact_assembly().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
+    register_format_descriptors_in_assembly(&assembly, descriptors)
 }
 
 /// 📌️ Publishes preflighted format rows while one artifact assembly owns the shared barrier.
-#[must_use]
-pub async fn register_format_descriptors_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, descriptors: impl IntoIterator<Item = FormatDescriptor>) -> Result<(), FormatRegistryError> {
-    let (proposed, proposed_by_kind) = index_format_descriptors(descriptors).await.map_err(FormatRegistryError::Conflict)?;
+pub fn register_format_descriptors_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, descriptors: impl IntoIterator<Item = FormatDescriptor>) -> Result<(), FormatRegistryError> {
+    let (proposed, proposed_by_kind) = index_format_descriptors(descriptors).map_err(FormatRegistryError::Conflict)?;
     let mut registry = format_catalog().write().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "format-catalog" }))?;
-    validate_format_descriptors(&registry, &proposed, &proposed_by_kind).await.map_err(FormatRegistryError::Conflict)?;
+    validate_format_descriptors(&registry, &proposed, &proposed_by_kind).map_err(FormatRegistryError::Conflict)?;
     for (key, descriptor) in proposed {
         registry.entry(key).or_insert(descriptor);
     }
@@ -1758,26 +1741,26 @@ pub async fn register_format_descriptors_in_assembly(_assembly: &store::Artifact
 }
 
 /// 🔬️ Verifies format rows against the catalog without mutating their global ownership.
-#[must_use]
 pub async fn preflight_format_descriptors(rows: &[FormatDescriptor]) -> Result<(), FormatRegistryError> {
-    let assembly = store::begin_artifact_assembly().await.map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
-    preflight_format_descriptors_in_assembly(&assembly, rows).await
+    let assembly = store::begin_artifact_assembly().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "artifact-assembly" }))?;
+    preflight_format_descriptors_in_assembly(&assembly, rows)
 }
 
 /// 🔬️ Verifies format rows while one artifact assembly owns the shared publication barrier.
-#[must_use]
-pub async fn preflight_format_descriptors_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, rows: &[FormatDescriptor]) -> Result<(), FormatRegistryError> {
-    let (proposed, proposed_by_kind) = index_format_descriptors(rows.iter().cloned()).await.map_err(FormatRegistryError::Conflict)?;
+pub fn preflight_format_descriptors_in_assembly(_assembly: &store::ArtifactAssemblyTransaction, rows: &[FormatDescriptor]) -> Result<(), FormatRegistryError> {
+    let (proposed, proposed_by_kind) = index_format_descriptors(rows.iter().cloned()).map_err(FormatRegistryError::Conflict)?;
     let registry = format_catalog().read().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "format-catalog" }))?;
-    validate_format_descriptors(&registry, &proposed, &proposed_by_kind).await.map_err(FormatRegistryError::Conflict)
+    validate_format_descriptors(&registry, &proposed, &proposed_by_kind).map_err(FormatRegistryError::Conflict)
 }
 
-async fn index_format_descriptors(descriptors: impl IntoIterator<Item = FormatDescriptor>) -> Result<(BTreeMap<String, FormatDescriptor>, BTreeMap<String, FormatDescriptor>), FormatRegistryConflict> {
+type FormatDescriptorIndexes = (BTreeMap<String, FormatDescriptor>, BTreeMap<String, FormatDescriptor>);
+
+fn index_format_descriptors(descriptors: impl IntoIterator<Item = FormatDescriptor>) -> Result<FormatDescriptorIndexes, FormatRegistryConflict> {
     let mut proposed: BTreeMap<String, FormatDescriptor> = BTreeMap::new();
     let mut proposed_by_kind: BTreeMap<String, FormatDescriptor> = BTreeMap::new();
     for row in descriptors {
-        let row = canonicalize_format_descriptor(row).await?;
-        for key in format_descriptor_keys(&row).await {
+        let row = canonicalize_format_descriptor(row)?;
+        for key in format_descriptor_keys(&row) {
             if let Some(existing) = proposed.get(&key) {
                 if existing != &row {
                     return Err(FormatRegistryConflict::Identity { key, established_kind_id: existing.kind_id.clone(), conflicting_kind_id: row.kind_id.clone() });
@@ -1797,7 +1780,7 @@ async fn index_format_descriptors(descriptors: impl IntoIterator<Item = FormatDe
     Ok((proposed, proposed_by_kind))
 }
 
-async fn canonicalize_format_descriptor(mut row: FormatDescriptor) -> Result<FormatDescriptor, FormatRegistryConflict> {
+fn canonicalize_format_descriptor(mut row: FormatDescriptor) -> Result<FormatDescriptor, FormatRegistryConflict> {
     row.kind_id = row.kind_id.trim().to_string();
     row.short_id = row.short_id.trim().to_string();
     if row.kind_id.is_empty() || row.short_id.is_empty() {
@@ -1836,11 +1819,11 @@ async fn canonicalize_format_descriptor(mut row: FormatDescriptor) -> Result<For
     Ok(row)
 }
 
-async fn format_mimes(row: &FormatDescriptor) -> impl Iterator<Item = &str> {
+fn format_mimes(row: &FormatDescriptor) -> impl Iterator<Item = &str> {
     row.mimes.iter().map(String::as_str)
 }
 
-async fn validate_format_descriptors(registry: &BTreeMap<String, FormatDescriptor>, proposed: &BTreeMap<String, FormatDescriptor>, proposed_by_kind: &BTreeMap<String, FormatDescriptor>) -> Result<(), FormatRegistryConflict> {
+fn validate_format_descriptors(registry: &BTreeMap<String, FormatDescriptor>, proposed: &BTreeMap<String, FormatDescriptor>, proposed_by_kind: &BTreeMap<String, FormatDescriptor>) -> Result<(), FormatRegistryConflict> {
     let mut established_by_kind: BTreeMap<String, &FormatDescriptor> = BTreeMap::new();
     for descriptor in registry.values() {
         established_by_kind.entry(descriptor.kind_id.clone()).or_insert(descriptor);
@@ -1857,8 +1840,8 @@ async fn validate_format_descriptors(registry: &BTreeMap<String, FormatDescripto
                     }
                 }
             }
-            for existing_mime in format_mimes(existing).await {
-                for row_mime in format_mimes(row).await {
+            for existing_mime in format_mimes(existing) {
+                for row_mime in format_mimes(row) {
                     if existing_mime == row_mime {
                         return Err(FormatRegistryConflict::Mime { mime: row_mime.to_string(), established_kind_id: existing.kind_id.clone(), conflicting_kind_id: row.kind_id.clone() });
                     }
@@ -1876,27 +1859,24 @@ async fn validate_format_descriptors(registry: &BTreeMap<String, FormatDescripto
     Ok(())
 }
 
-async fn format_descriptor_keys(row: &FormatDescriptor) -> impl Iterator<Item = String> + '_ {
+fn format_descriptor_keys(row: &FormatDescriptor) -> impl Iterator<Item = String> + '_ {
     std::iter::once(row.kind_id.clone()).chain(std::iter::once(row.short_id.clone())).chain(row.aliases.iter().cloned())
 }
 
 /// 🔎️ Resolves a format by its `kind_id`, `short_id`, or registered alias.
-#[must_use]
-pub async fn format_descriptor(kind_or_short_or_alias: &str) -> Result<Option<FormatDescriptor>, FormatRegistryError> {
+pub fn format_descriptor(kind_or_short_or_alias: &str) -> Result<Option<FormatDescriptor>, FormatRegistryError> {
     let registry = format_catalog().read().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "format-catalog" }))?;
     Ok(registry.get(kind_or_short_or_alias).cloned())
 }
 
 /// 🏷️ Normalize any recognized form (kind id, short id, alias) to the canonical `kind_id`.
-#[must_use]
-pub async fn normalize_format_kind(input: &str) -> Result<Option<String>, FormatRegistryError> {
-    Ok(format_descriptor(input).await?.map(|descriptor| descriptor.kind_id))
+pub fn normalize_format_kind(input: &str) -> Result<Option<String>, FormatRegistryError> {
+    Ok(format_descriptor(input)?.map(|descriptor| descriptor.kind_id))
 }
 
 /// 🗂️ File-picker `accept` filter (comma-joined extensions) for a list of kind/short/alias
 /// strings -- the generic successor to `mesh::stdio_accept_filter`.
-#[must_use]
-pub async fn format_accept_filter(kind_ids: &[&str]) -> Result<String, FormatRegistryError> {
+pub fn format_accept_filter(kind_ids: &[&str]) -> Result<String, FormatRegistryError> {
     let registry = format_catalog().read().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "format-catalog" }))?;
     let mut extensions = Vec::new();
     for kind_id in kind_ids {
@@ -1907,6 +1887,7 @@ pub async fn format_accept_filter(kind_ids: &[&str]) -> Result<String, FormatReg
 }
 
 /// 🧷️ All IO and store rows a plugin must publish as one irreducible assembly unit.
+#[derive(Default)]
 pub struct ArtifactAssemblyRegistryPlan {
     pub composer_entries: Vec<&'static ComposerEntry>,
     pub subset_validators: Vec<&'static SubsetValidatorEntry>,
@@ -1922,22 +1903,13 @@ impl ArtifactAssemblyRegistryPlan {
     }
 }
 
-impl Default for ArtifactAssemblyRegistryPlan {
-    // 🐛️ terra-io-thunks: `Default::default` is E1 (externally-declared trait, fixed sync
-    // signature) so it cannot `.await` `Self::new()` — builds the empty plan directly instead of
-    // routing through the (now correctly `async`) constructor.
-    fn default() -> Self {
-        Self { composer_entries: Vec::new(), subset_validators: Vec::new(), format_descriptors: Vec::new(), document_codecs: Vec::new(), dialect_migrations: Vec::new() }
-    }
-}
-
 /// 🚫️ An all-registry assembly cannot acquire its locks or pass preflight.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ArtifactAssemblyRegistryError {
-    Composer(IoRegistryRegistrationError),
+    Composer(Box<IoRegistryRegistrationError>),
     SubsetValidator(SubsetValidatorRegistryError),
     Format(FormatRegistryError),
-    Store(store::ArtifactAssemblyStoreRegistryError),
+    Store(Box<store::ArtifactAssemblyStoreRegistryError>),
 }
 
 impl std::fmt::Display for ArtifactAssemblyRegistryError {
@@ -1955,18 +1927,17 @@ impl std::error::Error for ArtifactAssemblyRegistryError {}
 
 /// 📌️ Acquires every affected write lock, preflights every candidate, then commits without any
 /// fallible operation after the first registry mutation.
-#[must_use]
-pub async fn commit_artifact_assembly_registry_plan(assembly: &store::ArtifactAssemblyTransaction, plan: ArtifactAssemblyRegistryPlan) -> Result<(), ArtifactAssemblyRegistryError> {
-    let mut store_guards = store::acquire_artifact_assembly_store_registry_guards(assembly).await.map_err(ArtifactAssemblyRegistryError::Store)?;
-    let mut composers = io_registry().await.write().map_err(|_| ArtifactAssemblyRegistryError::Composer(IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "io-composer" })))?;
-    let mut subset_validators = subset_validator_registry().await.write().map_err(|_| ArtifactAssemblyRegistryError::SubsetValidator(SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" })))?;
+pub fn commit_artifact_assembly_registry_plan(assembly: &store::ArtifactAssemblyTransaction, plan: ArtifactAssemblyRegistryPlan) -> Result<(), ArtifactAssemblyRegistryError> {
+    let mut store_guards = store::acquire_artifact_assembly_store_registry_guards(assembly).map_err(|error| ArtifactAssemblyRegistryError::Store(Box::new(error)))?;
+    let mut composers = io_registry().write().map_err(|_| ArtifactAssemblyRegistryError::Composer(Box::new(IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "io-composer" }))))?;
+    let mut subset_validators = subset_validator_registry().write().map_err(|_| ArtifactAssemblyRegistryError::SubsetValidator(SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" })))?;
     let mut formats = format_catalog().write().map_err(|_| ArtifactAssemblyRegistryError::Format(FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "format-catalog" })))?;
-    let proposed_composers = composer_entries_by_key(plan.composer_entries.iter().copied()).await.map_err(ArtifactAssemblyRegistryError::Composer)?;
-    validate_composer_entries(&composers, &proposed_composers).await.map_err(ArtifactAssemblyRegistryError::Composer)?;
-    validate_subset_validators(&subset_validators, &plan.subset_validators).await.map_err(ArtifactAssemblyRegistryError::SubsetValidator)?;
-    let (proposed_formats, proposed_formats_by_kind) = index_format_descriptors(plan.format_descriptors.iter().cloned()).await.map_err(|error| ArtifactAssemblyRegistryError::Format(FormatRegistryError::Conflict(error)))?;
-    validate_format_descriptors(&formats, &proposed_formats, &proposed_formats_by_kind).await.map_err(|error| ArtifactAssemblyRegistryError::Format(FormatRegistryError::Conflict(error)))?;
-    store::preflight_artifact_assembly_store_registry_guards(&store_guards, &plan.document_codecs, &plan.dialect_migrations).await.map_err(ArtifactAssemblyRegistryError::Store)?;
+    let proposed_composers = composer_entries_by_key(plan.composer_entries.iter().copied()).map_err(|error| ArtifactAssemblyRegistryError::Composer(Box::new(error)))?;
+    validate_composer_entries(&composers, &proposed_composers).map_err(|error| ArtifactAssemblyRegistryError::Composer(Box::new(error)))?;
+    validate_subset_validators(&subset_validators, &plan.subset_validators).map_err(ArtifactAssemblyRegistryError::SubsetValidator)?;
+    let (proposed_formats, proposed_formats_by_kind) = index_format_descriptors(plan.format_descriptors.iter().cloned()).map_err(|error| ArtifactAssemblyRegistryError::Format(FormatRegistryError::Conflict(error)))?;
+    validate_format_descriptors(&formats, &proposed_formats, &proposed_formats_by_kind).map_err(|error| ArtifactAssemblyRegistryError::Format(FormatRegistryError::Conflict(error)))?;
+    store::preflight_artifact_assembly_store_registry_guards(&store_guards, &plan.document_codecs, &plan.dialect_migrations).map_err(|error| ArtifactAssemblyRegistryError::Store(Box::new(error)))?;
     for (key, entry) in proposed_composers {
         composers.entry(key).or_insert(entry);
     }
@@ -1976,14 +1947,13 @@ pub async fn commit_artifact_assembly_registry_plan(assembly: &store::ArtifactAs
     for (key, descriptor) in proposed_formats {
         formats.entry(key).or_insert(descriptor);
     }
-    store::commit_artifact_assembly_store_registry_guards(&mut store_guards, plan.document_codecs, plan.dialect_migrations).await;
+    store::commit_artifact_assembly_store_registry_guards(&mut store_guards, plan.document_codecs, plan.dialect_migrations);
     Ok(())
 }
 
 /// 📋️ Serialize every distinct registered format as a `mimes.csv`-shaped body (header + one row
 /// per distinct `kind_id`, sorted for determinism) -- the generic successor to
 /// `mesh::stdio_mimes_csv`.
-#[must_use]
 pub async fn formats_csv() -> Result<String, FormatRegistryError> {
     let reg = format_catalog().read().map_err(|_| FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "format-catalog" }))?;
     let mut seen: BTreeMap<&str, &FormatDescriptor> = BTreeMap::new();
@@ -1992,7 +1962,7 @@ pub async fn formats_csv() -> Result<String, FormatRegistryError> {
     }
     let mut out = String::from("MIME,Extension,Name,FullName,Neutral,Dir,Kind\n");
     for row in seen.into_values() {
-        let mimes = format_mimes(row).await.collect::<Vec<_>>();
+        let mimes = format_mimes(row).collect::<Vec<_>>();
         for extension in &row.extensions {
             for mime in mimes.iter().copied().chain(std::iter::once("").take(usize::from(mimes.is_empty()))) {
                 out.push_str(mime);
@@ -2073,9 +2043,9 @@ mod tests {
     /// doc comment describes, registered and resolved through the real `IO_REGISTRY`.
     #[semio_framework_async_macros::async_test]
     async fn io_compose_via_chains_two_registered_hops() {
-        let _ = register_composer_entries(&ENTRIES).await.expect("register two-hop test entries");
-        let hub_key = IoKey::from_owner_counterpart(HOP1_INTO, HOP1_FROM, IoDirection::Import).await;
-        let target_key = IoKey::from_owner_counterpart(HOP2_INTO, HOP1_INTO, IoDirection::Import).await;
+        register_composer_entries(&ENTRIES).await.expect("register two-hop test entries");
+        let hub_key = IoKey::from_owner_counterpart(HOP1_INTO, HOP1_FROM, IoDirection::Import);
+        let target_key = IoKey::from_owner_counterpart(HOP2_INTO, HOP1_INTO, IoDirection::Import);
         let sources = [ErasedComposeSource { dialect: HOP1_FROM, payload: IoPayload::Text("seed".to_string()) }];
 
         let result = resolve_ready(io_compose_via(&hub_key, &target_key, &sources)).expect("2-hop compose over real registered entries should succeed");
@@ -2090,8 +2060,8 @@ mod tests {
     /// `ComposeError`, never silently attempt the target hop with stale/absent data.
     #[semio_framework_async_macros::async_test]
     async fn io_compose_via_surfaces_hub_resolve_failure() {
-        let unregistered_hub = IoKey::from_owner_counterpart(Dialect { artifact_kind: "test.io-compose-via.unregistered", standard: StandardId("1"), subset: SubsetId("*") }, HOP1_FROM, IoDirection::Import).await;
-        let target_key = IoKey::from_owner_counterpart(HOP2_INTO, HOP1_INTO, IoDirection::Import).await;
+        let unregistered_hub = IoKey::from_owner_counterpart(Dialect { artifact_kind: "test.io-compose-via.unregistered", standard: StandardId("1"), subset: SubsetId("*") }, HOP1_FROM, IoDirection::Import);
+        let target_key = IoKey::from_owner_counterpart(HOP2_INTO, HOP1_INTO, IoDirection::Import);
         let sources = [ErasedComposeSource { dialect: HOP1_FROM, payload: IoPayload::Text("seed".to_string()) }];
         let err = match resolve_ready(io_compose_via(&unregistered_hub, &target_key, &sources)) {
             Err(err) => err,
@@ -2102,13 +2072,13 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn io_registry_rejects_a_conflicting_key_without_replacing_the_first_entry() {
-        let _ = register_composer_entries(std::slice::from_ref(&CONFLICT_FIRST)).await.expect("first owner registers");
+        register_composer_entries(std::slice::from_ref(&CONFLICT_FIRST)).await.expect("first owner registers");
         assert!(matches!(preflight_composer_entry_refs(&[&CONFLICT_SECOND]).await, Err(IoRegistryRegistrationError::Conflict(_))), "preflight must expose the same conflict before any later assembly mutation");
         let conflict = match register_composer_entries(std::slice::from_ref(&CONFLICT_SECOND)).await.expect_err("a second owner for the same IO key must fail") {
             IoRegistryRegistrationError::Conflict(conflict) => conflict,
             IoRegistryRegistrationError::Unavailable(error) => panic!("registry unavailable: {error:?}"),
         };
-        assert_eq!(conflict.key, IoKey::from_owner_counterpart(CONFLICT_FROM, CONFLICT_INTO, IoDirection::Export).await);
+        assert_eq!(conflict.key, IoKey::from_owner_counterpart(CONFLICT_FROM, CONFLICT_INTO, IoDirection::Export));
         let resolved = resolve(&conflict.key).await.expect("first owner remains resolvable");
         assert!(std::ptr::eq(resolved, &CONFLICT_FIRST));
     }
@@ -2133,10 +2103,10 @@ mod tests {
         let txt = format_descriptor_fixture("test.format.txt", "txt", &["text/plain"], &[".txt"]).await;
         let epw = format_descriptor_fixture("test.format.epw", "epw", &[], &[".epw"]).await;
         preflight_format_descriptors(&[txt.clone(), epw.clone()]).await.expect("preflight accepts unclaimed distinct format metadata without mutation");
-        assert!(format_descriptor("test.format.epw").await.expect("catalog availability").is_none(), "preflight must not publish a descriptor");
+        assert!(format_descriptor("test.format.epw").expect("catalog availability").is_none(), "preflight must not publish a descriptor");
         register_format_descriptors(vec![txt.clone(), epw.clone()]).await.expect("txt MIME and EPW's absent MIME are unambiguous");
-        assert!(format_mimes(&epw).await.next().is_none());
-        assert!(format_mimes(&format_descriptor("test.format.epw").await.expect("catalog availability").expect("EPW descriptor")).await.next().is_none());
+        assert!(format_mimes(&epw).next().is_none());
+        assert!(format_mimes(&format_descriptor("test.format.epw").expect("catalog availability").expect("EPW descriptor")).next().is_none());
 
         let duplicate_step = format_descriptor_fixture("test.format.step-duplicate", "step-duplicate", &["application/step", "APPLICATION/STEP"], &[".step", ".stp", ".STEP"]).await;
         assert!(
@@ -2145,11 +2115,11 @@ mod tests {
         );
         let step = format_descriptor_fixture("test.format.step", "step", &["application/step"], &[".step", ".stp"]).await;
         register_format_descriptors(vec![step]).await.expect("plural representation claims register when each identity is distinct");
-        let step = format_descriptor("test.format.step").await.expect("catalog availability").expect("STEP descriptor");
+        let step = format_descriptor("test.format.step").expect("catalog availability").expect("STEP descriptor");
         assert_eq!(step.mimes, ["application/step"]);
         assert_eq!(step.extensions, [".step", ".stp"]);
-        assert_eq!(format_accept_filter(&["test.format.step"]).await.expect("catalog availability"), ".step,.stp");
-        assert!(matches!(format_accept_filter(&["test.format.unknown"]).await, Err(FormatRegistryError::Unknown { input }) if input == "test.format.unknown"));
+        assert_eq!(format_accept_filter(&["test.format.step"]).expect("catalog availability"), ".step,.stp");
+        assert!(matches!(format_accept_filter(&["test.format.unknown"]), Err(FormatRegistryError::Unknown { input }) if input == "test.format.unknown"));
         assert!(formats_csv().await.expect("catalog availability").contains("application/step,.step"));
 
         let first = format_descriptor_fixture("test.format.mime-first", "mime-first", &["application/x-wave0-conflict"], &[".first"]).await;
@@ -2252,14 +2222,14 @@ mod tests {
         let resolver = std::sync::Arc::new(TestResolver);
         let mut decode = DecodeContext::with_resolver(DecodePolicy { representation: CodecRepresentation::Lossless, limits: limits.clone(), cancellation: CancellationToken::new() }, resolver.clone()).await;
         let request = ResourceRequest { locator: "resolver://document".to_string(), expected_media_type: None };
-        let mut source = decode.resolve(&request).await.expect("decode resource resolves").value;
-        let mut output = [0u8; 3];
-        assert_eq!(source.read_chunk(&mut output).await.expect("bounded stream read").value, 3);
-        let mut random = source.random_access().await.expect("random access is available");
-        assert_eq!(random.read_at(0, &mut [0u8; 2]).await.expect("remaining bounded random read").value, 1);
-        assert!(random.read_at(0, &mut [0u8; 1]).await.is_err(), "random access cannot bypass the shared read budget");
-        drop(random);
-        drop(source);
+        {
+            let mut source = decode.resolve(&request).await.expect("decode resource resolves").value;
+            let mut output = [0u8; 3];
+            assert_eq!(source.read_chunk(&mut output).await.expect("bounded stream read").value, 3);
+            let mut random = source.random_access().await.expect("random access is available");
+            assert_eq!(random.read_at(0, &mut [0u8; 2]).await.expect("remaining bounded random read").value, 1);
+            assert!(random.read_at(0, &mut [0u8; 1]).await.is_err(), "random access cannot bypass the shared read budget");
+        }
         decode.budget.enter_recursion().await.expect("first recursion frame");
         assert!(decode.budget.enter_recursion().await.is_err(), "recursion limit is finite");
         decode.budget.leave_recursion().await.expect("leave recursion frame");
@@ -2326,8 +2296,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn artifact_kind_id_accepts_canonical_grammar() {
         for kind in ["s.stdio.stl", "s.stdio.semio"] {
-            assert!(is_canonical_artifact_kind(kind).await, "{kind:?} should be canonical");
-            ArtifactKindId::parse(kind).await.unwrap_or_else(|e| panic!("{kind:?} should parse: {e}"));
+            assert!(is_canonical_artifact_kind(kind), "{kind:?} should be canonical");
+            ArtifactKindId::parse(kind).unwrap_or_else(|e| panic!("{kind:?} should parse: {e}"));
         }
     }
 
@@ -2336,8 +2306,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn artifact_kind_id_rejects_non_canonical_grammar() {
         for kind in ["stdio.stl", "3d.cad", "data.🏛️program", "s.Stdio.stl", "s.stdio", "s.stdio.stl.extra", "s..stl", "s.stdio.-stl"] {
-            assert!(!is_canonical_artifact_kind(kind).await, "{kind:?} should be rejected");
-            assert!(ArtifactKindId::parse(kind).await.is_err(), "{kind:?} should fail to parse");
+            assert!(!is_canonical_artifact_kind(kind), "{kind:?} should be rejected");
+            assert!(ArtifactKindId::parse(kind).is_err(), "{kind:?} should fail to parse");
         }
     }
 
@@ -2397,7 +2367,7 @@ pub mod io_mechanism {
     pub trait Serializer<S> {
         const INTO: Dialect;
         const FIDELITY: IoFidelity;
-        async fn serialize(from: &S) -> IoResult<IoPayload>;
+        fn serialize(from: &S) -> impl std::future::Future<Output = IoResult<IoPayload>> + Send;
     }
 
     /// 🎹️ A typed foreign-payload → native-value decoder. `FROM`/`FIDELITY` are the foreign
@@ -2412,10 +2382,10 @@ pub mod io_mechanism {
         const FROM: Dialect;
         const FIDELITY: IoFidelity;
         const CONFORMANCE: Option<fn(&S) -> Vec<Diagnostic>> = None;
-        async fn sniff(_payload: &IoPayload) -> Confidence {
-            Confidence::None
+        fn sniff(_payload: &IoPayload) -> impl std::future::Future<Output = Confidence> + Send {
+            std::future::ready(Confidence::None)
         }
-        async fn deserialize(payload: &IoPayload) -> IoResult<S>;
+        fn deserialize(payload: &IoPayload) -> impl std::future::Future<Output = IoResult<S>> + Send;
     }
     //#endregion 🔖️Traits
 
@@ -2430,7 +2400,7 @@ pub mod io_mechanism {
         pub run: fn(&IoPayload) -> IoResult<IoPayload>,
     }
 
-    async fn same_io_entry(left: &IoEntry, right: &IoEntry) -> bool {
+    fn same_io_entry(left: &IoEntry, right: &IoEntry) -> bool {
         let same_sniff = match (left.sniff, right.sniff) {
             (Some(a), Some(b)) => std::ptr::fn_addr_eq(a, b),
             (None, None) => true,
@@ -2439,7 +2409,7 @@ pub mod io_mechanism {
         ArtifactDialect::from(left.from) == ArtifactDialect::from(right.from) && ArtifactDialect::from(left.into) == ArtifactDialect::from(right.into) && left.fidelity == right.fidelity && same_sniff && std::ptr::fn_addr_eq(left.run, right.run)
     }
 
-    async fn descriptor_of(entry: &IoEntry) -> IoEntryDescriptor {
+    fn descriptor_of(entry: &IoEntry) -> IoEntryDescriptor {
         IoEntryDescriptor { from: ArtifactDialect::from(entry.from), into: ArtifactDialect::from(entry.into), fidelity: entry.fidelity, sniffs: entry.sniff.is_some() }
     }
     //#endregion 🔖️Entry
@@ -2450,7 +2420,7 @@ pub mod io_mechanism {
 
     static IO_MECHANISM_REGISTRY: std::sync::OnceLock<RwLock<EntryMap>> = std::sync::OnceLock::new();
 
-    async fn io_mechanism_registry() -> &'static RwLock<EntryMap> {
+    fn io_mechanism_registry() -> &'static RwLock<EntryMap> {
         IO_MECHANISM_REGISTRY.get_or_init(|| RwLock::new(BTreeMap::new()))
     }
     // 🐛️ terra-io-thunks: every call site below awaits this before `.read()`/`.write()` — the
@@ -2462,7 +2432,7 @@ pub mod io_mechanism {
     /// registry lock.
     #[derive(Clone, Debug, PartialEq, Eq)]
     pub enum IoRegistryError {
-        Duplicate { from: ArtifactDialect, into: ArtifactDialect },
+        Duplicate { from: Box<ArtifactDialect>, into: Box<ArtifactDialect> },
         Unavailable,
     }
 
@@ -2485,26 +2455,26 @@ pub mod io_mechanism {
     // helper, not a fn-pointer slot, so per R2's O1 it keeps the literal `async` keyword rather
     // than staying sync — restructured off the match guard so the `.await` has a plain expression
     // position to live in.
-    async fn build_proposed(entries: &[&'static IoEntry]) -> Result<EntryMap, IoRegistryError> {
+    fn build_proposed(entries: &[&'static IoEntry]) -> Result<EntryMap, IoRegistryError> {
         let mut proposed: EntryMap = BTreeMap::new();
         for entry in entries {
             let key = (ArtifactDialect::from(entry.from), ArtifactDialect::from(entry.into));
             if let Some(existing) = proposed.get(&key) {
-                if same_io_entry(existing, entry).await {
+                if same_io_entry(existing, entry) {
                     continue;
                 }
-                return Err(IoRegistryError::Duplicate { from: key.0, into: key.1 });
+                return Err(IoRegistryError::Duplicate { from: Box::new(key.0), into: Box::new(key.1) });
             }
             proposed.insert(key, entry);
         }
         Ok(proposed)
     }
 
-    async fn validate_against(existing: &EntryMap, proposed: &EntryMap) -> Result<(), IoRegistryError> {
+    fn validate_against(existing: &EntryMap, proposed: &EntryMap) -> Result<(), IoRegistryError> {
         for (key, entry) in proposed {
             if let Some(current) = existing.get(key) {
-                if !same_io_entry(current, entry).await {
-                    return Err(IoRegistryError::Duplicate { from: key.0.clone(), into: key.1.clone() });
+                if !same_io_entry(current, entry) {
+                    return Err(IoRegistryError::Duplicate { from: Box::new(key.0.clone()), into: Box::new(key.1.clone()) });
                 }
             }
         }
@@ -2518,12 +2488,11 @@ pub mod io_mechanism {
     /// (preflight via `build_proposed`+`validate_against`, THEN commit — all-or-nothing, proven by
     /// `registration_is_all_or_nothing` below); re-registering the identical static entry is
     /// idempotent, mirroring `register_composer_entries`.
-    #[must_use]
-    pub async fn io_register(entries: &'static [IoEntry]) -> Result<(), IoRegistryError> {
-        let _assembly = store::begin_artifact_assembly().await.map_err(|_| IoRegistryError::Unavailable)?;
-        let proposed = build_proposed(&entries.iter().collect::<Vec<_>>()).await?;
-        let mut registry = io_mechanism_registry().await.write().map_err(|_| IoRegistryError::Unavailable)?;
-        validate_against(&registry, &proposed).await?;
+    pub fn io_register(entries: &'static [IoEntry]) -> Result<(), IoRegistryError> {
+        let _assembly = store::begin_artifact_assembly().map_err(|_| IoRegistryError::Unavailable)?;
+        let proposed = build_proposed(&entries.iter().collect::<Vec<_>>())?;
+        let mut registry = io_mechanism_registry().write().map_err(|_| IoRegistryError::Unavailable)?;
+        validate_against(&registry, &proposed)?;
         for (key, entry) in proposed {
             registry.entry(key).or_insert(entry);
         }
@@ -2605,14 +2574,14 @@ pub mod io_mechanism {
         let fidelity = rank_to_fidelity(best.iter().map(|entry| super::resolve_ready(entry.fidelity.rank())).min().expect("a route has at least one hop")).await;
         let mut hops = Vec::with_capacity(best.len());
         for entry in &best {
-            hops.push(descriptor_of(entry).await);
+            hops.push(descriptor_of(entry));
         }
         Ok(IoOutcome::clean(IoRoute { hops, fidelity }).await)
     }
 
     /// 🌉️ `resolve_route` against the process-wide registry.
     pub async fn io_route(from: &ArtifactDialect, into: &ArtifactDialect, max_hops: u8) -> IoResult<IoRoute> {
-        let registry = io_mechanism_registry().await.read().map_err(|_| IoError { message: "io mechanism registry unavailable".to_string(), diagnostics: Vec::new() })?;
+        let registry = io_mechanism_registry().read().map_err(|_| IoError { message: "io mechanism registry unavailable".to_string(), diagnostics: Vec::new() })?.clone();
         resolve_route(&registry, from, into, max_hops).await
     }
 
@@ -2632,7 +2601,7 @@ pub mod io_mechanism {
     /// 🌉️ Folds `IoEntry::run` along every hop of `route`, accumulating diagnostics; on failure
     /// the `IoError.message` names which hop (by dialect coordinates) failed.
     pub async fn io_run(route: &IoRoute, payload: IoPayload) -> IoResult<IoPayload> {
-        let registry = io_mechanism_registry().await.read().map_err(|_| IoError { message: "io mechanism registry unavailable".to_string(), diagnostics: Vec::new() })?;
+        let registry = io_mechanism_registry().read().map_err(|_| IoError { message: "io mechanism registry unavailable".to_string(), diagnostics: Vec::new() })?.clone();
         resolve_run(&registry, route, payload).await
     }
     //#endregion 🔖️Route
@@ -2657,22 +2626,23 @@ pub mod io_mechanism {
     /// variant (`CARRIER_BINARY` for `Binary`, `CARRIER_TEXT` for `Text` — never both), drops
     /// `Confidence::None`, sorts by confidence (descending) then coordinate (ascending).
     pub async fn io_identify(payload: &IoPayload) -> Vec<(ArtifactDialect, Confidence)> {
-        match io_mechanism_registry().await.read() {
-            Ok(registry) => resolve_identify(&registry, payload).await,
-            Err(_) => Vec::new(),
-        }
+        let registry = match io_mechanism_registry().read() {
+            Ok(registry) => registry.clone(),
+            Err(_) => return Vec::new(),
+        };
+        resolve_identify(&registry, payload).await
     }
 
     /// 📇️ Every registered entry, erased to owned descriptors — the WIT `list-io-entries` guest
     /// export body and the TS `IoEntryDescriptor[]` mirror both use this shape. Builds the vec with
     /// a plain `for` loop rather than `.map(..).collect()` because `descriptor_of` is `async` and a
     /// `Iterator::map` closure (std's fixed `FnMut` signature) cannot itself await.
-    pub async fn io_entries() -> Vec<IoEntryDescriptor> {
-        match io_mechanism_registry().await.read() {
+    pub fn io_entries() -> Vec<IoEntryDescriptor> {
+        match io_mechanism_registry().read() {
             Ok(registry) => {
                 let mut descriptors = Vec::with_capacity(registry.len());
                 for entry in registry.values() {
-                    descriptors.push(descriptor_of(entry).await);
+                    descriptors.push(descriptor_of(entry));
                 }
                 descriptors
             }
@@ -2780,6 +2750,7 @@ pub mod io_mechanism {
 
         // 🚫️async: E4 fn-pointer slot — `IoEntry.run` is a bare `fn` pointer and this test double
         // never suspends, so it needs no `resolve_ready` wrapping either.
+        #[allow(clippy::unnecessary_wraps, reason = "IoEntry test doubles must implement its fallible function-pointer contract")]
         fn passthrough(payload: &IoPayload) -> IoResult<IoPayload> {
             Ok(super::super::resolve_ready(IoOutcome::clean(payload.clone())))
         }
@@ -2876,11 +2847,11 @@ pub mod io_mechanism {
             let mut existing: EntryMap = BTreeMap::new();
             existing.insert(key(A, B).await, &ENTRY_A);
 
-            let same = build_proposed(&[&ENTRY_A]).await.unwrap();
-            assert!(validate_against(&existing, &same).await.is_ok(), "re-registering the identical entry is idempotent");
+            let same = build_proposed(&[&ENTRY_A]).unwrap();
+            assert!(validate_against(&existing, &same).is_ok(), "re-registering the identical entry is idempotent");
 
-            let different = build_proposed(&[&ENTRY_B]).await.unwrap();
-            assert!(matches!(validate_against(&existing, &different).await, Err(IoRegistryError::Duplicate { .. })), "a different entry for the same (from, into) key is a typed conflict");
+            let different = build_proposed(&[&ENTRY_B]).unwrap();
+            assert!(matches!(validate_against(&existing, &different), Err(IoRegistryError::Duplicate { .. })), "a different entry for the same (from, into) key is a typed conflict");
         }
 
         #[semio_framework_async_macros::async_test]
@@ -2892,8 +2863,8 @@ pub mod io_mechanism {
             let mut existing: EntryMap = BTreeMap::new();
             existing.insert(key(A, B).await, &ORIGINAL);
 
-            let proposed = build_proposed(&[&CONFLICTING, &FRESH]).await.expect("the batch is internally conflict-free");
-            assert!(matches!(validate_against(&existing, &proposed).await, Err(IoRegistryError::Duplicate { .. })), "one conflicting key must fail the whole batch");
+            let proposed = build_proposed(&[&CONFLICTING, &FRESH]).expect("the batch is internally conflict-free");
+            assert!(matches!(validate_against(&existing, &proposed), Err(IoRegistryError::Duplicate { .. })), "one conflicting key must fail the whole batch");
             assert!(!existing.contains_key(&key(D, E).await), "FRESH must not leak into the registry as a side effect of a failed validation");
             assert_eq!(existing.len(), 1, "existing registry state must be untouched by a failed validation");
         }

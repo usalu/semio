@@ -17,22 +17,22 @@ pub struct ScaleObject {
 impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for ScaleObject {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "scale", entity: "object", kind: "scale-object", record: "ScaledObject" };
 
-    async fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
+    fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
+    fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Scale object \"{}\"", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn scale_object(id: String, new_scale: Option<crate::artifacts::puzzle3d::Puzzle3dScale>) -> Puzzle3dMutation {
+pub fn scale_object(id: String, new_scale: Option<crate::artifacts::puzzle3d::Puzzle3dScale>) -> Puzzle3dMutation {
     Puzzle3dMutation::ScaleObject(ScaleObject { id, new_scale })
 }

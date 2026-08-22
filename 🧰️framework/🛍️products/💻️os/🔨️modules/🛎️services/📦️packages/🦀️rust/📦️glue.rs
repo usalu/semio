@@ -5,4 +5,10 @@
 
 #[path = "../../🦀️component.rs"]
 mod component;
+#[path = "../../🦀️file_watcher.rs"]
+mod file_watcher;
+#[path = "../../🦀️native_io.rs"]
+mod native_io;
 pub use component::*;
+pub use file_watcher::*;
+pub use native_io::*;

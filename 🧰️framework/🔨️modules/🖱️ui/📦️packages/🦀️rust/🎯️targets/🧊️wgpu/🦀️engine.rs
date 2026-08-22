@@ -118,6 +118,12 @@ pub struct Ui {
     lane_cursor: usize,
 }
 
+#[cfg(not(target_arch = "wasm32"))]
+const _: fn() = || {
+    fn assert_send<T: Send>() {}
+    assert_send::<Ui>();
+};
+
 impl Ui {
     pub fn new() -> Self {
         Self { windows: HashMap::new(), shell: Shell::new(), theme: Theme::default(), pending_commands: Vec::new(), layout_queues: std::array::from_fn(|_| VecDeque::new()), lane_cursor: 0 }

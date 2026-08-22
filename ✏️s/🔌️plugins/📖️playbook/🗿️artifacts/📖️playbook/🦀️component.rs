@@ -318,7 +318,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
 /// .composers(...).languages(...).document_codec(...)` chain, deleted outright, no dual channel) as
 /// the ONLY registration channel for schema/io/viewer/editor rows. `definition()` (old
 /// `ArtifactDefinition`/capability rows, above) is kept per debt D1.
-pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::PlaybookApps> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.playbook.playbook").expect("canonical playbook kind"), localization: &[], standards: vec![crate::artifacts::playbook::standards::v1::standard()] }
@@ -328,7 +328,7 @@ pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDe
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`. Private:
 /// `declaration()` above is its only caller (moved here with it from `⚙️engine`, ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g7 — kept unexported, not widened).
-pub async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -392,7 +392,7 @@ pub async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
 /// `crate::editor::playbook::create_playbook_play_app`'s `🔖️Manifest` region.
-pub async fn artifact_kind() -> ArtifactKindSpec {
+pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "text.playbook".into(),
         name: "Playbook".into(),

@@ -17,22 +17,22 @@ pub struct ReplaceReferenceSource {
 impl protocol::MutationKind<Puzzle3dSnapshot, Puzzle3dMutation> for ReplaceReferenceSource {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "reference", kind: "replace-reference-source", record: "ReplacedReferenceSource" };
 
-    async fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
+    fn diff(&self, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
+    fn inverse(&self, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Replace reference \"{}\" source", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }
 //#endregion 🔖️Mutation
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn replace_reference_source(id: String, new_source: crate::artifacts::puzzle3d::Puzzle3dReferenceSource) -> Puzzle3dMutation {
+pub fn replace_reference_source(id: String, new_source: crate::artifacts::puzzle3d::Puzzle3dReferenceSource) -> Puzzle3dMutation {
     Puzzle3dMutation::ReplaceReferenceSource(ReplaceReferenceSource { id, new_source })
 }

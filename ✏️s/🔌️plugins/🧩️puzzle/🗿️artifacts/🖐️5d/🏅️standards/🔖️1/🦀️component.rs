@@ -12,6 +12,6 @@ use crate::artifacts::puzzle5d::standards::v1::subsets;
 use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use semio_framework_plugin::StandardId;
 
-pub async fn standard() -> StandardDeclaration {
+pub fn standard() -> StandardDeclaration<crate::PuzzleApps> {
     StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.puzzle5d+json"], extensions: &["puzzle5d-play"] }, subsets: vec![subsets::any::subset()] }
 }

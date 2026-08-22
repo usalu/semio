@@ -57,7 +57,7 @@ pub(crate) fn halo(adjacency: &AdjacencyView, centers: &[NodeId], radius: usize)
 /// `previous_assignment` must have one entry per node (as produced by a prior `Solved` outcome on
 /// this same model/topology).
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn repair_region<T: Topology>(model: &CompiledModel, topo: &T, adjacency: &AdjacencyView, previous_assignment: &[PatternId], centers: &[NodeId], radius: usize, config: &SearchConfig, seed: u64) -> SolveOutcome {
+pub(crate) fn repair_region<T: Topology + Clone + Send>(model: &CompiledModel, topo: &T, adjacency: &AdjacencyView, previous_assignment: &[PatternId], centers: &[NodeId], radius: usize, config: &SearchConfig, seed: u64) -> SolveOutcome {
     let region = halo(adjacency, centers, radius);
     let mut in_region = vec![false; adjacency.node_count()];
     for &n in &region {

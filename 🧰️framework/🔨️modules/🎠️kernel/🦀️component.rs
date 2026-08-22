@@ -80,7 +80,6 @@ pub use protocol_core::HybridLogicalTimestamp;
 
 //#region 🔖️Capability
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum Rights {
     Read,
@@ -90,7 +89,6 @@ pub enum Rights {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum ArtifactKind {
     Document,
@@ -103,7 +101,6 @@ pub enum ArtifactKind {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum Scope {
     Instance,
@@ -113,7 +110,6 @@ pub enum Scope {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct CapabilityRequirement {
     pub artifact: ArtifactKind,
@@ -178,7 +174,6 @@ pub struct CommandInvocation {
 /// 📋️ How a paste anchors the copied fragment relative to the paste point — the seven placement
 /// modes semio_compose_rs's `copyDesign`/`pasteDesign` supported, now an OS-owned concept.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum PasteAnchor {
     #[default]
@@ -194,13 +189,11 @@ pub enum PasteAnchor {
 /// 📋️ Where/how a paste places its fragment: `anchor` picks the reference point, `position` (when
 /// given) overrides where that reference point lands.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct PastePlacement {
     #[serde(default)]
     pub anchor: PasteAnchor,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub position: Option<[f64; 3]>,
 }
 
@@ -210,14 +203,12 @@ pub struct PastePlacement {
 /// cross-app compatibility key (see `media_types_compatible`) an app's `clipboard_accepts()` checks
 /// before offering to paste a fragment copied from a different app.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ClipboardFragment {
     pub schema: String,
     pub media_type: MediaType,
     pub dsl_text: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
     pub pack_bytes: Option<Vec<u8>>,
     pub source_app: String,
     pub label: String,
@@ -225,15 +216,24 @@ pub struct ClipboardFragment {
 
 /// 🧯️ Clipboard operation failures — an app's `copy_fragment`/`paste_operations` return these instead
 /// of panicking on an empty selection or an incompatible fragment.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum ClipboardError {
-    #[error("nothing selected to copy")]
     EmptySelection,
-    #[error("clipboard fragment media type {0:?} not accepted by this app")]
     IncompatibleMediaType(MediaType),
-    #[error("clipboard fragment failed to parse: {0}")]
     ParseFailed(String),
 }
+
+impl std::fmt::Display for ClipboardError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::EmptySelection => formatter.write_str("nothing selected to copy"),
+            Self::IncompatibleMediaType(media_type) => write!(formatter, "clipboard fragment media type {media_type:?} not accepted by this app"),
+            Self::ParseFailed(message) => write!(formatter, "clipboard fragment failed to parse: {message}"),
+        }
+    }
+}
+
+impl std::error::Error for ClipboardError {}
 //#endregion 🔖️Clipboard
 
 //#region 🔖️Effect
@@ -995,7 +995,6 @@ pub enum Event {
 /// 🚀️ Why an instance was activated — `📓️design-abi.md` §2's activation-event list, matched
 /// against a `manifest::PackageDescriptor.activation_events` declaration at install time.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ActivationEvent {
     OnCommand { id: String },
@@ -1083,7 +1082,6 @@ pub struct TurnResult {
 /// expected to grow as new capability surfaces land — an exhaustive enum would need a matching
 /// wildcard arm anyway.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(transparent)]
 pub struct CapabilityId(pub String);
 
@@ -1093,7 +1091,6 @@ pub struct CapabilityId(pub String);
 /// consumers outside this packet's owned paths (`🔌️plugin/🏗️builder`, `🔌️plugin/🖥️host`,
 /// `🔌️plugin/🦀️component.rs`) — see this packet's report for the full consumer list.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct CapabilityRequest {
     pub id: CapabilityId,
@@ -1110,17 +1107,14 @@ pub struct CapabilityRequest {
 /// outside this packet's owned paths (`📦️packages/🦀️rust/📦️glue.rs`'s re-export list) — see the
 /// report's naming-collision note.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct BrokerCapabilityGrant {
     /// 🔢️ `u128` has no JavaScript number equivalent, so the mirror carries it as a decimal string —
     /// same treatment `PluginDependency.version` gets in `🛂️manifest`.
-    #[cfg_attr(feature = "typegen", ts(type = "string"))]
     pub token: CapabilityToken,
     pub id: CapabilityId,
     pub scope: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub expires_ms: Option<u64>,
 }
 
@@ -1140,59 +1134,41 @@ pub enum CapabilityChange {
 /// min-down). A plugin can sit inside its `memory_bytes` limit and still exhaust the host through
 /// timers/UI nodes/requests/GPU allocations, which is why the schema is this wide.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct QuotaSchema {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub memory_bytes: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub fuel_per_turn: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub turn_deadline_ms: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub tables: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub mailbox_len: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub message_bytes: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub outstanding_requests: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub timers: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub storage_bytes: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub network_bytes_per_min: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub ui_nodes: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub patch_bytes: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub patch_hz: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub blob_resident_bytes: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub gpu_ms_per_frame: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub background_ms_per_min: Option<u64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub log_bytes_per_min: Option<u64>,
 }
 
@@ -1231,10 +1207,10 @@ pub enum FailureAction {
 /// ∩ the host plugin's extension-point allowance ∩ user approvals ∩ the host plugin's own
 /// effective set" — `admit_effect` is where that intersection is enforced.
 pub trait BrokerHooks {
-    async fn admit_effect(&self, instance: &PluginInstanceId, effect: &Effect) -> Result<(), Fault>;
-    async fn on_turn_finished(&self, instance: &PluginInstanceId, usage: &Usage);
-    async fn on_breach(&self, instance: &PluginInstanceId, breach: &QuotaBreach) -> FailureAction;
-    async fn on_capability_change(&self, instance: &PluginInstanceId, change: &CapabilityChange);
+    fn admit_effect(&self, instance: &PluginInstanceId, effect: &Effect) -> impl std::future::Future<Output = Result<(), Fault>> + Send;
+    fn on_turn_finished(&self, instance: &PluginInstanceId, usage: &Usage) -> impl std::future::Future<Output = ()> + Send;
+    fn on_breach(&self, instance: &PluginInstanceId, breach: &QuotaBreach) -> impl std::future::Future<Output = FailureAction> + Send;
+    fn on_capability_change(&self, instance: &PluginInstanceId, change: &CapabilityChange) -> impl std::future::Future<Output = ()> + Send;
 }
 //#endregion 🔖️Broker
 
@@ -1256,7 +1232,6 @@ pub trait BrokerHooks {
 /// dependency-edge-law reason `PackagePluginDependency`'s own docstring gives for its wire-shape
 /// duplication).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ExtensionDescriptor {
     pub extension_id: String,

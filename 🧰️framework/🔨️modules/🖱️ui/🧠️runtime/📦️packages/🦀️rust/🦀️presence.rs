@@ -147,7 +147,7 @@ mod tests {
     fn presence_entries_expire_exactly_at_their_ttl_and_a_flush_after_expiry_omits_them() {
         let mut hub = PresenceHub::new();
         let surface = SurfaceId::from("note.play.navigator");
-        hub.record_peer(surface.clone(), "row-1", mark("a"), 1_000, 0);
+        hub.record_peer(surface, "row-1", mark("a"), 1_000, 0);
 
         let first = hub.flush();
         assert_eq!(first.len(), 1);
@@ -170,7 +170,7 @@ mod tests {
         let surface = SurfaceId::from("note.play.navigator");
         hub.record_peer(surface.clone(), "row-1", PeerMark { hovered: true, ..mark("a") }, 4_000, 0);
         hub.record_peer(surface.clone(), "row-1", PeerMark { hovered: true, selected: true, ..mark("a") }, 4_000, 10);
-        hub.record_peer(surface.clone(), "row-1", PeerMark { hovered: false, selected: true, ..mark("a") }, 4_000, 20);
+        hub.record_peer(surface, "row-1", PeerMark { hovered: false, selected: true, ..mark("a") }, 4_000, 20);
 
         let updates = hub.flush();
         assert_eq!(updates.len(), 1, "a burst of pointer moves on one key must cost exactly one update");
@@ -184,7 +184,7 @@ mod tests {
         hub.record_own(surface.clone(), "row-1", OwnPresence { hovered: true, ..Default::default() }, 1_000);
         hub.record_own(surface.clone(), "row-1", OwnPresence { hovered: true, selected: true, ..Default::default() }, 1_000);
         let newest = OwnPresence { hovered: false, selected: true, previewed: true, color: Some(2) };
-        hub.record_own(surface.clone(), "row-1", newest, 1_000);
+        hub.record_own(surface, "row-1", newest, 1_000);
 
         let updates = hub.flush();
         assert_eq!(updates.len(), 1);
@@ -195,7 +195,7 @@ mod tests {
     fn own_presence_never_expires() {
         let mut hub = PresenceHub::new();
         let surface = SurfaceId::from("s");
-        hub.record_own(surface.clone(), "row-1", OwnPresence { hovered: true, ..Default::default() }, 1_000);
+        hub.record_own(surface, "row-1", OwnPresence { hovered: true, ..Default::default() }, 1_000);
         hub.flush();
 
         hub.expire(1_000_000);
@@ -207,7 +207,7 @@ mod tests {
         let mut hub = PresenceHub::new();
         let surface = SurfaceId::from("s");
         hub.record_peer(surface.clone(), "row-1", mark("a"), 1_000, 0);
-        hub.record_peer(surface.clone(), "row-1", mark("b"), 5_000, 0);
+        hub.record_peer(surface, "row-1", mark("b"), 5_000, 0);
         let first = hub.flush();
         assert_eq!(first[0].peers.len(), 2);
 

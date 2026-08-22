@@ -20,7 +20,7 @@ export default defineConfig({
       { find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx") },
       {
         find: "@semio-tech/mit-bestand-praesentation-projektetage-spec",
-        replacement: resolve(repoRoot, "./♻️mit-bestand/🎤️präsentation/📅️33.projektetage/⚡️implementations/🟦️typescript/📦️index.ts"),
+        replacement: resolve(repoRoot, "./♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📦️index.ts"),
       },
     ],
   },
@@ -28,9 +28,12 @@ export default defineConfig({
     name: "@semio-tech/animate-js",
     mode: "test",
     environment: "jsdom",
-    include: [],
+    include: ["../../🎛️apps/🎬️present/⚡️implementations/🟦️typescript/🧪️index.test.ts"],
     coverage: { include: ["../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react/🟦️component.tsx"] },
-    includeSource: ["../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react/🟦️component.tsx"],
+    includeSource: [
+      "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react/🟦️component.tsx",
+      "../../🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react/🔨️modules/🔌️pdf-canvas-port/🟦️component.ts",
+    ],
     passWithNoTests: false,
     setupFiles: ["./🟦️vitest.setup.ts"],
   },

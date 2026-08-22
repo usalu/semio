@@ -540,18 +540,40 @@ pub const MAX_PLAN_DEPTH: u8 = 8;
 
 /// @emoji 🚧️ Typed failure of composite-mutation planning — never a panic, per the purity law on
 /// [`CompositeMutationKind::plan`].
-#[derive(Clone, Debug, PartialEq, thiserror::Error)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum PlanError {
-    #[error("plan depth {0} exceeds MAX_PLAN_DEPTH")]
     DepthExceeded(u8),
-    #[error("plan cycle on {0}")]
     Cycle(String),
-    #[error("step rejected: {0}")]
     StepRejected(String),
-    #[error("step diff could not be applied: {0}")]
-    Apply(#[from] MutationApplyError),
-    #[error("{0}")]
+    Apply(MutationApplyError),
     Invalid(String),
+}
+
+impl std::fmt::Display for PlanError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::DepthExceeded(depth) => write!(formatter, "plan depth {depth} exceeds MAX_PLAN_DEPTH"),
+            Self::Cycle(id) => write!(formatter, "plan cycle on {id}"),
+            Self::StepRejected(detail) => write!(formatter, "step rejected: {detail}"),
+            Self::Apply(error) => write!(formatter, "step diff could not be applied: {error}"),
+            Self::Invalid(detail) => formatter.write_str(detail),
+        }
+    }
+}
+
+impl std::error::Error for PlanError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Apply(error) => Some(error),
+            _ => None,
+        }
+    }
+}
+
+impl From<MutationApplyError> for PlanError {
+    fn from(error: MutationApplyError) -> Self {
+        Self::Apply(error)
+    }
 }
 
 /// @emoji 🧮️ Accumulates a [`CompositeMutationKind::plan`]'s steps against a snapshot that starts
@@ -626,7 +648,7 @@ impl<P: Clone, Op: Mutation<P>> Planner<P, Op> {
         let next_depth = self.depth.checked_add(1).filter(|depth| *depth <= MAX_PLAN_DEPTH).ok_or(PlanError::DepthExceeded(MAX_PLAN_DEPTH))?;
         let key = (step.mutation_id.0.clone(), *blake3::hash(&step.payload).as_bytes());
         if self.seen.contains(&key) {
-            return Err(PlanError::Cycle(step.target.artifact_id.clone()));
+            return Err(PlanError::Cycle(step.target.artifact_id));
         }
         self.depth = next_depth;
         self.seen.push(key);

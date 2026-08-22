@@ -95,7 +95,7 @@ impl Default for Puzzle5dArtifact {
 
 impl Puzzle5dArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> Puzzle5dSnapshot {
+    pub fn to_snapshot(&self) -> Puzzle5dSnapshot {
         Puzzle5dSnapshot {
             schema: self.schema.clone(),
             domain: self.domain.clone(),
@@ -110,7 +110,7 @@ impl Puzzle5dArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub async fn from_snapshot(snapshot: Puzzle5dSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: Puzzle5dSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             domain: snapshot.domain,
@@ -151,7 +151,7 @@ impl Puzzle5dArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: Puzzle5dSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: Puzzle5dSnapshot) {
         self.schema = snapshot.schema;
         self.domain = snapshot.domain;
         self.label = snapshot.label;
@@ -167,7 +167,7 @@ impl Puzzle5dArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.puzzle.puzzle5d` — twenty handcrafted schema leaves.
-pub async fn puzzle5d_artifact_schema_descriptor() -> artifact_schema::ArtifactSchemaDescriptor {
+pub fn puzzle5d_artifact_schema_descriptor() -> artifact_schema::ArtifactSchemaDescriptor {
     artifact_schema::ArtifactSchemaDescriptor {
         id: "s.puzzle.puzzle5d",
         artifact: artifact_schema::FacetLeaves {
@@ -223,10 +223,10 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<Puzzle5dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self { snapshot: <Puzzle5dSnapshot as store::ArtifactDsl>::parse_dsl(text)?, diagnostics: Vec::new() })
         }
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<Puzzle5dSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self { snapshot: <Puzzle5dSnapshot as store::ArtifactPack>::decode_pack(bytes)?, diagnostics: Vec::new() })
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
@@ -323,7 +323,7 @@ pub const PUZZLE5D_DEFAULT_MANIFEST_ID: &str = "puzzle5d-default";
 /// 🧲️ Looks up whether two grip kinds are compatible per the `puzzle5d-default` manifest's
 /// `kindCompatibility` rows — the single shared table both the 2D board and 3D world honor so
 /// brush/fill suggestions agree across projections.
-pub async fn puzzle5d_grip_kinds_compatible(source_kind: &str, target_kind: &str) -> bool {
+pub fn puzzle5d_grip_kinds_compatible(source_kind: &str, target_kind: &str) -> bool {
     let Some(manifest) = graph::manifest::manifest_by_id(PUZZLE5D_DEFAULT_MANIFEST_ID) else {
         return false;
     };
@@ -340,12 +340,12 @@ pub async fn puzzle5d_grip_kinds_compatible(source_kind: &str, target_kind: &str
 // 🚚️ Relocated from the deleted `⚙️engine` — pure document constructors/helpers with no app/wasm
 // dependency, consumed by both the app's wasm bridge (`empty_puzzle5d_snapshot`) and the mutations
 // binary facet, and by the transfer helpers (`next_id`).
-pub async fn empty_puzzle5d_snapshot() -> Puzzle5dSnapshot {
+pub fn empty_puzzle5d_snapshot() -> Puzzle5dSnapshot {
     Puzzle5dSnapshot::default()
 }
 
 /// 🪪️ Finds the smallest `"{prefix}{n}"` id not already present in `existing`.
-pub async fn next_id<'a>(existing: impl Iterator<Item = &'a str>, prefix: &str) -> String {
+pub fn next_id<'a>(existing: impl Iterator<Item = &'a str>, prefix: &str) -> String {
     let ids: HashSet<&str> = existing.collect();
     let mut i = ids.len();
     loop {
@@ -363,8 +363,8 @@ pub async fn next_id<'a>(existing: impl Iterator<Item = &'a str>, prefix: &str) 
 mod engine_relocation_tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn puzzle5d_grip_kinds_compatible_reads_manifest_rows() {
+    #[test]
+    fn puzzle5d_grip_kinds_compatible_reads_manifest_rows() {
         assert!(puzzle5d_grip_kinds_compatible("port", "port"));
         assert!(puzzle5d_grip_kinds_compatible("vortex", "vortex"));
         assert!(!puzzle5d_grip_kinds_compatible("port", "vortex"));

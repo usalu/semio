@@ -18,7 +18,7 @@ pub struct SetResultDisplay {
     pub mode_index: u32,
 }
 
-pub async fn handle(payload: &SetResultDisplay, _doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+pub fn handle(payload: &SetResultDisplay, _doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
     Ok(Emit::config(vec![Fem2dConfigMutation::SetResultDisplay { source_id: payload.source_id.clone(), mode: payload.mode.clone(), mode_index: payload.mode_index }]))
 }
 
@@ -32,10 +32,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn set_result_display_is_config_only() {
         let mut app = fem2d_app();
-        let before = app.snapshot().expect("snapshot");
-        let result = dispatch(&mut app, Fem2dCommand::SetResultDisplay(SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0 }));
+        let before = semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot");
+        let result = dispatch(&mut app, Fem2dCommand::SetResultDisplay(SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0 })).await;
         assert!(result.mutations.is_empty(), "setResultDisplay must not emit document operations (it's config-only)");
-        assert_eq!(app.snapshot().expect("snapshot"), before);
+        assert_eq!(semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot"), before);
     }
 }
 //#endregion 🧪️Tests

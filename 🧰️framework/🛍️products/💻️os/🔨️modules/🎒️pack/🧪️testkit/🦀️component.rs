@@ -255,7 +255,7 @@ impl RecordValueGen {
             Shape::Float => FieldValue::Float(self.next_f64()),
             Shape::Text => FieldValue::Text(self.next_string(6)),
             Shape::Bytes64 => FieldValue::Bytes64(Vec::new()),
-            Shape::Enum(variants) => FieldValue::Enum(variants.first().map(|(_, ordinal)| *ordinal).unwrap_or(0)),
+            Shape::Enum(variants) => FieldValue::Enum(variants.first().map_or(0, |(_, ordinal)| *ordinal)),
             Shape::Tuple(_, _) => FieldValue::Tuple(Vec::new()),
             Shape::List(_) => FieldValue::List(Vec::new()),
             Shape::Record(_) => FieldValue::Record(RecordValue::default()),
@@ -437,7 +437,7 @@ pub async fn assert_unknown_field_preserved(spec: &RecordSpec, record_with_extra
 
     let mut expected_extra: Vec<u16> = extra_ids.to_vec();
     expected_extra.sort_unstable();
-    let mut actual_extra: Vec<u16> = report.unknown_field_ids.clone();
+    let mut actual_extra: Vec<u16> = report.unknown_field_ids;
     actual_extra.sort_unstable();
     assert_eq!(actual_extra, expected_extra, "DecodeReport.unknown_field_ids must exactly match the caller-declared extra field ids");
 
@@ -569,8 +569,8 @@ mod tests {
         let spec = mixed_spec();
         for seed in 0..20u64 {
             let record = RecordValueGen::new(seed).generate(&spec, 4);
-            let bytes = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).await.unwrap_or_else(|e| panic!("seed {seed}: encode_document failed: {e}"));
-            crate::os_pack::decode_document(&bytes, &spec, &crate::os_pack::DecodeOptions::default()).await.unwrap_or_else(|e| panic!("seed {seed}: decode_document failed: {e}"));
+            let bytes = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).unwrap_or_else(|e| panic!("seed {seed}: encode_document failed: {e}"));
+            crate::os_pack::decode_document(&bytes, &spec, &crate::os_pack::DecodeOptions::default()).unwrap_or_else(|e| panic!("seed {seed}: decode_document failed: {e}"));
         }
     }
 
@@ -633,8 +633,8 @@ mod tests {
         let spec = camera_spec();
         let parse_dsl = async |text: &str| crate::os_dsl::schema::parse(text, &spec, &ParseOptions::default()).unwrap_or_else(|e| panic!("parse failed: {e}"));
         let print_dsl = async |value: &RecordValue| crate::os_dsl::schema::print(value, &spec, JoinMode::Document);
-        let encode_pack = async |value: &RecordValue| crate::os_pack::encode_document(&spec, value, &crate::os_pack::EncodeOptions::default()).await.expect("encode_pack");
-        let decode_pack = async |bytes: &[u8]| crate::os_pack::decode_document(bytes, &spec, &crate::os_pack::DecodeOptions::default()).await.expect("decode_pack").0;
+        let encode_pack = async |value: &RecordValue| crate::os_pack::encode_document(&spec, value, &crate::os_pack::EncodeOptions::default()).expect("encode_pack");
+        let decode_pack = async |bytes: &[u8]| crate::os_pack::decode_document(bytes, &spec, &crate::os_pack::DecodeOptions::default()).expect("decode_pack").0;
         assert_dsl_pack_bidirectional(parse_dsl, print_dsl, encode_pack, decode_pack, &camera_sample()).await;
     }
     //#endregion 🔖️Laws
@@ -644,14 +644,14 @@ mod tests {
     // decoder slot — bridges via `os_io::resolve_ready` (the same sanctioned pattern already used
     // by `📡️spr/🧪️testkit`'s `fuzz_truncation_never_panics_history_reader_open`), see R9/E5.
     fn decode_closure(spec: RecordSpec) -> impl Fn(&[u8]) -> Result<(), String> {
-        move |bytes: &[u8]| crate::os_io::resolve_ready(crate::os_pack::decode_document(bytes, &spec, &crate::os_pack::DecodeOptions::default())).map(|_| ()).map_err(|e| e.to_string())
+        move |bytes: &[u8]| crate::os_pack::decode_document(bytes, &spec, &crate::os_pack::DecodeOptions::default()).map(|_| ()).map_err(|e| e.to_string())
     }
 
     #[semio_framework_async_macros::async_test]
     async fn fuzz_truncation_never_panics_on_a_real_encoded_document() {
         let spec = mixed_spec();
         let record = RecordValueGen::new(9).generate(&spec, 4);
-        let bytes = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).await.expect("encode_document");
+        let bytes = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).expect("encode_document");
         let report = fuzz_truncation(&bytes, CorruptionLevel::Quick, decode_closure(spec));
         assert!(report.cases_panicked.is_empty(), "fuzz_truncation observed panics: {:?}", report.cases_panicked);
         assert!(report.cases_run > 0, "fuzz_truncation must have run at least one case");
@@ -661,7 +661,7 @@ mod tests {
     async fn fuzz_bit_flips_never_panics_on_a_real_encoded_document() {
         let spec = mixed_spec();
         let record = RecordValueGen::new(11).generate(&spec, 4);
-        let bytes = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).await.expect("encode_document");
+        let bytes = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).expect("encode_document");
         let report = fuzz_bit_flips(&bytes, CorruptionLevel::Quick, decode_closure(spec));
         assert!(report.cases_panicked.is_empty(), "fuzz_bit_flips observed panics: {:?}", report.cases_panicked);
         assert!(report.cases_run > 0, "fuzz_bit_flips must have run at least one case");
@@ -703,8 +703,8 @@ mod tests {
     async fn golden_hash_hex_matches_a_real_encoded_document_across_two_encodes() {
         let spec = mixed_spec();
         let record = RecordValueGen::new(5).generate(&spec, 4);
-        let a = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).await.unwrap();
-        let b = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).await.unwrap();
+        let a = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).unwrap();
+        let b = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).unwrap();
         assert_eq!(golden_hash_hex(&a).await, golden_hash_hex(&b).await, "golden hash of a canonical encoding must be stable across repeated encodes");
     }
     //#endregion 🔖️Golden
@@ -717,7 +717,7 @@ mod tests {
         async fn fuzz_truncation_and_bit_flips_never_panic_at_long_density() {
             let spec = mixed_spec();
             let record = RecordValueGen::new(21).generate(&spec, 5);
-            let bytes = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).await.expect("encode_document");
+            let bytes = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).expect("encode_document");
             let truncation_report = fuzz_truncation(&bytes, CorruptionLevel::Long, decode_closure(spec.clone()));
             let bit_flip_report = fuzz_bit_flips(&bytes, CorruptionLevel::Long, decode_closure(spec));
             assert!(truncation_report.cases_panicked.is_empty(), "long-level truncation fuzz observed panics: {:?}", truncation_report.cases_panicked);
@@ -736,7 +736,7 @@ mod tests {
         async fn fuzz_truncation_never_panics_at_every_single_byte_offset() {
             let spec = mixed_spec();
             let record = RecordValueGen::new(33).generate(&spec, 5);
-            let bytes = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).await.expect("encode_document");
+            let bytes = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).expect("encode_document");
             let report = fuzz_truncation(&bytes, CorruptionLevel::Exhaustive, decode_closure(spec));
             assert!(report.cases_panicked.is_empty(), "exhaustive truncation fuzz observed panics: {:?}", report.cases_panicked);
             assert_eq!(report.cases_run, bytes.len() as u64, "exhaustive truncation must try every offset");
@@ -746,7 +746,7 @@ mod tests {
         async fn fuzz_bit_flips_never_panics_at_every_single_bit() {
             let spec = mixed_spec();
             let record = RecordValueGen::new(34).generate(&spec, 3);
-            let bytes = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).await.expect("encode_document");
+            let bytes = crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).expect("encode_document");
             let report = fuzz_bit_flips(&bytes, CorruptionLevel::Exhaustive, decode_closure(spec));
             assert!(report.cases_panicked.is_empty(), "exhaustive bit-flip fuzz observed panics: {:?}", report.cases_panicked);
             assert_eq!(report.cases_run, bytes.len() as u64 * 8, "exhaustive bit-flip must try every bit");

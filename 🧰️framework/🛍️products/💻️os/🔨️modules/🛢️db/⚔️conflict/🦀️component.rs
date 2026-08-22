@@ -301,12 +301,9 @@ pub struct ConflictRecord {
 /// whole batch's envelopes are the evidence); `Degraded` when the batch was still accepted but its
 /// worst level reached `Warning` or above (already durable, `edit_ids` names what's worth a human's
 /// attention). `None` when the batch was clean.
-// 🔀️ Stays `async fn` (unlike the rest of this file, reverted to sync under R9): `protocol::
-// MergePolicy::rejects` is a genuinely async external-crate call (out of this packet's scope), so
-// this fn cannot be pure-sync like its siblings — R9's test ("no suspension point exists") fails.
-pub async fn classify(worst: Option<protocol::Severity>, policy: protocol::MergePolicy, envelopes: Vec<protocol::MutationEnvelope>, edit_ids: Vec<String>) -> Option<protocol::ConflictKind> {
+pub fn classify(worst: Option<protocol::Severity>, policy: protocol::MergePolicy, envelopes: Vec<protocol::MutationEnvelope>, edit_ids: Vec<String>) -> Option<protocol::ConflictKind> {
     let level = worst?;
-    if policy.rejects(level).await {
+    if policy.rejects(level) {
         Some(protocol::ConflictKind::Quarantined { envelopes })
     } else if level >= protocol::Severity::Warning {
         Some(protocol::ConflictKind::Degraded { edit_ids })
@@ -559,24 +556,24 @@ mod tests {
     //#endregion 🔖️KindMatrix
 
     //#region 🔖️Lifecycle
-    #[semio_framework_async_macros::async_test]
-    async fn classify_is_quarantined_when_the_policy_rejects_the_worst_level() {
+    #[test]
+    fn classify_is_quarantined_when_the_policy_rejects_the_worst_level() {
         let envelopes = Vec::new();
-        let kind = classify(Some(protocol::Severity::Fatal), protocol::MergePolicy::LaissezFaire, envelopes.clone(), Vec::new()).await;
+        let kind = classify(Some(protocol::Severity::Fatal), protocol::MergePolicy::LaissezFaire, envelopes.clone(), Vec::new());
         assert_eq!(kind, Some(protocol::ConflictKind::Quarantined { envelopes }));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn classify_is_degraded_when_accepted_but_still_warning_or_above() {
+    #[test]
+    fn classify_is_degraded_when_accepted_but_still_warning_or_above() {
         let edit_ids = vec!["e1".to_string()];
-        let kind = classify(Some(protocol::Severity::Warning), protocol::MergePolicy::Normal, Vec::new(), edit_ids.clone()).await;
+        let kind = classify(Some(protocol::Severity::Warning), protocol::MergePolicy::Normal, Vec::new(), edit_ids.clone());
         assert_eq!(kind, Some(protocol::ConflictKind::Degraded { edit_ids }));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn classify_is_none_when_clean_or_below_warning() {
-        assert_eq!(classify(None, protocol::MergePolicy::Vigilant, Vec::new(), Vec::new()).await, None);
-        assert_eq!(classify(Some(protocol::Severity::Info), protocol::MergePolicy::Vigilant, Vec::new(), Vec::new()).await, None);
+    #[test]
+    fn classify_is_none_when_clean_or_below_warning() {
+        assert_eq!(classify(None, protocol::MergePolicy::Vigilant, Vec::new(), Vec::new()), None);
+        assert_eq!(classify(Some(protocol::Severity::Info), protocol::MergePolicy::Vigilant, Vec::new(), Vec::new()), None);
     }
     //#endregion 🔖️Lifecycle
 

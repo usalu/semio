@@ -37,12 +37,12 @@
 
 use std::future::Future;
 use std::sync::atomic::{AtomicU32, Ordering};
-use std::sync::mpsc::Receiver;
-use std::sync::OnceLock;
+use std::sync::mpsc::{Receiver, Sender};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::task::{Context, Poll, Waker};
 use std::time::Instant;
 
-use semio_framework_async::{ChannelPolicy, Lane, WorkerPool};
+use semio_framework_async::{oneshot, ChannelPolicy, Lane, WorkerPool};
 use semio_framework_trace::{record_cancelled, record_checkpoint, record_committed, record_failed, record_operation_started, record_preview_published, record_stage_changed, TraceEvent, Watchdog};
 
 pub use semio_framework_async::CancelToken;
@@ -156,17 +156,15 @@ impl StepBudget {
     }
 }
 
-/// 🎯️ Lane budget defaults verbatim from `🎭️actor::Budget`'s `Interactive`/`UserVisible`/
-/// `Background`/`Maintenance` constants (design doc §2/Decision 3) — a fuel/wall_ms pair per lane, so
-/// a caller building a [`BatchDriveConfig`] or a per-step [`StepBudget`] doesn't have to re-derive
-/// these from the actor crate (which this crate must not depend on).
-pub const INTERACTIVE_LANE_WALL_MS: u64 = 4;
+/// 🎯️ Per-step wall budgets. Actor lane grants may span many steps; they are never reused as one
+/// step's deadline. These values leave watchdog margin below the hard eight-millisecond ceiling.
+pub const INTERACTIVE_LANE_WALL_MS: u64 = 1;
 pub const INTERACTIVE_LANE_FUEL: u64 = 2_000_000;
-pub const USER_VISIBLE_LANE_WALL_MS: u64 = 16;
+pub const USER_VISIBLE_LANE_WALL_MS: u64 = 2;
 pub const USER_VISIBLE_LANE_FUEL: u64 = 6_000_000;
-pub const BACKGROUND_LANE_WALL_MS: u64 = 50;
+pub const BACKGROUND_LANE_WALL_MS: u64 = 4;
 pub const BACKGROUND_LANE_FUEL: u64 = 20_000_000;
-pub const MAINTENANCE_LANE_WALL_MS: u64 = 200;
+pub const MAINTENANCE_LANE_WALL_MS: u64 = 4;
 pub const MAINTENANCE_LANE_FUEL: u64 = 80_000_000;
 //#endregion ⛽️Budget
 
@@ -390,6 +388,11 @@ pub fn root_cancel_token() -> CancelToken {
     poll_ready_now(CancelToken::root())
 }
 
+/// 🐕️ Returns the latest hard-ceiling violation for one operation generation.
+pub fn watchdog_step_overrun_us(operation: OperationId, generation: Generation) -> Option<u64> {
+    Watchdog::violations().into_iter().rev().find(|violation| violation.operation == operation && violation.generation == generation).map(|violation| violation.elapsed_us)
+}
+
 /// 👶️ Structured child-job ownership built directly on [`CancelToken`]'s parent-chain fold (design
 /// doc Decision 6: "no registry needed") rather than a new scope registry: [`JobScope::cancel_token`]
 /// is a [`CancelToken::child`] of whatever token this scope was built under, so cancelling an ancestor
@@ -610,10 +613,7 @@ pub enum ProgressChannelKind {
     PreviewGeometry,
     /// 🔒️ Commits and checkpoints — lossless, bounded (never dropped, backpressure instead).
     CommitAndCheckpoint,
-    /// 🩺️ Diagnostics — a bounded ring: `Coalesced` by `(operation, diagnostic kind)` is the closest
-    /// fit in [`ChannelPolicy`]'s four variants to "ring" (bounded, drops OLDEST rather than reject/
-    /// stall) since this crate adds no fifth variant to that enum — see `📓️p2a-job-protocol.md`'s
-    /// deviation note.
+    /// 🩺️ Diagnostics — a bounded overwrite-oldest ring.
     DiagnosticRing,
     /// 📉️ Telemetry — lossy, latest sample only.
     Telemetry,
@@ -629,7 +629,7 @@ pub fn channel_policy_for(kind: ProgressChannelKind) -> ChannelPolicy {
         ProgressChannelKind::PointerHover => ChannelPolicy::LatestWins { max_bytes: 4 * 1024 },
         ProgressChannelKind::PreviewGeometry => ChannelPolicy::Coalesced { key: "operation:entity:stage".to_string(), max_items: 64, max_bytes: 4 * 1024 * 1024 },
         ProgressChannelKind::CommitAndCheckpoint => ChannelPolicy::LosslessBounded { max_items: 256, max_bytes: 16 * 1024 * 1024 },
-        ProgressChannelKind::DiagnosticRing => ChannelPolicy::Coalesced { key: "operation:diagnostic_kind".to_string(), max_items: 128, max_bytes: 512 * 1024 },
+        ProgressChannelKind::DiagnosticRing => ChannelPolicy::Ring { max_items: 128, max_bytes: 512 * 1024 },
         ProgressChannelKind::Telemetry => ChannelPolicy::LatestWins { max_bytes: 1024 },
         ProgressChannelKind::LargeGeometry => ChannelPolicy::ByteCredit { max_items: 32, max_bytes: 32 * 1024 * 1024 },
     }
@@ -701,20 +701,102 @@ pub fn run_to_completion<J: InteractiveJob>(job: &mut J, params: &BatchJobParams
     }
 }
 
-/// ▶️ [`run_to_completion`], submitted onto a `semio_framework_async::WorkerPool` lane — the same
-/// substrate every other subsystem's CPU-bound work schedules onto (Phase 1 packet P1a). The returned
-/// `Receiver` yields exactly one [`StepOutcome`] once the job reaches a terminal state; a caller that
-/// doesn't want to block reads it via `try_recv`.
-pub fn run_on_worker<J: InteractiveJob + 'static>(pool: &WorkerPool, lane: Lane, mut job: J, params: BatchJobParams) -> Receiver<StepOutcome> {
-    let (sender, receiver) = std::sync::mpsc::channel();
+struct WorkerDriveState<J> {
+    job: J,
+    params: BatchJobParams,
+    preview_sequence: u64,
+    sender: Option<Sender<StepOutcome>>,
+}
+
+fn schedule_worker_step<J: InteractiveJob + 'static>(pool: &WorkerPool, lane: Lane, state: Arc<Mutex<WorkerDriveState<J>>>) {
+    let next_pool = pool.clone();
     pool.submit(
         lane,
         Box::new(move || {
-            let outcome = run_to_completion(&mut job, &params);
-            let _ = sender.send(outcome);
+            let (outcome, sender) = {
+                let mut state = state.lock().expect("WorkerDriveState mutex poisoned");
+                let WorkerDriveState { job, params, preview_sequence, sender } = &mut *state;
+                let config = params.config;
+                let budget = StepBudget::new(config.fuel_per_step, (params.now_ms)().saturating_add(config.step_budget_ms));
+                let outcome = drive_step(job, config.site, params.operation, params.generation, config.stage, budget, params.cancel.clone(), params.now_ms, preview_sequence);
+                let terminal_sender = outcome.is_terminal().then(|| sender.take()).flatten();
+                (outcome, terminal_sender)
+            };
+            if let Some(sender) = sender {
+                let _ = sender.send(outcome);
+            } else {
+                schedule_worker_step(&next_pool, lane, state);
+            }
         }),
     );
+}
+
+/// ▶️ Drives exactly one bounded job step per worker closure and re-enqueues non-terminal state at
+/// the back of `lane`. The returned receiver yields the single terminal outcome; pending work never
+/// occupies a worker across steps.
+pub fn run_on_worker<J: InteractiveJob + 'static>(pool: &WorkerPool, lane: Lane, job: J, params: BatchJobParams) -> Receiver<StepOutcome> {
+    let (sender, receiver) = std::sync::mpsc::channel();
+    record_operation_started(params.operation, params.generation);
+    schedule_worker_step(pool, lane, Arc::new(Mutex::new(WorkerDriveState { job, params, preview_sequence: 0, sender: Some(sender) })));
     receiver
+}
+
+struct AsyncWorkerDriveState<J> {
+    job: J,
+    params: BatchJobParams,
+    preview_sequence: u64,
+    sender: Option<oneshot::Sender<StepOutcome>>,
+}
+
+fn schedule_async_worker_step<J: InteractiveJob + 'static>(pool: &WorkerPool, lane: Lane, state: Arc<Mutex<AsyncWorkerDriveState<J>>>) {
+    let next_pool = pool.clone();
+    pool.submit(
+        lane,
+        Box::new(move || {
+            let (outcome, sender) = {
+                let mut state = state.lock().expect("AsyncWorkerDriveState mutex poisoned");
+                let AsyncWorkerDriveState { job, params, preview_sequence, sender } = &mut *state;
+                let config = params.config;
+                let budget = StepBudget::new(config.fuel_per_step, (params.now_ms)().saturating_add(config.step_budget_ms));
+                let outcome = drive_step(job, config.site, params.operation, params.generation, config.stage, budget, params.cancel.clone(), params.now_ms, preview_sequence);
+                let terminal_sender = outcome.is_terminal().then(|| sender.take()).flatten();
+                (outcome, terminal_sender)
+            };
+            if let Some(sender) = sender {
+                let _ = sender.send(outcome);
+            } else {
+                schedule_async_worker_step(&next_pool, lane, state);
+            }
+        }),
+    );
+}
+
+/// 🪢️ Async terminal handoff for UI/plugin dispatch. Each worker closure still drives exactly one
+/// bounded step and re-enqueues non-terminal state; awaiting the owned oneshot never parks the UI
+/// thread or a pool worker.
+pub async fn run_on_worker_async<J: InteractiveJob + 'static>(pool: &WorkerPool, lane: Lane, job: J, params: BatchJobParams) -> Result<StepOutcome, oneshot::RecvError> {
+    let (sender, receiver) = oneshot::channel();
+    record_operation_started(params.operation, params.generation);
+    #[cfg(target_arch = "wasm32")]
+    let pump_now_ms = params.now_ms;
+    schedule_async_worker_step(pool, lane, Arc::new(Mutex::new(AsyncWorkerDriveState { job, params, preview_sequence: 0, sender: Some(sender) })));
+    #[cfg(target_arch = "wasm32")]
+    {
+        let mut receiver = receiver;
+        loop {
+            match receiver.try_recv() {
+                Ok(outcome) => break Ok(outcome),
+                Err(oneshot::TryRecvError::Empty) => {
+                    pool.pump(pump_now_ms());
+                }
+                Err(oneshot::TryRecvError::Closed) => break Err(oneshot::RecvError),
+            }
+        }
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        receiver.await
+    }
 }
 //#endregion 🏭️Batch
 
@@ -878,6 +960,8 @@ impl InteractiveJob for TortureJob {
 mod tests {
     use super::*;
     use semio_framework_async::{ProcessKind, WorkerPoolConfig};
+    use std::sync::atomic::AtomicBool;
+    use std::time::Duration;
     use std::time::Instant as StdInstant;
 
     fn test_now_ms() -> u64 {
@@ -939,6 +1023,7 @@ mod tests {
             let max_bytes = match &policy {
                 ChannelPolicy::LatestWins { max_bytes } => *max_bytes,
                 ChannelPolicy::Coalesced { max_bytes, .. } => *max_bytes,
+                ChannelPolicy::Ring { max_bytes, .. } => *max_bytes,
                 ChannelPolicy::LosslessBounded { max_bytes, .. } => *max_bytes,
                 ChannelPolicy::ByteCredit { max_bytes, .. } => *max_bytes,
             };
@@ -1155,6 +1240,55 @@ mod tests {
         let outcome = receiver.recv().expect("worker never produced a result");
         pool.shutdown();
         assert!(matches!(outcome, StepOutcome::Complete(_)));
+    }
+
+    struct GatedJob {
+        release: Arc<AtomicBool>,
+        completed: Arc<AtomicBool>,
+        first_step: Option<Sender<()>>,
+    }
+
+    impl InteractiveJob for GatedJob {
+        fn step(&mut self, _cx: &mut StepContext<'_>) -> StepOutcome {
+            if let Some(sender) = self.first_step.take() {
+                let _ = sender.send(());
+            }
+            if !self.release.load(Ordering::SeqCst) {
+                return StepOutcome::Yield;
+            }
+            self.completed.store(true, Ordering::SeqCst);
+            StepOutcome::Complete(CommitCandidate { state: Vec::new(), output: Vec::new() })
+        }
+    }
+
+    #[test]
+    fn run_on_worker_releases_a_single_worker_between_job_steps() {
+        let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
+        let release = Arc::new(AtomicBool::new(false));
+        let completed = Arc::new(AtomicBool::new(false));
+        let (first_tx, first_rx) = std::sync::mpsc::channel();
+        let job = GatedJob { release: Arc::clone(&release), completed: Arc::clone(&completed), first_step: Some(first_tx) };
+        let params = BatchJobParams {
+            operation: allocate_operation_id(),
+            generation: Generation(1),
+            cancel: root_cancel_token(),
+            config: BatchDriveConfig { site: "test.batch.finite-turn", stage: InteractiveStage::BackgroundStep, fuel_per_step: 1, step_budget_ms: BACKGROUND_LANE_WALL_MS },
+            now_ms: default_now_ms,
+        };
+        let terminal = run_on_worker(&pool, Lane::Background, job, params);
+        first_rx.recv_timeout(Duration::from_secs(1)).expect("first job step did not run");
+        let (competitor_tx, competitor_rx) = std::sync::mpsc::channel();
+        pool.submit(
+            Lane::Interactive,
+            Box::new(move || {
+                let completed_before_competitor = completed.load(Ordering::SeqCst);
+                release.store(true, Ordering::SeqCst);
+                competitor_tx.send(completed_before_competitor).expect("competitor receiver alive");
+            }),
+        );
+        assert!(!competitor_rx.recv_timeout(Duration::from_secs(1)).expect("competing closure never ran"));
+        assert!(matches!(terminal.recv_timeout(Duration::from_secs(1)), Ok(StepOutcome::Complete(_))));
+        pool.shutdown();
     }
     //#endregion 🏭️Batch
 

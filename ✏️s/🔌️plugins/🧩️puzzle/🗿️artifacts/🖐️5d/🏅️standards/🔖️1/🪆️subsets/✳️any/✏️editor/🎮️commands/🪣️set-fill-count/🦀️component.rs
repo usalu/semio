@@ -5,7 +5,7 @@ use serde_json::Value;
 
 /// 🪣️ Applies the requested placement count (clamped to [`PUZZLE5D_FILL_COUNT_MAX`]); a count of zero
 /// only records the runtime value, leaving the document untouched.
-pub async fn set_fill_count(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
+pub fn set_fill_count(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     ctx.app.drive_precompute(ctx.scene);
     let count = args.and_then(|value| value.get("count").or_else(|| value.get("value"))).and_then(|value| value.as_f64()).map_or(0, |value| value.round().max(0.0) as u32).min(PUZZLE5D_FILL_COUNT_MAX);
     ctx.scene.runtime.fill_count = count;

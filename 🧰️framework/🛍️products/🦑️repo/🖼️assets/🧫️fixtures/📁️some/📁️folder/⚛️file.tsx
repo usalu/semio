@@ -15,8 +15,6 @@
 
 // #endregion 🧲️Header
 
-import { JSX } from "react";
-
 // #region ⚙️Types
 
 interface TestType {
@@ -30,7 +28,7 @@ type TestKind = "a" | "b" | "c";
 
 // #region 🎖️Components
 
-function TestComponent(): JSX.Element {
+function TestComponent() {
   return <div>Test</div>;
 }
 

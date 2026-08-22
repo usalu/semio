@@ -458,10 +458,7 @@ function splitRootWithStack(layout: WindowLayoutNode, stack: WindowLayoutStackNo
 function safePanelGroupSetLayout(group: ResizablePrimitive.GroupImperativeHandle, layout: Record<string, number>): void {
   try {
     group.setLayout(layout);
-  } catch (error) {
-    // Stale resize payloads (e.g. edit 68/32 after switching to generate's 3 panels) must not crash the shell.
-    console.warn("[DEBUG] ignored panel group setLayout mismatch", error);
-  }
+  } catch {}
 }
 
 function applyAxisSizes(layout: WindowLayoutNode, axisPath: ModeLayoutPath, sizes: Record<string, number> | readonly number[]): WindowLayoutNode {
@@ -1804,7 +1801,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   const draggedPreviewTitle = previewDragState ? (windowsById.get(previewDragState.windowId)?.title ?? previewDragState.ghostLabel) : "";
   const draggedPreviewIconId = previewDragState ? windowsById.get(previewDragState.windowId)?.iconId : undefined;
   const tabInsertPreview = resolveModeTabInsertPreview(previewDragState, dropZone);
-  const draggedInsertTabs = reactHostPort.useMemo(() => {
+  const draggedInsertTabs = reactHostPort.useMemo<ModeDockContextValue["draggedInsertTabs"]>(() => {
     if (templateDrag) return [{ id: MODE_TEMPLATE_PREVIEW_WINDOW_ID, title: templateDrag.label, iconId: "app-window" }];
     if (!dragState) return [];
     return modeDockDragInsertTabs(

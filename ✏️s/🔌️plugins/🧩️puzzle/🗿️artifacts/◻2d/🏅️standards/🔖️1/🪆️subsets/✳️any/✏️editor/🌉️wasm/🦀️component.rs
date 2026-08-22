@@ -185,7 +185,7 @@ impl BoardSession {
         let pw = ((lw as f64 * dpr).round() as u32).max(1);
         let ph = ((lh as f64 * dpr).round() as u32).max(1);
         let mut inner = self.state.borrow_mut();
-        inner.set_logical_size_and_maybe_resize_surface(lw, lh, dpr, pw, ph);
+        inner.set_logical_size_and_maybe_resize_surface(lw, lh, dpr, pw, ph).await;
     }
 
     #[wasm_bindgen(js_name = setSelectionScreenPreview)]
@@ -397,26 +397,6 @@ impl BoardSession {
         self.state.borrow_mut().host.brush_cancel_slot();
     }
 
-    #[wasm_bindgen(js_name = brushFillJson)]
-    pub async fn brush_fill_json_wasm(&self, max_count: u32, seed: u32) -> String {
-        self.state.borrow().host.brush_fill_json(max_count, u64::from(seed))
-    }
-
-    #[wasm_bindgen(js_name = brushFillSessionBegin)]
-    pub async fn brush_fill_session_begin_wasm(&mut self, max_count: u32, seed: u32) {
-        self.state.borrow_mut().host.brush_fill_session_begin(max_count, u64::from(seed));
-    }
-
-    #[wasm_bindgen(js_name = brushFillSessionStep)]
-    pub async fn brush_fill_session_step_wasm(&mut self, chunk_budget: u32) -> String {
-        self.state.borrow_mut().host.brush_fill_session_step(chunk_budget)
-    }
-
-    #[wasm_bindgen(js_name = brushFillSessionClear)]
-    pub async fn brush_fill_session_clear_wasm(&mut self) {
-        self.state.borrow_mut().host.brush_fill_session_clear();
-    }
-
     #[wasm_bindgen(js_name = setBrushSessionJson)]
     pub async fn set_brush_session_json_wasm(&mut self, json: &str) -> Result<(), JsValue> {
         self.state.borrow_mut().host.set_brush_session_mirror_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
@@ -507,7 +487,7 @@ impl BoardSession {
     /// @emoji 🎨️ Presents one frame when a GPU surface is attached; otherwise no-operation `Ok`.
     #[wasm_bindgen(js_name = renderFrame)]
     pub async fn render_frame(&mut self) -> Result<(), JsValue> {
-        self.state.borrow_mut().render_frame_gpu()
+        self.state.borrow_mut().render_frame_gpu().await
     }
 }
 // #endregion 🔖️WasmSession

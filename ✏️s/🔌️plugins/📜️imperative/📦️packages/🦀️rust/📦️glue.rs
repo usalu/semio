@@ -467,7 +467,7 @@ pub use editor::imperative::wasm::ImperativeSession;
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
 mod plugin;
-semio_framework_plugin::plugin_exports!(plugin::plugin);
+semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::ImperativeApps);
 
 //#region 📚️Examples
 #[path = "."]

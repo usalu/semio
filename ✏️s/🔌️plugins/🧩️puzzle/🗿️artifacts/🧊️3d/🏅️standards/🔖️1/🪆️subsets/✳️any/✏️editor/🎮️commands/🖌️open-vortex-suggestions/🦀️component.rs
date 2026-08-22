@@ -1,7 +1,6 @@
 //! 🖌️ `open-vortex-suggestions` command.
 
 use crate::editor::puzzle3d::config::Puzzle3dSuggestionMenu;
-use crate::editor::puzzle3d::drive_precompute;
 use crate::editor::puzzle3d::sync_precompute_session;
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use serde_json::Value;
@@ -11,7 +10,7 @@ use serde_json::Value;
 /// longer also selects the vortex — selection is framework-owned and unwritable from here (see
 /// `puzzle3d_brush_target_vortex`'s doc comment); the client should pair this with an
 /// `interactionSelect` on the same target if it still wants the vortex to read as selected.
-pub async fn open_vortex_suggestions(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
+pub fn open_vortex_suggestions(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     let Some(full_id) = args.and_then(|value| value.get("fullId")).and_then(|value| value.as_str()).map(str::to_string) else {
         return;
     };
@@ -25,5 +24,4 @@ pub async fn open_vortex_suggestions(ctx: &mut Puzzle3dActionCtx<'_>, args: Opti
     ctx.app.precompute.borrow_mut().invalidate_brush_target(&full_id);
     sync_precompute_session(&mut ctx.app.precompute.borrow_mut(), ctx.scene);
     ctx.app.precompute.borrow_mut().refresh_brush_candidates(&full_id);
-    drive_precompute(&mut ctx.app.precompute.borrow_mut(), ctx.scene);
 }

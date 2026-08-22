@@ -78,7 +78,6 @@ use wasmtime::{AsContextMut, Config, Engine, InstanceAllocationStrategy, Pooling
 /// `component.rs`'s own body, the same nesting `imports`/`effects`/`shard` already use), so private
 /// items there — these consts included — are visible here via `super::`; verified by compiling this
 /// file (see the packet report), not assumed. Referenced via `super::` rather than duplicated.
-
 /// 🐎️ ONE async-capable `Engine` per process, distinct from `build_shared_engine`'s (that one never
 /// sets `wasm_component_model_async`/`concurrency_support` — it backs `world actor`'s SYNC-style
 /// call sites, i.e. `WasmtimeRuntime`, which still drives every export through `run_concurrent` too

@@ -2,7 +2,32 @@
 //!
 //! Infinite/flow component files exist under 🔨️modules/ but are unwired pending dep-DAG cleanup.
 
-#![allow(unused_extern_crates, ambiguous_glob_reexports, unused_imports)]
+#![allow(
+    unused_extern_crates,
+    ambiguous_glob_reexports,
+    unused_imports,
+    dead_code,
+    async_fn_in_trait,
+    clippy::approx_constant,
+    clippy::await_holding_lock,
+    clippy::double_must_use,
+    clippy::drop_non_drop,
+    clippy::empty_line_after_doc_comments,
+    clippy::explicit_counter_loop,
+    clippy::extra_unused_type_parameters,
+    clippy::field_reassign_with_default,
+    clippy::len_without_is_empty,
+    clippy::let_underscore_future,
+    clippy::map_unwrap_or,
+    clippy::needless_pass_by_value,
+    clippy::needless_range_loop,
+    clippy::result_large_err,
+    clippy::too_many_arguments,
+    clippy::type_complexity,
+    clippy::unnecessary_get_then_check,
+    clippy::unnecessary_wraps,
+    clippy::vec_init_then_push
+)]
 
 extern crate self as dsl;
 extern crate self as dsl_grammar;

@@ -569,7 +569,7 @@ pub fn mint_bridge_token() -> String {
     let now_ns = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|duration| duration.as_nanos()).unwrap_or(0);
     let entropy_marker = Box::new(counter);
     let entropy = format!("{now_ns}:{counter}:{:p}:{}", entropy_marker.as_ref(), std::process::id());
-    blake3::hash(entropy.as_bytes()).to_hex().to_string()
+    framework_hash::hash_bytes(entropy.as_bytes())
 }
 
 fn home_dir() -> Option<PathBuf> {
@@ -967,7 +967,7 @@ mod long {
 
     #[test]
     fn write_bridge_token_file_creates_parents_and_is_readable_back() {
-        let dir = std::env::temp_dir().join(format!("semio-mcp-bridge-token-test-{}-{}", std::process::id(), blake3::hash(b"bridge-token-test").to_hex()));
+        let dir = std::env::temp_dir().join(format!("semio-mcp-bridge-token-test-{}-{}", std::process::id(), framework_hash::hash_bytes(b"bridge-token-test")));
         let path = dir.join("bridge-token");
         write_bridge_token_file(&path, "the-token").unwrap();
         assert_eq!(std::fs::read_to_string(&path).unwrap(), "the-token");

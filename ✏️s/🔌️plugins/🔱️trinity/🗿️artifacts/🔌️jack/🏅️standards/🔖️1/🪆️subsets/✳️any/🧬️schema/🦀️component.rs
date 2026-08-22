@@ -138,7 +138,7 @@ impl JackArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.trinity.jack` — twenty handcrafted schema leaves.
-pub async fn jack_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn jack_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.trinity.jack",
         artifact: schema::FacetLeaves {

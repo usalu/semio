@@ -3,7 +3,7 @@
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use serde_json::Value;
 
-pub async fn set_selectable_kind(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
+pub fn set_selectable_kind(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("");
     let pressed = args.and_then(|value| value.get("pressed")).and_then(|value| value.as_bool());
     let kinds = &mut ctx.scene.runtime.selectable_kinds;

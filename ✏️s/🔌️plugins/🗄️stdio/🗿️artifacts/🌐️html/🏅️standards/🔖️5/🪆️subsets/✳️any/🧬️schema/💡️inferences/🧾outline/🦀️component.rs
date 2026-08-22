@@ -27,7 +27,7 @@ fn walk(node: &HtmlNode, depth: u32) -> (u32, u32, u32) {
             let mut max_depth = depth;
             let mut text_length = 0u32;
             for child in children {
-                let (c, d, t) = Box::pin(walk(child, depth + 1));
+                let (c, d, t) = walk(child, depth + 1);
                 count += c;
                 max_depth = max_depth.max(d);
                 text_length += t;

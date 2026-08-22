@@ -66,7 +66,7 @@ impl PlaybookArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.playbook.playbook` — twenty handcrafted schema leaves.
-pub async fn playbook_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn playbook_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.playbook.playbook",
         artifact: schema::FacetLeaves {

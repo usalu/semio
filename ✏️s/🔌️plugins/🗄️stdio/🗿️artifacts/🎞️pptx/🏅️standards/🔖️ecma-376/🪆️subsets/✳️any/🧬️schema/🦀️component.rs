@@ -35,17 +35,17 @@ impl Default for PptxArtifact {
 
 impl PptxArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> PptxSnapshot {
+    pub fn to_snapshot(&self) -> PptxSnapshot {
         PptxSnapshot { schema: self.schema.clone(), opc: self.opc.clone(), xml_parts: self.xml_parts.clone(), presentation: self.presentation.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot.
-    pub async fn from_snapshot(snapshot: PptxSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: PptxSnapshot) -> Self {
         Self { schema: snapshot.schema, opc: snapshot.opc, xml_parts: snapshot.xml_parts, presentation: snapshot.presentation }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: PptxSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: PptxSnapshot) {
         self.schema = snapshot.schema;
         self.opc = snapshot.opc;
         self.xml_parts = snapshot.xml_parts;
@@ -56,7 +56,7 @@ impl PptxArtifact {
 
 //#region Descriptor
 /// 🧬️ Descriptor for `s.stdio.pptx`.
-pub async fn pptx_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn pptx_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.stdio.pptx",
         artifact: schema::FacetLeaves {

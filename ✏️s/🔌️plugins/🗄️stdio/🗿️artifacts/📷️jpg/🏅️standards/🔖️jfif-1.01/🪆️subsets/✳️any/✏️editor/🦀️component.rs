@@ -8,7 +8,7 @@ use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::any::schema::snapsho
 use crate::artifacts::jpg::{JPG_ANY_DIALECT, STDIO_JPG_DOCUMENT_SCHEMA};
 use crate::editor::jpg_any::modes::edit;
 use crate::editor::jpg_any::modes::edit::windows::main;
-use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode};
+use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 
@@ -61,7 +61,7 @@ impl ArtifactEditor for JpgAnyEditor {
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
         match command {
-            JpgAnyEditCommand::SetPixelRegion { pixels } => Ok(Emit::mutations(vec![JpgMutation::SetPixels { pixels: pixels.clone() }]).await),
+            JpgAnyEditCommand::SetPixelRegion { pixels } => Ok(Emit::mutations(vec![JpgMutation::SetPixels { pixels: pixels.clone() }])),
         }
     }
 

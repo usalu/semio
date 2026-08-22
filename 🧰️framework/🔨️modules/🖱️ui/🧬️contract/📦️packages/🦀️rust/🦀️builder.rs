@@ -32,7 +32,6 @@ fn is_false(value: &bool) -> bool {
 /// tree has no ids yet to address by. Every field below serializes away at its default, mirroring the
 /// wire-cost guarantee this whole builder family exists to make automatic.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct BuiltNode {
     /// 🔑️ The reconciliation key — an author-set [`HasBase::id`] or a positional `"#N"` fallback. See
@@ -1228,7 +1227,7 @@ mod tests {
     #[test]
     fn on_with_carries_args() {
         let action = crate::ActionId::v1("app", "setValue");
-        let node = input(crate::InputKind::Text).on_with(crate::Trigger::Change, action.clone(), crate::UiValue::Text("hi".into())).build();
+        let node = input(crate::InputKind::Text).on_with(crate::Trigger::Change, action, crate::UiValue::Text("hi".into())).build();
         assert_eq!(node.bindings[0].args, Some(crate::UiValue::Text("hi".into())));
     }
     //#endregion 🔖️Bindings

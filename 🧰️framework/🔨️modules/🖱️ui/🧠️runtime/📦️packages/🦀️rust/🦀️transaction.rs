@@ -786,7 +786,7 @@ mod tests {
         crate::Command { id: crate::CommandId(seq), correlation: crate::CorrelationId(seq), payload: ui_contract::UiValue::Null }
     }
 
-    fn test_intent(surface: ui_contract::SurfaceId, node: crate::Entity<FakePresenter>, revision: ui_contract::UiRevision, trigger: ui_contract::Trigger, seq: u64) -> ui_contract::UiIntent {
+    fn test_intent(surface: ui_contract::SurfaceId, node: &crate::Entity<FakePresenter>, revision: ui_contract::UiRevision, trigger: ui_contract::Trigger, seq: u64) -> ui_contract::UiIntent {
         ui_contract::UiIntent { surface, revision, node: ui_contract::UiNodeId(node.id().0), node_key: "root".into(), trigger, action: ui_contract::ActionId::v1("test", "act"), args: None, input: None, seq }
     }
 
@@ -838,7 +838,7 @@ mod tests {
         let (presenter, _model) = register_test_surface(&mut runtime, surface.clone());
         runtime.transact(0); // 🌱️ unconditional first present, baseline revision 1
 
-        runtime.submit_intent(test_intent(surface.clone(), presenter.clone(), ui_contract::UiRevision(1), ui_contract::Trigger::Delta, 1));
+        runtime.submit_intent(test_intent(surface.clone(), &presenter, ui_contract::UiRevision(1), ui_contract::Trigger::Delta, 1));
         let transacted = runtime.transact(0);
 
         assert_eq!(transacted.patches.len(), 1);
@@ -869,7 +869,7 @@ mod tests {
         let bumped = runtime.transact(0); // revision 3
         assert_eq!(bumped.patches.len(), 1);
 
-        runtime.submit_intent(test_intent(surface, presenter, ui_contract::UiRevision(0), ui_contract::Trigger::Delta, 99));
+        runtime.submit_intent(test_intent(surface, &presenter, ui_contract::UiRevision(0), ui_contract::Trigger::Delta, 99));
         let transacted = runtime.transact(0);
 
         assert!(transacted.patches.is_empty(), "a stale intent must never reach the reconciler as a patch");
@@ -882,7 +882,7 @@ mod tests {
     fn a_bulk_projection_update_touching_one_surface_many_times_yields_exactly_one_patch() {
         let mut runtime = test_runtime();
         let surface = ui_contract::SurfaceId::from("s");
-        let (_presenter, model) = register_test_surface(&mut runtime, surface.clone());
+        let (_presenter, model) = register_test_surface(&mut runtime, surface);
         runtime.transact(0); // baseline
 
         for value in 1..=5 {
@@ -943,8 +943,8 @@ mod tests {
         let (presenter, _model) = register_test_surface(&mut runtime, surface.clone());
         runtime.transact(0);
 
-        runtime.submit_intent(test_intent(surface.clone(), presenter.clone(), ui_contract::UiRevision(1), ui_contract::Trigger::Delta, 1));
-        runtime.submit_intent(test_intent(surface, presenter, ui_contract::UiRevision(2), ui_contract::Trigger::Delta, 2));
+        runtime.submit_intent(test_intent(surface.clone(), &presenter, ui_contract::UiRevision(1), ui_contract::Trigger::Delta, 1));
+        runtime.submit_intent(test_intent(surface, &presenter, ui_contract::UiRevision(2), ui_contract::Trigger::Delta, 2));
         let transacted = runtime.transact(0);
 
         assert_eq!(transacted.commands.len(), 1, "only the sink-accepted command should be reported, without the transaction blocking or panicking");
@@ -973,7 +973,7 @@ mod tests {
         let (presenter, _model) = register_test_surface(&mut runtime, surface.clone());
         runtime.transact(0);
 
-        runtime.submit_intent(test_intent(surface, presenter, ui_contract::UiRevision(1), ui_contract::Trigger::Commit, 7));
+        runtime.submit_intent(test_intent(surface, &presenter, ui_contract::UiRevision(1), ui_contract::Trigger::Commit, 7));
         let transacted = runtime.transact(0);
 
         assert_eq!(transacted.presence.len(), 1);
@@ -1012,7 +1012,7 @@ mod tests {
         let (presenter, _) = register_test_surface(&mut runtime, surface.clone());
         runtime.transact(0);
         for seq in 0..32 {
-            runtime.submit_intent(test_intent(surface.clone(), presenter.clone(), ui_contract::UiRevision(1), ui_contract::Trigger::Delta, seq));
+            runtime.submit_intent(test_intent(surface.clone(), &presenter, ui_contract::UiRevision(1), ui_contract::Trigger::Delta, seq));
         }
 
         let mut transaction = FrameTransaction::new(FrameTransactionLimits::default());
@@ -1043,7 +1043,7 @@ mod tests {
         let surface = ui_contract::SurfaceId::from("s");
         let (presenter, model) = register_test_surface(&mut runtime, surface.clone());
         runtime.transact(0);
-        runtime.submit_intent(test_intent(surface.clone(), presenter, ui_contract::UiRevision(1), ui_contract::Trigger::Delta, 7));
+        runtime.submit_intent(test_intent(surface.clone(), &presenter, ui_contract::UiRevision(1), ui_contract::Trigger::Delta, 7));
 
         let mut transaction = FrameTransaction::new(FrameTransactionLimits::default());
         while transaction.stage() < FrameTransactionStage::ReconcileTree {

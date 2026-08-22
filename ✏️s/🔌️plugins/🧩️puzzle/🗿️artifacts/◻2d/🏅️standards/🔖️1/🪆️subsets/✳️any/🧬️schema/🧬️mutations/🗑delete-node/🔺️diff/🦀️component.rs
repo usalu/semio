@@ -4,7 +4,7 @@ use crate::artifacts::puzzle2d::diff::{Puzzle2dDiff, Puzzle2dEdgesDelta, Puzzle2
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::mutation::DeleteNode, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+pub fn diff(payload: &super::mutation::DeleteNode, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
     let Some(node) = base.nodes.iter().find(|entry| entry.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("{} \"{}\" not found", "node", payload.id), vec![payload.id.clone()]);
     };

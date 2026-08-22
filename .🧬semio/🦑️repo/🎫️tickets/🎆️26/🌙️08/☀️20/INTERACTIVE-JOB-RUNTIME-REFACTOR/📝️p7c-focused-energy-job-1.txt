@@ -1,0 +1,1778 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling arrayvec v0.7.8
+   Compiling smallvec v1.15.2
+   Compiling semio-framework-trace v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust)
+   Compiling itoa v1.0.18
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling memchr v2.8.3
+   Compiling polycool v0.4.0
+   Compiling serde_json v1.0.151
+   Compiling kurbo v0.13.1
+   Compiling syn v3.0.3
+   Compiling syn v2.0.119
+   Compiling serde_derive v1.0.229
+   Compiling serde v1.0.229
+   Compiling semio-framework-async-macros v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust)
+   Compiling semio-framework-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust)
+   Compiling semio-framework-geometry v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust)
+   Compiling semio-s-plugin-stdio v0.0.0 (/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/RESUMABLE-WFC-PUZZLE2D-AND-ENERGY-JOBS/🧪️energy-focused/stdio-stub)
+   Compiling semio-framework-job v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust)
+   Compiling semio-energy-focused v0.0.0 (/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/RESUMABLE-WFC-PUZZLE2D-AND-ENERGY-JOBS/🧪️energy-focused)
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔄️air_exchange/🦀️component.rs:175:5
+    |
+175 |     fn ach_infiltration_scales_with_volume() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔄️air_exchange/🦀️component.rs:194:5
+    |
+194 |     fn ventilation_load_positive_when_outdoor_colder() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔄️air_exchange/🦀️component.rs:200:5
+    |
+200 |     fn heat_recovery_reduces_load() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔄️air_exchange/🦀️component.rs:207:5
+    |
+207 |     fn hybrid_uses_natural_when_favorable() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌬️air_system/🦀️component.rs:291:5
+    |
+291 |     fn vav_system_cools_mixed_air() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌬️air_system/🦀️component.rs:313:5
+    |
+313 |     fn economizer_detected_when_oa_cooler() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌬️air_system/🦀️component.rs:333:5
+    |
+333 |     fn doas_conditions_outdoor_air() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🫧️airflow_network/🦀️component.rs:199:5
+    |
+199 |     fn stack_pressure_positive_when_outdoor_colder() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🫧️airflow_network/🦀️component.rs:207:5
+    |
+207 |     fn network_solves_pressures() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🫧️airflow_network/🦀️component.rs:215:5
+    |
+215 |     fn infiltration_flow_when_zone_warmer() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📅️calendar/🦀️component.rs:213:5
+    |
+213 |     fn leap_year_feb_has_29_days() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📅️calendar/🦀️component.rs:219:5
+    |
+219 |     fn run_period_jan_week_is_168_hours() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📅️calendar/🦀️component.rs:225:5
+    |
+225 |     fn day_of_week_known_date() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📅️calendar/🦀️component.rs:231:5
+    |
+231 |     fn hours_iterator_count() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌀️coils/🦀️component.rs:201:5
+    |
+201 |     fn electric_heating_raises_temperature() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌀️coils/🦀️component.rs:210:5
+    |
+210 |     fn dx_cooling_removes_sensible_and_latent() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌀️coils/🦀️component.rs:221:5
+    |
+221 |     fn bypass_factor_reduces_effect() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🛋️comfort/🦀️component.rs:140:5
+    |
+140 |     fn operative_equals_air_when_equal_mrt() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🛋️comfort/🦀️component.rs:146:5
+    |
+146 |     fn pmv_near_zero_at_neutral() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🛋️comfort/🦀️component.rs:152:5
+    |
+152 |     fn ppd_minimum_at_zero_pmv() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🛋️comfort/🦀️component.rs:158:5
+    |
+158 |     fn pmv_increases_when_too_warm() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🛋️comfort/🦀️component.rs:166:5
+    |
+166 |     fn adaptive_range_centers_on_outdoor() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🛋️comfort/🦀️component.rs:173:5
+    |
+173 |     fn mrt_from_surfaces() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🎛️controls/🦀️component.rs:213:5
+    |
+213 |     fn heating_fraction_full_when_cold() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🎛️controls/🦀️component.rs:220:5
+    |
+220 |     fn cooling_fraction_when_warm() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🎛️controls/🦀️component.rs:226:5
+    |
+226 |     fn predict_heating_load_when_negative_residual() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🎛️controls/🦀️component.rs:234:5
+    |
+234 |     fn equipment_priority_allocates_in_order() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📉️curves/🦀️component.rs:182:5
+    |
+182 |     fn linear_curve_midpoint() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📉️curves/🦀️component.rs:188:5
+    |
+188 |     fn quadratic_curve_evaluates() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📉️curves/🦀️component.rs:194:5
+    |
+194 |     fn biquadratic_at_origin() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📉️curves/🦀️component.rs:200:5
+    |
+200 |     fn triquadratic_includes_cross_terms() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📉️curves/🦀️component.rs:206:5
+    |
+206 |     fn lookup_wrapper_evaluates() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📉️curves/🦀️component.rs:213:5
+    |
+213 |     fn validate_rejects_degenerate_linear() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📉️curves/🦀️component.rs:219:5
+    |
+219 |     fn validate_accepts_valid_quadratic() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📉️curves/🦀️component.rs:225:5
+    |
+225 |     fn part_load_clamps() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌞️daylight/🦀️component.rs:118:5
+    |
+118 |     fn illuminance_increases_with_sun() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌞️daylight/🦀️component.rs:124:5
+    |
+124 |     fn dimming_reduces_at_high_daylight() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌞️daylight/🦀️component.rs:130:5
+    |
+130 |     fn dimming_full_when_dark() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌞️daylight/🦀️component.rs:136:5
+    |
+136 |     fn glare_high_for_bright_window() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌞️daylight/🦀️component.rs:142:5
+    |
+142 |     fn zone_average_illuminance() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🚦️dispatch/🦀️component.rs:103:5
+    |
+103 |     fn sequential_fills_first_unit() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🚦️dispatch/🦀️component.rs:114:5
+    |
+114 |     fn uniform_splits_proportionally_to_capacity() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🚦️dispatch/🦀️component.rs:128:5
+    |
+128 |     fn uniform_with_no_capacity_returns_empty() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🚦️dispatch/🦀️component.rs:135:5
+    |
+135 |     fn optimal_delegates_to_uniform() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🚦️dispatch/🦀️component.rs:144:5
+    |
+144 |     fn unhandled_scheme_falls_back_to_sequential() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/💰️economics/🦀️component.rs:108:5
+    |
+108 |     fn present_value_positive() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/💰️economics/🦀️component.rs:114:5
+    |
+114 |     fn lcca_computes_payback() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/⚡️electrical/🦀️component.rs:244:5
+    |
+244 |     fn end_use_scales_with_schedule() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/⚡️electrical/🦀️component.rs:250:5
+    |
+250 |     fn pv_zero_at_night() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/⚡️electrical/🦀️component.rs:256:5
+    |
+256 |     fn wind_cubic_below_rated() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/⚡️electrical/🦀️component.rs:265:5
+    |
+265 |     fn battery_soc_bounds() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/⚡️electrical/🦀️component.rs:275:5
+    |
+275 |     fn grid_balance_import_when_load_exceeds_supply() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/⚡️electrical/🦀️component.rs:283:5
+    |
+283 |     fn generator_respects_minimum_load() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🏢️envelope/🦀️component.rs:156:5
+    |
+156 |     fn exterior_h_increases_with_wind() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🏢️envelope/🦀️component.rs:162:5
+    |
+162 |     fn interior_h_increases_with_delta_t() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🏢️envelope/🦀️component.rs:168:5
+    |
+168 |     fn ctf_flux_sign_correct() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🏢️envelope/🦀️component.rs:175:5
+    |
+175 |     fn steady_flux_cold_outside() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🏢️envelope/🦀️component.rs:182:5
+    |
+182 |     fn interior_surface_balance_near_air() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🚨️error/🦀️component.rs:84:5
+   |
+84 |     fn fatal_has_correct_severity() {
+   |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🚨️error/🦀️component.rs:90:5
+   |
+90 |     fn severe_and_warning_severities() {
+   |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🚨️error/🦀️component.rs:96:5
+   |
+96 |     fn with_context_sets_context() {
+   |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🚨️error/🦀️component.rs:102:5
+    |
+102 |     fn display_includes_context_when_present() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🚨️error/🦀️component.rs:110:5
+    |
+110 |     fn diagnostics_push_has_fatal_and_merge() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌫️evaporative/🦀️component.rs:87:5
+   |
+87 |     fn direct_cooling_lowers_dry_bulb() {
+   |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌫️evaporative/🦀️component.rs:97:5
+   |
+97 |     fn indirect_preserves_humidity_ratio() {
+   |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌫️evaporative/🦀️component.rs:106:5
+    |
+106 |     fn disabled_no_effect() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🪭️fans/🦀️component.rs:105:5
+    |
+105 |     fn fan_laws_cubic_power() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🪭️fans/🦀️component.rs:110:5
+    |
+110 |     fn zero_flow_zero_power() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🪭️fans/🦀️component.rs:117:5
+    |
+117 |     fn full_load_positive_power() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/⚠️faults/🦀️component.rs:216:5
+    |
+216 |     fn severity_schedule_constant() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/⚠️faults/🦀️component.rs:222:5
+    |
+222 |     fn sensor_offset_biases_reading() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/⚠️faults/🦀️component.rs:229:5
+    |
+229 |     fn fouling_reduces_ua() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/⚠️faults/🦀️component.rs:235:5
+    |
+235 |     fn damper_stuck_open_increases_flow() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/⚠️faults/🦀️component.rs:242:5
+    |
+242 |     fn undercharge_reduces_capacity() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/⚠️faults/🦀️component.rs:249:5
+    |
+249 |     fn fault_set_compounds_sensor_offsets() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🪟️fenestration/🦀️component.rs:181:5
+    |
+181 |     fn double_glazing_u_below_single() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🪟️fenestration/🦀️component.rs:189:5
+    |
+189 |     fn shade_reduces_shgc() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🪟️fenestration/🦀️component.rs:196:5
+    |
+196 |     fn conduction_cold_outside_negative_into_zone() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🪟️fenestration/🦀️component.rs:202:5
+    |
+202 |     fn condensation_when_surface_cold() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📈️gains/🦀️component.rs:129:5
+    |
+129 |     fn people_gain_scales_with_count() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📈️gains/🦀️component.rs:136:5
+    |
+136 |     fn lighting_return_air_reduces_convective() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📈️gains/🦀️component.rs:144:5
+    |
+144 |     fn equipment_latent_reduces_sensible() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📈️gains/🦀️component.rs:151:5
+    |
+151 |     fn datacenter_total_matches_it_load() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📐️geometry/🦀️component.rs:176:5
+    |
+176 |     fn unit_square_area() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📐️geometry/🦀️component.rs:182:5
+    |
+182 |     fn horizontal_roof_tilt_zero() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📐️geometry/🦀️component.rs:188:5
+    |
+188 |     fn vertical_wall_tilt_ninety() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📐️geometry/🦀️component.rs:194:5
+    |
+194 |     fn box_volume() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📐️geometry/🦀️component.rs:212:5
+    |
+212 |     fn planar_validation_ok() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📐️geometry/🦀️component.rs:218:5
+    |
+218 |     fn identity_transform_preserves_vertices() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/♻️heat_recovery/🦀️component.rs:168:5
+    |
+168 |     fn winter_recovery_heats_supply() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/♻️heat_recovery/🦀️component.rs:178:5
+    |
+178 |     fn effectiveness_ntu_counterflow() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/♻️heat_recovery/🦀️component.rs:184:5
+    |
+184 |     fn frost_reduces_effectiveness() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/💦️humidity_eq/🦀️component.rs:146:5
+    |
+146 |     fn steam_humidifier_adds_moisture() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/💦️humidity_eq/🦀️component.rs:156:5
+    |
+156 |     fn refrigerant_dehumidifier_removes_moisture() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/💦️humidity_eq/🦀️component.rs:165:5
+    |
+165 |     fn at_target_no_humidification() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🕸️hvac_topo/🦀️component.rs:247:5
+    |
+247 |     fn mixer_blends_by_mass_flow() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🕸️hvac_topo/🦀️component.rs:256:5
+    |
+256 |     fn splitter_preserves_mass() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🕸️hvac_topo/🦀️component.rs:265:5
+    |
+265 |     fn valid_topology_passes() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🕸️hvac_topo/🦀️component.rs:273:5
+    |
+273 |     fn branch_with_invalid_node_index_is_fatal() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🕸️hvac_topo/🦀️component.rs:281:5
+    |
+281 |     fn branch_with_identical_inlet_outlet_is_severe() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🕸️hvac_topo/🦀️component.rs:290:5
+    |
+290 |     fn splitter_fraction_mismatch_warns() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🕸️hvac_topo/🦀️component.rs:298:5
+    |
+298 |     fn splitter_invalid_inlet_is_fatal() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🕸️hvac_topo/🦀️component.rs:306:5
+    |
+306 |     fn mixer_invalid_inlet_and_outlet_are_fatal() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🕸️hvac_topo/🦀️component.rs:315:5
+    |
+315 |     fn mixer_blend_with_zero_flow_returns_default_node() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🕸️hvac_topo/🦀️component.rs:324:5
+    |
+324 |     fn air_loop_validate_flags_invalid_zone_outlet() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🕸️hvac_topo/🦀️component.rs:344:5
+    |
+344 |     fn plant_loop_validate_delegates_to_validate_topology() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🕸️hvac_topo/🦀️component.rs:362:5
+    |
+362 |     fn branch_pressure_drop_for_each_component_kind() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🫁️iaq/🦀️component.rs:148:5
+    |
+148 |     fn co2_rises_with_occupancy_at_low_ventilation() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🫁️iaq/🦀️component.rs:155:5
+    |
+155 |     fn contaminant_transient_approaches_steady_state() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🫁️iaq/🦀️component.rs:167:5
+    |
+167 |     fn dcv_increases_flow_at_high_co2() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/💯️ideal_hvac/🦀️component.rs:188:5
+    |
+188 |     fn heating_meets_demand() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/💯️ideal_hvac/🦀️component.rs:209:5
+    |
+209 |     fn capacity_limits_cooling() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/💯️ideal_hvac/🦀️component.rs:229:5
+    |
+229 |     fn economizer_active_when_oa_cooler() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌰️kernel/🦀️component.rs:836:5
+    |
+836 |     fn initialize_creates_zone_states() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌰️kernel/🦀️component.rs:845:5
+    |
+845 |     fn energy_balance_near_zero_for_steady_state() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌰️kernel/🦀️component.rs:851:5
+    |
+851 |     fn run_period_from_config() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌰️kernel/🦀️component.rs:857:5
+    |
+857 |     fn advance_timestep_with_mechanical_ventilation_and_fan_coil_zone_equipment() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌰️kernel/🦀️component.rs:873:5
+    |
+873 |     fn advance_timestep_with_baseboard_zone_equipment_and_humidistat() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌰️kernel/🦀️component.rs:897:5
+    |
+897 |     fn advance_timestep_handles_ground_and_adiabatic_surfaces() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌰️kernel/🦀️component.rs:923:5
+    |
+923 |     fn advance_timestep_with_airflow_network() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌰️kernel/🦀️component.rs:937:5
+    |
+937 |     fn advance_timestep_applies_fault_severity_to_ideal_loads() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧱️material/🦀️component.rs:83:5
+   |
+83 |     fn wall_u_value_reasonable() {
+   |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧱️material/🦀️component.rs:90:5
+   |
+90 |     fn resistance_adds_film_terms() {
+   |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧱️material/🦀️component.rs:97:5
+   |
+97 |     fn thermal_mass_positive() {
+   |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧮️meters/🦀️component.rs:98:5
+   |
+98 |     fn meter_accumulates_energy() {
+   |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧮️meters/🦀️component.rs:105:5
+    |
+105 |     fn meter_tracks_peak_demand_hour() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧮️meters/🦀️component.rs:115:5
+    |
+115 |     fn store_get_or_create_is_idempotent_and_totals_by_fuel() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧮️meters/🦀️component.rs:127:5
+    |
+127 |     fn end_use_breakdown_aggregates_by_category() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📊️metrics/🦀️component.rs:93:5
+   |
+93 |     fn resilience_counts_extremes() {
+   |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️component.rs:732:5
+    |
+732 |     fn empty_model_fails_validation() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️component.rs:738:5
+    |
+738 |     fn zone_only_still_fails_without_construction() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️component.rs:765:5
+    |
+765 |     fn valid_model_passes_validation() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️component.rs:770:5
+    |
+770 |     fn duplicate_zone_name_fails() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️component.rs:777:5
+    |
+777 |     fn non_positive_volume_fails() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️component.rs:784:5
+    |
+784 |     fn surface_unknown_zone_fails() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️component.rs:791:5
+    |
+791 |     fn surface_unknown_construction_fails() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️component.rs:798:5
+    |
+798 |     fn surface_too_few_vertices_fails() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️component.rs:805:5
+    |
+805 |     fn interzone_missing_pair_fails() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️component.rs:812:5
+    |
+812 |     fn fenestration_unknown_surface_fails() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️component.rs:819:5
+    |
+819 |     fn construction_empty_layers_fails() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️component.rs:826:5
+    |
+826 |     fn construction_unknown_material_fails() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️component.rs:833:5
+    |
+833 |     fn material_invalid_thermal_properties_fails() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️component.rs:840:5
+    |
+840 |     fn thermostat_unknown_zone_fails() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️component.rs:847:5
+    |
+847 |     fn ideal_loads_unknown_zone_fails() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️component.rs:863:5
+    |
+863 |     fn humidistat_unknown_zone_fails() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️component.rs:877:5
+    |
+877 |     fn zone_equipment_unknown_zone_fails() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️component.rs:884:5
+    |
+884 |     fn mechanical_ventilation_unknown_zone_fails() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️component.rs:891:5
+    |
+891 |     fn air_loop_unknown_zone_fails() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️component.rs:898:5
+    |
+898 |     fn daylight_zone_unknown_zone_fails() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️component.rs:905:5
+    |
+905 |     fn adjacency_pair_unknown_surface_fails() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔋️model/🦀️component.rs:912:5
+    |
+912 |     fn lookup_helpers_find_entities() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔢️num/🦀️component.rs:154:5
+    |
+154 |     fn lerp_endpoints() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔢️num/🦀️component.rs:159:5
+    |
+159 |     fn newton_finds_sqrt() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔢️num/🦀️component.rs:165:5
+    |
+165 |     fn simpson_integrates_x_squared() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📤️output/🦀️component.rs:126:5
+    |
+126 |     fn time_series_average() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📤️output/🦀️component.rs:134:5
+    |
+134 |     fn time_series_sum_and_min_max() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📤️output/🦀️component.rs:146:5
+    |
+146 |     fn time_series_average_of_empty_is_zero() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📤️output/🦀️component.rs:152:5
+    |
+152 |     fn registry_matches_exact_and_wildcard() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📤️output/🦀️component.rs:162:5
+    |
+162 |     fn store_record_get_and_csv() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🏭️plant/🦀️component.rs:342:5
+    |
+342 |     fn boiler_meets_partial_load() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🏭️plant/🦀️component.rs:351:5
+    |
+351 |     fn chiller_eir_cooling() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🏭️plant/🦀️component.rs:361:5
+    |
+361 |     fn cooling_tower_rejects_heat() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🏭️plant/🦀️component.rs:370:5
+    |
+370 |     fn heat_exchanger_transfers_positive() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🏭️plant/🦀️component.rs:382:5
+    |
+382 |     fn thermal_storage_changes_temperature() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🏭️plant/🦀️component.rs:398:5
+    |
+398 |     fn pump_power_scales_with_flow() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🏭️plant/🦀️component.rs:407:5
+    |
+407 |     fn gshp_penalty_increases_with_ground_load() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧠️precompute/🦀️component.rs:253:5
+    |
+253 |     fn precompute_builds_surface_ctf() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧠️precompute/🦀️component.rs:261:5
+    |
+261 |     fn surface_incidence_is_zero_for_unknown_surface() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧠️precompute/🦀️component.rs:268:5
+    |
+268 |     fn surface_incidence_matches_known_surface_normal() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧠️precompute/🦀️component.rs:276:5
+    |
+276 |     fn solar_at_returns_altitude_and_azimuth() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧠️precompute/🦀️component.rs:285:5
+    |
+285 |     fn thermostat_overrides_default_setpoints() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧠️precompute/🦀️component.rs:295:5
+    |
+295 |     fn fenestration_precompute_derives_from_host_surface() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧰️props/🦀️component.rs:135:5
+    |
+135 |     fn saturation_at_zero_c() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧰️props/🦀️component.rs:141:5
+    |
+141 |     fn rh_roundtrip() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧰️props/🦀️component.rs:148:5
+    |
+148 |     fn water_density_near_room_temp() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/❄️refrigeration/🦀️component.rs:184:5
+    |
+184 |     fn display_case_cooling_positive() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/❄️refrigeration/🦀️component.rs:192:5
+    |
+192 |     fn walk_in_freezer_higher_compressor_ratio() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/❄️refrigeration/🦀️component.rs:201:5
+    |
+201 |     fn compressor_rack_part_load() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/❄️refrigeration/🦀️component.rs:209:5
+    |
+209 |     fn condenser_approach_temperature() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/❄️refrigeration/🦀️component.rs:217:5
+    |
+217 |     fn secondary_loop_return_rises_with_load() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/❄️refrigeration/🦀️component.rs:224:5
+    |
+224 |     fn saturation_pressure_increases_with_temperature() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧾️results/🦀️component.rs:84:5
+   |
+84 |     fn summary_tables_accumulate() {
+   |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🛏️room_air/🦀️component.rs:139:5
+    |
+139 |     fn fully_mixed_uniform() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🛏️room_air/🦀️component.rs:145:5
+    |
+145 |     fn displacement_cooler_at_occupancy() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🛏️room_air/🦀️component.rs:152:5
+    |
+152 |     fn vertical_gradient_stratifies() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🛏️room_air/🦀️component.rs:158:5
+    |
+158 |     fn ufad_occupied_between_supply_and_zone() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🗓️schedule/🦀️component.rs:177:5
+    |
+177 |     fn constant_schedule_lookup() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🗓️schedule/🦀️component.rs:184:5
+    |
+184 |     fn daily_schedule_respects_limits() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🚿️shw/🦀️component.rs:241:5
+    |
+241 |     fn mixed_tank_recovers_after_draw() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🚿️shw/🦀️component.rs:250:5
+    |
+250 |     fn stratified_tank_top_hotter_than_bottom() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🚿️shw/🦀️component.rs:259:5
+    |
+259 |     fn hpwh_cop_reduces_electrical() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🚿️shw/🦀️component.rs:269:5
+    |
+269 |     fn fixture_demand_positive() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🚿️shw/🦀️component.rs:275:5
+    |
+275 |     fn drain_recovery_preheats_mains() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🚿️shw/🦀️component.rs:283:5
+    |
+283 |     fn standby_loss_increases_with_temperature() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🦀️component.rs:820:5
+    |
+820 |     fn engine_runs_single_zone() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🦀️component.rs:829:5
+    |
+829 |     fn engine_deterministic_repeatability() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🦀️component.rs:839:5
+    |
+839 |     fn ashrae_140_case600_base() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🦀️component.rs:848:5
+    |
+848 |     fn invalid_model_rejected() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🦀️component.rs:854:5
+    |
+854 |     fn energy_conservation_order_of_magnitude() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🦀️component.rs:863:5
+    |
+863 |     fn full_topology_e2e() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🦀️component.rs:872:5
+    |
+872 |     fn hvac_bestest_heating_day() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🦀️component.rs:881:5
+    |
+881 |     fn run_period_honors_calendar() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🦀️component.rs:891:5
+    |
+891 |     fn energy_job_previews_checkpoints_and_commits_bounded_steps() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🦀️component.rs:907:5
+    |
+907 |     fn energy_job_cancellation_and_freshness_precede_mutation() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📍️site/🦀️component.rs:273:5
+    |
+273 |     fn epw_parses_minimal() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📍️site/🦀️component.rs:286:5
+    |
+286 |     fn weather_record_derives_correct_fields_from_stdio_snapshot() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📍️site/🦀️component.rs:300:5
+    |
+300 |     fn epw_parse_rejects_malformed_text() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📍️site/🦀️component.rs:305:5
+    |
+305 |     fn solar_noon_altitude_positive() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📏️sizing/🦀️component.rs:103:5
+    |
+103 |     fn sizes_zone_with_surfaces() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📏️sizing/🦀️component.rs:115:5
+    |
+115 |     fn sizes_equipment_for_ideal_loads_zone() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📏️sizing/🦀️component.rs:123:5
+    |
+123 |     fn coincident_peak_sums_all_loads() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📏️sizing/🦀️component.rs:129:5
+    |
+129 |     fn non_coincident_peak_takes_maximum() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/☀️solar/🦀️component.rs:130:5
+    |
+130 |     fn vertical_south_wall_noon_incidence() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/☀️solar/🦀️component.rs:136:5
+    |
+136 |     fn shading_reduces_with_overhang() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/☀️solar/🦀️component.rs:143:5
+    |
+143 |     fn absorption_positive_at_noon() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/☀️solar/🦀️component.rs:149:5
+    |
+149 |     fn split_flux_allocates_floor_share() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔥️solar_thermal/🦀️component.rs:163:5
+    |
+163 |     fn flat_plate_gain_positive_at_noon() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔥️solar_thermal/🦀️component.rs:170:5
+    |
+170 |     fn zero_irradiance_zero_gain() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔥️solar_thermal/🦀️component.rs:176:5
+    |
+176 |     fn ics_raises_storage_temperature() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔥️solar_thermal/🦀️component.rs:184:5
+    |
+184 |     fn unglazed_preheats_air() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔥️solar_thermal/🦀️component.rs:192:5
+    |
+192 |     fn pvt_splits_electric_and_thermal() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔚️terminal/🦀️component.rs:133:5
+    |
+133 |     fn cav_constant_flow() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔚️terminal/🦀️component.rs:153:5
+    |
+153 |     fn vav_reheat_adds_heat() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔚️terminal/🦀️component.rs:173:5
+    |
+173 |     fn dual_duct_mixes_temperatures() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/⚖️units/🦀️component.rs:99:5
+   |
+99 |     fn celsius_kelvin_roundtrip() {
+   |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/💧️water/🦀️component.rs:220:5
+    |
+220 |     fn fixture_flow_scales_with_schedule() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/💧️water/🦀️component.rs:226:5
+    |
+226 |     fn tank_level_rises_with_inflow() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/💧️water/🦀️component.rs:233:5
+    |
+233 |     fn rainwater_harvest_reduces_with_first_flush() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/💧️water/🦀️component.rs:242:5
+    |
+242 |     fn cooling_makeup_increases_with_load() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/💧️water/🦀️component.rs:250:5
+    |
+250 |     fn water_balance_mains_import() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/💧️water/🦀️component.rs:257:5
+    |
+257 |     fn irrigation_demand_scales_with_et0() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🏠️zone_air/🦀️component.rs:230:5
+    |
+230 |     fn analytical_temp_rises_with_gain() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🏠️zone_air/🦀️component.rs:236:5
+    |
+236 |     fn bdf3_rate_constant_history() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🏠️zone_air/🦀️component.rs:242:5
+    |
+242 |     fn floating_zone_uses_steady_analytical() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🏠️zone_air/🦀️component.rs:269:5
+    |
+269 |     fn conditioned_bdf3_warms_zone() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🏠️zone_air/🦀️component.rs:296:5
+    |
+296 |     fn humidity_analytical_increases_with_latent_gain() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌡️zone_hvac/🦀️component.rs:207:5
+    |
+207 |     fn baseboard_delivers_heat() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌡️zone_hvac/🦀️component.rs:226:5
+    |
+226 |     fn vrf_respects_capacity() {
+    |     ^^
+
+error: #[async_test] can only be applied to an `async fn` — the whole point is expanding an async test body to a sync #[test] harness
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌡️zone_hvac/🦀️component.rs:246:5
+    |
+246 |     fn fan_coil_runs_coils_and_fan() {
+    |     ^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔄️air_exchange/🦀️component.rs:171:9
+    |
+171 |     use super::*;
+    |         ^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::units::P_STD`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔄️air_exchange/🦀️component.rs:172:9
+    |
+172 |     use crate::units::P_STD;
+    |         ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::props::humidity_ratio_from_rh`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌬️air_system/🦀️component.rs:271:9
+    |
+271 |     use crate::props::humidity_ratio_from_rh;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::units::P_STD`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌬️air_system/🦀️component.rs:272:9
+    |
+272 |     use crate::units::P_STD;
+    |         ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::units::P_STD`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🫧️airflow_network/🦀️component.rs:185:9
+    |
+185 |     use crate::units::P_STD;
+    |         ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📅️calendar/🦀️component.rs:210:9
+    |
+210 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌀️coils/🦀️component.rs:198:9
+    |
+198 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📉️curves/🦀️component.rs:179:9
+    |
+179 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🚦️dispatch/🦀️component.rs:100:9
+    |
+100 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/💰️economics/🦀️component.rs:105:9
+    |
+105 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/⚡️electrical/🦀️component.rs:241:9
+    |
+241 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🏢️envelope/🦀️component.rs:153:9
+    |
+153 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused import: `super::*`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🚨️error/🦀️component.rs:81:9
+   |
+81 |     use super::*;
+   |         ^^^^^^^^
+
+warning: unused import: `super::*`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌫️evaporative/🦀️component.rs:83:9
+   |
+83 |     use super::*;
+   |         ^^^^^^^^
+
+warning: unused import: `crate::units::P_STD`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌫️evaporative/🦀️component.rs:84:9
+   |
+84 |     use crate::units::P_STD;
+   |         ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::units::RHO_AIR_REF`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🪭️fans/🦀️component.rs:90:9
+   |
+90 |     use crate::units::RHO_AIR_REF;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/⚠️faults/🦀️component.rs:213:9
+    |
+213 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📈️gains/🦀️component.rs:126:9
+    |
+126 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📐️geometry/🦀️component.rs:172:9
+    |
+172 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused import: `geometry::Mat4`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📐️geometry/🦀️component.rs:173:9
+    |
+173 |     use geometry::Mat4;
+    |         ^^^^^^^^^^^^^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/💦️humidity_eq/🦀️component.rs:142:9
+    |
+142 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused import: `crate::units::P_STD`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/💦️humidity_eq/🦀️component.rs:143:9
+    |
+143 |     use crate::units::P_STD;
+    |         ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🕸️hvac_topo/🦀️component.rs:244:9
+    |
+244 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🫁️iaq/🦀️component.rs:145:9
+    |
+145 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌰️kernel/🦀️component.rs:832:9
+    |
+832 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused import: `crate::precompute::PrecomputedModel`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌰️kernel/🦀️component.rs:833:9
+    |
+833 |     use crate::precompute::PrecomputedModel;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::*`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧮️meters/🦀️component.rs:95:9
+   |
+95 |     use super::*;
+   |         ^^^^^^^^
+
+warning: unused import: `super::*`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📊️metrics/🦀️component.rs:90:9
+   |
+90 |     use super::*;
+   |         ^^^^^^^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔢️num/🦀️component.rs:151:9
+    |
+151 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📤️output/🦀️component.rs:123:9
+    |
+123 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🏭️plant/🦀️component.rs:334:9
+    |
+334 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧠️precompute/🦀️component.rs:249:9
+    |
+249 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused import: `crate::model::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧠️precompute/🦀️component.rs:250:9
+    |
+250 |     use crate::model::*;
+    |         ^^^^^^^^^^^^^^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧰️props/🦀️component.rs:132:9
+    |
+132 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/❄️refrigeration/🦀️component.rs:180:9
+    |
+180 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused import: `crate::curves::PerformanceCurve`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/❄️refrigeration/🦀️component.rs:181:9
+    |
+181 |     use crate::curves::PerformanceCurve;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::*`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧾️results/🦀️component.rs:81:9
+   |
+81 |     use super::*;
+   |         ^^^^^^^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🗓️schedule/🦀️component.rs:174:9
+    |
+174 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused import: `crate::calendar::RunPeriod`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🦀️component.rs:792:9
+    |
+792 |     use crate::calendar::RunPeriod;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📍️site/🦀️component.rs:255:9
+    |
+255 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused import: `super::*`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📏️sizing/🦀️component.rs:98:9
+   |
+98 |     use super::*;
+   |         ^^^^^^^^
+
+warning: unused import: `crate::model::EntityId`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📏️sizing/🦀️component.rs:99:9
+   |
+99 |     use crate::model::EntityId;
+   |         ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Model`, `Site`, and `Zone`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📏️sizing/🦀️component.rs:100:24
+    |
+100 |     use crate::model::{Model, Site, Zone};
+    |                        ^^^^^  ^^^^  ^^^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/☀️solar/🦀️component.rs:127:9
+    |
+127 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔥️solar_thermal/🦀️component.rs:160:9
+    |
+160 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔚️terminal/🦀️component.rs:130:9
+    |
+130 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused import: `super::*`
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/⚖️units/🦀️component.rs:96:9
+   |
+96 |     use super::*;
+   |         ^^^^^^^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/💧️water/🦀️component.rs:217:9
+    |
+217 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🏠️zone_air/🦀️component.rs:227:9
+    |
+227 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused import: `super::*`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌡️zone_hvac/🦀️component.rs:201:9
+    |
+201 |     use super::*;
+    |         ^^^^^^^^
+
+warning: unused import: `crate::curves::PerformanceCurve`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌡️zone_hvac/🦀️component.rs:202:9
+    |
+202 |     use crate::curves::PerformanceCurve;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::fans::FanType`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌡️zone_hvac/🦀️component.rs:203:9
+    |
+203 |     use crate::fans::FanType;
+    |         ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::units::P_STD`
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌡️zone_hvac/🦀️component.rs:204:9
+    |
+204 |     use crate::units::P_STD;
+    |         ^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-energy-focused` (lib test) generated 53 warnings
+error: could not compile `semio-energy-focused` (lib test) due to 239 previous errors; 53 warnings emitted

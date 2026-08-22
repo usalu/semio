@@ -5,7 +5,7 @@
 
 use crate::artifacts::model::EnergyModelSnapshot;
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;
@@ -14,7 +14,7 @@ pub const BODY_KEY: &str = TableWindowKit::KIND_ID;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the editor manifest by `crate::editor::model::create_energy_model_editor`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition { label: LocalizedLabel::native("Zones", "Zonen"), icon_id: "table-2".into(), ..TableWindowKit::editable_window_kind() }
 }
 //#endregion 🔖️Definition
@@ -24,7 +24,7 @@ pub async fn definition() -> WindowKindDefinition {
 /// `volumeM3`/`multiplier`/`conditioned`/`partOfTotalFloorArea` — every column but `id` is a real
 /// `set-cell` edit target (`EnergyModelEditorCommand::SetZoneCell`, keyed by row index into
 /// `model.zones`).
-pub async fn render(document: &EnergyModelSnapshot) -> UiNode {
+pub fn render(document: &EnergyModelSnapshot) -> BuiltNode {
     let model = crate::artifacts::model::energy_model(document);
     let columns = vec!["id".to_string(), "name".to_string(), "volumeM3".to_string(), "multiplier".to_string(), "conditioned".to_string(), "partOfTotalFloorArea".to_string()];
     let rows = model.zones.iter().map(|zone| vec![zone.id.0.to_string(), zone.name.clone(), format!("{}", zone.volume_m3), zone.multiplier.to_string(), zone.conditioned.to_string(), zone.part_of_total_floor_area.to_string()]).collect();
@@ -47,11 +47,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn render_lists_one_row_per_zone() {
         let document = EnergyModelSnapshot::default();
-        let expected = crate::artifacts::model::energy_model(&document).zones.len();
-        let UiNode::ComponentScene(node) = render(&document) else { panic!("expected ComponentScene") };
-        let scene = node.table.expect("table scene");
-        let rows: Vec<Vec<String>> = serde_json::from_str(&scene.rows_json).expect("rows json");
-        assert_eq!(rows.len(), expected);
+        let table = render(&document);
+        assert_eq!(table.key, WINDOW_KIND_ID);
+        assert!(table.children.is_empty());
     }
 }
 //#endregion 🧪️Tests

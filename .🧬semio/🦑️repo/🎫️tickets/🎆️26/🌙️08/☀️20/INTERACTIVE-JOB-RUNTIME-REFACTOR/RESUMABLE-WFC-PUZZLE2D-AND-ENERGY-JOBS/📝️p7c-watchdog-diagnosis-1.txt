@@ -1,0 +1,31 @@
+    Blocking waiting for file lock on package cache
+   Compiling semio-energy-focused v0.0.0 (/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/RESUMABLE-WFC-PUZZLE2D-AND-ENERGY-JOBS/🧪️energy-focused)
+warning: associated functions `resolve_weather` and `synthetic_weather_year` are never used
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🦀️component.rs:847:8
+    |
+824 | impl Engine {
+    | ----------- associated functions in this implementation
+...
+847 |     fn resolve_weather(config: &SimulationConfig) -> Vec<WeatherRecord> {
+    |        ^^^^^^^^^^^^^^^
+...
+858 |     fn synthetic_weather_year() -> Vec<WeatherRecord> {
+    |        ^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `design_day_weather` is never used
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🦀️component.rs:890:4
+    |
+890 | fn design_day_weather(dry_bulb_c: f64) -> Vec<WeatherRecord> {
+    |    ^^^^^^^^^^^^^^^^^^
+
+warning: `semio-energy-focused` (lib test) generated 2 warnings
+    Finished `release` profile [optimized] target(s) in 1m 18s
+     Running unittests lib.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/RESUMABLE-WFC-PUZZLE2D-AND-ENERGY-JOBS/🧪️target-p7-energy-focused/release/deps/semio_energy_focused-9ca7d2c1de3b5624)
+
+running 1 test
+test sim::tests::energy_job_previews_checkpoints_and_commits_bounded_steps ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 240 filtered out; finished in 0.01s
+

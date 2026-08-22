@@ -9,7 +9,7 @@ use crate::artifacts::stl::standards::v_ascii::subsets::any::schema::snapshot::S
 use crate::viewer::stl::modes::view;
 use crate::viewer::stl::modes::view::windows::main;
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Dialect

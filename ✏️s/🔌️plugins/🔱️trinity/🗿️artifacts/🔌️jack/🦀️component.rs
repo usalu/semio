@@ -20,63 +20,129 @@ pub type Manifest = TrinityManifest;
 
 //#region ⚠️ Errors
 /// ⚠️ Trinity graph fixture, manifest-validation, and mutation errors.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum TrinityRamError {
     /// 🧬️ JSON (de)serialization failure.
-    #[error(transparent)]
-    Json(#[from] serde_json::Error),
+    Json(serde_json::Error),
     /// 🧭️ VCS store/dispatch failure.
-    #[error(transparent)]
-    Vcs(#[from] vcs::VcsError),
+    Vcs(vcs::VcsError),
     /// 🧬️ Persisted mutation diff rejection.
-    #[error(transparent)]
-    MutationApply(#[from] protocol::MutationApplyError),
+    MutationApply(protocol::MutationApplyError),
     /// 📜️ Compile-time manifest validation failure (path-qualified).
-    #[error("{}: {}", .0.path, .0.message)]
     Manifest(ManifestValidationError),
-    #[error("expected schema {expected}, got {actual}")]
-    SchemaMismatch { expected: &'static str, actual: String },
-    #[error("unknown manifest id {0}")]
+    SchemaMismatch {
+        expected: &'static str,
+        actual: String,
+    },
     UnknownManifestId(String),
-    #[error("fixture missing manifest or manifestId")]
     ManifestMissing,
-    #[error("node {0} not found")]
     NodeNotFound(String),
-    #[error("edge {0} not found")]
     EdgeNotFound(String),
-    #[error("node {0} already exists")]
     NodeAlreadyExists(String),
-    #[error("edge {0} already exists")]
     EdgeAlreadyExists(String),
-    #[error("invalid source port key {0}")]
     InvalidSourcePortKey(String),
-    #[error("invalid target port key {0}")]
     InvalidTargetPortKey(String),
-    #[error("source node {0} not found")]
     SourceNodeNotFound(String),
-    #[error("target node {0} not found")]
     TargetNodeNotFound(String),
-    #[error("nodes/{node_id}/ports/{port_kind}: port kind {port_kind} not declared on node kind {node_kind}")]
-    PortKindNotDeclaredOnFixture { node_id: String, port_kind: String, node_kind: String },
-    #[error("nodes/{node_id}/ports/{port_id}: port kind {port_kind} not declared on node kind {node_kind}")]
-    PortKindNotDeclaredOnMutation { node_id: String, port_id: String, port_kind: String, node_kind: String },
-    #[error("nodes/{kind}: unknown node kind {kind:?}")]
-    UnknownNodeKind { kind: String },
-    #[error("edges/{kind}: unknown edge kind {kind:?}")]
-    UnknownEdgeKind { kind: String },
-    #[error("ports/{kind}: unknown port kind {kind:?}")]
-    UnknownPortKind { kind: String },
-    #[error("{path}: unknown kind")]
-    UnknownEntityKind { path: String },
-    #[error("{path}: unknown property {key:?}")]
-    UnknownPropertyAtPath { path: String, key: String },
-    #[error("{path}/{name}: property type mismatch for {value_type}")]
-    PropertyTypeMismatch { path: String, name: String, value_type: String },
-    #[error("{path}/{key}: unknown property {key:?}")]
-    UnknownPropertyInBag { path: String, key: String },
+    PortKindNotDeclaredOnFixture {
+        node_id: String,
+        port_kind: String,
+        node_kind: String,
+    },
+    PortKindNotDeclaredOnMutation {
+        node_id: String,
+        port_id: String,
+        port_kind: String,
+        node_kind: String,
+    },
+    UnknownNodeKind {
+        kind: String,
+    },
+    UnknownEdgeKind {
+        kind: String,
+    },
+    UnknownPortKind {
+        kind: String,
+    },
+    UnknownEntityKind {
+        path: String,
+    },
+    UnknownPropertyAtPath {
+        path: String,
+        key: String,
+    },
+    PropertyTypeMismatch {
+        path: String,
+        name: String,
+        value_type: String,
+    },
+    UnknownPropertyInBag {
+        path: String,
+        key: String,
+    },
 }
 
-/// 🔀️ [`ManifestValidationError`] carries no `std::error::Error` impl of its own (plain path/message struct), so this is a manual conversion rather than `#[from]`.
+impl std::fmt::Display for TrinityRamError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Json(error) => write!(formatter, "{error}"),
+            Self::Vcs(error) => write!(formatter, "{error}"),
+            Self::MutationApply(error) => write!(formatter, "{error}"),
+            Self::Manifest(error) => write!(formatter, "{}: {}", error.path, error.message),
+            Self::SchemaMismatch { expected, actual } => write!(formatter, "expected schema {expected}, got {actual}"),
+            Self::UnknownManifestId(id) => write!(formatter, "unknown manifest id {id}"),
+            Self::ManifestMissing => formatter.write_str("fixture missing manifest or manifestId"),
+            Self::NodeNotFound(id) => write!(formatter, "node {id} not found"),
+            Self::EdgeNotFound(id) => write!(formatter, "edge {id} not found"),
+            Self::NodeAlreadyExists(id) => write!(formatter, "node {id} already exists"),
+            Self::EdgeAlreadyExists(id) => write!(formatter, "edge {id} already exists"),
+            Self::InvalidSourcePortKey(key) => write!(formatter, "invalid source port key {key}"),
+            Self::InvalidTargetPortKey(key) => write!(formatter, "invalid target port key {key}"),
+            Self::SourceNodeNotFound(id) => write!(formatter, "source node {id} not found"),
+            Self::TargetNodeNotFound(id) => write!(formatter, "target node {id} not found"),
+            Self::PortKindNotDeclaredOnFixture { node_id, port_kind, node_kind } => write!(formatter, "nodes/{node_id}/ports/{port_kind}: port kind {port_kind} not declared on node kind {node_kind}"),
+            Self::PortKindNotDeclaredOnMutation { node_id, port_id, port_kind, node_kind } => write!(formatter, "nodes/{node_id}/ports/{port_id}: port kind {port_kind} not declared on node kind {node_kind}"),
+            Self::UnknownNodeKind { kind } => write!(formatter, "nodes/{kind}: unknown node kind {kind:?}"),
+            Self::UnknownEdgeKind { kind } => write!(formatter, "edges/{kind}: unknown edge kind {kind:?}"),
+            Self::UnknownPortKind { kind } => write!(formatter, "ports/{kind}: unknown port kind {kind:?}"),
+            Self::UnknownEntityKind { path } => write!(formatter, "{path}: unknown kind"),
+            Self::UnknownPropertyAtPath { path, key } => write!(formatter, "{path}: unknown property {key:?}"),
+            Self::PropertyTypeMismatch { path, name, value_type } => write!(formatter, "{path}/{name}: property type mismatch for {value_type}"),
+            Self::UnknownPropertyInBag { path, key } => write!(formatter, "{path}/{key}: unknown property {key:?}"),
+        }
+    }
+}
+
+impl std::error::Error for TrinityRamError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Json(error) => std::error::Error::source(error),
+            Self::Vcs(error) => std::error::Error::source(error),
+            Self::MutationApply(error) => std::error::Error::source(error),
+            _ => None,
+        }
+    }
+}
+
+impl From<serde_json::Error> for TrinityRamError {
+    fn from(error: serde_json::Error) -> Self {
+        Self::Json(error)
+    }
+}
+
+impl From<vcs::VcsError> for TrinityRamError {
+    fn from(error: vcs::VcsError) -> Self {
+        Self::Vcs(error)
+    }
+}
+
+impl From<protocol::MutationApplyError> for TrinityRamError {
+    fn from(error: protocol::MutationApplyError) -> Self {
+        Self::MutationApply(error)
+    }
+}
+
+/// 🔀️ [`ManifestValidationError`] carries no `std::error::Error` impl of its own (plain path/message struct), so this conversion remains explicit.
 impl From<ManifestValidationError> for TrinityRamError {
     fn from(error: ManifestValidationError) -> Self {
         Self::Manifest(error)
@@ -595,7 +661,7 @@ pub async fn empty_trinity_graph_fixture() -> JackSnapshot {
 }
 
 /// 🎯️ `ArtifactKindSpec` identity shared by every `jack`-family app that mounts this artifact.
-pub async fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "graph.trinity".into(),
         name: "Trinity Graph".into(),
@@ -621,7 +687,7 @@ pub async fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// tree's `🪆️subsets/✳️any/🦀️component.rs` reads these same five `LanguageSpec`s to build its
 /// `NativeCodecs` `LanguagePair`s (see that file's own doc for why it does not delegate to a sibling
 /// `io::io()` the way `🗒️note`/`🖍️draw` do).
-pub async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -736,7 +802,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
 /// for schema/io/viewer/editor rows. `definition()` (old `ArtifactDefinition`/capability rows, above)
 /// is kept per debt D1, and `artifact_kind()` is kept because this crate's own plugin-root
 /// `.activation(...)` still reads `artifact_kind().id`; neither has any caller left in this function.
-pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::TrinityApps> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.trinity.jack").expect("canonical jack kind"), localization: &[], standards: vec![crate::artifacts::jack::standards::v1::standard()] }

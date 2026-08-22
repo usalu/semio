@@ -1,0 +1,4 @@
+[run r13-ras5knfp] crate=semio-s-plugin-stdio dryRun=false target=(host) excludePath=artifacts/📄️pdf/
+[run r13-ras5knfp] iteration 1: total errors=6, async-class=6
+[run r13-ras5knfp] iteration 1: planned 6 edits (0 residue)
+[run r13-ras5knfp] reached max-iterations=1 without reaching a fixpoint.

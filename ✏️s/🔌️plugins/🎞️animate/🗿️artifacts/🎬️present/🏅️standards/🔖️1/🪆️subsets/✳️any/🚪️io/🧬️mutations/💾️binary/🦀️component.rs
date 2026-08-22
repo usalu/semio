@@ -23,12 +23,12 @@ use protocol::OpBinary;
 use store::{create_document_envelope, materialize_document_snapshot, ArtifactEnvelope, ArtifactStore};
 
 /// 📦️ Encodes a `PresentMutation` to its binary state-patch form.
-pub async fn encode_op(operation: &PresentMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &PresentMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `PresentMutation` from its binary state-patch form.
-pub async fn decode_op(bytes: &[u8]) -> Result<PresentMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<PresentMutation, protocol::ProtocolError> {
     PresentMutation::decode_op(bytes)
 }
 
@@ -39,15 +39,15 @@ pub type PresentStore = ArtifactStore<PresentSnapshot, PresentMutation>;
 
 //#region 🔖️VcsEnvelope
 /// 📦️ Creates an empty typed VCS envelope for a presentation deck document.
-pub async fn create_present_envelope(id: &str) -> PresentEnvelope {
+pub fn create_present_envelope(id: &str) -> PresentEnvelope {
     create_document_envelope(PRESENT_DOCUMENT_SCHEMA, id, empty_present_snapshot(), None)
 }
 
 /// 📐️ Replays every stored edit in `envelope_json` and returns the materialized deck projection.
-pub async fn materialize_present_projection_json(envelope_json: &str) -> Result<PresentSnapshot, PresentError> {
+pub fn materialize_present_projection_json(envelope_json: &str) -> Result<PresentSnapshot, PresentError> {
     let envelope: PresentEnvelope = serde_json::from_str(envelope_json)?;
     let edit_ids: Vec<String> = envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
-    Ok(materialize_document_snapshot(&envelope, &edit_ids)?)
+    Ok(semio_framework_plugin::resolve_ready(materialize_document_snapshot(&envelope, &edit_ids))?)
 }
 //#endregion 🔖️VcsEnvelope
 
@@ -78,7 +78,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn present_deck_materializes() {
-        let mut store = PresentStore::new(create_document_envelope(PRESENT_DOCUMENT_SCHEMA, "animate-present", empty_present_snapshot(), None)).expect("valid artifact store fixture");
+        let mut store = PresentStore::new(create_document_envelope(PRESENT_DOCUMENT_SCHEMA, "animate-present", empty_present_snapshot(), None)).await.expect("valid artifact store fixture");
         store
             .dispatch(ArtifactCommand::Apply {
                 mutations: vec![PresentMutation::CreateTile(create_tile::mutation::CreateTile {
@@ -87,14 +87,15 @@ mod tests {
                 })],
                 description: None,
             })
+            .await
             .expect("apply");
-        assert_eq!(crate::artifacts::present::present_working_scene(&store.snapshot().expect("projection")).1.len(), 1);
+        assert_eq!(crate::artifacts::present::present_working_scene(&store.snapshot().await.expect("projection")).1.len(), 1);
     }
 
     //#region 🔖️DocumentTextTests
     #[semio_framework_async_macros::async_test]
     async fn document_text_round_trip_with_operation_applied() {
-        let mut store = PresentStore::new(create_document_envelope(PRESENT_DOCUMENT_SCHEMA, "animate-present", crate::artifacts::present::default_present_snapshot(), None)).expect("valid artifact store fixture");
+        let mut store = PresentStore::new(create_document_envelope(PRESENT_DOCUMENT_SCHEMA, "animate-present", crate::artifacts::present::default_present_snapshot(), None)).await.expect("valid artifact store fixture");
         store
             .dispatch(ArtifactCommand::Apply {
                 mutations: vec![PresentMutation::CreateTile(create_tile::mutation::CreateTile {
@@ -103,9 +104,10 @@ mod tests {
                 })],
                 description: None,
             })
+            .await
             .expect("apply");
-        test_support::assert_document_text_round_trip(&store);
-        test_support::assert_document_pack_round_trip(&store);
+        test_support::assert_document_text_round_trip(&store).await;
+        test_support::assert_document_pack_round_trip(&store).await;
     }
     //#endregion 🔖️DocumentTextTests
 }

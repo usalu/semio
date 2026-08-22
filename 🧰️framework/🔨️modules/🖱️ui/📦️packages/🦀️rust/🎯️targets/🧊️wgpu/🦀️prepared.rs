@@ -66,6 +66,20 @@ pub enum PreparedRenderUpload {
     Mesh { key: String, version: u64, positions: Vec<f32>, normals: Vec<f32>, indices: Vec<u32> },
 }
 
+/// 🧹️ UI-thread GPU cache invalidation selected during worker preparation.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum PreparedRenderEviction {
+    Mesh { key: String },
+}
+
+impl PreparedRenderEviction {
+    pub fn byte_len(&self) -> usize {
+        match self {
+            Self::Mesh { key } => key.len(),
+        }
+    }
+}
+
 impl PreparedRenderUpload {
     pub fn byte_len(&self) -> usize {
         match self {
@@ -87,6 +101,7 @@ pub struct PreparedRenderPacket {
     pub(crate) clips: Vec<ScissorRect>,
     pub(crate) directives: Vec<RenderDirective>,
     pub(crate) uploads: Vec<PreparedRenderUpload>,
+    pub(crate) evictions: Vec<PreparedRenderEviction>,
     pub(crate) draw: DrawList,
     pub(crate) overlay: Option<DrawList>,
     pub(crate) time_seconds: f32,
@@ -119,6 +134,10 @@ impl PreparedRenderPacket {
         &self.uploads
     }
 
+    pub fn evictions(&self) -> &[PreparedRenderEviction] {
+        &self.evictions
+    }
+
     pub fn usage(&self) -> PreparedRenderUsage {
         self.usage
     }
@@ -140,6 +159,7 @@ pub struct PreparedRenderInput {
     pub clips: Vec<ScissorRect>,
     pub directives: Vec<RenderDirective>,
     pub uploads: Vec<PreparedRenderUpload>,
+    pub evictions: Vec<PreparedRenderEviction>,
     pub draw: DrawList,
     pub overlay: Option<DrawList>,
     pub time_seconds: f32,
@@ -148,7 +168,19 @@ pub struct PreparedRenderInput {
 
 impl PreparedRenderInput {
     pub fn new(scene_revision: u64, preview_generation: u64, draw: DrawList, overlay: Option<DrawList>, time_seconds: f32) -> Self {
-        Self { scene_revision, preview_generation, damage: Vec::new(), clips: Vec::new(), directives: vec![RenderDirective::PreservePreviousOnFailure], uploads: Vec::new(), draw, overlay, time_seconds, limits: PreparedRenderLimits::default() }
+        Self {
+            scene_revision,
+            preview_generation,
+            damage: Vec::new(),
+            clips: Vec::new(),
+            directives: vec![RenderDirective::PreservePreviousOnFailure],
+            uploads: Vec::new(),
+            evictions: Vec::new(),
+            draw,
+            overlay,
+            time_seconds,
+            limits: PreparedRenderLimits::default(),
+        }
     }
 }
 //#endregion 📦️Packet
@@ -191,6 +223,7 @@ enum PreparationSection {
     Draw,
     Overlay,
     Uploads,
+    Evictions,
     Damage,
     Clips,
     Directives,
@@ -399,6 +432,16 @@ impl PreparedRenderJob {
                     self.metadata_cursor += 1;
                     return Some(PreparedRenderUsage { upload_items: 1, upload_bytes: upload.byte_len(), ..PreparedRenderUsage::default() });
                 }
+                self.section = PreparationSection::Evictions;
+                self.metadata_cursor = 0;
+                self.measure_next()
+            }
+            PreparationSection::Evictions => {
+                let input = self.input.as_ref().expect("prepared render input");
+                if let Some(eviction) = input.evictions.get(self.metadata_cursor) {
+                    self.metadata_cursor += 1;
+                    return Some(PreparedRenderUsage { upload_items: 1, upload_bytes: eviction.byte_len(), ..PreparedRenderUsage::default() });
+                }
                 self.section = PreparationSection::Damage;
                 self.metadata_cursor = 0;
                 self.measure_next()
@@ -439,6 +482,7 @@ impl PreparedRenderJob {
             clips: input.clips,
             directives: input.directives,
             uploads: input.uploads,
+            evictions: input.evictions,
             draw: input.draw,
             overlay: input.overlay,
             time_seconds: input.time_seconds,
@@ -561,6 +605,7 @@ mod tests {
             clips: Vec::new(),
             directives: vec![RenderDirective::PreservePreviousOnFailure],
             uploads: Vec::new(),
+            evictions: Vec::new(),
             draw: DrawList::default(),
             overlay: None,
             time_seconds: 0.0,
@@ -682,6 +727,18 @@ mod tests {
         let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
         input.limits.max_upload_bytes = 3;
         input.uploads.push(PreparedRenderUpload::GlyphAtlas { pixels: vec![0; 4], width: 2, height: 2 });
+        let mut job = PreparedRenderJob::new(input, 64);
+        let mut preview = 0;
+        let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), root_cancel_token(), now_ms, &mut preview);
+        assert!(matches!(outcome, StepOutcome::Fault(_)));
+        assert!(job.take_packet().is_none());
+    }
+
+    #[test]
+    fn eviction_byte_cap_faults_before_packet_publication() {
+        let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
+        input.limits.max_upload_bytes = 3;
+        input.evictions.push(PreparedRenderEviction::Mesh { key: "mesh".into() });
         let mut job = PreparedRenderJob::new(input, 64);
         let mut preview = 0;
         let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(100, 10), root_cancel_token(), now_ms, &mut preview);

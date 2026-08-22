@@ -17,15 +17,12 @@ path = "📦️glue.rs"
 
 [features]
 default = []
-# 🧬️ TypeScript mirror of the whole contract. The flat node table (no recursive `Vec<UiNode>`) is what
-# makes the entire surface ts-rs-derivable — the hand-written mirror this replaces existed only because
-# recursion blocked derivation.
-typegen = ["dep:ts-rs"]
+# 🧬️ TypeScript mirror rendered from the contract's versioned owned schema metadata.
+typegen = []
 
 [dependencies]
 ui_styling = { path = "../../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 serde = { version = "1.0.219", features = ["derive"] }
-ts-rs = { version = "10", optional = true }
 
 [dev-dependencies]
 serde_json = { version = "1.0.140" }

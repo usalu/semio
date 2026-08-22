@@ -7,21 +7,12 @@
 //! [`RenderSnapshotSink`]'s own doc for the real use-after-free bug a concurrent stress test caught in
 //! that version and why a `Mutex<Arc<T>>` is the correct fix here, not a compromise.
 //!
-//! **Honest scope note — read before assuming this makes frame BUILDING worker-side.** This type and
-//! its sink are real, tested, and used by [`crate::os_host::OsHost::redraw`] exactly as designed: the
-//! UI thread only ever calls [`RenderSnapshotSink::acquire`] (never blocks, never waits on a worker,
-//! re-presents the previous snapshot if nothing newer landed) and applies the directives it carries.
-//! What this packet's boundary could NOT achieve is having a WORKER thread be the one calling
-//! [`RenderSnapshotSink::publish`]: `crate::AppRuntime` is `Rc<RefCell<_>>` (see its own struct
-//! definition — `self_weak: std::rc::Weak<RefCell<AppRuntime>>`), not `Send`, so it cannot be moved to
-//! an OS thread as-is, and the actual GPU submission (`GpuContext::render_frame`) lives inside
-//! `ui_wgpu`, a crate outside this packet's ownership boundary. `OsHost::redraw` therefore still BUILDS
-//! the frame (via `AppRuntime::frame()`) and PUBLISHES the resulting snapshot on the same UI-thread call
-//! that then immediately ACQUIRES and presents it — the sink and its acquire/publish contract are the
-//! real, working seam a future packet plugs a genuine worker-side builder into once `AppRuntime`'s
-//! ownership model is refactored to be `Send` (or the immediate-mode `DrawList` pipeline is replaced by
-//! the `Element`/`FrameEngine` pipeline `os_host.rs`'s own docstring already names as the eventual
-//! target). See `📓️p3a-render-snapshot.md` for the full writeup and what Phase 5 still owes.
+//! The mounted native renderer owns `AppRuntime` behind a bounded completion mailbox and submits
+//! `AppRuntime::frame` through `FrameBuildHandle` to the process worker pool. The UI callback
+//! non-blockingly polls the capacity-one completion channel, presents only an immutable prepared
+//! packet, and keeps the last valid snapshot when the worker stalls. This sink carries the
+//! cursor/IME scheduling subset of that publication. The retained hit-test index and damage regions
+//! are still explicit optional gaps below; neither is represented by an invented placeholder.
 
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
@@ -52,9 +43,8 @@ pub struct RenderSnapshot {
     pub ime: Option<ImeDirective>,
     /// 🌳️ Hit-test index for the frame this snapshot represents. This crate's actual hit-testing
     /// (`ui_wgpu::wgpu::InputState::hit_at`) is immediate-mode against live `AppRuntime` state, not a
-    /// `ui_render::DispatchTree` — so there is no real value to carry here yet. `None` always, today;
-    /// see `📓️p3a-render-snapshot.md` §5 for the architecture-mismatch finding this honestly records
-    /// rather than papers over with a fake tree.
+    /// `ui_render::DispatchTree` — so there is no real value to carry here yet. `None` is an explicit
+    /// remaining P3 input-contract gap, not a synthetic index.
     pub dispatch_tree: Option<Arc<()>>,
     /// 🩹️ Damage/dirty regions this frame touched — not tracked by the immediate-mode `DrawList`
     /// pipeline today (it always repaints the full surface); `None` until damage tracking exists.

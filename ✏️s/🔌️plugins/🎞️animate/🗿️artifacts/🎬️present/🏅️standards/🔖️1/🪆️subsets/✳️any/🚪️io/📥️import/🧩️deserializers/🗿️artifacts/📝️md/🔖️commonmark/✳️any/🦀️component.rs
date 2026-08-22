@@ -14,7 +14,7 @@ use semio_s_plugin_stdio::artifacts::md::MdSnapshot;
 
 pub const MD_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId::ANY };
 
-async fn extract_placeholder_text(from: &MdSnapshot) -> String {
+fn extract_placeholder_text(from: &MdSnapshot) -> String {
     for block in &from.blocks {
         if let MdBlock::Paragraph { inlines } = block {
             for inline in inlines {
@@ -32,12 +32,12 @@ pub struct MdIntoPresent;
 impl Deserializer<PresentSnapshot> for MdIntoPresent {
     const FROM: Dialect = MD_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Canonical;
-    fn deserialize(payload: &IoPayload) -> IoResult<PresentSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<PresentSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "MdIntoPresent: expected a binary md payload".to_string(), diagnostics: Vec::new() });
         };
         let md = <MdSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError { message: format!("MdIntoPresent: {error}"), diagnostics: Vec::new() })?;
         let snapshot = <PresentSnapshot as store::ArtifactDsl>::parse_dsl(&extract_placeholder_text(&md)).map_err(|error| IoError { message: format!("MdIntoPresent: {error}"), diagnostics: Vec::new() })?;
-        Ok(IoOutcome::clean(snapshot))
+        Ok(IoOutcome::clean(snapshot).await)
     }
 }

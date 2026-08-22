@@ -56,7 +56,7 @@ impl ArtifactInferrer for crate::artifacts::rewrite::standards::v1::subsets::any
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.trinity.rewrite.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `rewrite_artifact_schema_descriptor`'s registration.
-pub async fn rewrite_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn rewrite_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.trinity.rewrite.inference",
         inference: schema::FacetLeaves {

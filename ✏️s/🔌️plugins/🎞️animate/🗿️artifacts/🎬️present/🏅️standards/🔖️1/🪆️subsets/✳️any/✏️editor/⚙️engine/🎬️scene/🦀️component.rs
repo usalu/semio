@@ -3,6 +3,7 @@
 
 #![allow(clippy::too_many_arguments, clippy::type_complexity)]
 
+#[allow(clippy::module_inception)]
 pub mod scene {
     //! 🎭️ Scene trait with construct/play/wait timeline and frame loop.
 
@@ -16,42 +17,42 @@ pub mod scene {
 
     /// 🎬️ User-authored animation scene contract.
     pub trait Scene {
-        async fn construct(&mut self);
+        fn construct(&mut self);
 
-        async fn setup(&mut self, _config: &AnimateConfig) {}
+        fn setup(&mut self, _config: &AnimateConfig) {}
 
-        async fn tear_down(&mut self) {}
+        fn tear_down(&mut self) {}
 
-        async fn config(&self) -> &AnimateConfig;
+        fn config(&self) -> &AnimateConfig;
 
-        async fn config_mut(&mut self) -> &mut AnimateConfig;
+        fn config_mut(&mut self) -> &mut AnimateConfig;
 
-        async fn camera(&self) -> &Camera;
+        fn camera(&self) -> &Camera;
 
-        async fn camera_mut(&mut self) -> &mut Camera;
+        fn camera_mut(&mut self) -> &mut Camera;
 
-        async fn mobjects(&self) -> &HashMap<u64, Sobjects>;
+        fn mobjects(&self) -> &HashMap<u64, Sobjects>;
 
-        async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects>;
+        fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects>;
 
-        async fn sections(&self) -> &SectionList;
+        fn sections(&self) -> &SectionList;
 
-        async fn sections_mut(&mut self) -> &mut SectionList;
+        fn sections_mut(&mut self) -> &mut SectionList;
 
-        async fn scene_time(&self) -> f64;
+        fn scene_time(&self) -> f64;
 
-        async fn set_scene_time(&mut self, time: f64);
+        fn set_scene_time(&mut self, time: f64);
 
-        async fn add(&mut self, mobject: Sobjects) {
+        fn add(&mut self, mobject: Sobjects) {
             let id = mobject.id();
             self.mobjects_mut().insert(id, mobject);
         }
 
-        async fn remove(&mut self, id: u64) {
+        fn remove(&mut self, id: u64) {
             self.mobjects_mut().remove(&id);
         }
 
-        async fn play(&mut self, mut animation: Animations) {
+        fn play(&mut self, mut animation: Animations) {
             let pending_introducers = if animation.is_introducer() { animation.get_all_mobjects() } else { Vec::new() };
             for id in &pending_introducers {
                 debug_assert!(self.mobjects().contains_key(id), "introducer animation requires mobject {id} to exist in scene");
@@ -72,28 +73,28 @@ pub mod scene {
             }
         }
 
-        async fn begin_section(&mut self, name: impl Into<String>) {
+        fn begin_section(&mut self, name: impl Into<String>) {
             self.sections_mut().begin_section(name, false);
         }
 
-        async fn next_section(&mut self, name: impl Into<String>) {
+        fn next_section(&mut self, name: impl Into<String>) {
             let t = self.scene_time();
             self.sections_mut().end_section(t);
             self.sections_mut().begin_section(name, false);
         }
 
-        async fn wait(&mut self, seconds: f64) {
+        fn wait(&mut self, seconds: f64) {
             self.play(Wait::new(seconds).into());
         }
 
-        async fn compile_and_play(&mut self, animations: Vec<Animations>) {
+        fn compile_and_play(&mut self, animations: Vec<Animations>) {
             let _durations = compile_animations(&animations);
             for anim in animations {
                 self.play(anim);
             }
         }
 
-        async fn sample_frame(&mut self, dt: f64) {
+        fn sample_frame(&mut self, dt: f64) {
             let t = self.scene_time() + dt;
             self.set_scene_time(t);
             for m in self.mobjects_mut().values_mut() {
@@ -102,7 +103,7 @@ pub mod scene {
             }
         }
 
-        async fn render_frame_index(&self, frame: u64) -> SceneFrame {
+        fn render_frame_index(&self, frame: u64) -> SceneFrame {
             SceneFrame { frame, time: frame as f64 / self.config().frame_rate, mobject_count: self.mobjects().len(), section: self.sections().find_at_time(self.scene_time()).map(|s| s.name.clone()) }
         }
     }
@@ -117,7 +118,7 @@ pub mod scene {
     }
 
     /// 🔁️ Interactive preview loop sampling construct timeline without encoding.
-    pub async fn preview_scene_loop<S: Scene>(scene: &mut S, max_frames: u64, mut on_frame: impl FnMut(&SceneFrame)) {
+    pub fn preview_scene_loop<S: Scene>(scene: &mut S, max_frames: u64, mut on_frame: impl FnMut(&SceneFrame)) {
         let config = scene.config().clone();
         scene.setup(&config);
         let fps = config.frame_rate;
@@ -140,12 +141,12 @@ pub mod scene {
     }
 
     impl BasicStage {
-        pub async fn new(config: AnimateConfig) -> Self {
+        pub fn new(config: AnimateConfig) -> Self {
             let camera = Camera::new(config.width as f64 / 100.0, config.height as f64 / 100.0);
             Self { config, camera, mobjects: HashMap::new(), sections: SectionList::new(), scene_time: 0.0 }
         }
 
-        pub async fn run_construct<S: Scene>(&mut self, scene: &mut S) {
+        pub fn run_construct<S: Scene>(&mut self, scene: &mut S) {
             scene.setup(&self.config);
             scene.construct();
             scene.tear_down();
@@ -153,45 +154,45 @@ pub mod scene {
     }
 
     impl Scene for BasicStage {
-        async fn construct(&mut self) {}
+        fn construct(&mut self) {}
 
-        async fn config(&self) -> &AnimateConfig {
+        fn config(&self) -> &AnimateConfig {
             &self.config
         }
 
-        async fn config_mut(&mut self) -> &mut AnimateConfig {
+        fn config_mut(&mut self) -> &mut AnimateConfig {
             &mut self.config
         }
 
-        async fn camera(&self) -> &Camera {
+        fn camera(&self) -> &Camera {
             &self.camera
         }
 
-        async fn camera_mut(&mut self) -> &mut Camera {
+        fn camera_mut(&mut self) -> &mut Camera {
             &mut self.camera
         }
 
-        async fn mobjects(&self) -> &HashMap<u64, Sobjects> {
+        fn mobjects(&self) -> &HashMap<u64, Sobjects> {
             &self.mobjects
         }
 
-        async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
+        fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
             &mut self.mobjects
         }
 
-        async fn sections(&self) -> &SectionList {
+        fn sections(&self) -> &SectionList {
             &self.sections
         }
 
-        async fn sections_mut(&mut self) -> &mut SectionList {
+        fn sections_mut(&mut self) -> &mut SectionList {
             &mut self.sections
         }
 
-        async fn scene_time(&self) -> f64 {
+        fn scene_time(&self) -> f64 {
             self.scene_time
         }
 
-        async fn set_scene_time(&mut self, time: f64) {
+        fn set_scene_time(&mut self, time: f64) {
             self.scene_time = time;
         }
     }
@@ -202,7 +203,7 @@ pub mod scene {
     }
 
     impl TestScene {
-        pub async fn new() -> Self {
+        pub fn new() -> Self {
             Self { inner: BasicStage::new(AnimateConfig::default().with_frame_rate(60.0)) }
         }
     }
@@ -214,35 +215,35 @@ pub mod scene {
     }
 
     impl Scene for TestScene {
-        async fn construct(&mut self) {}
-        async fn config(&self) -> &AnimateConfig {
+        fn construct(&mut self) {}
+        fn config(&self) -> &AnimateConfig {
             self.inner.config()
         }
-        async fn config_mut(&mut self) -> &mut AnimateConfig {
+        fn config_mut(&mut self) -> &mut AnimateConfig {
             self.inner.config_mut()
         }
-        async fn camera(&self) -> &Camera {
+        fn camera(&self) -> &Camera {
             self.inner.camera()
         }
-        async fn camera_mut(&mut self) -> &mut Camera {
+        fn camera_mut(&mut self) -> &mut Camera {
             self.inner.camera_mut()
         }
-        async fn mobjects(&self) -> &HashMap<u64, Sobjects> {
+        fn mobjects(&self) -> &HashMap<u64, Sobjects> {
             self.inner.mobjects()
         }
-        async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
+        fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
             self.inner.mobjects_mut()
         }
-        async fn sections(&self) -> &SectionList {
+        fn sections(&self) -> &SectionList {
             self.inner.sections()
         }
-        async fn sections_mut(&mut self) -> &mut SectionList {
+        fn sections_mut(&mut self) -> &mut SectionList {
             self.inner.sections_mut()
         }
-        async fn scene_time(&self) -> f64 {
+        fn scene_time(&self) -> f64 {
             self.inner.scene_time()
         }
-        async fn set_scene_time(&mut self, time: f64) {
+        fn set_scene_time(&mut self, time: f64) {
             self.inner.set_scene_time(time);
         }
     }
@@ -254,45 +255,45 @@ pub mod scene {
     }
 
     impl MovingCameraScene {
-        pub async fn new(config: AnimateConfig) -> Self {
+        pub fn new(config: AnimateConfig) -> Self {
             let camera = Camera::new(config.width as f64 / 100.0, config.height as f64 / 100.0);
             Self { moving_camera: MovingCamera::new(camera.clone()), inner: BasicStage { config, camera, mobjects: HashMap::new(), sections: SectionList::new(), scene_time: 0.0 } }
         }
     }
 
     impl Scene for MovingCameraScene {
-        async fn construct(&mut self) {}
-        async fn config(&self) -> &AnimateConfig {
+        fn construct(&mut self) {}
+        fn config(&self) -> &AnimateConfig {
             self.inner.config()
         }
-        async fn config_mut(&mut self) -> &mut AnimateConfig {
+        fn config_mut(&mut self) -> &mut AnimateConfig {
             self.inner.config_mut()
         }
-        async fn camera(&self) -> &Camera {
+        fn camera(&self) -> &Camera {
             &self.moving_camera.camera
         }
-        async fn camera_mut(&mut self) -> &mut Camera {
+        fn camera_mut(&mut self) -> &mut Camera {
             &mut self.moving_camera.camera
         }
-        async fn mobjects(&self) -> &HashMap<u64, Sobjects> {
+        fn mobjects(&self) -> &HashMap<u64, Sobjects> {
             self.inner.mobjects()
         }
-        async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
+        fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
             self.inner.mobjects_mut()
         }
-        async fn sections(&self) -> &SectionList {
+        fn sections(&self) -> &SectionList {
             self.inner.sections()
         }
-        async fn sections_mut(&mut self) -> &mut SectionList {
+        fn sections_mut(&mut self) -> &mut SectionList {
             self.inner.sections_mut()
         }
-        async fn scene_time(&self) -> f64 {
+        fn scene_time(&self) -> f64 {
             self.inner.scene_time()
         }
-        async fn set_scene_time(&mut self, time: f64) {
+        fn set_scene_time(&mut self, time: f64) {
             self.inner.set_scene_time(time);
         }
-        async fn sample_frame(&mut self, dt: f64) {
+        fn sample_frame(&mut self, dt: f64) {
             self.moving_camera.interpolate((self.scene_time() * self.config().frame_rate).fract());
             self.inner.sample_frame(dt);
         }
@@ -305,42 +306,42 @@ pub mod scene {
     }
 
     impl ThreeDScene {
-        pub async fn new(config: AnimateConfig) -> Self {
+        pub fn new(config: AnimateConfig) -> Self {
             let camera = Camera::new(config.width as f64 / 100.0, config.height as f64 / 100.0);
             Self { three_d_camera: ThreeDCamera::new(camera.clone()), inner: BasicStage { config, camera, mobjects: HashMap::new(), sections: SectionList::new(), scene_time: 0.0 } }
         }
     }
 
     impl Scene for ThreeDScene {
-        async fn construct(&mut self) {}
-        async fn config(&self) -> &AnimateConfig {
+        fn construct(&mut self) {}
+        fn config(&self) -> &AnimateConfig {
             self.inner.config()
         }
-        async fn config_mut(&mut self) -> &mut AnimateConfig {
+        fn config_mut(&mut self) -> &mut AnimateConfig {
             self.inner.config_mut()
         }
-        async fn camera(&self) -> &Camera {
+        fn camera(&self) -> &Camera {
             &self.three_d_camera.camera
         }
-        async fn camera_mut(&mut self) -> &mut Camera {
+        fn camera_mut(&mut self) -> &mut Camera {
             &mut self.three_d_camera.camera
         }
-        async fn mobjects(&self) -> &HashMap<u64, Sobjects> {
+        fn mobjects(&self) -> &HashMap<u64, Sobjects> {
             self.inner.mobjects()
         }
-        async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
+        fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
             self.inner.mobjects_mut()
         }
-        async fn sections(&self) -> &SectionList {
+        fn sections(&self) -> &SectionList {
             self.inner.sections()
         }
-        async fn sections_mut(&mut self) -> &mut SectionList {
+        fn sections_mut(&mut self) -> &mut SectionList {
             self.inner.sections_mut()
         }
-        async fn scene_time(&self) -> f64 {
+        fn scene_time(&self) -> f64 {
             self.inner.scene_time()
         }
-        async fn set_scene_time(&mut self, time: f64) {
+        fn set_scene_time(&mut self, time: f64) {
             self.inner.set_scene_time(time);
         }
     }
@@ -352,42 +353,42 @@ pub mod scene {
     }
 
     impl ZoomedScene {
-        pub async fn new(config: AnimateConfig, zoom_factor: f64) -> Self {
+        pub fn new(config: AnimateConfig, zoom_factor: f64) -> Self {
             let camera = Camera::new(config.width as f64 / 100.0, config.height as f64 / 100.0);
             Self { zoomed_camera: ZoomedCamera::new(camera.clone(), zoom_factor), inner: BasicStage { config, camera, mobjects: HashMap::new(), sections: SectionList::new(), scene_time: 0.0 } }
         }
     }
 
     impl Scene for ZoomedScene {
-        async fn construct(&mut self) {}
-        async fn config(&self) -> &AnimateConfig {
+        fn construct(&mut self) {}
+        fn config(&self) -> &AnimateConfig {
             self.inner.config()
         }
-        async fn config_mut(&mut self) -> &mut AnimateConfig {
+        fn config_mut(&mut self) -> &mut AnimateConfig {
             self.inner.config_mut()
         }
-        async fn camera(&self) -> &Camera {
+        fn camera(&self) -> &Camera {
             &self.zoomed_camera.camera
         }
-        async fn camera_mut(&mut self) -> &mut Camera {
+        fn camera_mut(&mut self) -> &mut Camera {
             &mut self.zoomed_camera.camera
         }
-        async fn mobjects(&self) -> &HashMap<u64, Sobjects> {
+        fn mobjects(&self) -> &HashMap<u64, Sobjects> {
             self.inner.mobjects()
         }
-        async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
+        fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
             self.inner.mobjects_mut()
         }
-        async fn sections(&self) -> &SectionList {
+        fn sections(&self) -> &SectionList {
             self.inner.sections()
         }
-        async fn sections_mut(&mut self) -> &mut SectionList {
+        fn sections_mut(&mut self) -> &mut SectionList {
             self.inner.sections_mut()
         }
-        async fn scene_time(&self) -> f64 {
+        fn scene_time(&self) -> f64 {
             self.inner.scene_time()
         }
-        async fn set_scene_time(&mut self, time: f64) {
+        fn set_scene_time(&mut self, time: f64) {
             self.inner.set_scene_time(time);
         }
     }
@@ -398,41 +399,41 @@ pub mod scene {
     }
 
     impl VectorScene {
-        pub async fn new(config: AnimateConfig) -> Self {
+        pub fn new(config: AnimateConfig) -> Self {
             Self { inner: BasicStage::new(config) }
         }
     }
 
     impl Scene for VectorScene {
-        async fn construct(&mut self) {}
-        async fn config(&self) -> &AnimateConfig {
+        fn construct(&mut self) {}
+        fn config(&self) -> &AnimateConfig {
             self.inner.config()
         }
-        async fn config_mut(&mut self) -> &mut AnimateConfig {
+        fn config_mut(&mut self) -> &mut AnimateConfig {
             self.inner.config_mut()
         }
-        async fn camera(&self) -> &Camera {
+        fn camera(&self) -> &Camera {
             self.inner.camera()
         }
-        async fn camera_mut(&mut self) -> &mut Camera {
+        fn camera_mut(&mut self) -> &mut Camera {
             self.inner.camera_mut()
         }
-        async fn mobjects(&self) -> &HashMap<u64, Sobjects> {
+        fn mobjects(&self) -> &HashMap<u64, Sobjects> {
             self.inner.mobjects()
         }
-        async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
+        fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
             self.inner.mobjects_mut()
         }
-        async fn sections(&self) -> &SectionList {
+        fn sections(&self) -> &SectionList {
             self.inner.sections()
         }
-        async fn sections_mut(&mut self) -> &mut SectionList {
+        fn sections_mut(&mut self) -> &mut SectionList {
             self.inner.sections_mut()
         }
-        async fn scene_time(&self) -> f64 {
+        fn scene_time(&self) -> f64 {
             self.inner.scene_time()
         }
-        async fn set_scene_time(&mut self, time: f64) {
+        fn set_scene_time(&mut self, time: f64) {
             self.inner.set_scene_time(time);
         }
     }
@@ -447,50 +448,50 @@ pub mod scene {
         }
 
         impl DemoScene {
-            async fn new() -> Self {
+            fn new() -> Self {
                 Self { base: TestScene::new() }
             }
         }
 
         impl Scene for DemoScene {
-            async fn construct(&mut self) {
+            fn construct(&mut self) {
                 self.add(VSobject::new().into());
                 self.wait(0.5);
             }
-            async fn config(&self) -> &AnimateConfig {
+            fn config(&self) -> &AnimateConfig {
                 self.base.config()
             }
-            async fn config_mut(&mut self) -> &mut AnimateConfig {
+            fn config_mut(&mut self) -> &mut AnimateConfig {
                 self.base.config_mut()
             }
-            async fn camera(&self) -> &Camera {
+            fn camera(&self) -> &Camera {
                 self.base.camera()
             }
-            async fn camera_mut(&mut self) -> &mut Camera {
+            fn camera_mut(&mut self) -> &mut Camera {
                 self.base.camera_mut()
             }
-            async fn mobjects(&self) -> &HashMap<u64, Sobjects> {
+            fn mobjects(&self) -> &HashMap<u64, Sobjects> {
                 self.base.mobjects()
             }
-            async fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
+            fn mobjects_mut(&mut self) -> &mut HashMap<u64, Sobjects> {
                 self.base.mobjects_mut()
             }
-            async fn sections(&self) -> &SectionList {
+            fn sections(&self) -> &SectionList {
                 self.base.sections()
             }
-            async fn sections_mut(&mut self) -> &mut SectionList {
+            fn sections_mut(&mut self) -> &mut SectionList {
                 self.base.sections_mut()
             }
-            async fn scene_time(&self) -> f64 {
+            fn scene_time(&self) -> f64 {
                 self.base.scene_time()
             }
-            async fn set_scene_time(&mut self, time: f64) {
+            fn set_scene_time(&mut self, time: f64) {
                 self.base.set_scene_time(time);
             }
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn preview_loop_samples_frames() {
+        #[test]
+        fn preview_loop_samples_frames() {
             let mut s = DemoScene::new();
             let mut frames = 0u64;
             preview_scene_loop(&mut s, 3, |_| {
@@ -516,15 +517,15 @@ pub mod section {
     }
 
     impl Section {
-        pub async fn new(name: impl Into<String>, start_time: f64, end_time: f64) -> Self {
+        pub fn new(name: impl Into<String>, start_time: f64, end_time: f64) -> Self {
             Self { name: name.into(), start_time, end_time, skip_animations: false }
         }
 
-        pub async fn duration(&self) -> f64 {
+        pub fn duration(&self) -> f64 {
             (self.end_time - self.start_time).max(0.0)
         }
 
-        pub async fn contains_time(&self, t: f64) -> bool {
+        pub fn contains_time(&self, t: f64) -> bool {
             t >= self.start_time && t <= self.end_time
         }
     }
@@ -537,30 +538,30 @@ pub mod section {
     }
 
     impl SectionList {
-        pub async fn new() -> Self {
+        pub fn new() -> Self {
             Self::default()
         }
 
-        pub async fn begin_section(&mut self, name: impl Into<String>, skip_animations: bool) {
+        pub fn begin_section(&mut self, name: impl Into<String>, skip_animations: bool) {
             self.open = Some(Section { name: name.into(), start_time: 0.0, end_time: 0.0, skip_animations });
         }
 
-        pub async fn end_section(&mut self, end_time: f64) {
+        pub fn end_section(&mut self, end_time: f64) {
             if let Some(mut s) = self.open.take() {
                 s.end_time = end_time;
                 self.sections.push(s);
             }
         }
 
-        pub async fn push(&mut self, section: Section) {
+        pub fn push(&mut self, section: Section) {
             self.sections.push(section);
         }
 
-        pub async fn find_at_time(&self, t: f64) -> Option<&Section> {
+        pub fn find_at_time(&self, t: f64) -> Option<&Section> {
             self.sections.iter().find(|s| s.contains_time(t))
         }
 
-        pub async fn names(&self) -> Vec<&str> {
+        pub fn names(&self) -> Vec<&str> {
             self.sections.iter().map(|s| s.name.as_str()).collect()
         }
     }
@@ -569,14 +570,14 @@ pub mod section {
     mod tests {
         use super::*;
 
-        #[semio_framework_async_macros::async_test]
-        async fn section_duration_is_non_negative() {
+        #[test]
+        fn section_duration_is_non_negative() {
             let s = Section::new("intro", 0.0, 2.5);
             assert!((s.duration() - 2.5).abs() < 1e-9);
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn section_list_tracks_open_close() {
+        #[test]
+        fn section_list_tracks_open_close() {
             let mut list = SectionList::new();
             list.begin_section("main", false);
             list.end_section(10.0);
@@ -595,8 +596,8 @@ pub mod sobject {
     use kurbo::{ParamCurve, ParamCurveArclen, PathSeg, Shape};
     use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
 
-    async fn next_id() -> u64 {
-        ({ u64::from_str_radix(&blake3::hash(concat!(file!(), line!()).as_bytes()).to_hex()[..8], 16).unwrap_or(1) })
+    fn next_id() -> u64 {
+        u64::from_str_radix(&framework_hash::hash_bytes(concat!(file!(), line!()).as_bytes())[..8], 16).unwrap_or(1)
     }
 
     /// 🎨️ Stroke and fill style for vector Sobjects.
@@ -623,19 +624,19 @@ pub mod sobject {
     }
 
     impl Bounds {
-        pub async fn center(self) -> Point {
+        pub fn center(self) -> Point {
             Point::new((self.min.x() + self.max.x()) / 2.0, (self.min.y() + self.max.y()) / 2.0)
         }
 
-        pub async fn width(self) -> f64 {
+        pub fn width(self) -> f64 {
             self.max.x() - self.min.x()
         }
 
-        pub async fn height(self) -> f64 {
+        pub fn height(self) -> f64 {
             self.max.y() - self.min.y()
         }
 
-        pub async fn empty() -> Self {
+        pub fn empty() -> Self {
             Self { min: Point::ZERO, max: Point::ZERO }
         }
     }
@@ -643,68 +644,68 @@ pub mod sobject {
     /// 🧬️ Base scene-graph object contract.
     #[dyn_enum]
     pub trait Sobject: Send {
-        async fn id(&self) -> u64;
-        async fn name(&self) -> &str;
-        async fn set_name(&mut self, name: String);
-        async fn style(&self) -> &Style;
-        async fn style_mut(&mut self) -> &mut Style;
-        async fn opacity(&self) -> f64;
-        async fn set_opacity(&mut self, opacity: f64);
-        async fn effective_opacity(&self) -> f64;
-        async fn set_parent_opacity(&mut self, parent: f64);
-        async fn transform(&self) -> Affine;
-        async fn transform_mut(&mut self) -> &mut Affine;
-        async fn bounds(&self) -> Bounds;
-        async fn center(&self) -> Point {
+        fn id(&self) -> u64;
+        fn name(&self) -> &str;
+        fn set_name(&mut self, name: String);
+        fn style(&self) -> &Style;
+        fn style_mut(&mut self) -> &mut Style;
+        fn opacity(&self) -> f64;
+        fn set_opacity(&mut self, opacity: f64);
+        fn effective_opacity(&self) -> f64;
+        fn set_parent_opacity(&mut self, parent: f64);
+        fn transform(&self) -> Affine;
+        fn transform_mut(&mut self) -> &mut Affine;
+        fn bounds(&self) -> Bounds;
+        fn center(&self) -> Point {
             self.bounds().center()
         }
-        async fn shift(&mut self, delta: Vec2) {
+        fn shift(&mut self, delta: Vec2) {
             *self.transform_mut() = self.transform() * Affine::IDENTITY.translate(delta);
         }
-        async fn move_to(&mut self, point: Point) {
+        fn move_to(&mut self, point: Point) {
             let c = self.center();
             self.shift(point - c);
         }
-        async fn scale(&mut self, factor: f64) {
+        fn scale(&mut self, factor: f64) {
             let c = self.center();
             let t = Affine::IDENTITY.translate(c.to_vec2()) * Affine::IDENTITY.scale(factor) * Affine::IDENTITY.translate(-c.to_vec2());
             *self.transform_mut() = self.transform() * t;
         }
-        async fn rotate(&mut self, angle: f64) {
+        fn rotate(&mut self, angle: f64) {
             let c = self.center();
             let t = Affine::IDENTITY.translate(c.to_vec2()) * Affine::IDENTITY.rotate(angle) * Affine::IDENTITY.translate(-c.to_vec2());
             *self.transform_mut() = self.transform() * t;
         }
-        async fn set_color(&mut self, color: Color) {
+        fn set_color(&mut self, color: Color) {
             self.style_mut().fill = Some(color);
             self.style_mut().stroke = Some(color);
         }
-        async fn set_fill(&mut self, color: Color) {
+        fn set_fill(&mut self, color: Color) {
             self.style_mut().fill = Some(color);
         }
-        async fn set_stroke(&mut self, color: Color, width: f64) {
+        fn set_stroke(&mut self, color: Color, width: f64) {
             self.style_mut().stroke = Some(color);
             self.style_mut().stroke_width = width;
         }
-        async fn paths(&self) -> Vec<BezPath>;
-        async fn children(&self) -> Vec<&Sobjects>;
-        async fn visit_children_mut(&mut self, f: &mut dyn FnMut(&mut Sobjects));
-        async fn add_child(&mut self, child: Sobjects);
-        async fn updaters(&self) -> &[Updater];
-        async fn updaters_mut(&mut self) -> &mut Vec<Updater>;
-        async fn save_state(&mut self);
-        async fn restore(&mut self);
-        async fn generate_target(&mut self);
-        async fn has_target(&self) -> bool;
-        async fn apply_target(&mut self);
-        async fn clone_box(&self) -> Sobjects;
-        async fn as_any(&self) -> &dyn std::any::Any;
-        async fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
-        async fn z_order(&self) -> i64 {
+        fn paths(&self) -> Vec<BezPath>;
+        fn children(&self) -> Vec<&Sobjects>;
+        fn visit_children_mut(&mut self, f: &mut dyn FnMut(&mut Sobjects));
+        fn add_child(&mut self, child: Sobjects);
+        fn updaters(&self) -> &[Updater];
+        fn updaters_mut(&mut self) -> &mut Vec<Updater>;
+        fn save_state(&mut self);
+        fn restore(&mut self);
+        fn generate_target(&mut self);
+        fn has_target(&self) -> bool;
+        fn apply_target(&mut self);
+        fn clone_box(&self) -> Sobjects;
+        fn as_any(&self) -> &dyn std::any::Any;
+        fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
+        fn z_order(&self) -> i64 {
             0
         }
-        async fn set_z_order(&mut self, _z: i64) {}
-        async fn point_ratio(&self) -> f64 {
+        fn set_z_order(&mut self, _z: i64) {}
+        fn point_ratio(&self) -> f64 {
             1.0
         }
     }
@@ -736,35 +737,35 @@ pub mod sobject {
     }
 
     impl VSobject {
-        pub async fn new() -> Self {
+        pub fn new() -> Self {
             Self { id: next_id(), name: String::new(), paths: Vec::new(), style: Style::default(), opacity: 1.0, parent_opacity: 1.0, transform: Affine::IDENTITY, point_ratio: 1.0, z_order: 0, saved: None, target: None, updaters: Vec::new() }
         }
 
-        pub async fn from_path(path: BezPath) -> Self {
+        pub fn from_path(path: BezPath) -> Self {
             let mut s = Self::new();
             s.paths.push(path);
             s
         }
 
-        pub async fn from_shape<'a>(shape: impl Into<geometry::ShapeRef<'a>>) -> Self {
+        pub fn from_shape<'a>(shape: impl Into<geometry::ShapeRef<'a>>) -> Self {
             let mut path = BezPath::new();
             append_shape_to_path(&mut path, shape, 0.01);
             Self::from_path(path)
         }
 
-        pub async fn set_paths(&mut self, paths: Vec<BezPath>) {
+        pub fn set_paths(&mut self, paths: Vec<BezPath>) {
             self.paths = paths;
         }
 
-        pub async fn set_point_ratio(&mut self, ratio: f64) {
+        pub fn set_point_ratio(&mut self, ratio: f64) {
             self.point_ratio = ratio.clamp(0.0, 1.0);
         }
 
-        async fn snapshot(&self) -> VSobjectSnapshot {
+        fn snapshot(&self) -> VSobjectSnapshot {
             VSobjectSnapshot { paths: self.paths.clone(), style: self.style.clone(), opacity: self.opacity, transform: self.transform, point_ratio: self.point_ratio }
         }
 
-        async fn restore_snapshot(&mut self, snap: VSobjectSnapshot) {
+        fn restore_snapshot(&mut self, snap: VSobjectSnapshot) {
             self.paths = snap.paths;
             self.style = snap.style;
             self.opacity = snap.opacity;
@@ -773,7 +774,7 @@ pub mod sobject {
         }
 
         /// 🔀️ Linearly blend two snapshots into the live VSobject state.
-        pub async fn interpolate_snapshots(&mut self, from: &VSobjectSnapshot, to: &VSobjectSnapshot, t: f64) {
+        pub fn interpolate_snapshots(&mut self, from: &VSobjectSnapshot, to: &VSobjectSnapshot, t: f64) {
             let t = t.clamp(0.0, 1.0);
             self.opacity = lerp_f64(from.opacity, to.opacity, t);
             self.transform = lerp_affine(from.transform, to.transform, t);
@@ -783,7 +784,7 @@ pub mod sobject {
         }
 
         /// 🎯️ Blend from saved state toward the generated target.
-        pub async fn interpolate_saved_to_target(&mut self, t: f64) {
+        pub fn interpolate_saved_to_target(&mut self, t: f64) {
             if self.saved.is_none() {
                 self.save_state();
             }
@@ -798,12 +799,12 @@ pub mod sobject {
         }
     }
 
-    async fn lerp_f64(a: f64, b: f64, t: f64) -> f64 {
+    fn lerp_f64(a: f64, b: f64, t: f64) -> f64 {
         a + (b - a) * t.clamp(0.0, 1.0)
     }
 
     /// ✂️ Trim a path to a partial reveal ratio in [0,1].
-    pub async fn trim_path_at_ratio(path: &BezPath, ratio: f64) -> BezPath {
+    pub fn trim_path_at_ratio(path: &BezPath, ratio: f64) -> BezPath {
         let ratio = ratio.clamp(0.0, 1.0);
         if ratio >= 1.0 {
             return path.clone();
@@ -840,7 +841,7 @@ pub mod sobject {
         bezpath_from_kurbo(&out_k)
     }
 
-    async fn bezpath_from_kurbo(k: &kurbo::BezPath) -> BezPath {
+    fn bezpath_from_kurbo(k: &kurbo::BezPath) -> BezPath {
         let mut out = BezPath::new();
         for el in k.elements() {
             out.push(PathEl::from(*el));
@@ -848,7 +849,7 @@ pub mod sobject {
         out
     }
 
-    async fn interpolate_path_sets(from: &[BezPath], to: &[BezPath], t: f64) -> Vec<BezPath> {
+    fn interpolate_path_sets(from: &[BezPath], to: &[BezPath], t: f64) -> Vec<BezPath> {
         if from.is_empty() {
             return to.to_vec();
         }
@@ -865,7 +866,7 @@ pub mod sobject {
             .collect()
     }
 
-    async fn interpolate_bezpaths(from: &BezPath, to: &BezPath, t: f64) -> BezPath {
+    fn interpolate_bezpaths(from: &BezPath, to: &BezPath, t: f64) -> BezPath {
         let fa = resample_points(&sample_path_points(from, 32), 32);
         let tb = resample_points(&sample_path_points(to, 32), 32);
         let mut out = BezPath::new();
@@ -880,7 +881,7 @@ pub mod sobject {
         out
     }
 
-    async fn sample_path_points(path: &BezPath, samples: usize) -> Vec<Point> {
+    fn sample_path_points(path: &BezPath, samples: usize) -> Vec<Point> {
         let kurbo = path.to_kurbo();
         let segments: Vec<PathSeg> = kurbo.path_segments(0.25).collect();
         let total: f64 = segments.iter().map(|s| s.arclen(0.25)).sum();
@@ -905,7 +906,7 @@ pub mod sobject {
         pts
     }
 
-    async fn resample_points(pts: &[Point], count: usize) -> Vec<Point> {
+    fn resample_points(pts: &[Point], count: usize) -> Vec<Point> {
         if pts.is_empty() {
             return vec![Point::ZERO; count];
         }
@@ -920,7 +921,7 @@ pub mod sobject {
             .collect()
     }
 
-    async fn lerp_affine(a: Affine, b: Affine, t: f64) -> Affine {
+    fn lerp_affine(a: Affine, b: Affine, t: f64) -> Affine {
         let ta = a.to_kurbo().as_coeffs();
         let tb = b.to_kurbo().as_coeffs();
         let t = t.clamp(0.0, 1.0);
@@ -934,40 +935,40 @@ pub mod sobject {
     }
 
     impl Sobject for VSobject {
-        async fn id(&self) -> u64 {
+        fn id(&self) -> u64 {
             self.id
         }
-        async fn name(&self) -> &str {
+        fn name(&self) -> &str {
             &self.name
         }
-        async fn set_name(&mut self, name: String) {
+        fn set_name(&mut self, name: String) {
             self.name = name;
         }
-        async fn style(&self) -> &Style {
+        fn style(&self) -> &Style {
             &self.style
         }
-        async fn style_mut(&mut self) -> &mut Style {
+        fn style_mut(&mut self) -> &mut Style {
             &mut self.style
         }
-        async fn opacity(&self) -> f64 {
+        fn opacity(&self) -> f64 {
             self.opacity
         }
-        async fn set_opacity(&mut self, opacity: f64) {
+        fn set_opacity(&mut self, opacity: f64) {
             self.opacity = opacity.clamp(0.0, 1.0);
         }
-        async fn effective_opacity(&self) -> f64 {
+        fn effective_opacity(&self) -> f64 {
             self.opacity * self.parent_opacity
         }
-        async fn set_parent_opacity(&mut self, parent: f64) {
+        fn set_parent_opacity(&mut self, parent: f64) {
             self.parent_opacity = parent.clamp(0.0, 1.0);
         }
-        async fn transform(&self) -> Affine {
+        fn transform(&self) -> Affine {
             self.transform
         }
-        async fn transform_mut(&mut self) -> &mut Affine {
+        fn transform_mut(&mut self) -> &mut Affine {
             &mut self.transform
         }
-        async fn bounds(&self) -> Bounds {
+        fn bounds(&self) -> Bounds {
             let mut pts = Vec::new();
             for path in &self.paths {
                 for el in path.elements() {
@@ -982,7 +983,7 @@ pub mod sobject {
                 Bounds::empty()
             }
         }
-        async fn paths(&self) -> Vec<BezPath> {
+        fn paths(&self) -> Vec<BezPath> {
             let t = self.transform.to_kurbo();
             self.paths
                 .iter()
@@ -992,52 +993,52 @@ pub mod sobject {
                 })
                 .collect()
         }
-        async fn children(&self) -> Vec<&Sobjects> {
+        fn children(&self) -> Vec<&Sobjects> {
             Vec::new()
         }
-        async fn visit_children_mut(&mut self, _f: &mut dyn FnMut(&mut Sobjects)) {}
-        async fn add_child(&mut self, _child: Sobjects) {}
-        async fn updaters(&self) -> &[Updater] {
+        fn visit_children_mut(&mut self, _f: &mut dyn FnMut(&mut Sobjects)) {}
+        fn add_child(&mut self, _child: Sobjects) {}
+        fn updaters(&self) -> &[Updater] {
             &self.updaters
         }
-        async fn updaters_mut(&mut self) -> &mut Vec<Updater> {
+        fn updaters_mut(&mut self) -> &mut Vec<Updater> {
             &mut self.updaters
         }
-        async fn save_state(&mut self) {
+        fn save_state(&mut self) {
             self.saved = Some(self.snapshot());
         }
-        async fn restore(&mut self) {
+        fn restore(&mut self) {
             if let Some(s) = self.saved.take() {
                 self.restore_snapshot(s);
             }
         }
-        async fn generate_target(&mut self) {
+        fn generate_target(&mut self) {
             self.target = Some(self.snapshot());
         }
-        async fn has_target(&self) -> bool {
+        fn has_target(&self) -> bool {
             self.target.is_some()
         }
-        async fn apply_target(&mut self) {
+        fn apply_target(&mut self) {
             if let Some(t) = self.target.take() {
                 self.restore_snapshot(t);
             }
         }
-        async fn clone_box(&self) -> Sobjects {
+        fn clone_box(&self) -> Sobjects {
             self.clone().into()
         }
-        async fn as_any(&self) -> &dyn std::any::Any {
+        fn as_any(&self) -> &dyn std::any::Any {
             self
         }
-        async fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
             self
         }
-        async fn z_order(&self) -> i64 {
+        fn z_order(&self) -> i64 {
             self.z_order
         }
-        async fn set_z_order(&mut self, z: i64) {
+        fn set_z_order(&mut self, z: i64) {
             self.z_order = z;
         }
-        async fn point_ratio(&self) -> f64 {
+        fn point_ratio(&self) -> f64 {
             self.point_ratio
         }
     }
@@ -1064,15 +1065,15 @@ pub mod sobject {
     }
 
     impl Group {
-        pub async fn new(children: Vec<Sobjects>) -> Self {
+        pub fn new(children: Vec<Sobjects>) -> Self {
             Self { id: next_id(), name: String::new(), children, style: Style::default(), opacity: 1.0, parent_opacity: 1.0, transform: Affine::IDENTITY, z_order: 0, saved: None, target: None, updaters: Vec::new() }
         }
 
-        pub async fn empty() -> Self {
+        pub fn empty() -> Self {
             Self::new(Vec::new())
         }
 
-        async fn propagate_parent_opacity(&mut self) {
+        fn propagate_parent_opacity(&mut self) {
             let eff = self.effective_opacity();
             for child in &mut self.children {
                 child.set_parent_opacity(eff);
@@ -1084,42 +1085,42 @@ pub mod sobject {
     }
 
     impl Sobject for Group {
-        async fn id(&self) -> u64 {
+        fn id(&self) -> u64 {
             self.id
         }
-        async fn name(&self) -> &str {
+        fn name(&self) -> &str {
             &self.name
         }
-        async fn set_name(&mut self, name: String) {
+        fn set_name(&mut self, name: String) {
             self.name = name;
         }
-        async fn style(&self) -> &Style {
+        fn style(&self) -> &Style {
             &self.style
         }
-        async fn style_mut(&mut self) -> &mut Style {
+        fn style_mut(&mut self) -> &mut Style {
             &mut self.style
         }
-        async fn opacity(&self) -> f64 {
+        fn opacity(&self) -> f64 {
             self.opacity
         }
-        async fn set_opacity(&mut self, opacity: f64) {
+        fn set_opacity(&mut self, opacity: f64) {
             self.opacity = opacity.clamp(0.0, 1.0);
             self.propagate_parent_opacity();
         }
-        async fn effective_opacity(&self) -> f64 {
+        fn effective_opacity(&self) -> f64 {
             self.opacity * self.parent_opacity
         }
-        async fn set_parent_opacity(&mut self, parent: f64) {
+        fn set_parent_opacity(&mut self, parent: f64) {
             self.parent_opacity = parent.clamp(0.0, 1.0);
             self.propagate_parent_opacity();
         }
-        async fn transform(&self) -> Affine {
+        fn transform(&self) -> Affine {
             self.transform
         }
-        async fn transform_mut(&mut self) -> &mut Affine {
+        fn transform_mut(&mut self) -> &mut Affine {
             &mut self.transform
         }
-        async fn bounds(&self) -> Bounds {
+        fn bounds(&self) -> Bounds {
             let mut min = Point::new(f64::INFINITY, f64::INFINITY);
             let mut max = Point::new(f64::NEG_INFINITY, f64::NEG_INFINITY);
             for child in &self.children {
@@ -1135,34 +1136,34 @@ pub mod sobject {
                 Bounds::empty()
             }
         }
-        async fn paths(&self) -> Vec<BezPath> {
+        fn paths(&self) -> Vec<BezPath> {
             self.children.iter().flat_map(|c| c.paths()).collect()
         }
-        async fn children(&self) -> Vec<&Sobjects> {
+        fn children(&self) -> Vec<&Sobjects> {
             self.children.iter().collect()
         }
-        async fn visit_children_mut(&mut self, f: &mut dyn FnMut(&mut Sobjects)) {
+        fn visit_children_mut(&mut self, f: &mut dyn FnMut(&mut Sobjects)) {
             for child in &mut self.children {
                 f(child);
             }
         }
-        async fn add_child(&mut self, child: Sobjects) {
+        fn add_child(&mut self, child: Sobjects) {
             self.children.push(child);
             self.propagate_parent_opacity();
         }
-        async fn updaters(&self) -> &[Updater] {
+        fn updaters(&self) -> &[Updater] {
             &self.updaters
         }
-        async fn updaters_mut(&mut self) -> &mut Vec<Updater> {
+        fn updaters_mut(&mut self) -> &mut Vec<Updater> {
             &mut self.updaters
         }
-        async fn save_state(&mut self) {
+        fn save_state(&mut self) {
             for c in &mut self.children {
                 c.save_state();
             }
             self.saved = Some(GroupSnapshot { opacity: self.opacity, transform: self.transform });
         }
-        async fn restore(&mut self) {
+        fn restore(&mut self) {
             for c in &mut self.children {
                 c.restore();
             }
@@ -1171,16 +1172,16 @@ pub mod sobject {
                 self.transform = s.transform;
             }
         }
-        async fn generate_target(&mut self) {
+        fn generate_target(&mut self) {
             for c in &mut self.children {
                 c.generate_target();
             }
             self.target = Some(GroupSnapshot { opacity: self.opacity, transform: self.transform });
         }
-        async fn has_target(&self) -> bool {
+        fn has_target(&self) -> bool {
             self.target.is_some() || self.children.iter().any(|c| c.has_target())
         }
-        async fn apply_target(&mut self) {
+        fn apply_target(&mut self) {
             for c in &mut self.children {
                 c.apply_target();
             }
@@ -1189,7 +1190,7 @@ pub mod sobject {
                 self.transform = t.transform;
             }
         }
-        async fn clone_box(&self) -> Sobjects {
+        fn clone_box(&self) -> Sobjects {
             Group {
                 id: next_id(),
                 name: self.name.clone(),
@@ -1205,16 +1206,16 @@ pub mod sobject {
             }
             .into()
         }
-        async fn as_any(&self) -> &dyn std::any::Any {
+        fn as_any(&self) -> &dyn std::any::Any {
             self
         }
-        async fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
             self
         }
-        async fn z_order(&self) -> i64 {
+        fn z_order(&self) -> i64 {
             self.z_order
         }
-        async fn set_z_order(&mut self, z: i64) {
+        fn set_z_order(&mut self, z: i64) {
             self.z_order = z;
         }
     }
@@ -1234,12 +1235,12 @@ pub mod sobject {
     /// ✏️ Vector-only group convenience wrapper.
     pub type VGroup = Group;
 
-    pub async fn vgroup(children: Vec<Sobjects>) -> VGroup {
+    pub fn vgroup(children: Vec<Sobjects>) -> VGroup {
         Group::new(children)
     }
 
     /// ↔ Place `mover` next to `anchor` along a direction.
-    pub async fn next_to(mover: &mut Sobjects, anchor: &Sobjects, direction: Vec2, buff: f64) {
+    pub fn next_to(mover: &mut Sobjects, anchor: &Sobjects, direction: Vec2, buff: f64) {
         let mb = mover.bounds();
         let ab = anchor.bounds();
         let dir = if direction.hypot() < 1e-9 { Vec2::new(1.0, 0.0) } else { direction / direction.hypot() };
@@ -1256,7 +1257,7 @@ pub mod sobject {
     }
 
     /// 📏️ Arrange children in a line.
-    pub async fn arrange(group: &mut Group, direction: Vec2, buff: f64) {
+    pub fn arrange(group: &mut Group, direction: Vec2, buff: f64) {
         if group.children.is_empty() {
             return;
         }
@@ -1280,7 +1281,7 @@ pub mod sobject {
         Center,
     }
 
-    pub async fn align_to(mover: &mut Sobjects, anchor: &Sobjects, edge: AlignEdge) {
+    pub fn align_to(mover: &mut Sobjects, anchor: &Sobjects, edge: AlignEdge) {
         let mb = mover.bounds();
         let ab = anchor.bounds();
         let shift = match edge {
@@ -1293,7 +1294,7 @@ pub mod sobject {
         mover.shift(shift);
     }
 
-    pub async fn center_of_points(points: &[Point]) -> Point {
+    pub fn center_of_points(points: &[Point]) -> Point {
         if points.is_empty() {
             Point::ZERO
         } else {
@@ -1301,7 +1302,7 @@ pub mod sobject {
         }
     }
 
-    async fn transform_bezpath(path: &BezPath, affine: kurbo::Affine) -> BezPath {
+    fn transform_bezpath(path: &BezPath, affine: kurbo::Affine) -> BezPath {
         let mut k = path.to_kurbo();
         k.apply_affine(affine);
         let mut out = BezPath::new();
@@ -1312,11 +1313,11 @@ pub mod sobject {
     }
 
     trait PathElPoint {
-        async fn as_ref_point(&self) -> Option<Point>;
+        fn as_ref_point(&self) -> Option<Point>;
     }
 
     impl PathElPoint for PathEl {
-        async fn as_ref_point(&self) -> Option<Point> {
+        fn as_ref_point(&self) -> Option<Point> {
             match self {
                 PathEl::MoveTo(p) | PathEl::LineTo(p) => Some(*p),
                 PathEl::QuadTo(p, _) | PathEl::CurveTo(p, _, _) => Some(*p),
@@ -1326,11 +1327,11 @@ pub mod sobject {
     }
 
     trait PointVec2 {
-        async fn to_vec2(self) -> Vec2;
+        fn to_vec2(self) -> Vec2;
     }
 
     impl PointVec2 for Point {
-        async fn to_vec2(self) -> Vec2 {
+        fn to_vec2(self) -> Vec2 {
             Vec2::new(self.x(), self.y())
         }
     }
@@ -1340,29 +1341,29 @@ pub mod sobject {
         use super::*;
         use geometry::Circle;
 
-        #[semio_framework_async_macros::async_test]
-        async fn vobject_has_finite_bounds() {
+        #[test]
+        fn vobject_has_finite_bounds() {
             let dot = VSobject::from_shape(&Circle::new(Point::new(0.0, 0.0), 1.0));
             let b = dot.bounds();
             assert!(b.max.x() > b.min.x());
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn parent_opacity_multiplies() {
+        #[test]
+        fn parent_opacity_multiplies() {
             let mut v = VSobject::new();
             v.set_opacity(0.5);
             v.set_parent_opacity(0.5);
             assert!((v.effective_opacity() - 0.25).abs() < 1e-9);
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn group_propagates_parent_opacity() {
+        #[test]
+        fn group_propagates_parent_opacity() {
             let mut g = Group::new(vec![VSobject::new().into()]);
             g.set_opacity(0.5);
             assert!((g.children[0].effective_opacity() - 0.5).abs() < 1e-9);
         }
 
-        async fn square_vobj(center: Point, half: f64) -> VSobject {
+        fn square_vobj(center: Point, half: f64) -> VSobject {
             let mut path = BezPath::new();
             path.move_to(Point::new(center.x() - half, center.y() - half));
             path.line_to(Point::new(center.x() + half, center.y() - half));
@@ -1372,8 +1373,8 @@ pub mod sobject {
             VSobject::from_path(path)
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn next_to_places_mover_right_of_anchor() {
+        #[test]
+        fn next_to_places_mover_right_of_anchor() {
             let anchor: Sobjects = square_vobj(Point::ZERO, 1.0).into();
             let mut mover: Sobjects = square_vobj(Point::ZERO, 0.5).into();
             next_to(&mut mover, &anchor, Vec2::new(1.0, 0.0), 0.2);
@@ -1381,8 +1382,8 @@ pub mod sobject {
             assert!((b.min.x() - 1.2).abs() < 1e-6);
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn next_to_places_mover_below_anchor() {
+        #[test]
+        fn next_to_places_mover_below_anchor() {
             let anchor: Sobjects = square_vobj(Point::ZERO, 1.0).into();
             let mut mover: Sobjects = square_vobj(Point::ZERO, 0.5).into();
             next_to(&mut mover, &anchor, Vec2::new(0.0, -1.0), 0.2);
@@ -1390,8 +1391,8 @@ pub mod sobject {
             assert!((b.max.y() - (-1.2)).abs() < 1e-6);
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn next_to_zero_direction_defaults_to_right() {
+        #[test]
+        fn next_to_zero_direction_defaults_to_right() {
             let anchor: Sobjects = square_vobj(Point::ZERO, 1.0).into();
             let mut mover: Sobjects = square_vobj(Point::ZERO, 0.5).into();
             next_to(&mut mover, &anchor, Vec2::new(0.0, 0.0), 0.2);
@@ -1399,8 +1400,8 @@ pub mod sobject {
             assert!((b.min.x() - 1.2).abs() < 1e-6);
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn arrange_lays_children_along_direction() {
+        #[test]
+        fn arrange_lays_children_along_direction() {
             let children: Vec<Sobjects> = vec![square_vobj(Point::ZERO, 0.5).into(), square_vobj(Point::ZERO, 0.5).into(), square_vobj(Point::ZERO, 0.5).into()];
             let mut g = Group::new(children);
             arrange(&mut g, Vec2::new(1.0, 0.0), 0.5);
@@ -1409,15 +1410,15 @@ pub mod sobject {
             assert!((g.children[2].center().x() - 2.0).abs() < 1e-6);
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn arrange_on_empty_group_is_noop() {
+        #[test]
+        fn arrange_on_empty_group_is_noop() {
             let mut g = Group::empty();
             arrange(&mut g, Vec2::new(1.0, 0.0), 0.5);
             assert!(g.children.is_empty());
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn align_to_all_edges() {
+        #[test]
+        fn align_to_all_edges() {
             let anchor: Sobjects = square_vobj(Point::ZERO, 1.0).into();
             for edge in [AlignEdge::Left, AlignEdge::Right, AlignEdge::Up, AlignEdge::Down, AlignEdge::Center] {
                 let mut mover: Sobjects = square_vobj(Point::new(5.0, 5.0), 0.5).into();
@@ -1436,21 +1437,21 @@ pub mod sobject {
             }
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn center_of_points_empty_is_zero() {
+        #[test]
+        fn center_of_points_empty_is_zero() {
             assert_eq!(center_of_points(&[]), Point::ZERO);
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn center_of_points_nonempty_matches_centroid() {
+        #[test]
+        fn center_of_points_nonempty_matches_centroid() {
             let pts = [Point::new(-1.0, -1.0), Point::new(1.0, -1.0), Point::new(1.0, 1.0), Point::new(-1.0, 1.0)];
             let c = center_of_points(&pts);
             assert!(c.x().abs() < 1e-9);
             assert!(c.y().abs() < 1e-9);
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn trim_path_at_ratio_boundary_and_partial() {
+        #[test]
+        fn trim_path_at_ratio_boundary_and_partial() {
             let mut path = BezPath::new();
             path.move_to(Point::new(0.0, 0.0));
             path.line_to(Point::new(10.0, 0.0));

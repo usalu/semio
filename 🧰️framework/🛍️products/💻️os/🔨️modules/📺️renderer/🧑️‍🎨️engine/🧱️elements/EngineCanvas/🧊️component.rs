@@ -14,8 +14,8 @@ use framework_surface_node_graph::node_graph::GraphHost;
 use framework_surface_tiled_map::tiled_map::MapHost;
 use infinite_canvas as canvas;
 use serde_json::{json, Value};
-use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
+use std::sync::{Mutex, MutexGuard, OnceLock};
 use ui_wgpu::wgpu::{draw_text_overlay, FontAtlas, GpuContext, HitKind, HitTarget, KeyAction, PointerModifiers, Rect, Rgba, Theme};
 use ui_wgpu::wgpu::{ActionDescriptor, UiComponentSceneNode};
 use vello::peniko::Color;
@@ -75,13 +75,106 @@ struct EngineSurface {
     board_pointer_inside: bool,
     editor: Option<EditorHost>,
     editor_scene_pack: Option<Vec<u8>>,
+    width: u32,
+    height: u32,
+    last_note_click: Option<(String, f64)>,
+}
+
+//#region 📦️PreparedEngineCanvas
+/// 📦️ An owned vector scene produced during worker-side product traversal. Device, queue, texture,
+/// and window handles are deliberately absent; the UI presenter realizes this packet only after its
+/// enclosing frame generation has passed the prepared-render gate.
+#[derive(Clone)]
+pub(crate) struct EngineCanvasPacket {
+    surface_id: String,
+    scene: canvas::Scene,
+    clear: Color,
+    width: u32,
+    height: u32,
+}
+
+/// 🧰️ Worker-owned resource sink threaded through chrome/scene traversal.
+#[derive(Default)]
+pub(crate) struct EngineCanvasBuildContext {
+    dpr: f64,
+    packets: Vec<EngineCanvasPacket>,
+}
+
+impl EngineCanvasBuildContext {
+    pub(crate) fn new(dpr: f64) -> Self {
+        Self { dpr, packets: Vec::new() }
+    }
+
+    pub(crate) fn dpr(&self) -> f64 {
+        self.dpr
+    }
+
+    pub(crate) fn take_packets(&mut self) -> Vec<EngineCanvasPacket> {
+        std::mem::take(&mut self.packets)
+    }
+
+    fn enqueue(&mut self, surface_id: &str, scene: canvas::Scene, clear: Color, width: u32, height: u32) {
+        self.packets.push(EngineCanvasPacket { surface_id: surface_id.to_string(), scene, clear, width, height });
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+const _: fn() = || {
+    fn assert_send<T: Send>() {}
+    assert_send::<EngineCanvasPacket>();
+    assert_send::<EngineCanvasBuildContext>();
+};
+
+struct EngineGpuSurface {
     vello: Renderer,
     texture: wgpu::Texture,
     view: wgpu::TextureView,
     width: u32,
     height: u32,
-    last_note_click: Option<(String, f64)>,
 }
+
+/// 🖥️ UI-capability owner for EngineCanvas GPU realization.
+#[derive(Default)]
+pub(crate) struct EngineCanvasPresenter {
+    surfaces: HashMap<String, EngineGpuSurface>,
+}
+
+impl EngineCanvasPresenter {
+    pub(crate) fn realize(&mut self, gpu: &mut GpuContext, packets: &[EngineCanvasPacket]) -> Result<(), String> {
+        for packet in packets {
+            self.realize_one(gpu, packet)?;
+        }
+        Ok(())
+    }
+
+    fn realize_one(&mut self, gpu: &mut GpuContext, packet: &EngineCanvasPacket) -> Result<(), String> {
+        let width = packet.width.max(1);
+        let height = packet.height.max(1);
+        let needs_create = !self.surfaces.contains_key(&packet.surface_id);
+        if needs_create {
+            let vello = Renderer::new(gpu.device(), RendererOptions { use_cpu: false, antialiasing_support: AaSupport::area_only(), num_init_threads: std::num::NonZeroUsize::new(1), pipeline_cache: None })
+                .map_err(|error| format!("vello renderer: {error:?}"))?;
+            let (texture, view) = create_target_texture(gpu.device(), width, height);
+            self.surfaces.insert(packet.surface_id.clone(), EngineGpuSurface { vello, texture, view, width, height });
+        } else if self.surfaces.get(&packet.surface_id).is_some_and(|surface| surface.width != width || surface.height != height) {
+            let (texture, view) = create_target_texture(gpu.device(), width, height);
+            let surface = self.surfaces.get_mut(&packet.surface_id).expect("engine surface");
+            surface.texture = texture;
+            surface.view = view;
+            surface.width = width;
+            surface.height = height;
+        }
+        let surface = self.surfaces.get_mut(&packet.surface_id).expect("engine surface");
+        let params = RenderParams { base_color: packet.clear, width, height, antialiasing_method: AaConfig::Area };
+        surface.vello.render_to_texture(gpu.device(), gpu.queue(), packet.scene.vello_scene(), &surface.view, &params).map_err(|error| format!("vello render: {error:?}"))?;
+        let published_view = surface.view.clone();
+        let published_texture = std::mem::replace(&mut surface.texture, create_target_texture(gpu.device(), width, height).0);
+        surface.view = surface.texture.create_view(&wgpu::TextureViewDescriptor::default());
+        gpu.register_engine_texture(&raster_key(&packet.surface_id), published_texture, &published_view, width, height);
+        Ok(())
+    }
+}
+//#endregion 📦️PreparedEngineCanvas
 
 #[derive(Default)]
 struct MapSyncCache {
@@ -127,10 +220,37 @@ pub struct PendingMapTileFetch {
     pub y: u32,
 }
 
-thread_local! {
-    static PENDING_MAP_TILE_FETCHES: RefCell<Vec<PendingMapTileFetch>> = RefCell::new(Vec::new());
-    static MAP_TILE_MISS: RefCell<HashSet<String>> = RefCell::new(HashSet::new());
+/// 🧵️ Worker-safe retained cell whose existing `with`/`borrow` call shape keeps scene code concise.
+struct WorkerCell<T> {
+    inner: OnceLock<Mutex<T>>,
 }
+
+impl<T> WorkerCell<T> {
+    const fn new() -> Self {
+        Self { inner: OnceLock::new() }
+    }
+}
+
+impl<T: Default> WorkerCell<T> {
+    fn state(&self) -> &Mutex<T> {
+        self.inner.get_or_init(|| Mutex::new(T::default()))
+    }
+
+    fn borrow(&self) -> MutexGuard<'_, T> {
+        self.state().lock().expect("worker canvas state")
+    }
+
+    fn borrow_mut(&self) -> MutexGuard<'_, T> {
+        self.borrow()
+    }
+
+    fn with<R>(&self, apply: impl FnOnce(&Self) -> R) -> R {
+        apply(self)
+    }
+}
+
+static PENDING_MAP_TILE_FETCHES: WorkerCell<Vec<PendingMapTileFetch>> = WorkerCell::new();
+static MAP_TILE_MISS: WorkerCell<HashSet<String>> = WorkerCell::new();
 
 fn sync_field(cache: &mut Option<String>, value: &str) -> bool {
     if cache.as_deref() == Some(value) {
@@ -186,9 +306,7 @@ fn sync_graph_canvas_theme_dark(_cache: &mut NodeGraphSyncCache, dark: bool, gra
     graph.set_canvas_theme_dark(dark);
 }
 
-thread_local! {
-    static ENGINE_SURFACES: RefCell<HashMap<String, EngineSurface>> = RefCell::new(HashMap::new());
-}
+static ENGINE_SURFACES: WorkerCell<HashMap<String, EngineSurface>> = WorkerCell::new();
 
 fn raster_key(surface_id: &str) -> String {
     format!("engine:{surface_id}")
@@ -305,16 +423,12 @@ fn sync_flow_host(host: &mut FlowHost, graph: &ui_wgpu::wgpu::NodeGraphScene, ca
     // flow-backed scenes don't currently emit it, so there is nothing to sync here yet.
 }
 
-fn ensure_surface(gpu: &GpuContext, surface_id: &str, pw: u32, ph: u32) -> Result<(), String> {
+fn ensure_surface(surface_id: &str, pw: u32, ph: u32) {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
         let needs_create = !map.contains_key(surface_id);
         let needs_resize = map.get(surface_id).is_some_and(|entry| entry.width != pw.max(1) || entry.height != ph.max(1));
         if needs_create {
-            let device = gpu.device();
-            let vello =
-                Renderer::new(device, RendererOptions { use_cpu: false, antialiasing_support: AaSupport::area_only(), num_init_threads: std::num::NonZeroUsize::new(1), pipeline_cache: None }).map_err(|err| format!("vello renderer: {err:?}"))?;
-            let (texture, view) = create_target_texture(device, pw.max(1), ph.max(1));
             map.insert(
                 surface_id.to_string(),
                 EngineSurface {
@@ -328,27 +442,19 @@ fn ensure_surface(gpu: &GpuContext, surface_id: &str, pw: u32, ph: u32) -> Resul
                     board_pointer_inside: false,
                     editor: None,
                     editor_scene_pack: None,
-                    vello,
-                    texture,
-                    view,
                     width: pw.max(1),
                     height: ph.max(1),
                     last_note_click: None,
                 },
             );
-            return Ok(());
+            return;
         }
         if needs_resize {
-            let device = gpu.device();
             let entry = map.get_mut(surface_id).expect("surface");
-            let (texture, view) = create_target_texture(device, pw.max(1), ph.max(1));
-            entry.texture = texture;
-            entry.view = view;
             entry.width = pw.max(1);
             entry.height = ph.max(1);
         }
-        Ok(())
-    })
+    });
 }
 
 fn create_target_texture(device: &wgpu::Device, width: u32, height: u32) -> (wgpu::Texture, wgpu::TextureView) {
@@ -366,48 +472,21 @@ fn create_target_texture(device: &wgpu::Device, width: u32, height: u32) -> (wgp
     (texture, view)
 }
 
-fn render_vello_scene(gpu: &mut GpuContext, surface_id: &str, scene: &canvas::Scene, clear: Color) -> Result<(), String> {
-    ENGINE_SURFACES.with(|cell| {
-        let mut map = cell.borrow_mut();
-        let entry = map.get_mut(surface_id).ok_or_else(|| "missing engine surface".to_string())?;
-        let params = RenderParams { base_color: clear, width: entry.width, height: entry.height, antialiasing_method: AaConfig::Area };
-        entry.vello.render_to_texture(gpu.device(), gpu.queue(), scene.vello_scene(), &entry.view, &params).map_err(|err| format!("vello render: {err:?}"))?;
-        let device = gpu.device();
-        let published_view = entry.view.clone();
-        let published_texture = std::mem::replace(
-            &mut entry.texture,
-            device.create_texture(&wgpu::TextureDescriptor {
-                label: Some("engine_canvas_target"),
-                size: wgpu::Extent3d { width: entry.width, height: entry.height, depth_or_array_layers: 1 },
-                mip_level_count: 1,
-                sample_count: 1,
-                dimension: wgpu::TextureDimension::D2,
-                format: wgpu::TextureFormat::Rgba8Unorm,
-                usage: wgpu::TextureUsages::STORAGE_BINDING | wgpu::TextureUsages::TEXTURE_BINDING,
-                view_formats: &[],
-            }),
-        );
-        entry.view = entry.texture.create_view(&wgpu::TextureViewDescriptor::default());
-        let width = entry.width;
-        let height = entry.height;
-        gpu.register_engine_texture(&raster_key(surface_id), published_texture, &published_view, width, height);
-        Ok(())
-    })
+fn render_vello_scene(resources: &mut EngineCanvasBuildContext, surface_id: &str, scene: canvas::Scene, clear: Color, width: u32, height: u32) {
+    resources.enqueue(surface_id, scene, clear, width, height);
 }
 //#endregion Registry
 
 //#region NodeGraph
-pub fn paint_node_graph(gpu: &mut GpuContext, ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, inner: Rect) {
+pub fn paint_node_graph(resources: &mut EngineCanvasBuildContext, ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, inner: Rect) {
     let Some(graph) = &scene.node_graph else {
         return;
     };
     let pw = inner.w.max(1.0) as u32;
     let ph = inner.h.max(1.0) as u32;
-    let dpr = gpu.dpr() as f64;
+    let dpr = resources.dpr();
     let flow = is_flow_graph(graph);
-    if ensure_surface(gpu, &scene.surface_id, pw, ph).is_err() {
-        return;
-    }
+    ensure_surface(&scene.surface_id, pw, ph);
     let clear = vello_clear(ctx.theme);
     let scene_pack = graph_scene_pack(graph);
     let dark = theme_is_dark(ctx.theme);
@@ -451,9 +530,7 @@ pub fn paint_node_graph(gpu: &mut GpuContext, ctx: &mut FrameworkWidgetContext<'
             engine.paint_scene(&mut canvas_scene, pw, ph, dpr);
         }
     });
-    if render_vello_scene(gpu, &scene.surface_id, &canvas_scene, clear).is_err() {
-        return;
-    }
+    render_vello_scene(resources, &scene.surface_id, canvas_scene, clear, pw, ph);
     ctx.draw.push_raster_quad(&raster_key(&scene.surface_id), [inner.x, inner.y, inner.w, inner.h], [0.0, 0.0, 1.0, 1.0], 1.0);
     ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(format!("{}.pane", scene.surface_id)), kind: HitKind::ScrollRegion, drag_axis: Some(ui_wgpu::wgpu::input::DragAxis::Both), drag_data: None });
 }
@@ -1249,16 +1326,14 @@ pub fn apply_map_tile_bytes(surface_id: &str, fetch: &PendingMapTileFetch, bytes
     });
 }
 
-pub fn paint_tiled_map(gpu: &mut GpuContext, ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, inner: Rect) {
+pub fn paint_tiled_map(resources: &mut EngineCanvasBuildContext, ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, inner: Rect) {
     let Some(map_scene) = &scene.tiled_map else {
         return;
     };
     let pw = inner.w.max(1.0) as u32;
     let ph = inner.h.max(1.0) as u32;
-    let dpr = gpu.dpr() as f64;
-    if ensure_surface(gpu, &scene.surface_id, pw, ph).is_err() {
-        return;
-    }
+    let dpr = resources.dpr();
+    ensure_surface(&scene.surface_id, pw, ph);
     let theme_json = map_theme_json_from_ui_theme(ctx.theme);
     let clear = vello_clear(ctx.theme);
     let canvas_scene = ENGINE_SURFACES.with(|cell| {
@@ -1273,9 +1348,7 @@ pub fn paint_tiled_map(gpu: &mut GpuContext, ctx: &mut FrameworkWidgetContext<'_
         queue_map_tile_fetches(&scene.surface_id, map_scene, host);
         host.build_render_scene()
     });
-    if render_vello_scene(gpu, &scene.surface_id, &canvas_scene, clear).is_err() {
-        return;
-    }
+    render_vello_scene(resources, &scene.surface_id, canvas_scene, clear, pw, ph);
     ctx.draw.push_raster_quad(&raster_key(&scene.surface_id), [inner.x, inner.y, inner.w, inner.h], [0.0, 0.0, 1.0, 1.0], 1.0);
     ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(format!("{}.map", scene.surface_id)), kind: HitKind::ScrollRegion, drag_axis: Some(ui_wgpu::wgpu::input::DragAxis::Both), drag_data: None });
 }
@@ -1551,16 +1624,14 @@ fn sync_board_host(host: &mut puzzle::editor::puzzle2d::engine::BoardHost, scene
     }
 }
 
-pub fn paint_puzzle_board(gpu: &mut GpuContext, ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, inner: Rect) {
+pub fn paint_puzzle_board(resources: &mut EngineCanvasBuildContext, ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, inner: Rect) {
     let Some(board_scene) = &scene.board2d else {
         return;
     };
     let pw = inner.w.max(1.0) as u32;
     let ph = inner.h.max(1.0) as u32;
-    let dpr = gpu.dpr() as f64;
-    if ensure_surface(gpu, &scene.surface_id, pw, ph).is_err() {
-        return;
-    }
+    let dpr = resources.dpr();
+    ensure_surface(&scene.surface_id, pw, ph);
     let clear = vello_clear(ctx.theme);
     let canvas_scene = ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
@@ -1573,9 +1644,7 @@ pub fn paint_puzzle_board(gpu: &mut GpuContext, ctx: &mut FrameworkWidgetContext
         sync_board_host(host, board_scene, &mut entry.board_sync_cache, pw, ph, dpr);
         host.build_vector_scene()
     });
-    if render_vello_scene(gpu, &scene.surface_id, &canvas_scene, clear).is_err() {
-        return;
-    }
+    render_vello_scene(resources, &scene.surface_id, canvas_scene, clear, pw, ph);
     ctx.draw.push_raster_quad(&raster_key(&scene.surface_id), [inner.x, inner.y, inner.w, inner.h], [0.0, 0.0, 1.0, 1.0], 1.0);
     if board_scene.interactive {
         ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(format!("{}.board", scene.surface_id)), kind: HitKind::ScrollRegion, drag_axis: Some(ui_wgpu::wgpu::input::DragAxis::Both), drag_data: None });
@@ -1822,16 +1891,14 @@ pub fn text_editor_apply_key(scene: &UiComponentSceneNode, key: KeyAction, modif
     })
 }
 
-pub fn paint_text_editor(gpu: &mut GpuContext, ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, inner: Rect) {
+pub fn paint_text_editor(resources: &mut EngineCanvasBuildContext, ctx: &mut FrameworkWidgetContext<'_>, scene: &UiComponentSceneNode, inner: Rect) {
     let Some(editor) = &scene.text_editor else {
         return;
     };
     let pw = inner.w.max(1.0) as u32;
     let ph = inner.h.max(1.0) as u32;
-    let dpr = gpu.dpr() as f64;
-    if ensure_surface(gpu, &scene.surface_id, pw, ph).is_err() {
-        return;
-    }
+    let dpr = resources.dpr();
+    ensure_surface(&scene.surface_id, pw, ph);
     let clear = vello_clear(ctx.theme);
     let scene_pack = editor_scene_pack(editor);
     let canvas_scene = ENGINE_SURFACES.with(|cell| {
@@ -1847,9 +1914,7 @@ pub fn paint_text_editor(gpu: &mut GpuContext, ctx: &mut FrameworkWidgetContext<
         host.set_size(pw, ph, dpr);
         host.build_scene()
     });
-    if render_vello_scene(gpu, &scene.surface_id, &canvas_scene, clear).is_err() {
-        return;
-    }
+    render_vello_scene(resources, &scene.surface_id, canvas_scene, clear, pw, ph);
     ctx.draw.push_raster_quad(&raster_key(&scene.surface_id), [inner.x, inner.y, inner.w, inner.h], [0.0, 0.0, 1.0, 1.0], 1.0);
     let editor_id = format!("{}.editor", scene.surface_id);
     ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(editor_id), kind: HitKind::Input, drag_axis: None, drag_data: None });

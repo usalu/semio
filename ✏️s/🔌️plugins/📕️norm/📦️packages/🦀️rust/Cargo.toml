@@ -109,7 +109,6 @@ semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨
 fem = { path = "../../../🏗️fem/📦️packages/🦀️rust", package = "semio-s-plugin-fem", default-features = false, optional = true }
 serde.workspace = true
 serde_json.workspace = true
-thiserror.workspace = true
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

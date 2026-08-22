@@ -1,0 +1,52 @@
+[DEBUG] Phase 4 platform/static/runtime evidence — 2026-08-22
+
+[DEBUG] cargo check -p semio-s-plugin-puzzle --message-format=short
+[DEBUG] PASS exit=0; Finished dev profile in 4m09s.
+
+[DEBUG] cargo check --release -p semio-s-plugin-puzzle --lib --message-format=short
+[DEBUG] PASS exit=0; Finished release profile in 7m06s.
+
+[DEBUG] cargo check -p semio-s-plugin-puzzle --target wasm32-unknown-unknown --message-format=short
+[DEBUG] PASS exit=0; Finished dev profile in 9m12s.
+
+[DEBUG] cargo check -p semio-s-plugin-puzzle --target wasm32-wasip2 --message-format=short
+[DEBUG] PASS exit=0; Finished dev profile in 4m47s.
+
+[DEBUG] rustfmt --edition 2021 --check <five owned action/precompute/fill/brush/geometry files>
+[DEBUG] PASS exit=0.
+
+[DEBUG] fill_first_substantive_preview_arrives_below_fifty_ms_and_every_step_below_eight_ms
+[DEBUG] PASS 1/1; first-preview-us=1238 max-step-us=422.
+
+[DEBUG] adversarial_broad_phase_fill_is_end_to_end_resumable_below_eight_ms
+[DEBUG] PASS 1/1; 1024 placed objects; first-preview-us=650 max-step-us=181 transitions=3122.
+
+[DEBUG] fill_job_commit_is_byte_identical_at_one_two_four_and_default_workers
+[DEBUG] PASS 1/1; workers=1/2/4/default(10), commit-bytes=2691 for every run; verified accepted placement sequence length=1.
+
+[DEBUG] fill_job_* sequential group
+[DEBUG] PASS 3/3; checkpoint/resume, actual-worker parity, drive-batch determinism.
+
+[DEBUG] fill::tests sequential group
+[DEBUG] PASS 6/6; adversarial watchdog, cancellation-next-step, checkpoint byte identity, empty transition watchdog, typed revisioned preview checkpoint, stale-generation fault.
+
+[DEBUG] geometry::tests::overlap_* sequential group
+[DEBUG] PASS 8/8; cancellation/yield, checkpoint RNG/sample cursor, batch determinism, early rejection, interaction watchdog, disjoint/coincident/touching reference outcomes.
+
+[DEBUG] geometry::tests::spatial_index_* sequential group
+[DEBUG] PASS 2/2; adversarial cell spans and exact deterministic ordering.
+
+[DEBUG] fill_build_tick_only_polls_and_enqueues_one_isolated_worker_job
+[DEBUG] PASS 1/1.
+
+[DEBUG] static action census
+[DEBUG] zero direct-step/private-executor/thread matches; positive poll_fill_job + enqueue_fill_job + one isolated SpawnJob.
+
+[DEBUG] static production precompute census (lines 1-889, before #[cfg(test)])
+[DEBUG] zero WorkerPool::new/std::thread/thread::spawn/rayon/block_on/run_to_completion/spawn_blocking/run_blocking matches.
+
+[DEBUG] test-only census
+[DEBUG] available_parallelism and WorkerPool::new occur only after #[cfg(test)] line 890 in the required 1/2/4/default parity test.
+
+[DEBUG] dependency audit
+[DEBUG] Cargo.toml directly declares semio-framework-job; Cargo.lock resolves it; cargo tree -p semio-s-plugin-puzzle --edges normal -i semio-framework-job exits 0 and includes semio-s-plugin-puzzle.

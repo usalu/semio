@@ -71,7 +71,7 @@ impl Default for Fem2dArtifact {
 
 impl Fem2dArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> crate::artifacts::fem2d::Fem2dSnapshot {
+    pub fn to_snapshot(&self) -> crate::artifacts::fem2d::Fem2dSnapshot {
         crate::artifacts::fem2d::Fem2dSnapshot {
             nodes: self.nodes.clone(),
             elements: self.elements.clone(),
@@ -86,7 +86,7 @@ impl Fem2dArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI/preview fields at defaults.
-    pub async fn from_snapshot(snapshot: crate::artifacts::fem2d::Fem2dSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::artifacts::fem2d::Fem2dSnapshot) -> Self {
         Self {
             nodes: snapshot.nodes,
             elements: snapshot.elements,
@@ -102,7 +102,7 @@ impl Fem2dArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: crate::artifacts::fem2d::Fem2dSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::fem2d::Fem2dSnapshot) {
         self.nodes = snapshot.nodes;
         self.elements = snapshot.elements;
         self.regions = snapshot.regions;
@@ -118,7 +118,7 @@ impl Fem2dArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.fem.fem2d` — twenty handcrafted schema leaves.
-pub async fn fem2d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn fem2d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.fem.fem2d",
         artifact: schema::FacetLeaves {
@@ -174,10 +174,10 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<Fem2dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self { snapshot: <Fem2dSnapshot as store::ArtifactDsl>::parse_dsl(text)?, diagnostics: Vec::new() })
         }
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<Fem2dSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self { snapshot: <Fem2dSnapshot as store::ArtifactPack>::decode_pack(bytes)?, diagnostics: Vec::new() })
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
@@ -206,7 +206,7 @@ pub use derived_construction::*;
 
 //#region 🌱️DerivedEmpty
 /// 🌱️ An empty `Fem2dSnapshot` — the app's genesis document and every test fixture's blank baseline.
-pub async fn empty_fem2d_snapshot() -> crate::artifacts::fem2d::Fem2dSnapshot {
+pub fn empty_fem2d_snapshot() -> crate::artifacts::fem2d::Fem2dSnapshot {
     crate::artifacts::fem2d::Fem2dSnapshot::default()
 }
 //#endregion 🌱️DerivedEmpty

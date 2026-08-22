@@ -9,12 +9,44 @@
 
 use crate::scenes::{decode_canvas_image, queue_canvas_image_upload, render_component_scene, Board2dSurface, NodeGraphSurface, TiledMapSurface};
 use serde_json::Value;
+use std::sync::{Mutex, MutexGuard, OnceLock};
+#[cfg(test)]
+use ui_wgpu::wgpu::UiPresence;
 #[cfg(any(target_arch = "wasm32", test))]
 use ui_wgpu::wgpu::UiState;
 use ui_wgpu::wgpu::{draw_text, render_widget, Rect, Theme, WidgetContext, WidgetInteractionMaps, WidgetNode};
 use ui_wgpu::wgpu::{ActionDescriptor, DragPayload, NodeId, UiComponentSceneNode, UiNode};
 
 pub type FrameworkWidgetContext<'a> = WidgetContext<'a, ActionDescriptor>;
+
+/// 🧵️ Worker-safe retained cell used by renderer state that may resume on any shared-pool worker.
+struct WorkerCell<T> {
+    inner: OnceLock<Mutex<T>>,
+}
+
+impl<T> WorkerCell<T> {
+    const fn new() -> Self {
+        Self { inner: OnceLock::new() }
+    }
+}
+
+impl<T: Default> WorkerCell<T> {
+    fn state(&self) -> &Mutex<T> {
+        self.inner.get_or_init(|| Mutex::new(T::default()))
+    }
+
+    fn borrow(&self) -> MutexGuard<'_, T> {
+        self.state().lock().expect("worker interpreter state")
+    }
+
+    fn borrow_mut(&self) -> MutexGuard<'_, T> {
+        self.borrow()
+    }
+
+    fn with<R>(&self, apply: impl FnOnce(&Self) -> R) -> R {
+        apply(self)
+    }
+}
 
 //#region RenderPlanValidator
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -224,14 +256,10 @@ fn render_plan_error_widget(message: &str, bounds: Rect, ctx: &mut FrameworkWidg
  * instead of reading from (or clobbering) a second, independent one. See
  * `.🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w3-interpreter-cutover.md`'s "CRITICAL FINDING"
  * for the original gap and the follow-up ticket work that closed it. */
-thread_local! {
-    static UI_ENGINE: std::cell::RefCell<ui_wgpu::wgpu::Ui> = std::cell::RefCell::new(ui_wgpu::wgpu::Ui::new());
-    /// 👆️ Last-seen `(pointer_down, pointer_button)` per `window_id`, so `dispatch_pointer_events` can
-    /// detect Down/Up edges from `InputState`'s per-frame aggregate (which only carries *current*
-    /// state, not a transition) without needing a `ShellTypes` field either.
-    static POINTER_EDGE_STATE: std::cell::RefCell<std::collections::HashMap<String, (bool, i16)>> =
-        std::cell::RefCell::new(std::collections::HashMap::new());
-}
+static UI_ENGINE: WorkerCell<ui_wgpu::wgpu::Ui> = WorkerCell::new();
+/// 👆️ Last-seen `(pointer_down, pointer_button)` per `window_id`, so `dispatch_pointer_events` can
+/// detect Down/Up edges from `InputState`'s per-frame aggregate.
+static POINTER_EDGE_STATE: WorkerCell<std::collections::HashMap<String, (bool, i16)>> = WorkerCell::new();
 
 /** 🖇️ Public hook for the sibling `w3-shell-input-cutover` workstream (region `shell::ShellInput`,
  * which this ticket must not touch): routes a fully-formed `ui_wgpu::wgpu::UiEvent` (built from raw
@@ -254,8 +282,8 @@ pub fn dispatch_ui_event(window_id: &str, event: ui_wgpu::wgpu::UiEvent, input: 
  *    action already flows through.
  *  - `ClipboardCopy`/`ClipboardCut` → `write_os_clipboard` (real OS clipboard via `ui_wgpu::wgpu::host`,
  *    mocked in this module's own tests — see `MOCK_CLIPBOARD_WRITES`).
- *  - `ClipboardPasteRequested` → `apply_clipboard_paste_requested`, below (native/wasm split: native
- *    reads synchronously and round-trips within this same call; wasm can't, see that fn's doc comment).
+ *  - `ClipboardPasteRequested` → `apply_clipboard_paste_requested`, below. Production native
+ *    hosts submit the blocking read to the process worker pool; browsers use their Promise API.
  *  - `DropCommitted` → `apply_drop_committed`, below.
  *  - `DropCancelled` → intentional no-op: mirrors `framework/renderer/react/index.tsx`'s
  *    `UiStackHost.onDrop` (native HTML5 DnD), which has no "drag cancelled" callback on any
@@ -348,7 +376,15 @@ fn merge_action_args(existing: Option<&semio_framework::DslValue>, patch: serde_
 /// swap for a mock (`MOCK_CLIPBOARD_WRITES`), so `cargo test` never touches a real display/clipboard.
 #[cfg(not(test))]
 fn write_os_clipboard(text: &str) {
-    ui_wgpu::wgpu::clipboard_write_text(text);
+    #[cfg(not(target_arch = "wasm32"))]
+    submit_clipboard_io(ui_wgpu::wgpu::ClipboardIoJob::write(text.to_string()), |_| {});
+    #[cfg(target_arch = "wasm32")]
+    {
+        let text = text.to_string();
+        wasm_bindgen_futures::spawn_local(async move {
+            ui_wgpu::wgpu::clipboard_write_text(&text).await;
+        });
+    }
 }
 
 #[cfg(test)]
@@ -356,11 +392,23 @@ fn write_os_clipboard(text: &str) {
     MOCK_CLIPBOARD_WRITES.with(|cell| cell.borrow_mut().push(text.to_string()));
 }
 
-/// 📋️ Native-only OS clipboard read — see `read_os_clipboard`'s wasm non-existence note on
-/// `apply_clipboard_paste_requested` below for why there is no wasm counterpart of this fn itself.
 #[cfg(all(not(target_arch = "wasm32"), not(test)))]
-fn read_os_clipboard() -> Option<String> {
-    ui_wgpu::wgpu::clipboard_read_text()
+fn submit_clipboard_io(job: ui_wgpu::wgpu::ClipboardIoJob, complete: impl FnOnce(semio_framework_job::StepOutcome) + Send + 'static) {
+    use semio_framework_job::{allocate_operation_id, root_cancel_token, BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS};
+    let params = BatchJobParams {
+        operation: allocate_operation_id(),
+        generation: Generation(0),
+        cancel: root_cancel_token(),
+        config: BatchDriveConfig { site: "renderer_clipboard_io", stage: InteractiveStage::InteractiveStep, fuel_per_step: INTERACTIVE_LANE_FUEL, step_budget_ms: INTERACTIVE_LANE_WALL_MS },
+        now_ms: semio_framework_job::default_now_ms,
+    };
+    crate::renderer_worker_pool().submit(
+        semio_framework_async::Lane::Io,
+        Box::new(move || {
+            let mut job = job;
+            complete(semio_framework_job::run_to_completion(&mut job, &params));
+        }),
+    );
 }
 
 #[cfg(all(not(target_arch = "wasm32"), test))]
@@ -374,25 +422,30 @@ thread_local! {
     static MOCK_CLIPBOARD_READ: std::cell::RefCell<Option<String>> = std::cell::RefCell::new(None);
 }
 
-/** 📋️ `ClipboardPasteRequested`'s native handling: `ui_wgpu::wgpu::clipboard_read_text` is a blocking
- * call, so this reads the OS clipboard and round-trips the result straight back into the SAME
- * retained window (`UI_ENGINE.dispatch_event(window_id, UiEvent::Paste{text})`) within this one
- * synchronous call — safe to re-enter `UI_ENGINE` here specifically because every caller of
- * `apply_ui_commands` (`render_ui_node`, `dispatch_ui_event`) only calls it AFTER its own
- * `UI_ENGINE.with(...)` borrow has already been dropped (see this region's top-of-file doc comment).
- * Whatever `UiCommand`s that `Paste` produces (none today — inserting text doesn't itself fire an
- * `on_change` action yet, a documented pre-existing gap, see `report-w1d-events-overlay.md`) are
- * applied right back through `apply_ui_commands`, so this stays correct if that ever changes. */
-#[cfg(not(target_arch = "wasm32"))]
+/** 🧪️ Test-only native clipboard handling. The in-memory mock is deliberately synchronous so
+ * focused retained-engine tests can assert the resulting paste commands without an OS clipboard or
+ * worker race. Production native handling below submits the blocking read to the I/O lane. */
+#[cfg(all(not(target_arch = "wasm32"), test))]
 fn apply_clipboard_paste_requested(window_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
     let Some(text) = read_os_clipboard() else { return };
     let commands = UI_ENGINE.with(|cell| cell.borrow_mut().dispatch_event(window_id, ui_wgpu::wgpu::UiEvent::Paste { text }));
     apply_ui_commands(&commands, input);
 }
 
-/** 📋️ `ClipboardPasteRequested`'s wasm handling: the browser's Clipboard API is Promise-based with
- * no synchronous read (`ui_wgpu::wgpu::clipboard_read_text` is `async` there — see that fn's doc comment),
- * so this can't resolve within this synchronous call the way the native arm above does. Spawns a
+#[cfg(all(not(target_arch = "wasm32"), not(test)))]
+fn apply_clipboard_paste_requested(window_id: &str, _input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
+    let window_id = window_id.to_string();
+    submit_clipboard_io(ui_wgpu::wgpu::ClipboardIoJob::read(), move |outcome| {
+        let Some(text) = ui_wgpu::wgpu::ClipboardIoJob::read_candidate(&outcome) else { return };
+        UI_ENGINE.with(|cell| {
+            cell.borrow_mut().dispatch_event(&window_id, ui_wgpu::wgpu::UiEvent::Paste { text });
+        });
+    });
+}
+
+/** 🌐️ `ClipboardPasteRequested`'s wasm handling: the browser's Clipboard API is Promise-based with
+ * no synchronous read (`ui_wgpu::wgpu::clipboard_read_text` is `async` there — see that fn's doc comment).
+ * Spawns a
  * `wasm_bindgen_futures::spawn_local` task that re-enters `UI_ENGINE` once the browser grants/denies
  * the read, on a later microtask (no `&mut InputState<ActionDescriptor>` borrow can survive that
  * boundary — it's tied to this frame's call stack). Whatever `UiCommand`s that later `dispatch_event`
@@ -602,16 +655,17 @@ fn composite_retained_draw_list(target: &mut ui_wgpu::wgpu::DrawList, retained: 
  * takes `scene_host` as a parameter rather than a stored field (see that method's doc comment):
  * `gpu`/the per-surface-kind state maps aren't anything a `Ui`-owned `Box<dyn SceneHost>` could hold. */
 struct FrameworkSceneHost<'ctx> {
-    gpu: &'ctx mut ui_wgpu::wgpu::GpuContext,
+    engine_resources: &'ctx mut crate::engine_canvas::EngineCanvasBuildContext,
+    world_resources: &'ctx mut infinite_world::world::World3dBuildContext,
     input: &'ctx mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
     theme: &'ctx Theme,
     scroll_offsets: &'ctx mut std::collections::HashMap<String, f32>,
     collapsed_sections: &'ctx mut std::collections::HashMap<String, bool>,
     open_selects: &'ctx mut std::collections::HashMap<String, bool>,
-    world3d_states: &'ctx mut std::collections::HashMap<String, infinite_world::World3dState>,
+    world3d_states: &'ctx mut std::collections::HashMap<String, infinite_world::world::World3dState>,
     node_graph_states: &'ctx mut std::collections::HashMap<String, NodeGraphSurface>,
     tiled_map_states: &'ctx mut std::collections::HashMap<String, TiledMapSurface>,
-    icon_render_states: &'ctx mut std::collections::HashMap<String, infinite_world::World3dState>,
+    icon_render_states: &'ctx mut std::collections::HashMap<String, infinite_world::world::World3dState>,
     board2d_states: &'ctx mut std::collections::HashMap<String, Board2dSurface>,
 }
 
@@ -625,7 +679,9 @@ impl ui_wgpu::wgpu::SceneHost for FrameworkSceneHost<'_> {
     fn paint_slot(&mut self, slot: &ui_wgpu::wgpu::SceneSlot<'_>, draw: &mut ui_wgpu::wgpu::DrawList, atlas: &mut ui_wgpu::wgpu::FontAtlas, icons: Option<&ui_wgpu::wgpu::IconAtlas>) {
         let mut ctx = framework_widget_context(draw, None, atlas, icons, self.input, self.theme, self.scroll_offsets, self.collapsed_sections, self.open_selects, None);
         match &slot.content {
-            ui_wgpu::wgpu::SlotContent::Scene(scene) => render_component_scene(scene, slot.rect, &mut ctx, self.gpu, self.world3d_states, self.node_graph_states, self.tiled_map_states, self.icon_render_states, self.board2d_states),
+            ui_wgpu::wgpu::SlotContent::Scene(scene) => {
+                render_component_scene(scene, slot.rect, &mut ctx, self.engine_resources, self.world_resources, self.world3d_states, self.node_graph_states, self.tiled_map_states, self.icon_render_states, self.board2d_states)
+            }
             ui_wgpu::wgpu::SlotContent::Image(image) => render_ui_image(image, slot.rect, &mut ctx),
         }
     }
@@ -650,11 +706,12 @@ pub fn render_ui_node(
     bounds: Rect,
     ctx: &mut FrameworkWidgetContext<'_>,
     window_id: &str,
-    gpu: &mut ui_wgpu::wgpu::GpuContext,
-    world3d_states: &mut std::collections::HashMap<String, infinite_world::World3dState>,
+    engine_resources: &mut crate::engine_canvas::EngineCanvasBuildContext,
+    world_resources: &mut infinite_world::world::World3dBuildContext,
+    world3d_states: &mut std::collections::HashMap<String, infinite_world::world::World3dState>,
     node_graph_states: &mut std::collections::HashMap<String, NodeGraphSurface>,
     tiled_map_states: &mut std::collections::HashMap<String, TiledMapSurface>,
-    icon_render_states: &mut std::collections::HashMap<String, infinite_world::World3dState>,
+    icon_render_states: &mut std::collections::HashMap<String, infinite_world::world::World3dState>,
     board2d_states: &mut std::collections::HashMap<String, Board2dSurface>,
 ) {
     if let Err(message) = validate_ui_node(node, &RENDER_PLAN_LIMITS) {
@@ -670,7 +727,8 @@ pub fn render_ui_node(
         engine.set_viewport(window_id, viewport_w, viewport_h);
         let commands = dispatch_pointer_events(&mut engine, window_id, bounds, ctx.input);
         let mut scene_host = FrameworkSceneHost {
-            gpu,
+            engine_resources,
+            world_resources,
             input: ctx.input,
             theme: ctx.theme,
             scroll_offsets: ctx.scroll_offsets,
@@ -1084,18 +1142,16 @@ pub struct PendingUiImageFetch {
     pub url: String,
 }
 
-thread_local! {
-    static UI_IMAGE_FETCH_QUEUE: std::cell::RefCell<Vec<PendingUiImageFetch>> = std::cell::RefCell::new(Vec::new());
-    static UI_IMAGE_FETCH_INFLIGHT: std::cell::RefCell<std::collections::HashMap<String, String>> = std::cell::RefCell::new(std::collections::HashMap::new());
-    static UI_IMAGE_FETCH_MISS: std::cell::RefCell<std::collections::HashMap<String, String>> = std::cell::RefCell::new(std::collections::HashMap::new());
-    static UI_IMAGE_LAST_URL: std::cell::RefCell<std::collections::HashMap<String, String>> = std::cell::RefCell::new(std::collections::HashMap::new());
-    static UI_IMAGE_URL_CACHE: std::cell::RefCell<std::collections::HashMap<String, String>> = std::cell::RefCell::new(std::collections::HashMap::new());
-    static UI_IMAGE_SIZES: std::cell::RefCell<std::collections::HashMap<String, (u32, u32)>> = std::cell::RefCell::new(std::collections::HashMap::new());
-    static UI_IMAGE_SVG_CACHE: std::cell::RefCell<std::collections::HashMap<String, (u64, String, u32, u32)>> = std::cell::RefCell::new(std::collections::HashMap::new());
-}
+static UI_IMAGE_FETCH_QUEUE: WorkerCell<Vec<PendingUiImageFetch>> = WorkerCell::new();
+static UI_IMAGE_FETCH_INFLIGHT: WorkerCell<std::collections::HashMap<String, String>> = WorkerCell::new();
+static UI_IMAGE_FETCH_MISS: WorkerCell<std::collections::HashMap<String, String>> = WorkerCell::new();
+static UI_IMAGE_LAST_URL: WorkerCell<std::collections::HashMap<String, String>> = WorkerCell::new();
+static UI_IMAGE_URL_CACHE: WorkerCell<std::collections::HashMap<String, String>> = WorkerCell::new();
+static UI_IMAGE_SIZES: WorkerCell<std::collections::HashMap<String, (u32, u32)>> = WorkerCell::new();
+static UI_IMAGE_SVG_CACHE: WorkerCell<std::collections::HashMap<String, (u64, String, u32, u32)>> = WorkerCell::new();
 
 /** 📥️ Drains and returns the `http(s)`/relative-URL image fetches queued this frame by
- * `render_ui_image` — the host runtime (native `ureq`/`pollster` or wasm `fetch`, see
+ * `render_ui_image` — the host runtime (native I/O lane or wasm `fetch`, see
  * `poll_pending_assets`'s existing `collect_pending_map_tile_fetches` stanza for the established
  * driver-loop shape) fetches each `url` and reports the bytes back via `apply_ui_image_bytes`. Not
  * yet wired into `poll_pending_assets` — that function lives in the `shell` module, out of scope

@@ -1,45 +1,19 @@
-//! 🧵️ INTERACTIVE-JOB-RUNTIME-REFACTOR packet P3b (Phase 3, ui-thread-isolation) — the real, if
-//! deliberately narrow, `semio_framework_job::InteractiveJob` seam for `AppRuntime::frame()`.
+//! 🧵️ P3/P5 mounted frame coordinator. [`FrameBuildJob`] incrementally derives deadline candidates,
+//! and [`FrameBuildHandle::poll_runtime_and_resubmit`] couples that protocol to the complete
+//! `AppRuntime::frame` transaction. Native submits one generation at a time to the process worker
+//! pool, publishes only matching completions, and never waits while polling. Frame construction owns
+//! shell traversal, layout/tessellation, engine-scene directives, and prepared-packet creation;
+//! `AppPresenter` retains platform/GPU presentation authority.
 //!
-//! **What this genuinely moves off the UI thread.** `frame()`'s World3D wheel-zoom settle sweep
-//! (scanning `world3d_camera_dispatch_deadlines_ms` for expired entries) and its node-graph wheel-zoom
-//! deadline check are pure arithmetic over owned, `Send` values with no `Rc`/`RefCell`/GPU/thread-local
-//! involvement. [`FrameBuildJob`] runs that scan as a real [`semio_framework_job::InteractiveJob`],
-//! submitted onto `crate::renderer_worker_pool()` via [`semio_framework_job::run_on_worker`] (native) —
-//! a genuine job, on the real pool, not a synchronous call dressed up to look like one. The scan is
-//! O(open deadlines); a document with many live World3D viewports is the case this is worth doing for.
-//! **`frame()` still re-validates every candidate the job reports against LIVE state before acting on
-//! it** (see `📓️p3b-frame-building.md` §4) — the worker's output is a candidate list, not an
-//! authoritative replacement, so a stale result (the job is one or more frames behind) can only cause a
-//! harmless one-tick delay, never a dropped or duplicated dispatch. Deliberately excludes the caret-
-//! blink toggle the earlier draft of this job also computed: that state is a RELATIVE timer
-//! (toggle-if-≥500ms-elapsed), and re-validating a relative toggle against a stale snapshot can silently
-//! under- or double-toggle across a stall in a way the World3D scan's re-validation cannot — moving it
-//! off-thread safely needs an absolute "next flip due at" schedule instead, left to Phase 5.
-//!
-//! **What this does NOT move — read `📓️p3b-frame-building.md` before assuming more.** The expensive
-//! part of "building" — `shell::ShellState::render_chrome`'s layout/text-shaping/tessellation — is
-//! excluded on purpose: it takes `&mut ui_wgpu::wgpu::GpuContext` directly (lazy glyph/raster texture
-//! upload happens mid-layout, not after), and it reads/writes upwards of a dozen `thread_local!` UI
-//! caches in `🧱️elements/Shell/🧊️component.rs` (tooltip hover, dialog stack, tour state, prefs, find
-//! items, boot-hub env, content focus) that are genuinely per-OS-thread storage — moving that call to a
-//! worker thread would silently read/write a DIFFERENT, empty set of thread-locals than the UI thread,
-//! not just a `!Send` compile error. Neither blocker is fixable inside this packet's boundary or risk
-//! budget (the first needs a `ui_wgpu` seam change, outside `🖱️ui/🖥️host/**`+`📺️renderer/**`; the
-//! second needs auditing/threading through ~15 ambient statics across an 11,000-line file). This job is
-//! the seam Phase 5 plugs the real extraction into once those are resolved — not a finished migration.
-//!
-//! **Platform constraint.** `crate::renderer_worker_pool()` is native-only
-//! (`#[cfg(not(target_arch = "wasm32"))]`) — wasm32 has no second OS thread in this crate's model, so
-//! [`FrameBuildHandle::poll_and_resubmit`] runs the identical [`InteractiveJob`] to completion inline,
-//! synchronously, via [`semio_framework_job::run_to_completion`] on that target. This is not a gap: a
-//! "worker" is meaningless when there is no second thread to put it on, and the job protocol's own
-//! `run_to_completion`/`run_on_worker` split exists precisely so both paths drive the identical impl
-//! (design ticket packet P2a item 6).
+//! The deadline candidates remain non-authoritative: `AppRuntime::frame` revalidates them against live
+//! state before applying them. The wasm implementation still drives the job and frame inline because
+//! this crate has no Web Worker bridge; that is an explicit cross-target P3 gate gap, not a claimed
+//! equivalent worker implementation.
 
 use semio_framework_job::{root_cancel_token, BatchDriveConfig, BatchJobParams, CommitCandidate, InteractiveJob, StepContext, StepOutcome, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS};
 use semio_framework_trace::{Generation, InteractiveStage, OperationId};
 use std::collections::HashMap;
+use std::sync::Arc;
 
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_async::Lane;
@@ -50,8 +24,8 @@ use std::sync::mpsc::{Receiver, TryRecvError};
 
 //#region 📥️FrameBuildInputs
 /// 📥️ The `Send`-safe slice of `AppRuntime` this job needs — cloned out of `self` once per submission
-/// (all `f64`/`bool`/small `HashMap<String, f64>`, cheap to copy; never the `Rc<RefCell<AppRuntime>>`
-/// itself, never `ShellState`, never `GpuContext`).
+/// (all `f64`/`bool`/small `HashMap<String, f64>`, cheap to copy; never `AppRuntime`, `ShellState`,
+/// or `GpuContext`).
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 pub(crate) struct FrameBuildInputs {
     pub world3d_camera_dispatch_deadlines_ms: HashMap<String, f64>,
@@ -143,8 +117,22 @@ fn batch_params(operation: OperationId, generation: Generation) -> BatchJobParam
 /// cancelled) and re-checked next call rather than submitting a second overlapping one.
 pub(crate) struct FrameBuildHandle {
     #[cfg(not(target_arch = "wasm32"))]
-    in_flight: Option<Receiver<StepOutcome>>,
-    last: FrameDirectives,
+    runtime_in_flight: Option<Receiver<RuntimeFrameResult>>,
+    #[cfg(not(target_arch = "wasm32"))]
+    completion_waker: Option<Arc<dyn Fn() + Send + Sync>>,
+    latest_requested_generation: Generation,
+    last_submitted_generation: Option<Generation>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct RuntimeFrameResult {
+    generation: Generation,
+    frame: Option<crate::AppFramePresentation>,
+}
+
+#[cfg(any(not(target_arch = "wasm32"), test))]
+fn generation_is_fresh(requested: Generation, completed: Generation) -> bool {
+    requested == completed
 }
 
 impl FrameBuildHandle {
@@ -153,47 +141,83 @@ impl FrameBuildHandle {
     // pattern this file cannot itself compile-check today (see module doc §7 of the report).
     #[cfg(not(target_arch = "wasm32"))]
     pub(crate) fn new() -> Self {
-        Self { in_flight: None, last: FrameDirectives::default() }
+        Self { runtime_in_flight: None, completion_waker: None, latest_requested_generation: Generation(0), last_submitted_generation: None }
     }
 
     #[cfg(target_arch = "wasm32")]
     pub(crate) fn new() -> Self {
-        Self { last: FrameDirectives::default() }
+        Self { latest_requested_generation: Generation(0), last_submitted_generation: None }
     }
 
-    /// 🔁️ Native: drains the in-flight job's `Receiver` with `try_recv` (never `recv`), adopts its
-    /// result if `Complete`, then submits a fresh job for `inputs` only if nothing is currently in
-    /// flight. Wasm32: no pool exists (see module doc) — runs the job to completion inline and returns
-    /// its result immediately, same signature, so `winit_app.rs`'s call site never branches on target.
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) fn poll_and_resubmit(&mut self, inputs: FrameBuildInputs, operation: OperationId, generation: Generation) -> FrameDirectives {
-        if let Some(receiver) = &self.in_flight {
+    pub(crate) fn set_completion_waker(&mut self, waker: Arc<dyn Fn() + Send + Sync>) {
+        self.completion_waker = Some(waker);
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    pub(crate) fn set_completion_waker(&mut self, _waker: Arc<dyn Fn() + Send + Sync>) {}
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub(crate) fn poll_runtime_and_resubmit(&mut self, runtime: crate::RuntimeMailbox, inputs: FrameBuildInputs, operation: OperationId, generation: Generation, dpr: f32) -> Option<crate::AppFramePresentation> {
+        self.latest_requested_generation = generation;
+        let mut completed = None;
+        if let Some(receiver) = &self.runtime_in_flight {
             match receiver.try_recv() {
-                Ok(StepOutcome::Complete(candidate)) => {
-                    self.last = decode_directives(&candidate.output);
-                    self.in_flight = None;
+                Ok(result) => {
+                    if generation_is_fresh(self.latest_requested_generation, result.generation) {
+                        completed = result.frame;
+                    }
+                    self.runtime_in_flight = None;
                 }
-                Ok(_) | Err(TryRecvError::Disconnected) => {
-                    self.in_flight = None;
+                Err(TryRecvError::Disconnected) => {
+                    self.runtime_in_flight = None;
                 }
                 Err(TryRecvError::Empty) => {}
             }
         }
-        if self.in_flight.is_none() {
-            let pool = crate::renderer_worker_pool();
-            let receiver = semio_framework_job::run_on_worker(&pool, Lane::Interactive, FrameBuildJob::new(inputs), batch_params(operation, generation));
-            self.in_flight = Some(receiver);
+        if self.runtime_in_flight.is_none() && self.last_submitted_generation != Some(generation) {
+            let (sender, receiver) = std::sync::mpsc::channel();
+            let handle = runtime.downgrade();
+            let waker = self.completion_waker.clone();
+            crate::renderer_worker_pool().submit(
+                Lane::Interactive,
+                Box::new(move || {
+                    runtime.apply_pending();
+                    let mut job = FrameBuildJob::new(inputs);
+                    let directives = match semio_framework_job::run_to_completion(&mut job, &batch_params(operation, generation)) {
+                        StepOutcome::Complete(candidate) => decode_directives(&candidate.output),
+                        _ => FrameDirectives::default(),
+                    };
+                    let frame = runtime.try_lock().ok().and_then(|mut app| {
+                        runtime.update_frame_inputs(&app);
+                        app.interaction_available().then(|| app.frame(&handle, &directives, generation, dpr).prepare()).flatten()
+                    });
+                    let _ = sender.send(RuntimeFrameResult { generation, frame });
+                    if let Some(waker) = waker {
+                        waker();
+                    }
+                }),
+            );
+            self.runtime_in_flight = Some(receiver);
+            self.last_submitted_generation = Some(generation);
         }
-        self.last.clone()
+        completed
     }
 
     #[cfg(target_arch = "wasm32")]
-    pub(crate) fn poll_and_resubmit(&mut self, inputs: FrameBuildInputs, operation: OperationId, generation: Generation) -> FrameDirectives {
+    pub(crate) fn poll_runtime_and_resubmit(&mut self, runtime: crate::RuntimeMailbox, inputs: FrameBuildInputs, operation: OperationId, generation: Generation, dpr: f32) -> Option<crate::AppFramePresentation> {
+        self.latest_requested_generation = generation;
         let mut job = FrameBuildJob::new(inputs);
-        if let StepOutcome::Complete(candidate) = run_to_completion(&mut job, &batch_params(operation, generation)) {
-            self.last = decode_directives(&candidate.output);
-        }
-        self.last.clone()
+        let directives = match run_to_completion(&mut job, &batch_params(operation, generation)) {
+            StepOutcome::Complete(candidate) => decode_directives(&candidate.output),
+            _ => FrameDirectives::default(),
+        };
+        runtime.apply_pending();
+        let handle = runtime.downgrade();
+        runtime.try_lock().ok().and_then(|mut app| {
+            runtime.update_frame_inputs(&app);
+            app.interaction_available().then(|| app.frame(&handle, &directives, generation, dpr).prepare()).flatten()
+        })
     }
 }
 //#endregion 📮️FrameBuildHandle
@@ -243,5 +267,11 @@ mod tests {
     #[test]
     fn malformed_bytes_decode_to_a_safe_default_rather_than_panicking() {
         assert_eq!(decode_directives(b"not json"), FrameDirectives::default());
+    }
+
+    #[test]
+    fn stale_runtime_frame_generation_is_rejected() {
+        assert!(generation_is_fresh(Generation(7), Generation(7)));
+        assert!(!generation_is_fresh(Generation(8), Generation(7)));
     }
 }

@@ -7,7 +7,7 @@
 use crate::artifacts::csv::{CsvMutation, CsvSnapshot, STDIO_CSV_DOCUMENT_SCHEMA};
 use crate::viewer::csv::modes::view;
 use crate::viewer::csv::modes::view::windows::main;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, ViewEmit, Viewer};
 
 //#region 🔖️Dialect
 /// 🪪️ Same coordinate as the sibling editor surface's own `CSV_EDITOR_DIALECT` — duplicated here

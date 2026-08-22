@@ -41,13 +41,13 @@ fn before() -> PresentSnapshot {
     let PresentMutation::CreateTile(payload) = mutation() else {
         panic!("rejects-a-duplicate-tile-id's committed mutation must be a create-tile");
     };
-    cache_present_working_scene(&snapshot.presentation.child_id, &default_figure_tile_source(), &[payload.tile.clone()]);
+    cache_present_working_scene(&snapshot.presentation.child_id, &default_figure_tile_source(), std::slice::from_ref(&payload.tile));
     snapshot
 }
 
 /// ▶️ A rejected `create-tile` leaves the document byte-identical to the committed `after`.
-#[semio_framework_async_macros::async_test]
-async fn rejection_leaves_the_document_at_the_committed_after() {
+#[test]
+fn rejection_leaves_the_document_at_the_committed_after() {
     let base = before();
     let snapshot = apply_present_mutation(&base, &mutation()).expect("an empty diff still applies cleanly");
     assert_eq!(snapshot, expected_after(), "create-tile/rejects-a-duplicate-tile-id: applied state differs from committed after-snapshot");
@@ -56,8 +56,8 @@ async fn rejection_leaves_the_document_at_the_committed_after() {
 
 /// 🚨️ A colliding tile id is FATAL `mutation.duplicate-id` — the only Fatal-by-identity guard in
 /// this vocabulary; every other missing/absent case here is a merge-absorbable Error.
-#[semio_framework_async_macros::async_test]
-async fn a_colliding_tile_id_is_fatal() {
+#[test]
+fn a_colliding_tile_id_is_fatal() {
     let produced = <PresentMutation as protocol::Mutation<PresentSnapshot>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &PresentDiff::default(), "a rejecting create-tile must carry the identity diff, never a half-built presentation handle");
     let messages = produced.messages();
@@ -68,8 +68,8 @@ async fn a_colliding_tile_id_is_fatal() {
 }
 
 /// 🚷 The diff is DECLARED absent, not an invented empty patch.
-#[semio_framework_async_macros::async_test]
-async fn the_committed_diff_is_declared_absent() {
+#[test]
+fn the_committed_diff_is_declared_absent() {
     assert!(DIFF_ABSENT.is_empty(), "🔺️diff/🚫️component.absent must be an empty marker, not a stand-in patch");
     let produced = <PresentMutation as protocol::Mutation<PresentSnapshot>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &PresentDiff::default(), "create-tile/rejects-a-duplicate-tile-id: a Fatal outcome must produce no delta at all");
@@ -77,8 +77,8 @@ async fn the_committed_diff_is_declared_absent() {
 
 /// 🔣️ Both committed snapshots and the committed mutation are already canonical — including the
 /// externally tagged `{"CreateTile": …}` envelope this enum's missing serde tag attribute implies.
-#[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+#[test]
+fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: PresentSnapshot = serde_json::from_str(text).expect("snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
@@ -92,8 +92,8 @@ async fn committed_json_is_canonical() {
 }
 
 /// 🎯️ The declared rejection — status, code and path — is exactly what the diff builder emits.
-#[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+#[test]
+fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("rejected"), "create-tile/rejects-a-duplicate-tile-id declares a rejected outcome");
     let produced = <PresentMutation as protocol::Mutation<PresentSnapshot>>::diff(&mutation(), &before());
@@ -105,8 +105,8 @@ async fn declared_outcome_holds() {
 
 /// ↩️ `create-tile`'s inverse is PAYLOAD-derived — a `delete-tile` of the id it was asked to create,
 /// produced even here where the create was refused as a duplicate.
-#[semio_framework_async_macros::async_test]
-async fn inverse_is_a_delete_of_the_requested_id_even_when_refused() {
+#[test]
+fn inverse_is_a_delete_of_the_requested_id_even_when_refused() {
     let inverse = inverse_present_mutation(&before(), &mutation());
     assert_eq!(inverse.len(), 1, "create-tile always undoes with exactly one step, got {inverse:?}");
     let PresentMutation::DeleteTile(undo) = &inverse[0] else {
@@ -116,8 +116,8 @@ async fn inverse_is_a_delete_of_the_requested_id_even_when_refused() {
 }
 
 /// 🪪️ The fixture is bound to `create-tile`'s own descriptor and its `tiles`-scoped address.
-#[semio_framework_async_macros::async_test]
-async fn semantics_bind_this_fixture_to_create_tile() {
+#[test]
+fn semantics_bind_this_fixture_to_create_tile() {
     let semantics = <PresentMutation as protocol::SemanticMutation<PresentSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("create", "tile", "create-tile", "CreatedTile"), "the fixture must be bound to create-tile's own descriptor");
     assert_eq!(<PresentMutation as protocol::SemanticMutation<PresentSnapshot>>::target(&mutation()), vec!["tiles".to_string(), "t-hero".to_string()], "create-tile addresses the collection then the new tile id");

@@ -9,7 +9,7 @@ use crate::artifacts::png::standards::v1_2::subsets::any::schema::snapshot::PngS
 use crate::artifacts::png::{PNG_DIALECT, STDIO_PNG_DOCUMENT_SCHEMA};
 use crate::viewer::png::modes::view;
 use crate::viewer::png::modes::view::windows::main;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command

@@ -23,8 +23,8 @@ use base64::Engine as _;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, AppIo, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, FaultCode, FaultOrigin, GlbExporter, GranularityDefinition,
-    HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, MeshExporter, NoDraft, NoDraftMutation,
-    SelectionMethod, SelectionMode, SelectionSpec, UiNode, UtilityCategory, UtilityDefinition, WindowMeasure,
+    HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaPortDirection, MediaPortSpec, MediaType, MergeMode,
+    MeshExporter, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
 use serde_json::Value;
 use std::collections::HashMap;
@@ -555,7 +555,7 @@ impl ArtifactEditor for RemodelPlayApp {
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/utility declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
-pub async fn create_remodel_app() -> AppDefinition {
+pub fn create_remodel_app() -> AppDefinition {
     Editor::builder(crate::artifacts::remodel::REMODEL_DIALECT)
             .document(["semio", "remodel"])
             .artifact_kind(crate::artifacts::remodel::artifact_kind())
@@ -607,6 +607,9 @@ pub async fn create_remodel_app() -> AppDefinition {
             .mutation("runReconstruction", LocalizedLabel::native("Run Reconstruction", "Rekonstruktion starten"))
             .mutation("retryStage", LocalizedLabel::native("Retry", "Wiederholen"))
             .mutation("runStage", LocalizedLabel::native("Run Stage", "Stufe ausführen"))
+            .action_interactive_job("runReconstruction", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("retryStage", InteractiveJobClassification::BatchOnlyPendingRewrite)
+            .action_interactive_job("runStage", InteractiveJobClassification::BatchOnlyPendingRewrite)
             .action_args("runStage", vec![ActionArgDef::select(
                 "stage",
                 LocalizedLabel::native("Stage", "Stufe"),
@@ -623,12 +626,12 @@ pub async fn create_remodel_app() -> AppDefinition {
             )
             .default_value("extracting-features")])
             // 📥️ Ingestion.
-            .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::new_catalog("importFrames", LocalizedLabel::native("Import Frames", "Frames importieren"), ActionKind::Shell) })
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importFramePayload", LocalizedLabel::native("Import Frame Payload", "Bild-Payload importieren"), ActionKind::Mutation) })
-            .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::new_catalog("importVideo", LocalizedLabel::native("Import Video", "Video importieren"), ActionKind::Shell) })
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importVideoFramePayload", LocalizedLabel::native("Import Video Frame Payload", "Video-Frame-Payload importieren"), ActionKind::Mutation) })
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importVideoDone", LocalizedLabel::native("Import Video Done", "Video-Import abgeschlossen"), ActionKind::Mutation) })
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importVideoBytesPayload", LocalizedLabel::native("Import Video Bytes Payload", "Video-Byte-Payload importieren"), ActionKind::Mutation) })
+            .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::bounded_catalog("importFrames", LocalizedLabel::native("Import Frames", "Frames importieren"), ActionKind::Shell) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importFramePayload", LocalizedLabel::native("Import Frame Payload", "Bild-Payload importieren"), ActionKind::Mutation) })
+            .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::bounded_catalog("importVideo", LocalizedLabel::native("Import Video", "Video importieren"), ActionKind::Shell) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importVideoFramePayload", LocalizedLabel::native("Import Video Frame Payload", "Video-Frame-Payload importieren"), ActionKind::Mutation) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importVideoDone", LocalizedLabel::native("Import Video Done", "Video-Import abgeschlossen"), ActionKind::Mutation) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importVideoBytesPayload", LocalizedLabel::native("Import Video Bytes Payload", "Video-Byte-Payload importieren"), ActionKind::Mutation) })
             .mutation("addStream", LocalizedLabel::native("Add Stream", "Stream hinzufügen"))
             .action_args("addStream", vec![
                 ActionArgDef::text("name", LocalizedLabel::native("Name", "Name")).default_value("Stream"),
@@ -756,12 +759,12 @@ pub async fn create_remodel_app() -> AppDefinition {
             .mutation("clearGeoProducts", LocalizedLabel::native("Clear Geo Products", "Geo-Produkte löschen"))
             .mutation("clearResult", LocalizedLabel::native("Clear Result", "Ergebnis löschen"))
             // 👁️ View-only runtime actions.
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View) })
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setLayerVisibility", LocalizedLabel::native("Set Layer Visibility", "Ebenensichtbarkeit festlegen"), ActionKind::View) })
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setFrameCursor", LocalizedLabel::native("Set Frame Cursor", "Frame-Cursor festlegen"), ActionKind::View) })
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setReportTable", LocalizedLabel::native("Set Report Table", "Berichtstabelle festlegen"), ActionKind::View) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("setLayerVisibility", LocalizedLabel::native("Set Layer Visibility", "Ebenensichtbarkeit festlegen"), ActionKind::View) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("setFrameCursor", LocalizedLabel::native("Set Frame Cursor", "Frame-Cursor festlegen"), ActionKind::View) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("setReportTable", LocalizedLabel::native("Set Report Table", "Berichtstabelle festlegen"), ActionKind::View) })
             // 📤️ Export.
-            .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::new_catalog("exportQcReport", LocalizedLabel::native("Export QC Report", "QC-Bericht exportieren"), ActionKind::Shell) })
+            .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::bounded_catalog("exportQcReport", LocalizedLabel::native("Export QC Report", "QC-Bericht exportieren"), ActionKind::Shell) })
             // 🧰️ Utility groups — an exclusive per-window set (active utility is host-owned); which
             // window exposes which is declared by that window's own `definition()`.
             .utility(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", LocalizedLabel::native("Select", "Auswählen"), "mouse-pointer-2") })

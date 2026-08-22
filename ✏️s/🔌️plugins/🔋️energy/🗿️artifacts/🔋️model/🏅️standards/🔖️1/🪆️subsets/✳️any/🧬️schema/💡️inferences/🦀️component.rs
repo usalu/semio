@@ -31,7 +31,7 @@ pub struct EnergyModelInference {
 }
 
 impl protocol::Inference<EnergyModelSnapshot> for EnergyModelInference {
-    async fn infer(snapshot: &EnergyModelSnapshot) -> Self {
+    fn infer(snapshot: &EnergyModelSnapshot) -> Self {
         Self { entries: compute_energy_model_entries(snapshot) }
     }
 }
@@ -47,13 +47,13 @@ impl Default for EnergyModelInference {
 }
 
 impl protocol::InferenceSpec<EnergyModelSnapshot> for EnergyModelInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.energy.model.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.energy.model.inference.entries", reads: &["structure", "zones"] }]
     }
 }
@@ -69,7 +69,7 @@ impl ArtifactInferrer for crate::artifacts::model::standards::v1::subsets::any::
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.energy.model.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `energy_model_artifact_schema_descriptor`'s registration.
-pub async fn energy_model_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn energy_model_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.energy.model.inference",
         inference: schema::FacetLeaves {
@@ -89,8 +89,8 @@ mod tests {
     use super::*;
     use protocol::Inference;
 
-    async fn populated_snapshot() -> EnergyModelSnapshot {
-        crate::artifacts::model::energy_snapshot_with_state("energy.model", crate::model::Model { name: "demo".into(), zones: Vec::new(), ..crate::model::Model::default() }, None)
+    fn populated_snapshot() -> EnergyModelSnapshot {
+        crate::artifacts::model::energy_snapshot_with_state("energy.model", &crate::model::Model { name: "demo".into(), zones: Vec::new(), ..crate::model::Model::default() }, None)
     }
 
     #[semio_framework_async_macros::async_test]

@@ -4,7 +4,7 @@
 // bridges to (json is Exact via full serde round trip; txt/md/pdf/docx are Lossy — plain-text
 // content only, no `schema`/`id`/`uri`/`language_id`). Shaped inline (no generated
 // `IoEntryDescriptor` type checked in anywhere yet in this repo) so this file has no fragile
-// forward reference; swap for a real import once ts-rs generation lands.
+// forward reference; swap for a real import once owned schema generation lands.
 export interface IoEntryDescriptorMirror {
   from: string;
   into: string;

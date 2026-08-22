@@ -4,12 +4,11 @@ use crate::editor::puzzle2d::modes::edit::windows::overview;
 use crate::editor::puzzle2d::{Puzzle2dActionCtx, PUZZLE2D_PANES};
 use serde_json::Value;
 
-pub async fn set_active_utility(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
+pub fn set_active_utility(ctx: &mut Puzzle2dActionCtx<'_>, args: Option<&Value>) {
     if let Some(utility_id) = args.and_then(|value| value.get("utilityId")).and_then(|value| value.as_str()) {
         let wid = ctx.window_id.unwrap_or(overview::WINDOW_KIND_ID).to_string();
         ctx.scene.runtime.active_utility_by_window_id.insert(wid, utility_id.to_string());
     }
-    ctx.host.borrow_mut().brush_fill_session_clear();
     ctx.scene.runtime.fill_job_generation = ctx.scene.runtime.fill_job_generation.saturating_add(1);
     ctx.scene.runtime.fill_job_checkpoint = None;
     ctx.scene.runtime.fill_job_applied_count = 0;

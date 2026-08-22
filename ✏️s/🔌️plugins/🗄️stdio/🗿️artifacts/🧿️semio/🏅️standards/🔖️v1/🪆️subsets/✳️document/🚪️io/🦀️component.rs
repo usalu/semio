@@ -86,7 +86,7 @@ pub mod derived_composition {
                             }
                         }
                     }
-                    DocBlock::Quote { blocks } => Box::pin(walk(blocks, known_images, known_styles, out)),
+                    DocBlock::Quote { blocks } => walk(blocks, known_images, known_styles, out),
                     _ => {}
                 }
             }

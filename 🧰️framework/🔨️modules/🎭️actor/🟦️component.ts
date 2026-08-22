@@ -1,4 +1,4 @@
-/** 🎭️ TypeScript surface for `semio-framework-actor`: the ts-rs mirror of the pure kernel vocabulary
+/** 🎭️ TypeScript surface for `semio-framework-actor`: the owned-schema mirror of the pure kernel vocabulary
  * (`PackageId`/`ActorId`/`Lane`/`Budget`/`Envelope`/`TurnResult`/`FailureStage`/`ShardTable`/…).
  * Regenerate via `bun nx run @semio-tech/framework-actor-rs:typegen`.
  *

@@ -19,15 +19,12 @@ path = "📦️glue.rs"
 
 [features]
 default = []
-# 🧬️ Generates the TypeScript mirror for boundary types (see `../../🤖️generated/🟦️shell.ts`); never
-# enabled by default so `ts-rs` never affects the plain `cargo build`/`cargo test` path.
-typegen = ["dep:ts-rs"]
+# 🧬️ Generates the TypeScript mirror from versioned owned schema metadata.
+typegen = []
 
 [dependencies]
 schemars = "0.8.22"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
-thiserror = "2.0.18"
-ts-rs = { version = "10", optional = true }
 
 [dev-dependencies]

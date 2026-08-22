@@ -74,7 +74,6 @@ use serde::{Deserialize, Serialize};
 ///
 /// **Rename: `"virtualFileSystem"` → `"virtual-file-system"`.**
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub enum SurfaceKind {
     /// 🖌️ The plainest surface a host can always satisfy, so a `SurfaceProps` built from defaults
     /// names something renderable rather than a kind no backend registered.
@@ -115,7 +114,6 @@ pub enum SurfaceKind {
 /// [`SurfaceProps`] names the version-specific shape (e.g. `"world3d@1"`) that some other layer (the
 /// `🎬️scene` crate) knows how to decode.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct SurfaceDoc {
     pub bytes: Vec<u8>,
 }
@@ -127,7 +125,6 @@ pub struct SurfaceDoc {
 /// the exact reasoning behind each field (and each field the scaffold this replaces used to carry but
 /// no longer does).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct SurfaceProps {
     pub kind: SurfaceKind,

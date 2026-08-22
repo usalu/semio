@@ -13,57 +13,72 @@
 use semio_framework_plugin::{WorldProjectionConfig, WorldSunConfig};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
+use std::sync::atomic::{AtomicU64, Ordering};
 
 //#region 🔖️Defaults
-async fn one_f64() -> f64 {
+#[derive(Clone, Copy, Debug, Eq)]
+pub(crate) struct RuntimeSessionId(pub(crate) u64);
+
+impl PartialEq for RuntimeSessionId {
+    fn eq(&self, _other: &Self) -> bool {
+        true
+    }
+}
+
+fn next_runtime_session_id() -> RuntimeSessionId {
+    static NEXT: AtomicU64 = AtomicU64::new(1);
+    RuntimeSessionId(NEXT.fetch_add(1, Ordering::Relaxed))
+}
+
+fn one_f64() -> f64 {
     1.0
 }
 
-async fn default_true() -> bool {
+fn default_true() -> bool {
     true
 }
 
-async fn default_overlap_budget() -> f64 {
+fn default_overlap_budget() -> f64 {
     0.02
 }
 
-async fn default_manual_lod() -> f64 {
+fn default_manual_lod() -> f64 {
     100.0
 }
 
-async fn default_grid_spacing() -> f64 {
+fn default_grid_spacing() -> f64 {
     10.0
 }
 
-async fn default_proximity_radius() -> f64 {
+fn default_proximity_radius() -> f64 {
     0.75
 }
 
-async fn default_chunk_size() -> f64 {
+fn default_chunk_size() -> f64 {
     256.0
 }
 
-async fn default_voxel_dims() -> [u32; 3] {
+fn default_voxel_dims() -> [u32; 3] {
     [1, 1, 1]
 }
 
-async fn default_vortex_show() -> String {
+fn default_vortex_show() -> String {
     crate::editor::puzzle3d::PUZZLE3D_VORTEX_SHOW_SELECTED.into()
 }
 
-async fn default_vortex_direction() -> String {
+fn default_vortex_direction() -> String {
     crate::editor::puzzle3d::PUZZLE3D_VORTEX_DIRECTION_OUTWARDS.into()
 }
 
-async fn default_terminology() -> String {
+fn default_terminology() -> String {
     "native".into()
 }
 
-async fn default_locale() -> String {
+fn default_locale() -> String {
     "en-US".into()
 }
 
-async fn default_window_ids() -> Vec<String> {
+fn default_window_ids() -> Vec<String> {
     vec![crate::editor::puzzle3d::modes::edit::windows::main::WINDOW_KIND_ID.to_string()]
 }
 //#endregion 🔖️Defaults
@@ -88,7 +103,7 @@ pub struct Puzzle3dCamera {
 }
 
 /// 📐️ Distance from `camera.position` to `camera.target`, defaulting to the historic 30-unit orbit radius when degenerate.
-pub async fn puzzle3d_camera_distance(camera: &Puzzle3dCamera) -> f64 {
+pub fn puzzle3d_camera_distance(camera: &Puzzle3dCamera) -> f64 {
     let [dx, dy, dz] = [camera.position[0] - camera.target[0], camera.position[1] - camera.target[1], camera.position[2] - camera.target[2]];
     let distance = (dx * dx + dy * dy + dz * dz).sqrt();
     if distance > 1e-3 {
@@ -138,12 +153,21 @@ pub struct Puzzle3dSuggestionMenu {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle3dConfig {
+    /// 🧠 Ephemeral worker-portable identity for the retained precompute session. Cloning a
+    /// config into an `AppCommandJob` preserves it; persistence intentionally allocates a fresh
+    /// session and restores from `fill_checkpoint`.
+    #[serde(skip, default = "next_runtime_session_id")]
+    pub(crate) runtime_session_id: RuntimeSessionId,
     #[serde(default)]
     pub suggestion_menu: Option<Puzzle3dSuggestionMenu>,
     #[serde(default = "default_overlap_budget")]
     pub overlap_budget: f64,
     #[serde(default)]
     pub fill_count: u32,
+    /// 🧵 Worker-independent checkpoint for the bounded fill planner. This travels with the
+    /// config snapshot so successive commands may execute on any shared-pool worker.
+    #[serde(default)]
+    pub fill_checkpoint: Vec<u8>,
     #[serde(default)]
     pub brush_candidate_index: usize,
     #[serde(default)]
@@ -218,9 +242,11 @@ impl Default for Puzzle3dConfig {
     /// them and zero out fields like `overlap_budget`/`selection_method`/`lod_automatic` in Rust-constructed runtimes.
     fn default() -> Self {
         Self {
+            runtime_session_id: next_runtime_session_id(),
             suggestion_menu: None,
             overlap_budget: default_overlap_budget(),
             fill_count: 0,
+            fill_checkpoint: Vec::new(),
             brush_candidate_index: 0,
             object_kind_weights: HashMap::new(),
             vortex_kind_weights: HashMap::new(),
@@ -261,21 +287,21 @@ pub type Puzzle3dRuntime = Puzzle3dConfig;
 impl store::ArtifactDsl for Puzzle3dConfig {
     const EXTENSION: &'static str = "puzzle3dcfg";
 
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
     }
 
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         serde_json::to_string_pretty(self).unwrap_or_default()
     }
 }
 
 impl store::ArtifactPack for Puzzle3dConfig {
-    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         dsl::to_dsl_value(self).map_err(store::PackError::Schema)?.encode_pack_with(options)
     }
 
-    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let value = dsl::DslValue::decode_pack_with(bytes, options)?;
         dsl::from_dsl_value(value).map_err(store::PackError::Schema)
     }
@@ -338,7 +364,7 @@ impl Default for Puzzle3dWindowOptions {
 impl Puzzle3dConfig {
     /// 🪟️ Snapshots this runtime's currently-materialized flat window-option fields into a
     /// [`Puzzle3dWindowOptions`] — the counterpart to `apply_window_options`.
-    async fn snapshot_window_options(&self) -> Puzzle3dWindowOptions {
+    fn snapshot_window_options(&self) -> Puzzle3dWindowOptions {
         Puzzle3dWindowOptions {
             lod_automatic: self.lod_automatic,
             lod_depth_variable: self.lod_depth_variable,
@@ -363,7 +389,7 @@ impl Puzzle3dConfig {
     /// 🪟️ Materializes `options` onto this runtime's flat window-option fields — the counterpart to
     /// `snapshot_window_options`. Leaves fill count / distribution / overlap untouched so a pane
     /// switch cannot rewrite the shared fill scene.
-    async fn apply_window_options(&mut self, options: &Puzzle3dWindowOptions) {
+    fn apply_window_options(&mut self, options: &Puzzle3dWindowOptions) {
         self.lod_automatic = options.lod_automatic;
         self.lod_depth_variable = options.lod_depth_variable;
         self.grid_visible = options.grid_visible;
@@ -386,7 +412,7 @@ impl Puzzle3dConfig {
     /// 🪟️ Materializes `window_id`'s stored options (the type default, for a window never touched yet)
     /// onto this runtime's flat fields — call before building a `Puzzle3dScene` for that window, in
     /// every read (`render`/`window_engagements`/`window_measures`) and write (`handle`) path.
-    pub async fn load_window(&mut self, window_id: &str) {
+    pub fn load_window(&mut self, window_id: &str) {
         let options = self.window_options.get(window_id).cloned().unwrap_or_default();
         self.apply_window_options(&options);
     }
@@ -394,7 +420,7 @@ impl Puzzle3dConfig {
     /// 🪟️ Snapshots this runtime's current flat view-local option fields (as left by whatever action
     /// just ran) back into `window_id`'s stored entry. Other windows' entries are untouched, so a
     /// `setGridVisible` in one window instance never affects another's.
-    pub async fn save_window(&mut self, window_id: &str) {
+    pub fn save_window(&mut self, window_id: &str) {
         let options = self.snapshot_window_options();
         self.window_options.insert(window_id.to_string(), options);
     }
@@ -413,32 +439,53 @@ pub enum Puzzle3dConfigMutation {
 impl protocol::Mutation<Puzzle3dConfig> for Puzzle3dConfigMutation {
     type Diff = Puzzle3dConfig;
 
-    async fn diff(&self, _base: &Puzzle3dConfig) -> protocol::MutationOutcome<Puzzle3dConfig> {
+    fn diff(&self, _base: &Puzzle3dConfig) -> protocol::MutationOutcome<Puzzle3dConfig> {
         protocol::MutationOutcome::new(match self {
             Puzzle3dConfigMutation::Snapshot { config } => config.clone(),
         })
     }
 
-    async fn inverse(&self, base: &Puzzle3dConfig) -> Vec<Self> {
+    fn inverse(&self, base: &Puzzle3dConfig) -> Vec<Self> {
         vec![Puzzle3dConfigMutation::Snapshot { config: base.clone() }]
     }
 }
 
 impl protocol::OpBinary for Puzzle3dConfigMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
     }
 }
 
 impl protocol::OpText for Puzzle3dConfigMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         serde_json::to_string(self).unwrap_or_default()
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         serde_json::from_str(line).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
     }
 }
 //#endregion 🔖️ConfigMutation
+
+//#region 🧪️Tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn runtime_session_identity_is_ephemeral_and_equality_neutral() {
+        let config = Puzzle3dConfig::default();
+        let json = serde_json::to_string(&config).expect("config serializes");
+        assert!(!json.contains("runtimeSessionId"));
+        assert!(!json.contains("runtime_session_id"));
+        let restored: Puzzle3dConfig = serde_json::from_str(&json).expect("config deserializes");
+        assert_ne!(config.runtime_session_id.0, restored.runtime_session_id.0);
+        assert_eq!(config, restored);
+        let mutation = Puzzle3dConfigMutation::Snapshot { config };
+        let encoded = protocol::OpBinary::encode_op(&mutation).expect("mutation encodes");
+        assert!(!String::from_utf8_lossy(&encoded).contains("runtimeSessionId"));
+    }
+}
+//#endregion 🧪️Tests

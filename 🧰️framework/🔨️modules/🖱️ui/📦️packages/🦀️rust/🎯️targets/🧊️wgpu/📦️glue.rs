@@ -232,7 +232,10 @@ pub use host::{dispatch_window_event, modifiers_from_winit, pointer_coords, Clip
 #[cfg(feature = "wgpu-engine")]
 pub use input::{DragAxis, DragState, HitKind, HitTarget, InputState, KeyAction, PointerCallbacks, PointerModifiers, TreeDragState, TreeDropPosition};
 #[cfg(feature = "wgpu-engine")]
-pub use prepared::{PreparedRenderGate, PreparedRenderInput, PreparedRenderJob, PreparedRenderLimits, PreparedRenderPacket, PreparedRenderReceiver, PreparedRenderRejection, PreparedRenderUpload, PreparedRenderUsage, RenderDirective, UiPresentToken};
+pub use prepared::{
+    PreparedRenderEviction, PreparedRenderGate, PreparedRenderInput, PreparedRenderJob, PreparedRenderLimits, PreparedRenderPacket, PreparedRenderReceiver, PreparedRenderRejection, PreparedRenderUpload, PreparedRenderUsage, RenderDirective,
+    UiPresentToken,
+};
 #[cfg(feature = "wgpu-engine")]
 // 🎬️ Relocated out of this crate into `semio-framework-ui-scene`'s `math` module (ticket
 // 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME packet `scene-surface`; previously relocated

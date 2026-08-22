@@ -4,7 +4,6 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "selectedIds",
     "cameraX",
     "cameraY",
     "cameraZoom",
@@ -14,7 +13,10 @@
     "brushCandidates",
     "brushCandidateSourceHandleId",
     "fillCount",
-    "selectionMethod",
+    "fillJobOperation",
+    "fillJobGeneration",
+    "fillJobSeed",
+    "fillJobAppliedCount",
     "gridSnapEnabled",
     "gridFactor",
     "suggestionOffset",
@@ -22,16 +24,10 @@
     "handleKindWeights",
     "activeUtilityByWindowId",
     "locale",
-    "terminology"
+    "terminology",
+    "exampleLoadGeneration"
   ],
   "properties": {
-    "selectedIds": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-semio-state": "config"
-    },
     "cameraX": {
       "type": "number",
       "x-semio-state": "config"
@@ -81,8 +77,38 @@
       "minimum": 0,
       "x-semio-state": "config"
     },
-    "selectionMethod": {
-      "type": "string",
+    "fillJobCheckpoint": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "x-semio-state": "config"
+    },
+    "fillJobOperation": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "config"
+    },
+    "fillJobGeneration": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "config"
+    },
+    "fillJobSeed": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "config"
+    },
+    "fillJobAppliedCount": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "config"
+    },
+    "fillJobPreview": {
+      "title": "Value",
+      "type": "object",
       "x-semio-state": "config"
     },
     "gridSnapEnabled": {
@@ -123,6 +149,15 @@
       "x-semio-state": "config"
     },
     "terminology": {
+      "type": "string",
+      "x-semio-state": "config"
+    },
+    "exampleLoadGeneration": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-state": "config"
+    },
+    "exampleLoadId": {
       "type": "string",
       "x-semio-state": "config"
     }

@@ -527,7 +527,7 @@ pub use editor::writer::wasm::*;
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
 mod plugin;
-semio_framework_plugin::plugin_exports!(plugin::plugin);
+semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::WriterApps);
 
 //#region 📚️Examples
 #[path = "."]

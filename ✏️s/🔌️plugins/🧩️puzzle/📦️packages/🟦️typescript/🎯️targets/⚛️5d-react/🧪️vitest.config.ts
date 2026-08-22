@@ -1,10 +1,9 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "vitest/config";
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-export default defineConfig({
+export default {
   root,
   test: {
     name: "@semio-tech/puzzle-5d-react",
@@ -12,4 +11,4 @@ export default defineConfig({
     include: ["📦️index.tsx"],
     coverage: { include: ["📦️index.tsx"] },
   },
-});
+};

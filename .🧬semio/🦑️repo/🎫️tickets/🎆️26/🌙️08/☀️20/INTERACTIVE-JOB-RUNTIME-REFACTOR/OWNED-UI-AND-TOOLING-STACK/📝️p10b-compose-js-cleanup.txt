@@ -1,0 +1,23 @@
+2026-08-22 P10b Compose JS direct dependency cleanup
+
+Static source roots:
+- compose/client/lib/js/index.ts
+- compose/client/lib/js/kit-store.worker.ts
+- compose/client/lib/js/vite.config.ts
+- compose/client/lib/js/📜️script.ts
+- compose/client/lib/js/tsconfig.json
+- compose/client/lib/js/📋️project.json
+
+Removed rows from compose/client/lib/js/package.json:
+- dependencies: rxjs, zod
+- devDependencies: cross-env, fast-check, @vitest/coverage-v8
+
+Commands and results:
+- bun install --lockfile-only: exit 0
+- bun nx run @semio-tech/compose-js:build --skip-nx-cache: exit 0
+- bun nx run @semio-tech/compose-js:test-quick --skip-nx-cache: exit 0; 1 test file, 7 tests
+- source DEBUG census on touched source files: 0 matches
+- git diff --check: exit 0
+
+Router repair:
+- 📜️script.ts now references existing vite.config.ts instead of nonexistent ⚙️vite.config.ts.

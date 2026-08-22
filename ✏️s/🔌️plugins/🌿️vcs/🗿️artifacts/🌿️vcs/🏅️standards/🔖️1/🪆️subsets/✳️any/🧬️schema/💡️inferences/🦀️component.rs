@@ -76,7 +76,7 @@ impl ArtifactInferrer for VcsInferrer {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.vcs.vcs.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `vcs_artifact_schema_descriptor`'s registration.
-pub async fn vcs_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn vcs_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.vcs.vcs.inference",
         inference: schema::FacetLeaves {

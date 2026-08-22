@@ -38,7 +38,7 @@ use crate::*;
 /// bytes; this codec is the seam it should reuse rather than inventing a second one.
 pub async fn encode_command_envelope(envelope: &protocol::MutationEnvelope) -> Vec<u8> {
     let mut out = Vec::new();
-    protocol::encode_envelope(envelope, &mut out).await;
+    protocol::encode_envelope(envelope, &mut out);
     out
 }
 
@@ -49,7 +49,7 @@ pub async fn encode_command_envelope(envelope: &protocol::MutationEnvelope) -> V
 pub async fn decode_command_envelope(bytes: &[u8]) -> Result<protocol::MutationEnvelope, DbError> {
     check_len(bytes.len() as u64, DbLimits::default().max_command_bytes, "wal_command_envelope")?;
     let mut pos = 0usize;
-    let envelope = protocol::decode_envelope(bytes, &mut pos).await.map_err(|error| DbError::Corrupt(format!("malformed wal command envelope: {error}")))?;
+    let envelope = protocol::decode_envelope(bytes, &mut pos).map_err(|error| DbError::Corrupt(format!("malformed wal command envelope: {error}")))?;
     Ok(envelope)
 }
 //#endregion 🔖️Codec
@@ -334,7 +334,7 @@ mod tests {
             dependencies: Vec::new(),
             diff: protocol::ArtifactDiff { schema: protocol::SchemaId("diff.v1".to_string()), payload: seq.to_le_bytes().to_vec() },
             inverse: protocol::InverseMutation { schema: protocol::SchemaId("diff.v1".to_string()), payload: Vec::new() },
-            timestamp: protocol::HybridLogicalTimestamp::new(1, seq).await,
+            timestamp: protocol::HybridLogicalTimestamp::new(1, seq),
         }
     }
 

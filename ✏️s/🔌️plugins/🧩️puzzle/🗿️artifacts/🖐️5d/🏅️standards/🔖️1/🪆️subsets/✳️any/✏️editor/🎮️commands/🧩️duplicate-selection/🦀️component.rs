@@ -7,7 +7,7 @@ use crate::editor::puzzle5d::{next_part_id, Puzzle5dActionCtx, Puzzle5dPart};
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: no longer re-selects the new
 /// duplicates afterward — see puzzle3d's `duplicate-selection` doc comment for the identical
 /// limitation.
-pub async fn duplicate_selection(ctx: &mut Puzzle5dActionCtx<'_>) {
+pub fn duplicate_selection(ctx: &mut Puzzle5dActionCtx<'_>) {
     let ids = ctx.selected_part_ids();
     let clones: Vec<Puzzle5dPart> = ctx
         .scene

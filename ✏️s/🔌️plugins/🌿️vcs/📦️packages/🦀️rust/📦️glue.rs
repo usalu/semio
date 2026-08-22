@@ -500,7 +500,8 @@ pub mod viewer {
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
 mod plugin;
-semio_framework_plugin::plugin_exports!(plugin::plugin);
+pub use plugin::VcsApps;
+semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::VcsApps);
 
 //#region 📚️Examples
 #[path = "."]

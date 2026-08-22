@@ -1,8 +1,8 @@
 "use components";
-import { fetchBody, slowEcho } from './host-shim.js';
-import { environment, exit as exit$1, stderr, stdin, stdout, terminalInput, terminalOutput, terminalStderr, terminalStdin, terminalStdout } from '@bytecodealliance/preview2-shim/cli';
-import { monotonicClock } from '@bytecodealliance/preview2-shim/clocks';
-import { error, poll as poll$2, streams } from '@bytecodealliance/preview2-shim/io';
+import { fetchBody, slowEcho } from '../out-callback/host-shim.js';
+import { environment, exit as exit$1, stderr, stdin, stdout, terminalInput, terminalOutput, terminalStderr, terminalStdin, terminalStdout } from '../out-callback/preview2-shim/cli.js';
+import { monotonicClock } from '../out-callback/preview2-shim/clocks.js';
+import { error, poll as poll$2, streams } from '../out-callback/preview2-shim/io.js';
 const { getEnvironment } = environment;
 
 if (getEnvironment=== undefined) {
@@ -10978,4 +10978,3 @@ export { probe010 as probe, probe010 as 'semio:jcoprobe/probe@0.1.0',  }
 export const _util = {
   
 }
-

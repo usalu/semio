@@ -95,7 +95,7 @@ pub async fn puzzle5d_catalog_fragment(definition: &Block5dSnapshot) -> Value {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.block.block5d.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `block5d_artifact_schema_descriptor`'s registration.
-pub async fn block5d_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn block5d_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.block.block5d.inference",
         inference: schema::FacetLeaves {

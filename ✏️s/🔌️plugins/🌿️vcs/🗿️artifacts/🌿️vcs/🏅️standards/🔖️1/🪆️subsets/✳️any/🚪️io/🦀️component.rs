@@ -15,7 +15,7 @@
 //! underlying codec impls these would point at are unchanged and independently tested either way.
 
 //#region 🔖️IoDeclaration
-pub async fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
+pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use crate::artifacts::vcs::standards::v1::subsets::any::io::export::serializers::artifacts as export;
     use crate::artifacts::vcs::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
     use crate::artifacts::vcs::{VcsDemoMutation, VcsSnapshot, VCS_DIALECT, VCS_DOCUMENT_SCHEMA};

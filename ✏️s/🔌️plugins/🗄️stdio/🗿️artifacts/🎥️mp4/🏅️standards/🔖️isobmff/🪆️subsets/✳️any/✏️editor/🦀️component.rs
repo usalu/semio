@@ -8,7 +8,7 @@ use crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::M
 use crate::artifacts::mp4::{MP4_DIALECT, STDIO_MP4_DOCUMENT_SCHEMA};
 use crate::editor::mp4::modes::edit;
 use crate::editor::mp4::modes::edit::windows::main;
-use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode};
+use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 

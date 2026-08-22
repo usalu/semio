@@ -1,0 +1,10 @@
+    Blocking waiting for file lock on package cache
+   Compiling semio-framework-os-services v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust)
+    Finished `test` profile [unoptimized] target(s) in 1.28s
+     Running unittests 📦️glue.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL/🧪️target-p9u-notify/debug/deps/semio_framework_os_services-a85c2f27d806362b)
+
+running 1 test
+test file_watcher::tests::detects_create_modify_rename_delete_and_cancellation_without_false_idle_events ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 33 filtered out; finished in 0.11s
+

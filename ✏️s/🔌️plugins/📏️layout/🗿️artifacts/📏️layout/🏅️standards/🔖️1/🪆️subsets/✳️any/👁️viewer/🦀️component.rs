@@ -73,7 +73,7 @@ impl ArtifactViewer for LayoutViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_layout_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_layout_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(LAYOUT_DIALECT).document(["semio", "layout"]).icon_id("layout").mode_def(view::definition()).default_mode_id(view::LAYOUT_VIEW_MODE_VIEW).window_kind_def(preview::definition()).default_layout(view::layout()).build_definition()
 }
 //#endregion 🔖️Manifest

@@ -462,7 +462,7 @@ mod media_tests {
 //#endregion 🧪️Tests
 
 //#region 🔖️IoDeclaration
-pub async fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
+pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use crate::artifacts::note::standards::v1::subsets::any::io::export::serializers::artifacts as export;
     use crate::artifacts::note::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
     use crate::artifacts::note::standards::v1::subsets::any::io::{diff, mutations, snapshot};

@@ -217,7 +217,7 @@ async fn fold_checksum(prev_checksum: u32, line: &str) -> u32 {
     let mut buf = Vec::with_capacity(4 + line.len());
     buf.extend_from_slice(&prev_checksum.to_le_bytes());
     buf.extend_from_slice(line.as_bytes());
-    pack::crc32c(&buf).await
+    pack::crc32c(&buf)
 }
 
 struct AuditChainState {

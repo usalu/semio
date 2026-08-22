@@ -3,10 +3,10 @@
 use crate::editor::puzzle5d::{find_part_by_grip_full_id, Puzzle5dActionCtx, Puzzle5dDocument};
 use serde_json::Value;
 
-async fn arg_str<'a>(args: Option<&'a Value>, key: &str) -> Option<&'a str> {
+fn arg_str<'a>(args: Option<&'a Value>, key: &str) -> Option<&'a str> {
     args.and_then(|value| value.get(key)).and_then(Value::as_str).filter(|text| !text.is_empty())
 }
-async fn resolve_grip_kind(document: &Puzzle5dDocument, full_id: &str) -> Option<String> {
+fn resolve_grip_kind(document: &Puzzle5dDocument, full_id: &str) -> Option<String> {
     let (_part, grip) = find_part_by_grip_full_id(document, full_id)?;
     let kind = if grip.grip_kind.is_empty() { grip.grip_2d.grip_kind.clone() } else { grip.grip_kind.clone() };
     if kind.is_empty() {
@@ -17,7 +17,7 @@ async fn resolve_grip_kind(document: &Puzzle5dDocument, full_id: &str) -> Option
 }
 /// 🧲️ Permissive when the document declares no `kindCompatibility` rules — otherwise requires an
 /// explicit (or bidirectional) entry, matching puzzle3d's attraction gate.
-async fn puzzle5d_kinds_compatible(document: &Puzzle5dDocument, source_kind: &str, target_kind: &str) -> bool {
+fn puzzle5d_kinds_compatible(document: &Puzzle5dDocument, source_kind: &str, target_kind: &str) -> bool {
     let Some(entries) = document.kind_compatibility.as_ref().and_then(Value::as_array) else {
         return true;
     };
@@ -34,7 +34,7 @@ async fn puzzle5d_kinds_compatible(document: &Puzzle5dDocument, source_kind: &st
 
 /// 🔀 Retargets `source` and/or `target` on an existing fastener. Rejects dangling grip refs, self-loops,
 /// and pairs that would duplicate another fastener.
-pub async fn retarget_fastener(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
+pub fn retarget_fastener(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     let Some(id) = arg_str(args, "id").or_else(|| arg_str(args, "fastenerId")).map(str::to_string) else {
         return;
     };

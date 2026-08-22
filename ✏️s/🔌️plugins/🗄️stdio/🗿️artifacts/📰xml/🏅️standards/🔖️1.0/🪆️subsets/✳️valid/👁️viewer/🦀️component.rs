@@ -7,7 +7,7 @@
 use crate::artifacts::xml::{XmlMutation, XmlSnapshot, STDIO_XML_DOCUMENT_SCHEMA};
 use crate::viewer::xml_valid::modes::view;
 use crate::viewer::xml_valid::modes::view::windows::main;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, ViewEmit, Viewer};
 
 //#region 🔖️Dialect
 /// 🪪️ Same coordinate as the sibling editor surface's own `XML_VALID_EDITOR_DIALECT` — duplicated here

@@ -1,7 +1,47 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
+use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
-use semio_framework_plugin::{ExecutionMode, Plugin, PluginAssemblyError};
+use semio_framework_plugin::plugin_app_close_prelude::*;
+use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp, PluginAssemblyError};
+
+//#region 🗃️Apps
+/// 🗃️ Closed runtime app fleet for all fifteen norm-family editor/viewer pairs.
+semio_framework_dispatch_macros::dyn_enum_close! {
+    pub enum NormApps: PluginApp {
+        Din4108Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::din4108::Din4108PlayApp>>),
+        Din4108Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::din4108::Din4108Viewer>>),
+        Din16798Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::din16798::Din16798PlayApp>>),
+        Din16798Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::din16798::Din16798Viewer>>),
+        Din18599Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::din18599::Din18599PlayApp>>),
+        Din18599Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::din18599::Din18599Viewer>>),
+        En1990Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::en1990::En1990PlayApp>>),
+        En1990Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::en1990::En1990Viewer>>),
+        En1991Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::en1991::En1991PlayApp>>),
+        En1991Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::en1991::En1991Viewer>>),
+        En1992Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::en1992::En1992PlayApp>>),
+        En1992Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::en1992::En1992Viewer>>),
+        En1993Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::en1993::En1993PlayApp>>),
+        En1993Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::en1993::En1993Viewer>>),
+        En1994Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::en1994::En1994PlayApp>>),
+        En1994Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::en1994::En1994Viewer>>),
+        En1995Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::en1995::En1995PlayApp>>),
+        En1995Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::en1995::En1995Viewer>>),
+        En1996Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::en1996::En1996PlayApp>>),
+        En1996Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::en1996::En1996Viewer>>),
+        En1997Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::en1997::En1997PlayApp>>),
+        En1997Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::en1997::En1997Viewer>>),
+        En1998Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::en1998::En1998PlayApp>>),
+        En1998Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::en1998::En1998Viewer>>),
+        En1999Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::en1999::En1999PlayApp>>),
+        En1999Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::en1999::En1999Viewer>>),
+        Iso16757Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::iso16757::Iso16757PlayApp>>),
+        Iso16757Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::iso16757::Iso16757Viewer>>),
+        Vdi3805Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::vdi3805::Vdi3805PlayApp>>),
+        Vdi3805Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::vdi3805::Vdi3805Viewer>>),
+    }
+}
+//#endregion 🗃️Apps
 
 /// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1b) replaces the deleted `register_norm_exports`
@@ -15,7 +55,7 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginAssemblyError};
 /// crate's migration proof: one `OnArtifactKind` event per owned norm family, read live from each
 /// family's own `artifact_kind().id` (never hardcoded, same standard `🗄️stdio`'s 36-kind migration
 /// set), `Isolated` execution, one `documents.write` ask covering all fifteen editors.
-pub async fn plugin() -> Result<Plugin, PluginAssemblyError> {
+pub async fn plugin() -> Result<Plugin<NormApps>, PluginAssemblyError> {
     let din4108 = crate::artifacts::din4108::declaration(crate::artifacts::din4108::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
     let din16798 = crate::artifacts::din16798::declaration(crate::artifacts::din16798::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
     let din18599 = crate::artifacts::din18599::declaration(crate::artifacts::din18599::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
@@ -31,7 +71,7 @@ pub async fn plugin() -> Result<Plugin, PluginAssemblyError> {
     let en1999 = crate::artifacts::en1999::declaration(crate::artifacts::en1999::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
     let iso16757 = crate::artifacts::iso16757::declaration(crate::artifacts::iso16757::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
     let vdi3805 = crate::artifacts::vdi3805::declaration(crate::artifacts::vdi3805::definition().map_err(PluginAssemblyError::definition)?).map_err(PluginAssemblyError::definition)?;
-    Plugin::builder("norm")
+    Plugin::<NormApps>::builder("norm")
         .label("Norm")
         .version("0.1.0")
         .artifact(din4108)

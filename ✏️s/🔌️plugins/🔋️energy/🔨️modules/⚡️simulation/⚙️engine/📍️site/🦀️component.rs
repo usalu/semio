@@ -269,7 +269,7 @@ COMMENTS 2,0\n\
 DATA PERIODS,1,1,Data,Sunday,1/1,1/1\n\
 2026,1,15,1,0,?9?9?9?9E0?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9?9,-7.8,-12.3,92,101100,0,0,280,0,0,0,0,0,0,0,205,2.9,3,2,20.0,22000,0,999999999,14,0.081,0,88,0.2,0,0\n";
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn epw_parses_minimal() {
         let w = EpwWeather::parse(EPW_FIXTURE).unwrap();
         assert!((w.latitude_deg - 52.37).abs() < 1e-6);
@@ -282,7 +282,7 @@ DATA PERIODS,1,1,Data,Sunday,1/1,1/1\n\
     /// 🐛️ Regression: the deleted ad-hoc parser read the wrong wire columns for wind
     /// speed/direction and horizontal-infrared radiation (off by several columns). Deriving
     /// `WeatherRecord` from stdio's labeled `EpwRecord` fields must recover the correct values.
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn weather_record_derives_correct_fields_from_stdio_snapshot() {
         let w = EpwWeather::parse(EPW_FIXTURE).unwrap();
         let r = &w.records[0];
@@ -296,12 +296,12 @@ DATA PERIODS,1,1,Data,Sunday,1/1,1/1\n\
         assert!((r.snow_depth_mm - 0.0).abs() < 1e-6);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn epw_parse_rejects_malformed_text() {
         assert!(EpwWeather::parse("not an epw file").is_err());
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn solar_noon_altitude_positive() {
         let pos = solar_position(45.0, 0.0, 172, 12.0);
         assert!(pos.altitude_deg > 0.0);

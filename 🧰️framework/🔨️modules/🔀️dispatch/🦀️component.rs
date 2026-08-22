@@ -376,7 +376,7 @@ struct DynEnumVariant {
 }
 
 impl Parse for DynEnumInput {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
+    fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
         let attrs = input.call(Attribute::parse_outer)?;
         let vis: Visibility = input.parse()?;
         input.parse::<Token![enum]>()?;
@@ -391,7 +391,7 @@ impl Parse for DynEnumInput {
 }
 
 impl Parse for DynEnumVariant {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
+    fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
         let ident: Ident = input.parse()?;
         let content;
         parenthesized!(content in input);

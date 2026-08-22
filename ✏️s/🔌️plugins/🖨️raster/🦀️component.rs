@@ -1,7 +1,19 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
+use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
-use semio_framework_plugin::{ExecutionMode, Plugin};
+use semio_framework_plugin::plugin_app_close_prelude::*;
+use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+
+//#region 🗃️Apps
+/// 🗃️ Closed runtime app fleet for the raster editor and viewer surfaces.
+semio_framework_dispatch_macros::dyn_enum_close! {
+    pub enum RasterApps: PluginApp {
+        RasterEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::raster::RasterPlayApp>>),
+        RasterViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::raster::RasterViewer>>),
+    }
+}
+//#endregion 🗃️Apps
 
 /// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1b) replaces the old `.setup(engine::register)`
@@ -15,8 +27,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// (`crate::artifacts::raster::artifact_kind().id`) is opened, this plugin's actor runs `Isolated`
 /// (no cross-plugin extension attachment, the SDK default holds), and it asks the broker for
 /// document write access because `RasterPlayApp` persists edits back to the open document.
-pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
-    Plugin::builder("raster")
+pub async fn plugin() -> Result<Plugin<RasterApps>, semio_framework_plugin::PluginAssemblyError> {
+    Plugin::<RasterApps>::builder("raster")
         .label("Raster")
         .version("0.1.0")
         .artifact(crate::artifacts::raster::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)

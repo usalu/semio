@@ -2,13 +2,14 @@
 /** @emoji 🏛️ Entwerfen mit Bestand Aggregator's shell-chrome partner/funding credits — brand-exclusive footer items, not part of the shared `@semio-tech/ui-react` component library. */
 // #endregion 🧲️Header
 
-import type * as React from "react";
 import type { NavbarItem, UiLocale } from "../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { cn } from "../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 
+type PartnerLogoStyle = Readonly<Record<string, string | number | undefined>>;
+
 //#region 🏛️ZukunftBauLogo
 /** @emoji 🏛️ Zukunft Bau wordmark, used to credit the BBSR research funding programme in app chrome. @see https://www.zukunftbau.de/projekte/forschungsfoerderung/1008187-2506 */
-export function ZukunftBauLogo({ className, style }: { className?: string; style?: React.CSSProperties }) {
+export function ZukunftBauLogo({ className, style }: { className?: string; style?: PartnerLogoStyle }) {
   return (
     <svg viewBox="0 0 336 59.185" className={className} style={style} xmlns="http://www.w3.org/2000/svg">
       <g transform="translate(71.508 -4.507)">
@@ -66,7 +67,7 @@ export const LUH_LOGO_DARK_URL = "/♻️mit-bestand/🧺️demonstrator/🖼️
 export const LUH_URL = "https://www.iek.uni-hannover.de/ngs/team";
 
 /** @emoji 🏛️ Leibniz Universität Hannover logo with light/dark variants served from `♻️mit-bestand/🧺️demonstrator/🖼️asset`. */
-export function LuhLogo({ className, style }: { className?: string; style?: React.CSSProperties }) {
+export function LuhLogo({ className, style }: { className?: string; style?: PartnerLogoStyle }) {
   return (
     <span className={cn("inline-flex shrink-0 items-center", className)} style={style}>
       <img src={LUH_LOGO_URL} alt="Leibniz Universität Hannover" className="h-full w-auto dark:hidden" />
@@ -85,7 +86,7 @@ export const UDK_LOGO_DARK_URL = "/♻️mit-bestand/🧺️demonstrator/🖼️
 export const UDK_URL = "https://www.udk-berlin.de/studium/architektur/fachgebiete/konstruktives-entwerfen-und-tragwerksplanung/team-2025-2026/";
 
 /** @emoji 🏛️ Universität der Künste Berlin logo with light/dark variants served from `♻️mit-bestand/🧺️demonstrator/🖼️asset`. */
-export function UdkLogo({ className, style }: { className?: string; style?: React.CSSProperties }) {
+export function UdkLogo({ className, style }: { className?: string; style?: PartnerLogoStyle }) {
   return (
     <span className={cn("inline-flex shrink-0 items-center", className)} style={style}>
       <img src={UDK_LOGO_URL} alt="Universität der Künste Berlin" className="h-full w-auto dark:hidden" />

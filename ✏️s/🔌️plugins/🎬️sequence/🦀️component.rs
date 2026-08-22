@@ -1,7 +1,16 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
+use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
-use semio_framework_plugin::{ExecutionMode, Plugin};
+use semio_framework_plugin::plugin_app_close_prelude::*;
+use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+
+//#region 🗃️Apps
+/// 🗃️ Closed runtime app fleet for the declaration-owned sequence surfaces.
+semio_framework_dispatch_macros::dyn_enum_close! {
+    pub enum SequenceApps: PluginApp {}
+}
+//#endregion 🗃️Apps
 
 /// 🔌️ Builds the plugin surface for host registration. Atomic cutover (ticket
 /// 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM): `.declare_artifact(...)` (new declaration
@@ -14,8 +23,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// `.execution(…)`/`.requests(…)` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME
 /// M6-remaining, `📓️design-abi.md` §3/§6) are this crate's migration proof, mirroring `🗒️note`'s
 /// shape.
-pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
-    Plugin::builder("sequence")
+pub async fn plugin() -> Result<Plugin<SequenceApps>, semio_framework_plugin::PluginAssemblyError> {
+    Plugin::<SequenceApps>::builder("sequence")
         .label("Sequence")
         .version("0.1.0")
         .declare_artifact(crate::artifacts::sequence::artifact())

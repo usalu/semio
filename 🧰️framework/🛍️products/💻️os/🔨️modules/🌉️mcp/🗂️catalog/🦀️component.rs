@@ -651,7 +651,7 @@ impl Catalog {
 
 fn compute_catalog_entries_hash(entries: &[CapabilityDefinition]) -> String {
     let bytes = serde_json::to_vec(entries).expect("capability catalog entries always serialize");
-    blake3::hash(&bytes).to_hex().to_string()
+    framework_hash::hash_bytes(&bytes)
 }
 //#endregion 🔖️Catalog
 

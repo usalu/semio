@@ -13,13 +13,14 @@
 //! ticket. It now lives here, private to flow, rather than as shared framework API: nothing outside
 //! flow's own two files (`💻️os/🔨️modules/🌊️flow/🖍️drawing/🦀️component.rs`, this file, and
 //! `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🦀️component.rs`) ever referenced it. `PathSegment`/
-//! `Vec2`/`DrawingError`/`block_on` remain shared framework surface
+//! `Vec2`/`DrawingError` remain shared framework surface
 //! (`semio_framework_2d::{...}`) — genuinely generic geometry-kernel primitives also used by the
 //! framework's own `booleans`/`trace` pure-function kernels and by the unrelated `🖍️draw` plugin.
 
 use neural_engine as neural;
 
 use std::collections::HashSet;
+use std::fmt;
 use std::sync::{LazyLock, Mutex};
 
 use neural::EvalError;
@@ -184,74 +185,70 @@ impl Default for DrawingScene {
 // #endregion 🔖️KernelTypes
 
 // #region 🔖️KernelTrait
-/// 🔌️ Model-free 2D drawing kernel interface (fully async) — flow's own ephemeral node-evaluation
+/// 🔌️ Model-free synchronous 2D drawing kernel interface for flow's ephemeral node-evaluation
 /// contract, implemented only by [`DrawingStore`] below.
-///
-/// 🚪️ R8: plain AFIT, no `#[async_trait]`. That macro desugars every method to
-/// `Pin<Box<dyn Future>>` in return position, which R1 bans outright; and with exactly one
-/// implementor and zero `dyn DrawingKernel` uses repo-wide, there was never an erasure to buy.
 pub trait DrawingKernel {
     // #region Primitives
-    async fn rect(&mut self, x: f64, y: f64, width: f64, height: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
-    async fn ellipse(&mut self, cx: f64, cy: f64, rx: f64, ry: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
-    async fn circle(&mut self, cx: f64, cy: f64, r: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
-    async fn line(&mut self, x1: f64, y1: f64, x2: f64, y2: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
-    async fn polygon(&mut self, points: &[semio_framework_2d::Vec2]) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn rect(&mut self, x: f64, y: f64, width: f64, height: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn ellipse(&mut self, cx: f64, cy: f64, rx: f64, ry: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn circle(&mut self, cx: f64, cy: f64, r: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn line(&mut self, x1: f64, y1: f64, x2: f64, y2: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn polygon(&mut self, points: &[semio_framework_2d::Vec2]) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
     // #endregion Primitives
 
     // #region Paths
-    async fn polyline_path(&mut self, points: &[semio_framework_2d::Vec2]) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
-    async fn rect_path(&mut self, x: f64, y: f64, width: f64, height: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn polyline_path(&mut self, points: &[semio_framework_2d::Vec2]) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn rect_path(&mut self, x: f64, y: f64, width: f64, height: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
     // #endregion Paths
 
     // #region Style
-    async fn set_fill(&mut self, handle: &DrawingHandle, fill: FillStyle) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
-    async fn set_stroke(&mut self, handle: &DrawingHandle, stroke: StrokeStyle) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
-    async fn linear_gradient_fill(&mut self, handle: &DrawingHandle, x1: f64, y1: f64, x2: f64, y2: f64, stops: &[GradientStop]) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn set_fill(&mut self, handle: &DrawingHandle, fill: FillStyle) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn set_stroke(&mut self, handle: &DrawingHandle, stroke: StrokeStyle) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn linear_gradient_fill(&mut self, handle: &DrawingHandle, x1: f64, y1: f64, x2: f64, y2: f64, stops: &[GradientStop]) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
     // #endregion Style
 
     // #region Transforms
-    async fn translate(&mut self, handle: &DrawingHandle, dx: f64, dy: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
-    async fn rotate(&mut self, handle: &DrawingHandle, angle: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
-    async fn scale(&mut self, handle: &DrawingHandle, sx: f64, sy: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn translate(&mut self, handle: &DrawingHandle, dx: f64, dy: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn rotate(&mut self, handle: &DrawingHandle, angle: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn scale(&mut self, handle: &DrawingHandle, sx: f64, sy: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
     // #endregion Transforms
 
     // #region Group
-    async fn group(&mut self, children: &[DrawingHandle]) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn group(&mut self, children: &[DrawingHandle]) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
     // #endregion Group
 
     // #region Booleans
-    async fn bool_union(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
-    async fn bool_difference(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
-    async fn bool_intersection(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
-    async fn bool_xor(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
-    async fn bool_op_many(&mut self, operation: &str, handles: &[DrawingHandle]) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
-    async fn boolean_segments(&self, a: &[semio_framework_2d::PathSegment], b: &[semio_framework_2d::PathSegment], operation: &str) -> Result<Vec<semio_framework_2d::PathSegment>, semio_framework_2d::DrawingError>;
+    fn bool_union(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn bool_difference(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn bool_intersection(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn bool_xor(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn bool_op_many(&mut self, operation: &str, handles: &[DrawingHandle]) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn boolean_segments(&self, a: &[semio_framework_2d::PathSegment], b: &[semio_framework_2d::PathSegment], operation: &str) -> Result<Vec<semio_framework_2d::PathSegment>, semio_framework_2d::DrawingError>;
     // #endregion Booleans
 
     // #region Trace
-    async fn trace_bitmap(&mut self, width: u32, height: u32, mask_or_luma: &[u8], threshold: f64, simplify_epsilon: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn trace_bitmap(&mut self, width: u32, height: u32, mask_or_luma: &[u8], threshold: f64, simplify_epsilon: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
     // #endregion Trace
 
     // #region Text
-    async fn text(&mut self, x: f64, y: f64, content: &str, size: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn text(&mut self, x: f64, y: f64, content: &str, size: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
     // #endregion Text
 
     // #region Clip
-    async fn apply_clip(&mut self, target: &DrawingHandle, clip: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn apply_clip(&mut self, target: &DrawingHandle, clip: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
     // #endregion Clip
 
     // #region Export
-    async fn flatten_scene(&self, handle: &DrawingHandle) -> Result<DrawingScene, semio_framework_2d::DrawingError>;
-    async fn export_svg(&self, handle: &DrawingHandle) -> Result<String, semio_framework_2d::DrawingError>;
-    async fn export_pdf(&self, handle: &DrawingHandle) -> Result<Vec<u8>, semio_framework_2d::DrawingError>;
-    async fn export_dwg(&self, handle: &DrawingHandle) -> Result<Vec<u8>, semio_framework_2d::DrawingError>;
-    async fn import_dwg(&mut self, data: &[u8]) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn flatten_scene(&self, handle: &DrawingHandle) -> Result<DrawingScene, semio_framework_2d::DrawingError>;
+    fn export_svg(&self, handle: &DrawingHandle) -> Result<String, semio_framework_2d::DrawingError>;
+    fn export_pdf(&self, handle: &DrawingHandle) -> Result<Vec<u8>, semio_framework_2d::DrawingError>;
+    fn export_dwg(&self, handle: &DrawingHandle) -> Result<Vec<u8>, semio_framework_2d::DrawingError>;
+    fn import_dwg(&mut self, data: &[u8]) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
     // #endregion Export
 
     // #region Core
-    async fn kind(&self, handle: &DrawingHandle) -> Result<DrawingKind, semio_framework_2d::DrawingError>;
-    async fn dispose(&mut self, handle: &DrawingHandle);
+    fn kind(&self, handle: &DrawingHandle) -> Result<DrawingKind, semio_framework_2d::DrawingError>;
+    fn dispose(&mut self, handle: &DrawingHandle);
     fn retain_sync(&mut self, live: &HashSet<String>);
     // #endregion Core
 }
@@ -813,65 +810,65 @@ fn serialize_pdf(scene: &DrawingScene) -> Vec<u8> {
 
 // #region 🔖️KernelImpl
 impl DrawingKernel for DrawingStore {
-    async fn rect(&mut self, x: f64, y: f64, width: f64, height: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+    fn rect(&mut self, x: f64, y: f64, width: f64, height: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
         self.register(DrawingKind::Rect, DrawingNode::Rect { x, y, width, height })
     }
 
-    async fn ellipse(&mut self, cx: f64, cy: f64, rx: f64, ry: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+    fn ellipse(&mut self, cx: f64, cy: f64, rx: f64, ry: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
         self.register(DrawingKind::Ellipse, DrawingNode::Ellipse { cx, cy, rx, ry })
     }
 
-    async fn circle(&mut self, cx: f64, cy: f64, r: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+    fn circle(&mut self, cx: f64, cy: f64, r: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
         self.register(DrawingKind::Circle, DrawingNode::Circle { cx, cy, r })
     }
 
-    async fn line(&mut self, x1: f64, y1: f64, x2: f64, y2: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+    fn line(&mut self, x1: f64, y1: f64, x2: f64, y2: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
         self.register(DrawingKind::Line, DrawingNode::Line { x1, y1, x2, y2 })
     }
 
-    async fn polygon(&mut self, points: &[semio_framework_2d::Vec2]) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+    fn polygon(&mut self, points: &[semio_framework_2d::Vec2]) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
         if points.len() < 3 {
             return Err(semio_framework_2d::DrawingError::InvalidInput("polygon needs at least 3 points".into()));
         }
         self.register(DrawingKind::Polygon, DrawingNode::Polygon { points: points.to_vec() })
     }
 
-    async fn polyline_path(&mut self, points: &[semio_framework_2d::Vec2]) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+    fn polyline_path(&mut self, points: &[semio_framework_2d::Vec2]) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
         if points.len() < 2 {
             return Err(semio_framework_2d::DrawingError::InvalidInput("polyline needs at least 2 points".into()));
         }
         self.register(DrawingKind::Path, DrawingNode::Path { segments: polyline_segments(points) })
     }
 
-    async fn rect_path(&mut self, x: f64, y: f64, width: f64, height: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+    fn rect_path(&mut self, x: f64, y: f64, width: f64, height: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
         self.register(DrawingKind::Path, DrawingNode::Path { segments: rect_segments(x, y, width, height) })
     }
 
-    async fn set_fill(&mut self, handle: &DrawingHandle, fill: FillStyle) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+    fn set_fill(&mut self, handle: &DrawingHandle, fill: FillStyle) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
         self.with_mutated(handle, |entry| entry.fill = Some(fill))
     }
 
-    async fn set_stroke(&mut self, handle: &DrawingHandle, stroke: StrokeStyle) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+    fn set_stroke(&mut self, handle: &DrawingHandle, stroke: StrokeStyle) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
         self.with_mutated(handle, |entry| entry.stroke = Some(stroke))
     }
 
-    async fn linear_gradient_fill(&mut self, handle: &DrawingHandle, x1: f64, y1: f64, x2: f64, y2: f64, stops: &[GradientStop]) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
-        self.set_fill(handle, FillStyle::LinearGradient { x1, y1, x2, y2, stops: stops.to_vec() }).await
+    fn linear_gradient_fill(&mut self, handle: &DrawingHandle, x1: f64, y1: f64, x2: f64, y2: f64, stops: &[GradientStop]) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        self.set_fill(handle, FillStyle::LinearGradient { x1, y1, x2, y2, stops: stops.to_vec() })
     }
 
-    async fn translate(&mut self, handle: &DrawingHandle, dx: f64, dy: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+    fn translate(&mut self, handle: &DrawingHandle, dx: f64, dy: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
         self.with_mutated(handle, |entry| entry.transform = entry.transform.multiply(Affine2D::translate(dx, dy)))
     }
 
-    async fn rotate(&mut self, handle: &DrawingHandle, angle: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+    fn rotate(&mut self, handle: &DrawingHandle, angle: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
         self.with_mutated(handle, |entry| entry.transform = entry.transform.multiply(Affine2D::rotate(angle)))
     }
 
-    async fn scale(&mut self, handle: &DrawingHandle, sx: f64, sy: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+    fn scale(&mut self, handle: &DrawingHandle, sx: f64, sy: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
         self.with_mutated(handle, |entry| entry.transform = entry.transform.multiply(Affine2D::scale(sx, sy)))
     }
 
-    async fn group(&mut self, children: &[DrawingHandle]) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+    fn group(&mut self, children: &[DrawingHandle]) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
         if children.is_empty() {
             return Err(semio_framework_2d::DrawingError::InvalidInput("group needs children".into()));
         }
@@ -879,23 +876,23 @@ impl DrawingKernel for DrawingStore {
         self.register(DrawingKind::Group, DrawingNode::Group { children: handles })
     }
 
-    async fn bool_union(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
-        self.bool_operation(a, b, "union").await
+    fn bool_union(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        self.bool_operation(a, b, "union")
     }
 
-    async fn bool_difference(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
-        self.bool_operation(a, b, "difference").await
+    fn bool_difference(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        self.bool_operation(a, b, "difference")
     }
 
-    async fn bool_intersection(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
-        self.bool_operation(a, b, "intersection").await
+    fn bool_intersection(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        self.bool_operation(a, b, "intersection")
     }
 
-    async fn bool_xor(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
-        self.bool_operation(a, b, "xor").await
+    fn bool_xor(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        self.bool_operation(a, b, "xor")
     }
 
-    async fn bool_op_many(&mut self, operation: &str, handles: &[DrawingHandle]) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+    fn bool_op_many(&mut self, operation: &str, handles: &[DrawingHandle]) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
         if handles.is_empty() {
             return Err(semio_framework_2d::DrawingError::InvalidInput("boolean operation needs at least one handle".into()));
         }
@@ -910,49 +907,49 @@ impl DrawingKernel for DrawingStore {
         self.register(DrawingKind::Path, DrawingNode::Path { segments: merged })
     }
 
-    async fn boolean_segments(&self, a: &[semio_framework_2d::PathSegment], b: &[semio_framework_2d::PathSegment], operation: &str) -> Result<Vec<semio_framework_2d::PathSegment>, semio_framework_2d::DrawingError> {
+    fn boolean_segments(&self, a: &[semio_framework_2d::PathSegment], b: &[semio_framework_2d::PathSegment], operation: &str) -> Result<Vec<semio_framework_2d::PathSegment>, semio_framework_2d::DrawingError> {
         semio_framework_2d::booleans::boolean_paths(a, b, operation)
     }
 
-    async fn trace_bitmap(&mut self, width: u32, height: u32, mask_or_luma: &[u8], threshold: f64, simplify_epsilon: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+    fn trace_bitmap(&mut self, width: u32, height: u32, mask_or_luma: &[u8], threshold: f64, simplify_epsilon: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
         let segments = semio_framework_2d::trace::trace_bitmap_paths(width, height, mask_or_luma, threshold, simplify_epsilon)?;
         self.register(DrawingKind::Path, DrawingNode::Path { segments })
     }
 
-    async fn text(&mut self, x: f64, y: f64, content: &str, size: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+    fn text(&mut self, x: f64, y: f64, content: &str, size: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
         self.register(DrawingKind::Text, DrawingNode::Text { x, y, content: content.to_string(), size })
     }
 
-    async fn apply_clip(&mut self, target: &DrawingHandle, clip: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+    fn apply_clip(&mut self, target: &DrawingHandle, clip: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
         let clip_segments = DrawingStore::node_to_segments(&self.entry(clip)?.node);
         self.with_mutated(target, |entry| entry.clip = Some(clip_segments))
     }
 
-    async fn flatten_scene(&self, handle: &DrawingHandle) -> Result<DrawingScene, semio_framework_2d::DrawingError> {
+    fn flatten_scene(&self, handle: &DrawingHandle) -> Result<DrawingScene, semio_framework_2d::DrawingError> {
         self.flatten_scene_sync(handle)
     }
 
-    async fn export_svg(&self, handle: &DrawingHandle) -> Result<String, semio_framework_2d::DrawingError> {
+    fn export_svg(&self, handle: &DrawingHandle) -> Result<String, semio_framework_2d::DrawingError> {
         self.export_svg_sync(handle)
     }
 
-    async fn export_pdf(&self, handle: &DrawingHandle) -> Result<Vec<u8>, semio_framework_2d::DrawingError> {
+    fn export_pdf(&self, handle: &DrawingHandle) -> Result<Vec<u8>, semio_framework_2d::DrawingError> {
         self.export_pdf_sync(handle)
     }
 
-    async fn export_dwg(&self, handle: &DrawingHandle) -> Result<Vec<u8>, semio_framework_2d::DrawingError> {
+    fn export_dwg(&self, handle: &DrawingHandle) -> Result<Vec<u8>, semio_framework_2d::DrawingError> {
         self.export_dwg_sync(handle)
     }
 
-    async fn import_dwg(&mut self, data: &[u8]) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+    fn import_dwg(&mut self, data: &[u8]) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
         self.import_dwg_sync(data)
     }
 
-    async fn kind(&self, handle: &DrawingHandle) -> Result<DrawingKind, semio_framework_2d::DrawingError> {
+    fn kind(&self, handle: &DrawingHandle) -> Result<DrawingKind, semio_framework_2d::DrawingError> {
         Ok(self.entry(handle)?.kind)
     }
 
-    async fn dispose(&mut self, handle: &DrawingHandle) {
+    fn dispose(&mut self, handle: &DrawingHandle) {
         self.dispose_sync(handle);
     }
 
@@ -962,7 +959,7 @@ impl DrawingKernel for DrawingStore {
 }
 
 impl DrawingStore {
-    async fn bool_operation(&mut self, a: &DrawingHandle, b: &DrawingHandle, operation: &str) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+    fn bool_operation(&mut self, a: &DrawingHandle, b: &DrawingHandle, operation: &str) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
         let a_segments = DrawingStore::node_to_segments(&self.entry(a)?.node);
         let b_segments = DrawingStore::node_to_segments(&self.entry(b)?.node);
         let merged = semio_framework_2d::booleans::boolean_paths(&a_segments, &b_segments, operation)?;
@@ -972,7 +969,6 @@ impl DrawingStore {
 // #endregion 🔖️KernelImpl
 
 // #region 🖍️DrawingKernel
-use semio_framework_2d::block_on as drawing_block_on;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::wasm_bindgen;
 
@@ -989,12 +985,27 @@ pub fn with_drawing_kernel<T>(f: impl FnOnce(&mut DrawingStore) -> Result<T, Eva
 }
 
 /// 🧯️ Internal error type for drawing JSON-bridging helpers.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 enum DrawingKernelError {
-    #[error(transparent)]
-    Json(#[from] serde_json::Error),
-    #[error("{0}")]
+    Json(serde_json::Error),
     Invalid(String),
+}
+
+impl fmt::Display for DrawingKernelError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Json(error) => error.fmt(formatter),
+            Self::Invalid(message) => formatter.write_str(message),
+        }
+    }
+}
+
+impl std::error::Error for DrawingKernelError {}
+
+impl From<serde_json::Error> for DrawingKernelError {
+    fn from(error: serde_json::Error) -> Self {
+        Self::Json(error)
+    }
 }
 
 /// 🧹️ Retains only drawing handles referenced by the current evaluation outputs.
@@ -1012,7 +1023,7 @@ pub fn render_scene_json(handle: &str) -> String {
         .ok()
         .map(|store| {
             let drawing = DrawingHandle(handle.to_string());
-            match drawing_block_on(store.flatten_scene(&drawing)) {
+            match store.flatten_scene(&drawing) {
                 Ok(scene) => serde_json::to_string(&scene).unwrap_or_else(|_| "{}".into()),
                 Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
             }
@@ -1027,7 +1038,7 @@ pub fn export_svg_json(handle: &str) -> String {
         .ok()
         .map(|store| {
             let drawing = DrawingHandle(handle.to_string());
-            match drawing_block_on(store.export_svg(&drawing)) {
+            match store.export_svg(&drawing) {
                 Ok(svg) => serde_json::json!({ "svg": svg }).to_string(),
                 Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
             }
@@ -1042,7 +1053,7 @@ pub fn export_pdf_json(handle: &str) -> String {
         .ok()
         .map(|store| {
             let drawing = DrawingHandle(handle.to_string());
-            match drawing_block_on(store.export_pdf(&drawing)) {
+            match store.export_pdf(&drawing) {
                 Ok(pdf) => serde_json::json!({ "pdf": drawing_base64_encode(&pdf) }).to_string(),
                 Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
             }
@@ -1057,7 +1068,7 @@ pub fn export_dwg_json(handle: &str) -> String {
         .ok()
         .map(|store| {
             let drawing = DrawingHandle(handle.to_string());
-            match drawing_block_on(store.export_dwg(&drawing)) {
+            match store.export_dwg(&drawing) {
                 Ok(dwg) => serde_json::json!({ "dwg": drawing_base64_encode(&dwg) }).to_string(),
                 Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
             }
@@ -1073,7 +1084,7 @@ pub fn import_dwg_json(data_base64: &str) -> String {
     drawing_kernel()
         .lock()
         .ok()
-        .map(|mut store| match drawing_block_on(store.import_dwg(&bytes)) {
+        .map(|mut store| match store.import_dwg(&bytes) {
             Ok(handle) => serde_json::json!({ "handle": handle.as_str() }).to_string(),
             Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
         })
@@ -1084,7 +1095,7 @@ pub fn import_dwg_json(data_base64: &str) -> String {
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 pub fn dispose_drawing(handle: &str) {
     if let Ok(mut store) = drawing_kernel().lock() {
-        drawing_block_on(store.dispose(&DrawingHandle(handle.to_string())));
+        store.dispose(&DrawingHandle(handle.to_string()));
     }
 }
 
@@ -1093,8 +1104,8 @@ pub fn trace_bitmap_json(width: u32, height: u32, mask: &[u8], threshold: f64, s
     drawing_kernel()
         .lock()
         .ok()
-        .and_then(|mut store| match drawing_block_on(store.trace_bitmap(width, height, mask, threshold, simplify_epsilon)) {
-            Ok(handle) => match drawing_block_on(store.flatten_scene(&handle)) {
+        .and_then(|mut store| match store.trace_bitmap(width, height, mask, threshold, simplify_epsilon) {
+            Ok(handle) => match store.flatten_scene(&handle) {
                 Ok(scene) => {
                     let segments = scene.nodes.into_iter().find_map(|node| if let DrawingNode::Path { segments } = node.node { Some(segments) } else { None });
                     segments.map(|segs| serde_json::json!({ "segments": segs }).to_string())
@@ -1120,7 +1131,7 @@ pub fn boolean_segments_json(a_json: &str, b_json: &str, operation: &str) -> Str
         .lock()
         .ok()
         .map(|store| match (parse(a_json), parse(b_json)) {
-            (Ok(a), Ok(b)) => match drawing_block_on(store.boolean_segments(&a, &b, operation)) {
+            (Ok(a), Ok(b)) => match store.boolean_segments(&a, &b, operation) {
                 Ok(segments) => serde_json::json!({ "segments": segments }).to_string(),
                 Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
             },
@@ -1179,12 +1190,11 @@ fn drawing_base64_decode(data: &str) -> Result<Vec<u8>, DrawingKernelError> {
 #[cfg(test)]
 mod drawing_kernel_tests {
     use super::*;
-    use semio_framework_2d::block_on;
 
     #[test]
     fn rect_exports_svg() {
         let mut store = DrawingStore::new();
-        let rect = block_on(store.rect(0.0, 0.0, 10.0, 20.0)).expect("rect");
+        let rect = store.rect(0.0, 0.0, 10.0, 20.0).expect("rect");
         let svg = store.export_svg_sync(&rect).expect("svg");
         assert!(svg.contains("<svg"));
         assert!(svg.contains("10"));
@@ -1193,7 +1203,7 @@ mod drawing_kernel_tests {
     #[test]
     fn rect_exports_pdf() {
         let mut store = DrawingStore::new();
-        let rect = block_on(store.rect(0.0, 0.0, 10.0, 20.0)).expect("rect");
+        let rect = store.rect(0.0, 0.0, 10.0, 20.0).expect("rect");
         let pdf = store.export_pdf_sync(&rect).expect("pdf");
         assert!(pdf.starts_with(b"%PDF"));
     }
@@ -1201,9 +1211,9 @@ mod drawing_kernel_tests {
     #[test]
     fn group_flattens_children() {
         let mut store = DrawingStore::new();
-        let a = block_on(store.rect(0.0, 0.0, 5.0, 5.0)).unwrap();
-        let b = block_on(store.circle(10.0, 10.0, 3.0)).unwrap();
-        let group = block_on(store.group(&[a, b])).unwrap();
+        let a = store.rect(0.0, 0.0, 5.0, 5.0).unwrap();
+        let b = store.circle(10.0, 10.0, 3.0).unwrap();
+        let group = store.group(&[a, b]).unwrap();
         let scene = store.flatten_scene_sync(&group).unwrap();
         assert_eq!(scene.nodes.len(), 2);
     }
@@ -1211,9 +1221,9 @@ mod drawing_kernel_tests {
     #[test]
     fn dwg_export_import_round_trips_a_group() {
         let mut store = DrawingStore::new();
-        let rect = block_on(store.rect_path(0.0, 0.0, 5.0, 5.0)).unwrap();
-        let circle = block_on(store.circle(10.0, 10.0, 3.0)).unwrap();
-        let group = block_on(store.group(&[rect, circle])).unwrap();
+        let rect = store.rect_path(0.0, 0.0, 5.0, 5.0).unwrap();
+        let circle = store.circle(10.0, 10.0, 3.0).unwrap();
+        let group = store.group(&[rect, circle]).unwrap();
 
         let bytes = store.export_dwg_sync(&group).expect("export dwg");
         assert!(!bytes.is_empty());
@@ -1227,7 +1237,7 @@ mod drawing_kernel_tests {
     #[test]
     fn ellipse_exports_svg_with_cubic_curves() {
         let mut store = DrawingStore::new();
-        let ellipse = block_on(store.ellipse(5.0, 5.0, 4.0, 2.0)).unwrap();
+        let ellipse = store.ellipse(5.0, 5.0, 4.0, 2.0).unwrap();
         let svg = store.export_svg_sync(&ellipse).expect("svg");
         assert!(svg.contains("C "));
         assert!(svg.contains("Z"));
@@ -1236,7 +1246,7 @@ mod drawing_kernel_tests {
     #[test]
     fn line_exports_svg_move_and_line() {
         let mut store = DrawingStore::new();
-        let line = block_on(store.line(0.0, 0.0, 10.0, 10.0)).unwrap();
+        let line = store.line(0.0, 0.0, 10.0, 10.0).unwrap();
         let svg = store.export_svg_sync(&line).expect("svg");
         assert!(svg.contains("M 0 0"));
         assert!(svg.contains("L 10 10"));
@@ -1245,7 +1255,7 @@ mod drawing_kernel_tests {
     #[test]
     fn polygon_exports_closed_svg_path() {
         let mut store = DrawingStore::new();
-        let polygon = block_on(store.polygon(&[[0.0, 0.0], [4.0, 0.0], [2.0, 4.0]])).unwrap();
+        let polygon = store.polygon(&[[0.0, 0.0], [4.0, 0.0], [2.0, 4.0]]).unwrap();
         let svg = store.export_svg_sync(&polygon).expect("svg");
         assert!(svg.contains("Z"));
     }
@@ -1253,7 +1263,7 @@ mod drawing_kernel_tests {
     #[test]
     fn polyline_path_exports_open_path_without_close() {
         let mut store = DrawingStore::new();
-        let polyline = block_on(store.polyline_path(&[[0.0, 0.0], [4.0, 0.0], [2.0, 4.0]])).unwrap();
+        let polyline = store.polyline_path(&[[0.0, 0.0], [4.0, 0.0], [2.0, 4.0]]).unwrap();
         let svg = store.export_svg_sync(&polyline).expect("svg");
         assert!(!svg.contains("Z"));
     }
@@ -1261,14 +1271,14 @@ mod drawing_kernel_tests {
     #[test]
     fn polygon_errors_on_too_few_points() {
         let mut store = DrawingStore::new();
-        let err = block_on(store.polygon(&[[0.0, 0.0], [1.0, 1.0]])).unwrap_err();
+        let err = store.polygon(&[[0.0, 0.0], [1.0, 1.0]]).unwrap_err();
         assert!(matches!(err, semio_framework_2d::DrawingError::InvalidInput(_)));
     }
 
     #[test]
     fn polyline_path_errors_on_too_few_points() {
         let mut store = DrawingStore::new();
-        let err = block_on(store.polyline_path(&[[0.0, 0.0]])).unwrap_err();
+        let err = store.polyline_path(&[[0.0, 0.0]]).unwrap_err();
         assert!(matches!(err, semio_framework_2d::DrawingError::InvalidInput(_)));
     }
     // #endregion Geometry primitives export
@@ -1277,8 +1287,8 @@ mod drawing_kernel_tests {
     #[test]
     fn set_fill_solid_renders_opaque_hex_color() {
         let mut store = DrawingStore::new();
-        let rect = block_on(store.rect(0.0, 0.0, 5.0, 5.0)).unwrap();
-        let filled = block_on(store.set_fill(&rect, FillStyle::Solid { color: [1.0, 0.0, 0.0, 1.0] })).unwrap();
+        let rect = store.rect(0.0, 0.0, 5.0, 5.0).unwrap();
+        let filled = store.set_fill(&rect, FillStyle::Solid { color: [1.0, 0.0, 0.0, 1.0] }).unwrap();
         let svg = store.export_svg_sync(&filled).expect("svg");
         assert!(svg.contains(r##"fill="#ff0000""##));
     }
@@ -1286,8 +1296,8 @@ mod drawing_kernel_tests {
     #[test]
     fn set_fill_with_alpha_renders_rgba() {
         let mut store = DrawingStore::new();
-        let rect = block_on(store.rect(0.0, 0.0, 5.0, 5.0)).unwrap();
-        let filled = block_on(store.set_fill(&rect, FillStyle::Solid { color: [0.0, 1.0, 0.0, 0.5] })).unwrap();
+        let rect = store.rect(0.0, 0.0, 5.0, 5.0).unwrap();
+        let filled = store.set_fill(&rect, FillStyle::Solid { color: [0.0, 1.0, 0.0, 0.5] }).unwrap();
         let svg = store.export_svg_sync(&filled).expect("svg");
         assert!(svg.contains("rgba(0,255,0,0.500)"));
     }
@@ -1295,9 +1305,9 @@ mod drawing_kernel_tests {
     #[test]
     fn linear_gradient_fill_renders_gradient_defs() {
         let mut store = DrawingStore::new();
-        let rect = block_on(store.rect(0.0, 0.0, 5.0, 5.0)).unwrap();
+        let rect = store.rect(0.0, 0.0, 5.0, 5.0).unwrap();
         let stops = vec![GradientStop { offset: 0.0, color: [1.0, 1.0, 1.0, 1.0] }, GradientStop { offset: 1.0, color: [0.0, 0.0, 0.0, 1.0] }];
-        let filled = block_on(store.linear_gradient_fill(&rect, 0.0, 0.0, 5.0, 5.0, &stops)).unwrap();
+        let filled = store.linear_gradient_fill(&rect, 0.0, 0.0, 5.0, 5.0, &stops).unwrap();
         let svg = store.export_svg_sync(&filled).expect("svg");
         assert!(svg.contains("<linearGradient"));
         assert!(svg.contains("fill=\"url(#lg"));
@@ -1306,10 +1316,10 @@ mod drawing_kernel_tests {
     #[test]
     fn set_fill_radial_gradient_renders_defs() {
         let mut store = DrawingStore::new();
-        let rect = block_on(store.rect(0.0, 0.0, 5.0, 5.0)).unwrap();
+        let rect = store.rect(0.0, 0.0, 5.0, 5.0).unwrap();
         let stops = vec![GradientStop { offset: 0.0, color: [1.0, 0.0, 0.0, 1.0] }];
         let fill = FillStyle::RadialGradient { cx: 2.5, cy: 2.5, r: 2.0, stops };
-        let filled = block_on(store.set_fill(&rect, fill)).unwrap();
+        let filled = store.set_fill(&rect, fill).unwrap();
         let svg = store.export_svg_sync(&filled).expect("svg");
         assert!(svg.contains("<radialGradient"));
         assert!(svg.contains("fill=\"url(#rg"));
@@ -1318,9 +1328,9 @@ mod drawing_kernel_tests {
     #[test]
     fn set_stroke_renders_stroke_attributes() {
         let mut store = DrawingStore::new();
-        let rect = block_on(store.rect(0.0, 0.0, 5.0, 5.0)).unwrap();
+        let rect = store.rect(0.0, 0.0, 5.0, 5.0).unwrap();
         let stroke = StrokeStyle { color: [0.0, 0.0, 1.0, 1.0], width: 2.0, cap: LineCap::Round, join: LineJoin::Round, dash: vec![] };
-        let stroked = block_on(store.set_stroke(&rect, stroke)).unwrap();
+        let stroked = store.set_stroke(&rect, stroke).unwrap();
         let svg = store.export_svg_sync(&stroked).expect("svg");
         assert!(svg.contains(r##"stroke="#0000ff""##));
         assert!(svg.contains(r#"stroke-width="2""#));
@@ -1331,8 +1341,8 @@ mod drawing_kernel_tests {
     #[test]
     fn translate_moves_exported_geometry() {
         let mut store = DrawingStore::new();
-        let rect = block_on(store.rect(0.0, 0.0, 5.0, 5.0)).unwrap();
-        let moved = block_on(store.translate(&rect, 10.0, 20.0)).unwrap();
+        let rect = store.rect(0.0, 0.0, 5.0, 5.0).unwrap();
+        let moved = store.translate(&rect, 10.0, 20.0).unwrap();
         let scene = store.flatten_scene_sync(&moved).unwrap();
         assert_eq!(scene.nodes[0].transform.transform_point([0.0, 0.0]), [10.0, 20.0]);
     }
@@ -1340,9 +1350,9 @@ mod drawing_kernel_tests {
     #[test]
     fn rotate_and_scale_compose_into_transform() {
         let mut store = DrawingStore::new();
-        let rect = block_on(store.rect(0.0, 0.0, 5.0, 5.0)).unwrap();
-        let rotated = block_on(store.rotate(&rect, std::f64::consts::FRAC_PI_2)).unwrap();
-        let scaled = block_on(store.scale(&rotated, 2.0, 2.0)).unwrap();
+        let rect = store.rect(0.0, 0.0, 5.0, 5.0).unwrap();
+        let rotated = store.rotate(&rect, std::f64::consts::FRAC_PI_2).unwrap();
+        let scaled = store.scale(&rotated, 2.0, 2.0).unwrap();
         let scene = store.flatten_scene_sync(&scaled).unwrap();
         let [x, y] = scene.nodes[0].transform.transform_point([1.0, 0.0]);
         assert!((x - 0.0).abs() < 1e-9);
@@ -1354,16 +1364,16 @@ mod drawing_kernel_tests {
     #[test]
     fn group_errors_on_empty_children() {
         let mut store = DrawingStore::new();
-        let err = block_on(store.group(&[])).unwrap_err();
+        let err = store.group(&[]).unwrap_err();
         assert!(matches!(err, semio_framework_2d::DrawingError::InvalidInput(_)));
     }
 
     #[test]
     fn apply_clip_stores_clip_segments_on_flatten() {
         let mut store = DrawingStore::new();
-        let rect = block_on(store.rect(0.0, 0.0, 5.0, 5.0)).unwrap();
-        let circle = block_on(store.circle(2.0, 2.0, 1.0)).unwrap();
-        let clipped = block_on(store.apply_clip(&rect, &circle)).unwrap();
+        let rect = store.rect(0.0, 0.0, 5.0, 5.0).unwrap();
+        let circle = store.circle(2.0, 2.0, 1.0).unwrap();
+        let clipped = store.apply_clip(&rect, &circle).unwrap();
         let scene = store.flatten_scene_sync(&clipped).unwrap();
         assert!(scene.nodes[0].clip.as_ref().is_some_and(|segments| !segments.is_empty()));
     }
@@ -1373,8 +1383,8 @@ mod drawing_kernel_tests {
     #[test]
     fn text_with_fill_renders_colored_text_element() {
         let mut store = DrawingStore::new();
-        let text = block_on(store.text(1.0, 2.0, "hi", 12.0)).unwrap();
-        let colored = block_on(store.set_fill(&text, FillStyle::Solid { color: [0.0, 0.0, 1.0, 1.0] })).unwrap();
+        let text = store.text(1.0, 2.0, "hi", 12.0).unwrap();
+        let colored = store.set_fill(&text, FillStyle::Solid { color: [0.0, 0.0, 1.0, 1.0] }).unwrap();
         let svg = store.export_svg_sync(&colored).expect("svg");
         assert!(svg.contains(r##"<text x="1" y="2" font-size="12" fill="#0000ff">hi</text>"##));
     }
@@ -1382,7 +1392,7 @@ mod drawing_kernel_tests {
     #[test]
     fn text_without_fill_defaults_to_black() {
         let mut store = DrawingStore::new();
-        let text = block_on(store.text(0.0, 0.0, "plain", 10.0)).unwrap();
+        let text = store.text(0.0, 0.0, "plain", 10.0).unwrap();
         let svg = store.export_svg_sync(&text).expect("svg");
         assert!(svg.contains(r#"fill="black">plain"#));
     }
@@ -1390,9 +1400,9 @@ mod drawing_kernel_tests {
     #[test]
     fn text_with_gradient_fill_falls_back_to_black_in_svg() {
         let mut store = DrawingStore::new();
-        let text = block_on(store.text(0.0, 0.0, "grad", 10.0)).unwrap();
+        let text = store.text(0.0, 0.0, "grad", 10.0).unwrap();
         let stops = vec![GradientStop { offset: 0.0, color: [1.0, 1.0, 1.0, 1.0] }];
-        let gradient = block_on(store.linear_gradient_fill(&text, 0.0, 0.0, 1.0, 1.0, &stops)).unwrap();
+        let gradient = store.linear_gradient_fill(&text, 0.0, 0.0, 1.0, 1.0, &stops).unwrap();
         let svg = store.export_svg_sync(&gradient).expect("svg");
         assert!(svg.contains(r#"fill="black">grad"#));
     }
@@ -1402,18 +1412,18 @@ mod drawing_kernel_tests {
     #[test]
     fn bool_union_via_kernel_trait() {
         let mut store = DrawingStore::new();
-        let a = block_on(store.rect_path(0.0, 0.0, 10.0, 10.0)).unwrap();
-        let b = block_on(store.rect_path(5.0, 5.0, 10.0, 10.0)).unwrap();
-        let merged = block_on(store.bool_union(&a, &b)).unwrap();
-        assert_eq!(block_on(store.kind(&merged)).unwrap(), DrawingKind::Path);
+        let a = store.rect_path(0.0, 0.0, 10.0, 10.0).unwrap();
+        let b = store.rect_path(5.0, 5.0, 10.0, 10.0).unwrap();
+        let merged = store.bool_union(&a, &b).unwrap();
+        assert_eq!(store.kind(&merged).unwrap(), DrawingKind::Path);
     }
 
     #[test]
     fn bool_difference_via_kernel_trait() {
         let mut store = DrawingStore::new();
-        let a = block_on(store.rect_path(0.0, 0.0, 10.0, 10.0)).unwrap();
-        let b = block_on(store.rect_path(5.0, 5.0, 10.0, 10.0)).unwrap();
-        let diff = block_on(store.bool_difference(&a, &b)).unwrap();
+        let a = store.rect_path(0.0, 0.0, 10.0, 10.0).unwrap();
+        let b = store.rect_path(5.0, 5.0, 10.0, 10.0).unwrap();
+        let diff = store.bool_difference(&a, &b).unwrap();
         let scene = store.flatten_scene_sync(&diff).unwrap();
         assert!(!scene.nodes.is_empty());
     }
@@ -1421,9 +1431,9 @@ mod drawing_kernel_tests {
     #[test]
     fn bool_intersection_via_kernel_trait() {
         let mut store = DrawingStore::new();
-        let a = block_on(store.rect_path(0.0, 0.0, 10.0, 10.0)).unwrap();
-        let b = block_on(store.rect_path(5.0, 5.0, 10.0, 10.0)).unwrap();
-        let intersection = block_on(store.bool_intersection(&a, &b)).unwrap();
+        let a = store.rect_path(0.0, 0.0, 10.0, 10.0).unwrap();
+        let b = store.rect_path(5.0, 5.0, 10.0, 10.0).unwrap();
+        let intersection = store.bool_intersection(&a, &b).unwrap();
         let scene = store.flatten_scene_sync(&intersection).unwrap();
         assert!(!scene.nodes.is_empty());
     }
@@ -1431,9 +1441,9 @@ mod drawing_kernel_tests {
     #[test]
     fn bool_xor_via_kernel_trait() {
         let mut store = DrawingStore::new();
-        let a = block_on(store.rect_path(0.0, 0.0, 10.0, 10.0)).unwrap();
-        let b = block_on(store.rect_path(5.0, 5.0, 10.0, 10.0)).unwrap();
-        let xor = block_on(store.bool_xor(&a, &b)).unwrap();
+        let a = store.rect_path(0.0, 0.0, 10.0, 10.0).unwrap();
+        let b = store.rect_path(5.0, 5.0, 10.0, 10.0).unwrap();
+        let xor = store.bool_xor(&a, &b).unwrap();
         let scene = store.flatten_scene_sync(&xor).unwrap();
         assert!(!scene.nodes.is_empty());
     }
@@ -1441,26 +1451,26 @@ mod drawing_kernel_tests {
     #[test]
     fn bool_op_many_single_handle_is_content_addressed() {
         let mut store = DrawingStore::new();
-        let rect = block_on(store.rect(0.0, 0.0, 5.0, 5.0)).unwrap();
-        let forked = block_on(store.bool_op_many("union", std::slice::from_ref(&rect))).unwrap();
+        let rect = store.rect(0.0, 0.0, 5.0, 5.0).unwrap();
+        let forked = store.bool_op_many("union", std::slice::from_ref(&rect)).unwrap();
         assert_eq!(forked.as_str(), rect.as_str());
-        assert_eq!(block_on(store.kind(&forked)).unwrap(), DrawingKind::Rect);
+        assert_eq!(store.kind(&forked).unwrap(), DrawingKind::Rect);
     }
 
     #[test]
     fn bool_op_many_merges_multiple_handles() {
         let mut store = DrawingStore::new();
-        let a = block_on(store.rect_path(0.0, 0.0, 10.0, 10.0)).unwrap();
-        let b = block_on(store.rect_path(5.0, 0.0, 10.0, 10.0)).unwrap();
-        let c = block_on(store.rect_path(0.0, 5.0, 10.0, 10.0)).unwrap();
-        let merged = block_on(store.bool_op_many("union", &[a, b, c])).unwrap();
-        assert_eq!(block_on(store.kind(&merged)).unwrap(), DrawingKind::Path);
+        let a = store.rect_path(0.0, 0.0, 10.0, 10.0).unwrap();
+        let b = store.rect_path(5.0, 0.0, 10.0, 10.0).unwrap();
+        let c = store.rect_path(0.0, 5.0, 10.0, 10.0).unwrap();
+        let merged = store.bool_op_many("union", &[a, b, c]).unwrap();
+        assert_eq!(store.kind(&merged).unwrap(), DrawingKind::Path);
     }
 
     #[test]
     fn bool_op_many_errors_on_empty_handles() {
         let mut store = DrawingStore::new();
-        let err = block_on(store.bool_op_many("union", &[])).unwrap_err();
+        let err = store.bool_op_many("union", &[]).unwrap_err();
         assert!(matches!(err, semio_framework_2d::DrawingError::InvalidInput(_)));
     }
 
@@ -1469,7 +1479,7 @@ mod drawing_kernel_tests {
         let store = DrawingStore::new();
         let a = rect_segments(0.0, 0.0, 10.0, 10.0);
         let b = rect_segments(5.0, 5.0, 10.0, 10.0);
-        let merged = block_on(store.boolean_segments(&a, &b, "union")).expect("union");
+        let merged = store.boolean_segments(&a, &b, "union").expect("union");
         assert!(!merged.is_empty());
     }
     // #endregion Boolean operations via kernel trait
@@ -1486,8 +1496,8 @@ mod drawing_kernel_tests {
                 mask[(y * width + x) as usize] = 255;
             }
         }
-        let traced = block_on(store.trace_bitmap(width, height, &mask, 0.5, 0.5)).unwrap();
-        assert_eq!(block_on(store.kind(&traced)).unwrap(), DrawingKind::Path);
+        let traced = store.trace_bitmap(width, height, &mask, 0.5, 0.5).unwrap();
+        assert_eq!(store.kind(&traced).unwrap(), DrawingKind::Path);
     }
     // #endregion Trace via kernel trait
 
@@ -1496,40 +1506,40 @@ mod drawing_kernel_tests {
     fn registry_len_tracks_inserted_handles() {
         let mut store = DrawingStore::new();
         assert_eq!(store.registry_len(), 0);
-        let rect = block_on(store.rect(0.0, 0.0, 5.0, 5.0)).unwrap();
+        let rect = store.rect(0.0, 0.0, 5.0, 5.0).unwrap();
         assert_eq!(store.registry_len(), 1);
-        block_on(store.set_fill(&rect, FillStyle::Solid { color: [1.0, 1.0, 1.0, 1.0] })).unwrap();
+        store.set_fill(&rect, FillStyle::Solid { color: [1.0, 1.0, 1.0, 1.0] }).unwrap();
         assert_eq!(store.registry_len(), 2);
     }
 
     #[test]
     fn dispose_sync_removes_handle_from_registry() {
         let mut store = DrawingStore::new();
-        let rect = block_on(store.rect(0.0, 0.0, 5.0, 5.0)).unwrap();
+        let rect = store.rect(0.0, 0.0, 5.0, 5.0).unwrap();
         store.dispose_sync(&rect);
         assert_eq!(store.registry_len(), 0);
-        let err = block_on(store.kind(&rect)).unwrap_err();
+        let err = store.kind(&rect).unwrap_err();
         assert!(matches!(err, semio_framework_2d::DrawingError::MissingHandle(_)));
     }
 
     #[test]
     fn retain_sync_keeps_only_live_handles() {
         let mut store = DrawingStore::new();
-        let a = block_on(store.rect(0.0, 0.0, 5.0, 5.0)).unwrap();
-        let b = block_on(store.circle(1.0, 1.0, 1.0)).unwrap();
+        let a = store.rect(0.0, 0.0, 5.0, 5.0).unwrap();
+        let b = store.circle(1.0, 1.0, 1.0).unwrap();
         let live: HashSet<String> = [a.as_str().to_string()].into_iter().collect();
         store.retain_sync(&live);
-        assert!(block_on(store.kind(&a)).is_ok());
-        assert!(block_on(store.kind(&b)).is_err());
+        assert!(store.kind(&a).is_ok());
+        assert!(store.kind(&b).is_err());
     }
 
     #[test]
     fn missing_handle_errors_on_set_fill_and_translate() {
         let mut store = DrawingStore::new();
         let bogus = DrawingHandle("not-valid-hex".to_string());
-        let fill_err = block_on(store.set_fill(&bogus, FillStyle::Solid { color: [0.0, 0.0, 0.0, 1.0] })).unwrap_err();
+        let fill_err = store.set_fill(&bogus, FillStyle::Solid { color: [0.0, 0.0, 0.0, 1.0] }).unwrap_err();
         assert!(matches!(fill_err, semio_framework_2d::DrawingError::MissingHandle(_)));
-        let translate_err = block_on(store.translate(&bogus, 1.0, 1.0)).unwrap_err();
+        let translate_err = store.translate(&bogus, 1.0, 1.0).unwrap_err();
         assert!(matches!(translate_err, semio_framework_2d::DrawingError::MissingHandle(_)));
     }
 
@@ -1537,7 +1547,7 @@ mod drawing_kernel_tests {
     fn flatten_scene_errors_on_missing_handle() {
         let store = DrawingStore::new();
         let bogus = DrawingHandle("not-valid-hex".to_string());
-        let err = block_on(store.flatten_scene(&bogus)).unwrap_err();
+        let err = store.flatten_scene(&bogus).unwrap_err();
         assert!(matches!(err, semio_framework_2d::DrawingError::MissingHandle(_)));
     }
     // #endregion Registry lifecycle
@@ -1546,9 +1556,9 @@ mod drawing_kernel_tests {
     #[test]
     fn export_dwg_includes_circle_and_text_entities() {
         let mut store = DrawingStore::new();
-        let circle = block_on(store.circle(5.0, 5.0, 3.0)).unwrap();
-        let text = block_on(store.text(0.0, 0.0, "hi", 5.0)).unwrap();
-        let group = block_on(store.group(&[circle, text])).unwrap();
+        let circle = store.circle(5.0, 5.0, 3.0).unwrap();
+        let text = store.text(0.0, 0.0, "hi", 5.0).unwrap();
+        let group = store.group(&[circle, text]).unwrap();
         let bytes = store.export_dwg_sync(&group).expect("export dwg");
         let imported = store.import_dwg_sync(&bytes).expect("import dwg");
         let scene = store.flatten_scene_sync(&imported).expect("flatten imported scene");
@@ -1558,10 +1568,10 @@ mod drawing_kernel_tests {
     #[test]
     fn import_dwg_of_single_path_skips_group_wrapper() {
         let mut store = DrawingStore::new();
-        let rect = block_on(store.rect_path(0.0, 0.0, 5.0, 5.0)).unwrap();
+        let rect = store.rect_path(0.0, 0.0, 5.0, 5.0).unwrap();
         let bytes = store.export_dwg_sync(&rect).expect("export dwg");
         let imported = store.import_dwg_sync(&bytes).expect("import dwg");
-        assert_eq!(block_on(store.kind(&imported)).unwrap(), DrawingKind::Path);
+        assert_eq!(store.kind(&imported).unwrap(), DrawingKind::Path);
     }
 
     #[test]
@@ -1570,7 +1580,7 @@ mod drawing_kernel_tests {
         let empty = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
         let bytes = semio_s_plugin_stdio::artifacts::dwg::dwg_to_bytes(&empty).expect("encode empty dwg");
         let imported = store.import_dwg_sync(&bytes).expect("import empty dwg");
-        assert_eq!(block_on(store.kind(&imported)).unwrap(), DrawingKind::Path);
+        assert_eq!(store.kind(&imported).unwrap(), DrawingKind::Path);
     }
     // #endregion DWG export/import branches
 
@@ -1578,9 +1588,9 @@ mod drawing_kernel_tests {
     #[test]
     fn scene_bounds_grows_to_fit_text_and_shapes() {
         let mut store = DrawingStore::new();
-        let rect = block_on(store.rect(600.0, 0.0, 10.0, 10.0)).unwrap();
-        let text = block_on(store.text(0.0, 700.0, "wide label", 20.0)).unwrap();
-        let group = block_on(store.group(&[rect, text])).unwrap();
+        let rect = store.rect(600.0, 0.0, 10.0, 10.0).unwrap();
+        let text = store.text(0.0, 700.0, "wide label", 20.0).unwrap();
+        let group = store.group(&[rect, text]).unwrap();
         let scene = store.flatten_scene_sync(&group).unwrap();
         assert!(scene.width >= 610.0);
         assert!(scene.height >= 720.0);
@@ -1596,8 +1606,8 @@ mod drawing_kernel_tests {
     #[test]
     fn derive_twice_same_node_is_same_handle() {
         let mut store = DrawingStore::new();
-        let first = block_on(store.rect(1.0, 2.0, 3.0, 4.0)).unwrap();
-        let second = block_on(store.rect(1.0, 2.0, 3.0, 4.0)).unwrap();
+        let first = store.rect(1.0, 2.0, 3.0, 4.0).unwrap();
+        let second = store.rect(1.0, 2.0, 3.0, 4.0).unwrap();
         assert_eq!(first.as_str(), second.as_str());
         assert_eq!(store.registry_len(), 2);
     }
@@ -1605,7 +1615,7 @@ mod drawing_kernel_tests {
     #[test]
     fn handles_are_hex_engine_keys() {
         let mut store = DrawingStore::new();
-        let rect = block_on(store.rect(0.0, 0.0, 1.0, 1.0)).unwrap();
+        let rect = store.rect(0.0, 0.0, 1.0, 1.0).unwrap();
         assert_eq!(rect.as_str().len(), 64);
         assert!(rect.as_str().chars().all(|ch| ch.is_ascii_hexdigit()));
     }

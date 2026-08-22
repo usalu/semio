@@ -12,13 +12,12 @@
  */
 
 //#region 🔌️WireTypes
-/** ⚖️ `Lane`/`CoalesceKey` are taken from the ts-rs-generated mirror — they are real wire types (no
+/** ⚖️ `Lane`/`CoalesceKey` are taken from the owned-schema mirror — they are real wire types (no
  * `#[serde(rename_all)]` on Rust `Lane`, so its wire form is PascalCase, e.g. `"Interactive"`, not
  * `"interactive"`) — redeclaring them locally would silently drift from the wire the moment either
  * side changes. `Backpressure` is declared fresh below instead: the generated mirror's `Backpressure`
  * is `{ "kind": "dropped" } & Lane`, an object-intersected-with-a-string-literal-union type that no
- * value can ever satisfy (a ts-rs limitation on tuple-variant enums combined with
- * `rename_all_fields`), so importing it would be unusable, not just inconvenient. */
+ * value can ever satisfy. The owned schema fixes that historical tuple-variant projection. */
 import type { Lane, CoalesceKey } from "../../🤖️generated/🟦️actor.ts";
 export type { Lane, CoalesceKey };
 //#endregion 🔌️WireTypes

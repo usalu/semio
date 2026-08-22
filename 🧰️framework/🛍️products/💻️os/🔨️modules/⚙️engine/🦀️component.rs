@@ -3,6 +3,7 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
+use std::fmt;
 
 //#region 🔖️Keys
 /// 🔑 Content-addressed cache key — blake3 of `(engine_id, 0, input)`.
@@ -19,17 +20,26 @@ pub struct EngineHandle {
 
 //#region 🔖️Faults
 /// 💥 Engine derive/read failures.
-#[derive(Debug, thiserror::Error, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum EngineFault {
-    #[error("unknown engine: {0}")]
     UnknownEngine(String),
-    #[error("compute failed: {0}")]
     Compute(String),
-    #[error("cache miss: handle evicted")]
     Evicted,
-    #[error("invalid input: {0}")]
     InvalidInput(String),
 }
+
+impl fmt::Display for EngineFault {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::UnknownEngine(engine) => write!(formatter, "unknown engine: {engine}"),
+            Self::Compute(message) => write!(formatter, "compute failed: {message}"),
+            Self::Evicted => formatter.write_str("cache miss: handle evicted"),
+            Self::InvalidInput(message) => write!(formatter, "invalid input: {message}"),
+        }
+    }
+}
+
+impl std::error::Error for EngineFault {}
 //#endregion 🔖️Faults
 
 //#region 🔖️Engine

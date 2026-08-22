@@ -6,12 +6,12 @@
 //! `crate::shell::...` call site elsewhere in the crate keeps resolving with zero other changes.
 //! 🖥️ OS shell chrome — navbar, footer, floating panels, overlays, and studio mode.
 
-use crate::dock::{compute_dock_drop_zone, drop_zone_indicator_rect, parse_path, push_window_silhouette_border, DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockState, WindowSilhouette};
+use crate::dock::{compute_dock_drop_zone, drop_zone_indicator_rect, parse_path, push_window_silhouette_border, DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockStackTab, DockState, WindowSilhouette};
 use crate::engine_canvas::theme_is_dark;
 use crate::interpreter::{framework_widget_context, render_ui_node, resolve_ui_image, validate_window_body_surface};
 use crate::program_bridge::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, PluginHostConfig, ProgramBridgeEntry};
 use crate::scenes::{clear_graph_node_context, resolve_graph_context_action, toggle_vfs_row_expanded, vfs_selection_for_click, Board2dSurface, NodeGraphSurface, TiledMapSurface};
-use infinite_world::{
+use infinite_world::world::{
     fetch_pending_glb_meshes, fetch_pending_reference_images, fetch_pending_terrain_tiles, handle_world3d_paint_actions, handle_world3d_pointer_button, handle_world3d_pointer_drag, handle_world3d_pointer_move, handle_world3d_wheel, World3dState,
 };
 use semio_framework::{app_breadcrumb, app_window_label, resolve_app_breadcrumb, AppDefinition, ExampleDefinition, IconName, PanelGroup, PanelTabDefinition, ViewModel};
@@ -128,9 +128,31 @@ pub struct ShellFindItem {
 #[derive(Clone, Default)]
 struct ShellFindItemSink(std::sync::Arc<std::sync::Mutex<Vec<ShellFindItem>>>);
 
+#[cfg(not(target_arch = "wasm32"))]
+struct WorkerCell<T>(std::sync::OnceLock<std::sync::Mutex<std::cell::RefCell<T>>>);
+
+#[cfg(not(target_arch = "wasm32"))]
+impl<T> WorkerCell<T> {
+    const fn new() -> Self {
+        Self(std::sync::OnceLock::new())
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl<T: Default> WorkerCell<T> {
+    fn with<R>(&self, f: impl FnOnce(&std::cell::RefCell<T>) -> R) -> R {
+        let guard = self.0.get_or_init(|| std::sync::Mutex::new(std::cell::RefCell::new(T::default()))).lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        f(&guard)
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
 thread_local! {
     static ACTIVE_FIND_ITEM_SINKS: std::cell::RefCell<Vec<ShellFindItemSink>> = const { std::cell::RefCell::new(Vec::new()) };
 }
+
+#[cfg(not(target_arch = "wasm32"))]
+static ACTIVE_FIND_ITEM_SINKS: WorkerCell<Vec<ShellFindItemSink>> = WorkerCell::new();
 
 /// 🪢️ Scoped adapter binding that exposes an owned find-item sink to scene callbacks.
 struct ShellFindItemSinkBinding(std::marker::PhantomData<std::rc::Rc<()>>);
@@ -586,7 +608,20 @@ mod identity_directory_presence_tests {
     /// 🧪️ Verify item: "the presence roster filtering by surface".
     #[test]
     fn presence_rows_are_scoped_to_the_attached_surface() {
-        let peer = PresencePeer { actor: "user:a#1".into(), label: Some("Alice".into()), presence_pack: None, connected_at_ms: 1, user_id: None, role: Some("author".into()), cursor: None, viewport: None, drag_ghost_json: None, interaction: None };
+        let peer = PresencePeer {
+            actor: "user:a#1".into(),
+            connected_at_ms: 1,
+            label: Some("Alice".into()),
+            presence_pack: None,
+            user_id: None,
+            role: Some("author".into()),
+            drag_ghost_json: None,
+            interaction: None,
+            color: None,
+            surface: None,
+            views: Vec::new(),
+            ui: None,
+        };
         let rows = presence_peer_rows_for_surface(std::slice::from_ref(&peer), Some("s.space.space@1/*#editor"), "s.space.space@1/*#editor");
         assert_eq!(rows.len(), 1);
         assert_eq!(rows[0].actor, "user:a#1");
@@ -1178,7 +1213,7 @@ mod shell_pool_future_tests {
         let workers = pool.worker_count();
         let (tx, rx) = std::sync::mpsc::channel();
         let _task = ShellPoolFuture::spawn(pool.clone(), Lane::Io, async move {
-            futures_lite::future::yield_now().await;
+            semio_framework_async::yield_once().await;
             let _ = tx.send(7);
         });
         assert_eq!(rx.recv_timeout(std::time::Duration::from_secs(1)), Ok(7));
@@ -1204,6 +1239,12 @@ mod shell_pool_future_tests {
 enum ShellIoCompletion {
     Actions(Vec<ActionDescriptor>),
     Finished,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct PendingShellIo {
+    receiver: std::sync::mpsc::Receiver<ShellIoCompletion>,
+    task: Option<std::sync::Arc<ShellPoolFuture>>,
 }
 
 pub struct ShellState {
@@ -1285,7 +1326,7 @@ pub struct ShellState {
     pub measures_resize_window_id: Option<String>,
     pub deferred_actions: Vec<ActionDescriptor>,
     #[cfg(not(target_arch = "wasm32"))]
-    shell_io_pending: std::collections::VecDeque<std::sync::mpsc::Receiver<ShellIoCompletion>>,
+    shell_io_pending: std::collections::VecDeque<PendingShellIo>,
     pub fullscreen_toggle_requested: bool,
     pub fullscreen_active: bool,
     pub active_utilities: Vec<UtilityNode>,
@@ -1436,6 +1477,11 @@ impl Drop for ShellState {
         }
         if let Some(runner) = self.directory_stream.take() {
             runner.cancel();
+        }
+        for pending in &self.shell_io_pending {
+            if let Some(task) = &pending.task {
+                task.cancel();
+            }
         }
     }
 }
@@ -1591,7 +1637,20 @@ impl ShellState {
                 let _ = sender.send(operation());
             }),
         );
-        self.shell_io_pending.push_back(receiver);
+        self.shell_io_pending.push_back(PendingShellIo { receiver, task: None });
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn submit_shell_io_future(&mut self, operation: impl std::future::Future<Output = ShellIoCompletion> + Send + 'static) {
+        const MAX_PENDING_SHELL_IO: usize = 64;
+        if self.shell_io_pending.len() >= MAX_PENDING_SHELL_IO {
+            return;
+        }
+        let (sender, receiver) = std::sync::mpsc::channel();
+        let task = ShellPoolFuture::spawn(crate::renderer_worker_pool(), Lane::Io, async move {
+            let _ = sender.send(operation.await);
+        });
+        self.shell_io_pending.push_back(PendingShellIo { receiver, task: Some(task) });
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -1600,17 +1659,25 @@ impl ShellState {
         let mut changed = false;
         for _ in 0..MAX_COMPLETIONS_PER_FRAME {
             let result = match self.shell_io_pending.front() {
-                Some(receiver) => receiver.try_recv(),
+                Some(pending) => pending.receiver.try_recv(),
                 None => break,
             };
             match result {
                 Ok(ShellIoCompletion::Actions(actions)) => {
-                    self.shell_io_pending.pop_front();
+                    if let Some(pending) = self.shell_io_pending.pop_front() {
+                        if let Some(task) = pending.task {
+                            task.cancel();
+                        }
+                    }
                     changed |= !actions.is_empty();
                     self.deferred_actions.extend(actions);
                 }
                 Ok(ShellIoCompletion::Finished) | Err(std::sync::mpsc::TryRecvError::Disconnected) => {
-                    self.shell_io_pending.pop_front();
+                    if let Some(pending) = self.shell_io_pending.pop_front() {
+                        if let Some(task) = pending.task {
+                            task.cancel();
+                        }
+                    }
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => break,
             }
@@ -2097,7 +2164,7 @@ impl ShellState {
                 semio_framework::kernel::Effect::LoadDocument { pack, spr } => {
                     if let Some(session) = self.session.clone() {
                         if let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned() {
-                            // 🎠️ terra-shell-unpark — this used to `pollster::block_on` the kernel
+                            // 🎠️ terra-shell-unpark — this used to synchronously drive the kernel
                             // round trip right here. Unlike the two `glue.rs` call sites, `ShellState`
                             // has no `Weak<RefCell<AppRuntime>>` to re-borrow after the `.await` (only
                             // `AppRuntime` carries `self_weak`), which is exactly why an earlier packet
@@ -2124,8 +2191,8 @@ impl ShellState {
                     {
                         let controller_id = controller_id.to_string();
                         let args = optional_dsl_value_as_json(args);
-                        self.submit_shell_io(move || {
-                            ShellIoCompletion::Actions(request_media_frames(&controller_id, &accept, &frame_action, &done_action, &fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload.as_deref(), args))
+                        self.submit_shell_io_future(async move {
+                            ShellIoCompletion::Actions(request_media_frames(&controller_id, &accept, &frame_action, &done_action, &fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload.as_deref(), args).await)
                         });
                     }
                     #[cfg(target_arch = "wasm32")]
@@ -2613,7 +2680,7 @@ impl ShellState {
 
     //#region 🔖️NativeBackboneSync
     /// @emoji 🧭️ Parses a shell sync-card uri into the `framework/sync` persistence bindings a
-    /// document actor opens. `folder://` → the multi-document sqlite store; `file://x.json` → its
+    /// document actor opens. `folder://` → the multi-document append-only event log; `file://x.json` → its
     /// parent folder's store (single-blob export demoted per the plan); `remote://host:port[/space_id]`
     /// → the semio_hub over WebSocket, studio-scoped (an omitted studio segment falls back to `"default"`).
     /// Superseded the fetch/CRUD `shell_backbone_read`/`write` pair.
@@ -2795,11 +2862,11 @@ impl ShellState {
         "Persisted".to_string()
     }
 
-    /// 💓️ Publishes the newest renderer cursor and app-typed presence through the document host's
+    /// 💓️ Publishes the newest app-typed presence through the document host's
     /// per-document coalescer. The channel drain also exposes transient generation for the native
     /// renderer's next-frame invalidation contract without ever sharing transient contents.
     #[cfg(not(target_arch = "wasm32"))]
-    fn publish_presence_heartbeat(&mut self, input: &InputState<ActionDescriptor>) {
+    fn publish_presence_heartbeat(&mut self) {
         let Some(channel) = self.sync_channel.as_ref() else { return };
         let document_id = channel.document_id.clone();
         let instance_id = channel.instance_id;
@@ -2846,7 +2913,7 @@ impl ShellState {
     /// same posture every other native exchange call in this file already takes on error — logged, not
     /// propagated, since a stale/absent history must never block opening a document).
     #[cfg(not(target_arch = "wasm32"))]
-    fn refresh_history_snapshot(&mut self) {
+    async fn refresh_history_snapshot(&mut self) {
         self.history_cursor = 0;
         self.history_entries.clear();
         self.history_current_checkpoint_id = None;
@@ -2855,7 +2922,7 @@ impl ShellState {
         self.checkpoint_dispatched = false;
         let Some(session) = self.session.as_ref() else { return };
         let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id) else { return };
-        match plugin.read_history(session.instance_id) {
+        match plugin.read_history(session.instance_id).await {
             Ok(patch) => {
                 fold_history_patch(&mut self.history_entries, &mut self.history_cursor, &patch, true);
                 self.history_current_checkpoint_id = patch.current_checkpoint_id;
@@ -3032,7 +3099,7 @@ impl ShellState {
         let surface = semio_framework::manifest::surface_app_id(&app.dialect, semio_framework::manifest::AppRole::Editor);
         let bindings = default_persistence_bindings(self.identity.as_ref(), Some(space_id), data_dir, Some(surface.as_str()));
         let actor_uri = format!("actor://{S_SPACE_INDEX_DOCUMENT_ID}");
-        let channels = self.document_host.open(ArtifactActorConfig { document_id: S_SPACE_INDEX_DOCUMENT_ID.to_string(), schema: S_SPACE_INDEX_DOCUMENT_SCHEMA.to_string(), bindings, watch_external: true, actor: actor.clone() });
+        let channels = self.document_host.open(ArtifactActorConfig { document_id: S_SPACE_INDEX_DOCUMENT_ID.to_string(), schema: S_SPACE_INDEX_DOCUMENT_SCHEMA.to_string(), bindings, watch_external: true, actor: actor.clone() }).await;
         if let Err(error) = program.attach_backbone(instance_id, &actor_uri) {
             eprintln!("[DEBUG] wgpu shell touchArtifact attach_backbone failed: {error}");
             self.document_host.close(S_SPACE_INDEX_DOCUMENT_ID);
@@ -3110,8 +3177,8 @@ impl ShellState {
             self.presence_surface = None;
             let actor_uri = format!("actor://{document_id}");
             let actor = self.current_shell_actor(session.instance_id);
-            let channels = self.document_host.open(ArtifactActorConfig { document_id: document_id.clone(), schema, bindings, watch_external: true, actor });
-            let events = self.document_host.subscribe(&document_id);
+            let channels = self.document_host.open(ArtifactActorConfig { document_id: document_id.clone(), schema, bindings, watch_external: true, actor }).await;
+            let events = self.document_host.subscribe(&document_id).await;
             plugin.attach_backbone(session.instance_id, &actor_uri).map_err(|error| format!("plugin attach backbone: {error}"))?;
             let cmd_tx = channels.cmd_tx.clone();
             let _ = cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() });
@@ -3120,7 +3187,7 @@ impl ShellState {
             self.sync_backbone_uri = Some(uri);
             self.sync_card_kind = None;
             eprintln!("[DEBUG] wgpu shell attached backbone {}", self.sync_backbone_uri.as_deref().unwrap_or_default());
-            self.refresh_history_snapshot();
+            self.refresh_history_snapshot().await;
             self.refresh_ui().await?;
             Ok(())
         }
@@ -3153,8 +3220,8 @@ impl ShellState {
         self.presence_surface = surface;
         let actor_uri = format!("actor://{document_id}");
         let actor = self.current_shell_actor(session.instance_id);
-        let channels = self.document_host.open(ArtifactActorConfig { document_id: document_id.clone(), schema, bindings, watch_external: true, actor });
-        let events = self.document_host.subscribe(&document_id);
+        let channels = self.document_host.open(ArtifactActorConfig { document_id: document_id.clone(), schema, bindings, watch_external: true, actor }).await;
+        let events = self.document_host.subscribe(&document_id).await;
         plugin.attach_backbone(session.instance_id, &actor_uri).map_err(|error| format!("plugin attach backbone: {error}"))?;
         let cmd_tx = channels.cmd_tx.clone();
         let _ = cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() });
@@ -3162,7 +3229,7 @@ impl ShellState {
         self.sync_channel = Some(ShellSyncChannel { document_id, actor_uri, instance_id: session.instance_id, plugin_id: session.plugin_id.clone(), cmd_tx, events, connected_at_ms: chrome_now_ms() as i64 });
         self.sync_status = Some(ArtifactSyncStatus::default());
         self.sync_card_kind = None;
-        self.refresh_history_snapshot();
+        self.refresh_history_snapshot().await;
         self.refresh_ui().await
     }
 
@@ -3408,8 +3475,8 @@ impl ShellState {
                         let (sample_stride, max_frames, max_long_edge_px, fps_hint) = (*sample_stride, *max_frames, *max_long_edge_px, *fps_hint);
                         let payload = payload.clone();
                         let args = optional_dsl_value_as_json(args.clone());
-                        self.submit_shell_io(move || {
-                            ShellIoCompletion::Actions(request_media_frames(&controller_id, &accept, &frame_action, &done_action, &fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload.as_deref(), args))
+                        self.submit_shell_io_future(async move {
+                            ShellIoCompletion::Actions(request_media_frames(&controller_id, &accept, &frame_action, &done_action, &fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload.as_deref(), args).await)
                         });
                     }
                     #[cfg(target_arch = "wasm32")]
@@ -3717,8 +3784,8 @@ impl ShellState {
                         #[cfg(not(target_arch = "wasm32"))]
                         {
                             let (filename, mime_type, data, encoding) = (filename.to_string(), mime_type.to_string(), data.to_string(), encoding.map(str::to_string));
-                            self.submit_shell_io(move || {
-                                download_media_export_worker(&filename, &mime_type, &data, encoding.as_deref());
+                            self.submit_shell_io_future(async move {
+                                download_media_export_worker(&filename, &mime_type, &data, encoding.as_deref()).await;
                                 ShellIoCompletion::Finished
                             });
                         }
@@ -3730,7 +3797,7 @@ impl ShellState {
                     if let Some(import_action) = operation.get("importAction").and_then(|v| v.as_str()) {
                         let accept = operation.get("accept").and_then(|v| v.as_str()).unwrap_or(".json");
                         let read_as = operation.get("readAs").and_then(|v| v.as_str());
-                        // 📤️ D3: `multiple` opens a multi-select native dialog (`rfd::FileDialog::pick_files`);
+                        // 📤️ D3: `multiple` opens a multi-select native dialog;
                         // single-file behavior (one dialog call, one `handleAction` with `{json, payload}`) is
                         // byte-for-byte unchanged when absent/false since `request_file_open` then returns at
                         // most one entry and this loop runs exactly once with the same args shape as before.
@@ -3741,8 +3808,8 @@ impl ShellState {
                             let read_as = read_as.map(str::to_string);
                             let import_action = import_action.to_string();
                             let base_args = operation.get("args").cloned().unwrap_or_else(|| serde_json::json!({}));
-                            self.submit_shell_io(move || {
-                                let opened = request_file_open(&accept, read_as.as_deref(), multiple);
+                            self.submit_shell_io_future(async move {
+                                let opened = request_file_open(&accept, read_as.as_deref(), multiple).await;
                                 let total = opened.len();
                                 let actions = opened
                                     .into_iter()
@@ -3796,8 +3863,8 @@ impl ShellState {
                     if let (Some(filename), Some(data), Some(space_id)) = (operation.get("filename").and_then(|v| v.as_str()), operation.get("data").and_then(|v| v.as_str()), operation.get("spaceId").and_then(|v| v.as_str())) {
                         if let Some(session) = self.session.clone() {
                             let (filename, data, space_id) = (filename.to_string(), data.to_string(), space_id.to_string());
-                            self.submit_shell_io(move || {
-                                let Some(path) = request_file_save(&filename) else { return ShellIoCompletion::Finished };
+                            self.submit_shell_io_future(async move {
+                                let Some(path) = request_file_save(&filename).await else { return ShellIoCompletion::Finished };
                                 use std::fs as system_fs;
                                 if system_fs::write(&path, data.as_bytes()).is_err() {
                                     return ShellIoCompletion::Finished;
@@ -3817,8 +3884,8 @@ impl ShellState {
                         if let Some(session) = self.session.clone() {
                             let import_action = import_action.to_string();
                             let mut args = operation.get("args").cloned().unwrap_or_else(|| serde_json::json!({}));
-                            self.submit_shell_io(move || {
-                                let Some(folder_path) = pick_folder() else { return ShellIoCompletion::Finished };
+                            self.submit_shell_io_future(async move {
+                                let Some(folder_path) = pick_folder().await else { return ShellIoCompletion::Finished };
                                 if let Some(obj) = args.as_object_mut() {
                                     obj.insert("folderPath".into(), serde_json::json!(folder_path));
                                 }
@@ -5774,8 +5841,6 @@ impl ShellState {
 #[cfg(test)]
 mod shell_input_tests {
     use super::*;
-    use ui_wgpu::wgpu::UiPresence;
-
     #[test]
     fn standalone_multi_app_variants_resolve_their_declared_app() {
         assert_eq!(resolve_playground_app_id("puzzle2d"), Some("puzzle2d-play"));
@@ -5807,15 +5872,15 @@ mod shell_input_tests {
 
     #[test]
     fn dock_window_order_flattens_a_single_stack_in_tab_order() {
-        let node = crate::dock::DockNode::Stack { windows: vec!["a".into(), "b".into(), "c".into()], active: "a".into() };
+        let node = crate::dock::DockNode::Stack { windows: vec![DockStackTab::new("a"), DockStackTab::new("b"), DockStackTab::new("c")], active: "a".into() };
         assert_eq!(window_ids(&node), vec!["a", "b", "c"]);
     }
 
     #[test]
     fn dock_window_order_walks_row_and_column_children_depth_first() {
-        let left = crate::dock::DockNode::Stack { windows: vec!["left".into()], active: "left".into() };
-        let right_top = crate::dock::DockNode::Stack { windows: vec!["top".into()], active: "top".into() };
-        let right_bottom = crate::dock::DockNode::Stack { windows: vec!["bottom".into()], active: "bottom".into() };
+        let left = crate::dock::DockNode::Stack { windows: vec![DockStackTab::new("left")], active: "left".into() };
+        let right_top = crate::dock::DockNode::Stack { windows: vec![DockStackTab::new("top")], active: "top".into() };
+        let right_bottom = crate::dock::DockNode::Stack { windows: vec![DockStackTab::new("bottom")], active: "bottom".into() };
         let right = crate::dock::DockNode::Column(vec![(right_top, 0.5), (right_bottom, 0.5)]);
         let root = crate::dock::DockNode::Row(vec![(left, 0.5), (right, 0.5)]);
         assert_eq!(window_ids(&root), vec!["left", "top", "bottom"]);
@@ -5823,8 +5888,8 @@ mod shell_input_tests {
 
     #[test]
     fn dock_window_order_pairs_each_window_with_its_own_stack_path() {
-        let a = crate::dock::DockNode::Stack { windows: vec!["a".into()], active: "a".into() };
-        let b = crate::dock::DockNode::Stack { windows: vec!["b".into()], active: "b".into() };
+        let a = crate::dock::DockNode::Stack { windows: vec![DockStackTab::new("a")], active: "a".into() };
+        let b = crate::dock::DockNode::Stack { windows: vec![DockStackTab::new("b")], active: "b".into() };
         let root = crate::dock::DockNode::Row(vec![(a, 0.5), (b, 0.5)]);
         let mut out = Vec::new();
         ShellState::dock_window_order(&root, &mut Vec::new(), &mut out);
@@ -5917,14 +5982,14 @@ mod shell_input_tests {
     #[test]
     fn finish_dock_drag_persists_layout_and_clears_drag_state_on_successful_drop() {
         let mut shell = ShellState::new(Vec::new(), String::new());
-        shell.dock.root = crate::dock::DockNode::Row(vec![(crate::dock::DockNode::Stack { windows: vec!["a".into(), "b".into(), "c".into()], active: "a".into() }, 1.0)]);
+        shell.dock.root = crate::dock::DockNode::Row(vec![(crate::dock::DockNode::Stack { windows: vec![DockStackTab::new("a"), DockStackTab::new("b"), DockStackTab::new("c")], active: "a".into() }, 1.0)]);
         assert!(shell.dock.remove_window("a"));
         let payload = DockDragPayload { kind: DockDragKind::Tab, window_id: "a".into(), source_path: vec![0], tab_index: 0, ghost_label: "a".into() };
         let zone = DockDropZone::Tab { stack_path: vec![0], corner: WindowStackCorner::TopLeft, index: 2 };
         shell.dock_drag = Some(DockDragState { payload, x: 10.0, y: 10.0, drop_zone: Some(zone) });
         assert!(shell.layout_override.is_none(), "sanity: nothing persisted yet");
         let input = InputState::<ActionDescriptor>::default();
-        let result = pollster::block_on(shell.finish_dock_drag(10.0, 10.0, &input));
+        let result = semio_framework_async::block_on(shell.finish_dock_drag(10.0, 10.0, &input));
         assert!(result.is_ok(), "finish_dock_drag must not error even without a host app to log a shell.windowMove against");
         assert!(shell.layout_override.is_some(), "a successful drop persists the new dock layout");
         assert!(shell.dock_drag.is_none(), "the transient drag state is always taken");
@@ -6856,11 +6921,11 @@ impl ShellState {
         use semio_framework::{ActionArgDef, ActionArgOption, ActionKind, CommandDefinition, PlatformKeybinding};
         let terminology_options: Vec<ActionArgOption> = self.active_terminologies().into_iter().map(|id| ActionArgOption { label: if id == "native" { LocalizedLabel::data("Native") } else { LocalizedLabel::data(id.clone()) }, value: id }).collect();
         vec![
-            CommandDefinition::new_catalog("os.toggleFullscreen", LocalizedLabel::native("Toggle Full Screen", "Vollbild umschalten"), "window", ActionKind::Shell)
+            CommandDefinition::bounded_catalog("os.toggleFullscreen", LocalizedLabel::native("Toggle Full Screen", "Vollbild umschalten"), "window", ActionKind::Shell)
                 .with_keybinding(PlatformKeybinding::for_platform("f11", Platform::Windows))
                 .with_keybinding(PlatformKeybinding::for_platform("f11", Platform::Linux))
                 .with_keybinding(PlatformKeybinding::for_platform("control+meta+f", Platform::MacOs)),
-            CommandDefinition::new_catalog("os.setAppearance", LocalizedLabel::data("Set Appearance"), "appearance", ActionKind::Shell).with_args([ActionArgDef::select(
+            CommandDefinition::bounded_catalog("os.setAppearance", LocalizedLabel::data("Set Appearance"), "appearance", ActionKind::Shell).with_args([ActionArgDef::select(
                 "value",
                 LocalizedLabel::data("Appearance"),
                 vec![
@@ -6870,20 +6935,21 @@ impl ShellState {
                 ],
             )
             .required()]),
-            CommandDefinition::new_catalog("os.setDriver", LocalizedLabel::data("Set Driver"), "layout", ActionKind::Shell).with_args([ActionArgDef::select(
+            CommandDefinition::bounded_catalog("os.setDriver", LocalizedLabel::data("Set Driver"), "layout", ActionKind::Shell).with_args([ActionArgDef::select(
                 "value",
                 LocalizedLabel::data("Driver"),
                 vec![ActionArgOption { value: "default".into(), label: LocalizedLabel::data("Default") }, ActionArgOption { value: "compact".into(), label: LocalizedLabel::data("Compact") }],
             )
             .required()]),
-            CommandDefinition::new_catalog("os.setLocale", LocalizedLabel::data("Set Locale"), "language", ActionKind::Shell).with_args([ActionArgDef::select(
+            CommandDefinition::bounded_catalog("os.setLocale", LocalizedLabel::data("Set Locale"), "language", ActionKind::Shell).with_args([ActionArgDef::select(
                 "value",
                 LocalizedLabel::data("Locale"),
                 vec![ActionArgOption { value: "en".into(), label: LocalizedLabel::data("English") }, ActionArgOption { value: "de".into(), label: LocalizedLabel::data("Deutsch") }],
             )
             .required()]),
-            CommandDefinition::new_catalog("os.setTerminology", LocalizedLabel::data("Set Terminology"), "language", ActionKind::Shell).with_args([ActionArgDef::select("value", LocalizedLabel::data("Terminology"), terminology_options).required()]),
-            CommandDefinition::new_catalog("os.setThemeId", LocalizedLabel::data("Set Theme"), "appearance", ActionKind::Shell).with_args([ActionArgDef::select(
+            CommandDefinition::bounded_catalog("os.setTerminology", LocalizedLabel::data("Set Terminology"), "language", ActionKind::Shell)
+                .with_args([ActionArgDef::select("value", LocalizedLabel::data("Terminology"), terminology_options).required()]),
+            CommandDefinition::bounded_catalog("os.setThemeId", LocalizedLabel::data("Set Theme"), "appearance", ActionKind::Shell).with_args([ActionArgDef::select(
                 "value",
                 LocalizedLabel::data("Theme"),
                 std::iter::once(ActionArgOption { value: "semio".into(), label: LocalizedLabel::data("Semio") })
@@ -6895,7 +6961,7 @@ impl ShellState {
                     .collect(),
             )
             .required()]),
-            CommandDefinition::new_catalog("os.resetDock", LocalizedLabel::data("Reset Dock Layout"), "layout", ActionKind::Shell),
+            CommandDefinition::bounded_catalog("os.resetDock", LocalizedLabel::data("Reset Dock Layout"), "layout", ActionKind::Shell),
         ]
     }
 
@@ -7362,8 +7428,8 @@ mod command_registry_tests {
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
             artifact_kinds: Vec::new(),
-            config: semio_framework::ConfigSpec::empty(),
-            command_grammar: semio_framework::CommandGrammar::empty(),
+            config: semio_framework_async::block_on(semio_framework::ConfigSpec::empty()),
+            command_grammar: semio_framework_async::block_on(semio_framework::CommandGrammar::empty()),
             io: semio_framework::AppIo::default(),
         }
     }
@@ -7382,7 +7448,7 @@ mod command_registry_tests {
     #[test]
     fn fullscreen_command_requests_the_host_transition() {
         let mut shell = test_shell_state();
-        pollster::block_on(shell.apply_os_command("os.toggleFullscreen", None)).expect("fullscreen command");
+        semio_framework_async::block_on(shell.apply_os_command("os.toggleFullscreen", None)).expect("fullscreen command");
         assert!(shell.fullscreen_toggle_requested);
     }
 
@@ -7400,9 +7466,9 @@ mod command_registry_tests {
 
     #[test]
     fn resolve_commands_tags_every_source() {
-        let os_commands = vec![CommandDefinition::new_catalog("os.setLocale", LocalizedLabel::data("Set Locale"), "language", ActionKind::Shell)];
-        let app_command = CommandDefinition::new_catalog("export", LocalizedLabel::data("Export"), "app", ActionKind::Mutation);
-        let mode_command = CommandDefinition::new_catalog("focus", LocalizedLabel::data("Focus Mode"), "mode", ActionKind::View);
+        let os_commands = vec![CommandDefinition::bounded_catalog("os.setLocale", LocalizedLabel::data("Set Locale"), "language", ActionKind::Shell)];
+        let app_command = CommandDefinition::bounded_catalog("export", LocalizedLabel::data("Export"), "app", ActionKind::Mutation);
+        let mode_command = CommandDefinition::bounded_catalog("focus", LocalizedLabel::data("Focus Mode"), "mode", ActionKind::View);
         let app = test_app(vec![app_command.clone()], vec![mode_command.clone()]);
         let plugin_manifest = PluginManifest {
             plugin_id: "plugin".into(),
@@ -7412,7 +7478,7 @@ mod command_registry_tests {
             examples: vec![],
             capabilities: vec![],
             topic_contributions: vec![],
-            commands: vec![CommandDefinition::new_catalog("doThing", LocalizedLabel::data("Do Thing"), "plugin", ActionKind::Shell)],
+            commands: vec![CommandDefinition::bounded_catalog("doThing", LocalizedLabel::data("Do Thing"), "plugin", ActionKind::Shell)],
             artifact_kinds: vec![],
             dependencies: vec![],
             contributions: vec![],
@@ -7433,7 +7499,10 @@ mod command_registry_tests {
     #[test]
     fn identical_local_command_ids_have_collision_free_owner_keys() {
         let local_id = "refresh";
-        let app = test_app(vec![CommandDefinition::new_catalog(local_id, LocalizedLabel::data("Refresh App"), "app", ActionKind::View)], vec![CommandDefinition::new_catalog(local_id, LocalizedLabel::data("Refresh Mode"), "mode", ActionKind::View)]);
+        let app = test_app(
+            vec![CommandDefinition::bounded_catalog(local_id, LocalizedLabel::data("Refresh App"), "app", ActionKind::View)],
+            vec![CommandDefinition::bounded_catalog(local_id, LocalizedLabel::data("Refresh Mode"), "mode", ActionKind::View)],
+        );
         let plugin_manifest = PluginManifest {
             plugin_id: "plugin".into(),
             label: "Plugin".into(),
@@ -7442,12 +7511,12 @@ mod command_registry_tests {
             examples: vec![],
             capabilities: vec![],
             topic_contributions: vec![],
-            commands: vec![CommandDefinition::new_catalog(local_id, LocalizedLabel::data("Refresh Plugin"), "plugin", ActionKind::View)],
+            commands: vec![CommandDefinition::bounded_catalog(local_id, LocalizedLabel::data("Refresh Plugin"), "plugin", ActionKind::View)],
             artifact_kinds: vec![],
             dependencies: vec![],
             contributions: vec![],
         };
-        let resolved = resolve_commands(vec![CommandDefinition::new_catalog(local_id, LocalizedLabel::data("Refresh Shell"), "general", ActionKind::Shell)], Some(&plugin_manifest), "plugin", &app, "default");
+        let resolved = resolve_commands(vec![CommandDefinition::bounded_catalog(local_id, LocalizedLabel::data("Refresh Shell"), "general", ActionKind::Shell)], Some(&plugin_manifest), "plugin", &app, "default");
         let keys: Vec<String> = resolved.iter().map(|entry| command_address_stable_key(&entry.address)).collect();
         assert_eq!(keys, vec!["os:refresh", "plugin:plugin:refresh", "app:plugin:test-app:refresh", "mode:plugin:test-app:default:refresh"]);
     }
@@ -7455,9 +7524,9 @@ mod command_registry_tests {
     #[test]
     fn command_categories_orders_by_first_appearance_and_dedupes() {
         let resolved = vec![
-            ResolvedCommand::new(CommandDefinition::new_catalog("a", LocalizedLabel::data("A"), "appearance", ActionKind::Shell), CommandOwnerAddress::Os),
-            ResolvedCommand::new(CommandDefinition::new_catalog("b", LocalizedLabel::data("B"), "layout", ActionKind::Shell), CommandOwnerAddress::Os),
-            ResolvedCommand::new(CommandDefinition::new_catalog("c", LocalizedLabel::data("C"), "appearance", ActionKind::Shell), CommandOwnerAddress::Os),
+            ResolvedCommand::new(CommandDefinition::bounded_catalog("a", LocalizedLabel::data("A"), "appearance", ActionKind::Shell), CommandOwnerAddress::Os),
+            ResolvedCommand::new(CommandDefinition::bounded_catalog("b", LocalizedLabel::data("B"), "layout", ActionKind::Shell), CommandOwnerAddress::Os),
+            ResolvedCommand::new(CommandDefinition::bounded_catalog("c", LocalizedLabel::data("C"), "appearance", ActionKind::Shell), CommandOwnerAddress::Os),
         ];
         assert_eq!(command_categories(&resolved), vec![("appearance".to_string(), "Appearance".to_string()), ("layout".to_string(), "Layout".to_string())]);
     }
@@ -7482,15 +7551,14 @@ mod command_registry_tests {
         assert!(reset_dock.dispatch_action.is_none());
     }
 
-    // 🔌️ Plain `#[test]` + `pollster::block_on` (not `#[tokio::test]`) — matches the rest of this crate's
-    // async-from-sync convention (see e.g. `pollster::block_on(self.shell.boot())` in the native event
-    // loop); this crate's `tokio` dependency only enables the `sync` feature, not `rt`/`macros`.
+    // 🔌️ Plain `#[test]` plus the sanctioned test-entrypoint driver keeps these tests
+    // deterministic without introducing a runtime.
     #[test]
     fn apply_os_command_reset_dock_clears_layout_override_locally() {
         let mut shell = test_shell_state();
         shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework::ViewModel::default() });
         shell.layout_override = Some(shell.dock.to_window_layout());
-        pollster::block_on(shell.apply_os_command("os.resetDock", None)).expect("reset dock never errors");
+        semio_framework_async::block_on(shell.apply_os_command("os.resetDock", None)).expect("reset dock never errors");
         assert!(shell.layout_override.is_none());
     }
 
@@ -7498,7 +7566,7 @@ mod command_registry_tests {
     fn apply_os_command_set_locale_dispatches_through_framework_controller() {
         let mut shell = test_shell_state();
         shell.session = Some(ActiveSession { plugin_id: "test".into(), instance_id: 0, app: test_app(vec![], vec![]), view_state: semio_framework::ViewModel::default() });
-        pollster::block_on(shell.apply_os_command("os.setLocale", Some("de"))).expect("set locale never errors");
+        semio_framework_async::block_on(shell.apply_os_command("os.setLocale", Some("de"))).expect("set locale never errors");
         assert_eq!(shell.locale_id, "de");
     }
 
@@ -7506,9 +7574,9 @@ mod command_registry_tests {
     fn apply_os_command_set_driver_updates_driver_id() {
         let mut shell = test_shell_state();
         assert_eq!(shell.driver_id, "default");
-        pollster::block_on(shell.apply_os_command("os.setDriver", Some("compact"))).expect("set driver never errors");
+        semio_framework_async::block_on(shell.apply_os_command("os.setDriver", Some("compact"))).expect("set driver never errors");
         assert_eq!(shell.driver_id, "compact");
-        pollster::block_on(shell.apply_os_command("os.setDriver", Some("default"))).expect("set driver never errors");
+        semio_framework_async::block_on(shell.apply_os_command("os.setDriver", Some("default"))).expect("set driver never errors");
         assert_eq!(shell.driver_id, "default");
     }
 
@@ -7519,10 +7587,10 @@ mod command_registry_tests {
     #[test]
     fn apply_os_command_set_theme_id_updates_active_theme() {
         let mut shell = test_shell_state();
-        pollster::block_on(shell.apply_os_command("os.setThemeId", Some("mono"))).expect("set theme never errors");
+        semio_framework_async::block_on(shell.apply_os_command("os.setThemeId", Some("mono"))).expect("set theme never errors");
         assert_eq!(active_theme_id(), "mono");
         assert_eq!(shell.chrome_build.preferences.theme_id, "mono");
-        pollster::block_on(shell.apply_os_command("os.setThemeId", Some("semio"))).expect("set theme never errors");
+        semio_framework_async::block_on(shell.apply_os_command("os.setThemeId", Some("semio"))).expect("set theme never errors");
         assert_eq!(active_theme_id(), "semio");
         assert_eq!(shell.chrome_build.preferences.theme_id, "semio");
     }
@@ -8812,7 +8880,7 @@ fn tutorial_recorder_sample(state: &mut ShellState, runtime: &mut TutorialRuntim
     if now_wall_ms - runtime.recorder_last_ui_sample_wall_ms >= UI_SAMPLE_INTERVAL_MS {
         let snapshot = tutorial_capture_ui_snapshot(state);
         if snapshot != runtime.recorder_last_ui {
-            runtime.definition.tracks.ui.push(semio_framework::TutorialUiKeyframe { at: runtime.playhead_ms.max(0.0) as u64, sample: semio_framework::TutorialUiSample::Snapshot { state: snapshot.clone() } });
+            runtime.definition.tracks.ui.push(semio_framework::TutorialUiKeyframe { at: runtime.playhead_ms.max(0.0) as u64, sample: semio_framework::TutorialUiSample::Snapshot { state: Box::new(snapshot.clone()) } });
             runtime.recorder_last_ui = snapshot;
         }
         runtime.recorder_last_ui_sample_wall_ms = now_wall_ms;
@@ -8956,7 +9024,8 @@ mod tutorial_tests {
     fn gesture_point_scopes_out_scene_and_entity_kinds() {
         let state = shell();
         assert_eq!(tutorial_resolve_gesture_point(&state, &semio_framework::IntroductionPoint::Scene { id: "w".into(), position: [0.0, 0.0, 0.0] }), None);
-        assert_eq!(tutorial_resolve_gesture_point(&state, &semio_framework::IntroductionPoint::any_entity("w", "vortex")), None);
+        let point = semio_framework_async::block_on(semio_framework::IntroductionPoint::any_entity("w", "vortex"));
+        assert_eq!(tutorial_resolve_gesture_point(&state, &point), None);
     }
     //#endregion GesturePointTests
 
@@ -9065,15 +9134,25 @@ mod tutorial_tests {
 
 impl ShellState {
     /// 🎭️ Runs present-side synchronization around the owned chrome construction phase.
-    pub fn render_chrome(&mut self, draw: &mut DrawList, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, gpu: &mut ui_wgpu::wgpu::GpuContext) {
+    pub fn render_chrome(
+        &mut self,
+        draw: &mut DrawList,
+        overlay: &mut DrawList,
+        atlas: &mut FontAtlas,
+        icons: &IconAtlas,
+        input: &mut InputState<ActionDescriptor>,
+        theme: &Theme,
+        engine_resources: &mut crate::engine_canvas::EngineCanvasBuildContext,
+        world_resources: &mut infinite_world::world::World3dBuildContext,
+    ) {
         self.load_ui_prefs_once();
         if let Some(app_id) = self.session.as_ref().map(|session| session.app.id.clone()) {
             self.chrome_build.introduction_seen.entry(app_id.clone()).or_insert_with(|| read_stored_introduction_seen(&app_id));
         }
         #[cfg(not(target_arch = "wasm32"))]
-        self.publish_presence_heartbeat(input);
+        self.publish_presence_heartbeat();
         self.persist_panel_layout_if_changed();
-        self.render_chrome_build(draw, overlay, atlas, icons, input, theme, gpu);
+        self.render_chrome_build(draw, overlay, atlas, icons, input, theme, engine_resources, world_resources);
         for app_id in std::mem::take(&mut self.chrome_build.introduction_seen_writes) {
             write_stored_introduction_seen(&app_id);
         }
@@ -9081,7 +9160,17 @@ impl ShellState {
     }
 
     /// 🧱️ Builds chrome exclusively from explicit owned state and caller-provided rendering resources.
-    fn render_chrome_build(&mut self, draw: &mut DrawList, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, gpu: &mut ui_wgpu::wgpu::GpuContext) {
+    fn render_chrome_build(
+        &mut self,
+        draw: &mut DrawList,
+        overlay: &mut DrawList,
+        atlas: &mut FontAtlas,
+        icons: &IconAtlas,
+        input: &mut InputState<ActionDescriptor>,
+        theme: &Theme,
+        engine_resources: &mut crate::engine_canvas::EngineCanvasBuildContext,
+        world_resources: &mut infinite_world::world::World3dBuildContext,
+    ) {
         let w = self.screen_w;
         let h = self.screen_h;
         draw.set_screen_height(h);
@@ -9103,21 +9192,21 @@ impl ShellState {
         let mut overlay_slot = Some(overlay);
         {
             let _find_items_binding = find_items.bind();
-            self.render_main_window(draw, &mut overlay_slot, atlas, icons, input, theme, body, gpu);
+            self.render_main_window(draw, &mut overlay_slot, atlas, icons, input, theme, body, engine_resources, world_resources);
         }
         self.find_items = find_items.take();
         if self.left_panel_open && self.has_left_tabs() {
             if let Some(panel_draw) = overlay_slot.as_deref_mut() {
-                self.render_left_panel(panel_draw, None, atlas, icons, input, theme, body, gpu);
+                self.render_left_panel(panel_draw, None, atlas, icons, input, theme, body, engine_resources, world_resources);
             } else {
-                self.render_left_panel(draw, None, atlas, icons, input, theme, body, gpu);
+                self.render_left_panel(draw, None, atlas, icons, input, theme, body, engine_resources, world_resources);
             }
         }
         if self.right_panel_open && self.has_right_tabs() {
             if let Some(panel_draw) = overlay_slot.as_deref_mut() {
-                self.render_right_panel(panel_draw, None, atlas, icons, input, theme, body, gpu);
+                self.render_right_panel(panel_draw, None, atlas, icons, input, theme, body, engine_resources, world_resources);
             } else {
-                self.render_right_panel(draw, None, atlas, icons, input, theme, body, gpu);
+                self.render_right_panel(draw, None, atlas, icons, input, theme, body, engine_resources, world_resources);
             }
         }
         with_chrome_sink(draw, &mut overlay_slot, |chrome, _select_overlay| {
@@ -9458,7 +9547,7 @@ impl ShellState {
         }
     }
 
-    fn render_footer(&self, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) {
+    fn render_footer(&mut self, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) {
         let y = height - theme.footer_height;
         let footer_rect = Rect::new(0.0, y, width, theme.footer_height);
         let footer_hovered = footer_rect.contains(input.pointer_x, input.pointer_y);
@@ -9522,7 +9611,8 @@ impl ShellState {
         tabs: &[PanelTabDefinition],
         active_tab_id: &str,
         side_left: bool,
-        gpu: &mut ui_wgpu::wgpu::GpuContext,
+        engine_resources: &mut crate::engine_canvas::EngineCanvasBuildContext,
+        world_resources: &mut infinite_world::world::World3dBuildContext,
     ) {
         const PANEL_RESIZE_HIT_PX: f32 = 20.0;
         let resize_id = if side_left { "panel.resize.left" } else { "panel.resize.right" };
@@ -9569,14 +9659,25 @@ impl ShellState {
             let widget_maps = &mut self.widget_maps;
             let mut ctx = framework_widget_context(panel_draw, overlay, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps));
             ctx.pick_clip = Some(content);
-            render_ui_node(&ui, scrolled, &mut ctx, active_tab_id, gpu, &mut self.world3d_states, &mut self.node_graph_states, &mut self.tiled_map_states, &mut self.icon_render_states, &mut self.board2d_states);
+            render_ui_node(&ui, scrolled, &mut ctx, active_tab_id, engine_resources, world_resources, &mut self.world3d_states, &mut self.node_graph_states, &mut self.tiled_map_states, &mut self.icon_render_states, &mut self.board2d_states);
         }
         panel_draw.pop_scissor();
         panel_draw.end_glass_content();
         input.register_hit(HitTarget { rect: resize_handle, event: None, control_id: Some(resize_id.into()), kind: HitKind::PanelResize, drag_axis: Some(DragAxis::Horizontal), drag_data: None });
     }
 
-    fn render_left_panel(&mut self, panel_draw: &mut DrawList, mut overlay: Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, body: Rect, gpu: &mut ui_wgpu::wgpu::GpuContext) {
+    fn render_left_panel(
+        &mut self,
+        panel_draw: &mut DrawList,
+        mut overlay: Option<&mut DrawList>,
+        atlas: &mut FontAtlas,
+        icons: &IconAtlas,
+        input: &mut InputState<ActionDescriptor>,
+        theme: &Theme,
+        body: Rect,
+        engine_resources: &mut crate::engine_canvas::EngineCanvasBuildContext,
+        world_resources: &mut infinite_world::world::World3dBuildContext,
+    ) {
         let session = match self.session.as_ref() {
             Some(s) => s.clone(),
             None => return,
@@ -9587,10 +9688,21 @@ impl ShellState {
         }
         let active = self.active_left_tab_id(&session);
         let panel = self.floating_panel_rect(true, body, theme);
-        self.render_floating_panel(panel_draw, overlay.as_deref_mut(), atlas, icons, input, theme, panel, &tabs, &active, true, gpu);
+        self.render_floating_panel(panel_draw, overlay.as_deref_mut(), atlas, icons, input, theme, panel, &tabs, &active, true, engine_resources, world_resources);
     }
 
-    fn render_right_panel(&mut self, panel_draw: &mut DrawList, mut overlay: Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, body: Rect, gpu: &mut ui_wgpu::wgpu::GpuContext) {
+    fn render_right_panel(
+        &mut self,
+        panel_draw: &mut DrawList,
+        mut overlay: Option<&mut DrawList>,
+        atlas: &mut FontAtlas,
+        icons: &IconAtlas,
+        input: &mut InputState<ActionDescriptor>,
+        theme: &Theme,
+        body: Rect,
+        engine_resources: &mut crate::engine_canvas::EngineCanvasBuildContext,
+        world_resources: &mut infinite_world::world::World3dBuildContext,
+    ) {
         let session = match self.session.as_ref() {
             Some(s) => s.clone(),
             None => return,
@@ -9601,10 +9713,21 @@ impl ShellState {
         }
         let active = self.active_right_tab_id(&session);
         let panel = self.floating_panel_rect(false, body, theme);
-        self.render_floating_panel(panel_draw, overlay.as_deref_mut(), atlas, icons, input, theme, panel, &tabs, &active, false, gpu);
+        self.render_floating_panel(panel_draw, overlay.as_deref_mut(), atlas, icons, input, theme, panel, &tabs, &active, false, engine_resources, world_resources);
     }
 
-    fn render_main_window(&mut self, draw: &mut DrawList, overlay: &mut Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, bounds: Rect, gpu: &mut ui_wgpu::wgpu::GpuContext) {
+    fn render_main_window(
+        &mut self,
+        draw: &mut DrawList,
+        overlay: &mut Option<&mut DrawList>,
+        atlas: &mut FontAtlas,
+        icons: &IconAtlas,
+        input: &mut InputState<ActionDescriptor>,
+        theme: &Theme,
+        bounds: Rect,
+        engine_resources: &mut crate::engine_canvas::EngineCanvasBuildContext,
+        world_resources: &mut infinite_world::world::World3dBuildContext,
+    ) {
         draw.push_solid([bounds.x, bounds.y, bounds.w, bounds.h], theme.background);
         let session = match self.session.as_ref() {
             Some(s) => s.clone(),
@@ -9614,7 +9737,7 @@ impl ShellState {
         canvas = self.render_studio_canvas_bars(draw, atlas, icons, input, theme, canvas, &session);
         if self.space_mode {
             if let Some(spawned_ui) = self.spawned_ui.clone() {
-                self.render_window_content(draw, overlay.as_deref_mut(), atlas, icons, input, theme, canvas, canvas, &[canvas], &spawned_ui, "spawned", gpu);
+                self.render_window_content(draw, overlay.as_deref_mut(), atlas, icons, input, theme, canvas, canvas, &[canvas], &spawned_ui, "spawned", engine_resources, world_resources);
                 return;
             }
         }
@@ -9643,21 +9766,21 @@ impl ShellState {
                 let clip_rects = silhouette.as_ref().map(WindowSilhouette::content_clip_rects).unwrap_or_else(|| vec![safe_body]);
                 let hit_regions: Vec<Rect> = clip_rects.iter().filter_map(|clip| Self::intersect_content_rect(*clip, content_viewport)).collect();
                 draw.begin_silhouette_clip(&clip_rects);
-                self.render_window_content(draw, overlay.as_deref_mut(), atlas, icons, input, theme, content_viewport, content_layout, &hit_regions, &ui, &window_id, gpu);
+                self.render_window_content(draw, overlay.as_deref_mut(), atlas, icons, input, theme, content_viewport, content_layout, &hit_regions, &ui, &window_id, engine_resources, world_resources);
                 draw.end_silhouette_clip();
             }
             if let Some(kind) = window_kind {
-                let measures_outcome = self.render_window_measures_rail(draw, overlay, atlas, icons, input, theme, &safe_body, &window_id, &kind, gpu);
+                let measures_outcome = self.render_window_measures_rail(draw, overlay, atlas, icons, input, theme, &safe_body, &window_id, &kind);
                 if let Some(hit) = measures_outcome.chip_hit {
                     window_chip_hits.push(hit);
                 }
-                if let Some(hit) = self.render_window_engagement_rail(draw, overlay, atlas, icons, input, theme, &safe_body, &window_id, &kind, measures_outcome.reserve_width, gpu) {
+                if let Some(hit) = self.render_window_engagement_rail(draw, overlay, atlas, icons, input, theme, &safe_body, &window_id, &kind, measures_outcome.reserve_width) {
                     window_chip_hits.push(hit);
                 }
                 if let Some(hit) = self.render_window_actions_rail(draw, overlay, atlas, icons, input, theme, &safe_body, &window_id, &session.app, &kind) {
                     window_chip_hits.push(hit);
                 }
-                self.render_utility_options_rail(draw, overlay, atlas, icons, input, theme, &safe_body, &window_id, &kind, gpu);
+                self.render_utility_options_rail(draw, overlay, atlas, icons, input, theme, &safe_body, &window_id, &kind);
             }
             for (rect, control_id) in window_chip_hits {
                 input.register_hit(HitTarget { rect, event: None, control_id: Some(control_id), kind: HitKind::Button, drag_axis: None, drag_data: None });
@@ -9744,7 +9867,8 @@ impl ShellState {
         hit_regions: &[Rect],
         ui: &UiNode,
         window_id: &str,
-        gpu: &mut ui_wgpu::wgpu::GpuContext,
+        engine_resources: &mut crate::engine_canvas::EngineCanvasBuildContext,
+        world_resources: &mut infinite_world::world::World3dBuildContext,
     ) {
         let scroll_key = format!("window.{window_id}");
         let scroll_y = *self.scroll_offsets.get(&scroll_key).unwrap_or(&0.0);
@@ -9765,7 +9889,7 @@ impl ShellState {
         let widget_maps = &mut self.widget_maps;
         let mut ctx = framework_widget_context(draw, overlay, atlas, Some(icons), input, theme, scroll_offsets, collapsed_sections, open_selects, Some(widget_maps));
         ctx.pick_clip = Some(viewport);
-        render_ui_node(ui, scrolled, &mut ctx, window_id, gpu, &mut self.world3d_states, &mut self.node_graph_states, &mut self.tiled_map_states, &mut self.icon_render_states, &mut self.board2d_states);
+        render_ui_node(ui, scrolled, &mut ctx, window_id, engine_resources, world_resources, &mut self.world3d_states, &mut self.node_graph_states, &mut self.tiled_map_states, &mut self.icon_render_states, &mut self.board2d_states);
         drop(ctx);
         input.pointer_x = pointer.0;
         input.pointer_y = pointer.1;
@@ -9782,7 +9906,7 @@ impl ShellState {
 
     //#endregion SilhouetteContent
 
-    fn render_overlay(&self, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) {
+    fn render_overlay(&mut self, overlay: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32, height: f32) {
         match &self.overlay_state {
             OverlayState::Search => {
                 let items: Vec<(String, String, usize)> = self.filtered_search_items().into_iter().enumerate().map(|(index, item)| (item.group, item.label, index)).collect();
@@ -10499,7 +10623,6 @@ impl ShellState {
         content: &Rect,
         window_id: &str,
         kind: &semio_framework::WindowKindDefinition,
-        gpu: &mut ui_wgpu::wgpu::GpuContext,
     ) -> WindowMeasuresRailOutcome {
         let inset = theme.gap_standard;
         let active_utility = self.active_utility_by_window.get(window_id).cloned();
@@ -10554,7 +10677,7 @@ impl ShellState {
             let mut y = body.y;
             for measure in &measures {
                 let h = measure_window_measure_height(theme, &self.collapsed_sections, measure);
-                self.render_window_measure(chrome, select_overlay, atlas, icons, input, theme, Rect::new(body.x, y, body.w, h), measure, gpu);
+                self.render_window_measure(chrome, select_overlay, atlas, icons, input, theme, Rect::new(body.x, y, body.w, h), measure);
                 y += h;
             }
             if !expanded {
@@ -10581,7 +10704,6 @@ impl ShellState {
         content: &Rect,
         window_id: &str,
         kind: &semio_framework::WindowKindDefinition,
-        gpu: &mut ui_wgpu::wgpu::GpuContext,
     ) {
         let inset = theme.gap_standard;
         let active_utility = self.active_utility_by_window.get(window_id).cloned();
@@ -10601,25 +10723,14 @@ impl ShellState {
             let mut y = body.y;
             for measure in &utility_options {
                 let h = measure_window_measure_height(theme, &self.collapsed_sections, measure);
-                self.render_window_measure(chrome, select_overlay, atlas, icons, input, theme, Rect::new(body.x, y, body.w, h), measure, gpu);
+                self.render_window_measure(chrome, select_overlay, atlas, icons, input, theme, Rect::new(body.x, y, body.w, h), measure);
                 y += h;
             }
             chrome.end_glass_content();
         })(draw, overlay)
     }
 
-    fn render_window_measure(
-        &mut self,
-        draw: &mut DrawList,
-        overlay: &mut Option<&mut DrawList>,
-        atlas: &mut FontAtlas,
-        icons: &IconAtlas,
-        input: &mut InputState<ActionDescriptor>,
-        theme: &Theme,
-        bounds: Rect,
-        measure: &WindowMeasure,
-        gpu: &mut ui_wgpu::wgpu::GpuContext,
-    ) -> f32 {
+    fn render_window_measure(&mut self, draw: &mut DrawList, overlay: &mut Option<&mut DrawList>, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, bounds: Rect, measure: &WindowMeasure) -> f32 {
         use ui_wgpu::wgpu::component::layout::MeasureSelectItem;
         use ui_wgpu::wgpu::widgets::{render_widget, WidgetNode};
         let height = measure_window_measure_height(theme, &self.collapsed_sections, measure);
@@ -10633,7 +10744,7 @@ impl ShellState {
                 if open {
                     for child in children {
                         let child_h = measure_window_measure_height(theme, &self.collapsed_sections, child);
-                        self.render_window_measure(draw, overlay, atlas, icons, input, theme, Rect::new(bounds.x + 12.0, y, bounds.w - 12.0, child_h), child, gpu);
+                        self.render_window_measure(draw, overlay, atlas, icons, input, theme, Rect::new(bounds.x + 12.0, y, bounds.w - 12.0, child_h), child);
                         y += child_h;
                     }
                 }
@@ -10702,7 +10813,6 @@ impl ShellState {
         window_id: &str,
         kind: &semio_framework::WindowKindDefinition,
         measures_reserve: f32,
-        gpu: &mut ui_wgpu::wgpu::GpuContext,
     ) -> Option<(Rect, String)> {
         let inset = theme.gap_standard;
         let measures_expanded = self.measures_expanded.get(window_id).copied().unwrap_or(false);
@@ -10759,11 +10869,11 @@ impl ShellState {
                 }
             }
             if let Some(input_spec) = &engagement.input {
-                self.render_engagement_input(chrome, select_overlay, atlas, icons, input, theme, Rect::new(rail.x + 8.0, y, rail.w - 16.0, theme.control_height * 2.0), window_id, input_spec, engagement.possible_engagements.as_deref(), gpu);
+                self.render_engagement_input(chrome, select_overlay, atlas, icons, input, theme, Rect::new(rail.x + 8.0, y, rail.w - 16.0, theme.control_height * 2.0), window_id, input_spec, engagement.possible_engagements.as_deref());
                 y += theme.control_height * 2.0 + 8.0;
             }
             if let Some(control) = &engagement.control {
-                self.render_engagement_control(chrome, select_overlay, atlas, icons, input, theme, Rect::new(rail.x + 8.0, y, rail.w - 16.0, theme.control_height), control, gpu);
+                self.render_engagement_control(chrome, select_overlay, atlas, icons, input, theme, Rect::new(rail.x + 8.0, y, rail.w - 16.0, theme.control_height), control);
                 y += theme.control_height;
             }
             if let Some(status_rows) = &engagement.status {
@@ -10800,7 +10910,6 @@ impl ShellState {
         window_id: &str,
         spec: &WindowEngagementInput,
         possibles: Option<&[ui_wgpu::wgpu::WindowEngagementPossible]>,
-        _gpu: &mut ui_wgpu::wgpu::GpuContext,
     ) {
         let id = spec.id.clone().unwrap_or_else(|| format!("engagement-input-{window_id}"));
         let committed_value = self.engagement_inputs.get(&id).cloned().or_else(|| spec.value.clone()).unwrap_or_default();
@@ -10860,7 +10969,6 @@ impl ShellState {
         theme: &Theme,
         bounds: Rect,
         control: &WindowEngagementControl,
-        _gpu: &mut ui_wgpu::wgpu::GpuContext,
     ) {
         use ui_wgpu::wgpu::widgets::{render_widget, WidgetNode};
         let node = match control {
@@ -11487,12 +11595,14 @@ impl PrefsStore for FilePrefsStore {
     }
 }
 
+#[cfg(target_arch = "wasm32")]
 thread_local! {
     #[cfg(target_arch = "wasm32")]
     static PREFS_STORE: std::cell::RefCell<WebLocalStorage> = std::cell::RefCell::new(WebLocalStorage::new());
-    #[cfg(not(target_arch = "wasm32"))]
-    static PREFS_STORE: std::cell::RefCell<FilePrefsStore> = std::cell::RefCell::new(FilePrefsStore::new());
 }
+
+#[cfg(not(target_arch = "wasm32"))]
+static PREFS_STORE: std::sync::OnceLock<std::sync::Mutex<std::cell::RefCell<FilePrefsStore>>> = std::sync::OnceLock::new();
 
 fn empty_os_shell_config() -> Value {
     serde_json::json!({
@@ -11522,11 +11632,26 @@ fn prefs_set_in(store: &mut impl PrefsStore, key: &str, value: &str) {
 }
 
 fn prefs_get(key: &str) -> Option<String> {
-    PREFS_STORE.with(|store| prefs_get_from(&*store.borrow(), key))
+    #[cfg(target_arch = "wasm32")]
+    {
+        PREFS_STORE.with(|store| prefs_get_from(&*store.borrow(), key))
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let store = PREFS_STORE.get_or_init(|| std::sync::Mutex::new(std::cell::RefCell::new(FilePrefsStore::new()))).lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let value = prefs_get_from(&*store.borrow(), key);
+        value
+    }
 }
 
 fn prefs_set(key: &str, value: &str) {
+    #[cfg(target_arch = "wasm32")]
     PREFS_STORE.with(|store| prefs_set_in(&mut *store.borrow_mut(), key, value));
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let store = PREFS_STORE.get_or_init(|| std::sync::Mutex::new(std::cell::RefCell::new(FilePrefsStore::new()))).lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        prefs_set_in(&mut *store.borrow_mut(), key, value);
+    }
 }
 //#endregion 🗄️PrefsStore
 
@@ -11612,9 +11737,13 @@ impl Default for ChromePrefsState {
     }
 }
 
+#[cfg(target_arch = "wasm32")]
 thread_local! {
     static CHROME_PREFS: std::cell::RefCell<Option<ChromePrefsState>> = std::cell::RefCell::new(None);
 }
+
+#[cfg(not(target_arch = "wasm32"))]
+static CHROME_PREFS: WorkerCell<Option<ChromePrefsState>> = WorkerCell::new();
 
 fn default_compute_worker_count() -> u32 {
     std::thread::available_parallelism().map(|n| n.get() as u32).unwrap_or(1)
@@ -12292,7 +12421,7 @@ mod chrome_overlays_tour_tests {
         chrome.register_tooltip("nav.help", "Help");
         chrome.preferences.theme_id = "mono".to_string();
         let chrome = std::thread::spawn(move || {
-            assert!(chrome.content_has_focus());
+            assert!(chrome.content_has_focus("main"));
             assert_eq!(chrome.tooltip_titles.get("nav.help").map(String::as_str), Some("Help"));
             chrome
         })
@@ -12530,7 +12659,7 @@ mod chrome_overlays_tour_tests {
         let mut shell = ShellState::new(Vec::new(), String::new());
         shell.chrome_build.start_introduction();
         let step = semio_framework::IntroductionStepDefinition::new("viewport", LocalizedLabel::data("Viewport"), LocalizedLabel::data("…"))
-            .interact_ordered(vec![semio_framework::IntroductionInteraction::zoom("main", "Zoom"), semio_framework::IntroductionInteraction::pan("main", "Pan")]);
+            .interact_ordered(vec![semio_framework_async::block_on(semio_framework::IntroductionInteraction::zoom("main", "Zoom")), semio_framework_async::block_on(semio_framework::IntroductionInteraction::pan("main", "Pan"))]);
         // Pan is index 1; out of order while zoom (index 0) hasn't completed — ignored.
         shell.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework::IntroductionInteractionKind::Pan(id) if id == "main"));
         assert_eq!(shell.chrome_build.tour_state.as_ref().unwrap().completed_interactions, Vec::<usize>::new());
@@ -12802,12 +12931,15 @@ fn download_media_export(filename: &str, mime_type: &str, data: &str, _encoding:
 #[cfg(not(target_arch = "wasm32"))]
 fn download_media_export(filename: &str, mime_type: &str, data: &str, encoding: Option<&str>) {
     let (filename, mime_type, data, encoding) = (filename.to_string(), mime_type.to_string(), data.to_string(), encoding.map(str::to_string));
-    crate::renderer_worker_pool().submit(Lane::Io, Box::new(move || download_media_export_worker(&filename, &mime_type, &data, encoding.as_deref())));
+    ShellPoolFuture::spawn(crate::renderer_worker_pool(), Lane::Io, async move {
+        download_media_export_worker(&filename, &mime_type, &data, encoding.as_deref()).await;
+    });
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn download_media_export_worker(filename: &str, mime_type: &str, data: &str, encoding: Option<&str>) {
-    if let Some(path) = rfd::FileDialog::new().set_file_name(filename).add_filter("export", &[mime_type.rsplit_once('/').map(|(_, ext)| ext).unwrap_or("dat")]).save_file() {
+async fn download_media_export_worker(filename: &str, mime_type: &str, data: &str, encoding: Option<&str>) {
+    let extension = mime_type.rsplit_once('/').map(|(_, ext)| ext).unwrap_or("dat");
+    if let Some(path) = ui_host::select_native_paths(ui_host::NativeFileDialogRequest::save(filename, [extension])).await.into_iter().next() {
         use base64::Engine;
         use std::fs as system_fs;
         let bytes = if encoding == Some("base64") { base64::engine::general_purpose::STANDARD.decode(data).unwrap_or_else(|_| data.as_bytes().to_vec()) } else { data.as_bytes().to_vec() };
@@ -12816,8 +12948,8 @@ fn download_media_export_worker(filename: &str, mime_type: &str, data: &str, enc
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn request_file_save(filename: &str) -> Option<std::path::PathBuf> {
-    rfd::FileDialog::new().set_file_name(filename).add_filter("studio", &["json"]).save_file()
+async fn request_file_save(filename: &str) -> Option<std::path::PathBuf> {
+    ui_host::select_native_paths(ui_host::NativeFileDialogRequest::save(filename, ["json"])).await.into_iter().next()
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -12826,8 +12958,8 @@ fn request_file_save(_filename: &str) -> Option<std::path::PathBuf> {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn pick_folder() -> Option<String> {
-    rfd::FileDialog::new().pick_folder().map(|path| path.display().to_string())
+async fn pick_folder() -> Option<String> {
+    ui_host::select_native_paths(ui_host::NativeFileDialogRequest::folder()).await.into_iter().next().map(|path| path.display().to_string())
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -12835,19 +12967,12 @@ fn pick_folder() -> Option<String> {
     None
 }
 
-/// 📤️ Opens the native file picker; one entry per selected file, in selection order. `multiple`
-/// switches to `rfd::FileDialog::pick_files` (native multi-select); single-file behavior (`pick_file`,
-/// at most one entry) is unchanged when false — rfd's own OS-native dialog handles the multi-select UI,
-/// no bespoke picker needed.
+/// 📤️ Opens the native file picker; one entry per selected file, in selection order.
 #[cfg(not(target_arch = "wasm32"))]
-fn request_file_open(accept: &str, read_as: Option<&str>, multiple: bool) -> Vec<String> {
+async fn request_file_open(accept: &str, read_as: Option<&str>, multiple: bool) -> Vec<String> {
     use std::fs as system_fs;
-    let extensions: Vec<&str> = accept.split(',').filter_map(|entry| entry.trim().strip_prefix('.')).collect();
-    let mut dialog = rfd::FileDialog::new();
-    if !extensions.is_empty() {
-        dialog = dialog.add_filter("import", &extensions);
-    }
-    let paths: Vec<std::path::PathBuf> = if multiple { dialog.pick_files().unwrap_or_default() } else { dialog.pick_file().into_iter().collect() };
+    let extensions: Vec<String> = accept.split(',').filter_map(|entry| entry.trim().strip_prefix('.').map(str::to_string)).collect();
+    let paths = ui_host::select_native_paths(ui_host::NativeFileDialogRequest::open(extensions.clone(), multiple)).await;
     paths
         .into_iter()
         .filter_map(|path| {
@@ -12922,7 +13047,7 @@ fn ffmpeg_available() -> bool {
     system_process::Command::new("ffmpeg").arg("-version").stdout(system_process::Stdio::null()).stderr(system_process::Stdio::null()).status().is_ok_and(|status| status.success())
 }
 
-/// 🎞️ D5 native pipeline, beside `request_file_open` above: obtains video bytes (native `rfd` file
+/// 🎞️ D5 native pipeline, beside `request_file_open` above: obtains video bytes (native file
 /// picker, or `payload`'s data-URL bytes when the caller already has them from a drop zone), shells out
 /// to `ffmpeg` to sample frames into a scratch temp directory, base64-encodes each resulting JPEG, and
 /// returns one `ActionDescriptor` per frame (`frame_action`) followed by one for `done_action` — or, on
@@ -12931,7 +13056,7 @@ fn ffmpeg_available() -> bool {
 /// (MJPEG/H.264-baseline) gets a chance.
 #[cfg(not(target_arch = "wasm32"))]
 #[allow(clippy::too_many_arguments)]
-fn request_media_frames(
+async fn request_media_frames(
     controller_id: &str,
     accept: &str,
     frame_action: &str,
@@ -12954,12 +13079,8 @@ fn request_media_frames(
             None => return Vec::new(),
         },
         None => {
-            let mut dialog = rfd::FileDialog::new();
-            let extensions: Vec<&str> = accept.split(',').filter_map(|entry| entry.trim().strip_prefix('.')).collect();
-            if !extensions.is_empty() {
-                dialog = dialog.add_filter("import", &extensions);
-            }
-            let Some(path) = dialog.pick_file() else {
+            let extensions: Vec<String> = accept.split(',').filter_map(|entry| entry.trim().strip_prefix('.').map(str::to_string)).collect();
+            let Some(path) = ui_host::select_native_paths(ui_host::NativeFileDialogRequest::open(extensions, false)).await.into_iter().next() else {
                 return Vec::new();
             };
             let Ok(bytes) = system_fs::read(&path) else {
@@ -13128,7 +13249,19 @@ mod media_frames_tests {
         // fails to extract frames from it and this still falls back).
         use base64::Engine;
         let payload = format!("data:video/mp4;base64,{}", base64::engine::general_purpose::STANDARD.encode(b"not a real video"));
-        let actions = request_media_frames("app.controller", "video/mp4", "importVideoFramePayload", "importVideoDone", "importVideoBytesPayload", 5, 200, 1600, 30.0, Some(&payload), Some(serde_json::json!({"streamId": "s1"})));
+        let actions = semio_framework_async::block_on(request_media_frames(
+            "app.controller",
+            "video/mp4",
+            "importVideoFramePayload",
+            "importVideoDone",
+            "importVideoBytesPayload",
+            5,
+            200,
+            1600,
+            30.0,
+            Some(&payload),
+            Some(serde_json::json!({"streamId": "s1"})),
+        ));
         assert_eq!(actions.len(), 1, "garbage payload never yields real frames: {actions:?}");
         assert_eq!(actions[0].action, "importVideoBytesPayload");
         assert_eq!(actions[0].args.as_ref().and_then(|args| args.get("streamId")).and_then(semio_framework::DslValue::as_str), Some("s1"));
@@ -13161,7 +13294,7 @@ mod context_menu_keyboard_tests {
             ..Default::default()
         });
         let hit = HitTarget { rect: Rect::new(0.0, 0.0, 10.0, 10.0), event: None, control_id: Some("menu.group.view".into()), kind: HitKind::ContextMenu, drag_axis: None, drag_data: None };
-        let consumed = pollster::block_on(shell.handle_shell_hit(&hit)).expect("group-row click never errors");
+        let consumed = semio_framework_async::block_on(shell.handle_shell_hit(&hit)).expect("group-row click never errors");
         assert!(consumed);
         let menu = shell.context_menu.as_ref().expect("a group-row click opens its submenu instead of closing the menu");
         assert_eq!(menu.active, vec![0]);

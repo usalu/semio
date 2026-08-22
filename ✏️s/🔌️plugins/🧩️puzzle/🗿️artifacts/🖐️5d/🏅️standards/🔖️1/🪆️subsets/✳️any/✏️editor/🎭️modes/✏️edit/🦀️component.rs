@@ -14,21 +14,21 @@ pub const PUZZLE5D_PLAY_MODE_EDIT: &str = "edit";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::puzzle5d::create_puzzle5d_app`.
-pub async fn definition() -> ModeDefinition {
+pub fn definition() -> ModeDefinition {
     ModeDefinition { id: PUZZLE5D_PLAY_MODE_EDIT.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ 3D-first 60/40 split — mirrors semio_compose_rs's design app (scene 60% / diagram 40%,
 /// `semio_compose_rs/client/lib/sketchpad/js/index.ts:15367-15378`), the assembly-editing use case
 /// this app replaces.
-pub async fn layout() -> WindowLayout {
+pub fn layout() -> WindowLayout {
     create_default_layout(&[world3d::WINDOW_KIND_ID.into(), board2d::WINDOW_KIND_ID.into()], "row", Some(&[60.0, 40.0]), Some(&["Puzzle 3D".into(), "Puzzle 2D".into()]))
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Engagement
 /// 🧭️ Whether the engagement HUD should mark an active session for the given utility.
-async fn puzzle5d_engagement_session_active(window: &str, active_utility: &str) -> bool {
+fn puzzle5d_engagement_session_active(window: &str, active_utility: &str) -> bool {
     if window == world3d::WINDOW_KIND_ID {
         matches!(active_utility, "brush" | "fill" | "worldRelocate")
     } else {
@@ -40,7 +40,7 @@ async fn puzzle5d_engagement_session_active(window: &str, active_utility: &str) 
 /// utility bar (declared via `.utility` + each window's `utilities` binding); the fill-count slider
 /// and brush placement picker live as tagged [`semio_framework_plugin::WindowMeasure::Group`]s in the
 /// dedicated "Utility Options" rail, so what is left here is a bare command input plus a status line.
-pub async fn puzzle5d_engagement(envelope: &Puzzle5dScene, window: &str, labels: &Puzzle5dLabels) -> WindowEngagement {
+pub fn puzzle5d_engagement(envelope: &Puzzle5dScene, window: &str, labels: &Puzzle5dLabels) -> WindowEngagement {
     let part_count = envelope.document.parts.len();
     let fastener_count = envelope.document.fasteners.len();
     let active_utility = envelope.active_utility.as_str();
@@ -77,10 +77,10 @@ mod tests {
     use crate::editor::puzzle5d::create_puzzle5d_app;
     use semio_framework_plugin::WindowLayoutRoot;
 
-    #[semio_framework_async_macros::async_test]
-    async fn default_layout_is_world_three_fifths_and_board_two_fifths() {
+    #[test]
+    fn default_layout_is_world_three_fifths_and_board_two_fifths() {
         let app = create_puzzle5d_app();
-        let layout = app.definition.default_layout.as_ref().expect("default layout");
+        let layout = app.default_layout.as_ref().expect("default layout");
         let WindowLayoutRoot::Axis(root) = &layout.root else {
             panic!("default layout root must be a row axis");
         };

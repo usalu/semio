@@ -7,12 +7,12 @@ use crate::artifacts::fem2d::Fem2dSnapshot;
 use semio_s_plugin_stdio::artifacts::md::schema::snapshot::MdBlock;
 use semio_s_plugin_stdio::artifacts::md::{MdSnapshot, STDIO_MD_DOCUMENT_SCHEMA};
 
-pub async fn register() {}
+pub fn register() {}
 
-pub async fn serialize(snapshot: &Fem2dSnapshot) -> Result<MdSnapshot, store::TextError> {
+pub fn serialize(snapshot: &Fem2dSnapshot) -> Result<MdSnapshot, store::TextError> {
     Ok(MdSnapshot { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: vec![MdBlock::CodeBlock { info: None, literal: <Fem2dSnapshot as store::ArtifactDsl>::print_dsl(snapshot) }] })
 }
 
-pub async fn serialize_bytes(snapshot: &Fem2dSnapshot) -> Result<Vec<u8>, store::TextError> {
+pub fn serialize_bytes(snapshot: &Fem2dSnapshot) -> Result<Vec<u8>, store::TextError> {
     Ok(<Fem2dSnapshot as store::ArtifactDsl>::print_dsl(snapshot).into_bytes())
 }

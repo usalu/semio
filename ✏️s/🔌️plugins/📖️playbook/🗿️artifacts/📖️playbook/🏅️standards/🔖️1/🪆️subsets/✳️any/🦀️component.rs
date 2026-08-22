@@ -34,12 +34,12 @@ use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, 
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
 
-async fn examples() -> &'static [ExampleSource] {
+fn examples() -> &'static [ExampleSource] {
     static EXAMPLES: OnceLock<Vec<ExampleSource>> = OnceLock::new();
     EXAMPLES.get_or_init(|| vec![crate::artifacts::playbook::examples::demo::source()]).as_slice()
 }
 
-async fn inference_descriptors() -> &'static [::semio_framework_schema::ArtifactInferenceDescriptor] {
+fn inference_descriptors() -> &'static [::semio_framework_schema::ArtifactInferenceDescriptor] {
     static DESCRIPTORS: OnceLock<Vec<::semio_framework_schema::ArtifactInferenceDescriptor>> = OnceLock::new();
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::playbook_artifact_inference_descriptor()]).as_slice()
 }
@@ -47,7 +47,7 @@ async fn inference_descriptors() -> &'static [::semio_framework_schema::Artifact
 /// 🚪️ See this file's own module doc for why this is not `io::io()`. `pilot_languages()` indices
 /// are fixed by that function's own literal `vec![document, op, diff, pack, spr]` order — the same
 /// role→slot mapping `🗒️note`'s `io()` uses for its own five-language array.
-async fn io_declaration() -> IoDeclaration {
+fn io_declaration() -> IoDeclaration {
     let langs = crate::artifacts::playbook::pilot_languages();
     IoDeclaration {
         native: NativeCodecs {
@@ -62,13 +62,13 @@ async fn io_declaration() -> IoDeclaration {
 }
 
 /// 🌳️ `standard "1" / subset "any"`'s complete declaration — the only subset this artifact has.
-pub async fn subset() -> SubsetDeclaration {
+pub fn subset() -> SubsetDeclaration<crate::PlaybookApps> {
     SubsetDeclaration {
         dialect: PLAYBOOK_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::playbook_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io_declaration(),
-        viewer: viewer_surface::<viewer::PlaybookViewer>(viewer::create_playbook_viewer()),
-        editor: editor_surface::<editor::PlaybookPlayApp>(editor::create_playbook_play_app()),
+        viewer: viewer_surface::<viewer::PlaybookViewer, crate::PlaybookApps>(viewer::create_playbook_viewer()),
+        editor: editor_surface::<editor::PlaybookPlayApp, crate::PlaybookApps>(editor::create_playbook_play_app()),
         examples: examples(),
     }
 }

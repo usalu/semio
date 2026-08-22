@@ -455,7 +455,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
 /// because `🦀️component.rs`'s own `.activation(...)` (ticket
 /// 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME) still reads `artifact_kind().id`; neither has
 /// any caller left in this function.
-pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::DrawApps> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.draw.draw").expect("canonical draw kind"), localization: &[], standards: vec![crate::artifacts::draw::standards::v1::standard()] }

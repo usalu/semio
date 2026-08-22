@@ -6,14 +6,14 @@ use crate::editor::puzzle2d::engine::icons::puzzle_themed_icon_lookup;
 use crate::editor::puzzle2d::engine::BoardHost;
 
 /// 🎲️ A `BoardHost` for the directed port graph, painting icons from this plugin's metabolism table.
-pub async fn puzzle_board_host() -> BoardHost {
+pub fn puzzle_board_host() -> BoardHost {
     let mut h = BoardHost::new();
     h.icon_paint_cache.themed_icon_lookup = puzzle_themed_icon_lookup;
     h
 }
 
 /// 🎲️ The undirected ("normal") variant of [`puzzle_board_host`].
-pub async fn puzzle_board_host_normal() -> BoardHost {
+pub fn puzzle_board_host_normal() -> BoardHost {
     let mut h = BoardHost::new_normal();
     h.icon_paint_cache.themed_icon_lookup = puzzle_themed_icon_lookup;
     h
@@ -27,7 +27,7 @@ pub(crate) mod testkit {
     use crate::editor::puzzle2d::engine::{BoardHost, EdgeDescJson, HandleDescJson, NodeDescJson, SceneDescriptorJson};
     use serde_json::json;
 
-    pub async fn set_detail_lod(h: &mut BoardHost) {
+    pub fn set_detail_lod(h: &mut BoardHost) {
         h.set_camera(0.0, 0.0, 2.0);
     }
 
@@ -35,7 +35,7 @@ pub(crate) mod testkit {
     /// registry (`graph::manifest`), not in fixture `meta.kindCatalogs`, so tests that
     /// need real node/handle kinds read them from there. Each catalog row is the manifest row's
     /// `id`/`name` merged with its flattened `presentation` object.
-    pub async fn catalogs_json_from_manifest_id(manifest_id: &str) -> String {
+    pub fn catalogs_json_from_manifest_id(manifest_id: &str) -> String {
         let manifest = graph::manifest::manifest_by_id(manifest_id).unwrap_or_else(|| panic!("unknown manifest id {manifest_id}"));
         let rows = |kinds: &[graph::manifest::KindDef]| -> Vec<serde_json::Value> {
             kinds
@@ -57,15 +57,15 @@ pub(crate) mod testkit {
         json!({ "handleKinds": rows(&visual_port_kinds), "nodeKinds": rows(&manifest.node_kinds) }).to_string()
     }
 
-    pub async fn set_micro_lod(h: &mut BoardHost) {
+    pub fn set_micro_lod(h: &mut BoardHost) {
         h.set_camera(0.0, 60.0, 4.5);
     }
 
-    pub async fn set_overview_lod(h: &mut BoardHost) {
+    pub fn set_overview_lod(h: &mut BoardHost) {
         h.set_camera(0.0, 0.0, 0.25);
     }
 
-    pub async fn sample_scene() -> SceneDescriptorJson {
+    pub fn sample_scene() -> SceneDescriptorJson {
         SceneDescriptorJson {
             nodes: vec![NodeDescJson {
                 id: "a".into(),
@@ -125,7 +125,7 @@ pub(crate) mod testkit {
         }
     }
 
-    pub async fn link_test_scene_no_edge() -> SceneDescriptorJson {
+    pub fn link_test_scene_no_edge() -> SceneDescriptorJson {
         SceneDescriptorJson {
             nodes: vec![
                 NodeDescJson {
@@ -207,7 +207,7 @@ pub(crate) mod testkit {
         }
     }
 
-    pub async fn link_test_scene_no_edge_non_draggable_nodes() -> SceneDescriptorJson {
+    pub fn link_test_scene_no_edge_non_draggable_nodes() -> SceneDescriptorJson {
         let mut s = link_test_scene_no_edge();
         for n in &mut s.nodes {
             n.draggable = Some(false);
@@ -215,7 +215,7 @@ pub(crate) mod testkit {
         s
     }
 
-    pub async fn link_test_scene_node_a_two_free_handles() -> SceneDescriptorJson {
+    pub fn link_test_scene_node_a_two_free_handles() -> SceneDescriptorJson {
         let mut s = link_test_scene_no_edge();
         s.handles.push(HandleDescJson {
             id: "a:h1".into(),
@@ -235,7 +235,7 @@ pub(crate) mod testkit {
         s
     }
 
-    pub async fn link_test_scene_b_two_free_child_handles() -> SceneDescriptorJson {
+    pub fn link_test_scene_b_two_free_child_handles() -> SceneDescriptorJson {
         let mut s = link_test_scene_no_edge();
         s.handles.push(HandleDescJson {
             id: "b:h1".into(),
@@ -255,7 +255,7 @@ pub(crate) mod testkit {
         s
     }
 
-    pub async fn link_test_scene_target_b_handle_busy() -> SceneDescriptorJson {
+    pub fn link_test_scene_target_b_handle_busy() -> SceneDescriptorJson {
         let mut s = link_test_scene_no_edge();
         s.nodes.push(NodeDescJson {
             id: "c".into(),
@@ -296,13 +296,13 @@ pub(crate) mod testkit {
         s
     }
 
-    pub async fn link_test_scene_a_to_b_linked() -> SceneDescriptorJson {
+    pub fn link_test_scene_a_to_b_linked() -> SceneDescriptorJson {
         let mut s = link_test_scene_no_edge();
         s.edges.push(EdgeDescJson { id: "e-ab".into(), source: "a:h0".into(), target: "b:h0".into(), edge_kind: None, source_tip: None, target_tip: None, selected: None, style: None, user_data: None, visible: None, locked: None });
         s
     }
 
-    pub async fn link_test_scene_node_a_two_handles_one_busy() -> SceneDescriptorJson {
+    pub fn link_test_scene_node_a_two_handles_one_busy() -> SceneDescriptorJson {
         let mut s = link_test_scene_a_to_b_linked();
         s.handles.push(HandleDescJson {
             id: "a:h1".into(),
@@ -333,8 +333,8 @@ mod tests {
     use serde_json::json;
 
     /// 🔗️ Keeps the runtime kind-catalog JSON shape in sync with the compile-time `puzzle2d-default` manifest.
-    #[semio_framework_async_macros::async_test]
-    async fn puzzle2d_default_manifest_satisfies_board_host_validation() {
+    #[test]
+    fn puzzle2d_default_manifest_satisfies_board_host_validation() {
         let manifest: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🛂️manifest.jsondefault.manifest.json")).unwrap();
         let handle_kinds: Vec<serde_json::Value> =
             manifest["portKinds"].as_array().unwrap().iter().map(|row| json!({ "id": row["id"], "name": row["name"], "color": row["presentation"]["color"], "defaultWireKind": row["presentation"]["defaultWireKind"] })).collect();
@@ -347,8 +347,8 @@ mod tests {
         host.validate_against_manifest_id("puzzle2d-default").expect("runtime catalog must satisfy the compile-time puzzle2d-default manifest");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_defers_descriptor_sync_while_panning() {
+    #[test]
+    fn board_host_defers_descriptor_sync_while_panning() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.sync_descriptor(&sample_scene()).unwrap();
@@ -362,8 +362,8 @@ mod tests {
         assert!(!h.defers_descriptor_sync_from_js());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_defers_descriptor_sync_while_dragging_nodes() {
+    #[test]
+    fn board_host_defers_descriptor_sync_while_dragging_nodes() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.sync_descriptor(&sample_scene()).unwrap();
@@ -381,8 +381,8 @@ mod tests {
         assert!(end.contains("nodeDragEnd"));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_set_node_positions_updates_existing_nodes_only() {
+    #[test]
+    fn board_host_set_node_positions_updates_existing_nodes_only() {
         let mut h = BoardHost::new();
         h.set_size(400, 300, 1.0);
         h.sync_descriptor(&sample_scene()).unwrap();
@@ -398,8 +398,8 @@ mod tests {
         assert!((node.y - 110.0).abs() < 0.001);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_overlay_paint_state_json_matches_host_camera_lod_and_node_centers() {
+    #[test]
+    fn board_host_overlay_paint_state_json_matches_host_camera_lod_and_node_centers() {
         let mut h = BoardHost::new();
         h.set_size(640, 480, 2.0);
         h.sync_descriptor(&sample_scene()).unwrap();
@@ -419,8 +419,8 @@ mod tests {
         assert!((a["y"].as_f64().unwrap() - 44.0).abs() < 1e-9);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_node_drag_invalidates_cached_world_content() {
+    #[test]
+    fn board_host_node_drag_invalidates_cached_world_content() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.sync_descriptor(&sample_scene()).unwrap();
@@ -433,8 +433,8 @@ mod tests {
         assert!(node.x.abs() > 1.0 || node.y.abs() > 1.0, "pointer move should translate node a away from origin");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_manual_lod_follow_zoom_still_encodes_graph() {
+    #[test]
+    fn board_host_manual_lod_follow_zoom_still_encodes_graph() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.sync_descriptor(&sample_scene()).unwrap();
@@ -452,8 +452,8 @@ mod tests {
         assert_eq!(with_automatic, automatic_restored);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_pick_selection_never_sets_exit_highlight() {
+    #[test]
+    fn board_host_pick_selection_never_sets_exit_highlight() {
         let mut h = BoardHost::new();
         h.set_size(400, 300, 1.0);
         let mut d = sample_scene();
@@ -471,8 +471,8 @@ mod tests {
         assert!(ev2.contains("\"exitHighlightIds\":[]"));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_canvas_theme_keeps_explicit_element_state_colors() {
+    #[test]
+    fn board_host_canvas_theme_keeps_explicit_element_state_colors() {
         let mut h = BoardHost::new();
         h.set_canvas_theme_from_json(
             r#"{
@@ -489,8 +489,8 @@ mod tests {
         assert_eq!(h.canvas_theme.wire_stroke_hovered.to_rgba8(), canvas::Color::from_rgba8(10, 11, 12, 255).to_rgba8());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_cancel_area_select_restores_initial_selection() {
+    #[test]
+    fn board_host_cancel_area_select_restores_initial_selection() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
@@ -513,8 +513,8 @@ mod tests {
         assert!(h.preselect.is_empty());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_syncs_descriptor_and_hit_tests_handle_before_node() {
+    #[test]
+    fn board_host_syncs_descriptor_and_hit_tests_handle_before_node() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
@@ -546,8 +546,8 @@ mod tests {
         assert!(h.encoded_scene_hint() > 10);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_cached_content_includes_edge_vector_paths_at_overview_zoom() {
+    #[test]
+    fn board_host_cached_content_includes_edge_vector_paths_at_overview_zoom() {
         let mut h = BoardHost::new();
         h.set_size(1200, 800, 1.0);
         h.sync_descriptor(&link_test_scene_a_to_b_linked()).unwrap();
@@ -559,8 +559,8 @@ mod tests {
         assert!(with_edges > without_edges, "overview cached draw must encode edges (with={with_edges}, without={without_edges})");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_world_clip_changes_vector_encoding() {
+    #[test]
+    fn board_host_world_clip_changes_vector_encoding() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         let mut desc = sample_scene();
@@ -592,8 +592,8 @@ mod tests {
         assert!(tiled >= monolithic);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_silent_selection_keeps_cached_world_content_warm() {
+    #[test]
+    fn board_host_silent_selection_keeps_cached_world_content_warm() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.sync_descriptor(&sample_scene()).unwrap();
@@ -605,8 +605,8 @@ mod tests {
         assert_eq!(h.test_resolve_node_style_kind("a"), Some(BoardElementStyleKind::Selected));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_selected_node_keeps_selected_style_when_hovered() {
+    #[test]
+    fn board_host_selected_node_keeps_selected_style_when_hovered() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
@@ -619,8 +619,8 @@ mod tests {
         assert_eq!(h.test_resolve_node_style_kind("a"), Some(BoardElementStyleKind::Hovered), "unselected nodes should still use hover chrome");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_dragging_selected_node_keeps_selected_style_at_detail_lod() {
+    #[test]
+    fn board_host_dragging_selected_node_keeps_selected_style_at_detail_lod() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
@@ -633,8 +633,8 @@ mod tests {
         assert_eq!(h.test_resolve_node_style_kind("a"), Some(BoardElementStyleKind::Selected), "node drag should keep primary selected paint at detail LOD");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_drag_emits_node_move() {
+    #[test]
+    fn board_host_drag_emits_node_move() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         let mut desc = sample_scene();
@@ -669,8 +669,8 @@ mod tests {
         assert!(ev.contains("nodeMove"));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_compact_discrete_hit_selects_and_drags_node() {
+    #[test]
+    fn board_host_compact_discrete_hit_selects_and_drags_node() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 0.5);
@@ -709,8 +709,8 @@ mod tests {
         assert!(ev.contains("nodeMove"), "compact discrete node hit should drag, got: {ev}");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_minimap_bounded_drag_moves_selection_inside_union_bounds() {
+    #[test]
+    fn board_host_minimap_bounded_drag_moves_selection_inside_union_bounds() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_automatic_lod(false);
@@ -759,8 +759,8 @@ mod tests {
         assert!((b.x - (300.0 + dx)).abs() < 1e-3 && (b.y - dy).abs() < 1e-3);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_overview_bounded_drag_moves_selection_inside_union_bounds() {
+    #[test]
+    fn board_host_overview_bounded_drag_moves_selection_inside_union_bounds() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_automatic_lod(false);
@@ -802,8 +802,8 @@ mod tests {
         assert!(ev.contains("nodeMove"), "expected overview bounded drag, got: {ev}");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_detail_lod_resolves_direct_handle_hit() {
+    #[test]
+    fn board_host_detail_lod_resolves_direct_handle_hit() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
@@ -834,8 +834,8 @@ mod tests {
         assert_eq!(h.resolve_hit_world(probe).as_deref(), Some("a:h0"));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_multi_select_drag_moves_each_selected_node() {
+    #[test]
+    fn board_host_multi_select_drag_moves_each_selected_node() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         let mut desc = sample_scene();
@@ -878,8 +878,8 @@ mod tests {
         assert_eq!(sorted, vec!["a".to_string(), "b".to_string()]);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_selection_target_edges_skips_node_geometry() {
+    #[test]
+    fn board_host_selection_target_edges_skips_node_geometry() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_selection_options("rectangle", "invertive", false, true, false);
@@ -911,8 +911,8 @@ mod tests {
         assert_eq!(h.resolve_hit_world(on_edge).as_deref(), Some("e1"));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_additive_click_merges_edge_into_existing_selection() {
+    #[test]
+    fn board_host_additive_click_merges_edge_into_existing_selection() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_selection_options("rectangle", "additive", true, true, true);
@@ -948,8 +948,8 @@ mod tests {
         assert_eq!(got, vec!["a".to_string(), "e1".to_string()]);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_selection_change_does_not_bump_content_scene_generation() {
+    #[test]
+    fn board_host_selection_change_does_not_bump_content_scene_generation() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.sync_descriptor(&sample_scene()).unwrap();
@@ -964,8 +964,8 @@ mod tests {
         assert_eq!(h.encoded_scene_hint(), neutral_hint);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_hover_change_does_not_bump_content_scene_generation() {
+    #[test]
+    fn board_host_hover_change_does_not_bump_content_scene_generation() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.sync_descriptor(&sample_scene()).unwrap();
@@ -980,8 +980,8 @@ mod tests {
         assert_eq!(h.encoded_scene_hint(), neutral_hint);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_background_click_deselect_skips_preselect_events() {
+    #[test]
+    fn board_host_background_click_deselect_skips_preselect_events() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         let desc = sample_scene();
@@ -1007,8 +1007,8 @@ mod tests {
         assert!(fin.contains("\"exitHighlightIds\":[]"));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_background_click_without_drag_clears_selection() {
+    #[test]
+    fn board_host_background_click_without_drag_clears_selection() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         let mut desc = sample_scene();
@@ -1041,8 +1041,8 @@ mod tests {
         assert!(h.selection.is_empty());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_rectangle_area_select_includes_handles_with_nodes() {
+    #[test]
+    fn board_host_rectangle_area_select_includes_handles_with_nodes() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_selection_options("rectangle", "invertive", true, true, true);
@@ -1082,8 +1082,8 @@ mod tests {
         assert!(got.contains(&"a:h0".to_string()));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_area_select_preselect_matches_selected_chrome() {
+    #[test]
+    fn board_host_area_select_preselect_matches_selected_chrome() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
@@ -1142,8 +1142,8 @@ mod tests {
         assert!(h.selection_exit_highlight.is_empty());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_area_select_from_empty_keeps_selection_until_commit() {
+    #[test]
+    fn board_host_area_select_from_empty_keeps_selection_until_commit() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
@@ -1188,8 +1188,8 @@ mod tests {
         assert!(h.preselect.is_empty());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_minimap_pointer_move_hovers_node_under_cursor() {
+    #[test]
+    fn board_host_minimap_pointer_move_hovers_node_under_cursor() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 0.1);
@@ -1203,8 +1203,8 @@ mod tests {
         assert!(h.hovered_id.is_none());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_minimap_preselect_matches_selected_chrome() {
+    #[test]
+    fn board_host_minimap_preselect_matches_selected_chrome() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 0.1);
@@ -1250,8 +1250,8 @@ mod tests {
         assert!(preselect_hint > neutral_hint, "minimap preselect should add visible selected chrome over neutral minimap rendering");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_silent_preselect_applies_selected_chrome_without_area_drag() {
+    #[test]
+    fn board_host_silent_preselect_applies_selected_chrome_without_area_drag() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 0.1);
@@ -1286,8 +1286,8 @@ mod tests {
         assert!(preselect_hint > neutral_hint, "silent minimap preselect should paint selected chrome without an active area-select interaction");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_hover_tracks_visible_wires() {
+    #[test]
+    fn board_host_hover_tracks_visible_wires() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);

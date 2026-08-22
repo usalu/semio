@@ -23,7 +23,7 @@ pub struct AddSolid {
 
 /// 🧱️ Builds a rectangular footprint `[x,y]..[x+width,y+depth]` with `base_z`/`layers`/`mesh_size`
 /// defaulted to `0.0`/`1`/`0.5` when unspecified — mirrors the pre-migration `handle_action` defaults.
-pub async fn handle(payload: &AddSolid, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+pub fn handle(payload: &AddSolid, doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
     let snapshot = doc.snapshot;
     let id = crate::app_surface::next_id(snapshot.solids.iter().map(|s| s.id.clone()), "sol");
     let outline = vec![[payload.x, payload.y], [payload.x + payload.width, payload.y], [payload.x + payload.width, payload.y + payload.depth], [payload.x, payload.y + payload.depth]];

@@ -1,8 +1,6 @@
 /** 🧬️ Puzzle2dConfig */
 export interface Puzzle2dConfig {
   /** @state config */
-  selectedIds: string[];
-  /** @state config */
   cameraX: number;
   /** @state config */
   cameraY: number;
@@ -21,7 +19,17 @@ export interface Puzzle2dConfig {
   /** @state config */
   fillCount: number;
   /** @state config */
-  selectionMethod: string;
+  fillJobCheckpoint?: number[];
+  /** @state config */
+  fillJobOperation: number;
+  /** @state config */
+  fillJobGeneration: number;
+  /** @state config */
+  fillJobSeed: number;
+  /** @state config */
+  fillJobAppliedCount: number;
+  /** @state config */
+  fillJobPreview?: unknown;
   /** @state config */
   gridSnapEnabled: boolean;
   /** @state config */
@@ -38,4 +46,8 @@ export interface Puzzle2dConfig {
   locale: string;
   /** @state config */
   terminology: string;
+  /** @state config */
+  exampleLoadGeneration: number;
+  /** @state config */
+  exampleLoadId?: string;
 }

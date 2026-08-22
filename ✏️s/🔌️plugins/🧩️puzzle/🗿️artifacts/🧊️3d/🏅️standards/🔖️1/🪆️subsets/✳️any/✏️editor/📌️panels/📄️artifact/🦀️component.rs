@@ -5,13 +5,12 @@
 
 use crate::editor::puzzle3d::terminology::Puzzle3dLabels;
 use crate::editor::puzzle3d::{
-    puzzle3d_action, puzzle3d_interaction_select, puzzle3d_vortex_full_id, Puzzle3dFixture, PUZZLE3D_GRANULARITY_ATTRACTION, PUZZLE3D_GRANULARITY_OBJECT, PUZZLE3D_GRANULARITY_REFERENCE, PUZZLE3D_GRANULARITY_TARGET_VOLUME,
-    PUZZLE3D_GRANULARITY_VORTEX, PUZZLE3D_INTERACTION_DOMAIN,
+    puzzle3d_vortex_full_id, Puzzle3dFixture, PUZZLE3D_GRANULARITY_ATTRACTION, PUZZLE3D_GRANULARITY_OBJECT, PUZZLE3D_GRANULARITY_REFERENCE, PUZZLE3D_GRANULARITY_TARGET_VOLUME, PUZZLE3D_GRANULARITY_VORTEX, PUZZLE3D_INTERACTION_DOMAIN,
+    PUZZLE3D_PLAY_CONTROLLER_ID,
 };
-use semio_framework_plugin::{
-    ActionDescriptor, IconName, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID,
-    FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
-};
+use semio_framework_plugin::plugin_app_close_prelude::{ActionBinding, Buildable, BuiltNode, HasBase, HasChildren, Label, RowAction, RowActionPlacement, Trigger};
+use semio_framework_plugin::{ActionFactory, InteractionTarget, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, INTERACTION_SELECT_ACTION_ID};
+use semio_framework_ui_contract as ui;
 use serde_json::{json, Value};
 
 //#region 🔖️Constants
@@ -19,7 +18,7 @@ pub const BODY_KEY: &str = "puzzle.3d.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -31,38 +30,41 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Rows
-async fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, icon_id: Option<&str>, action: ActionDescriptor) -> UiTreeItemNode {
-    UiTreeItemNode {
-        presence: UiPresence::default(),
-        id: id.into(),
-        label: Label::data(label),
-        description: None,
-        icon_id: icon_id.map(IconName::from),
-        default_open: None,
-        action: Some(action),
-        actions: None,
-        draggable: None,
-        drag_data: None,
-        items: None,
-        control: None,
-        dimmed: None,
-        menu: None,
+fn action(action: &str, args: Option<Value>) -> (semio_framework_ui_contract::ActionId, Option<semio_framework_ui_contract::UiValue>) {
+    ActionFactory::new(PUZZLE3D_PLAY_CONTROLLER_ID).action(action, args)
+}
+
+fn select_action(granularity: &str, id: &str) -> (semio_framework_ui_contract::ActionId, Option<semio_framework_ui_contract::UiValue>) {
+    let targets = serde_json::to_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]).unwrap_or_default();
+    action(INTERACTION_SELECT_ACTION_ID, Some(json!({ "domainId": PUZZLE3D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })))
+}
+
+fn binding((action, args): (semio_framework_ui_contract::ActionId, Option<semio_framework_ui_contract::UiValue>)) -> ActionBinding {
+    ActionBinding { trigger: Trigger::Activate, action, args, capability: None }
+}
+
+fn selectable_item(id: impl Into<String>, label: impl Into<Label>, icon: &str, action: (semio_framework_ui_contract::ActionId, Option<semio_framework_ui_contract::UiValue>)) -> semio_framework_ui_contract::TreeItemBuilder {
+    let (action_id, args) = action;
+    let builder = ui::tree_item(label).id(id).icon(icon);
+    match args {
+        Some(args) => builder.on_with(Trigger::Activate, action_id, args),
+        None => builder.on(Trigger::Activate, action_id),
     }
 }
 
-async fn hide_lock_actions(hidden: bool, locked: bool, labels: &Puzzle3dLabels, flag_args: impl Fn(&str) -> Value) -> Vec<UiTreeItemAction> {
+fn hide_lock_actions(hidden: bool, locked: bool, labels: &Puzzle3dLabels, flag_args: impl Fn(&str) -> Value) -> Vec<RowAction> {
     vec![
-        UiTreeItemAction {
-            icon_id: if hidden { "eye-off".into() } else { "eye".into() },
-            label: Some(if hidden { labels.show.into() } else { labels.hide.into() }),
-            action: puzzle3d_action("setSelectionFlag", Some(flag_args("hidden"))),
-            placement: Some(UiTreeActionPlacement::Row),
+        RowAction {
+            icon: if hidden { "eye-off".into() } else { "eye".into() },
+            label: Some(if hidden { labels.show.as_str().into() } else { labels.hide.as_str().into() }),
+            action: binding(action("setSelectionFlag", Some(flag_args("hidden")))),
+            placement: RowActionPlacement::Row,
         },
-        UiTreeItemAction {
-            icon_id: if locked { "lock".into() } else { "lock-open".into() },
-            label: Some(if locked { labels.unlock.into() } else { labels.lock.into() }),
-            action: puzzle3d_action("setSelectionFlag", Some(flag_args("locked"))),
-            placement: Some(UiTreeActionPlacement::Row),
+        RowAction {
+            icon: if locked { "lock".into() } else { "lock-open".into() },
+            label: Some(if locked { labels.unlock.as_str().into() } else { labels.lock.as_str().into() }),
+            action: binding(action("setSelectionFlag", Some(flag_args("locked")))),
+            placement: RowActionPlacement::Row,
         },
     ]
 }
@@ -70,42 +72,32 @@ async fn hide_lock_actions(hidden: bool, locked: bool, labels: &Puzzle3dLabels, 
 
 //#region 🔖️Render
 /// 🌳️ The four document sections, memoized by the app against the fixture's geometry fingerprint.
-pub async fn sections(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> Vec<UiTreeSectionNode> {
-    let object_items: Vec<UiTreeItemNode> = fixture
+pub fn render(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> BuiltNode {
+    let object_items: Vec<BuiltNode> = fixture
         .objects
         .iter()
         .map(|object| {
-            let vortex_items: Vec<UiTreeItemNode> = object
+            let vortex_items: Vec<BuiltNode> = object
                 .vortices
                 .iter()
                 .map(|vortex| {
                     let full_id = puzzle3d_vortex_full_id(&object.id, &vortex.id);
-                    tree_item_with_action(full_id.clone(), vortex.vortex_kind.clone().unwrap_or_else(|| vortex.id.clone()), Some("circle-dot"), puzzle3d_interaction_select(PUZZLE3D_GRANULARITY_VORTEX, &full_id))
+                    selectable_item(full_id.clone(), vortex.vortex_kind.clone().unwrap_or_else(|| vortex.id.clone()), "circle-dot", select_action(PUZZLE3D_GRANULARITY_VORTEX, &full_id)).build()
                 })
                 .collect();
             let flag_args = {
                 let id = object.id.clone();
                 move |flag: &str| json!({ "flag": flag, "value": true, "entity": "object", "ids": [id.clone()] })
             };
-            UiTreeItemNode {
-                presence: UiPresence::default(),
-                id: object.id.clone(),
-                label: Label::data(object.object_kind.clone().unwrap_or_else(|| object.id.clone())),
-                description: None,
-                icon_id: Some("box".into()),
-                default_open: Some(false),
-                action: Some(puzzle3d_interaction_select(PUZZLE3D_GRANULARITY_OBJECT, &object.id)),
-                actions: Some(hide_lock_actions(object.hidden, object.locked, labels, flag_args)),
-                draggable: None,
-                drag_data: None,
-                items: if vortex_items.is_empty() { None } else { Some(vortex_items) },
-                control: None,
-                dimmed: Some(object.hidden),
-                menu: None,
-            }
+            selectable_item(object.id.clone(), object.object_kind.clone().unwrap_or_else(|| object.id.clone()), "box", select_action(PUZZLE3D_GRANULARITY_OBJECT, &object.id))
+                .default_open(false)
+                .row_actions(hide_lock_actions(object.hidden, object.locked, labels, flag_args))
+                .dimmed(object.hidden)
+                .children(vortex_items)
+                .build()
         })
         .collect();
-    let reference_items: Vec<UiTreeItemNode> = fixture
+    let reference_items: Vec<BuiltNode> = fixture
         .references
         .iter()
         .map(|reference| {
@@ -113,25 +105,14 @@ pub async fn sections(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> Vec
                 let id = reference.id.clone();
                 move |flag: &str| json!({ "flag": flag, "value": true, "entity": "reference", "ids": [id.clone()] })
             };
-            UiTreeItemNode {
-                presence: UiPresence::default(),
-                id: reference.id.clone(),
-                label: Label::data(reference.id.clone()),
-                description: Some(reference.source.url.clone()),
-                icon_id: Some("globe".into()),
-                default_open: None,
-                action: Some(puzzle3d_interaction_select(PUZZLE3D_GRANULARITY_REFERENCE, &reference.id)),
-                actions: Some(hide_lock_actions(reference.hidden, reference.locked, labels, flag_args)),
-                draggable: None,
-                drag_data: None,
-                items: None,
-                control: None,
-                dimmed: Some(reference.hidden),
-                menu: None,
-            }
+            selectable_item(reference.id.clone(), reference.id.clone(), "globe", select_action(PUZZLE3D_GRANULARITY_REFERENCE, &reference.id))
+                .description(reference.source.url.clone())
+                .row_actions(hide_lock_actions(reference.hidden, reference.locked, labels, flag_args))
+                .dimmed(reference.hidden)
+                .build()
         })
         .collect();
-    let target_volume_items: Vec<UiTreeItemNode> = fixture
+    let target_volume_items: Vec<BuiltNode> = fixture
         .target_volumes
         .iter()
         .map(|volume| {
@@ -139,42 +120,17 @@ pub async fn sections(fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> Vec
                 let id = volume.id.clone();
                 move |flag: &str| json!({ "flag": flag, "value": true, "entity": "targetVolume", "ids": [id.clone()] })
             };
-            UiTreeItemNode {
-                presence: UiPresence::default(),
-                id: volume.id.clone(),
-                label: Label::data(volume.id.clone()),
-                description: None,
-                icon_id: Some("cylinder".into()),
-                default_open: None,
-                action: Some(puzzle3d_interaction_select(PUZZLE3D_GRANULARITY_TARGET_VOLUME, &volume.id)),
-                actions: Some(hide_lock_actions(volume.hidden, volume.locked, labels, flag_args)),
-                draggable: None,
-                drag_data: None,
-                items: None,
-                control: None,
-                dimmed: Some(volume.hidden),
-                menu: None,
-            }
+            selectable_item(volume.id.clone(), volume.id.clone(), "cylinder", select_action(PUZZLE3D_GRANULARITY_TARGET_VOLUME, &volume.id)).row_actions(hide_lock_actions(volume.hidden, volume.locked, labels, flag_args)).dimmed(volume.hidden).build()
         })
         .collect();
-    let attraction_items: Vec<UiTreeItemNode> = fixture
-        .attractions
-        .iter()
-        .map(|attraction| tree_item_with_action(attraction.id.clone(), format!("{} → {}", attraction.attracting, attraction.attracted), Some("link"), puzzle3d_interaction_select(PUZZLE3D_GRANULARITY_ATTRACTION, &attraction.id)))
-        .collect();
-    vec![
-        UiTreeSectionNode { id: "puzzle3d-play-document.objects".into(), label: Some(labels.objects.into()), default_open: Some(true), presence: UiPresence::default(), items: object_items },
-        UiTreeSectionNode { id: "puzzle3d-play-document.references".into(), label: Some(labels.references.into()), default_open: Some(false), presence: UiPresence::default(), items: reference_items },
-        UiTreeSectionNode { id: "puzzle3d-play-document.target-volumes".into(), label: Some(labels.target_volumes.into()), default_open: Some(false), presence: UiPresence::default(), items: target_volume_items },
-        UiTreeSectionNode { id: "puzzle3d-play-document.attractions".into(), label: Some(labels.attractions.into()), default_open: Some(false), presence: UiPresence::default(), items: attraction_items },
-    ]
-}
-
-/// 🌳️ Wraps memoized `sections` into the tree node the panel body renders — bound to the `vortex`
-/// interaction domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM), so the framework
-/// stamps every row's `selected`/`hovered` presence from `InteractionState` after render, replacing
-/// the deleted `selected_ids`/`highlighted_ids`/`selection_change` wire surface.
-pub async fn render(sections: Vec<UiTreeSectionNode>) -> UiNode {
-    UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), drop_action: None, menu: None, interaction_domain: Some(PUZZLE3D_INTERACTION_DOMAIN.into()) })
+    let attraction_items: Vec<BuiltNode> =
+        fixture.attractions.iter().map(|attraction| selectable_item(attraction.id.clone(), format!("{} → {}", attraction.attracting, attraction.attracted), "link", select_action(PUZZLE3D_GRANULARITY_ATTRACTION, &attraction.id)).build()).collect();
+    PanelTreeBuilder::new("puzzle3d-play-document")
+        .section("puzzle3d-play-document.objects", Some(labels.objects.as_str().into()), true, object_items)
+        .section("puzzle3d-play-document.references", Some(labels.references.as_str().into()), false, reference_items)
+        .section("puzzle3d-play-document.target-volumes", Some(labels.target_volumes.as_str().into()), false, target_volume_items)
+        .section("puzzle3d-play-document.attractions", Some(labels.attractions.as_str().into()), false, attraction_items)
+        .interaction_domain(PUZZLE3D_INTERACTION_DOMAIN)
+        .build()
 }
 //#endregion 🔖️Render

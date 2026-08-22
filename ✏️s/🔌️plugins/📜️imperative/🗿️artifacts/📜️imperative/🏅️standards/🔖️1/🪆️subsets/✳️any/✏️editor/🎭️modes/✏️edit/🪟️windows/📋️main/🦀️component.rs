@@ -3,23 +3,22 @@
 
 use crate::artifacts::imperative::{ImperativeSnapshot, Step};
 use crate::editor::imperative::terminology::ImperativeLabels;
-use semio_framework_plugin::{build_table_scene, LocalizedLabel, SurfaceKind, TableScene, UiNode, WindowKindDefinition, WindowOptions};
-use serde::{Deserialize, Serialize};
+use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
 use serde_json::Value;
 
 //#region 🔖️Constants
 pub const IMPERATIVE_PLAY_WINDOW_MAIN: &str = "imperative-main";
 pub const IMPERATIVE_PLAY_BODY_MAIN: &str = "imperative.play.main";
-const IMPERATIVE_PLAY_SURFACE_MAIN: &str = "imperative.play.main";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: IMPERATIVE_PLAY_WINDOW_MAIN.into(),
         label: LocalizedLabel::native("Imperative", "Imperativ"),
         body_key: IMPERATIVE_PLAY_BODY_MAIN.into(),
-        surface_kind: SurfaceKind::NodeGraph,
+        surface_kind: SurfaceKind::Table,
         icon_id: "code".into(),
         options: WindowOptions::default(),
         actions: Vec::new(),
@@ -35,21 +34,25 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-#[derive(Serialize, Deserialize)]
 struct TableRow {
     index: usize,
     id: String,
     kind: String,
 }
 
-async fn table_rows(steps: &[Step]) -> String {
-    let rows: Vec<TableRow> = steps.iter().enumerate().map(|(index, step)| TableRow { index: index + 1, id: step.id.clone(), kind: step.kind.clone() }).collect();
-    serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
+impl TableRow {
+    fn cells(self) -> Vec<String> {
+        vec![self.index.to_string(), self.id, self.kind]
+    }
+}
+
+fn table_rows(steps: &[Step]) -> Vec<TableRow> {
+    steps.iter().enumerate().map(|(index, step)| TableRow { index: index + 1, id: step.id.clone(), kind: step.kind.clone() }).collect()
 }
 
 /// 📤️ One table row per scope key so the full run output is legible instead of an 80-char
 /// truncated blob; falls back to the raw JSON when it isn't a plain object.
-async fn run_output_rows(run_output_json: &str, offset: usize) -> Vec<TableRow> {
+fn run_output_rows(run_output_json: &str, offset: usize) -> Vec<TableRow> {
     match serde_json::from_str::<Value>(run_output_json).ok().and_then(|value| value.as_object().cloned()) {
         Some(scope) if !scope.is_empty() => {
             scope.into_iter().enumerate().map(|(index, (key, value))| TableRow { index: offset + index + 1, id: format!("run-output.{key}"), kind: format!("{key} = {}", serde_json::to_string(&value).unwrap_or_else(|_| "null".into())) }).collect()
@@ -58,28 +61,13 @@ async fn run_output_rows(run_output_json: &str, offset: usize) -> Vec<TableRow> 
     }
 }
 
-pub async fn render(document: &ImperativeSnapshot, run_output_json: &str, labels: &ImperativeLabels) -> UiNode {
+pub fn render(document: &ImperativeSnapshot, run_output_json: &str, labels: &ImperativeLabels) -> BuiltNode {
     let path = crate::artifacts::imperative::imperative_working_scene(document).path;
-    let mut rows_json = table_rows(&path.steps);
+    let mut rows = table_rows(&path.steps);
     if !run_output_json.is_empty() {
-        if let Ok(mut rows) = serde_json::from_str::<Vec<TableRow>>(&rows_json) {
-            rows.extend(run_output_rows(run_output_json, rows.len()));
-            rows_json = serde_json::to_string(&rows).unwrap_or(rows_json);
-        }
+        rows.extend(run_output_rows(run_output_json, rows.len()));
     }
-    build_table_scene(
-        IMPERATIVE_PLAY_SURFACE_MAIN,
-        crate::editor::imperative::IMPERATIVE_PLAY_APP_ID,
-        TableScene::base(
-            serde_json::json!([
-                {"id":"index","label":labels.col_index.as_str()},
-                {"id":"id","label":labels.col_id.as_str()},
-                {"id":"kind","label":labels.col_kind.as_str()},
-            ])
-            .to_string(),
-            rows_json,
-        ),
-    )
+    TableWindowKit::render(&TableView { columns: vec![labels.col_index.as_str().into(), labels.col_id.as_str().into(), labels.col_kind.as_str().into()], rows: rows.into_iter().map(TableRow::cells).collect() })
 }
 //#endregion 🔖️Render
 
@@ -92,8 +80,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_table_scene() {
-        let mut app = imperative_app();
-        let json = render_body(&mut app, IMPERATIVE_PLAY_BODY_MAIN);
+        let mut app = imperative_app().await;
+        let json = render_body(&mut app, IMPERATIVE_PLAY_BODY_MAIN).await;
         assert!(json.contains("table"));
     }
 
@@ -101,9 +89,9 @@ mod tests {
     async fn run_command_expands_scope_into_readable_rows_without_truncation() {
         use crate::editor::imperative::commands::run;
         use crate::editor::imperative::testkit::dispatch;
-        let mut app = imperative_app();
-        dispatch(&mut app, ImperativeCommand::Run(run::Run {}));
-        let json = render_body(&mut app, IMPERATIVE_PLAY_BODY_MAIN);
+        let mut app = imperative_app().await;
+        dispatch(&mut app, ImperativeCommand::Run(run::Run {})).await;
+        let json = render_body(&mut app, IMPERATIVE_PLAY_BODY_MAIN).await;
         assert!(json.contains("log.print"), "main table lists default path steps after run");
     }
 }

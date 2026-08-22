@@ -293,22 +293,31 @@ pub struct ProgramDiagnostic {
 
 //#region ⚠️ Errors
 /// 💥️ Fatal program operation or exchange error.
-#[derive(Clone, Debug, thiserror::Error, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum PluginError {
-    #[error("invalid schema: expected {expected}, got {actual}")]
     InvalidSchema { expected: String, actual: String },
-    #[error("missing entity {id}")]
     MissingEntity { id: EntityId },
-    #[error("duplicate adjacency {a} — {b}")]
     DuplicateAdjacency { a: EntityId, b: EntityId },
-    #[error("serialize error: {0}")]
     Serialize(String),
-    #[error("deserialize error: {0}")]
     Deserialize(String),
-    #[error("csv error: {0}")]
     Csv(String),
 }
+
+impl std::fmt::Display for PluginError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::InvalidSchema { expected, actual } => write!(formatter, "invalid schema: expected {expected}, got {actual}"),
+            Self::MissingEntity { id } => write!(formatter, "missing entity {id}"),
+            Self::DuplicateAdjacency { a, b } => write!(formatter, "duplicate adjacency {a} — {b}"),
+            Self::Serialize(message) => write!(formatter, "serialize error: {message}"),
+            Self::Deserialize(message) => write!(formatter, "deserialize error: {message}"),
+            Self::Csv(message) => write!(formatter, "csv error: {message}"),
+        }
+    }
+}
+
+impl std::error::Error for PluginError {}
 //#endregion ⚠️ Errors
 
 #[cfg(test)]

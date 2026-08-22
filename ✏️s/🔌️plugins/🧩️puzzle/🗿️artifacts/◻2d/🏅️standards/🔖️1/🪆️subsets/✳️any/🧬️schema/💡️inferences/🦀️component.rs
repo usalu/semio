@@ -28,19 +28,19 @@ pub struct Puzzle2dInference {
 }
 
 impl protocol::Inference<Puzzle2dSnapshot> for Puzzle2dInference {
-    async fn infer(snapshot: &Puzzle2dSnapshot) -> Self {
+    fn infer(snapshot: &Puzzle2dSnapshot) -> Self {
         Self { flat_position: compute_flat_position(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<Puzzle2dSnapshot> for Puzzle2dInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.puzzle.puzzle2d.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.puzzle.puzzle2d.inference.flatPosition", reads: &["nodes", "edges"] }]
     }
 }
@@ -59,7 +59,7 @@ impl ArtifactInferrer for crate::artifacts::puzzle2d::standards::v1::subsets::an
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.puzzle.puzzle2d.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `puzzle2d_artifact_schema_descriptor`'s registration.
-pub async fn puzzle2d_artifact_inference_descriptor() -> artifact_schema::ArtifactInferenceDescriptor {
+pub fn puzzle2d_artifact_inference_descriptor() -> artifact_schema::ArtifactInferenceDescriptor {
     artifact_schema::ArtifactInferenceDescriptor {
         id: "s.puzzle.puzzle2d.inference",
         inference: artifact_schema::FacetLeaves {
@@ -81,7 +81,7 @@ mod tests {
     use protocol::Inference;
 
     //#region 🧸️Fixtures
-    async fn parent_child_snapshot() -> Puzzle2dSnapshot {
+    fn parent_child_snapshot() -> Puzzle2dSnapshot {
         // p (Fixed, off-origin) --e-- c (Derived): edge x/y offsets place c relative to p.
         let p = Puzzle2dNode { id: "p".into(), x: 5.0, y: 7.0, anchor: Puzzle2dNodeAnchor::Fixed, handles: vec![Puzzle2dHandle { id: "h".into(), ..Default::default() }], ..Default::default() };
         let c = Puzzle2dNode { id: "c".into(), anchor: Puzzle2dNodeAnchor::Derived, handles: vec![Puzzle2dHandle { id: "h".into(), ..Default::default() }], ..Default::default() };
@@ -91,19 +91,19 @@ mod tests {
     //#endregion 🧸️Fixtures
 
     //#region 🧪️InferenceLaws
-    #[semio_framework_async_macros::async_test]
-    async fn inference_determinism_law() {
+    #[test]
+    fn inference_determinism_law() {
         let snapshot = parent_child_snapshot();
         assert_eq!(Puzzle2dInference::infer(&snapshot), Puzzle2dInference::infer(&snapshot));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn inference_default_law() {
+    #[test]
+    fn inference_default_law() {
         assert_eq!(Puzzle2dInference::infer(&Puzzle2dSnapshot::default()), Puzzle2dInference::default());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn inference_matches_compute_flat_position_directly() {
+    #[test]
+    fn inference_matches_compute_flat_position_directly() {
         let snapshot = parent_child_snapshot();
         let inferred = Puzzle2dInference::infer(&snapshot);
         assert_eq!(inferred.flat_position, compute_flat_position(&snapshot));
@@ -122,16 +122,16 @@ use crate::artifacts::puzzle2d::{Puzzle2dNode, Puzzle2dNodeAnchor};
 use crate::artifacts::puzzle3d::schema::inferences::flatten::{DIAGRAM_HORIZONTAL_SCALE, DIAGRAM_RADIUS};
 use std::collections::{HashMap, HashSet, VecDeque};
 
-async fn round_f(v: f64) -> f64 {
+fn round_f(v: f64) -> f64 {
     (v * 1_000_000.0).round() / 1_000_000.0
 }
 
-async fn parse_endpoint(endpoint: &str) -> Option<(&str, &str)> {
+fn parse_endpoint(endpoint: &str) -> Option<(&str, &str)> {
     endpoint.split_once(':')
 }
 
 /// 🔗 Compose-parity fastened layout: places nodes from edge gap/shift/rise/rotation/turn/tilt + x/y using the diagram-center rule.
-pub async fn fastened_layout_snapshot(snapshot: &mut Puzzle2dSnapshot) {
+pub fn fastened_layout_snapshot(snapshot: &mut Puzzle2dSnapshot) {
     if snapshot.nodes.is_empty() {
         return;
     }
@@ -219,8 +219,8 @@ mod fastened_tests {
     use super::*;
     use crate::artifacts::puzzle2d::{Puzzle2dCamera, Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, Puzzle2dNodeAnchor, Puzzle2dSnapshot};
 
-    #[semio_framework_async_macros::async_test]
-    async fn fastened_layout_places_child_from_origin_parent_by_handle_angle() {
+    #[test]
+    fn fastened_layout_places_child_from_origin_parent_by_handle_angle() {
         let mut snapshot = Puzzle2dSnapshot {
             schema: "puzzle.2d".into(),
             camera: Puzzle2dCamera { x: 0.0, y: 0.0, zoom: 1.0 },

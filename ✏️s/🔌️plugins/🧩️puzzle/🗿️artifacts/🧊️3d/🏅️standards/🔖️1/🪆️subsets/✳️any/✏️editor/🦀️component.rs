@@ -34,10 +34,10 @@ use crate::editor::puzzle3d::terminology::{puzzle3d_labels, puzzle3d_localized, 
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{
-    mesh_from_kind, panel_tab_element_id, panel_tab_first_draggable_element_id, window_element_id, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ActionRef, AppIo, ArtifactEditor, ArtifactView, ConfigView, Dialect,
-    DialogDefinition, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, IntroductionDefinition, IntroductionInteraction, IntroductionPlacement,
+    mesh_from_kind, panel_tab_element_id, panel_tab_first_draggable_element_id, window_element_id, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ActionRef, AppIo, ArtifactEditor, ArtifactView, BuiltNode, ConfigView,
+    Dialect, DialogDefinition, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, IntroductionDefinition, IntroductionInteraction, IntroductionPlacement,
     IntroductionStepDefinition, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity, SelectionMethod, SelectionMode, SelectionSpec,
-    ToolRef, UiNode, UiTreeSectionNode, WindowEngagement, WindowMeasure, INTERACTION_SELECT_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
+    ToolRef, UiNode, WindowEngagement, WindowMeasure, INTERACTION_SELECT_ACTION_ID, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
 };
 use store::EngineHandles;
 // 🎭️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET (contract §2.1): `ArtifactEditor`
@@ -52,9 +52,9 @@ use store::EngineHandles;
 use semio_framework_plugin::app::InteractionView;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::collections::{HashMap, HashSet};
-use std::sync::atomic::{AtomicU32, Ordering};
-use std::sync::{LazyLock, Mutex};
+use std::collections::{HashMap, HashSet, VecDeque};
+use std::sync::atomic::{AtomicU32, AtomicUsize, Ordering};
+use std::sync::{Arc, LazyLock, Mutex};
 
 //#region 🔖️Constants
 pub const PUZZLE3D_PLAY_APP_ID: &str = "puzzle3d-play";
@@ -103,20 +103,22 @@ pub static PUZZLE3D_MESH_REGISTRY: LazyLock<Mutex<HashMap<String, (Vec<f32>, Vec
 /// this module's `serde_json::from_str::<Puzzle3dFixture>`/`.example(...)` call sites expect.
 pub static CONCRETE_FOREST_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::artifacts::puzzle3d::dsl::PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT, "concrete-forest"));
 pub static NAKAGIN_EXAMPLE_JSON: LazyLock<String> = LazyLock::new(|| parse_example_dsl(crate::artifacts::puzzle3d::dsl::PUZZLE3D_NAKAGIN_EXAMPLE_TEXT, "nakagin"));
+static CONCRETE_FOREST_EXAMPLE_FIXTURE: LazyLock<Puzzle3dFixture> = LazyLock::new(|| serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON.as_str()).unwrap_or_else(|_| empty_fixture()));
+static NAKAGIN_EXAMPLE_FIXTURE: LazyLock<Puzzle3dFixture> = LazyLock::new(|| serde_json::from_str(NAKAGIN_EXAMPLE_JSON.as_str()).unwrap_or_else(|_| empty_fixture()));
 
-async fn parse_example_dsl(dsl_text: &str, label: &str) -> String {
+fn parse_example_dsl(dsl_text: &str, label: &str) -> String {
     let projection = <Puzzle3dSnapshot as store::ArtifactDsl>::parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{label} example fixture parses as dsl: {error}"));
     serde_json::to_string(&projection).unwrap_or_else(|error| panic!("serialize {label} example fixture: {error}"))
 }
 
-pub async fn puzzle3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    semio_framework_plugin::ActionFactory::new(PUZZLE3D_PLAY_CONTROLLER_ID).action(action, args)
+pub fn puzzle3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: PUZZLE3D_PLAY_CONTROLLER_ID.into(), action: action.into(), args: semio_framework_plugin::optional_json_to_dsl(args) }
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: builds a framework `interactionSelect`
 /// action targeting one `(granularity, id)` pair in the `vortex` domain — replaces the deleted
 /// `setSelection` action builders every document/catalogue tree row used to construct by hand.
-pub async fn puzzle3d_interaction_select(granularity: &str, id: &str) -> ActionDescriptor {
+pub fn puzzle3d_interaction_select(granularity: &str, id: &str) -> ActionDescriptor {
     let targets = serde_json::to_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]).unwrap_or_default();
     puzzle3d_action(INTERACTION_SELECT_ACTION_ID, Some(json!({ "domainId": PUZZLE3D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })))
 }
@@ -272,33 +274,56 @@ pub struct Puzzle3dScene {
     pub active_utility: String,
 }
 
-pub async fn empty_fixture() -> Puzzle3dFixture {
+pub fn empty_fixture() -> Puzzle3dFixture {
     Puzzle3dFixture { schema: PUZZLE3D_FIXTURE_SCHEMA.into(), domain: "architecture".into(), meta: Puzzle3dFixtureMeta::default(), objects: Vec::new(), attractions: Vec::new(), target_volumes: Vec::new(), references: Vec::new() }
 }
 
-pub async fn default_fixture() -> Puzzle3dFixture {
-    serde_json::from_str::<Puzzle3dFixture>(CONCRETE_FOREST_EXAMPLE_JSON.as_str()).unwrap_or_else(|_| empty_fixture())
+pub fn default_fixture() -> Puzzle3dFixture {
+    CONCRETE_FOREST_EXAMPLE_FIXTURE.clone()
 }
 
-pub async fn nakagin_fixture() -> Puzzle3dFixture {
-    serde_json::from_str::<Puzzle3dFixture>(NAKAGIN_EXAMPLE_JSON.as_str()).unwrap_or_else(|_| empty_fixture())
+pub fn nakagin_fixture() -> Puzzle3dFixture {
+    NAKAGIN_EXAMPLE_FIXTURE.clone()
 }
 
 /// 🧾️ Materializes the transient scene from the persisted projection (bare fixture json) and the
 /// app's current view state; an unparseable projection degrades to an empty board.
-pub async fn scene_from_projection(projection: &Value, runtime: Puzzle3dRuntime, active_utility: &str) -> Puzzle3dScene {
+pub fn scene_from_projection(projection: &Value, runtime: Puzzle3dRuntime, active_utility: &str) -> Puzzle3dScene {
     let fixture = serde_json::from_value::<Puzzle3dFixture>(projection.clone()).unwrap_or_else(|_| empty_fixture());
     Puzzle3dScene { fixture, runtime, active_utility: active_utility.to_string() }
 }
 
-/// 🧮️ Document operations for a fixture mutation — normalizes `before` through the same typed round
-/// trip as `after` so View-kind actions that only touch runtime never trip the "must not emit
-/// operations" guard when the live store still holds an artifact-shaped projection
-/// (`skip_serializing_if`-elided optional fields) from a prior op apply.
-pub async fn puzzle3d_operations_from_fixture_change(before: &Value, after_fixture: &Puzzle3dFixture) -> Vec<Puzzle3dMutation> {
-    let before_normalized = serde_json::to_value(serde_json::from_value::<Puzzle3dFixture>(before.clone()).unwrap_or_else(|_| empty_fixture())).unwrap_or_else(|_| before.clone());
-    let after = serde_json::to_value(after_fixture).unwrap_or_else(|_| before_normalized.clone());
-    puzzle3d_document_delta_operations(&before_normalized, &after)
+struct Puzzle3dExampleOperations {
+    before: Value,
+    after: Puzzle3dFixture,
+    operations: Vec<Puzzle3dMutation>,
+}
+
+static PUZZLE3D_EXAMPLE_OPERATIONS: LazyLock<Vec<Puzzle3dExampleOperations>> = LazyLock::new(|| {
+    let raw = vec![empty_fixture(), default_fixture(), nakagin_fixture()];
+    let mut resolved = raw.clone();
+    for fixture in &mut resolved {
+        resolve_puzzle3d_attractions(fixture);
+    }
+    let mut before_values: Vec<Value> = raw.iter().chain(&resolved).filter_map(|fixture| serde_json::to_value(fixture).ok()).collect();
+    before_values.dedup();
+    let after_values: Vec<Value> = resolved.iter().filter_map(|fixture| serde_json::to_value(fixture).ok()).collect();
+    let mut entries = Vec::new();
+    for before in before_values {
+        for (after, after_value) in resolved.iter().zip(&after_values) {
+            entries.push(Puzzle3dExampleOperations { operations: puzzle3d_document_delta_operations(&before, after_value), before: before.clone(), after: after.clone() });
+        }
+    }
+    entries
+});
+
+/// 🧮️ Document operations for a fixture mutation through the typed semantic delta vocabulary.
+pub fn puzzle3d_operations_from_fixture_change(before: &Value, after_fixture: &Puzzle3dFixture) -> Vec<Puzzle3dMutation> {
+    if let Some(entry) = PUZZLE3D_EXAMPLE_OPERATIONS.iter().find(|entry| &entry.before == before && &entry.after == after_fixture) {
+        return entry.operations.clone();
+    }
+    let after = serde_json::to_value(after_fixture).unwrap_or_else(|_| before.clone());
+    puzzle3d_document_delta_operations(before, &after)
 }
 
 /// 🔌️ `kit:in` seam helper: keyed UPSERT of `incoming` rows (each shaped `{"id": "...", ...}`) into
@@ -306,7 +331,7 @@ pub async fn puzzle3d_operations_from_fixture_change(before: &Value, after_fixtu
 /// with the same `"id"`, else appends. Deterministic/order-independent in the resulting SET of ids (a
 /// `multiplicity: Many` port may fan in from several producers across several `import_media` calls);
 /// when two producers disagree on one id's content, the most-recently-applied wins.
-async fn puzzle3d_normalize_object_kind_row(mut row: Value) -> Value {
+fn puzzle3d_normalize_object_kind_row(mut row: Value) -> Value {
     let mesh_url = row.get("meshUrl").and_then(Value::as_str).filter(|url| !url.is_empty()).map(str::to_string);
     let has_rep = row.get("representations").and_then(Value::as_array).map(|rows| rows.iter().any(|rep| rep.get("url").and_then(Value::as_str).filter(|url| !url.is_empty()).is_some())).unwrap_or(false);
     let id = row.get("id").and_then(Value::as_str).unwrap_or("kind").to_string();
@@ -321,7 +346,7 @@ async fn puzzle3d_normalize_object_kind_row(mut row: Value) -> Value {
     row
 }
 
-async fn puzzle3d_upsert_catalog_rows(catalogs: &mut Value, section: &str, incoming: Option<&Value>) {
+fn puzzle3d_upsert_catalog_rows(catalogs: &mut Value, section: &str, incoming: Option<&Value>) {
     let Some(incoming_rows) = incoming.and_then(Value::as_array) else {
         return;
     };
@@ -349,7 +374,7 @@ async fn puzzle3d_upsert_catalog_rows(catalogs: &mut Value, section: &str, incom
 /// headless/test call that never populated it still gets exactly the one entry today's single-window
 /// callers expect). puzzle3d has one window KIND that may be split into several INSTANCES, all
 /// recorded flat in `window_ids`, so there is no per-kind filtering left to do.
-async fn window_instance_ids(config: &Puzzle3dConfig, kind_id: &str) -> Vec<String> {
+fn window_instance_ids(config: &Puzzle3dConfig, kind_id: &str) -> Vec<String> {
     if config.window_ids.is_empty() {
         vec![kind_id.to_string()]
     } else {
@@ -357,12 +382,12 @@ async fn window_instance_ids(config: &Puzzle3dConfig, kind_id: &str) -> Vec<Stri
     }
 }
 
-pub async fn mesh_selection_ids(args: Option<&Value>, fallback: &[String]) -> Vec<String> {
+pub fn mesh_selection_ids(args: Option<&Value>, fallback: &[String]) -> Vec<String> {
     args.and_then(|value| value.get("ids")).and_then(|value| serde_json::from_value(value.clone()).ok()).filter(|ids: &Vec<String>| !ids.is_empty()).unwrap_or_else(|| fallback.to_vec())
 }
 
 /** @emoji 🧭️ Whether `handle` may emit VCS operations from a fixture before/after delta — view-only actions skip the document snapshot entirely. */
-async fn puzzle3d_action_document_intent(action: &str) -> bool {
+fn puzzle3d_action_document_intent(action: &str) -> bool {
     matches!(
         action,
         "setFixtureJson"
@@ -391,11 +416,11 @@ async fn puzzle3d_action_document_intent(action: &str) -> bool {
 }
 
 //#region 🔖️Quaternions
-pub async fn quat_mul(a: [f64; 4], b: [f64; 4]) -> [f64; 4] {
+pub fn quat_mul(a: [f64; 4], b: [f64; 4]) -> [f64; 4] {
     [a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1], a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0], a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3], a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2]]
 }
 
-pub async fn quat_from_axis_angle(ax: f64, ay: f64, az: f64, angle: f64) -> [f64; 4] {
+pub fn quat_from_axis_angle(ax: f64, ay: f64, az: f64, angle: f64) -> [f64; 4] {
     let len = (ax * ax + ay * ay + az * az).sqrt();
     if len < 1e-8 {
         return [0.0, 0.0, 0.0, 1.0];
@@ -405,7 +430,7 @@ pub async fn quat_from_axis_angle(ax: f64, ay: f64, az: f64, angle: f64) -> [f64
     [ax / len * s, ay / len * s, az / len * s, half.cos()]
 }
 
-pub async fn quat_rotate_vector(quat: [f64; 4], vector: [f64; 3]) -> [f64; 3] {
+pub fn quat_rotate_vector(quat: [f64; 4], vector: [f64; 3]) -> [f64; 3] {
     let [x, y, z, w] = quat;
     let vx = vector[0];
     let vy = vector[1];
@@ -419,7 +444,7 @@ pub async fn quat_rotate_vector(quat: [f64; 4], vector: [f64; 3]) -> [f64; 3] {
 //#endregion 🔖️Quaternions
 
 //#region 🔖️FixtureQueries
-async fn scale_value_mul(scale: &Option<Value>, sx: f64, sy: f64, sz: f64) -> Value {
+fn scale_value_mul(scale: &Option<Value>, sx: f64, sy: f64, sz: f64) -> Value {
     match scale {
         Some(Value::Array(values)) if values.len() >= 3 => json!([values[0].as_f64().unwrap_or(1.0) * sx, values[1].as_f64().unwrap_or(1.0) * sy, values[2].as_f64().unwrap_or(1.0) * sz,]),
         Some(Value::Number(value)) => {
@@ -430,7 +455,7 @@ async fn scale_value_mul(scale: &Option<Value>, sx: f64, sy: f64, sz: f64) -> Va
     }
 }
 
-pub async fn resolve_object_mesh_url(object: &Puzzle3dObject, meta: &Puzzle3dFixtureMeta) -> Option<String> {
+pub fn resolve_object_mesh_url(object: &Puzzle3dObject, meta: &Puzzle3dFixtureMeta) -> Option<String> {
     if let Some(url) = object.mesh_url.as_ref().filter(|url| !url.is_empty()) {
         return Some(url.clone());
     }
@@ -445,7 +470,7 @@ pub async fn resolve_object_mesh_url(object: &Puzzle3dObject, meta: &Puzzle3dFix
     None
 }
 
-pub async fn collect_mesh_urls(fixture: &Puzzle3dFixture) -> Vec<String> {
+pub fn collect_mesh_urls(fixture: &Puzzle3dFixture) -> Vec<String> {
     let mut urls = HashSet::new();
     for object in &fixture.objects {
         if let Some(url) = resolve_object_mesh_url(object, &fixture.meta) {
@@ -464,21 +489,21 @@ pub async fn collect_mesh_urls(fixture: &Puzzle3dFixture) -> Vec<String> {
     urls.into_iter().collect()
 }
 
-pub async fn object_scale_json(object: &Puzzle3dObject) -> [f64; 3] {
+pub fn object_scale_json(object: &Puzzle3dObject) -> [f64; 3] {
     match &object.scale {
         Some(Value::Array(values)) if values.len() >= 3 => [values[0].as_f64().unwrap_or(1.0), values[1].as_f64().unwrap_or(1.0), values[2].as_f64().unwrap_or(1.0)],
         _ => [1.0, 1.0, 1.0],
     }
 }
 
-pub async fn target_volume_scale_json(volume: &Puzzle3dTargetVolume) -> [f64; 3] {
+pub fn target_volume_scale_json(volume: &Puzzle3dTargetVolume) -> [f64; 3] {
     match &volume.scale {
         Some(Value::Array(values)) if values.len() >= 3 => [values[0].as_f64().unwrap_or(1.0), values[1].as_f64().unwrap_or(1.0), values[2].as_f64().unwrap_or(1.0)],
         _ => [1.0, 1.0, 1.0],
     }
 }
 
-pub async fn puzzle3d_vortex_full_id(object_id: &str, vortex_id: &str) -> String {
+pub fn puzzle3d_vortex_full_id(object_id: &str, vortex_id: &str) -> String {
     if vortex_id.contains(':') {
         vortex_id.to_string()
     } else {
@@ -486,13 +511,13 @@ pub async fn puzzle3d_vortex_full_id(object_id: &str, vortex_id: &str) -> String
     }
 }
 
-pub async fn world_vortex_position(object: &Puzzle3dObject, vortex: &Puzzle3dVortex) -> [f64; 3] {
+pub fn world_vortex_position(object: &Puzzle3dObject, vortex: &Puzzle3dVortex) -> [f64; 3] {
     let orientation = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
     let rotated = quat_rotate_vector(orientation, vortex.position);
     [object.origin.first().copied().unwrap_or(0.0) + rotated[0], object.origin.get(1).copied().unwrap_or(0.0) + rotated[1], object.origin.get(2).copied().unwrap_or(0.0) + rotated[2]]
 }
 
-pub async fn resolve_vortex_world_position(fixture: &Puzzle3dFixture, full_id: &str) -> Option<[f64; 3]> {
+pub fn resolve_vortex_world_position(fixture: &Puzzle3dFixture, full_id: &str) -> Option<[f64; 3]> {
     for object in &fixture.objects {
         for vortex in &object.vortices {
             if puzzle3d_vortex_full_id(&object.id, &vortex.id) == full_id {
@@ -503,12 +528,12 @@ pub async fn resolve_vortex_world_position(fixture: &Puzzle3dFixture, full_id: &
     None
 }
 
-pub async fn resolve_vortex_kind(fixture: &Puzzle3dFixture, full_id: &str) -> Option<String> {
+pub fn resolve_vortex_kind(fixture: &Puzzle3dFixture, full_id: &str) -> Option<String> {
     fixture.objects.iter().find_map(|object| object.vortices.iter().find(|vortex| puzzle3d_vortex_full_id(&object.id, &vortex.id) == full_id).and_then(|vortex| vortex.vortex_kind.clone()))
 }
 
 /// 🧲️ Permissive when the fixture declares no `kindCompatibility` rules at all — otherwise requires an explicit (or bidirectional) entry.
-pub async fn puzzle3d_kinds_compatible(fixture: &Puzzle3dFixture, source_kind: &str, target_kind: &str) -> bool {
+pub fn puzzle3d_kinds_compatible(fixture: &Puzzle3dFixture, source_kind: &str, target_kind: &str) -> bool {
     let Some(entries) = fixture.meta.kind_compatibility.as_ref().and_then(|value| value.as_array()) else {
         return true;
     };
@@ -523,21 +548,21 @@ pub async fn puzzle3d_kinds_compatible(fixture: &Puzzle3dFixture, source_kind: &
     })
 }
 
-pub async fn puzzle3d_catalog_entries<'a>(fixture: &'a Puzzle3dFixture, section: &str) -> &'a [Value] {
+pub fn puzzle3d_catalog_entries<'a>(fixture: &'a Puzzle3dFixture, section: &str) -> &'a [Value] {
     fixture.meta.kind_catalogs.as_ref().and_then(|catalogs| catalogs.get(section)).and_then(|entries| entries.as_array()).map(Vec::as_slice).unwrap_or(&[])
 }
 
-pub async fn puzzle3d_kind_ids(fixture: &Puzzle3dFixture, section: &str) -> Vec<String> {
+pub fn puzzle3d_kind_ids(fixture: &Puzzle3dFixture, section: &str) -> Vec<String> {
     puzzle3d_catalog_entries(fixture, section).iter().filter_map(|entry| entry.get("id").and_then(|value| value.as_str()).map(str::to_string)).collect()
 }
 
-pub async fn next_object_id() -> String {
+pub fn next_object_id() -> String {
     let next = PUZZLE3D_ID_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
     format!("object-{next}")
 }
 
 /// 🧊️ Seeds real vortices for a freshly placed object from its kind catalog's `vortices` templates, so it is immediately brushable instead of connector-less.
-pub async fn puzzle3d_vortices_from_kind_template(catalog_entry: &Value) -> Vec<Puzzle3dVortex> {
+pub fn puzzle3d_vortices_from_kind_template(catalog_entry: &Value) -> Vec<Puzzle3dVortex> {
     catalog_entry
         .get("vortices")
         .and_then(|value| value.as_array())
@@ -559,7 +584,7 @@ pub async fn puzzle3d_vortices_from_kind_template(catalog_entry: &Value) -> Vec<
 
 //#region 🔖️SceneState
 /// 🪣️ Whether the mode-level Fill tool currently authorizes fill planning and interaction.
-pub async fn puzzle3d_fill_tool_active(config: &Puzzle3dConfig) -> bool {
+pub fn puzzle3d_fill_tool_active(config: &Puzzle3dConfig) -> bool {
     config.active_tool_id.as_deref() == Some(fill_tool::TOOL_ID)
 }
 
@@ -567,7 +592,7 @@ pub async fn puzzle3d_fill_tool_active(config: &Puzzle3dConfig) -> bool {
 /// utility (`active_utility_by_window_id` for `window_id`), UNLESS the mode-level fill tool is active
 /// (`active_tool_id`), in which case fill wins. Fill keeps its viewport interaction even though it is
 /// declared as a windowless tool, not a `WindowKindDefinition` utility.
-pub async fn puzzle3d_scene_active_utility(config: &Puzzle3dConfig, window_id: Option<&str>) -> String {
+pub fn puzzle3d_scene_active_utility(config: &Puzzle3dConfig, window_id: Option<&str>) -> String {
     if puzzle3d_fill_tool_active(config) {
         return fill_tool::TOOL_ID.to_string();
     }
@@ -590,14 +615,14 @@ pub async fn puzzle3d_scene_active_utility(config: &Puzzle3dConfig, window_id: O
 /// coordinator as a framework-level gap (`ArtifactApp::render`/`context_menu` never gained the
 /// `interaction: &InteractionView` parameter `handle`/`copy_fragment`/`cut_operations` did), not fixed
 /// here (framework file, out of this crate's remit).
-pub async fn puzzle3d_brush_target_vortex(_envelope: &Puzzle3dScene) -> Option<String> {
+pub fn puzzle3d_brush_target_vortex(_envelope: &Puzzle3dScene) -> Option<String> {
     None
 }
 //#endregion 🔖️SceneState
 
 //#region 🔖️FixtureEdits
 /// 🧲️ Applies one absolute gumball translate (total delta from drag-start) onto a fixture snapshot.
-pub async fn puzzle3d_apply_translate(fixture: &mut Puzzle3dFixture, object_ids: &[String], volume_ids: &[String], dx: f64, dy: f64, dz: f64) {
+pub fn puzzle3d_apply_translate(fixture: &mut Puzzle3dFixture, object_ids: &[String], volume_ids: &[String], dx: f64, dy: f64, dz: f64) {
     for object in &mut fixture.objects {
         if object_ids.contains(&object.id) {
             object.origin[0] += dx;
@@ -613,7 +638,7 @@ pub async fn puzzle3d_apply_translate(fixture: &mut Puzzle3dFixture, object_ids:
 }
 
 /// 🧲️ Applies one absolute gumball rotate (total axis-angle from drag-start) onto a fixture snapshot.
-pub async fn puzzle3d_apply_rotate(fixture: &mut Puzzle3dFixture, object_ids: &[String], volume_ids: &[String], ax: f64, ay: f64, az: f64, angle: f64) {
+pub fn puzzle3d_apply_rotate(fixture: &mut Puzzle3dFixture, object_ids: &[String], volume_ids: &[String], ax: f64, ay: f64, az: f64, angle: f64) {
     let delta = quat_from_axis_angle(ax, ay, az, angle);
     for object in &mut fixture.objects {
         if object_ids.contains(&object.id) {
@@ -628,7 +653,7 @@ pub async fn puzzle3d_apply_rotate(fixture: &mut Puzzle3dFixture, object_ids: &[
 }
 
 /// 🧲️ Applies one absolute gumball scale (total factors from drag-start) onto a fixture snapshot.
-pub async fn puzzle3d_apply_scale(fixture: &mut Puzzle3dFixture, object_ids: &[String], volume_ids: &[String], sx: f64, sy: f64, sz: f64) {
+pub fn puzzle3d_apply_scale(fixture: &mut Puzzle3dFixture, object_ids: &[String], volume_ids: &[String], sx: f64, sy: f64, sz: f64) {
     for object in &mut fixture.objects {
         if object_ids.contains(&object.id) {
             object.scale = Some(scale_value_mul(&object.scale, sx, sy, sz));
@@ -640,7 +665,7 @@ pub async fn puzzle3d_apply_scale(fixture: &mut Puzzle3dFixture, object_ids: &[S
 }
 
 /// 🙈️ Applies `hidden`/`locked` to the given ids of one entity kind — `"vortex"` ids are full ids (`objectId:vortexId`).
-pub async fn apply_puzzle3d_selection_flag(fixture: &mut Puzzle3dFixture, entity: &str, ids: &[String], flag: &str, value: bool) {
+pub fn apply_puzzle3d_selection_flag(fixture: &mut Puzzle3dFixture, entity: &str, ids: &[String], flag: &str, value: bool) {
     if ids.is_empty() {
         return;
     }
@@ -690,7 +715,7 @@ pub async fn apply_puzzle3d_selection_flag(fixture: &mut Puzzle3dFixture, entity
     }
 }
 
-pub async fn value_as_vec3(value: &Value) -> Option<[f64; 3]> {
+pub fn value_as_vec3(value: &Value) -> Option<[f64; 3]> {
     let array = value.as_array()?;
     Some([array.first()?.as_f64()?, array.get(1)?.as_f64()?, array.get(2)?.as_f64()?])
 }
@@ -698,7 +723,7 @@ pub async fn value_as_vec3(value: &Value) -> Option<[f64; 3]> {
 /** @emoji 📐️ Resolves one numeric-field edit: an absolute `value` (typed entry) wins when present,
  * otherwise a `delta` (stepper nudge) is added to `current` — offset-preserving across a multi-select
  * where `current` differs per entity. `None` when neither parses. */
-async fn puzzle3d_resolve_number_edit(current: f64, value: Option<&Value>, delta: Option<&Value>) -> Option<f64> {
+fn puzzle3d_resolve_number_edit(current: f64, value: Option<&Value>, delta: Option<&Value>) -> Option<f64> {
     if let Some(absolute) = value.and_then(Value::as_f64) {
         return Some(absolute);
     }
@@ -708,14 +733,14 @@ async fn puzzle3d_resolve_number_edit(current: f64, value: Option<&Value>, delta
 /** @emoji 📐️ Settings counterpart to `puzzle3d_resolve_number_edit`: reads `value`/`delta` directly
  * out of an action's `args`, for single global settings (not per-entity multi-select) whose stepper
  * dispatches straight to their own dedicated action. */
-pub async fn puzzle3d_absolute_or_delta(args: Option<&Value>, current: f64) -> Option<f64> {
+pub fn puzzle3d_absolute_or_delta(args: Option<&Value>, current: f64) -> Option<f64> {
     puzzle3d_resolve_number_edit(current, args.and_then(|value| value.get("value")), args.and_then(|value| value.get("delta")))
 }
 
 /** @emoji 📐️ Parses a nested stepper-group field id as `"<base>.<axis>"` (`x`/`y`/`z`/`w`), returning
  * the axis index when `field` names a component of `base` — the dot-path convention
  * `ui_inspector_vec3_group`/the inspector's quaternion group use for their per-axis actions. */
-async fn puzzle3d_axis_index(field: &str, base: &str) -> Option<usize> {
+fn puzzle3d_axis_index(field: &str, base: &str) -> Option<usize> {
     match field.strip_prefix(base)?.strip_prefix('.')? {
         "x" => Some(0),
         "y" => Some(1),
@@ -728,7 +753,7 @@ async fn puzzle3d_axis_index(field: &str, base: &str) -> Option<usize> {
 /// 🔎️ Generic inspector edit dispatcher — `entity`/`field` select the target, `ids` scope it (full ids for vortices, `objectId:vortexId`).
 /// `hidden`/`locked` delegate to `apply_puzzle3d_selection_flag` (shared with the non-inspector toggle path); every other field
 /// resolves via `value` (absolute) or `delta` (relative, added to each entity's own current component).
-pub async fn apply_puzzle3d_inspector_patch(fixture: &mut Puzzle3dFixture, entity: &str, ids: &[String], field: &str, value: Option<&Value>, delta: Option<&Value>) {
+pub fn apply_puzzle3d_inspector_patch(fixture: &mut Puzzle3dFixture, entity: &str, ids: &[String], field: &str, value: Option<&Value>, delta: Option<&Value>) {
     if ids.is_empty() {
         return;
     }
@@ -926,7 +951,7 @@ pub async fn apply_puzzle3d_inspector_patch(fixture: &mut Puzzle3dFixture, entit
 /// 🎯️ Mirrors the host's client-side zoom-to-selection framing math so a keybinding/engagement-token
 /// driven focus (which bypasses that host interception) still produces a sensible camera. Camera-only:
 /// writes `envelope.runtime.camera` (session-only per-window state), never the shared `fixture`.
-pub async fn apply_puzzle3d_focus_selection(envelope: &mut Puzzle3dScene, selected_object_ids: &[String]) {
+pub fn apply_puzzle3d_focus_selection(envelope: &mut Puzzle3dScene, selected_object_ids: &[String]) {
     let selected_origins: Vec<[f64; 3]> = envelope.fixture.objects.iter().filter(|object| selected_object_ids.contains(&object.id)).map(|object| object.origin).collect();
     if selected_origins.is_empty() {
         return;
@@ -957,7 +982,7 @@ pub async fn apply_puzzle3d_focus_selection(envelope: &mut Puzzle3dScene, select
 //#region 🔖️EngineBridge
 /// 🎯️ Bridges this app's own document model into `⚙️engine`'s `SceneConfig` wire shape — schema
 /// translation between two independently-evolved Rust types, not a wasm-bindgen boundary.
-async fn scene_config_json(envelope: &Puzzle3dScene) -> String {
+fn scene_config_json(envelope: &Puzzle3dScene) -> String {
     json!({
         "fixture": {
             "objects": envelope.fixture.objects,
@@ -981,13 +1006,13 @@ async fn scene_config_json(envelope: &Puzzle3dScene) -> String {
 /// never populate before a real GLB arrives.
 const PUZZLE3D_FALLBACK_MESH_SCALE: f32 = 4.0;
 
-async fn scaled_mesh_positions(positions: &[f32], scale: f32) -> Vec<f32> {
+fn scaled_mesh_positions(positions: &[f32], scale: f32) -> Vec<f32> {
     positions.iter().map(|value| value * scale).collect()
 }
 
 /// 🧊️ Pushes the current scene into the precompute session and seeds the box fallback for URLs with
 /// no mesh yet, so a real GLB registered earlier via `registerBrushMesh` survives every resync.
-pub async fn sync_precompute_session(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) {
+pub fn sync_precompute_session(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) {
     if let Ok(scene) = serde_json::from_str::<crate::artifacts::puzzle3d::schema::SceneConfig>(&scene_config_json(envelope)) {
         let _ = session.dispatch(Puzzle3dEngineCommand::SetScene { scene });
     }
@@ -1003,7 +1028,14 @@ pub async fn sync_precompute_session(session: &mut Puzzle3dPrecomputeSession, en
     }
 }
 
-pub async fn sync_precompute_weights(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) {
+fn restored_precompute_session(envelope: &Puzzle3dScene, checkpoint: &[u8]) -> Puzzle3dPrecomputeSession {
+    let mut session = Puzzle3dPrecomputeSession::new();
+    sync_precompute_session(&mut session, envelope);
+    session.restore_persisted_fill(checkpoint);
+    session
+}
+
+pub fn sync_precompute_weights(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) {
     let object_weights = envelope.runtime.object_kind_weights.iter().map(|(k, v)| (k.clone(), *v)).collect();
     let vortex_weights = envelope.runtime.vortex_kind_weights.iter().map(|(k, v)| (k.clone(), *v)).collect();
     let _ = session.dispatch(Puzzle3dEngineCommand::UpdateKindWeights { object_weights, vortex_weights });
@@ -1012,7 +1044,7 @@ pub async fn sync_precompute_weights(session: &mut Puzzle3dPrecomputeSession, en
 /// ⏱️ Bounded to one small chunk per call — `handle` runs synchronously on the UI thread and the host
 /// redrives this via 120ms `suggestionsTick`/`fillBuildTick` ticks, so a large per-call budget here is
 /// exactly what froze the UI: hundreds of Monte-Carlo collision task units, blocking, every tick.
-pub async fn drive_precompute(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) {
+pub fn drive_precompute(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) {
     sync_precompute_session(session, envelope);
     session.precompute_step_lane(crate::artifacts::puzzle3d::schema::PrecomputeLane::Brush, 8);
 }
@@ -1021,7 +1053,7 @@ pub async fn drive_precompute(session: &mut Puzzle3dPrecomputeSession, envelope:
 /// this app's `Puzzle3dFixture` document model — bridged through one JSON round trip (schema translation
 /// between two independently-evolved Rust types) exactly like `scene_config_json` bridges the other
 /// direction.
-pub async fn fixture_from_engine_fixture(envelope: &Puzzle3dScene, fixture: &crate::artifacts::puzzle3d::schema::Fixture) -> Option<Puzzle3dScene> {
+pub fn fixture_from_engine_fixture(envelope: &Puzzle3dScene, fixture: &crate::artifacts::puzzle3d::schema::Fixture) -> Option<Puzzle3dScene> {
     let parsed = serde_json::to_value(fixture).ok()?;
     let mut next = envelope.clone();
     next.fixture.objects = serde_json::from_value(parsed.get("objects")?.clone()).ok()?;
@@ -1046,11 +1078,11 @@ struct FillDisplayMemo {
     payload: Puzzle3dFillDisplayPayload,
 }
 
-async fn fill_display_payload_from_fixture(fixture: &crate::artifacts::puzzle3d::schema::Fixture) -> Option<Puzzle3dFillDisplayPayload> {
+fn fill_display_payload_from_fixture(fixture: &crate::artifacts::puzzle3d::schema::Fixture) -> Option<Puzzle3dFillDisplayPayload> {
     serde_json::to_value(fixture).ok().and_then(|value| serde_json::from_value(value).ok())
 }
 
-async fn append_fill_display_tail(fixture: &mut Puzzle3dFixture, payload: &Puzzle3dFillDisplayPayload, applied_count: u32, available_count: u32) {
+fn append_fill_display_tail(fixture: &mut Puzzle3dFixture, payload: &Puzzle3dFillDisplayPayload, applied_count: u32, available_count: u32) {
     let reveal_count = (available_count - applied_count) as usize;
     let objects_tail_start = payload.objects.len().saturating_sub(reveal_count);
     fixture.objects.extend(payload.objects.iter().skip(objects_tail_start).cloned());
@@ -1058,7 +1090,7 @@ async fn append_fill_display_tail(fixture: &mut Puzzle3dFixture, payload: &Puzzl
     fixture.attractions.extend(payload.attractions.iter().skip(attractions_tail_start).cloned());
 }
 
-async fn puzzle3d_fixture_with_fill_display_memo(mut fixture: Puzzle3dFixture, precompute: &Puzzle3dPrecomputeSession, applied_count: u32, available_count: u32, memo: &Mutex<Option<FillDisplayMemo>>) -> Puzzle3dFixture {
+fn puzzle3d_fixture_with_fill_display_memo(mut fixture: Puzzle3dFixture, precompute: &Puzzle3dPrecomputeSession, applied_count: u32, available_count: u32, memo: &Mutex<Option<FillDisplayMemo>>) -> Puzzle3dFixture {
     if available_count <= applied_count {
         return fixture;
     }
@@ -1084,7 +1116,7 @@ async fn puzzle3d_fixture_with_fill_display_memo(mut fixture: Puzzle3dFixture, p
 /// 🔒️ Clamps to what the engine actually has planned so far — the slider primitive already clamps to
 /// `ready` client-side, this is the root-level backstop so the committed value and the document can
 /// never disagree with what `compose_fill_display`/`apply_fill_count` actually applied.
-pub async fn apply_puzzle3d_fill_count(precompute: &mut Puzzle3dPrecomputeSession, envelope: &mut Puzzle3dScene, count: u32) {
+pub fn apply_puzzle3d_fill_count(precompute: &mut Puzzle3dPrecomputeSession, envelope: &mut Puzzle3dScene, count: u32) {
     if count > 0 {
         envelope.active_utility = fill_tool::TOOL_ID.into();
     }
@@ -1105,31 +1137,31 @@ pub async fn apply_puzzle3d_fill_count(precompute: &mut Puzzle3dPrecomputeSessio
 /// angles in degrees, same semantics as compose connections).
 const PUZZLE3D_ATTRACTION_ALIGN_TOLERANCE: f64 = 0.01;
 
-async fn vec3_sub(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+fn vec3_sub(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
     [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
 }
 
-async fn vec3_add(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+fn vec3_add(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
     [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
 }
 
-async fn vec3_scale(a: [f64; 3], s: f64) -> [f64; 3] {
+fn vec3_scale(a: [f64; 3], s: f64) -> [f64; 3] {
     [a[0] * s, a[1] * s, a[2] * s]
 }
 
-async fn vec3_cross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+fn vec3_cross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
     [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
 }
 
-async fn vec3_dot(a: [f64; 3], b: [f64; 3]) -> f64 {
+fn vec3_dot(a: [f64; 3], b: [f64; 3]) -> f64 {
     a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 }
 
-async fn vec3_len(a: [f64; 3]) -> f64 {
+fn vec3_len(a: [f64; 3]) -> f64 {
     vec3_dot(a, a).sqrt()
 }
 
-async fn vec3_normalize(a: [f64; 3]) -> [f64; 3] {
+fn vec3_normalize(a: [f64; 3]) -> [f64; 3] {
     let len = vec3_len(a);
     if len < 1e-12 {
         a
@@ -1138,19 +1170,19 @@ async fn vec3_normalize(a: [f64; 3]) -> [f64; 3] {
     }
 }
 
-async fn deg_to_rad(deg: f64) -> f64 {
+fn deg_to_rad(deg: f64) -> f64 {
     deg * std::f64::consts::PI / 180.0
 }
 
-async fn rad_to_deg(rad: f64) -> f64 {
+fn rad_to_deg(rad: f64) -> f64 {
     rad * 180.0 / std::f64::consts::PI
 }
 
-async fn quat_conjugate(q: [f64; 4]) -> [f64; 4] {
+fn quat_conjugate(q: [f64; 4]) -> [f64; 4] {
     [-q[0], -q[1], -q[2], q[3]]
 }
 
-async fn quat_normalize(q: [f64; 4]) -> [f64; 4] {
+fn quat_normalize(q: [f64; 4]) -> [f64; 4] {
     let len = (q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3]).sqrt();
     if len < 1e-12 {
         [0.0, 0.0, 0.0, 1.0]
@@ -1160,7 +1192,7 @@ async fn quat_normalize(q: [f64; 4]) -> [f64; 4] {
 }
 
 /// 🧭️ The quaternion rotating unit vector `from` onto unit vector `to`.
-async fn puzzle3d_quaternion_from_unit_vectors(from: [f64; 3], to: [f64; 3]) -> [f64; 4] {
+fn puzzle3d_quaternion_from_unit_vectors(from: [f64; 3], to: [f64; 3]) -> [f64; 4] {
     let r = vec3_dot(from, to) + 1.0;
     let quat = if r < 0.000_001 {
         if from[0].abs() > from[2].abs() {
@@ -1178,7 +1210,7 @@ async fn puzzle3d_quaternion_from_unit_vectors(from: [f64; 3], to: [f64; 3]) -> 
 /// 🧲️ The align-quaternion special case for when the attracted vortex is already (anti)parallel to the
 /// attracting vortex. Falls back to an alternate cross axis when the attracting direction is exactly
 /// ±Z — a double-degenerate corner the compose kernel's own branch doesn't otherwise guard.
-async fn puzzle3d_attraction_align_quat(parent_dir: [f64; 3], child_dir: [f64; 3]) -> [f64; 4] {
+fn puzzle3d_attraction_align_quat(parent_dir: [f64; 3], child_dir: [f64; 3]) -> [f64; 4] {
     let reverse_child = vec3_scale(child_dir, -1.0);
     let cross_vec = vec3_cross(parent_dir, reverse_child);
     if vec3_len(cross_vec) < PUZZLE3D_ATTRACTION_ALIGN_TOLERANCE {
@@ -1201,7 +1233,7 @@ async fn puzzle3d_attraction_align_quat(parent_dir: [f64; 3], child_dir: [f64; 3
 /// 📌️ Resolves an attraction endpoint (`objectId:vortexId`) to its owning object id and its vortex's
 /// LOCAL (object-frame) position/direction — the frame the connector math expects, before the object's
 /// own world transform is applied.
-pub async fn puzzle3d_local_vortex_geom(fixture: &Puzzle3dFixture, full_id: &str) -> Option<(String, [f64; 3], [f64; 3])> {
+pub fn puzzle3d_local_vortex_geom(fixture: &Puzzle3dFixture, full_id: &str) -> Option<(String, [f64; 3], [f64; 3])> {
     for object in &fixture.objects {
         for vortex in &object.vortices {
             if puzzle3d_vortex_full_id(&object.id, &vortex.id) == full_id {
@@ -1215,7 +1247,7 @@ pub async fn puzzle3d_local_vortex_geom(fixture: &Puzzle3dFixture, full_id: &str
 /// 🔗️ Resolves an attraction's `attracting`/`attracted` vortex full-ids to their owning object ids.
 /// Returns `None` for dangling references or same-object attractions (legal today but not a resolvable
 /// directed edge).
-async fn puzzle3d_attraction_object_ids(fixture: &Puzzle3dFixture, attraction: &Puzzle3dAttraction) -> Option<(String, String)> {
+fn puzzle3d_attraction_object_ids(fixture: &Puzzle3dFixture, attraction: &Puzzle3dAttraction) -> Option<(String, String)> {
     let attracting_object = puzzle3d_local_vortex_geom(fixture, &attraction.attracting)?.0;
     let attracted_object = puzzle3d_local_vortex_geom(fixture, &attraction.attracted)?.0;
     if attracting_object == attracted_object {
@@ -1228,7 +1260,7 @@ async fn puzzle3d_attraction_object_ids(fixture: &Puzzle3dFixture, attraction: &
 /// vortices' LOCAL position/direction, and the 6 connection-style parameters (angles in degrees),
 /// returns the attracted object's world pose.
 #[allow(clippy::too_many_arguments)]
-async fn puzzle3d_attraction_child_pose(t_a: [f64; 3], q_a: [f64; 4], p_a: [f64; 3], d_a: [f64; 3], p_b: [f64; 3], d_b: [f64; 3], gap: f64, shift: f64, rise: f64, rotation_deg: f64, turn_deg: f64, tilt_deg: f64) -> ([f64; 3], [f64; 4]) {
+fn puzzle3d_attraction_child_pose(t_a: [f64; 3], q_a: [f64; 4], p_a: [f64; 3], d_a: [f64; 3], p_b: [f64; 3], d_b: [f64; 3], gap: f64, shift: f64, rise: f64, rotation_deg: f64, turn_deg: f64, tilt_deg: f64) -> ([f64; 3], [f64; 4]) {
     let parent_dir = vec3_normalize(d_a);
     let child_dir = vec3_normalize(d_b);
     let align_q = puzzle3d_attraction_align_quat(parent_dir, child_dir);
@@ -1260,7 +1292,7 @@ async fn puzzle3d_attraction_child_pose(t_a: [f64; 3], q_a: [f64; 4], p_a: [f64;
 /// derives the 6 parameters that reproduce it exactly, so moving/rotating an attracted object never
 /// causes a resolve-triggered snap-back and creating an attraction never moves either endpoint.
 #[allow(clippy::too_many_arguments)]
-pub async fn derive_attraction_params(t_a: [f64; 3], q_a: [f64; 4], p_a: [f64; 3], d_a: [f64; 3], p_b: [f64; 3], d_b: [f64; 3], t_b: [f64; 3], q_b: [f64; 4]) -> (f64, f64, f64, f64, f64, f64) {
+pub fn derive_attraction_params(t_a: [f64; 3], q_a: [f64; 4], p_a: [f64; 3], d_a: [f64; 3], p_b: [f64; 3], d_b: [f64; 3], t_b: [f64; 3], q_b: [f64; 4]) -> (f64, f64, f64, f64, f64, f64) {
     let parent_dir = vec3_normalize(d_a);
     let child_dir = vec3_normalize(d_b);
     let align_q = puzzle3d_attraction_align_quat(parent_dir, child_dir);
@@ -1301,7 +1333,7 @@ pub async fn derive_attraction_params(t_a: [f64; 3], q_a: [f64; 4], p_a: [f64; 3
 /// re-running against already-resolved poses reproduces them exactly. Returns, for every non-root
 /// object touched, the attraction index that positioned it — callers (e.g. `translateSelection`) use
 /// this to rederive params before a direct move so resolving never snaps it back.
-pub async fn resolve_puzzle3d_attractions(fixture: &mut Puzzle3dFixture) -> HashMap<String, usize> {
+pub fn resolve_puzzle3d_attractions(fixture: &mut Puzzle3dFixture) -> HashMap<String, usize> {
     let mut edges: HashMap<String, Vec<(String, usize)>> = HashMap::new();
     let mut in_degree: HashMap<String, usize> = HashMap::new();
     let mut all_object_ids: Vec<String> = fixture.objects.iter().map(|object| object.id.clone()).collect();
@@ -1316,7 +1348,7 @@ pub async fn resolve_puzzle3d_attractions(fixture: &mut Puzzle3dFixture) -> Hash
         }
     }
 
-    async fn find(parent_of: &mut HashMap<String, String>, id: &str) -> String {
+    fn find(parent_of: &mut HashMap<String, String>, id: &str) -> String {
         let mut current = id.to_string();
         while parent_of[&current] != current {
             let grandparent = parent_of[&parent_of[&current]].clone();
@@ -1325,7 +1357,7 @@ pub async fn resolve_puzzle3d_attractions(fixture: &mut Puzzle3dFixture) -> Hash
         }
         current
     }
-    async fn union(parent_of: &mut HashMap<String, String>, a: &str, b: &str) {
+    fn union(parent_of: &mut HashMap<String, String>, a: &str, b: &str) {
         let root_a = find(parent_of, a);
         let root_b = find(parent_of, b);
         if root_a != root_b {
@@ -1391,7 +1423,7 @@ pub async fn resolve_puzzle3d_attractions(fixture: &mut Puzzle3dFixture) -> Hash
 /// externally computed poses (brush/fill placement via the collision-aware engine, which knows nothing
 /// about gap/shift/rise/rotation/turn/tilt) so the follow-up resolve reproduces those poses exactly
 /// instead of re-deriving a bare port-to-port docking that could visibly jump the just-placed object.
-pub async fn puzzle3d_rederive_all_attractions(fixture: &mut Puzzle3dFixture) {
+pub fn puzzle3d_rederive_all_attractions(fixture: &mut Puzzle3dFixture) {
     let ids: Vec<String> = fixture.attractions.iter().map(|attraction| attraction.id.clone()).collect();
     for id in ids {
         let Some(attraction) = fixture.attractions.iter().find(|attraction| attraction.id == id).cloned() else { continue };
@@ -1414,7 +1446,7 @@ pub async fn puzzle3d_rederive_all_attractions(fixture: &mut Puzzle3dFixture) {
 /// incoming attraction (per the `incoming` map from a prior `resolve_puzzle3d_attractions` call) from
 /// its NEW pose, so the follow-up resolve reproduces that pose exactly instead of snapping the object
 /// back to its old one.
-pub async fn puzzle3d_rederive_moved_attractions(fixture: &mut Puzzle3dFixture, moved_ids: &[String], incoming: &HashMap<String, usize>) {
+pub fn puzzle3d_rederive_moved_attractions(fixture: &mut Puzzle3dFixture, moved_ids: &[String], incoming: &HashMap<String, usize>) {
     for object_id in moved_ids {
         let Some(&attraction_index) = incoming.get(object_id) else { continue };
         let Some(attraction) = fixture.attractions.get(attraction_index).cloned() else { continue };
@@ -1441,7 +1473,7 @@ pub async fn puzzle3d_rederive_moved_attractions(fixture: &mut Puzzle3dFixture, 
 /// vortex children are the **global** vortex catalog shown as joint P(object)×P(vortex). Moving an
 /// object header scales its children; the sum of every nested joint across all objects is 1. Shared by
 /// the Fill tool and the Brush utility options, so it lives here rather than in either of them.
-pub async fn puzzle3d_uniform_kind_weights(ids: &[String]) -> HashMap<String, f64> {
+pub fn puzzle3d_uniform_kind_weights(ids: &[String]) -> HashMap<String, f64> {
     if ids.is_empty() {
         return HashMap::new();
     }
@@ -1449,7 +1481,7 @@ pub async fn puzzle3d_uniform_kind_weights(ids: &[String]) -> HashMap<String, f6
     ids.iter().map(|id| (id.clone(), weight)).collect()
 }
 
-pub async fn puzzle3d_normalize_kind_weight_group(weights: &HashMap<String, f64>, kind_ids: &[String], changed_id: &str, new_value: f64) -> HashMap<String, f64> {
+pub fn puzzle3d_normalize_kind_weight_group(weights: &HashMap<String, f64>, kind_ids: &[String], changed_id: &str, new_value: f64) -> HashMap<String, f64> {
     if kind_ids.is_empty() {
         return HashMap::new();
     }
@@ -1482,7 +1514,7 @@ pub async fn puzzle3d_normalize_kind_weight_group(weights: &HashMap<String, f64>
     next
 }
 
-pub async fn puzzle3d_ensure_catalog_kind_weights(weights: &mut HashMap<String, f64>, kind_ids: &[String]) {
+pub fn puzzle3d_ensure_catalog_kind_weights(weights: &mut HashMap<String, f64>, kind_ids: &[String]) {
     if kind_ids.is_empty() {
         return;
     }
@@ -1500,7 +1532,7 @@ pub async fn puzzle3d_ensure_catalog_kind_weights(weights: &mut HashMap<String, 
     }
 }
 
-async fn puzzle3d_object_kind_label(fixture: &Puzzle3dFixture, object_kind_id: &str) -> String {
+fn puzzle3d_object_kind_label(fixture: &Puzzle3dFixture, object_kind_id: &str) -> String {
     puzzle3d_catalog_entries(fixture, "objects")
         .iter()
         .find(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(object_kind_id))
@@ -1509,7 +1541,7 @@ async fn puzzle3d_object_kind_label(fixture: &Puzzle3dFixture, object_kind_id: &
         .to_string()
 }
 
-pub async fn puzzle3d_joint_vortex_weight(object_weight: f64, vortex_weight: f64) -> f64 {
+pub fn puzzle3d_joint_vortex_weight(object_weight: f64, vortex_weight: f64) -> f64 {
     object_weight * vortex_weight
 }
 
@@ -1518,7 +1550,7 @@ pub async fn puzzle3d_joint_vortex_weight(object_weight: f64, vortex_weight: f64
 /// nested joint percentages across the tree is 1 (not a local simplex per object). Editing converts
 /// back to relative `P(vortex)` on the shared vortex simplex. Disabled when the parent object weight
 /// is 0. Step tracks ~1% of the object weight for a smooth `[0, P(object)]` range.
-pub async fn puzzle3d_joint_vortex_measures(object_kind_id: &str, object_weight: f64, vortex_kind_ids: &[String], vortex_weights: &HashMap<String, f64>) -> Vec<WindowMeasure> {
+pub fn puzzle3d_joint_vortex_measures(object_kind_id: &str, object_weight: f64, vortex_kind_ids: &[String], vortex_weights: &HashMap<String, f64>) -> Vec<WindowMeasure> {
     let object_kind_zero = object_weight <= f64::EPSILON;
     let joint_max = if object_kind_zero { 1.0 } else { object_weight };
     let joint_step = if object_kind_zero { 0.01 } else { (object_weight * 0.01).max(0.0001) };
@@ -1546,7 +1578,7 @@ pub async fn puzzle3d_joint_vortex_measures(object_kind_id: &str, object_weight:
         .collect()
 }
 
-pub async fn puzzle3d_distribution_children(envelope: &Puzzle3dScene, default_open: Option<bool>) -> Vec<WindowMeasure> {
+pub fn puzzle3d_distribution_children(envelope: &Puzzle3dScene, default_open: Option<bool>) -> Vec<WindowMeasure> {
     let object_ids = puzzle3d_kind_ids(&envelope.fixture, "objects");
     let vortex_kind_ids = puzzle3d_kind_ids(&envelope.fixture, "vortices");
     object_ids
@@ -1573,7 +1605,7 @@ pub async fn puzzle3d_distribution_children(envelope: &Puzzle3dScene, default_op
         .collect()
 }
 
-pub async fn puzzle3d_distribution_group(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, default_open: Option<bool>) -> WindowMeasure {
+pub fn puzzle3d_distribution_group(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, default_open: Option<bool>) -> WindowMeasure {
     WindowMeasure::Group {
         id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-distribution"),
         label: labels.distribution.into(),
@@ -1593,30 +1625,30 @@ pub async fn puzzle3d_distribution_group(envelope: &Puzzle3dScene, labels: &Puzz
 //#endregion 🔖️Distribution
 
 //#region 🔖️UiScopes
-pub async fn puzzle3d_viewport_scope() -> UiDirtyScope {
+pub fn puzzle3d_viewport_scope() -> UiDirtyScope {
     UiDirtyScope::Partial { window_bodies: vec![main::BODY_KEY.to_string()], panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false }
 }
 
 /// 🐢️ Background fill planning only mutates the main world body's `fillBuild` interaction JSON and the
 /// fill-count slider range in the fill tool's measures — never panels, engagements, window measures or
 /// labels. Emitting `Full` on every 120ms tick was half of the fill-utility stall.
-pub async fn puzzle3d_fill_build_scope() -> UiDirtyScope {
+pub fn puzzle3d_fill_build_scope() -> UiDirtyScope {
     UiDirtyScope::Partial { window_bodies: vec![main::BODY_KEY.to_string()], panel_bodies: Vec::new(), utilities: false, tools: true, engagements: false, measures: false, labels: false }
 }
 
 /// 🐢️ Fill/distribution slider gestures refresh the world body, fill-tool measures and utility-option
 /// window measures — never the full shell chrome.
-pub async fn puzzle3d_fill_options_scope() -> UiDirtyScope {
+pub fn puzzle3d_fill_options_scope() -> UiDirtyScope {
     UiDirtyScope::Partial { window_bodies: vec![main::BODY_KEY.to_string()], panel_bodies: Vec::new(), utilities: false, tools: true, engagements: false, measures: true, labels: false }
 }
 
 /// 🐢️ Suggestion collision ticking only refreshes the world body's suggestion-menu interaction JSON.
-pub async fn puzzle3d_suggestions_tick_scope() -> UiDirtyScope {
+pub fn puzzle3d_suggestions_tick_scope() -> UiDirtyScope {
     UiDirtyScope::Partial { window_bodies: vec![main::BODY_KEY.to_string()], panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false }
 }
 
 /// 🐢️ Mid-drag gumball scratch only refreshes the world composite body — never the full shell.
-pub async fn puzzle3d_transform_drag_scope() -> UiDirtyScope {
+pub fn puzzle3d_transform_drag_scope() -> UiDirtyScope {
     UiDirtyScope::Partial { window_bodies: vec![main::BODY_KEY.to_string()], panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false }
 }
 
@@ -1645,19 +1677,19 @@ macro_rules! puzzle3d_command_variants {
             /// 🏷️ The action id this variant was declared under — used both for `command_id()`
             /// (command-log labeling / registry kind-discipline) and to reconstruct the exact
             /// `action: &str` `handle` dispatches on.
-            async fn action_id(&self) -> &'static str {
+            fn action_id(&self) -> &'static str {
                 match self {
                     $(Puzzle3dCommand::$Variant { .. } => $id),*
                 }
             }
 
-            async fn window_id(&self) -> Option<&str> {
+            fn window_id(&self) -> Option<&str> {
                 match self {
                     $(Puzzle3dCommand::$Variant { window_id, .. } => window_id.as_deref()),*
                 }
             }
 
-            async fn args(&self) -> Option<&Value> {
+            fn args(&self) -> Option<&Value> {
                 match self {
                     $(Puzzle3dCommand::$Variant { args, .. } => args.as_ref()),*
                 }
@@ -1665,7 +1697,7 @@ macro_rules! puzzle3d_command_variants {
 
             /// 🎯️ Reverse of `action_id()` — builds the typed command used by both the host's
             /// transitional `{action,args}` bridge and the testkit dispatch helper.
-            async fn from_action(action: &str, args: Option<Value>, window_id: Option<String>) -> Option<Self> {
+            fn from_action(action: &str, args: Option<Value>, window_id: Option<String>) -> Option<Self> {
                 match action {
                     $($id => Some(Puzzle3dCommand::$Variant { window_id, args })),*,
                     _ => None,
@@ -1747,10 +1779,10 @@ puzzle3d_command_variants! {
 }
 
 impl protocol::OpBinary for Puzzle3dCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
     }
 }
@@ -1777,6 +1809,7 @@ pub struct Puzzle3dActionCtx<'a> {
     /// here instead of the deleted `Puzzle3dConfig` selection fields.
     pub interaction: &'a InteractionView<'a>,
     pub ui_scope: &'a mut UiDirtyScope,
+    pub effects: &'a mut Vec<Effect>,
     /// 🛑️ Set by an arm that must skip the whole epilogue (window save, delta, config snapshot).
     pub abort: bool,
 }
@@ -1786,27 +1819,27 @@ impl<'a> Puzzle3dActionCtx<'a> {
     /// every retained selection-acting verb (rotate/scale/translate/delete/duplicate-selection,
     /// set-selection-flag, select-same-kind) reads exactly one granularity's ids this way, since a
     /// `DomainSelection` only ever carries one active granularity at a time.
-    async fn selected_ids(&self, granularity_id: &str) -> Vec<String> {
-        let selection = self.interaction.selection(PUZZLE3D_INTERACTION_DOMAIN);
+    fn selected_ids(&self, granularity_id: &str) -> Vec<String> {
+        let selection = semio_framework::io::resolve_ready(self.interaction.selection(PUZZLE3D_INTERACTION_DOMAIN));
         if selection.granularity == granularity_id {
             selection.ids.clone()
         } else {
             Vec::new()
         }
     }
-    pub async fn selected_object_ids(&self) -> Vec<String> {
+    pub fn selected_object_ids(&self) -> Vec<String> {
         self.selected_ids(PUZZLE3D_GRANULARITY_OBJECT)
     }
-    pub async fn selected_vortex_ids(&self) -> Vec<String> {
+    pub fn selected_vortex_ids(&self) -> Vec<String> {
         self.selected_ids(PUZZLE3D_GRANULARITY_VORTEX)
     }
-    pub async fn selected_attraction_ids(&self) -> Vec<String> {
+    pub fn selected_attraction_ids(&self) -> Vec<String> {
         self.selected_ids(PUZZLE3D_GRANULARITY_ATTRACTION)
     }
-    pub async fn selected_target_volume_ids(&self) -> Vec<String> {
+    pub fn selected_target_volume_ids(&self) -> Vec<String> {
         self.selected_ids(PUZZLE3D_GRANULARITY_TARGET_VOLUME)
     }
-    pub async fn selected_reference_ids(&self) -> Vec<String> {
+    pub fn selected_reference_ids(&self) -> Vec<String> {
         self.selected_ids(PUZZLE3D_GRANULARITY_REFERENCE)
     }
 }
@@ -1817,7 +1850,7 @@ impl<'a> Puzzle3dActionCtx<'a> {
 /// declared `ActionDefinition` (English-only) cannot resolve, so each row is emitted via `Menu::item`
 /// rather than `Menu::action`. Grouping/ordering/the pre-destructive separator are still handled by
 /// `Menu::group` + the `organize_context_menu` funnel in `context_menu`.
-async fn puzzle3d_context_menu_row(id: &str, label: impl Into<String>, icon: &str, action: &str, args: Option<Value>, destructive: bool) -> semio_framework_plugin::ContextMenuItemSpec {
+fn puzzle3d_context_menu_row(id: &str, label: impl Into<String>, icon: &str, action: &str, args: Option<Value>, destructive: bool) -> semio_framework_plugin::ContextMenuItemSpec {
     semio_framework_plugin::ContextMenuItemSpec {
         id: id.into(),
         label: Some(label.into()),
@@ -1844,7 +1877,7 @@ struct Puzzle3dContextSelection {
 }
 
 impl Puzzle3dContextSelection {
-    async fn from_surface(surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>) -> Self {
+    fn from_surface(surface: Option<&semio_framework_plugin::ContextMenuSurfaceTarget>) -> Self {
         let mut out = Self::default();
         let Some(surface) = surface else {
             return out;
@@ -1864,53 +1897,92 @@ impl Puzzle3dContextSelection {
     }
 }
 
-async fn puzzle3d_context_menu_items(envelope: &Puzzle3dScene, selection: &Puzzle3dContextSelection, labels: &Puzzle3dLabels, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+fn puzzle3d_context_menu_items(envelope: &Puzzle3dScene, selection: &Puzzle3dContextSelection, labels: &Puzzle3dLabels, registry: &semio_framework_plugin::AppActionRegistry) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
     use semio_framework_plugin::Menu;
     if !selection.object_ids.is_empty() {
         let all_hidden = envelope.fixture.objects.iter().filter(|object| selection.object_ids.contains(&object.id)).all(|object| object.hidden);
         let all_locked = envelope.fixture.objects.iter().filter(|object| selection.object_ids.contains(&object.id)).all(|object| object.locked);
         let count = selection.object_ids.len();
         let phrase = if count == 1 { format!("1 {}", labels.object.as_str()) } else { format!("{count} {}", labels.objects.as_str()) };
-        return Menu::of(registry)
-            .item(puzzle3d_context_menu_row("duplicate", labels.duplicate, "copy", "duplicateSelection", None, false))
-            .item(puzzle3d_context_menu_row("select-same-kind", labels.select_same_kind, "layers", "selectSameKindSelection", None, false))
-            .item(puzzle3d_context_menu_row("zoom", labels.zoom_to_selection, "crosshair", "zoomToSelection", None, false))
-            .group("hand", |m| {
-                m.item(puzzle3d_context_menu_row("hide-show", if all_hidden { labels.show } else { labels.hide }, if all_hidden { "eye" } else { "eye-off" }, "setSelectionFlag", Some(json!({ "flag": "hidden", "value": !all_hidden })), false)).item(
-                    puzzle3d_context_menu_row("lock-unlock", if all_locked { labels.unlock } else { labels.lock }, if all_locked { "lock-open" } else { "lock" }, "setSelectionFlag", Some(json!({ "flag": "locked", "value": !all_locked })), false),
-                )
-            })
-            .item(puzzle3d_context_menu_row("delete", format!("{} ({phrase})", labels.delete.as_str()), "trash", "deleteSelection", None, true))
-            .build();
+        return semio_framework::io::resolve_ready(async {
+            Menu::of(registry)
+                .await
+                .item(puzzle3d_context_menu_row("duplicate", labels.duplicate, "copy", "duplicateSelection", None, false))
+                .await
+                .item(puzzle3d_context_menu_row("select-same-kind", labels.select_same_kind, "layers", "selectSameKindSelection", None, false))
+                .await
+                .item(puzzle3d_context_menu_row("zoom", labels.zoom_to_selection, "crosshair", "zoomToSelection", None, false))
+                .await
+                .group("hand", |m| async {
+                    m.item(puzzle3d_context_menu_row("hide-show", if all_hidden { labels.show } else { labels.hide }, if all_hidden { "eye" } else { "eye-off" }, "setSelectionFlag", Some(json!({ "flag": "hidden", "value": !all_hidden })), false))
+                        .await
+                        .item(puzzle3d_context_menu_row(
+                            "lock-unlock",
+                            if all_locked { labels.unlock } else { labels.lock },
+                            if all_locked { "lock-open" } else { "lock" },
+                            "setSelectionFlag",
+                            Some(json!({ "flag": "locked", "value": !all_locked })),
+                            false,
+                        ))
+                        .await
+                })
+                .await
+                .item(puzzle3d_context_menu_row("delete", format!("{} ({phrase})", labels.delete.as_str()), "trash", "deleteSelection", None, true))
+                .await
+                .build()
+                .await
+        });
     }
     if !selection.vortex_ids.is_empty() {
-        let mut menu = Menu::of(registry);
+        let mut menu = semio_framework::io::resolve_ready(Menu::of(registry));
         if let [only] = selection.vortex_ids.as_slice() {
-            menu = menu.item(puzzle3d_context_menu_row("suggest", labels.suggest_objects, "sparkles", "openVortexSuggestions", Some(json!({ "fullId": only })), false));
+            menu = semio_framework::io::resolve_ready(menu.item(puzzle3d_context_menu_row("suggest", labels.suggest_objects, "sparkles", "openVortexSuggestions", Some(json!({ "fullId": only })), false)));
         }
-        return menu.item(puzzle3d_context_menu_row("zoom", labels.zoom_to_selection, "crosshair", "zoomToSelection", None, false)).item(puzzle3d_context_menu_row("delete", labels.delete, "trash", "deleteSelection", None, true)).build();
+        return semio_framework::io::resolve_ready(async {
+            menu.item(puzzle3d_context_menu_row("zoom", labels.zoom_to_selection, "crosshair", "zoomToSelection", None, false)).await.item(puzzle3d_context_menu_row("delete", labels.delete, "trash", "deleteSelection", None, true)).await.build().await
+        });
     }
     if let Some(id) = selection.attraction_ids.first() {
-        return Menu::of(registry).item(puzzle3d_context_menu_row("delete", labels.delete, "trash", "deleteAttraction", Some(json!({ "id": id })), true)).build();
+        return semio_framework::io::resolve_ready(async { Menu::of(registry).await.item(puzzle3d_context_menu_row("delete", labels.delete, "trash", "deleteAttraction", Some(json!({ "id": id })), true)).await.build().await });
     }
     if let Some(id) = selection.target_volume_ids.first() {
         let target_volume = envelope.fixture.target_volumes.iter().find(|volume| &volume.id == id);
         let hidden = target_volume.is_some_and(|volume| volume.hidden);
         let locked = target_volume.is_some_and(|volume| volume.locked);
-        return Menu::of(registry)
-            .group("targets", |m| {
-                m.item(puzzle3d_context_menu_row("hide-show", if hidden { labels.show } else { labels.hide }, if hidden { "eye" } else { "eye-off" }, "setTargetVolumeFlag", Some(json!({ "id": id, "flag": "hidden", "value": !hidden })), false)).item(
-                    puzzle3d_context_menu_row("lock-unlock", if locked { labels.unlock } else { labels.lock }, if locked { "lock-open" } else { "lock" }, "setTargetVolumeFlag", Some(json!({ "id": id, "flag": "locked", "value": !locked })), false),
-                )
-            })
-            .item(puzzle3d_context_menu_row("delete", labels.delete, "trash", "deleteTargetVolume", Some(json!({ "id": id })), true))
-            .build();
+        return semio_framework::io::resolve_ready(async {
+            Menu::of(registry)
+                .await
+                .group("targets", |m| async {
+                    m.item(puzzle3d_context_menu_row("hide-show", if hidden { labels.show } else { labels.hide }, if hidden { "eye" } else { "eye-off" }, "setTargetVolumeFlag", Some(json!({ "id": id, "flag": "hidden", "value": !hidden })), false))
+                        .await
+                        .item(puzzle3d_context_menu_row(
+                            "lock-unlock",
+                            if locked { labels.unlock } else { labels.lock },
+                            if locked { "lock-open" } else { "lock" },
+                            "setTargetVolumeFlag",
+                            Some(json!({ "id": id, "flag": "locked", "value": !locked })),
+                            false,
+                        ))
+                        .await
+                })
+                .await
+                .item(puzzle3d_context_menu_row("delete", labels.delete, "trash", "deleteTargetVolume", Some(json!({ "id": id })), true))
+                .await
+                .build()
+                .await
+        });
     }
     if selection.reference_ids.first().is_some() {
-        return Menu::of(registry)
-            .item(puzzle3d_context_menu_row("zoom", labels.zoom_to_selection, "crosshair", "zoomToSelection", None, false))
-            .item(puzzle3d_context_menu_row("delete", labels.delete, "trash", "deleteSelection", None, true))
-            .build();
+        return semio_framework::io::resolve_ready(async {
+            Menu::of(registry)
+                .await
+                .item(puzzle3d_context_menu_row("zoom", labels.zoom_to_selection, "crosshair", "zoomToSelection", None, false))
+                .await
+                .item(puzzle3d_context_menu_row("delete", labels.delete, "trash", "deleteSelection", None, true))
+                .await
+                .build()
+                .await
+        });
     }
     Vec::new()
 }
@@ -1925,14 +1997,60 @@ async fn puzzle3d_context_menu_items(envelope: &Puzzle3dScene, selection: &Puzzl
 // 🧲️ Gumball drags use a scratch-commit session (`transform_drag_active` + `transform_base` /
 // `transform_scratch`): mid-drag ticks accumulate incremental deltas onto the scratch and emit no
 // operations; `transformEnd` commits the base→scratch fixture delta once.
-thread_local! {
-    /// 🧠 Long-lived play session — `ArtifactApp` methods are associated fns (no `&self`),
-    /// so the precompute/gumball scratch lives here until `EngineHandles` carries it.
-    static PUZZLE3D_PLAY_SESSION: std::cell::RefCell<Puzzle3dPlayApp> = std::cell::RefCell::new(Puzzle3dPlayApp::default());
+/// 🧠 Long-lived worker-portable play session — `ArtifactApp` methods are associated fns (no
+/// `&self`), so the precompute/gumball scratch lives behind one process-owned lock until
+/// `EngineHandles` carries it. A thread-local session loses resumable fill state whenever the
+/// shared worker pool resumes a command on another worker.
+struct Puzzle3dPlaySessions {
+    sessions: HashMap<usize, Arc<Mutex<Puzzle3dPlayApp>>>,
+    prewarmed: VecDeque<Puzzle3dPlayApp>,
 }
 
-async fn with_puzzle3d_app<R>(f: impl FnOnce(&Puzzle3dPlayApp) -> R) -> R {
-    PUZZLE3D_PLAY_SESSION.with(|app| f(&app.borrow()))
+static PUZZLE3D_PLAY_SESSIONS: std::sync::OnceLock<Mutex<Puzzle3dPlaySessions>> = std::sync::OnceLock::new();
+static LAST_PUZZLE3D_PLAY_SESSION: AtomicUsize = AtomicUsize::new(0);
+
+fn puzzle3d_play_sessions() -> &'static Mutex<Puzzle3dPlaySessions> {
+    PUZZLE3D_PLAY_SESSIONS.get_or_init(|| Mutex::new(Puzzle3dPlaySessions { sessions: HashMap::new(), prewarmed: VecDeque::new() }))
+}
+
+fn puzzle3d_play_session(config: &Puzzle3dConfig) -> Arc<Mutex<Puzzle3dPlayApp>> {
+    let key = config.runtime_session_id.0 as usize;
+    LAST_PUZZLE3D_PLAY_SESSION.store(key, Ordering::Release);
+    let mut sessions = puzzle3d_play_sessions().lock().expect("puzzle3d play sessions lock");
+    if let Some(session) = sessions.sessions.get(&key) {
+        return Arc::clone(session);
+    }
+    let session = Arc::new(Mutex::new(sessions.prewarmed.pop_front().unwrap_or_default()));
+    sessions.sessions.insert(key, Arc::clone(&session));
+    session
+}
+
+fn with_puzzle3d_app_for<R>(config: &Puzzle3dConfig, f: impl FnOnce(&Puzzle3dPlayApp) -> R) -> R {
+    let session = puzzle3d_play_session(config);
+    let app = session.lock().expect("puzzle3d play session lock");
+    f(&app)
+}
+
+fn with_puzzle3d_app<R>(f: impl FnOnce(&Puzzle3dPlayApp) -> R) -> R {
+    let key = LAST_PUZZLE3D_PLAY_SESSION.load(Ordering::Acquire);
+    let session = {
+        let sessions = puzzle3d_play_sessions().lock().expect("puzzle3d play sessions lock");
+        sessions.sessions.get(&key).cloned()
+    }
+    .unwrap_or_else(|| Arc::new(Mutex::new(Puzzle3dPlayApp::default())));
+    let app = session.lock().expect("puzzle3d play session lock");
+    f(&app)
+}
+
+pub(crate) fn with_puzzle3d_app_mut<R>(f: impl FnOnce(&mut Puzzle3dPlayApp) -> R) -> R {
+    let key = LAST_PUZZLE3D_PLAY_SESSION.load(Ordering::Acquire);
+    let session = {
+        let sessions = puzzle3d_play_sessions().lock().expect("puzzle3d play sessions lock");
+        sessions.sessions.get(&key).cloned()
+    }
+    .unwrap_or_else(|| Arc::new(Mutex::new(Puzzle3dPlayApp::default())));
+    let mut app = session.lock().expect("puzzle3d play session lock");
+    f(&mut app)
 }
 
 pub struct Puzzle3dPlayApp {
@@ -1944,7 +2062,7 @@ pub struct Puzzle3dPlayApp {
     preview_seq: std::cell::RefCell<u64>,
     fill_display_memo: Mutex<Option<FillDisplayMemo>>,
     geometry_cache: Mutex<Option<(u64, String, String)>>,
-    document_sections_cache: Mutex<Option<(u64, Vec<UiTreeSectionNode>)>>,
+    document_tree_cache: Mutex<Option<(u64, BuiltNode)>>,
 }
 
 impl Default for Puzzle3dPlayApp {
@@ -1957,34 +2075,34 @@ impl Default for Puzzle3dPlayApp {
             preview_seq: std::cell::RefCell::new(0),
             fill_display_memo: Mutex::new(None),
             geometry_cache: Mutex::new(None),
-            document_sections_cache: Mutex::new(None),
+            document_tree_cache: Mutex::new(None),
         }
     }
 }
 
 impl Puzzle3dPlayApp {
-    async fn geometry_jsons(&self, fixture: &Puzzle3dFixture) -> (String, String) {
+    fn geometry_jsons(&self, fixture: &Puzzle3dFixture) -> (String, String) {
         let fingerprint = main::fixture_geometry_fingerprint(fixture);
         let mut cache = self.geometry_cache.lock().expect("geometry cache");
         if cache.as_ref().is_none_or(|(fp, _, _)| *fp != fingerprint) {
             *cache = Some((fingerprint, main::world_instances_geometry_json(fixture), main::world_meshes_json(fixture)));
-            *self.document_sections_cache.lock().expect("document cache") = None;
+            *self.document_tree_cache.lock().expect("document cache") = None;
         }
         let (_, instances, meshes) = cache.as_ref().expect("geometry cache populated");
         (instances.clone(), meshes.clone())
     }
 
-    async fn document_sections_cached(&self, fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> Vec<UiTreeSectionNode> {
+    fn document_tree_cached(&self, fixture: &Puzzle3dFixture, labels: &Puzzle3dLabels) -> BuiltNode {
         let fingerprint = main::fixture_geometry_fingerprint(fixture);
-        let mut cache = self.document_sections_cache.lock().expect("document cache");
+        let mut cache = self.document_tree_cache.lock().expect("document cache");
         if cache.as_ref().is_none_or(|(fp, _)| *fp != fingerprint) {
-            *cache = Some((fingerprint, document::sections(fixture, labels)));
+            *cache = Some((fingerprint, document::render(fixture, labels)));
         }
         cache.as_ref().expect("document cache populated").1.clone()
     }
 
     /// 🎬️ Snapshots the live fixture as the gumball drag base and clears any prior scratch.
-    async fn begin_transform_session(&self, projection: &Value) {
+    fn begin_transform_session(&self, projection: &Value) {
         let fixture = serde_json::from_value::<Puzzle3dFixture>(projection.clone()).unwrap_or_else(|_| empty_fixture());
         *self.transform_drag_active.borrow_mut() = true;
         *self.transform_base.borrow_mut() = Some(fixture);
@@ -1992,7 +2110,7 @@ impl Puzzle3dPlayApp {
     }
 
     /// 🧹️ Drops an in-progress gumball scratch without committing.
-    pub(crate) async fn clear_transform_session(&self) {
+    pub(crate) fn clear_transform_session(&self) {
         *self.transform_drag_active.borrow_mut() = false;
         *self.transform_base.borrow_mut() = None;
         *self.transform_scratch.borrow_mut() = None;
@@ -2007,7 +2125,7 @@ impl Puzzle3dPlayApp {
     /// coordinator as a testability gap), so this inherent method stays constructible from this
     /// crate's own in-file tests; `handle_action_impl` resolves the ids from `interaction` before
     /// calling in.
-    pub(crate) async fn transform_drag_tick(&self, action: &str, args: Option<&Value>, projection: &Value, object_ids: &[String], volume_ids: &[String]) -> Emit<Puzzle3dMutation, Puzzle3dConfigMutation> {
+    pub(crate) fn transform_drag_tick(&self, action: &str, args: Option<&Value>, projection: &Value, object_ids: &[String], volume_ids: &[String]) -> Emit<Puzzle3dMutation, Puzzle3dConfigMutation> {
         if self.transform_base.borrow().is_none() {
             self.begin_transform_session(projection);
         }
@@ -2032,7 +2150,7 @@ impl Puzzle3dPlayApp {
     /// once. 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: takes the already-resolved
     /// object ids — see `transform_drag_tick`'s doc comment for why (no public `InteractionView`
     /// constructor exists outside `semio_framework_plugin`).
-    pub(crate) async fn commit_transform(&self, projection: &Value, object_ids: &[String]) -> Emit<Puzzle3dMutation, Puzzle3dConfigMutation> {
+    pub(crate) fn commit_transform(&self, projection: &Value, object_ids: &[String]) -> Emit<Puzzle3dMutation, Puzzle3dConfigMutation> {
         *self.transform_drag_active.borrow_mut() = false;
         let Some(mut scratch) = self.transform_scratch.borrow_mut().take() else {
             *self.transform_base.borrow_mut() = None;
@@ -2046,12 +2164,12 @@ impl Puzzle3dPlayApp {
         if operations.is_empty() {
             Emit { ui_scope: puzzle3d_transform_drag_scope(), ..Default::default() }
         } else {
-            Emit::commit(operations, "Transform selection")
+            semio_framework::io::resolve_ready(Emit::commit(operations, "Transform selection"))
         }
     }
 
     /// 🖼️ Fixture used for world render — live scratch while a gumball drag is in progress.
-    async fn render_fixture(&self, projection: &Value) -> Puzzle3dFixture {
+    fn render_fixture(&self, projection: &Value) -> Puzzle3dFixture {
         if let Some(scratch) = self.transform_scratch.borrow().as_ref() {
             return scratch.clone();
         }
@@ -2072,7 +2190,7 @@ impl Puzzle3dPlayApp {
     /// `store::BackboneMessage` has no preview-shaped variant to relay one through.
     /// `#[allow(dead_code)]`: exercised by `🧪️Tests` only until a host bridge exists.
     #[allow(dead_code)]
-    pub(crate) async fn gesture_preview(&self) -> Option<(&'static str, u64, Vec<u8>)> {
+    pub(crate) fn gesture_preview(&self) -> Option<(&'static str, u64, Vec<u8>)> {
         let base_binding = self.transform_base.borrow();
         let base = base_binding.as_ref()?;
         let scratch_binding = self.transform_scratch.borrow();
@@ -2086,7 +2204,7 @@ impl Puzzle3dPlayApp {
 
     /// 🧾️ Rebuilds the transient render bundle for one `(projection, config, window)` triple, with the
     /// window instance's own view-local options materialized onto the runtime.
-    async fn scene_for(&self, projection: &Value, config: &Puzzle3dConfig, window_id: &str) -> Puzzle3dScene {
+    fn scene_for(&self, projection: &Value, config: &Puzzle3dConfig, window_id: &str) -> Puzzle3dScene {
         let active_utility = puzzle3d_scene_active_utility(config, Some(window_id));
         let mut runtime_for_window = config.clone();
         runtime_for_window.load_window(window_id);
@@ -2097,7 +2215,7 @@ impl Puzzle3dPlayApp {
     /// `action`/`args`/`window_id` reconstructed 1:1 from the typed `Puzzle3dCommand`. Everything past
     /// this adapter boundary reads/writes the passed-in `Puzzle3dConfig` snapshot and returns a real
     /// `Emit` (document + config operations) instead of mutating `self`.
-    async fn handle_action_impl(
+    fn handle_action_impl(
         &self,
         action: &str,
         args: Option<&Value>,
@@ -2109,13 +2227,13 @@ impl Puzzle3dPlayApp {
         // 🗨️ Shell-only effect (no document interaction, hence no scene/before/after scaffolding
         // below): opens the declared "addObject" dialog over a glass veil.
         if action == "openAddObjectDialog" {
-            return Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(120), dialog_id: "addObject".into(), args: None });
+            return semio_framework::io::resolve_ready(Emit::effect(Effect::OpenDialog { req: semio_framework_plugin::RequestId(120), dialog_id: "addObject".into(), args: None }));
         }
         if action == "transformBegin" {
             self.begin_transform_session(&doc.snapshot.0);
             return Emit::default();
         }
-        let interaction_selection = interaction.selection(PUZZLE3D_INTERACTION_DOMAIN);
+        let interaction_selection = semio_framework::io::resolve_ready(interaction.selection(PUZZLE3D_INTERACTION_DOMAIN));
         let (transform_object_ids, transform_volume_ids) = if interaction_selection.granularity == PUZZLE3D_GRANULARITY_TARGET_VOLUME {
             (Vec::new(), interaction_selection.ids.clone())
         } else if interaction_selection.granularity == PUZZLE3D_GRANULARITY_OBJECT {
@@ -2148,11 +2266,12 @@ impl Puzzle3dPlayApp {
         let mut scene = scene_from_projection(&doc.snapshot.0, runtime_for_window, &active_utility_initial);
         let mut ui_scope = UiDirtyScope::Full;
         let mut effects = Vec::new();
-        let preserve_fill_plan = matches!(action, "setFillCount" | "fillBuildTick");
-        if !preserve_fill_plan {
+        let uses_precompute = puzzle3d_action_uses_precompute(action);
+        if uses_precompute {
             sync_precompute_session(&mut self.precompute.borrow_mut(), &scene);
+            self.precompute.borrow_mut().restore_persisted_fill(&config.fill_checkpoint);
         }
-        let mut ctx = Puzzle3dActionCtx { app: self, scene: &mut scene, window_id: &wid, config, interaction, ui_scope: &mut ui_scope, abort: false };
+        let mut ctx = Puzzle3dActionCtx { app: self, scene: &mut scene, window_id: &wid, config, interaction, ui_scope: &mut ui_scope, effects: &mut effects, abort: false };
         dispatch_puzzle3d_action(&mut ctx, action, args);
         let aborted = ctx.abort;
         if aborted {
@@ -2163,6 +2282,13 @@ impl Puzzle3dPlayApp {
             _ => ui_scope,
         };
         let next_active_utility = scene.active_utility.clone();
+        scene.runtime.fill_checkpoint = if document_action && action != "setFillCount" {
+            Vec::new()
+        } else if uses_precompute {
+            self.precompute.borrow().fill_checkpoint_bytes()
+        } else {
+            config.fill_checkpoint.clone()
+        };
         scene.runtime.save_window(&wid);
         let operations = if let Some(before) = before.as_ref() {
             puzzle3d_operations_from_fixture_change(before, &scene.fixture)
@@ -2202,7 +2328,7 @@ impl Puzzle3dPlayApp {
 
 /// 🎬️ Dispatch only: every arm's behaviour lives in its `🎮️commands/<group>/🦀️component.rs` free
 /// function. No behaviour lives in this match.
-async fn dispatch_puzzle3d_action(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args: Option<&Value>) {
+fn dispatch_puzzle3d_action(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args: Option<&Value>) {
     match action {
         "setFixtureJson" => set_fixture_json::set_fixture_json(ctx, args),
         "setActiveExample" => set_active_example::set_active_example(ctx, args),
@@ -2264,6 +2390,25 @@ async fn dispatch_puzzle3d_action(ctx: &mut Puzzle3dActionCtx<'_>, action: &str,
     }
 }
 
+fn puzzle3d_action_uses_precompute(action: &str) -> bool {
+    matches!(
+        action,
+        "setBrushPlacementOverlapBudget"
+            | "addBrushObject"
+            | "cycleBrushCandidate"
+            | "cycleBrushCandidateBack"
+            | "openVortexSuggestions"
+            | "acceptSuggestion"
+            | "suggestionsTick"
+            | "registerBrushMesh"
+            | "setFillCount"
+            | "fillBuildTick"
+            | "setObjectKindWeight"
+            | "setVortexKindWeight"
+            | "engagementRepeatLast"
+    )
+}
+
 impl ArtifactEditor for Puzzle3dPlayApp {
     const DIALECT: Dialect = crate::artifacts::puzzle3d::PUZZLE3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PUZZLE3D_FIXTURE_SCHEMA;
@@ -2289,7 +2434,16 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     }
 
     async fn initial_snapshot() -> Puzzle3dPlaySnapshot {
-        Puzzle3dPlaySnapshot(serde_json::to_value(default_fixture()).unwrap_or_else(|_| serde_json::to_value(empty_fixture()).unwrap_or(Value::Null)))
+        LazyLock::force(&NAKAGIN_EXAMPLE_FIXTURE);
+        LazyLock::force(&PUZZLE3D_EXAMPLE_OPERATIONS);
+        let snapshot = Puzzle3dPlaySnapshot(serde_json::to_value(default_fixture()).unwrap_or_else(|_| serde_json::to_value(empty_fixture()).unwrap_or(Value::Null)));
+        let config = Puzzle3dConfig::default();
+        let active_utility = puzzle3d_scene_active_utility(&config, None);
+        let scene = scene_from_projection(&snapshot.0, config, &active_utility);
+        let mut app = Puzzle3dPlayApp::default();
+        sync_precompute_session(&mut app.precompute.borrow_mut(), &scene);
+        puzzle3d_play_sessions().lock().expect("puzzle3d play sessions lock").prewarmed.push_back(app);
+        snapshot
     }
 
     /// 🏷️ Maps each `Puzzle3dCommand` variant back to the action id it was declared under.
@@ -2314,7 +2468,7 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Puzzle3dMutation, Puzzle3dConfigMutation, Self::DraftMutation>, Fault> {
-        with_puzzle3d_app(|app| Ok(app.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc, &cfg.snapshot, interaction)))
+        Ok(with_puzzle3d_app_for(&cfg.snapshot, |app| app.handle_action_impl(command.action_id(), command.args(), command.window_id(), doc, &cfg.snapshot, interaction)))
     }
 
     /// 🕹️ `vortex` domain topology (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
@@ -2395,8 +2549,8 @@ impl ArtifactEditor for Puzzle3dPlayApp {
         Ok(Emit::mutations(operations))
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> UiNode {
-        with_puzzle3d_app(|app| {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> semio_framework_plugin::ComponentTree {
+        semio_framework_plugin::built_to_component_tree(with_puzzle3d_app_for(&cfg.snapshot, |app| {
             let (base_body_key, window_id_from_key) = body_key.split_once(':').map(|(b, w)| (b, Some(w))).unwrap_or((body_key, None));
             let config = cfg.snapshot;
             let wid = window_id_from_key.or_else(|| config.window_ids.first().map(String::as_str)).unwrap_or(main::WINDOW_KIND_ID);
@@ -2406,29 +2560,36 @@ impl ArtifactEditor for Puzzle3dPlayApp {
                 runtime_for_window.window_ids.push(wid.to_string());
             }
             runtime_for_window.load_window(wid);
+            let precompute_scene = app.scene_for(&doc.snapshot.0, config, wid);
+            {
+                let mut precompute = app.precompute.borrow_mut();
+                sync_precompute_session(&mut precompute, &precompute_scene);
+                precompute.restore_persisted_fill(&config.fill_checkpoint);
+            }
+            let precompute = app.precompute.borrow();
             // 🪣️ Additive-only: appends just the not-yet-committed fill-plan tail onto the live fixture —
             // safe even during a live gumball scratch drag, since it never touches/replaces any
             // already-present object (the dragged one included).
-            let fill_available = app.precompute.borrow().fill_available_count();
-            let fixture = puzzle3d_fixture_with_fill_display_memo(app.render_fixture(&doc.snapshot.0), &app.precompute.borrow(), runtime_for_window.fill_count, fill_available, &app.fill_display_memo);
+            let fill_available = precompute.fill_available_count();
+            let fixture = puzzle3d_fixture_with_fill_display_memo(app.render_fixture(&doc.snapshot.0), &precompute, runtime_for_window.fill_count, fill_available, &app.fill_display_memo);
             let envelope = Puzzle3dScene { fixture, runtime: runtime_for_window, active_utility };
             let labels = puzzle3d_labels(config);
             match base_body_key {
                 main::BODY_KEY => {
                     let (instances_json, meshes_json) = app.geometry_jsons(&envelope.fixture);
-                    main::render(&envelope, &app.precompute.borrow(), instances_json, meshes_json)
+                    main::render(&envelope, &precompute, instances_json, meshes_json)
                 }
-                document::BODY_KEY => document::render(app.document_sections_cached(&envelope.fixture, labels)),
+                document::BODY_KEY => app.document_tree_cached(&envelope.fixture, labels),
                 catalogue::BODY_KEY => catalogue::render(&envelope, labels),
                 inspection::BODY_KEY => inspection::render(&envelope, labels),
                 settings_panel::BODY_KEY => settings_panel::render(&envelope, labels),
-                _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+                _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
             }
-        })
+        }))
     }
 
     async fn window_engagements(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> HashMap<String, WindowEngagement> {
-        with_puzzle3d_app(|app| {
+        with_puzzle3d_app_for(&cfg.snapshot, |app| {
             let config = cfg.snapshot;
             let labels = puzzle3d_labels(config);
             // 🪟️ One entry per live window INSTANCE (split top/perspective panes are two instances of the
@@ -2444,26 +2605,28 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     }
 
     async fn window_measures(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
-        with_puzzle3d_app(|app| {
+        with_puzzle3d_app_for(&cfg.snapshot, |app| {
             let config = cfg.snapshot;
             let labels = puzzle3d_labels(config);
             window_instance_ids(config, main::WINDOW_KIND_ID)
                 .into_iter()
                 .map(|wid| {
                     let envelope = app.scene_for(&doc.snapshot.0, config, &wid);
-                    (wid, main::window_measures(&envelope, &app.precompute.borrow(), labels))
+                    let precompute = restored_precompute_session(&envelope, &config.fill_checkpoint);
+                    (wid, main::window_measures(&envelope, &precompute, labels))
                 })
                 .collect()
         })
     }
 
     async fn tool_measures(doc: &ArtifactView<'_, Puzzle3dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle3dConfig>) -> HashMap<String, Vec<WindowMeasure>> {
-        with_puzzle3d_app(|app| {
+        with_puzzle3d_app_for(&cfg.snapshot, |app| {
             let config = cfg.snapshot;
             let wid = config.window_ids.first().map(String::as_str).unwrap_or(main::WINDOW_KIND_ID);
             let labels = puzzle3d_labels(config);
             let envelope = app.scene_for(&doc.snapshot.0, config, wid);
-            HashMap::from([(fill_tool::TOOL_ID.to_string(), fill_tool::measures(&envelope, &app.precompute.borrow(), labels))])
+            let precompute = restored_precompute_session(&envelope, &config.fill_checkpoint);
+            HashMap::from([(fill_tool::TOOL_ID.to_string(), fill_tool::measures(&envelope, &precompute, labels))])
         })
     }
 
@@ -2494,21 +2657,23 @@ impl ArtifactEditor for Puzzle3dPlayApp {
 /// puts `document_schema` into the published `AppDefinition`. Inlining it in only the trait method
 /// left the manifest's `io` empty, so a host reading the manifest could not route a document to this
 /// surface at all — caught by the demonstrator bundle's `every_pane_declares_a_document_schema`.
-pub async fn puzzle3d_io() -> AppIo {
-    AppIo::from_document(
-        "puzzle.3d",
-        MediaType { class: MediaClass::ThreeD, form: MediaForm::Design },
-        semio_framework_plugin::ArtifactPresentation { id: "3d.puzzle".into(), name: "3D Puzzle".into(), dimension: "3d".into(), component_kind: "puzzle3d".into() },
+pub fn puzzle3d_io() -> AppIo {
+    semio_framework::io::resolve_ready(
+        semio_framework::io::resolve_ready(AppIo::from_document(
+            "puzzle.3d",
+            MediaType { class: MediaClass::ThreeD, form: MediaForm::Design },
+            semio_framework_plugin::ArtifactPresentation { id: "3d.puzzle".into(), name: "3D Puzzle".into(), dimension: "3d".into(), component_kind: "puzzle3d".into() },
+        ))
+        .with_ports(vec![MediaPortSpec {
+            id: "kit:in".into(),
+            label: "Kit Catalog".into(),
+            direction: MediaPortDirection::In,
+            media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
+            kind_id: Some("kit.catalog".into()),
+            required: false,
+            multiplicity: PortMultiplicity::Many,
+        }]),
     )
-    .with_ports(vec![MediaPortSpec {
-        id: "kit:in".into(),
-        label: "Kit Catalog".into(),
-        direction: MediaPortDirection::In,
-        media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
-        kind_id: Some("kit.catalog".into()),
-        required: false,
-        multiplicity: PortMultiplicity::Many,
-    }])
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the `vortex` domain declaration —
@@ -2516,7 +2681,7 @@ pub async fn puzzle3d_io() -> AppIo {
 /// targetVolume/reference) plus `kind` for the catalogue's rows. `Topology` hierarchy (see
 /// `Puzzle3dPlayApp::interaction_topology`) makes the object→vortex-marker nesting available for a
 /// future transitive hover; every other granularity is a flat root today.
-async fn puzzle3d_interaction_definition() -> InteractionDefinition {
+fn puzzle3d_interaction_definition() -> InteractionDefinition {
     let granularity = |id: &str, label: LocalizedLabel, icon: &str| GranularityDefinition { id: id.into(), label, icon_id: icon.into() };
     InteractionDefinition {
         id: PUZZLE3D_INTERACTION_DOMAIN.into(),
@@ -2549,7 +2714,7 @@ async fn puzzle3d_interaction_definition() -> InteractionDefinition {
 /// here, not ported (contract §7.4's `App { definition, examples }` split: `.editor::<E>(def)` only
 /// takes the definition, so `AppBuilder`'s own `examples` vec is discarded either way) — flagged as a
 /// known gap for the coordinator, not silently lost.
-pub async fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
     let envelope = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() };
     Editor::builder(crate::artifacts::puzzle3d::PUZZLE3D_DIALECT)
             .document(["semio", "puzzle", "3d"])
@@ -2576,25 +2741,25 @@ pub async fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .keybinding("shift+tab", "cycleBrushCandidateBack")
             .keybinding("f", "focusSelection")
             // 🔧️ Document-mutating operations (emit VCS operations through the before/after fixture delta).
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Rohdaten festlegen"), ActionKind::Mutation) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Rohdaten festlegen"), ActionKind::Mutation) })
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             .mutation("addObjectKind", puzzle3d_localized_phrase(|l| l.object, |w| format!("Add {w}"), |w| format!("{w} hinzufügen")))
-            .action_with(ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).category("selection"))
-            .action_with(ActionDefinition::new_catalog("duplicateSelection", LocalizedLabel::native("Duplicate Selection", "Auswahl duplizieren"), ActionKind::Mutation).category("create"))
+            .action_with(semio_framework::io::resolve_ready(ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).category("selection")))
+            .action_with(semio_framework::io::resolve_ready(ActionDefinition::bounded_catalog("duplicateSelection", LocalizedLabel::native("Duplicate Selection", "Auswahl duplizieren"), ActionKind::Mutation).category("create")))
             .mutation("translateSelection", LocalizedLabel::native("Translate Selection", "Auswahl verschieben"))
             .mutation("rotateSelection", LocalizedLabel::native("Rotate Selection", "Auswahl drehen"))
             .mutation("scaleSelection", LocalizedLabel::native("Scale Selection", "Auswahl skalieren"))
             .mutation("transformEnd", LocalizedLabel::native("Transform End", "Transformieren beenden"))
             .mutation("worldRelocate", puzzle3d_localized_phrase(|l| l.object, |w| format!("Relocate {w}"), |w| format!("{w} verlagern")))
-            .action_with(ActionDefinition::new_catalog("setSelectionFlag", LocalizedLabel::native("Set Selection Flag", "Auswahlmarkierung festlegen"), ActionKind::Mutation).category("hand"))
+            .action_with(semio_framework::io::resolve_ready(ActionDefinition::bounded_catalog("setSelectionFlag", LocalizedLabel::native("Set Selection Flag", "Auswahlmarkierung festlegen"), ActionKind::Mutation).category("hand")))
             .mutation("patchInspector", LocalizedLabel::native("Patch Inspector", "Inspektor aktualisieren"))
             .mutation("engagementSubmit", LocalizedLabel::native("Engagement Submit", "Eingabe bestätigen"))
             .mutation("engagementRepeatLast", LocalizedLabel::native("Engagement Repeat Last", "Letzte Eingabe wiederholen"))
             .mutation("createAttraction", puzzle3d_localized_phrase(|l| l.attraction, |w| format!("Create {w}"), |w| format!("{w} erstellen")))
-            .action_with(ActionDefinition::new_catalog("deleteAttraction", puzzle3d_localized_phrase(|l| l.attraction, |w| format!("Delete {w}"), |w| format!("{w} löschen")), ActionKind::Mutation).category("targets"))
+            .action_with(semio_framework::io::resolve_ready(ActionDefinition::bounded_catalog("deleteAttraction", puzzle3d_localized_phrase(|l| l.attraction, |w| format!("Delete {w}"), |w| format!("{w} löschen")), ActionKind::Mutation).category("targets")))
             .mutation("addTargetVolume", puzzle3d_localized_phrase(|l| l.target_volume, |w| format!("Add {w}"), |w| format!("{w} hinzufügen")))
-            .action_with(ActionDefinition::new_catalog("deleteTargetVolume", LocalizedLabel::native("Delete Target Volume", "Zielvolumen löschen"), ActionKind::Mutation).category("targets"))
-            .action_with(ActionDefinition::new_catalog("setTargetVolumeFlag", LocalizedLabel::native("Set Target Volume Flag", "Zielvolumenmarkierung festlegen"), ActionKind::Mutation).category("targets"))
+            .action_with(semio_framework::io::resolve_ready(ActionDefinition::bounded_catalog("deleteTargetVolume", LocalizedLabel::native("Delete Target Volume", "Zielvolumen löschen"), ActionKind::Mutation).category("targets")))
+            .action_with(semio_framework::io::resolve_ready(ActionDefinition::bounded_catalog("setTargetVolumeFlag", LocalizedLabel::native("Set Target Volume Flag", "Zielvolumenmarkierung festlegen"), ActionKind::Mutation).category("targets")))
             .mutation("addBrushObject", puzzle3d_localized_phrase(|l| l.object, |w| format!("Add Brush {w}"), |w| format!("Pinsel-{w} hinzufügen")))
             .mutation("setFillCount", LocalizedLabel::native("Set Fill Count", "Füllanzahl festlegen"))
             .mutation("acceptSuggestion", LocalizedLabel::native("Accept Suggestion", "Vorschlag annehmen"))
@@ -2605,7 +2770,7 @@ pub async fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .view_action("setProjection", LocalizedLabel::native("Set Projection", "Projektion festlegen"))
             .view_action("setProjectionParam", LocalizedLabel::native("Set Projection Parameter", "Projektionsparameter festlegen"))
             .view_action("focusSelection", LocalizedLabel::native("Focus Selection", "Auswahl fokussieren"))
-            .action_with(ActionDefinition::new_catalog("selectSameKindSelection", LocalizedLabel::native("Select Same Kind", "Gleiche Art auswählen"), ActionKind::View).category("selection"))
+            .action_with(semio_framework::io::resolve_ready(ActionDefinition::bounded_catalog("selectSameKindSelection", LocalizedLabel::native("Select Same Kind", "Gleiche Art auswählen"), ActionKind::View).category("selection")))
             .view_action("setVortexShow", puzzle3d_localized_phrase(|l| l.vortex_show, |w| format!("Set {w}"), |w| format!("{w} festlegen")))
             .view_action("setVortexDirection", puzzle3d_localized_phrase(|l| l.vortex_direction, |w| format!("Set {w}"), |w| format!("{w} festlegen")))
             .view_action("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"))
@@ -2633,7 +2798,7 @@ pub async fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             .view_action("setVortexKindWeight", puzzle3d_localized_phrase(|l| l.vortex, |w| format!("Set {w} Kind Weight"), |w| format!("{w}-Art-Gewicht festlegen")))
             .view_action("cycleBrushCandidate", LocalizedLabel::native("Cycle Brush Candidate", "Pinselkandidat wechseln"))
             .view_action("cycleBrushCandidateBack", LocalizedLabel::native("Cycle Brush Candidate Back", "Pinselkandidat rückwärts wechseln"))
-            .action_with(ActionDefinition::new_catalog("openVortexSuggestions", puzzle3d_localized_phrase(|l| l.vortex, |w| format!("Open {w} Suggestions"), |w| format!("{w}-Vorschläge öffnen")), ActionKind::View).category("tools"))
+            .action_with(semio_framework::io::resolve_ready(ActionDefinition::bounded_catalog("openVortexSuggestions", puzzle3d_localized_phrase(|l| l.vortex, |w| format!("Open {w} Suggestions"), |w| format!("{w}-Vorschläge öffnen")), ActionKind::View).category("tools")))
             .view_action("closeVortexSuggestions", puzzle3d_localized_phrase(|l| l.vortex, |w| format!("Close {w} Suggestions"), |w| format!("{w}-Vorschläge schließen")))
             .view_action("hoverSuggestion", LocalizedLabel::native("Hover Suggestion", "Vorschlag überfahren"))
             .view_action("suggestionsTick", LocalizedLabel::native("Suggestions Tick", "Vorschläge-Takt"))
@@ -2659,7 +2824,7 @@ pub async fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
             // 🛠️ Fill is a mode-level tool (a whole-document generator), not a window utility — it keeps
             // its viewport interaction via `Puzzle3dConfig::active_tool_id`.
             .tool(fill_tool::definition(puzzle3d_localized(|l| l.fill)))
-            .mode_tools(edit::PUZZLE3D_PLAY_MODE_EDIT, vec![ToolRef::new(fill_tool::TOOL_ID)])
+            .mode_tools(edit::PUZZLE3D_PLAY_MODE_EDIT, vec![semio_framework::io::resolve_ready(ToolRef::new(fill_tool::TOOL_ID))])
             // 🎓️ Reference introduction: a short first-run walkthrough of the viewport, the catalogue
             // panel, adding an object, and the Transform utility.
             .introduction(IntroductionDefinition {
@@ -2683,9 +2848,9 @@ pub async fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
                     )
                         .introduce(window_element_id(main::WINDOW_KIND_ID))
                         .interact(vec![
-                            IntroductionInteraction::zoom(main::WINDOW_KIND_ID, "Zoom"),
-                            IntroductionInteraction::pan(main::WINDOW_KIND_ID, "Pan"),
-                            IntroductionInteraction::orbit(main::WINDOW_KIND_ID, "Orbit"),
+                            semio_framework::io::resolve_ready(IntroductionInteraction::zoom(main::WINDOW_KIND_ID, "Zoom")),
+                            semio_framework::io::resolve_ready(IntroductionInteraction::pan(main::WINDOW_KIND_ID, "Pan")),
+                            semio_framework::io::resolve_ready(IntroductionInteraction::orbit(main::WINDOW_KIND_ID, "Orbit")),
                         ]),
                     IntroductionStepDefinition::new(
                         "catalogue",
@@ -2706,7 +2871,7 @@ pub async fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
                         .introduce(panel_tab_first_draggable_element_id(semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID))
                         .show(vec![panel_tab_element_id(semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID), window_element_id(main::WINDOW_KIND_ID)])
                         .placement(IntroductionPlacement::Right)
-                        .interact(vec![IntroductionInteraction::action("addObjectKind", "Add an object")]),
+                        .interact(vec![semio_framework::io::resolve_ready(IntroductionInteraction::action("addObjectKind", "Add an object"))]),
                     IntroductionStepDefinition::new(
                         "transform-utility",
                         puzzle3d_localized_phrase(|l| l.objects, |w| format!("Transform {w}"), |w| format!("{w} transformieren")),
@@ -2718,7 +2883,7 @@ pub async fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
                     )
                         .introduce(utilities::transform::UTILITY_ID)
                         .show(vec![window_element_id(main::WINDOW_KIND_ID)])
-                        .interact(vec![IntroductionInteraction::utility(utilities::transform::UTILITY_ID, "Activate Transform")]),
+                        .interact(vec![semio_framework::io::resolve_ready(IntroductionInteraction::utility(utilities::transform::UTILITY_ID, "Activate Transform"))]),
                 ],
             })
             // 🗨️ Reference dialog opened by `openAddObjectDialog`, driving the existing `addObjectKind`
@@ -2750,29 +2915,29 @@ pub async fn create_puzzle3d_app() -> semio_framework_plugin::AppDefinition {
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
-    use semio_framework_plugin::{testkit, ActionMeta, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    use semio_framework_plugin::{testkit, ActionMeta, App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
     pub type Puzzle3dApp = VcsArtifactApp<EditorApp<Puzzle3dPlayApp>>;
 
-    pub async fn meta(actor: &str) -> ActionMeta {
+    pub fn meta(actor: &str) -> ActionMeta {
         testkit::meta(actor)
     }
 
-    pub async fn app() -> Puzzle3dApp {
-        testkit::new_app::<EditorApp<Puzzle3dPlayApp>>()
+    pub fn app() -> Puzzle3dApp {
+        semio_framework::io::resolve_ready(testkit::new_app::<EditorApp<Puzzle3dPlayApp>>())
     }
 
     /// 🌉️ `new_app_with_registry`'s `manifest: fn() -> App` shape predates the `AppDefinition`-returning
     /// `create_puzzle3d_app()` convention (contract §2.4 / SDK gap 3) — this tiny local wrapper bridges
     /// the two, mirroring `📓️w2-cad-report.md`'s recipe step 7.
-    pub async fn puzzle3d_manifest_for_testkit() -> App {
+    pub fn puzzle3d_manifest_for_testkit() -> App {
         App { definition: create_puzzle3d_app(), examples: Vec::new() }
     }
 
     /// 🧰️ A registry-backed app so kind discipline (View/Shell actions must emit no operations) and the
     /// utility contract are enforced exactly as in production.
-    pub async fn app_with_registry() -> Puzzle3dApp {
-        testkit::new_app_with_registry::<EditorApp<Puzzle3dPlayApp>>(puzzle3d_manifest_for_testkit)
+    pub fn app_with_registry() -> Puzzle3dApp {
+        semio_framework::io::resolve_ready(testkit::new_app_with_registry::<EditorApp<Puzzle3dPlayApp>>(puzzle3d_manifest_for_testkit))
     }
 
     /// 🧪️ B1: test-only replacement for the deleted `VcsArtifactApp::handle_action` app-dispatch path
@@ -2807,9 +2972,9 @@ pub(crate) mod testkit {
                 | "setSelectionMode"
                 | "setInteractionGranularity"
         ) {
-            return app.handle_action(action, args, &meta("local"));
+            return app.handle_action(action, args, &meta("local")).await;
         }
-        app.dispatch_typed(Puzzle3dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)).unwrap_or_else(|| panic!("unknown puzzle3d action id in test: {action}")), &meta("local"))
+        app.dispatch_typed(Puzzle3dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)).unwrap_or_else(|| panic!("unknown puzzle3d action id in test: {action}")), &meta("local")).await
     }
 
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: dispatches `interactionSelect`
@@ -2817,7 +2982,7 @@ pub(crate) mod testkit {
     /// deleted `worldPick`/`worldSelect`/`worldVortexSelect`/`setSelection` actions.
     pub async fn select_id(app: &mut Puzzle3dApp, granularity: &str, id: &str) -> Result<InvocationResult, Fault> {
         let targets = serde_json::to_string(&vec![InteractionTarget { granularity: granularity.into(), id: id.into() }]).unwrap_or_default();
-        dispatch(app, "interactionSelect", Some(&json!({ "domainId": PUZZLE3D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })), None)
+        dispatch(app, "interactionSelect", Some(&json!({ "domainId": PUZZLE3D_INTERACTION_DOMAIN, "targets": targets, "merge": "replace", "method": "pick" })), None).await
     }
 
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: dispatches `interactionHover`
@@ -2827,37 +2992,55 @@ pub(crate) mod testkit {
     pub async fn hover_id(app: &mut Puzzle3dApp, granularity: &str, id: Option<&str>) -> Result<InvocationResult, Fault> {
         let targets: Vec<InteractionTarget> = id.map(|id| InteractionTarget { granularity: granularity.into(), id: id.into() }).into_iter().collect();
         let targets_json = serde_json::to_string(&targets).unwrap_or_default();
-        dispatch(app, "interactionHover", Some(&json!({ "domainId": PUZZLE3D_INTERACTION_DOMAIN, "channel": "pointer", "targets": targets_json })), None)
+        dispatch(app, "interactionHover", Some(&json!({ "domainId": PUZZLE3D_INTERACTION_DOMAIN, "channel": "pointer", "targets": targets_json })), None).await
     }
 
     /// 🖼️ The rendered body, as JSON — every panel/window assertion navigates this value.
-    pub async fn render_body(app: &mut Puzzle3dApp, body_key: &str) -> Value {
-        serde_json::to_value(app.render(body_key, None, &ViewModel::default()).expect("render")).expect("serialize rendered node")
+    pub fn render_body(app: &mut Puzzle3dApp, body_key: &str) -> Value {
+        let tree = semio_framework::io::resolve_ready(app.render(body_key, None, &ViewModel::default())).expect("render");
+        let mut stack = vec![&tree.root];
+        let mut fallback_scene = None;
+        while let Some(node) = stack.pop() {
+            if let semio_framework_ui_contract::Component::Surface(surface) = &node.component {
+                if surface.doc_schema == <semio_framework_ui_scene::World3dScene as semio_framework_ui_scene::SceneDoc>::SCHEMA {
+                    let scene: semio_framework_ui_scene::World3dScene = semio_framework_ui_scene::decode(surface).expect("decode world scene");
+                    if scene.interaction_json.is_some() {
+                        return json!({ "schema": surface.doc_schema, "world3d": scene });
+                    }
+                    fallback_scene = Some(json!({ "schema": surface.doc_schema, "world3d": scene }));
+                }
+            }
+            stack.extend(node.children.iter());
+        }
+        if let Some(scene) = fallback_scene {
+            return scene;
+        }
+        serde_json::to_value(tree).expect("serialize rendered node")
     }
 
     /// 🪟️ The world composite body for one window INSTANCE — the `<body>:<windowInstanceId>` form is
     /// how a split pane asks for its own materialized options (see `ArtifactApp::render`).
-    pub async fn render_window(app: &mut Puzzle3dApp, window_id: &str) -> Value {
+    pub fn render_window(app: &mut Puzzle3dApp, window_id: &str) -> Value {
         render_body(app, &format!("{}:{window_id}", main::BODY_KEY))
     }
 
-    pub async fn render_composite(app: &mut Puzzle3dApp) -> Value {
+    pub fn render_composite(app: &mut Puzzle3dApp) -> Value {
         render_body(app, main::BODY_KEY)
     }
 
-    pub async fn projection_of(app: &Puzzle3dApp) -> Value {
-        app.snapshot().expect("projection").0
+    pub fn projection_of(app: &Puzzle3dApp) -> Value {
+        semio_framework::io::resolve_ready(app.snapshot()).expect("projection").0
     }
 
-    pub async fn object_count(app: &Puzzle3dApp) -> usize {
+    pub fn object_count(app: &Puzzle3dApp) -> usize {
         projection_of(app).get("objects").and_then(|value| value.as_array()).map(Vec::len).unwrap_or(0)
     }
 
-    pub async fn first_object_id(app: &Puzzle3dApp) -> String {
+    pub fn first_object_id(app: &Puzzle3dApp) -> String {
         projection_of(app).get("objects").and_then(Value::as_array).and_then(|objects| objects.first()).and_then(|object| object.get("id")).and_then(Value::as_str).expect("first object id").to_string()
     }
 
-    pub async fn vortex_full_ids(app: &Puzzle3dApp) -> Vec<String> {
+    pub fn vortex_full_ids(app: &Puzzle3dApp) -> Vec<String> {
         let projection = projection_of(app);
         let mut ids = Vec::new();
         for object in projection.get("objects").and_then(Value::as_array).into_iter().flatten() {
@@ -2871,44 +3054,44 @@ pub(crate) mod testkit {
         ids
     }
 
-    pub async fn first_vortex_full_id(app: &Puzzle3dApp) -> String {
+    pub fn first_vortex_full_id(app: &Puzzle3dApp) -> String {
         vortex_full_ids(app).into_iter().next().expect("seed vortex")
     }
 
     //#region 🔖️SceneProbes
-    async fn scene_field(node: &Value, field: &str) -> Value {
+    fn scene_field(node: &Value, field: &str) -> Value {
         node.pointer(&format!("/world3d/{field}")).and_then(Value::as_str).and_then(|raw| serde_json::from_str(raw).ok()).unwrap_or(Value::Null)
     }
 
-    pub async fn instances_of(node: &Value) -> Vec<Value> {
+    pub fn instances_of(node: &Value) -> Vec<Value> {
         scene_field(node, "instancesJson").as_array().cloned().unwrap_or_default()
     }
 
-    pub async fn instance_count(node: &Value) -> usize {
+    pub fn instance_count(node: &Value) -> usize {
         instances_of(node).len()
     }
 
-    pub async fn vortices_of(node: &Value) -> Vec<Value> {
+    pub fn vortices_of(node: &Value) -> Vec<Value> {
         scene_field(node, "vorticesJson").as_array().cloned().unwrap_or_default()
     }
 
-    pub async fn interaction_of(node: &Value) -> Value {
+    pub fn interaction_of(node: &Value) -> Value {
         scene_field(node, "interactionJson")
     }
 
-    pub async fn selection_of(node: &Value) -> Value {
+    pub fn selection_of(node: &Value) -> Value {
         scene_field(node, "selectionJson")
     }
 
-    pub async fn lod_of(node: &Value) -> Value {
+    pub fn lod_of(node: &Value) -> Value {
         scene_field(node, "lodJson")
     }
 
-    pub async fn camera_of(node: &Value) -> Value {
+    pub fn camera_of(node: &Value) -> Value {
         scene_field(node, "cameraJson")
     }
 
-    pub async fn brush_preview_of(node: &Value) -> Value {
+    pub fn brush_preview_of(node: &Value) -> Value {
         scene_field(node, "brushPreviewJson")
     }
     //#endregion 🔖️SceneProbes
@@ -2916,7 +3099,7 @@ pub(crate) mod testkit {
     //#region 🔖️MeasureProbes
     /// 🔍️ Depth-first search for a `WindowMeasure::Slider`'s value by id, descending into groups (the
     /// fill-count slider nests inside the fill tool's measure group rather than sitting on the engagement).
-    pub async fn find_measure_slider(measures: &[WindowMeasure], slider_id: &str) -> Option<f64> {
+    pub fn find_measure_slider(measures: &[WindowMeasure], slider_id: &str) -> Option<f64> {
         measures.iter().find_map(|measure| match measure {
             WindowMeasure::Slider { id, value, .. } if id == slider_id => Some(*value),
             WindowMeasure::Group { children, .. } => find_measure_slider(children, slider_id),
@@ -2924,7 +3107,7 @@ pub(crate) mod testkit {
         })
     }
 
-    pub async fn find_measure_slider_max(measures: &[WindowMeasure], slider_id: &str) -> Option<f64> {
+    pub fn find_measure_slider_max(measures: &[WindowMeasure], slider_id: &str) -> Option<f64> {
         measures.iter().find_map(|measure| match measure {
             WindowMeasure::Slider { id, max, .. } if id == slider_id => Some(*max),
             WindowMeasure::Group { children, .. } => find_measure_slider_max(children, slider_id),
@@ -2932,7 +3115,7 @@ pub(crate) mod testkit {
         })
     }
 
-    pub async fn find_measure_slider_ready(measures: &[WindowMeasure], slider_id: &str) -> Option<f64> {
+    pub fn find_measure_slider_ready(measures: &[WindowMeasure], slider_id: &str) -> Option<f64> {
         measures.iter().find_map(|measure| match measure {
             WindowMeasure::Slider { id, ready, .. } if id == slider_id => *ready,
             WindowMeasure::Group { children, .. } => find_measure_slider_ready(children, slider_id),
@@ -2940,7 +3123,7 @@ pub(crate) mod testkit {
         })
     }
 
-    pub async fn find_measure_select(measures: &[WindowMeasure], select_id: &str) -> Option<String> {
+    pub fn find_measure_select(measures: &[WindowMeasure], select_id: &str) -> Option<String> {
         measures.iter().find_map(|measure| match measure {
             WindowMeasure::Select { id, value, .. } if id == select_id => Some(value.clone()),
             WindowMeasure::Group { children, .. } => find_measure_select(children, select_id),
@@ -2948,7 +3131,7 @@ pub(crate) mod testkit {
         })
     }
 
-    pub async fn find_measure_toggle(measures: &[WindowMeasure], toggle_id: &str) -> Option<bool> {
+    pub fn find_measure_toggle(measures: &[WindowMeasure], toggle_id: &str) -> Option<bool> {
         measures.iter().find_map(|measure| match measure {
             WindowMeasure::Toggle { id, pressed, .. } if id == toggle_id => Some(*pressed),
             WindowMeasure::Group { children, .. } => find_measure_toggle(children, toggle_id),
@@ -2957,7 +3140,7 @@ pub(crate) mod testkit {
     }
 
     /// 🎯️ Top-level utility tag of a `WindowMeasure::Group` by id, or `None` when the group is absent.
-    pub async fn measure_group_tag(measures: &[WindowMeasure], group_id: &str) -> Option<Option<String>> {
+    pub fn measure_group_tag(measures: &[WindowMeasure], group_id: &str) -> Option<Option<String>> {
         measures.iter().find_map(|measure| match measure {
             WindowMeasure::Group { id, active_utility_id, .. } if id == group_id => Some(active_utility_id.clone()),
             _ => None,
@@ -2965,34 +3148,35 @@ pub(crate) mod testkit {
     }
 
     /// 🪣️ How far background fill planning has preloaded, read off the fill tool's own count slider.
-    pub async fn fill_ready(app: &mut Puzzle3dApp) -> f64 {
-        app.tool_measures().get(fill_tool::TOOL_ID).and_then(|tool_measures| find_measure_slider_ready(tool_measures, "puzzle3d-fill-count")).unwrap_or(0.0)
+    pub fn fill_ready(app: &mut Puzzle3dApp) -> f64 {
+        semio_framework::io::resolve_ready(app.tool_measures()).get(fill_tool::TOOL_ID).and_then(|tool_measures| find_measure_slider_ready(tool_measures, "puzzle3d-fill-count")).unwrap_or(0.0)
     }
 
     /// 🪣️ Drives `fillBuildTick` until planning has reached `target` placements (or the budget runs out).
     pub async fn drive_fill_until_ready(app: &mut Puzzle3dApp, target: f64) -> f64 {
-        for _ in 0..64 {
-            dispatch(app, "fillBuildTick", None, None).expect("fillBuildTick");
+        for _ in 0..256 {
+            dispatch(app, "fillBuildTick", None, None).await.expect("fillBuildTick");
             if fill_ready(app) >= target {
                 break;
             }
+            with_puzzle3d_app_mut(|inner| inner.precompute.borrow_mut().drive_enqueued_fill_job_for_test(64));
         }
         fill_ready(app)
     }
     //#endregion 🔖️MeasureProbes
 
     /// 🖱️ `context_menu()` through the `VcsArtifactApp` funnel (already-organized rows).
-    pub async fn context_menu_direct(app: &mut Puzzle3dApp) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+    pub fn context_menu_direct(app: &mut Puzzle3dApp) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         use semio_framework_plugin::{ContextMenuRequest, UiMenuRef};
         let request = ContextMenuRequest { menu: UiMenuRef { id: "world3d".into(), args: None }, surface: None, window_instance_id: None, point: None };
-        app.context_menu(&request)
+        semio_framework::io::resolve_ready(app.context_menu(&request))
     }
 
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `context_menu` reads the
     /// CLIENT-supplied `request.surface.selection` now (selection is framework-owned, no live config
     /// field to derive it from) — the test-side replacement for the deleted `contextMenuAt` command's
     /// "select then open the menu" round trip.
-    pub async fn context_menu_for_selection(app: &mut Puzzle3dApp, granularity: &str, id: &str) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
+    pub fn context_menu_for_selection(app: &mut Puzzle3dApp, granularity: &str, id: &str) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         use semio_framework_plugin::{ContextMenuRequest, ContextMenuSelectionGroup, ContextMenuSurfaceTarget, UiMenuRef};
         let request = ContextMenuRequest {
             menu: UiMenuRef { id: "world3d".into(), args: None },
@@ -3000,7 +3184,7 @@ pub(crate) mod testkit {
             window_instance_id: None,
             point: None,
         };
-        app.context_menu(&request)
+        semio_framework::io::resolve_ready(app.context_menu(&request))
     }
 }
 //#endregion 🧪️Testkit
@@ -3012,7 +3196,26 @@ mod tests {
     use super::*;
     use crate::editor::puzzle3d::config::Puzzle3dCamera;
     use protocol::MutationDiff;
-    use semio_framework_plugin::{testkit as framework_testkit, PluginApp, FRAMEWORK_HISTORY_BODY_KEY};
+    use semio_framework_plugin::{testkit as framework_testkit, EditorApp, PluginApp};
+
+    #[test]
+    fn two_documents_never_share_or_serialize_their_runtime_session() {
+        let first = Puzzle3dConfig::default();
+        let second = Puzzle3dConfig::default();
+        let first_session = puzzle3d_play_session(&first);
+        let second_session = puzzle3d_play_session(&second);
+        assert!(!Arc::ptr_eq(&first_session, &second_session));
+        let barrier = Arc::new(std::sync::Barrier::new(2));
+        let worker_barrier = Arc::clone(&barrier);
+        let worker = std::thread::spawn(move || {
+            let _first = first_session.lock().expect("first session lock");
+            worker_barrier.wait();
+            std::thread::sleep(std::time::Duration::from_millis(20));
+        });
+        barrier.wait();
+        assert!(second_session.try_lock().is_ok(), "a busy document must not serialize an unrelated document's command step");
+        worker.join().expect("session holder joins");
+    }
 
     //#region 🔖️Operations
     #[semio_framework_async_macros::async_test]
@@ -3034,14 +3237,14 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn puzzle3d_play_projection_pack_round_trips() {
         let app = app();
-        semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&app.snapshot().expect("projection"));
+        semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&semio_framework::io::resolve_ready(app.snapshot()).expect("projection"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn open_add_object_dialog_emits_the_open_dialog_effect_with_no_document_change() {
         let mut app = app();
         let before = object_count(&app);
-        let result = dispatch(&mut app, "openAddObjectDialog", None, None).expect("openAddObjectDialog");
+        let result = dispatch(&mut app, "openAddObjectDialog", None, None).await.expect("openAddObjectDialog");
         assert!(
             matches!(result.requested_effects.as_slice(), [Effect::OpenDialog { dialog_id, args, .. }] if dialog_id == "addObject" && args.is_none()),
             "expected a single OpenDialog effect for the addObject dialog, got {:?}",
@@ -3055,18 +3258,18 @@ mod tests {
         let mut app = app();
         let loaded = object_count(&app);
         assert!(loaded > 0);
-        dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).expect("empty");
+        dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
         assert_eq!(object_count(&app), 0, "empty example clears the objects");
-        dispatch(&mut app, "undo", None, None).expect("undo");
+        dispatch(&mut app, "undo", None, None).await.expect("undo");
         assert_eq!(object_count(&app), loaded, "undo restores the concrete-forest objects");
-        dispatch(&mut app, "redo", None, None).expect("redo");
+        dispatch(&mut app, "redo", None, None).await.expect("redo");
         assert_eq!(object_count(&app), 0);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn nakagin_example_loads_via_operations() {
         let mut app = app();
-        dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).expect("nakagin");
+        dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("nakagin");
         let projection = projection_of(&app);
         assert_eq!(projection.get("schema").and_then(|value| value.as_str()), Some(PUZZLE3D_FIXTURE_SCHEMA));
         assert!(projection.get("objects").and_then(|value| value.as_array()).is_some_and(|objects| !objects.is_empty()));
@@ -3094,11 +3297,12 @@ mod tests {
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand};
 
-        let mut store = Puzzle3dStore::new(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", Puzzle3dSnapshot::default(), None));
+        let mut store = semio_framework::io::resolve_ready(Puzzle3dStore::new(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", Puzzle3dSnapshot::default(), None))).expect("store");
         let object = TypedObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::puzzle3d::mutations::create_object(object, None)], description: None }).expect("apply");
-        let edit: &Edit<Puzzle3dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle3dSnapshot, Puzzle3dMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        semio_framework::io::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::puzzle3d::mutations::create_object(object, None)], description: None })).expect("apply");
+        let envelope = semio_framework::io::resolve_ready(store.envelope());
+        let edit: &Edit<Puzzle3dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
+        semio_framework::io::resolve_ready(semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle3dSnapshot, Puzzle3dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())));
     }
     //#endregion 🔖️CommandEnvelopeTests
 
@@ -3112,13 +3316,12 @@ mod tests {
     async fn selected_object_inspector_nests_origin_into_x_y_z_steppers() {
         let mut app = app_with_registry();
         let object_id = first_object_id(&app);
-        select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).expect("interactionSelect");
-        let json = render_body(&mut app, inspection::BODY_KEY);
-        let section_ids: Vec<String> = json.get("sections").and_then(Value::as_array).map(|sections| sections.iter().filter_map(|section| section.get("id").and_then(Value::as_str).map(str::to_string)).collect()).unwrap_or_default();
-        assert_eq!(section_ids, vec!["puzzle3d-play-inspector.empty"], "render has no InteractionView, so the inspector cannot key off the selection and always shows the document summary");
+        select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.expect("interactionSelect");
+        let json = render_body(&mut app, inspection::BODY_KEY).to_string();
+        assert!(json.contains("puzzle3d-play-inspector.empty"), "render has no InteractionView, so the inspector cannot key off the selection and always shows the document summary: {json}");
     }
 
-    async fn object_origin_x(app: &Puzzle3dApp, object_id: &str) -> f64 {
+    fn object_origin_x(app: &Puzzle3dApp, object_id: &str) -> f64 {
         projection_of(app)
             .get("objects")
             .and_then(Value::as_array)
@@ -3140,7 +3343,7 @@ mod tests {
             .and_then(|origin| origin.get(1))
             .and_then(|value| value.as_f64())
             .expect("origin.y");
-        dispatch(&mut app, "patchInspector", Some(&json!({ "entity": "object", "ids": [object_id.clone()], "field": "origin.x", "value": 42.5 })), None).expect("patchInspector");
+        dispatch(&mut app, "patchInspector", Some(&json!({ "entity": "object", "ids": [object_id.clone()], "field": "origin.x", "value": 42.5 })), None).await.expect("patchInspector");
         let projection = projection_of(&app);
         let objects = projection.get("objects").and_then(|value| value.as_array()).expect("objects");
         let object = objects.iter().find(|object| object.get("id").and_then(|value| value.as_str()) == Some(object_id.as_str())).expect("patched object");
@@ -3153,13 +3356,13 @@ mod tests {
     async fn patch_inspector_origin_axis_delta_offsets_each_selected_object_from_its_own_current_value() {
         let mut app = app();
         let id_a = first_object_id(&app);
-        dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [10.0, 0.0, 0.0] })), None).expect("addObjectKind");
+        dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [10.0, 0.0, 0.0] })), None).await.expect("addObjectKind");
         let id_b = projection_of(&app).get("objects").and_then(Value::as_array).and_then(|objects| objects.last()).and_then(|object| object.get("id")).and_then(Value::as_str).expect("added object id").to_string();
         assert_ne!(id_a, id_b, "the added object must be distinct from the first fixture object");
         let x_a_before = object_origin_x(&app, &id_a);
         let x_b_before = object_origin_x(&app, &id_b);
         assert_ne!(x_a_before, x_b_before, "the two objects must start at different x values for this test to prove per-object offset preservation");
-        dispatch(&mut app, "patchInspector", Some(&json!({ "entity": "object", "ids": [id_a.clone(), id_b.clone()], "field": "origin.x", "delta": 3.0 })), None).expect("patchInspector");
+        dispatch(&mut app, "patchInspector", Some(&json!({ "entity": "object", "ids": [id_a.clone(), id_b.clone()], "field": "origin.x", "delta": 3.0 })), None).await.expect("patchInspector");
         assert_eq!(object_origin_x(&app, &id_a), x_a_before + 3.0, "a delta edit adds to each object's own current x");
         assert_eq!(object_origin_x(&app, &id_b), x_b_before + 3.0, "a delta edit preserves each object's own starting offset");
     }
@@ -3174,8 +3377,8 @@ mod tests {
     async fn inspector_field_actions_resolve_selection_without_embedding_ids() {
         let mut app = app_with_registry();
         let object_id = first_object_id(&app);
-        select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).expect("interactionSelect");
-        dispatch(&mut app, "patchInspector", Some(&json!({ "entity": "object", "field": "origin.x", "value": 42.5 })), None).expect("patchInspector without ids");
+        select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.expect("interactionSelect");
+        dispatch(&mut app, "patchInspector", Some(&json!({ "entity": "object", "field": "origin.x", "value": 42.5 })), None).await.expect("patchInspector without ids");
         assert_eq!(object_origin_x(&app, &object_id), 42.5, "patchInspector must resolve the patched object from the live selection, not an embedded id");
     }
     //#endregion 🔖️Inspector
@@ -3210,8 +3413,8 @@ mod tests {
     /// `command_id` via the shared framework harness.
     #[semio_framework_async_macros::async_test]
     async fn every_declared_action_bridges_to_a_command() {
-        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<Puzzle3dPlayApp>>(puzzle3d_manifest_for_testkit);
-        assert!(Puzzle3dPlayApp::command_from_action("noSuchAction", None).is_err());
+        semio_framework::io::resolve_ready(semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<EditorApp<Puzzle3dPlayApp>>(puzzle3d_manifest_for_testkit));
+        assert!(semio_framework::io::resolve_ready(Puzzle3dPlayApp::command_from_action("noSuchAction", None)).is_err());
     }
 
     /// 🌉️ Every declared app action (framework-injected verbs never reach `Puzzle3dCommand::from_action`
@@ -3290,11 +3493,11 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn document_and_kinds_trees_use_german_reuse_section_labels() {
         let mut app = app();
-        dispatch(&mut app, "setLocale", Some(&json!({ "value": "de" })), None).expect("setLocale");
-        dispatch(&mut app, "setTerminology", Some(&json!({ "value": "reuse" })), None).expect("setTerminology");
+        dispatch(&mut app, "setLocale", Some(&json!({ "value": "de" })), None).await.expect("setLocale");
+        dispatch(&mut app, "setTerminology", Some(&json!({ "value": "reuse" })), None).await.expect("setTerminology");
         let document_json = render_body(&mut app, document::BODY_KEY).to_string();
         let kinds = render_body(&mut app, catalogue::BODY_KEY).to_string();
-        let measures_json = serde_json::to_string(&app.window_measures()).unwrap();
+        let measures_json = serde_json::to_string(&semio_framework::io::resolve_ready(app.window_measures())).unwrap();
         assert!(document_json.contains("Baukomponenten"), "document tree objects section");
         assert!(document_json.contains("Verbindungen"), "document tree attractions section");
         assert!(document_json.contains("Referenzen"), "document tree references section");
@@ -3328,7 +3531,7 @@ mod tests {
         let definition = create_puzzle3d_app();
         let tool_ids: Vec<&str> = definition.tools.iter().map(|tool| tool.id.as_str()).collect();
         assert_eq!(tool_ids, vec![fill_tool::TOOL_ID]);
-        assert_eq!(definition.modes[0].tools, vec![ToolRef::new(fill_tool::TOOL_ID)]);
+        assert_eq!(definition.modes[0].tools, vec![semio_framework::io::resolve_ready(ToolRef::new(fill_tool::TOOL_ID))]);
         assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID), "declaring tools must inject the setActiveTool action");
     }
     //#endregion 🔖️Manifest
@@ -3350,14 +3553,14 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn context_menu_at_selects_target_volume_and_set_target_volume_flag_toggles_hidden() {
         let mut app = app();
-        dispatch(&mut app, "addTargetVolume", Some(&json!({ "origin": [1.0, 2.0, 3.0] })), None).expect("addTargetVolume");
+        dispatch(&mut app, "addTargetVolume", Some(&json!({ "origin": [1.0, 2.0, 3.0] })), None).await.expect("addTargetVolume");
         let volume_id = projection_of(&app).get("targetVolumes").and_then(Value::as_array).and_then(|volumes| volumes.first()).and_then(|volume| volume.get("id")).and_then(Value::as_str).expect("volume id").to_string();
         let menu = context_menu_for_selection(&mut app, PUZZLE3D_GRANULARITY_TARGET_VOLUME, &volume_id);
         let menu_json = serde_json::to_string(&menu).unwrap();
         assert!(menu_json.contains("setTargetVolumeFlag"), "menu should be {menu_json}");
         assert!(menu_json.contains("menu.group.targets"), "hide/lock rows should be grouped under targets: {menu_json}");
         assert_eq!(menu.last().and_then(|item| item.destructive), Some(true), "destructive delete must be the last top-level row: {menu_json}");
-        dispatch(&mut app, "setTargetVolumeFlag", Some(&json!({ "id": volume_id, "flag": "hidden", "value": true })), None).expect("setTargetVolumeFlag");
+        dispatch(&mut app, "setTargetVolumeFlag", Some(&json!({ "id": volume_id, "flag": "hidden", "value": true })), None).await.expect("setTargetVolumeFlag");
         let hidden = projection_of(&app).get("targetVolumes").and_then(Value::as_array).and_then(|volumes| volumes.first()).and_then(|volume| volume.get("hidden")).and_then(Value::as_bool);
         assert_eq!(hidden, Some(true));
     }
@@ -3368,7 +3571,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn context_menu_at_selects_object_groups_flags_and_keeps_delete_last() {
         let mut app = app();
-        dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [1.0, 0.0, 0.0] })), None).expect("addObjectKind");
+        dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [1.0, 0.0, 0.0] })), None).await.expect("addObjectKind");
         let object_id = first_object_id(&app);
         let menu = context_menu_for_selection(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id);
         assert!(menu.len() <= 9, "top-level menu should stay scannable, got {} rows: {menu:?}", menu.len());
@@ -3383,7 +3586,7 @@ mod tests {
     async fn open_vortex_suggestions_opens_the_suggestion_popup() {
         let mut app = app();
         let vortex = first_vortex_full_id(&app);
-        let result = dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 12.0, "y": 34.0 })), None).expect("openVortexSuggestions");
+        let result = dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 12.0, "y": 34.0 })), None).await.expect("openVortexSuggestions");
         assert!(
             result.requested_effects.iter().all(|effect| !matches!(effect, Effect::SetActiveUtility { .. } | Effect::SetActiveTool { .. })),
             "opening a one-shot suggestion must not switch the host-owned utility or tool: {:?}",
@@ -3403,7 +3606,7 @@ mod tests {
     async fn open_vortex_suggestions_records_explicit_window_id() {
         let mut app = app();
         let vortex = first_vortex_full_id(&app);
-        dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 8.0, "y": 16.0, "windowId": main::WINDOW_INSTANCE_TOP })), Some(main::WINDOW_INSTANCE_PERSPECTIVE)).expect("openVortexSuggestions");
+        dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 8.0, "y": 16.0, "windowId": main::WINDOW_INSTANCE_TOP })), Some(main::WINDOW_INSTANCE_PERSPECTIVE)).await.expect("openVortexSuggestions");
         let interaction = interaction_of(&render_composite(&mut app));
         let menu = interaction.get("suggestionMenu").expect("suggestionMenu present");
         assert_eq!(menu.get("windowId").and_then(Value::as_str), Some(main::WINDOW_INSTANCE_TOP));
@@ -3414,11 +3617,11 @@ mod tests {
     async fn accept_suggestion_with_full_id_places_even_if_selection_was_cleared() {
         let mut app = app();
         let vortex = first_vortex_full_id(&app);
-        dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex.clone(), "x": 0.0, "y": 0.0 })), None).expect("openVortexSuggestions");
+        dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex.clone(), "x": 0.0, "y": 0.0 })), None).await.expect("openVortexSuggestions");
         let before_count = object_count(&app);
         // 🧹️ Simulate the split-pane outside-dismiss race clearing vortex selection before accept.
-        dispatch(&mut app, "clearSelection", None, None).expect("clearSelection");
-        let result = dispatch(&mut app, "acceptSuggestion", Some(&json!({ "index": 0, "fullId": vortex })), None).expect("acceptSuggestion");
+        dispatch(&mut app, "clearSelection", None, None).await.expect("clearSelection");
+        let result = dispatch(&mut app, "acceptSuggestion", Some(&json!({ "index": 0, "fullId": vortex })), None).await.expect("acceptSuggestion");
         assert!(result.requested_effects.iter().all(|effect| !matches!(effect, Effect::SetActiveUtility { .. } | Effect::SetActiveTool { .. })), "accept must not switch utility/tool: {:?}", result.requested_effects);
         assert!(object_count(&app) > before_count, "accept with fullId must place even after selection clear");
         let interaction = interaction_of(&render_composite(&mut app));
@@ -3429,8 +3632,8 @@ mod tests {
     async fn close_vortex_suggestions_clears_the_menu() {
         let mut app = app();
         let vortex = first_vortex_full_id(&app);
-        dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 0.0, "y": 0.0 })), None).expect("openVortexSuggestions");
-        dispatch(&mut app, "closeVortexSuggestions", None, None).expect("closeVortexSuggestions");
+        dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 0.0, "y": 0.0 })), None).await.expect("openVortexSuggestions");
+        dispatch(&mut app, "closeVortexSuggestions", None, None).await.expect("closeVortexSuggestions");
         let interaction = interaction_of(&render_composite(&mut app));
         assert!(interaction.get("suggestionMenu").is_none_or(|menu| menu.is_null()));
     }
@@ -3443,7 +3646,7 @@ mod tests {
     async fn hover_suggestion_updates_the_brush_candidate_index_and_live_preview() {
         let mut app = app();
         let vortex = first_vortex_full_id(&app);
-        dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex.clone(), "x": 0.0, "y": 0.0 })), None).expect("openVortexSuggestions");
+        dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex.clone(), "x": 0.0, "y": 0.0 })), None).await.expect("openVortexSuggestions");
         let composite = render_composite(&mut app);
         let interaction = interaction_of(&composite);
         assert_eq!(interaction.get("activeUtility").and_then(Value::as_str), Some("select"), "suggestion hover must not enter brush mode");
@@ -3457,7 +3660,7 @@ mod tests {
         assert!(preview.get("objectKindId").and_then(Value::as_str).is_some_and(|id| !id.is_empty()), "the live preview must resolve to a real candidate object kind");
         assert!(preview.get("color").and_then(Value::as_str).is_some_and(|color| color.starts_with('#')), "brush preview carries object-kind color: {preview}");
 
-        dispatch(&mut app, "hoverSuggestion", Some(&json!({ "index": 1 })), None).expect("hoverSuggestion");
+        dispatch(&mut app, "hoverSuggestion", Some(&json!({ "index": 1 })), None).await.expect("hoverSuggestion");
         let composite = render_composite(&mut app);
         let interaction = interaction_of(&composite);
         assert_eq!(interaction.get("brushCandidateIndex").and_then(Value::as_u64), Some(1), "hovering a different row must move the tracked candidate index");
@@ -3471,8 +3674,8 @@ mod tests {
         let mut app = app();
         let object_count_before = object_count(&app);
         let vortex = first_vortex_full_id(&app);
-        dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 0.0, "y": 0.0 })), None).expect("openVortexSuggestions");
-        let result = dispatch(&mut app, "acceptSuggestion", None, None).expect("acceptSuggestion");
+        dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 0.0, "y": 0.0 })), None).await.expect("openVortexSuggestions");
+        let result = dispatch(&mut app, "acceptSuggestion", None, None).await.expect("acceptSuggestion");
         assert_eq!(object_count(&app), object_count_before + 1);
         assert!(
             result.requested_effects.iter().all(|effect| !matches!(effect, Effect::SetActiveUtility { .. } | Effect::SetActiveTool { .. })),
@@ -3497,12 +3700,12 @@ mod tests {
         // `testkit::new_app`'s doc), so this needs the registry-backed `app_with_registry()`.
         let mut app = app_with_registry();
         let vortex = first_vortex_full_id(&app);
-        hover_id(&mut app, PUZZLE3D_GRANULARITY_VORTEX, Some(&vortex)).expect("interactionHover");
-        dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex.clone(), "x": 10.0, "y": 20.0, "windowId": main::WINDOW_INSTANCE_TOP })), None).expect("openVortexSuggestions");
+        hover_id(&mut app, PUZZLE3D_GRANULARITY_VORTEX, Some(&vortex)).await.expect("interactionHover");
+        dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex.clone(), "x": 10.0, "y": 20.0, "windowId": main::WINDOW_INSTANCE_TOP })), None).await.expect("openVortexSuggestions");
         let before = interaction_of(&render_composite(&mut app));
         assert_eq!(before.pointer("/suggestionMenu/open").and_then(Value::as_bool), Some(true));
         let object_count_before = object_count(&app);
-        dispatch(&mut app, "acceptSuggestion", Some(&json!({ "index": 0, "fullId": "missing-object::missing-vortex" })), None).expect("acceptSuggestion");
+        dispatch(&mut app, "acceptSuggestion", Some(&json!({ "index": 0, "fullId": "missing-object::missing-vortex" })), None).await.expect("acceptSuggestion");
         assert_eq!(object_count(&app), object_count_before, "unknown-vortex accept must not place");
         let interaction = interaction_of(&render_composite(&mut app));
         assert!(interaction.get("suggestionMenu").is_none_or(|menu| menu.is_null()), "failed accept must still dismiss the suggestion menu");
@@ -3512,9 +3715,9 @@ mod tests {
     async fn close_vortex_suggestions_clears_sticky_hover() {
         let mut app = app_with_registry();
         let vortex = first_vortex_full_id(&app);
-        hover_id(&mut app, PUZZLE3D_GRANULARITY_VORTEX, Some(&vortex)).expect("interactionHover");
-        dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 0.0, "y": 0.0 })), None).expect("openVortexSuggestions");
-        dispatch(&mut app, "closeVortexSuggestions", None, None).expect("closeVortexSuggestions");
+        hover_id(&mut app, PUZZLE3D_GRANULARITY_VORTEX, Some(&vortex)).await.expect("interactionHover");
+        dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 0.0, "y": 0.0 })), None).await.expect("openVortexSuggestions");
+        dispatch(&mut app, "closeVortexSuggestions", None, None).await.expect("closeVortexSuggestions");
         let interaction = interaction_of(&render_composite(&mut app));
         assert!(interaction.get("suggestionMenu").is_none_or(|menu| menu.is_null()));
     }
@@ -3524,16 +3727,16 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn open_and_accept_vortex_suggestions_preserve_active_utility() {
         let mut app = app();
-        dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::transform::UTILITY_ID })), Some(main::WINDOW_KIND_ID)).expect("activate transform");
+        dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::transform::UTILITY_ID })), Some(main::WINDOW_KIND_ID)).await.expect("activate transform");
         let vortex = first_vortex_full_id(&app);
-        let open = dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 0.0, "y": 0.0 })), Some(main::WINDOW_KIND_ID)).expect("openVortexSuggestions");
+        let open = dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 0.0, "y": 0.0 })), Some(main::WINDOW_KIND_ID)).await.expect("openVortexSuggestions");
         assert!(open.requested_effects.iter().all(|effect| !matches!(effect, Effect::SetActiveUtility { .. } | Effect::SetActiveTool { .. })), "opening suggestions must not emit utility/tool switches: {:?}", open.requested_effects);
         let open_node = render_window(&mut app, main::WINDOW_KIND_ID);
         let open_interaction = interaction_of(&open_node);
         assert_eq!(open_interaction.get("activeUtility").and_then(Value::as_str), Some("select"), "transform remains non-brush scene mode during suggestions");
         assert_eq!(open_interaction.pointer("/suggestionMenu/open").and_then(Value::as_bool), Some(true));
         assert!(brush_preview_of(&open_node).get("objectKindId").and_then(Value::as_str).is_some_and(|id| !id.is_empty()), "one-shot suggestions still emit a placement preview without entering brush mode");
-        let accept = dispatch(&mut app, "acceptSuggestion", None, Some(main::WINDOW_KIND_ID)).expect("acceptSuggestion");
+        let accept = dispatch(&mut app, "acceptSuggestion", None, Some(main::WINDOW_KIND_ID)).await.expect("acceptSuggestion");
         assert!(accept.requested_effects.iter().all(|effect| !matches!(effect, Effect::SetActiveUtility { .. } | Effect::SetActiveTool { .. })), "accepting suggestions must not emit utility/tool switches: {:?}", accept.requested_effects);
         let accept_interaction = interaction_of(&render_window(&mut app, main::WINDOW_KIND_ID));
         assert!(accept_interaction.get("suggestionMenu").is_none_or(|menu| menu.is_null()));
@@ -3545,12 +3748,12 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn grid_window_options_control_one_visible_grid_spacing() {
         let mut app = app();
-        dispatch(&mut app, "setGridVisible", Some(&json!({ "pressed": false })), None).expect("setGridVisible");
-        dispatch(&mut app, "setGridSpacing", Some(&json!({ "value": 7.5 })), None).expect("setGridSpacing");
+        dispatch(&mut app, "setGridVisible", Some(&json!({ "pressed": false })), None).await.expect("setGridVisible");
+        dispatch(&mut app, "setGridSpacing", Some(&json!({ "value": 7.5 })), None).await.expect("setGridSpacing");
         let lod = lod_of(&render_composite(&mut app));
         assert_eq!(lod.get("showLodGrid").and_then(Value::as_bool), Some(false));
         assert_eq!(lod.get("gridFactor").and_then(Value::as_f64), Some(7.5));
-        let measures = app.window_measures();
+        let measures = semio_framework::io::resolve_ready(app.window_measures());
         let window_measures = measures.get(main::WINDOW_KIND_ID).expect("main window measures");
         assert_eq!(measure_group_tag(window_measures, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid")), Some(None));
         assert_eq!(find_measure_slider(window_measures, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-spacing")), Some(7.5));
@@ -3566,18 +3769,18 @@ mod tests {
         let toggle_id = format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-visible");
 
         // Register both instances by dispatching a no-op-ish view action from each.
-        dispatch(&mut app, "worldPointerDown", None, Some(main::WINDOW_KIND_ID)).expect("register base window");
-        dispatch(&mut app, "worldPointerDown", None, Some(second_window)).expect("register second window");
+        dispatch(&mut app, "worldPointerDown", None, Some(main::WINDOW_KIND_ID)).await.expect("register base window");
+        dispatch(&mut app, "worldPointerDown", None, Some(second_window)).await.expect("register second window");
 
         // Both instances start visible (the type default).
-        let initial_measures = app.window_measures();
+        let initial_measures = semio_framework::io::resolve_ready(app.window_measures());
         assert_eq!(find_measure_toggle(initial_measures.get(main::WINDOW_KIND_ID).expect("base measures"), &toggle_id), Some(true));
         assert_eq!(find_measure_toggle(initial_measures.get(second_window).expect("second measures"), &toggle_id), Some(true));
 
         // Hide the grid, but ONLY on the second window instance.
-        dispatch(&mut app, "setGridVisible", Some(&json!({ "pressed": false })), Some(second_window)).expect("setGridVisible on second window");
+        dispatch(&mut app, "setGridVisible", Some(&json!({ "pressed": false })), Some(second_window)).await.expect("setGridVisible on second window");
 
-        let measures_after = app.window_measures();
+        let measures_after = semio_framework::io::resolve_ready(app.window_measures());
         assert_eq!(find_measure_toggle(measures_after.get(main::WINDOW_KIND_ID).expect("base measures"), &toggle_id), Some(true), "the base window instance's grid must stay visible");
         assert_eq!(find_measure_toggle(measures_after.get(second_window).expect("second measures"), &toggle_id), Some(false), "only the targeted window instance's grid toggles off");
 
@@ -3597,7 +3800,7 @@ mod tests {
         }
         let mut live = app_with_registry();
         let before = projection_of(&live);
-        let result = dispatch(&mut live, "setCamera", Some(&json!({ "camera": { "position": [1.0, 2.0, 3.0], "target": [4.0, 5.0, 6.0], "zoom": 2.5 } })), None).expect("setCamera");
+        let result = dispatch(&mut live, "setCamera", Some(&json!({ "camera": { "position": [1.0, 2.0, 3.0], "target": [4.0, 5.0, 6.0], "zoom": 2.5 } })), None).await.expect("setCamera");
         assert!(result.mutations.is_empty(), "setCamera must not emit document operations");
         assert_eq!(projection_of(&live), before, "setCamera must not mutate the document");
     }
@@ -3609,13 +3812,13 @@ mod tests {
         let mut app = app();
         let window_a = "puzzle3d-main-a";
         let window_b = "puzzle3d-main-b";
-        dispatch(&mut app, "worldPointerDown", None, Some(window_a)).expect("register a");
-        dispatch(&mut app, "worldPointerDown", None, Some(window_b)).expect("register b");
+        dispatch(&mut app, "worldPointerDown", None, Some(window_a)).await.expect("register a");
+        dispatch(&mut app, "worldPointerDown", None, Some(window_b)).await.expect("register b");
 
         let before_document = projection_of(&app);
         let camera_b_before = camera_of(&render_window(&mut app, window_b));
 
-        let result = dispatch(&mut app, "setCamera", Some(&json!({ "camera": { "position": [11.0, 22.0, 33.0], "target": [1.0, 2.0, 3.0], "zoom": 4.0 } })), Some(window_a)).expect("setCamera on window A");
+        let result = dispatch(&mut app, "setCamera", Some(&json!({ "camera": { "position": [11.0, 22.0, 33.0], "target": [1.0, 2.0, 3.0], "zoom": 4.0 } })), Some(window_a)).await.expect("setCamera on window A");
         assert!(result.mutations.is_empty(), "setCamera must not emit document operations");
         assert_eq!(projection_of(&app), before_document, "setCamera must never mutate the shared document");
 
@@ -3629,36 +3832,36 @@ mod tests {
         let mut app = app();
         let all_vortex_ids = vortex_full_ids(&app);
         assert!(!all_vortex_ids.is_empty(), "fixture must expose vortices");
-        let measures = app.window_measures();
+        let measures = semio_framework::io::resolve_ready(app.window_measures());
         let window_measures = measures.get(main::WINDOW_KIND_ID).expect("main window measures");
         assert_eq!(find_measure_select(window_measures, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-vortex-show")).as_deref(), Some(PUZZLE3D_VORTEX_SHOW_SELECTED));
 
         assert!(vortices_of(&render_composite(&mut app)).is_empty(), "Selected mode must hide vortices while idle");
 
-        dispatch(&mut app, "setVortexShow", Some(&json!({ "value": PUZZLE3D_VORTEX_SHOW_ALWAYS })), None).expect("setVortexShow always");
-        let measures_always = app.window_measures();
+        dispatch(&mut app, "setVortexShow", Some(&json!({ "value": PUZZLE3D_VORTEX_SHOW_ALWAYS })), None).await.expect("setVortexShow always");
+        let measures_always = semio_framework::io::resolve_ready(app.window_measures());
         let window_measures_always = measures_always.get(main::WINDOW_KIND_ID).expect("main window measures");
         assert_eq!(find_measure_select(window_measures_always, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-vortex-show")).as_deref(), Some(PUZZLE3D_VORTEX_SHOW_ALWAYS));
         assert_eq!(vortices_of(&render_composite(&mut app)).len(), all_vortex_ids.len(), "Always mode must emit every vortex while idle");
 
-        dispatch(&mut app, "setVortexShow", Some(&json!({ "value": PUZZLE3D_VORTEX_SHOW_SELECTED })), None).expect("setVortexShow selected");
+        dispatch(&mut app, "setVortexShow", Some(&json!({ "value": PUZZLE3D_VORTEX_SHOW_SELECTED })), None).await.expect("setVortexShow selected");
         assert!(vortices_of(&render_composite(&mut app)).is_empty(), "switching back to Selected must hide idle vortices");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn vortex_direction_window_option_defaults_to_outwards_and_switches_to_inwards() {
         let mut app = app();
-        let measures = app.window_measures();
+        let measures = semio_framework::io::resolve_ready(app.window_measures());
         let window_measures = measures.get(main::WINDOW_KIND_ID).expect("main window measures");
         assert_eq!(find_measure_select(window_measures, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-vortex-direction")).as_deref(), Some(PUZZLE3D_VORTEX_DIRECTION_OUTWARDS));
 
-        dispatch(&mut app, "setVortexShow", Some(&json!({ "value": PUZZLE3D_VORTEX_SHOW_ALWAYS })), None).expect("setVortexShow always");
+        dispatch(&mut app, "setVortexShow", Some(&json!({ "value": PUZZLE3D_VORTEX_SHOW_ALWAYS })), None).await.expect("setVortexShow always");
         let outwards_vortices = vortices_of(&render_composite(&mut app));
         assert!(!outwards_vortices.is_empty(), "fixture must expose vortices");
         assert!(outwards_vortices.iter().all(|record| record.get("displayDirection").and_then(Value::as_str) == Some(PUZZLE3D_VORTEX_DIRECTION_OUTWARDS)));
 
-        dispatch(&mut app, "setVortexDirection", Some(&json!({ "value": PUZZLE3D_VORTEX_DIRECTION_INWARDS })), None).expect("setVortexDirection inwards");
-        let measures_inwards = app.window_measures();
+        dispatch(&mut app, "setVortexDirection", Some(&json!({ "value": PUZZLE3D_VORTEX_DIRECTION_INWARDS })), None).await.expect("setVortexDirection inwards");
+        let measures_inwards = semio_framework::io::resolve_ready(app.window_measures());
         let window_measures_inwards = measures_inwards.get(main::WINDOW_KIND_ID).expect("main window measures");
         assert_eq!(find_measure_select(window_measures_inwards, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-vortex-direction")).as_deref(), Some(PUZZLE3D_VORTEX_DIRECTION_INWARDS));
         assert!(vortices_of(&render_composite(&mut app)).iter().all(|record| record.get("displayDirection").and_then(Value::as_str) == Some(PUZZLE3D_VORTEX_DIRECTION_INWARDS)));
@@ -3668,10 +3871,10 @@ mod tests {
     async fn vortex_direction_option_is_local_to_the_window_instance() {
         let mut app = app();
         let second_window = "puzzle3d-main-2";
-        dispatch(&mut app, "worldPointerDown", None, Some(main::WINDOW_KIND_ID)).expect("register base window");
-        dispatch(&mut app, "setVortexShow", Some(&json!({ "value": PUZZLE3D_VORTEX_SHOW_ALWAYS })), Some(main::WINDOW_KIND_ID)).expect("setVortexShow always on base");
-        dispatch(&mut app, "setVortexShow", Some(&json!({ "value": PUZZLE3D_VORTEX_SHOW_ALWAYS })), Some(second_window)).expect("setVortexShow always on second");
-        dispatch(&mut app, "setVortexDirection", Some(&json!({ "value": PUZZLE3D_VORTEX_DIRECTION_INWARDS })), Some(second_window)).expect("setVortexDirection inwards on second window");
+        dispatch(&mut app, "worldPointerDown", None, Some(main::WINDOW_KIND_ID)).await.expect("register base window");
+        dispatch(&mut app, "setVortexShow", Some(&json!({ "value": PUZZLE3D_VORTEX_SHOW_ALWAYS })), Some(main::WINDOW_KIND_ID)).await.expect("setVortexShow always on base");
+        dispatch(&mut app, "setVortexShow", Some(&json!({ "value": PUZZLE3D_VORTEX_SHOW_ALWAYS })), Some(second_window)).await.expect("setVortexShow always on second");
+        dispatch(&mut app, "setVortexDirection", Some(&json!({ "value": PUZZLE3D_VORTEX_DIRECTION_INWARDS })), Some(second_window)).await.expect("setVortexDirection inwards on second window");
 
         let base_vortices = vortices_of(&render_window(&mut app, main::WINDOW_KIND_ID));
         assert!(!base_vortices.is_empty(), "the base window must still emit vortices");
@@ -3704,15 +3907,31 @@ mod tests {
         // regression guard (no progression while inactive) plus the weaker-but-true scope bound (never
         // a `Full` refresh) instead of the unreachable exact `None`.
         let mut app = app();
-        dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).expect("activate fill");
-        dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": Value::Null })), None).expect("deactivate fill");
+        dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("activate fill");
+        dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": Value::Null })), None).await.expect("deactivate fill");
         let before = with_puzzle3d_app(|inner| inner.precompute.borrow().fill_progress_summary());
         for _ in 0..64 {
-            let result = dispatch(&mut app, "fillBuildTick", None, None).expect("fillBuildTick");
+            let result = dispatch(&mut app, "fillBuildTick", None, None).await.expect("fillBuildTick");
             assert!(!matches!(result.ui_scope, UiDirtyScope::Full), "an inactive fill tick must never force a full app refresh");
         }
         let after = with_puzzle3d_app(|inner| inner.precompute.borrow().fill_progress_summary());
         assert_eq!(after, before, "stale or queued fill ticks must not advance planning after the Fill tool is deactivated");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn fill_build_tick_only_polls_and_enqueues_one_isolated_worker_job() {
+        let mut app = app_with_registry();
+        dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("activate fill");
+        let before = with_puzzle3d_app(|inner| inner.precompute.borrow().fill_progress_summary());
+        let first = dispatch(&mut app, "fillBuildTick", None, None).await.expect("enqueue fill");
+        let after = with_puzzle3d_app(|inner| inner.precompute.borrow().fill_progress_summary());
+        assert_eq!(after, before, "the view action must not execute a solver transition inline");
+        assert!(matches!(
+            first.requested_effects.as_slice(),
+            [Effect::SpawnJob { kind, placement: semio_framework_plugin::kernel::JobPlacement::Isolated, .. }] if kind == crate::editor::puzzle3d::precompute::FILL_JOB_KIND
+        ));
+        let second = dispatch(&mut app, "fillBuildTick", None, None).await.expect("poll fill");
+        assert!(!second.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { .. })), "a live fill request must not be enqueued twice");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -3722,9 +3941,9 @@ mod tests {
         // converges over several ticks — exactly like the real 120ms `fillBuildTick` loop.
         let mut app = app_with_registry();
         let object_count_before = object_count(&app);
-        dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).expect("select fill tool");
-        drive_fill_until_ready(&mut app, 4.0);
-        let measures = app.tool_measures();
+        dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("select fill tool");
+        drive_fill_until_ready(&mut app, 4.0).await;
+        let measures = semio_framework::io::resolve_ready(app.tool_measures());
         let tool_measures = measures.get(fill_tool::TOOL_ID).expect("fill tool measures");
         match find_measure_slider(tool_measures, "puzzle3d-fill-count") {
             Some(value) => assert_eq!(value, 0.0, "background planning must not change the selected fill count"),
@@ -3734,7 +3953,7 @@ mod tests {
         assert_eq!(find_measure_slider_max(tool_measures, "puzzle3d-fill-count"), Some(PUZZLE3D_FILL_COUNT_MAX as f64), "fill slider range stays fixed at the fill count max");
         let available_count = find_measure_slider_ready(tool_measures, "puzzle3d-fill-count").expect("expected a fill-count slider ready extent") as usize;
         assert!(available_count > 0, "the fill slider ready extent must expose collision-free compatible placements");
-        dispatch(&mut app, "setFillCount", Some(&json!({ "value": available_count })), None).expect("setFillCount");
+        dispatch(&mut app, "setFillCount", Some(&json!({ "value": available_count })), None).await.expect("setFillCount");
         assert_eq!(object_count(&app), object_count_before + available_count, "the fill slider must materialize exactly its available placement count");
         assert_eq!(instance_count(&render_composite(&mut app)), object_count_before + available_count, "the viewport must show every materialized fill object immediately");
         let initial_fill_ids: HashSet<String> = projection_of(&app).get("objects").and_then(Value::as_array).into_iter().flatten().skip(object_count_before).filter_map(|object| object.get("id").and_then(Value::as_str).map(str::to_string)).collect();
@@ -3742,9 +3961,9 @@ mod tests {
         // rebuild `fill.base` around the materialized objects, after which the slider could neither
         // remove them nor replan — reproduce with a hover sync before clearing.
         let hovered_id = first_object_id(&app);
-        hover_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, Some(&hovered_id)).expect("interactionHover after fill");
+        hover_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, Some(&hovered_id)).await.expect("interactionHover after fill");
         let reduced = available_count / 2;
-        dispatch(&mut app, "setFillCount", Some(&json!({ "value": reduced })), None).expect("reduce fill count after sync");
+        dispatch(&mut app, "setFillCount", Some(&json!({ "value": reduced })), None).await.expect("reduce fill count after sync");
         assert_eq!(object_count(&app), object_count_before + reduced, "sliding down after an incidental sync must still remove fill objects from the document");
         let reduced_render = render_composite(&mut app);
         // 🪣️ The viewport keeps showing the FULL available plan (tagged revealIndex) even after
@@ -3754,14 +3973,14 @@ mod tests {
         assert_eq!(interaction_of(&reduced_render).pointer("/revealCutoffs/puzzle3d-fill").and_then(Value::as_u64), Some(reduced as u64), "the committed reveal cutoff tracks the reduced count");
         // 🔽️🔼️ Prefix-stable plan: moving back up to a count that was already planned before must be
         // INSTANT — no replanning, no `fillBuildTick` catch-up dispatch.
-        dispatch(&mut app, "setFillCount", Some(&json!({ "value": available_count })), None).expect("move back up to the previously-planned count");
+        dispatch(&mut app, "setFillCount", Some(&json!({ "value": available_count })), None).await.expect("move back up to the previously-planned count");
         assert_eq!(object_count(&app), object_count_before + available_count, "moving back up within the preserved plan is instant, not gated on another fillBuildTick");
-        let target_measures = app.tool_measures();
+        let target_measures = semio_framework::io::resolve_ready(app.tool_measures());
         let target_tool_measures = target_measures.get(fill_tool::TOOL_ID).expect("fill tool measures");
         assert_eq!(find_measure_slider(target_tool_measures, "puzzle3d-fill-count"), Some(available_count as f64));
         let restored_fill_ids: HashSet<String> = projection_of(&app).get("objects").and_then(Value::as_array).into_iter().flatten().skip(object_count_before).filter_map(|object| object.get("id").and_then(Value::as_str).map(str::to_string)).collect();
         assert_eq!(restored_fill_ids, initial_fill_ids, "up-down-up restores the exact same planned objects — the plan is prefix-stable, never discarded and re-rolled");
-        dispatch(&mut app, "setFillCount", Some(&json!({ "value": 0 })), None).expect("clear fill count");
+        dispatch(&mut app, "setFillCount", Some(&json!({ "value": 0 })), None).await.expect("clear fill count");
         assert_eq!(object_count(&app), object_count_before, "moving the fill slider to zero must remove every generated object");
     }
 
@@ -3773,17 +3992,17 @@ mod tests {
         // there is nothing left for a catch-up round trip to accomplish.
         let mut app = app();
         let object_count_before = object_count(&app);
-        dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).expect("select fill tool");
-        dispatch(&mut app, "fillBuildTick", None, None).expect("one fillBuildTick");
+        dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("select fill tool");
+        dispatch(&mut app, "fillBuildTick", None, None).await.expect("one fillBuildTick");
         let available_count = fill_ready(&mut app) as u32;
         // Request far beyond what a single tick could have planned.
-        dispatch(&mut app, "setFillCount", Some(&json!({ "value": PUZZLE3D_FILL_COUNT_MAX })), None).expect("setFillCount beyond available");
-        let measures = app.tool_measures();
+        dispatch(&mut app, "setFillCount", Some(&json!({ "value": PUZZLE3D_FILL_COUNT_MAX })), None).await.expect("setFillCount beyond available");
+        let measures = semio_framework::io::resolve_ready(app.tool_measures());
         let tool_measures = measures.get(fill_tool::TOOL_ID).expect("fill tool measures");
         let clamped = find_measure_slider(tool_measures, "puzzle3d-fill-count").expect("fill-count slider value");
         assert!(clamped <= available_count as f64, "runtime.fill_count must clamp to what's actually planned, not the raw request");
         assert_eq!(clamped as usize, object_count(&app) - object_count_before, "the clamped measure value must match what the document actually materialized");
-        let tick = dispatch(&mut app, "fillBuildTick", None, None).expect("fillBuildTick after an above-ready request");
+        let tick = dispatch(&mut app, "fillBuildTick", None, None).await.expect("fillBuildTick after an above-ready request");
         assert!(
             !tick.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == "setFillCount")),
             "fillBuildTick must never self-dispatch setFillCount — the clamp at commit time means fill_count can never run ahead of what's planned"
@@ -3798,8 +4017,8 @@ mod tests {
         // exposed as `interactionJson.revealCutoffs["puzzle3d-fill"]`.
         let mut app = app();
         let object_count_before = object_count(&app);
-        dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).expect("select fill tool");
-        let ready = drive_fill_until_ready(&mut app, 3.0) as usize;
+        dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("select fill tool");
+        let ready = drive_fill_until_ready(&mut app, 3.0).await as usize;
         assert!(ready >= 3, "fill planning must expose at least three ready placements");
         assert_eq!(object_count(&app), object_count_before, "background planning must not mutate the document before setFillCount");
 
@@ -3819,7 +4038,7 @@ mod tests {
         assert_eq!(interaction.pointer("/revealCutoffs/puzzle3d-fill").and_then(Value::as_u64), Some(0), "nothing committed yet — the reveal cutoff mirrors runtime.fill_count (0)");
         assert_eq!(interaction.pointer("/fillBuild/appliedCount").and_then(Value::as_u64), Some(0));
 
-        dispatch(&mut app, "setFillCount", Some(&json!({ "value": ready })), None).expect("setFillCount");
+        dispatch(&mut app, "setFillCount", Some(&json!({ "value": ready })), None).await.expect("setFillCount");
         let after_commit = render_composite(&mut app);
         assert_eq!(instance_count(&after_commit), object_count_before + ready, "instance count is unchanged by commit — only the cutoff (and document) advanced");
         let committed_interaction = interaction_of(&after_commit);
@@ -3834,14 +4053,14 @@ mod tests {
         let mut app = app();
         let top = main::WINDOW_INSTANCE_TOP;
         let perspective = main::WINDOW_INSTANCE_PERSPECTIVE;
-        dispatch(&mut app, "worldPointerDown", None, Some(perspective)).expect("register perspective");
-        dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), Some(top)).expect("select fill tool");
-        let ready = drive_fill_until_ready(&mut app, 3.0) as u32;
+        dispatch(&mut app, "worldPointerDown", None, Some(perspective)).await.expect("register perspective");
+        dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), Some(top)).await.expect("select fill tool");
+        let ready = drive_fill_until_ready(&mut app, 3.0).await as u32;
         assert!(ready >= 3, "need a planned fill prefix to assert cross-pane sync");
 
         // Commit from the top pane only — the perspective pane must still track the same cutoff.
         let committed = ready.min(3);
-        dispatch(&mut app, "setFillCount", Some(&json!({ "value": committed })), Some(top)).expect("setFillCount on top");
+        dispatch(&mut app, "setFillCount", Some(&json!({ "value": committed })), Some(top)).await.expect("setFillCount on top");
 
         let top_render = render_window(&mut app, top);
         let perspective_render = render_window(&mut app, perspective);
@@ -3854,7 +4073,7 @@ mod tests {
 
         // Sliding from the other pane must keep both panes in lockstep.
         let reduced = committed.saturating_sub(1);
-        dispatch(&mut app, "setFillCount", Some(&json!({ "value": reduced })), Some(perspective)).expect("setFillCount on perspective");
+        dispatch(&mut app, "setFillCount", Some(&json!({ "value": reduced })), Some(perspective)).await.expect("setFillCount on perspective");
         let top_after = render_window(&mut app, top);
         let perspective_after = render_window(&mut app, perspective);
         assert_eq!(interaction_of(&top_after).pointer("/revealCutoffs/puzzle3d-fill").and_then(Value::as_u64), Some(reduced as u64));
@@ -4078,8 +4297,8 @@ mod tests {
         // candidates exist — the brush Utility Options group must then surface, tagged for "brush".
         let mut app = app();
         let vortex = first_vortex_full_id(&app);
-        dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 0.0, "y": 0.0 })), None).expect("openVortexSuggestions");
-        let brush_app_measures = app.window_measures();
+        dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 0.0, "y": 0.0 })), None).await.expect("openVortexSuggestions");
+        let brush_app_measures = semio_framework::io::resolve_ready(app.window_measures());
         let window_measures = brush_app_measures.get(main::WINDOW_KIND_ID).expect("main window measures");
         assert_eq!(measure_group_tag(window_measures, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-utility-options-brush")), Some(Some(utilities::brush::UTILITY_ID.into())), "the brush Utility Options group surfaces once there are candidates to place");
     }
@@ -4092,12 +4311,12 @@ mod tests {
         let def = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|entry| entry.id == "fillBuildTick").expect("fillBuildTick declared");
         assert_eq!(def.kind, ActionKind::View, "fillBuildTick must stay a View action — it only advances background planning");
         let mut live = app();
-        dispatch(&mut live, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).expect("select fill tool");
-        let result = dispatch(&mut live, "fillBuildTick", None, None).expect("fillBuildTick");
+        dispatch(&mut live, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("select fill tool");
+        let result = dispatch(&mut live, "fillBuildTick", None, None).await.expect("fillBuildTick");
         match result.ui_scope {
             UiDirtyScope::Partial { window_bodies, panel_bodies, engagements, measures, utilities, tools, labels } => {
                 assert_eq!(window_bodies, vec![main::BODY_KEY.to_string()]);
-                assert_eq!(panel_bodies, vec![FRAMEWORK_HISTORY_BODY_KEY.to_string()]);
+                assert!(panel_bodies.is_empty());
                 assert!(tools, "fill planning must refresh the fill-count slider range in the fill tool's measures");
                 assert!(!measures);
                 assert!(!engagements);
@@ -4111,12 +4330,12 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn set_fill_count_declares_narrow_ui_scope() {
         let mut app = app();
-        dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).expect("select fill tool");
-        let result = dispatch(&mut app, "setFillCount", Some(&json!({ "value": 1 })), None).expect("setFillCount");
+        dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("select fill tool");
+        let result = dispatch(&mut app, "setFillCount", Some(&json!({ "value": 1 })), None).await.expect("setFillCount");
         match result.ui_scope {
             UiDirtyScope::Partial { window_bodies, panel_bodies, engagements, measures, utilities, tools, labels } => {
                 assert_eq!(window_bodies, vec![main::BODY_KEY.to_string()]);
-                assert_eq!(panel_bodies, vec![FRAMEWORK_HISTORY_BODY_KEY.to_string()]);
+                assert!(panel_bodies.is_empty());
                 assert!(tools);
                 assert!(!measures);
                 assert!(!engagements);
@@ -4130,14 +4349,14 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn set_object_kind_weight_declares_fill_options_ui_scope() {
         let mut app = app();
-        dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).expect("select fill tool");
+        dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).await.expect("select fill tool");
         let object_ids = puzzle3d_kind_ids(&nakagin_fixture(), "objects");
         let kind_id = object_ids.first().expect("object kind");
-        let result = dispatch(&mut app, "setObjectKindWeight", Some(&json!({ "kindId": kind_id, "value": 0.75 })), None).expect("setObjectKindWeight");
+        let result = dispatch(&mut app, "setObjectKindWeight", Some(&json!({ "kindId": kind_id, "value": 0.75 })), None).await.expect("setObjectKindWeight");
         match result.ui_scope {
             UiDirtyScope::Partial { window_bodies, panel_bodies, engagements, measures, utilities, tools, labels } => {
                 assert_eq!(window_bodies, vec![main::BODY_KEY.to_string()]);
-                assert_eq!(panel_bodies, vec![FRAMEWORK_HISTORY_BODY_KEY.to_string()]);
+                assert!(panel_bodies.is_empty());
                 assert!(tools);
                 assert!(measures, "distribution sliders live in tool + window measures");
                 assert!(!engagements);
@@ -4160,7 +4379,7 @@ mod tests {
     async fn add_object_kind_honors_drop_origin() {
         let mut app = app();
         let before = object_count(&app);
-        dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [2.5, 3.5, 0.0] })), None).expect("addObjectKind");
+        dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [2.5, 3.5, 0.0] })), None).await.expect("addObjectKind");
         assert_eq!(object_count(&app), before + 1);
         let projection = projection_of(&app);
         let object = projection.get("objects").and_then(Value::as_array).and_then(|objects| objects.last()).expect("added object");
@@ -4175,9 +4394,9 @@ mod tests {
         // 📝️ P1 arg form: firing addObjectKind with no args must materialize the declared `objectKind`
         // default and emit the object-add operation under registry enforcement.
         let mut app = app_with_registry();
-        dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).expect("empty");
+        dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
         let before = object_count(&app);
-        let result = dispatch(&mut app, "addObjectKind", None, None).expect("addObjectKind");
+        let result = dispatch(&mut app, "addObjectKind", None, None).await.expect("addObjectKind");
         assert!(!result.mutations.is_empty(), "addObjectKind is a Mutation that emits mutations");
         assert_eq!(object_count(&app), before + 1, "the materialized default kind adds exactly one object");
         let projection = projection_of(&app);
@@ -4191,7 +4410,7 @@ mod tests {
         // entry, no re-emitted utility-switch effect (the command IS the direct switch).
         let mut app = app_with_registry();
         let before = projection_of(&app);
-        let result = dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::brush::UTILITY_ID })), None).expect("switch utility");
+        let result = dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::brush::UTILITY_ID })), None).await.expect("switch utility");
         assert!(result.mutations.is_empty(), "utility switching never emits document operations");
         assert!(result.requested_effects.is_empty(), "a user utility switch does not re-emit SetActiveUtility");
         assert_eq!(projection_of(&app), before, "utility switching does not mutate the document");
@@ -4223,7 +4442,7 @@ mod tests {
         let mut app = app_with_registry();
         let before = projection_of(&app);
         let object_id = first_object_id(&app);
-        let result = select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).expect("interactionSelect");
+        let result = select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.expect("interactionSelect");
         assert!(result.mutations.is_empty(), "interactionSelect is framework-owned and view-only, must not diff the document");
         assert_eq!(projection_of(&app), before);
     }
@@ -4238,20 +4457,23 @@ mod tests {
         let mut app = app_with_registry();
         let instances_before = instances_of(&render_composite(&mut app));
         let object_id = first_object_id(&app);
-        select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).expect("interactionSelect");
+        select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.expect("interactionSelect");
         let after = render_composite(&mut app);
         assert_eq!(instances_of(&after), instances_before, "picking must never perturb instance geometry");
-        assert_eq!(app.interaction_state().selection.get(PUZZLE3D_INTERACTION_DOMAIN).map(|selection| selection.ids.clone()), Some(vec![object_id]));
+        assert_eq!(semio_framework::io::resolve_ready(app.interaction_state()).selection.get(PUZZLE3D_INTERACTION_DOMAIN).map(|selection| selection.ids.clone()), Some(vec![object_id]));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn world_pick_null_clears_without_reselecting_first_object() {
         let mut app = app_with_registry();
         let object_id = first_object_id(&app);
-        select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).expect("select");
-        assert!(app.interaction_state().selection.get(PUZZLE3D_INTERACTION_DOMAIN).is_some_and(|selection| !selection.ids.is_empty()));
-        dispatch(&mut app, semio_framework_plugin::CLEAR_SELECTION_ACTION_ID, None, None).expect("clear");
-        assert!(app.interaction_state().selection.get(PUZZLE3D_INTERACTION_DOMAIN).is_none_or(|selection| selection.ids.is_empty()), "clicking empty background must clear, never fall back to reselecting the first object");
+        select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.expect("select");
+        assert!(semio_framework::io::resolve_ready(app.interaction_state()).selection.get(PUZZLE3D_INTERACTION_DOMAIN).is_some_and(|selection| !selection.ids.is_empty()));
+        dispatch(&mut app, semio_framework_plugin::CLEAR_SELECTION_ACTION_ID, None, None).await.expect("clear");
+        assert!(
+            semio_framework::io::resolve_ready(app.interaction_state()).selection.get(PUZZLE3D_INTERACTION_DOMAIN).is_none_or(|selection| selection.ids.is_empty()),
+            "clicking empty background must clear, never fall back to reselecting the first object"
+        );
     }
 
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: this used to prove that
@@ -4266,13 +4488,13 @@ mod tests {
     async fn world_pick_locked_object_clears_like_background() {
         let mut app = app_with_registry();
         let object_id = first_object_id(&app);
-        select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).expect("select");
-        dispatch(&mut app, "setSelectionFlag", Some(&json!({ "entity": "object", "ids": [object_id.clone()], "flag": "locked", "value": true })), None).expect("lock");
+        select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.expect("select");
+        dispatch(&mut app, "setSelectionFlag", Some(&json!({ "entity": "object", "ids": [object_id.clone()], "flag": "locked", "value": true })), None).await.expect("lock");
         let instances = instances_of(&render_composite(&mut app));
         assert_eq!(instances.first().and_then(|entry| entry.get("disabled")).and_then(Value::as_bool), Some(true));
-        select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).expect("select locked object");
+        select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.expect("select locked object");
         assert_eq!(
-            app.interaction_state().selection.get(PUZZLE3D_INTERACTION_DOMAIN).map(|selection| selection.ids.clone()),
+            semio_framework::io::resolve_ready(app.interaction_state()).selection.get(PUZZLE3D_INTERACTION_DOMAIN).map(|selection| selection.ids.clone()),
             Some(vec![object_id]),
             "the vortex domain has no lock awareness — this now succeeds, the host must gate locked picks itself"
         );
@@ -4289,7 +4511,7 @@ mod tests {
         let all_vortex_ids = vortex_full_ids(&app);
         assert!(!all_vortex_ids.is_empty(), "fixture must expose vortices");
         assert!(vortices_of(&render_composite(&mut app)).is_empty(), "Selected mode with no render-time interaction access must hide every vortex marker");
-        dispatch(&mut app, "setVortexShow", Some(&json!({ "value": PUZZLE3D_VORTEX_SHOW_ALWAYS })), None).expect("setVortexShow");
+        dispatch(&mut app, "setVortexShow", Some(&json!({ "value": PUZZLE3D_VORTEX_SHOW_ALWAYS })), None).await.expect("setVortexShow");
         assert!(!vortices_of(&render_composite(&mut app)).is_empty(), "Always mode must still reveal every vortex marker");
     }
 
@@ -4303,10 +4525,10 @@ mod tests {
     async fn world_pick_object_replaces_vortex_selection() {
         let mut app = app_with_registry();
         let vortex = first_vortex_full_id(&app);
-        select_id(&mut app, PUZZLE3D_GRANULARITY_VORTEX, &vortex).expect("select vortex");
+        select_id(&mut app, PUZZLE3D_GRANULARITY_VORTEX, &vortex).await.expect("select vortex");
         let object_id = first_object_id(&app);
-        select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).expect("select object");
-        let selection = app.interaction_state().selection.get(PUZZLE3D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
+        select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.expect("select object");
+        let selection = semio_framework::io::resolve_ready(app.interaction_state()).selection.get(PUZZLE3D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
         assert_eq!(selection.granularity, PUZZLE3D_GRANULARITY_OBJECT);
         assert_eq!(selection.ids, vec![object_id]);
     }
@@ -4315,10 +4537,10 @@ mod tests {
     async fn world_vortex_select_clears_object_selection() {
         let mut app = app_with_registry();
         let object_id = first_object_id(&app);
-        select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).expect("select object");
+        select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.expect("select object");
         let vortex = first_vortex_full_id(&app);
-        select_id(&mut app, PUZZLE3D_GRANULARITY_VORTEX, &vortex).expect("select vortex");
-        let selection = app.interaction_state().selection.get(PUZZLE3D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
+        select_id(&mut app, PUZZLE3D_GRANULARITY_VORTEX, &vortex).await.expect("select vortex");
+        let selection = semio_framework::io::resolve_ready(app.interaction_state()).selection.get(PUZZLE3D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
         assert_eq!(selection.granularity, PUZZLE3D_GRANULARITY_VORTEX);
         assert_eq!(selection.ids, vec![vortex]);
     }
@@ -4335,14 +4557,14 @@ mod tests {
         let mut app = app_with_registry();
         let vortices = vortex_full_ids(&app);
         assert!(vortices.len() >= 2, "fixture must expose two vortices");
-        select_id(&mut app, PUZZLE3D_GRANULARITY_VORTEX, &vortices[0]).expect("select first vortex");
-        select_id(&mut app, PUZZLE3D_GRANULARITY_VORTEX, &vortices[1]).expect("replace with second vortex");
-        let replaced = app.interaction_state().selection.get(PUZZLE3D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
+        select_id(&mut app, PUZZLE3D_GRANULARITY_VORTEX, &vortices[0]).await.expect("select first vortex");
+        select_id(&mut app, PUZZLE3D_GRANULARITY_VORTEX, &vortices[1]).await.expect("replace with second vortex");
+        let replaced = semio_framework::io::resolve_ready(app.interaction_state()).selection.get(PUZZLE3D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
         assert_eq!(replaced.ids, vec![vortices[1].clone()]);
 
         let targets = serde_json::to_string(&vec![InteractionTarget { granularity: PUZZLE3D_GRANULARITY_VORTEX.into(), id: vortices[0].clone() }]).unwrap_or_default();
-        dispatch(&mut app, "interactionSelect", Some(&json!({ "domainId": PUZZLE3D_INTERACTION_DOMAIN, "targets": targets, "merge": "invertive", "method": "pick" })), None).expect("invertive toggle");
-        let invertive = app.interaction_state().selection.get(PUZZLE3D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
+        dispatch(&mut app, "interactionSelect", Some(&json!({ "domainId": PUZZLE3D_INTERACTION_DOMAIN, "targets": targets, "merge": "invertive", "method": "pick" })), None).await.expect("invertive toggle");
+        let invertive = semio_framework::io::resolve_ready(app.interaction_state()).selection.get(PUZZLE3D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
         assert_eq!(invertive.ids.len(), 2, "invertive merge toggles the first vortex back into the selection alongside the second");
     }
     //#endregion 🔖️WorldSelection
@@ -4358,25 +4580,24 @@ mod tests {
     async fn gumball_active_only_for_transform_utilities_with_object_selection() {
         let mut app = app_with_registry();
         let object_id = first_object_id(&app);
-        select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).expect("interactionSelect");
+        select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.expect("interactionSelect");
         let idle_selection = selection_of(&render_window(&mut app, main::WINDOW_KIND_ID));
         assert_eq!(idle_selection.get("gumballActive").and_then(Value::as_bool), Some(false), "selection alone must not show the gumball");
         assert!(idle_selection.get("transformMode").is_none(), "non-transform utility must not emit transformMode");
 
-        dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::transform::UTILITY_ID })), Some(main::WINDOW_KIND_ID)).expect("transform");
+        dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::transform::UTILITY_ID })), Some(main::WINDOW_KIND_ID)).await.expect("transform");
         let transform_selection = selection_of(&render_window(&mut app, main::WINDOW_KIND_ID));
         assert_eq!(transform_selection.get("gumballActive").and_then(Value::as_bool), Some(false), "render has no InteractionView, so gumballActive can no longer track the live selection");
         assert_eq!(transform_selection.get("transformMode").and_then(Value::as_str), Some("transform"));
         assert_eq!(transform_selection.pointer("/gumballConfig/moveAxes").and_then(Value::as_bool), Some(true));
         assert_eq!(transform_selection.pointer("/gumballConfig/rotate").and_then(Value::as_bool), Some(true));
 
-        dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::brush::UTILITY_ID })), Some(main::WINDOW_KIND_ID)).expect("brush");
+        dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::brush::UTILITY_ID })), Some(main::WINDOW_KIND_ID)).await.expect("brush");
         let brush_selection = selection_of(&render_window(&mut app, main::WINDOW_KIND_ID));
         assert_eq!(brush_selection.get("gumballActive").and_then(Value::as_bool), Some(false));
         assert!(brush_selection.get("transformMode").is_none());
     }
 
-    #[semio_framework_async_macros::async_test]
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM known gap: `gumballActive` no
     /// longer proves anything per-window (always `false` — see the sibling test's doc comment above);
     /// `transformMode` never depended on selection, only on each window instance's own
@@ -4386,8 +4607,8 @@ mod tests {
         let mut app = app();
         let top = main::WINDOW_INSTANCE_TOP;
         let perspective = main::WINDOW_INSTANCE_PERSPECTIVE;
-        dispatch(&mut app, "worldPointerDown", None, Some(perspective)).expect("register perspective");
-        dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::transform::UTILITY_ID })), Some(top)).expect("transform on top");
+        dispatch(&mut app, "worldPointerDown", None, Some(perspective)).await.expect("register perspective");
+        dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::transform::UTILITY_ID })), Some(top)).await.expect("transform on top");
         let top_selection = selection_of(&render_window(&mut app, top));
         assert_eq!(top_selection.get("transformMode").and_then(Value::as_str), Some("transform"), "transform on top pane must switch that pane's own scene mode");
         let perspective_selection = selection_of(&render_window(&mut app, perspective));
@@ -4404,17 +4625,17 @@ mod tests {
         assert_eq!(find_measure_toggle(&measures, "puzzle3d-transform-move"), Some(true));
         assert_eq!(find_measure_toggle(&measures, "puzzle3d-transform-rotate"), Some(true));
         let mut app = app();
-        dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::transform::UTILITY_ID })), Some(main::WINDOW_KIND_ID)).expect("transform");
-        dispatch(&mut app, "setTransformGumballFlag", Some(&json!({ "flag": "rotate", "pressed": false })), Some(main::WINDOW_KIND_ID)).expect("disable rotate");
+        dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::transform::UTILITY_ID })), Some(main::WINDOW_KIND_ID)).await.expect("transform");
+        dispatch(&mut app, "setTransformGumballFlag", Some(&json!({ "flag": "rotate", "pressed": false })), Some(main::WINDOW_KIND_ID)).await.expect("disable rotate");
         let selection = selection_of(&render_window(&mut app, main::WINDOW_KIND_ID));
         assert_eq!(selection.pointer("/gumballConfig/moveAxes").and_then(Value::as_bool), Some(true));
         assert_eq!(selection.pointer("/gumballConfig/rotate").and_then(Value::as_bool), Some(false));
-        let app_measures = app.window_measures();
+        let app_measures = semio_framework::io::resolve_ready(app.window_measures());
         let window_measures = app_measures.get(main::WINDOW_KIND_ID).expect("main window measures");
         assert_eq!(find_measure_toggle(window_measures, "puzzle3d-transform-rotate"), Some(false));
     }
 
-    async fn object_origin(app: &Puzzle3dApp, object_id: &str) -> Vec<f64> {
+    fn object_origin(app: &Puzzle3dApp, object_id: &str) -> Vec<f64> {
         projection_of(app)
             .get("objects")
             .and_then(Value::as_array)
@@ -4427,16 +4648,16 @@ mod tests {
     async fn gumball_translate_drag_coalesces_into_one_edit() {
         // 🌀️ Unbracketed translate ticks still coalesce via AmendLast (compat path without transformBegin).
         let mut app = app();
-        dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).expect("empty");
-        dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object" })), None).expect("add object");
+        dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
+        dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object" })), None).await.expect("add object");
         let object_id = first_object_id(&app);
         let start = object_origin(&app, &object_id);
         for dx in [1.0, 2.0, 3.0] {
-            dispatch(&mut app, "translateSelection", Some(&json!({ "ids": [object_id], "dx": dx, "dy": 0.0, "dz": 0.0 })), None).expect("drag tick");
+            dispatch(&mut app, "translateSelection", Some(&json!({ "ids": [object_id], "dx": dx, "dy": 0.0, "dz": 0.0 })), None).await.expect("drag tick");
         }
         let dragged = object_origin(&app, &object_id);
         assert!((dragged[0] - start[0] - 6.0).abs() < 1e-9, "three ticks accumulate 1+2+3 on x");
-        dispatch(&mut app, "undo", None, None).expect("undo");
+        dispatch(&mut app, "undo", None, None).await.expect("undo");
         assert_eq!(object_origin(&app, &object_id), start, "one undo restores the whole coalesced gumball drag");
     }
 
@@ -4445,15 +4666,15 @@ mod tests {
         // 🧲️ Scratch-commit: mid-drag ticks emit ZERO operations; transformEnd commits ONE edit from
         // base→scratch. Incremental host deltas accumulate on scratch — 1 then 5 → final +6.
         let mut app = app_with_registry();
-        dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).expect("empty");
-        dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object" })), None).expect("add object");
+        dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).await.expect("empty");
+        dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object" })), None).await.expect("add object");
         let object_id = first_object_id(&app);
-        dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::transform::UTILITY_ID })), Some(main::WINDOW_KIND_ID)).expect("transform");
-        select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).expect("interactionSelect");
+        dispatch(&mut app, SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": utilities::transform::UTILITY_ID })), Some(main::WINDOW_KIND_ID)).await.expect("transform");
+        select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).await.expect("interactionSelect");
         let start = object_origin(&app, &object_id);
-        dispatch(&mut app, "transformBegin", None, None).expect("begin");
-        let tick_a = dispatch(&mut app, "translateSelection", Some(&json!({ "ids": [object_id], "dx": 1.0, "dy": 0.0, "dz": 0.0 })), None).expect("tick a");
-        let tick_b = dispatch(&mut app, "translateSelection", Some(&json!({ "ids": [object_id], "dx": 5.0, "dy": 0.0, "dz": 0.0 })), None).expect("tick b");
+        dispatch(&mut app, "transformBegin", None, None).await.expect("begin");
+        let tick_a = dispatch(&mut app, "translateSelection", Some(&json!({ "ids": [object_id], "dx": 1.0, "dy": 0.0, "dz": 0.0 })), None).await.expect("tick a");
+        let tick_b = dispatch(&mut app, "translateSelection", Some(&json!({ "ids": [object_id], "dx": 5.0, "dy": 0.0, "dz": 0.0 })), None).await.expect("tick b");
         assert!(tick_a.mutations.is_empty() && tick_b.mutations.is_empty(), "mid-drag transform ticks emit no operations");
         assert_eq!(object_origin(&app, &object_id), start, "document stays at the drag-start pose mid-drag");
         let preview: Vec<f64> = instances_of(&render_window(&mut app, main::WINDOW_KIND_ID))
@@ -4462,14 +4683,14 @@ mod tests {
             .and_then(|instance| instance.get("position").and_then(Value::as_array).map(|values| values.iter().filter_map(Value::as_f64).collect()))
             .unwrap_or_default();
         assert!((preview[0] - start[0] - 6.0).abs() < 1e-9, "scratch render accumulates incremental ticks");
-        let end = dispatch(&mut app, "transformEnd", None, None).expect("end");
+        let end = dispatch(&mut app, "transformEnd", None, None).await.expect("end");
         assert_eq!(end.mutations.len(), 1, "the whole drag commits as exactly one operation");
         assert!((object_origin(&app, &object_id)[0] - start[0] - 6.0).abs() < 1e-9, "transformEnd lands on the accumulated total");
-        dispatch(&mut app, "undo", None, None).expect("undo");
+        dispatch(&mut app, "undo", None, None).await.expect("undo");
         assert_eq!(object_origin(&app, &object_id), start, "one undo restores the whole scratch-committed gumball drag");
-        dispatch(&mut app, "transformBegin", None, None).expect("begin again");
-        dispatch(&mut app, "translateSelection", Some(&json!({ "ids": [object_id], "dx": 2.0, "dy": 0.0, "dz": 0.0 })), None).expect("second drag tick");
-        dispatch(&mut app, "transformEnd", None, None).expect("second end");
+        dispatch(&mut app, "transformBegin", None, None).await.expect("begin again");
+        dispatch(&mut app, "translateSelection", Some(&json!({ "ids": [object_id], "dx": 2.0, "dy": 0.0, "dz": 0.0 })), None).await.expect("second drag tick");
+        dispatch(&mut app, "transformEnd", None, None).await.expect("second end");
         assert!((object_origin(&app, &object_id)[0] - start[0] - 2.0).abs() < 1e-9, "a second gumball drag session works from the restored base");
     }
     //#endregion 🔖️Gumball
@@ -4536,9 +4757,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn kit_in_import_media_upserts_object_and_vortex_kinds_into_meta_kind_catalogs() {
         let app = Puzzle3dPlayApp::default();
-        let projection = Puzzle3dPlayApp::initial_snapshot();
-        let history = semio_framework_plugin::HistoryView::empty();
-        let doc = ArtifactView::new(&projection, &history);
+        let projection = semio_framework::io::resolve_ready(Puzzle3dPlayApp::initial_snapshot());
+        let history = semio_framework::io::resolve_ready(semio_framework_plugin::HistoryView::empty());
+        let doc = semio_framework::io::resolve_ready(ArtifactView::new(&projection, &history));
 
         let fragment = json!({
             "schema": "manifest",
@@ -4556,12 +4777,12 @@ mod tests {
         });
         let media = Media { media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "kit.catalog".into(), json: fragment.to_string() } };
 
-        let emit = Puzzle3dPlayApp::import_media("kit:in", &media, &doc).expect("kit:in import_media succeeds");
+        let emit = semio_framework::io::resolve_ready(Puzzle3dPlayApp::import_media("kit:in", &media, &doc)).expect("kit:in import_media succeeds");
         assert!(!emit.artifact_mutations.is_empty(), "importing a non-empty fragment must emit real operations");
 
         let mut next_projection = projection.0.clone();
         for operation in &emit.artifact_mutations {
-            next_projection = protocol::Mutation::<Value>::diff(operation, &next_projection).apply(&next_projection).expect("valid mutation diff");
+            next_projection = protocol::Mutation::<Value>::diff(operation, &next_projection).diff().apply(&next_projection).expect("valid mutation diff");
         }
 
         let objects = next_projection.pointer("/meta/kindCatalogs/objects").and_then(Value::as_array).expect("objects catalog present");
@@ -4582,8 +4803,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn kit_in_import_media_is_idempotent_on_repeated_delivery() {
         let app = Puzzle3dPlayApp::default();
-        let projection = Puzzle3dPlayApp::initial_snapshot();
-        let history = semio_framework_plugin::HistoryView::empty();
+        let projection = semio_framework::io::resolve_ready(Puzzle3dPlayApp::initial_snapshot());
+        let history = semio_framework::io::resolve_ready(semio_framework_plugin::HistoryView::empty());
         let mut current = projection.0.clone();
 
         let fragment = json!({
@@ -4597,10 +4818,10 @@ mod tests {
 
         for _ in 0..2 {
             let doc_projection = Puzzle3dPlaySnapshot(current.clone());
-            let doc = ArtifactView::new(&doc_projection, &history);
-            let emit = Puzzle3dPlayApp::import_media("kit:in", &media, &doc).expect("kit:in import_media succeeds");
+            let doc = semio_framework::io::resolve_ready(ArtifactView::new(&doc_projection, &history));
+            let emit = semio_framework::io::resolve_ready(Puzzle3dPlayApp::import_media("kit:in", &media, &doc)).expect("kit:in import_media succeeds");
             for operation in &emit.artifact_mutations {
-                current = protocol::Mutation::<Value>::diff(operation, &current).apply(&current).expect("valid mutation diff");
+                current = protocol::Mutation::<Value>::diff(operation, &current).diff().apply(&current).expect("valid mutation diff");
             }
         }
 
@@ -4611,7 +4832,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn kit_in_port_is_declared_on_the_app_io() {
         let app = Puzzle3dPlayApp::default();
-        let io = Puzzle3dPlayApp::io().expect("puzzle3d declares an AppIo");
+        let io = semio_framework::io::resolve_ready(Puzzle3dPlayApp::io()).expect("puzzle3d declares an AppIo");
         let port = io.ports.iter().find(|port| port.id == "kit:in").expect("kit:in port declared");
         assert_eq!(port.kind_id.as_deref(), Some("kit.catalog"));
         assert_eq!(port.media_type, MediaType { class: MediaClass::Kit, form: MediaForm::Type });
@@ -4629,16 +4850,16 @@ mod tests {
         let mut instance_a = app();
         let mut instance_b = app();
         let seeded = object_count(&instance_a);
-        let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://puzzle3d-convergence", "mem://puzzle3d-convergence");
-        instance_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
-        instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
+        let (backbone_a, backbone_b) = semio_framework::io::resolve_ready(MemoryBackbone::pair("mem://puzzle3d-convergence", "mem://puzzle3d-convergence"));
+        semio_framework::io::resolve_ready(instance_a.attach_backbone(store::Backbones::Memory(backbone_a))).expect("attach a");
+        semio_framework::io::resolve_ready(instance_b.attach_backbone(store::Backbones::Memory(backbone_b))).expect("attach b");
 
-        dispatch(&mut instance_a, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [1.0, 0.0, 0.0] })), None).expect("a adds object");
-        dispatch(&mut instance_b, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [2.0, 0.0, 0.0] })), None).expect("b adds object");
+        dispatch(&mut instance_a, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [1.0, 0.0, 0.0] })), None).await.expect("a adds object");
+        dispatch(&mut instance_b, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [2.0, 0.0, 0.0] })), None).await.expect("b adds object");
 
         // A neutral history action always calls store.dispatch(), which pumps inbound operations first.
-        dispatch(&mut instance_a, "commitCheckpoint", None, None).expect("pump a");
-        dispatch(&mut instance_b, "commitCheckpoint", None, None).expect("pump b");
+        dispatch(&mut instance_a, "commitCheckpoint", None, None).await.expect("pump a");
+        dispatch(&mut instance_b, "commitCheckpoint", None, None).await.expect("pump b");
 
         assert_eq!(object_count(&instance_a), seeded + 2, "instance A must contain both objects");
         assert_eq!(object_count(&instance_b), seeded + 2, "instance B must contain both objects");

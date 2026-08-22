@@ -24,12 +24,55 @@ extern crate semio_framework_schema as schema;
 // them byte-for-byte.
 extern crate semio_framework_graph as graph_core;
 
+//#region Base64
+/// 🔡 Encodes bytes with the padded RFC 4648 standard Base64 alphabet.
+pub fn base64_standard(bytes: &[u8]) -> String {
+    const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut output = String::with_capacity(bytes.len().div_ceil(3).saturating_mul(4));
+    let mut chunks = bytes.chunks_exact(3);
+    for chunk in &mut chunks {
+        let value = u32::from_be_bytes([0, chunk[0], chunk[1], chunk[2]]);
+        output.push(ALPHABET[((value >> 18) & 63) as usize] as char);
+        output.push(ALPHABET[((value >> 12) & 63) as usize] as char);
+        output.push(ALPHABET[((value >> 6) & 63) as usize] as char);
+        output.push(ALPHABET[(value & 63) as usize] as char);
+    }
+    match chunks.remainder() {
+        [first] => {
+            output.push(ALPHABET[(first >> 2) as usize] as char);
+            output.push(ALPHABET[((first & 3) << 4) as usize] as char);
+            output.push_str("==");
+        }
+        [first, second] => {
+            output.push(ALPHABET[(first >> 2) as usize] as char);
+            output.push(ALPHABET[(((first & 3) << 4) | (second >> 4)) as usize] as char);
+            output.push(ALPHABET[((second & 15) << 2) as usize] as char);
+            output.push('=');
+        }
+        _ => {}
+    }
+    output
+}
+//#endregion Base64
+
 //#region SemanticFingerprint
+fn hash_hex_bytes(hash: &str) -> Vec<u8> {
+    fn nibble(byte: u8) -> u8 {
+        match byte {
+            b'0'..=b'9' => byte - b'0',
+            b'a'..=b'f' => byte - b'a' + 10,
+            _ => unreachable!("framework hash must be lowercase hexadecimal"),
+        }
+    }
+
+    hash.as_bytes().chunks_exact(2).map(|pair| nibble(pair[0]) << 4 | nibble(pair[1])).collect()
+}
+
 /// 🪪️ Computes the stable BLAKE3 identity of a serializable semantic projection.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn semantic_fingerprint<T: serde::Serialize>(projection: &T) -> Result<Vec<u8>, String> {
     let encoded = serde_json::to_vec(projection).map_err(|error| format!("semantic projection serialization failed: {error}"))?;
-    Ok(blake3::hash(&encoded).as_bytes().to_vec())
+    Ok(hash_hex_bytes(&semio_framework_hash::hash_bytes(&encoded)))
 }
 //#endregion SemanticFingerprint
 
@@ -44,7 +87,7 @@ pub use plugin::plugin;
 // root. Mirrors `✏️s/🔌️plugins/🗒️note`'s own `semio_framework_plugin::plugin_exports!(plugin::plugin)`
 // call verbatim — stdio never had this wired up before this packet.
 #[cfg(feature = "plugin-root")]
-semio_framework_plugin::plugin_exports!(plugin);
+semio_framework_plugin::plugin_exports!(plugin, plugin::StdioApps);
 //#endregion Plugin
 
 //#region Registry

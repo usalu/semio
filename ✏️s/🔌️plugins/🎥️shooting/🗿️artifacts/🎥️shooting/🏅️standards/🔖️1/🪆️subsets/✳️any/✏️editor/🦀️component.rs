@@ -394,7 +394,7 @@ pub async fn create_shooting_app() -> semio_framework_plugin::AppDefinition {
             .panel_tab_def(inspection_panel::definition())
             // 🔧️ Document-mutating — dispatched as VCS operations with a true inverse.
             // 🛠️ Dev-only whole-fixture import — kept out of the command palette.
-            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("importSnapshotJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Mutation) })
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("importSnapshotJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Mutation) })
             .mutation("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"))
             .mutation("setActiveShot", LocalizedLabel::native("Set Active Shot", "Aktive Aufnahme festlegen"))
             .mutation("setActiveAsset", LocalizedLabel::native("Set Active Asset", "Aktives Objekt festlegen"))

@@ -4,7 +4,7 @@ use crate::artifacts::fem2d::diff::{Fem2dDiff, Fem2dElementsDelta};
 use crate::artifacts::fem2d::{element_id, Fem2dSnapshot, FemElement};
 
 //#region 🔖️Diff
-pub async fn diff(payload: &CreateElement, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {
+pub fn diff(payload: &CreateElement, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {
     let new_id = element_id(&payload.element);
     if base.elements.iter().any(|element| element_id(element) == new_id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("An element with id \"{}\" already exists.", new_id), [new_id.to_string()]);

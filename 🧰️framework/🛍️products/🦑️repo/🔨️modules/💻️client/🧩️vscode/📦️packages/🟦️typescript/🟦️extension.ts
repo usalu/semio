@@ -53,7 +53,13 @@ export type RepoEvent = {
 // #region 🧬️CodegenGraphql
 // #endregion 🧲️Header
 
-import { TypedDocumentNode as DocumentNode } from "@graphql-typed-document-node/core";
+/** 🕸️ Owned typed GraphQL artifact contract used by generated query constants. */
+interface DocumentNode<TResult = unknown, TVariables = unknown> {
+  readonly kind: string;
+  readonly definitions: readonly unknown[];
+  readonly __resultType?: TResult;
+  readonly __variablesType?: TVariables;
+}
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -856,7 +862,6 @@ export const CodebaseDocument = { "kind": "Artifact", "definitions": [{ "kind": 
 // #endregion 🧲️Header
 
 
-import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
 export function graphql(source: string): unknown;
 export function graphql(source: "\n  query Repo {\n    repo {\n      id\n      name\n      path\n      bundles { id name root s  bundles { id name root sourceRoot projectType tags uri }\n      tickets { id year month day slug path uri prompt summary status checkpoint }\n      policies { id name description scopes }\n      contributors { id github name emails }\n    }\n  }\n"];
 export function graphql(source: "\n  query Tickets($year: Int, $month: Int, $day: Int, $status: TicketStatus) {\n    repo {\n      tickets(year: $year, month: $month, day: $day, status: $status) {\n        id year month day slug path uri prompt summary status\n        author { github name }\n        model checkpoint\n        date { created finished }\n        checkpoints { prompt model author { github name } checkpoint date { created } }\n        metrics { checkpoints files lines { added removed } }\n      }\n    }\n  }\n"): tickets(year: $year, month: $month, day: $day, status: $status) { \n        id year month day slug path uri prompt summary status\n        author { github name } \n        model checkpoint\n        date { created finished } \n        checkpoints { prompt model author { github name } checkpoint date { created } } \n        metrics { checkpoints files lines { added removed } } \n }\n    }\n  }\n"];
@@ -877,7 +882,7 @@ export function graphql(source: string) {
   return (documents as any)[source] ?? {};
 }
 
-export type DocumentType<TDocumentNode extends DocumentNode<any, any>> = TDocumentNode extends DocumentNode<  infer TType,  any>  ? TType  : never;
+export type DocumentType<TDocumentNode extends DocumentNode> = TDocumentNode extends DocumentNode<infer TType, unknown> ? TType : never;
 // #endregion 🧬️CodegenGql
 
 

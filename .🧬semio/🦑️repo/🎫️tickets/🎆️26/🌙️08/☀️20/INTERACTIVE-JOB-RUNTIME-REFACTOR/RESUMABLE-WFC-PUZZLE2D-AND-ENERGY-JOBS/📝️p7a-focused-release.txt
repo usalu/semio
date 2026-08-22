@@ -1,0 +1,1030 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.47
+   Compiling serde_core v1.0.229
+   Compiling serde v1.0.229
+   Compiling cfg-if v1.0.4
+   Compiling find-msvc-tools v0.1.11
+   Compiling shlex v2.0.1
+   Compiling arrayvec v0.7.8
+   Compiling simd-adler32 v0.3.10
+   Compiling thiserror v2.0.20
+   Compiling zmij v1.0.23
+   Compiling cc v1.4.4
+   Compiling crc32fast v1.5.0
+   Compiling serde_json v1.0.151
+   Compiling adler2 v2.0.1
+   Compiling libc v0.2.189
+   Compiling memchr v2.8.3
+   Compiling blake3 v1.8.7
+   Compiling miniz_oxide v0.8.9
+   Compiling pin-project-lite v0.2.17
+   Compiling constant_time_eq v0.4.2
+   Compiling itoa v1.0.18
+   Compiling semio-framework-trace v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust)
+   Compiling futures-core v0.3.34
+   Compiling futures-io v0.3.34
+   Compiling equivalent v1.0.2
+   Compiling parking v2.2.1
+   Compiling fastrand v2.5.0
+   Compiling hashbrown v0.17.1
+   Compiling zip v2.4.2
+   Compiling bumpalo v3.20.3
+   Compiling log v0.4.33
+   Compiling base64 v0.22.1
+   Compiling mio v1.2.2
+   Compiling socket2 v0.6.5
+   Compiling flate2 v1.1.9
+   Compiling polycool v0.4.0
+   Compiling futures-lite v2.6.1
+   Compiling indexmap v2.14.0
+   Compiling futures-task v0.3.34
+   Compiling syn v3.0.3
+   Compiling zopfli v0.8.3
+   Compiling syn v2.0.119
+   Compiling futures-sink v0.3.34
+   Compiling smallvec v1.15.2
+   Compiling slab v0.4.12
+   Compiling semio-framework-hash v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust)
+   Compiling semio-framework-ui-styling v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust)
+   Compiling semio-framework-graph v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust)
+   Compiling serde_derive v1.0.229
+   Compiling thiserror-impl v2.0.20
+   Compiling tokio-macros v2.7.2
+   Compiling futures-macro v0.3.34
+   Compiling displaydoc v0.2.7
+   Compiling tokio v1.53.1
+   Compiling async-trait v0.1.92
+   Compiling semio-framework-os-kernel-dsl-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust)
+   Compiling kurbo v0.13.1
+   Compiling futures-util v0.3.34
+   Compiling semio-framework-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust)
+   Compiling semio-framework-replication v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust)
+   Compiling semio-framework-ui-contract v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust)
+   Compiling semio-framework-os-kernel-neural-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust)
+   Compiling semio-framework-geometry v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust)
+   Compiling semio-framework-job v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust)
+warning: unexpected `cfg` condition value: `typegen`
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1221:12
+     |
+1221 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+     = note: `#[warn(unexpected_cfgs)]` on by default
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1248:12
+     |
+1248 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1267:12
+     |
+1267 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1282:12
+     |
+1282 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1291:12
+     |
+1291 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1301:12
+     |
+1301 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1325:12
+     |
+1325 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1335:12
+     |
+1335 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1348:12
+     |
+1348 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1358:12
+     |
+1358 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1371:12
+     |
+1371 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1384:12
+     |
+1384 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1446:12
+     |
+1446 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1457:12
+     |
+1457 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1560:12
+     |
+1560 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1602:12
+     |
+1602 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1677:12
+     |
+1677 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1687:12
+     |
+1687 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |            ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1341:16
+     |
+1341 |     #[cfg_attr(feature = "typegen", ts(optional))]
+     |                ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+warning: unexpected `cfg` condition value: `typegen`
+    --> /Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/./../../📡️wire/🦀️component.rs:1377:16
+     |
+1377 |     #[cfg_attr(feature = "typegen", ts(optional))]
+     |                ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: expected values for `feature` are: `default` and `deflate`
+     = help: consider adding `typegen` as a feature in `Cargo.toml`
+     = note: see <https://doc.rust-lang.org/nightly/rustc/check-cfg/cargo-specifics.html> for more information about checking conditional configuration
+
+   Compiling semio-framework-pack v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust)
+warning: `semio-framework-replication` (lib) generated 20 warnings
+   Compiling semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13127:6
+      |
+13127 | impl crate::os_store::ArtifactPack for protocol::InteractionState {
+      |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+      = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+      |
+13127 - impl crate::os_store::ArtifactPack for protocol::InteractionState {
+13127 + impl ArtifactPack for protocol::InteractionState {
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13128:42
+      |
+13128 |     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+      |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13128 -     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+13128 +     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13128:97
+      |
+13128 |     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+      |                                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13128 -     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
+13128 +     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13129:64
+      |
+13129 |         let value = serde_json::to_value(self).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))?;
+      |                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13129 -         let value = serde_json::to_value(self).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))?;
+13129 +         let value = serde_json::to_value(self).map_err(|error| PackError::Schema(error.to_string()))?;
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13130:9
+      |
+13130 |         crate::os_store::ArtifactPack::encode_pack_with(&value, options)
+      |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13130 -         crate::os_store::ArtifactPack::encode_pack_with(&value, options)
+13130 +         ArtifactPack::encode_pack_with(&value, options)
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13132:49
+      |
+13132 |     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+      |                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13132 -     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+13132 +     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13132:101
+      |
+13132 |     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+      |                                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13132 -     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, crate::os_store::PackError> {
+13132 +     fn decode_pack_with(bytes: &[u8], options: &crate::os_store::PackDecodeOptions) -> Result<Self, PackError> {
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13133:21
+      |
+13133 |         let value = <serde_json::Value as crate::os_store::ArtifactPack>::decode_pack_with(bytes, options)?;
+      |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13133 -         let value = <serde_json::Value as crate::os_store::ArtifactPack>::decode_pack_with(bytes, options)?;
+13133 +         let value = <serde_json::Value as ArtifactPack>::decode_pack_with(bytes, options)?;
+      |
+
+warning: unnecessary qualification
+     --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13134:55
+      |
+13134 |         serde_json::from_value(value).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))
+      |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+13134 -         serde_json::from_value(value).map_err(|error| crate::os_store::PackError::Schema(error.to_string()))
+13134 +         serde_json::from_value(value).map_err(|error| PackError::Schema(error.to_string()))
+      |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/⌨️cli/🦀️component.rs:84:5
+   |
+84 |     async fn resolve(&self, schema: &str) -> Option<crate::os_dsl::schema::RecordSpec>;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+   = note: `#[warn(async_fn_in_trait)]` on by default
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+84 -     async fn resolve(&self, schema: &str) -> Option<crate::os_dsl::schema::RecordSpec>;
+84 +     fn resolve(&self, schema: &str) -> impl std::future::Future<Output = Option<crate::os_dsl::schema::RecordSpec>> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/⌨️cli/🦀️component.rs:87:5
+   |
+87 |     async fn names(&self) -> Vec<String> {
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+87 ~     fn names(&self) -> impl std::future::Future<Output = Vec<String>> + Send {async {
+88 |         Vec::new()
+89 ~     } }
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2400:9
+     |
+2400 |         async fn serialize(from: &S) -> IoResult<IoPayload>;
+     |         ^^^^^
+     |
+     = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+     |
+2400 -         async fn serialize(from: &S) -> IoResult<IoPayload>;
+2400 +         fn serialize(from: &S) -> impl std::future::Future<Output = IoResult<IoPayload>> + Send;
+     |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2415:9
+     |
+2415 |         async fn sniff(_payload: &IoPayload) -> Confidence {
+     |         ^^^^^
+     |
+     = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+     |
+2415 ~         fn sniff(_payload: &IoPayload) -> impl std::future::Future<Output = Confidence> + Send {async {
+2416 |             Confidence::None
+2417 ~         } }
+     |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2418:9
+     |
+2418 |         async fn deserialize(payload: &IoPayload) -> IoResult<S>;
+     |         ^^^^^
+     |
+     = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+     |
+2418 -         async fn deserialize(payload: &IoPayload) -> IoResult<S>;
+2418 +         fn deserialize(payload: &IoPayload) -> impl std::future::Future<Output = IoResult<S>> + Send;
+     |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:501:5
+    |
+501 |     async fn len(&self) -> CodecResult<u64>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+501 -     async fn len(&self) -> CodecResult<u64>;
+501 +     fn len(&self) -> impl std::future::Future<Output = CodecResult<u64>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:502:5
+    |
+502 |     async fn read_at(&self, offset: u64, output: &mut [u8]) -> CodecResult<usize>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+502 -     async fn read_at(&self, offset: u64, output: &mut [u8]) -> CodecResult<usize>;
+502 +     fn read_at(&self, offset: u64, output: &mut [u8]) -> impl std::future::Future<Output = CodecResult<usize>> + Send;
+    |
+
+warning: unused return value of `Box::<T>::pin` that must be used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🔢️value/🦀️component.rs:229:9
+    |
+229 |         Box::pin(walk_value_for_symbols(counts, forced, shape, value));
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_must_use)]` (part of `#[warn(unused)]`) on by default
+help: use `let _ = ...` to ignore the resulting value
+    |
+229 |         let _ = Box::pin(walk_value_for_symbols(counts, forced, shape, value));
+    |         +++++++
+
+warning: unused return value of `Box::<T>::pin` that must be used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🔢️value/🦀️component.rs:239:17
+    |
+239 |                 Box::pin(walk_value_for_symbols(counts, forced, elem, it));
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: use `let _ = ...` to ignore the resulting value
+    |
+239 |                 let _ = Box::pin(walk_value_for_symbols(counts, forced, elem, it));
+    |                 +++++++
+
+warning: unused return value of `Box::<T>::pin` that must be used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🔢️value/🦀️component.rs:260:29
+    |
+260 | ...                   Box::pin(walk_value_for_symbols(counts, forced, Some(&field.shape), v));
+    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: use `let _ = ...` to ignore the resulting value
+    |
+260 |                             let _ = Box::pin(walk_value_for_symbols(counts, forced, Some(&field.shape), v));
+    |                             +++++++
+
+warning: unused return value of `Box::<T>::pin` that must be used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🔢️value/🦀️component.rs:267:21
+    |
+267 |                     Box::pin(walk_value_for_symbols(counts, forced, elem, it));
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: use `let _ = ...` to ignore the resulting value
+    |
+267 |                     let _ = Box::pin(walk_value_for_symbols(counts, forced, elem, it));
+    |                     +++++++
+
+warning: unused return value of `Box::<T>::pin` that must be used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🔢️value/🦀️component.rs:273:13
+    |
+273 |             Box::pin(walk_record_for_symbols(counts, forced, spec.as_ref(), r));
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: use `let _ = ...` to ignore the resulting value
+    |
+273 |             let _ = Box::pin(walk_record_for_symbols(counts, forced, spec.as_ref(), r));
+    |             +++++++
+
+warning: unused return value of `Box::<T>::pin` that must be used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🔢️value/🦀️component.rs:281:17
+    |
+281 |                 Box::pin(walk_record_for_symbols(counts, forced, spec.as_ref(), record));
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: use `let _ = ...` to ignore the resulting value
+    |
+281 |                 let _ = Box::pin(walk_record_for_symbols(counts, forced, spec.as_ref(), record));
+    |                 +++++++
+
+warning: unused return value of `Box::<T>::pin` that must be used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🔢️value/🦀️component.rs:288:17
+    |
+288 |                 Box::pin(walk_value_for_symbols(counts, forced, inner, v));
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: use `let _ = ...` to ignore the resulting value
+    |
+288 |                 let _ = Box::pin(walk_value_for_symbols(counts, forced, inner, v));
+    |                 +++++++
+
+warning: unused return value of `Box::<T>::pin` that must be used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🔢️value/🦀️component.rs:323:17
+    |
+323 |                 Box::pin(walk_dsl_value_for_symbols(counts, it));
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: use `let _ = ...` to ignore the resulting value
+    |
+323 |                 let _ = Box::pin(walk_dsl_value_for_symbols(counts, it));
+    |                 +++++++
+
+warning: unused return value of `Box::<T>::pin` that must be used
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/🔢️value/🦀️component.rs:328:17
+    |
+328 |                 Box::pin(walk_dsl_value_for_symbols(counts, v));
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: use `let _ = ...` to ignore the resulting value
+    |
+328 |                 let _ = Box::pin(walk_dsl_value_for_symbols(counts, v));
+    |                 +++++++
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:513:5
+    |
+513 |     async fn span(&self) -> SourceSpan;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+513 -     async fn span(&self) -> SourceSpan;
+513 +     fn span(&self) -> impl std::future::Future<Output = SourceSpan> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:514:5
+    |
+514 |     async fn read_chunk(&mut self, output: &mut [u8]) -> CodecResult<usize>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+514 -     async fn read_chunk(&mut self, output: &mut [u8]) -> CodecResult<usize>;
+514 +     fn read_chunk(&mut self, output: &mut [u8]) -> impl std::future::Future<Output = CodecResult<usize>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:515:5
+    |
+515 |     async fn random_access(&self) -> Option<&Self::RandomAccess> {
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+515 ~     fn random_access(&self) -> impl std::future::Future<Output = Option<&Self::RandomAccess>> + Send {async {
+516 |         None
+517 ~     } }
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:522:5
+    |
+522 |     async fn write_chunk(&mut self, input: &[u8]) -> CodecResult<()>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+522 -     async fn write_chunk(&mut self, input: &[u8]) -> CodecResult<()>;
+522 +     fn write_chunk(&mut self, input: &[u8]) -> impl std::future::Future<Output = CodecResult<()>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:541:5
+    |
+541 |     async fn resolve_decode(&self, request: &ResourceRequest) -> CodecResult<Self::Source>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+541 -     async fn resolve_decode(&self, request: &ResourceRequest) -> CodecResult<Self::Source>;
+541 +     fn resolve_decode(&self, request: &ResourceRequest) -> impl std::future::Future<Output = CodecResult<Self::Source>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:542:5
+    |
+542 |     async fn resolve_encode(&self, request: &ResourceRequest) -> CodecResult<Self::Sink>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+542 -     async fn resolve_encode(&self, request: &ResourceRequest) -> CodecResult<Self::Sink>;
+542 +     fn resolve_encode(&self, request: &ResourceRequest) -> impl std::future::Future<Output = CodecResult<Self::Sink>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:720:5
+    |
+720 |     async fn sniff(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> CodecResult<PayloadSniff>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+720 -     async fn sniff(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> CodecResult<PayloadSniff>;
+720 +     fn sniff(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> impl std::future::Future<Output = CodecResult<PayloadSniff>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:721:5
+    |
+721 |     async fn decode_payload(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> CodecResult<Self::Payload>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+721 -     async fn decode_payload(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> CodecResult<Self::Payload>;
+721 +     fn decode_payload(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> impl std::future::Future<Output = CodecResult<Self::Payload>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:722:5
+    |
+722 |     async fn encode_payload(&self, payload: &Self::Payload, sink: &mut BoundedPayloadSink<'_, Self::Sink>) -> CodecResult<()>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+722 -     async fn encode_payload(&self, payload: &Self::Payload, sink: &mut BoundedPayloadSink<'_, Self::Sink>) -> CodecResult<()>;
+722 +     fn encode_payload(&self, payload: &Self::Payload, sink: &mut BoundedPayloadSink<'_, Self::Sink>) -> impl std::future::Future<Output = CodecResult<()>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:732:5
+    |
+732 |     async fn dialect(&self) -> &ArtifactDialect;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+732 -     async fn dialect(&self) -> &ArtifactDialect;
+732 +     fn dialect(&self) -> impl std::future::Future<Output = &ArtifactDialect> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:733:5
+    |
+733 |     async fn decode_artifact<R: ResourceResolver>(&self, payload: Self::Payload, context: &mut DecodeContext<R>) -> CodecResult<Sel...
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+733 -     async fn decode_artifact<R: ResourceResolver>(&self, payload: Self::Payload, context: &mut DecodeContext<R>) -> CodecResult<Self::Artifact>;
+733 +     fn decode_artifact<R: ResourceResolver>(&self, payload: Self::Payload, context: &mut DecodeContext<R>) -> impl std::future::Future<Output = CodecResult<Self::Artifact>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:734:5
+    |
+734 |     async fn encode_artifact<R: ResourceResolver>(&self, artifact: &Self::Artifact, context: &mut EncodeContext<R>) -> CodecResult<...
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+734 -     async fn encode_artifact<R: ResourceResolver>(&self, artifact: &Self::Artifact, context: &mut EncodeContext<R>) -> CodecResult<Self::Payload>;
+734 +     fn encode_artifact<R: ResourceResolver>(&self, artifact: &Self::Artifact, context: &mut EncodeContext<R>) -> impl std::future::Future<Output = CodecResult<Self::Payload>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:1212:5
+     |
+1212 |     async fn validate(payload: &IoPayload) -> Vec<Diagnostic>;
+     |     ^^^^^
+     |
+     = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+     |
+1212 -     async fn validate(payload: &IoPayload) -> Vec<Diagnostic>;
+1212 +     fn validate(payload: &IoPayload) -> impl std::future::Future<Output = Vec<Diagnostic>> + Send;
+     |
+
+warning: unused implementer of `Future` that must be used
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4041:21
+     |
+4041 |                     write_command_str(&mut out, text);
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: futures do nothing unless you `.await` or poll them
+
+warning: unused implementer of `Future` that must be used
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4061:21
+     |
+4061 |                     write_command_str(&mut out, text);
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: futures do nothing unless you `.await` or poll them
+
+warning: unused implementer of `Future` that must be used
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4065:21
+     |
+4065 |                     write_command_str(&mut out, &author.id);
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: futures do nothing unless you `.await` or poll them
+
+warning: unused implementer of `Future` that must be used
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4066:21
+     |
+4066 |                     write_command_str(&mut out, &author.name);
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: futures do nothing unless you `.await` or poll them
+
+warning: unused implementer of `Future` that must be used
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4071:17
+     |
+4071 |                 write_command_str(&mut out, name);
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: futures do nothing unless you `.await` or poll them
+
+warning: unused implementer of `Future` that must be used
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4075:17
+     |
+4075 |                 write_command_str(&mut out, alternative_id);
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: futures do nothing unless you `.await` or poll them
+
+warning: unused implementer of `Future` that must be used
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4079:17
+     |
+4079 |                 write_command_str(&mut out, checkpoint_id);
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: futures do nothing unless you `.await` or poll them
+
+warning: unused implementer of `Future` that must be used
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4085:21
+     |
+4085 |                     write_command_str(&mut out, key);
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: futures do nothing unless you `.await` or poll them
+
+warning: unused implementer of `Future` that must be used
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4101:21
+     |
+4101 |                     write_command_str(&mut out, text);
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: futures do nothing unless you `.await` or poll them
+
+warning: unused implementer of `Future` that must be used
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4110:21
+     |
+4110 |                     write_command_str(&mut out, key);
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: futures do nothing unless you `.await` or poll them
+
+warning: unused implementer of `Future` that must be used
+    --> /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:4129:17
+     |
+4129 |                 write_command_str(&mut out, conflict_id);
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: futures do nothing unless you `.await` or poll them
+
+warning: `semio-framework-os-kernel` (lib) generated 49 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 9 suggestions)
+   Compiling semio-wfc-focused v0.0.0 (/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/RESUMABLE-WFC-PUZZLE2D-AND-ENERGY-JOBS/🧪️wfc-focused)
+warning: methods `domain_masks` and `metrics` are never used
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧵️job/🦀️component.rs:293:19
+    |
+215 | impl<T: Topology + Clone> WfcJob<T> {
+    | ----------------------------------- methods in this implementation
+...
+293 |     pub(crate) fn domain_masks(&self) -> Vec<PatternSet> {
+    |                   ^^^^^^^^^^^^
+...
+297 |     pub(crate) fn metrics(&self) -> (u64, u64, u64) {
+    |                   ^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `label` is never used
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧵️job/🦀️component.rs:27:8
+   |
+26 | impl WfcStage {
+   | ------------- method in this implementation
+27 |     fn label(self) -> &'static str {
+   |        ^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `JobRng` is never constructed
+  --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧵️job/🦀️component.rs:81:8
+   |
+81 | struct JobRng {
+   |        ^^^^^^
+
+warning: associated items `from_seed`, `next_u64`, `next_f64`, and `range` are never used
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧵️job/🦀️component.rs:86:8
+    |
+ 85 | impl JobRng {
+    | ----------- associated items in this implementation
+ 86 |     fn from_seed(seed: u64) -> Self {
+    |        ^^^^^^^^^
+...
+ 99 |     fn next_u64(&mut self) -> u64 {
+    |        ^^^^^^^^
+...
+111 |     fn next_f64(&mut self) -> f64 {
+    |        ^^^^^^^^
+...
+115 |     fn range(&mut self, hi: u64) -> u64 {
+    |        ^^^^^
+
+warning: struct `Removal` is never constructed
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧵️job/🦀️component.rs:132:8
+    |
+132 | struct Removal {
+    |        ^^^^^^^
+
+warning: struct `Decision` is never constructed
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧵️job/🦀️component.rs:138:8
+    |
+138 | struct Decision {
+    |        ^^^^^^^^
+
+warning: struct `EntropyEntry` is never constructed
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧵️job/🦀️component.rs:146:8
+    |
+146 | struct EntropyEntry {
+    |        ^^^^^^^^^^^^
+
+warning: struct `ArcCursor` is never constructed
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧵️job/🦀️component.rs:171:8
+    |
+171 | struct ArcCursor {
+    |        ^^^^^^^^^
+
+warning: struct `WfcState` is never constructed
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧵️job/🦀️component.rs:178:8
+    |
+178 | struct WfcState {
+    |        ^^^^^^^^
+
+warning: struct `WfcJob` is never constructed
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧵️job/🦀️component.rs:205:19
+    |
+205 | pub(crate) struct WfcJob<T> {
+    |                   ^^^^^^
+
+warning: multiple associated items are never used
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧩️assembly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧩️wfc-engine/🧵️job/🦀️component.rs:216:12
+    |
+215 | impl<T: Topology + Clone> WfcJob<T> {
+    | ----------------------------------- associated items in this implementation
+216 |     pub fn new(operation: Operation, model: CompiledModel, topology: T, config: WfcJobConfig, initial_domains: Option<Vec<PatternSe...
+    |            ^^^
+...
+253 |     pub fn from_checkpoint(operation: Operation, model: CompiledModel, topology: T, config: WfcJobConfig, initial_domains: Option<V...
+    |            ^^^^^^^^^^^^^^^
+...
+261 |     pub fn checkpoint_bytes(&self) -> Vec<u8> {
+    |            ^^^^^^^^^^^^^^^^
+...
+265 |     pub fn preview(&self, sequence: u64) -> WfcPreview {
+    |            ^^^^^^^
+...
+284 |     pub fn commit(&self) -> Option<WfcCommit> {
+    |            ^^^^^^
+...
+293 |     pub(crate) fn domain_masks(&self) -> Vec<PatternSet> {
+    |                   ^^^^^^^^^^^^
+...
+297 |     pub(crate) fn metrics(&self) -> (u64, u64, u64) {
+    |                   ^^^^^^^
+...
+301 |     fn push_queue(&mut self, node: NodeId) {
+    |        ^^^^^^^^^^
+...
+308 |     fn entropy(&self, node: NodeId) -> f64 {
+    |        ^^^^^^^
+...
+321 |     fn push_entropy(&mut self, node: NodeId) {
+    |        ^^^^^^^^^^^^
+...
+327 |     fn initialize_one(&mut self) {
+    |        ^^^^^^^^^^^^^^
+...
+351 |     fn find_slot(&mut self) {
+    |        ^^^^^^^^^
+...
+363 |     fn choose_candidate(&mut self) {
+    |        ^^^^^^^^^^^^^^^^
+...
+397 |     fn propagate_one(&mut self) {
+    |        ^^^^^^^^^^^^^
+...
+442 |     fn detect(&mut self) {
+    |        ^^^^^^
+...
+454 |     fn backtrack_one(&mut self) {
+    |        ^^^^^^^^^^^^^
+...
+486 |     fn reset_preview_delta(&mut self) {
+    |        ^^^^^^^^^^^^^^^^^^^
+
+warning: `semio-wfc-focused` (lib) generated 10 warnings
+warning: `semio-wfc-focused` (lib test) generated 1 warning
+    Finished `release` profile [optimized] target(s) in 2m 52s
+     Running unittests lib.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/RESUMABLE-WFC-PUZZLE2D-AND-ENERGY-JOBS/🧪️target-p7-focused/release/deps/semio_wfc_focused-508f17a468ed9e41)
+
+running 43 tests
+test wfc_engine::bitset::tests::and_or_and_not ... ok
+test wfc_engine::bitset::tests::empty_and_full ... ok
+test wfc_engine::bitset::tests::first_set_and_iter_ones_skip_zero_words ... ok
+test wfc_engine::bitset::tests::freshly_built_sets_are_well_formed ... ok
+test wfc_engine::bitset::tests::full_respects_boundary_bits ... ok
+test wfc_engine::bitset::tests::quick::random_and_or_matches_vec_bool_model ... ok
+test wfc_engine::bitset::tests::restrict_no_change_returns_zero ... ok
+test wfc_engine::bitset::tests::restrict_returning_removed_matches_naive ... ok
+test wfc_engine::bitset::tests::serde_round_trip_preserves_bits_and_len ... ok
+test wfc_engine::bitset::tests::set_get_roundtrip ... ok
+test wfc_engine::bitset::tests::stray_bits_past_len_in_final_word_are_not_well_formed ... ok
+test wfc_engine::bitset::tests::subset_and_intersects ... ok
+test wfc_engine::bitset::tests::wrong_word_count_is_not_well_formed ... ok
+test wfc_engine::error::tests::display_messages_are_human_readable ... ok
+test wfc_engine::error::tests::errors_are_std_error ... ok
+test wfc_engine::ids::tests::id_index_roundtrip ... ok
+test wfc_engine::ids::tests::id_ordering_and_equality ... ok
+test wfc_engine::ids::tests::id_serde_roundtrip ... ok
+test wfc_engine::model::tests::deny_wins_over_allow_regardless_of_order ... ok
+test wfc_engine::job::tests::cancellation_and_generation_freshness_do_not_mutate_state ... ok
+test wfc_engine::model::tests::allowed_and_supporters_are_transposes ... ok
+test wfc_engine::model::tests::compile_rejects_empty_pattern_universe ... ok
+test wfc_engine::model::tests::compile_rejects_invalid_weight ... ok
+test wfc_engine::job::tests::checkpoint_resume_preserves_rng_queue_trail_and_cursors ... ok
+test wfc_engine::model::tests::fingerprint_is_deterministic_and_sensitive ... ok
+test wfc_engine::model::tests::lint_flags_unconstrained_and_unsupported ... ok
+test wfc_engine::model::tests::stats_report_sane_values ... ok
+test wfc_engine::model::tests::tags_are_interned_and_deduplicated ... ok
+test wfc_engine::model::tests::validate_fails_on_asymmetric_declaration ... ok
+test wfc_engine::model::tests::validate_passes_on_mirrored_model ... ok
+test wfc_engine::topology::tests::dangling_arc_is_rejected ... ok
+test wfc_engine::topology::tests::builder_produces_correct_out_and_in_arcs ... ok
+test wfc_engine::job::tests::batch_size_and_replay_are_deterministic ... ok
+test wfc_engine::topology::tests::in_arc_slots_are_dense_and_unique_per_node ... ok
+test wfc_engine::topology::tests::regions_default_to_zero_and_are_settable ... ok
+test wfc_engine::topology::tests::self_loops_and_multiedges_are_supported ... ok
+test wfc_engine::weights::tests::integer_detection ... ok
+test wfc_engine::weights::tests::precomputes_terms ... ok
+test wfc_engine::weights::tests::rejects_negative_and_nonfinite ... ok
+test wfc_engine::weights::tests::sum_over_matches_manual ... ok
+test wfc_engine::weights::tests::zero_weight_terms_are_zero_not_nan ... ok
+test wfc_engine::job::tests::one_unit_adversarial_step_stays_below_watchdog ... ok
+test wfc_engine::job::tests::disjoint_and_adversarial_graphs_finish ... ok
+
+test result: ok. 43 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+   Doc-tests semio_wfc_focused
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

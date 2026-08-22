@@ -71,7 +71,7 @@ impl VcsArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.vcs.vcs` — twenty handcrafted schema leaves.
-pub async fn vcs_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn vcs_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.vcs.vcs",
         artifact: schema::FacetLeaves {

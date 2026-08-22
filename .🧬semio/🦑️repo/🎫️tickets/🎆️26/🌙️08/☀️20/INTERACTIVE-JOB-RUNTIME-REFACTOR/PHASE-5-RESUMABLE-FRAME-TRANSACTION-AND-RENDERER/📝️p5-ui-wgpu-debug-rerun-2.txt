@@ -1,0 +1,588 @@
+$ bun ./📜️script.ts nx run @semio-tech/ui-rs:test-wgpu-engine --skip-nx-cache
+
+> nx run @semio-tech/ui-rs:test-wgpu-engine
+
+> bun ./📜️script.ts test-wgpu-engine
+
+    Blocking waiting for file lock on build directory
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+    Finished `dev` profile [unoptimized] target(s) in 17.37s
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/⌨️cli/🦀️component.rs:83:5
+   |
+83 |     async fn resolve(&self, schema: &str) -> Option<crate::os_dsl::schema::RecordSpec>;
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+   = note: `#[warn(async_fn_in_trait)]` on by default
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+83 -     async fn resolve(&self, schema: &str) -> Option<crate::os_dsl::schema::RecordSpec>;
+83 +     fn resolve(&self, schema: &str) -> impl std::future::Future<Output = Option<crate::os_dsl::schema::RecordSpec>> + Send;
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+  --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/⌨️cli/🦀️component.rs:86:5
+   |
+86 |     async fn names(&self) -> Vec<String> {
+   |     ^^^^^
+   |
+   = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+   |
+86 ~     fn names(&self) -> impl std::future::Future<Output = Vec<String>> + Send {async {
+87 |         Vec::new()
+88 ~     } }
+   |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../🔨️modules/📇️directory/🔌️client/🦀️component.rs:113:5
+    |
+113 |     async fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> Res...
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+113 -     async fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError>;
+113 +     fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> impl std::future::Future<Output = Result<HttpResponse, TransportError>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:501:5
+    |
+501 |     async fn len(&self) -> CodecResult<u64>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+501 -     async fn len(&self) -> CodecResult<u64>;
+501 +     fn len(&self) -> impl std::future::Future<Output = CodecResult<u64>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:502:5
+    |
+502 |     async fn read_at(&self, offset: u64, output: &mut [u8]) -> CodecResult<usize>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+502 -     async fn read_at(&self, offset: u64, output: &mut [u8]) -> CodecResult<usize>;
+502 +     fn read_at(&self, offset: u64, output: &mut [u8]) -> impl std::future::Future<Output = CodecResult<usize>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:513:5
+    |
+513 |     async fn span(&self) -> SourceSpan;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+513 -     async fn span(&self) -> SourceSpan;
+513 +     fn span(&self) -> impl std::future::Future<Output = SourceSpan> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:514:5
+    |
+514 |     async fn read_chunk(&mut self, output: &mut [u8]) -> CodecResult<usize>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+514 -     async fn read_chunk(&mut self, output: &mut [u8]) -> CodecResult<usize>;
+514 +     fn read_chunk(&mut self, output: &mut [u8]) -> impl std::future::Future<Output = CodecResult<usize>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:515:5
+    |
+515 |     async fn random_access(&self) -> Option<&Self::RandomAccess> {
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+515 ~     fn random_access(&self) -> impl std::future::Future<Output = Option<&Self::RandomAccess>> + Send {async {
+516 |         None
+517 ~     } }
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:522:5
+    |
+522 |     async fn write_chunk(&mut self, input: &[u8]) -> CodecResult<()>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+522 -     async fn write_chunk(&mut self, input: &[u8]) -> CodecResult<()>;
+522 +     fn write_chunk(&mut self, input: &[u8]) -> impl std::future::Future<Output = CodecResult<()>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:541:5
+    |
+541 |     async fn resolve_decode(&self, request: &ResourceRequest) -> CodecResult<Self::Source>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+541 -     async fn resolve_decode(&self, request: &ResourceRequest) -> CodecResult<Self::Source>;
+541 +     fn resolve_decode(&self, request: &ResourceRequest) -> impl std::future::Future<Output = CodecResult<Self::Source>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:542:5
+    |
+542 |     async fn resolve_encode(&self, request: &ResourceRequest) -> CodecResult<Self::Sink>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+542 -     async fn resolve_encode(&self, request: &ResourceRequest) -> CodecResult<Self::Sink>;
+542 +     fn resolve_encode(&self, request: &ResourceRequest) -> impl std::future::Future<Output = CodecResult<Self::Sink>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:720:5
+    |
+720 |     async fn sniff(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> CodecResult<PayloadSniff>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+720 -     async fn sniff(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> CodecResult<PayloadSniff>;
+720 +     fn sniff(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> impl std::future::Future<Output = CodecResult<PayloadSniff>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:721:5
+    |
+721 |     async fn decode_payload(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> CodecResult<Self::Payload>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+721 -     async fn decode_payload(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> CodecResult<Self::Payload>;
+721 +     fn decode_payload(&self, source: &mut BoundedPayloadSource<'_, Self::Source>) -> impl std::future::Future<Output = CodecResult<Self::Payload>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:722:5
+    |
+722 |     async fn encode_payload(&self, payload: &Self::Payload, sink: &mut BoundedPayloadSink<'_, Self::Sink>) -> CodecResult<()>;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+722 -     async fn encode_payload(&self, payload: &Self::Payload, sink: &mut BoundedPayloadSink<'_, Self::Sink>) -> CodecResult<()>;
+722 +     fn encode_payload(&self, payload: &Self::Payload, sink: &mut BoundedPayloadSink<'_, Self::Sink>) -> impl std::future::Future<Output = CodecResult<()>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:732:5
+    |
+732 |     async fn dialect(&self) -> &ArtifactDialect;
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+732 -     async fn dialect(&self) -> &ArtifactDialect;
+732 +     fn dialect(&self) -> impl std::future::Future<Output = &ArtifactDialect> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:733:5
+    |
+733 |     async fn decode_artifact<R: ResourceResolver>(&self, payload: Self::Payload, context: &mut DecodeContext<R>) -> CodecResult<Sel...
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+733 -     async fn decode_artifact<R: ResourceResolver>(&self, payload: Self::Payload, context: &mut DecodeContext<R>) -> CodecResult<Self::Artifact>;
+733 +     fn decode_artifact<R: ResourceResolver>(&self, payload: Self::Payload, context: &mut DecodeContext<R>) -> impl std::future::Future<Output = CodecResult<Self::Artifact>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:734:5
+    |
+734 |     async fn encode_artifact<R: ResourceResolver>(&self, artifact: &Self::Artifact, context: &mut EncodeContext<R>) -> CodecResult<...
+    |     ^^^^^
+    |
+    = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+    |
+734 -     async fn encode_artifact<R: ResourceResolver>(&self, artifact: &Self::Artifact, context: &mut EncodeContext<R>) -> CodecResult<Self::Payload>;
+734 +     fn encode_artifact<R: ResourceResolver>(&self, artifact: &Self::Artifact, context: &mut EncodeContext<R>) -> impl std::future::Future<Output = CodecResult<Self::Payload>> + Send;
+    |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:1212:5
+     |
+1212 |     async fn validate(payload: &IoPayload) -> Vec<Diagnostic>;
+     |     ^^^^^
+     |
+     = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+     |
+1212 -     async fn validate(payload: &IoPayload) -> Vec<Diagnostic>;
+1212 +     fn validate(payload: &IoPayload) -> impl std::future::Future<Output = Vec<Diagnostic>> + Send;
+     |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2400:9
+     |
+2400 |         async fn serialize(from: &S) -> IoResult<IoPayload>;
+     |         ^^^^^
+     |
+     = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+     |
+2400 -         async fn serialize(from: &S) -> IoResult<IoPayload>;
+2400 +         fn serialize(from: &S) -> impl std::future::Future<Output = IoResult<IoPayload>> + Send;
+     |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2415:9
+     |
+2415 |         async fn sniff(_payload: &IoPayload) -> Confidence {
+     |         ^^^^^
+     |
+     = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+     |
+2415 ~         fn sniff(_payload: &IoPayload) -> impl std::future::Future<Output = Confidence> + Send {async {
+2416 |             Confidence::None
+2417 ~         } }
+     |
+
+warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+    --> 🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2418:9
+     |
+2418 |         async fn deserialize(payload: &IoPayload) -> IoResult<S>;
+     |         ^^^^^
+     |
+     = note: you can suppress this lint if you plan to use the trait only in your own code, or do not care about auto traits like `Send` on the `Future`
+help: you can alternatively desugar to a normal `fn` that returns `impl Future` and add any desired bounds such as `Send`, but these cannot be relaxed without a breaking API change
+     |
+2418 -         async fn deserialize(payload: &IoPayload) -> IoResult<S>;
+2418 +         fn deserialize(payload: &IoPayload) -> impl std::future::Future<Output = IoResult<S>> + Send;
+     |
+
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+   Compiling semio-framework-job v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust)
+warning: `semio-framework-os-kernel` (lib) generated 21 warnings
+warning: unnecessary qualification
+   --> 🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/../../🦀️component.rs:778:48
+    |
+778 |     eprintln!("[DEBUG] worker async enter {}", std::mem::size_of::<J>());
+    |                                                ^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+778 -     eprintln!("[DEBUG] worker async enter {}", std::mem::size_of::<J>());
+778 +     eprintln!("[DEBUG] worker async enter {}", size_of::<J>());
+    |
+
+warning: `semio-framework-job` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-job` to apply 1 suggestion)
+    Finished `test` profile [unoptimized] target(s) in 3.62s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+────────────
+[32;1m Nextest run[0m ID [1m05871081-a0aa-4b96-8889-ed653a0cf873[0m with nextest profile: [1mfundamental[0m
+[32;1m    Starting[0m [1m264[0m tests across [1m1[0m binary
+[32;1m        PASS[0m [   0.017s] (  1/264) [35;1msemio-framework-ui[0m [36mwgpu::component::layout::layout_wire_format_tests[0m[36m::[0m[34;1mpartition_window_measures_drops_non_matching_utility_group_from_both_buckets[0m
+[32;1m        PASS[0m [   0.018s] (  2/264) [35;1msemio-framework-ui[0m [36mwgpu::component::layout::layout_wire_format_tests[0m[36m::[0m[34;1mpartition_window_measures_unwraps_matching_utility_group_children_into_utility_options[0m
+[32;1m        PASS[0m [   0.018s] (  3/264) [35;1msemio-framework-ui[0m [36mwgpu::arena::tests[0m[36m::[0m[34;1mreused_slot_bumps_generation_so_old_id_does_not_alias_new_value[0m
+[32;1m        PASS[0m [   0.019s] (  4/264) [35;1msemio-framework-ui[0m [36mwgpu::arena::tests[0m[36m::[0m[34;1mremove_invalidates_the_old_node_id[0m
+[32;1m        PASS[0m [   0.019s] (  5/264) [35;1msemio-framework-ui[0m [36mwgpu::component::layout::layout_wire_format_tests[0m[36m::[0m[34;1maction_descriptor_and_style_spec_serialize_to_golden_json[0m
+[32;1m        PASS[0m [   0.019s] (  6/264) [35;1msemio-framework-ui[0m [36mwgpu::component::layout::layout_wire_format_tests[0m[36m::[0m[34;1mpartition_window_measures_keeps_untagged_group_and_non_group_in_general[0m
+[32;1m        PASS[0m [   0.020s] (  7/264) [35;1msemio-framework-ui[0m [36mwgpu::component::layout::layout_wire_format_tests[0m[36m::[0m[34;1mwindow_engagement_serializes_to_golden_json[0m
+[32;1m        PASS[0m [   0.020s] (  8/264) [35;1msemio-framework-ui[0m [36mwgpu::arena::tests[0m[36m::[0m[34;1minsert_and_get_round_trip[0m
+[32;1m        PASS[0m [   0.020s] (  9/264) [35;1msemio-framework-ui[0m [36mwgpu::component::layout::layout_wire_format_tests[0m[36m::[0m[34;1mpartition_window_measures_empty_input_roundtrips_to_empty[0m
+[32;1m        PASS[0m [   0.021s] ( 10/264) [35;1msemio-framework-ui[0m [36mwgpu::arena::tests[0m[36m::[0m[34;1miterates_over_live_slots_only[0m
+[32;1m        PASS[0m [   0.015s] ( 11/264) [35;1msemio-framework-ui[0m [36mwgpu::component::role_chrome::role_chrome_tests[0m[36m::[0m[34;1mfrom_boot_env_accepts_viewer_and_falls_back_to_editor[0m
+[32;1m        PASS[0m [   0.016s] ( 12/264) [35;1msemio-framework-ui[0m [36mwgpu::component::role_chrome::role_chrome_tests[0m[36m::[0m[34;1mapply_role_to_utilities_disables_history_only_for_viewer[0m
+[32;1m        PASS[0m [   0.018s] ( 13/264) [35;1msemio-framework-ui[0m [36mwgpu::component::layout::layout_wire_format_tests[0m[36m::[0m[34;1mwindow_layout_serializes_to_golden_json[0m
+[32;1m        PASS[0m [   0.018s] ( 14/264) [35;1msemio-framework-ui[0m [36mwgpu::component::layout::layout_wire_format_tests[0m[36m::[0m[34;1mwindow_measure_serializes_to_golden_json[0m
+[32;1m        PASS[0m [   0.017s] ( 15/264) [35;1msemio-framework-ui[0m [36mwgpu::component::role_chrome::role_chrome_tests[0m[36m::[0m[34;1mopen_with_menu_item_groups_by_role_viewer_first_then_editor[0m
+[32;1m        PASS[0m [   0.018s] ( 16/264) [35;1msemio-framework-ui[0m [36mwgpu::component::role_chrome::role_chrome_tests[0m[36m::[0m[34;1mfilter_shell_menu_actions_drops_mutation_kind_for_viewer_only[0m
+[32;1m        PASS[0m [   0.017s] ( 17/264) [35;1msemio-framework-ui[0m [36mwgpu::component::role_chrome::role_chrome_tests[0m[36m::[0m[34;1mopen_with_menu_item_localizes_headers_and_label_to_german[0m
+[32;1m        PASS[0m [   0.017s] ( 18/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mbuild_shell_context_menu_specs_shapes_arg_carrying_actions_and_appends_the_palette[0m
+[32;1m        PASS[0m [   0.017s] ( 19/264) [35;1msemio-framework-ui[0m [36mwgpu::component::role_chrome::role_chrome_tests[0m[36m::[0m[34;1mopen_with_menu_item_toggle_sets_when_not_default_and_clears_when_default[0m
+[32;1m        PASS[0m [   0.018s] ( 20/264) [35;1msemio-framework-ui[0m [36mwgpu::component::role_chrome::role_chrome_tests[0m[36m::[0m[34;1mtitle_chip_text_covers_both_roles_in_both_locales[0m
+[32;1m        PASS[0m [   0.017s] ( 21/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mevery_ui_node_variant_serializes_a_non_default_presence[0m
+[32;1m        PASS[0m [   0.018s] ( 22/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mdiff_view_and_event_feed_scenes_serialize_to_golden_json[0m
+[32;1m        PASS[0m [   0.016s] ( 23/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1morganize_context_menu_buckets_overflow_leaves_by_category_of[0m
+[32;1m        PASS[0m [   0.016s] ( 24/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1morganize_context_menu_collapses_doubled_bare_separators_and_drops_leading_trailing_ones[0m
+[32;1m        PASS[0m [   0.016s] ( 25/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1morganize_context_menu_folds_overflow_groups_into_menu_group_more[0m
+[32;1m        PASS[0m [   0.015s] ( 26/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1morganize_context_menu_puts_destructive_leaves_last_after_a_separator[0m
+[32;1m        PASS[0m [   0.016s] ( 27/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1morganize_context_menu_keeps_a_labeled_separator_as_a_non_interactive_header[0m
+[32;1m        PASS[0m [   0.019s] ( 28/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mevery_ui_node_variant_serializes_a_set_menu_ref[0m
+[32;1m        PASS[0m [   0.017s] ( 29/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1morganize_context_menu_merges_same_id_groups_and_dedupes_children_by_id[0m
+[32;1m        PASS[0m [   0.021s] ( 30/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1morganize_context_menu_emits_as_is_within_budget[0m
+[32;1m        PASS[0m [   0.014s] ( 31/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mui_tree_item_celebrating_state_roundtrips[0m
+[32;1m        PASS[0m [   0.016s] ( 32/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1morganize_context_menu_sorts_group_rows_in_taxonomy_order_unknown_last[0m
+[32;1m        PASS[0m [   0.015s] ( 33/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1msurface_kind_serializes_to_golden_json[0m
+[32;1m        PASS[0m [   0.017s] ( 34/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mribbon_parent_label_covers_exactly_the_twenty_taxonomy_ids_and_rejects_unknown[0m
+[32;1m        PASS[0m [   0.017s] ( 35/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mscene_records_serialize_to_golden_json[0m
+[32;1m        PASS[0m [   0.017s] ( 36/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mui_node_tree_serializes_to_golden_json[0m
+[32;1m        PASS[0m [   0.016s] ( 37/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mui_tree_item_hidden_state_roundtrips[0m
+[32;1m        PASS[0m [   0.019s] ( 38/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mui_menu_ref_and_context_menu_item_spec_roundtrip_camel_case[0m
+[32;1m        PASS[0m [   0.016s] ( 39/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mui_tree_item_waiting_status_skips_when_default_and_roundtrips_when_set[0m
+[32;1m        PASS[0m [   0.019s] ( 40/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mui_tree_item_loading_status_skips_when_default_and_roundtrips_when_set[0m
+[32;1m        PASS[0m [   0.015s] ( 41/264) [35;1msemio-framework-ui[0m [36mwgpu::component::utilities::utility_node_wire_format_tests[0m[36m::[0m[34;1mderive_utility_nodes_groups_shared_group_into_one_collection[0m
+[32;1m        PASS[0m [   0.016s] ( 42/264) [35;1msemio-framework-ui[0m [36mwgpu::component::ui::ui_node_wire_format_tests[0m[36m::[0m[34;1mworld_3d_scene_points_json_skips_when_none_and_roundtrips_when_set[0m
+[32;1m        PASS[0m [   0.015s] ( 43/264) [35;1msemio-framework-ui[0m [36mwgpu::component::utilities::utility_node_wire_format_tests[0m[36m::[0m[34;1mderive_utility_nodes_marks_the_active_utility_pressed[0m
+[32;1m        PASS[0m [   0.014s] ( 44/264) [35;1msemio-framework-ui[0m [36mwgpu::cursor::tests[0m[36m::[0m[34;1ma_vertical_scroll_thumb_capture_uses_the_ns_resize_cursor[0m
+[32;1m        PASS[0m [   0.019s] ( 45/264) [35;1msemio-framework-ui[0m [36mwgpu::component::utilities::utility_node_wire_format_tests[0m[36m::[0m[34;1mderive_utility_nodes_hoists_single_child_groups[0m
+[32;1m        PASS[0m [   0.016s] ( 46/264) [35;1msemio-framework-ui[0m [36mwgpu::cursor::tests[0m[36m::[0m[34;1man_active_drag_capture_overrides_whatever_is_merely_hovered[0m
+[32;1m        PASS[0m [   0.019s] ( 47/264) [35;1msemio-framework-ui[0m [36mwgpu::component::utilities::utility_node_wire_format_tests[0m[36m::[0m[34;1mutility_node_serializes_to_golden_json[0m
+[32;1m        PASS[0m [   0.014s] ( 48/264) [35;1msemio-framework-ui[0m [36mwgpu::cursor::tests[0m[36m::[0m[34;1mdark_theme_cursor_urls_use_dark_assets[0m
+[32;1m        PASS[0m [   0.019s] ( 49/264) [35;1msemio-framework-ui[0m [36mwgpu::cursor::tests[0m[36m::[0m[34;1mactive_slider_drag_uses_grabbing[0m
+[32;1m        PASS[0m [   0.016s] ( 50/264) [35;1msemio-framework-ui[0m [36mwgpu::cursor::tests[0m[36m::[0m[34;1mdock_join_corner_uses_move_cursor[0m
+[32;1m        PASS[0m [   0.012s] ( 51/264) [35;1msemio-framework-ui[0m [36mwgpu::cursor::tests[0m[36m::[0m[34;1mhovering_an_input_uses_the_text_cursor[0m
+[32;1m        PASS[0m [   0.015s] ( 52/264) [35;1msemio-framework-ui[0m [36mwgpu::cursor::tests[0m[36m::[0m[34;1mdock_split_horizontal_uses_ew_cursor[0m
+[32;1m        PASS[0m [   0.014s] ( 53/264) [35;1msemio-framework-ui[0m [36mwgpu::cursor::tests[0m[36m::[0m[34;1mhovering_a_drag_source_uses_the_grab_cursor[0m
+[32;1m        PASS[0m [   0.017s] ( 54/264) [35;1msemio-framework-ui[0m [36mwgpu::cursor::tests[0m[36m::[0m[34;1mdock_tab_uses_grab_cursor[0m
+[32;1m        PASS[0m [   0.014s] ( 55/264) [35;1msemio-framework-ui[0m [36mwgpu::draw::selection_marquee_tests[0m[36m::[0m[34;1mdashed_line_segments_emit_dashes_along_segment[0m
+[32;1m        PASS[0m [   0.015s] ( 56/264) [35;1msemio-framework-ui[0m [36mwgpu::cursor::tests[0m[36m::[0m[34;1mtree_draggable_label_uses_grab[0m
+[32;1m        PASS[0m [   0.015s] ( 57/264) [35;1msemio-framework-ui[0m [36mwgpu::draw::selection_marquee_tests[0m[36m::[0m[34;1mselection_marquee_colors_use_active_token_only[0m
+[32;1m        PASS[0m [   0.017s] ( 58/264) [35;1msemio-framework-ui[0m [36mwgpu::cursor::tests[0m[36m::[0m[34;1mpanel_resize_uses_ew_cursor[0m
+[32;1m        PASS[0m [   0.016s] ( 59/264) [35;1msemio-framework-ui[0m [36mwgpu::draw::tests[0m[36m::[0m[34;1mdraw_list_nests_and_restores_clip_regions[0m
+[32;1m        PASS[0m [   0.018s] ( 60/264) [35;1msemio-framework-ui[0m [36mwgpu::draw::tests[0m[36m::[0m[34;1mclip_region_preserves_disjoint_cutouts_and_intersects_scissor[0m
+[32;1m        PASS[0m [   0.014s] ( 61/264) [35;1msemio-framework-ui[0m [36mwgpu::draw::tests[0m[36m::[0m[34;1mear_clip_produces_triangles[0m
+[32;1m        PASS[0m [   0.013s] ( 62/264) [35;1msemio-framework-ui[0m [36mwgpu::draw::tests[0m[36m::[0m[34;1mempty_silhouette_clip_writes_no_visible_stencil_region[0m
+[32;1m        PASS[0m [   0.015s] ( 63/264) [35;1msemio-framework-ui[0m [36mwgpu::draw::tests[0m[36m::[0m[34;1mdraw_list_push_scissor_splits_layers[0m
+[32;1m        PASS[0m [   0.014s] ( 64/264) [35;1msemio-framework-ui[0m [36mwgpu::draw::tests[0m[36m::[0m[34;1mglass_alpha_and_blur_are_formula_derived_per_level[0m
+[32;1m        PASS[0m [   0.012s] ( 65/264) [35;1msemio-framework-ui[0m [36mwgpu::draw::tests[0m[36m::[0m[34;1mglass_foreground_inherits_active_silhouette_clip[0m
+[32;1m        PASS[0m [   0.012s] ( 66/264) [35;1msemio-framework-ui[0m [36mwgpu::draw::tests[0m[36m::[0m[34;1mglass_foreground_layers_excluded_from_backdrop_batches[0m
+[32;1m        PASS[0m [   0.013s] ( 67/264) [35;1msemio-framework-ui[0m [36mwgpu::draw::tests[0m[36m::[0m[34;1mglass_content_layers_tagged_with_foreground_of[0m
+[32;1m        PASS[0m [   0.016s] ( 68/264) [35;1msemio-framework-ui[0m [36mwgpu::draw::tests[0m[36m::[0m[34;1mglass_scissor_inherits_foreground_tag[0m
+[32;1m        PASS[0m [   0.016s] ( 69/264) [35;1msemio-framework-ui[0m [36mwgpu::draw::tests[0m[36m::[0m[34;1mmesh_instances_without_lines_are_valid_world_pass[0m
+[32;1m        PASS[0m [   0.014s] ( 70/264) [35;1msemio-framework-ui[0m [36mwgpu::draw::tests[0m[36m::[0m[34;1moverlay_layers_collected_separately_from_backdrop_ui[0m
+[32;1m        PASS[0m [   0.015s] ( 71/264) [35;1msemio-framework-ui[0m [36mwgpu::draw::tests[0m[36m::[0m[34;1mscene_pass_records_layer_watermarks[0m
+[32;1m        PASS[0m [   0.014s] ( 72/264) [35;1msemio-framework-ui[0m [36mwgpu::draw::tests[0m[36m::[0m[34;1msilhouette_stencil_states_write_masks_then_require_equality[0m
+[32;1m        PASS[0m [   0.018s] ( 73/264) [35;1msemio-framework-ui[0m [36mwgpu::draw::tests[0m[36m::[0m[34;1mscissor_covers_fractional_rect_edges_without_pixel_seams[0m
+[32;1m        PASS[0m [   0.015s] ( 74/264) [35;1msemio-framework-ui[0m [36mwgpu::draw::tests[0m[36m::[0m[34;1msilhouette_mask_reset_is_bounded_to_previous_and_current_unions[0m
+[32;1m        PASS[0m [   0.024s] ( 75/264) [35;1msemio-framework-ui[0m [36mwgpu::draw::tests[0m[36m::[0m[34;1mmesh_content_version_changes_with_indices[0m
+[32;1m        PASS[0m [   0.017s] ( 76/264) [35;1msemio-framework-ui[0m [36mwgpu::draw::tests[0m[36m::[0m[34;1mscissor_from_rect_uses_top_left_origin[0m
+[32;1m        PASS[0m [   0.018s] ( 77/264) [35;1msemio-framework-ui[0m [36mwgpu::draw::tests[0m[36m::[0m[34;1mscissor_intersects_child[0m
+[32;1m        PASS[0m [   0.017s] ( 78/264) [35;1msemio-framework-ui[0m [36mwgpu::draw::tests[0m[36m::[0m[34;1mworld_globals_slot_size_is_aligned[0m
+[32;1m        PASS[0m [   0.016s] ( 79/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mapply_tree_then_frame_produces_a_non_empty_draw_list[0m
+[32;1m        PASS[0m [   0.017s] ( 80/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mdispatch_event_emits_a_button_click_command_and_it_is_also_drainable[0m
+[32;1m        PASS[0m [   0.015s] ( 81/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mdraw_text_overlay_on_writes_to_the_overlay_channel_not_the_main_one[0m
+[32;1m        PASS[0m [   0.015s] ( 82/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mframe_with_a_scene_host_routes_the_component_scene_leaf_through_it[0m
+[32;1m        PASS[0m [   0.018s] ( 83/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mdraw_text_on_emits_one_glyph_instance_per_character[0m
+[32;1m        PASS[0m [   0.016s] ( 84/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mframe_with_a_scene_host_still_paints_ancestor_chrome_around_the_hosted_slot[0m
+[32;1m        PASS[0m [   0.018s] ( 85/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mframe_before_any_apply_tree_returns_none[0m
+[32;1m        PASS[0m [   0.016s] ( 86/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mframe_with_no_scene_host_falls_back_to_the_placeholder_chrome[0m
+[32;1m        PASS[0m [   0.017s] ( 87/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mgolden_button[0m
+[32;1m        PASS[0m [   0.017s] ( 88/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mgolden_component_scene_known_gap[0m
+[32;1m        PASS[0m [   0.015s] ( 89/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mgolden_external_slot_known_gap[0m
+[32;1m        PASS[0m [   0.014s] ( 90/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mgolden_field_known_gap[0m
+[32;1m        PASS[0m [   0.018s] ( 91/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mgolden_image_known_gap[0m
+[32;1m        PASS[0m [   0.018s] ( 92/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mgolden_input[0m
+[32;1m        PASS[0m [   0.020s] ( 93/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mgolden_icon_select[0m
+[32;1m        PASS[0m [   0.018s] ( 94/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mgolden_key_value[0m
+[32;1m        PASS[0m [   0.022s] ( 95/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mgolden_number_stepper[0m
+[32;1m        PASS[0m [   0.021s] ( 96/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mgolden_number_stepper_known_gap[0m
+[32;1m        PASS[0m [   0.024s] ( 97/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mgolden_ring[0m
+[32;1m        PASS[0m [   0.022s] ( 98/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mgolden_section_known_gap[0m
+[32;1m        PASS[0m [   0.023s] ( 99/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mgolden_select[0m
+[32;1m        PASS[0m [   0.022s] (100/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mgolden_separator[0m
+[32;1m        PASS[0m [   0.017s] (101/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mgolden_slider[0m
+[32;1m        PASS[0m [   0.020s] (102/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mgolden_stack[0m
+[32;1m        PASS[0m [   0.022s] (103/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mgolden_toggle[0m
+[32;1m        PASS[0m [   0.022s] (104/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mgolden_text[0m
+[32;1m        PASS[0m [   0.022s] (105/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1minteractive_storm_does_not_starve_background_surface_lane[0m
+[32;1m        PASS[0m [   0.017s] (106/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mmeasure_widget_key_value_grows_with_entry_count[0m
+[32;1m        PASS[0m [   0.026s] (107/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mgolden_tree[0m
+[32;1m        PASS[0m [   0.018s] (108/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mmeasure_widget_ring_is_fixed_size[0m
+[32;1m        PASS[0m [   0.021s] (109/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mmeasure_widget_field_combines_label_and_child_height[0m
+[32;1m        PASS[0m [   0.017s] (110/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mmeasure_widget_section_sums_header_and_children_plus_gap[0m
+[32;1m        PASS[0m [   0.020s] (111/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mmeasure_widget_separator_uses_theme_control_height_floor[0m
+[32;1m        PASS[0m [   0.017s] (112/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mmeasure_widget_stack_vertical_sums_child_heights_and_maxes_width[0m
+[32;1m        PASS[0m [   0.020s] (113/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mmeasure_widget_stack_horizontal_sums_child_widths[0m
+[32;1m        PASS[0m [   0.020s] (114/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mneeds_frame_is_false_once_a_stable_tree_has_been_framed[0m
+[32;1m        PASS[0m [   0.024s] (115/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mmeasure_widget_tree_skips_dimmed_items_in_height[0m
+[32;1m        PASS[0m [   0.021s] (116/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mrender_scroll_region_clamps_stale_offset_to_new_max_scroll[0m
+[32;1m        PASS[0m [   0.023s] (117/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mrender_scroll_region_registers_a_scroll_region_hit_target[0m
+[32;1m        PASS[0m [   0.022s] (118/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mrender_widget_input_registers_interaction_meta_when_maps_present[0m
+[32;1m        PASS[0m [   0.018s] (119/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mrender_widget_input_with_no_on_change_does_not_register_meta[0m
+[32;1m        PASS[0m [   0.019s] (120/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mrender_widget_number_stepper_registers_stepper_meta[0m
+[32;1m        PASS[0m [   0.019s] (121/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mrender_widget_ring_registers_meta_and_live_value[0m
+[32;1m        PASS[0m [   0.028s] (122/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mrender_widget_field_draws_label_and_delegates_to_control[0m
+[32;1m        PASS[0m [   0.057s] (123/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mlarge_layout_and_shaping_job_keeps_every_observed_slice_below_eight_ms[0m
+[32;1m        PASS[0m [   0.017s] (124/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mrender_widget_section_toggles_collapsed_state_from_default_open[0m
+[32;1m        PASS[0m [   0.016s] (125/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mrender_widget_select_and_toggle_register_interaction_metas[0m
+[32;1m        PASS[0m [   0.017s] (126/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mrender_widget_slider_registers_meta_and_live_value_unless_disabled[0m
+[32;1m        PASS[0m [   0.015s] (127/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mrender_widget_tree_row_actions_register_hits_without_hover[0m
+[32;1m        PASS[0m [   0.018s] (128/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mrender_widget_tree_marks_selected_and_highlighted_ids_via_ids_list[0m
+[32;1m        PASS[0m [   0.018s] (129/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mrender_widget_tree_populates_hover_and_unhover_commands[0m
+[32;1m        PASS[0m [   0.022s] (130/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mrender_widget_tree_menu_placement_skips_row_action_hits[0m
+[32;1m        PASS[0m [   0.017s] (131/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mresize_storm_coalesces_to_one_latest_surface_job[0m
+[32;1m        PASS[0m [   0.021s] (132/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mselected_presence_draws_an_outset_ring_on_any_element[0m
+[32;1m        PASS[0m [   0.016s] (133/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mset_window_layout_wires_into_the_facades_shell[0m
+[32;1m        PASS[0m [   0.015s] (134/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mwrap_text_of_empty_string_yields_one_empty_line[0m
+[32;1m        PASS[0m [   0.017s] (135/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mwindow_ids_viewport_tree_and_theme_expose_private_window_state[0m
+[32;1m        PASS[0m [   0.021s] (136/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mwidget_interaction_maps_clear_frame_empties_every_map[0m
+[32;1m        PASS[0m [   0.018s] (137/264) [35;1msemio-framework-ui[0m [36mwgpu::engine::tests[0m[36m::[0m[34;1mwrap_text_wraps_long_text_across_multiple_lines[0m
+[32;1m        PASS[0m [   0.017s] (138/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1ma_component_scene_nested_under_a_container_resolves_its_absolute_rect[0m
+[32;1m        PASS[0m [   0.016s] (139/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1ma_drop_targets_accept_predicate_can_reject_the_active_payload[0m
+[32;1m        PASS[0m [   0.022s] (140/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1ma_bare_stack_without_activate_or_drop_action_stays_a_hit_test_pass_through[0m
+[32;1m        PASS[0m [   0.017s] (141/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1ma_press_outside_an_open_selects_popup_closes_it_and_swallows_the_press[0m
+[32;1m        PASS[0m [   0.015s] (142/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mbubble_stops_when_a_handler_returns_true[0m
+[32;1m        PASS[0m [   0.016s] (143/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mcapture_routes_move_and_up_to_the_captured_node_regardless_of_pointer_position[0m
+[32;1m        PASS[0m [   0.016s] (144/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1marrow_keys_move_the_caret_and_backspace_deletes_the_previous_char[0m
+[32;1m        PASS[0m [   0.016s] (145/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mcharacter_insertion_replaces_the_selection[0m
+[32;1m        PASS[0m [   0.019s] (146/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mclicking_a_button_emits_its_action_descriptor_as_a_ui_command[0m
+[32;1m        PASS[0m [   0.018s] (147/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mclicking_a_select_opens_its_popup_and_clicking_again_closes_it[0m
+[32;1m        PASS[0m [   0.016s] (148/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mcopy_over_a_selection_emits_a_clipboard_command_without_mutating_the_buffer[0m
+[32;1m        PASS[0m [   0.021s] (149/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mclicking_an_activatable_stack_fires_its_activate_action[0m
+[32;1m        PASS[0m [   0.017s] (150/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mdrag_session_promotes_after_threshold_and_commits_on_an_accepting_drop_target[0m
+[32;1m        PASS[0m [   0.015s] (151/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mescape_closes_only_the_topmost_of_two_open_overlays[0m
+[32;1m        PASS[0m [   0.014s] (152/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mfocusing_an_input_seeds_edit_state_from_its_value_and_blur_clears_it[0m
+[32;1m        PASS[0m [   0.016s] (153/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mfocus_next_and_prev_cycle_only_through_focusable_nodes[0m
+[32;1m        PASS[0m [   0.020s] (154/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mdrag_session_cancels_when_released_over_no_accepting_drop_target[0m
+[32;1m        PASS[0m [   0.016s] (155/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mhit_test_finds_the_topmost_of_two_non_overlapping_siblings[0m
+[32;1m        PASS[0m [   0.016s] (156/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mhovering_a_leaf_marks_its_whole_ancestor_chain_hovered_and_clearing_hover_clears_it_all[0m
+[32;1m        PASS[0m [   0.018s] (157/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mhit_test_respects_clips_children_pruning[0m
+[32;1m        PASS[0m [   0.017s] (158/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mime_commit_inserts_the_composed_text_and_clears_composition[0m
+[32;1m        PASS[0m [   0.018s] (159/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mhovering_a_tree_row_no_longer_fires_a_per_item_action[0m
+[32;1m        PASS[0m [   0.016s] (160/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1moverlay_open_flags_the_node_and_close_clears_it_and_emits_overlay_closed[0m
+[32;1m        PASS[0m [   0.021s] (161/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mhit_test_skips_hit_transparent_node_but_still_matches_its_children[0m
+[32;1m        PASS[0m [   0.015s] (162/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mpointer_down_on_a_component_scene_leaf_emits_a_scene_command[0m
+[32;1m        PASS[0m [   0.017s] (163/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mpicking_a_selects_item_row_fires_its_action_and_closes_the_popup[0m
+[32;1m        PASS[0m [   0.019s] (164/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mpointer_down_inside_a_dismissable_overlay_does_not_close_it[0m
+[32;1m        PASS[0m [   0.021s] (165/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mpointer_down_on_a_plain_button_emits_no_scene_command[0m
+[32;1m        PASS[0m [   0.016s] (166/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mpointer_down_outside_a_dismissable_overlay_closes_it_and_swallows_the_press[0m
+[32;1m        PASS[0m [   0.017s] (167/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mpointer_down_outside_any_component_scene_leaf_emits_no_scene_command[0m
+[32;1m        PASS[0m [   0.016s] (168/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mpointer_move_over_a_component_scene_leaf_emits_a_scene_command[0m
+[32;1m        PASS[0m [   0.017s] (169/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mscroll_routes_to_the_nearest_scrollable_ancestor_and_clamps_at_zero[0m
+[32;1m        PASS[0m [   0.018s] (170/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mreleasing_off_the_captured_button_does_not_fire_its_action[0m
+[32;1m        PASS[0m [   0.018s] (171/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mpressing_a_draggable_tree_row_then_moving_past_threshold_promotes_it_to_a_drag_session[0m
+[32;1m        PASS[0m [   0.018s] (172/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mscroll_thumb_capture_drags_the_scrollable_offset_along_its_registered_axis[0m
+[32;1m        PASS[0m [   0.019s] (173/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mscroll_over_a_component_scene_leaf_emits_a_scene_command_and_still_routes_container_scroll[0m
+[32;1m        PASS[0m [   0.014s] (174/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mtab_focus_is_trapped_inside_an_open_dialog_overlay[0m
+[32;1m        PASS[0m [   0.024s] (175/264) [35;1msemio-framework-ui[0m [36mwgpu::events::tests[0m[36m::[0m[34;1mset_focus_flips_the_focused_flag_in_both_directions[0m
+[32;1m        PASS[0m [   0.018s] (176/264) [35;1msemio-framework-ui[0m [36mwgpu::flex::tests[0m[36m::[0m[34;1mhorizontal_stack_distributes_equal_leftover_width_across_children[0m
+[32;1m        PASS[0m [   0.018s] (177/264) [35;1msemio-framework-ui[0m [36mwgpu::flex::tests[0m[36m::[0m[34;1mfield_child_grows_to_fill_the_label_adjusted_remainder[0m
+[32;1m        PASS[0m [   0.014s] (178/264) [35;1msemio-framework-ui[0m [36mwgpu::input::tests[0m[36m::[0m[34;1mhit_at_prefers_content_registered_after_scroll_region[0m
+[32;1m        PASS[0m [   0.018s] (179/264) [35;1msemio-framework-ui[0m [36mwgpu::flex::tests[0m[36m::[0m[34;1mpersistent_layout_job_is_worker_movable[0m
+[32;1m        PASS[0m [   0.017s] (180/264) [35;1msemio-framework-ui[0m [36mwgpu::flex::tests[0m[36m::[0m[34;1mtext_measurement_is_cached_per_unchanged_width[0m
+[32;1m        PASS[0m [   0.018s] (181/264) [35;1msemio-framework-ui[0m [36mwgpu::flex::tests[0m[36m::[0m[34;1mrecomputing_with_nothing_dirty_is_a_no_operation[0m
+[32;1m        PASS[0m [   0.017s] (182/264) [35;1msemio-framework-ui[0m [36mwgpu::flex::tests[0m[36m::[0m[34;1mvertical_stack_lays_children_top_to_bottom_with_correct_y_offsets[0m
+[32;1m        PASS[0m [   0.021s] (183/264) [35;1msemio-framework-ui[0m [36mwgpu::flex::tests[0m[36m::[0m[34;1msection_children_stack_below_the_header_at_their_own_intrinsic_height_with_gap[0m
+[32;1m        PASS[0m [   0.022s] (184/264) [35;1msemio-framework-ui[0m [36mwgpu::layout::tests[0m[36m::[0m[34;1mvertical_layout_distributes_children[0m
+[32;1m        PASS[0m [   0.016s] (185/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1ma_trees_draggable_item_gets_real_row_layout_and_the_drag_source_flag[0m
+[32;1m        PASS[0m [   0.020s] (186/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1ma_stacks_drop_target_flag_tracks_its_drop_action[0m
+[32;1m        PASS[0m [   0.020s] (187/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1man_activatable_stack_paints_a_frame_and_a_selected_one_paints_an_extra_ring[0m
+[32;1m        PASS[0m [   0.015s] (188/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mpainting_a_field_with_description_required_and_error_emits_extra_glyphs[0m
+[32;1m        PASS[0m [   0.017s] (189/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mopening_a_selects_popup_gives_its_synthesized_item_rows_real_hit_testable_layout[0m
+[32;1m        PASS[0m [   0.016s] (190/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mpainting_a_focused_button_swaps_its_border_to_border_emphasized[0m
+[32;1m        PASS[0m [   0.018s] (191/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mpaint_tree_clears_dirty_paint_but_leaves_layout_dirt_flags_untouched[0m
+[32;1m        PASS[0m [   0.018s] (192/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mpainting_a_disabled_button_dims_its_border_alpha[0m
+[32;1m        PASS[0m [   0.020s] (193/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mpainting_a_focused_icon_select_swaps_its_border_to_border_emphasized[0m
+[32;1m        PASS[0m [   0.019s] (194/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mpainting_a_focused_input_with_a_collapsed_selection_emits_a_caret_line_but_no_highlight[0m
+[32;1m        PASS[0m [   0.022s] (195/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mpainting_a_focused_input_shows_the_live_edit_buffer_text_not_the_stale_declarative_value[0m
+[32;1m        PASS[0m [   0.013s] (196/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mpainting_a_loading_section_emits_a_loading_border_instance[0m
+[32;1m        PASS[0m [   0.017s] (197/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mpainting_a_focused_number_stepper_swaps_its_outer_border_to_border_emphasized[0m
+[32;1m        PASS[0m [   0.020s] (198/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mpainting_a_focused_input_with_a_real_selection_emits_a_translucent_highlight[0m
+[32;1m        PASS[0m [   0.016s] (199/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mpainting_a_focused_select_swaps_its_border_to_border_emphasized[0m
+[32;1m        PASS[0m [   0.017s] (200/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mpainting_a_focused_toggle_swaps_its_border_to_border_emphasized[0m
+[32;1m        PASS[0m [   0.017s] (201/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mpainting_a_hovered_number_stepper_tints_its_outer_background[0m
+[32;1m        PASS[0m [   0.020s] (202/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mpainting_a_loading_button_emits_a_loading_border_instance[0m
+[32;1m        PASS[0m [   0.015s] (203/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mpainting_a_loading_stack_emits_a_loading_border_instance[0m
+[32;1m        PASS[0m [   0.016s] (204/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mpainting_a_loading_tree_emits_a_loading_border_instance[0m
+[32;1m        PASS[0m [   0.017s] (205/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mpainting_a_mixed_number_stepper_shows_the_mixed_placeholder_in_muted_color[0m
+[32;1m        PASS[0m [   0.017s] (206/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mpainting_a_slider_with_a_unit_emits_extra_glyphs_for_the_readout[0m
+[32;1m        PASS[0m [   0.017s] (207/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mpainting_a_text_node_emits_glyph_instances[0m
+[32;1m        PASS[0m [   0.017s] (208/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mpainting_a_stack_recurses_into_every_child[0m
+[32;1m        PASS[0m [   0.017s] (209/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mpainting_a_uniform_number_stepper_nests_a_border_around_its_center_value[0m
+[32;1m        PASS[0m [   0.016s] (210/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mpainting_a_waiting_button_emits_a_waiting_border_instance[0m
+[32;1m        PASS[0m [   0.019s] (211/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mpainting_a_tree_item_with_description_emits_more_than_a_bare_item[0m
+[32;1m        PASS[0m [   0.016s] (212/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mpainting_a_waiting_stack_emits_a_waiting_border_instance[0m
+[32;1m        PASS[0m [   0.020s] (213/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mpainting_a_waiting_section_emits_a_waiting_border_instance[0m
+[32;1m        PASS[0m [   0.013s] (214/264) [35;1msemio-framework-ui[0m [36mwgpu::prepared::tests[0m[36m::[0m[34;1mdevice_loss_retains_the_last_valid_packet[0m
+[32;1m        PASS[0m [   0.017s] (215/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mpainting_a_waiting_tree_emits_a_waiting_border_instance[0m
+[32;1m        PASS[0m [   0.017s] (216/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mpainting_an_open_select_popup_emits_more_instances_than_a_closed_one_and_highlights_the_value[0m
+[32;1m        PASS[0m [   0.017s] (217/264) [35;1msemio-framework-ui[0m [36mwgpu::prepared::tests[0m[36m::[0m[34;1mgeneration_rejection_happens_before_presentation[0m
+[32;1m        PASS[0m [   0.017s] (218/264) [35;1msemio-framework-ui[0m [36mwgpu::prepared::tests[0m[36m::[0m[34;1mpreparation_observes_cancellation_without_replacing_a_packet[0m
+[32;1m        PASS[0m [   0.020s] (219/264) [35;1msemio-framework-ui[0m [36mwgpu::prepared::tests[0m[36m::[0m[34;1mdraw_item_cap_faults_before_packet_publication[0m
+[32;1m        PASS[0m [   0.020s] (220/264) [35;1msemio-framework-ui[0m [36mwgpu::paint::tests[0m[36m::[0m[34;1mpainting_an_unfocused_input_emits_no_caret_or_selection[0m
+[32;1m        PASS[0m [   0.017s] (221/264) [35;1msemio-framework-ui[0m [36mwgpu::prepared::tests[0m[36m::[0m[34;1mpreparation_rejects_a_stale_generation_before_publication[0m
+[32;1m        PASS[0m [   0.023s] (222/264) [35;1msemio-framework-ui[0m [36mwgpu::prepared::tests[0m[36m::[0m[34;1mpreparation_completes_across_bounded_steps[0m
+[32;1m        PASS[0m [   0.018s] (223/264) [35;1msemio-framework-ui[0m [36mwgpu::prepared::tests[0m[36m::[0m[34;1mpreparation_yields_at_the_configured_item_budget[0m
+[32;1m        PASS[0m [   0.017s] (224/264) [35;1msemio-framework-ui[0m [36mwgpu::prepared::tests[0m[36m::[0m[34;1mprepared_packet_is_send_owned_data[0m
+[32;1m        PASS[0m [   0.017s] (225/264) [35;1msemio-framework-ui[0m [36mwgpu::prepared::tests[0m[36m::[0m[34;1mstale_packet_rejection_preserves_the_last_valid_packet[0m
+[32;1m        PASS[0m [   0.015s] (226/264) [35;1msemio-framework-ui[0m [36mwgpu::presence_bar::tests[0m[36m::[0m[34;1mbuild_presence_bar_collapses_past_max_into_one_overflow_node[0m
+[32;1m        PASS[0m [   0.014s] (227/264) [35;1msemio-framework-ui[0m [36mwgpu::presence_bar::tests[0m[36m::[0m[34;1mbuild_presence_bar_renders_one_stack_child_per_peer_under_max[0m
+[32;1m        PASS[0m [   0.016s] (228/264) [35;1msemio-framework-ui[0m [36mwgpu::presence_bar::tests[0m[36m::[0m[34;1mbuild_presence_bar_empty_peers_renders_localized_empty_text[0m
+[32;1m        PASS[0m [   0.021s] (229/264) [35;1msemio-framework-ui[0m [36mwgpu::prepared::tests[0m[36m::[0m[34;1mreceiver_survives_worker_ownership_of_the_job[0m
+[32;1m        PASS[0m [   0.015s] (230/264) [35;1msemio-framework-ui[0m [36mwgpu::presence_bar::tests[0m[36m::[0m[34;1mpresence_color_wraps_after_twelve_with_lightness_then_saturation_shift[0m
+[32;1m        PASS[0m [   0.021s] (231/264) [35;1msemio-framework-ui[0m [36mwgpu::prepared::tests[0m[36m::[0m[34;1mupload_byte_cap_faults_before_packet_publication[0m
+[32;1m        PASS[0m [   0.015s] (232/264) [35;1msemio-framework-ui[0m [36mwgpu::presence_bar::tests[0m[36m::[0m[34;1mpresence_css_var_only_addresses_the_base_cycle[0m
+[32;1m        PASS[0m [   0.017s] (233/264) [35;1msemio-framework-ui[0m [36mwgpu::reconcile::tests[0m[36m::[0m[34;1madding_a_child_inserts_exactly_one_new_dirty_node_and_leaves_siblings_untouched[0m
+[32;1m        PASS[0m [   0.018s] (234/264) [35;1msemio-framework-ui[0m [36mwgpu::reconcile::tests[0m[36m::[0m[34;1mreapplying_an_identical_select_or_tree_sets_zero_dirty_flags[0m
+[32;1m        PASS[0m [   0.015s] (235/264) [35;1msemio-framework-ui[0m [36mwgpu::reconcile::tests[0m[36m::[0m[34;1mreapplying_an_identical_tree_sets_zero_dirty_flags[0m
+[32;1m        PASS[0m [   0.014s] (236/264) [35;1msemio-framework-ui[0m [36mwgpu::reconcile::tests[0m[36m::[0m[34;1mremoving_a_child_frees_its_arena_slot[0m
+[32;1m        PASS[0m [   0.016s] (237/264) [35;1msemio-framework-ui[0m [36mwgpu::reconcile::tests[0m[36m::[0m[34;1mtext_value_change_dirties_that_node_and_ancestors_but_not_siblings[0m
+[32;1m        PASS[0m [   0.018s] (238/264) [35;1msemio-framework-ui[0m [36mwgpu::reconcile::tests[0m[36m::[0m[34;1mselect_removing_an_item_removes_its_row_and_clears_has_popup_once_empty[0m
+[32;1m        PASS[0m [   0.019s] (239/264) [35;1msemio-framework-ui[0m [36mwgpu::reconcile::tests[0m[36m::[0m[34;1mselect_expands_items_into_keyed_button_rows_carrying_the_chosen_value_and_flags_has_popup[0m
+[32;1m        PASS[0m [   0.015s] (240/264) [35;1msemio-framework-ui[0m [36mwgpu::reconcile::tests[0m[36m::[0m[34;1mtree_item_control_and_trailing_actions_become_retained_children_too[0m
+[32;1m        PASS[0m [   0.016s] (241/264) [35;1msemio-framework-ui[0m [36mwgpu::scene_slots::tests[0m[36m::[0m[34;1mcollects_a_scene_leaf_nested_under_a_group_ancestor[0m
+[32;1m        PASS[0m [   0.014s] (242/264) [35;1msemio-framework-ui[0m [36mwgpu::scene_slots::tests[0m[36m::[0m[34;1mcollects_a_scene_leaf_with_its_absolute_rect_accounting_for_ancestor_offsets[0m
+[32;1m        PASS[0m [   0.023s] (243/264) [35;1msemio-framework-ui[0m [36mwgpu::reconcile::tests[0m[36m::[0m[34;1mtree_expands_sections_and_nested_items_into_keyed_stack_rows[0m
+[32;1m        PASS[0m [   0.016s] (244/264) [35;1msemio-framework-ui[0m [36mwgpu::scene_slots::tests[0m[36m::[0m[34;1mcollects_multiple_scene_leaves_in_document_order[0m
+[32;1m        PASS[0m [   0.017s] (245/264) [35;1msemio-framework-ui[0m [36mwgpu::scene_slots::tests[0m[36m::[0m[34;1mcollects_an_image_leaf_alongside_a_scene_leaf[0m
+[32;1m        PASS[0m [   0.019s] (246/264) [35;1msemio-framework-ui[0m [36mwgpu::scene_slots::tests[0m[36m::[0m[34;1mfinds_no_slots_when_the_tree_has_no_scene_nodes[0m
+[32;1m        PASS[0m [   0.016s] (247/264) [35;1msemio-framework-ui[0m [36mwgpu::shell::tests[0m[36m::[0m[34;1ma_window_with_no_role_paints_no_role_chrome[0m
+[32;1m        PASS[0m [   0.017s] (248/264) [35;1msemio-framework-ui[0m [36mwgpu::shell::tests[0m[36m::[0m[34;1mpointer_down_then_up_outside_the_pressed_window_cap_does_not_activate_a_tab[0m
+[32;1m        PASS[0m [   0.016s] (249/264) [35;1msemio-framework-ui[0m [36mwgpu::shell::tests[0m[36m::[0m[34;1mset_locale_de_resolves_the_german_title_chip[0m
+[32;1m        PASS[0m [   0.018s] (250/264) [35;1msemio-framework-ui[0m [36mwgpu::shell::tests[0m[36m::[0m[34;1mpointer_down_and_up_on_the_same_window_cap_activates_its_tab[0m
+[32;1m        PASS[0m [   0.014s] (251/264) [35;1msemio-framework-ui[0m [36mwgpu::shell::tests[0m[36m::[0m[34;1mset_window_layout_with_one_window_produces_the_expected_retained_tree_shape[0m
+[32;1m        PASS[0m [   0.020s] (252/264) [35;1msemio-framework-ui[0m [36mwgpu::shell::tests[0m[36m::[0m[34;1mset_window_layout_called_twice_with_the_same_layout_is_idempotent_and_does_not_panic[0m
+[32;1m        PASS[0m [   0.017s] (253/264) [35;1msemio-framework-ui[0m [36mwgpu::shell::tests[0m[36m::[0m[34;1mset_window_role_after_the_layout_is_already_set_repaints_immediately[0m
+[32;1m        PASS[0m [   0.019s] (254/264) [35;1msemio-framework-ui[0m [36mwgpu::shell::tests[0m[36m::[0m[34;1mset_window_role_editor_appends_the_title_chip_but_keeps_the_window_kind_icon[0m
+[32;1m        PASS[0m [   0.021s] (255/264) [35;1msemio-framework-ui[0m [36mwgpu::shell::tests[0m[36m::[0m[34;1mset_window_role_viewer_appends_the_title_chip_and_swaps_to_the_lock_icon[0m
+[32;1m        PASS[0m [   0.018s] (256/264) [35;1msemio-framework-ui[0m [36mwgpu::text::tests[0m[36m::[0m[34;1memoji_codepoints_resolve_through_the_noto_emoji_fallback_family[0m
+[32;1m        PASS[0m [   0.016s] (257/264) [35;1msemio-framework-ui[0m [36mwgpu::text::tests[0m[36m::[0m[34;1mpacking_a_synthetic_color_glyph_lands_on_the_rgba_page_and_marks_it_dirty[0m
+[32;1m        PASS[0m [   0.017s] (258/264) [35;1msemio-framework-ui[0m [36mwgpu::text::tests[0m[36m::[0m[34;1mfrom_bytes_falls_back_to_embedded_fonts_for_unparseable_input[0m
+[32;1m        PASS[0m [   0.017s] (259/264) [35;1msemio-framework-ui[0m [36mwgpu::text::tests[0m[36m::[0m[34;1mshaped_mode_resolves_real_font_metrics_that_differ_from_the_bitmap_fallback[0m
+[32;1m        PASS[0m [   0.017s] (260/264) [35;1msemio-framework-ui[0m [36mwgpu::tree::tests[0m[36m::[0m[34;1minsert_and_iterate_children_in_order[0m
+[32;1m        PASS[0m [   0.018s] (261/264) [35;1msemio-framework-ui[0m [36mwgpu::text::tests[0m[36m::[0m[34;1msame_char_at_different_sizes_does_not_collide_in_the_glyph_cache[0m
+[32;1m        PASS[0m [   0.013s] (262/264) [35;1msemio-framework-ui[0m [36mwgpu::tree::tests[0m[36m::[0m[34;1mmark_dirty_sets_layout_and_paint_and_bubbles_subtree_dirty_to_root[0m
+[32;1m        PASS[0m [   0.014s] (263/264) [35;1msemio-framework-ui[0m [36mwgpu::tree::tests[0m[36m::[0m[34;1mmark_dirty_stops_bubbling_once_it_hits_an_already_dirty_ancestor[0m
+[32;1m        PASS[0m [   0.013s] (264/264) [35;1msemio-framework-ui[0m [36mwgpu::tree::tests[0m[36m::[0m[34;1mremove_detaches_node_and_frees_its_children_slots[0m
+────────────
+[32;1m     Summary[0m [   0.476s] [1m264[0m tests run: [1m264[0m [32;1mpassed[0m, [1m0[0m [33;1mskipped[0m
+
+
+
+ NX   Successfully ran target test-wgpu-engine for project @semio-tech/ui-rs
+
+
+
+ NX   Nx detected a flaky task
+
+  @semio-tech/ui-rs:test-wgpu-engine
+
+Flaky tasks can disrupt your CI pipeline. Automatically retry them with Nx Cloud. Learn more at https://nx.dev/ci/features/flaky-tasks
+

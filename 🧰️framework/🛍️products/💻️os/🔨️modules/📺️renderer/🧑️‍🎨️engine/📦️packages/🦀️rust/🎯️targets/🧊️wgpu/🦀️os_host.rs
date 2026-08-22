@@ -20,10 +20,8 @@
 use crate::deadlines::{CaretBlink, HotSwapPoll};
 use crate::kernel_seam::{default_intent_exchange, AppKernelSeam};
 use crate::render_snapshot::{RenderSnapshot, RenderSnapshotSink};
-use crate::AppRuntime;
-use std::cell::RefCell;
+use crate::{AppPresenter, RuntimeMailbox};
 use std::collections::HashMap;
-use std::rc::Rc;
 use ui_render::{CursorRequest, FrameScheduler};
 
 //#region 🔖️OsHost
@@ -95,16 +93,14 @@ fn performance_now_ms() -> f64 {
 ///
 /// **Why `scheduler` lives here and not on `AppRuntime`.** `ui_host::WindowDelegate::scheduler_mut`
 /// returns a plain `&mut FrameScheduler` — a real, exclusively-owned reference. `AppRuntime` is
-/// necessarily `Rc<RefCell<_>>`-shared (every `PointerCallbacks` closure and every `spawn_app_task`
-/// completion re-borrows it via `Weak::upgrade().try_borrow_mut()`, `📦️glue.rs`'s own pervasive
-/// pattern) — you cannot soundly return a bare `&mut` borrowed out of a `RefCell` that other code may
-/// concurrently hold, so a `FrameScheduler` field on `AppRuntime` could never satisfy
-/// `WindowDelegate`'s signature without `unsafe`. `OsHost` itself, by contrast, is owned exclusively
-/// by whatever drives the event loop (see `winit_app.rs`) — never `Rc`-shared — so `&mut self.scheduler`
+/// addressed by worker jobs through `RuntimeMailbox`, which deliberately exposes no borrow that can
+/// cross a suspension. `OsHost`, by contrast, is owned exclusively by the event loop, so
+/// `&mut self.scheduler`
 /// is trivially sound. This is a real, load-bearing reason the composition root is a *separate* type
 /// from the product runtime, not just an organizational preference.
 pub struct OsHost {
-    pub runtime: Rc<RefCell<AppRuntime>>,
+    pub(crate) runtime: RuntimeMailbox,
+    pub(crate) presenter: AppPresenter,
     pub scheduler: FrameScheduler,
     pub kernel: AppKernelSeam,
     pub clock: OsClock,
@@ -119,14 +115,11 @@ pub struct OsHost {
     /// `semio_framework_trace::Watchdog` with, so two consecutive frame-callback overruns are
     /// distinguishable events in `Watchdog::violations()`, not one indistinguishable repeat.
     pub frame_generation: u64,
+    pub frame_ready: bool,
     /// 📬️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): the fixed-capacity enqueue-only
     /// sink `WindowDelegate::handle_event`/`handle_metrics` write into instead of immediately spawning
     /// a heap-allocated future per event. `redraw()` drains it once per frame and dispatches the whole
-    /// batch through a single `spawn_app_task` call — see `winit_app.rs`'s own `WindowDelegate for
-    /// OsHost` impl and `dispatch_drained_events` for why one batched dispatch, not a fully worker-side
-    /// one, is what this packet's boundary can honestly deliver (`AppRuntime` is `Rc<RefCell<_>>`, not
-    /// `Send`, so it cannot itself move to an OS worker thread without a much larger ownership rewrite
-    /// — see `📓️p3a-render-snapshot.md`).
+    /// batch through one deferred reduction on the process worker pool.
     pub events: ui_host::EventQueue,
     /// 🎫️ Minted once, here, at `OsHost` construction — `OsHost` is owned exclusively by whatever
     /// drives this crate's hand-rolled `WinitApp` event loop (see that file's own docstring on why it
@@ -134,21 +127,20 @@ pub struct OsHost {
     /// proof every `WindowDelegate` callback below runs on the thread that owns the window.
     pub ui_token: ui_host::UiThreadToken,
     /// 📸️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): the atomically-published frame
-    /// artifact — see `🦀️render_snapshot.rs`'s own module docstring for what this genuinely achieves
-    /// today (a real, tested acquire/publish contract) versus what it does not yet (a worker-side
-    /// builder; blocked on `AppRuntime` being `Rc<RefCell<_>>`, not `Send`).
+    /// artifact. Worker-built prepared packets and UI-only presentation share its generation and
+    /// revision vocabulary; the retained dispatch-tree field remains an explicit follow-up.
     pub snapshot_sink: RenderSnapshotSink,
     /// 🧵️ P3b (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): the non-blocking poll/resubmit
-    /// handle for `frame_job::FrameBuildJob` — see that file's own module docstring for exactly what
-    /// slice of `frame()` this runs off the UI thread today, and what still cannot.
+    /// handle for the deadline-scan job plus worker-owned `AppRuntime::frame` transaction.
     pub(crate) frame_build: crate::frame_job::FrameBuildHandle,
 }
 
 impl OsHost {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn new(runtime: Rc<RefCell<AppRuntime>>) -> Self {
+    pub(crate) fn new(runtime: RuntimeMailbox, presenter: AppPresenter) -> Self {
         Self {
             runtime,
+            presenter,
             scheduler: FrameScheduler::new(),
             kernel: AppKernelSeam::new(default_intent_exchange),
             clock: OsClock::new(),
@@ -157,6 +149,7 @@ impl OsHost {
             wheel_zoom_settle: HashMap::new(),
             camera_settle: HashMap::new(),
             frame_generation: 0,
+            frame_ready: false,
             events: ui_host::EventQueue::new(),
             ui_token: ui_host::UiThreadToken::mint_for_host(),
             snapshot_sink: RenderSnapshotSink::new(RenderSnapshot::new(0, semio_framework_trace::Generation(0), 0, CursorRequest::Default, None)),

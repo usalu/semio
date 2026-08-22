@@ -33,7 +33,7 @@ pub struct Identity {
 
 /// 🎭️ `user:{userId}#{sessionId}` (contract §C0) — `session_id` is the caller's own per-tab/
 /// per-process id (e.g. wgpu's `session.instance_id`), never derived here.
-pub async fn actor_id(identity: &Identity, session_id: &str) -> String {
+pub fn actor_id(identity: &Identity, session_id: &str) -> String {
     format!("user:{}#{session_id}", identity.user_id)
 }
 
@@ -50,11 +50,20 @@ pub struct IdentityOutcome {
     pub status: IdentityStatus,
 }
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum IdentityError {
-    #[error("hub unreachable and no cached identity for {0}")]
     Unavailable(String),
 }
+
+impl std::fmt::Display for IdentityError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Unavailable(user) => write!(formatter, "hub unreachable and no cached identity for {user}"),
+        }
+    }
+}
+
+impl std::error::Error for IdentityError {}
 //#endregion 🔖️Identity
 
 //#region 🔖️Env
@@ -68,7 +77,7 @@ pub struct IdentityEnv {
 }
 
 impl IdentityEnv {
-    pub async fn from_process_env() -> Option<Self> {
+    pub fn from_process_env() -> Option<Self> {
         let hub_url = std::env::var("S_HUB_URL").ok()?;
         let user_email = std::env::var("S_USER").ok()?;
         let data_dir = std::env::var("S_DATA_DIR").ok().map(std::path::PathBuf::from);
@@ -123,7 +132,7 @@ mod cache {
 /// `🏪️store/🔄️sync`'s own `now_ms` already uses.
 #[cfg(not(target_arch = "wasm32"))]
 async fn now_ms() -> i64 {
-    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|duration| duration.as_millis() as i64).unwrap_or(0)
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as i64)
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -200,12 +209,12 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn actor_id_matches_contract_grammar() {
         let identity = Identity { user_id: "u-amara".to_string(), email: "amara@semio.dev".to_string(), display_name: "Amara".to_string(), hub_base_url: "http://hub.local".to_string(), session_token: "tok".to_string(), issued_at_ms: 0 };
-        assert_eq!(actor_id(&identity, "sess-1").await, "user:u-amara#sess-1");
+        assert_eq!(actor_id(&identity, "sess-1"), "user:u-amara#sess-1");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn no_cache_mints_a_fresh_session() {
-        let dir = tempfile::tempdir().expect("tempdir");
+        let dir = crate::os_store::test_support::tempdir().expect("tempdir");
         let transport = FakeTransport::default();
         transport.push_response(FakeTransport::json_response(200, &serde_json::json!({ "token": "tok-new", "user_id": "u-1" })).await).await;
         let client = DirectoryClient::new(transport.clone(), "http://hub.local");
@@ -219,7 +228,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn valid_cache_restores_without_minting() {
-        let dir = tempfile::tempdir().expect("tempdir");
+        let dir = crate::os_store::test_support::tempdir().expect("tempdir");
         let cached = Identity { user_id: "u-1".to_string(), email: "amara@semio.dev".to_string(), display_name: "Amara".to_string(), hub_base_url: "http://hub.local".to_string(), session_token: "tok-old".to_string(), issued_at_ms: 111 };
         cache::save(dir.path(), &cached).await;
         let transport = FakeTransport::default();
@@ -236,7 +245,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn expired_cache_falls_through_to_mint() {
-        let dir = tempfile::tempdir().expect("tempdir");
+        let dir = crate::os_store::test_support::tempdir().expect("tempdir");
         let cached = Identity { user_id: "u-1".to_string(), email: "amara@semio.dev".to_string(), display_name: "Amara".to_string(), hub_base_url: "http://hub.local".to_string(), session_token: "tok-expired".to_string(), issued_at_ms: 111 };
         cache::save(dir.path(), &cached).await;
         let transport = FakeTransport::default();
@@ -254,7 +263,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn unreachable_hub_degrades_to_cached_identity_offline() {
-        let dir = tempfile::tempdir().expect("tempdir");
+        let dir = crate::os_store::test_support::tempdir().expect("tempdir");
         let cached = Identity { user_id: "u-1".to_string(), email: "amara@semio.dev".to_string(), display_name: "Amara".to_string(), hub_base_url: "http://hub.local".to_string(), session_token: "tok-old".to_string(), issued_at_ms: 111 };
         cache::save(dir.path(), &cached).await;
         let transport = FakeTransport::default();
@@ -268,7 +277,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn unreachable_hub_with_no_cache_is_unavailable_not_a_panic() {
-        let dir = tempfile::tempdir().expect("tempdir");
+        let dir = crate::os_store::test_support::tempdir().expect("tempdir");
         let transport = FakeTransport::default();
         transport.push_response(Err(super::super::client::TransportError::Io("connection refused".to_string()))).await;
         let client = DirectoryClient::new(transport, "http://hub.local");

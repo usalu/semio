@@ -19,7 +19,7 @@ import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
-import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance } from "@xyflow/react";
+import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node as FlowNode, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import {
   activeUiTheme,
@@ -54,10 +54,7 @@ import {
 // this barrel, never straight from "@semio-tech/ui-styling") can resolve these — a bare `import {...}
 // from "@semio-tech/ui-styling"` above does not itself make a name part of this module's public surface.
 export { resolveColorHex, resolveSemanticColorHex, resolveSpatialAxisColors, themeColorVar, tokenVar, uiSpacingPx };
-import { CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_PICK_MENU, canvasHoverFocusFromTarget, canvasPickTargetKey, effectiveActionArgs, missingRequiredArgs, SHELL_LOCALES, SHELL_TERMINOLOGIES, type ActionArgDef, type CanvasHoverFocus, type CanvasPickRequest, type CanvasPickTarget, type DialogDefinition, type DockSkeleton, type DockTabSkeleton, type IntroductionCursor, type IntroductionDefinition, type IntroductionDemonstration, type IntroductionGesture, type IntroductionKeyModifier, type IntroductionLogo, type IntroductionPlacement, type IntroductionPoint, type IntroductionStepDefinition, type ShellLocale, type ShellTerminology, type StoragePort, createBrowserStoragePort, createMemoryStoragePort, panelTabFirstDraggableElementId, panelTabElementId, windowElementId, pickMostSpecificCanvasTarget, sortCanvasPickTargetsGeneralFirst, START_TUTORIAL_ACTION_ID, RECORD_TUTORIAL_ACTION_ID, TUTORIAL_CONVERGE_MS, type TutorialDefinition, type TutorialChapter, type TutorialUiSnapshot, type TutorialUiChange, type TutorialCameraKeyframe, type TutorialCameraState, type TutorialEasing, type TutorialEvent, type TutorialDocumentEvent, type TutorialGestureCue, type TutorialOverlayRect, type WindowLayout, ephemeralBox, ephemeralMap, ephemeralSet } from "@semio-tech/framework";
-import * as dagre from "dagre";
-import { format, formatDistanceToNow } from "date-fns";
-import Fuse, { type FuseResult } from "fuse.js";
+import { CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_PICK_MENU, canvasHoverFocusFromTarget, canvasPickTargetKey, effectiveActionArgs, missingRequiredArgs, SHELL_LOCALES, SHELL_TERMINOLOGIES, type ActionArgDef, type CanvasHoverFocus, type CanvasPickRequest, type CanvasPickTarget, type DialogDefinition, type DockSkeleton, type DockTabSkeleton, type IntroductionCursor, type IntroductionDefinition, type IntroductionDemonstration, type IntroductionGesture, type IntroductionKeyModifier, type IntroductionLogo, type IntroductionPlacement, type IntroductionPoint, type IntroductionStepDefinition, type ShellLocale, type ShellTerminology, type StoragePort, createBrowserStoragePort, createMemoryStoragePort, panelTabFirstDraggableElementId, panelTabElementId, windowElementId, pickMostSpecificCanvasTarget, sortCanvasPickTargetsGeneralFirst, START_TUTORIAL_ACTION_ID, RECORD_TUTORIAL_ACTION_ID, TUTORIAL_CONVERGE_MS, type TutorialDefinition, type TutorialChapter, type TutorialUiSnapshot, type TutorialUiChange, type TutorialCameraKeyframe, type TutorialCameraState, type TutorialEasing, type TutorialEvent, type TutorialArtifactEvent, type TutorialGestureCue, type TutorialOverlayRect, type WindowLayout, ephemeralBox, ephemeralMap, ephemeralSet } from "@semio-tech/framework";
 import i18next from "i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import * as React from "react";
@@ -70,6 +67,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { Slot } from "@radix-ui/react-slot";
 import { Clone, Edges, GizmoHelper, GizmoViewport, Grid, Line as DreiLine, OrbitControls, OrthographicCamera, Outlines, PerspectiveCamera, Text as DreiText, TransformControls, useGLTF } from "@react-three/drei";
 import { Canvas as ThreeCanvas, createPortal as r3fCreatePortal, ThreeEvent, useFrame, useStore, useThree } from "@react-three/fiber";
+import { rankFuzzyItems, type FuzzySearchField, type FuzzySearchOptions, type FuzzySearchResult } from "../../../../🔨️modules/🔎️fuzzy-ranking/🟦️component.ts";
 import {
   applyNodeChanges,
   Background,
@@ -88,20 +86,17 @@ import {
   useStoreApi,
   ViewportPortal,
 } from "@xyflow/react";
-import { cva, type VariantProps } from "class-variance-authority";
 import { Command as CommandPrimitive } from "cmdk";
-import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
 import { ICONS, assertUniqueIconConceptAssignments, isIconName, resolveCatalogIconSvgFromTheme, shortcodeCatalogKey, shortcodeEmoji, type IconName } from "@semio-tech/assets";
 import { isMetabolismIconName, METABOLISM_ICONS, resolveMetabolismIconSvgFromTheme, type MetabolismIconName } from "@semio-tech/assets";
 export type { IconName, MetabolismIconName };
 import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
-import { useHotkeys } from "react-hotkeys-hook";
 import { I18nextProvider, initReactI18next, useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router";
 // 🕹️wave-0: imported directly from the module's own source (not via `@semio-tech/framework`) — the
-// `🛂️manifest` module already re-exports a same-named, ts-rs-generated `MergeMode`/`SelectionMode`
+// `🛂️manifest` module already re-exports a same-named, owned-schema-generated `MergeMode`/`SelectionMode`
 // family through that barrel, so a second barrel export of the hand-written mirror would collide.
 import { type MergeMode } from "../../../../../🕹️interaction/🟦️component.ts";
 // #endregion 🔌️Adapters
@@ -863,7 +858,7 @@ export function CanvasPickMenu({ request, hoveredKey, onHoverKey, onPick, onDism
     if (!request) return;
     const onPointerDown = (event: PointerEvent) => {
       const menu = menuRef.current;
-      if (menu?.contains(event.target as globalThis.Node)) return;
+      if (event.target instanceof globalThis.Node && menu?.contains(event.target)) return;
       onDismiss();
     };
     const onKeyDown = (event: KeyboardEvent) => {
@@ -1043,7 +1038,6 @@ export function useCanvasPickInteraction({ resolveTargetsAtClient, onHoverFocus,
 // #region 🔖️Icon
 import { resolveIconSizePx, decodeIcon, encodeIcon, classifyIconSelectorMode, resolveIconUrlsInBoardJson, resolveCatalogIconSvg, resolveMetabolismIconSvg, renderControlIcon, iconSvgMarkup, iconMaskImage, Icon, createIconComponent, AddIcon, AlertCircleIcon, ArrowLeftIcon, AwardIcon, BookIcon, BoxIcon, CameraIcon, ChatIcon, CheckIcon, CheckIconAlt, ChevronDownIcon, ChevronDownIconAlt, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, ChevronsUpDownIcon, CircleDotIcon, CloseIcon, CloseIconAlt, CodeIcon, ComponentIcon, ConnectionIcon, ConnectorIcon, CopyIcon, DetailsIcon, DiagramIcon, DisconnectIcon, DocumentIcon, ExternalLinkIcon, FileArchiveIcon, FileCodeIcon, FileImageIcon, FileJsonIcon, FileSpreadsheetIcon, FileTypeIcon, FileVideoIcon, FilterIcon, FindInViewIcon, FocusIcon, FolderIcon, FolderOpenIcon, GlobeIcon, GripVerticalIcon, HandIcon, HashIcon, HomeIcon, HudIcon, HudPanelIcon, InfoIcon, IntersectIcon, LandmarkIcon, LassoIcon, LayoutIcon, LayoutGridIcon, LeftSidePanelIcon, LightbulbIcon, LinkIcon, LoaderIcon, LocalKitIcon, Maximize2Icon, MessageCircle, MessageSquareIcon, Minimize2Icon, MonitorIcon, MoonIcon, MoreHorizontalIcon, MousePointerIcon, MoveIcon, NavigateBackIcon, NavigateForwardIcon, NavigateUpIcon, PanelRightIcon, PauseIcon, PieceIcon, PlayIcon, PlugIcon, PlusIcon, PortIcon, Puzzle2dIconFileImportIcon, Puzzle2dIconMathGlyphIcon, Puzzle2dIconRasterGlyphIcon, RecordIcon, RemoteKitIcon, RemoveIcon, ResetIcon, RightSidePanelIcon, SceneIcon, SearchIcon, SelectUtilityIcon, Settings2Icon, SettingsIcon, SkipBackIcon, SkipForwardIcon, SmartphoneIcon, SortAscendingIcon, SortDescendingIcon, StatsIcon, StopIcon, SunIcon, TabletIcon, TableViewIcon, TemporaryKitIcon, TriangleAlertIcon, TutorialIcon, TypeIcon, UserIcon, UsersIcon, UtilitiesIcon, UtilityBarIcon, WorkbenchIcon, Cursor, type IconSizeToken, type IconSelectorMode, type IconSource, type ControlIcon, type IconProps } from "../../../../🧱️elements/🔣️Icons/🟦️component.tsx";
 export { resolveIconSizePx, decodeIcon, encodeIcon, classifyIconSelectorMode, resolveIconUrlsInBoardJson, resolveCatalogIconSvg, resolveMetabolismIconSvg, renderControlIcon, iconSvgMarkup, iconMaskImage, Icon, createIconComponent, AddIcon, AlertCircleIcon, ArrowLeftIcon, AwardIcon, BookIcon, BoxIcon, CameraIcon, ChatIcon, CheckIcon, CheckIconAlt, ChevronDownIcon, ChevronDownIconAlt, ChevronLeftIcon, ChevronRightIcon, ChevronUpIcon, ChevronsUpDownIcon, CircleDotIcon, CloseIcon, CloseIconAlt, CodeIcon, ComponentIcon, ConnectionIcon, ConnectorIcon, CopyIcon, DetailsIcon, DiagramIcon, DisconnectIcon, DocumentIcon, ExternalLinkIcon, FileArchiveIcon, FileCodeIcon, FileImageIcon, FileJsonIcon, FileSpreadsheetIcon, FileTypeIcon, FileVideoIcon, FilterIcon, FindInViewIcon, FocusIcon, FolderIcon, FolderOpenIcon, GlobeIcon, GripVerticalIcon, HandIcon, HashIcon, HomeIcon, HudIcon, HudPanelIcon, InfoIcon, IntersectIcon, LandmarkIcon, LassoIcon, LayoutIcon, LayoutGridIcon, LeftSidePanelIcon, LightbulbIcon, LinkIcon, LoaderIcon, LocalKitIcon, Maximize2Icon, MessageCircle, MessageSquareIcon, Minimize2Icon, MonitorIcon, MoonIcon, MoreHorizontalIcon, MousePointerIcon, MoveIcon, NavigateBackIcon, NavigateForwardIcon, NavigateUpIcon, PanelRightIcon, PauseIcon, PieceIcon, PlayIcon, PlugIcon, PlusIcon, PortIcon, Puzzle2dIconFileImportIcon, Puzzle2dIconMathGlyphIcon, Puzzle2dIconRasterGlyphIcon, RecordIcon, RemoteKitIcon, RemoveIcon, ResetIcon, RightSidePanelIcon, SceneIcon, SearchIcon, SelectUtilityIcon, Settings2Icon, SettingsIcon, SkipBackIcon, SkipForwardIcon, SmartphoneIcon, SortAscendingIcon, SortDescendingIcon, StatsIcon, StopIcon, SunIcon, TabletIcon, TableViewIcon, TemporaryKitIcon, TriangleAlertIcon, TutorialIcon, TypeIcon, UserIcon, UsersIcon, UtilitiesIcon, UtilityBarIcon, WorkbenchIcon, Cursor, type IconSizeToken, type IconSelectorMode, type IconSource, type ControlIcon, type IconProps };
-export type { Icon } from "../../../../🧱️elements/🔣️Icons/🟦️component.tsx";
 
 
 
@@ -1068,7 +1062,7 @@ export { DEFAULT_UI_DRIVER, COMPACT_UI_DRIVER, builtinUiDrivers, parseUiDriver, 
 // #region ⌨️UiKeybindings
 import { parseKeybindingChords, formatKeybindingShortcut } from "../../../../🔨️modules/⌨️keybinding-text-interpretation/🟦️component.ts";
 import { formatControlTooltipText } from "../../../../🔨️modules/⌨️control-tooltip-presentation/🟦️component.ts";
-import { buildKeysByActionId, SHELL_KEYBINDINGS, composeControlKeybindings, UiKeybindingsProvider, useUiKeybindingsByControlId, resolveControlKeybindingRaw, useControlHotkey, useControlKeybinding, type ControlKeybindingAction, type ControlKeybindingDefinition, type ControlKeybindingCallback, type ControlKeybindingOptions, type ControlKeybindingDependencies } from "../../../../🔨️modules/⌨️control-keybinding-context/🟦️component.tsx";
+import { buildKeysByActionId, SHELL_KEYBINDINGS, composeControlKeybindings, UiKeybindingsProvider, useUiKeybindingsByControlId, resolveControlKeybindingRaw, useControlHotkey, useControlKeybinding, useHotkeys, type ControlKeybindingAction, type ControlKeybindingDefinition, type ControlKeybindingCallback, type ControlKeybindingOptions, type ControlKeybindingDependencies } from "../../../../🔨️modules/⌨️control-keybinding-context/🟦️component.tsx";
 import { ControlHotkeyBadge, type ControlHotkeyBadgeProps } from "../../../../🔨️modules/⌨️control-hotkey-presentation/🟦️component.tsx";
 import { readStoredUiKeybindingOverrides, writeStoredUiKeybindingOverrides } from "../../../../🔨️modules/💾️keybinding-persistence/🟦️component.ts";
 export { parseKeybindingChords, formatKeybindingShortcut, formatControlTooltipText, buildKeysByActionId, SHELL_KEYBINDINGS, composeControlKeybindings, UiKeybindingsProvider, useUiKeybindingsByControlId, resolveControlKeybindingRaw, useControlHotkey, useControlKeybinding, ControlHotkeyBadge, readStoredUiKeybindingOverrides, writeStoredUiKeybindingOverrides };
@@ -1254,7 +1248,7 @@ function ensureUiChromeRevealController(root: HTMLElement): void {
   bindings.listen(window, "pointermove", (event: PointerEvent) => {
     // 🐚️ `pointermove` only ever bubbles to `window` (never scoped to a subtree), so this root only
     // reacts to points actually over its own DOM — otherwise hovering shell B would reveal shell A's chrome.
-    if (!root.contains(event.target as Node | null)) return;
+    if (!(event.target instanceof globalThis.Node) || !root.contains(event.target)) return;
     chromeRevealLastPointByRoot.set(root, { x: event.clientX, y: event.clientY });
     scheduleChromeRevealUpdate(root);
   });
@@ -1264,7 +1258,7 @@ function ensureUiChromeRevealController(root: HTMLElement): void {
   });
   bindings.listen(root, "focusout", (event: FocusEvent) => {
     const region = (event.target as HTMLElement | null)?.closest<HTMLElement>("[data-ui-reveal-region]");
-    const related = event.relatedTarget as Node | null;
+    const related = event.relatedTarget as globalThis.Node | null;
     if (region && (!related || !region.contains(related))) delete region.dataset.uiRevealed;
   });
   chromeRevealBindingsByRoot.set(root, bindings);
@@ -1719,8 +1713,8 @@ import { uiDataLabel, type UiLabel } from "../../../../🧱️elements/🏷️Ui
 export { uiDataLabel, type UiLabel };
 // #endregion UiLabel
 
-import { type UiLocale, type UiLabelPair, type UiLabelValue, type UiRibbonParentCategory, type UiRibbonParentEntries, type UiTranslationSchema, type UiTranslationKey, type AssertUiRibbonParentKeysCovered, type AssertUiSettingsLanguageKeysCovered, type UiChromeTerminologyId, type AssertUiSettingsTerminologyKeysCovered, type UiTranslateFn, type UiI18nPort, type UiRegisteredTranslationKey, UI_RIBBON_PARENT_CATEGORIES } from "../../../../🧱️elements/📚️I18n/🟦️component.tsx";
-export type { UiLocale, UiLabelPair, UiLabelValue, UiRibbonParentCategory, UiRibbonParentEntries, UiTranslationSchema, UiTranslationKey, AssertUiRibbonParentKeysCovered, AssertUiSettingsLanguageKeysCovered, UiChromeTerminologyId, AssertUiSettingsTerminologyKeysCovered, UiTranslateFn, UiI18nPort, UiRegisteredTranslationKey };
+import { type UiLocale, type UiLabelPair, type UiLabelValue, type UiRibbonParentCategory, type UiRibbonParentEntries, type DeepUiTranslationKeys, type UiTranslationSchema, type UiTranslationKey, type AssertUiRibbonParentKeysCovered, type AssertUiSettingsLanguageKeysCovered, type UiChromeTerminologyId, type AssertUiSettingsTerminologyKeysCovered, type UiTranslateFn, type UiI18nPort, type UiRegisteredTranslationKey, UI_RIBBON_PARENT_CATEGORIES } from "../../../../🧱️elements/📚️I18n/🟦️component.tsx";
+export type { UiLocale, UiLabelPair, UiLabelValue, UiRibbonParentCategory, UiRibbonParentEntries, DeepUiTranslationKeys, UiTranslationSchema, UiTranslationKey, AssertUiRibbonParentKeysCovered, AssertUiSettingsLanguageKeysCovered, UiChromeTerminologyId, AssertUiSettingsTerminologyKeysCovered, UiTranslateFn, UiI18nPort, UiRegisteredTranslationKey };
 export { UI_RIBBON_PARENT_CATEGORIES };
 
 const _assertUiRibbonParentKeys: AssertUiRibbonParentKeysCovered<UiRibbonParentCategory> = true;
@@ -3975,7 +3969,7 @@ export const GhostProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 };
 
 interface GhostRegionShellProps extends React.HTMLAttributes<HTMLDivElement> {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   /** @emoji 🫳️ When true, the region root is click-through while ghosted (panels over canvas). */
   clickThroughWhenGhost?: boolean;
   /** @emoji 👻️ When false, this region stays undimmed during a global ghost session (navbar/footer panel toggles). Default true — open panels/panes hide. */
@@ -4061,7 +4055,7 @@ function useIntroductionAnchorRect(selector: string | null): IntroductionRect | 
       if (shellScope) return shellScope.rootRef.current;
       return document;
     };
-    const observeRoot: Node = shellScope?.rootRef.current ?? document.body;
+    const observeRoot: globalThis.Node = shellScope?.rootRef.current ?? document.body;
     let elements: Element[] = [];
     let resizeObserver: ResizeObserver | null = null;
     let reportedUnresolved = false;
@@ -4174,7 +4168,7 @@ function useIntroductionElevation(ids: readonly string[]): ReadonlySet<string> {
       if (shellScope) return shellScope.rootRef.current;
       return document;
     };
-    const observeRoot: Node = shellScope?.rootRef.current ?? document.body;
+    const observeRoot: globalThis.Node = shellScope?.rootRef.current ?? document.body;
     let stampedRoots = new Set<Element>();
     const positionedByUs = new Set<Element>();
 
@@ -5014,6 +5008,18 @@ export type UIIntroductionProps = {
   readonly onDismiss: (completed: boolean) => void;
 };
 
+/** @emoji 🗺️ Resolves manifest-localized copy at the UI boundary while retaining support for already-resolved TS-native strings. */
+export function resolveUiLocalizedText(value: unknown, terminology: string, locale: UiLocale): string {
+  if (typeof value === "string") return value;
+  if (value === null || typeof value !== "object") return "";
+  const matrix = value as Readonly<Record<string, unknown>>;
+  const terminologyCells = matrix[terminology] ?? matrix[UI_TERMINOLOGY_NATIVE] ?? matrix.reuse;
+  if (terminologyCells === null || typeof terminologyCells !== "object") return "";
+  const localeCells = terminologyCells as Readonly<Record<string, unknown>>;
+  const resolved = localeCells[locale] ?? localeCells.en ?? Object.values(localeCells).find((cell) => typeof cell === "string");
+  return typeof resolved === "string" ? resolved : "";
+}
+
 /** @emoji 📐️ One row of an introduction step's {@link IntroductionLogo}s, all sharing one computed height
  * so the row fills its full width edge-to-edge with no logo dominating over another — the height isn't
  * guessed: it's solved from the row's measured width and each logo's own natural aspect ratio (`width /
@@ -5086,6 +5092,9 @@ function IntroductionLogoRow({ logos }: { readonly logos: readonly IntroductionL
  * button — an automatic "click Next" demonstration (see `INTRODUCTION_DEMO_NEXT_BUTTON_DEMONSTRATION`),
  * so authors never have to spell that one out per step. */
 export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, stepIndex, completedInteractionIndices, onStepIndexChange, onDismiss }) => {
+  const introductionShellScope = useShellScopeOptional();
+  const { terminology } = useUiTerminology();
+  const locale = detectShellLocale(introductionShellScope?.i18n.resolvedLanguage ?? uiI18n.resolvedLanguage);
   const step: IntroductionStepDefinition | undefined = introduction.steps[stepIndex];
   const introduceSelector = step?.introduce ? elementIdSelector(step.introduce) : null;
   const introduceRect = useIntroductionAnchorRect(introduceSelector);
@@ -5252,7 +5261,8 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
 
   if (!step) return null;
 
-  const bodyParagraphs = splitIntroductionBodyParagraphs(step.body);
+  const stepTitle = resolveUiLocalizedText(step.title, terminology, locale);
+  const bodyParagraphs = splitIntroductionBodyParagraphs(resolveUiLocalizedText(step.body, terminology, locale));
   // When the overlay is absolutely positioned inside the shell portal layer (multi-shell hosts that
   // CSS-transform their shells, e.g. the demonstrator grid), placement must use host-local coords —
   // getBoundingClientRect is viewport-space and would otherwise land the box on the wrong pane.
@@ -5286,7 +5296,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
         titleChips={
           <div data-hover-scope data-slot="introduction-info-box-chip" className={cn(windowChromeTitleChipClass, "!h-auto max-w-none shrink overflow-visible whitespace-normal")}>
             <span data-slot="introduction-info-box-title" className="min-w-0 flex-1 break-words whitespace-normal text-sm leading-normal font-medium">
-              {step.title}
+              {stepTitle}
             </span>
             <div data-slot="introduction-info-box-drag" className="flex shrink-0 items-center justify-center">
               <DragHandle {...dragPointerProps} emphasized={dragging} />
@@ -5452,7 +5462,7 @@ export function applyTutorialUiChange(state: TutorialUiSnapshot, change: Tutoria
     case "panelState":
       return { ...state, panelJson: change.panelJson };
     case "selection":
-      return { ...state, selectionJson: change.selectionJson };
+      return { ...state, interactionSelection: { ...state.interactionSelection, [change.domainId]: { granularity: change.granularity, ids: [...change.ids] } } };
     case "dialog":
       return { ...state, openDialogId: change.id };
     case "treeExpansion": {
@@ -5488,7 +5498,7 @@ export function composeTutorialUi(def: TutorialDefinition, atMs: number): Tutori
 export type TutorialSlice = {
   readonly forward: boolean;
   readonly events: readonly TutorialEvent[];
-  readonly document: readonly TutorialDocumentEvent[];
+  readonly artifact: readonly TutorialArtifactEvent[];
   readonly uiChanges: readonly TutorialUiChange[];
 };
 
@@ -5502,7 +5512,7 @@ export function tutorialSlice(def: TutorialDefinition, fromMs: number, toMs: num
   const hi = Math.max(fromMs, toMs);
   const inRange = (at: number) => at > lo && at <= hi;
   let events = def.tracks.events.filter((event) => inRange(event.at));
-  let document = def.tracks.document.filter((event) => inRange(event.at));
+  let artifact = def.tracks.artifact.filter((event) => inRange(event.at));
   let uiChanges: TutorialUiChange[] = [];
   for (const keyframe of def.tracks.ui) {
     if (!inRange(keyframe.at)) continue;
@@ -5510,10 +5520,10 @@ export function tutorialSlice(def: TutorialDefinition, fromMs: number, toMs: num
   }
   if (!forward) {
     events = [...events].reverse();
-    document = [...document].reverse();
+    artifact = [...artifact].reverse();
     uiChanges = [...uiChanges].reverse();
   }
-  return { forward, events, document, uiChanges };
+  return { forward, events, artifact, uiChanges };
 }
 
 /** @emoji ✅️ TS port of Rust `validate_tutorial` — light structural sanity check shared by the recorder before download; does not validate referenced action/command/element ids (no `AppDefinition` in scope here). Returns the first error found, or `null`. */
@@ -5534,7 +5544,7 @@ export function validateTutorial(def: TutorialDefinition): string | null {
     () => sortedByAt("video", def.tracks.video, (c) => c.at),
     () => sortedByAt("events", def.tracks.events, (e) => e.at),
     () => sortedByAt("ui", def.tracks.ui, (k) => k.at),
-    () => sortedByAt("document", def.tracks.document, (e) => e.at),
+    () => sortedByAt("artifact", def.tracks.artifact, (e) => e.at),
     () => sortedByAt("camera", def.tracks.camera, (k) => k.at),
     () => sortedByAt("gestures", def.tracks.gestures, (c) => c.at),
   ];
@@ -5763,7 +5773,7 @@ export const TutorialBar: React.FC<TutorialBarProps> = ({
             />
           ))}
         </div>
-        <Button id="ui.tutorial.rate" icon="gauge" text={`${rate}x`} onClick={() => onRateChange(nextTutorialRate(rate))} />
+        <Button id="ui.tutorial.rate" icon="bar-chart-3" text={`${rate}x`} onClick={() => onRateChange(nextTutorialRate(rate))} />
         <Button id="ui.tutorial.mute" icon="x" text={muteLabel} aria-pressed={muted} onClick={() => onMutedChange(!muted)} />
         <Button id="ui.tutorial.captions" icon="message-square" text={captionsLabel} aria-pressed={captionsOn} onClick={() => onCaptionsChange(!captionsOn)} />
         {recordAvailable && (
@@ -6853,7 +6863,7 @@ export function useWindowSilhouetteGeometry(stack: HTMLElement | null, enabled =
         if (windowSilhouetteOwnsElement(stack, element)) resizeObserver?.observe(element);
       }
     };
-    const containsGeometryTarget = (node: Node): boolean => node instanceof Element && (node.matches(targetSelector) || node.querySelector(targetSelector) !== null);
+    const containsGeometryTarget = (node: globalThis.Node): boolean => node instanceof Element && (node.matches(targetSelector) || node.querySelector(targetSelector) !== null);
     const mutationObserver =
       typeof MutationObserver === "undefined"
         ? null
@@ -7078,7 +7088,7 @@ export const WindowChromeSilhouetteBorder: React.FC<{
           </mask>
         </defs>
         <foreignObject x={0} y={0} width={metrics.width} height={metrics.height} mask={`url(#${celebrateMaskId})`}>
-          <div xmlns="http://www.w3.org/1999/xhtml" className="window-silhouette-border-celebrated-fill" style={{ width: "100%", height: "100%" }} />
+          <div className="window-silhouette-border-celebrated-fill" style={{ width: "100%", height: "100%" }} />
         </foreignObject>
       </svg>
     );
@@ -7488,7 +7498,6 @@ export function celebrateAllElements(durationMs = CELEBRATE_STAMP_DURATION_MS, r
     const aliases = (el.getAttribute("data-element-alias") ?? "").split(/\s+/).filter(Boolean);
     if (aliases.some((alias) => isElementId(alias) && !alias.startsWith("ui.introduction."))) targets.add(el);
   }
-  console.log(`[DEBUG] celebrateAllElements stamping ${targets.size} ui elements for ${durationMs}ms`);
   const cancels = [...targets].map((el) => celebrateElement(el, durationMs));
   return () => cancels.forEach((cancel) => cancel());
 }
@@ -8063,7 +8072,7 @@ const shellNavbarTrailingEndWidthListenersByRoot = ephemeralMap<HTMLElement, Set
 
 function publishShellNavbarTrailingEndWidthPx(root: HTMLElement | undefined, width: number): void {
   const key = resolveElementsSurfaceChromeRoot(root);
-  if (!key || width <= 0 || width === shellNavbarTrailingEndWidthByRoot.get(key)) return;
+  if (!key || width < 0 || width === shellNavbarTrailingEndWidthByRoot.get(key)) return;
   shellNavbarTrailingEndWidthByRoot.set(key, width);
   for (const listener of shellNavbarTrailingEndWidthListenersByRoot.get(key) ?? []) listener();
 }
@@ -9528,14 +9537,9 @@ export { Window, type WindowConfig };
 // #endregion 🌊️Window
 
 // #region 🧫️Diagram
-// 🚧️W3-interim: applyNodeChanges/Background/.../SimulationNodeDatum are re-exports of symbols already
-// imported at the top of this barrel file (from "@xyflow/react" and "d3-force") — the Diagram element
-// re-imports them directly from those third-party packages for its own use, but the barrel must keep
-// re-exporting its OWN top-level bindings here (not re-import the same names from the element file),
-// or TS2300 "Duplicate identifier" fires against the top-level import.
-export { applyNodeChanges, Background, BackgroundVariant, BaseEdge, forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, getBezierPath, Handle, Position, ReactFlow, ReactFlowProvider, SelectionMode, useInternalNode, useReactFlow, useStoreApi, ViewportPortal };
-export type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance, Connection as RFConnection, Simulation, SimulationLinkDatum, SimulationNodeDatum };
-import { DIAGRAM_UNIT, type DiagramLayoutDirection, type DiagramLayoutOptions, calculateDiagramLayout, type DiagramForceConfig, defaultDiagramForceConfig, type DiagramProps, Diagram, useDiagramLayout, DiagramSkeleton } from "../../../../🧱️elements/📊️Diagram/🟦️component.tsx";
+export { applyNodeChanges, Background, BackgroundVariant, BaseEdge, getBezierPath, Handle, Position, ReactFlow, ReactFlowProvider, SelectionMode, useInternalNode, useReactFlow, useStoreApi, ViewportPortal };
+export type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, FlowNode as Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance, Connection as RFConnection };
+import { DIAGRAM_UNIT, type DiagramLayoutDirection, type DiagramLayoutOptions, calculateDiagramLayout, createDiagramForceSimulation, type DiagramForceConfig, defaultDiagramForceConfig, type DiagramProps, Diagram, useDiagramLayout, DiagramSkeleton } from "../../../../🧱️elements/📊️Diagram/🟦️component.tsx";
 export { DIAGRAM_UNIT, type DiagramLayoutDirection, type DiagramLayoutOptions, calculateDiagramLayout, type DiagramForceConfig, defaultDiagramForceConfig, type DiagramProps, Diagram, useDiagramLayout, DiagramSkeleton };
 // #endregion 🧫️Diagram
 
@@ -9734,6 +9738,7 @@ import {
   resolveVirtualFileSystemDescriptorKind,
   resolveVirtualFileSystemDescriptorBinding,
   buildVirtualFileSystemDescriptorValues,
+  formatVirtualFileSystemTime,
   renderVirtualFileSystemDescriptorCell,
   buildVirtualFileSystemDescriptorColumns,
   resolveVirtualFileSystemSchemaIcon,
@@ -9762,6 +9767,7 @@ export {
   resolveVirtualFileSystemDescriptorKind,
   resolveVirtualFileSystemDescriptorBinding,
   buildVirtualFileSystemDescriptorValues,
+  formatVirtualFileSystemTime,
   renderVirtualFileSystemDescriptorCell,
   buildVirtualFileSystemDescriptorColumns,
   resolveVirtualFileSystemSchemaIcon,
@@ -9920,6 +9926,62 @@ if (import.meta.vitest) {
   const { describe, expect, it, vi } = import.meta.vitest;
   const { render, screen, fireEvent, waitFor, act } = await import("@testing-library/react");
 
+  describe("owned diagram implementations", () => {
+    it("lays out a directed graph through the owned structural boundary", () => {
+      const nodes: FlowNode[] = [
+        { id: "source", position: { x: 0, y: 0 }, data: {} },
+        { id: "target", position: { x: 0, y: 0 }, data: {} },
+      ];
+      const edges: Edge[] = [{ id: "source-target", source: "source", target: "target" }];
+      const result = calculateDiagramLayout(nodes, edges, { direction: "LR", nodeWidth: 40, nodeHeight: 20, rankSep: 30, nodeSep: 10 });
+      expect(result.nodes[0]!.position.x).toBeLessThan(result.nodes[1]!.position.x);
+      expect(result.nodes.every((node) => Number.isFinite(node.position.x) && Number.isFinite(node.position.y))).toBe(true);
+      expect(result.edges).toBe(edges);
+    });
+
+    it("settles force nodes through an owned simulation handle", () => {
+      const nodes = [
+        { id: "source", x: -100, y: 0 },
+        { id: "target", x: 100, y: 0 },
+      ];
+      const links = [{ id: "source-target", source: "source", target: "target" }];
+      const simulation = createDiagramForceSimulation(nodes, links, { ...defaultDiagramForceConfig, enabled: true });
+      const ticks = Math.ceil(Math.log(simulation.alphaMin()) / Math.log(1 - simulation.alphaDecay()));
+      for (let index = 0; index < ticks; index++) simulation.tick();
+      expect(simulation.nodes()).toBe(nodes);
+      expect(nodes.every((node) => Number.isFinite(node.x) && Number.isFinite(node.y))).toBe(true);
+      expect(nodes[0]!.x).not.toBe(-100);
+      simulation.stop();
+    });
+  });
+
+  describe("owned fuzzy ranking", () => {
+    const items = [
+      { label: "Alpha", description: "First letter", category: "Letters" },
+      { label: "Bravo", description: "Second letter", category: "Letters" },
+      { label: "Chair", description: "A seat", category: "Furniture" },
+    ] as const;
+    const options = {
+      fields: [
+        { read: (item: (typeof items)[number]) => item.label, weight: 2 },
+        { read: (item: (typeof items)[number]) => item.description, weight: 1 },
+        { read: (item: (typeof items)[number]) => item.category, weight: 0.5 },
+      ],
+      threshold: 0.4,
+      limit: 20,
+    } as const;
+
+    it("ranks prefixes and transposed typos deterministically", () => {
+      expect(rankFuzzyItems(items, "alp", options).map((result) => result.item.label)).toEqual(["Alpha"]);
+      expect(rankFuzzyItems(items, "ahlpa", options).map((result) => result.item.label)).toEqual(["Alpha"]);
+    });
+
+    it("matches query tokens across weighted fields and preserves source order for empty input", () => {
+      expect(rankFuzzyItems(items, "chair furniture", options).map((result) => result.item.label)).toEqual(["Chair"]);
+      expect(rankFuzzyItems(items, "", { ...options, limit: 2 }).map((result) => result.item.label)).toEqual(["Alpha", "Bravo"]);
+    });
+  });
+
   describe("element id grammar", () => {
     it("isElementId accepts dotted camelCase and rejects everything else", () => {
       expect(isElementId("framework.navbar")).toBe(true);
@@ -10053,7 +10115,6 @@ if (import.meta.vitest) {
 
     it("celebrateAllElements stamps every valid UI element id and alias, skips introduction chrome and non-grammar ids", () => {
       vi.useFakeTimers();
-      const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
       try {
         const { container } = render(
           <div>
@@ -10070,7 +10131,6 @@ if (import.meta.vitest) {
         expect(container.querySelector('[id="ui.introduction.next"]')?.getAttribute("data-celebrated")).toBeNull();
         expect(container.querySelector('[id="not-a-valid-id"]')?.getAttribute("data-celebrated")).toBeNull();
         expect(container.querySelector('[data-element-alias="framework.panelTab.puzzle.catalogue.firstDraggable"]')?.getAttribute("data-celebrated")).toBe("true");
-        expect(logSpy).toHaveBeenCalledWith(expect.stringMatching(/^\[DEBUG\] celebrateAllElements stamping \d+ ui elements for 1000ms$/));
         cancel();
         expect(container.querySelector('[id="framework.window.main"]')?.getAttribute("data-celebrated")).toBeNull();
         expect(container.querySelector('[data-element-alias="framework.panelTab.puzzle.catalogue.firstDraggable"]')?.getAttribute("data-celebrated")).toBeNull();
@@ -10082,7 +10142,6 @@ if (import.meta.vitest) {
         });
         expect(container.querySelector('[id="framework.window.main"]')?.getAttribute("data-celebrated")).toBeNull();
       } finally {
-        logSpy.mockRestore();
         vi.useRealTimers();
       }
     });
@@ -10340,6 +10399,7 @@ if (import.meta.vitest) {
             windows={[
               {
                 id: "puzzle3d-main-top",
+                iconId: "scene-3d",
                 title: uiDataLabel("Top"),
                 utilityBar: (
                   <button id="transform" type="button">
@@ -10400,6 +10460,7 @@ if (import.meta.vitest) {
             windows={[
               {
                 id: "puzzle3d-main-top",
+                iconId: "scene-3d",
                 title: uiDataLabel("Top"),
                 children: <div id="framework.window.puzzle3dMain">Main Pane</div>,
               },
@@ -10470,7 +10531,7 @@ if (import.meta.vitest) {
       expect(measureWindowSilhouetteMetrics(stack)).toEqual({
         width: 200,
         height: 100,
-        top: { depth: 24, chips: [{ left: 0, right: 60 }, { left: 160, right: 200 }] },
+        top: { depth: 24, chips: [{ left: 0, right: 60 }] },
         bottom: { depth: 0, chips: [] },
       });
       stack.setAttribute("data-silhouette-remeasure", "1");
@@ -10482,7 +10543,7 @@ if (import.meta.vitest) {
           windowSilhouettePath({
             width: 200,
             height: 100,
-            top: { depth: 24, chips: [{ left: 0, right: 60 }, { left: 160, right: 200 }] },
+            top: { depth: 24, chips: [{ left: 0, right: 60 }] },
             bottom: { depth: 0, chips: [] },
           }),
         );
@@ -11052,7 +11113,7 @@ if (import.meta.vitest) {
           introduce: null,
           show: [],
           placement: "center",
-          interactions: [{ on: { kind: "click", id: "ui.footer" }, label: "Click footer" }],
+          interactions: [{ on: { kind: "action", id: "ui.footer" }, label: "Click footer" }],
           ordered: true,
           logos: [],
           demonstrations: [],
@@ -11325,7 +11386,7 @@ if (import.meta.vitest) {
           introduce: null,
           show: [],
           placement: "center",
-          interactions: [{ on: { kind: "click", id: "ui.footer" }, label: "Click" }],
+          interactions: [{ on: { kind: "action", id: "ui.footer" }, label: "Click" }],
           ordered: false,
           logos: [],
           demonstrations: [],
@@ -11347,7 +11408,7 @@ if (import.meta.vitest) {
           introduce: null,
           show: [],
           placement: "center",
-          interactions: [{ on: { kind: "click", id: "ui.footer" }, label: "Click" }],
+          interactions: [{ on: { kind: "action", id: "ui.footer" }, label: "Click" }],
           ordered: false,
           logos: [],
           demonstrations: [],
@@ -14444,7 +14505,7 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("flex-1");
       expect(container.querySelector('[data-slot="mode-dock-tabbar"]')?.className).not.toContain("ui-glass");
       expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("ui-glass");
-      expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("ui-glass");
+      expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeNull();
       expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-glass");
       expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-glass-chrome");
       expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-surface");
@@ -14452,13 +14513,12 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).not.toContain("justify-end");
       const tabbar = container.querySelector('[data-slot="mode-dock-tabbar"]');
       expect(tabbar?.querySelector('[data-slot="mode-dock-tab-cap"]')).toBeTruthy();
-      expect(tabbar?.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeTruthy();
-      expect([...(tabbar?.children ?? [])].map((child) => child.getAttribute("data-slot")).filter(Boolean)).toEqual(["mode-dock-tab-cap", "mode-dock-tab-gap", "mode-dock-controls-cap"]);
+      expect(tabbar?.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeNull();
+      expect([...(tabbar?.children ?? [])].map((child) => child.getAttribute("data-slot")).filter(Boolean)).toEqual(["mode-dock-tab-cap", "mode-dock-tab-gap"]);
       expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).not.toContain("ui-glass-chrome");
-      expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("ui-glass-chrome");
-      expect(container.querySelector('[data-slot="mode-dock-maximize"]')?.className).toContain("hover:text-emphasized");
-      expect(container.querySelector('[data-slot="mode-dock-close"]')?.className).toContain("hover:text-emphasized");
-      expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("text-element");
+      expect(container.querySelector('[data-slot="mode-dock-tab-focus"]')?.className).toContain("hover:text-foreground");
+      expect(container.querySelector('[data-slot="mode-dock-tab-close"]')?.className).toContain("hover:text-foreground");
+      expect(container.querySelector('[data-slot="mode-dock-tab"]')?.className).toContain("text-element");
       const layoutActiveStack = container.querySelector('[data-slot="window"][data-active="true"]')?.closest('[data-slot="mode-dock-stack"]') as HTMLElement;
       const layoutInactiveStack = [...container.querySelectorAll('[data-slot="mode-dock-stack"]')].find((stack) => !stack.querySelector('[data-slot="window"][data-active="true"]')) as HTMLElement;
       expect(layoutActiveStack?.className).toContain("z-window");
@@ -14473,11 +14533,11 @@ if (import.meta.vitest) {
       expect(layoutInactiveStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
       expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.className).toContain("z-[40]");
       expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("border-0");
-      expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-0");
+      expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-tab-focus"]')?.className).toContain("border-0");
       expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("border-0");
       expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-0");
       expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-tab-cap-corner"]')).toBeNull();
-      expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-controls-cap-corner"]')).toBeNull();
+      expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeNull();
       expect(container.querySelector('[data-slot="mode-dock-stack"]')?.className).not.toContain("border-emphasized");
     });
 
@@ -14512,7 +14572,7 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="mode-dock-stack"]')?.className).toContain("pointer-events-none");
       expect(container.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("pointer-events-auto");
       expect(container.querySelector('[data-slot="mode-dock-tab"]')?.className).toContain("pointer-events-auto");
-      expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("pointer-events-auto");
+      expect(container.querySelector('[data-slot="mode-dock-tab"]')?.className).toContain("pointer-events-auto");
       expect(gap.className).toContain("pointer-events-none");
       expect(gap.className).not.toContain("cursor-grab");
       vi.spyOn(gap, "getBoundingClientRect").mockReturnValue({ left: 60, right: 160, top: 0, bottom: 24, width: 100, height: 24, x: 60, y: 0, toJSON: () => ({}) } as DOMRect);
@@ -14606,13 +14666,12 @@ if (import.meta.vitest) {
       expect(inactiveStackTab?.className).not.toContain("text-foreground");
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-tabbar"]')?.className).not.toContain("ui-glass");
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("ui-glass");
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("ui-glass");
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("ui-glass-chrome");
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-0");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeNull();
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-close"]')?.className).toContain("border-0");
       expect(activeStack?.querySelector('[data-slot="mode-dock-tabbar"]')?.className).not.toContain("ui-glass");
       expect(activeStack?.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("ui-glass");
-      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("ui-glass");
-      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("ui-glass-chrome");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeNull();
+      expect(activeStack?.querySelector('[data-slot="mode-dock-tab-focus"]')).toBeTruthy();
       expect(activeStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
       fireEvent.pointerDown(activeStack.querySelector('[data-slot="mode-dock-stack-body"]')!);
@@ -14773,11 +14832,11 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="mode-dock-chrome-column"]')).toBeNull();
       expect(container.querySelector('[data-slot="mode-dock-stack"] [data-slot="mode-dock-stack-body"]')).toBeTruthy();
       const multiTabBar = container.querySelector('[data-slot="mode-dock-tabbar"]');
-      expect(multiTabBar?.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeTruthy();
-      expect(multiTabBar?.querySelectorAll('[data-slot="mode-dock-maximize"]')).toHaveLength(1);
+      expect(multiTabBar?.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeNull();
+      expect(multiTabBar?.querySelectorAll('[data-slot="mode-dock-tab-focus"]')).toHaveLength(2);
       expect(container.querySelector('[data-slot="mode-dock-stack"]')?.className).not.toContain("grid");
       expect(container.querySelector('[data-slot="mode-dock-tabbar"]')?.className).not.toContain("ui-glass");
-      expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("ui-glass");
+      expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeNull();
       expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("ui-glass");
       expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-glass");
       expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-glass-chrome");
@@ -14815,7 +14874,7 @@ if (import.meta.vitest) {
       const stackBody = stack.querySelector('[data-slot="mode-dock-stack-body"]') as HTMLElement;
       expect(stack.querySelectorAll('[data-slot="mode-dock-tab"]')).toHaveLength(2);
       expect(stack.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("ui-glass");
-      expect(stack.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("ui-glass");
+      expect(stack.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeNull();
       expect(stack.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-glass");
       expect(stackBody.hasAttribute("data-window-silhouette-content")).toBe(true);
       expect(stackBody.style.clipPath).toBe("inset(100%)");
@@ -14825,13 +14884,15 @@ if (import.meta.vitest) {
       const activeTab = stack.querySelector('[data-slot="mode-dock-tab"][data-window-id="energy"]');
       expect(inactiveTab?.className).not.toContain("border-active-base");
       expect(activeTab?.className).toContain("bg-active-base");
-      expect(activeTab?.getAttribute("aria-selected")).toBe("true");
-      expect(activeTab?.getAttribute("aria-controls")).toBe(stack.querySelector('[role="tabpanel"]')?.id);
-      expect(stack.querySelector('[role="tabpanel"]')?.getAttribute("aria-labelledby")).toBe(activeTab?.id);
+      const inactiveTabButton = inactiveTab?.querySelector<HTMLElement>('[role="tab"]');
+      const activeTabButton = activeTab?.querySelector<HTMLElement>('[role="tab"]');
+      expect(activeTabButton?.getAttribute("aria-selected")).toBe("true");
+      expect(activeTabButton?.getAttribute("aria-controls")).toBe(stack.querySelector('[role="tabpanel"]')?.id);
+      expect(stack.querySelector('[role="tabpanel"]')?.getAttribute("aria-labelledby")).toBe(activeTabButton?.id);
       expect(stackBody.getAttribute("data-level")).toBe("base");
-      fireEvent.keyDown(activeTab!, { key: "ArrowLeft" });
-      expect(document.activeElement).toBe(inactiveTab);
-      fireEvent.keyDown(inactiveTab!, { key: "Enter" });
+      fireEvent.keyDown(activeTabButton!, { key: "ArrowLeft" });
+      expect(document.activeElement).toBe(inactiveTabButton);
+      fireEvent.keyDown(inactiveTabButton!, { key: "Enter" });
       expect(screen.getByText("Shape Body")).toBeTruthy();
       expect(screen.queryByText("Energy Body")).toBeNull();
       fireEvent.pointerDown(stackBody);
@@ -14861,7 +14922,7 @@ if (import.meta.vitest) {
           />
         </div>,
       );
-      const soloClose = container.querySelector("[data-stack-path='0'] [data-slot='mode-dock-close']");
+      const soloClose = container.querySelector("[data-stack-path='0'] [data-slot='mode-dock-tab-close']");
       expect(soloClose).toBeTruthy();
       fireEvent.click(soloClose!);
       expect(screen.queryByText("Solo Body")).toBeNull();
@@ -15560,7 +15621,7 @@ if (import.meta.vitest) {
           />
         </div>,
       );
-      fireEvent.click(container.querySelector("[data-stack-path='0'] [data-slot='mode-dock-maximize']")!);
+      fireEvent.click(container.querySelector("[data-stack-path='0'] [data-slot='mode-dock-tab-focus']")!);
       expect(container.querySelector('[data-slot="mode"]')?.getAttribute("data-maximized-path")).toBe("0");
       expect(screen.getByText("A Body")).toBeTruthy();
       expect(screen.queryByText("B Body")).toBeNull();
@@ -15572,8 +15633,8 @@ if (import.meta.vitest) {
           <Mode windows={[{ id: "solo", title: uiDataLabel("Solo"), iconId: "app-window", children: <div>Solo Body</div> }]} activeWindowId="solo" onActiveWindowChange={() => {}} />
         </div>,
       );
-      expect(container.querySelector('[data-slot="mode-dock-maximize"]')).toBeNull();
-      expect(container.querySelector('[data-slot="mode-dock-close"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="mode-dock-tab-focus"]')).toBeNull();
+      expect(container.querySelector('[data-slot="mode-dock-tab-close"]')).toBeTruthy();
       rerender(
         <div className="h-layout-story w-layout-story-md">
           <Mode
@@ -15593,7 +15654,7 @@ if (import.meta.vitest) {
           />
         </div>,
       );
-      expect(container.querySelectorAll('[data-slot="mode-dock-maximize"]').length).toBeGreaterThan(0);
+      expect(container.querySelectorAll('[data-slot="mode-dock-tab-focus"]').length).toBeGreaterThan(0);
     });
 
     it("Engagement renders options and status lines; Search renders the input", () => {
@@ -15922,6 +15983,7 @@ if (import.meta.vitest) {
                   windows={[
                     {
                       id: "engagement-window",
+                      iconId: "search",
                       title: uiDataLabel("Viewport"),
                       active: true,
                       search: { input: { id: "search-input", value, placeholder: uiDataLabel("Action"), onChange: setValue } },
@@ -16111,6 +16173,7 @@ if (import.meta.vitest) {
                 windows={[
                   {
                     id: "engagement-window",
+                    iconId: "search",
                     title: uiDataLabel("Viewport"),
                     active: true,
                     search: {
@@ -17053,10 +17116,6 @@ export { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 export { ConnectionMode, MiniMap } from "@xyflow/react";
 // #endregion 🎽️XY Flow
 
-// #region ⚗️Dagre
-export * as dagre from "dagre";
-// #endregion ⚗️Dagre
-
 // #region 🖋️State Management
 export { useSelector as useXStateSelector } from "@xstate/react";
 export { assign, createActor, fromCallback, setup, type ActorRefFrom, type AnyActorRef, type SnapshotFrom } from "xstate";
@@ -17071,17 +17130,15 @@ export { useTranslation };
 // #endregion 🗿️I18n
 
 // #region 🌙️Hotkeys
-export { useHotkeys } from "react-hotkeys-hook";
+export { useHotkeys };
 // #endregion 🌙️Hotkeys
 
 // #region ⛅️Date
-export { format, formatDistanceToNow } from "date-fns";
-export { de as dateFnsDe, enUS as dateFnsEnUS } from "date-fns/locale";
 // #endregion ⛅️Date
 
 // #region 🔔️Search
-export { default as Fuse } from "fuse.js";
-export type { FuseResult } from "fuse.js";
+export { rankFuzzyItems };
+export type { FuzzySearchField, FuzzySearchOptions, FuzzySearchResult };
 // #endregion 🔔️Search
 
 // #region 🧵️MDX
@@ -17089,8 +17146,8 @@ export { MDXProvider } from "@mdx-js/react";
 // #endregion 🧵️MDX
 
 // #region 🌨️Styling
-export { cva } from "class-variance-authority";
-export type { VariantProps } from "class-variance-authority";
+export { styleVariants } from "../../../../🔨️modules/🏷️style-variants/🟦️component.ts";
+export type { StyleCompoundVariant, StyleVariantCompiler, StyleVariantConfiguration, StyleVariantProps, StyleVariantSchema, StyleVariantSelection } from "../../../../🔨️modules/🏷️style-variants/🟦️component.ts";
 export { clsx } from "clsx";
 // #endregion 🌨️Styling
 
@@ -17932,7 +17989,7 @@ if (treeVitest) {
       const markup = renderToStaticMarkup(
         <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
           <TreeSection id="tooltip.manual" label="Section" defaultOpen={true}>
-            <TreeItem id="tooltip.tutorial" label="Folder">
+            <TreeItem id="tooltip.tutorial" label="Folder" defaultOpen>
               <TreeItem id="tooltip.docs" label="Leaf" />
             </TreeItem>
           </TreeSection>
@@ -18017,10 +18074,10 @@ if (treeVitest) {
         </TreeStateProvider>,
       );
 
-      const objectBranch = markup.split('data-slot="tree-item-content"')[1]?.slice(0, 900) ?? "";
-      const guideLefts = [...objectBranch.matchAll(/style="left:([0-9.]+)px"/g)].map((match) => match[1]);
-      expect(guideLefts).toContain("6.5");
-      expect(guideLefts).toContain("16.5");
+      const objectBranch = markup.split('data-slot="tree-item-content"')[1]?.slice(0, 1_500) ?? "";
+      expect(objectBranch.match(/data-tree-guide-line/g)?.length ?? 0).toBe(2);
+      expect(objectBranch.match(/inset-inline-start:/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
+      expect(objectBranch).not.toMatch(/(?:^|;)left:/);
     });
 
     it("renders steppers at full control width with the current numeric value visible", () => {
@@ -18665,7 +18722,7 @@ if (treeVitest) {
           },
         },
       };
-      const columns = buildVirtualFileSystemDescriptorColumns(schemaWithMeta);
+      const columns = buildVirtualFileSystemDescriptorColumns(schemaWithMeta, "en");
       const createdBy = columns.find((column) => column.id === "createdBy");
       expect(createdBy?.header).toBe("Created by");
       const updated = columns.find((column) => column.id === "updated");
@@ -18685,10 +18742,21 @@ if (treeVitest) {
       const avatarColumn = buildVirtualFileSystemDescriptorColumns({
         ...schemaWithMeta,
         descriptorColumnIds: ["createdBy"],
-      })[0];
+      }, "en")[0];
       const avatarMarkup = renderToStaticMarkup(<>{avatarColumn?.accessor(row)}</>);
       expect(avatarMarkup).toContain("avatar-fallback");
       expect(avatarMarkup).toContain(">A<");
+    });
+
+    it("formats calendar and relative timestamps through the owned locale-explicit formatter", () => {
+      const calendar = new Date(2026, 4, 1, 12, 34);
+      expect(formatVirtualFileSystemTime(calendar, "date", "en")).toBe("2026-05-01");
+      expect(formatVirtualFileSystemTime(calendar, "datetime", "de")).toBe("2026-05-01 12:34");
+      const now = new Date("2026-05-01T12:00:00.000Z");
+      const future = new Date("2026-05-01T14:00:00.000Z");
+      const past = new Date("2026-05-01T10:00:00.000Z");
+      expect(formatVirtualFileSystemTime(future, "relative", "en", now)).toContain("2 hours");
+      expect(formatVirtualFileSystemTime(past, "relative", "de", now)).toContain("2 Stunden");
     });
 
     it("renders expand affordance only for rows with children", () => {
@@ -19235,8 +19303,8 @@ if (treeVitest) {
       const markup = renderToStaticMarkup(<Mode mobile windows={windows} activeWindowId="b" layout={splitLayout} />);
       expect(markup).toContain('data-slot="mode-dock-tabbar"');
       expect(markup).toContain('data-slot="mode-dock-tab"');
-      expect(markup).not.toContain('data-slot="mode-dock-maximize"');
-      expect(markup).toContain('data-slot="mode-dock-close"');
+      expect(markup).not.toContain('data-slot="mode-dock-tab-focus"');
+      expect(markup).toContain('data-slot="mode-dock-tab-close"');
       expect(markup).toContain("A");
       expect(markup).toContain("B body");
       expect(markup).not.toContain("A body");
@@ -19257,14 +19325,14 @@ if (treeVitest) {
       const markup = renderToStaticMarkup(<Mode mobile windows={manyWindows} activeWindowId="a" layout={manyLayout} />);
       expect(markup).not.toContain('data-slot="mode-dock-chrome-column"');
       expect(markup).toContain('data-slot="mode-dock-tab-cap"');
-      expect(markup).not.toContain('data-slot="mode-dock-maximize"');
+      expect(markup).not.toContain('data-slot="mode-dock-tab-focus"');
       expect(markup.match(/data-slot="mode-dock-tab"/g)?.length).toBe(4);
     });
 
     it("keeps the Focus control on desktop for the same layout", () => {
       const markup = renderToStaticMarkup(<Mode windows={windows} activeWindowId="b" layout={splitLayout} />);
-      expect(markup).toContain('data-slot="mode-dock-maximize"');
-      expect(markup).toContain('data-slot="mode-dock-close"');
+      expect(markup).toContain('data-slot="mode-dock-tab-focus"');
+      expect(markup).toContain('data-slot="mode-dock-tab-close"');
     });
   });
 
@@ -20647,8 +20715,8 @@ if (treeVitest) {
       title: "Welcome Tour",
       durationMs: 10_000,
       chapters: [{ id: "start", at: 0, title: "Start" }],
-      base: { exampleId: "concrete-forest", ui: { activeUtilityByWindowId: {}, activePanelTabByGroup: {}, expandedTreeIds: [], commandPanelOpen: false }, cameras: [] },
-      tracks: { narration: [], video: [], events: [], ui: [], document: [], camera: [], gestures: [] },
+      base: { exampleId: "concrete-forest", ui: { activeUtilityByWindowId: {}, activePanelTabByGroup: {}, interactionSelection: {}, expandedTreeIds: [], commandPanelOpen: false }, cameras: [] },
+      tracks: { narration: [], video: [], events: [], ui: [], artifact: [], camera: [], gestures: [] },
     });
 
     it("formatTutorialTime formats mm:ss and floors sub-second/negative offsets", () => {
@@ -20720,7 +20788,7 @@ if (treeVitest) {
         tracks: {
           ...base.tracks,
           ui: [
-            { at: 100, sample: { kind: "snapshot", state: { activeModeId: "edit", activeUtilityByWindowId: {}, activePanelTabByGroup: {}, expandedTreeIds: [], commandPanelOpen: false } } },
+            { at: 100, sample: { kind: "snapshot", state: { activeModeId: "edit", activeUtilityByWindowId: {}, activePanelTabByGroup: {}, interactionSelection: {}, expandedTreeIds: [], commandPanelOpen: false } } },
             { at: 200, sample: { kind: "delta", changes: [{ kind: "activeTool", id: "brush" }] } },
             { at: 300, sample: { kind: "delta", changes: [{ kind: "panelTab", group: "top-left", tabId: "catalogue" }] } },
           ],
@@ -20742,7 +20810,7 @@ if (treeVitest) {
         ...base,
         tracks: {
           ...base.tracks,
-          document: [
+          artifact: [
             { at: 100, kind: { kind: "edit", forwards: [{ op: "add", id: "a" }], backwards: [{ op: "remove", id: "a" }] } },
             { at: 200, kind: { kind: "edit", forwards: [{ op: "add", id: "b" }], backwards: [{ op: "remove", id: "b" }] } },
           ],
@@ -20750,15 +20818,15 @@ if (treeVitest) {
       };
       const forward = tutorialSlice(def, 0, 250);
       expect(forward.forward).toBe(true);
-      expect(forward.document).toHaveLength(2);
-      expect((forward.document[0].kind as { forwards: readonly { id: string }[] }).forwards[0].id).toBe("a");
+      expect(forward.artifact).toHaveLength(2);
+      expect((forward.artifact[0].kind as { forwards: readonly { id: string }[] }).forwards[0].id).toBe("a");
 
       const backward = tutorialSlice(def, 250, 0);
       expect(backward.forward).toBe(false);
-      expect(backward.document).toHaveLength(2);
-      expect((backward.document[0].kind as { backwards: readonly { id: string }[] }).backwards[0].id).toBe("b");
+      expect(backward.artifact).toHaveLength(2);
+      expect((backward.artifact[0].kind as { backwards: readonly { id: string }[] }).backwards[0].id).toBe("b");
 
-      expect(tutorialSlice(def, 250, 250).document).toHaveLength(0);
+      expect(tutorialSlice(def, 250, 250).artifact).toHaveLength(0);
     });
 
     it("validateTutorial rejects unsorted/out-of-range tracks and passes a minimal valid tutorial", () => {

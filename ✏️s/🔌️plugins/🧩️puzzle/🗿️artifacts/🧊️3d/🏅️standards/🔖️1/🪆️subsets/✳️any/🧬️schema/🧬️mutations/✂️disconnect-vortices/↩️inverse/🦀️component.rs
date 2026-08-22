@@ -4,7 +4,7 @@ use crate::artifacts::puzzle3d::mutations::Puzzle3dMutation;
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(payload: &super::mutation::DisconnectVortices, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
+pub fn inverse(payload: &super::mutation::DisconnectVortices, base: &Puzzle3dSnapshot) -> Vec<Puzzle3dMutation> {
     let Some(attraction) = base.attractions.iter().find(|entry| entry.id == payload.id) else {
         return Vec::new();
     };

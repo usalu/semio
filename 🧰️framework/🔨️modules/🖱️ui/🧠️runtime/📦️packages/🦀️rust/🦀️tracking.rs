@@ -130,7 +130,7 @@ mod tests {
         tracker.finish(surface.clone());
 
         tracker.notify_entity(a);
-        assert_eq!(tracker.drain_dirty().collect::<Vec<_>>(), vec![surface.clone()]);
+        assert_eq!(tracker.drain_dirty().collect::<Vec<_>>(), vec![surface]);
 
         tracker.notify_entity(b);
         assert_eq!(tracker.drain_dirty().count(), 0);
@@ -147,7 +147,7 @@ mod tests {
         assert_eq!(tracker.dirty_surfaces_for(a).collect::<Vec<_>>(), vec![surface.clone()]);
 
         tracker.begin(surface.clone());
-        tracker.finish(surface.clone());
+        tracker.finish(surface);
         assert_eq!(tracker.dirty_surfaces_for(a).count(), 0);
     }
 

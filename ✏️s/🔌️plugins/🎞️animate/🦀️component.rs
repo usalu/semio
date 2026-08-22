@@ -1,16 +1,28 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
+use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
-use semio_framework_plugin::{ExecutionMode, Plugin};
+use semio_framework_plugin::plugin_app_close_prelude::*;
+use semio_framework_plugin::{EditorApp, ExecutionMode, Plugin, PluginApp, PluginAssemblyError, VcsArtifactApp, ViewerApp};
+
+//#region 🗃️Apps
+// 🗃️ Closed runtime app fleet for the declaration-owned animate surfaces.
+semio_framework_dispatch_macros::dyn_enum_close! {
+    pub enum AnimateApps: PluginApp {
+        PresentEditor(VcsArtifactApp<EditorApp<crate::editor::animate::AnimatePresentPlayApp>>),
+        PresentViewer(VcsArtifactApp<ViewerApp<crate::viewer::animate::AnimatePresentViewer>>),
+    }
+}
+//#endregion 🗃️Apps
 
 /// 🔌️ Builds the plugin surface for host registration. `.activation(…)`/`.execution(…)`/
 /// `.requests(…)` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M6-remaining,
 /// `📓️design-abi.md` §3/§6) are this crate's migration proof, mirroring `🗒️note`'s shape.
-pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
-    Plugin::builder("animate")
+pub fn plugin() -> Result<Plugin<AnimateApps>, PluginAssemblyError> {
+    Plugin::<AnimateApps>::builder("animate")
         .label("Animate")
         .version("0.1.0")
-        .declare_artifact(crate::artifacts::present::artifact())
+        .declare_artifact(crate::artifacts::present::artifact::<AnimateApps>())
         .editor_mutation_roster::<crate::editor::animate::AnimatePresentPlayApp>()
         .viewer_mutation_roster::<crate::viewer::animate::AnimatePresentViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::present::artifact_kind().id })
@@ -29,12 +41,12 @@ mod surface_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn animate_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::animate::AnimatePresentViewer>();
+        assert_viewer_never_mutates::<crate::viewer::animate::AnimatePresentViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn animate_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::animate::AnimatePresentPlayApp, crate::viewer::animate::AnimatePresentViewer>();
+        assert_editor_and_viewer_share_dialect::<crate::editor::animate::AnimatePresentPlayApp, crate::viewer::animate::AnimatePresentViewer>().await;
     }
 }
 //#endregion 🧪️SurfaceTests

@@ -1,5 +1,7 @@
 //! 👁️ 👁️ Animate present app commands command — `no-operation`.
 
+#![allow(clippy::result_large_err)]
+
 use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::PresentSnapshot;
 use crate::editor::animate::config::{PresentConfig, PresentConfigMutation};
@@ -13,6 +15,6 @@ use serde::{Deserialize, Serialize};
 #[dsl(keyword = "no-op")]
 pub struct NoOperation {}
 
-pub async fn handle(_payload: &NoOperation, _doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+pub fn handle(_payload: &NoOperation, _doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     Ok(Emit::default())
 }

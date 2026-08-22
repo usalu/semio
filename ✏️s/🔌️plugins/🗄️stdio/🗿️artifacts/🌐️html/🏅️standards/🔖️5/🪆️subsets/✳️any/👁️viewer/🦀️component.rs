@@ -9,7 +9,7 @@ use crate::artifacts::html::standards::v5::subsets::any::schema::snapshot::HtmlS
 use crate::artifacts::html::{HTML_DIALECT, STDIO_HTML_DOCUMENT_SCHEMA};
 use crate::viewer::html::modes::view;
 use crate::viewer::html::modes::view::windows::main;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command

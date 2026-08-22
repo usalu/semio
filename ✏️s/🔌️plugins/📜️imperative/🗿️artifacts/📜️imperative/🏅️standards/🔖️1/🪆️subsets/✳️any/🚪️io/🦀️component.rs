@@ -1,9 +1,9 @@
 //! 🚪️ IO s.imperative (1/✳️any) — registration now flows through 🎹️composer::register
 //! (called once from the artifact root's `declaration()`), not per-leaf register().
-pub async fn import_stdio_kinds() -> &'static [&'static str] {
+pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.csv", "stdio.json", "stdio.md", "stdio.txt"]
 }
-pub async fn export_stdio_kinds() -> &'static [&'static str] {
+pub fn export_stdio_kinds() -> &'static [&'static str] {
     &["stdio.csv", "stdio.json", "stdio.md", "stdio.txt"]
 }
 
@@ -14,7 +14,7 @@ pub async fn export_stdio_kinds() -> &'static [&'static str] {
 /// building composers/inferences), the app's `🎚️config` (`crate::artifacts::imperative::io::default_imperative_contributions_json`),
 /// and the app engine's `ImperativeHost::from_snapshot`. An artifact must not depend on its app, so this
 /// stays artifact-side where both the root and the app can reach it by qualified path.
-pub async fn default_imperative_contributions_json() -> String {
+pub fn default_imperative_contributions_json() -> String {
     static ENTRIES: std::sync::OnceLock<String> = std::sync::OnceLock::new();
     ENTRIES
         .get_or_init(|| {
@@ -34,7 +34,7 @@ pub async fn default_imperative_contributions_json() -> String {
 /// doc for why this lives here rather than the artifact root or the app. Widened to `pub` (was
 /// `pub(crate)` while confined to the artifact crate) because the app engine's `ImperativeHost` is now
 /// its second caller.
-pub async fn bootstrap_imperative_runtime() {
+pub fn bootstrap_imperative_runtime() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(|| {
         imperative_engine::register_native_imperative_module("imperative-extension-core", crate::extensions::effect::register);
@@ -49,7 +49,6 @@ pub async fn bootstrap_imperative_runtime() {
 
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::artifacts::imperative::standards::v1::subsets::any::schema::ImperativeAnalyzer;
     use crate::artifacts::imperative::ImperativeSnapshot;
     use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
@@ -72,14 +71,11 @@ pub mod derived_composition {
         async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             for source in sources {
                 if source.dialect == DIALECT {
-                    let native = match &source.payload {
-                        AnalyzeSource::Text(t) => AnalyzeSource::Text(*t),
-                        AnalyzeSource::Binary(b) => AnalyzeSource::Binary(*b),
+                    let snapshot = match &source.payload {
+                        AnalyzeSource::Text(text) => <ImperativeSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| ComposeError { message: error.to_string(), diagnostics: Vec::new() })?,
+                        AnalyzeSource::Binary(bytes) => <ImperativeSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| ComposeError { message: error.to_string(), diagnostics: Vec::new() })?,
                     };
-                    let analysis = ImperativeAnalyzer::analyze(&[native]);
-                    if let Some(snapshot) = analysis.parts.snapshot {
-                        return Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics });
-                    }
+                    return Ok(Composition { snapshot, confidence: semio_framework_plugin::IoConfidence::High, diagnostics: Vec::new() });
                 }
                 if source.dialect == DEP_CSV {
                     let bytes: Vec<u8> = match &source.payload {
@@ -131,9 +127,8 @@ pub use derived_composition::*;
 /// module's `entries()` (`&'static [ComposerEntry]`, owning storage) — deliberately different return
 /// types; do not conflate them when qualifying paths.
 pub mod io_registry {
-    use crate::artifacts::imperative::standards::v1::subsets::any::schema::ImperativeBuilder as ImperativeAnyBuilder;
     use crate::artifacts::imperative::standards::v1::subsets::any::schema::ImperativeComposer as ImperativeAnyComposer;
-    use semio_framework_plugin::{composer_entry_of, ArtifactBuilder, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, IoConfidence, IoPayload, StandardId, SubsetId};
+    use semio_framework_plugin::{composer_entry_of, ComposeError, ComposedArtifact, ComposerEntry, Dialect, ErasedComposeSource, IoConfidence, IoPayload, StandardId, SubsetId};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -152,13 +147,12 @@ pub mod io_registry {
     const IMPERATIVE_DIALECT: Dialect = Dialect { artifact_kind: "s.imperative", standard: StandardId("1"), subset: SubsetId("*") };
     const IMPERATIVE_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
 
-    async fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::imperative::ImperativeSnapshot, ComposeError> {
+    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::imperative::ImperativeSnapshot, ComposeError> {
         if let Some(source) = sources.iter().find(|s| s.dialect == IMPERATIVE_DIALECT) {
-            let builder = match &source.payload {
-                IoPayload::Text(t) => ImperativeAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
-                IoPayload::Binary(b) => ImperativeAnyBuilder::from_binary(b).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
+            return match &source.payload {
+                IoPayload::Text(text) => <crate::artifacts::imperative::ImperativeSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| ComposeError { message: error.to_string(), diagnostics: Vec::new() }),
+                IoPayload::Binary(bytes) => <crate::artifacts::imperative::ImperativeSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| ComposeError { message: error.to_string(), diagnostics: Vec::new() }),
             };
-            return builder.build().map_err(|diagnostics| ComposeError { message: "ImperativeComposer export: build() failed".into(), diagnostics });
         }
         if let Some(source) = sources.iter().find(|s| s.dialect == IMPERATIVE_JSON_BRIDGE_DIALECT) {
             // 🌉 The OS dispatch layer (export_os_app_instance_media_kind) deals in already-
@@ -174,7 +168,7 @@ pub mod io_registry {
     }
 
     const EXPORT_CSV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId("*") };
-    async fn compose_export_csv(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    fn compose_export_csv(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
             let bytes = crate::artifacts::imperative::io::export::serializers::artifacts::csv::v_rfc4180::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -182,7 +176,7 @@ pub mod io_registry {
         })
     }
     const EXPORT_MD_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId("*") };
-    async fn compose_export_md(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    fn compose_export_md(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
             let bytes = crate::artifacts::imperative::io::export::serializers::artifacts::md::v_commonmark::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -190,7 +184,7 @@ pub mod io_registry {
         })
     }
     const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    async fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
             let bytes = crate::artifacts::imperative::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -199,7 +193,7 @@ pub mod io_registry {
     }
     //#endregion 🔖️ExportEntries
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES
             .get_or_init(|| {
                 vec![

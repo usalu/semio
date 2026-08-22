@@ -777,19 +777,28 @@ pub mod part_5 {
     }
 
     /// ⚠️ Script execution error.
-    #[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
+    #[derive(Clone, Debug, PartialEq, Eq)]
     pub enum ScriptError {
-        #[error("timeout after {0} ms")]
         Timeout(u64),
-        #[error("recursion limit {0} exceeded")]
         RecursionLimit(u32),
-        #[error("step limit {0} exceeded")]
         StepLimit(u32),
-        #[error("invalid expression: {0}")]
         InvalidExpression(String),
-        #[error("missing input: {0}")]
         MissingInput(String),
     }
+
+    impl std::fmt::Display for ScriptError {
+        fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                Self::Timeout(milliseconds) => write!(formatter, "timeout after {milliseconds} ms"),
+                Self::RecursionLimit(limit) => write!(formatter, "recursion limit {limit} exceeded"),
+                Self::StepLimit(limit) => write!(formatter, "step limit {limit} exceeded"),
+                Self::InvalidExpression(expression) => write!(formatter, "invalid expression: {expression}"),
+                Self::MissingInput(input) => write!(formatter, "missing input: {input}"),
+            }
+        }
+    }
+
+    impl std::error::Error for ScriptError {}
 }
 // #endregion Part5
 /// 📸️ Persisted snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.

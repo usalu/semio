@@ -5,7 +5,6 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import openCascadeWasmBundledUrl from "brepjs-opencascade/src/brepjs_single.wasm?url";
 import {
   box,
   bsplineApprox,
@@ -28,7 +27,7 @@ import {
   getFaces,
   getHashCode,
   getSurfaceType,
-  initFromOC,
+  initializeOwnedOpenCascade,
   isOk,
   isSolid,
   isValidSolid,
@@ -44,7 +43,6 @@ import {
   offsetFace,
   fuseAll,
   sewShells,
-  shape,
   solidFromShell,
   sphere,
   threePointArc,
@@ -53,9 +51,15 @@ import {
   unwrap,
   vertex as brepVertex,
   wireLoop,
-} from "brepjs";
-import type { Dimension, Edge, Face, OrientedFace, Shape3D, ValidSolid, Wire } from "brepjs";
-import initOpenCascade from "brepjs-opencascade";
+  ownedOpenCascadeWasmBundledUrl,
+  resolveOwnedOpenCascadeWasmFileUrl,
+  type OwnedBrepEdge as Edge,
+  type OwnedBrepFace as Face,
+  type OwnedBrepOrientedFace as OrientedFace,
+  type OwnedBrepShape as Shape3D,
+  type OwnedBrepSolid as ValidSolid,
+  type OwnedBrepWire as Wire,
+} from "../../../../🔌️plugins/📐️cad/📦️packages/🟦️typescript/🟦️brep-implementation.ts";
 import { applyModelDiff, isEmptyModelDiff, type SpatialKernel, type SpatialPreviewKernel, type ModelDiff } from "../🗺️spatial/🟦️component.ts";
 import { Model, ModelSpace, type ModelJson, defaultModelDefinitionId, type ModelSpaceJson } from "../📐️geometry/🟦️component.ts";
 import { executeActionCapability, type ActionResult } from "../../../../🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts";
@@ -1332,20 +1336,17 @@ export const preciseSpatialKernelMath = new PreciseSpatialKernelMath();
 // #region 🧩️OpenCascade
 const isBrepjsTestRun = import.meta.env.VITEST === true || import.meta.env.MODE === "test" || Boolean(import.meta.vitest);
 
-const openCascadeWasmNeedsNodeResolve = (import.meta.env.VITEST || import.meta.env.MODE === "test") && (openCascadeWasmBundledUrl.includes("@fs") || openCascadeWasmBundledUrl.includes("node_modules/brepjs-opencascade"));
+const openCascadeWasmNeedsNodeResolve =
+  (import.meta.env.VITEST || import.meta.env.MODE === "test") && (ownedOpenCascadeWasmBundledUrl.includes("@fs") || ownedOpenCascadeWasmBundledUrl.includes("node_modules/brepjs-opencascade"));
 
 /** @emoji 📂️ Builds `locateFile` for OpenCascade: Vite asset URL in browser, `createRequire` on disk in Vitest. */
 async function createOpenCascadeLocateFile(): Promise<(path: string) => string> {
   if (!openCascadeWasmNeedsNodeResolve) {
-    return (path) => (path === "brepjs_single.wasm" ? openCascadeWasmBundledUrl : path);
+    return (path) => (path === "brepjs_single.wasm" ? ownedOpenCascadeWasmBundledUrl : path);
   }
-  const { createRequire } = await import("node:module");
-  const { pathToFileURL } = await import("node:url");
-  const wasmFile = pathToFileURL(createRequire(import.meta.url).resolve("brepjs-opencascade/src/brepjs_single.wasm")).href;
+  const wasmFile = await resolveOwnedOpenCascadeWasmFileUrl();
   return (path) => (path === "brepjs_single.wasm" ? wasmFile : path);
 }
-
-type OpenCascadeModuleInit = (moduleArg?: { locateFile?: (path: string) => string }) => Promise<unknown>;
 // #endregion 🧩️OpenCascade
 
 // #region ♻️BrepjsScratch
@@ -1657,7 +1658,7 @@ function geomEdgeToBrepEdge(model: Model, edge: EdgeRecord): Edge | null {
 }
 
 /** @emoji 🔗️ brepjs wire from a model wire (closed `wireLoop` or open `wire`). */
-function geomWireToBrepWire(model: Model, wireId: WireRef): Wire<Dimension> | null {
+function geomWireToBrepWire(model: Model, wireId: WireRef): Wire | null {
   const w = geom(model).wires[wireId];
   if (!w?.edgeIds.length) return null;
   const edges: Edge[] = [];
@@ -1982,11 +1983,7 @@ class BrepjsWasmEngine {
 
   async ensureInit(): Promise<void> {
     if (!this.initPromise) {
-      this.initPromise = createOpenCascadeLocateFile().then((locateFile) =>
-        (initOpenCascade as OpenCascadeModuleInit)({ locateFile }).then((oc) => {
-          initFromOC(oc);
-        }),
-      );
+      this.initPromise = createOpenCascadeLocateFile().then(initializeOwnedOpenCascade);
     }
     await this.initPromise;
   }

@@ -6,23 +6,32 @@
 
 // #region 🔖️Error
 /// ⚠️ Fallible construction, lookup, and parsing errors for [`Table`] and [`CategoricalColumn`].
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum TabularError {
-    #[error("column length {found} does not match row count {expected}")]
     LengthMismatch { expected: usize, found: usize },
-    #[error("duplicate column name `{0}`")]
     DuplicateName(String),
-    #[error("no column named `{0}`")]
     UnknownColumn(String),
-    #[error("column index {0} out of bounds")]
     IndexOutOfBounds(usize),
-    #[error("column `{0}` is not continuous")]
     NotContinuous(String),
-    #[error("column `{0}` is not categorical")]
     NotCategorical(String),
-    #[error("csv parse error at line {line}: {message}")]
     Csv { line: usize, message: String },
 }
+
+impl std::fmt::Display for TabularError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::LengthMismatch { expected, found } => write!(formatter, "column length {found} does not match row count {expected}"),
+            Self::DuplicateName(name) => write!(formatter, "duplicate column name `{name}`"),
+            Self::UnknownColumn(name) => write!(formatter, "no column named `{name}`"),
+            Self::IndexOutOfBounds(index) => write!(formatter, "column index {index} out of bounds"),
+            Self::NotContinuous(name) => write!(formatter, "column `{name}` is not continuous"),
+            Self::NotCategorical(name) => write!(formatter, "column `{name}` is not categorical"),
+            Self::Csv { line, message } => write!(formatter, "csv parse error at line {line}: {message}"),
+        }
+    }
+}
+
+impl std::error::Error for TabularError {}
 // #endregion 🔖️Error
 
 // #region 🔖️Categorical
@@ -494,6 +503,23 @@ impl Table {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn tabular_error_contract_is_owned_and_stable() {
+        let errors = [
+            (TabularError::LengthMismatch { expected: 4, found: 2 }, "column length 2 does not match row count 4".to_string()),
+            (TabularError::DuplicateName("x".into()), "duplicate column name `x`".to_string()),
+            (TabularError::UnknownColumn("x".into()), "no column named `x`".to_string()),
+            (TabularError::IndexOutOfBounds(8), "column index 8 out of bounds".to_string()),
+            (TabularError::NotContinuous("x".into()), "column `x` is not continuous".to_string()),
+            (TabularError::NotCategorical("x".into()), "column `x` is not categorical".to_string()),
+            (TabularError::Csv { line: 3, message: "bad quote".into() }, "csv parse error at line 3: bad quote".to_string()),
+        ];
+        for (error, message) in errors {
+            assert_eq!(error.to_string(), message);
+            assert!(std::error::Error::source(&error).is_none());
+        }
+    }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn nan_aware_eq(a: &[f64], b: &[f64]) -> bool {

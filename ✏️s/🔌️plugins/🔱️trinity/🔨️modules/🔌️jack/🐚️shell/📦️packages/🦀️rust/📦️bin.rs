@@ -11,18 +11,49 @@ use trinity::executor::run;
 
 //#region ⚠️ Errors
 /// ⚠️ Trinity jack shell errors.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 enum TrinityJackShellError {
-    #[error("read {path}: {source}")]
     ReadFixture { path: String, source: io::Error },
-    #[error("parse {path}: {source}")]
     Dsl { path: String, source: store::TextError },
-    #[error(transparent)]
-    Graph(#[from] trinity::artifacts::jack::TrinityRamError),
-    #[error("{0}")]
+    Graph(trinity::artifacts::jack::TrinityRamError),
     Query(String),
-    #[error(transparent)]
-    Io(#[from] io::Error),
+    Io(io::Error),
+}
+
+impl std::fmt::Display for TrinityJackShellError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::ReadFixture { path, source } => write!(formatter, "read {path}: {source}"),
+            Self::Dsl { path, source } => write!(formatter, "parse {path}: {source}"),
+            Self::Graph(error) => write!(formatter, "{error}"),
+            Self::Query(message) => formatter.write_str(message),
+            Self::Io(error) => write!(formatter, "{error}"),
+        }
+    }
+}
+
+impl std::error::Error for TrinityJackShellError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::ReadFixture { source, .. } => Some(source),
+            Self::Dsl { source, .. } => Some(source),
+            Self::Graph(error) => std::error::Error::source(error),
+            Self::Io(error) => std::error::Error::source(error),
+            Self::Query(_) => None,
+        }
+    }
+}
+
+impl From<trinity::artifacts::jack::TrinityRamError> for TrinityJackShellError {
+    fn from(error: trinity::artifacts::jack::TrinityRamError) -> Self {
+        Self::Graph(error)
+    }
+}
+
+impl From<io::Error> for TrinityJackShellError {
+    fn from(error: io::Error) -> Self {
+        Self::Io(error)
+    }
 }
 //#endregion ⚠️ Errors
 

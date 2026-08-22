@@ -13,31 +13,31 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 
 //#region 🔖️Defaults
-async fn one_f64() -> f64 {
+fn one_f64() -> f64 {
     1.0
 }
 
-async fn default_overlap_budget() -> f64 {
+fn default_overlap_budget() -> f64 {
     0.02
 }
 
-async fn default_lod_mode() -> String {
+fn default_lod_mode() -> String {
     crate::editor::puzzle5d::PUZZLE5D_LOD_MODE_AUTOMATIC.into()
 }
 
-async fn default_suggestion_offset() -> f64 {
+fn default_suggestion_offset() -> f64 {
     crate::editor::puzzle5d::PUZZLE5D_DEFAULT_SUGGESTION_OFFSET
 }
 
-async fn default_true() -> bool {
+fn default_true() -> bool {
     true
 }
 
-async fn default_terminology() -> String {
+fn default_terminology() -> String {
     "native".into()
 }
 
-async fn default_locale() -> String {
+fn default_locale() -> String {
     "en-US".into()
 }
 //#endregion 🔖️Defaults
@@ -146,21 +146,21 @@ pub type Puzzle5dRuntime = Puzzle5dConfig;
 impl store::ArtifactDsl for Puzzle5dConfig {
     const EXTENSION: &'static str = "puzzle5dcfg";
 
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         serde_json::from_str(text).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
     }
 
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         serde_json::to_string_pretty(self).unwrap_or_default()
     }
 }
 
 impl store::ArtifactPack for Puzzle5dConfig {
-    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         dsl::to_dsl_value(self).map_err(store::PackError::Schema)?.encode_pack_with(options)
     }
 
-    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let value = dsl::DslValue::decode_pack_with(bytes, options)?;
         dsl::from_dsl_value(value).map_err(store::PackError::Schema)
     }
@@ -180,31 +180,31 @@ pub enum Puzzle5dConfigMutation {
 impl protocol::Mutation<Puzzle5dConfig> for Puzzle5dConfigMutation {
     type Diff = Puzzle5dConfig;
 
-    async fn diff(&self, _base: &Puzzle5dConfig) -> protocol::MutationOutcome<Puzzle5dConfig> {
+    fn diff(&self, _base: &Puzzle5dConfig) -> protocol::MutationOutcome<Puzzle5dConfig> {
         protocol::MutationOutcome::new(match self {
             Puzzle5dConfigMutation::Snapshot { config } => config.clone(),
         })
     }
 
-    async fn inverse(&self, base: &Puzzle5dConfig) -> Vec<Self> {
+    fn inverse(&self, base: &Puzzle5dConfig) -> Vec<Self> {
         vec![Puzzle5dConfigMutation::Snapshot { config: base.clone() }]
     }
 }
 
 impl protocol::OpBinary for Puzzle5dConfigMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::Schema(error.to_string())))
     }
 }
 
 impl protocol::OpText for Puzzle5dConfigMutation {
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         serde_json::to_string(self).unwrap_or_default()
     }
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         serde_json::from_str(line).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
     }
 }

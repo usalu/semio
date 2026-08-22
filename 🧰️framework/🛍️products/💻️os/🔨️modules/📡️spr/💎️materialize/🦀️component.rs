@@ -164,7 +164,7 @@ async fn apply_dict_record(dict: &mut DictReader, payload: &[u8]) -> Result<(), 
         let bytes = input.read_bytes(len)?;
         entries.push(std::str::from_utf8(bytes).map_err(|_| malformed("dict entry utf8", "invalid utf-8"))?.to_string());
     }
-    dict.extend(base_count, entries).await
+    dict.extend(base_count, entries)
 }
 //#endregion 🔖️Snapshot
 
@@ -255,7 +255,7 @@ struct Candidate<'a> {
 
 async fn verify_candidate(hasher: &Blake3Hasher, candidate: &Candidate<'_>) -> bool {
     match candidate.body_span {
-        Some((start, len)) => hasher.hash(&candidate.payload[start..start + len]).await == candidate.header.body_hash,
+        Some((start, len)) => hasher.hash(&candidate.payload[start..start + len]) == candidate.header.body_hash,
         // A sidecar body lives outside `trusted` entirely; nothing here to hash against.
         None => true,
     }
@@ -444,7 +444,7 @@ pub struct MaterializeReport {
 /// frame, since its `id`/dependency fields may reference dictionary entries or edit ordinals
 /// introduced anywhere earlier in the file, including inside the base snapshot's own coverage.
 async fn prescan_dict_and_edits(trusted: &[u8], up_to_offset: u64) -> Result<(DictReader, Vec<String>), ProtocolError> {
-    let mut dict = DictReader::new().await;
+    let mut dict = DictReader::new();
     let mut edit_ids = Vec::new();
     let mut cursor = FrameCursor::new(trusted, HEADER_SIZE as u64).await;
     while let Some(frame) = cursor.next_frame().await? {
@@ -540,7 +540,7 @@ mod tests {
     //#region 🔖️Snapshot
     async fn sample_record(anchor: Option<&str>, ordinal: u64, kind: SnapshotBodyKind, body: Option<Vec<u8>>) -> SnapshotRecord {
         let body_hash = match body.as_deref() {
-            Some(b) => Blake3Hasher.hash(b).await,
+            Some(b) => Blake3Hasher.hash(b),
             None => [0u8; 32],
         };
         SnapshotRecord { anchor_checkpoint_id: anchor.map(str::to_string), edit_ordinal: ordinal, body_kind: kind, body_hash, body }
@@ -580,23 +580,23 @@ mod tests {
     //#endregion 🔖️Snapshot
 
     //#region 🔖️Plan
-    async fn sample_edit(id: &str, op_text: &str) -> HistoryEdit {
+    fn sample_edit(id: &str, op_text: &str) -> HistoryEdit {
         HistoryEdit { id: id.to_string(), actor: None, started_at: format!("t-{id}"), finished_at: None, coalesce_key: None, description: None, ops: vec![OpPayload { text: Some(op_text.to_string()), binary: None }], inverse: Vec::new(), meta: None }
     }
 
     async fn flush_dict_delta<S: crate::os_pack::PackSink>(writer: &mut SprWriter<S>, dict: &DictBuilder, base: &mut u32) {
-        let len = dict.len().await;
+        let len = dict.len();
         if len > *base {
-            let entries = dict.entries_since(*base).await;
-            let mut payload = ByteWriter::new().await;
-            payload.write_u8(1).await;
-            payload.write_varint_u64(*base as u64).await;
-            payload.write_varint_u64(entries.len() as u64).await;
+            let entries = dict.entries_since(*base);
+            let mut payload = ByteWriter::new();
+            payload.write_u8(1);
+            payload.write_varint_u64(*base as u64);
+            payload.write_varint_u64(entries.len() as u64);
             for entry in entries {
-                payload.write_varint_u64(entry.len() as u64).await;
-                payload.write_bytes(entry.as_bytes()).await;
+                payload.write_varint_u64(entry.len() as u64);
+                payload.write_bytes(entry.as_bytes());
             }
-            writer.write_record(crate::os_spr::REC_STR_DICT, true, &payload.into_bytes().await, CodecId(0)).await.unwrap();
+            writer.write_record(crate::os_spr::REC_STR_DICT, true, &payload.into_bytes(), CodecId(0)).await.unwrap();
             *base = len;
         }
     }
@@ -607,14 +607,14 @@ mod tests {
     async fn build_stream_with_snapshot(snapshot_body: &[u8]) -> Vec<u8> {
         let write_options = WriteOptions { required_flags: REQUIRED_HASH_CHAIN, optional_flags: 0 };
         let mut writer = SprWriter::begin(Vec::<u8>::new(), &write_options).await.unwrap();
-        let mut dict = DictBuilder::new().await;
+        let mut dict = DictBuilder::new();
         let mut dict_base = 0u32;
 
         let doc_payload = crate::os_spr::history::encode_doc("doc-1", "schema-1", &mut dict).await;
         flush_dict_delta(&mut writer, &dict, &mut dict_base).await;
         writer.write_record(crate::os_spr::REC_DOC, true, &doc_payload, CodecId(0)).await.unwrap();
 
-        for (i, edit) in [sample_edit("edit-0", "op-0").await, sample_edit("edit-1", "op-1").await].iter().enumerate() {
+        for (i, edit) in [sample_edit("edit-0", "op-0"), sample_edit("edit-1", "op-1")].iter().enumerate() {
             let _ = i;
             let payload = crate::os_spr::history::encode_edit(edit, &mut dict, |_| None).await.unwrap();
             flush_dict_delta(&mut writer, &dict, &mut dict_base).await;
@@ -624,7 +624,7 @@ mod tests {
         let snapshot = sample_record(None, 1, SnapshotBodyKind::EmbeddedPack, Some(snapshot_body.to_vec())).await;
         writer.write_record(crate::os_spr::REC_PROJECTION, false, &encode_snapshot(&snapshot).await, CodecId(0)).await.unwrap();
 
-        for edit in [sample_edit("edit-2", "op-2").await, sample_edit("edit-3", "op-3").await] {
+        for edit in [sample_edit("edit-2", "op-2"), sample_edit("edit-3", "op-3")] {
             let payload = crate::os_spr::history::encode_edit(&edit, &mut dict, |_| None).await.unwrap();
             flush_dict_delta(&mut writer, &dict, &mut dict_base).await;
             writer.write_record(REC_EDIT, true, &payload, CodecId(0)).await.unwrap();
@@ -702,8 +702,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn resolve_plan_at_checkpoint_falls_back_to_full_decode_without_an_index() {
         let mut log = HistoryLog { doc_id: "doc-2".to_string(), schema: "schema-2".to_string(), ..Default::default() };
-        log.edits.push(sample_edit("edit-0", "op-0").await);
-        log.edits.push(sample_edit("edit-1", "op-1").await);
+        log.edits.push(sample_edit("edit-0", "op-0"));
+        log.edits.push(sample_edit("edit-1", "op-1"));
         log.changes.push(HistoryChange { id: "change-1".to_string(), saved_at: "t-change-1".to_string(), edit_ids: vec!["edit-0".to_string(), "edit-1".to_string()], description: None });
         log.checkpoints.push(HistoryCheckpoint { id: "cp-1".to_string(), timestamp: "t-cp-1".to_string(), change_ids: vec!["change-1".to_string()], parent_id: None, authors: Vec::new(), message: None });
 
@@ -723,7 +723,7 @@ mod tests {
     async fn resolve_plan_skips_a_corrupt_snapshot_and_falls_back_to_initial_pack() {
         let write_options = WriteOptions { required_flags: REQUIRED_HASH_CHAIN, optional_flags: 0 };
         let mut writer = SprWriter::begin(Vec::<u8>::new(), &write_options).await.unwrap();
-        let mut dict = DictBuilder::new().await;
+        let mut dict = DictBuilder::new();
         let mut dict_base = 0u32;
 
         let doc_payload = crate::os_spr::history::encode_doc("doc-3", "schema-3", &mut dict).await;
@@ -735,7 +735,7 @@ mod tests {
         bad_record.body_hash = [0xFFu8; 32];
         writer.write_record(crate::os_spr::REC_PROJECTION, false, &encode_snapshot(&bad_record).await, CodecId(0)).await.unwrap();
 
-        let payload = crate::os_spr::history::encode_edit(&sample_edit("edit-0", "op-0").await, &mut dict, |_| None).await.unwrap();
+        let payload = crate::os_spr::history::encode_edit(&sample_edit("edit-0", "op-0"), &mut dict, |_| None).await.unwrap();
         flush_dict_delta(&mut writer, &dict, &mut dict_base).await;
         writer.write_record(REC_EDIT, true, &payload, CodecId(0)).await.unwrap();
         writer.commit().await.unwrap();

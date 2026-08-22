@@ -1,6 +1,6 @@
 import { createElement, useState, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { cleanup, fireEvent, render } from "@testing-library/react";
+import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   deriveUtilityNodes,
@@ -40,6 +40,7 @@ import {
   ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION,
 } from "../../../../../../../../../../♻️mit-bestand/🧺️demonstrator/🟦️brand.ts";
 import { Footer, navbarFillItem, SelectionMarquee, uiDataLabel, formatKeybindingShortcut, buildKeysByActionId, type PanelTabNode, type TreeDataSection } from "@semio-tech/ui-react";
+import { renderUiControl } from "../../../../🧱️elements/Interpreter/🟦️component.tsx";
 import {
   aProjectOfLuhUdkFooterItem,
   fundedByZukunftBauFooterItem,
@@ -1570,6 +1571,23 @@ describe("framework renderer types", () => {
   });
 });
 
+describe("owned declarative controls", () => {
+  it("renders and dispatches a panel input through the Interpreter export", () => {
+    const onAction = vi.fn();
+    const { getByRole } = render(
+      renderUiControl(
+        { type: "input", id: "name", inputKind: "text", value: "before", onChange: { controllerId: "test", action: "rename", args: { retained: true } } },
+        onAction,
+        "panel.name",
+      ),
+    );
+    const input = getByRole("textbox");
+    expect(input.getAttribute("data-ui-path")).toBe("panel.name");
+    fireEvent.change(input, { target: { value: "after" } });
+    expect(onAction).toHaveBeenCalledWith({ controllerId: "test", action: "rename", args: { retained: true, value: "after" } });
+  });
+});
+
 describe("framework external slots", () => {
   // 🚧️ HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS: `resolveExternalSlots` (framework-core)
   // no longer has a `render`/`renderWithDocument` verb to call — rendering a contributor's UI body
@@ -1592,21 +1610,24 @@ describe("framework external slots", () => {
       outcomes: createTurnOutcomeBroadcast<TurnOutcome>().stream,
       dispose: () => {},
     };
-    const resolved = await resolveExternalSlots(
-      {
-        type: "externalSlot",
-        pluginId: "forms-module-procedural",
-        appId: "forms-module-procedural",
-        bodyKey: "preview",
-        paramsJson: "{}",
-      },
-      {
+    const externalNode: Parameters<typeof resolveExternalSlots>[0] = {
+      key: "forms-module-procedural",
+      component: { type: "extension", extension: "forms-module-procedural/forms-module-procedural", props: {} },
+      layout: CONTRACT_LEAF_LAYOUT,
+      style: { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" },
+      activity: "idle",
+      disabled: false,
+      accessibility: { label: null, description: null, live: "off", shortcut: null, hidden: false },
+      bindings: [],
+      menu: null,
+      children: [],
+    };
+    const resolved = await resolveExternalSlots(externalNode, {
         plugins: new Map([["forms-module-procedural", handle]]),
         contributorInstances: new Map(),
         viewState: {},
-      },
-    );
-    expect(resolved).toEqual({ type: "text", value: "Extension unavailable: forms-module-procedural" });
+      });
+    expect(resolved).toEqual({ ...externalNode, component: { type: "text", value: "Extension unavailable: forms-module-procedural", emphasize: null, dataAttributes: null }, children: [] });
   });
 
   it("renders external slot fallback text when unresolved", () => {
@@ -3147,10 +3168,10 @@ describe("framework renderer hosts", () => {
         type: "surface",
         surfaceId: "s.play.media-vfs",
         controllerId: "s-play",
-        kind: "virtualFileSystem",
+        kind: "virtual-file-system",
         paneId: null,
         bindingId: null,
-        docSchema: "virtualFileSystem@1",
+        docSchema: "virtual-file-system@1",
         doc: { bytes: Array.from(encodePackValue(doc)) },
         domainId: null,
         domainGranularityId: null,
@@ -4236,7 +4257,7 @@ describe("s workflow flow routing", () => {
         createElement(FaultyChild),
       ),
     );
-    expect(getByRole("alert")).toHaveTextContent("boom");
+    expect(getByRole("alert").textContent).toContain("boom");
   });
 
   it("folds spawned focus into viewState so a subsequent host-effect session write keeps activeSpawnedId", async () => {
@@ -4266,12 +4287,12 @@ describe("ui search/find (fuse re-export from @semio-tech/ui-react)", () => {
   // Command dialogs render via a Radix Portal into `document.body`, not into the render() container, so assertions query `document.body`.
   // This package's vitest config has no shared setupFile, so tests here clean up their own portal-rendered DOM.
   afterEach(async () => {
-    const { cleanup } = await import("@testing-library/react");
+    const { cleanup } = await import("@semio-tech/ui-react/test");
     cleanup();
   });
 
-  it("UISearch renders all items and fuzzy-filters them via the shared Fuse re-export", async () => {
-    const { render, fireEvent } = await import("@testing-library/react");
+  it("UISearch renders all items and fuzzy-filters them through the owned ranker", async () => {
+    const { render, fireEvent } = await import("@semio-tech/ui-react/test");
     const items: UISearchItem[] = [
       { id: "a", label: "Alpha", category: "Test", onSelect: noopAction },
       { id: "b", label: "Bravo", category: "Test", onSelect: noopAction },
@@ -4286,8 +4307,8 @@ describe("ui search/find (fuse re-export from @semio-tech/ui-react)", () => {
     expect(document.body.textContent).not.toContain("Bravo");
   });
 
-  it("UIFind renders and fuzzy-filters items registered on its context via the shared Fuse re-export", async () => {
-    const { render, fireEvent, act } = await import("@testing-library/react");
+  it("UIFind renders and fuzzy-filters items registered on its context through the owned ranker", async () => {
+    const { render, fireEvent, act } = await import("@semio-tech/ui-react/test");
     let contextValue: ReturnType<typeof useUIFind> | undefined;
     const Harness = () => {
       contextValue = useUIFind();
@@ -4315,7 +4336,7 @@ describe("ui search/find (fuse re-export from @semio-tech/ui-react)", () => {
 describe("window action panel — staging and single dispatch (P1/P2)", () => {
   afterEach(() => cleanup());
 
-  const numberArg = (id: string, required: boolean, def?: number): ActionArgDef => ({ id, label: id[0]!.toUpperCase() + id.slice(1), control: { kind: "number" }, required, ...(def === undefined ? {} : { default: def }) });
+  const numberArg = (id: string, required: boolean, def?: number): ActionArgDef => ({ id, label: id[0]!.toUpperCase() + id.slice(1), schema: { kind: "number", integer: false }, required, ...(def === undefined ? {} : { default: def }) });
 
   const twoArgAction: ActionDefinition = { id: "extrude", label: "Extrude", kind: "mutation", inPalette: true, args: [numberArg("depth", true), numberArg("segments", true)] };
   const zeroArgAction: ActionDefinition = { id: "flatten", label: "Flatten", kind: "mutation", inPalette: true, args: [] };
@@ -4644,7 +4665,7 @@ describe("registry-derived utilities and activation (P5)", () => {
     expect(translated.position).toEqual([3, -2, 1.5]);
   });
 
-  it("resolveWindowActions surfaces only panel-eligible definitions owned by the window", () => {
+  it("resolveWindowActions preserves every definition owned by the window", () => {
     const actionsApp = {
       controllerId: "draw",
       windowKinds: [{ actions: [
@@ -4654,7 +4675,7 @@ describe("registry-derived utilities and activation (P5)", () => {
       ] as ActionDefinition[] }],
     };
     const resolved = resolveWindowActions(actionsApp, actionsApp.windowKinds[0]!);
-    expect(resolved.map((action) => action.id)).toEqual(["extrude"]);
+    expect(resolved.map((action) => action.id)).toEqual(["extrude", "undo", "setActiveUtility"]);
   });
 
   it("panelTabDefinitionToNode maps the framework-injected History panel tab through its rendered body", () => {
@@ -4736,7 +4757,7 @@ describe("resolveCommands / commandCategories (footer command panel registry)", 
     const resolved = resolveCommands(osCommands, pluginManifest, app, "edit");
     expect(commandCategories(resolved)).toEqual([
       { id: "appearance", label: "Appearance" },
-      { id: "document", label: "Artifact" },
+      { id: "document", label: "Document" },
       { id: "view", label: "View" },
     ]);
   });
@@ -5040,8 +5061,8 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     const funding = ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION.steps.find((step) => step.id === "funding")!;
     expect(funding.logos).toHaveLength(3);
     for (const logo of funding.logos!) {
-      expect(logo.src).toMatch(/♻️mit-bestand\/🧺️demonstrator\/🖼️asset\/🪧️logo\//);
-      expect(logo.darkSrc).toMatch(/♻️mit-bestand\/🧺️demonstrator\/🖼️asset\/🪧️logo\//);
+      expect(logo.src).toMatch(/♻️mit-bestand\/🧺️demonstrator\/🖼️asset\/🪧️logos\//);
+      expect(logo.darkSrc).toMatch(/♻️mit-bestand\/🧺️demonstrator\/🖼️asset\/🪧️logos\//);
       expect(logo.alt).toBeTruthy();
     }
     const zukunftBauLogo = funding.logos!.find((logo) => logo.href === ZUKUNFT_BAU_PROJECT_URL);
@@ -5075,8 +5096,8 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(projectOfIconOnlyMarkup).not.toContain(">und<");
     expect(projectOfIconOnlyMarkup).toContain(LUH_LOGO_URL);
     expect(projectOfIconOnlyMarkup).toContain(UDK_LOGO_URL);
-    expect(LUH_LOGO_URL).toMatch(/♻️mit-bestand\/🧺️demonstrator\/🖼️asset\/🪧️logo\//);
-    expect(UDK_LOGO_URL).toMatch(/♻️mit-bestand\/🧺️demonstrator\/🖼️asset\/🪧️logo\//);
+    expect(LUH_LOGO_URL).toMatch(/♻️mit-bestand\/🧺️demonstrator\/🖼️asset\/🪧️logos\//);
+    expect(UDK_LOGO_URL).toMatch(/♻️mit-bestand\/🧺️demonstrator\/🖼️asset\/🪧️logos\//);
   });
 
   it("buildOsCommands omits only the commands for locked prefs", () => {
@@ -5185,7 +5206,7 @@ describe("buildCommandCategoryTree / buildCommandCategoryTabs (command palette a
     // Executing routes through the injected onCommand with the command's own source.
     const executeRow = resolved.sections[0]!.items!.find((item: { id: string }) => item.id === "command.os.os.resetDock") as unknown as { onClick: (event: never, context: never) => void };
     executeRow.onClick({} as never, {} as never);
-    expect(onCommand).toHaveBeenCalledWith({ kind: "os" }, "os.resetDock", undefined);
+    expect(onCommand).toHaveBeenCalledWith({ owner: "os", commandId: "os.resetDock" }, undefined);
   });
 });
 

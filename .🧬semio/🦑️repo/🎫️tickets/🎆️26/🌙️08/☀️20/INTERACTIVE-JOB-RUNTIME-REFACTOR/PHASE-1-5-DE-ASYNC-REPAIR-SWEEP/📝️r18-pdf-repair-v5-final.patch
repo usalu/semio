@@ -1,0 +1,586 @@
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/✏️editor/🦀️component.rs b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/✏️editor/🦀️component.rs
+index ab436f4e58..de38ab7f54 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/✏️editor/🦀️component.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/✏️editor/🦀️component.rs
+@@ -154,13 +154,13 @@ impl ArtifactEditor for Pdf14AEditor {
+ // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+ pub fn create_pdf14_a_editor() -> semio_framework_plugin::AppDefinition {
+     let builder = Editor::builder(PDF14A_DIALECT);
+-    let builder = semio_framework_plugin::resolve_ready(builder.document(["stdio", "pdf", "1.4", "a"]));
+-    let builder = semio_framework_plugin::resolve_ready(builder.icon_id("file-text"));
+-    let builder = semio_framework_plugin::resolve_ready(builder.mode_def(edit::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_mode_id(edit::PDF14A_EDIT_MODE_ID));
+-    let builder = semio_framework_plugin::resolve_ready(builder.window_kind_def(main::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_layout(edit::layout()));
+-    semio_framework_plugin::resolve_ready(builder.build_definition())
++    let builder = builder.document(["stdio", "pdf", "1.4", "a"]);
++    let builder = builder.icon_id("file-text");
++    let builder = builder.mode_def(edit::definition());
++    let builder = builder.default_mode_id(edit::PDF14A_EDIT_MODE_ID);
++    let builder = builder.window_kind_def(main::definition());
++    let builder = builder.default_layout(edit::layout());
++    builder.build_definition()
+ }
+ //#endregion 🔖️Manifest
+ 
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/👁️viewer/🦀️component.rs b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/👁️viewer/🦀️component.rs
+index 99a6e8be61..de3329f7b1 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/👁️viewer/🦀️component.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️a/👁️viewer/🦀️component.rs
+@@ -84,13 +84,13 @@ impl ArtifactViewer for Pdf14AViewer {
+ // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+ pub fn create_pdf14_a_viewer() -> semio_framework_plugin::AppDefinition {
+     let builder = Viewer::builder(PDF14A_DIALECT);
+-    let builder = semio_framework_plugin::resolve_ready(builder.document(["stdio", "pdf", "1.4", "a"]));
+-    let builder = semio_framework_plugin::resolve_ready(builder.icon_id("file-text"));
+-    let builder = semio_framework_plugin::resolve_ready(builder.mode_def(view::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_mode_id(view::PDF14A_VIEW_MODE_ID));
+-    let builder = semio_framework_plugin::resolve_ready(builder.window_kind_def(main::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_layout(view::layout()));
+-    semio_framework_plugin::resolve_ready(builder.build_definition())
++    let builder = builder.document(["stdio", "pdf", "1.4", "a"]);
++    let builder = builder.icon_id("file-text");
++    let builder = builder.mode_def(view::definition());
++    let builder = builder.default_mode_id(view::PDF14A_VIEW_MODE_ID);
++    let builder = builder.window_kind_def(main::definition());
++    let builder = builder.default_layout(view::layout());
++    builder.build_definition()
+ }
+ //#endregion 🔖️Manifest
+ 
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/✏️editor/🦀️component.rs b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/✏️editor/🦀️component.rs
+index 04c504b0de..af49f2fe3a 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/✏️editor/🦀️component.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/✏️editor/🦀️component.rs
+@@ -154,13 +154,13 @@ impl ArtifactEditor for Pdf14Editor {
+ // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+ pub fn create_pdf14_editor() -> semio_framework_plugin::AppDefinition {
+     let builder = Editor::builder(PDF14_DIALECT);
+-    let builder = semio_framework_plugin::resolve_ready(builder.document(["stdio", "pdf", "1.4", "any"]));
+-    let builder = semio_framework_plugin::resolve_ready(builder.icon_id("file-text"));
+-    let builder = semio_framework_plugin::resolve_ready(builder.mode_def(edit::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_mode_id(edit::PDF14_EDIT_MODE_ID));
+-    let builder = semio_framework_plugin::resolve_ready(builder.window_kind_def(main::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_layout(edit::layout()));
+-    semio_framework_plugin::resolve_ready(builder.build_definition())
++    let builder = builder.document(["stdio", "pdf", "1.4", "any"]);
++    let builder = builder.icon_id("file-text");
++    let builder = builder.mode_def(edit::definition());
++    let builder = builder.default_mode_id(edit::PDF14_EDIT_MODE_ID);
++    let builder = builder.window_kind_def(main::definition());
++    let builder = builder.default_layout(edit::layout());
++    builder.build_definition()
+ }
+ //#endregion 🔖️Manifest
+ 
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/👁️viewer/🦀️component.rs b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/👁️viewer/🦀️component.rs
+index 64e8a369cb..77b240762c 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/👁️viewer/🦀️component.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/👁️viewer/🦀️component.rs
+@@ -84,13 +84,13 @@ impl ArtifactViewer for Pdf14Viewer {
+ // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+ pub fn create_pdf14_viewer() -> semio_framework_plugin::AppDefinition {
+     let builder = Viewer::builder(PDF14_DIALECT);
+-    let builder = semio_framework_plugin::resolve_ready(builder.document(["stdio", "pdf", "1.4", "any"]));
+-    let builder = semio_framework_plugin::resolve_ready(builder.icon_id("file-text"));
+-    let builder = semio_framework_plugin::resolve_ready(builder.mode_def(view::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_mode_id(view::PDF14_VIEW_MODE_ID));
+-    let builder = semio_framework_plugin::resolve_ready(builder.window_kind_def(main::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_layout(view::layout()));
+-    semio_framework_plugin::resolve_ready(builder.build_definition())
++    let builder = builder.document(["stdio", "pdf", "1.4", "any"]);
++    let builder = builder.icon_id("file-text");
++    let builder = builder.mode_def(view::definition());
++    let builder = builder.default_mode_id(view::PDF14_VIEW_MODE_ID);
++    let builder = builder.window_kind_def(main::definition());
++    let builder = builder.default_layout(view::layout());
++    builder.build_definition()
+ }
+ //#endregion 🔖️Manifest
+ 
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🦀️component.rs b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🦀️component.rs
+index 7a60aeea6c..3396b6eec7 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🦀️component.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🦀️component.rs
+@@ -24,5 +24,5 @@ fn decoded_summary_json() -> String {
+ 
+ // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+ pub fn source() -> ExampleSource {
+-    semio_framework_plugin::resolve_ready(ExampleSource::new(ID, label(), decoded_summary_json(), ICON))
++    ExampleSource::new(ID, label(), decoded_summary_json(), ICON)
+ }
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs
+index b96935e46f..26a503ca66 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎬️demo/🦀️component.rs
+@@ -11,7 +11,7 @@ pub const ICON: &str = "file";
+ pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🗣️example.dsl.semio");
+ // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+ pub fn source() -> ExampleSource {
+-    semio_framework_plugin::resolve_ready(ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON))
++    ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
+ }
+ 
+ #[cfg(test)]
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/✏️editor/🦀️component.rs b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/✏️editor/🦀️component.rs
+index ba87420d59..f16f9c06f2 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/✏️editor/🦀️component.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/✏️editor/🦀️component.rs
+@@ -154,13 +154,13 @@ impl ArtifactEditor for Pdf14XEditor {
+ // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+ pub fn create_pdf14_x_editor() -> semio_framework_plugin::AppDefinition {
+     let builder = Editor::builder(PDF14X_DIALECT);
+-    let builder = semio_framework_plugin::resolve_ready(builder.document(["stdio", "pdf", "1.4", "x"]));
+-    let builder = semio_framework_plugin::resolve_ready(builder.icon_id("file-text"));
+-    let builder = semio_framework_plugin::resolve_ready(builder.mode_def(edit::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_mode_id(edit::PDF14X_EDIT_MODE_ID));
+-    let builder = semio_framework_plugin::resolve_ready(builder.window_kind_def(main::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_layout(edit::layout()));
+-    semio_framework_plugin::resolve_ready(builder.build_definition())
++    let builder = builder.document(["stdio", "pdf", "1.4", "x"]);
++    let builder = builder.icon_id("file-text");
++    let builder = builder.mode_def(edit::definition());
++    let builder = builder.default_mode_id(edit::PDF14X_EDIT_MODE_ID);
++    let builder = builder.window_kind_def(main::definition());
++    let builder = builder.default_layout(edit::layout());
++    builder.build_definition()
+ }
+ //#endregion 🔖️Manifest
+ 
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/👁️viewer/🦀️component.rs b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/👁️viewer/🦀️component.rs
+index fa9e84f853..2f28b59858 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/👁️viewer/🦀️component.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️x/👁️viewer/🦀️component.rs
+@@ -84,13 +84,13 @@ impl ArtifactViewer for Pdf14XViewer {
+ // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+ pub fn create_pdf14_x_viewer() -> semio_framework_plugin::AppDefinition {
+     let builder = Viewer::builder(PDF14X_DIALECT);
+-    let builder = semio_framework_plugin::resolve_ready(builder.document(["stdio", "pdf", "1.4", "x"]));
+-    let builder = semio_framework_plugin::resolve_ready(builder.icon_id("file-text"));
+-    let builder = semio_framework_plugin::resolve_ready(builder.mode_def(view::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_mode_id(view::PDF14X_VIEW_MODE_ID));
+-    let builder = semio_framework_plugin::resolve_ready(builder.window_kind_def(main::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_layout(view::layout()));
+-    semio_framework_plugin::resolve_ready(builder.build_definition())
++    let builder = builder.document(["stdio", "pdf", "1.4", "x"]);
++    let builder = builder.icon_id("file-text");
++    let builder = builder.mode_def(view::definition());
++    let builder = builder.default_mode_id(view::PDF14X_VIEW_MODE_ID);
++    let builder = builder.window_kind_def(main::definition());
++    let builder = builder.default_layout(view::layout());
++    builder.build_definition()
+ }
+ //#endregion 🔖️Manifest
+ 
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/✏️editor/🦀️component.rs b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/✏️editor/🦀️component.rs
+index fe4241837d..ab44eca65e 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/✏️editor/🦀️component.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/✏️editor/🦀️component.rs
+@@ -154,13 +154,13 @@ impl ArtifactEditor for Pdf17AEditor {
+ // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+ pub fn create_pdf17_a_editor() -> semio_framework_plugin::AppDefinition {
+     let builder = Editor::builder(PDF17A_DIALECT);
+-    let builder = semio_framework_plugin::resolve_ready(builder.document(["stdio", "pdf", "1.7", "a"]));
+-    let builder = semio_framework_plugin::resolve_ready(builder.icon_id("file-text"));
+-    let builder = semio_framework_plugin::resolve_ready(builder.mode_def(edit::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_mode_id(edit::PDF17A_EDIT_MODE_ID));
+-    let builder = semio_framework_plugin::resolve_ready(builder.window_kind_def(main::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_layout(edit::layout()));
+-    semio_framework_plugin::resolve_ready(builder.build_definition())
++    let builder = builder.document(["stdio", "pdf", "1.7", "a"]);
++    let builder = builder.icon_id("file-text");
++    let builder = builder.mode_def(edit::definition());
++    let builder = builder.default_mode_id(edit::PDF17A_EDIT_MODE_ID);
++    let builder = builder.window_kind_def(main::definition());
++    let builder = builder.default_layout(edit::layout());
++    builder.build_definition()
+ }
+ //#endregion 🔖️Manifest
+ 
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/👁️viewer/🦀️component.rs b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/👁️viewer/🦀️component.rs
+index bb30775254..ebf8bcfa5c 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/👁️viewer/🦀️component.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️a/👁️viewer/🦀️component.rs
+@@ -84,13 +84,13 @@ impl ArtifactViewer for Pdf17AViewer {
+ // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+ pub fn create_pdf17_a_viewer() -> semio_framework_plugin::AppDefinition {
+     let builder = Viewer::builder(PDF17A_DIALECT);
+-    let builder = semio_framework_plugin::resolve_ready(builder.document(["stdio", "pdf", "1.7", "a"]));
+-    let builder = semio_framework_plugin::resolve_ready(builder.icon_id("file-text"));
+-    let builder = semio_framework_plugin::resolve_ready(builder.mode_def(view::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_mode_id(view::PDF17A_VIEW_MODE_ID));
+-    let builder = semio_framework_plugin::resolve_ready(builder.window_kind_def(main::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_layout(view::layout()));
+-    semio_framework_plugin::resolve_ready(builder.build_definition())
++    let builder = builder.document(["stdio", "pdf", "1.7", "a"]);
++    let builder = builder.icon_id("file-text");
++    let builder = builder.mode_def(view::definition());
++    let builder = builder.default_mode_id(view::PDF17A_VIEW_MODE_ID);
++    let builder = builder.window_kind_def(main::definition());
++    let builder = builder.default_layout(view::layout());
++    builder.build_definition()
+ }
+ //#endregion 🔖️Manifest
+ 
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/✏️editor/🦀️component.rs b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/✏️editor/🦀️component.rs
+index e7e430d5ed..97a35487d6 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/✏️editor/🦀️component.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/✏️editor/🦀️component.rs
+@@ -154,13 +154,13 @@ impl ArtifactEditor for Pdf17Editor {
+ // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+ pub fn create_pdf17_editor() -> semio_framework_plugin::AppDefinition {
+     let builder = Editor::builder(PDF17_DIALECT);
+-    let builder = semio_framework_plugin::resolve_ready(builder.document(["stdio", "pdf", "1.7", "any"]));
+-    let builder = semio_framework_plugin::resolve_ready(builder.icon_id("file-text"));
+-    let builder = semio_framework_plugin::resolve_ready(builder.mode_def(edit::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_mode_id(edit::PDF17_EDIT_MODE_ID));
+-    let builder = semio_framework_plugin::resolve_ready(builder.window_kind_def(main::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_layout(edit::layout()));
+-    semio_framework_plugin::resolve_ready(builder.build_definition())
++    let builder = builder.document(["stdio", "pdf", "1.7", "any"]);
++    let builder = builder.icon_id("file-text");
++    let builder = builder.mode_def(edit::definition());
++    let builder = builder.default_mode_id(edit::PDF17_EDIT_MODE_ID);
++    let builder = builder.window_kind_def(main::definition());
++    let builder = builder.default_layout(edit::layout());
++    builder.build_definition()
+ }
+ //#endregion 🔖️Manifest
+ 
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/👁️viewer/🦀️component.rs b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/👁️viewer/🦀️component.rs
+index acebaa31a8..2f1115263f 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/👁️viewer/🦀️component.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/👁️viewer/🦀️component.rs
+@@ -84,13 +84,13 @@ impl ArtifactViewer for Pdf17Viewer {
+ // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+ pub fn create_pdf17_viewer() -> semio_framework_plugin::AppDefinition {
+     let builder = Viewer::builder(PDF17_DIALECT);
+-    let builder = semio_framework_plugin::resolve_ready(builder.document(["stdio", "pdf", "1.7", "any"]));
+-    let builder = semio_framework_plugin::resolve_ready(builder.icon_id("file-text"));
+-    let builder = semio_framework_plugin::resolve_ready(builder.mode_def(view::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_mode_id(view::PDF17_VIEW_MODE_ID));
+-    let builder = semio_framework_plugin::resolve_ready(builder.window_kind_def(main::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_layout(view::layout()));
+-    semio_framework_plugin::resolve_ready(builder.build_definition())
++    let builder = builder.document(["stdio", "pdf", "1.7", "any"]);
++    let builder = builder.icon_id("file-text");
++    let builder = builder.mode_def(view::definition());
++    let builder = builder.default_mode_id(view::PDF17_VIEW_MODE_ID);
++    let builder = builder.window_kind_def(main::definition());
++    let builder = builder.default_layout(view::layout());
++    builder.build_definition()
+ }
+ //#endregion 🔖️Manifest
+ 
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs
+index a419737f1a..0fb17b9fe9 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs
+@@ -2435,8 +2435,7 @@ pub fn encode_pdf(snap: &PdfSnapshot) -> PResult<Vec<u8>> {
+     let mut objects: Vec<(u32, Vec<u8>)> = Vec::new();
+ 
+     if let (Some(fnum), Some(cnum)) = (font_num, cmap_num) {
+-        let compressed =
+-            crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(TOUNICODE_IDENTITY_CMAP.as_bytes()).map_err(|e| PdfEngineError::Malformed(format!("cmap compress: {e}")))?;
++        let compressed = crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress(TOUNICODE_IDENTITY_CMAP.as_bytes()).map_err(|e| PdfEngineError::Malformed(format!("cmap compress: {e}")))?;
+         let mut cbytes = Vec::new();
+         cbytes.extend_from_slice(format!("{cnum} 0 obj\n<< /Length {} /Filter /FlateDecode >>\nstream\n", compressed.len()).as_bytes());
+         cbytes.extend_from_slice(&compressed);
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/✏️editor/🦀️component.rs b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/✏️editor/🦀️component.rs
+index 15b48ce03f..35da07c01e 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/✏️editor/🦀️component.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/✏️editor/🦀️component.rs
+@@ -154,13 +154,13 @@ impl ArtifactEditor for Pdf17EEditor {
+ // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+ pub fn create_pdf17_e_editor() -> semio_framework_plugin::AppDefinition {
+     let builder = Editor::builder(PDF17E_DIALECT);
+-    let builder = semio_framework_plugin::resolve_ready(builder.document(["stdio", "pdf", "1.7", "e"]));
+-    let builder = semio_framework_plugin::resolve_ready(builder.icon_id("file-text"));
+-    let builder = semio_framework_plugin::resolve_ready(builder.mode_def(edit::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_mode_id(edit::PDF17E_EDIT_MODE_ID));
+-    let builder = semio_framework_plugin::resolve_ready(builder.window_kind_def(main::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_layout(edit::layout()));
+-    semio_framework_plugin::resolve_ready(builder.build_definition())
++    let builder = builder.document(["stdio", "pdf", "1.7", "e"]);
++    let builder = builder.icon_id("file-text");
++    let builder = builder.mode_def(edit::definition());
++    let builder = builder.default_mode_id(edit::PDF17E_EDIT_MODE_ID);
++    let builder = builder.window_kind_def(main::definition());
++    let builder = builder.default_layout(edit::layout());
++    builder.build_definition()
+ }
+ //#endregion 🔖️Manifest
+ 
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/👁️viewer/🦀️component.rs b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/👁️viewer/🦀️component.rs
+index e2a07bb692..516b900036 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/👁️viewer/🦀️component.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️e/👁️viewer/🦀️component.rs
+@@ -84,13 +84,13 @@ impl ArtifactViewer for Pdf17EViewer {
+ // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+ pub fn create_pdf17_e_viewer() -> semio_framework_plugin::AppDefinition {
+     let builder = Viewer::builder(PDF17E_DIALECT);
+-    let builder = semio_framework_plugin::resolve_ready(builder.document(["stdio", "pdf", "1.7", "e"]));
+-    let builder = semio_framework_plugin::resolve_ready(builder.icon_id("file-text"));
+-    let builder = semio_framework_plugin::resolve_ready(builder.mode_def(view::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_mode_id(view::PDF17E_VIEW_MODE_ID));
+-    let builder = semio_framework_plugin::resolve_ready(builder.window_kind_def(main::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_layout(view::layout()));
+-    semio_framework_plugin::resolve_ready(builder.build_definition())
++    let builder = builder.document(["stdio", "pdf", "1.7", "e"]);
++    let builder = builder.icon_id("file-text");
++    let builder = builder.mode_def(view::definition());
++    let builder = builder.default_mode_id(view::PDF17E_VIEW_MODE_ID);
++    let builder = builder.window_kind_def(main::definition());
++    let builder = builder.default_layout(view::layout());
++    builder.build_definition()
+ }
+ //#endregion 🔖️Manifest
+ 
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/✏️editor/🦀️component.rs b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/✏️editor/🦀️component.rs
+index 4d4b63b386..d7f38b6709 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/✏️editor/🦀️component.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/✏️editor/🦀️component.rs
+@@ -154,13 +154,13 @@ impl ArtifactEditor for Pdf17HEditor {
+ // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+ pub fn create_pdf17_h_editor() -> semio_framework_plugin::AppDefinition {
+     let builder = Editor::builder(PDF17H_DIALECT);
+-    let builder = semio_framework_plugin::resolve_ready(builder.document(["stdio", "pdf", "1.7", "h"]));
+-    let builder = semio_framework_plugin::resolve_ready(builder.icon_id("file-text"));
+-    let builder = semio_framework_plugin::resolve_ready(builder.mode_def(edit::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_mode_id(edit::PDF17H_EDIT_MODE_ID));
+-    let builder = semio_framework_plugin::resolve_ready(builder.window_kind_def(main::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_layout(edit::layout()));
+-    semio_framework_plugin::resolve_ready(builder.build_definition())
++    let builder = builder.document(["stdio", "pdf", "1.7", "h"]);
++    let builder = builder.icon_id("file-text");
++    let builder = builder.mode_def(edit::definition());
++    let builder = builder.default_mode_id(edit::PDF17H_EDIT_MODE_ID);
++    let builder = builder.window_kind_def(main::definition());
++    let builder = builder.default_layout(edit::layout());
++    builder.build_definition()
+ }
+ //#endregion 🔖️Manifest
+ 
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/👁️viewer/🦀️component.rs b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/👁️viewer/🦀️component.rs
+index 07df5fc511..5a6aa88b2a 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/👁️viewer/🦀️component.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️h/👁️viewer/🦀️component.rs
+@@ -84,13 +84,13 @@ impl ArtifactViewer for Pdf17HViewer {
+ // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+ pub fn create_pdf17_h_viewer() -> semio_framework_plugin::AppDefinition {
+     let builder = Viewer::builder(PDF17H_DIALECT);
+-    let builder = semio_framework_plugin::resolve_ready(builder.document(["stdio", "pdf", "1.7", "h"]));
+-    let builder = semio_framework_plugin::resolve_ready(builder.icon_id("file-text"));
+-    let builder = semio_framework_plugin::resolve_ready(builder.mode_def(view::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_mode_id(view::PDF17H_VIEW_MODE_ID));
+-    let builder = semio_framework_plugin::resolve_ready(builder.window_kind_def(main::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_layout(view::layout()));
+-    semio_framework_plugin::resolve_ready(builder.build_definition())
++    let builder = builder.document(["stdio", "pdf", "1.7", "h"]);
++    let builder = builder.icon_id("file-text");
++    let builder = builder.mode_def(view::definition());
++    let builder = builder.default_mode_id(view::PDF17H_VIEW_MODE_ID);
++    let builder = builder.window_kind_def(main::definition());
++    let builder = builder.default_layout(view::layout());
++    builder.build_definition()
+ }
+ //#endregion 🔖️Manifest
+ 
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/✏️editor/🦀️component.rs b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/✏️editor/🦀️component.rs
+index 2d028ffcfd..13e725c1f8 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/✏️editor/🦀️component.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/✏️editor/🦀️component.rs
+@@ -154,13 +154,13 @@ impl ArtifactEditor for Pdf17UaEditor {
+ // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+ pub fn create_pdf17_ua_editor() -> semio_framework_plugin::AppDefinition {
+     let builder = Editor::builder(PDF17UA_DIALECT);
+-    let builder = semio_framework_plugin::resolve_ready(builder.document(["stdio", "pdf", "1.7", "ua"]));
+-    let builder = semio_framework_plugin::resolve_ready(builder.icon_id("file-text"));
+-    let builder = semio_framework_plugin::resolve_ready(builder.mode_def(edit::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_mode_id(edit::PDF17UA_EDIT_MODE_ID));
+-    let builder = semio_framework_plugin::resolve_ready(builder.window_kind_def(main::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_layout(edit::layout()));
+-    semio_framework_plugin::resolve_ready(builder.build_definition())
++    let builder = builder.document(["stdio", "pdf", "1.7", "ua"]);
++    let builder = builder.icon_id("file-text");
++    let builder = builder.mode_def(edit::definition());
++    let builder = builder.default_mode_id(edit::PDF17UA_EDIT_MODE_ID);
++    let builder = builder.window_kind_def(main::definition());
++    let builder = builder.default_layout(edit::layout());
++    builder.build_definition()
+ }
+ //#endregion 🔖️Manifest
+ 
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/👁️viewer/🦀️component.rs b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/👁️viewer/🦀️component.rs
+index 0957210aca..bf7fdaca20 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/👁️viewer/🦀️component.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️ua/👁️viewer/🦀️component.rs
+@@ -84,13 +84,13 @@ impl ArtifactViewer for Pdf17UaViewer {
+ // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+ pub fn create_pdf17_ua_viewer() -> semio_framework_plugin::AppDefinition {
+     let builder = Viewer::builder(PDF17UA_DIALECT);
+-    let builder = semio_framework_plugin::resolve_ready(builder.document(["stdio", "pdf", "1.7", "ua"]));
+-    let builder = semio_framework_plugin::resolve_ready(builder.icon_id("file-text"));
+-    let builder = semio_framework_plugin::resolve_ready(builder.mode_def(view::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_mode_id(view::PDF17UA_VIEW_MODE_ID));
+-    let builder = semio_framework_plugin::resolve_ready(builder.window_kind_def(main::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_layout(view::layout()));
+-    semio_framework_plugin::resolve_ready(builder.build_definition())
++    let builder = builder.document(["stdio", "pdf", "1.7", "ua"]);
++    let builder = builder.icon_id("file-text");
++    let builder = builder.mode_def(view::definition());
++    let builder = builder.default_mode_id(view::PDF17UA_VIEW_MODE_ID);
++    let builder = builder.window_kind_def(main::definition());
++    let builder = builder.default_layout(view::layout());
++    builder.build_definition()
+ }
+ //#endregion 🔖️Manifest
+ 
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/✏️editor/🦀️component.rs b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/✏️editor/🦀️component.rs
+index d6d2b91dec..35a7964c0d 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/✏️editor/🦀️component.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/✏️editor/🦀️component.rs
+@@ -154,13 +154,13 @@ impl ArtifactEditor for Pdf17VtEditor {
+ // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+ pub fn create_pdf17_vt_editor() -> semio_framework_plugin::AppDefinition {
+     let builder = Editor::builder(PDF17VT_DIALECT);
+-    let builder = semio_framework_plugin::resolve_ready(builder.document(["stdio", "pdf", "1.7", "vt"]));
+-    let builder = semio_framework_plugin::resolve_ready(builder.icon_id("file-text"));
+-    let builder = semio_framework_plugin::resolve_ready(builder.mode_def(edit::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_mode_id(edit::PDF17VT_EDIT_MODE_ID));
+-    let builder = semio_framework_plugin::resolve_ready(builder.window_kind_def(main::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_layout(edit::layout()));
+-    semio_framework_plugin::resolve_ready(builder.build_definition())
++    let builder = builder.document(["stdio", "pdf", "1.7", "vt"]);
++    let builder = builder.icon_id("file-text");
++    let builder = builder.mode_def(edit::definition());
++    let builder = builder.default_mode_id(edit::PDF17VT_EDIT_MODE_ID);
++    let builder = builder.window_kind_def(main::definition());
++    let builder = builder.default_layout(edit::layout());
++    builder.build_definition()
+ }
+ //#endregion 🔖️Manifest
+ 
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/👁️viewer/🦀️component.rs b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/👁️viewer/🦀️component.rs
+index 842900ba4c..b36976007b 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/👁️viewer/🦀️component.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️vt/👁️viewer/🦀️component.rs
+@@ -84,13 +84,13 @@ impl ArtifactViewer for Pdf17VtViewer {
+ // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+ pub fn create_pdf17_vt_viewer() -> semio_framework_plugin::AppDefinition {
+     let builder = Viewer::builder(PDF17VT_DIALECT);
+-    let builder = semio_framework_plugin::resolve_ready(builder.document(["stdio", "pdf", "1.7", "vt"]));
+-    let builder = semio_framework_plugin::resolve_ready(builder.icon_id("file-text"));
+-    let builder = semio_framework_plugin::resolve_ready(builder.mode_def(view::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_mode_id(view::PDF17VT_VIEW_MODE_ID));
+-    let builder = semio_framework_plugin::resolve_ready(builder.window_kind_def(main::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_layout(view::layout()));
+-    semio_framework_plugin::resolve_ready(builder.build_definition())
++    let builder = builder.document(["stdio", "pdf", "1.7", "vt"]);
++    let builder = builder.icon_id("file-text");
++    let builder = builder.mode_def(view::definition());
++    let builder = builder.default_mode_id(view::PDF17VT_VIEW_MODE_ID);
++    let builder = builder.window_kind_def(main::definition());
++    let builder = builder.default_layout(view::layout());
++    builder.build_definition()
+ }
+ //#endregion 🔖️Manifest
+ 
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/✏️editor/🦀️component.rs b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/✏️editor/🦀️component.rs
+index b787d99387..bdee08626f 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/✏️editor/🦀️component.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/✏️editor/🦀️component.rs
+@@ -154,13 +154,13 @@ impl ArtifactEditor for Pdf17XEditor {
+ // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+ pub fn create_pdf17_x_editor() -> semio_framework_plugin::AppDefinition {
+     let builder = Editor::builder(PDF17X_DIALECT);
+-    let builder = semio_framework_plugin::resolve_ready(builder.document(["stdio", "pdf", "1.7", "x"]));
+-    let builder = semio_framework_plugin::resolve_ready(builder.icon_id("file-text"));
+-    let builder = semio_framework_plugin::resolve_ready(builder.mode_def(edit::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_mode_id(edit::PDF17X_EDIT_MODE_ID));
+-    let builder = semio_framework_plugin::resolve_ready(builder.window_kind_def(main::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_layout(edit::layout()));
+-    semio_framework_plugin::resolve_ready(builder.build_definition())
++    let builder = builder.document(["stdio", "pdf", "1.7", "x"]);
++    let builder = builder.icon_id("file-text");
++    let builder = builder.mode_def(edit::definition());
++    let builder = builder.default_mode_id(edit::PDF17X_EDIT_MODE_ID);
++    let builder = builder.window_kind_def(main::definition());
++    let builder = builder.default_layout(edit::layout());
++    builder.build_definition()
+ }
+ //#endregion 🔖️Manifest
+ 
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/👁️viewer/🦀️component.rs b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/👁️viewer/🦀️component.rs
+index 879be9e9fb..882564332f 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/👁️viewer/🦀️component.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️x/👁️viewer/🦀️component.rs
+@@ -84,13 +84,13 @@ impl ArtifactViewer for Pdf17XViewer {
+ // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+ pub fn create_pdf17_x_viewer() -> semio_framework_plugin::AppDefinition {
+     let builder = Viewer::builder(PDF17X_DIALECT);
+-    let builder = semio_framework_plugin::resolve_ready(builder.document(["stdio", "pdf", "1.7", "x"]));
+-    let builder = semio_framework_plugin::resolve_ready(builder.icon_id("file-text"));
+-    let builder = semio_framework_plugin::resolve_ready(builder.mode_def(view::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_mode_id(view::PDF17X_VIEW_MODE_ID));
+-    let builder = semio_framework_plugin::resolve_ready(builder.window_kind_def(main::definition()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.default_layout(view::layout()));
+-    semio_framework_plugin::resolve_ready(builder.build_definition())
++    let builder = builder.document(["stdio", "pdf", "1.7", "x"]);
++    let builder = builder.icon_id("file-text");
++    let builder = builder.mode_def(view::definition());
++    let builder = builder.default_mode_id(view::PDF17X_VIEW_MODE_ID);
++    let builder = builder.window_kind_def(main::definition());
++    let builder = builder.default_layout(view::layout());
++    builder.build_definition()
+ }
+ //#endregion 🔖️Manifest
+ 
+diff --git a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🦀️component.rs b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🦀️component.rs
+index c2b736c661..fd7c9c27bf 100644
+--- a/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🦀️component.rs
++++ b/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🦀️component.rs
+@@ -27,26 +27,23 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
+ // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+     let formats = crate::registry::format_descriptors_for("pdf")?;
+-    let builder = semio_framework_plugin::resolve_ready(semio_framework_plugin::ArtifactDeclaration::builder(definition));
+-    let builder = semio_framework_plugin::resolve_ready(builder.schema(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::pdf_artifact_schema_descriptor()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.formats(formats));
+-    let builder = semio_framework_plugin::resolve_ready(builder.schemas([crate::artifacts::pdf::standards::v1_4::subsets::any::schema::pdf_artifact_schema_descriptor()]));
+-    let builder =
+-        semio_framework_plugin::resolve_ready(builder.inferences([
+-            crate::artifacts::pdf::standards::v1_7::subsets::any::schema::inferences::pdf17_artifact_inference_descriptor(),
+-            crate::artifacts::pdf::standards::v1_4::subsets::any::schema::inferences::pdf_artifact_inference_descriptor(),
+-        ]));
+-    let builder = semio_framework_plugin::resolve_ready(builder.composers(crate::artifacts::pdf::standards::v1_7::subsets::any::io::io_registry::entries()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.composers(crate::artifacts::pdf::standards::v1_4::subsets::any::io::io_registry::entries()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.subset_validators(pdf_1_7_subset_validators()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.subset_validators(pdf_1_4_subset_validators()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.languages(pilot_languages_1_7()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.languages(pilot_languages_1_4()));
+-    let builder = semio_framework_plugin::resolve_ready(builder.document_codec_bare::<PdfSnapshot, PdfMutation>(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::STDIO_PDF17_DOCUMENT_SCHEMA));
+-    let builder = semio_framework_plugin::resolve_ready(
+-        builder.document_codec_bare::<crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PdfSnapshot, crate::artifacts::pdf::standards::v1_4::subsets::any::schema::mutations::PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA),
+-    );
+-    semio_framework_plugin::resolve_ready(builder.try_build())
++    let builder = semio_framework_plugin::ArtifactDeclaration::builder(definition);
++    let builder = builder.schema(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::pdf_artifact_schema_descriptor());
++    let builder = builder.formats(formats);
++    let builder = builder.schemas([crate::artifacts::pdf::standards::v1_4::subsets::any::schema::pdf_artifact_schema_descriptor()]);
++    let builder = builder.inferences([
++        crate::artifacts::pdf::standards::v1_7::subsets::any::schema::inferences::pdf17_artifact_inference_descriptor(),
++        crate::artifacts::pdf::standards::v1_4::subsets::any::schema::inferences::pdf_artifact_inference_descriptor(),
++    ]);
++    let builder = builder.composers(crate::artifacts::pdf::standards::v1_7::subsets::any::io::io_registry::entries());
++    let builder = builder.composers(crate::artifacts::pdf::standards::v1_4::subsets::any::io::io_registry::entries());
++    let builder = builder.subset_validators(pdf_1_7_subset_validators());
++    let builder = builder.subset_validators(pdf_1_4_subset_validators());
++    let builder = builder.languages(pilot_languages_1_7());
++    let builder = builder.languages(pilot_languages_1_4());
++    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::STDIO_PDF17_DOCUMENT_SCHEMA);
++    let builder = builder.document_codec_bare::<crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PdfSnapshot, crate::artifacts::pdf::standards::v1_4::subsets::any::schema::mutations::PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA);
++    builder.try_build()
+ }
+ 
+ /// 🛡️ `standards::v1_7`'s six real subsets (`a`/`x`/`e`/`ua`/`vt`/`h`), re-derived (not moved) from

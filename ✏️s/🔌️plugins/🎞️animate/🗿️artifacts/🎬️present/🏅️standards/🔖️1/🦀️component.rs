@@ -10,6 +10,11 @@ use semio_framework_plugin::StandardId;
 /// debt D1). `mimes` is a documented synthesis: no real MIME registration exists anywhere in the
 /// pre-migration code for this artifact (unlike stdio's `📜️artifact-definition.json`) — see
 /// `## openQuestions` in the fan-out report, mirrors `🎬️sequence`'s identical documented deviation.
-pub async fn standard() -> StandardDeclaration {
-    StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.animate.present"], extensions: &["present"] }, subsets: vec![subsets::any::subset()] }
+pub fn standard<PA>() -> StandardDeclaration<PA>
+where
+    PA: semio_framework_plugin::PluginApp
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::animate::AnimatePresentPlayApp>>>
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::animate::AnimatePresentViewer>>>,
+{
+    StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.animate.present"], extensions: &["present"] }, subsets: vec![subsets::any::subset::<PA>()] }
 }

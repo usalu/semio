@@ -45,10 +45,10 @@ pub mod derived_composition {
     /// this artifact's standard-level `engine::register()`.
     pub async fn register() {
         ::schema::register_artifact_schema_descriptor(crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mp4_artifact_schema_descriptor());
-        register_artifact_inferences();
-        let _ = store::register_document_codec(
-            store::ArtifactCodec::of::<Mp4Snapshot, crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mutations::Mp4Mutation>(crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA).await,
-        );
+        register_artifact_inferences().await;
+        let _ = store::register_document_codec(store::ArtifactCodec::of::<Mp4Snapshot, crate::artifacts::mp4::standards::isobmff::subsets::any::schema::mutations::Mp4Mutation>(
+            crate::artifacts::mp4::standards::isobmff::subsets::any::schema::snapshot::STDIO_MP4_DOCUMENT_SCHEMA,
+        ));
     }
 
     /// 💡️ Registers `s.stdio.mp4.inference`'s facet leaves into the OS-wide inference
@@ -91,7 +91,7 @@ use boxes::{find_box, find_boxes, iter_boxes, require_box, write_box, ByteReader
 /// 🔍 True when `bytes` starts with a plausible ISO-BMFF top-level box whose 4-byte type is
 /// ASCII AND is the real `ftyp` magic (the first box of every conformant MP4/ISO-BMFF file,
 /// §4.3) — a real structural check, not a fixed byte-string match.
-pub async fn sniff_real_bytes(bytes: &[u8]) -> bool {
+pub fn sniff_real_bytes(bytes: &[u8]) -> bool {
     if bytes.len() < 8 {
         return false;
     }
@@ -104,7 +104,7 @@ pub async fn sniff_real_bytes(bytes: &[u8]) -> bool {
 
 //#region 🔖️Stbl
 /// 📥️ `stts` (moved from remodel's `parse_stts`) → `(sample_count, delta)*` run-length pairs.
-async fn parse_stts(payload: &[u8]) -> Result<Vec<(u32, u32)>, String> {
+fn parse_stts(payload: &[u8]) -> Result<Vec<(u32, u32)>, String> {
     let mut r = ByteReader::new(payload);
     r.skip(4).map_err(|e| e.to_string())?;
     let count = r.u32_be().map_err(|e| e.to_string())?;
@@ -115,7 +115,7 @@ async fn parse_stts(payload: &[u8]) -> Result<Vec<(u32, u32)>, String> {
     Ok(out)
 }
 
-async fn parse_ctts(payload: &[u8]) -> Result<Vec<(u32, i64)>, String> {
+fn parse_ctts(payload: &[u8]) -> Result<Vec<(u32, i64)>, String> {
     let mut r = ByteReader::new(payload);
     let version = r.u8().map_err(|e| e.to_string())?;
     r.skip(3).map_err(|e| e.to_string())?;
@@ -130,7 +130,7 @@ async fn parse_ctts(payload: &[u8]) -> Result<Vec<(u32, i64)>, String> {
     Ok(out)
 }
 
-async fn parse_stsc(payload: &[u8]) -> Result<Vec<(u32, u32, u32)>, String> {
+fn parse_stsc(payload: &[u8]) -> Result<Vec<(u32, u32, u32)>, String> {
     let mut r = ByteReader::new(payload);
     r.skip(4).map_err(|e| e.to_string())?;
     let count = r.u32_be().map_err(|e| e.to_string())?;
@@ -146,13 +146,13 @@ enum SampleSizes {
     PerSample(Vec<u32>),
 }
 impl SampleSizes {
-    async fn len(&self) -> usize {
+    fn len(&self) -> usize {
         match self {
             Self::Uniform { count, .. } => *count as usize,
             Self::PerSample(v) => v.len(),
         }
     }
-    async fn get(&self, i: usize) -> Result<u32, String> {
+    fn get(&self, i: usize) -> Result<u32, String> {
         match self {
             Self::Uniform { size, count } => {
                 if (i as u32) < *count {
@@ -166,7 +166,7 @@ impl SampleSizes {
     }
 }
 
-async fn parse_stsz(payload: &[u8]) -> Result<SampleSizes, String> {
+fn parse_stsz(payload: &[u8]) -> Result<SampleSizes, String> {
     let mut r = ByteReader::new(payload);
     r.skip(4).map_err(|e| e.to_string())?;
     let sample_size = r.u32_be().map_err(|e| e.to_string())?;
@@ -181,7 +181,7 @@ async fn parse_stsz(payload: &[u8]) -> Result<SampleSizes, String> {
     Ok(SampleSizes::PerSample(sizes))
 }
 
-async fn parse_stco(payload: &[u8]) -> Result<Vec<u64>, String> {
+fn parse_stco(payload: &[u8]) -> Result<Vec<u64>, String> {
     let mut r = ByteReader::new(payload);
     r.skip(4).map_err(|e| e.to_string())?;
     let count = r.u32_be().map_err(|e| e.to_string())?;
@@ -192,7 +192,7 @@ async fn parse_stco(payload: &[u8]) -> Result<Vec<u64>, String> {
     Ok(out)
 }
 
-async fn parse_co64(payload: &[u8]) -> Result<Vec<u64>, String> {
+fn parse_co64(payload: &[u8]) -> Result<Vec<u64>, String> {
     let mut r = ByteReader::new(payload);
     r.skip(4).map_err(|e| e.to_string())?;
     let count = r.u32_be().map_err(|e| e.to_string())?;
@@ -203,7 +203,7 @@ async fn parse_co64(payload: &[u8]) -> Result<Vec<u64>, String> {
     Ok(out)
 }
 
-async fn parse_stss(payload: &[u8]) -> Result<Vec<u32>, String> {
+fn parse_stss(payload: &[u8]) -> Result<Vec<u32>, String> {
     let mut r = ByteReader::new(payload);
     r.skip(4).map_err(|e| e.to_string())?;
     let count = r.u32_be().map_err(|e| e.to_string())?;
@@ -214,7 +214,7 @@ async fn parse_stss(payload: &[u8]) -> Result<Vec<u32>, String> {
     Ok(out)
 }
 
-async fn samples_per_chunk_for(stsc: &[(u32, u32, u32)], chunk_number: u32) -> Result<u32, String> {
+fn samples_per_chunk_for(stsc: &[(u32, u32, u32)], chunk_number: u32) -> Result<u32, String> {
     let mut result = None;
     for &(first_chunk, spc, _) in stsc {
         if first_chunk == 0 {
@@ -229,21 +229,21 @@ async fn samples_per_chunk_for(stsc: &[(u32, u32, u32)], chunk_number: u32) -> R
     result.ok_or_else(|| "stsc does not cover this chunk".into())
 }
 
-async fn resolve_samples(stsc: &[(u32, u32, u32)], chunk_offsets: &[u64], sizes: &SampleSizes) -> Result<Vec<(u64, u32)>, String> {
+fn resolve_samples(stsc: &[(u32, u32, u32)], chunk_offsets: &[u64], sizes: &SampleSizes) -> Result<Vec<(u64, u32)>, String> {
     if stsc.is_empty() {
         return Err("stsc has no entries".into());
     }
-    let mut out = Vec::with_capacity(sizes.len().await);
+    let mut out = Vec::with_capacity(sizes.len());
     let mut sample_index = 0usize;
     for (i, &chunk_offset) in chunk_offsets.iter().enumerate() {
         let chunk_number = i as u32 + 1;
-        let spc = samples_per_chunk_for(stsc, chunk_number).await?;
+        let spc = samples_per_chunk_for(stsc, chunk_number)?;
         let mut offset = chunk_offset;
         for _ in 0..spc {
-            if sample_index >= sizes.len().await {
+            if sample_index >= sizes.len() {
                 break;
             }
-            let size = sizes.get(sample_index).await?;
+            let size = sizes.get(sample_index)?;
             out.push((offset, size));
             offset = offset.checked_add(u64::from(size)).ok_or("chunk offset overflow")?;
             sample_index += 1;
@@ -252,11 +252,11 @@ async fn resolve_samples(stsc: &[(u32, u32, u32)], chunk_offsets: &[u64], sizes:
     Ok(out)
 }
 
-async fn logical_chunk_sample_counts(stsc: &[(u32, u32, u32)], chunk_count: usize, sample_count: usize) -> Result<Vec<u32>, String> {
+fn logical_chunk_sample_counts(stsc: &[(u32, u32, u32)], chunk_count: usize, sample_count: usize) -> Result<Vec<u32>, String> {
     let mut remaining = sample_count;
     let mut counts = Vec::with_capacity(chunk_count);
     for index in 0..chunk_count {
-        let declared = samples_per_chunk_for(stsc, index as u32 + 1).await? as usize;
+        let declared = samples_per_chunk_for(stsc, index as u32 + 1)? as usize;
         let count = declared.min(remaining);
         counts.push(count as u32);
         remaining -= count;
@@ -267,15 +267,15 @@ async fn logical_chunk_sample_counts(stsc: &[(u32, u32, u32)], chunk_count: usiz
     Ok(counts)
 }
 
-async fn expand_run_length_u32(entries: &[(u32, u32)]) -> Vec<u32> {
+fn expand_run_length_u32(entries: &[(u32, u32)]) -> Vec<u32> {
     entries.iter().flat_map(|&(count, value)| std::iter::repeat_n(value, count as usize)).collect()
 }
-async fn expand_run_length_i64(entries: &[(u32, i64)]) -> Vec<i64> {
+fn expand_run_length_i64(entries: &[(u32, i64)]) -> Vec<i64> {
     entries.iter().flat_map(|&(count, value)| std::iter::repeat_n(value, count as usize)).collect()
 }
 
 /// ✍️ Run-length encodes a per-sample `u32` series into `stts`/`stsz`-style `(count, value)*` runs.
-async fn run_length_encode_u32(values: &[u32]) -> Vec<(u32, u32)> {
+fn run_length_encode_u32(values: &[u32]) -> Vec<(u32, u32)> {
     let mut out: Vec<(u32, u32)> = Vec::new();
     for &v in values {
         if let Some(last) = out.last_mut() {
@@ -288,7 +288,7 @@ async fn run_length_encode_u32(values: &[u32]) -> Vec<(u32, u32)> {
     }
     out
 }
-async fn run_length_encode_i64(values: &[i64]) -> Vec<(u32, i64)> {
+fn run_length_encode_i64(values: &[i64]) -> Vec<(u32, i64)> {
     let mut out: Vec<(u32, i64)> = Vec::new();
     for &v in values {
         if let Some(last) = out.last_mut() {
@@ -304,7 +304,7 @@ async fn run_length_encode_i64(values: &[i64]) -> Vec<(u32, i64)> {
 //#endregion 🔖️Stbl
 
 //#region 🔖️Tkhd
-async fn read_time(reader: &mut ByteReader<'_>, version: u8) -> Result<u64, String> {
+fn read_time(reader: &mut ByteReader<'_>, version: u8) -> Result<u64, String> {
     if version == 1 {
         reader.u64_be().map_err(|error| error.to_string())
     } else {
@@ -312,16 +312,16 @@ async fn read_time(reader: &mut ByteReader<'_>, version: u8) -> Result<u64, Stri
     }
 }
 
-async fn parse_tkhd(payload: &[u8]) -> Result<(u32, Mp4TrackMetadata), String> {
+fn parse_tkhd(payload: &[u8]) -> Result<(u32, Mp4TrackMetadata), String> {
     let mut r = ByteReader::new(payload);
     let version = r.u8().map_err(|e| e.to_string())?;
     let flags_bytes = r.take(3).map_err(|e| e.to_string())?;
     let flags = u32::from_be_bytes([0, flags_bytes[0], flags_bytes[1], flags_bytes[2]]);
-    let creation_time = read_time(&mut r, version).await?;
-    let modification_time = read_time(&mut r, version).await?;
+    let creation_time = read_time(&mut r, version)?;
+    let modification_time = read_time(&mut r, version)?;
     let track_id = r.u32_be().map_err(|e| e.to_string())?;
     r.skip(4).map_err(|e| e.to_string())?;
-    let duration = read_time(&mut r, version).await?;
+    let duration = read_time(&mut r, version)?;
     r.skip(8).map_err(|e| e.to_string())?;
     let layer = r.u16_be().map_err(|e| e.to_string())? as i16;
     let alternate_group = r.u16_be().map_err(|e| e.to_string())? as i16;
@@ -334,21 +334,21 @@ async fn parse_tkhd(payload: &[u8]) -> Result<(u32, Mp4TrackMetadata), String> {
     Ok((track_id, Mp4TrackMetadata { flags, creation_time, modification_time, duration, layer, alternate_group, volume, matrix, ..Mp4TrackMetadata::default() }))
 }
 
-async fn parse_mdhd(payload: &[u8], metadata: &mut Mp4TrackMetadata) -> Result<u32, String> {
+fn parse_mdhd(payload: &[u8], metadata: &mut Mp4TrackMetadata) -> Result<u32, String> {
     let mut r = ByteReader::new(payload);
     let version = r.u8().map_err(|e| e.to_string())?;
     r.skip(3).map_err(|e| e.to_string())?;
-    metadata.media_creation_time = read_time(&mut r, version).await?;
-    metadata.media_modification_time = read_time(&mut r, version).await?;
+    metadata.media_creation_time = read_time(&mut r, version)?;
+    metadata.media_modification_time = read_time(&mut r, version)?;
     let timescale = r.u32_be().map_err(|e| e.to_string())?;
-    metadata.media_duration = read_time(&mut r, version).await?;
+    metadata.media_duration = read_time(&mut r, version)?;
     let packed_language = r.u16_be().map_err(|e| e.to_string())?;
     metadata.language = [10, 5, 0].into_iter().map(|shift| char::from(((packed_language >> shift) & 0x1f) as u8 + 0x60)).collect();
     metadata.quality = r.u16_be().map_err(|e| e.to_string())?;
     Ok(timescale)
 }
 
-async fn parse_visual_sample_entry(payload: &[u8]) -> Result<(u16, u16, Mp4VisualSampleEntry, &[u8]), String> {
+fn parse_visual_sample_entry(payload: &[u8]) -> Result<(u16, u16, Mp4VisualSampleEntry, &[u8]), String> {
     let mut r = ByteReader::new(payload);
     r.skip(6).map_err(|e| e.to_string())?;
     let data_reference_index = r.u16_be().map_err(|e| e.to_string())?;
@@ -372,14 +372,14 @@ async fn parse_visual_sample_entry(payload: &[u8]) -> Result<(u16, u16, Mp4Visua
     Ok((width, height, visual, &payload[r.pos()..]))
 }
 
-async fn parse_mvhd(payload: &[u8]) -> Result<Mp4Movie, String> {
+fn parse_mvhd(payload: &[u8]) -> Result<Mp4Movie, String> {
     let mut r = ByteReader::new(payload);
     let version = r.u8().map_err(|e| e.to_string())?;
     r.skip(3).map_err(|e| e.to_string())?;
-    let creation_time = read_time(&mut r, version).await?;
-    let modification_time = read_time(&mut r, version).await?;
+    let creation_time = read_time(&mut r, version)?;
+    let modification_time = read_time(&mut r, version)?;
     let timescale = r.u32_be().map_err(|e| e.to_string())?;
-    let duration = read_time(&mut r, version).await?;
+    let duration = read_time(&mut r, version)?;
     let rate = r.i32_be().map_err(|e| e.to_string())?;
     let volume = r.u16_be().map_err(|e| e.to_string())? as i16;
     r.skip(10).map_err(|e| e.to_string())?;
@@ -392,7 +392,7 @@ async fn parse_mvhd(payload: &[u8]) -> Result<Mp4Movie, String> {
     Ok(Mp4Movie { creation_time, modification_time, timescale, duration, rate, volume, matrix, next_track_id, title: None, encoder: None })
 }
 
-async fn parse_edit_list(trak: &[u8]) -> Result<Vec<Mp4Edit>, String> {
+fn parse_edit_list(trak: &[u8]) -> Result<Vec<Mp4Edit>, String> {
     let Some(edts) = find_box(trak, b"edts").map_err(|e| e.to_string())? else {
         return Ok(Vec::new());
     };
@@ -405,14 +405,14 @@ async fn parse_edit_list(trak: &[u8]) -> Result<Vec<Mp4Edit>, String> {
     let count = r.u32_be().map_err(|e| e.to_string())?;
     let mut edits = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        let segment_duration = read_time(&mut r, version).await?;
+        let segment_duration = read_time(&mut r, version)?;
         let media_time = if version == 1 { r.u64_be().map_err(|e| e.to_string())? as i64 } else { i64::from(r.i32_be().map_err(|e| e.to_string())?) };
         edits.push(Mp4Edit { segment_duration, media_time, media_rate_integer: r.u16_be().map_err(|e| e.to_string())? as i16, media_rate_fraction: r.u16_be().map_err(|e| e.to_string())? as i16 });
     }
     Ok(edits)
 }
 
-async fn parse_codec_extensions(children: &[u8], metadata: &mut Mp4TrackMetadata) -> Result<(), String> {
+fn parse_codec_extensions(children: &[u8], metadata: &mut Mp4TrackMetadata) -> Result<(), String> {
     if let Some(payload) = find_box(children, b"colr").map_err(|e| e.to_string())? {
         let mut r = ByteReader::new(payload);
         let color_type = r.fourcc().map_err(|e| e.to_string())?.as_str().into_owned();
@@ -433,7 +433,7 @@ async fn parse_codec_extensions(children: &[u8], metadata: &mut Mp4TrackMetadata
     Ok(())
 }
 
-async fn parse_metadata_item(ilst: &[u8], fourcc: &[u8; 4]) -> Result<Option<String>, String> {
+fn parse_metadata_item(ilst: &[u8], fourcc: &[u8; 4]) -> Result<Option<String>, String> {
     let Some(item) = find_box(ilst, fourcc).map_err(|e| e.to_string())? else {
         return Ok(None);
     };
@@ -446,7 +446,7 @@ async fn parse_metadata_item(ilst: &[u8], fourcc: &[u8; 4]) -> Result<Option<Str
     Ok(Some(String::from_utf8_lossy(&data[8..]).into_owned()))
 }
 
-async fn parse_movie_metadata(moov: &[u8], movie: &mut Mp4Movie) -> Result<(), String> {
+fn parse_movie_metadata(moov: &[u8], movie: &mut Mp4Movie) -> Result<(), String> {
     let Some(udta) = find_box(moov, b"udta").map_err(|e| e.to_string())? else {
         return Ok(());
     };
@@ -459,8 +459,8 @@ async fn parse_movie_metadata(moov: &[u8], movie: &mut Mp4Movie) -> Result<(), S
     let Some(ilst) = find_box(&meta[4..], b"ilst").map_err(|e| e.to_string())? else {
         return Ok(());
     };
-    movie.title = parse_metadata_item(ilst, &[0xa9, b'n', b'a', b'm']).await?;
-    movie.encoder = parse_metadata_item(ilst, &[0xa9, b't', b'o', b'o']).await?;
+    movie.title = parse_metadata_item(ilst, &[0xa9, b'n', b'a', b'm'])?;
+    movie.encoder = parse_metadata_item(ilst, &[0xa9, b't', b'o', b'o'])?;
     Ok(())
 }
 //#endregion 🔖️Tkhd
@@ -472,7 +472,7 @@ async fn parse_movie_metadata(moov: &[u8], movie: &mut Mp4Movie) -> Result<(), S
 /// bytes) — this version decodes EVERY `vide` track and copies each sample's real payload bytes
 /// out of `mdat` into `Mp4Sample.data` (probe_mp4 never needed the bytes themselves, only
 /// offsets, since remodel's own callers re-read from the source buffer lazily).
-pub async fn decode_mp4(bytes: &[u8]) -> Result<Mp4Snapshot, String> {
+pub fn decode_mp4(bytes: &[u8]) -> Result<Mp4Snapshot, String> {
     let ftyp_payload = require_box(bytes, b"ftyp", "mp4 stream missing ftyp box").map_err(|e| e.to_string())?;
     let mut fr = ByteReader::new(ftyp_payload);
     let major_brand = fr.fourcc().map_err(|e| e.to_string())?.as_str().into_owned();
@@ -484,8 +484,8 @@ pub async fn decode_mp4(bytes: &[u8]) -> Result<Mp4Snapshot, String> {
     let ftyp = Mp4Ftyp { major_brand, minor_version, compatible_brands };
 
     let moov = require_box(bytes, b"moov", "mp4 stream missing moov box").map_err(|e| e.to_string())?;
-    let mut movie = parse_mvhd(require_box(moov, b"mvhd", "moov missing mvhd").map_err(|e| e.to_string())?).await?;
-    parse_movie_metadata(moov, &mut movie).await?;
+    let mut movie = parse_mvhd(require_box(moov, b"mvhd", "moov missing mvhd").map_err(|e| e.to_string())?)?;
+    parse_movie_metadata(moov, &mut movie)?;
     let mut tracks = Vec::new();
     for item in iter_boxes(bytes) {
         let b = item.map_err(|e| e.to_string())?;
@@ -493,7 +493,7 @@ pub async fn decode_mp4(bytes: &[u8]) -> Result<Mp4Snapshot, String> {
             b"ftyp" | b"mdat" => {}
             b"moov" => {
                 for trak in find_boxes(b.payload, b"trak").map_err(|e| e.to_string())? {
-                    tracks.push(decode_trak(trak, bytes).await?);
+                    tracks.push(decode_trak(trak, bytes)?);
                 }
             }
             b"free" | b"skip" => {}
@@ -504,10 +504,10 @@ pub async fn decode_mp4(bytes: &[u8]) -> Result<Mp4Snapshot, String> {
 }
 
 /// 📥️ Decodes one typed video track and rejects unsupported handler types.
-async fn decode_trak(trak: &[u8], file_bytes: &[u8]) -> Result<Mp4Track, String> {
+fn decode_trak(trak: &[u8], file_bytes: &[u8]) -> Result<Mp4Track, String> {
     let tkhd = require_box(trak, b"tkhd", "trak missing tkhd").map_err(|e| e.to_string())?;
-    let (track_id, mut metadata) = parse_tkhd(tkhd).await?;
-    metadata.edits = parse_edit_list(trak).await?;
+    let (track_id, mut metadata) = parse_tkhd(tkhd)?;
+    metadata.edits = parse_edit_list(trak)?;
     let mdia = require_box(trak, b"mdia", "trak missing mdia").map_err(|e| e.to_string())?;
     let hdlr = require_box(mdia, b"hdlr", "mdia missing hdlr").map_err(|e| e.to_string())?;
     if hdlr.len() < 12 || &hdlr[8..12] != b"vide" {
@@ -517,7 +517,7 @@ async fn decode_trak(trak: &[u8], file_bytes: &[u8]) -> Result<Mp4Track, String>
         metadata.handler_name = String::from_utf8_lossy(&hdlr[24..]).trim_end_matches('\0').to_string();
     }
     let mdhd = require_box(mdia, b"mdhd", "mdia missing mdhd").map_err(|e| e.to_string())?;
-    let timescale = parse_mdhd(mdhd, &mut metadata).await?;
+    let timescale = parse_mdhd(mdhd, &mut metadata)?;
     let minf = require_box(mdia, b"minf", "mdia missing minf").map_err(|e| e.to_string())?;
     let stbl = require_box(minf, b"stbl", "minf missing stbl").map_err(|e| e.to_string())?;
     let stsd = require_box(stbl, b"stsd", "stbl missing stsd").map_err(|e| e.to_string())?;
@@ -530,9 +530,9 @@ async fn decode_trak(trak: &[u8], file_bytes: &[u8]) -> Result<Mp4Track, String>
     }
     let rest = &stsd[sr.pos()..];
     let first = iter_boxes(rest).next().ok_or("stsd missing sample entry box")?.map_err(|e| e.to_string())?;
-    let (width, height, visual, children) = parse_visual_sample_entry(first.payload).await?;
+    let (width, height, visual, children) = parse_visual_sample_entry(first.payload)?;
     metadata.visual = visual;
-    parse_codec_extensions(children, &mut metadata).await?;
+    parse_codec_extensions(children, &mut metadata)?;
     let codec = if first.kind.0 == *b"avc1" || first.kind.0 == *b"avc3" {
         let avcc = require_box(children, b"avcC", "avc sample entry missing avcC").map_err(|e| e.to_string())?;
         let (sps, pps, nal_length_size, extension) = h264::parse_avcc_extended(avcc).map_err(|e| e.to_string())?;
@@ -542,15 +542,15 @@ async fn decode_trak(trak: &[u8], file_bytes: &[u8]) -> Result<Mp4Track, String>
     };
 
     let stts = require_box(stbl, b"stts", "stbl missing stts").map_err(|e| e.to_string())?;
-    let durations = expand_run_length_u32(&parse_stts(stts).await?).await;
-    let stsc_entries = parse_stsc(require_box(stbl, b"stsc", "stbl missing stsc").map_err(|e| e.to_string())?).await?;
-    let sizes = parse_stsz(require_box(stbl, b"stsz", "stbl missing stsz").map_err(|e| e.to_string())?).await?;
+    let durations = expand_run_length_u32(&parse_stts(stts)?);
+    let stsc_entries = parse_stsc(require_box(stbl, b"stsc", "stbl missing stsc").map_err(|e| e.to_string())?)?;
+    let sizes = parse_stsz(require_box(stbl, b"stsz", "stbl missing stsz").map_err(|e| e.to_string())?)?;
     let chunk_offsets = match find_box(stbl, b"stco").map_err(|e| e.to_string())? {
-        Some(p) => parse_stco(p).await?,
-        None => parse_co64(require_box(stbl, b"co64", "stbl missing stco/co64").map_err(|e| e.to_string())?).await?,
+        Some(p) => parse_stco(p)?,
+        None => parse_co64(require_box(stbl, b"co64", "stbl missing stco/co64").map_err(|e| e.to_string())?)?,
     };
     let sync = match find_box(stbl, b"stss").map_err(|e| e.to_string())? {
-        Some(p) => Some(parse_stss(p).await?),
+        Some(p) => Some(parse_stss(p)?),
         None => None,
     };
     let sample_count = sizes.len();
@@ -559,28 +559,28 @@ async fn decode_trak(trak: &[u8], file_bytes: &[u8]) -> Result<Mp4Track, String>
     }
     let cts_offsets: Vec<i64> = match find_box(stbl, b"ctts").map_err(|e| e.to_string())? {
         Some(p) => {
-            let expanded = expand_run_length_i64(&parse_ctts(p).await?).await;
+            let expanded = expand_run_length_i64(&parse_ctts(p)?);
             if expanded.len() != sample_count {
                 return Err("ctts sample count does not match stsz".into());
             }
             expanded
         }
-        None => vec![0i64; sample_count.await],
+        None => vec![0i64; sample_count],
     };
-    let offsets_sizes = resolve_samples(&stsc_entries, &chunk_offsets, &sizes).await?;
+    let offsets_sizes = resolve_samples(&stsc_entries, &chunk_offsets, &sizes)?;
     if offsets_sizes.len() != sample_count {
         return Err("stsc/stco resolved sample count does not match stsz".into());
     }
 
-    let mut samples = Vec::with_capacity(sample_count.await);
-    for i in 0..sample_count.await {
+    let mut samples = Vec::with_capacity(sample_count);
+    for i in 0..sample_count {
         let (offset, size) = offsets_sizes[i];
         let data = file_bytes.get(offset as usize..offset as usize + size as usize).ok_or("mp4: sample byte range out of file bounds")?.to_vec();
         let is_sync = sync.as_ref().is_none_or(|list| list.contains(&(i as u32 + 1)));
         samples.push(Mp4Sample { data, duration: durations[i], cts_offset: cts_offsets[i] as i32, sync: is_sync });
     }
 
-    let chunk_sample_counts = logical_chunk_sample_counts(&stsc_entries, chunk_offsets.len(), sample_count.await).await?;
+    let chunk_sample_counts = logical_chunk_sample_counts(&stsc_entries, chunk_offsets.len(), sample_count)?;
     Ok(Mp4Track { track_id, timescale, codec, width: u32::from(width), height: u32::from(height), metadata, chunk_sample_counts, samples })
 }
 //#endregion 🔖️Decode
@@ -638,7 +638,7 @@ fn build_codec_extensions(track: &Mp4Track) -> Vec<u8> {
     result
 }
 
-async fn build_stbl(track: &Mp4Track, chunk_offsets: &[u32]) -> Vec<u8> {
+fn build_stbl(track: &Mp4Track, chunk_offsets: &[u32]) -> Vec<u8> {
     let Mp4Codec { sps, pps, nal_length_size, extension } = &track.codec;
     let mut extra = h264::build_avcc_extended(sps, pps, *nal_length_size, extension.as_ref());
     extra.extend(build_codec_extensions(track));
@@ -647,12 +647,12 @@ async fn build_stbl(track: &Mp4Track, chunk_offsets: &[u32]) -> Vec<u8> {
     stsd_payload.extend_from_slice(&1u32.to_be_bytes());
     stsd_payload.extend(mp4_visual_sample_entry(&codec_fourcc, track.width as u16, track.height as u16, &track.metadata.visual, &extra));
     let stsd = write_box(b"stsd", &stsd_payload);
-    [stsd, build_stts(track).await, build_stss(track), build_ctts(track).await, build_stsc(track), build_stsz(track), build_stco(chunk_offsets)].concat()
+    [stsd, build_stts(track), build_stss(track), build_ctts(track), build_stsc(track), build_stsz(track), build_stco(chunk_offsets)].concat()
 }
 
-async fn build_stts(track: &Mp4Track) -> Vec<u8> {
+fn build_stts(track: &Mp4Track) -> Vec<u8> {
     let durations: Vec<u32> = track.samples.iter().map(|s| s.duration).collect();
-    let runs = run_length_encode_u32(&durations).await;
+    let runs = run_length_encode_u32(&durations);
     let mut payload = vec![0u8; 4];
     payload.extend_from_slice(&(runs.len() as u32).to_be_bytes());
     for (count, delta) in runs {
@@ -662,13 +662,13 @@ async fn build_stts(track: &Mp4Track) -> Vec<u8> {
     write_box(b"stts", &payload)
 }
 
-async fn build_ctts(track: &Mp4Track) -> Vec<u8> {
+fn build_ctts(track: &Mp4Track) -> Vec<u8> {
     if track.samples.iter().all(|s| s.cts_offset == 0) {
         return Vec::new();
     }
     let offsets: Vec<i64> = track.samples.iter().map(|s| i64::from(s.cts_offset)).collect();
     let version: u8 = if offsets.iter().any(|&v| v < 0) { 1 } else { 0 };
-    let runs = run_length_encode_i64(&offsets).await;
+    let runs = run_length_encode_i64(&offsets);
     let mut payload = vec![version, 0, 0, 0];
     payload.extend_from_slice(&(runs.len() as u32).to_be_bytes());
     for (count, offset) in runs {
@@ -758,7 +758,7 @@ fn build_hdlr(track: &Mp4Track) -> Vec<u8> {
 /// ✍️ Real, spec-valid vmhd/dinf/dref — adapted addition (remodel's own fixture muxer omits
 /// these for brevity; a genuinely conformant video `minf` needs them, so this artifact's encoder
 /// adds them for real player/ffprobe compatibility).
-async fn build_vmhd() -> Vec<u8> {
+fn build_vmhd() -> Vec<u8> {
     write_box(b"vmhd", &[0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0])
 }
 fn build_dinf() -> Vec<u8> {
@@ -769,23 +769,23 @@ fn build_dinf() -> Vec<u8> {
     write_box(b"dinf", &write_box(b"dref", &dref_payload))
 }
 
-async fn packed_language(language: &str) -> u16 {
+fn packed_language(language: &str) -> u16 {
     let mut chars = language.bytes().chain(std::iter::repeat(b'`')).take(3).map(|byte| u16::from(byte.saturating_sub(0x60)) & 0x1f);
     (chars.next().unwrap_or(0) << 10) | (chars.next().unwrap_or(0) << 5) | chars.next().unwrap_or(0)
 }
 
-async fn build_mdhd(track: &Mp4Track) -> Vec<u8> {
+fn build_mdhd(track: &Mp4Track) -> Vec<u8> {
     let mut payload = vec![0u8; 4];
     payload.extend_from_slice(&(track.metadata.media_creation_time as u32).to_be_bytes());
     payload.extend_from_slice(&(track.metadata.media_modification_time as u32).to_be_bytes());
     payload.extend_from_slice(&track.timescale.to_be_bytes());
     payload.extend_from_slice(&(track.metadata.media_duration as u32).to_be_bytes());
-    payload.extend_from_slice(&packed_language(&track.metadata.language).await.to_be_bytes());
+    payload.extend_from_slice(&packed_language(&track.metadata.language).to_be_bytes());
     payload.extend_from_slice(&track.metadata.quality.to_be_bytes());
     write_box(b"mdhd", &payload)
 }
 
-async fn build_tkhd(track: &Mp4Track) -> Vec<u8> {
+fn build_tkhd(track: &Mp4Track) -> Vec<u8> {
     let mut payload = vec![0, (track.metadata.flags >> 16) as u8, (track.metadata.flags >> 8) as u8, track.metadata.flags as u8];
     payload.extend_from_slice(&(track.metadata.creation_time as u32).to_be_bytes());
     payload.extend_from_slice(&(track.metadata.modification_time as u32).to_be_bytes());
@@ -817,7 +817,7 @@ fn build_edts(track: &Mp4Track) -> Vec<u8> {
         payload.extend_from_slice(&edit.media_rate_integer.to_be_bytes());
         payload.extend_from_slice(&edit.media_rate_fraction.to_be_bytes());
     }
-    write_box(b"edts", &write_boxasync(b"elst", &payload))
+    write_box(b"edts", &write_box(b"elst", &payload))
 }
 
 fn build_trak(track: &Mp4Track, chunk_offsets: &[u32]) -> Vec<u8> {
@@ -828,7 +828,7 @@ fn build_trak(track: &Mp4Track, chunk_offsets: &[u32]) -> Vec<u8> {
     write_box(b"trak", &[tkhd, build_edts(track), mdia].concat())
 }
 
-async fn build_mvhd(movie: &Mp4Movie) -> Vec<u8> {
+fn build_mvhd(movie: &Mp4Movie) -> Vec<u8> {
     let mut payload = vec![0u8; 4];
     payload.extend_from_slice(&(movie.creation_time as u32).to_be_bytes());
     payload.extend_from_slice(&(movie.modification_time as u32).to_be_bytes());
@@ -852,7 +852,7 @@ fn build_metadata_item(fourcc: &[u8; 4], value: &str) -> Vec<u8> {
     write_box(fourcc, &write_box(b"data", &data))
 }
 
-async fn build_udta(movie: &Mp4Movie) -> Vec<u8> {
+fn build_udta(movie: &Mp4Movie) -> Vec<u8> {
     if movie.title.is_none() && movie.encoder.is_none() {
         return Vec::new();
     }
@@ -872,7 +872,7 @@ async fn build_udta(movie: &Mp4Movie) -> Vec<u8> {
     write_box(b"udta", &write_box(b"meta", &meta_payload))
 }
 
-async fn build_moov(snapshot: &Mp4Snapshot, mdat_data_offset: u32) -> Vec<u8> {
+fn build_moov(snapshot: &Mp4Snapshot, mdat_data_offset: u32) -> Vec<u8> {
     let mut offset = mdat_data_offset;
     let mut traks = Vec::new();
     for track in &snapshot.tracks {
@@ -895,7 +895,7 @@ async fn build_moov(snapshot: &Mp4Snapshot, mdat_data_offset: u32) -> Vec<u8> {
 /// internals are a fresh, spec-valid rebuild). The deterministic layout is `ftyp`, `moov`,
 /// a canonical empty `free`, and `mdat`; a first pass measures `moov`, and the second writes
 /// the resulting logical chunk offsets.
-pub async fn encode_mp4(snapshot: &Mp4Snapshot) -> Vec<u8> {
+pub fn encode_mp4(snapshot: &Mp4Snapshot) -> Vec<u8> {
     let mut major_brand_bytes = [b' '; 4];
     for (i, b) in snapshot.ftyp.major_brand.as_bytes().iter().take(4).enumerate() {
         major_brand_bytes[i] = *b;
@@ -914,12 +914,12 @@ pub async fn encode_mp4(snapshot: &Mp4Snapshot) -> Vec<u8> {
 
     let all_sample_bytes: Vec<u8> = snapshot.tracks.iter().flat_map(|t| t.samples.iter().flat_map(|s| s.data.clone())).collect();
     let mdat = write_box(b"mdat", &all_sample_bytes);
-    let measured_moov = build_moov(snapshot, 0).await;
+    let measured_moov = build_moov(snapshot, 0);
     let free = write_box(b"free", &[]);
     let mdat_data_offset = u32::try_from(ftyp.len() + measured_moov.len() + free.len() + 8).expect("MP4 media offset exceeds stco range");
     let moov = build_moov(snapshot, mdat_data_offset);
 
-    [ftyp, moov.await, free, mdat].concat()
+    [ftyp, moov, free, mdat].concat()
 }
 //#endregion 🔖️Encode
 

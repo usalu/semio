@@ -6,7 +6,7 @@
 // placeholders (structural `serde_json` coercion or raw pack-byte passthrough, not real format
 // conversion — `Lossy`); txt is an honest not-yet-implemented stub (`Lossy`). Shaped inline (no
 // generated `IoEntryDescriptor` type checked in anywhere yet in this repo) so this file has no
-// fragile forward reference; swap for a real import once ts-rs generation lands.
+// fragile forward reference; swap for a real import once owned schema generation lands.
 export interface IoEntryDescriptorMirror {
   from: string;
   into: string;

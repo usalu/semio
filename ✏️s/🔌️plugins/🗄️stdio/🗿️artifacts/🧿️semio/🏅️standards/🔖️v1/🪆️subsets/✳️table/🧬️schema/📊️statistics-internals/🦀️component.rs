@@ -14,22 +14,51 @@ use std::collections::HashMap;
 
 // #region 🔖️Error
 /// ⚠️ Fallible-computation error type shared by every function in this crate.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum StatisticsError {
-    #[error("need at least {needed} observations, found {found}")]
     InsufficientData { needed: usize, found: usize },
-    #[error("dimension mismatch: expected {expected}, found {found}")]
     DimensionMismatch { expected: usize, found: usize },
-    #[error("singular matrix")]
     SingularMatrix,
-    #[error("no convergence after {iterations} iterations")]
     NoConvergence { iterations: usize },
-    #[error("invalid argument: {0}")]
     InvalidArgument(&'static str),
-    #[error(transparent)]
-    Tabular(#[from] crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::TabularError),
-    #[error(transparent)]
-    Probability(#[from] crate::artifacts::semio::standards::v1::subsets::table::schema::probability_internals::ProbabilityError),
+    Tabular(crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::TabularError),
+    Probability(crate::artifacts::semio::standards::v1::subsets::table::schema::probability_internals::ProbabilityError),
+}
+
+impl std::fmt::Display for StatisticsError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::InsufficientData { needed, found } => write!(formatter, "need at least {needed} observations, found {found}"),
+            Self::DimensionMismatch { expected, found } => write!(formatter, "dimension mismatch: expected {expected}, found {found}"),
+            Self::SingularMatrix => formatter.write_str("singular matrix"),
+            Self::NoConvergence { iterations } => write!(formatter, "no convergence after {iterations} iterations"),
+            Self::InvalidArgument(message) => write!(formatter, "invalid argument: {message}"),
+            Self::Tabular(error) => std::fmt::Display::fmt(error, formatter),
+            Self::Probability(error) => std::fmt::Display::fmt(error, formatter),
+        }
+    }
+}
+
+impl std::error::Error for StatisticsError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Tabular(error) => Some(error),
+            Self::Probability(error) => Some(error),
+            _ => None,
+        }
+    }
+}
+
+impl From<crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::TabularError> for StatisticsError {
+    fn from(error: crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::TabularError) -> Self {
+        Self::Tabular(error)
+    }
+}
+
+impl From<crate::artifacts::semio::standards::v1::subsets::table::schema::probability_internals::ProbabilityError> for StatisticsError {
+    fn from(error: crate::artifacts::semio::standards::v1::subsets::table::schema::probability_internals::ProbabilityError) -> Self {
+        Self::Probability(error)
+    }
 }
 // #endregion 🔖️Error
 
@@ -592,6 +621,27 @@ pub fn conditional_mutual_information(x: &[u32], y: &[u32], given: &[&[u32]], le
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn statistics_error_contract_preserves_transparent_sources_and_conversions() {
+        let simple = [
+            (StatisticsError::InsufficientData { needed: 3, found: 1 }, "need at least 3 observations, found 1"),
+            (StatisticsError::DimensionMismatch { expected: 4, found: 2 }, "dimension mismatch: expected 4, found 2"),
+            (StatisticsError::SingularMatrix, "singular matrix"),
+            (StatisticsError::NoConvergence { iterations: 7 }, "no convergence after 7 iterations"),
+            (StatisticsError::InvalidArgument("rate"), "invalid argument: rate"),
+        ];
+        for (error, message) in simple {
+            assert_eq!(error.to_string(), message);
+            assert!(std::error::Error::source(&error).is_none());
+        }
+        let tabular: StatisticsError = crate::artifacts::semio::standards::v1::subsets::table::schema::tabular_internals::TabularError::UnknownColumn("x".into()).into();
+        assert_eq!(tabular.to_string(), "no column named `x`");
+        assert!(std::error::Error::source(&tabular).is_some());
+        let probability: StatisticsError = crate::artifacts::semio::standards::v1::subsets::table::schema::probability_internals::ProbabilityError::NoConvergence { what: "cdf" }.into();
+        assert_eq!(probability.to_string(), "no convergence in cdf");
+        assert!(std::error::Error::source(&probability).is_some());
+    }
 
     // #region 🔖️DescriptiveTests
     #[semio_framework_async_macros::async_test]

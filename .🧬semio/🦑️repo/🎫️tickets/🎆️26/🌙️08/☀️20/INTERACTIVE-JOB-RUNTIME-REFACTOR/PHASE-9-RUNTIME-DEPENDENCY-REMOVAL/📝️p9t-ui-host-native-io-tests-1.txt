@@ -1,0 +1,20 @@
+🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🦀️backend.rs:480:23: warning: unnecessary qualification
+🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🦀️backend.rs:481:25: warning: unnecessary qualification
+🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🦀️pipelines.rs:52:35: warning: unnecessary qualification
+🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🦀️pipelines.rs:87:26: warning: unnecessary qualification
+🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🦀️pipelines.rs:111:35: warning: unnecessary qualification
+🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🦀️pipelines.rs:141:33: warning: unnecessary qualification
+🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🦀️pipelines.rs:144:35: warning: unnecessary qualification
+🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🦀️pipelines.rs:174:26: warning: unnecessary qualification
+🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🦀️world3d.rs:82:107: warning: unnecessary qualification
+🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🦀️world3d.rs:135:27: warning: unnecessary qualification
+🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🦀️world3d.rs:136:23: warning: unnecessary qualification
+🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🦀️backend.rs:94:5: warning: field `surface_format` is never read
+🧰️framework/🔨️modules/🖱️ui/🖼️render/🎯️targets/🍎️metal/📦️packages/🦀️rust/🦀️scene_target.rs:86:12: warning: method `format` is never used
+warning: `semio-framework-ui-backend-metal` (lib) generated 13 warnings (run `cargo fix --lib -p semio-framework-ui-backend-metal` to apply 11 suggestions)
+   Compiling semio-framework-ui-host v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust)
+🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust/🦀️native_io.rs:241:22: warning: unnecessary qualification
+🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust/🦀️native_io.rs:241:65: warning: unnecessary qualification
+🧰️framework/🔨️modules/🖱️ui/🖥️host/📦️packages/🦀️rust/🦀️native_io.rs:204:100: error[E0277]: the trait bound `JobFault: From<&str>` is not satisfied: the trait `From<&str>` is not implemented for `JobFault`
+warning: `semio-framework-ui-host` (lib test) generated 2 warnings
+error: could not compile `semio-framework-ui-host` (lib test) due to 1 previous error; 2 warnings emitted

@@ -29,10 +29,10 @@ pub fn validate_commit(op: &Operation, live_revision: RevisionId, live_generatio
 
 // —— Budget ——
 pub struct StepBudget { pub fuel: u64, pub deadline_ms: u64 }
-pub const INTERACTIVE_LANE_WALL_MS: u64 = 4;      pub const INTERACTIVE_LANE_FUEL: u64 = 2_000_000;
-pub const USER_VISIBLE_LANE_WALL_MS: u64 = 16;    pub const USER_VISIBLE_LANE_FUEL: u64 = 6_000_000;
-pub const BACKGROUND_LANE_WALL_MS: u64 = 50;      pub const BACKGROUND_LANE_FUEL: u64 = 20_000_000;
-pub const MAINTENANCE_LANE_WALL_MS: u64 = 200;    pub const MAINTENANCE_LANE_FUEL: u64 = 80_000_000;
+pub const INTERACTIVE_LANE_WALL_MS: u64 = 1;      pub const INTERACTIVE_LANE_FUEL: u64 = 2_000_000;
+pub const USER_VISIBLE_LANE_WALL_MS: u64 = 2;     pub const USER_VISIBLE_LANE_FUEL: u64 = 6_000_000;
+pub const BACKGROUND_LANE_WALL_MS: u64 = 4;       pub const BACKGROUND_LANE_FUEL: u64 = 20_000_000;
+pub const MAINTENANCE_LANE_WALL_MS: u64 = 4;      pub const MAINTENANCE_LANE_FUEL: u64 = 80_000_000;
 
 // —— The protocol itself ——
 pub struct StepContext<'a> { /* private fields, see §2 */ }
@@ -169,7 +169,7 @@ silent-apply fallback exists to bypass it.
 | `PointerHover` | `LatestWins { max_bytes: 4KiB }` | one slot, always the newest pointer/hover sample |
 | `PreviewGeometry` | `Coalesced { key: "operation:entity:stage", max_items: 64, max_bytes: 4MiB }` | dedups repeated previews for the same entity/stage within an operation |
 | `CommitAndCheckpoint` | `LosslessBounded { max_items: 256, max_bytes: 16MiB }` | commits/checkpoints are never dropped — backpressure (reject/stall) instead |
-| `DiagnosticRing` | `Coalesced { key: "operation:diagnostic_kind", max_items: 128, max_bytes: 512KiB }` | closest existing fit to "bounded ring" — see deviation note below |
+| `DiagnosticRing` | `Ring { max_items: 128, max_bytes: 512KiB }` | overwrite-oldest bounded diagnostic history |
 | `Telemetry` | `LatestWins { max_bytes: 1KiB }` | lossy, single most-recent sample |
 | `LargeGeometry` | `ByteCredit { max_items: 32, max_bytes: 32MiB }` | byte-credit controlled, for oversized preview patches |
 
@@ -179,15 +179,8 @@ categories above; `ProgressEvent::PreviewPatch` specifically splits by payload s
 `ChannelPolicy` variant bounds both items AND bytes (Phase 1a's requirement, verified — see
 `channel_policy_matrix_bounds_every_kind_in_items_and_bytes` test).
 
-**Deviation from the design doc's literal wording**: the ticket brief calls for diagnostics to be "a
-bounded ring." `semio_framework_async::ChannelPolicy` has exactly four variants
-(`LatestWins`/`Coalesced`/`LosslessBounded`/`ByteCredit`), none of which is a literal fixed-capacity
-overwrite-oldest ring. `Coalesced` keyed by `(operation, diagnostic_kind)` is the closest available
-shape (bounded, drops rather than stalls) and is what this packet ships. A true ring variant would be a
-change to `semio_framework_async::ChannelPolicy` itself, out of scope for this packet's "stay strictly
-inside the new module" constraint — flagged here for whichever later phase actually wires a live
-diagnostics channel to decide whether the `Coalesced` approximation is good enough or a fifth
-`ChannelPolicy` variant is warranted.
+The earlier coalescing approximation was removed during coordinator verification. The async policy
+vocabulary and services mailbox now implement a real item-and-byte-bounded overwrite-oldest ring.
 
 ## 5. How the trace crate is used
 
@@ -273,26 +266,32 @@ diagnostics channel to decide whether the `Coalesced` approximation is good enou
   interactive paths can never diverge (packet item 6's whole point).
 - **Structured child jobs**: once a phase owns a live `HostAsyncRuntime`, extend `JobScope` with an
   optional `ScopeHandle` (see deviation #3) rather than inventing a second scope type.
-- **Progress stream wiring**: `ProgressEvent`/`channel_policy_for`/`default_channel_kind_for` are ready
-  to use, but no live channel/actor-mailbox implementation exists yet in this crate (deliberately —
-  packet P2a's scope is the protocol, not a concrete transport). A later phase wires an actual bounded
-  channel per `ChannelPolicy` and a UI-facing consumer.
+- **Progress stream wiring**: the services `EventRouter` now provides real policy-driven bounded
+  mailboxes, including overwrite-oldest diagnostics and byte enforcement for every queueing policy.
+  Product projections still need to route their `ProgressEvent` values into those mailboxes.
 - **Determinism discipline**: any job with checkpointed/persisted state must, like `TortureJob`, seed
   its RNG once at construction (never re-seed per step) and use only stable-order collections
   (`BTreeMap`/`BTreeSet`/`Vec`) for anything that ends up in `Checkpoint::state`/`CommitCandidate`.
 
 ## 8. Exit gate — what was actually run
 
-```
-cargo check  -p semio-framework-job                                  # clean
-cargo clippy -p semio-framework-job --all-targets -- -D warnings     # clean
-cargo test   -p semio-framework-job                                  # 16/16 passed (debug)
-cargo test   -p semio-framework-job --release                        # 16/16 passed (release)
-cargo build  -p semio-framework-job --target wasm32-unknown-unknown  # clean
-cargo build  -p semio-framework-job --target wasm32-wasip2           # clean
-bun ./📜️script.ts verify dependencies                                 # 238 -> 238, no new deps
-bun ./📜️script.ts test   (from the crate's own 📦️packages/🦀️rust dir)  # nextest: 16/16 passed
-```
+| Command | Result |
+| --- | --- |
+| `bun nx run @semio-tech/framework-job-rs:test-quick` | PASS — 17/17 debug |
+| `bun nx run @semio-tech/framework-job-rs:test-long -- --release` | PASS — 17/17 release |
+| `cargo clippy -p semio-framework-job --all-targets -- -D warnings` | PASS |
+| `cargo check -p semio-framework-job --lib --target wasm32-unknown-unknown` | PASS |
+| `cargo check -p semio-framework-job --lib --target wasm32-wasip2` | PASS |
+| `cargo check -p semio-framework-async -p semio-framework-job -p semio-framework-os-services --lib --target wasm32-unknown-unknown` | PASS |
+| `cargo check -p semio-framework-async -p semio-framework-job -p semio-framework-os-services --lib --target wasm32-wasip2` | PASS |
+| `bun nx run @semio-tech/os-services-rs:test` | PASS — 39/39 debug, including ring and byte bounds |
+| `bun nx run @semio-tech/os-services-rs:test -- --release` | PASS — 39/39 release |
+| `cargo clippy -p semio-framework-os-services --all-targets -- -D warnings` | PASS |
+
+Coordinator verification also corrected `run_on_worker`: it now submits one `drive_step` call per
+pool closure and re-enqueues non-terminal state at the back of the lane. The single-worker
+`run_on_worker_releases_a_single_worker_between_job_steps` test would deadlock under the former
+run-to-completion closure and now passes in debug and release.
 
 The five `torture_job_*` tests are the conformance suite for the ticket's exit gate:
 - `torture_job_never_trips_the_watchdog_ceiling` — asserts `Watchdog::violations()` (filtered to this

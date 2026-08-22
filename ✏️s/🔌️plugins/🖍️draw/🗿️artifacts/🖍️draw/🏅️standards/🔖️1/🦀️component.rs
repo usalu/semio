@@ -12,6 +12,6 @@ use semio_framework_plugin::StandardId;
 /// `MediaType`/`OsMediaCapability` fields are a coarser, unrelated classification — see
 /// `📓️recipe-subset.md` §4b). `extensions: ["draw"]` is the real, carried-over value (the codec
 /// row's own claim).
-pub async fn standard() -> StandardDeclaration {
+pub fn standard() -> StandardDeclaration<crate::DrawApps> {
     StandardDeclaration { id: StandardId("1"), media: MediaDeclaration { mimes: &["application/vnd.semio.draw+json"], extensions: &["draw"] }, subsets: vec![subsets::any::subset()] }
 }

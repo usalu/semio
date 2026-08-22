@@ -8,7 +8,7 @@ use crate::artifacts::present::PresentSnapshot;
 /// `payload.index` (clamped, FINAL-state per the taxonomy's index-addressing law), and mints a new
 /// content-addressed `presentation` handle for the result — real handcrafted construction from
 /// `(payload, base)`, never apply-then-capture.
-pub async fn diff(payload: &CreateTile, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
+pub fn diff(payload: &CreateTile, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
     let (source, mut tiles) = crate::artifacts::present::present_working_scene(base);
     if tiles.iter().any(|tile| tile.id == payload.tile.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A tile with id \"{}\" already exists.", payload.tile.id), ["tiles".to_string(), payload.tile.id.clone()]);

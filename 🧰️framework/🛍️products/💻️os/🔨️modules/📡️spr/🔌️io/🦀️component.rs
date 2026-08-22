@@ -46,7 +46,7 @@ mod native {
         if recovery.last_commit_seq == 0 {
             let mut header_bytes = [0u8; HEADER_SIZE];
             source.read_exact_at(0, &mut header_bytes).await?;
-            return Ok(ResumeState { end_offset: recovery.bytes_recovered, last_commit_seq: 0, chain_hash: Blake3Hasher.hash(&header_bytes).await });
+            return Ok(ResumeState { end_offset: recovery.bytes_recovered, last_commit_seq: 0, chain_hash: Blake3Hasher.hash(&header_bytes) });
         }
         let mut commit_bytes = vec![0u8; COMMIT_FRAME_LEN as usize];
         source.read_exact_at(recovery.last_commit_offset, &mut commit_bytes).await?;
@@ -77,7 +77,7 @@ mod native {
             let source = crate::os_pack::io::FilePackSource::open(path)?;
             let mut header_bytes = [0u8; HEADER_SIZE];
             source.read_exact_at(0, &mut header_bytes).await?;
-            let resume = ResumeState { end_offset: source.len().await, last_commit_seq: 0, chain_hash: Blake3Hasher.hash(&header_bytes).await };
+            let resume = ResumeState { end_offset: source.len().await, last_commit_seq: 0, chain_hash: Blake3Hasher.hash(&header_bytes) };
             Ok(Self { appender: Some(appender), resume })
         }
 
@@ -276,9 +276,9 @@ mod native {
     /// needs to interleave one extra `REC_COMPACTION` record into the same commit generation, and
     /// neither type exposes a raw `write_record` passthrough for that).
     async fn flush_dict(writer: &mut SprWriter<Vec<u8>>, dict: &DictBuilder, base: &mut u32) -> Result<(), ProtocolError> {
-        let len = dict.len().await;
+        let len = dict.len();
         if len > *base {
-            let entries = dict.entries_since(*base).await;
+            let entries = dict.entries_since(*base);
             let mut payload = crate::os_pack::ByteWriter::new();
             payload.write_u8(1);
             payload.write_varint_u64(*base as u64);
@@ -317,7 +317,7 @@ mod native {
 
         let write_options = WriteOptions { required_flags: header.required_flags, optional_flags: header.optional_flags };
         let mut writer = SprWriter::begin(Vec::<u8>::new(), &write_options).await?;
-        let mut dict = DictBuilder::new().await;
+        let mut dict = DictBuilder::new();
         let mut dict_base = 0u32;
 
         let doc_payload = encode_doc(&log.doc_id, &log.schema, &mut dict).await;

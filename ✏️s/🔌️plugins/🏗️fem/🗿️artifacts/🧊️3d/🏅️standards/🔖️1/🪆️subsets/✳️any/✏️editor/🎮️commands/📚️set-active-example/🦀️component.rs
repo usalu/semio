@@ -20,7 +20,7 @@ pub struct SetActiveExample {
 /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetSnapshot` — see
 /// `📓️taxonomy.md`'s forbidden vocabulary), so this builds `editor::fem3d::reset_document_effect`
 /// (a `Effect::LoadDocument`, outside undo history) instead of an `artifact_mutations` entry.
-pub async fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
+pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Fem3dSnapshot>, _cfg: &ConfigView<'_, Fem3dConfig>) -> Result<Emit<Fem3dMutation, Fem3dConfigMutation>, Fault> {
     let document = if payload.example_id == "default" { <Fem3dSnapshot as store::ArtifactDsl>::parse_dsl(crate::artifacts::fem3d::dsl::FEM3D_EXAMPLE_TEXT).unwrap_or_default() } else { Fem3dSnapshot::default() };
     Ok(Emit { effects: vec![crate::editor::fem3d::reset_document_effect(&document)], config_mutations: vec![Fem3dConfigMutation::Snapshot { config: Fem3dConfig::default() }], ..Default::default() })
 }
@@ -31,8 +31,8 @@ mod tests {
     use semio_framework::kernel::Effect;
     use semio_framework_plugin::ActionKind;
 
-    async fn empty_view() -> (Fem3dSnapshot, semio_framework_plugin::HistoryView) {
-        (Fem3dSnapshot::default(), semio_framework_plugin::HistoryView::empty())
+    fn empty_view() -> (Fem3dSnapshot, semio_framework_plugin::HistoryView) {
+        (Fem3dSnapshot::default(), semio_framework_plugin::resolve_ready(semio_framework_plugin::HistoryView::empty()))
     }
 
     /// 🧬️ Whole-document replace is not an in-history mutation (`SetSnapshot` is banned outright —
@@ -41,10 +41,10 @@ mod tests {
     /// in-process `VcsArtifactApp` never applies `effects` to its own store (that's the real host's
     /// job), so this asserts directly on the `Emit` `import_media`-style rather than through
     /// `app.snapshot()`.
-    #[semio_framework_async_macros::async_test]
-    async fn set_active_example_loads_default_fixture_3d() {
+    #[test]
+    fn set_active_example_loads_default_fixture_3d() {
         let (snapshot, history) = empty_view();
-        let doc = ArtifactView::new(&snapshot, &history);
+        let doc = semio_framework_plugin::resolve_ready(ArtifactView::new(&snapshot, &history));
         let cfg_snapshot = Fem3dConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let emit = handle(&SetActiveExample { example_id: "default".into() }, &doc, &cfg).expect("handle");
@@ -58,18 +58,18 @@ mod tests {
     /// 🧬️ `setActiveExample` replaces document content via a `Effect::LoadDocument`, so it MUST be
     /// declared as a Mutation, not a View/Shell action — the framework's "View/Shell actions must not
     /// emit operations" guard would otherwise reject it.
-    #[semio_framework_async_macros::async_test]
-    async fn set_active_example_is_declared_as_operation_3d() {
+    #[test]
+    fn set_active_example_is_declared_as_operation_3d() {
         let definition = crate::editor::fem3d::create_fem3d_app();
         let action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
         assert!(matches!(action.kind, ActionKind::Mutation), "loading an example emits a document-replace effect, so it is a Mutation");
         assert!(!action.args.is_empty(), "the palette stages the example choice via a declared select arg");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn set_active_example_unknown_id_resets_to_empty_document() {
+    #[test]
+    fn set_active_example_unknown_id_resets_to_empty_document() {
         let (snapshot, history) = empty_view();
-        let doc = ArtifactView::new(&snapshot, &history);
+        let doc = semio_framework_plugin::resolve_ready(ArtifactView::new(&snapshot, &history));
         let cfg_snapshot = Fem3dConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let emit = handle(&SetActiveExample { example_id: "nonsense".into() }, &doc, &cfg).expect("handle");

@@ -471,9 +471,9 @@ impl ActionAdapter {
             }
         };
 
-        if let Ok(validator) = jsonschema::Validator::new(&capability.input_schema) {
-            if let Err(validation_error) = validator.validate(&input) {
-                let error = GatewayError::new(GatewayErrorCode::InputInvalid, validation_error.to_string());
+        if let Ok(validator) = crate::schema::compile_validator(&capability.input_schema) {
+            if let Err(validation_error) = crate::schema::validate(&validator, &input) {
+                let error = GatewayError::new(GatewayErrorCode::InputInvalid, validation_error);
                 self.record_audit(AuditContext { invocation_id: &invocation_id, principal, session, capability_id, raw_input: &input }, AuditDecision::Denied { code: error.code }, None, None, "input_invalid", Some(error.clone()), None, now_ms);
                 return Err(error);
             }
@@ -1223,7 +1223,7 @@ mod quick {
     /// assumption that translateSelection's `dx`/`dy`/`dz`/`objectIds` args are required. They are
     /// not — `🧫️fixtures/🦀️component.rs`'s `string_array_arg`/`number_arg` helpers never call
     /// `ActionArgDef::required()`, so the compiled `input_schema` has no `"required"` array at all,
-    /// and `{}` is genuinely schema-valid (confirmed directly: a `jsonschema::Validator` built from
+    /// and `{}` is genuinely schema-valid (confirmed directly by the repo-owned validator built from
     /// this exact capability's `input_schema` reports `is_valid(&json!({}))  == true`). The test
     /// encoded the wrong expectation, not a defect in `prepare`'s validation — `prepare` itself was
     /// already correctly invoking the validator (confirmed: the same validator correctly rejects a

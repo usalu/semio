@@ -24,7 +24,7 @@
 //! `📓️w4-sourcing-report.md` `## openQuestions`.
 
 //#region 🔖️IoDeclaration
-pub async fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
+pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use crate::artifacts::curate::standards::v1::subsets::any::io::export::serializers::artifacts as export;
     use crate::artifacts::curate::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
     use crate::artifacts::curate::{language_spec, CurateSnapshot, SourcingMutation, SOURCING_CURATE_SCHEMA, SOURCING_DIALECT};

@@ -1,0 +1,715 @@
+diff --git a/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml b/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml
+index 9ea0f46d31..c62ae5d3d2 100644
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml
+@@ -64,7 +64,6 @@ base64 = "0.22.1"
+ image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+ vello = { version = "0.7.0", default-features = false, features = ["wgpu"] }
+ winit = { version = "0.30.12", default-features = false, features = ["rwh_06"] }
+-pollster = "0.4.0"
+ resvg = "0.45.1"
+ tiny-skia = "0.11.4"
+ usvg = "0.45.1"
+@@ -89,7 +88,7 @@ semio-framework-actor = { workspace = true }
+ # `TokioHostRuntime` (directory-client HTTP work) — "the global thread budget exists so no component
+ # sizes itself per-CPU" (that fn's own doc), now literally one pool object rather than a per-caller
+ # sizing formula.
+-semio-framework-async = { workspace = true }
++semio-framework-async = { workspace = true, features = ["entrypoint"] }
+ blake3 = "1"
+ # 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C0/§C6 (lane 2-D): `ureq`
+ # added alongside the pre-existing `sync` so `os_directory::client::native::NativeDirectoryTransport`
+@@ -140,6 +139,3 @@ web-sys = { version = "0.3.98", features = [
+     "console",
+     "MediaQueryList",
+ ] }
+-
+-[dev-dependencies]
+-wasm-bindgen-test = "0.3.56"
+diff --git a/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️bin.rs b/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️bin.rs
+index 247bf38aa1..9cd3f5cc36 100644
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️bin.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️bin.rs
+@@ -11,6 +11,10 @@ fn main() {
+         env::args().position(|arg| arg == flag).and_then(|index| env::args().nth(index + 1))
+     }
+ 
++    fn drive_entrypoint<F: std::future::Future>(future: F) -> F::Output {
++        semio_framework_async::block_on(future)
++    }
++
+     let plugin_filter = arg_value("--plugin").unwrap_or_else(|| "studio".to_string());
+     let modules_root = env::var("SEMIO_PLUGIN_MODULES").map(PathBuf::from).unwrap_or_else(|_| PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../dev/js/plugin-modules"));
+     // 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (V1b-bench) — `--scale <registry.json>
+@@ -28,13 +32,13 @@ fn main() {
+             std::process::exit(1);
+         };
+         let shard_count: u16 = arg_value("--shards").and_then(|v| v.parse().ok()).unwrap_or(8);
+-        std::process::exit(semio_framework_os_renderer_wgpu::scale_bench::run(PathBuf::from(registry_path), PathBuf::from(wasm_path), shard_count, PathBuf::from(report_path)));
++        std::process::exit(drive_entrypoint(semio_framework_os_renderer_wgpu::scale_bench::run(PathBuf::from(registry_path), PathBuf::from(wasm_path), shard_count, PathBuf::from(report_path))));
+     }
+     // 🧪️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END — `--smoke` boots the shell (real
+     // identity/directory/plugin path, no GPU/window) and dumps its widget tree as JSON instead of
+     // opening a real window, for environments that cannot drive one.
+     if env::args().any(|arg| arg == "--smoke") {
+-        std::process::exit(run_smoke(&plugin_filter, modules_root));
++        std::process::exit(drive_entrypoint(run_smoke(&plugin_filter, modules_root)));
+     }
+     run_native(&plugin_filter, modules_root);
+ }
+diff --git a/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs b/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs
+index 2f888c6cc9..9de980e014 100644
+--- a/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs
++++ b/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs
+@@ -338,11 +338,8 @@ pub(crate) mod kernel_runtime {
+     }
+ 
+     /// 🌉 The genuinely-yielding leaf every plugin call now awaits, replacing the old in-process
+-    /// `WasmPluginRuntime::exchange` blocking call. Whoever drives this to completion (`pollster`'s
+-    /// own park-based executor for the majority of call sites that are fine staying synchronous, or
+-    /// `poll_app_tasks`'s tiny task-pool executor for the 3 sites this packet moved off the winit
+-    /// thread — see `📓️terra-H3-wgpu-native-report.md`) supplies its own `Waker`; this future does
+-    /// not care which, it only stores+calls whatever it was last polled with.
++    /// `WasmPluginRuntime::exchange` blocking call. The renderer worker-pool and app-task drivers
++    /// supply its `Waker`; this future only stores and wakes the most recent one.
+     struct KernelFuture {
+         slot: Arc<ResponseSlot>,
+         request: Option<KernelRequest>,
+@@ -462,18 +459,10 @@ pub(crate) mod kernel_runtime {
+     }
+ 
+     impl KernelPoolState {
+-        /// ⏱️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): this whole `impl` block used
+-        /// to bridge every single `ParallelRuntime`/`GuestRuntime` call with its OWN `pollster::block_on`
+-        /// (15 call sites — the design doc's Category C, "THE PHASE 3 FOCUS"). Those calls never
+-        /// actually blocked the UI/winit thread (they only ever ran inside `run_kernel_thread`'s own
+-        /// former dedicated `"semio-kernel"` background thread), but they were still disguised,
+-        /// scattered `block_on` calls outside any approved entry point, which is
+-        /// exactly what the audit's "block_on confined to approved process/test entry points" rule
+-        /// forbids and what inflated the interactivity audit's blocking-bridge count. Every method below
+-        /// is now a genuine `async fn`; the ONE remaining bridge lives at `run_kernel_thread`'s own
+-        /// top-level `pollster::block_on`, wrapping this thread's entire request-processing loop — the
+-        /// same class of justified bridge `run_native`'s event loop or the CLI's `bin.rs` already use,
+-        /// not a disguised one hiding inside product logic.
++        /// ⏱️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): every method in this
++        /// state machine is genuinely asynchronous and the whole request loop is mounted once on the
++        /// injected renderer worker pool. No executor bridge or dedicated kernel thread remains in
++        /// product logic.
+         async fn new() -> Self {
+             let guest_runtime: Arc<GuestRuntimes> = Arc::new(GuestRuntimes::Wasmtime(WasmtimeRuntime::new(SharedEngineConfig::default()).expect("wasmtime engine builds")));
+             // 🧵️ P1e: the injected process-wide pool (`crate::renderer_worker_pool`), never a pool this
+@@ -493,12 +482,8 @@ pub(crate) mod kernel_runtime {
+             let hash = PackageHash(*blake3::hash(&bytes).as_bytes());
+             let package_id = PackageId(plugin_id.clone());
+             let package_ref = PackageRef { package: package_id.clone(), hash };
+-            // 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): `GuestRuntime::
+-            // compile` is `async fn` (the actor-green async migration landed after this call site was
+-            // written) — bridged with `pollster::block_on`, this file's own established sync↔async
+-            // bridge (already used repeatedly below, e.g. `poll_world3d_assets`/`fetch_url_bytes`).
+-            // Pre-existing defect in this exact function, fixed here because it sits directly upstream
+-            // of this packet's own cascade addition below.
++            // 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): compile
++            // remains a genuine suspension point on the worker-pool-owned request state machine.
+             let compiled = self.guest_runtime.compile(&package_ref, &bytes).await.map_err(|error| error.to_string())?;
+             let instance_id = self.next_instance_id;
+             self.next_instance_id += 1;
+@@ -907,7 +892,7 @@ pub(crate) mod kernel_runtime {
+     //#endregion
+ 
+     //#region 🔖️TaskPool — the non-blocking executor for `spawn_app_task`
+-    // 🌀️ `spawn_app_task`'s native replacement for `pollster::block_on(future)`: pushes onto a
++    // 🌀️ `spawn_app_task` pushes onto a
+     // thread-local pool polled from `about_to_wait` (which already runs every loop iteration —
+     // `ControlFlow::Poll` is set once `RuntimeReady` lands) instead of running the future to
+     // completion synchronously on the winit thread. This is safe precisely because
+@@ -1121,7 +1106,7 @@ pub mod scale_bench {
+     }
+ 
+     impl Env {
+-        fn new(runtime: Arc<GuestRuntimes>, shard_count: u16) -> Self {
++        async fn new(runtime: Arc<GuestRuntimes>, shard_count: u16) -> Self {
+             // 🧵️ P1e: this bench is a standalone, one-shot headless invocation (`semio-wgpu-native
+             // --scale`), never sharing a process with the interactive winit host (`crate::
+             // renderer_worker_pool`'s `InteractiveNative` singleton) — so it owns its OWN
+@@ -1132,7 +1117,7 @@ pub mod scale_bench {
+             // process's whole lifetime, sized once, here.
+             let cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4);
+             let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, cores)));
+-            let runtime = pollster::block_on(super::parallel_runtime::ParallelRuntime::new(pool, runtime, shard_count.max(1), 0, 64));
++            let runtime = super::parallel_runtime::ParallelRuntime::new(pool, runtime, shard_count.max(1), 0, 64).await;
+             Self { runtime, budgets: HashMap::new(), seq: 0, ordinals: HashMap::new(), now_ms: 0, pending: Vec::new() }
+         }
+ 
+@@ -1150,11 +1135,11 @@ pub mod scale_bench {
+         /// names an *interactive* actor, and the kernel's placement gate keys off the actor's
+         /// ACTIVATION lane, so activating the probe as `Background` measured a background actor and
+         /// left the interactive path untested. This is an instrument correction, not a threshold change.
+-        fn activate(&mut self, compiled: &CompiledHandle, record: &RegistryRecord) -> Result<ActorId, String> {
+-            self.activate_on_lane(compiled, record, Lane::Background)
++        async fn activate(&mut self, compiled: &CompiledHandle, record: &RegistryRecord) -> Result<ActorId, String> {
++            self.activate_on_lane(compiled, record, Lane::Background).await
+         }
+ 
+-        fn activate_on_lane(&mut self, compiled: &CompiledHandle, record: &RegistryRecord, lane: Lane) -> Result<ActorId, String> {
++        async fn activate_on_lane(&mut self, compiled: &CompiledHandle, record: &RegistryRecord, lane: Lane) -> Result<ActorId, String> {
+             let kind = if record.kind == "extension" {
+                 ActorKind::Extension { plugin: PackageId(record.parent_id.clone().unwrap_or_default()), extension_id: record.id.clone() }
+             } else {
+@@ -1163,13 +1148,13 @@ pub mod scale_bench {
+             let package_id = record.parent_id.clone().unwrap_or_else(|| record.id.clone());
+             let ordinal = self.ordinal(&package_id);
+             let budget = turn_budget_of(record);
+-            let actor = pollster::block_on(self.runtime.activate(PackageId(package_id), ordinal, kind, lane, None, ActorActivationTrigger::Manual, compiled, &[], &budget))?;
++            let actor = self.runtime.activate(PackageId(package_id), ordinal, kind, lane, None, ActorActivationTrigger::Manual, compiled, &[], &budget).await?;
+             self.budgets.insert(actor.0, budget);
+             Ok(actor)
+         }
+ 
+-        fn send(&mut self, actor: ActorId, event: &Event) {
+-            self.send_payload(actor, Payload::Event { bytes: serde_json::to_vec(event).unwrap_or_default() });
++        async fn send(&mut self, actor: ActorId, event: &Event) {
++            self.send_payload(actor, Payload::Event { bytes: serde_json::to_vec(event).unwrap_or_default() }).await;
+         }
+ 
+         /// 🔀️ `Payload::Suspend`/`Payload::Resume`/`Payload::Cancel` need the same envelope plumbing
+@@ -1183,8 +1168,8 @@ pub mod scale_bench {
+         /// sends at most a handful of envelopes per actor, far under any lane's mailbox capacity
+         /// (128-1024 depending on lane, `lane_defaults::budget_for`), so treating a reject as fatal
+         /// here would be testing the mailbox ceiling, not the budget this harness measures.
+-        fn send_payload(&mut self, actor: ActorId, payload: Payload) {
+-            self.send_payload_lane(actor, payload, Lane::Background);
++        async fn send_payload(&mut self, actor: ActorId, payload: Payload) {
++            self.send_payload_lane(actor, payload, Lane::Background).await;
+         }
+ 
+         /// 🎯️ terra-bench-instrument: sibling of `send_payload` that lets a caller pick the
+@@ -1203,10 +1188,10 @@ pub mod scale_bench {
+         /// shared by every budget, not just 5 — so fixing only this envelope's lane does not, by
+         /// itself, make that isolation mechanism reachable from this bench; see this packet's own
+         /// report for the honest gap).
+-        fn send_payload_lane(&mut self, actor: ActorId, payload: Payload, lane: Lane) {
++        async fn send_payload_lane(&mut self, actor: ActorId, payload: Payload, lane: Lane) {
+             self.seq += 1;
+             let envelope = Envelope { to: actor, from: Origin::Kernel, lane, seq: self.seq, deadline_ms: None, coalesce: None, cancel_of: None, payload };
+-            let _ = pollster::block_on(self.runtime.submit(&envelope));
++            let _ = self.runtime.submit(&envelope).await;
+         }
+ 
+         /// ⏱️ terra-kernel-loop: `Kernel::tick`-drives every actor with a non-empty mailbox to
+@@ -1223,7 +1208,7 @@ pub mod scale_bench {
+         /// budget 5 used to time itself this way and that is exactly the defect this packet fixed;
+         /// budget 5 now uses `pump_tracking` below instead, which stamps the moment ONE specific
+         /// actor's own outcome is observed rather than waiting on this method's own return.
+-        fn pump(&mut self) -> Result<usize, String> {
++        async fn pump(&mut self) -> Result<usize, String> {
+             let mut total = 0usize;
+             loop {
+                 self.now_ms += 1;
+@@ -1233,7 +1218,7 @@ pub mod scale_bench {
+                 // call, and a closure capturing `&self.budgets` directly would conflict with that.
+                 let budgets = self.budgets.clone();
+                 let fallback = TurnBudget { fuel: BENCH_FUEL, deadline_ms: 50, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
+-                let decision = pollster::block_on(self.runtime.tick_and_dispatch(self.now_ms, |actor| crate::actor_budget_from_turn_budget(budgets.get(&actor.0).copied().unwrap_or(fallback), Lane::Background)));
++                let decision = self.runtime.tick_and_dispatch(self.now_ms, |actor| crate::actor_budget_from_turn_budget(budgets.get(&actor.0).copied().unwrap_or(fallback), Lane::Background)).await;
+                 if decision.run.is_empty() {
+                     break;
+                 }
+@@ -1246,7 +1231,7 @@ pub mod scale_bench {
+                 for outcome in &outcomes {
+                     match outcome {
+                         ShardOutcome::Turn { actor, result } => {
+-                            let _ = pollster::block_on(self.runtime.complete(ActorId(*actor), result, 0, 0, self.now_ms));
++                            let _ = self.runtime.complete(ActorId(*actor), result, 0, 0, self.now_ms).await;
+                         }
+                         // 🎠️ terra-kernel-loop: same reasoning as `kernel_runtime::run_turn`'s own
+                         // `ShardOutcome::Fault` arm — a trap must reach `Kernel::complete` too, or the
+@@ -1254,7 +1239,7 @@ pub mod scale_bench {
+                         // deliberately exercise.
+                         ShardOutcome::Fault { actor, message } => {
+                             let faulted = TurnResult { ui_patches: Vec::new(), effects: Vec::new(), next_wake: None, status: semio_framework::kernel::TurnStatus::Faulted(message.clone().into_bytes()), fuel_used: 0 };
+-                            let _ = pollster::block_on(self.runtime.complete(ActorId(*actor), &faulted, 0, 0, self.now_ms));
++                            let _ = self.runtime.complete(ActorId(*actor), &faulted, 0, 0, self.now_ms).await;
+                         }
+                         _ => {}
+                     }
+@@ -1278,13 +1263,13 @@ pub mod scale_bench {
+         /// whichever arrives) is among them. That stamp, not this call's own return, is budget 5's
+         /// actual measurement: see its round loop for why the interval is `send -> this stamp`, not
+         /// `send -> this call returning`.
+-        fn pump_tracking(&mut self, target: ActorId) -> Result<Option<Instant>, String> {
++        async fn pump_tracking(&mut self, target: ActorId) -> Result<Option<Instant>, String> {
+             let mut target_seen: Option<Instant> = None;
+             loop {
+                 self.now_ms += 1;
+                 let budgets = self.budgets.clone();
+                 let fallback = TurnBudget { fuel: BENCH_FUEL, deadline_ms: 50, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
+-                let decision = pollster::block_on(self.runtime.tick_and_dispatch(self.now_ms, |actor| crate::actor_budget_from_turn_budget(budgets.get(&actor.0).copied().unwrap_or(fallback), Lane::Background)));
++                let decision = self.runtime.tick_and_dispatch(self.now_ms, |actor| crate::actor_budget_from_turn_budget(budgets.get(&actor.0).copied().unwrap_or(fallback), Lane::Background)).await;
+                 if decision.run.is_empty() {
+                     break;
+                 }
+@@ -1298,12 +1283,12 @@ pub mod scale_bench {
+                     for outcome in &outcomes {
+                         let reporting_actor = match outcome {
+                             ShardOutcome::Turn { actor, result } => {
+-                                let _ = pollster::block_on(self.runtime.complete(ActorId(*actor), result, 0, 0, self.now_ms));
++                                let _ = self.runtime.complete(ActorId(*actor), result, 0, 0, self.now_ms).await;
+                                 Some(*actor)
+                             }
+                             ShardOutcome::Fault { actor, message } => {
+                                 let faulted = TurnResult { ui_patches: Vec::new(), effects: Vec::new(), next_wake: None, status: semio_framework::kernel::TurnStatus::Faulted(message.clone().into_bytes()), fuel_used: 0 };
+-                                let _ = pollster::block_on(self.runtime.complete(ActorId(*actor), &faulted, 0, 0, self.now_ms));
++                                let _ = self.runtime.complete(ActorId(*actor), &faulted, 0, 0, self.now_ms).await;
+                                 Some(*actor)
+                             }
+                             _ => None,
+@@ -1323,8 +1308,8 @@ pub mod scale_bench {
+             std::mem::take(&mut self.pending)
+         }
+ 
+-        fn unregister(&mut self, actor: ActorId) {
+-            pollster::block_on(self.runtime.unregister(actor));
++        async fn unregister(&mut self, actor: ActorId) {
++            self.runtime.unregister(actor).await;
+         }
+     }
+     //#endregion 🔖️Env
+@@ -1340,21 +1325,21 @@ pub mod scale_bench {
+     }
+ 
+     //#region 🔖️Budget2ColdBoot
+-    fn budget_2_cold_boot(process_start: Instant, runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord], shard_count: u16, native_budget_ms: u64) -> serde_json::Value {
++    async fn budget_2_cold_boot(process_start: Instant, runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord], shard_count: u16, native_budget_ms: u64) -> serde_json::Value {
+         let startup: Vec<&RegistryRecord> = records.iter().filter(|r| is_startup(r)).collect();
+         if startup.is_empty() {
+             return skipped(2, "cold boot to first interactive frame, only on-startup-finished actors live", "registry carries no on-startup-finished record");
+         }
+-        let mut env = Env::new(runtime.clone(), shard_count);
++        let mut env = Env::new(runtime.clone(), shard_count).await;
+         let mut actors = Vec::with_capacity(startup.len());
+         for (index, record) in startup.iter().enumerate() {
+-            match env.activate(compiled, record) {
++            match env.activate(compiled, record).await {
+                 Ok(actor) => actors.push(actor),
+                 Err(error) => return row(2, "cold boot to first interactive frame, only on-startup-finished actors live", "fail", json!({ "error": error }), json!({ "nativeMs": native_budget_ms }), "activate/instantiate failed mid cold-boot"),
+             }
+-            env.send(actors[index], &instance_open_event(record, index as u32 + 1));
++            env.send(actors[index], &instance_open_event(record, index as u32 + 1)).await;
+         }
+-        if let Err(error) = env.pump() {
++        if let Err(error) = env.pump().await {
+             return row(2, "cold boot to first interactive frame, only on-startup-finished actors live", "fail", json!({ "error": error }), json!({ "nativeMs": native_budget_ms }), "ShardLoop::pump failed");
+         }
+         let outcomes = env.drain();
+@@ -1375,28 +1360,28 @@ pub mod scale_bench {
+     //#endregion 🔖️Budget2ColdBoot
+ 
+     //#region 🔖️Budget3Activate100
+-    fn budget_3_activate_100(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord], shard_count: u16) -> serde_json::Value {
++    async fn budget_3_activate_100(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord], shard_count: u16) -> serde_json::Value {
+         let plugin_records: Vec<&RegistryRecord> = records.iter().filter(|r| r.kind == "plugin").take(50).collect();
+         if plugin_records.is_empty() {
+             return skipped(3, "activate 50 plugins + 50 extensions of one plugin", "registry carries no plugin-kind record");
+         }
+         let target_plugin_id = plugin_records[0].id.clone();
+         let ext_records: Vec<&RegistryRecord> = records.iter().filter(|r| r.kind == "extension" && r.parent_id.as_deref() == Some(target_plugin_id.as_str())).collect();
+-        let mut env = Env::new(runtime.clone(), shard_count);
++        let mut env = Env::new(runtime.clone(), shard_count).await;
+         let mut activated: Vec<ActorId> = Vec::new();
+         let selected: Vec<&RegistryRecord> = plugin_records.iter().chain(ext_records.iter()).copied().collect();
+         let mut instance_id = 1u32;
+         for record in &selected {
+-            match env.activate(compiled, record) {
++            match env.activate(compiled, record).await {
+                 Ok(actor) => {
+-                    env.send(actor, &instance_open_event(record, instance_id));
++                    env.send(actor, &instance_open_event(record, instance_id)).await;
+                     instance_id += 1;
+                     activated.push(actor);
+                 }
+                 Err(error) => return row(3, "activate 50 plugins + 50 extensions of one plugin", "fail", json!({ "error": error }), json!({ "activeActors": 100, "shards": shard_count }), "activate/instantiate failed"),
+             }
+         }
+-        if let Err(error) = env.pump() {
++        if let Err(error) = env.pump().await {
+             return row(3, "activate 50 plugins + 50 extensions of one plugin", "fail", json!({ "error": error }), json!({ "activeActors": 100, "shards": shard_count }), "ShardLoop::pump failed");
+         }
+         let outcomes = env.drain();
+@@ -1427,14 +1412,14 @@ pub mod scale_bench {
+     /// 🏋️ Budgets 4 (memory) and 5 (interactive p95 under 40-cpu-actor load) share one fully-activated
+     /// registry ("the" 50x50 scale claim) so budget 5 measures real contention against the same live
+     /// fleet budget 4 just measured RSS for, instead of paying for a second 2550-instance activation.
+-    fn budget_4_and_5(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord], shard_count: u16, memory_budget_bytes: u64) -> (serde_json::Value, serde_json::Value) {
+-        let mut env = Env::new(runtime.clone(), shard_count);
++    async fn budget_4_and_5(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord], shard_count: u16, memory_budget_bytes: u64) -> (serde_json::Value, serde_json::Value) {
++        let mut env = Env::new(runtime.clone(), shard_count).await;
+         let mut activated: Vec<(ActorId, String)> = Vec::with_capacity(records.len());
+         let mut instance_id = 1u32;
+         for record in records {
+-            match env.activate(compiled, record) {
++            match env.activate(compiled, record).await {
+                 Ok(actor) => {
+-                    env.send(actor, &instance_open_event(record, instance_id));
++                    env.send(actor, &instance_open_event(record, instance_id)).await;
+                     instance_id += 1;
+                     activated.push((actor, profile_of(record).to_string()));
+                 }
+@@ -1444,7 +1429,7 @@ pub mod scale_bench {
+                 }
+             }
+         }
+-        if let Err(error) = env.pump() {
++        if let Err(error) = env.pump().await {
+             let fail = row(4, "memory <= K x 512MiB + 256MiB headroom (native RSS <= 1.5GiB)", "fail", json!({ "error": error }), json!({ "maxBytes": memory_budget_bytes }), "ShardLoop::pump failed");
+             return (fail, skipped(5, "interactive p95 command->patch <= 16ms web / <= 8ms native, 40 cpu actors saturating background", "budget 4's full-scale activation failed before this could run"));
+         }
+@@ -1491,7 +1476,7 @@ pub mod scale_bench {
+                     // WHOLE measured interval below, which is exactly the "40 cpu actors saturating
+                     // the background" load this budget names. They are just not what stops the clock.
+                     for actor in &cpu_actors {
+-                        env.send(*actor, &Event::Wake);
++                        env.send(*actor, &Event::Wake).await;
+                     }
+                     let start = Instant::now();
+                     // 🎯️ terra-bench-instrument: the one envelope in this bench that carries
+@@ -1501,7 +1486,8 @@ pub mod scale_bench {
+                         interactive_actor,
+                         Payload::Event { bytes: serde_json::to_vec(&Event::AppCommandEvent { instance: PluginInstanceId(interactive_actor.0.to_string()), seq: 0, command: Vec::new() }).unwrap_or_default() },
+                         Lane::Interactive,
+-                    );
++                    )
++                    .await;
+                     // 🎯️ terra-bench-instrument (THE measurement fix): the interval this bench
+                     // records is send -> `interactive_actor`'s OWN `ShardOutcome` being observed,
+                     // via `Env::pump_tracking`'s `Instant` stamp — NOT the moment `pump_tracking`
+@@ -1514,7 +1500,7 @@ pub mod scale_bench {
+                     // already returned — i.e. it timed the slowest of 41 actors every round, not this
+                     // one actor's own response; see this packet's own report for why that made the
+                     // 8ms budget unreachable by construction, independent of scheduler quality.
+-                    match env.pump_tracking(interactive_actor) {
++                    match env.pump_tracking(interactive_actor).await {
+                         Ok(Some(seen_at)) => samples_ms.push((seen_at - start).as_secs_f64() * 1000.0),
+                         Ok(None) => round_faults += 1,
+                         Err(_) => round_faults += 1,
+@@ -1542,7 +1528,7 @@ pub mod scale_bench {
+     //#endregion 🔖️Budget4And5FullScale
+ 
+     //#region 🔖️Budget6Hang
+-    fn budget_6_hang(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> serde_json::Value {
++    async fn budget_6_hang(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> serde_json::Value {
+         let Some(hang_record) = records.iter().find(|r| profile_of(r) == "hang") else {
+             return skipped(6, "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms", "no hang-profile record in registry");
+         };
+@@ -1550,25 +1536,25 @@ pub mod scale_bench {
+         if sibling_records.is_empty() {
+             return skipped(6, "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms", "no idle-profile sibling records in registry");
+         }
+-        let mut env = Env::new(runtime.clone(), 1);
++        let mut env = Env::new(runtime.clone(), 1).await;
+         let deadline_ms = hang_record.quotas.deadline_ms;
+         let pause_start = Instant::now();
+-        let hang_actor = match env.activate(compiled, hang_record) {
++        let hang_actor = match env.activate(compiled, hang_record).await {
+             Ok(actor) => actor,
+             Err(error) => return row(6, "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms", "fail", json!({ "error": error }), json!(null), "hang actor activate/instantiate failed"),
+         };
+-        env.send(hang_actor, &instance_open_event(hang_record, 1));
++        env.send(hang_actor, &instance_open_event(hang_record, 1)).await;
+         let mut siblings = Vec::new();
+         for (index, record) in sibling_records.iter().enumerate() {
+-            match env.activate(compiled, record) {
++            match env.activate(compiled, record).await {
+                 Ok(actor) => {
+-                    env.send(actor, &instance_open_event(record, index as u32 + 2));
++                    env.send(actor, &instance_open_event(record, index as u32 + 2)).await;
+                     siblings.push(actor);
+                 }
+                 Err(error) => return row(6, "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms", "fail", json!({ "error": error }), json!(null), "sibling activate/instantiate failed"),
+             }
+         }
+-        if env.pump().is_err() {
++        if env.pump().await.is_err() {
+             return row(6, "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms", "fail", json!(null), json!(null), "ShardLoop::pump failed on InstanceOpen phase");
+         }
+         // 🐛️ `🎭️profile::turn()` runs unconditionally on EVERY `poll`, including `InstanceOpen` (see
+@@ -1589,8 +1575,8 @@ pub mod scale_bench {
+         let (killed, hang_fault) = if let Some(message) = hang_fault_on_open {
+             (true, Some(message))
+         } else {
+-            env.send(hang_actor, &Event::Wake);
+-            let _ = env.pump();
++            env.send(hang_actor, &Event::Wake).await;
++            let _ = env.pump().await;
+             let wake_outcomes = env.drain();
+             let message = wake_outcomes.iter().find_map(|o| match o {
+                 ShardOutcome::Fault { actor, message } if *actor == hang_actor.0 => Some(message.clone()),
+@@ -1605,11 +1591,11 @@ pub mod scale_bench {
+                 .unwrap_or(false);
+             (killed, message)
+         };
+-        env.unregister(hang_actor);
++        env.unregister(hang_actor).await;
+         for actor in &siblings {
+-            env.send(*actor, &Event::Wake);
++            env.send(*actor, &Event::Wake).await;
+         }
+-        let siblings_pumped = env.pump().is_ok();
++        let siblings_pumped = env.pump().await.is_ok();
+         let sibling_outcomes = env.drain();
+         let siblings_ok = siblings.iter().all(|actor| sibling_outcomes.iter().any(|o| matches!(o, ShardOutcome::Turn { actor: a, .. } if *a == actor.0)));
+         let pause_ms = pause_start.elapsed().as_millis() as u64;
+@@ -1637,27 +1623,27 @@ pub mod scale_bench {
+     /// checkpoint wire path K1 unblocked.
+     const BUDGET_7_DESCRIPTION: &str = "stateful actor LRU-suspended and resumed -> identical state hash";
+ 
+-    fn budget_7_stateful(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> serde_json::Value {
++    async fn budget_7_stateful(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> serde_json::Value {
+         let Some(record) = records.iter().find(|r| profile_of(r) == "stateful") else {
+             return skipped(7, BUDGET_7_DESCRIPTION, "no stateful-profile record in registry");
+         };
+-        let mut env = Env::new(runtime.clone(), 1);
+-        let actor_a = match env.activate(compiled, record) {
++        let mut env = Env::new(runtime.clone(), 1).await;
++        let actor_a = match env.activate(compiled, record).await {
+             Ok(actor) => actor,
+             Err(error) => return row(7, BUDGET_7_DESCRIPTION, "fail", json!({ "error": error }), json!(null), "activate/instantiate failed"),
+         };
+-        env.send(actor_a, &instance_open_event(record, 1));
++        env.send(actor_a, &instance_open_event(record, 1)).await;
+         for _ in 0..5 {
+-            env.send(actor_a, &Event::Wake);
++            env.send(actor_a, &Event::Wake).await;
+         }
+-        if env.pump().is_err() {
++        if env.pump().await.is_err() {
+             return row(7, BUDGET_7_DESCRIPTION, "fail", json!(null), json!(null), "pump failed while accumulating state");
+         }
+         env.drain();
+ 
+         let operation = JobOperation { operation: actor_a.0, base_revision: 0, generation: actor_a.generation() as u64, preview_sequence: 0, seed: actor_a.0 };
+-        env.send_payload(actor_a, Payload::Suspend { operation, applied_progress: 0 });
+-        if env.pump().is_err() {
++        env.send_payload(actor_a, Payload::Suspend { operation, applied_progress: 0 }).await;
++        if env.pump().await.is_err() {
+             return row(7, BUDGET_7_DESCRIPTION, "fail", json!(null), json!(null), "pump failed on Suspend");
+         }
+         let suspend_outcomes = env.drain();
+@@ -1669,22 +1655,22 @@ pub mod scale_bench {
+         };
+ 
+         // The "evicted" half of LRU-suspend: drop A's live instance from this shard.
+-        env.unregister(actor_a);
++        env.unregister(actor_a).await;
+ 
+         // The "resumed elsewhere" half: a FRESH instance, resumed from the captured checkpoint bytes.
+-        let actor_b = match env.activate(compiled, record) {
++        let actor_b = match env.activate(compiled, record).await {
+             Ok(actor) => actor,
+             Err(error) => return row(7, BUDGET_7_DESCRIPTION, "fail", json!({ "error": error }), json!(null), "re-activate/instantiate failed"),
+         };
+-        env.send_payload(actor_b, Payload::Resume { operation, checkpoint: JobCheckpoint { state: state.clone(), applied_progress: 0 } });
+-        if env.pump().is_err() {
++        env.send_payload(actor_b, Payload::Resume { operation, checkpoint: JobCheckpoint { state: state.clone(), applied_progress: 0 } }).await;
++        if env.pump().await.is_err() {
+             return row(7, BUDGET_7_DESCRIPTION, "fail", json!(null), json!(null), "pump failed on Resume");
+         }
+         let resume_outcomes = env.drain();
+         let resumed = resume_outcomes.iter().any(|o| matches!(o, ShardOutcome::Resumed { actor } if *actor == actor_b.0));
+ 
+-        env.send_payload(actor_b, Payload::Suspend { operation, applied_progress: 0 });
+-        if env.pump().is_err() {
++        env.send_payload(actor_b, Payload::Suspend { operation, applied_progress: 0 }).await;
++        if env.pump().await.is_err() {
+             return row(7, BUDGET_7_DESCRIPTION, "fail", json!({ "resumed": resumed }), json!(null), "pump failed on post-resume re-Suspend");
+         }
+         let recheck_outcomes = env.drain();
+@@ -1759,7 +1745,7 @@ pub mod scale_bench {
+     /// writes one JSON report. Returns `0` on a clean harness run (regardless of individual budget
+     /// pass/fail — a real measured FAIL is a valid, non-error outcome), `1` if the harness itself could
+     /// not set up (bad registry/wasm/report path).
+-    pub fn run(registry_path: PathBuf, wasm_path: PathBuf, shard_count: u16, report_path: PathBuf) -> i32 {
++    pub async fn run(registry_path: PathBuf, wasm_path: PathBuf, shard_count: u16, report_path: PathBuf) -> i32 {
+         let process_start = Instant::now();
+         let registry_bytes = match std::fs::read(&registry_path) {
+             Ok(bytes) => bytes,
+@@ -1798,11 +1784,11 @@ pub mod scale_bench {
+             }
+         };
+ 
+-        let row_2 = budget_2_cold_boot(process_start, &runtime, &compiled, &registry.records, shard_count, 1500);
+-        let row_3 = budget_3_activate_100(&runtime, &compiled, &registry.records, shard_count);
+-        let (row_4, row_5) = budget_4_and_5(&runtime, &compiled, &registry.records, shard_count, shard_count as u64 * 512 * 1024 * 1024 + 256 * 1024 * 1024);
+-        let row_6 = budget_6_hang(&runtime, &compiled, &registry.records);
+-        let row_7 = budget_7_stateful(&runtime, &compiled, &registry.records);
++        let row_2 = budget_2_cold_boot(process_start, &runtime, &compiled, &registry.records, shard_count, 1500).await;
++        let row_3 = budget_3_activate_100(&runtime, &compiled, &registry.records, shard_count).await;
++        let (row_4, row_5) = budget_4_and_5(&runtime, &compiled, &registry.records, shard_count, shard_count as u64 * 512 * 1024 * 1024 + 256 * 1024 * 1024).await;
++        let row_6 = budget_6_hang(&runtime, &compiled, &registry.records).await;
++        let row_7 = budget_7_stateful(&runtime, &compiled, &registry.records).await;
+         let row_8 = budget_8_capability_revoke(&runtime, &compiled, &registry.records);
+ 
+         let report = json!({
+@@ -1942,6 +1928,37 @@ mod camera_dispatch_deadline_tests {
+     }
+ }
+ 
++//#region 🔖️AsyncBoundaryTests
++#[cfg(test)]
++mod async_boundary_tests {
++    const LIBRARY_SOURCE: &str = include_str!("📦️glue.rs");
++    const BINARY_SOURCE: &str = include_str!("📦️bin.rs");
++    const MANIFEST_SOURCE: &str = include_str!("Cargo.toml");
++
++    #[test]
++    fn product_library_has_no_executor_bridge() {
++        assert!(!LIBRARY_SOURCE.contains(concat!("poll", "ster")));
++        assert!(!LIBRARY_SOURCE.contains(concat!("block", "_on")));
++        assert!(LIBRARY_SOURCE.contains("KernelPoolFuture::spawn"));
++        assert!(LIBRARY_SOURCE.contains("spawn_app_task"));
++        assert!(LIBRARY_SOURCE.contains("poll_tasks"));
++    }
++
++    #[test]
++    fn native_binary_owns_exactly_one_entrypoint_driver() {
++        assert_eq!(BINARY_SOURCE.matches(concat!("block", "_on(")).count(), 1);
++        assert_eq!(BINARY_SOURCE.matches("drive_entrypoint(").count(), 3);
++    }
++
++    #[test]
++    fn manifest_has_no_retired_direct_edges() {
++        assert!(!MANIFEST_SOURCE.contains(concat!("poll", "ster =")));
++        assert!(!MANIFEST_SOURCE.contains(concat!("wasm-bindgen", "-test")));
++        assert!(!MANIFEST_SOURCE.lines().any(|line| line.trim_start().starts_with("naga =")));
++    }
++}
++//#endregion 🔖️AsyncBoundaryTests
++
+ /// 🪪️ P3c (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): the capability a deferred
+ /// `spawn_app_task` continuation needs to re-borrow the `AppRuntime` it was scheduled from, once its
+ /// `.await` resumes. This used to be a field on `AppRuntime` itself (`self_weak`) — a genuine
+@@ -2043,7 +2060,7 @@ impl AppRuntime {
+         }
+     }
+ 
+-    /// 🎠️ H3-wgpu-native / terra-shell-unpark — this used to `pollster::block_on(self.shell.boot())`
++    /// 🎠️ H3-wgpu-native / terra-shell-unpark — shell boot used to run synchronously
+     /// directly on the winit thread. The H3 comment this replaces reasoned that `frame()` already
+     /// holds `self` via `Rc<RefCell<AppRuntime>>`'s `try_borrow_mut()`, so re-borrowing that SAME
+     /// cell from INSIDE `frame()`'s own call stack panics rather than working — true, but that only
+@@ -2324,15 +2341,13 @@ impl AppRuntime {
+     /// ⏱️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): previously the native
+     /// (`not(wasm32)`) branch of this function did SYNCHRONOUS network I/O on the UI thread —
+     /// `fetch_map_tile_bytes_blocking` called `ureq::get(..).call()` directly inside `frame()`, and
+-    /// three more calls wrapped `fetch_url_bytes` in `pollster::block_on`. That is a real
+-    /// UI-thread-reachable blocking-I/O violation, not just a disguised `block_on`: an unresponsive
++    /// three more calls synchronously waited for `fetch_url_bytes`. That is a real
++    /// UI-thread-reachable blocking-I/O violation: an unresponsive
+     /// asset host would freeze every frame's `redraw()` for as long as the HTTP request took. Fixed by
+     /// deleting the whole native fast-path and routing BOTH platforms through the single non-blocking
+     /// `spawn_app_task` deferral the wasm32 branch already used — the only platform difference left is
+     /// URL resolution (native needs `SEMIO_ASSET_BASE_URL` absolute-ification for relative paths;
+-    /// wasm32 resolves relative URLs against the page origin for free). Removes 4 of the 17
+-    /// UI-thread-reachable `pollster::block_on` sites this packet's brief names (the former lines
+-    /// 2157/2170/2180/2184).
++    /// wasm32 resolves relative URLs against the page origin for free).
+     fn poll_pending_assets(&mut self, handle: &AppHandle) {
+         let mut glb = collect_pending_glb_fetches(&self.shell.world3d_states);
+         glb.extend(collect_pending_glb_fetches(&self.shell.icon_render_states));
+@@ -2832,54 +2847,52 @@ pub fn run_native(plugin_filter: &str, plugin_modules_root: std::path::PathBuf)
+ /// driving a real window when this environment cannot open one (lane 3-D's brief proposed exactly this
+ /// shape). Returns `0` on a clean boot+dump, `1` on any hard failure along the way.
+ #[cfg(not(target_arch = "wasm32"))]
+-pub fn run_smoke(plugin_filter: &str, plugin_modules_root: std::path::PathBuf) -> i32 {
+-    pollster::block_on(async {
+-        let loaded = match load_wasm_plugins(plugin_filter, &plugin_modules_root) {
+-            Ok(entries) => entries,
+-            Err(error) => {
+-                eprintln!("smoke: load_wasm_plugins failed: {error}");
+-                return 1;
+-            }
+-        };
+-        let entries = filter_plugins(loaded, plugin_filter);
+-        let mut shell = ShellState::new(entries, plugin_filter.to_string());
+-        if let Err(error) = shell.boot().await {
+-            eprintln!("smoke: shell.boot() failed: {error}");
++pub async fn run_smoke(plugin_filter: &str, plugin_modules_root: std::path::PathBuf) -> i32 {
++    let loaded = match load_wasm_plugins(plugin_filter, &plugin_modules_root) {
++        Ok(entries) => entries,
++        Err(error) => {
++            eprintln!("smoke: load_wasm_plugins failed: {error}");
+             return 1;
+         }
+-        // 🪪️ Identity mint/restore runs on a background OS thread (contract §C3: never blocks
+-        // `boot()` itself) — poll the same every-frame pump the real render loop uses (drains the
+-        // identity bootstrap channel + the directory stream + folds any pending events) for up to 5s
+-        // so a real hub round trip has time to land before the dump.
+-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+-        while std::time::Instant::now() < deadline {
+-            shell.pump_sync_events().await;
+-            if shell.identity.is_some() || shell.identity_env.is_none() {
+-                break;
+-            }
+-            std::thread::sleep(std::time::Duration::from_millis(100));
+-        }
+-        let _ = shell.refresh_ui().await;
+-        let identity_summary = shell.identity.as_ref().map(|identity| serde_json::json!({ "userId": identity.user_id, "email": identity.email, "hubBaseUrl": identity.hub_base_url }));
+-        let report = serde_json::json!({
+-            "booted": true,
+-            "identity": identity_summary,
+-            "identityOffline": shell.identity_offline,
+-            "openSpaceId": shell.open_space_id,
+-            "session": shell.session.as_ref().map(|session| serde_json::json!({ "pluginId": session.plugin_id, "appId": session.app.id, "role": format!("{:?}", session.app.role) })),
+-            "windowUi": &shell.window_ui,
+-        });
+-        match serde_json::to_string_pretty(&report) {
+-            Ok(json) => {
+-                println!("{json}");
+-                0
+-            }
+-            Err(error) => {
+-                eprintln!("smoke: report encode failed: {error}");
+-                1
+-            }
++    };
++    let entries = filter_plugins(loaded, plugin_filter);
++    let mut shell = ShellState::new(entries, plugin_filter.to_string());
++    if let Err(error) = shell.boot().await {
++        eprintln!("smoke: shell.boot() failed: {error}");
++        return 1;
++    }
++    // 🪪️ Identity mint/restore runs on a background OS thread (contract §C3: never blocks
++    // `boot()` itself) — poll the same every-frame pump the real render loop uses (drains the
++    // identity bootstrap channel + the directory stream + folds any pending events) for up to 5s
++    // so a real hub round trip has time to land before the dump.
++    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
++    while std::time::Instant::now() < deadline {
++        shell.pump_sync_events().await;
++        if shell.identity.is_some() || shell.identity_env.is_none() {
++            break;
++        }
++        std::thread::sleep(std::time::Duration::from_millis(100));
++    }
++    let _ = shell.refresh_ui().await;
++    let identity_summary = shell.identity.as_ref().map(|identity| serde_json::json!({ "userId": identity.user_id, "email": identity.email, "hubBaseUrl": identity.hub_base_url }));
++    let report = serde_json::json!({
++        "booted": true,
++        "identity": identity_summary,
++        "identityOffline": shell.identity_offline,
++        "openSpaceId": shell.open_space_id,
++        "session": shell.session.as_ref().map(|session| serde_json::json!({ "pluginId": session.plugin_id, "appId": session.app.id, "role": format!("{:?}", session.app.role) })),
++        "windowUi": &shell.window_ui,
++    });
++    match serde_json::to_string_pretty(&report) {
++        Ok(json) => {
++            println!("{json}");
++            0
++        }
++        Err(error) => {
++            eprintln!("smoke: report encode failed: {error}");
++            1
+         }
+-    })
++    }
+ }
+ 
+ /// 🐚️ Multi-mount: takes an already-created, already-placed canvas from the caller instead of looking

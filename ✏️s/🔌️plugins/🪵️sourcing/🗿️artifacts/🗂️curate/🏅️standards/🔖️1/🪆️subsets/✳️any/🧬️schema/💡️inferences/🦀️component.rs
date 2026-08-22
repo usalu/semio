@@ -98,7 +98,7 @@ pub async fn sourcing_catalog_fragment(document: &CurateSnapshot) -> Value {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.sourcing.curate.inference`'s facet leaves into the OS-wide inference catalog —
 /// call once at plugin init, alongside `curate_artifact_schema_descriptor`'s registration.
-pub async fn curate_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn curate_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.sourcing.curate.inference",
         inference: schema::FacetLeaves {

@@ -37,7 +37,7 @@ use std::time::{Duration, Instant};
 /// `impl ShardTransport for Arc<ThreadTransport>` directly would hit `E0117` (neither type is local
 /// to this crate; `🧵️shard/🦀️component.rs`'s own `LoopbackProbe` doc comment already names this same
 /// orphan-rule constraint for `Arc<LoopbackTransport>`).
-pub(crate) struct SharedThreadTransport(Arc<ThreadTransport>);
+pub struct SharedThreadTransport(Arc<ThreadTransport>);
 
 impl ShardTransport for SharedThreadTransport {
     async fn send(&self, bytes: &[u8]) {
@@ -175,7 +175,7 @@ impl ShardExecutor {
         let (kernel_side, shard_side) = ThreadTransport::new_pair().await;
         let mut shard = ShardLoop::new(runtime, ShardTransports::SharedThread(SharedThreadTransport(Arc::new(shard_side)))).await;
         for (actor, instance) in initial {
-            shard.register(actor, instance).await;
+            shard.register(actor, instance);
         }
         Arc::new(ShardExecutor { state: Mutex::new(shard), kernel_side, outcomes, pool, scheduled: AtomicBool::new(false), epoch: AtomicU64::new(0), pending_lane_rank: AtomicU8::new(NO_LANE) })
     }
@@ -190,7 +190,7 @@ impl ShardExecutor {
     /// cadence to race against — `register` and every pump job serialize on the SAME lock.
     pub async fn register(&self, actor: ActorId, instance: GuestInstance) {
         let mut shard = self.state.lock().unwrap_or_else(PoisonError::into_inner);
-        shard.register(actor, instance).await;
+        shard.register(actor, instance);
     }
 
     /// ✉️ Injects one already-encoded [`super::ShardFrame`]'s bytes (a `Grant` or `Unregister`) and
@@ -328,7 +328,7 @@ mod tests {
             cancel_of: None,
             payload: Payload::Event { bytes: serde_json::to_vec(&semio_framework::kernel::Event::InstanceClose).unwrap() },
         };
-        let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive).await;
+        let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
         let bytes = encode_frame(super::super::ShardFrame::Grant { actor, budget, envelopes: vec![envelope] }).await;
         executor.send_frame(bytes, semio_framework_actor::Lane::Interactive).await;
 
@@ -364,7 +364,7 @@ mod tests {
         let package = PackageRef { package: PackageId("grant-routing-property".to_string()), hash: PackageHash([55u8; 32]) };
         let compiled = mock.compile(&package, &[]).await.expect("mock compile");
         let instantiate_budget = Budget { fuel: 1_000, deadline_ms: 4, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
-        let grant_budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive).await;
+        let grant_budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
 
         for i in 0..ACTORS {
             let actor = ActorId::new(0, 0, i as u32, 0).await;
@@ -481,7 +481,7 @@ mod tests {
             actors.push(actor);
         }
         let executor = ShardExecutor::new(pool, Arc::new(GuestRuntimes::Mock(mock.clone())), initial, outcomes.clone()).await;
-        let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive).await;
+        let budget = semio_framework_actor::lane_defaults::budget_for(semio_framework_actor::Lane::Interactive);
 
         let mut handles = Vec::new();
         for (i, actor) in actors.into_iter().enumerate() {

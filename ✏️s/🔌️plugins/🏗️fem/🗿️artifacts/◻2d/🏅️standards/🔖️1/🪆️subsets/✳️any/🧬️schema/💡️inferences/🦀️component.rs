@@ -23,19 +23,19 @@ pub struct Fem2dInference {
 }
 
 impl protocol::Inference<Fem2dSnapshot> for Fem2dInference {
-    async fn infer(snapshot: &Fem2dSnapshot) -> Self {
+    fn infer(snapshot: &Fem2dSnapshot) -> Self {
         Self { bounds: compute_fem2d_bounds(snapshot) }
     }
 }
 
 impl protocol::InferenceSpec<Fem2dSnapshot> for Fem2dInference {
-    async fn inference_schema_id() -> &'static str {
+    fn inference_schema_id() -> &'static str {
         "s.fem.fem2d.inference"
     }
-    async fn schema_version() -> u32 {
+    fn schema_version() -> u32 {
         1
     }
-    async fn fields() -> &'static [protocol::InferenceFieldSpec] {
+    fn fields() -> &'static [protocol::InferenceFieldSpec] {
         &[protocol::InferenceFieldSpec { id: "s.fem.fem2d.inference.bounds", reads: &["nodes", "elements"] }]
     }
 }
@@ -54,7 +54,7 @@ impl ArtifactInferrer for crate::artifacts::fem2d::standards::v1::subsets::any::
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.fem.fem2d.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `fem2d_artifact_schema_descriptor`'s registration.
-pub async fn fem2d_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn fem2d_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.fem.fem2d.inference",
         inference: schema::FacetLeaves {
@@ -76,25 +76,25 @@ mod tests {
     use protocol::Inference;
 
     //#region 🧸️Fixtures
-    async fn sample_snapshot() -> Fem2dSnapshot {
+    fn sample_snapshot() -> Fem2dSnapshot {
         Fem2dSnapshot { nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0 }, FemNode { id: "n2".into(), x: 4.0, y: 0.0 }, FemNode { id: "n3".into(), x: 4.0, y: 3.0 }], ..Default::default() }
     }
     //#endregion 🧸️Fixtures
 
     //#region 🧪️InferenceLaws
-    #[semio_framework_async_macros::async_test]
-    async fn inference_determinism_law() {
+    #[test]
+    fn inference_determinism_law() {
         let snapshot = sample_snapshot();
         assert_eq!(Fem2dInference::infer(&snapshot), Fem2dInference::infer(&snapshot));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn inference_default_law() {
+    #[test]
+    fn inference_default_law() {
         assert_eq!(Fem2dInference::infer(&Fem2dSnapshot::default()), Fem2dInference::default());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn bounds_matches_node_extent() {
+    #[test]
+    fn bounds_matches_node_extent() {
         let snapshot = sample_snapshot();
         let inferred = Fem2dInference::infer(&snapshot);
         assert_eq!(inferred.bounds.node_count, 3);

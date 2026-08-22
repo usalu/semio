@@ -1,5 +1,5 @@
 dialect protocol
-protocol 3d.mutations
+protocol fem3d.mutations
 version 1
 schema stdio.json
 start record

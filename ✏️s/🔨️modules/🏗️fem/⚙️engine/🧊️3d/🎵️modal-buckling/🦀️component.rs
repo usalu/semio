@@ -9,7 +9,7 @@ use crate::model::{Dof, Element, Elements, Node};
 /// 🔢️ Node-major, active-DOF-filtered ordering matching `crate::analyses::ModalResult`/
 /// `BucklingResult`'s documented shape-vector layout — mirrors `fem_2d`'s identically named helper
 /// (both are small local reimplementations of `analyses::build_dof_map`, which isn't `pub`).
-async fn mode_dof_order(nodes: &[Node], elements: &[Elements]) -> Vec<(String, Dof)> {
+fn mode_dof_order(nodes: &[Node], elements: &[Elements]) -> Vec<(String, Dof)> {
     let mut order = Vec::new();
     for node in nodes {
         let mut active: Vec<Dof> = Vec::new();
@@ -31,7 +31,7 @@ async fn mode_dof_order(nodes: &[Node], elements: &[Elements]) -> Vec<(String, D
 }
 
 /// 🎵️ Modal analysis: lowest `doc.analysis.modal_count` natural frequencies/mode shapes.
-pub async fn fem3d_modal(doc: &Fem3dSnapshot) -> Result<analyses::ModalResult, Fem3dError> {
+pub fn fem3d_modal(doc: &Fem3dSnapshot) -> Result<analyses::ModalResult, Fem3dError> {
     let (nodes, elements, _solids, supports) = meshing::resolve_geometry(doc)?;
     let model = analyses::AnalysisModel { nodes, elements, supports };
     analyses::modal(&model, doc.analysis.modal_count).map_err(Fem3dError::from)
@@ -40,7 +40,7 @@ pub async fn fem3d_modal(doc: &Fem3dSnapshot) -> Result<analyses::ModalResult, F
 /// 🌉️ Richer modal entry point: solves the same modal analysis as `fem3d_modal` but also unpacks mode
 /// `mode_index`'s shape into a per-node `[f64;6]` displacement map. Returns
 /// `(frequency_hz, node_id -> displacement values)`.
-pub async fn fem3d_modal_mode_values(doc: &Fem3dSnapshot, mode_index: usize) -> Result<(f64, std::collections::HashMap<String, [f64; 6]>), Fem3dError> {
+pub fn fem3d_modal_mode_values(doc: &Fem3dSnapshot, mode_index: usize) -> Result<(f64, std::collections::HashMap<String, [f64; 6]>), Fem3dError> {
     let (nodes, elements, _solids, supports) = meshing::resolve_geometry(doc)?;
     let order = mode_dof_order(&nodes, &elements);
     let model = analyses::AnalysisModel { nodes, elements, supports };
@@ -56,14 +56,14 @@ pub async fn fem3d_modal_mode_values(doc: &Fem3dSnapshot, mode_index: usize) -> 
 
 /// 🌉️ Shared buckling-case resolution for `fem3d_buckling`/`fem3d_buckling_mode_values`, mirroring
 /// `fem2d`'s `buckling_inputs` — translates the named case's loads (incl. `Area` against `solids`).
-async fn buckling_case(doc: &Fem3dSnapshot, case_id: &str, solids: &[meshing::MeshedSolid]) -> Result<analyses::LoadCase, Fem3dError> {
+fn buckling_case(doc: &Fem3dSnapshot, case_id: &str, solids: &[meshing::MeshedSolid]) -> Result<analyses::LoadCase, Fem3dError> {
     let case = doc.load_cases.iter().find(|c| c.id == case_id).ok_or_else(|| Fem3dError::LoadCaseNotFound(case_id.to_string()))?;
     let (nodal_loads, member_loads) = meshing::translate_loads(&case.loads, solids)?;
     Ok(analyses::LoadCase { id: case.id.clone(), nodal_loads, member_loads, self_weight: case.self_weight })
 }
 
 /// 🏛️ Linear buckling: lowest `doc.analysis.buckling_count` load factors/mode shapes for `case_id`.
-pub async fn fem3d_buckling(doc: &Fem3dSnapshot, case_id: &str) -> Result<analyses::BucklingResult, Fem3dError> {
+pub fn fem3d_buckling(doc: &Fem3dSnapshot, case_id: &str) -> Result<analyses::BucklingResult, Fem3dError> {
     let (nodes, elements, solids, supports) = meshing::resolve_geometry(doc)?;
     let case = buckling_case(doc, case_id, &solids)?;
     let model = analyses::AnalysisModel { nodes, elements, supports };
@@ -73,7 +73,7 @@ pub async fn fem3d_buckling(doc: &Fem3dSnapshot, case_id: &str) -> Result<analys
 /// 🌉️ Richer buckling entry point: mirrors `fem3d_modal_mode_values` — solves the same buckling
 /// analysis as `fem3d_buckling` but also unpacks mode `mode_index`'s shape into a per-node
 /// displacement map. Returns `(load_factor, node_id -> displacement values)`.
-pub async fn fem3d_buckling_mode_values(doc: &Fem3dSnapshot, case_id: &str, mode_index: usize) -> Result<(f64, std::collections::HashMap<String, [f64; 6]>), Fem3dError> {
+pub fn fem3d_buckling_mode_values(doc: &Fem3dSnapshot, case_id: &str, mode_index: usize) -> Result<(f64, std::collections::HashMap<String, [f64; 6]>), Fem3dError> {
     let (nodes, elements, solids, supports) = meshing::resolve_geometry(doc)?;
     let order = mode_dof_order(&nodes, &elements);
     let case = buckling_case(doc, case_id, &solids)?;
@@ -94,7 +94,7 @@ mod tests {
     use super::*;
     use crate::artifacts::fem3d::{FemAnalysisSettings, FemDof, FemElement, FemLoadCase, FemMaterial, FemNode, FemSection, FemSupport};
 
-    async fn cantilever_fixture() -> Fem3dSnapshot {
+    fn cantilever_fixture() -> Fem3dSnapshot {
         let (e, g, a, iy, iz, j, l, p) = (210e9, 80.77e9, 0.00538, 0.0000369, 0.0000133, 0.00000060, 3.0, 5000.0);
         Fem3dSnapshot {
             nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "n2".into(), x: l, y: 0.0, z: 0.0 }],
@@ -109,8 +109,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn fem3d_modal_returns_requested_mode_count() {
+    #[test]
+    fn fem3d_modal_returns_requested_mode_count() {
         let doc = cantilever_fixture();
         let result = fem3d_modal(&doc).expect("modal solves");
         assert_eq!(result.frequencies_hz.len(), doc.analysis.modal_count);
@@ -122,8 +122,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn fem3d_modal_mode_values_returns_node_displacements() {
+    #[test]
+    fn fem3d_modal_mode_values_returns_node_displacements() {
         let doc = cantilever_fixture();
         let (freq, values) = fem3d_modal_mode_values(&doc, 0).expect("modal mode values solves");
         assert!(freq.is_finite() && freq >= 0.0);
@@ -131,8 +131,8 @@ mod tests {
         assert!(values.contains_key("n2"));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn fem3d_buckling_returns_requested_mode_count() {
+    #[test]
+    fn fem3d_buckling_returns_requested_mode_count() {
         let doc = cantilever_fixture();
         let result = fem3d_buckling(&doc, "point").expect("buckling solves");
         assert_eq!(result.factors.len(), doc.analysis.buckling_count);
@@ -141,8 +141,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn fem3d_buckling_mode_values_returns_node_displacements() {
+    #[test]
+    fn fem3d_buckling_mode_values_returns_node_displacements() {
         let doc = cantilever_fixture();
         let (factor, values) = fem3d_buckling_mode_values(&doc, "point", 0).expect("buckling mode values solves");
         assert!(factor.is_finite());
@@ -150,8 +150,8 @@ mod tests {
         assert!(values.contains_key("n2"));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn fem3d_buckling_unknown_case_errors() {
+    #[test]
+    fn fem3d_buckling_unknown_case_errors() {
         let doc = cantilever_fixture();
         let err = fem3d_buckling(&doc, "missing").err().expect("expected error");
         assert!(err.to_string().contains("load case not found"), "unexpected error: {err}");

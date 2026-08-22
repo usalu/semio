@@ -513,7 +513,7 @@ mod tests {
             dependencies: Vec::new(),
             diff: protocol::ArtifactDiff { schema: protocol::SchemaId("diff.v1".to_string()), payload: seq.to_le_bytes().to_vec() },
             inverse: protocol::InverseMutation { schema: protocol::SchemaId("diff.v1".to_string()), payload: Vec::new() },
-            timestamp: protocol::HybridLogicalTimestamp::new(1, seq).await,
+            timestamp: protocol::HybridLogicalTimestamp::new(1, seq),
         }
     }
 

@@ -96,19 +96,9 @@ pub fn imperative_module_contribution(extension_id: &str, module_id: &str, label
 /// 🗺️ Builds the `"imperative.module"` `TopicContribution` payload consumed by
 /// [`imperative_module_contribution`] — see
 /// `🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs::TopicContribution`.
-// 🚫️async: E1 pure — serde_json manifest assembly, zero suspension points; every one of the 5
-// imperative-* extensions' `bundle()`/`extension_exports!` call sites needs this synchronously
-// (the macro invokes `bundle` outside an async context) — see R9. `TopicContribution::new` itself is
-// still `async fn` in `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs` (out of this
-// packet's path_scope — SDK owner's file); bridged here via the framework's own established
-// sync-from-async idiom (`semio_framework::io::resolve_ready`, already used by
-// `ExtensionBundle::depends_on` in that same file for the identical purpose) rather than waiting on a
-// cross-packet lease. See `📓️terra-fleet-extensions-report.md` for the matching lease-request asking
-// the SDK owner to revert `TopicContribution::new` (and `ExtensionBundle::mode`/`.contributes_topic`)
-// to sync directly, which would let this bridge be removed.
 pub fn imperative_module_topic_contribution(module_id: &str, label: &str, icon_id: &str, manifest_id: &str, manifest_name: &str, version: &str, registry: &Registry, catalogue_json: Option<&str>) -> TopicContribution {
     let manifest_json = build_manifest_json(manifest_id, manifest_name, version, registry, catalogue_json);
-    semio_framework::io::resolve_ready(TopicContribution::new(
+    TopicContribution::new(
         "imperative.module",
         serde_json::json!({
             "appId": IMPERATIVE_PLAY_APP_ID,
@@ -117,6 +107,6 @@ pub fn imperative_module_topic_contribution(module_id: &str, label: &str, icon_i
             "iconId": icon_id,
             "manifestJson": manifest_json,
         }),
-    ))
+    )
 }
 // #endregion 🔖️TopicContribution

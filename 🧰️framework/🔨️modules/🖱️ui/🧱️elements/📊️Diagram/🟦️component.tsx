@@ -1,3 +1,4 @@
+/// <reference path="./🟦️implementation.d.ts" />
 // #region 🧲️Header
 // 💻️ framework/ui/elements/📊️Diagram/component.tsx
 // 2026 Ueli Saluz <ueli@semio-tech.com>
@@ -7,10 +8,10 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance } from "@xyflow/react";
+import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnNodeDrag, OnSelectionChangeParams, ReactFlowInstance } from "@xyflow/react";
 import { applyNodeChanges, Background, BackgroundVariant, BaseEdge, ConnectionMode, getBezierPath, Handle, MiniMap, Position, ReactFlow, ReactFlowProvider, SelectionMode, useInternalNode, useReactFlow, useStoreApi, ViewportPortal } from "@xyflow/react";
-import * as dagre from "dagre";
-import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
+import * as dagreImplementation from "dagre";
+import * as forceImplementation from "d3-force";
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
 import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️component.ts";
@@ -28,13 +29,6 @@ export {
   Background,
   BackgroundVariant,
   BaseEdge,
-  forceCenter,
-  forceCollide,
-  forceLink,
-  forceManyBody,
-  forceSimulation,
-  forceX,
-  forceY,
   getBezierPath,
   Handle,
   Position,
@@ -45,7 +39,7 @@ export {
   useStoreApi,
   ViewportPortal,
 };
-export type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance, Connection as RFConnection, Simulation, SimulationLinkDatum, SimulationNodeDatum };
+export type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance, Connection as RFConnection };
 
 /**
  * Base pixel unit for diagram node sizing.
@@ -68,28 +62,50 @@ export interface DiagramLayoutOptions {
   nodeSep?: number;
 }
 
+interface DiagramLayoutGraph {
+  setDefaultEdgeLabel(factory: () => Record<string, never>): void;
+  setGraph(options: { rankdir: DiagramLayoutDirection; ranksep: number; nodesep: number }): void;
+  setNode(id: string, dimensions: { width: number; height: number }): void;
+  setEdge(source: string, target: string): void;
+  node(id: string): { x: number; y: number };
+}
+
+interface DiagramLayoutImplementation {
+  readonly graphlib: { readonly Graph: new () => DiagramLayoutGraph };
+  layout(graph: DiagramLayoutGraph): void;
+}
+
+interface DiagramLayoutPort {
+  positions(nodes: readonly { id: string; width: number; height: number }[], edges: readonly { source: string; target: string }[], options: Required<DiagramLayoutOptions>): ReadonlyMap<string, { x: number; y: number }>;
+}
+
+const diagramLayoutImplementation = dagreImplementation as unknown as DiagramLayoutImplementation;
+
+const diagramLayoutPort: DiagramLayoutPort = {
+  positions(nodes, edges, options) {
+    const graph = new diagramLayoutImplementation.graphlib.Graph();
+    graph.setDefaultEdgeLabel(() => ({}));
+    graph.setGraph({ rankdir: options.direction, ranksep: options.rankSep, nodesep: options.nodeSep });
+    for (const node of nodes) graph.setNode(node.id, { width: node.width, height: node.height });
+    for (const edge of edges) graph.setEdge(edge.source, edge.target);
+    diagramLayoutImplementation.layout(graph);
+    return new Map(nodes.map((node) => [node.id, graph.node(node.id)]));
+  },
+};
+
 /**
  * Computes dagre layout positions for diagram nodes and edges.
  **/
 export function calculateDiagramLayout(nodes: Node[], edges: Edge[], options: DiagramLayoutOptions = {}): { nodes: Node[]; edges: Edge[] } {
   const { direction = "TB", nodeWidth = DIAGRAM_UNIT, nodeHeight = DIAGRAM_UNIT, rankSep = DIAGRAM_UNIT * 1.67, nodeSep = DIAGRAM_UNIT * 1.04 } = options;
-
-  const dagreGraph = new dagre.graphlib.Graph();
-  dagreGraph.setDefaultEdgeLabel(() => ({}));
-  dagreGraph.setGraph({ rankdir: direction, ranksep: rankSep, nodesep: nodeSep });
-
-  nodes.forEach((node) => {
-    dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
-  });
-
-  edges.forEach((edge) => {
-    dagreGraph.setEdge(edge.source, edge.target);
-  });
-
-  dagre.layout(dagreGraph);
+  const positions = diagramLayoutPort.positions(
+    nodes.map((node) => ({ id: node.id, width: nodeWidth, height: nodeHeight })),
+    edges.map((edge) => ({ source: edge.source, target: edge.target })),
+    { direction, nodeWidth, nodeHeight, rankSep, nodeSep },
+  );
 
   const layoutedNodes = nodes.map((node) => {
-    const nodeWithPosition = dagreGraph.node(node.id);
+    const nodeWithPosition = positions.get(node.id)!;
     return {
       ...node,
       position: {
@@ -126,10 +142,83 @@ export const defaultDiagramForceConfig: DiagramForceConfig = {
   updateIntervalMs: 50,
 };
 
+export interface DiagramForceNode {
+  id: string;
+  x?: number;
+  y?: number;
+  vx?: number;
+  vy?: number;
+  fx?: number | null;
+  fy?: number | null;
+}
+
+export interface DiagramForceLink<NodeType extends DiagramForceNode> {
+  id: string;
+  source: string | NodeType;
+  target: string | NodeType;
+}
+
+export interface DiagramForceSimulation<NodeType extends DiagramForceNode> {
+  alphaDecay(): number;
+  alphaMin(): number;
+  alphaTarget(value: number): this;
+  nodes(): NodeType[];
+  on(event: "tick", listener: () => void): this;
+  restart(): this;
+  stop(): this;
+  tick(): this;
+}
+
+interface DiagramForceValue {
+  strength(value: number): this;
+}
+
+interface DiagramLinkForce<NodeType extends DiagramForceNode> {
+  distance(value: number): this;
+  id(accessor: (node: NodeType) => string): this;
+}
+
+interface DiagramForceSimulationImplementation<NodeType extends DiagramForceNode> extends DiagramForceSimulation<NodeType> {
+  force(name: string, force: unknown): this;
+}
+
+interface DiagramForceImplementation {
+  forceCollide(): DiagramForceValue & { radius(value: number): DiagramForceValue };
+  forceLink<NodeType extends DiagramForceNode, LinkType extends DiagramForceLink<NodeType>>(links: LinkType[]): DiagramLinkForce<NodeType>;
+  forceManyBody(): DiagramForceValue;
+  forceSimulation<NodeType extends DiagramForceNode>(nodes: NodeType[]): DiagramForceSimulationImplementation<NodeType>;
+  forceX(value: number): DiagramForceValue;
+  forceY(value: number): DiagramForceValue;
+}
+
+interface DiagramForcePort {
+  create<NodeType extends DiagramForceNode, LinkType extends DiagramForceLink<NodeType>>(nodes: NodeType[], links: LinkType[], config: DiagramForceConfig): DiagramForceSimulation<NodeType>;
+}
+
+const diagramForceImplementation = forceImplementation as unknown as DiagramForceImplementation;
+
+const diagramForcePort: DiagramForcePort = {
+  create(nodes, links, config) {
+    return diagramForceImplementation
+      .forceSimulation(nodes)
+      .force("charge", diagramForceImplementation.forceManyBody().strength(config.chargeStrength ?? -100))
+      .force("link", diagramForceImplementation.forceLink(links).id((node) => node.id).distance(config.linkDistance ?? 100))
+      .force("collide", diagramForceImplementation.forceCollide().radius(config.collideRadius ?? 50))
+      .force("x", diagramForceImplementation.forceX(0).strength(config.centerStrength ?? 0.1))
+      .force("y", diagramForceImplementation.forceY(0).strength(config.centerStrength ?? 0.1))
+      .stop();
+  },
+};
+
+/** @emoji 🧲️ Creates the owned force-simulation handle used by the Diagram interaction loop. */
+export function createDiagramForceSimulation<NodeType extends DiagramForceNode, LinkType extends DiagramForceLink<NodeType>>(nodes: NodeType[], links: LinkType[], config: DiagramForceConfig): DiagramForceSimulation<NodeType> {
+  return diagramForcePort.create(nodes, links, config);
+}
+
 /**
  * ForceNode holds the data fields for a ForceNode record.
  **/
-interface ForceNode extends SimulationNodeDatum {
+interface ForceNode extends DiagramForceNode {
   id: string;
   data: any;
 }
@@ -137,9 +226,7 @@ interface ForceNode extends SimulationNodeDatum {
 /**
  * ForceLink holds the data fields for a ForceLink record.
  **/
-interface ForceLink extends SimulationLinkDatum<ForceNode> {
-  id: string;
-}
+interface ForceLink extends DiagramForceLink<ForceNode> {}
 
 /**
  * Props interface for the Diagram component.
@@ -160,9 +247,9 @@ export interface DiagramProps {
   onNodeDoubleClick?: (event: React.MouseEvent, node: Node) => void;
   onNodeMouseEnter?: (event: React.MouseEvent, node: Node) => void;
   onNodeMouseLeave?: (event: React.MouseEvent, node: Node) => void;
-  onNodeDragStart?: (event: React.MouseEvent, node: Node) => void;
-  onNodeDrag?: (event: React.MouseEvent, node: Node) => void;
-  onNodeDragStop?: (event: React.MouseEvent, node: Node) => void;
+  onNodeDragStart?: OnNodeDrag<Node>;
+  onNodeDrag?: OnNodeDrag<Node>;
+  onNodeDragStop?: OnNodeDrag<Node>;
   onEdgeClick?: (event: React.MouseEvent, edge: Edge) => void;
   onEdgeMouseEnter?: (event: React.MouseEvent, edge: Edge) => void;
   onEdgeMouseLeave?: (event: React.MouseEvent, edge: Edge) => void;
@@ -275,7 +362,7 @@ const DiagramInner: React.FC<DiagramProps> = ({
   selectNodesOnDrag,
 }) => {
   const forceConfig = reactHostPort.useMemo(() => ({ ...defaultDiagramForceConfig, ...forceConfigProp }), [forceConfigProp]);
-  const simulationRef = reactHostPort.useRef<Simulation<any, any> | null>(null);
+  const simulationRef = reactHostPort.useRef<DiagramForceSimulation<ForceNode> | null>(null);
   const draggingNodeRef = reactHostPort.useRef<string | null>(null);
   const isControlled = controlledNodes !== undefined && controlledEdges !== undefined;
   const rfStoreApi = useStoreApi();
@@ -371,7 +458,7 @@ const DiagramInner: React.FC<DiagramProps> = ({
   );
 
   const handleNodeDragStart = reactHostPort.useCallback(
-    (event: React.MouseEvent, node: Node) => {
+    (event: MouseEvent | TouchEvent, node: Node, nodes: Node[]) => {
       draggingNodeRef.current = node.id;
       if (forceConfig.enabled && simulationRef.current) {
         const currentPositions = new Map(finalNodesRef.current.map((n) => [n.id, n.position]));
@@ -388,13 +475,13 @@ const DiagramInner: React.FC<DiagramProps> = ({
           simulationRef.current.alphaTarget(0.3).restart();
         }
       }
-      onNodeDragStartPropRef.current?.(event, node);
+      onNodeDragStartPropRef.current?.(event, node, nodes);
     },
     [forceConfig.enabled],
   );
 
   const handleNodeDrag = reactHostPort.useCallback(
-    (event: React.MouseEvent, node: Node) => {
+    (event: MouseEvent | TouchEvent, node: Node, nodes: Node[]) => {
       if (draggingNodeRef.current !== node.id) return;
       if (forceConfig.enabled && simulationRef.current) {
         const selectedNodes = finalNodesRef.current.filter((n) => n.selected);
@@ -415,13 +502,13 @@ const DiagramInner: React.FC<DiagramProps> = ({
           }
         }
       }
-      onNodeDragPropRef.current?.(event, node);
+      onNodeDragPropRef.current?.(event, node, nodes);
     },
     [forceConfig.enabled],
   );
 
   const handleNodeDragStop = reactHostPort.useCallback(
-    (event: React.MouseEvent, node: Node) => {
+    (event: MouseEvent | TouchEvent, node: Node, nodes: Node[]) => {
       if (forceConfig.enabled && simulationRef.current) {
         simulationRef.current.alphaTarget(0);
         for (const simNode of simulationRef.current.nodes()) {
@@ -430,7 +517,7 @@ const DiagramInner: React.FC<DiagramProps> = ({
         }
       }
       draggingNodeRef.current = null;
-      onNodeDragStopPropRef.current?.(event, node);
+      onNodeDragStopPropRef.current?.(event, node, nodes);
     },
     [forceConfig.enabled],
   );
@@ -467,18 +554,7 @@ const DiagramInner: React.FC<DiagramProps> = ({
       target: e.target,
     }));
 
-    const simulation = forceSimulation<ForceNode, ForceLink>(nodesCopy)
-      .force("charge", forceManyBody().strength(forceConfig.chargeStrength ?? -100))
-      .force(
-        "link",
-        forceLink<ForceNode, ForceLink>(linksCopy)
-          .id((d) => d.id)
-          .distance(forceConfig.linkDistance ?? 100),
-      )
-      .force("collide", forceCollide().radius(forceConfig.collideRadius ?? 50))
-      .force("x", forceX(0).strength(forceConfig.centerStrength ?? 0.1))
-      .force("y", forceY(0).strength(forceConfig.centerStrength ?? 0.1))
-      .stop();
+    const simulation = createDiagramForceSimulation(nodesCopy, linksCopy, forceConfig);
 
     // 🔷️Run simulation synchronously to completion once
     const numTicks = Math.ceil(Math.log(simulation.alphaMin()) / Math.log(1 - simulation.alphaDecay()));

@@ -101,6 +101,7 @@ mod framing {
         frames: VecDeque<Frame>,
     }
 
+    #[derive(Debug)]
     pub enum PipeState {
         Open,
         Eof,

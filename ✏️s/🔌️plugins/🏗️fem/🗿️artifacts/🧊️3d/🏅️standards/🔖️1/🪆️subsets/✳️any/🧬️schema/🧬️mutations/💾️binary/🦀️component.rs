@@ -12,12 +12,12 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 /// 📦️ Encodes a `Fem3dMutation` to its binary command form.
-pub async fn encode_op(operation: &Fem3dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
+pub fn encode_op(operation: &Fem3dMutation) -> Result<Vec<u8>, protocol::ProtocolError> {
     operation.encode_op()
 }
 
 /// 📖️ Decodes a `Fem3dMutation` from its binary command form.
-pub async fn decode_op(bytes: &[u8]) -> Result<Fem3dMutation, protocol::ProtocolError> {
+pub fn decode_op(bytes: &[u8]) -> Result<Fem3dMutation, protocol::ProtocolError> {
     Fem3dMutation::decode_op(bytes)
 }
 
@@ -25,11 +25,12 @@ pub async fn decode_op(bytes: &[u8]) -> Result<Fem3dMutation, protocol::Protocol
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::fem3d::mutations::update_analysis_settings;
     use crate::artifacts::fem3d::schema;
     use crate::artifacts::fem3d::{FemAnalysisSettings, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSupport};
     use store::{create_document_envelope, ArtifactCommand};
 
-    async fn cantilever_fixture() -> crate::artifacts::fem3d::Fem3dSnapshot {
+    fn cantilever_fixture() -> crate::artifacts::fem3d::Fem3dSnapshot {
         crate::artifacts::fem3d::Fem3dSnapshot {
             nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "n2".into(), x: 3.0, y: 0.0, z: 0.0 }],
             elements: vec![FemElement::Frame { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "hea200".into(), roll: 0.0 }],
@@ -43,8 +44,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn op_binary_round_trips_and_agrees_with_text() {
+    #[test]
+    fn op_binary_round_trips_and_agrees_with_text() {
         let operation = Fem3dMutation::UpdateAnalysisSettings(update_analysis_settings::mutation::UpdateAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } });
         semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
@@ -58,7 +59,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn fem3d_document_text_round_trips_through_the_store() {
         let fixture = cantilever_fixture();
-        let mut store = crate::artifacts::fem3d::schema::mutations::Fem3dStore::new(create_document_envelope(crate::artifacts::fem3d::FEM_3D_SCHEMA, "fem3d", schema::empty_fem3d_snapshot(), None)).expect("valid store");
+        let mut store =
+            semio_framework_plugin::resolve_ready(crate::artifacts::fem3d::schema::mutations::Fem3dStore::new(create_document_envelope(crate::artifacts::fem3d::FEM_3D_SCHEMA, "fem3d", schema::empty_fem3d_snapshot(), None))).expect("valid store");
         let mutations = vec![
             Fem3dMutation::CreateMaterial(crate::artifacts::fem3d::schema::mutations::create_material::mutation::CreateMaterial { material: fixture.materials[0].clone() }),
             Fem3dMutation::CreateSection(crate::artifacts::fem3d::schema::mutations::create_section::mutation::CreateSection { section: fixture.sections[0].clone() }),
@@ -68,10 +70,10 @@ mod tests {
             Fem3dMutation::CreateSupport(crate::artifacts::fem3d::schema::mutations::create_support::mutation::CreateSupport { support: fixture.supports[0].clone() }),
             Fem3dMutation::CreateLoadCase(crate::artifacts::fem3d::schema::mutations::create_load_case::mutation::CreateLoadCase { load_case: fixture.load_cases[0].clone() }),
         ];
-        store.dispatch(ArtifactCommand::Apply { mutations, description: None }).expect("apply");
-        assert_eq!(store.snapshot().expect("snapshot"), fixture);
-        semio_framework_os_kernel::os_store::test_support::assert_document_text_round_trip(&store);
-        semio_framework_os_kernel::os_store::test_support::assert_document_pack_round_trip(&store);
+        store.dispatch(ArtifactCommand::Apply { mutations, description: None }).await.expect("apply");
+        assert_eq!(semio_framework_plugin::resolve_ready(store.snapshot()).expect("snapshot"), fixture);
+        semio_framework_os_kernel::os_store::test_support::assert_document_text_round_trip(&store).await;
+        semio_framework_os_kernel::os_store::test_support::assert_document_pack_round_trip(&store).await;
     }
 }
 // #endregion 🧪️Tests
@@ -79,16 +81,17 @@ mod tests {
 #[cfg(test)]
 mod semio_protocol_conformance {
     use super::*;
+    use crate::artifacts::fem3d::mutations::update_analysis_settings;
 
-    #[semio_framework_async_macros::async_test]
-    async fn component_protocol_semio_is_protocol_dialect() {
+    #[test]
+    fn component_protocol_semio_is_protocol_dialect() {
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol.semio");
         assert_eq!(g.dialect, ::dsl::SemioDialect::Protocol);
         assert!(!COMPONENT_PROTOCOL_SEMIO.is_empty());
         let _ = COMPONENT_PROTOCOL_PATH;
     }
-    #[semio_framework_async_macros::async_test]
-    async fn verify_protocol_bytes_against_encoded_spr() {
+    #[test]
+    fn verify_protocol_bytes_against_encoded_spr() {
         let operation = Fem3dMutation::UpdateAnalysisSettings(update_analysis_settings::mutation::UpdateAnalysisSettings { settings: crate::artifacts::fem3d::FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } });
         let bytes = encode_op(&operation).expect("encode op");
         let g = ::dsl::parse_grammar(COMPONENT_PROTOCOL_SEMIO).expect("parse protocol");

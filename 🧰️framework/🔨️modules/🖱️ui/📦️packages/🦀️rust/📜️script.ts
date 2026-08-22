@@ -10,6 +10,7 @@ import { BundleScript, ScriptRouter, buildBudgetMs, getWorkspaceRoot, resolveTes
 
 const packageRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
 const uiOwnerRoot = join(packageRoot, "..", "..");
+const wgpuTargetRoot = join(packageRoot, "🎯️targets", "🧊️wgpu");
 
 //#region 🔖️UiAxesSpec
 type UiAxisEntry = { readonly id: string; readonly variant: string; readonly label?: string };
@@ -29,7 +30,6 @@ function emitRustEnum(name: string, entries: readonly UiAxisEntry[]): string {
   const allList = entries.map((e) => `${name}::${e.variant}`).join(", ");
   return `#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub enum ${name} {
 ${variants}
 }
@@ -110,7 +110,7 @@ type GeneratedTarget = { readonly path: string; readonly content: string };
 function generatedTargets(repoRoot: string, axes: UiAxesSpec): GeneratedTarget[] {
   return [
     { path: join(wgpuTargetRoot, "🤖️generated.rs"), content: emitRust(axes) },
-    { path: join(repoRoot, "🧰️framework/📦️packages/🟦️typescript/🤖️generated/🟦️ui-axes.ts"), content: emitTypeScript(axes) },
+    { path: join(repoRoot, "🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️ui-axes.ts"), content: emitTypeScript(axes) },
   ];
 }
 //#endregion 🔖️targets

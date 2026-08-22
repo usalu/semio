@@ -37,9 +37,9 @@ fn inline_text(inlines: &[MdInline]) -> String {
     for inline in inlines {
         match inline {
             MdInline::Text { text } => out.push_str(text),
-            MdInline::Emphasis { inlines } | MdInline::Strong { inlines } => out.push_str(&Box::pin(inline_text(inlines))),
+            MdInline::Emphasis { inlines } | MdInline::Strong { inlines } => out.push_str(&inline_text(inlines)),
             MdInline::Code { literal } => out.push_str(literal),
-            MdInline::Link { text, .. } => out.push_str(&Box::pin(inline_text(text))),
+            MdInline::Link { text, .. } => out.push_str(&inline_text(text)),
             MdInline::Image { alt, .. } => out.push_str(alt),
             MdInline::SoftBreak | MdInline::HardBreak => out.push(' '),
             MdInline::HtmlInline { .. } => {}

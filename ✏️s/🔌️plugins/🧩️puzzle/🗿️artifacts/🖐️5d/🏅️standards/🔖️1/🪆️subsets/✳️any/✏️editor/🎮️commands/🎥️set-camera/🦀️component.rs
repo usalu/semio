@@ -7,7 +7,7 @@ use serde_json::Value;
 
 /// 📷️ The surface-agnostic setter: the flat camera wins when the surface is the board (or the payload
 /// carries no `position`), otherwise the volume camera.
-pub async fn set_camera(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
+pub fn set_camera(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     let Some(camera) = args.and_then(|value| value.get("camera")) else {
         return;
     };

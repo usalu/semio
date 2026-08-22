@@ -9,7 +9,7 @@ use crate::artifacts::imperative::schema::default_snapshot;
 use crate::artifacts::imperative::{ImperativeSnapshot, IMPERATIVE_DIALECT, IMPERATIVE_DOCUMENT_SCHEMA};
 use crate::viewer::imperative::modes::view;
 use crate::viewer::imperative::modes::view::windows::{main, script};
-use semio_framework_plugin::{ArtifactView, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode};
+use semio_framework_plugin::{ArtifactView, ComponentTree, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 // 🚧️ SDK GAP: `ArtifactViewer`/`Viewer`/`ViewEmit`/`Dialect` were closed by w0-f (bare-importable
 // from the crate root now); `Dialect`/`StandardId`/`SubsetId` and the window-kit types (contract
 // §2.6) are still only reachable through `app` — see the identical note in `✏️editor`'s own file.
@@ -28,10 +28,10 @@ pub enum ImperativeViewCommand {
 }
 
 impl protocol::OpBinary for ImperativeViewCommand {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         Ok(Vec::new())
     }
-    async fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(ImperativeViewCommand::Noop)
     }
 }
@@ -73,18 +73,18 @@ impl ArtifactViewer for ImperativeViewer {
         Ok(ViewEmit::default())
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
-        match body_key {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> ComponentTree {
+        semio_framework_plugin::built_to_component_tree(match body_key {
             main::BODY_KEY => main::render(doc.snapshot),
             script::BODY_KEY => script::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
+        })
     }
 }
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_imperative_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_imperative_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(IMPERATIVE_DIALECT)
         .document(["semio", "imperative"])
         .icon_id("imperative")

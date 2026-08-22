@@ -3,7 +3,7 @@ use crate::artifacts::puzzle2d::mutations::Puzzle2dMutation;
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
 
 //#region 🔖️Inverse
-pub async fn inverse(_payload: &super::mutation::ReplaceKindCatalogs, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
+pub fn inverse(_payload: &super::mutation::ReplaceKindCatalogs, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
     vec![crate::artifacts::puzzle2d::mutations::replace_kind_catalogs::mutation::replace_kind_catalogs(base.meta.kind_catalogs.clone())]
 }
 //#endregion 🔖️Inverse

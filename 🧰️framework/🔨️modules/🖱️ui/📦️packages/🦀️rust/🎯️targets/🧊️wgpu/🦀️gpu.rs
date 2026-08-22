@@ -2,7 +2,7 @@
 //! 🖥️ WebGPU device, surface, and frame loop.
 
 use crate::wgpu::draw::{FrameBuffers, MeshGpuTable, RasterTextureTable, SceneColorTarget, UiPipelines};
-use crate::wgpu::prepared::{PreparedRenderGate, PreparedRenderPacket, PreparedRenderUpload, UiPresentToken};
+use crate::wgpu::prepared::{PreparedRenderEviction, PreparedRenderGate, PreparedRenderPacket, PreparedRenderUpload, UiPresentToken};
 use crate::wgpu::text::FontAtlas;
 use std::sync::Arc;
 use wgpu::Surface;
@@ -137,10 +137,19 @@ impl GpuContext {
     /// 🖥️ Applies one validated worker-owned packet and presents it under a non-Send UI token.
     pub fn submit_prepared(&mut self, _token: &UiPresentToken, gate: &mut PreparedRenderGate, packet: Arc<PreparedRenderPacket>, live_revision: u64, live_generation: u64) -> Result<(), String> {
         gate.validate(&packet, live_revision, live_generation).map_err(|error| error.to_string())?;
+        self.apply_prepared_evictions(&packet.evictions);
         self.apply_prepared_uploads(&packet.uploads);
         self.render_prepared(&packet)?;
         gate.commit_presented(packet);
         Ok(())
+    }
+
+    fn apply_prepared_evictions(&mut self, evictions: &[PreparedRenderEviction]) {
+        for eviction in evictions {
+            match eviction {
+                PreparedRenderEviction::Mesh { key } => self.evict_mesh(key),
+            }
+        }
     }
 
     fn apply_prepared_uploads(&mut self, uploads: &[PreparedRenderUpload]) {

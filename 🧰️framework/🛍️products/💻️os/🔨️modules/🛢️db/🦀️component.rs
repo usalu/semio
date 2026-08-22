@@ -41,8 +41,6 @@ pub use crate::db_engine::vcs_integration;
 /// 🗄️#⃣ `CommandReceipt.state_hash`'s type — hashing is pack-style `ContentHash` throughout the
 /// `db` family per the contract, so it is nameable at the facade root without reaching past this
 /// crate into `pack`/`pack_core` directly.
-pub use pack::ContentHash;
-
 /// 🗄️🎚️ Bootstrap vocabulary the facade round-trip needs at its root: the profile a `Database`
 /// opens with, the durability class a submit requests, and the one error type the family returns.
 pub use crate::db_durability::DurabilityClass;
@@ -222,7 +220,7 @@ mod tests {
             dependencies: deps.iter().map(|dep| protocol::MutationId((*dep).to_string())).collect(),
             diff: protocol::ArtifactDiff { schema: protocol::SchemaId(document::DB_PATHMAP_SCHEMA.to_string()), payload: document::encode_pathmap_json(&serde_json::Value::Object(payload)).await.unwrap() },
             inverse: protocol::InverseMutation { schema: protocol::SchemaId(document::DB_PATHMAP_SCHEMA.to_string()), payload: document::encode_pathmap_json(&serde_json::Value::Object(serde_json::Map::new())).await.unwrap() },
-            timestamp: protocol::HybridLogicalTimestamp::new(0, 0).await,
+            timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         }
     }
     //#endregion 🧸️Fixtures

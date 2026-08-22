@@ -390,6 +390,25 @@ impl LdltFactor {
         out
     }
 
+    fn multiply(&self, x: &VecD) -> VecD {
+        let mut upper = x.0.clone();
+        for (column, entries) in self.l_cols.iter().enumerate() {
+            for (&row, &value) in entries {
+                upper[column] += value * x.get(row as usize);
+            }
+        }
+        for (index, value) in upper.iter_mut().enumerate() {
+            *value *= self.d[index];
+        }
+        let mut output = upper.clone();
+        for (column, entries) in self.l_cols.iter().enumerate() {
+            for (&row, &value) in entries {
+                output[row as usize] += value * upper[column];
+            }
+        }
+        VecD::from_vec(output)
+    }
+
     /// 🔢️ Count of `D[j] < 0` — a Sturm-sequence inertia count, used later for eigenvalue-count checks.
     pub fn negative_pivot_count(&self) -> usize {
         self.d.iter().filter(|&&value| value < 0.0).count()
@@ -845,7 +864,7 @@ fn dense_symmetric_eigen_jacobi(a: &MatD) -> (Vec<f64>, MatD) {
 
     let raw_vals: Vec<f64> = (0..n).map(|i| m.get(i, i)).collect();
     let mut order: Vec<usize> = (0..n).collect();
-    order.sort_by(|&a_idx, &b_idx| raw_vals[a_idx].partial_cmp(&raw_vals[b_idx]).unwrap());
+    order.sort_by(|&a_idx, &b_idx| raw_vals[a_idx].total_cmp(&raw_vals[b_idx]));
     let mut vals = vec![0.0; n];
     let mut vecs = MatD::zeros(n, n);
     for (new_idx, &old_idx) in order.iter().enumerate() {
@@ -865,46 +884,6 @@ fn frobenius_norm(m: &MatD) -> f64 {
         }
     }
     sum.sqrt()
-}
-
-/// 🪜️ Lower-triangular Cholesky `A = L Lᵀ` of a small dense SPD matrix (Cholesky-Banachiewicz).
-fn cholesky_lower(a: &MatD) -> MatD {
-    let n = a.rows;
-    let mut l = MatD::zeros(n, n);
-    for i in 0..n {
-        for j in 0..=i {
-            let mut sum = a.get(i, j);
-            for k in 0..j {
-                sum -= l.get(i, k) * l.get(j, k);
-            }
-            if i == j {
-                l.set(i, j, sum.max(1e-300).sqrt());
-            } else {
-                l.set(i, j, sum / l.get(j, j));
-            }
-        }
-    }
-    l
-}
-
-/// 🔁️ Inverse of a lower-triangular matrix via forward substitution, one identity column at a time.
-fn invert_lower_triangular(l: &MatD) -> MatD {
-    let n = l.rows;
-    let mut inv = MatD::zeros(n, n);
-    for col in 0..n {
-        let mut x = vec![0.0; n];
-        for i in 0..n {
-            let mut sum = if i == col { 1.0 } else { 0.0 };
-            for k in 0..i {
-                sum -= l.get(i, k) * x[k];
-            }
-            x[i] = sum / l.get(i, i);
-        }
-        for i in 0..n {
-            inv.set(i, col, x[i]);
-        }
-    }
-    inv
 }
 
 fn symmetrize(a: &MatD) -> MatD {
@@ -1043,34 +1022,52 @@ impl SubspaceIterationJob {
     }
 
     fn iterate(&mut self) {
-        let bx = apply_b(&self.state.b, &self.state.x);
-        let mut cols: Vec<VecD> = (0..self.state.m).map(|j| mat_col(&self.state.x, j)).collect();
-        let mut bcols: Vec<VecD> = (0..self.state.m).map(|j| mat_col(&bx, j)).collect();
-        for j in 0..self.state.m {
-            for k in 0..j {
-                let coeff = cols[j].dot(&bcols[k]);
-                cols[j] = cols[j].sub(&cols[k].scale(coeff));
-                bcols[j] = bcols[j].sub(&bcols[k].scale(coeff));
-            }
-            let norm = cols[j].dot(&bcols[j]).max(1e-300).sqrt();
-            cols[j] = cols[j].scale(1.0 / norm);
-            bcols[j] = bcols[j].scale(1.0 / norm);
-        }
-        for j in 0..self.state.m {
-            set_col(&mut self.state.x, j, &cols[j]);
-        }
-
         let rhs = apply_b(&self.state.b, &self.state.x);
         let y = self.state.k_factor.solve_many(&rhs);
-        let k_proj = symmetrize(&y.transpose().matmul(&rhs));
-        let by = apply_b(&self.state.b, &y);
-        let b_proj = symmetrize(&y.transpose().matmul(&by));
-        let l = cholesky_lower(&b_proj);
-        let l_inv = invert_lower_triangular(&l);
-        let a_hat = symmetrize(&l_inv.matmul(&k_proj).matmul(&l_inv.transpose()));
-        let (theta, w) = dense_symmetric_eigen_jacobi(&a_hat);
-        let z = l_inv.transpose().matmul(&w);
-        let x_new = y.matmul(&z);
+        let mut cols: Vec<VecD> = (0..self.state.m).map(|j| mat_col(&y, j)).collect();
+        let mut kcols: Vec<VecD> = (0..self.state.m).map(|j| mat_col(&rhs, j)).collect();
+        for j in 0..self.state.m {
+            for k in 0..j {
+                let coeff = cols[j].dot(&kcols[k]);
+                cols[j] = cols[j].sub(&cols[k].scale(coeff));
+                kcols[j] = kcols[j].sub(&kcols[k].scale(coeff));
+            }
+            let mut norm_sq = cols[j].dot(&kcols[j]);
+            if !norm_sq.is_finite() || norm_sq <= 1e-24 {
+                cols[j] = mat_col(&self.state.x, j);
+                kcols[j] = self.state.k_factor.multiply(&cols[j]);
+                for k in 0..j {
+                    let coeff = cols[j].dot(&kcols[k]);
+                    cols[j] = cols[j].sub(&cols[k].scale(coeff));
+                    kcols[j] = kcols[j].sub(&kcols[k].scale(coeff));
+                }
+                norm_sq = cols[j].dot(&kcols[j]);
+            }
+            let norm = norm_sq.max(1e-300).sqrt();
+            cols[j] = cols[j].scale(1.0 / norm);
+            kcols[j] = kcols[j].scale(1.0 / norm);
+        }
+        let mut basis = MatD::zeros(self.state.n, self.state.m);
+        for j in 0..self.state.m {
+            set_col(&mut basis, j, &cols[j]);
+        }
+
+        let projected = symmetrize(&basis.transpose().matmul(&apply_b(&self.state.b, &basis)));
+        let (mu, vectors) = dense_symmetric_eigen_jacobi(&projected);
+        let mut order: Vec<usize> = (0..mu.len()).collect();
+        order.sort_by(|&left, &right| {
+            let left_lambda = if mu[left] > 1e-14 { mu[left].recip() } else { f64::MAX };
+            let right_lambda = if mu[right] > 1e-14 { mu[right].recip() } else { f64::MAX };
+            left_lambda.total_cmp(&right_lambda).then_with(|| left.cmp(&right))
+        });
+        let theta: Vec<f64> = order.iter().map(|&index| if mu[index] > 1e-14 { mu[index].recip() } else { f64::MAX }).collect();
+        let mut ordered_vectors = MatD::zeros(vectors.rows, vectors.cols);
+        for (column, &source) in order.iter().enumerate() {
+            for row in 0..vectors.rows {
+                ordered_vectors.set(row, column, vectors.get(row, source));
+            }
+        }
+        let x_new = basis.matmul(&ordered_vectors);
 
         let current: Vec<f64> = theta.iter().take(self.state.p).copied().collect();
         self.state.residuals = current.iter().zip(&self.state.prev_theta).map(|(&value, &previous)| if previous < f64::MAX { ((value - previous) / previous.abs().max(1e-12)).abs() } else { f64::MAX }).collect();
@@ -1395,6 +1392,30 @@ mod tests {
         for i in 0..3 {
             assert!((pairs.values[i] - dense_vals[i]).abs() / dense_vals[i].abs().max(1e-9) < 1e-3);
         }
+    }
+
+    /// 🕳️ Indefinite and null generalized modes sort behind physical positive modes using the same
+    /// finite sentinel on every replay, so checkpoints remain valid JSON and ordering is total.
+    #[test]
+    fn subspace_iteration_uses_a_deterministic_finite_null_mode_sentinel() {
+        let n = 3;
+        let mut k_coo = Coo::new(n);
+        let mut b_coo = Coo::new(n);
+        for (index, stiffness) in [1.0, 2.0, 3.0].into_iter().enumerate() {
+            k_coo.add(index, index, stiffness);
+        }
+        b_coo.add(0, 0, 1.0);
+        b_coo.add(2, 2, -1.0);
+        let k_factor = ldlt_factor(&k_coo.to_csc_sym_upper()).expect("factors");
+        let b_csr = b_coo.to_csr();
+
+        let first = subspace_iteration(&k_factor, &b_csr, n, 3, 30);
+        let replay = subspace_iteration(&k_factor, &b_csr, n, 3, 30);
+
+        assert_eq!(first, replay);
+        assert_eq!(first.values, vec![1.0, f64::MAX, f64::MAX]);
+        assert!(first.values.iter().all(|value| value.is_finite() && *value > 0.0));
+        assert!(first.values.windows(2).all(|pair| pair[0] <= pair[1]));
     }
 
     /// 🔍️ `CscSym::get` reads back every entry of a symmetric matrix (both `row<=col` and `row>col`

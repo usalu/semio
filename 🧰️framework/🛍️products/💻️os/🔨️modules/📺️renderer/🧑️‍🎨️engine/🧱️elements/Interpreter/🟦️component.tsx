@@ -36,10 +36,12 @@ import {
   VirtualFileSystem,
   borderElementClass,
   borderNormalTopClass,
+  catalogueTreeDragController,
   classifyIconSelectorMode,
   cn,
   elementSkeleton,
   loadingBorderElementClass,
+  renderControlIcon,
   useLabel,
   waitingBorderElementClass,
   type ContextMenuItem,
@@ -48,6 +50,7 @@ import {
   type TreeDataItem,
   type TreeDataSection,
   type TreeDragAndDropController,
+  type TreePanelConfig,
   type UiLabel,
   type UiTranslationKey,
 } from "@semio-tech/ui-react";
@@ -144,6 +147,137 @@ export function usePresenceOverlayEntry(key: string): UiPresenceOverlayEntry {
   return overlay.byKey.get(key) ?? {};
 }
 //#endregion PresenceOverlay
+
+//#region 🌲️TreePanelBoundary
+type PanelTreePresence = {
+  readonly status?: "idle" | "loading" | "waiting";
+  readonly selected?: boolean;
+};
+
+type PanelTreeItem = {
+  readonly id: string;
+  readonly label: string;
+  readonly description?: string;
+  readonly iconId?: IconName;
+  readonly defaultOpen?: boolean;
+  readonly presence?: PanelTreePresence;
+  readonly dimmed?: boolean;
+  readonly draggable?: boolean;
+  readonly dragData?: Record<string, string>;
+  readonly items?: readonly PanelTreeItem[];
+  readonly action?: ActionDescriptor;
+  readonly hoverAction?: ActionDescriptor;
+  readonly unhoverAction?: ActionDescriptor;
+  readonly actions?: readonly {
+    readonly iconId: IconName;
+    readonly label?: string;
+    readonly placement?: "row" | "menu";
+    readonly action: ActionDescriptor;
+  }[];
+};
+
+type PanelTreeNode = {
+  readonly sections: readonly {
+    readonly id: string;
+    readonly label?: string;
+    readonly defaultOpen?: boolean;
+    readonly presence?: PanelTreePresence;
+    readonly items: readonly PanelTreeItem[];
+  }[];
+  readonly selectedIds?: readonly string[];
+  readonly highlightedIds?: readonly string[];
+  readonly selectionChange?: ActionDescriptor;
+  readonly dropAction?: ActionDescriptor;
+};
+
+function dispatchPanelTreeAction(onAction: (action: ActionDescriptor) => void, descriptor: ActionDescriptor, patch: Record<string, unknown>): void {
+  onAction({ ...descriptor, args: { ...(typeof descriptor.args === "object" && descriptor.args != null ? descriptor.args : {}), ...patch } });
+}
+
+function panelTreeItemsToData(items: readonly PanelTreeItem[], onAction: (action: ActionDescriptor) => void): TreeDataItem[] {
+  return items.map((item) => ({
+    id: item.id,
+    label: item.label,
+    description: item.description,
+    icon: item.iconId ? renderControlIcon(item.iconId, 12) : undefined,
+    defaultOpen: item.defaultOpen,
+    isSelected: item.presence?.selected,
+    loading: item.presence?.status === "loading",
+    waiting: item.presence?.status === "waiting",
+    isHidden: item.dimmed,
+    draggable: item.draggable,
+    dragData: item.dragData,
+    items: item.items?.length ? panelTreeItemsToData(item.items, onAction) : undefined,
+    onClick: item.action ? () => dispatchPanelTreeAction(onAction, item.action!, {}) : undefined,
+    onPointerEnter: item.hoverAction ? () => dispatchPanelTreeAction(onAction, item.hoverAction!, {}) : undefined,
+    onPointerLeave: item.unhoverAction ? () => dispatchPanelTreeAction(onAction, item.unhoverAction!, {}) : undefined,
+    actions: item.actions?.map((action) => ({
+      kind: "button" as const,
+      icon: action.iconId,
+      title: action.label ? wireLabel(action.label) : undefined,
+      placement: action.placement ?? "row",
+      onClick: () => dispatchPanelTreeAction(onAction, action.action, {}),
+    })),
+  }));
+}
+
+/** @emoji 🌲️ Maps the still-supported manifest tree payload onto the owned panel-tree contract. */
+export function uiTreeNodeToTreePanelConfig(treeNode: PanelTreeNode, onAction: (action: ActionDescriptor) => void): TreePanelConfig {
+  const sections: TreeDataSection[] = treeNode.sections.map((section) => ({
+    id: section.id,
+    label: section.label ?? "",
+    defaultOpen: section.defaultOpen,
+    loading: section.presence?.status === "loading",
+    waiting: section.presence?.status === "waiting",
+    items: panelTreeItemsToData(section.items, onAction),
+  }));
+  return {
+    sections,
+    selectedIds: treeNode.selectedIds ? [...treeNode.selectedIds] : undefined,
+    highlightedIds: treeNode.highlightedIds,
+    onSelectionChange: treeNode.selectionChange ? (selectedIds) => dispatchPanelTreeAction(onAction, treeNode.selectionChange!, { ids: selectedIds }) : undefined,
+    sortableSections: Boolean(treeNode.dropAction) && sections.length > 1,
+  };
+}
+
+function panelTreeDragMime(treeNode: PanelTreeNode): string | undefined {
+  const visit = (items: readonly PanelTreeItem[]): string | undefined => {
+    for (const item of items) {
+      const mime = item.dragData ? Object.keys(item.dragData)[0] : undefined;
+      if (mime) return mime;
+      const nested = item.items?.length ? visit(item.items) : undefined;
+      if (nested) return nested;
+    }
+    return undefined;
+  };
+  for (const section of treeNode.sections) {
+    const mime = visit(section.items);
+    if (mime) return mime;
+  }
+  return undefined;
+}
+
+/** @emoji 🖱️ Owns manifest-tree drag payload and drop-action routing. */
+export function declarativeTreeDragController(treeNode: PanelTreeNode, onAction: (action: ActionDescriptor) => void): TreeDragAndDropController | undefined {
+  const mime = panelTreeDragMime(treeNode);
+  const source = mime ? catalogueTreeDragController(mime) : undefined;
+  if (!treeNode.dropAction) return source;
+  return {
+    ...(source ?? {}),
+    handleDrop: ({ data, target, dropPosition }) => {
+      const encoded = Object.entries(data).find(([kind, value]) => kind.startsWith("application/x-semio-") && value.trim())?.[1];
+      if (!encoded) return;
+      let payload: Record<string, unknown>;
+      try {
+        payload = JSON.parse(encoded) as Record<string, unknown>;
+      } catch {
+        return;
+      }
+      dispatchPanelTreeAction(onAction, treeNode.dropAction!, { ...payload, targetId: target.id, dropPosition: dropPosition ?? "inside" });
+    },
+  };
+}
+//#endregion 🌲️TreePanelBoundary
 
 //#region ComponentSceneHostRegistry
 /** 🧭️ Resolve scene hosts at render time — these modules form a cycle with Interpreter
@@ -256,7 +390,7 @@ function surfacePropsToComponentSceneNode(record: UiNodeRecord, props: SurfacePr
   }
   let decoded: Record<string, unknown> | undefined;
   try {
-    // 🧭️ `SurfaceDoc.bytes` is `Vec<u8>` — ts-rs renders it as a plain `number[]`, not a `Uint8Array`
+    // 🧭️ `SurfaceDoc.bytes` is `Vec<u8>` — owned schema exporter renders it as a plain `number[]`, not a `Uint8Array`
     // or the old `"pk:"`-prefixed string `decodeScenePackField` (used by `parseSceneJsonField` below
     // for still-string-shaped scene sub-fields) expects. Raw bytes decode via `decodePackValue`.
     decoded = props.doc.bytes.length > 0 ? (decodePackValue(new Uint8Array(props.doc.bytes)) as Record<string, unknown>) : undefined;
@@ -612,6 +746,82 @@ function toUiValue(value: string | number | boolean): UiValue {
   return value as UiValue;
 }
 //#endregion ActionDispatch
+
+//#region DeclarativeControlBoundary
+type DeclarativeControlBase = {
+  readonly id?: string;
+  readonly disabled?: boolean;
+  readonly loading?: boolean;
+  readonly waiting?: boolean;
+  readonly presence?: { readonly state?: string; readonly status?: string };
+};
+
+type DeclarativeUiControl =
+  | (DeclarativeControlBase & { readonly type: "input"; readonly id: string; readonly inputKind: string; readonly value: string; readonly placeholder?: string; readonly commit?: string; readonly min?: number; readonly max?: number; readonly step?: number; readonly accept?: string; readonly onChange: ActionDescriptor })
+  | (DeclarativeControlBase & { readonly type: "select"; readonly id: string; readonly value: string; readonly items: readonly { readonly value: string; readonly label: string }[]; readonly placeholder?: string; readonly onChange: ActionDescriptor })
+  | (DeclarativeControlBase & { readonly type: "toggle"; readonly id: string; readonly iconId: string; readonly pressed: boolean; readonly text?: string; readonly onChange: ActionDescriptor })
+  | (DeclarativeControlBase & { readonly type: "keyValue"; readonly entries: readonly { readonly label: string; readonly value: string }[] })
+  | (DeclarativeControlBase & { readonly type: "slider"; readonly id: string; readonly value: number; readonly min: number; readonly max: number; readonly step: number; readonly unit?: string; readonly onChange: ActionDescriptor })
+  | (DeclarativeControlBase & { readonly type: "numberStepper"; readonly id: string; readonly value: number; readonly step: number; readonly uniform: boolean; readonly onAbsolute: ActionDescriptor; readonly onDelta: ActionDescriptor })
+  | (DeclarativeControlBase & { readonly type: "ring"; readonly id: string; readonly orbId: string; readonly t: number; readonly onChange: ActionDescriptor })
+  | (DeclarativeControlBase & { readonly type: "iconSelect"; readonly id: string; readonly value: string; readonly uniform: boolean; readonly classifierKind: string; readonly onChange: ActionDescriptor })
+  | (DeclarativeControlBase & { readonly type: "button"; readonly iconId: string; readonly label: string; readonly action: ActionDescriptor });
+
+function declarativeControlDisabled(control: DeclarativeControlBase): boolean {
+  return control.disabled === true || control.presence?.state === "disabled";
+}
+
+function declarativeControlActivityClass(control: DeclarativeControlBase): string | undefined {
+  if (control.loading || control.presence?.status === "loading") return loadingBorderElementClass;
+  if (control.waiting || control.presence?.status === "waiting") return waitingBorderElementClass;
+  return undefined;
+}
+
+function dispatchDeclarativeControlAction(onAction: (action: ActionDescriptor) => void, descriptor: ActionDescriptor, patch: Record<string, unknown>): void {
+  onAction({ ...descriptor, args: { ...(typeof descriptor.args === "object" && descriptor.args != null ? descriptor.args : {}), ...patch } });
+}
+
+/** @emoji 🎛️ Renders the owned structural control payload retained by panel-tree composition. */
+export function renderUiControl(control: DeclarativeUiControl, onAction: (action: ActionDescriptor) => void, path?: string): ReactElement {
+  switch (control.type) {
+    case "input": {
+      const commitOnBlur = control.commit === "blur";
+      const commitValue = (raw: string) => dispatchDeclarativeControlAction(onAction, control.onChange, { value: control.inputKind === "number" ? Number(raw) : raw });
+      if (control.inputKind === "longText") {
+        return <Textarea id={control.id} data-ui-path={path} className="min-h-[4.5rem] w-full min-w-0" value={control.value} placeholder={control.placeholder} onChange={commitOnBlur ? undefined : (event) => commitValue(event.target.value)} onBlur={commitOnBlur ? (event) => commitValue(event.target.value) : undefined} />;
+      }
+      const inputType = control.inputKind === "number" ? "number" : control.inputKind === "date" ? "date" : control.inputKind === "color" ? "color" : control.inputKind === "file" ? "file" : "text";
+      return <Input id={control.id} data-ui-path={path} type={inputType} className="h-medium w-full min-w-0" value={control.inputKind === "file" ? undefined : control.value} placeholder={control.placeholder} min={control.min} max={control.max} step={control.step} accept={control.inputKind === "file" ? control.accept : undefined} onChange={commitOnBlur ? undefined : (event) => commitValue(control.inputKind === "file" ? (event.target.files?.[0]?.name ?? "") : event.target.value)} onBlur={commitOnBlur ? (event) => commitValue(control.inputKind === "file" ? (event.target.files?.[0]?.name ?? "") : event.target.value) : undefined} />;
+    }
+    case "select":
+      return (
+        <Select value={control.value || undefined} onValueChange={(value) => dispatchDeclarativeControlAction(onAction, control.onChange, { value })}>
+          <SelectTrigger id={control.id} data-ui-path={path} className="h-medium w-full min-w-0" size="sm"><SelectValue placeholder={control.placeholder ?? interpLabel("ui.common.select")} /></SelectTrigger>
+          <SelectContent>{control.items.map((item, index) => <SelectItem key={`${control.id}:${index}:${item.value}`} value={item.value}>{item.label}</SelectItem>)}</SelectContent>
+        </Select>
+      );
+    case "toggle":
+      return <Toggle id={control.id} pressed={control.pressed} text={control.text} icon={resolveControlIconNode(control.iconId)} onPressedChange={(pressed) => dispatchDeclarativeControlAction(onAction, control.onChange, { pressed })} />;
+    case "keyValue":
+      return <dl className="grid grid-cols-[auto_1fr] gap-x-single gap-y-single text-xs" data-ui-path={path}>{control.entries.map((entry, index) => <div key={`${entry.label}:${index}`} className="contents"><dt className="text-muted-foreground">{entry.label}</dt><dd className="tabular-nums">{entry.value}</dd></div>)}</dl>;
+    case "slider": {
+      const slider = <Slider id={control.id} data-ui-path={path} className="w-full min-w-0" max={control.max} min={control.min} step={control.step} value={[control.value]} onValueChange={(values) => dispatchDeclarativeControlAction(onAction, control.onChange, { value: values[0] ?? control.value })} />;
+      if (!control.unit) return slider;
+      return <div className="flex min-w-0 w-full items-center gap-single">{slider}<span className="text-muted-foreground shrink-0 text-xs tabular-nums">{control.value} {control.unit}</span></div>;
+    }
+    case "numberStepper":
+      return <Stepper id={control.id} step={control.step} value={control.uniform ? control.value : undefined} mixed={!control.uniform} onChange={(value) => dispatchDeclarativeControlAction(onAction, control.onAbsolute, { value })} onDelta={(delta) => dispatchDeclarativeControlAction(onAction, control.onDelta, { delta })} />;
+    case "ring":
+      return <Ring id={control.id} onOrbChange={(_orbId, _oldT, newT) => dispatchDeclarativeControlAction(onAction, control.onChange, { t: newT })} orbs={[{ disabled: declarativeControlDisabled(control), id: control.orbId, selected: true, t: control.t }]} />;
+    case "iconSelect":
+      return <IconSelector classifyIconSelectorMode={control.classifierKind === "puzzle2d" ? classifyIconSelectorMode : undefined} id={control.id} onChange={(next) => dispatchDeclarativeControlAction(onAction, control.onChange, { value: next })} uniform={control.uniform} value={control.value} />;
+    case "button": {
+      const activityClass = declarativeControlActivityClass(control);
+      return <Button id={control.id} data-ui-path={path} text={control.label} icon={resolveControlIconNode(control.iconId)} disabled={declarativeControlDisabled(control)} onClick={() => onAction(control.action)} className={activityClass} aria-busy={Boolean(activityClass) || undefined} />;
+    }
+  }
+}
+//#endregion DeclarativeControlBoundary
 
 //#region ComponentRenderers
 function activityBorderClass(record: UiNodeRecord): string | undefined {
@@ -1032,7 +1242,7 @@ if (import.meta.vitest) {
 
   describe("unknown component placeholder", () => {
     it("renders a visible placeholder and never nothing for an unregistered component type", async () => {
-      const { render, cleanup } = await import("@testing-library/react");
+      const { render, cleanup } = await import("@semio-tech/ui-react/test");
       const store = new UiDocumentStore("s");
       store.loadSnapshot(snapshot(0, [leaf(0, "root", { type: "future-widget" } as unknown as Component)]));
       const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
@@ -1047,7 +1257,7 @@ if (import.meta.vitest) {
 
   describe("per-node render granularity (React level)", () => {
     it("re-renders only the component whose own record changed", async () => {
-      const { act, render, cleanup } = await import("@testing-library/react");
+      const { act, render, cleanup } = await import("@semio-tech/ui-react/test");
       const store = new UiDocumentStore("s");
       // 🧭️ `root` owns `a`/`b` as real document children (required — every node must be reachable
       // from the root or `validateUiDocumentCore` rejects the whole document as `danglingRoot`), but

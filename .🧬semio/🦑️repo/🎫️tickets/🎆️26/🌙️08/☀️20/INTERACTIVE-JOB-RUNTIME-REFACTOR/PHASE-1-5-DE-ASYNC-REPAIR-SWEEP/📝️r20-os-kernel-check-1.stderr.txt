@@ -1,0 +1,60 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.45
+    Checking cfg-if v1.0.4
+   Compiling find-msvc-tools v0.1.9
+   Compiling serde_core v1.0.228
+   Compiling shlex v1.3.0
+    Checking simd-adler32 v0.3.9
+   Compiling serde v1.0.228
+    Checking adler2 v2.0.1
+   Compiling crc32fast v1.5.0
+   Compiling libc v0.2.186
+   Compiling zmij v1.0.21
+    Checking pin-project-lite v0.2.17
+    Checking arrayvec v0.7.6
+    Checking memchr v2.8.0
+   Compiling serde_json v1.0.149
+    Checking constant_time_eq v0.4.2
+    Checking miniz_oxide v0.8.9
+    Checking arrayref v0.3.9
+   Compiling cc v1.2.62
+   Compiling thiserror v2.0.18
+    Checking futures-core v0.3.32
+    Checking itoa v1.0.18
+    Checking equivalent v1.0.2
+    Checking semio-framework-trace v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust)
+    Checking log v0.4.29
+    Checking fastrand v2.4.1
+   Compiling blake3 v1.8.5
+    Checking base64 v0.22.1
+   Compiling zip v2.4.2
+    Checking bumpalo v3.20.2
+    Checking futures-io v0.3.32
+    Checking hashbrown v0.17.1
+    Checking parking v2.2.1
+    Checking socket2 v0.6.4
+    Checking mio v1.2.1
+    Checking flate2 v1.1.9
+    Checking futures-task v0.3.32
+   Compiling syn v2.0.117
+    Checking zopfli v0.8.3
+    Checking slab v0.4.12
+    Checking futures-sink v0.3.32
+    Checking indexmap v2.14.0
+    Checking futures-lite v2.6.1
+    Checking semio-framework-hash v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust)
+   Compiling serde_derive v1.0.228
+   Compiling thiserror-impl v2.0.18
+   Compiling tokio-macros v2.7.0
+   Compiling futures-macro v0.3.32
+   Compiling displaydoc v0.2.5
+   Compiling async-trait v0.1.89
+   Compiling semio-framework-os-kernel-dsl-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust)
+    Checking tokio v1.52.3
+    Checking futures-util v0.3.32
+    Checking semio-framework-replication v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust)
+    Checking semio-framework-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust)
+    Checking semio-framework-pack v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust)
+    Checking semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+error: could not compile `semio-framework-os-kernel` (lib) due to 1 previous error; 9 warnings emitted

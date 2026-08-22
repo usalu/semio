@@ -1,0 +1,53 @@
+warning: associated functions `resolve_weather` and `synthetic_weather_year` are never used
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🦀️component.rs:847:8
+    |
+824 | impl Engine {
+    | ----------- associated functions in this implementation
+...
+847 |     fn resolve_weather(config: &SimulationConfig) -> Vec<WeatherRecord> {
+    |        ^^^^^^^^^^^^^^^
+...
+858 |     fn synthetic_weather_year() -> Vec<WeatherRecord> {
+    |        ^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `design_day_weather` is never used
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🦀️component.rs:890:4
+    |
+890 | fn design_day_weather(dry_bulb_c: f64) -> Vec<WeatherRecord> {
+    |    ^^^^^^^^^^^^^^^^^^
+
+warning: `semio-energy-focused` (lib test) generated 2 warnings
+    Finished `release` profile [optimized] target(s) in 0.20s
+     Running unittests lib.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/RESUMABLE-WFC-PUZZLE2D-AND-ENERGY-JOBS/🧪️target-p7-energy-focused/release/deps/semio_energy_focused-9ca7d2c1de3b5624)
+
+running 12 tests
+test sim::tests::energy_job_cancellation_and_freshness_precede_mutation ... ok
+test sim::tests::invalid_model_rejected ... ok
+test sim::tests::adversarial_timestep_work_unit_stays_below_watchdog ... ok
+test sim::tests::energy_job_previews_checkpoints_and_commits_bounded_steps ... FAILED
+test sim::tests::hvac_bestest_heating_day ... ok
+test sim::tests::ashrae_140_case600_base ... ok
+test sim::tests::energy_job_checkpoint_restore_and_fuel_batches_are_deterministic ... ok
+test sim::tests::energy_conservation_order_of_magnitude ... ok
+test sim::tests::full_topology_e2e ... ok
+test sim::tests::engine_runs_single_zone ... ok
+test sim::tests::run_period_honors_calendar ... ok
+test sim::tests::engine_deterministic_repeatability ... ok
+
+failures:
+
+---- sim::tests::energy_job_previews_checkpoints_and_commits_bounded_steps stdout ----
+
+thread 'sim::tests::energy_job_previews_checkpoints_and_commits_bounded_steps' (69130734) panicked at /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🦀️component.rs:1092:9:
+worst energy step was 8.806583ms
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    sim::tests::energy_job_previews_checkpoints_and_commits_bounded_steps
+
+test result: FAILED. 11 passed; 1 failed; 0 ignored; 0 measured; 229 filtered out; finished in 0.23s
+
+error: test failed, to rerun pass `--lib`

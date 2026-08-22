@@ -68,7 +68,7 @@ impl ArtifactInferrer for NoteInferrer {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.note.note.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `note_artifact_schema_descriptor`'s registration.
-pub async fn note_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn note_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.note.note.inference",
         inference: schema::FacetLeaves {

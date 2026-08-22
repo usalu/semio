@@ -10,7 +10,7 @@
 
 // #region 🔌️Adapters
 import { ActionDropdown, type ActionDropdownOption } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 // #endregion 🔌️Adapters
 

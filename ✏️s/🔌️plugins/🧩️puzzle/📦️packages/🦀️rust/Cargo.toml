@@ -91,11 +91,13 @@ semio-framework-schema = { path = "../../../../../🧰️framework/🔨️module
 infinite_canvas = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
+semio-framework-ui-contract = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-framework-ui-scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
+semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 nalgebra = { version = "0.33", default-features = false, features = ["std"] }
 parry3d = "0.17"
 serde.workspace = true
 serde_json.workspace = true
-thiserror.workspace = true
 
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
 semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
@@ -107,4 +109,5 @@ wasm-bindgen-futures = "0.4.71"
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }
 
 [dev-dependencies]
+semio-framework-async = { workspace = true }
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

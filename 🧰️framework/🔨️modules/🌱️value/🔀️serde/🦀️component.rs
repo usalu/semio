@@ -375,7 +375,7 @@ impl<'de> SeqAccess<'de> for SeqAccessDeserializer {
     type Error = SerdeError;
 
     fn next_element_seed<T: DeserializeSeed<'de>>(&mut self, seed: T) -> Result<Option<T::Value>, Self::Error> {
-        Ok(self.iter.next().map(|value| seed.deserialize(&mut ValueDeserializer::new(value))).transpose()?)
+        self.iter.next().map(|value| seed.deserialize(&mut ValueDeserializer::new(value))).transpose()
     }
 }
 
@@ -451,7 +451,7 @@ impl<'de> EnumAccess<'de> for EnumAccessTagged {
 
     fn variant_seed<V: DeserializeSeed<'de>>(self, seed: V) -> Result<(V::Value, Self::Variant), Self::Error> {
         if let Some((_kind, DslValue::String(variant))) = self.entries.iter().find(|(k, _)| k == "kind") {
-            let payload = self.entries.iter().find(|(k, _)| k == "value").map(|(_, v)| v.clone()).unwrap_or(DslValue::Null);
+            let payload = self.entries.iter().find(|(k, _)| k == "value").map_or(DslValue::Null, |(_, v)| v.clone());
             return Ok((seed.deserialize(VariantNameDeserializer { variant: variant.clone() })?, VariantAccessNewtype(payload)));
         }
         let (variant, payload) = self.entries.into_iter().next().ok_or_else(|| SerdeError("empty enum object".to_string()))?;
@@ -672,7 +672,7 @@ mod tests {
     use super::*;
     use serde::{Deserialize, Serialize};
 
-    fn round_trip<T>(value: T) -> T
+    fn round_trip<T>(value: &T) -> T
     where
         T: Serialize + de::DeserializeOwned,
     {
@@ -689,8 +689,8 @@ mod tests {
         #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
         struct Counter(i64);
 
-        assert_eq!(round_trip(Counter(15)), Counter(15));
-        assert_eq!(round_trip(Counter(-3)), Counter(-3));
+        assert_eq!(round_trip(&Counter(15)), Counter(15));
+        assert_eq!(round_trip(&Counter(-3)), Counter(-3));
     }
 
     #[test]
@@ -698,7 +698,7 @@ mod tests {
         #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
         struct Label(String);
 
-        assert_eq!(round_trip(Label("hub".to_owned())), Label("hub".to_owned()));
+        assert_eq!(round_trip(&Label("hub".to_owned())), Label("hub".to_owned()));
     }
 
     /// @emoji 🏷️ `TupleVariantSerializer` used to tag its payload "fields" while
@@ -711,7 +711,7 @@ mod tests {
         enum E {
             Pair(i64, i64),
         }
-        assert_eq!(round_trip(E::Pair(1, 2)), E::Pair(1, 2));
+        assert_eq!(round_trip(&E::Pair(1, 2)), E::Pair(1, 2));
     }
 }
 //#endregion 🧪️Tests

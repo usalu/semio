@@ -98,14 +98,49 @@ fn default_zoom() -> f64 {
 
 //#region ⚠️ Errors
 /// ⚠️ Node-graph host errors — JSON decode failures plus passthrough of the underlying DAG engine's own error.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum NodeGraphError {
-    #[error(transparent)]
-    Json(#[from] serde_json::Error),
-    #[error(transparent)]
-    Pack(#[from] store::PackError),
-    #[error(transparent)]
-    Dag(#[from] dag::DagError),
+    Json(serde_json::Error),
+    Pack(store::PackError),
+    Dag(dag::DagError),
+}
+
+impl std::fmt::Display for NodeGraphError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Json(error) => error.fmt(formatter),
+            Self::Pack(error) => error.fmt(formatter),
+            Self::Dag(error) => error.fmt(formatter),
+        }
+    }
+}
+
+impl std::error::Error for NodeGraphError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Json(error) => Some(error),
+            Self::Pack(error) => Some(error),
+            Self::Dag(error) => Some(error),
+        }
+    }
+}
+
+impl From<serde_json::Error> for NodeGraphError {
+    fn from(error: serde_json::Error) -> Self {
+        Self::Json(error)
+    }
+}
+
+impl From<store::PackError> for NodeGraphError {
+    fn from(error: store::PackError) -> Self {
+        Self::Pack(error)
+    }
+}
+
+impl From<dag::DagError> for NodeGraphError {
+    fn from(error: dag::DagError) -> Self {
+        Self::Dag(error)
+    }
 }
 //#endregion ⚠️ Errors
 
@@ -552,7 +587,7 @@ mod wasm_session {
             let pw = ((lw as f64 * dpr).round() as u32).max(1);
             let ph = ((lh as f64 * dpr).round() as u32).max(1);
             future_to_promise(async move {
-                let (render_ctx, renderer, surface) = canvas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).map_err(|err| JsValue::from_str(&err))?;
+                let (render_ctx, renderer, surface) = canvas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|err| JsValue::from_str(&err))?;
                 let mut g = inner.borrow_mut();
                 g.width = lw;
                 g.height = lh;
@@ -1081,9 +1116,9 @@ mod tests {
     #[test]
     fn graph_host_sync_from_scene_json_parses_raw_json() {
         let mut host = GraphHost::default();
-        let scene = r#"{"nodes":[{"id":"a","x":0.0,"y":0.0,"width":1.0,"height":1.0,"outputs":[{"id":"out"}]}],"edges":[],"viewport":{"x":0,"y":0,"zoom":1},"selection":["a"]}"#;
+        let scene = r#"{"nodes":[{"id":"a","x":0.0,"y":0.0,"width":1.0,"height":1.0,"outputs":[{"id":"out"}]}],"edges":[],"viewport":{"x":0,"y":0,"zoom":1}}"#;
         host.sync_from_scene_json(scene).expect("sync");
-        assert_eq!(host.dag.selected_node_ids(), vec!["a"]);
+        assert_eq!(host.dag.fixture.nodes.iter().map(|node| node.id.as_str()).collect::<Vec<_>>(), vec!["a"]);
     }
 
     #[test]
@@ -1092,13 +1127,12 @@ mod tests {
         let scene = serde_json::json!({
             "nodes": [{"id": "a", "x": 0.0, "y": 0.0, "width": 1.0, "height": 1.0, "outputs": [{"id": "out"}]}],
             "edges": [],
-            "viewport": {"x": 0.0, "y": 0.0, "zoom": 1.0},
-            "selection": ["a"]
+            "viewport": {"x": 0.0, "y": 0.0, "zoom": 1.0}
         });
         let dsl = dsl::to_dsl_value(&scene).expect("dsl");
         let bytes = store::pack_rt::encode_pack_value(&dsl);
         host.sync_from_scene_pack(&bytes).expect("sync");
-        assert_eq!(host.dag.selected_node_ids(), vec!["a"]);
+        assert_eq!(host.dag.fixture.nodes.iter().map(|node| node.id.as_str()).collect::<Vec<_>>(), vec!["a"]);
     }
 
     #[test]

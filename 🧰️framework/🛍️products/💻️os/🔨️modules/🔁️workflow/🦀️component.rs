@@ -813,7 +813,7 @@ pub async fn workflow_parameter_types_compatible(left: &WorkflowParameterType, r
 }
 
 pub async fn create_default_workflow_parameter(parameter_type: &WorkflowParameterType, name: &str, id: Option<&str>) -> WorkflowParameter {
-    let parameter_id = id.map(str::to_string).unwrap_or_else(create_workflow_parameter_id);
+    let parameter_id = id.map_or_else(create_workflow_parameter_id, str::to_string);
     match parameter_type {
         WorkflowParameterType::Numeric => WorkflowParameter::Numeric { id: parameter_id, name: name.into(), value: 0.0, min: Some(0.0), max: Some(100.0), step: Some(1.0) },
         WorkflowParameterType::Categorical => WorkflowParameter::Categorical { id: parameter_id, name: name.into(), value: "Option A".into(), options: vec!["Option A".into(), "Option B".into()] },
@@ -846,7 +846,7 @@ async fn clamp_workflow_numeric_value(value: f64, min: Option<f64>, max: Option<
 /// @emoji 🎛️ Applies a partial patch to a workflow parameter, enforcing type constraints. Ported
 /// verbatim from os-core's `patch_os_parameter`.
 pub async fn patch_workflow_parameter(parameter: &WorkflowParameter, patch: &serde_json::Value) -> WorkflowParameter {
-    let name = patch.get("name").and_then(|v| v.as_str()).map(str::to_string).unwrap_or_else(|| workflow_parameter_name(parameter));
+    let name = patch.get("name").and_then(|v| v.as_str()).map_or_else(|| workflow_parameter_name(parameter), str::to_string);
     let patch_type = patch.get("type").and_then(|v| v.as_str());
     let use_numeric = patch_type == Some("numeric") || (patch_type.is_none() && matches!(parameter, WorkflowParameter::Numeric { .. }));
     if use_numeric {
@@ -869,7 +869,7 @@ pub async fn patch_workflow_parameter(parameter: &WorkflowParameter, patch: &ser
             _ => create_default_workflow_parameter(&WorkflowParameterType::Categorical, &name, Some(workflow_parameter_id(parameter))).await,
         };
         if let WorkflowParameter::Categorical { id, value: current_value, options: current_options, .. } = current {
-            let options = patch.get("options").and_then(|v| v.as_array()).map(|entries| entries.iter().filter_map(|entry| entry.as_str().map(str::to_string)).collect::<Vec<_>>()).unwrap_or(current_options);
+            let options = patch.get("options").and_then(|v| v.as_array()).map_or(current_options, |entries| entries.iter().filter_map(|entry| entry.as_str().map(str::to_string)).collect::<Vec<_>>());
             let unique_options = if options.is_empty() { vec!["Option A".into()] } else { options };
             let value = patch
                 .get("value")
@@ -896,7 +896,7 @@ pub async fn patch_workflow_parameter(parameter: &WorkflowParameter, patch: &ser
         _ => create_default_workflow_parameter(&WorkflowParameterType::Text, &name, Some(workflow_parameter_id(parameter))).await,
     };
     if let WorkflowParameter::Text { id, value: current_value, .. } = current {
-        let value = patch.get("value").and_then(|v| v.as_str()).map(str::to_string).unwrap_or(current_value);
+        let value = patch.get("value").and_then(|v| v.as_str()).map_or(current_value, str::to_string);
         return WorkflowParameter::Text { id, name, value };
     }
     parameter.clone()
@@ -968,7 +968,7 @@ pub fn workflow_parameter_port_id(node_id: &str, parameter_id: &str) -> String {
 // 🚫️async: E1 transitive — consumed by std Iterator/Option combinators (external traits) in
 // sync closures; pure, no I/O (R9).
 pub fn is_workflow_parameter_port_id(port_id: &str) -> bool {
-    media_port_spec_id(port_id).map(|spec_id| spec_id.starts_with(WORKFLOW_PARAMETER_PORT_PREFIX)).unwrap_or(false)
+    media_port_spec_id(port_id).is_some_and(|spec_id| spec_id.starts_with(WORKFLOW_PARAMETER_PORT_PREFIX))
 }
 
 // 🚫️async: E1 transitive — consumed by std Iterator/Option combinators (external traits) in
@@ -1575,12 +1575,10 @@ impl protocol::Mutation<WorkflowSnapshot> for WorkflowMutation {
                 ops.push(WorkflowMutation::AddParameter { parameter: parameter.clone() });
                 ops
             }
-            WorkflowMutation::PatchParameter { parameter_id, parameter } => document
-                .parameters
-                .iter()
-                .find(|entry| workflow_parameter_entity_id(entry) == *parameter_id)
-                .map(|current| vec![WorkflowMutation::PatchParameter { parameter_id: parameter_id.clone(), parameter: current.clone() }])
-                .unwrap_or_else(|| vec![WorkflowMutation::PatchParameter { parameter_id: parameter_id.clone(), parameter: parameter.clone() }]),
+            WorkflowMutation::PatchParameter { parameter_id, parameter } => document.parameters.iter().find(|entry| workflow_parameter_entity_id(entry) == *parameter_id).map_or_else(
+                || vec![WorkflowMutation::PatchParameter { parameter_id: parameter_id.clone(), parameter: parameter.clone() }],
+                |current| vec![WorkflowMutation::PatchParameter { parameter_id: parameter_id.clone(), parameter: current.clone() }],
+            ),
             WorkflowMutation::BindParameterField { binding } => vec![WorkflowMutation::UnbindParameterField { node_id: binding.node_id.clone(), field_path: binding.field_path.clone() }],
             WorkflowMutation::UnbindParameterField { node_id, field_path } => {
                 document.parameter_bindings.iter().find(|binding| binding.node_id == *node_id && binding.field_path == *field_path).map(|binding| vec![WorkflowMutation::BindParameterField { binding: binding.clone() }]).unwrap_or_default()
@@ -2671,7 +2669,7 @@ mod tests {
         // maintains as an invariant (every `BindParameterField`/`AddNode`/etc call re-derives parameter
         // ports from `parameter_bindings`) — an un-synced fixture would make `assert_operation_round_trip`
         // see a spurious port diff on any op whose apply path re-syncs, not a real bug.
-        let graph = sync_workflow_parameter_ports(&graph, &parameter_bindings).await;
+        let graph = sync_workflow_parameter_ports(&graph, &parameter_bindings);
         WorkflowSnapshot {
             schema: S_WORKFLOW_SCHEMA.into(),
             graph,
@@ -2699,31 +2697,30 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn workflow_snapshot_dsl_pack_round_trips() {
-        store::os_store::test_support::assert_dsl_pack_equivalence(&sample_workflow_snapshot().await).await;
-        store::os_store::test_support::assert_dsl_pack_equivalence(&empty_workflow_snapshot().await).await;
+        store::os_store::test_support::assert_dsl_pack_equivalence(&sample_workflow_snapshot().await);
+        store::os_store::test_support::assert_dsl_pack_equivalence(&empty_workflow_snapshot().await);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn workflow_operation_op_text_round_trips_every_variant() {
-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::AddNode { node: workflow_node("n1", Vec::new(), Vec::new()).await }).await;
-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveNode { node_id: "n1".into() }).await;
-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::ConnectPorts { edge: workflow_edge("e1", "a", "out", "b", "in").await }).await;
-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::DisconnectEdge { edge_id: "e1".into() }).await;
-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::MoveNode { node_id: "n1".into(), x: 5.5, y: -6.25 }).await;
-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::PatchNode { node_id: "n1".into(), label: "Renamed".into() }).await;
-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::AddParameter { parameter: WorkflowParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 10.0, min: None, max: None, step: None } }).await;
-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveParameter { parameter_id: "p1".into() }).await;
-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::PatchParameter { parameter_id: "p1".into(), parameter: WorkflowParameter::Toggle { id: "p1".into(), name: "Flag".into(), value: false } }).await;
-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindParameterField { binding: WorkflowParameterBinding { parameter_id: "p1".into(), node_id: "n1".into(), field_path: "/zoom".into() } }).await;
-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindParameterField { node_id: "n1".into(), field_path: "/zoom".into() }).await;
-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::SyncNodePorts).await;
-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::DeclareInput { input: WorkflowInput { id: "in-1".into(), kind_id: "kind.a".into(), selector: "**/*".into(), required: true, multiplicity: PortMultiplicity::Many } })
-            .await;
-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveInput { input_id: "in-1".into() }).await;
-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindInput { binding: WorkflowInputBinding { input_id: "in-1".into(), node_id: "n1".into(), port_id: "n1:in:in".into() } }).await;
-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindInput { input_id: "in-1".into() }).await;
-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindOutput { binding: WorkflowOutputBinding { node_id: "n1".into(), port_id: "n1:out:out".into(), path_template: "out/{node}".into() } }).await;
-        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindOutput { node_id: "n1".into(), port_id: "n1:out:out".into() }).await;
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::AddNode { node: workflow_node("n1", Vec::new(), Vec::new()).await });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveNode { node_id: "n1".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::ConnectPorts { edge: workflow_edge("e1", "a", "out", "b", "in").await });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::DisconnectEdge { edge_id: "e1".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::MoveNode { node_id: "n1".into(), x: 5.5, y: -6.25 });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::PatchNode { node_id: "n1".into(), label: "Renamed".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::AddParameter { parameter: WorkflowParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 10.0, min: None, max: None, step: None } });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveParameter { parameter_id: "p1".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::PatchParameter { parameter_id: "p1".into(), parameter: WorkflowParameter::Toggle { id: "p1".into(), name: "Flag".into(), value: false } });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindParameterField { binding: WorkflowParameterBinding { parameter_id: "p1".into(), node_id: "n1".into(), field_path: "/zoom".into() } });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindParameterField { node_id: "n1".into(), field_path: "/zoom".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::SyncNodePorts);
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::DeclareInput { input: WorkflowInput { id: "in-1".into(), kind_id: "kind.a".into(), selector: "**/*".into(), required: true, multiplicity: PortMultiplicity::Many } });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::RemoveInput { input_id: "in-1".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindInput { binding: WorkflowInputBinding { input_id: "in-1".into(), node_id: "n1".into(), port_id: "n1:in:in".into() } });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindInput { input_id: "in-1".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindOutput { binding: WorkflowOutputBinding { node_id: "n1".into(), port_id: "n1:out:out".into(), path_template: "out/{node}".into() } });
+        store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindOutput { node_id: "n1".into(), port_id: "n1:out:out".into() });
     }
 
     #[semio_framework_async_macros::async_test]
@@ -2761,7 +2758,7 @@ mod tests {
         // `p4` is the last parameter and has no bindings, so this only proves the simple case; add a
         // binding on it first so the cascade-restoration path is actually exercised.
         document.parameter_bindings.push(WorkflowParameterBinding { parameter_id: "p4".into(), node_id: "a".into(), field_path: "/label".into() });
-        document.graph = sync_workflow_parameter_ports(&document.graph, &document.parameter_bindings).await;
+        document.graph = sync_workflow_parameter_ports(&document.graph, &document.parameter_bindings);
         store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::RemoveParameter { parameter_id: "p4".into() }).await;
 
         document.input_bindings.push(WorkflowInputBinding { input_id: "in-1".into(), node_id: "b".into(), port_id: "b:in:in".into() });
@@ -2776,7 +2773,7 @@ mod tests {
             WorkflowDiff::Empty,
         ];
         for diff in diffs {
-            let applied = protocol::MutationDiff::apply(&diff, &empty_workflow_snapshot().await).await.expect("valid workflow diff");
+            let applied = protocol::MutationDiff::apply(&diff, &empty_workflow_snapshot().await).expect("valid workflow diff");
             let _ = applied;
         }
     }
@@ -2842,10 +2839,9 @@ mod tests {
                 output_collection_ref: "collections/out".into(),
                 trigger: RunTrigger::Manual { actor: "dev".into() },
             },
-        )
-        .await;
-        document = apply_run_operation(&document, &RunMutation::NodeStarted { node_id: "a".into() }).await;
-        document = apply_run_operation(&document, &RunMutation::NodeFinished { node_record: sample_run_node_record("a", RunNodeStatus::Computed).await }).await;
+        );
+        document = apply_run_operation(&document, &RunMutation::NodeStarted { node_id: "a".into() });
+        document = apply_run_operation(&document, &RunMutation::NodeFinished { node_record: sample_run_node_record("a", RunNodeStatus::Computed).await });
         document
     }
 
@@ -2860,8 +2856,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn run_document_dsl_pack_round_trips() {
-        store::os_store::test_support::assert_dsl_pack_equivalence(&sample_run_document().await).await;
-        store::os_store::test_support::assert_dsl_pack_equivalence(&empty_run_document().await).await;
+        store::os_store::test_support::assert_dsl_pack_equivalence(&sample_run_document().await);
+        store::os_store::test_support::assert_dsl_pack_equivalence(&empty_run_document().await);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -2874,8 +2870,7 @@ mod tests {
             parameter_values: vec![RunParameterValue { parameter_id: "p1".into(), value: "10".into() }],
             output_collection_ref: "collections/out".into(),
             trigger: RunTrigger::Manual { actor: "dev".into() },
-        })
-        .await;
+        });
         store::os_store::test_support::assert_op_line_round_trip(&RunMutation::Start {
             workflow_ref: "space.space".into(),
             workflow_checkpoint_id: "ck-1".into(),
@@ -2884,12 +2879,11 @@ mod tests {
             parameter_values: Vec::new(),
             output_collection_ref: "collections/out".into(),
             trigger: RunTrigger::Automation { automation_ref: "os.automation/a1".into(), event_fingerprint: "evt-1".into() },
-        })
-        .await;
-        store::os_store::test_support::assert_op_line_round_trip(&RunMutation::NodeStarted { node_id: "a".into() }).await;
-        store::os_store::test_support::assert_op_line_round_trip(&RunMutation::NodeFinished { node_record: sample_run_node_record("a", RunNodeStatus::CacheHit).await }).await;
-        store::os_store::test_support::assert_op_line_round_trip(&RunMutation::Log { node_id: "a".into(), level: "info".into(), message: "computed".into(), at: "123".into() }).await;
-        store::os_store::test_support::assert_op_line_round_trip(&RunMutation::Seal { status: RunStatus::Succeeded }).await;
+        });
+        store::os_store::test_support::assert_op_line_round_trip(&RunMutation::NodeStarted { node_id: "a".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&RunMutation::NodeFinished { node_record: sample_run_node_record("a", RunNodeStatus::CacheHit).await });
+        store::os_store::test_support::assert_op_line_round_trip(&RunMutation::Log { node_id: "a".into(), level: "info".into(), message: "computed".into(), at: "123".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&RunMutation::Seal { status: RunStatus::Succeeded });
     }
 
     /// 🔒️ The load-bearing law this wave exists to prove: once `Seal` has been applied, every further
@@ -2923,7 +2917,7 @@ mod tests {
         let record = sample_run_node_record("a", RunNodeStatus::Failed).await;
         let mut document = empty_run_document().await;
         document.node_records.push(record);
-        store::os_store::test_support::assert_dsl_pack_equivalence(&document).await;
+        store::os_store::test_support::assert_dsl_pack_equivalence(&document);
     }
     //#endregion 🧪️RunArtifactLaws
 }

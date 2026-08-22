@@ -68,22 +68,22 @@ impl store::InferredField<SemioTableSnapshot> for ColumnMoments {
     const FIELD_ID: &'static str = "s.stdio.semio.table.inference.moments";
     const SCHEMA_VERSION: u32 = 1;
 
-    async fn reads() -> &'static [&'static str] {
+    fn reads() -> &'static [&'static str] {
         &["columns", "rows"]
     }
 
-    async fn plan(snapshot: &SemioTableSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
+    fn plan(snapshot: &SemioTableSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
         snapshot.columns.iter().filter(|c| matches!(c.kind, SemioTableCellKind::Int | SemioTableCellKind::Float)).map(|c| store::InferenceStep { key: c.name.clone(), parents: Vec::new() }).collect()
     }
 
     /// 🔑 Canonical dependency-input bytes — EXACTLY this column's own numeric cell values, nothing
     /// else (not other columns, not `kind`, which `plan` already gates on) — an unrelated column's
     /// edit must still hit the cache, proven by the incrementality-law test below.
-    async fn dep_input(snapshot: &SemioTableSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
+    fn dep_input(snapshot: &SemioTableSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
         serde_json::to_vec(&column_values(snapshot, key)).unwrap_or_default()
     }
 
-    async fn compute(snapshot: &SemioTableSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
+    fn compute(snapshot: &SemioTableSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
         let values = column_values(snapshot, key);
         let count = values.len() as u32;
         let mean = statistics_internals::mean(&values).unwrap_or(0.0);

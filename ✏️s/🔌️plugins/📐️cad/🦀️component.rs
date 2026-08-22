@@ -1,7 +1,19 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
+use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
-use semio_framework_plugin::{ExecutionMode, HostMediaHandlerDeclaration, Plugin};
+use semio_framework_plugin::plugin_app_close_prelude::*;
+use semio_framework_plugin::{ExecutionMode, HostMediaHandlerDeclaration, Plugin, PluginApp};
+
+//#region 🗃️Apps
+/// 🗃️ Closed runtime app fleet for the CAD editor and viewer.
+semio_framework_dispatch_macros::dyn_enum_close! {
+    pub enum CadApps: PluginApp {
+        Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::cad::CadPlayApp>>),
+        Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::cad::CadViewer>>),
+    }
+}
+//#endregion 🗃️Apps
 
 /// 🔌️ Builds the plugin surface for host registration. `.activation(…)`/`.execution(…)`/
 /// `.requests(…)` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME M2, `📓️design-abi.md`
@@ -10,8 +22,8 @@ use semio_framework_plugin::{ExecutionMode, HostMediaHandlerDeclaration, Plugin}
 /// `Isolated` (no publisher trust assumed beyond the sandbox default — nothing in this crate's own
 /// effects, all UI-chrome/RPC `Effect` variants with no documented `CapabilityId`, justifies
 /// otherwise), and it asks the broker for document write access to persist edits.
-pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
-    Plugin::builder("cad")
+pub async fn plugin() -> Result<Plugin<CadApps>, semio_framework_plugin::PluginAssemblyError> {
+    Plugin::<CadApps>::builder("cad")
         .label("CAD")
         .version("0.1.0")
         .artifact(crate::artifacts::cad::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)

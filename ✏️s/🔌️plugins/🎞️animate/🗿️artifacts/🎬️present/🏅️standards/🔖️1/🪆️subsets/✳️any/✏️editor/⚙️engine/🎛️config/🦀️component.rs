@@ -3,6 +3,7 @@
 
 #![allow(clippy::too_many_arguments, clippy::type_complexity)]
 
+#[allow(clippy::module_inception)]
 pub mod config {
     //! ⚙️ Global animation configuration, quality presets, and cache paths.
 
@@ -20,14 +21,14 @@ pub mod config {
     }
 
     impl QualityPreset {
-        pub async fn frame_rate(self) -> f64 {
+        pub fn frame_rate(self) -> f64 {
             match self {
                 Self::Low | Self::Medium => 15.0,
                 Self::High | Self::FourK | Self::Production => 60.0,
             }
         }
 
-        pub async fn resolution(self) -> (u32, u32) {
+        pub fn resolution(self) -> (u32, u32) {
             match self {
                 Self::Low => (854, 480),
                 Self::Medium => (1280, 720),
@@ -37,7 +38,7 @@ pub mod config {
             }
         }
 
-        pub async fn pixel_height(self) -> u32 {
+        pub fn pixel_height(self) -> u32 {
             self.resolution().1
         }
     }
@@ -78,7 +79,7 @@ pub mod config {
     }
 
     impl AnimateConfig {
-        pub async fn from_quality(quality: QualityPreset) -> Self {
+        pub fn from_quality(quality: QualityPreset) -> Self {
             let (width, height) = quality.resolution();
             Self {
                 quality,
@@ -94,42 +95,42 @@ pub mod config {
             }
         }
 
-        pub async fn with_frame_rate(mut self, frame_rate: f64) -> Self {
+        pub fn with_frame_rate(mut self, frame_rate: f64) -> Self {
             self.frame_rate = frame_rate.max(1.0);
             self
         }
 
-        pub async fn with_resolution(mut self, width: u32, height: u32) -> Self {
+        pub fn with_resolution(mut self, width: u32, height: u32) -> Self {
             self.width = width.max(1);
             self.height = height.max(1);
             self
         }
 
-        pub async fn with_output_dir(mut self, path: impl AsRef<Path>) -> Self {
+        pub fn with_output_dir(mut self, path: impl AsRef<Path>) -> Self {
             self.output_dir = path.as_ref().to_path_buf();
             self
         }
 
-        pub async fn with_media_dir(mut self, path: impl AsRef<Path>) -> Self {
+        pub fn with_media_dir(mut self, path: impl AsRef<Path>) -> Self {
             self.media_dir = path.as_ref().to_path_buf();
             self
         }
 
-        pub async fn with_audio_track(mut self, path: impl AsRef<Path>) -> Self {
+        pub fn with_audio_track(mut self, path: impl AsRef<Path>) -> Self {
             self.audio_track = Some(path.as_ref().to_path_buf());
             self
         }
 
-        pub async fn with_subtitles_path(mut self, path: impl AsRef<Path>) -> Self {
+        pub fn with_subtitles_path(mut self, path: impl AsRef<Path>) -> Self {
             self.subtitles_path = Some(path.as_ref().to_path_buf());
             self
         }
 
-        pub async fn frame_duration(&self) -> f64 {
+        pub fn frame_duration(&self) -> f64 {
             1.0 / self.frame_rate
         }
 
-        pub async fn aspect_ratio(self) -> f64 {
+        pub fn aspect_ratio(self) -> f64 {
             self.width as f64 / self.height as f64
         }
     }
@@ -138,20 +139,20 @@ pub mod config {
     mod tests {
         use super::*;
 
-        #[semio_framework_async_macros::async_test]
-        async fn quality_presets_have_expected_resolution() {
+        #[test]
+        fn quality_presets_have_expected_resolution() {
             assert_eq!(QualityPreset::High.resolution(), (1920, 1080));
             assert_eq!(QualityPreset::FourK.resolution(), (3840, 2160));
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn config_frame_duration_matches_rate() {
+        #[test]
+        fn config_frame_duration_matches_rate() {
             let cfg = AnimateConfig::default().with_frame_rate(30.0);
             assert!((cfg.frame_duration() - 1.0 / 30.0).abs() < 1e-9);
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn all_quality_presets_report_frame_rate_and_resolution() {
+        #[test]
+        fn all_quality_presets_report_frame_rate_and_resolution() {
             assert_eq!(QualityPreset::Low.frame_rate(), 15.0);
             assert_eq!(QualityPreset::Medium.frame_rate(), 15.0);
             assert_eq!(QualityPreset::High.frame_rate(), 60.0);
@@ -163,8 +164,8 @@ pub mod config {
             assert_eq!(QualityPreset::High.pixel_height(), 1080);
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn config_builder_methods_apply() {
+        #[test]
+        fn config_builder_methods_apply() {
             let cfg = AnimateConfig::from_quality(QualityPreset::Low).with_resolution(0, 0).with_output_dir("out").with_media_dir("media2").with_audio_track("track.wav").with_subtitles_path("subs.srt");
             assert_eq!(cfg.width, 1);
             assert_eq!(cfg.height, 1);
@@ -174,14 +175,14 @@ pub mod config {
             assert_eq!(cfg.subtitles_path, Some(PathBuf::from("subs.srt")));
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn config_with_frame_rate_clamps_to_minimum() {
+        #[test]
+        fn config_with_frame_rate_clamps_to_minimum() {
             let cfg = AnimateConfig::default().with_frame_rate(-5.0);
             assert_eq!(cfg.frame_rate, 1.0);
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn config_aspect_ratio_and_default_cache() {
+        #[test]
+        fn config_aspect_ratio_and_default_cache() {
             let cfg = AnimateConfig::from_quality(QualityPreset::Medium);
             assert!(cfg.cache.enabled);
             assert_eq!(cfg.cache.max_entries, 10_000);
@@ -207,28 +208,28 @@ pub mod hash {
     }
 
     impl AnimationHashInput {
-        pub async fn new(kind: impl Into<String>, run_time: f64) -> Self {
+        pub fn new(kind: impl Into<String>, run_time: f64) -> Self {
             Self { kind: kind.into(), run_time, target_ids: Vec::new(), rate: "linear".into(), extras: Vec::new() }
         }
 
-        pub async fn with_targets(mut self, ids: Vec<u64>) -> Self {
+        pub fn with_targets(mut self, ids: Vec<u64>) -> Self {
             self.target_ids = ids;
             self
         }
 
-        pub async fn with_rate(mut self, rate: impl Into<String>) -> Self {
+        pub fn with_rate(mut self, rate: impl Into<String>) -> Self {
             self.rate = rate.into();
             self
         }
 
-        pub async fn with_extra(mut self, extra: impl Into<String>) -> Self {
+        pub fn with_extra(mut self, extra: impl Into<String>) -> Self {
             self.extras.push(extra.into());
             self
         }
     }
 
     /// 🔐️ Hash a single animation descriptor.
-    pub async fn hash_animation(input: &AnimationHashInput) -> String {
+    pub fn hash_animation(input: &AnimationHashInput) -> String {
         let mut parts = vec![input.kind.clone(), format_number_for_hash(input.run_time), input.rate.clone()];
         for id in &input.target_ids {
             parts.push(id.to_string());
@@ -238,12 +239,12 @@ pub mod hash {
     }
 
     /// 🌳️ Merkle hash over an animation timeline.
-    pub async fn hash_animation_timeline(children: Vec<String>) -> String {
+    pub fn hash_animation_timeline(children: Vec<String>) -> String {
         merkle_node(&["AnimateTimeline"], children)
     }
 
     /// 🎬️ Hash a scene configuration snapshot.
-    pub async fn hash_scene_config(frame_rate: f64, width: u32, height: u32, mobject_count: usize) -> String {
+    pub fn hash_scene_config(frame_rate: f64, width: u32, height: u32, mobject_count: usize) -> String {
         let rate = format_number_for_hash(frame_rate);
         hash_parts(&["SceneConfig", &rate, &width.to_string(), &height.to_string(), &mobject_count.to_string()])
     }
@@ -252,22 +253,22 @@ pub mod hash {
     mod tests {
         use super::*;
 
-        #[semio_framework_async_macros::async_test]
-        async fn animation_hash_is_stable() {
+        #[test]
+        fn animation_hash_is_stable() {
             let input = AnimationHashInput::new("FadeIn", 1.0).with_targets(vec![42]);
             let a = hash_animation(&input);
             let b = hash_animation(&input);
             assert_eq!(a, b);
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn timeline_merkle_orders_children() {
+        #[test]
+        fn timeline_merkle_orders_children() {
             let h = hash_animation_timeline(vec!["a".into(), "b".into()]);
             assert!(!h.is_empty());
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn hash_scene_config_is_stable_and_sensitive_to_inputs() {
+        #[test]
+        fn hash_scene_config_is_stable_and_sensitive_to_inputs() {
             let a = hash_scene_config(60.0, 1920, 1080, 3);
             let b = hash_scene_config(60.0, 1920, 1080, 3);
             assert_eq!(a, b);
@@ -275,8 +276,8 @@ pub mod hash {
             assert_ne!(a, c);
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn hash_animation_differs_by_rate_and_extras() {
+        #[test]
+        fn hash_animation_differs_by_rate_and_extras() {
             let base = AnimationHashInput::new("Fade", 1.0);
             let with_rate = base.clone().with_rate("smooth");
             let with_extra = base.clone().with_extra("scale=2");
@@ -304,7 +305,7 @@ pub mod graph {
     }
 
     impl Graph {
-        pub async fn new(nodes: Vec<u32>, edges: Vec<(u32, u32)>, radius: f64, center: Point, color: Color) -> Self {
+        pub fn new(nodes: Vec<u32>, edges: Vec<(u32, u32)>, radius: f64, center: Point, color: Color) -> Self {
             let positions = circular_layout(&nodes, radius, center);
             let mut children: Vec<Sobjects> = Vec::new();
             for &(a, b) in &edges {
@@ -320,7 +321,7 @@ pub mod graph {
             Self { group: Group::new(children), nodes, edges }
         }
 
-        pub async fn with_edge_labels(mut self, labels: &HashMap<(u32, u32), String>, positions: &HashMap<u32, Point>, color: Color) -> Self {
+        pub fn with_edge_labels(mut self, labels: &HashMap<(u32, u32), String>, positions: &HashMap<u32, Point>, color: Color) -> Self {
             for (&(a, b), label) in labels {
                 if let (Some(&pa), Some(&pb)) = (positions.get(&a), positions.get(&b)) {
                     let mid = Point::new((pa.x() + pb.x()) / 2.0, (pa.y() + pb.y()) / 2.0);
@@ -341,7 +342,7 @@ pub mod graph {
     }
 
     impl DiGraph {
-        pub async fn new(nodes: Vec<u32>, edges: Vec<(u32, u32)>, radius: f64, center: Point, color: Color) -> Self {
+        pub fn new(nodes: Vec<u32>, edges: Vec<(u32, u32)>, radius: f64, center: Point, color: Color) -> Self {
             let positions = force_layout_seed(&nodes, &edges, radius, center);
             let node_r = 0.18;
             let mut children: Vec<Sobjects> = Vec::new();
@@ -363,7 +364,7 @@ pub mod graph {
             Self { group: Group::new(children), nodes, edges }
         }
 
-        pub async fn with_edge_labels(mut self, labels: &HashMap<(u32, u32), String>, positions: &HashMap<u32, Point>, color: Color) -> Self {
+        pub fn with_edge_labels(mut self, labels: &HashMap<(u32, u32), String>, positions: &HashMap<u32, Point>, color: Color) -> Self {
             for (&(a, b), label) in labels {
                 if let (Some(&pa), Some(&pb)) = (positions.get(&a), positions.get(&b)) {
                     let mid = Point::new((pa.x() + pb.x()) / 2.0, (pa.y() + pb.y()) / 2.0);
@@ -376,7 +377,7 @@ pub mod graph {
         }
     }
 
-    async fn circular_layout(nodes: &[u32], radius: f64, center: Point) -> HashMap<u32, Point> {
+    fn circular_layout(nodes: &[u32], radius: f64, center: Point) -> HashMap<u32, Point> {
         let mut out = HashMap::new();
         let n = nodes.len().max(1);
         for (i, &id) in nodes.iter().enumerate() {
@@ -386,7 +387,7 @@ pub mod graph {
         out
     }
 
-    async fn force_layout_seed(nodes: &[u32], edges: &[(u32, u32)], radius: f64, center: Point) -> HashMap<u32, Point> {
+    fn force_layout_seed(nodes: &[u32], edges: &[(u32, u32)], radius: f64, center: Point) -> HashMap<u32, Point> {
         let mut pos = circular_layout(nodes, radius, center);
         for _ in 0..24 {
             let mut forces: HashMap<u32, (f64, f64)> = nodes.iter().map(|&id| (id, (0.0, 0.0))).collect();
@@ -438,15 +439,15 @@ pub mod graph {
     mod tests {
         use super::*;
 
-        #[semio_framework_async_macros::async_test]
-        async fn graph_has_node_and_edge_children() {
+        #[test]
+        fn graph_has_node_and_edge_children() {
             let g = Graph::new(vec![1, 2, 3], vec![(1, 2), (2, 3)], 2.0, Point::ZERO, Color::BLUE);
             assert_eq!(g.nodes.len(), 3);
             assert!(!g.group.children.is_empty());
         }
 
-        #[semio_framework_async_macros::async_test]
-        async fn digraph_uses_arrows_and_labels() {
+        #[test]
+        fn digraph_uses_arrows_and_labels() {
             let dg = DiGraph::new(vec![1, 2], vec![(1, 2)], 2.0, Point::ZERO, Color::WHITE);
             assert_eq!(dg.edges.len(), 1);
             let mut positions = HashMap::new();

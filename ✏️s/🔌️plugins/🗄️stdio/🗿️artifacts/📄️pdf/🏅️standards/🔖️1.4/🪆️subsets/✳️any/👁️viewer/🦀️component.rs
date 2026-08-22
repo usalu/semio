@@ -84,13 +84,13 @@ impl ArtifactViewer for Pdf14Viewer {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_pdf14_viewer() -> semio_framework_plugin::AppDefinition {
     let builder = Viewer::builder(PDF14_DIALECT);
-    let builder = semio_framework_plugin::resolve_ready(builder.document(["stdio", "pdf", "1.4", "any"]));
-    let builder = semio_framework_plugin::resolve_ready(builder.icon_id("file-text"));
-    let builder = semio_framework_plugin::resolve_ready(builder.mode_def(view::definition()));
-    let builder = semio_framework_plugin::resolve_ready(builder.default_mode_id(view::PDF14_VIEW_MODE_ID));
-    let builder = semio_framework_plugin::resolve_ready(builder.window_kind_def(main::definition()));
-    let builder = semio_framework_plugin::resolve_ready(builder.default_layout(view::layout()));
-    semio_framework_plugin::resolve_ready(builder.build_definition())
+    let builder = builder.document(["stdio", "pdf", "1.4", "any"]);
+    let builder = builder.icon_id("file-text");
+    let builder = builder.mode_def(view::definition());
+    let builder = builder.default_mode_id(view::PDF14_VIEW_MODE_ID);
+    let builder = builder.window_kind_def(main::definition());
+    let builder = builder.default_layout(view::layout());
+    builder.build_definition()
 }
 //#endregion 🔖️Manifest
 

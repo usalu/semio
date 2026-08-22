@@ -903,7 +903,7 @@ pub fn concrete_catalog() -> ConcreteCatalog {
 //#region 🔖️DocumentHelpers
 /// 🪪️ A pseudo-random step id — collision odds are astronomically low for a single-document timeline.
 pub fn next_step_id() -> String {
-    format!("step-{}", &blake3::hash(concat!(file!(), line!(), "step-{}").as_bytes()).to_hex()[..12])
+    format!("step-{}", &framework_hash::hash_bytes(concat!(file!(), line!(), "step-{}").as_bytes())[..12])
 }
 
 /// ✂️➕️ Read-only operation builders for the two structural collection edits every mutating command

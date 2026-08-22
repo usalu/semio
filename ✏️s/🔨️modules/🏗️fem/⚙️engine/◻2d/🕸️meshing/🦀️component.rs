@@ -32,7 +32,7 @@ pub(crate) struct MeshedRegion {
 pub(crate) type ResolvedGeometry = (Vec<Node>, Vec<Elements>, Vec<MeshedRegion>);
 
 /// 📐️ Unsigned area of triangle `(p0, p1, p2)` via the shoelace formula.
-async fn triangle_area(p0: [f64; 2], p1: [f64; 2], p2: [f64; 2]) -> f64 {
+fn triangle_area(p0: [f64; 2], p1: [f64; 2], p2: [f64; 2]) -> f64 {
     (0.5 * ((p1[0] - p0[0]) * (p2[1] - p0[1]) - (p2[0] - p0[0]) * (p1[1] - p0[1]))).abs()
 }
 
@@ -42,7 +42,7 @@ async fn triangle_area(p0: [f64; 2], p1: [f64; 2], p2: [f64; 2]) -> f64 {
 /// (within `1e-9`, both x and y) with an existing document node reuses that node's id, so supports and
 /// loads placed on that node reach the mesh; otherwise a node is synthesized once per unique mesh
 /// point as `{region_id}_m{point_index}`.
-pub(crate) async fn build_nodes_and_elements(doc: &Fem2dSnapshot) -> Result<ResolvedGeometry, Fem2dError> {
+pub(crate) fn build_nodes_and_elements(doc: &Fem2dSnapshot) -> Result<ResolvedGeometry, Fem2dError> {
     let node_exists = |id: &str| doc.nodes.iter().any(|n| n.id == id);
     let mut nodes: Vec<Node> = doc.nodes.iter().map(|n| Node { id: n.id.clone(), pos: [n.x, n.y, 0.0] }).collect();
 
@@ -109,7 +109,7 @@ pub(crate) async fn build_nodes_and_elements(doc: &Fem2dSnapshot) -> Result<Reso
 /// path (which has no native self-weight concept) — `fem2d_solve_all` never calls this helper, since it
 /// gets self-weight natively through `crate::analyses`' own `element.mass()`-based pipeline for
 /// EVERY massed element (`Bar2`/`BeamEb2` and now `Tri3Cst` regions too), so the two paths never overlap.
-pub(crate) async fn self_weight_nodal_loads(doc: &Fem2dSnapshot, regions: &[MeshedRegion]) -> Vec<NodalLoad> {
+pub(crate) fn self_weight_nodal_loads(doc: &Fem2dSnapshot, regions: &[MeshedRegion]) -> Vec<NodalLoad> {
     let mut totals: HashMap<String, f64> = HashMap::new();
 
     for element in &doc.elements {
@@ -145,7 +145,7 @@ pub(crate) async fn self_weight_nodal_loads(doc: &Fem2dSnapshot, regions: &[Mesh
 /// 🌬️ Converts a `FemLoad::Area` (uniform pressure, Pa) into per-node global `-Y` nodal loads —
 /// `pressure * tributaryArea` at each region node, where tributary area is `(1/3)` of the summed area
 /// of every triangle touching that node.
-pub(crate) async fn area_load_nodal_loads(region: &MeshedRegion, pressure: f64) -> Vec<NodalLoad> {
+pub(crate) fn area_load_nodal_loads(region: &MeshedRegion, pressure: f64) -> Vec<NodalLoad> {
     let mut tributary: HashMap<String, f64> = HashMap::new();
     for tri in &region.tris {
         let area = triangle_area(region.points[tri[0] as usize], region.points[tri[1] as usize], region.points[tri[2] as usize]);
@@ -170,7 +170,7 @@ pub(crate) async fn area_load_nodal_loads(region: &MeshedRegion, pressure: f64) 
 /// data (only `area`/`iy`, scalar section properties) so no honest 3D solid can be derived from
 /// them — they contribute no geometry here. A pure bar/beam model (no `regions`) yields an empty,
 /// still-structurally-valid mesh (and thus an empty .obj/.stl) rather than a fabricated shape.
-pub(crate) async fn build_semio_mesh_snapshot(doc: &Fem2dSnapshot) -> SemioMeshSnapshot {
+pub(crate) fn build_semio_mesh_snapshot(doc: &Fem2dSnapshot) -> SemioMeshSnapshot {
     let mut meshes = Vec::with_capacity(doc.regions.len());
     for region in &doc.regions {
         let domain = crate::mesh::PlanarDomain { outer: region.outline.clone(), holes: region.holes.clone() };

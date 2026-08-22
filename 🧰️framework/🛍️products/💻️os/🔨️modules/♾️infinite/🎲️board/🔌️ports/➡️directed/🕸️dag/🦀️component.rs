@@ -22,26 +22,47 @@ pub type DagBoardEngine = DirectedPortGraphEngine;
 
 //#region ⚠️ Errors
 /// 🚨️ Crate-local error for DAG fixture parsing, layout, and host-state mutation.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum DagError {
-    #[error("fixture root must be object")]
     FixtureRootNotObject,
-    #[error("schema must be dag.fixture")]
     SchemaMismatch,
-    #[error("nodes array missing")]
     NodesMissing,
-    #[error("{0}")]
     InvalidNodeKind(String),
-    #[error("unknown align mode: {0}")]
     UnknownAlignMode(String),
-    #[error("unknown widget: {0}")]
     UnknownWidget(String),
-    #[error("{0}")]
     CanvasTheme(String),
-    #[error("gridFactor must be finite and in (0, 1e6]")]
     GridFactorOutOfRange,
-    #[error(transparent)]
-    Json(#[from] serde_json::Error),
+    Json(serde_json::Error),
+}
+
+impl std::fmt::Display for DagError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::FixtureRootNotObject => formatter.write_str("fixture root must be object"),
+            Self::SchemaMismatch => formatter.write_str("schema must be dag.fixture"),
+            Self::NodesMissing => formatter.write_str("nodes array missing"),
+            Self::InvalidNodeKind(message) | Self::CanvasTheme(message) => formatter.write_str(message),
+            Self::UnknownAlignMode(mode) => write!(formatter, "unknown align mode: {mode}"),
+            Self::UnknownWidget(widget) => write!(formatter, "unknown widget: {widget}"),
+            Self::GridFactorOutOfRange => formatter.write_str("gridFactor must be finite and in (0, 1e6]"),
+            Self::Json(error) => write!(formatter, "{error}"),
+        }
+    }
+}
+
+impl std::error::Error for DagError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Json(error) => std::error::Error::source(error),
+            _ => None,
+        }
+    }
+}
+
+impl From<serde_json::Error> for DagError {
+    fn from(error: serde_json::Error) -> Self {
+        Self::Json(error)
+    }
 }
 //#endregion ⚠️ Errors
 
@@ -2163,10 +2184,8 @@ pub struct DagFixtureEdge {
 
 impl Default for DagFixture {
     fn default() -> Self {
-        // 📜️ the demo board is handcrafted `.dag` DSL text (see `//#region 🔖️Dsl`), not JSON — it is
-        // compiled into the binary, so a parse failure here is a bug in the bundled fixture itself.
         let document = <DagSnapshot as crate::os_store::ArtifactDsl>::parse_dsl(include_str!("../../../../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio"))
-            .expect("bundled dag demo DSL is valid DagSnapshot text");
+            .expect("bundled DAG demo DSL is valid DagSnapshot text");
         Self { schema: document.schema, camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: document.nodes, edges: document.edges }
     }
 }
@@ -8302,7 +8321,7 @@ fn dag_node_spec_from_dsl(mirror: DagNodeSpecDsl) -> DagNodeSpec {
 /// 🧬️ Mirror of {@link DagSnapshot} — `nodes: Vec<DagNodeSpecDsl>` instead of `Vec<DagNodeSpec>` since
 /// `DagNodeSpec` itself can't implement `dsl::DslField` (its `kind` field isn't boxed).
 #[derive(Clone, Debug, PartialEq, dsl::DslArtifact)]
-#[dsl(extension = "dag")]
+#[dsl(id = "dag.dag")]
 #[dsl(layout = "lines")]
 struct DagSnapshotDsl {
     schema: String,
@@ -8565,41 +8584,47 @@ mod wasm_bridge {
 
     #[wasm_bindgen]
     impl DagSnapshotVcs {
-        #[wasm_bindgen(constructor)]
-        pub fn new(envelope_json: Option<String>) -> Result<DagSnapshotVcs, JsValue> {
+        /// 🌐️ Constructs the VCS bridge without synchronously blocking the browser host callback.
+        #[wasm_bindgen(js_name = create)]
+        pub async fn create(envelope_json: Option<String>) -> Result<DagSnapshotVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
                     let envelope: DagEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-                    DagStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?
+                    DagStore::new(envelope).await.map_err(|e| JsValue::from_str(&e.to_string()))?
                 }
-                None => DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", empty_dag_document(), None)).map_err(|e| JsValue::from_str(&e.to_string()))?,
+                None => DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", empty_dag_document(), None)).await.map_err(|e| JsValue::from_str(&e.to_string()))?,
             };
             Ok(Self { store: RefCell::new(store) })
         }
 
         #[wasm_bindgen(js_name = dispatchText)]
-        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
-            self.store.borrow_mut().dispatch_text(command_text).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
+        pub async fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
+            let mut store = self.store.try_borrow_mut().map_err(|_| JsValue::from_str("DAG VCS operation already in progress"))?;
+            store.dispatch_text(command_text).await.map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = dispatchBinary)]
-        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
-            self.store.borrow_mut().dispatch_binary(command_bytes).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
+        pub async fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
+            let mut store = self.store.try_borrow_mut().map_err(|_| JsValue::from_str("DAG VCS operation already in progress"))?;
+            store.dispatch_binary(command_bytes).await.map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = snapshotJson)]
-        pub fn snapshot_json(&self) -> Result<String, JsValue> {
-            self.store.borrow().snapshot_json().map_err(|e| JsValue::from_str(&e.to_string()))
+        pub async fn snapshot_json(&self) -> Result<String, JsValue> {
+            let store = self.store.try_borrow().map_err(|_| JsValue::from_str("DAG VCS operation already in progress"))?;
+            store.snapshot_json().await.map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = envelopeJson)]
-        pub fn envelope_json(&self) -> Result<String, JsValue> {
-            self.store.borrow().envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))
+        pub async fn envelope_json(&self) -> Result<String, JsValue> {
+            let store = self.store.try_borrow().map_err(|_| JsValue::from_str("DAG VCS operation already in progress"))?;
+            store.envelope_json().await.map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = generation)]
-        pub fn generation(&self) -> u32 {
-            self.store.borrow().generation() as u32
+        pub async fn generation(&self) -> Result<u32, JsValue> {
+            let store = self.store.try_borrow().map_err(|_| JsValue::from_str("DAG VCS operation already in progress"))?;
+            Ok(store.generation().await as u32)
         }
     }
 }
@@ -8614,20 +8639,20 @@ mod dag_vcs_tests {
     }
 
     fn round_trip(document: &DagSnapshot, operation: &DagMutation) -> DagSnapshot {
-        let forward = vcs::apply_mutation(document, operation).expect("valid DAG diff").0;
+        let forward = operation.diff(document).diff().apply(document).expect("valid DAG diff");
         let mut restored = forward.clone();
         for back in operation.inverse(document) {
-            restored = vcs::apply_mutation(&restored, &back).expect("valid inverse DAG diff").0;
+            restored = back.diff(&restored).diff().apply(&restored).expect("valid inverse DAG diff");
         }
         assert_eq!(&restored, document, "inverse() must exactly restore the pre-operation document");
         forward
     }
 
-    #[test]
-    fn dag_document_vcs_replays_node_operations() {
-        let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", empty_dag_document(), None));
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode { node: sample_node("n1"), index: 0 }], description: None }).expect("apply");
-        assert_eq!(store.snapshot().expect("projection").nodes.len(), 1);
+    #[semio_framework_async_macros::async_test]
+    async fn dag_document_vcs_replays_node_operations() {
+        let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", empty_dag_document(), None)).await.expect("store");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode { node: sample_node("n1"), index: 0 }], description: None }).await.expect("apply");
+        assert_eq!(store.snapshot().await.expect("projection").nodes.len(), 1);
     }
 
     #[test]
@@ -8735,9 +8760,9 @@ mod dag_vcs_tests {
     #[test]
     fn move_node_diff_absorb_law_holds() {
         let document = round_trip(&empty_dag_document(), &DagMutation::CreateNode { node: sample_node("n1"), index: 0 });
-        let mut d1 = Mutation::diff(&DagMutation::MoveNode { id: "n1".into(), x: 10.0, y: 10.0 }, &document);
+        let (mut d1, _) = Mutation::diff(&DagMutation::MoveNode { id: "n1".into(), x: 10.0, y: 10.0 }, &document).into_parts();
         let mid = d1.apply(&document).expect("valid first DAG diff");
-        let d2 = Mutation::diff(&DagMutation::MoveNode { id: "n1".into(), x: 20.0, y: 30.0 }, &mid);
+        let (d2, _) = Mutation::diff(&DagMutation::MoveNode { id: "n1".into(), x: 20.0, y: 30.0 }, &mid).into_parts();
         d1.absorb(d2);
         let absorbed = d1.apply(&document).expect("valid absorbed DAG diff");
         assert_eq!(absorbed.nodes[0].x, 20.0, "absorb must converge to the LATER move, not the earlier one");
@@ -8747,7 +8772,7 @@ mod dag_vcs_tests {
     #[test]
     fn missing_target_inverse_and_diff_are_no_ops() {
         let document = empty_dag_document();
-        assert_eq!(Mutation::diff(&DagMutation::MoveNode { id: "ghost".into(), x: 1.0, y: 1.0 }, &document), DagDiff::default());
+        assert_eq!(Mutation::diff(&DagMutation::MoveNode { id: "ghost".into(), x: 1.0, y: 1.0 }, &document).diff(), &DagDiff::default());
         assert!(DagMutation::MoveNode { id: "ghost".into(), x: 1.0, y: 1.0 }.inverse(&document).is_empty());
         assert!(DagMutation::DeleteNode { id: "ghost".into() }.inverse(&document).is_empty());
         assert!(DagMutation::DisconnectNodes { id: "ghost".into() }.inverse(&document).is_empty());
@@ -8827,6 +8852,13 @@ mod dag_vcs_tests {
     fn dag_document_dsl_round_trips_the_demo_fixture() {
         crate::os_store::test_support::assert_dsl_round_trip(&default_dag_document());
         crate::os_store::test_support::assert_dsl_pack_equivalence(&default_dag_document());
+    }
+
+    #[test]
+    fn bundled_demo_fixture_is_canonical() {
+        let actual = include_str!("../../../../../../../../../✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
+        let expected = <DagSnapshot as crate::os_store::ArtifactDsl>::print_dsl(&default_dag_document());
+        assert_eq!(actual, expected, "bundled demo fixture must stay in canonical owned DSL form");
     }
 
     #[test]
@@ -8918,24 +8950,25 @@ mod dag_vcs_tests {
         crate::os_store::test_support::assert_op_line_round_trip(&DagMutation::DisconnectNodes { id: "e1".into() });
     }
 
-    #[test]
-    fn document_text_round_trips_a_store_with_an_applied_operation() {
-        let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", kitchen_sink_snapshot(), None));
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode { node: sample_node("extra"), index: 0 }], description: None }).expect("apply");
-        crate::os_store::test_support::assert_document_text_round_trip(&store);
-        crate::os_store::test_support::assert_document_pack_round_trip(&store);
+    #[semio_framework_async_macros::async_test]
+    async fn document_text_round_trips_a_store_with_an_applied_operation() {
+        let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", kitchen_sink_snapshot(), None)).await.expect("store");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode { node: sample_node("extra"), index: 0 }], description: None }).await.expect("apply");
+        crate::os_store::test_support::assert_document_text_round_trip(&store).await;
+        crate::os_store::test_support::assert_document_pack_round_trip(&store).await;
     }
 
     /// 🎫️ CW7 command-envelope law (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`): `DagMutation`
     /// already implements `crate::os_spr::OpBinary` (forwarded through the derived `DagMutationDsl`
     /// mirror, see `🔖️OpTextMirror` above), so this closes the missing coverage rather than adding
     /// any new codec.
-    #[test]
-    fn command_envelope_round_trip_holds_for_an_applied_operation() {
-        let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", kitchen_sink_snapshot(), None));
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode { node: sample_node("extra"), index: 0 }], description: None }).expect("apply");
-        let edit: &Edit<DagMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        crate::os_store::test_support::assert_command_envelope_round_trip::<DagSnapshot, DagMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+    #[semio_framework_async_macros::async_test]
+    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
+        let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", kitchen_sink_snapshot(), None)).await.expect("store");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DagMutation::CreateNode { node: sample_node("extra"), index: 0 }], description: None }).await.expect("apply");
+        let envelope = store.envelope().await;
+        let edit: &Edit<DagMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
+        crate::os_store::test_support::assert_command_envelope_round_trip::<DagSnapshot, DagMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())).await;
     }
     //#endregion 🔖️DslTests
 }

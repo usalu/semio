@@ -4,7 +4,7 @@
 // bridges to (csv/md/json exercise real conversions; txt is an honest not-yet-implemented stub,
 // same fidelity/sniffs shape either way). Shaped inline (no generated `IoEntryDescriptor` type
 // checked in anywhere yet in this repo) so this file has no fragile forward reference; swap for a
-// real import once ts-rs generation lands.
+// real import once owned schema generation lands.
 export interface IoEntryDescriptorMirror {
   from: string;
   into: string;

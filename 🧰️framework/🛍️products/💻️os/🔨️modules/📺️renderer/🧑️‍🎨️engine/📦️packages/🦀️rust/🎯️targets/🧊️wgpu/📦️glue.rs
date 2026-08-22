@@ -87,7 +87,7 @@ mod winit_app;
 #[path = "🎠️runtime.rs"]
 pub mod parallel_runtime;
 
-use infinite_world::{
+use infinite_world::world::{
     apply_glb_bytes, apply_world_action_preview, collect_pending_glb_fetches, fetch_url_bytes, handle_world3d_paint_actions, handle_world3d_pointer_button, handle_world3d_pointer_drag, handle_world3d_pointer_move, handle_world3d_wheel,
     orbit_camera_action,
 };
@@ -99,8 +99,8 @@ use program_bridge::load_wasm_plugins;
 use program_bridge::parse_plugin_entries;
 use shell::ShellState;
 use std::cell::RefCell;
-use std::rc::Rc;
-use std::sync::Arc;
+use std::future::Future;
+use std::sync::{Arc, Mutex};
 #[cfg(target_arch = "wasm32")]
 use ui_wgpu::wgpu::apply_canvas_cursor;
 use ui_wgpu::wgpu::ActionDescriptor;
@@ -122,30 +122,61 @@ use winit::window::Fullscreen;
 use winit::window::Window;
 
 //#region 🧵️RendererWorkerPool
-/// 🧵️ P1e (INTERACTIVE-JOB-RUNTIME-REFACTOR, one-pool-worker-runtime): the ONE process-wide
-/// [`semio_framework_async::WorkerPool`] this renderer crate itself owns — real dependency
-/// injection into every consumer that needs one below (`shell::ShellState::new`'s
-/// `TokioHostRuntime::with_pool`, `kernel_runtime::KernelPoolState::new`'s `ParallelRuntime::new`),
-/// never a second pool minted per-consumer. Per P1a/P1b's own reports this renderer was the
-/// explicitly-named "next place to inject a real, externally-owned `WorkerPool`" rather than falling
-/// through to `semio-framework-os-services`'s own private `global_worker_pool()` default (that
-/// singleton is a SEPARATE pool, scoped to `os-services`' own HTTP/storage/timer work; it cannot be
-/// reused here — its accessor is crate-private by design). `ProcessKind::InteractiveNative` (this
-/// crate IS the interactive UI host) keeps one core free for the UI/winit thread — the same
-/// reservation `TokioHostRuntime`'s directory-client work and `ParallelRuntime`'s shard-executor
-/// submissions now share, so neither can starve the other under the pool's own admission control.
-/// Lazily built on first use (native-only: nothing on wasm32 calls this), never rebuilt.
-#[cfg(not(target_arch = "wasm32"))]
-static RENDERER_WORKER_POOL: std::sync::OnceLock<semio_framework_async::WorkerPool> = std::sync::OnceLock::new();
-
+/// 🧵️ Resolves the interactive OS process's single worker pool for every renderer subsystem.
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) fn renderer_worker_pool() -> semio_framework_async::WorkerPool {
-    RENDERER_WORKER_POOL
-        .get_or_init(|| {
-            let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
-            semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores))
-        })
-        .clone()
+    let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
+    semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores))
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct RendererIoHandle {
+    completion: semio_framework_os_services::NativeIoCompletion,
+    cancel: semio_framework_async::CancelToken,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl RendererIoHandle {
+    fn try_take(&self) -> Option<Result<semio_framework_os_services::NativeIoValue, String>> {
+        self.completion.try_take()
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl std::future::Future for RendererIoHandle {
+    type Output = Result<semio_framework_os_services::NativeIoValue, String>;
+
+    fn poll(mut self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+        std::future::Future::poll(std::pin::Pin::new(&mut self.completion), cx)
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl Drop for RendererIoHandle {
+    fn drop(&mut self) {
+        self.cancel.cancel_now();
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn submit_renderer_io(request: semio_framework_os_services::NativeIoRequest) -> RendererIoHandle {
+    use semio_framework_job::{allocate_operation_id, root_cancel_token, BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS};
+    let (job, completion) = semio_framework_os_services::NativeIoJob::new(request);
+    let cancel = root_cancel_token();
+    let params = BatchJobParams {
+        operation: allocate_operation_id(),
+        generation: Generation(0),
+        cancel: cancel.clone(),
+        config: BatchDriveConfig { site: "os_renderer_native_io", stage: InteractiveStage::InteractiveStep, fuel_per_step: INTERACTIVE_LANE_FUEL, step_budget_ms: INTERACTIVE_LANE_WALL_MS },
+        now_ms: semio_framework_job::default_now_ms,
+    };
+    let _ = semio_framework_job::run_on_worker(&renderer_worker_pool(), semio_framework_async::Lane::Io, job, params);
+    RendererIoHandle { completion, cancel }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+async fn run_renderer_io(request: semio_framework_os_services::NativeIoRequest) -> Result<semio_framework_os_services::NativeIoValue, String> {
+    submit_renderer_io(request).await
 }
 //#endregion 🧵️RendererWorkerPool
 
@@ -164,10 +195,10 @@ pub(crate) fn renderer_worker_pool() -> semio_framework_async::WorkerPool {
 /// in-process on the winit thread.
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) mod kernel_runtime {
-    use semio_framework::kernel::{BrokerCapabilityGrant, Budget as TurnBudget, Effect, Event, MessageEndpoint, PatchOp, QuotaSchema, TurnResult, UiPatch as KernelUiPatch};
+    use semio_framework::kernel::{BrokerCapabilityGrant, Budget as TurnBudget, Effect, Event, MessageEndpoint, QuotaSchema, TurnResult, UiPatch as KernelUiPatch};
     use semio_framework_actor::{intersect_capabilities, ActivationEvent, ActorId, ActorKind, Backpressure, CapabilityGrant, Envelope, Lane, Origin, PackageHash, PackageId, Payload};
     use semio_framework_plugin_host::shard::ShardOutcome;
-    use semio_framework_plugin_host::{GuestRuntime, GuestRuntimes, PackageRef, SharedEngineConfig, WasmtimeRuntime};
+    use semio_framework_plugin_host::{GuestRuntime, GuestRuntimes, OwnedRuntime, PackageRef};
     use std::collections::HashMap;
     use std::future::Future;
     use std::path::PathBuf;
@@ -176,11 +207,30 @@ pub(crate) mod kernel_runtime {
     use std::sync::{Arc, Mutex, OnceLock};
     use std::task::{Context, Poll, Waker};
     use std::time::Duration;
-    use ui_wgpu::wgpu::UiNode;
+    use ui_contract::{Activity, Component, ContainerRole, SurfaceId, TransitionHint, Trigger, UiDocumentLimits, UiNodeRecord, UiRevision, UiSnapshotState, UiValue};
+    use ui_wgpu::wgpu::{ActionDescriptor, Label as LegacyLabel, StyleSpec as LegacyStyleSpec, UiButtonNode, UiDropOverlaySpec, UiExternalSlotNode, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiMenuRef, UiNode, UiNumberStepperNode, UiPresence, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiStatus, UiTextNode, UiToggleNode, UiTreeActionPlacement, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode};
 
     static SEQ: AtomicU64 = AtomicU64::new(1);
     fn next_seq() -> u64 {
         SEQ.fetch_add(1, Ordering::Relaxed)
+    }
+
+    fn decode_actor_turn_result(result: &semio_framework_actor::TurnResult) -> Result<TurnResult, String> {
+        let status = match &result.status {
+            semio_framework_actor::TurnStatus::Idle => semio_framework::kernel::TurnStatus::Idle,
+            semio_framework_actor::TurnStatus::MoreWork => semio_framework::kernel::TurnStatus::MoreWork,
+            semio_framework_actor::TurnStatus::CheckpointReady { checkpoint } => semio_framework::kernel::TurnStatus::CheckpointReady { checkpoint: checkpoint.clone() },
+            semio_framework_actor::TurnStatus::Faulted { detail } => semio_framework::kernel::TurnStatus::Faulted(detail.clone()),
+            status => return Err(format!("kernel: unexpected job status in reactor turn: {status:?}")),
+        };
+        Ok(TurnResult {
+            ui_patches: serde_json::from_slice(&result.ui_patches).map_err(|error| format!("kernel: decode ui patches: {error}"))?,
+            effects: serde_json::from_slice(&result.effects).map_err(|error| format!("kernel: decode effects: {error}"))?,
+            presence: Vec::new(),
+            next_wake: result.next_wake,
+            status,
+            fuel_used: result.usage.fuel,
+        })
     }
 
     /// ⛽️ One generous constant turn budget until the DRR scheduler threads a real per-lane one
@@ -278,8 +328,12 @@ pub(crate) mod kernel_runtime {
     /// 🧩️ Mirrors `program_bridge::load_wasm_plugins`'s own "first `.wasm` file directly inside the
     /// plugin's own directory" convention — kept as a small local helper rather than importing that
     /// module's version, which is embedded inside its own `find`-style closure, not a reusable fn.
-    fn find_wasm_artifact(dir: &std::path::Path) -> Option<PathBuf> {
-        std::fs::read_dir(dir).ok()?.filter_map(|entry| entry.ok()).map(|entry| entry.path()).find(|path| path.extension().is_some_and(|ext| ext == "wasm"))
+    async fn find_wasm_artifact(dir: &std::path::Path) -> Option<PathBuf> {
+        let request = semio_framework_os_services::NativeIoRequest::ScanDirectory { path: dir.to_path_buf(), directories_only: false, extension: Some("wasm".into()), first_only: true };
+        match crate::run_renderer_io(request).await.ok()? {
+            semio_framework_os_services::NativeIoValue::Paths(paths) => paths.into_iter().next(),
+            _ => None,
+        }
     }
     //#endregion 🔖️ExtensionIndex
 
@@ -338,11 +392,8 @@ pub(crate) mod kernel_runtime {
     }
 
     /// 🌉 The genuinely-yielding leaf every plugin call now awaits, replacing the old in-process
-    /// `WasmPluginRuntime::exchange` blocking call. Whoever drives this to completion (`pollster`'s
-    /// own park-based executor for the majority of call sites that are fine staying synchronous, or
-    /// `poll_app_tasks`'s tiny task-pool executor for the 3 sites this packet moved off the winit
-    /// thread — see `📓️terra-H3-wgpu-native-report.md`) supplies its own `Waker`; this future does
-    /// not care which, it only stores+calls whatever it was last polled with.
+    /// `WasmPluginRuntime::exchange` blocking call. The renderer worker-pool and app-task drivers
+    /// supply its `Waker`; this future only stores and wakes the most recent one.
     struct KernelFuture {
         slot: Arc<ResponseSlot>,
         request: Option<KernelRequest>,
@@ -385,7 +436,7 @@ pub(crate) mod kernel_runtime {
             global_client()
                 .get_or_init(|| {
                     let queue = Arc::new(KernelRequestQueue::default());
-                    let task = KernelPoolFuture::spawn(crate::renderer_worker_pool(), Lane::Interactive, run_kernel_pool(queue.clone()));
+                    let task = KernelPoolFuture::spawn(crate::renderer_worker_pool(), semio_framework_async::Lane::Interactive, run_kernel_pool(queue.clone()));
                     KernelClient { queue, _task: task }
                 })
                 .clone()
@@ -409,7 +460,10 @@ pub(crate) mod kernel_runtime {
         }
 
         pub(crate) async fn exchange_commands(&self, instance: u32, commands: Vec<protocol::AppCommand>) -> Result<ExchangeOutcome, String> {
-            let events = commands.into_iter().map(|command| Event::AppCommandEvent { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()), seq: next_seq(), command: protocol::encode_app_command(&command) }).collect();
+            let mut events = Vec::with_capacity(commands.len());
+            for command in commands {
+                events.push(Event::AppCommandEvent { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()), seq: next_seq(), command: protocol::encode_app_command(&command).await });
+            }
             self.exchange_events(instance, events).await
         }
 
@@ -423,8 +477,282 @@ pub(crate) mod kernel_runtime {
     //#endregion
 
     //#region 🔖️KernelPoolState
+    //#region 🔖️SemanticDocumentPresentation
+    /// 🎭️ Presents one accepted semantic document through the renderer's nested node API.
+    fn present_snapshot(state: &UiSnapshotState) -> UiNode {
+        state.root.and_then(|root| state.nodes.get(&root)).map_or_else(UiNode::default, |record| present_record(state, record))
+    }
+
+    fn present_record(state: &UiSnapshotState, record: &UiNodeRecord) -> UiNode {
+        let children = || record.children.iter().filter_map(|id| state.nodes.get(id)).map(|child| present_record(state, child)).collect::<Vec<_>>();
+        let presence = present_presence(record);
+        let menu = record.menu.as_ref().map(present_menu);
+        match &record.component {
+            Component::Container(props) => match props.role {
+                ContainerRole::Section => UiNode::Section(UiSectionNode { id: record.key.clone(), label: props.label.as_ref().map(present_label), default_open: props.default_open, presence, menu, children: children() }),
+                ContainerRole::Group => UiNode::Group(UiGroupNode { id: record.key.clone(), label: props.label.as_ref().map_or_else(|| LegacyLabel::data(record.key.clone()), present_label), default_open: props.default_open, presence, menu, children: children() }),
+                ContainerRole::Field => {
+                    let child = children().into_iter().next().unwrap_or_default();
+                    UiNode::Field(UiFieldNode { id: record.key.clone(), label: props.label.as_ref().map_or_else(|| LegacyLabel::data(record.key.clone()), present_label), description: props.description.clone(), required: props.required, error: props.error.clone(), child: Box::new(child), presence, menu })
+                }
+                ContainerRole::Plain | ContainerRole::Form | ContainerRole::Toolbar => {
+                    let (direction, gap, padding) = present_stack_layout(&record.layout);
+                    UiNode::Stack(UiStackNode {
+                        direction,
+                        gap,
+                        padding,
+                        id: Some(record.key.clone()),
+                        presence,
+                        activate: binding_action(record, Trigger::Activate),
+                        drop_action: binding_action(record, Trigger::Drop),
+                        drop_overlay: props.drop_overlay.as_ref().map(|overlay| UiDropOverlaySpec { title: present_label(&overlay.title), hint: present_label(&overlay.hint), accept: overlay.accept.clone() }),
+                        menu,
+                        children: children(),
+                    })
+                }
+            },
+            Component::Text(props) => UiNode::Text(UiTextNode { value: present_label(&props.value), emphasize: props.emphasize, data_attributes: props.data_attributes.clone(), presence, menu }),
+            Component::Button(props) => UiNode::Button(UiButtonNode { id: Some(record.key.clone()), icon_id: props.icon.as_str().into(), label: present_label(&props.label), action: binding_action_or_inert(record, Trigger::Activate), style: Some(present_style(&record.style)), presence, menu }),
+            Component::Separator(_) => UiNode::Separator(UiSeparatorNode { presence, menu }),
+            Component::Input(props) => UiNode::Input(UiInputNode {
+                id: record.key.clone(),
+                input_kind: match props.kind {
+                    ui_contract::InputKind::Text => "text",
+                    ui_contract::InputKind::LongText => "longText",
+                    ui_contract::InputKind::Number => "number",
+                    ui_contract::InputKind::Date => "date",
+                    ui_contract::InputKind::Color => "color",
+                    ui_contract::InputKind::File => "file",
+                }
+                .into(),
+                value: props.value.clone(),
+                placeholder: props.placeholder.as_ref().map(present_label),
+                commit: props.commit.clone(),
+                min: props.min,
+                max: props.max,
+                step: props.step,
+                accept: props.accept.clone(),
+                on_change: binding_action(record, Trigger::Change).or_else(|| binding_action(record, Trigger::Commit)).unwrap_or_else(inert_action),
+                presence,
+                menu,
+            }),
+            Component::Select(props) => UiNode::Select(UiSelectNode {
+                id: record.key.clone(),
+                value: props.value.clone(),
+                items: props.items.iter().map(|item| UiSelectItem { value: item.value.clone(), label: present_label(&item.label) }).collect(),
+                placeholder: props.placeholder.as_ref().map(present_label),
+                on_change: binding_action_or_inert(record, Trigger::Change),
+                presence,
+                menu,
+            }),
+            Component::Toggle(props) => UiNode::Toggle(UiToggleNode { id: record.key.clone(), icon_id: props.icon.as_str().into(), text: props.text.as_ref().map(present_label), on_change: binding_action_or_inert(record, Trigger::Change), presence: UiPresence { selected: props.on, ..presence }, menu }),
+            Component::KeyValueList(props) => UiNode::KeyValue(UiKeyValueNode { entries: props.entries.iter().map(|entry| UiKeyValueEntry { label: present_label(&entry.label), value: entry.value.clone() }).collect(), presence, menu }),
+            Component::Slider(props) => UiNode::Slider(UiSliderNode { id: record.key.clone(), value: props.value, min: props.min, max: props.max, step: props.step, unit: props.unit.clone(), on_change: binding_action_or_inert(record, Trigger::Change), presence, menu }),
+            Component::NumberStepper(props) => UiNode::NumberStepper(UiNumberStepperNode { id: record.key.clone(), value: props.value, step: props.step, uniform: props.uniform, on_absolute: binding_action(record, Trigger::Change).or_else(|| binding_action(record, Trigger::Commit)).unwrap_or_else(inert_action), on_delta: binding_action_or_inert(record, Trigger::Delta), presence, menu }),
+            Component::Ring(props) => UiNode::Ring(UiRingNode { id: record.key.clone(), orb_id: props.orb_id.clone(), t: props.t, on_change: binding_action_or_inert(record, Trigger::Change), presence, menu }),
+            Component::IconSelect(props) => UiNode::IconSelect(UiIconSelectNode { id: record.key.clone(), value: props.value.clone(), uniform: props.uniform, classifier_kind: props.classifier_kind.clone(), on_change: binding_action_or_inert(record, Trigger::Change), presence, menu }),
+            Component::Tree(props) => UiNode::Tree(present_tree(state, record, props.interaction_domain.clone(), presence, menu)),
+            Component::TreeSection(props) => UiNode::Section(UiSectionNode { id: record.key.clone(), label: props.label.as_ref().map(present_label), default_open: props.default_open, presence, menu, children: children() }),
+            Component::TreeItem(_) => UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some(record.key.clone()), presence, activate: binding_action(record, Trigger::Activate), drop_action: binding_action(record, Trigger::Drop), drop_overlay: None, menu, children: children() }),
+            Component::Image(props) => UiNode::Image(UiImageNode { id: record.key.clone(), src: props.src.clone(), alt: props.alt.as_ref().map(present_label), presence, menu }),
+            Component::Surface(props) => present_surface(state, record, props, presence, menu),
+            Component::Extension(props) => UiNode::ExternalSlot(UiExternalSlotNode { plugin_id: props.extension.clone(), app_id: String::new(), body_key: record.key.clone(), params_json: serde_json::to_string(&props.props).unwrap_or_else(|_| "null".into()), presence, menu }),
+        }
+    }
+
+    fn present_tree(state: &UiSnapshotState, record: &UiNodeRecord, interaction_domain: Option<String>, presence: UiPresence, menu: Option<UiMenuRef>) -> UiTreeNode {
+        let mut sections = Vec::new();
+        let mut loose = Vec::new();
+        for child_id in &record.children {
+            let Some(child) = state.nodes.get(child_id) else { continue };
+            match &child.component {
+                Component::TreeSection(props) => sections.push(UiTreeSectionNode { id: child.key.clone(), label: props.label.as_ref().map(present_label), default_open: props.default_open, presence: present_presence(child), items: child.children.iter().filter_map(|id| state.nodes.get(id)).filter_map(|item| present_tree_item(state, item)).collect() }),
+                Component::TreeItem(_) => {
+                    if let Some(item) = present_tree_item(state, child) {
+                        loose.push(item);
+                    }
+                }
+                _ => {}
+            }
+        }
+        if !loose.is_empty() {
+            sections.insert(0, UiTreeSectionNode { id: format!("{}-root", record.key), label: None, default_open: Some(true), presence: UiPresence::default(), items: loose });
+        }
+        UiTreeNode { sections, presence, drop_action: binding_action(record, Trigger::Drop), menu, interaction_domain }
+    }
+
+    fn present_surface(state: &UiSnapshotState, record: &UiNodeRecord, props: &ui_contract::SurfaceProps, presence: UiPresence, menu: Option<UiMenuRef>) -> UiNode {
+        let controller = record.bindings.first().map(|binding| binding.action.scope.clone()).unwrap_or_else(|| record.key.clone());
+        macro_rules! decode_scene {
+            ($scene:ty, $builder:path) => {
+                ui_wgpu::wgpu::decode_surface_doc::<$scene>(props).map(|scene| $builder(state.surface.0.clone(), controller.clone(), scene))
+            };
+        }
+        let decoded = match props.kind {
+            ui_contract::SurfaceKind::Canvas2d => decode_scene!(ui_wgpu::wgpu::Canvas2dScene, ui_wgpu::wgpu::build_canvas_2d_scene),
+            ui_contract::SurfaceKind::World3d => decode_scene!(ui_wgpu::wgpu::World3dScene, ui_wgpu::wgpu::build_world_3d_scene),
+            ui_contract::SurfaceKind::NodeGraph => decode_scene!(ui_wgpu::wgpu::NodeGraphScene, ui_wgpu::wgpu::build_node_graph_scene),
+            ui_contract::SurfaceKind::TextEditor => decode_scene!(ui_wgpu::wgpu::TextEditorScene, ui_wgpu::wgpu::build_text_editor_scene),
+            ui_contract::SurfaceKind::Table => decode_scene!(ui_wgpu::wgpu::TableScene, ui_wgpu::wgpu::build_table_scene),
+            ui_contract::SurfaceKind::Paint2d => decode_scene!(ui_wgpu::wgpu::Paint2dScene, ui_wgpu::wgpu::build_paint_2d_scene),
+            ui_contract::SurfaceKind::VirtualFileSystem => ui_wgpu::wgpu::decode_surface_doc::<ui_wgpu::wgpu::VirtualFileSystemScene>(props).map(|scene| ui_wgpu::wgpu::build_virtual_file_system_scene(state.surface.0.clone(), controller.clone(), scene, None, None)),
+            ui_contract::SurfaceKind::TiledMap => decode_scene!(ui_wgpu::wgpu::TiledMapScene, ui_wgpu::wgpu::build_tiled_map_scene),
+            ui_contract::SurfaceKind::Board2d => decode_scene!(ui_wgpu::wgpu::Board2dScene, ui_wgpu::wgpu::build_board2d_scene),
+            ui_contract::SurfaceKind::IconRender => decode_scene!(ui_wgpu::wgpu::IconRenderScene, ui_wgpu::wgpu::build_icon_render_scene),
+            ui_contract::SurfaceKind::InkCanvas => decode_scene!(ui_wgpu::wgpu::InkCanvasScene, ui_wgpu::wgpu::build_ink_canvas_scene),
+            ui_contract::SurfaceKind::GraphTimeline => decode_scene!(ui_wgpu::wgpu::GraphTimelineScene, ui_wgpu::wgpu::build_graph_timeline_scene),
+            ui_contract::SurfaceKind::BlockList => decode_scene!(ui_wgpu::wgpu::BlockListScene, ui_wgpu::wgpu::build_block_list_scene),
+            ui_contract::SurfaceKind::DiffView => decode_scene!(ui_wgpu::wgpu::DiffViewScene, ui_wgpu::wgpu::build_diff_view_scene),
+            ui_contract::SurfaceKind::EventFeed => decode_scene!(ui_wgpu::wgpu::EventFeedScene, ui_wgpu::wgpu::build_event_feed_scene),
+        };
+        match decoded {
+            Ok(mut node) => {
+                *node.presence_mut() = presence;
+                *node.menu_mut() = menu;
+                node
+            }
+            Err(error) => {
+                crate::log_debug(&format!("[DEBUG] semantic surface {} could not be decoded: {error:?}", props.doc_schema));
+                UiNode::Text(UiTextNode { value: LegacyLabel::data(format!("Unsupported surface {}", props.doc_schema)), emphasize: None, data_attributes: None, presence, menu })
+            }
+        }
+    }
+
+    fn present_tree_item(state: &UiSnapshotState, record: &UiNodeRecord) -> Option<UiTreeItemNode> {
+        let Component::TreeItem(props) = &record.component else { return None };
+        let mut items = Vec::new();
+        let mut control = None;
+        for child_id in &record.children {
+            let Some(child) = state.nodes.get(child_id) else { continue };
+            if let Some(item) = present_tree_item(state, child) {
+                items.push(item);
+            } else if control.is_none() {
+                control = ui_wgpu::wgpu::ui_node_to_control(&present_record(state, child));
+            }
+        }
+        Some(UiTreeItemNode {
+            id: record.key.clone(),
+            label: present_label(&props.label),
+            description: props.description.clone(),
+            icon_id: props.icon.as_deref().map(Into::into),
+            presence: present_presence(record),
+            default_open: props.default_open,
+            action: binding_action(record, Trigger::Activate),
+            actions: (!props.row_actions.is_empty()).then(|| props.row_actions.iter().map(|item| UiTreeItemAction { icon_id: item.icon.as_str().into(), label: item.label.as_ref().map(present_label), action: present_action(&item.action), placement: Some(match item.placement { ui_contract::RowActionPlacement::Row => UiTreeActionPlacement::Row, ui_contract::RowActionPlacement::Menu => UiTreeActionPlacement::Menu }) }).collect()),
+            draggable: props.draggable,
+            drag_data: props.drag_data.clone(),
+            items: (!items.is_empty()).then_some(items),
+            control,
+            dimmed: props.dimmed,
+            menu: record.menu.as_ref().map(present_menu),
+        })
+    }
+
+    fn present_label(label: &ui_contract::Label) -> LegacyLabel {
+        LegacyLabel::data(label.0.clone())
+    }
+
+    fn binding_action(record: &UiNodeRecord, trigger: Trigger) -> Option<ActionDescriptor> {
+        record.bindings.iter().find(|binding| binding.trigger == trigger).map(present_action)
+    }
+
+    fn binding_action_or_inert(record: &UiNodeRecord, trigger: Trigger) -> ActionDescriptor {
+        binding_action(record, trigger).unwrap_or_else(inert_action)
+    }
+
+    fn present_action(binding: &ui_contract::ActionBinding) -> ActionDescriptor {
+        ActionDescriptor { controller_id: binding.action.scope.clone(), action: binding.action.name.clone(), args: binding.args.as_ref().map(present_value) }
+    }
+
+    fn inert_action() -> ActionDescriptor {
+        ActionDescriptor { controller_id: String::new(), action: String::new(), args: None }
+    }
+
+    fn present_value(value: &UiValue) -> dsl::DslValue {
+        match value {
+            UiValue::Null => dsl::DslValue::Null,
+            UiValue::Bool(value) => dsl::DslValue::Bool(*value),
+            UiValue::Number(value) => dsl::DslValue::Number(*value),
+            UiValue::Text(value) => dsl::DslValue::String(value.clone()),
+            UiValue::List(values) => dsl::DslValue::Array(values.iter().map(present_value).collect()),
+            UiValue::Map(values) => dsl::DslValue::Object(values.iter().map(|(key, value)| (key.clone(), present_value(value))).collect()),
+        }
+    }
+
+    fn present_menu(menu: &ui_contract::MenuRef) -> UiMenuRef {
+        UiMenuRef { id: menu.id.clone(), args: menu.args.as_ref().map(present_value) }
+    }
+
+    fn present_presence(record: &UiNodeRecord) -> UiPresence {
+        let state = if record.disabled {
+            UiState::Disabled
+        } else {
+            match record.transition {
+                Some(TransitionHint::Introducing) => UiState::Introducing,
+                Some(TransitionHint::Celebrating) => UiState::Celebrating,
+                None => UiState::Normal,
+            }
+        };
+        let status = match record.activity {
+            Activity::Waiting => UiStatus::Waiting,
+            Activity::Loading => UiStatus::Loading,
+            Activity::Idle => UiStatus::Idle,
+            Activity::Finished => UiStatus::Finished,
+        };
+        UiPresence { state, status, ..UiPresence::default() }
+    }
+
+    fn present_style(style: &ui_contract::StyleSpec) -> LegacyStyleSpec {
+        let variant = match style.variant {
+            ui_contract::Variant::Solid => "solid",
+            ui_contract::Variant::Outline => "outline",
+            ui_contract::Variant::Ghost => "ghost",
+            ui_contract::Variant::Plain => "plain",
+        };
+        let size = match style.size {
+            ui_contract::SizeToken::Xs => "xs",
+            ui_contract::SizeToken::Sm => "sm",
+            ui_contract::SizeToken::Md => "md",
+            ui_contract::SizeToken::Lg => "lg",
+            ui_contract::SizeToken::Xl => "xl",
+        };
+        let density = match style.density {
+            ui_contract::Density::Compact => "compact",
+            ui_contract::Density::Standard => "standard",
+            ui_contract::Density::Touch => "touch",
+        };
+        LegacyStyleSpec { variant: Some(variant.into()), size: Some(size.into()), density: Some(density.into()) }
+    }
+
+    fn present_stack_layout(layout: &ui_contract::LayoutSpec) -> (String, Option<String>, Option<String>) {
+        let ui_contract::LayoutSpec::Stack(stack) = layout else { return ("vertical".into(), None, None) };
+        let direction = match stack.axis {
+            ui_contract::Axis::Horizontal => "horizontal",
+            ui_contract::Axis::Vertical => "vertical",
+        };
+        let gap = present_space(stack.gap);
+        let padding = match stack.padding {
+            ui_contract::EdgeSpace::All(space) => present_space(space),
+            _ => None,
+        };
+        (direction.into(), gap, padding)
+    }
+
+    fn present_space(space: ui_contract::SpaceToken) -> Option<String> {
+        match space {
+            ui_contract::SpaceToken::None => None,
+            ui_contract::SpaceToken::Xs => Some("xs".into()),
+            ui_contract::SpaceToken::Sm => Some("small".into()),
+            ui_contract::SpaceToken::Md => Some("standard".into()),
+            ui_contract::SpaceToken::Lg => Some("large".into()),
+            ui_contract::SpaceToken::Xl => Some("xl".into()),
+            ui_contract::SpaceToken::Xxl => Some("xxl".into()),
+        }
+    }
+    //#endregion 🔖️SemanticDocumentPresentation
+
     struct RetainedSurface {
-        revision: u64,
+        state: UiSnapshotState,
         node: UiNode,
     }
 
@@ -447,35 +775,23 @@ pub(crate) mod kernel_runtime {
         /// by) → the kernel's own bit-packed `ActorId`, minted by `Kernel::activate`.
         instances: HashMap<u32, ActorId>,
         next_instance_id: u32,
-        /// 🖼️ `📓️design-runtime.md` §"Scene": one retained `UiNode` per `(instance, surface)`,
-        /// reconciled from `TurnResult.ui_patches` on every turn — this crate's stand-in for a full
-        /// `SceneStore` snapshot swap (item 4 of the packet: never block the render loop on a plugin
-        /// turn, reuse the previous tree on a missed/rejected patch). Only `PatchOp::Replace{path:
-        /// "", node}` (a full body) is applied by walking the tree; `📓️design-abi.md` §4's guest-side
-        /// diffing (`InsertChild`/`RemoveChild`/non-root `Replace`/`SetProps`) has no guest emitting
-        /// it yet (no plugin has migrated to `world actor`, W3 hasn't started) — an unrecognized op
-        /// shape is treated as a desync, not walked, exactly like a `base_revision` mismatch.
-        retained: HashMap<(u32, String), RetainedSurface>,
-        /// 🔁️ Surfaces whose next turn must carry an `Event::PatchRejected` asking the guest to
-        /// resend a full body — queued here instead of round-tripping an extra turn synchronously.
-        pending_rejections: HashMap<(u32, String), u64>,
+        /// 🖼️ One retained semantic [`UiSnapshotState`] plus its last successfully presented
+        /// nested renderer node per `(instance, surface)`. Every [`UiPatchOp`] is applied through the
+        /// contract's transactional, quota-bounded [`ui_contract::apply_patch`]; a rejection preserves
+        /// both the document revision and the previously presented tree.
+        retained: HashMap<(u32, SurfaceId), RetainedSurface>,
+        /// 🔁️ Surfaces whose next turn must carry an `Event::PatchRejected`, retaining both
+        /// the receiver revision and the contract rejection reason.
+        pending_rejections: HashMap<(u32, SurfaceId), (UiRevision, String)>,
     }
 
     impl KernelPoolState {
-        /// ⏱️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): this whole `impl` block used
-        /// to bridge every single `ParallelRuntime`/`GuestRuntime` call with its OWN `pollster::block_on`
-        /// (15 call sites — the design doc's Category C, "THE PHASE 3 FOCUS"). Those calls never
-        /// actually blocked the UI/winit thread (they only ever ran inside `run_kernel_thread`'s own
-        /// former dedicated `"semio-kernel"` background thread), but they were still disguised,
-        /// scattered `block_on` calls outside any approved entry point, which is
-        /// exactly what the audit's "block_on confined to approved process/test entry points" rule
-        /// forbids and what inflated the interactivity audit's blocking-bridge count. Every method below
-        /// is now a genuine `async fn`; the ONE remaining bridge lives at `run_kernel_thread`'s own
-        /// top-level `pollster::block_on`, wrapping this thread's entire request-processing loop — the
-        /// same class of justified bridge `run_native`'s event loop or the CLI's `bin.rs` already use,
-        /// not a disguised one hiding inside product logic.
+        /// ⏱️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): every method in this
+        /// state machine is genuinely asynchronous and the whole request loop is mounted once on the
+        /// injected renderer worker pool. No executor bridge or dedicated kernel thread remains in
+        /// product logic.
         async fn new() -> Self {
-            let guest_runtime: Arc<GuestRuntimes> = Arc::new(GuestRuntimes::Wasmtime(WasmtimeRuntime::new(SharedEngineConfig::default()).expect("wasmtime engine builds")));
+            let guest_runtime: Arc<GuestRuntimes> = Arc::new(GuestRuntimes::Owned(OwnedRuntime::new()));
             // 🧵️ P1e: the injected process-wide pool (`crate::renderer_worker_pool`), never a pool this
             // type mints for itself — see `ParallelRuntime::new`'s own doc.
             let pool = Arc::new(crate::renderer_worker_pool());
@@ -489,16 +805,15 @@ pub(crate) mod kernel_runtime {
         }
 
         async fn create_app(&mut self, wasm_path: PathBuf, plugin_id: String, app_id: String) -> Result<u32, String> {
-            let bytes = std::fs::read(&wasm_path).map_err(|error| format!("{}: {error}", wasm_path.display()))?;
+            let bytes = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(wasm_path.clone())).await? {
+                semio_framework_os_services::NativeIoValue::Bytes(bytes) => bytes,
+                _ => return Err("kernel: native I/O returned the wrong value for wasm read".into()),
+            };
             let hash = PackageHash(*blake3::hash(&bytes).as_bytes());
             let package_id = PackageId(plugin_id.clone());
             let package_ref = PackageRef { package: package_id.clone(), hash };
-            // 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): `GuestRuntime::
-            // compile` is `async fn` (the actor-green async migration landed after this call site was
-            // written) — bridged with `pollster::block_on`, this file's own established sync↔async
-            // bridge (already used repeatedly below, e.g. `poll_world3d_assets`/`fetch_url_bytes`).
-            // Pre-existing defect in this exact function, fixed here because it sits directly upstream
-            // of this packet's own cascade addition below.
+            // 🐛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): compile
+            // remains a genuine suspension point on the worker-pool-owned request state machine.
             let compiled = self.guest_runtime.compile(&package_ref, &bytes).await.map_err(|error| error.to_string())?;
             let instance_id = self.next_instance_id;
             self.next_instance_id += 1;
@@ -572,12 +887,16 @@ pub(crate) mod kernel_runtime {
             let parent_grants = self.runtime.kernel().actor_record(parent).await.map(|record| record.capabilities).unwrap_or_default();
             for extension in extensions.to_vec() {
                 let extension_dir = modules_root.join(&extension.extension_id);
-                let Some(extension_wasm_path) = find_wasm_artifact(&extension_dir) else {
+                let Some(extension_wasm_path) = find_wasm_artifact(&extension_dir).await else {
                     crate::log_debug(&format!("kernel: extension {} of {plugin_id} has no compiled wasm under {}, skipping", extension.extension_id, extension_dir.display()));
                     continue;
                 };
-                let extension_bytes = match std::fs::read(&extension_wasm_path) {
-                    Ok(bytes) => bytes,
+                let extension_bytes = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(extension_wasm_path.clone())).await {
+                    Ok(semio_framework_os_services::NativeIoValue::Bytes(bytes)) => bytes,
+                    Ok(_) => {
+                        crate::log_debug(&format!("kernel: native I/O returned the wrong value for extension {}", extension.extension_id));
+                        continue;
+                    }
                     Err(error) => {
                         crate::log_debug(&format!("kernel: failed reading extension {} wasm ({}): {error}", extension.extension_id, extension_wasm_path.display()));
                         continue;
@@ -639,10 +958,10 @@ pub(crate) mod kernel_runtime {
             let Some(&actor) = self.instances.get(&instance) else {
                 return Err(format!("kernel: instance {instance} is not registered"));
             };
-            let rejections: Vec<(u32, String)> = self.pending_rejections.keys().filter(|(inst, _)| *inst == instance).cloned().collect();
+            let rejections: Vec<(u32, SurfaceId)> = self.pending_rejections.keys().filter(|(inst, _)| *inst == instance).cloned().collect();
             for key in rejections {
-                if let Some(revision) = self.pending_rejections.remove(&key) {
-                    events.insert(0, Event::PatchRejected { surface: key.1, revision, reason: "revision-mismatch".to_string() });
+                if let Some((revision, reason)) = self.pending_rejections.remove(&key) {
+                    events.insert(0, Event::PatchRejected { surface: key.1.0, revision: revision.0, reason });
                 }
             }
             self.run_turn(actor, instance, events).await
@@ -715,9 +1034,10 @@ pub(crate) mod kernel_runtime {
                 for outcome in &outcomes {
                     match outcome {
                         ShardOutcome::Turn { actor: reported, result } => {
-                            let _ = self.runtime.complete(ActorId(*reported), result, 0, 0, self.now_ms).await;
+                            let decoded = decode_actor_turn_result(result)?;
+                            let _ = self.runtime.complete_actor(ActorId(*reported), result, self.now_ms).await;
                             if *reported == actor.0 {
-                                turn_result = Some(result.clone());
+                                turn_result = Some(decoded);
                             }
                         }
                         // 🎠️ terra-kernel-loop: a trap must ALSO reach `Kernel::complete` — otherwise
@@ -728,8 +1048,14 @@ pub(crate) mod kernel_runtime {
                         // is synthesized from its `message` — the same shape `apply_turn_result`'s
                         // caller already treats a fault as `TurnStatus::Faulted` for retry purposes.
                         ShardOutcome::Fault { actor: reported, message } => {
-                            let faulted = TurnResult { ui_patches: Vec::new(), effects: Vec::new(), next_wake: None, status: semio_framework::kernel::TurnStatus::Faulted(message.clone().into_bytes()), fuel_used: 0 };
-                            let _ = self.runtime.complete(ActorId(*reported), &faulted, 0, 0, self.now_ms).await;
+                            let faulted = semio_framework_actor::TurnResult {
+                                ui_patches: Vec::new(),
+                                effects: Vec::new(),
+                                next_wake: None,
+                                status: semio_framework_actor::TurnStatus::Faulted { detail: message.clone().into_bytes() },
+                                usage: semio_framework_actor::Usage::default(),
+                            };
+                            let _ = self.runtime.complete_actor(ActorId(*reported), &faulted, self.now_ms).await;
                             if *reported == actor.0 {
                                 fault = Some(message.clone());
                             }
@@ -751,12 +1077,12 @@ pub(crate) mod kernel_runtime {
                 return Err(message);
             }
             match turn_result {
-                Some(result) => self.apply_turn_result(actor, instance, result),
+                Some(result) => self.apply_turn_result(actor, instance, result).await,
                 None => Err("kernel: shard produced no outcome for this turn".to_string()),
             }
         }
 
-        fn apply_turn_result(&mut self, actor: ActorId, instance: u32, result: TurnResult) -> Result<ExchangeOutcome, String> {
+        async fn apply_turn_result(&mut self, actor: ActorId, instance: u32, result: TurnResult) -> Result<ExchangeOutcome, String> {
             // 🎠️ terra-kernel-loop: `Kernel::complete` (the bridge this doc comment used to flag as
             // unreached — "bridging the two needs a real pack-encode step this packet didn't reach")
             // is now genuinely called, from `run_turn`, for EVERY `ShardOutcome::Turn` a tick grants
@@ -768,7 +1094,7 @@ pub(crate) mod kernel_runtime {
             for effect in result.effects {
                 if let Effect::SendMessage { target: MessageEndpoint::Shell { instance: target_instance }, payload } = &effect {
                     if target_instance.0 == instance.to_string() {
-                        if let Ok(frame) = protocol::decode_app_frame(payload) {
+                        if let Ok(frame) = protocol::decode_app_frame(payload).await {
                             frames.push(frame);
                             continue;
                         }
@@ -785,22 +1111,18 @@ pub(crate) mod kernel_runtime {
 
         fn apply_ui_patch(&mut self, instance: u32, patch: &KernelUiPatch, out: &mut HashMap<String, UiNode>) {
             let key = (instance, patch.surface.clone());
-            let full_body = match patch.ops.as_slice() {
-                [PatchOp::Replace { path, node }] if path.is_empty() => Some(node.clone()),
-                _ => None,
-            };
-            let local_revision = self.retained.get(&key).map(|surface| surface.revision).unwrap_or(0);
-            if let Some(node) = full_body {
-                self.retained.insert(key.clone(), RetainedSurface { revision: patch.revision, node: node.clone() });
-                self.pending_rejections.remove(&key);
-                out.insert(patch.surface.clone(), node);
-            } else {
-                // 🚧️ Incremental ops or `base_revision` mismatch — queue `PatchRejected` and reuse the
-                // previous full-body snapshot (item 4) so `render_with_document` keeps painting stale UI
-                // instead of erroring on a missing surface key.
-                self.pending_rejections.insert(key.clone(), local_revision);
-                if let Some(retained) = self.retained.get(&key) {
-                    out.insert(patch.surface.clone(), retained.node.clone());
+            let retained = self.retained.entry(key.clone()).or_insert_with(|| RetainedSurface { state: UiSnapshotState::new(patch.surface.clone()), node: UiNode::default() });
+            let local_revision = retained.state.revision;
+            match ui_contract::apply_patch(&mut retained.state, patch, &UiDocumentLimits::default()) {
+                Ok(()) => {
+                    let node = present_snapshot(&retained.state);
+                    retained.node = node.clone();
+                    self.pending_rejections.remove(&key);
+                    out.insert(patch.surface.0.clone(), node);
+                }
+                Err(rejection) => {
+                    self.pending_rejections.insert(key, (local_revision, format!("{rejection:?}")));
+                    out.insert(patch.surface.0.clone(), retained.node.clone());
                 }
             }
         }
@@ -839,16 +1161,16 @@ pub(crate) mod kernel_runtime {
         }
     }
 
-    struct KernelPoolFuture {
+    pub(crate) struct KernelPoolFuture {
         pool: semio_framework_async::WorkerPool,
-        lane: Lane,
+        lane: semio_framework_async::Lane,
         future: Mutex<Option<Pin<Box<dyn Future<Output = ()> + Send + 'static>>>>,
         scheduled: std::sync::atomic::AtomicBool,
         notified: std::sync::atomic::AtomicBool,
     }
 
     impl KernelPoolFuture {
-        fn spawn(pool: semio_framework_async::WorkerPool, lane: Lane, future: impl Future<Output = ()> + Send + 'static) -> Arc<Self> {
+        pub(crate) fn spawn(pool: semio_framework_async::WorkerPool, lane: semio_framework_async::Lane, future: impl Future<Output = ()> + Send + 'static) -> Arc<Self> {
             let task = Arc::new(Self { pool, lane, future: Mutex::new(Some(Box::pin(future))), scheduled: std::sync::atomic::AtomicBool::new(false), notified: std::sync::atomic::AtomicBool::new(true) });
             task.schedule();
             task
@@ -904,51 +1226,64 @@ pub(crate) mod kernel_runtime {
             slot.deliver(outcome);
         }
     }
+
+    #[cfg(test)]
+    mod semantic_document_tests {
+        use super::*;
+
+        fn record(id: u64, component: Component) -> UiNodeRecord {
+            UiNodeRecord {
+                id: ui_contract::UiNodeId(id),
+                key: format!("node-{id}"),
+                component,
+                layout: ui_contract::LayoutSpec::default(),
+                style: ui_contract::StyleSpec::default(),
+                activity: Activity::Idle,
+                disabled: false,
+                transition: None,
+                accessibility: ui_contract::AccessibilitySpec::default(),
+                bindings: Vec::new(),
+                menu: None,
+                children: Vec::new(),
+            }
+        }
+
+        #[test]
+        fn semantic_patch_is_transactional_and_presented() {
+            let mut state = UiSnapshotState::new(SurfaceId::from("surface"));
+            let initial = ui_contract::UiPatch {
+                surface: state.surface.clone(),
+                base_revision: UiRevision(0),
+                revision: UiRevision(1),
+                ops: vec![
+                    ui_contract::UiPatchOp::Upsert(record(1, Component::Text(ui_contract::TextProps { value: ui_contract::Label::from("ready"), emphasize: None, data_attributes: None }))),
+                    ui_contract::UiPatchOp::SetRoot { id: ui_contract::UiNodeId(1) },
+                ],
+            };
+            ui_contract::apply_patch(&mut state, &initial, &UiDocumentLimits::default()).expect("initial semantic document");
+            let UiNode::Text(node) = present_snapshot(&state) else { panic!("text presentation") };
+            assert_eq!(node.value.as_str(), "ready");
+
+            let before = state.clone();
+            let stale = ui_contract::UiPatch { surface: state.surface.clone(), base_revision: UiRevision(0), revision: UiRevision(2), ops: Vec::new() };
+            assert!(ui_contract::apply_patch(&mut state, &stale, &UiDocumentLimits::default()).is_err());
+            assert_eq!(state, before);
+        }
+
+        #[test]
+        fn known_surface_doc_decodes_into_component_scene() {
+            let scene = ui_wgpu::wgpu::Canvas2dScene { camera_x: 1.0, camera_y: 2.0, zoom: 3.0, layers_json: "[]".into() };
+            let props = ui_wgpu::wgpu::encode_surface_doc(ui_contract::SurfaceKind::Canvas2d, &scene);
+            let mut state = UiSnapshotState::new(SurfaceId::from("canvas"));
+            state.root = Some(ui_contract::UiNodeId(1));
+            state.nodes.insert(ui_contract::UiNodeId(1), record(1, Component::Surface(props)));
+            let UiNode::ComponentScene(node) = present_snapshot(&state) else { panic!("component-scene presentation") };
+            assert_eq!(node.surface_id, "canvas");
+            assert_eq!(node.canvas_2d, Some(scene));
+        }
+    }
     //#endregion
 
-    //#region 🔖️TaskPool — the non-blocking executor for `spawn_app_task`
-    // 🌀️ `spawn_app_task`'s native replacement for `pollster::block_on(future)`: pushes onto a
-    // thread-local pool polled from `about_to_wait` (which already runs every loop iteration —
-    // `ControlFlow::Poll` is set once `RuntimeReady` lands) instead of running the future to
-    // completion synchronously on the winit thread. This is safe precisely because
-    // `about_to_wait`/`poll_tasks` never hold a `try_borrow_mut()` on `Rc<RefCell<AppRuntime>>`
-    // themselves while polling — each queued future re-acquires its OWN borrow only for the
-    // instant it needs it (the existing `if let Ok(mut app) = runtime.try_borrow_mut() { ...await
-    // inside here... }` pattern every `PointerCallbacks` closure already used before this packet).
-    // `Waker::noop()` WAS correct here exactly because the loop used to be continuous `Poll` — that
-    // honest gap this comment used to flag ("a real cross-thread `EventLoopProxy` wake... is not
-    // implemented") is exactly what `📓️terra-os-host-report.md` (ticket
-    // 26/08/20/SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY, packet os-host) closes below: now that
-    // `winit_app.rs` sets `ControlFlow::WaitUntil`/`Wait` instead, a `KernelFuture` awaiting a kernel
-    // round trip needs a REAL wake for its completion to be noticed promptly rather than only on the
-    // next unrelated event/deadline — see `install_waker`/`REAL_WAKER` immediately below, and
-    // `kernel_seam.rs`'s own module docstring for the full "waker correctness" writeup.
-    thread_local! {
-        static TASK_POOL: std::cell::RefCell<Vec<Pin<Box<dyn Future<Output = ()>>>>> = const { std::cell::RefCell::new(Vec::new()) };
-        static REAL_WAKER: std::cell::RefCell<Option<Waker>> = const { std::cell::RefCell::new(None) };
-    }
-
-    pub(crate) fn spawn_task(future: impl Future<Output = ()> + 'static) {
-        TASK_POOL.with(|pool| pool.borrow_mut().push(Box::pin(future)));
-    }
-
-    /// 🔔️ `winit_app.rs` installs a real `Waker` (built from `ui_host::WakeProxy`, `Send + Sync`, so
-    /// it can be called from off the winit thread — see `kernel_seam.rs`) once, at boot, after the
-    /// event loop exists. Before that first install, `poll_tasks` falls back to `Waker::noop()`,
-    /// harmless for the same reason it always was: nothing is waiting on a `WaitUntil` yet this early.
-    pub(crate) fn install_waker(waker: Waker) {
-        REAL_WAKER.with(|cell| *cell.borrow_mut() = Some(waker));
-    }
-
-    pub(crate) fn poll_tasks() {
-        let waker: Waker = REAL_WAKER.with(|cell| cell.borrow().clone()).unwrap_or_else(|| Waker::noop().clone());
-        let mut cx = Context::from_waker(&waker);
-        TASK_POOL.with(|pool| {
-            let mut pool = pool.borrow_mut();
-            pool.retain_mut(|task| task.as_mut().poll(&mut cx).is_pending());
-        });
-    }
-    //#endregion
 }
 //#endregion 🎠️KernelRuntime
 
@@ -988,7 +1323,7 @@ pub mod scale_bench {
     use semio_framework::kernel::{AppInstanceId, Budget as TurnBudget, CapabilityChange, CapabilityId, Effect, Event, PluginInstanceId, QuotaSchema, TurnResult};
     use semio_framework_actor::{ActivationEvent as ActorActivationTrigger, ActorId, ActorKind, Envelope, JobCheckpoint, JobOperation, Kernel, Lane, Origin, PackageHash, PackageId, Payload};
     use semio_framework_plugin_host::shard::ShardOutcome;
-    use semio_framework_plugin_host::{CompiledHandle, GuestRuntime, GuestRuntimes, PackageRef, SharedEngineConfig, WasmtimeRuntime};
+    use semio_framework_plugin_host::{CompiledHandle, GuestRuntime, GuestRuntimes, OwnedRuntime, PackageRef};
     use serde::Deserialize;
     use serde_json::json;
     use std::collections::HashMap;
@@ -1121,18 +1456,10 @@ pub mod scale_bench {
     }
 
     impl Env {
-        fn new(runtime: Arc<GuestRuntimes>, shard_count: u16) -> Self {
-            // 🧵️ P1e: this bench is a standalone, one-shot headless invocation (`semio-wgpu-native
-            // --scale`), never sharing a process with the interactive winit host (`crate::
-            // renderer_worker_pool`'s `InteractiveNative` singleton) — so it owns its OWN
-            // `ProcessKind::HeadlessBatch` pool, the same shape `NativeKernelRuntime` (`🖥️host/
-            // 🎠️activation.rs`, P1c) uses for its own equally standalone, one-shot CLI callers. This is
-            // NOT the anti-pattern P1e's own brief forbids (a component sizing its own pool while
-            // sharing a process with others that also do) — there is exactly one pool for this
-            // process's whole lifetime, sized once, here.
-            let cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4);
-            let pool = Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, cores)));
-            let runtime = pollster::block_on(super::parallel_runtime::ParallelRuntime::new(pool, runtime, shard_count.max(1), 0, 64));
+        async fn new(runtime: Arc<GuestRuntimes>, shard_count: u16) -> Self {
+            let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
+            let pool = Arc::new(semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores)));
+            let runtime = super::parallel_runtime::ParallelRuntime::new(pool, runtime, shard_count.max(1), 0, 64).await;
             Self { runtime, budgets: HashMap::new(), seq: 0, ordinals: HashMap::new(), now_ms: 0, pending: Vec::new() }
         }
 
@@ -1150,11 +1477,11 @@ pub mod scale_bench {
         /// names an *interactive* actor, and the kernel's placement gate keys off the actor's
         /// ACTIVATION lane, so activating the probe as `Background` measured a background actor and
         /// left the interactive path untested. This is an instrument correction, not a threshold change.
-        fn activate(&mut self, compiled: &CompiledHandle, record: &RegistryRecord) -> Result<ActorId, String> {
-            self.activate_on_lane(compiled, record, Lane::Background)
+        async fn activate(&mut self, compiled: &CompiledHandle, record: &RegistryRecord) -> Result<ActorId, String> {
+            self.activate_on_lane(compiled, record, Lane::Background).await
         }
 
-        fn activate_on_lane(&mut self, compiled: &CompiledHandle, record: &RegistryRecord, lane: Lane) -> Result<ActorId, String> {
+        async fn activate_on_lane(&mut self, compiled: &CompiledHandle, record: &RegistryRecord, lane: Lane) -> Result<ActorId, String> {
             let kind = if record.kind == "extension" {
                 ActorKind::Extension { plugin: PackageId(record.parent_id.clone().unwrap_or_default()), extension_id: record.id.clone() }
             } else {
@@ -1163,13 +1490,13 @@ pub mod scale_bench {
             let package_id = record.parent_id.clone().unwrap_or_else(|| record.id.clone());
             let ordinal = self.ordinal(&package_id);
             let budget = turn_budget_of(record);
-            let actor = pollster::block_on(self.runtime.activate(PackageId(package_id), ordinal, kind, lane, None, ActorActivationTrigger::Manual, compiled, &[], &budget))?;
+            let actor = self.runtime.activate(PackageId(package_id), ordinal, kind, lane, None, ActorActivationTrigger::Manual, compiled, &[], &budget).await?;
             self.budgets.insert(actor.0, budget);
             Ok(actor)
         }
 
-        fn send(&mut self, actor: ActorId, event: &Event) {
-            self.send_payload(actor, Payload::Event { bytes: serde_json::to_vec(event).unwrap_or_default() });
+        async fn send(&mut self, actor: ActorId, event: &Event) {
+            self.send_payload(actor, Payload::Event { bytes: serde_json::to_vec(event).unwrap_or_default() }).await;
         }
 
         /// 🔀️ `Payload::Suspend`/`Payload::Resume`/`Payload::Cancel` need the same envelope plumbing
@@ -1183,8 +1510,8 @@ pub mod scale_bench {
         /// sends at most a handful of envelopes per actor, far under any lane's mailbox capacity
         /// (128-1024 depending on lane, `lane_defaults::budget_for`), so treating a reject as fatal
         /// here would be testing the mailbox ceiling, not the budget this harness measures.
-        fn send_payload(&mut self, actor: ActorId, payload: Payload) {
-            self.send_payload_lane(actor, payload, Lane::Background);
+        async fn send_payload(&mut self, actor: ActorId, payload: Payload) {
+            self.send_payload_lane(actor, payload, Lane::Background).await;
         }
 
         /// 🎯️ terra-bench-instrument: sibling of `send_payload` that lets a caller pick the
@@ -1203,10 +1530,10 @@ pub mod scale_bench {
         /// shared by every budget, not just 5 — so fixing only this envelope's lane does not, by
         /// itself, make that isolation mechanism reachable from this bench; see this packet's own
         /// report for the honest gap).
-        fn send_payload_lane(&mut self, actor: ActorId, payload: Payload, lane: Lane) {
+        async fn send_payload_lane(&mut self, actor: ActorId, payload: Payload, lane: Lane) {
             self.seq += 1;
             let envelope = Envelope { to: actor, from: Origin::Kernel, lane, seq: self.seq, deadline_ms: None, coalesce: None, cancel_of: None, payload };
-            let _ = pollster::block_on(self.runtime.submit(&envelope));
+            let _ = self.runtime.submit(&envelope).await;
         }
 
         /// ⏱️ terra-kernel-loop: `Kernel::tick`-drives every actor with a non-empty mailbox to
@@ -1223,7 +1550,7 @@ pub mod scale_bench {
         /// budget 5 used to time itself this way and that is exactly the defect this packet fixed;
         /// budget 5 now uses `pump_tracking` below instead, which stamps the moment ONE specific
         /// actor's own outcome is observed rather than waiting on this method's own return.
-        fn pump(&mut self) -> Result<usize, String> {
+        async fn pump(&mut self) -> Result<usize, String> {
             let mut total = 0usize;
             loop {
                 self.now_ms += 1;
@@ -1233,7 +1560,7 @@ pub mod scale_bench {
                 // call, and a closure capturing `&self.budgets` directly would conflict with that.
                 let budgets = self.budgets.clone();
                 let fallback = TurnBudget { fuel: BENCH_FUEL, deadline_ms: 50, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
-                let decision = pollster::block_on(self.runtime.tick_and_dispatch(self.now_ms, |actor| crate::actor_budget_from_turn_budget(budgets.get(&actor.0).copied().unwrap_or(fallback), Lane::Background)));
+                let decision = self.runtime.tick_and_dispatch(self.now_ms, |actor| crate::actor_budget_from_turn_budget(budgets.get(&actor.0).copied().unwrap_or(fallback), Lane::Background)).await;
                 if decision.run.is_empty() {
                     break;
                 }
@@ -1246,15 +1573,21 @@ pub mod scale_bench {
                 for outcome in &outcomes {
                     match outcome {
                         ShardOutcome::Turn { actor, result } => {
-                            let _ = pollster::block_on(self.runtime.complete(ActorId(*actor), result, 0, 0, self.now_ms));
+                            let _ = self.runtime.complete_actor(ActorId(*actor), result, self.now_ms).await;
                         }
                         // 🎠️ terra-kernel-loop: same reasoning as `kernel_runtime::run_turn`'s own
                         // `ShardOutcome::Fault` arm — a trap must reach `Kernel::complete` too, or the
                         // failure ladder never sees the SAME "hang"/"crash" profiles budgets 2/3/6
                         // deliberately exercise.
                         ShardOutcome::Fault { actor, message } => {
-                            let faulted = TurnResult { ui_patches: Vec::new(), effects: Vec::new(), next_wake: None, status: semio_framework::kernel::TurnStatus::Faulted(message.clone().into_bytes()), fuel_used: 0 };
-                            let _ = pollster::block_on(self.runtime.complete(ActorId(*actor), &faulted, 0, 0, self.now_ms));
+                            let faulted = semio_framework_actor::TurnResult {
+                                ui_patches: Vec::new(),
+                                effects: Vec::new(),
+                                next_wake: None,
+                                status: semio_framework_actor::TurnStatus::Faulted { detail: message.clone().into_bytes() },
+                                usage: semio_framework_actor::Usage::default(),
+                            };
+                            let _ = self.runtime.complete_actor(ActorId(*actor), &faulted, self.now_ms).await;
                         }
                         _ => {}
                     }
@@ -1278,13 +1611,13 @@ pub mod scale_bench {
         /// whichever arrives) is among them. That stamp, not this call's own return, is budget 5's
         /// actual measurement: see its round loop for why the interval is `send -> this stamp`, not
         /// `send -> this call returning`.
-        fn pump_tracking(&mut self, target: ActorId) -> Result<Option<Instant>, String> {
+        async fn pump_tracking(&mut self, target: ActorId) -> Result<Option<Instant>, String> {
             let mut target_seen: Option<Instant> = None;
             loop {
                 self.now_ms += 1;
                 let budgets = self.budgets.clone();
                 let fallback = TurnBudget { fuel: BENCH_FUEL, deadline_ms: 50, max_effects: 8, max_patch_bytes: 4096, max_frames: 1 };
-                let decision = pollster::block_on(self.runtime.tick_and_dispatch(self.now_ms, |actor| crate::actor_budget_from_turn_budget(budgets.get(&actor.0).copied().unwrap_or(fallback), Lane::Background)));
+                let decision = self.runtime.tick_and_dispatch(self.now_ms, |actor| crate::actor_budget_from_turn_budget(budgets.get(&actor.0).copied().unwrap_or(fallback), Lane::Background)).await;
                 if decision.run.is_empty() {
                     break;
                 }
@@ -1298,12 +1631,18 @@ pub mod scale_bench {
                     for outcome in &outcomes {
                         let reporting_actor = match outcome {
                             ShardOutcome::Turn { actor, result } => {
-                                let _ = pollster::block_on(self.runtime.complete(ActorId(*actor), result, 0, 0, self.now_ms));
+                                let _ = self.runtime.complete_actor(ActorId(*actor), result, self.now_ms).await;
                                 Some(*actor)
                             }
                             ShardOutcome::Fault { actor, message } => {
-                                let faulted = TurnResult { ui_patches: Vec::new(), effects: Vec::new(), next_wake: None, status: semio_framework::kernel::TurnStatus::Faulted(message.clone().into_bytes()), fuel_used: 0 };
-                                let _ = pollster::block_on(self.runtime.complete(ActorId(*actor), &faulted, 0, 0, self.now_ms));
+                                let faulted = semio_framework_actor::TurnResult {
+                                    ui_patches: Vec::new(),
+                                    effects: Vec::new(),
+                                    next_wake: None,
+                                    status: semio_framework_actor::TurnStatus::Faulted { detail: message.clone().into_bytes() },
+                                    usage: semio_framework_actor::Usage::default(),
+                                };
+                                let _ = self.runtime.complete_actor(ActorId(*actor), &faulted, self.now_ms).await;
                                 Some(*actor)
                             }
                             _ => None,
@@ -1323,44 +1662,41 @@ pub mod scale_bench {
             std::mem::take(&mut self.pending)
         }
 
-        fn unregister(&mut self, actor: ActorId) {
-            pollster::block_on(self.runtime.unregister(actor));
+        async fn unregister(&mut self, actor: ActorId) {
+            self.runtime.unregister(actor).await;
         }
     }
     //#endregion 🔖️Env
 
-    fn process_rss_bytes() -> Option<u64> {
-        let pid = std::process::id().to_string();
-        let output = std::process::Command::new("ps").args(["-o", "rss=", "-p", &pid]).output().ok()?;
-        if !output.status.success() {
-            return None;
+    async fn process_rss_bytes() -> Option<u64> {
+        match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ProcessResidentBytes).await.ok()? {
+            semio_framework_os_services::NativeIoValue::ResidentBytes(bytes) => bytes,
+            _ => None,
         }
-        let text = String::from_utf8_lossy(&output.stdout);
-        text.trim().parse::<u64>().ok().map(|kb| kb * 1024)
     }
 
     //#region 🔖️Budget2ColdBoot
-    fn budget_2_cold_boot(process_start: Instant, runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord], shard_count: u16, native_budget_ms: u64) -> serde_json::Value {
+    async fn budget_2_cold_boot(process_start: Instant, runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord], shard_count: u16, native_budget_ms: u64) -> serde_json::Value {
         let startup: Vec<&RegistryRecord> = records.iter().filter(|r| is_startup(r)).collect();
         if startup.is_empty() {
             return skipped(2, "cold boot to first interactive frame, only on-startup-finished actors live", "registry carries no on-startup-finished record");
         }
-        let mut env = Env::new(runtime.clone(), shard_count);
+        let mut env = Env::new(runtime.clone(), shard_count).await;
         let mut actors = Vec::with_capacity(startup.len());
         for (index, record) in startup.iter().enumerate() {
-            match env.activate(compiled, record) {
+            match env.activate(compiled, record).await {
                 Ok(actor) => actors.push(actor),
                 Err(error) => return row(2, "cold boot to first interactive frame, only on-startup-finished actors live", "fail", json!({ "error": error }), json!({ "nativeMs": native_budget_ms }), "activate/instantiate failed mid cold-boot"),
             }
-            env.send(actors[index], &instance_open_event(record, index as u32 + 1));
+            env.send(actors[index], &instance_open_event(record, index as u32 + 1)).await;
         }
-        if let Err(error) = env.pump() {
+        if let Err(error) = env.pump().await {
             return row(2, "cold boot to first interactive frame, only on-startup-finished actors live", "fail", json!({ "error": error }), json!({ "nativeMs": native_budget_ms }), "ShardLoop::pump failed");
         }
         let outcomes = env.drain();
         let elapsed_ms = process_start.elapsed().as_millis() as u64;
         let faults = unexpected_faults(&outcomes, &actors, &startup);
-        let active = env.kernel().metrics().actors;
+        let active = env.kernel().metrics().await.actors;
         let only_startup_live = active as usize == startup.len();
         let pass = faults.is_empty() && only_startup_live && elapsed_ms <= native_budget_ms;
         row(
@@ -1375,40 +1711,40 @@ pub mod scale_bench {
     //#endregion 🔖️Budget2ColdBoot
 
     //#region 🔖️Budget3Activate100
-    fn budget_3_activate_100(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord], shard_count: u16) -> serde_json::Value {
+    async fn budget_3_activate_100(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord], shard_count: u16) -> serde_json::Value {
         let plugin_records: Vec<&RegistryRecord> = records.iter().filter(|r| r.kind == "plugin").take(50).collect();
         if plugin_records.is_empty() {
             return skipped(3, "activate 50 plugins + 50 extensions of one plugin", "registry carries no plugin-kind record");
         }
         let target_plugin_id = plugin_records[0].id.clone();
         let ext_records: Vec<&RegistryRecord> = records.iter().filter(|r| r.kind == "extension" && r.parent_id.as_deref() == Some(target_plugin_id.as_str())).collect();
-        let mut env = Env::new(runtime.clone(), shard_count);
+        let mut env = Env::new(runtime.clone(), shard_count).await;
         let mut activated: Vec<ActorId> = Vec::new();
         let selected: Vec<&RegistryRecord> = plugin_records.iter().chain(ext_records.iter()).copied().collect();
         let mut instance_id = 1u32;
         for record in &selected {
-            match env.activate(compiled, record) {
+            match env.activate(compiled, record).await {
                 Ok(actor) => {
-                    env.send(actor, &instance_open_event(record, instance_id));
+                    env.send(actor, &instance_open_event(record, instance_id)).await;
                     instance_id += 1;
                     activated.push(actor);
                 }
                 Err(error) => return row(3, "activate 50 plugins + 50 extensions of one plugin", "fail", json!({ "error": error }), json!({ "activeActors": 100, "shards": shard_count }), "activate/instantiate failed"),
             }
         }
-        if let Err(error) = env.pump() {
+        if let Err(error) = env.pump().await {
             return row(3, "activate 50 plugins + 50 extensions of one plugin", "fail", json!({ "error": error }), json!({ "activeActors": 100, "shards": shard_count }), "ShardLoop::pump failed");
         }
         let outcomes = env.drain();
         let faults = unexpected_faults(&outcomes, &activated, &selected).len();
-        let active = env.kernel().metrics().actors;
+        let active = env.kernel().metrics().await.actors;
         let mut per_shard: HashMap<u16, u32> = HashMap::new();
         for actor in &activated {
-            if let Some(record) = env.kernel().actor_record(*actor) {
+            if let Some(record) = env.kernel().actor_record(*actor).await {
                 *per_shard.entry(record.shard.0).or_insert(0) += 1;
             }
         }
-        let shards_used = env.kernel().metrics().shards;
+        let shards_used = env.kernel().metrics().await.shards;
         let max_shard_load = per_shard.values().copied().max().unwrap_or(0);
         let ceiling = ((activated.len() as f64) / (shard_count.max(1) as f64)).ceil() as u32 + 1;
         let pass = active as usize == 100 && activated.len() == 100 && faults == 0 && shards_used == shard_count as u32 && max_shard_load <= ceiling;
@@ -1427,14 +1763,14 @@ pub mod scale_bench {
     /// 🏋️ Budgets 4 (memory) and 5 (interactive p95 under 40-cpu-actor load) share one fully-activated
     /// registry ("the" 50x50 scale claim) so budget 5 measures real contention against the same live
     /// fleet budget 4 just measured RSS for, instead of paying for a second 2550-instance activation.
-    fn budget_4_and_5(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord], shard_count: u16, memory_budget_bytes: u64) -> (serde_json::Value, serde_json::Value) {
-        let mut env = Env::new(runtime.clone(), shard_count);
+    async fn budget_4_and_5(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord], shard_count: u16, memory_budget_bytes: u64) -> (serde_json::Value, serde_json::Value) {
+        let mut env = Env::new(runtime.clone(), shard_count).await;
         let mut activated: Vec<(ActorId, String)> = Vec::with_capacity(records.len());
         let mut instance_id = 1u32;
         for record in records {
-            match env.activate(compiled, record) {
+            match env.activate(compiled, record).await {
                 Ok(actor) => {
-                    env.send(actor, &instance_open_event(record, instance_id));
+                    env.send(actor, &instance_open_event(record, instance_id)).await;
                     instance_id += 1;
                     activated.push((actor, profile_of(record).to_string()));
                 }
@@ -1444,15 +1780,15 @@ pub mod scale_bench {
                 }
             }
         }
-        if let Err(error) = env.pump() {
+        if let Err(error) = env.pump().await {
             let fail = row(4, "memory <= K x 512MiB + 256MiB headroom (native RSS <= 1.5GiB)", "fail", json!({ "error": error }), json!({ "maxBytes": memory_budget_bytes }), "ShardLoop::pump failed");
             return (fail, skipped(5, "interactive p95 command->patch <= 16ms web / <= 8ms native, 40 cpu actors saturating background", "budget 4's full-scale activation failed before this could run"));
         }
         let outcomes = env.drain();
         let by_design: std::collections::HashSet<u64> = activated.iter().zip(records.iter()).filter(|(_, record)| matches!(profile_of(record), "hang" | "crash")).map(|((actor, _), _)| actor.0).collect();
         let faults = outcomes.iter().filter(|o| matches!(o, ShardOutcome::Fault { actor, .. } if !by_design.contains(actor))).count();
-        let rss = process_rss_bytes();
-        let active = env.kernel().metrics().actors;
+        let rss = process_rss_bytes().await;
+        let active = env.kernel().metrics().await.actors;
         let pass4 = faults == 0 && active as usize == activated.len() && rss.map(|bytes| bytes <= memory_budget_bytes).unwrap_or(false);
         let row4 = row(
             4,
@@ -1466,7 +1802,11 @@ pub mod scale_bench {
             },
             json!({ "rssBytes": rss, "activatedCount": activated.len(), "activeActors": active, "faultCount": faults }),
             json!({ "maxBytes": memory_budget_bytes }),
-            if rss.is_none() { "`ps -o rss=` did not return a value on this host" } else { "RSS sampled once via `ps -o rss= -p <pid>` immediately after all 2550 records were instantiated and given their InstanceOpen turn" },
+            if rss.is_none() {
+                "the owned platform resident-memory probe did not return a value on this host"
+            } else {
+                "RSS sampled once through the renderer WorkerPool I/O lane immediately after all 2550 records were instantiated and given their InstanceOpen turn"
+            },
         );
 
         // Budget 5 — reuse the live fleet: 40 cpu-profile actors + 1 idle-profile "interactive" actor.
@@ -1491,7 +1831,7 @@ pub mod scale_bench {
                     // WHOLE measured interval below, which is exactly the "40 cpu actors saturating
                     // the background" load this budget names. They are just not what stops the clock.
                     for actor in &cpu_actors {
-                        env.send(*actor, &Event::Wake);
+                        env.send(*actor, &Event::Wake).await;
                     }
                     let start = Instant::now();
                     // 🎯️ terra-bench-instrument: the one envelope in this bench that carries
@@ -1501,7 +1841,8 @@ pub mod scale_bench {
                         interactive_actor,
                         Payload::Event { bytes: serde_json::to_vec(&Event::AppCommandEvent { instance: PluginInstanceId(interactive_actor.0.to_string()), seq: 0, command: Vec::new() }).unwrap_or_default() },
                         Lane::Interactive,
-                    );
+                    )
+                    .await;
                     // 🎯️ terra-bench-instrument (THE measurement fix): the interval this bench
                     // records is send -> `interactive_actor`'s OWN `ShardOutcome` being observed,
                     // via `Env::pump_tracking`'s `Instant` stamp — NOT the moment `pump_tracking`
@@ -1514,7 +1855,7 @@ pub mod scale_bench {
                     // already returned — i.e. it timed the slowest of 41 actors every round, not this
                     // one actor's own response; see this packet's own report for why that made the
                     // 8ms budget unreachable by construction, independent of scheduler quality.
-                    match env.pump_tracking(interactive_actor) {
+                    match env.pump_tracking(interactive_actor).await {
                         Ok(Some(seen_at)) => samples_ms.push((seen_at - start).as_secs_f64() * 1000.0),
                         Ok(None) => round_faults += 1,
                         Err(_) => round_faults += 1,
@@ -1542,7 +1883,7 @@ pub mod scale_bench {
     //#endregion 🔖️Budget4And5FullScale
 
     //#region 🔖️Budget6Hang
-    fn budget_6_hang(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> serde_json::Value {
+    async fn budget_6_hang(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> serde_json::Value {
         let Some(hang_record) = records.iter().find(|r| profile_of(r) == "hang") else {
             return skipped(6, "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms", "no hang-profile record in registry");
         };
@@ -1550,25 +1891,25 @@ pub mod scale_bench {
         if sibling_records.is_empty() {
             return skipped(6, "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms", "no idle-profile sibling records in registry");
         }
-        let mut env = Env::new(runtime.clone(), 1);
+        let mut env = Env::new(runtime.clone(), 1).await;
         let deadline_ms = hang_record.quotas.deadline_ms;
         let pause_start = Instant::now();
-        let hang_actor = match env.activate(compiled, hang_record) {
+        let hang_actor = match env.activate(compiled, hang_record).await {
             Ok(actor) => actor,
             Err(error) => return row(6, "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms", "fail", json!({ "error": error }), json!(null), "hang actor activate/instantiate failed"),
         };
-        env.send(hang_actor, &instance_open_event(hang_record, 1));
+        env.send(hang_actor, &instance_open_event(hang_record, 1)).await;
         let mut siblings = Vec::new();
         for (index, record) in sibling_records.iter().enumerate() {
-            match env.activate(compiled, record) {
+            match env.activate(compiled, record).await {
                 Ok(actor) => {
-                    env.send(actor, &instance_open_event(record, index as u32 + 2));
+                    env.send(actor, &instance_open_event(record, index as u32 + 2)).await;
                     siblings.push(actor);
                 }
                 Err(error) => return row(6, "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms", "fail", json!({ "error": error }), json!(null), "sibling activate/instantiate failed"),
             }
         }
-        if env.pump().is_err() {
+        if env.pump().await.is_err() {
             return row(6, "hang actor killed within 2x budget, shard rebuilt, siblings restored, total pause <= 250ms", "fail", json!(null), json!(null), "ShardLoop::pump failed on InstanceOpen phase");
         }
         // 🐛️ `🎭️profile::turn()` runs unconditionally on EVERY `poll`, including `InstanceOpen` (see
@@ -1589,8 +1930,8 @@ pub mod scale_bench {
         let (killed, hang_fault) = if let Some(message) = hang_fault_on_open {
             (true, Some(message))
         } else {
-            env.send(hang_actor, &Event::Wake);
-            let _ = env.pump();
+            env.send(hang_actor, &Event::Wake).await;
+            let _ = env.pump().await;
             let wake_outcomes = env.drain();
             let message = wake_outcomes.iter().find_map(|o| match o {
                 ShardOutcome::Fault { actor, message } if *actor == hang_actor.0 => Some(message.clone()),
@@ -1605,11 +1946,11 @@ pub mod scale_bench {
                 .unwrap_or(false);
             (killed, message)
         };
-        env.unregister(hang_actor);
+        env.unregister(hang_actor).await;
         for actor in &siblings {
-            env.send(*actor, &Event::Wake);
+            env.send(*actor, &Event::Wake).await;
         }
-        let siblings_pumped = env.pump().is_ok();
+        let siblings_pumped = env.pump().await.is_ok();
         let sibling_outcomes = env.drain();
         let siblings_ok = siblings.iter().all(|actor| sibling_outcomes.iter().any(|o| matches!(o, ShardOutcome::Turn { actor: a, .. } if *a == actor.0)));
         let pause_ms = pause_start.elapsed().as_millis() as u64;
@@ -1637,59 +1978,59 @@ pub mod scale_bench {
     /// checkpoint wire path K1 unblocked.
     const BUDGET_7_DESCRIPTION: &str = "stateful actor LRU-suspended and resumed -> identical state hash";
 
-    fn budget_7_stateful(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> serde_json::Value {
+    async fn budget_7_stateful(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> serde_json::Value {
         let Some(record) = records.iter().find(|r| profile_of(r) == "stateful") else {
             return skipped(7, BUDGET_7_DESCRIPTION, "no stateful-profile record in registry");
         };
-        let mut env = Env::new(runtime.clone(), 1);
-        let actor_a = match env.activate(compiled, record) {
+        let mut env = Env::new(runtime.clone(), 1).await;
+        let actor_a = match env.activate(compiled, record).await {
             Ok(actor) => actor,
             Err(error) => return row(7, BUDGET_7_DESCRIPTION, "fail", json!({ "error": error }), json!(null), "activate/instantiate failed"),
         };
-        env.send(actor_a, &instance_open_event(record, 1));
+        env.send(actor_a, &instance_open_event(record, 1)).await;
         for _ in 0..5 {
-            env.send(actor_a, &Event::Wake);
+            env.send(actor_a, &Event::Wake).await;
         }
-        if env.pump().is_err() {
+        if env.pump().await.is_err() {
             return row(7, BUDGET_7_DESCRIPTION, "fail", json!(null), json!(null), "pump failed while accumulating state");
         }
         env.drain();
 
         let operation = JobOperation { operation: actor_a.0, base_revision: 0, generation: actor_a.generation() as u64, preview_sequence: 0, seed: actor_a.0 };
-        env.send_payload(actor_a, Payload::Suspend { operation, applied_progress: 0 });
-        if env.pump().is_err() {
+        env.send_payload(actor_a, Payload::Suspend { operation, applied_progress: 0 }).await;
+        if env.pump().await.is_err() {
             return row(7, BUDGET_7_DESCRIPTION, "fail", json!(null), json!(null), "pump failed on Suspend");
         }
         let suspend_outcomes = env.drain();
         let Some(state) = suspend_outcomes.iter().find_map(|o| match o {
-            ShardOutcome::Checkpoint { actor, state } if *actor == actor_a.0 => Some(state.clone()),
+            ShardOutcome::Checkpoint { actor, checkpoint, .. } if *actor == actor_a.0 => Some(checkpoint.state.clone()),
             _ => None,
         }) else {
             return row(7, BUDGET_7_DESCRIPTION, "fail", json!({ "outcomes": format!("{suspend_outcomes:?}") }), json!(null), "no ShardOutcome::Checkpoint for Suspend");
         };
 
         // The "evicted" half of LRU-suspend: drop A's live instance from this shard.
-        env.unregister(actor_a);
+        env.unregister(actor_a).await;
 
         // The "resumed elsewhere" half: a FRESH instance, resumed from the captured checkpoint bytes.
-        let actor_b = match env.activate(compiled, record) {
+        let actor_b = match env.activate(compiled, record).await {
             Ok(actor) => actor,
             Err(error) => return row(7, BUDGET_7_DESCRIPTION, "fail", json!({ "error": error }), json!(null), "re-activate/instantiate failed"),
         };
-        env.send_payload(actor_b, Payload::Resume { operation, checkpoint: JobCheckpoint { state: state.clone(), applied_progress: 0 } });
-        if env.pump().is_err() {
+        env.send_payload(actor_b, Payload::Resume { operation, checkpoint: JobCheckpoint { state: state.clone(), applied_progress: 0 } }).await;
+        if env.pump().await.is_err() {
             return row(7, BUDGET_7_DESCRIPTION, "fail", json!(null), json!(null), "pump failed on Resume");
         }
         let resume_outcomes = env.drain();
-        let resumed = resume_outcomes.iter().any(|o| matches!(o, ShardOutcome::Resumed { actor } if *actor == actor_b.0));
+        let resumed = resume_outcomes.iter().any(|o| matches!(o, ShardOutcome::Resumed { actor, .. } if *actor == actor_b.0));
 
-        env.send_payload(actor_b, Payload::Suspend { operation, applied_progress: 0 });
-        if env.pump().is_err() {
+        env.send_payload(actor_b, Payload::Suspend { operation, applied_progress: 0 }).await;
+        if env.pump().await.is_err() {
             return row(7, BUDGET_7_DESCRIPTION, "fail", json!({ "resumed": resumed }), json!(null), "pump failed on post-resume re-Suspend");
         }
         let recheck_outcomes = env.drain();
         let Some(state_after_resume) = recheck_outcomes.iter().find_map(|o| match o {
-            ShardOutcome::Checkpoint { actor, state } if *actor == actor_b.0 => Some(state.clone()),
+            ShardOutcome::Checkpoint { actor, checkpoint, .. } if *actor == actor_b.0 => Some(checkpoint.state.clone()),
             _ => None,
         }) else {
             return row(7, BUDGET_7_DESCRIPTION, "fail", json!({ "resumed": resumed }), json!(null), "no ShardOutcome::Checkpoint after resume");
@@ -1708,14 +2049,14 @@ pub mod scale_bench {
     //#endregion 🔖️Budget7Stateful
 
     //#region 🔖️Budget8CapabilityRevoke
-    fn budget_8_capability_revoke(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> serde_json::Value {
+    async fn budget_8_capability_revoke(runtime: &Arc<GuestRuntimes>, compiled: &CompiledHandle, records: &[RegistryRecord]) -> serde_json::Value {
         let Some(record) = records.iter().find(|r| profile_of(r) == "io") else {
             return skipped(8, "capability revoked at runtime -> denied completion, actor stays alive, quota counters zero", "no io-profile record in registry");
         };
         let cap_id = record.scale_fixture.get("ioCapabilityId").and_then(|v| v.as_str()).unwrap_or("scale-fixture.io").to_string();
         let budget = turn_budget_of(record);
         let actor = ActorId(0xB8_0000_0001);
-        let mut inst = match runtime.instantiate(compiled, actor, &[], &budget) {
+        let mut inst = match runtime.instantiate(compiled, actor, &[], &budget).await {
             Ok(instance) => instance,
             Err(error) => return row(8, "capability revoked at runtime -> denied completion, actor stays alive, quota counters zero", "fail", json!({ "error": error.to_string() }), json!(null), "instantiate failed"),
         };
@@ -1723,24 +2064,24 @@ pub mod scale_bench {
         // the `io` profile's ONE-TIME `RequestCapability` effect is therefore typically emitted on
         // THIS very first `InstanceOpen` turn, not a dedicated follow-up. Checked on both turns so a
         // real request is never misread as absent just because it landed on turn 1.
-        let open_result = match semio_framework_plugin_host::poll_ready(runtime.execute_turn(&mut inst, &[instance_open_event(record, 1)], budget)) {
+        let open_result = match runtime.execute_turn(&mut inst, &[instance_open_event(record, 1)], budget).await {
             Ok(result) => result,
             Err(fault) => return row(8, "capability revoked at runtime -> denied completion, actor stays alive, quota counters zero", "fail", json!({ "error": fault.to_string() }), json!(null), "InstanceOpen turn failed"),
         };
         let requested_on_open = open_result.effects.iter().any(|effect| matches!(effect, Effect::RequestCapability { capability, .. } if capability.id.0 == cap_id));
-        let requested_on_wake = match semio_framework_plugin_host::poll_ready(runtime.execute_turn(&mut inst, &[Event::Wake], budget)) {
+        let requested_on_wake = match runtime.execute_turn(&mut inst, &[Event::Wake], budget).await {
             Ok(result) => result.effects.iter().any(|effect| matches!(effect, Effect::RequestCapability { capability, .. } if capability.id.0 == cap_id)),
             Err(fault) => return row(8, "capability revoked at runtime -> denied completion, actor stays alive, quota counters zero", "fail", json!({ "error": fault.to_string() }), json!(null), "capability-request turn failed"),
         };
         let requested = requested_on_open || requested_on_wake;
         let revoke_event = Event::CapabilityChanged { change: CapabilityChange::Revoked { id: CapabilityId(cap_id.clone()) } };
-        let revoke_result = semio_framework_plugin_host::poll_ready(runtime.execute_turn(&mut inst, &[revoke_event], budget));
+        let revoke_result = runtime.execute_turn(&mut inst, &[revoke_event], budget).await;
         let survived_revoke = revoke_result.is_ok();
         let revoke_status = match &revoke_result {
             Ok(result) => format!("{:?}", result.status),
             Err(fault) => fault.to_string(),
         };
-        let followup = semio_framework_plugin_host::poll_ready(runtime.execute_turn(&mut inst, &[Event::Wake], budget));
+        let followup = runtime.execute_turn(&mut inst, &[Event::Wake], budget).await;
         let survived_followup = followup.is_ok();
         let pass = requested && survived_revoke && survived_followup;
         row(
@@ -1759,10 +2100,14 @@ pub mod scale_bench {
     /// writes one JSON report. Returns `0` on a clean harness run (regardless of individual budget
     /// pass/fail — a real measured FAIL is a valid, non-error outcome), `1` if the harness itself could
     /// not set up (bad registry/wasm/report path).
-    pub fn run(registry_path: PathBuf, wasm_path: PathBuf, shard_count: u16, report_path: PathBuf) -> i32 {
+    pub async fn run(registry_path: PathBuf, wasm_path: PathBuf, shard_count: u16, report_path: PathBuf) -> i32 {
         let process_start = Instant::now();
-        let registry_bytes = match std::fs::read(&registry_path) {
-            Ok(bytes) => bytes,
+        let registry_bytes = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(registry_path.clone())).await {
+            Ok(semio_framework_os_services::NativeIoValue::Bytes(bytes)) => bytes,
+            Ok(_) => {
+                eprintln!("scale-bench: native I/O returned the wrong value for {}", registry_path.display());
+                return 1;
+            }
             Err(error) => {
                 eprintln!("scale-bench: failed to read {}: {error}", registry_path.display());
                 return 1;
@@ -1775,22 +2120,20 @@ pub mod scale_bench {
                 return 1;
             }
         };
-        let wasm_bytes = match std::fs::read(&wasm_path) {
-            Ok(bytes) => bytes,
+        let wasm_bytes = match crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::ReadBytes(wasm_path.clone())).await {
+            Ok(semio_framework_os_services::NativeIoValue::Bytes(bytes)) => bytes,
+            Ok(_) => {
+                eprintln!("scale-bench: native I/O returned the wrong value for {}", wasm_path.display());
+                return 1;
+            }
             Err(error) => {
                 eprintln!("scale-bench: failed to read {}: {error}", wasm_path.display());
                 return 1;
             }
         };
-        let runtime: Arc<GuestRuntimes> = match WasmtimeRuntime::new(SharedEngineConfig::default()) {
-            Ok(rt) => Arc::new(GuestRuntimes::Wasmtime(rt)),
-            Err(error) => {
-                eprintln!("scale-bench: engine build failed: {error}");
-                return 1;
-            }
-        };
+        let runtime: Arc<GuestRuntimes> = Arc::new(GuestRuntimes::Owned(OwnedRuntime::new()));
         let package_ref = PackageRef { package: PackageId("scale-fixture".to_string()), hash: PackageHash(*blake3::hash(&wasm_bytes).as_bytes()) };
-        let compiled = match runtime.compile(&package_ref, &wasm_bytes) {
+        let compiled = match runtime.compile(&package_ref, &wasm_bytes).await {
             Ok(handle) => handle,
             Err(error) => {
                 eprintln!("scale-bench: compile failed: {error}");
@@ -1798,12 +2141,12 @@ pub mod scale_bench {
             }
         };
 
-        let row_2 = budget_2_cold_boot(process_start, &runtime, &compiled, &registry.records, shard_count, 1500);
-        let row_3 = budget_3_activate_100(&runtime, &compiled, &registry.records, shard_count);
-        let (row_4, row_5) = budget_4_and_5(&runtime, &compiled, &registry.records, shard_count, shard_count as u64 * 512 * 1024 * 1024 + 256 * 1024 * 1024);
-        let row_6 = budget_6_hang(&runtime, &compiled, &registry.records);
-        let row_7 = budget_7_stateful(&runtime, &compiled, &registry.records);
-        let row_8 = budget_8_capability_revoke(&runtime, &compiled, &registry.records);
+        let row_2 = budget_2_cold_boot(process_start, &runtime, &compiled, &registry.records, shard_count, 1500).await;
+        let row_3 = budget_3_activate_100(&runtime, &compiled, &registry.records, shard_count).await;
+        let (row_4, row_5) = budget_4_and_5(&runtime, &compiled, &registry.records, shard_count, shard_count as u64 * 512 * 1024 * 1024 + 256 * 1024 * 1024).await;
+        let row_6 = budget_6_hang(&runtime, &compiled, &registry.records).await;
+        let row_7 = budget_7_stateful(&runtime, &compiled, &registry.records).await;
+        let row_8 = budget_8_capability_revoke(&runtime, &compiled, &registry.records).await;
 
         let report = json!({
             "renderer": "native",
@@ -1812,12 +2155,9 @@ pub mod scale_bench {
             "wasmPath": wasm_path.display().to_string(),
             "budgets": [row_2, row_3, row_4, row_5, row_6, row_7, row_8],
         });
-        if let Some(parent) = report_path.parent() {
-            let _ = std::fs::create_dir_all(parent);
-        }
         match serde_json::to_string_pretty(&report) {
             Ok(text) => {
-                if let Err(error) = std::fs::write(&report_path, text) {
+                if let Err(error) = crate::run_renderer_io(semio_framework_os_services::NativeIoRequest::WriteBytes { path: report_path.clone(), bytes: text.into_bytes(), create_parent: true }).await {
                     eprintln!("scale-bench: failed to write {}: {error}", report_path.display());
                     return 1;
                 }
@@ -1833,14 +2173,20 @@ pub mod scale_bench {
 }
 //#endregion 🔖️ScaleBench
 
+#[cfg(not(target_arch = "wasm32"))]
+fn spawn_app_task<F>(future: F)
+where
+    F: std::future::Future<Output = ()> + Send + 'static,
+{
+    let _ = kernel_runtime::KernelPoolFuture::spawn(renderer_worker_pool(), semio_framework_async::Lane::Interactive, future);
+}
+
+#[cfg(target_arch = "wasm32")]
 fn spawn_app_task<F>(future: F)
 where
     F: std::future::Future<Output = ()> + 'static,
 {
-    #[cfg(target_arch = "wasm32")]
     spawn_local(future);
-    #[cfg(not(target_arch = "wasm32"))]
-    kernel_runtime::spawn_task(future);
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -1942,29 +2288,362 @@ mod camera_dispatch_deadline_tests {
     }
 }
 
-/// 🪪️ P3c (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): the capability a deferred
-/// `spawn_app_task` continuation needs to re-borrow the `AppRuntime` it was scheduled from, once its
-/// `.await` resumes. This used to be a field on `AppRuntime` itself (`self_weak`) — a genuine
-/// self-reference that forced `Rc<RefCell<AppRuntime>>` ownership on the whole struct and made it
-/// `!Send` in the strongest possible way (definitionally, not merely "contains a `!Send` handle").
-/// Every call site that needs one already has the real `Rc<RefCell<AppRuntime>>` in scope at its own
-/// call boundary (`OsHost::runtime`, or a `spawn_app_task` closure that already captured it) — so this
-/// is now an explicit parameter threaded down from there, never stored inside the struct it points
-/// back to. See `📓️p3c-explicit-app-handle.md` §1.
-type AppHandle = std::rc::Weak<RefCell<AppRuntime>>;
+//#region 🔖️AsyncBoundaryTests
+#[cfg(test)]
+mod async_boundary_tests {
+    use super::*;
+
+    const LIBRARY_SOURCE: &str = include_str!("📦️glue.rs");
+    const BINARY_SOURCE: &str = include_str!("📦️bin.rs");
+    const MANIFEST_SOURCE: &str = include_str!("Cargo.toml");
+    const WINT_APP_SOURCE: &str = include_str!("🦀️winit_app.rs");
+
+    #[test]
+    fn product_library_has_no_executor_bridge() {
+        assert!(!LIBRARY_SOURCE.contains(concat!("poll", "ster")));
+        assert!(!LIBRARY_SOURCE.contains(concat!("block", "_on")));
+        assert!(LIBRARY_SOURCE.contains("KernelPoolFuture::spawn"));
+        assert!(LIBRARY_SOURCE.contains("spawn_app_task"));
+        assert!(!LIBRARY_SOURCE.contains(concat!("TASK", "_POOL")));
+        assert!(!LIBRARY_SOURCE.contains(concat!("poll", "_tasks")));
+        assert!(!LIBRARY_SOURCE.contains("thread_local! {\n        static REAL_WAKER"));
+        assert!(!WINT_APP_SOURCE.contains(concat!("poll", "_tasks")));
+        assert!(!WINT_APP_SOURCE.contains(concat!("TASK", "_POOL")));
+    }
+
+    #[test]
+    fn runtime_mailbox_reserves_completion_capacity_and_coalesces_only_matching_keys() {
+        let completion = |key: Option<&'static str>, revision: u64| RuntimeCompletion { key, revision, requires_interaction: false, apply: Box::new(|_, _| {}) };
+        let mut queue = RuntimeCompletionQueue::new();
+        for revision in 0..RUNTIME_COMPLETION_CAPACITY - 1 {
+            assert!(queue.enqueue(completion(None, revision as u64)));
+        }
+        assert!(!queue.enqueue(completion(None, 10_000)));
+        assert_eq!(queue.len(), RUNTIME_COMPLETION_CAPACITY - 1);
+
+        let mut queue = RuntimeCompletionQueue::new();
+        for revision in 0..RUNTIME_COMPLETION_CAPACITY - 1 {
+            assert!(queue.enqueue(completion(Some("refresh"), revision as u64)));
+        }
+        assert!(queue.enqueue(completion(Some("refresh"), 10_000)));
+        assert_eq!(queue.len(), RUNTIME_COMPLETION_CAPACITY - 1);
+        assert_eq!(queue.ready.back().expect("latest refresh").revision, 10_000);
+
+        let mut queue = RuntimeCompletionQueue::new();
+        for _ in 0..RUNTIME_COMPLETION_CAPACITY - 1 {
+            assert!(queue.reserve(None));
+        }
+        assert!(!queue.reserve(None));
+        assert!(queue.reserve_interaction());
+        assert!(!queue.reserve_interaction());
+        queue.finish(completion(None, 20_000));
+        assert_eq!(queue.len(), RUNTIME_COMPLETION_CAPACITY);
+    }
+
+    #[test]
+    fn native_binary_owns_exactly_one_entrypoint_driver() {
+        assert_eq!(BINARY_SOURCE.matches(concat!("block", "_on(")).count(), 1);
+        assert_eq!(BINARY_SOURCE.matches("drive_entrypoint(").count(), 2);
+    }
+
+    #[test]
+    fn manifest_has_no_retired_direct_edges() {
+        assert!(!MANIFEST_SOURCE.contains(concat!("poll", "ster =")));
+        assert!(!MANIFEST_SOURCE.contains(concat!("wasm-bindgen", "-test")));
+        assert!(!MANIFEST_SOURCE.lines().any(|line| line.trim_start().starts_with("naga =")));
+        assert!(!MANIFEST_SOURCE.lines().any(|line| line.trim_start().starts_with("rfd =")));
+        assert!(!MANIFEST_SOURCE.lines().any(|line| line.trim_start().starts_with("ureq =")));
+    }
+}
+//#endregion 🔖️AsyncBoundaryTests
+
+//#region 📮️RuntimeMailbox
+
+#[cfg(not(target_arch = "wasm32"))]
+type RuntimeApply = Box<dyn FnOnce(&mut AppRuntime, &AppHandle) + Send + 'static>;
+
+#[cfg(target_arch = "wasm32")]
+type RuntimeApply = Box<dyn FnOnce(&mut AppRuntime, &AppHandle) + 'static>;
+
+const RUNTIME_COMPLETION_CAPACITY: usize = 128;
+
+struct RuntimeCompletion {
+    key: Option<&'static str>,
+    revision: u64,
+    requires_interaction: bool,
+    apply: RuntimeApply,
+}
+
+struct RuntimeCompletionQueue {
+    ready: std::collections::VecDeque<RuntimeCompletion>,
+    in_flight: usize,
+}
+
+impl RuntimeCompletionQueue {
+    fn new() -> Self {
+        Self { ready: std::collections::VecDeque::with_capacity(RUNTIME_COMPLETION_CAPACITY), in_flight: 0 }
+    }
+
+    fn len(&self) -> usize {
+        self.ready.len() + self.in_flight
+    }
+
+    fn make_room_for(&mut self, key: Option<&'static str>, limit: usize) -> bool {
+        if self.len() < limit {
+            return true;
+        }
+        let Some(key) = key else { return false };
+        let Some(index) = self.ready.iter().position(|queued| queued.key == Some(key)) else { return false };
+        self.ready.remove(index);
+        true
+    }
+
+    fn enqueue(&mut self, completion: RuntimeCompletion) -> bool {
+        if !self.make_room_for(completion.key, RUNTIME_COMPLETION_CAPACITY - 1) {
+            return false;
+        }
+        self.ready.push_back(completion);
+        true
+    }
+
+    fn reserve(&mut self, key: Option<&'static str>) -> bool {
+        if !self.make_room_for(key, RUNTIME_COMPLETION_CAPACITY - 1) {
+            return false;
+        }
+        self.in_flight += 1;
+        true
+    }
+
+    fn reserve_interaction(&mut self) -> bool {
+        if self.len() == RUNTIME_COMPLETION_CAPACITY {
+            return false;
+        }
+        self.in_flight += 1;
+        true
+    }
+
+    fn finish(&mut self, completion: RuntimeCompletion) {
+        assert!(self.in_flight > 0, "runtime completion without reservation");
+        self.in_flight -= 1;
+        self.ready.push_front(completion);
+        assert!(self.len() <= RUNTIME_COMPLETION_CAPACITY, "runtime completion mailbox capacity exceeded");
+    }
+}
+
+struct RuntimeMailboxInner {
+    runtime: Mutex<AppRuntime>,
+    completions: Mutex<RuntimeCompletionQueue>,
+    waker: Mutex<Option<Arc<dyn Fn() + Send + Sync>>>,
+    next_revision: std::sync::atomic::AtomicU64,
+    applied_revisions: Mutex<std::collections::HashMap<&'static str, u64>>,
+    frame_inputs: Mutex<crate::frame_job::FrameBuildInputs>,
+}
+
+impl RuntimeMailboxInner {
+    fn try_lock(&self) -> std::sync::TryLockResult<std::sync::MutexGuard<'_, AppRuntime>> {
+        self.runtime.try_lock()
+    }
+
+    fn completion(&self, key: Option<&'static str>, requires_interaction: bool, apply: RuntimeApply) -> RuntimeCompletion {
+        RuntimeCompletion { key, revision: self.next_revision.fetch_add(1, std::sync::atomic::Ordering::Relaxed), requires_interaction, apply }
+    }
+
+    fn enqueue(&self, key: Option<&'static str>, requires_interaction: bool, apply: RuntimeApply) -> bool {
+        let completion = self.completion(key, requires_interaction, apply);
+        let mut queue = self.completions.lock().expect("runtime completion mailbox lock");
+        if !queue.enqueue(completion) {
+            return false;
+        }
+        drop(queue);
+        if let Some(waker) = self.waker.lock().expect("runtime completion waker lock").as_ref() {
+            waker();
+        }
+        true
+    }
+
+    fn finish(&self, completion: RuntimeCompletion) {
+        let mut queue = self.completions.lock().expect("runtime completion mailbox lock");
+        queue.finish(completion);
+        drop(queue);
+        if let Some(waker) = self.waker.lock().expect("runtime completion waker lock").as_ref() {
+            waker();
+        }
+    }
+}
+
+#[derive(Clone)]
+pub(crate) struct RuntimeMailbox(Arc<RuntimeMailboxInner>);
+
+impl RuntimeMailbox {
+    fn new(runtime: AppRuntime) -> Self {
+        Self(Arc::new(RuntimeMailboxInner {
+            runtime: Mutex::new(runtime),
+            completions: Mutex::new(RuntimeCompletionQueue::new()),
+            waker: Mutex::new(None),
+            next_revision: std::sync::atomic::AtomicU64::new(1),
+            applied_revisions: Mutex::new(std::collections::HashMap::new()),
+            frame_inputs: Mutex::new(crate::frame_job::FrameBuildInputs::default()),
+        }))
+    }
+
+    fn downgrade(&self) -> AppHandle {
+        Arc::downgrade(&self.0)
+    }
+
+    fn try_lock(&self) -> std::sync::TryLockResult<std::sync::MutexGuard<'_, AppRuntime>> {
+        self.0.try_lock()
+    }
+
+    fn set_waker(&self, waker: Arc<dyn Fn() + Send + Sync>) {
+        *self.0.waker.lock().expect("runtime completion waker lock") = Some(waker);
+    }
+
+    fn enqueue_apply(&self, key: Option<&'static str>, requires_interaction: bool, apply: RuntimeApply) -> bool {
+        self.0.enqueue(key, requires_interaction, apply)
+    }
+
+    fn has_lossless_capacity(&self) -> bool {
+        self.0.completions.lock().expect("runtime completion mailbox lock").len() < RUNTIME_COMPLETION_CAPACITY - 1
+    }
+
+    fn frame_inputs(&self, now_ms: f64) -> crate::frame_job::FrameBuildInputs {
+        let mut inputs = self.0.frame_inputs.try_lock().map(|inputs| inputs.clone()).unwrap_or_default();
+        inputs.now_ms = now_ms;
+        inputs
+    }
+
+    fn update_frame_inputs(&self, runtime: &AppRuntime) {
+        if !runtime.interaction_available() {
+            return;
+        }
+        *self.0.frame_inputs.lock().expect("runtime frame inputs lock") = crate::frame_job::FrameBuildInputs {
+            world3d_camera_dispatch_deadlines_ms: runtime.world3d_camera_dispatch_deadlines_ms.clone(),
+            wheel_zoom_deadline_ms: runtime.wheel_zoom_deadline_ms,
+            now_ms: app_now_ms(),
+        };
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn reserve_future(&self, key: Option<&'static str>) -> bool {
+        self.0.completions.lock().expect("runtime completion mailbox lock").reserve(key)
+    }
+
+    fn reserve_interaction_future(&self) -> bool {
+        self.0.completions.lock().expect("runtime completion mailbox lock").reserve_interaction()
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn spawn_reserved<T, F, C>(&self, key: Option<&'static str>, requires_interaction: bool, future: F, complete: C)
+    where
+        T: Send + 'static,
+        F: Future<Output = T> + Send + 'static,
+        C: FnOnce(&mut AppRuntime, T, &AppHandle) + Send + 'static,
+    {
+        let mailbox = self.clone();
+        let revision = mailbox.0.next_revision.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        spawn_app_task(async move {
+            let result = future.await;
+            mailbox.0.finish(RuntimeCompletion { key, revision, requires_interaction, apply: Box::new(move |runtime, handle| complete(runtime, result, handle)) });
+        });
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    fn spawn_reserved<T, F, C>(&self, key: Option<&'static str>, requires_interaction: bool, future: F, complete: C)
+    where
+        T: 'static,
+        F: Future<Output = T> + 'static,
+        C: FnOnce(&mut AppRuntime, T, &AppHandle) + 'static,
+    {
+        let mailbox = self.clone();
+        let revision = mailbox.0.next_revision.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        spawn_app_task(async move {
+            let result = future.await;
+            mailbox.0.finish(RuntimeCompletion { key, revision, requires_interaction, apply: Box::new(move |runtime, handle| complete(runtime, result, handle)) });
+        });
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn submit<T, F, C>(&self, key: Option<&'static str>, requires_interaction: bool, future: F, complete: C) -> bool
+    where
+        T: Send + 'static,
+        F: Future<Output = T> + Send + 'static,
+        C: FnOnce(&mut AppRuntime, T, &AppHandle) + Send + 'static,
+    {
+        if !self.reserve_future(key) {
+            return false;
+        }
+        self.spawn_reserved(key, requires_interaction, future, complete);
+        true
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    fn submit<T, F, C>(&self, key: Option<&'static str>, requires_interaction: bool, future: F, complete: C) -> bool
+    where
+        T: 'static,
+        F: Future<Output = T> + 'static,
+        C: FnOnce(&mut AppRuntime, T, &AppHandle) + 'static,
+    {
+        if !self.reserve_future(key) {
+            return false;
+        }
+        self.spawn_reserved(key, requires_interaction, future, complete);
+        true
+    }
+
+    fn apply_pending(&self) -> usize {
+        let Ok(mut runtime) = self.try_lock() else {
+            return 0;
+        };
+        loop {
+            let mut queue = self.0.completions.lock().expect("runtime completion mailbox lock");
+            if queue.ready.front().is_some_and(|completion| completion.requires_interaction && !runtime.interaction_available()) {
+                return 0;
+            }
+            let Some(completion) = queue.ready.pop_front() else { return 0 };
+            drop(queue);
+            if let Some(key) = completion.key {
+                let mut applied = self.0.applied_revisions.lock().expect("runtime completion revisions lock");
+                if applied.get(key).is_some_and(|revision| *revision >= completion.revision) {
+                    continue;
+                }
+                applied.insert(key, completion.revision);
+            }
+            let handle = self.downgrade();
+            (completion.apply)(&mut runtime, &handle);
+            return 1;
+        }
+    }
+}
+
+/// 🪪️ Weak address for submitting owned work and returning serial completions without retaining
+/// `AppRuntime` or a mutex guard across suspension.
+type AppHandle = std::sync::Weak<RuntimeMailboxInner>;
+
+//#endregion 📮️RuntimeMailbox
+
+//#region 🎮️AppInteractionState
 
 struct AppRuntime {
-    gpu: GpuContext,
     atlas: FontAtlas,
     icons: IconAtlas,
-    shell: ShellState,
+    interaction: Option<AppInteractionState>,
     draw: DrawList,
     overlay: DrawList,
+    #[cfg(not(target_arch = "wasm32"))]
+    plugin_modules_root: std::path::PathBuf,
+    #[cfg(not(target_arch = "wasm32"))]
+    native_plugin_mtimes: std::collections::HashMap<std::path::PathBuf, std::time::SystemTime>,
+    #[cfg(not(target_arch = "wasm32"))]
+    native_hot_swap_scan: Option<RendererIoHandle>,
+    #[cfg(not(target_arch = "wasm32"))]
+    native_reload_pending: bool,
+}
+
+pub(crate) struct AppInteractionState {
+    shell: ShellState,
     input: InputState<ActionDescriptor>,
     theme: Theme,
-    window: Arc<Window>,
     theme_dark: bool,
-    last_cursor: Option<(SemioCursor, bool)>,
     last_pointer_x: f32,
     last_pointer_y: f32,
     pointer_down: bool,
@@ -1982,11 +2661,151 @@ struct AppRuntime {
     caret_blink_visible: bool,
     asset_poll_pending: bool,
     #[cfg(not(target_arch = "wasm32"))]
-    plugin_modules_root: std::path::PathBuf,
+    last_sync_pump_ms: f64,
+}
+
+impl std::ops::Deref for AppRuntime {
+    type Target = AppInteractionState;
+
+    fn deref(&self) -> &Self::Target {
+        self.interaction.as_ref().expect("runtime interaction state is worker-owned")
+    }
+}
+
+impl std::ops::DerefMut for AppRuntime {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.interaction.as_mut().expect("runtime interaction state is worker-owned")
+    }
+}
+
+impl AppRuntime {
+    fn interaction_available(&self) -> bool {
+        self.interaction.is_some()
+    }
+
     #[cfg(not(target_arch = "wasm32"))]
-    native_plugin_mtimes: std::collections::HashMap<std::path::PathBuf, std::time::SystemTime>,
-    #[cfg(not(target_arch = "wasm32"))]
-    native_reload_pending: bool,
+    fn submit_interaction<F, Fut>(&mut self, handle: &AppHandle, key: Option<&'static str>, work: F) -> bool
+    where
+        F: FnOnce(AppInteractionState) -> Fut,
+        Fut: Future<Output = AppInteractionState> + Send + 'static,
+    {
+        let Some(interaction) = self.interaction.take() else { return false };
+        let Some(mailbox) = handle.upgrade().map(RuntimeMailbox) else {
+            self.interaction = Some(interaction);
+            return false;
+        };
+        if !mailbox.reserve_interaction_future() {
+            self.interaction = Some(interaction);
+            return false;
+        }
+        mailbox.spawn_reserved(key, false, work(interaction), |runtime, interaction, _| runtime.interaction = Some(interaction));
+        true
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    fn submit_interaction<F, Fut>(&mut self, handle: &AppHandle, key: Option<&'static str>, work: F) -> bool
+    where
+        F: FnOnce(AppInteractionState) -> Fut,
+        Fut: Future<Output = AppInteractionState> + 'static,
+    {
+        let Some(interaction) = self.interaction.take() else { return false };
+        let Some(mailbox) = handle.upgrade().map(RuntimeMailbox) else {
+            self.interaction = Some(interaction);
+            return false;
+        };
+        if !mailbox.reserve_interaction_future() {
+            self.interaction = Some(interaction);
+            return false;
+        }
+        mailbox.spawn_reserved(key, false, work(interaction), |runtime, interaction, _| runtime.interaction = Some(interaction));
+        true
+    }
+}
+
+//#endregion 🎮️AppInteractionState
+
+pub(crate) struct AppFrameBuild {
+    input: ui_wgpu::wgpu::PreparedRenderInput,
+    engine_packets: Vec<engine_canvas::EngineCanvasPacket>,
+    pub(crate) cursor: SemioCursor,
+    theme_dark: bool,
+    fullscreen: Option<bool>,
+}
+
+pub(crate) struct AppFramePresentation {
+    packet: Arc<ui_wgpu::wgpu::PreparedRenderPacket>,
+    engine_packets: Vec<engine_canvas::EngineCanvasPacket>,
+    pub(crate) cursor: SemioCursor,
+    theme_dark: bool,
+    fullscreen: Option<bool>,
+}
+
+impl AppFrameBuild {
+    pub(crate) fn prepare(self) -> Option<AppFramePresentation> {
+        let generation = self.input.preview_generation;
+        let mut job = ui_wgpu::wgpu::PreparedRenderJob::new(self.input, 256);
+        let params = semio_framework_job::BatchJobParams {
+            operation: semio_framework_job::allocate_operation_id(),
+            generation: semio_framework_job::Generation(generation),
+            cancel: semio_framework_job::root_cancel_token(),
+            config: semio_framework_job::BatchDriveConfig { site: "os_renderer.prepare", stage: semio_framework_job::InteractiveStage::BackgroundStep, fuel_per_step: 256, step_budget_ms: 2 },
+            now_ms: semio_framework_job::default_now_ms,
+        };
+        let outcome = semio_framework_job::run_to_completion(&mut job, &params);
+        let packet = outcome.is_terminal().then(|| job.take_packet()).flatten()?;
+        Some(AppFramePresentation { packet, engine_packets: self.engine_packets, cursor: self.cursor, theme_dark: self.theme_dark, fullscreen: self.fullscreen })
+    }
+}
+
+pub(crate) struct AppPresenter {
+    gpu: GpuContext,
+    engine: engine_canvas::EngineCanvasPresenter,
+    gate: ui_wgpu::wgpu::PreparedRenderGate,
+    window: Arc<Window>,
+    last_cursor: Option<(SemioCursor, bool)>,
+}
+
+impl AppPresenter {
+    pub(crate) fn dpr(&self) -> f32 {
+        self.gpu.dpr()
+    }
+
+    pub(crate) fn resize(&mut self, css_width: f32, css_height: f32, dpr: f32) {
+        self.gpu.resize(css_width, css_height, dpr);
+    }
+
+    pub(crate) fn present(&mut self, frame: AppFramePresentation) {
+        if let Some(active) = frame.fullscreen {
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                self.window.set_fullscreen(if active { Some(Fullscreen::Borderless(None)) } else { None });
+            }
+            #[cfg(target_arch = "wasm32")]
+            {
+                use winit::platform::web::WindowExtWebSys;
+                if let Some(canvas) = self.window.canvas() {
+                    let document = canvas.owner_document();
+                    if active {
+                        if let Err(error) = canvas.request_fullscreen() {
+                            web_sys::console::error_2(&"Fullscreen request was rejected".into(), &error);
+                        }
+                    } else if let Some(document) = document {
+                        document.exit_fullscreen();
+                    }
+                }
+            }
+        }
+        if let Err(error) = self.engine.realize(&mut self.gpu, &frame.engine_packets) {
+            log_debug(&format!("engine canvas present: {error}"));
+        }
+        let token = ui_wgpu::wgpu::UiPresentToken::mint_for_current_thread();
+        let revision = frame.packet.scene_revision();
+        let generation = frame.packet.preview_generation();
+        if let Err(error) = self.gpu.submit_prepared(&token, &mut self.gate, frame.packet, revision, generation) {
+            log_debug(&format!("prepared frame submit: {error}"));
+        }
+        apply_window_cursor(&self.window, frame.cursor, frame.theme_dark, &mut self.last_cursor);
+    }
 }
 
 /// 🧪️ P3c: `self_weak` was the only field that made `AppRuntime` definitionally `Rc<RefCell<_>>`-owned
@@ -1999,6 +2818,8 @@ struct AppRuntime {
 const _: fn() = || {
     fn assert_send<T: Send>() {}
     assert_send::<AppRuntime>();
+    assert_send::<AppFrameBuild>();
+    assert_send::<AppFramePresentation>();
 };
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -2021,41 +2842,30 @@ fn resolve_map_tile_fetch_url(url: &str) -> String {
 impl AppRuntime {
     #[cfg(not(target_arch = "wasm32"))]
     fn poll_native_plugin_hot_swap(&mut self) {
-        let mut changed = false;
-        for program in &self.shell.plugins {
-            let Some(path) = program.wasm_artifact_path() else {
-                continue;
-            };
-            let Ok(metadata) = std::fs::metadata(path) else {
-                continue;
-            };
-            let Ok(mtime) = metadata.modified() else {
-                continue;
-            };
-            let previous = self.native_plugin_mtimes.get(path);
-            if previous.is_some_and(|previous| *previous != mtime) {
-                changed = true;
+        if let Some(scan) = self.native_hot_swap_scan.as_ref() {
+            let Some(result) = scan.try_take() else { return };
+            self.native_hot_swap_scan = None;
+            match result {
+                Ok(semio_framework_os_services::NativeIoValue::Modified(entries)) => {
+                    for (path, mtime) in entries {
+                        let previous = self.native_plugin_mtimes.get(&path);
+                        if previous.is_some_and(|previous| *previous != mtime) {
+                            self.native_reload_pending = true;
+                        }
+                        self.native_plugin_mtimes.insert(path, mtime);
+                    }
+                }
+                Ok(_) => log_debug("plugin hot-swap scan returned the wrong native I/O value"),
+                Err(error) => log_debug(&format!("plugin hot-swap scan failed: {error}")),
             }
-            self.native_plugin_mtimes.insert(path.to_path_buf(), mtime);
+            return;
         }
-        if changed {
-            self.native_reload_pending = true;
-        }
+        let paths = self.shell.plugins.iter().filter_map(|program| program.wasm_artifact_path().map(std::path::Path::to_path_buf)).collect();
+        self.native_hot_swap_scan = Some(submit_renderer_io(semio_framework_os_services::NativeIoRequest::Modified(paths)));
     }
 
-    /// 🎠️ H3-wgpu-native / terra-shell-unpark — this used to `pollster::block_on(self.shell.boot())`
-    /// directly on the winit thread. The H3 comment this replaces reasoned that `frame()` already
-    /// holds `self` via `Rc<RefCell<AppRuntime>>`'s `try_borrow_mut()`, so re-borrowing that SAME
-    /// cell from INSIDE `frame()`'s own call stack panics rather than working — true, but that only
-    /// rules out borrowing synchronously; it does not rule out deferring the whole call. This now
-    /// uses the identical explicit-handle/`try_borrow_mut()`-held-across-`.await` pattern the camera-
-    /// dispatch closures below already use: `spawn_app_task` queues the future, and it
-    /// only actually re-borrows from `about_to_wait`'s `poll_tasks()` tick — strictly AFTER `frame()`
-    /// has already returned and dropped its own borrow, so there is no re-entrant conflict. Holding
-    /// the borrow across `.boot()`'s `.await` makes `frame()`'s outer `try_borrow_mut()` fail (and
-    /// skip redrawing) for however many ticks the reload's kernel round trip takes — a graceful
-    /// frame-skip, not a UI-thread park; the winit event loop keeps pumping OS messages the whole
-    /// time. See `📓️terra-shell-unpark-report.md`.
+    /// 🎠️ Hot-reload preparation snapshots only the filter and module root. Loading runs on the
+    /// process pool; its completion re-enters through the runtime mailbox.
     #[cfg(not(target_arch = "wasm32"))]
     fn maybe_reload_native_plugins(&mut self, handle: &AppHandle) {
         if !self.native_reload_pending {
@@ -2064,81 +2874,54 @@ impl AppRuntime {
         self.native_reload_pending = false;
         let plugin_filter = self.shell.plugin_filter.clone();
         let modules_root = self.plugin_modules_root.clone();
-        let entries = match load_wasm_plugins(&plugin_filter, &modules_root) {
-            Ok(entries) => filter_plugins(entries, &plugin_filter),
-            Err(error) => {
-                log_debug(&format!("wasm program reload failed: {error}"));
-                return;
-            }
-        };
-        self.shell.prepare_hot_reload(entries);
-        let runtime = handle.clone();
-        spawn_app_task(async move {
-            let Some(runtime) = runtime.upgrade() else { return };
-            let Ok(mut app) = runtime.try_borrow_mut() else { return };
-            if let Err(error) = app.shell.boot().await {
-                log_debug(&format!("wasm program hot reload failed: {error}"));
-            } else {
-                log_debug("wasm program hot reload complete");
-            }
-        });
+        let Some(mailbox) = handle.upgrade().map(RuntimeMailbox) else { return };
+        let accepted = mailbox.submit(
+            Some("plugin-reload"),
+            true,
+            async move { load_wasm_plugins(&plugin_filter, &modules_root).await.map(|entries| filter_plugins(entries, &plugin_filter)) },
+            |app, result, handle| match result {
+                Ok(entries) => {
+                    let handle = handle.clone();
+                    app.submit_interaction(&handle, Some("plugin-boot"), move |mut interaction| async move {
+                        interaction.shell.prepare_hot_reload(entries);
+                        if let Err(error) = interaction.shell.boot().await {
+                            log_debug(&format!("wasm program hot reload failed: {error}"));
+                        } else {
+                            log_debug("wasm program hot reload complete");
+                        }
+                        interaction
+                    });
+                }
+                Err(error) => log_debug(&format!("wasm program reload failed: {error}")),
+            },
+        );
+        if !accepted {
+            self.native_reload_pending = true;
+        }
     }
 
     /// 🧵️ P3b (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): `build_directives` is
     /// `frame_job::FrameBuildJob`'s (possibly stale, see that module's own doc) output — a candidate
     /// list this method re-validates against LIVE state before acting on, never applies blindly. See
     /// `winit_app.rs`'s `build_and_publish_snapshot` for where it is computed and passed in.
-    fn frame(&mut self, handle: &AppHandle, build_directives: &crate::frame_job::FrameDirectives) {
-        if std::mem::take(&mut self.shell.fullscreen_toggle_requested) {
-            #[cfg(not(target_arch = "wasm32"))]
-            {
-                let active = self.window.fullscreen().is_none();
-                self.window.set_fullscreen(if active { Some(Fullscreen::Borderless(None)) } else { None });
-                self.shell.fullscreen_active = active;
-            }
-            #[cfg(target_arch = "wasm32")]
-            {
-                use winit::platform::web::WindowExtWebSys;
-                if let Some(canvas) = self.window.canvas() {
-                    let document = canvas.owner_document();
-                    let active = document.as_ref().is_some_and(|document| document.fullscreen_element().is_some());
-                    if active {
-                        if let Some(document) = document {
-                            document.exit_fullscreen();
-                        }
-                        self.shell.fullscreen_active = false;
-                    } else {
-                        match canvas.request_fullscreen() {
-                            Ok(()) => self.shell.fullscreen_active = true,
-                            Err(error) => web_sys::console::error_2(&"Fullscreen request was rejected".into(), &error),
-                        }
-                    }
-                }
-            }
-        }
+    fn frame(&mut self, handle: &AppHandle, build_directives: &crate::frame_job::FrameDirectives, generation: semio_framework_trace::Generation, dpr: f32) -> AppFrameBuild {
+        let mut deferred_actions = Vec::new();
+        let fullscreen = std::mem::take(&mut self.shell.fullscreen_toggle_requested).then(|| {
+            self.shell.fullscreen_active = !self.shell.fullscreen_active;
+            self.shell.fullscreen_active
+        });
         #[cfg(not(target_arch = "wasm32"))]
         {
             self.poll_native_plugin_hot_swap();
             self.maybe_reload_native_plugins(handle);
-            // 🎠️ terra-shell-unpark — same `self_weak`/`try_borrow_mut()`-held-across-`.await`
-            // deferral as `maybe_reload_native_plugins` above (see its doc comment for why this is
-            // sound despite `frame()` itself running inside a borrow): `pump_sync_events` no longer
-            // runs to completion before the rest of `frame()` continues below, it resumes from
-            // `about_to_wait`'s `poll_tasks()` tick. One tick of staleness on directory/sync events is
-            // invisible at `ControlFlow::Poll`'s frame rate. See `📓️terra-shell-unpark-report.md`.
-            let runtime = handle.clone();
-            spawn_app_task(async move {
-                let Some(runtime) = runtime.upgrade() else { return };
-                let Ok(mut app) = runtime.try_borrow_mut() else { return };
-                app.shell.pump_sync_events().await;
-            });
         }
         self.theme = shell::resolve_theme_for_ids(&shell::active_theme_id(), &self.shell.appearance_id);
         self.theme_dark = appearance_is_dark(&self.shell.appearance_id);
         if !self.pointer_down && self.input.drag.active {
             self.input.end_drag();
         }
-        self.input.update_hover(self.last_pointer_x, self.last_pointer_y);
+        let pointer = (self.last_pointer_x, self.last_pointer_y);
+        self.input.update_hover(pointer.0, pointer.1);
         self.input.clear_frame();
         // 🧵️ P3b: `build_directives.wheel_zoom_deadline_cleared` is `frame_job::FrameBuildJob`'s
         // (possibly stale) verdict — re-checked against the LIVE `self.wheel_zoom_deadline_ms`/`now`
@@ -2164,28 +2947,10 @@ impl AppRuntime {
         }
         if !expired_world3d_surfaces.is_empty() {
             let camera_actions: Vec<ActionDescriptor> = expired_world3d_surfaces.iter().filter_map(|surface_id| self.shell.world3d_states.get(surface_id).map(orbit_camera_action)).collect();
-            if !camera_actions.is_empty() {
-                let runtime = handle.clone();
-                spawn_app_task(async move {
-                    if let Some(runtime) = runtime.upgrade() {
-                        if let Ok(mut app) = runtime.try_borrow_mut() {
-                            app.dispatch_actions(camera_actions).await;
-                        }
-                    }
-                });
-            }
+            deferred_actions.extend(camera_actions);
         }
         let scene_camera_actions = scenes::sweep_expired_scene_camera_dispatches(app_now_ms());
-        if !scene_camera_actions.is_empty() {
-            let runtime = handle.clone();
-            spawn_app_task(async move {
-                if let Some(runtime) = runtime.upgrade() {
-                    if let Ok(mut app) = runtime.try_borrow_mut() {
-                        app.dispatch_actions(scene_camera_actions).await;
-                    }
-                }
-            });
-        }
+        deferred_actions.extend(scene_camera_actions);
         if app_now_ms() - self.caret_blink_at_ms >= 500.0 {
             self.caret_blink_at_ms = app_now_ms();
             self.caret_blink_visible = !self.caret_blink_visible;
@@ -2193,10 +2958,11 @@ impl AppRuntime {
         }
         self.draw.clear();
         self.overlay.clear();
+        let mut icon_upload = None;
         ICON_ATLAS_RUNTIME.with(|cell| {
             if let Some(atlas) = cell.borrow_mut().take() {
                 self.icons = atlas;
-                self.gpu.upload_icon_atlas(&self.icons);
+                icon_upload = Some(ui_wgpu::wgpu::PreparedRenderUpload::IconAtlas { pixels: self.icons.pixels.clone(), width: self.icons.width, height: self.icons.height });
             }
         });
         // 🎬️ Tutorial tick — advances the playhead/recorder and applies UI/camera synchronously; any
@@ -2204,43 +2970,37 @@ impl AppRuntime {
         // flushed asynchronously below (the plugin bridge's document calls are async, chrome rendering
         // isn't — same reason `scene_events` gets deferred through `spawn_app_task` just after).
         self.shell.tutorial_tick(app_now_ms());
-        self.shell.render_chrome(&mut self.draw, &mut self.overlay, &mut self.atlas, &self.icons, &mut self.input, &self.theme, &mut self.gpu);
-        let scene_events = self.input.drain_events();
-        if !scene_events.is_empty() {
-            let runtime = handle.clone();
-            spawn_app_task(async move {
-                if let Some(runtime) = runtime.upgrade() {
-                    if let Ok(mut app) = runtime.try_borrow_mut() {
-                        app.dispatch_actions(scene_events).await;
-                    }
-                }
-            });
+        let mut engine_resources = engine_canvas::EngineCanvasBuildContext::new(dpr as f64);
+        let mut world_resources = infinite_world::world::World3dBuildContext::default();
+        {
+            let AppRuntime { atlas, icons, interaction, draw, overlay, .. } = self;
+            let interaction = interaction.as_mut().expect("checked interaction availability");
+            interaction.shell.render_chrome(draw, overlay, atlas, icons, &mut interaction.input, &interaction.theme, &mut engine_resources, &mut world_resources);
         }
-        if !self.shell.tutorial_pending_document_ops.is_empty() {
-            let runtime = handle.clone();
-            spawn_app_task(async move {
-                if let Some(runtime) = runtime.upgrade() {
-                    if let Ok(mut app) = runtime.try_borrow_mut() {
-                        app.shell.tutorial_flush_pending_document_ops().await;
-                    }
-                }
-            });
+        let engine_packets = engine_resources.take_packets();
+        let mut resource_input = ui_wgpu::wgpu::PreparedRenderInput::new(generation.0, generation.0, ui_wgpu::wgpu::DrawList::default(), None, 0.0);
+        world_resources.append_to(&mut resource_input);
+        if let Some(upload) = icon_upload {
+            resource_input.uploads.push(upload);
         }
+        deferred_actions.extend(self.input.drain_events());
+        let flush_tutorial = !self.shell.tutorial_pending_document_ops.is_empty();
         let wheel_delta = self.wheel_delta;
         self.wheel_delta = 0.0;
         if wheel_delta.abs() > 0.0 {
             let x = self.last_pointer_x;
             let y = self.last_pointer_y;
             let ctrl = self.modifiers.ctrl;
-            self.shell.handle_pointer_wheel(x, y, wheel_delta, &self.input);
-            if ShellState::wheel_propagates_to_scene_surface(self.input.hit_at(x, y)) {
-                for state in self.shell.world3d_states.values_mut() {
+            let interaction = self.interaction.as_mut().expect("checked interaction availability");
+            interaction.shell.handle_pointer_wheel(x, y, wheel_delta, &interaction.input);
+            if ShellState::wheel_propagates_to_scene_surface(interaction.input.hit_at(x, y)) {
+                for state in interaction.shell.world3d_states.values_mut() {
                     if state.bounds.contains(x, y) {
                         handle_world3d_wheel(state, wheel_delta);
                         // 🕒️ Settle-then-dispatch (see `world3d_camera_dispatch_deadlines_ms`): each
                         // further wheel tick just pushes this surface's deadline back out, so a
                         // `setCamera` only fires ~350ms after the LAST wheel tick, not every tick.
-                        self.world3d_camera_dispatch_deadlines_ms.insert(state.surface_id.clone(), app_now_ms() + 350.0);
+                        interaction.world3d_camera_dispatch_deadlines_ms.insert(state.surface_id.clone(), app_now_ms() + 350.0);
                     }
                 }
                 let mut graph_actions = Vec::new();
@@ -2251,14 +3011,7 @@ impl AppRuntime {
                 }
                 if !graph_actions.is_empty() {
                     self.wheel_zoom_deadline_ms = app_now_ms() + 120.0;
-                    let runtime = handle.clone();
-                    spawn_app_task(async move {
-                        if let Some(runtime) = runtime.upgrade() {
-                            if let Ok(mut app) = runtime.try_borrow_mut() {
-                                app.dispatch_actions(graph_actions).await;
-                            }
-                        }
-                    });
+                    deferred_actions.extend(graph_actions);
                 }
                 let mut map_actions = Vec::new();
                 for (surface_id, surface) in &self.shell.tiled_map_states {
@@ -2266,44 +3019,23 @@ impl AppRuntime {
                         map_actions.extend(engine_canvas::tiled_map_wheel(surface_id, &surface.controller_id, surface.bounds, x, y, wheel_delta, ctrl));
                     }
                 }
-                if !map_actions.is_empty() {
-                    let runtime = handle.clone();
-                    spawn_app_task(async move {
-                        if let Some(runtime) = runtime.upgrade() {
-                            if let Ok(mut app) = runtime.try_borrow_mut() {
-                                app.dispatch_actions(map_actions).await;
-                            }
-                        }
-                    });
-                }
+                deferred_actions.extend(map_actions);
                 let mut board_actions = Vec::new();
                 for (surface_id, surface) in &self.shell.board2d_states {
                     if surface.bounds.contains(x, y) {
                         board_actions.extend(scenes::puzzle_board_wheel(surface_id, &surface.controller_id, surface.bounds, x, y, wheel_delta));
                     }
                 }
-                if !board_actions.is_empty() {
-                    let runtime = handle.clone();
-                    spawn_app_task(async move {
-                        if let Some(runtime) = runtime.upgrade() {
-                            if let Ok(mut app) = runtime.try_borrow_mut() {
-                                app.dispatch_actions(board_actions).await;
-                            }
-                        }
-                    });
-                }
+                deferred_actions.extend(board_actions);
             }
         }
         for upload in scenes::drain_pending_raster_uploads() {
-            self.gpu.ensure_raster_texture(&upload.key, &upload.pixels, upload.width, upload.height);
+            resource_input.uploads.push(ui_wgpu::wgpu::PreparedRenderUpload::Raster { key: upload.key, pixels: upload.pixels, width: upload.width, height: upload.height });
         }
         if self.atlas.take_dirty() {
-            self.gpu.upload_font_atlas(&self.atlas);
+            resource_input.uploads.push(ui_wgpu::wgpu::PreparedRenderUpload::GlyphAtlas { pixels: self.atlas.pixels.clone(), width: self.atlas.width, height: self.atlas.height });
         }
         let time_seconds = (app_now_ms() / 1000.0) as f32;
-        if let Err(err) = self.gpu.render_frame(&self.draw, Some(&self.overlay), time_seconds) {
-            log_debug(&format!("render frame: {err}"));
-        }
         let hit = self.input.hit_at(self.last_pointer_x, self.last_pointer_y);
         let base_cursor = resolve_semio_cursor(
             hit,
@@ -2315,126 +3047,123 @@ impl AppRuntime {
             Some(utility_cursor) if matches!(base_cursor, SemioCursor::Default | SemioCursor::Grab | SemioCursor::Selectable | SemioCursor::Pointer) => utility_cursor,
             _ => base_cursor,
         };
-        apply_window_cursor(&self.window, cursor, self.theme_dark, &mut self.last_cursor);
-        if !self.asset_poll_pending {
-            self.poll_pending_assets(handle);
+        let poll_assets = !self.asset_poll_pending
+            && (!collect_pending_glb_fetches(&self.shell.world3d_states).is_empty()
+                || !collect_pending_glb_fetches(&self.shell.icon_render_states).is_empty()
+                || !engine_canvas::collect_pending_map_tile_fetches().is_empty()
+                || !collect_pending_ui_image_fetches().is_empty());
+        #[cfg(not(target_arch = "wasm32"))]
+        let pump_sync = app_now_ms() - self.last_sync_pump_ms >= 100.0;
+        #[cfg(not(target_arch = "wasm32"))]
+        if pump_sync {
+            self.last_sync_pump_ms = app_now_ms();
         }
+        resource_input.draw = std::mem::take(&mut self.draw);
+        resource_input.overlay = Some(std::mem::take(&mut self.overlay));
+        resource_input.time_seconds = time_seconds;
+        let frame = AppFrameBuild { input: resource_input, engine_packets, cursor, theme_dark: self.theme_dark, fullscreen };
+        #[cfg(target_arch = "wasm32")]
+        let pump_sync = false;
+        if pump_sync || !deferred_actions.is_empty() || flush_tutorial || poll_assets {
+            self.submit_interaction(handle, None, move |mut interaction| async move {
+                #[cfg(not(target_arch = "wasm32"))]
+                if pump_sync {
+                    interaction.shell.pump_sync_events().await;
+                }
+                interaction.dispatch_actions(deferred_actions).await;
+                if flush_tutorial {
+                    interaction.shell.tutorial_flush_pending_document_ops().await;
+                }
+                if poll_assets {
+                    interaction.poll_pending_assets().await;
+                }
+                interaction
+            });
+        }
+        frame
     }
+}
+
+impl AppInteractionState {
 
     /// ⏱️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): previously the native
     /// (`not(wasm32)`) branch of this function did SYNCHRONOUS network I/O on the UI thread —
-    /// `fetch_map_tile_bytes_blocking` called `ureq::get(..).call()` directly inside `frame()`, and
-    /// three more calls wrapped `fetch_url_bytes` in `pollster::block_on`. That is a real
-    /// UI-thread-reachable blocking-I/O violation, not just a disguised `block_on`: an unresponsive
+    /// the old blocking map-tile transport performed a synchronous HTTP call inside `frame()`, and
+    /// three more calls synchronously waited for `fetch_url_bytes`. That is a real
+    /// UI-thread-reachable blocking-I/O violation: an unresponsive
     /// asset host would freeze every frame's `redraw()` for as long as the HTTP request took. Fixed by
     /// deleting the whole native fast-path and routing BOTH platforms through the single non-blocking
     /// `spawn_app_task` deferral the wasm32 branch already used — the only platform difference left is
     /// URL resolution (native needs `SEMIO_ASSET_BASE_URL` absolute-ification for relative paths;
-    /// wasm32 resolves relative URLs against the page origin for free). Removes 4 of the 17
-    /// UI-thread-reachable `pollster::block_on` sites this packet's brief names (the former lines
-    /// 2157/2170/2180/2184).
-    fn poll_pending_assets(&mut self, handle: &AppHandle) {
+    /// wasm32 resolves relative URLs against the page origin for free).
+    async fn poll_pending_assets(&mut self) {
         let mut glb = collect_pending_glb_fetches(&self.shell.world3d_states);
         glb.extend(collect_pending_glb_fetches(&self.shell.icon_render_states));
         let map = engine_canvas::collect_pending_map_tile_fetches();
         let ui_images = collect_pending_ui_image_fetches();
         if glb.is_empty() && map.is_empty() && ui_images.is_empty() {
-            let runtime = handle.clone();
-            spawn_app_task(async move {
-                if let Some(runtime) = runtime.upgrade() {
-                    if let Ok(mut app) = runtime.try_borrow_mut() {
-                        app.shell.poll_world3d_assets().await;
-                    }
-                }
-            });
+            self.shell.poll_world3d_assets().await;
             return;
         }
         self.asset_poll_pending = true;
-        let runtime = handle.clone();
-        spawn_app_task(async move {
-            struct AssetPollReset(std::rc::Weak<RefCell<AppRuntime>>);
-            impl Drop for AssetPollReset {
-                fn drop(&mut self) {
-                    if let Some(runtime) = self.0.upgrade() {
-                        if let Ok(mut app) = runtime.try_borrow_mut() {
-                            app.asset_poll_pending = false;
-                        }
-                    }
-                }
+        let mut fetched_glb = Vec::new();
+        for item in glb {
+            #[cfg(not(target_arch = "wasm32"))]
+            let fetch_url = resolve_asset_fetch_url(&item.url);
+            #[cfg(target_arch = "wasm32")]
+            let fetch_url = item.url.clone();
+            if let Some(bytes) = fetch_url_bytes(&fetch_url).await {
+                fetched_glb.push((item.surface_id, item.url, bytes));
             }
-            let _reset = AssetPollReset(runtime.clone());
-            let Some(runtime) = runtime.upgrade() else {
-                return;
-            };
-            let mut fetched_glb = Vec::new();
-            for item in glb {
-                #[cfg(not(target_arch = "wasm32"))]
-                let fetch_url = resolve_asset_fetch_url(&item.url);
-                #[cfg(target_arch = "wasm32")]
-                let fetch_url = item.url.clone();
-                if let Some(bytes) = fetch_url_bytes(&fetch_url).await {
-                    fetched_glb.push((item.surface_id, item.url, bytes));
-                }
+        }
+        let mut fetched_map = Vec::new();
+        for item in map {
+            #[cfg(not(target_arch = "wasm32"))]
+            let fetch_url = resolve_map_tile_fetch_url(&item.url);
+            #[cfg(target_arch = "wasm32")]
+            let fetch_url = item.url.clone();
+            if let Some(bytes) = fetch_url_bytes(&fetch_url).await {
+                fetched_map.push((item, bytes));
             }
-            let mut fetched_map = Vec::new();
-            for item in map {
-                #[cfg(not(target_arch = "wasm32"))]
-                let fetch_url = resolve_map_tile_fetch_url(&item.url);
-                #[cfg(target_arch = "wasm32")]
-                let fetch_url = item.url.clone();
-                if let Some(bytes) = fetch_url_bytes(&fetch_url).await {
-                    fetched_map.push((item, bytes));
-                }
+        }
+        let mut fetched_ui_images = Vec::new();
+        for item in ui_images {
+            #[cfg(not(target_arch = "wasm32"))]
+            let fetch_url = resolve_asset_fetch_url(&item.url);
+            #[cfg(target_arch = "wasm32")]
+            let fetch_url = item.url.clone();
+            if let Some(bytes) = fetch_url_bytes(&fetch_url).await {
+                fetched_ui_images.push((item.id, item.url, bytes));
             }
-            let mut fetched_ui_images = Vec::new();
-            for item in ui_images {
-                #[cfg(not(target_arch = "wasm32"))]
-                let fetch_url = resolve_asset_fetch_url(&item.url);
-                #[cfg(target_arch = "wasm32")]
-                let fetch_url = item.url.clone();
-                if let Some(bytes) = fetch_url_bytes(&fetch_url).await {
-                    fetched_ui_images.push((item.id, item.url, bytes));
-                }
+        }
+        for (surface_id, url, bytes) in fetched_glb {
+            if let Some(state) = self.shell.world3d_states.get_mut(&surface_id) {
+                apply_glb_bytes(state, &url, &bytes);
+            } else if let Some(state) = self.shell.icon_render_states.get_mut(&surface_id) {
+                apply_glb_bytes(state, &url, &bytes);
             }
-            if let Ok(mut app) = runtime.try_borrow_mut() {
-                for (surface_id, url, bytes) in fetched_glb {
-                    if let Some(state) = app.shell.world3d_states.get_mut(&surface_id) {
-                        apply_glb_bytes(state, &url, &bytes);
-                    } else if let Some(state) = app.shell.icon_render_states.get_mut(&surface_id) {
-                        apply_glb_bytes(state, &url, &bytes);
-                    }
-                }
-                for (fetch, bytes) in fetched_map {
-                    engine_canvas::apply_map_tile_bytes(&fetch.surface_id, &fetch, &bytes);
-                }
-                for (id, url, bytes) in fetched_ui_images {
-                    apply_ui_image_bytes(&id, &url, &bytes);
-                }
-                app.shell.poll_world3d_assets().await;
-            };
-        });
+        }
+        for (fetch, bytes) in fetched_map {
+            engine_canvas::apply_map_tile_bytes(&fetch.surface_id, &fetch, &bytes);
+        }
+        for (id, url, bytes) in fetched_ui_images {
+            apply_ui_image_bytes(&id, &url, &bytes);
+        }
+        self.shell.poll_world3d_assets().await;
+        self.asset_poll_pending = false;
     }
 
     fn resize(&mut self, css_width: f32, css_height: f32, dpr: f32) {
-        self.gpu.resize(css_width, css_height, dpr);
         self.shell.screen_w = (css_width * dpr).max(1.0);
         self.shell.screen_h = (css_height * dpr).max(1.0);
     }
 
-    fn handle_key(&mut self, handle: &AppHandle, action: KeyAction, modifiers: PointerModifiers) {
+    async fn handle_key(&mut self, action: KeyAction, modifiers: PointerModifiers) {
         if let KeyAction::Space(pressed) = &action {
             if self.shell.context_menu.is_some() && *pressed {
-                let runtime = handle.clone();
-                spawn_app_task(async move {
-                    if let Some(runtime) = runtime.upgrade() {
-                        if let Ok(mut app) = runtime.try_borrow_mut() {
-                            let app = &mut *app;
-                            if let Err(err) = app.shell.handle_keyboard_async(KeyAction::Space(true), &modifiers, &mut app.input).await {
-                                log_debug(&format!("keyboard failed: {err}"));
-                            }
-                        }
-                    }
-                });
+                if let Err(err) = self.shell.handle_keyboard_async(KeyAction::Space(true), &modifiers, &mut self.input).await {
+                    log_debug(&format!("keyboard failed: {err}"));
+                }
                 return;
             }
             self.space_pressed = *pressed;
@@ -2452,17 +3181,9 @@ impl AppRuntime {
         // via Enter/Escape never fired. `handle_keyboard_async`'s own top already reimplements the
         // exact search/find-Enter-activation this fn used to hand-duplicate around the sync call, so
         // that duplication is gone, not just moved.
-        let runtime = handle.clone();
-        spawn_app_task(async move {
-            if let Some(runtime) = runtime.upgrade() {
-                if let Ok(mut app) = runtime.try_borrow_mut() {
-                    let app = &mut *app;
-                    if let Err(err) = app.shell.handle_keyboard_async(action, &modifiers, &mut app.input).await {
-                        log_debug(&format!("keyboard failed: {err}"));
-                    }
-                }
-            }
-        });
+        if let Err(err) = self.shell.handle_keyboard_async(action, &modifiers, &mut self.input).await {
+            log_debug(&format!("keyboard failed: {err}"));
+        }
     }
 
     async fn dispatch_actions(&mut self, actions: Vec<ActionDescriptor>) {
@@ -2706,12 +3427,12 @@ impl AppRuntime {
 // forever), `enum HostUserEvent` and `struct SemioApp` + its `ApplicationHandler` impl (`resumed`
 // set `ControlFlow::Poll` at boot — ~line 2383 pre-edit; `window_event`'s `RedrawRequested` arm
 // called `window.request_redraw()` unconditionally right after building a frame — ~line 2406
-// pre-edit; `about_to_wait` called `kernel_runtime::poll_tasks()` then ALSO unconditionally
+// pre-edit; `about_to_wait` polled a thread-local task pool then ALSO unconditionally
 // `window.request_redraw()` every single iteration — ~line 2416-2424 pre-edit). Replaced by
 // `winit_app::{HostUserEvent, WinitApp}` — same two-phase boot handshake, but steady-state control
 // flow is `WaitUntil(next deadline)`/`Wait`, redraw only fires `if let Some(reason) =
-// scheduler.should_render(now)`, and `poll_tasks()` now runs once per real wake instead of every
-// tick of an infinite `Poll` loop. See `📓️terra-os-host-report.md`'s redraw audit for the full
+// scheduler.should_render(now)`, while native continuations run on the process pool. See
+// `📓️terra-os-host-report.md`'s redraw audit for the full
 // before/after per site.
 //#endregion 🔖️OsHostDecomposition — SemioApp deletion
 
@@ -2720,7 +3441,7 @@ async fn boot_runtime(
     plugin_filter: String,
     #[cfg(target_arch = "wasm32")] plugins: Option<wasm_bindgen::JsValue>,
     #[cfg(not(target_arch = "wasm32"))] plugin_modules_root: std::path::PathBuf,
-) -> Result<Rc<RefCell<AppRuntime>>, String> {
+) -> Result<(RuntimeMailbox, AppPresenter), String> {
     let dpr = window.scale_factor() as f32;
     let size = window.inner_size();
     #[cfg(target_arch = "wasm32")]
@@ -2760,44 +3481,48 @@ async fn boot_runtime(
         filter_plugins(parse_plugin_entries(plugins).map_err(|err| format!("program parse failed: {err}"))?, &plugin_filter)
     };
     #[cfg(not(target_arch = "wasm32"))]
-    let entries = filter_plugins(load_wasm_plugins(&plugin_filter, &plugin_modules_root)?, &plugin_filter);
+    let entries = filter_plugins(load_wasm_plugins(&plugin_filter, &plugin_modules_root).await?, &plugin_filter);
 
     let mut shell = ShellState::new(entries, plugin_filter.clone());
     shell.screen_w = css_width * dpr;
     shell.screen_h = css_height * dpr;
     shell.boot().await.map_err(|err| format!("shell boot failed: {err}"))?;
 
-    let runtime = Rc::new(RefCell::new(AppRuntime {
-        gpu,
+    let presenter = AppPresenter { gpu, engine: engine_canvas::EngineCanvasPresenter::default(), gate: ui_wgpu::wgpu::PreparedRenderGate::default(), window: window.clone(), last_cursor: None };
+    let runtime = RuntimeMailbox::new(AppRuntime {
         atlas,
         icons,
-        shell,
+        interaction: Some(AppInteractionState {
+            shell,
+            input: InputState::default(),
+            theme: Theme::default(),
+            theme_dark: appearance_is_dark("system"),
+            last_pointer_x: 0.0,
+            last_pointer_y: 0.0,
+            pointer_down: false,
+            pointer_button: 0,
+            modifiers: PointerModifiers::default(),
+            wheel_delta: 0.0,
+            space_pressed: false,
+            wheel_zoom_deadline_ms: 0.0,
+            world3d_camera_dispatch_deadlines_ms: std::collections::HashMap::new(),
+            caret_blink_at_ms: 0.0,
+            caret_blink_visible: true,
+            asset_poll_pending: false,
+            #[cfg(not(target_arch = "wasm32"))]
+            last_sync_pump_ms: 0.0,
+        }),
         draw: DrawList::default(),
         overlay: DrawList::default(),
-        input: InputState::default(),
-        theme: Theme::default(),
-        window: window.clone(),
-        theme_dark: appearance_is_dark("system"),
-        last_cursor: None,
-        last_pointer_x: 0.0,
-        last_pointer_y: 0.0,
-        pointer_down: false,
-        pointer_button: 0,
-        modifiers: PointerModifiers::default(),
-        wheel_delta: 0.0,
-        space_pressed: false,
-        wheel_zoom_deadline_ms: 0.0,
-        world3d_camera_dispatch_deadlines_ms: std::collections::HashMap::new(),
-        caret_blink_at_ms: 0.0,
-        caret_blink_visible: true,
-        asset_poll_pending: false,
         #[cfg(not(target_arch = "wasm32"))]
         plugin_modules_root: plugin_modules_root.clone(),
         #[cfg(not(target_arch = "wasm32"))]
         native_plugin_mtimes: std::collections::HashMap::new(),
         #[cfg(not(target_arch = "wasm32"))]
+        native_hot_swap_scan: None,
+        #[cfg(not(target_arch = "wasm32"))]
         native_reload_pending: false,
-    }));
+    });
 
     // 🧹️ P3c: this used to build a `PointerCallbacks` here (5 `Rc<RefCell<AppRuntime>>` clones, one
     // per input kind) and hand it back alongside `runtime`. `winit_app.rs`'s own `HostUserEvent` doc
@@ -2811,7 +3536,7 @@ async fn boot_runtime(
     // `handle_pointer_button`, whose Shell path opens the context menu. The redundant callbacks-only
     // `handle_context_menu` wrapper is deleted with its sole caller. See `📓️p3c-explicit-app-handle.md`.
     log_debug("wgpu renderer booted");
-    Ok(runtime)
+    Ok((runtime, presenter))
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -2832,54 +3557,52 @@ pub fn run_native(plugin_filter: &str, plugin_modules_root: std::path::PathBuf) 
 /// driving a real window when this environment cannot open one (lane 3-D's brief proposed exactly this
 /// shape). Returns `0` on a clean boot+dump, `1` on any hard failure along the way.
 #[cfg(not(target_arch = "wasm32"))]
-pub fn run_smoke(plugin_filter: &str, plugin_modules_root: std::path::PathBuf) -> i32 {
-    pollster::block_on(async {
-        let loaded = match load_wasm_plugins(plugin_filter, &plugin_modules_root) {
-            Ok(entries) => entries,
-            Err(error) => {
-                eprintln!("smoke: load_wasm_plugins failed: {error}");
-                return 1;
-            }
-        };
-        let entries = filter_plugins(loaded, plugin_filter);
-        let mut shell = ShellState::new(entries, plugin_filter.to_string());
-        if let Err(error) = shell.boot().await {
-            eprintln!("smoke: shell.boot() failed: {error}");
+pub async fn run_smoke(plugin_filter: &str, plugin_modules_root: std::path::PathBuf) -> i32 {
+    let loaded = match load_wasm_plugins(plugin_filter, &plugin_modules_root).await {
+        Ok(entries) => entries,
+        Err(error) => {
+            eprintln!("smoke: load_wasm_plugins failed: {error}");
             return 1;
         }
-        // 🪪️ Identity mint/restore runs on a background OS thread (contract §C3: never blocks
-        // `boot()` itself) — poll the same every-frame pump the real render loop uses (drains the
-        // identity bootstrap channel + the directory stream + folds any pending events) for up to 5s
-        // so a real hub round trip has time to land before the dump.
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
-        while std::time::Instant::now() < deadline {
-            shell.pump_sync_events().await;
-            if shell.identity.is_some() || shell.identity_env.is_none() {
-                break;
-            }
-            std::thread::sleep(std::time::Duration::from_millis(100));
+    };
+    let entries = filter_plugins(loaded, plugin_filter);
+    let mut shell = ShellState::new(entries, plugin_filter.to_string());
+    if let Err(error) = shell.boot().await {
+        eprintln!("smoke: shell.boot() failed: {error}");
+        return 1;
+    }
+    // 🪪️ Identity mint/restore runs on a background OS thread (contract §C3: never blocks
+    // `boot()` itself) — poll the same every-frame pump the real render loop uses (drains the
+    // identity bootstrap channel + the directory stream + folds any pending events) for up to 5s
+    // so a real hub round trip has time to land before the dump.
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+    while std::time::Instant::now() < deadline {
+        shell.pump_sync_events().await;
+        if shell.identity.is_some() || shell.identity_env.is_none() {
+            break;
         }
-        let _ = shell.refresh_ui().await;
-        let identity_summary = shell.identity.as_ref().map(|identity| serde_json::json!({ "userId": identity.user_id, "email": identity.email, "hubBaseUrl": identity.hub_base_url }));
-        let report = serde_json::json!({
-            "booted": true,
-            "identity": identity_summary,
-            "identityOffline": shell.identity_offline,
-            "openSpaceId": shell.open_space_id,
-            "session": shell.session.as_ref().map(|session| serde_json::json!({ "pluginId": session.plugin_id, "appId": session.app.id, "role": format!("{:?}", session.app.role) })),
-            "windowUi": &shell.window_ui,
-        });
-        match serde_json::to_string_pretty(&report) {
-            Ok(json) => {
-                println!("{json}");
-                0
-            }
-            Err(error) => {
-                eprintln!("smoke: report encode failed: {error}");
-                1
-            }
+        std::thread::sleep(std::time::Duration::from_millis(100));
+    }
+    let _ = shell.refresh_ui().await;
+    let identity_summary = shell.identity.as_ref().map(|identity| serde_json::json!({ "userId": identity.user_id, "email": identity.email, "hubBaseUrl": identity.hub_base_url }));
+    let report = serde_json::json!({
+        "booted": true,
+        "identity": identity_summary,
+        "identityOffline": shell.identity_offline,
+        "openSpaceId": shell.open_space_id,
+        "session": shell.session.as_ref().map(|session| serde_json::json!({ "pluginId": session.plugin_id, "appId": session.app.id, "role": format!("{:?}", session.app.role) })),
+        "windowUi": &shell.window_ui,
+    });
+    match serde_json::to_string_pretty(&report) {
+        Ok(json) => {
+            println!("{json}");
+            0
         }
-    })
+        Err(error) => {
+            eprintln!("smoke: report encode failed: {error}");
+            1
+        }
+    }
 }
 
 /// 🐚️ Multi-mount: takes an already-created, already-placed canvas from the caller instead of looking

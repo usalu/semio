@@ -1,0 +1,70 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.24
+   Compiling serde_core v1.0.229
+   Compiling serde v1.0.229
+   Compiling cfg-if v1.0.4
+   Compiling find-msvc-tools v0.1.11
+   Compiling arrayvec v0.7.8
+   Compiling shlex v2.0.1
+   Compiling simd-adler32 v0.3.10
+   Compiling zmij v1.0.23
+   Compiling serde_json v1.0.151
+   Compiling libc v0.2.189
+   Compiling crc32fast v1.5.0
+   Compiling memchr v2.8.3
+   Compiling thiserror v2.0.20
+   Compiling adler2 v2.0.1
+   Compiling cc v1.4.4
+   Compiling pin-project-lite v0.2.17
+   Compiling itoa v1.0.18
+   Compiling constant_time_eq v0.4.2
+   Compiling miniz_oxide v0.8.9
+   Compiling semio-framework-trace v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust)
+   Compiling futures-core v0.3.34
+   Compiling blake3 v1.8.7
+   Compiling base64 v0.22.1
+   Compiling hashbrown v0.17.1
+   Compiling zip v2.4.2
+   Compiling bumpalo v3.20.3
+   Compiling log v0.4.33
+   Compiling fastrand v2.5.0
+   Compiling parking v2.2.1
+   Compiling equivalent v1.0.2
+   Compiling futures-io v0.3.34
+   Compiling flate2 v1.1.9
+   Compiling socket2 v0.6.5
+   Compiling mio v1.2.2
+   Compiling zopfli v0.8.3
+   Compiling syn v3.0.3
+   Compiling syn v2.0.119
+   Compiling polycool v0.4.0
+   Compiling futures-task v0.3.34
+   Compiling indexmap v2.14.0
+   Compiling futures-lite v2.6.1
+   Compiling futures-sink v0.3.34
+   Compiling slab v0.4.12
+   Compiling smallvec v1.15.2
+   Compiling semio-framework-hash v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust)
+   Compiling semio-framework-ui-styling v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust)
+   Compiling semio-framework-graph v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust)
+   Compiling serde_derive v1.0.229
+   Compiling thiserror-impl v2.0.20
+   Compiling tokio-macros v2.7.2
+   Compiling futures-macro v0.3.34
+   Compiling displaydoc v0.2.7
+   Compiling tokio v1.53.1
+   Compiling semio-framework-os-kernel-dsl-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust)
+   Compiling async-trait v0.1.92
+   Compiling semio-framework-dispatch-macros v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust)
+   Compiling futures-util v0.3.34
+   Compiling kurbo v0.13.1
+   Compiling semio-framework-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust)
+   Compiling semio-framework-replication v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust)
+   Compiling semio-framework-os-kernel-neural-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust)
+   Compiling semio-framework-ui-contract v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust)
+   Compiling semio-framework-job v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust)
+   Compiling semio-framework-pack v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust)
+   Compiling semio-framework-geometry v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust)
+   Compiling semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+error: could not compile `semio-framework-os-kernel` (lib) due to 1 previous error; 9 warnings emitted

@@ -1,5 +1,7 @@
 //! 👁️ 👁️ Animate present app commands command — `set-locale`.
 
+#![allow(clippy::result_large_err)]
+
 use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::PresentSnapshot;
 use crate::editor::animate::config::{PresentConfig, PresentConfigMutation};
@@ -13,6 +15,6 @@ pub struct SetLocale {
     pub value: String,
 }
 
-pub async fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     Ok(Emit::config(vec![PresentConfigMutation::SetLocale { value: payload.value.clone() }]))
 }

@@ -22,7 +22,6 @@ use std::collections::{HashMap, HashSet};
 /// enforced directly by [`apply_patch`] (surfaced as [`PatchRejection::QuotaExceeded`]) — rejecting a
 /// patch before it is even applied to the shadow draft is cheaper than discovering the violation after.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiDocumentLimits {
     /// 📦️ Total live nodes in one surface. 20 000 comfortably covers the largest known tree (a fully
@@ -151,7 +150,6 @@ fn is_section(component: &crate::Component) -> bool {
 /// ⚠️ One structural invariant a [`crate::UiSnapshot`] fails — every variant here is a whole-document
 /// shape property, never a per-patch wire quota (those are [`PatchRejection::QuotaExceeded`]).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum UiContractViolation {
     /// 🔁️ `node` is reachable from itself by following `children` — a document must be a tree.
@@ -290,7 +288,6 @@ fn validate_core<V: Borrow<crate::UiNodeRecord>>(root: Option<crate::UiNodeId>, 
 /// exceeded quota with its actual/max, or the full violation list) for the existing `patch-rejected`
 /// wire event to explain itself and for the sender to resynchronise.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum PatchRejection {
     RevisionMismatch {
@@ -322,7 +319,6 @@ pub enum PatchRejection {
 /// [`PatchRejection::InvariantViolated`], since those are whole-document shape properties only knowable
 /// after the draft is built.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum QuotaKind {
     Children,

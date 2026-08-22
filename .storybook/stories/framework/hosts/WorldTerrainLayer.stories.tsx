@@ -11,11 +11,11 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
-import type { Meta, StoryObj } from "@storybook/react";
-import { Canvas } from "@react-three/fiber";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ReactElement } from "react";
 
 import { WorldTerrainLayer } from "@semio-tech/framework-renderer-react";
+import { ThreeCanvas } from "@semio-tech/ui-react";
 
 //#region SceneFixtures
 /** ⛰️ Matches the `WorldTerrainStyle` fixture in `framework/os/renderer/js/react/index.test.ts` ("accepts extended world 3d scene fields"). */
@@ -34,11 +34,11 @@ const HANNOVER_TERRAIN_JSON = JSON.stringify({
 function WorldTerrainLayerStoryHost({ terrainJson, cameraPosition, cameraTarget }: { readonly terrainJson: string | undefined; readonly cameraPosition: readonly [number, number, number]; readonly cameraTarget: readonly [number, number, number] }): ReactElement {
   return (
     <div style={{ height: "100%", width: "100%", minHeight: "24rem" }}>
-      <Canvas camera={{ position: cameraPosition as [number, number, number], fov: 50 }}>
+      <ThreeCanvas camera={{ position: cameraPosition as [number, number, number], fov: 50 }}>
         <ambientLight intensity={1.2} />
         <directionalLight position={[12, 18, 10]} intensity={2} />
         <WorldTerrainLayer terrainJson={terrainJson} cameraPosition={cameraPosition} cameraTarget={cameraTarget} />
-      </Canvas>
+      </ThreeCanvas>
     </div>
   );
 }

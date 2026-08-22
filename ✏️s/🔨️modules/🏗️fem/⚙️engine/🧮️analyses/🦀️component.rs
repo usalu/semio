@@ -335,6 +335,396 @@ fn build_rcm_permutation(nodes: &[Node], elements: &[Elements], dof_map: &DofMap
 // #endregion 🔖️Rcm
 
 // #region 🔖️Assembly
+/// 🧱️ Bounded phases of deterministic stiffness assembly.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub enum AssemblyJobStage {
+    ElementTriplets,
+    MergeFull,
+    MergeFree,
+    Complete,
+}
+
+impl AssemblyJobStage {
+    fn label(self) -> &'static str {
+        match self {
+            Self::ElementTriplets => "fem.assembly.element-triplets",
+            Self::MergeFull => "fem.assembly.merge-full",
+            Self::MergeFree => "fem.assembly.merge-free",
+            Self::Complete => "fem.assembly.complete",
+        }
+    }
+}
+
+/// 👁️ Replaceable assembly progress for live element-mark rendering.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+pub struct AssemblyPreview {
+    pub stage: AssemblyJobStage,
+    pub completed_elements: usize,
+    pub total_elements: usize,
+    pub full_triplets: usize,
+    pub free_triplets: usize,
+    pub assembled_element_ids: Vec<String>,
+}
+
+#[derive(Clone, Copy, serde::Serialize, serde::Deserialize)]
+struct AssemblyTriplet {
+    sequence: u64,
+    row: u32,
+    col: u32,
+    value: f64,
+}
+
+#[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
+struct AssemblyPartitionBuffer {
+    full: Vec<AssemblyTriplet>,
+    free: Vec<AssemblyTriplet>,
+}
+
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
+struct PendingElementAssembly {
+    element_index: usize,
+    side: usize,
+    cell_cursor: usize,
+    indices_new: Vec<usize>,
+    stiffness: Vec<f64>,
+}
+
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
+struct AssemblyCheckpoint {
+    stage: AssemblyJobStage,
+    total_elements: usize,
+    element_cursor: usize,
+    pending: Option<PendingElementAssembly>,
+    partitions: Vec<AssemblyPartitionBuffer>,
+    full_merge_cursors: Vec<usize>,
+    free_merge_cursors: Vec<usize>,
+    merged_full: Vec<AssemblyTriplet>,
+    merged_free: Vec<AssemblyTriplet>,
+    checkpoint_due: bool,
+    preview_due: bool,
+    resume_target: usize,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+struct AssemblyResumeCheckpoint {
+    version: u8,
+    model_signature: u64,
+    total_elements: usize,
+    completed_elements: usize,
+    partition_count: usize,
+}
+
+struct AssemblyPlan {
+    dof_map: DofMap,
+    inv_perm: Vec<usize>,
+    ndof: usize,
+    free_new: Vec<usize>,
+    compact_of_new: Vec<Option<usize>>,
+}
+
+/// #️⃣️ Stable identity for rejecting a checkpoint against different FEM inputs.
+fn assembly_model_signature(model: &AnalysisModel) -> u64 {
+    fn fold(mut hash: u64, bytes: &[u8]) -> u64 {
+        for byte in bytes {
+            hash ^= *byte as u64;
+            hash = hash.wrapping_mul(0x100_0000_01b3);
+        }
+        hash
+    }
+
+    let mut hash = 0xcbf2_9ce4_8422_2325;
+    for node in &model.nodes {
+        hash = fold(hash, node.id.as_bytes());
+        for coordinate in node.pos {
+            hash = fold(hash, &coordinate.to_bits().to_le_bytes());
+        }
+    }
+    for element in &model.elements {
+        hash = fold(hash, element.id().as_bytes());
+        for node_id in element.node_ids() {
+            hash = fold(hash, node_id.as_bytes());
+        }
+        for dof in element.dofs_per_node() {
+            hash = fold(hash, &[*dof as u8]);
+        }
+    }
+    for support in &model.supports {
+        hash = fold(hash, support.node_id.as_bytes());
+        for dof in &support.fixed {
+            hash = fold(hash, &[*dof as u8]);
+        }
+    }
+    hash
+}
+
+impl AssemblyPlan {
+    fn prepare(model: &AnalysisModel) -> Result<Self, FemError> {
+        validate(model)?;
+        let dof_map = build_dof_map(&model.nodes, &model.elements);
+        let ndof = dof_map.len();
+        let permutation = build_rcm_permutation(&model.nodes, &model.elements, &dof_map);
+        let mut constrained_old = HashSet::new();
+        for support in &model.supports {
+            for &dof in &support.fixed {
+                if let Some(index) = dof_map.get(&support.node_id, dof) {
+                    constrained_old.insert(index);
+                }
+            }
+        }
+        let constrained_new: HashSet<usize> = constrained_old.iter().map(|&old| permutation.inv_perm[old]).collect();
+        let free_new: Vec<usize> = (0..ndof).filter(|new_index| !constrained_new.contains(new_index)).collect();
+        let mut compact_of_new = vec![None; ndof];
+        for (compact, &new_index) in free_new.iter().enumerate() {
+            compact_of_new[new_index] = Some(compact);
+        }
+        Ok(Self { dof_map, inv_perm: permutation.inv_perm, ndof, free_new, compact_of_new })
+    }
+}
+
+struct UnfactoredSystem {
+    plan: AssemblyPlan,
+    k_full_coo: Coo,
+    k_ff_coo: Coo,
+}
+
+/// 🧮️ Persistent per-element assembly with worker-local triplets and a stable k-way merge.
+pub struct AssemblyJob<'model> {
+    model: &'model AnalysisModel,
+    operation: Operation,
+    model_signature: u64,
+    plan: AssemblyPlan,
+    state: AssemblyCheckpoint,
+}
+
+impl<'model> AssemblyJob<'model> {
+    pub fn new(model: &'model AnalysisModel, operation: Operation, partition_count: usize) -> Result<Self, FemError> {
+        assert!(partition_count > 0, "assembly requires at least one worker-local partition");
+        let plan = AssemblyPlan::prepare(model)?;
+        let model_signature = assembly_model_signature(model);
+        Ok(Self {
+            model,
+            operation,
+            model_signature,
+            plan,
+            state: AssemblyCheckpoint {
+                stage: AssemblyJobStage::ElementTriplets,
+                total_elements: model.elements.len(),
+                element_cursor: 0,
+                pending: None,
+                partitions: vec![AssemblyPartitionBuffer::default(); partition_count],
+                full_merge_cursors: vec![0; partition_count],
+                free_merge_cursors: vec![0; partition_count],
+                merged_full: Vec::new(),
+                merged_free: Vec::new(),
+                checkpoint_due: false,
+                preview_due: false,
+                resume_target: 0,
+            },
+        })
+    }
+
+    pub fn from_checkpoint(model: &'model AnalysisModel, operation: Operation, bytes: &[u8]) -> Result<Self, String> {
+        let checkpoint: AssemblyResumeCheckpoint = serde_json::from_slice(bytes).map_err(|error| error.to_string())?;
+        if checkpoint.version != 1 || checkpoint.partition_count == 0 || checkpoint.total_elements != model.elements.len() || checkpoint.completed_elements > checkpoint.total_elements || checkpoint.model_signature != assembly_model_signature(model) {
+            return Err("assembly checkpoint does not match the supplied model".to_string());
+        }
+        let mut job = Self::new(model, operation, checkpoint.partition_count).map_err(|error| error.to_string())?;
+        job.state.resume_target = checkpoint.completed_elements;
+        Ok(job)
+    }
+
+    pub fn checkpoint_bytes(&self) -> Vec<u8> {
+        let checkpoint = AssemblyResumeCheckpoint {
+            version: 1,
+            model_signature: self.model_signature,
+            total_elements: self.state.total_elements,
+            completed_elements: self.state.element_cursor.max(self.state.resume_target),
+            partition_count: self.state.partitions.len(),
+        };
+        serde_json::to_vec(&checkpoint).expect("assembly checkpoint is serializable")
+    }
+
+    pub fn preview(&self) -> AssemblyPreview {
+        AssemblyPreview {
+            stage: self.state.stage,
+            completed_elements: self.state.element_cursor,
+            total_elements: self.state.total_elements,
+            full_triplets: self.state.partitions.iter().map(|partition| partition.full.len()).sum(),
+            free_triplets: self.state.partitions.iter().map(|partition| partition.free.len()).sum(),
+            assembled_element_ids: self.model.elements.iter().take(self.state.element_cursor).map(|element| element.id().to_string()).collect(),
+        }
+    }
+
+    fn begin_element(&mut self) {
+        let element_index = self.state.element_cursor;
+        let element = &self.model.elements[element_index];
+        let node_ids = element.node_ids();
+        let dofs = element.dofs_per_node();
+        let indices_old = element_global_indices(&self.plan.dof_map, &node_ids, dofs).expect("validated element DOFs resolve");
+        let indices_new = indices_old.iter().map(|&old| self.plan.inv_perm[old]).collect::<Vec<_>>();
+        let context = ElementContext { positions: positions_of(&self.model.nodes, &node_ids) };
+        let stiffness = element.stiffness_global(&context);
+        let side = indices_new.len();
+        let mut values = Vec::with_capacity(side * side);
+        for row in 0..side {
+            for col in 0..side {
+                values.push(stiffness.get(row, col));
+            }
+        }
+        self.state.pending = Some(PendingElementAssembly { element_index, side, cell_cursor: 0, indices_new, stiffness: values });
+    }
+
+    fn assemble_cell(&mut self) {
+        let pending = self.state.pending.as_mut().expect("pending element exists");
+        let local_row = pending.cell_cursor / pending.side;
+        let local_col = pending.cell_cursor % pending.side;
+        let value = pending.stiffness[pending.cell_cursor];
+        if value != 0.0 {
+            let new_row = pending.indices_new[local_row];
+            let new_col = pending.indices_new[local_col];
+            let sequence = ((pending.element_index as u64) << 32) | pending.cell_cursor as u64;
+            let partition = pending.element_index % self.state.partitions.len();
+            self.state.partitions[partition].full.push(AssemblyTriplet { sequence, row: new_row as u32, col: new_col as u32, value });
+            if let (Some(compact_row), Some(compact_col)) = (self.plan.compact_of_new[new_row], self.plan.compact_of_new[new_col]) {
+                self.state.partitions[partition].free.push(AssemblyTriplet { sequence, row: compact_row as u32, col: compact_col as u32, value });
+            }
+        }
+        pending.cell_cursor += 1;
+        if pending.cell_cursor == pending.side * pending.side {
+            self.state.element_cursor += 1;
+            self.state.pending = None;
+            if self.state.resume_target > self.state.element_cursor {
+                return;
+            }
+            self.state.resume_target = 0;
+            self.state.preview_due = true;
+            self.state.checkpoint_due = self.state.element_cursor % 16 == 0 || self.state.element_cursor == self.state.total_elements;
+        }
+    }
+
+    fn next_partition_triplet(&self, full: bool) -> Option<(usize, AssemblyTriplet)> {
+        let cursors = if full { &self.state.full_merge_cursors } else { &self.state.free_merge_cursors };
+        self.state
+            .partitions
+            .iter()
+            .enumerate()
+            .filter_map(|(partition_index, partition)| {
+                let entries = if full { &partition.full } else { &partition.free };
+                entries.get(cursors[partition_index]).copied().map(|entry| (partition_index, entry))
+            })
+            .min_by_key(|(_, entry)| entry.sequence)
+    }
+
+    fn merge_triplet(&mut self, full: bool) -> bool {
+        let Some((partition_index, entry)) = self.next_partition_triplet(full) else { return false };
+        if full {
+            self.state.full_merge_cursors[partition_index] += 1;
+            self.state.merged_full.push(entry);
+        } else {
+            self.state.free_merge_cursors[partition_index] += 1;
+            self.state.merged_free.push(entry);
+        }
+        true
+    }
+
+    fn finish(self) -> Option<UnfactoredSystem> {
+        if self.state.stage != AssemblyJobStage::Complete {
+            return None;
+        }
+        let mut k_full_coo = Coo::new(self.plan.ndof);
+        for entry in self.state.merged_full {
+            k_full_coo.add(entry.row as usize, entry.col as usize, entry.value);
+        }
+        let mut k_ff_coo = Coo::new(self.plan.free_new.len());
+        for entry in self.state.merged_free {
+            k_ff_coo.add(entry.row as usize, entry.col as usize, entry.value);
+        }
+        Some(UnfactoredSystem { plan: self.plan, k_full_coo, k_ff_coo })
+    }
+}
+
+impl InteractiveJob for AssemblyJob<'_> {
+    fn step(&mut self, context: &mut StepContext<'_>) -> StepOutcome {
+        if context.is_cancelled() {
+            return StepOutcome::Cancelled;
+        }
+        if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
+            return StepOutcome::Fault(JobFault { detail: b"stale-fem-assembly-operation".to_vec() });
+        }
+        context.set_stage(self.state.stage.label());
+        if self.state.checkpoint_due {
+            self.state.checkpoint_due = false;
+            return StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: self.checkpoint_bytes(), applied_progress: self.state.element_cursor as u64 });
+        }
+        if self.state.preview_due {
+            self.state.preview_due = false;
+            return StepOutcome::PreviewReady(serde_json::to_vec(&self.preview()).expect("assembly preview is serializable"));
+        }
+        while !context.should_yield() {
+            match self.state.stage {
+                AssemblyJobStage::ElementTriplets => {
+                    if self.state.pending.is_none() {
+                        if self.state.element_cursor == self.state.total_elements {
+                            self.state.stage = AssemblyJobStage::MergeFull;
+                            context.set_stage(self.state.stage.label());
+                            continue;
+                        }
+                        self.begin_element();
+                        context.consume_fuel(1);
+                        if context.should_yield() {
+                            break;
+                        }
+                    }
+                    if self.state.pending.as_ref().is_some_and(|pending| pending.side == 0) {
+                        self.state.element_cursor += 1;
+                        self.state.pending = None;
+                        if self.state.resume_target <= self.state.element_cursor {
+                            self.state.resume_target = 0;
+                            self.state.preview_due = true;
+                            self.state.checkpoint_due = self.state.element_cursor % 16 == 0 || self.state.element_cursor == self.state.total_elements;
+                            break;
+                        }
+                        continue;
+                    }
+                    self.assemble_cell();
+                    context.consume_fuel(1);
+                    if self.state.preview_due {
+                        break;
+                    }
+                }
+                AssemblyJobStage::MergeFull => {
+                    if !self.merge_triplet(true) {
+                        self.state.stage = AssemblyJobStage::MergeFree;
+                        context.set_stage(self.state.stage.label());
+                        continue;
+                    }
+                    context.consume_fuel(1);
+                }
+                AssemblyJobStage::MergeFree => {
+                    if !self.merge_triplet(false) {
+                        self.state.stage = AssemblyJobStage::Complete;
+                        context.set_stage(self.state.stage.label());
+                        continue;
+                    }
+                    context.consume_fuel(1);
+                }
+                AssemblyJobStage::Complete => {
+                    return StepOutcome::Complete(CommitCandidate { state: self.checkpoint_bytes(), output: serde_json::to_vec(&self.preview()).expect("assembly result is serializable") });
+                }
+            }
+            if context.is_cancelled() {
+                return StepOutcome::Cancelled;
+            }
+        }
+        if self.state.preview_due {
+            self.state.preview_due = false;
+            StepOutcome::PreviewReady(serde_json::to_vec(&self.preview()).expect("assembly preview is serializable"))
+        } else {
+            StepOutcome::Yield
+        }
+    }
+}
+
 /// 🧮️ The shared, once-per-model assembly: DOF map, RCM permutation, free/constrained partition
 /// (partitioned BEFORE assembly per the design — only free×free entries feed the LDLT factor), and
 /// both the free-free `LdltFactor` (for solves) and the full `Csr` (for reactions/residuals).
@@ -355,55 +745,22 @@ impl AssembledSystem {
 }
 
 fn assemble_system(model: &AnalysisModel) -> Result<AssembledSystem, FemError> {
-    validate(model)?;
-    let dof_map = build_dof_map(&model.nodes, &model.elements);
-    let ndof = dof_map.len();
-    let perm = build_rcm_permutation(&model.nodes, &model.elements, &dof_map);
-
-    let mut constrained_old: HashSet<usize> = HashSet::new();
-    for support in &model.supports {
-        for &dof in &support.fixed {
-            if let Some(idx) = dof_map.get(&support.node_id, dof) {
-                constrained_old.insert(idx);
-            }
+    let operation = Operation::new(semio_framework_job::OperationId(u64::MAX - 5), semio_framework_job::RevisionId(0), semio_framework_job::Generation(0), 0);
+    let mut job = AssemblyJob::new(model, operation, 1)?;
+    let mut preview_sequence = 0;
+    loop {
+        let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(4_096, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut preview_sequence);
+        match job.step(&mut context) {
+            StepOutcome::Complete(_) => break,
+            StepOutcome::Fault(_) | StepOutcome::Cancelled => return Err(FemError::Singular),
+            StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) => {}
         }
     }
-    let constrained_new: HashSet<usize> = constrained_old.iter().map(|&old| perm.inv_perm[old]).collect();
-    let free_new: Vec<usize> = (0..ndof).filter(|new_idx| !constrained_new.contains(new_idx)).collect();
-    let mut compact_of_new: Vec<Option<usize>> = vec![None; ndof];
-    for (k, &new_idx) in free_new.iter().enumerate() {
-        compact_of_new[new_idx] = Some(k);
-    }
-    let n_free = free_new.len();
-
-    let mut k_full_coo = Coo::new(ndof);
-    let mut k_ff_coo = Coo::new(n_free);
-
-    for element in &model.elements {
-        let node_ids = element.node_ids();
-        let dofs = element.dofs_per_node();
-        let Some(indices_old) = element_global_indices(&dof_map, &node_ids, dofs) else { continue };
-        let indices_new: Vec<usize> = indices_old.iter().map(|&old| perm.inv_perm[old]).collect();
-        let ctx = ElementContext { positions: positions_of(&model.nodes, &node_ids) };
-        let ke = element.stiffness_global(&ctx);
-        k_full_coo.add_block(&indices_new, &ke);
-
-        for (local_row, &new_row) in indices_new.iter().enumerate() {
-            let Some(compact_row) = compact_of_new[new_row] else { continue };
-            for (local_col, &new_col) in indices_new.iter().enumerate() {
-                let Some(compact_col) = compact_of_new[new_col] else { continue };
-                let v = ke.get(local_row, local_col);
-                if v != 0.0 {
-                    k_ff_coo.add(compact_row, compact_col, v);
-                }
-            }
-        }
-    }
-
-    let k_full = k_full_coo.to_csr();
-    let k_factor = ldlt_factor(&k_ff_coo.to_csc_sym_upper()).map_err(|_| FemError::Singular)?;
-
-    Ok(AssembledSystem { dof_map, inv_perm: perm.inv_perm, ndof, free_new, compact_of_new, k_factor, k_full })
+    let unfactored = job.finish().expect("completed assembly owns its matrices");
+    let k_full = unfactored.k_full_coo.to_csr();
+    let k_factor = ldlt_factor(&unfactored.k_ff_coo.to_csc_sym_upper()).map_err(|_| FemError::Singular)?;
+    let AssemblyPlan { dof_map, inv_perm, ndof, free_new, compact_of_new } = unfactored.plan;
+    Ok(AssembledSystem { dof_map, inv_perm, ndof, free_new, compact_of_new, k_factor, k_full })
 }
 
 /// 🌬️ Per-node gravity pattern for an element's own `dofs_per_node()` layout — `[gx,gy,gz]` placed at
@@ -872,7 +1229,7 @@ pub fn nodal_averaged_scalar(model: &AnalysisModel, result: &StaticResult, scala
 mod tests {
     use super::*;
     use crate::elements2d::{Bar2, BeamEb2};
-    use crate::model::{solve_linear_static, Model};
+    use crate::model::{solve_linear_static, AxialSpring, Model};
 
     fn cantilever_analysis_model(e: f64, area: f64, iy: f64, l: f64, density: f64) -> (AnalysisModel, Vec<LoadCase>) {
         let model = AnalysisModel {
@@ -882,6 +1239,100 @@ mod tests {
         };
         let cases = vec![LoadCase { id: "tip_load".into(), nodal_loads: vec![NodalLoad { node_id: "b".into(), dof: Dof::Ty, value: -1000.0 }], member_loads: vec![], self_weight: false }];
         (model, cases)
+    }
+
+    fn axial_chain(element_count: usize) -> AnalysisModel {
+        AnalysisModel {
+            nodes: (0..=element_count).map(|index| Node { id: format!("n{index}"), pos: [index as f64, 0.0, 0.0] }).collect(),
+            elements: (0..element_count).map(|index| AxialSpring { id: format!("e{index}"), a: format!("n{index}"), b: format!("n{}", index + 1), k: 10.0 + index as f64 }.into()).collect(),
+            supports: vec![Support { node_id: "n0".to_string(), fixed: vec![Dof::Tx] }],
+        }
+    }
+
+    fn assembly_operation(id: u64) -> Operation {
+        Operation::new(semio_framework_job::OperationId(id), semio_framework_job::RevisionId(7), semio_framework_job::Generation(3), 11)
+    }
+
+    fn finish_assembly_job<'model>(mut job: AssemblyJob<'model>, operation: Operation, fuel: u64) -> (UnfactoredSystem, Vec<AssemblyPreview>, u128) {
+        let mut sequence = 0;
+        let mut previews = Vec::new();
+        let mut max_step_micros = 0;
+        loop {
+            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(fuel, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            let started = std::time::Instant::now();
+            let outcome = job.step(&mut context);
+            max_step_micros = max_step_micros.max(started.elapsed().as_micros());
+            match outcome {
+                StepOutcome::PreviewReady(bytes) => previews.push(serde_json::from_slice(&bytes).expect("assembly preview decodes")),
+                StepOutcome::Complete(_) => break,
+                StepOutcome::Yield | StepOutcome::CheckpointReady(_) => {}
+                StepOutcome::Cancelled | StepOutcome::Fault(_) => panic!("assembly fixture must complete"),
+            }
+        }
+        (job.finish().expect("completed assembly yields matrices"), previews, max_step_micros)
+    }
+
+    /// 🧮️ Worker-local partition counts cannot alter triplet reduction order or matrix bytes.
+    #[test]
+    fn assembly_job_is_exact_across_partition_counts() {
+        let model = axial_chain(24);
+        let operation = assembly_operation(301);
+        let (single, single_previews, _) = finish_assembly_job(AssemblyJob::new(&model, operation, 1).expect("single partition prepares"), operation, 5);
+        let (fleet, fleet_previews, _) = finish_assembly_job(AssemblyJob::new(&model, operation, 7).expect("fleet partitions prepare"), operation, 3);
+        assert_eq!(single.k_full_coo.to_dense().data, fleet.k_full_coo.to_dense().data);
+        assert_eq!(single.k_ff_coo.to_dense().data, fleet.k_ff_coo.to_dense().data);
+        assert_eq!(single_previews.last().expect("single publishes marks").assembled_element_ids.len(), model.elements.len());
+        assert_eq!(fleet_previews.last().expect("fleet publishes marks").assembled_element_ids.len(), model.elements.len());
+    }
+
+    /// 💾️ A serialized element-boundary checkpoint resumes to the exact same merged matrices.
+    #[test]
+    fn assembly_job_checkpoint_resume_is_byte_stable() {
+        let model = axial_chain(20);
+        let operation = assembly_operation(302);
+        let mut job = AssemblyJob::new(&model, operation, 4).expect("assembly prepares");
+        let mut sequence = 0;
+        let checkpoint = loop {
+            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(4, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+            if let StepOutcome::CheckpointReady(checkpoint) = job.step(&mut context) {
+                break checkpoint.state;
+            }
+        };
+        let resumed = AssemblyJob::from_checkpoint(&model, operation, &checkpoint).expect("assembly checkpoint restores");
+        assert_eq!(resumed.checkpoint_bytes(), checkpoint);
+        let (original, _, _) = finish_assembly_job(job, operation, 9);
+        let (restored, _, _) = finish_assembly_job(resumed, operation, 2);
+        assert_eq!(original.k_full_coo.to_dense().data, restored.k_full_coo.to_dense().data);
+        assert_eq!(original.k_ff_coo.to_dense().data, restored.k_ff_coo.to_dense().data);
+    }
+
+    /// ⏱️ One-fuel adversarial stepping keeps every callback below the global eight-millisecond ceiling.
+    #[test]
+    fn assembly_job_one_fuel_steps_stay_below_eight_milliseconds() {
+        let model = axial_chain(512);
+        let operation = assembly_operation(303);
+        let (_, previews, max_step_micros) = finish_assembly_job(AssemblyJob::new(&model, operation, 8).expect("assembly prepares"), operation, 1);
+        assert!(!previews.is_empty());
+        assert!(max_step_micros < 8_000, "slowest assembly step was {max_step_micros} us");
+    }
+
+    /// 🚫️ Stale and cancelled contexts leave the persistent assembly cursor untouched.
+    #[test]
+    fn assembly_job_rejects_stale_and_cancelled_steps_without_mutation() {
+        let model = axial_chain(3);
+        let operation = assembly_operation(304);
+        let mut job = AssemblyJob::new(&model, operation, 2).expect("assembly prepares");
+        let before = job.checkpoint_bytes();
+        let mut sequence = 0;
+        let mut stale = StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+        assert!(matches!(job.step(&mut stale), StepOutcome::Fault(_)));
+        assert_eq!(job.checkpoint_bytes(), before);
+
+        let token = semio_framework_job::root_cancel_token();
+        semio_framework_async::block_on(token.cancel());
+        let mut cancelled = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), token, || 0, &mut sequence);
+        assert_eq!(job.step(&mut cancelled), StepOutcome::Cancelled);
+        assert_eq!(job.checkpoint_bytes(), before);
     }
 
     /// 🧮️ Cross-validates `solve_multi_case`'s sparse RCM-ordered pipeline (single case) against

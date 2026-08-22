@@ -142,7 +142,7 @@ mod tests {
     use super::*;
     use crate::units::P_STD;
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn steam_humidifier_adds_moisture() {
         let hum = Humidifier::SteamElectric { capacity_kg_s: 0.01, efficiency: 0.95 };
         let inlet = HumidifierInlet { dry_bulb_c: 20.0, humidity_ratio: 0.005, mass_flow_kg_s: 0.5, target_humidity_ratio: 0.009, pressure_pa: P_STD };
@@ -152,7 +152,7 @@ mod tests {
         assert!(out.power_w > 0.0);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn refrigerant_dehumidifier_removes_moisture() {
         let dehum = Dehumidifier::Refrigerant { cop: 2.5, capacity_kg_s: 0.005 };
         let inlet = DehumidifierInlet { dry_bulb_c: 26.0, humidity_ratio: 0.014, mass_flow_kg_s: 0.6, target_humidity_ratio: 0.009, pressure_pa: P_STD };
@@ -161,7 +161,7 @@ mod tests {
         assert!(out.humidity_ratio < inlet.humidity_ratio);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn at_target_no_humidification() {
         let hum = Humidifier::SteamElectric { capacity_kg_s: 0.01, efficiency: 1.0 };
         let inlet = HumidifierInlet { dry_bulb_c: 22.0, humidity_ratio: 0.01, mass_flow_kg_s: 0.5, target_humidity_ratio: 0.009, pressure_pa: P_STD };

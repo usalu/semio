@@ -8,12 +8,12 @@ pub const ENERGY_MODEL_VIEW_MODE_ID: &str = "view";
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::model::create_energy_model_viewer`.
-pub async fn definition() -> ModeDefinition {
+pub fn definition() -> ModeDefinition {
     ModeDefinition { id: ENERGY_MODEL_VIEW_MODE_ID.into(), label: LocalizedLabel::native("View", "Ansicht"), icon_id: "eye".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
 /// 🪟️ One column of the split layout: a stack holding a single window kind.
-async fn model_window_stack(window_kind_id: &str, title: &str) -> WindowLayoutChild {
+fn model_window_stack(window_kind_id: &str, title: &str) -> WindowLayoutChild {
     WindowLayoutChild::Stack(WindowLayoutStackNode {
         kind: "stack".into(),
         size: Some(0.5),
@@ -24,7 +24,7 @@ async fn model_window_stack(window_kind_id: &str, title: &str) -> WindowLayoutCh
 
 /// 🪟️ Same split as the sibling mutation-capable surface's own layout — read-only twin, no quadrant
 /// to allocate for edit affordances.
-pub async fn layout() -> WindowLayout {
+pub fn layout() -> WindowLayout {
     WindowLayout { root: WindowLayoutRoot::Axis(WindowLayoutAxisNode { kind: "row".into(), size: None, children: vec![model_window_stack(structure::WINDOW_KIND_ID, "Structure"), model_window_stack(zones::WINDOW_KIND_ID, "Zones")] }) }
 }
 //#endregion 🔖️Definition

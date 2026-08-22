@@ -1,5 +1,7 @@
 //! 🀄️ 🀄️ Animate present app commands command — `patch-tile-crops`.
 
+#![allow(clippy::result_large_err)]
+
 use crate::artifacts::present::mutations::resize_tile_crop::mutation::ResizeTileCrop;
 use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::schema::clamp_tile_crop;
@@ -18,7 +20,7 @@ pub struct PatchTileCrops {
     pub value: f64,
 }
 
-pub async fn handle(payload: &PatchTileCrops, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+pub fn handle(payload: &PatchTileCrops, doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     let deck = doc.snapshot;
     let (_, deck_tiles) = crate::artifacts::present::present_working_scene(deck);
     let targets: HashSet<&str> = payload.ids.iter().map(String::as_str).collect();

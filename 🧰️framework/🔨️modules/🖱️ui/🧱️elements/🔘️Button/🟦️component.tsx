@@ -7,7 +7,7 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { type VariantProps } from "class-variance-authority";
+import { type StyleVariantProps } from "../../🔨️modules/🏷️style-variants/🟦️component.ts";
 import { type ControlIcon } from "../🔣️Icons/🟦️component.tsx";
 import { ButtonGroup, ButtonGroupItem, buttonGroupItemVariants } from "../🎛️ButtonGroup/🟦️component.tsx";
 // #endregion 🔌️Adapters
@@ -20,7 +20,7 @@ import { ButtonGroup, ButtonGroupItem, buttonGroupItemVariants } from "../🎛�
  * ButtonProps holds the data fields for a ButtonProps record.
  **/
 type ButtonProps = React.ComponentProps<"button"> &
-  VariantProps<typeof buttonGroupItemVariants> & {
+  StyleVariantProps<typeof buttonGroupItemVariants> & {
     asChild?: boolean;
     id?: string;
     icon: ControlIcon;

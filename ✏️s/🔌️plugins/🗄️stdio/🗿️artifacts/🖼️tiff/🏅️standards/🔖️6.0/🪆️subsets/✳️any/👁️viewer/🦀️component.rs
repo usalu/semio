@@ -9,7 +9,7 @@ use crate::artifacts::tiff::standards::v6_0::subsets::any::schema::snapshot::Tif
 use crate::artifacts::tiff::{STDIO_TIFF_DOCUMENT_SCHEMA, TIFF_ANY_DIALECT};
 use crate::viewer::tiff_any::modes::view;
 use crate::viewer::tiff_any::modes::view::windows::main;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command

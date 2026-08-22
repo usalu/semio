@@ -1,0 +1,153 @@
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui/../../../../⌨️tui/🦀️component.rs:4375:36
+     |
+4375 |                 std::thread::sleep(std::time::Duration::from_millis(80));
+     |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+4375 -                 std::thread::sleep(std::time::Duration::from_millis(80));
+4375 +                 std::thread::sleep(Duration::from_millis(80));
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui/../../../../⌨️tui/🦀️component.rs:4386:27
+     |
+4386 |             assert!(p99 < std::time::Duration::from_millis(2), "[DEBUG] clipboard poll callback p99 was {p99:?}");
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4386 -             assert!(p99 < std::time::Duration::from_millis(2), "[DEBUG] clipboard poll callback p99 was {p99:?}");
+4386 +             assert!(p99 < Duration::from_millis(2), "[DEBUG] clipboard poll callback p99 was {p99:?}");
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui/../../../../⌨️tui/🦀️component.rs:5557:29
+     |
+5557 |         assert_eq!(runs[0], crate::tui::cell::DiffRun { y: 0, x: 3, len: 1 });
+     |                             ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5557 -         assert_eq!(runs[0], crate::tui::cell::DiffRun { y: 0, x: 3, len: 1 });
+5557 +         assert_eq!(runs[0], DiffRun { y: 0, x: 3, len: 1 });
+     |
+
+warning: unnecessary qualification
+    --> 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/⌨️tui/../../../../⌨️tui/🦀️component.rs:5617:44
+     |
+5617 |         assert_eq!(events, vec![Event::Key(crate::tui::event::KeyEvent { key: Key::Esc, mods: 0 })]);
+     |                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5617 -         assert_eq!(events, vec![Event::Key(crate::tui::event::KeyEvent { key: Key::Esc, mods: 0 })]);
+5617 +         assert_eq!(events, vec![Event::Key(KeyEvent { key: Key::Esc, mods: 0 })]);
+     |
+
+warning: `semio-framework-ui` (lib test) generated 4 warnings (run `cargo fix --lib -p semio-framework-ui --tests` to apply 4 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 0.95s
+     Running unittests 📦️glue.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL/🧪️target-p9k-ui-unicode/debug/deps/semio_framework_ui-7abeaa3830a13d23)
+
+running 95 tests
+test tui::component::tests::ansi_setup_and_teardown_sequences_contain_expected_escapes ... ok
+test tui::component::tests::cell_buffer_get_returns_none_out_of_bounds ... ok
+test tui::component::tests::cell_buffer_hline_and_vline_paint_expected_cells ... ok
+test tui::component::tests::cell_buffer_fill_rect_clips_to_buffer_bounds ... ok
+test tui::component::tests::cell_buffer_put_clamps_wide_char_at_right_edge ... ok
+test tui::component::tests::cell_buffer_put_pairs_and_orphans_wide_char_continuations ... ok
+test tui::component::tests::diff_merges_nearby_runs ... ok
+test tui::component::tests::cell_buffer_put_str_counts_clipped_cells_but_only_draws_inside_clip ... ok
+test tui::component::tests::diff_emits_minimal_runs ... ok
+test tui::component::tests::diff_full_redraw_when_sizes_differ ... ok
+test tui::component::backend::clipboard_mailbox_tests::stalled_clipboard_worker_keeps_poll_callback_p99_below_two_ms ... ok
+test tui::component::tests::emit_runs_writes_cursor_move_and_truecolor_sgr ... ok
+test tui::component::tests::engine_mouse_move_does_not_steal_focus ... ok
+test tui::component::tests::input_on_key_inserts_utf8_and_respects_cursor_bounds ... ok
+test tui::component::tests::layout_column_direction_stacks_children_vertically ... ok
+test tui::component::tests::layout_auto_measures_text_width ... ok
+test tui::component::tests::layout_padding_and_gap ... ok
+test tui::component::tests::layout_distribute_weight_remainder_goes_to_earliest_child_on_ties ... ok
+test tui::component::tests::list_on_key_boundaries_toggle_and_activate ... ok
+test tui::component::tests::layout_row_weights_fill_exactly ... ok
+test tui::component::tests::log_on_key_page_and_home_end_scroll_states ... ok
+test tui::component::tests::log_state_push_evicts_oldest_beyond_capacity ... ok
+test tui::component::tests::osc52_copy_sequence_is_base64_payload ... ok
+test tui::component::tests::paint_chip_reflects_on_and_off_colors ... ok
+test tui::component::tests::paint_input_shows_placeholder_and_draws_cursor_when_focused ... ok
+test tui::component::tests::paint_list_highlights_selected_row_only_when_focused ... ok
+test tui::component::tests::paint_log_shows_the_tail_when_following ... ok
+test tui::component::tests::paint_divider_centers_its_label ... ok
+test tui::component::tests::paint_footer_renders_hints_then_status ... ok
+test tui::component::tests::mount_window_layout_reparents_windows_and_preserves_widget_state ... ok
+test tui::component::tests::paint_tabs_bolds_the_active_tab ... ok
+test tui::component::tests::paint_select_renders_label_and_current_option ... ok
+test tui::component::tests::paint_navbar_places_left_center_and_right_items ... ok
+test tui::component::tests::parser_alt_prefixed_char_sets_alt_mod ... ok
+test tui::component::tests::parser_backtab_and_focus_gained_lost ... ok
+test tui::component::tests::parser_bracketed_paste ... ok
+test tui::component::tests::parser_ctrl_char_maps_to_char_with_ctrl_mod ... ok
+test tui::component::tests::parser_control_keys_enter_tab_backspace ... ok
+test tui::component::tests::parser_mouse_scroll_drag_and_release_kinds ... ok
+test tui::component::tests::parser_lone_esc_flushes_on_timeout ... ok
+test tui::component::tests::parser_roundtrip_arrow_keys_with_modifiers ... ok
+test tui::component::tests::parser_sgr_mouse_click ... ok
+test tui::component::tests::parser_split_utf8_across_feeds ... ok
+test tui::component::tests::parser_ss3_function_keys ... ok
+test tui::component::tests::parser_tilde_navigation_and_function_keys ... ok
+test tui::component::tests::rect_contains_checks_boundaries ... ok
+test tui::component::tests::rect_inset_shrinks_and_clamps_when_margin_exceeds_size ... ok
+test tui::component::tests::rect_intersect_returns_overlap_or_default_on_miss ... ok
+test tui::component::tests::scene_hit_finds_deepest_visible_node_topmost_child_wins ... ok
+test tui::component::tests::rect_split_top_and_split_bottom_partition_rect ... ok
+test tui::component::tests::scene_node_mut_setters_update_content_and_visibility ... ok
+test tui::component::tests::scene_remove_detaches_subtree_from_parent ... ok
+test tui::component::tests::scene_widget_and_chrome_return_none_for_mismatched_content ... ok
+test tui::component::tests::scene_node_panics_after_its_id_is_removed - should panic ... ok
+test tui::component::tests::select_on_key_wraps_and_ignores_empty_options ... ok
+test tui::component::tests::table_flex_column_fills_remaining_width_and_right_aligns_numeric_column ... ok
+test tui::component::tests::table_header_is_bold_muted_with_a_hairline_underline_and_row_separators ... ok
+test tui::component::tests::table_on_key_left_right_expand_collapse_and_boundaries ... ok
+test tui::component::tests::shell_window_wizard_body_paints_options_after_remount ... ok
+test tui::component::tests::table_on_key_navigates_visible_rows_toggles_and_activates_leaves ... ok
+test tui::component::tests::table_visible_indices_skips_children_of_a_collapsed_parent ... ok
+test tui::component::tests::tabs_on_key_wraps_and_ignores_empty_tabs ... ok
+test tui::component::tests::terminal_widget_scroll_search_and_passthrough ... ok
+test tui::component::tests::table_selected_row_uses_active_base_only_when_focused ... ok
+test tui::component::tests::text_cell_width_unicode_goldens ... ok
+test tui::component::tests::text_char_cells_zero_and_wide ... ok
+test tui::component::tests::text_display_width_and_truncate ... ok
+test tui::component::tests::theme_light_and_dark_differ ... ok
+test tui::component::tests::truncate_to_stops_before_splitting_a_wide_char ... ok
+test tui::component::tests::tui_dispatch_tab_and_backtab_move_focus ... ok
+test tui::component::tests::tui_focus_next_and_prev_cycle_through_focusables ... ok
+test tui::component::tests::tui_render_skips_repaint_when_nothing_dirty ... ok
+test tui::component::tests::tui_set_appearance_and_resize_force_full_redraw ... ok
+test tui::component::tests::tui_dispatch_emits_window_close_signal_on_click ... ok
+test tui::component::tests::vt_alt_screen_1049_preserves_primary ... ok
+test tui::component::tests::vt_cursor_motion_cup_and_cuu ... ok
+test tui::component::tests::vt_resize_clamps_cursor ... ok
+test tui::component::tests::vt_scroll_region_decstbm_newline_scrolls_inside ... ok
+test tui::component::tests::vt_wrap_at_edge ... ok
+test tui::component::tests::vt_sgr_truecolor_sets_cell_fg_bg ... ok
+test tui::component::tests::wasm_host_resize_updates_engine_size ... ok
+test tui::component::tests::wasm_host_feed_and_render_smoke ... ok
+test tui::component::tests::wasm_host_setup_and_teardown_match_ansi_sequences ... ok
+test tui::component::tests::widget_preferred_size_for_label_select_chip_and_divider ... ok
+test tui::component::tests::window_chrome_hides_both_tabs_when_too_narrow_for_even_the_title ... ok
+test tui::component::tests::window_chrome_flattens_the_right_side_when_no_controls_tab_is_wanted ... ok
+test tui::component::tests::window_chrome_recesses_tabs_into_the_top_corners_of_a_closed_shape ... ok
+test tui::component::tests::window_control_clicks_resolve_to_close_and_maximize_signals ... ok
+test tui::component::tests::window_hit_resolves_tab_activation_and_new_tab_signals ... ok
+test tui::component::tests::window_stack_tabs_paint_on_body_top ... ok
+test tui::component::tests::window_layout_row_of_stacks_tiles_without_gaps ... ok
+test tui::component::tests::window_layout_split_resize_move_zoom_and_tabs ... ok
+test tui::component::tests::window_layout_stack_exposes_tabs ... ok
+test tui::component::tests::window_stack_tabs_respect_bottom_corners ... ok
+test tui::component::tests::wizard_keys_filter_navigate_back_and_activate ... ok
+
+test result: ok. 95 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+

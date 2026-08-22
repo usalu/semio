@@ -8,6 +8,6 @@ pub async fn label() -> LocalizedLabel {
 }
 pub const ICON: &str = "play";
 pub const PRIMARY_TEXT: &str = include_str!("🖼️assets/🎮️demo.cmd.semio");
-pub async fn source() -> ExampleSource {
+pub fn source() -> ExampleSource {
     ExampleSource::new(ID, label(), PRIMARY_TEXT, ICON)
 }

@@ -15,6 +15,7 @@ extern crate semio_framework_os_kernel as vcs;
 
 pub use crate as db_core;
 pub use crate as db;
+pub use pack::ContentHash;
 
 // 🌉️ Re-exported so a `db_storage::DbFuture`-driving caller outside this crate (`db_cli`'s own
 // module glob covers `db_cli` itself; `🌎️hub`'s bin entry needs it directly) can name
@@ -25,7 +26,9 @@ pub use crate as db;
 pub use semio_framework_async;
 
 #[path = "../../🦀️component.rs"]
+#[cfg(not(target_arch = "wasm32"))]
 mod db_facade;
+#[cfg(not(target_arch = "wasm32"))]
 pub use db_facade::*;
 
 #[path = "../../👁️preview/🦀️component.rs"]
@@ -111,7 +114,9 @@ pub mod db_artifact;
 pub mod db_query;
 
 #[path = "../../⌨️cli/🦀️component.rs"]
+#[cfg(not(target_arch = "wasm32"))]
 pub mod db_cli;
 
 #[path = "../../⚙️engine/🦀️component.rs"]
+#[cfg(not(target_arch = "wasm32"))]
 pub mod db_engine;

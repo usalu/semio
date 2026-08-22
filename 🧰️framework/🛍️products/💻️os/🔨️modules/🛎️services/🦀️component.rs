@@ -35,42 +35,24 @@ use std::cmp::Reverse;
 use std::collections::{BTreeMap, BinaryHeap, HashMap, VecDeque};
 use std::future::Future;
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::{Arc, Mutex};
+use std::task::{Context, Poll, Wake, Waker};
 
 use semio_framework_actor::{ActorId, PackageId};
 use semio_framework_async::{
-    block_on, oneshot, select2, CancelState, CancelToken, ChannelPolicy, Either, HostAsyncRuntime, HostFuture, Lane, Notify, OperationContext, ProcessKind, ScopeDrainReport, ScopeHandle, ScopeId, ScopeOwner, Semaphore, WorkerPool, WorkerPoolConfig,
+    block_on, oneshot, select2, CancelState, CancelToken, ChannelPolicy, Either, HostAsyncRuntime, HostFuture, Lane, OperationContext, OwnedPermit, ProcessKind, ScopeDrainReport, ScopeHandle, ScopeId, ScopeOwner, Semaphore, WorkerPool,
+    WorkerPoolConfig,
+};
+use semio_framework_job::{
+    default_now_ms, drive_step, Generation as JobGeneration, InteractiveJob, InteractiveStage, OperationId, StepBudget, StepOutcome, BACKGROUND_LANE_FUEL, BACKGROUND_LANE_WALL_MS, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS,
+    MAINTENANCE_LANE_FUEL, MAINTENANCE_LANE_WALL_MS, USER_VISIBLE_LANE_FUEL, USER_VISIBLE_LANE_WALL_MS,
 };
 
 //#region 🧵️GlobalWorkerPool
-/// 🧵️ The ONE process-wide [`WorkerPool`] every tokio-free service in this crate schedules real CPU/
-/// blocking work onto — [`TokioHostRuntime::new`]'s default, [`ComputePool::new`], [`HttpPool`]'s
-/// refill driver, [`StorageScheduler`]'s dispatch and [`TimerWheel`]'s driver ALL resolve the SAME
-/// pool through this fn, lazily built on first use and never rebuilt. `ComputePool::new`/
-/// `HttpPool::new`/`StorageScheduler::new`/`TimerWheel::new` cannot accept an injected pool: their
-/// signatures are frozen by call sites outside this packet's `path_scope` (`🔌️plugin/🖥️host`,
-/// `📇️directory/🔌️client` — neither edited here; see the packet report's `## honest gaps`), so a
-/// shared lazy static is what keeps "one process-wide pool" true anyway. [`TokioHostRuntime::new`]
-/// (a constructor this packet fully owns) resolves the SAME singleton for consistency — a caller that
-/// wants a genuinely INDEPENDENT pool (a CLI entry point, a test wanting deterministic sizing) uses
-/// [`TokioHostRuntime::with_pool`]/constructs its own [`WorkerPool`] directly instead.
-///
-/// `ProcessKind::InteractiveNative` is the honest default for THIS product (`os-services` backs the
-/// interactive OS host, never a headless batch tool); `cores.max(4)` intentionally oversubscribes a
-/// small/constrained machine (a 1–2 core CI runner or devcontainer) because the work THIS crate
-/// dispatches is overwhelmingly I/O-and-blocking-bound (HTTP fetches, file storage, timer callbacks)
-/// rather than pure CPU compute — a handful of extra worker threads beyond the physical core count
-/// avoids pathological single-worker starvation there without meaningfully hurting real compute
-/// throughput on a developer/production machine that already has more cores than 4.
-static GLOBAL_WORKER_POOL: OnceLock<WorkerPool> = OnceLock::new();
-
+/// 🧵️ Resolves the interactive OS process's single worker pool for every service subsystem.
 fn global_worker_pool() -> WorkerPool {
-    GLOBAL_WORKER_POOL
-        .get_or_init(|| {
-            let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get).max(4);
-            WorkerPool::new(WorkerPoolConfig::new(ProcessKind::InteractiveNative, cores))
-        })
-        .clone()
+    let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
+    semio_framework_async::process_worker_pool(WorkerPoolConfig::new(ProcessKind::InteractiveNative, cores))
 }
 //#endregion 🧵️GlobalWorkerPool
 
@@ -82,11 +64,88 @@ enum TaskOutcome {
     CancelledEarly,
 }
 
+//#region 🔁️PoolFutureTask
+/// 🔁️ One pool-hosted future polled exactly once per finite worker turn. A pending future keeps no
+/// worker occupied: its waker schedules the next turn only after the current poll has returned.
+struct PoolFutureTask {
+    pool: WorkerPool,
+    lane: Lane,
+    future: Mutex<Option<HostFuture<()>>>,
+    scheduled: AtomicBool,
+    wake_requested: AtomicBool,
+    complete: AtomicBool,
+}
+
+impl PoolFutureTask {
+    fn spawn(pool: WorkerPool, lane: Lane, future: HostFuture<()>) {
+        let task = Arc::new(PoolFutureTask { pool, lane, future: Mutex::new(Some(future)), scheduled: AtomicBool::new(false), wake_requested: AtomicBool::new(false), complete: AtomicBool::new(false) });
+        task.schedule();
+    }
+
+    fn schedule(self: &Arc<Self>) {
+        if self.complete.load(Ordering::Acquire) || self.pool.is_shutdown() {
+            return;
+        }
+        if self.scheduled.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_ok() {
+            let task = Arc::clone(self);
+            self.pool.submit(self.lane, Box::new(move || task.poll_once()));
+        }
+    }
+
+    fn poll_once(self: Arc<Self>) {
+        if self.complete.load(Ordering::Acquire) {
+            self.scheduled.store(false, Ordering::Release);
+            return;
+        }
+        self.wake_requested.store(false, Ordering::Release);
+        let waker = Waker::from(Arc::clone(&self));
+        let mut context = Context::from_waker(&waker);
+        let poll = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            let mut future = self.future.lock().expect("PoolFutureTask future mutex poisoned");
+            future.as_mut().map_or(Poll::Ready(()), |future| future.as_mut().poll(&mut context))
+        }));
+        match poll {
+            Ok(Poll::Pending) => {
+                self.scheduled.store(false, Ordering::Release);
+                if self.wake_requested.swap(false, Ordering::AcqRel) {
+                    self.schedule();
+                }
+            }
+            Ok(Poll::Ready(())) | Err(_) => {
+                self.complete.store(true, Ordering::Release);
+                self.future.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+                self.scheduled.store(false, Ordering::Release);
+            }
+        }
+    }
+
+    fn request_wake(self: &Arc<Self>) {
+        if self.complete.load(Ordering::Acquire) {
+            return;
+        }
+        self.wake_requested.store(true, Ordering::Release);
+        if !self.scheduled.load(Ordering::Acquire) {
+            self.schedule();
+        }
+    }
+}
+
+impl Wake for PoolFutureTask {
+    fn wake(self: Arc<Self>) {
+        self.request_wake();
+    }
+
+    fn wake_by_ref(self: &Arc<Self>) {
+        self.request_wake();
+    }
+}
+//#endregion 🔁️PoolFutureTask
+
 /// 🌳️ One scope's identity/lineage/cancellation plus the outcome receivers tracking every task
 /// [`ScopeTable::spawn_scoped`] put onto the shared [`WorkerPool`] — replaces the pre-Phase-1
-/// `tokio::task::JoinSet` one-for-one: an [`oneshot::Receiver`] per spawned task, completed by that
-/// task's own [`WorkerPool`] job once [`block_on`] drives it to completion. Like the `JoinSet` it
-/// replaces, entries are only ever reclaimed by [`ScopeTable::cancel_scope`] draining the whole
+/// `tokio::task::JoinSet` one-for-one: an [`oneshot::Receiver`] per spawned task, completed by its
+/// resumable [`PoolFutureTask`]. Like the `JoinSet` it replaces, entries are only ever reclaimed by
+/// [`ScopeTable::cancel_scope`] draining the whole
 /// scope — a long-lived scope that spawns many short tasks and is never cancelled accumulates dead
 /// receivers exactly as the old `JoinSet` accumulated dead `AbortHandle`s until `join_next` was
 /// called; not a new limitation.
@@ -171,13 +230,8 @@ impl ScopeTable {
 
     /// ▶️ Submits `fut` as ONE [`WorkerPool`] job on the [`Lane`] `ctx.lane` maps to
     /// ([`Lane::from_context_lane`]) — [`block_on`] (this crate's `entrypoint`-feature import of
-    /// `semio_framework_async::block_on`) turns that single worker into the future-polling executor
-    /// for `fut`'s ENTIRE lifetime, per the async crate's own module doc ("polling Futures to
-    /// completion remains the future-polling executor's job... built ON TOP of this pool"). A task
-    /// that never resolves (an infinite loop) occupies its worker for the process's whole lifetime —
-    /// an accepted, documented P1b limitation (see the packet report's `## honest gaps`); a properly
-    /// cooperative multi-task-per-thread executor is Phase 9's job, once tokio itself leaves this
-    /// crate entirely.
+    /// [`PoolFutureTask`] polls `fut` once per finite worker turn. Pending I/O or timers retain only
+    /// their waker and consume no worker, permit, or admission slot between wakes.
     // 🚫️async: E1-adjacent — no suspension point of its own (only SUBMITS the job; never drives it
     // here). Consumed by `TokioHostRuntime::spawn_scoped`, already `async fn` to match the trait,
     // which calls this plainly — an `async fn` here would add a second, pointless suspension layer.
@@ -192,17 +246,16 @@ impl ScopeTable {
         drop(records);
         let pool = self.0.pool.clone();
         let wait_pool = pool.clone();
-        pool.submit(
+        PoolFutureTask::spawn(
+            pool,
             lane,
-            Box::new(move || {
-                let outcome = block_on(async move {
-                    if await_live_or_cancelled(&wait_pool, &cancel).await {
-                        fut.await;
-                        TaskOutcome::Finished
-                    } else {
-                        TaskOutcome::CancelledEarly
-                    }
-                });
+            Box::pin(async move {
+                let outcome = if await_live_or_cancelled(&wait_pool, &cancel).await {
+                    fut.await;
+                    TaskOutcome::Finished
+                } else {
+                    TaskOutcome::CancelledEarly
+                };
                 let _ = result_tx.send(outcome);
             }),
         );
@@ -464,16 +517,22 @@ impl WheelCore {
     /// Cancelled entries are dropped here rather than rearmed — this is where lazy
     /// [`WheelCore::disarm`] deletion actually reclaims heap/map space.
     // 🚫️async: E1-adjacent pure computation (in-memory heap only, no suspension point) whose sole
-    // caller holds it behind a `std::sync::Mutex<WheelCore>` inside `TimerWheel::spawn_driver`'s
-    // async loop — `async fn` here would force that `MutexGuard` (not `Send`) to live across the
-    // outer future's await points, breaking the `HostFuture<()>: Send` bound R3 requires. See R9.
+    // caller holds it behind a `std::sync::Mutex<WheelCore>` inside the finite timer-driver turn.
     pub fn pop_expired(&mut self, now_ms: u64) -> Vec<TimerFired> {
+        self.pop_expired_batch(now_ms, usize::MAX)
+    }
+
+    /// ⏱️ Pops at most `max_items` due timers so one driver turn has a hard item bound.
+    pub fn pop_expired_batch(&mut self, now_ms: u64, max_items: usize) -> Vec<TimerFired> {
         let mut fired = Vec::new();
-        while let Some(&Reverse((expiry, _seq, id))) = self.order.peek() {
+        let mut processed_items = 0usize;
+        while processed_items < max_items {
+            let Some(&Reverse((expiry, _seq, id))) = self.order.peek() else { break };
             if expiry > now_ms {
                 break;
             }
             self.order.pop();
+            processed_items += 1;
             let Some(entry) = self.entries.get_mut(&id) else { continue };
             if entry.cancelled {
                 self.entries.remove(&id);
@@ -503,14 +562,12 @@ impl WheelCore {
         fired
     }
 
-    /// ⏰️ The earliest still-armed (non-cancelled) expiry, if any — lets a driver compute how long
-    /// to sleep. O(n) in the number of currently-heaped entries (an acceptable scan given per-host
-    /// timer counts are bounded by `quota_per_plugin` times the plugin count; a later packet can
-    /// swap in a cancellation-aware heap if that ever matters).
+    /// ⏰️ The earliest heaped expiry. A cancelled head may cause one harmless early driver turn;
+    /// bounded expiry processing discards it without an unbounded scan here.
     // 🚫️async: E1-adjacent — same reasoning as `pop_expired` above (R9): pure, in-memory only, and
     // held behind a `std::sync::Mutex` across an async caller.
     pub fn next_expiry_ms(&self) -> Option<u64> {
-        self.order.iter().filter(|Reverse((_, _, id))| self.entries.get(id).is_some_and(|entry| !entry.cancelled)).map(|Reverse((expiry, _, _))| *expiry).min()
+        self.order.peek().map(|Reverse((expiry, _, _))| *expiry)
     }
 
     // 🚫️async: E1-adjacent — same reasoning as `arm` above (R9).
@@ -519,29 +576,27 @@ impl WheelCore {
     }
 }
 
-/// 🐌️ How long the driver sleeps when the wheel is empty, before checking again — bounded so the
-/// loop still wakes promptly once [`TimerWheel::arm`] posts to `wake` even if that notification is
-/// somehow missed.
-const TIMER_DRIVER_IDLE_POLL_MS: u64 = 250;
+/// 🐌️ Maximum delay between finite timer-driver turns while the wheel is empty.
+const TIMER_DRIVER_MAX_IDLE_MS: u64 = 4;
+const TIMER_DRIVER_BATCH_ITEMS: usize = 8;
 
 /// ⏲️ The ONE host timer wheel for every plugin's timers — see the crate doc. Owns a [`WheelCore`]
-/// behind a `Mutex` plus the driver loop ([`TimerWheel::spawn_driver`]) that wakes it and posts
+/// behind a `Mutex` plus the finite driver chain ([`TimerWheel::spawn_driver`]) that posts
 /// firings to a [`CompletionSink`]. Plugins arm/disarm through here; they must never spin up a timer
 /// of their own.
 pub struct TimerWheel {
     core: Arc<Mutex<WheelCore>>,
-    wake: Arc<Notify>,
+    driver_started: AtomicBool,
 }
 
 impl TimerWheel {
     pub async fn new(quota_per_plugin: u32) -> TimerWheel {
-        TimerWheel { core: Arc::new(Mutex::new(WheelCore::new(quota_per_plugin).await)), wake: Arc::new(Notify::new()) }
+        TimerWheel { core: Arc::new(Mutex::new(WheelCore::new(quota_per_plugin).await)), driver_started: AtomicBool::new(false) }
     }
 
     #[allow(clippy::too_many_arguments)]
     pub async fn arm(&self, plugin: PackageId, actor: u64, generation: u16, lane: u8, at_ms: u64, repeat_ms: Option<u64>) -> Result<TimerId, TimerError> {
         let id = self.core.lock().expect("TimerWheel core mutex poisoned").arm(plugin, actor, generation, lane, at_ms, repeat_ms)?;
-        self.wake.notify_one();
         Ok(id)
     }
 
@@ -553,61 +608,45 @@ impl TimerWheel {
         self.core.lock().expect("TimerWheel core mutex poisoned").armed_count(plugin)
     }
 
-    /// ▶️ Submits the driver loop as ONE dedicated job on `pool`'s [`Lane::Timer`] lane: sleeps
-    /// until the wheel's next expiry (or wakes early on [`TimerWheel::arm`], via `wake`), pops
-    /// everything due, and hands each firing to `sink` — the ONLY re-entry path, per
-    /// [`CompletionSink`]'s own doc. [`Lane::Timer`] is deliberately EXEMPT from [`WorkerPool`]'s
-    /// interactive-reserve admission control (see the async crate's `is_low_priority` doc), so this
-    /// driver is never starved by a saturated interactive workload.
-    ///
-    /// 🚨️ HONEST GAP (P1b, tracked for a Phase 9 follow-up): [`block_on`] drives this loop's `async
-    /// move` body FOREVER on whatever [`WorkerPool`] worker picks up the job — an infinite task
-    /// occupies its worker for the process's entire lifetime, exactly the tradeoff
-    /// [`ScopeTable::spawn_scoped`]'s doc already accepts for any never-resolving scoped task. On a
-    /// pool forced down to `worker_count == 1` (a single-core host), calling this AND
-    /// [`HttpPool::spawn_refill_driver`] together would starve the pool completely — do not call both
-    /// against a single-worker pool until Phase 9 replaces `block_on`-per-job with a real cooperative
-    /// multi-task executor.
+    /// ▶️ Starts a chain of finite timer-lane turns. Each turn handles at most
+    /// [`TIMER_DRIVER_BATCH_ITEMS`] firings and schedules its successor without occupying a worker
+    /// while it waits. The four-millisecond idle cadence bounds newly-armed-timer latency without a
+    /// permanent polling task.
     // 🚫️async: E1-adjacent — no suspension point of its own (only SUBMITS the job; never drives it
     // here). See R9.
     pub fn spawn_driver(&self, pool: &WorkerPool, sink: Arc<dyn CompletionSink>) {
-        let core = self.core.clone();
-        let wake = self.wake.clone();
-        let driver_pool = pool.clone();
-        pool.submit(
-            Lane::Timer,
-            Box::new(move || {
-                let pool = driver_pool;
-                block_on(async move {
-                    loop {
-                        let now_ms = pool.now_ms();
-                        let fired = core.lock().expect("TimerWheel core mutex poisoned").pop_expired(now_ms);
-                        for timer in fired {
-                            sink.complete(timer.actor, timer.generation, timer.id.0.to_le_bytes().to_vec(), timer.lane);
-                        }
-                        let next = core.lock().expect("TimerWheel core mutex poisoned").next_expiry_ms();
-                        let sleep_deadline = match next {
-                            Some(expiry) if expiry > now_ms => expiry,
-                            Some(_) => now_ms,
-                            None => now_ms + TIMER_DRIVER_IDLE_POLL_MS,
-                        };
-                        select2(pool.timer().sleep_until(sleep_deadline), wake.notified()).await;
-                    }
-                });
-            }),
-        );
+        if self.driver_started.compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst).is_ok() {
+            schedule_timer_driver_turn(pool, self.core.clone(), sink);
+        }
     }
+}
+
+fn schedule_timer_driver_turn(pool: &WorkerPool, core: Arc<Mutex<WheelCore>>, sink: Arc<dyn CompletionSink>) {
+    let now_ms = pool.now_ms();
+    let deadline_ms = core.lock().expect("TimerWheel core mutex poisoned").next_expiry_ms().unwrap_or(now_ms + TIMER_DRIVER_MAX_IDLE_MS).min(now_ms + TIMER_DRIVER_MAX_IDLE_MS);
+    let turn_pool = pool.clone();
+    pool.submit_at(
+        deadline_ms,
+        Lane::Timer,
+        Box::new(move || {
+            let now_ms = turn_pool.now_ms();
+            let fired = core.lock().expect("TimerWheel core mutex poisoned").pop_expired_batch(now_ms, TIMER_DRIVER_BATCH_ITEMS);
+            for timer in fired {
+                sink.complete(timer.actor, timer.generation, timer.id.0.to_le_bytes().to_vec(), timer.lane);
+            }
+            schedule_timer_driver_turn(&turn_pool, core, sink);
+        }),
+    );
 }
 //#endregion ⏲️TimerWheel
 
 //#region 🧮️ComputePool
-/// 🚫️ [`ComputePool::run_blocking`]'s failure modes.
+/// 🚫️ [`ComputePool`]'s dispatch failure modes.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ComputeError {
-    /// ⏰️ `ctx.deadline_ms` elapsed before a pool permit was available, or before the blocking work
-    /// finished. Either way the caller's async wait loses the race; the underlying OS thread running
-    /// `work` (if it had already started) is NOT forcibly killed — blocking OS threads are not
-    /// preemptible, so this is an honest limitation, not a claim of hard cancellation.
+    /// ⏰️ `ctx.deadline_ms` elapsed before admission or terminal completion. Interactive jobs
+    /// receive cancellation immediately and observe it at their next bounded step; platform I/O
+    /// remains non-preemptible once its operating-system call has started.
     DeadlineExceeded,
     /// 💥️ The result channel closed before a value arrived (the worker thread panicked, or the
     /// runtime is shutting down).
@@ -624,7 +663,8 @@ impl std::fmt::Display for ComputeError {
 }
 impl std::error::Error for ComputeError {}
 
-/// 🧮️ Bounds every blocking-CPU host operation this pool admits to `capacity`, independent of
+/// 🧮️ Bounds every interactive compute job and blocking platform-I/O call admitted to
+/// `capacity`, independent of
 /// [`WorkerPool`]'s own (larger, process-wide) `worker_count` — the real dispatch substrate is now
 /// [`global_worker_pool`] (this type's constructor is frozen by external call sites this packet's
 /// boundary does not own — see that fn's doc — so it cannot accept an injected pool), but a
@@ -645,25 +685,52 @@ impl ComputePool {
         ComputePool { admission: Arc::new(Semaphore::new(capacity.max(1) as usize)), pool }
     }
 
-    /// 🧮️ Runs `work` on [`global_worker_pool`] (the `Lane` `ctx.lane` maps to via
-    /// [`Lane::from_context_lane`] — the caller's own interactivity requirement decides), admitted
-    /// only once a [`ComputePool`]-local permit is free, racing BOTH the admission wait and the
-    /// result wait against `runtime.sleep_until(deadline)` whenever `ctx.deadline_ms` is set — either
-    /// race losing returns [`ComputeError::DeadlineExceeded`] rather than letting a caller wait past
-    /// its own stated deadline. `runtime` is used ONLY for that deadline race (`sleep_until`) — the
-    /// removed `HostAsyncRuntime::run_blocking` is gone, this crate's [`WorkerPool`] submission
-    /// replaces it directly, so `work` never runs on — and never blocks — an async task's own worker;
-    /// the caller `.await`s a plain result channel instead. `_scope` is kept only for call-site
-    /// compatibility with `🔌️plugin/🖥️host`/`📇️directory/🔌️client` (outside this packet's boundary,
-    /// not edited here) — [`WorkerPool`] dispatch has no scope concept to hand it to.
-    pub async fn run_blocking<T: Send + 'static, R: HostAsyncRuntime>(&self, runtime: &R, _scope: &ScopeHandle, ctx: OperationContext, work: impl FnOnce() -> T + Send + 'static) -> Result<T, ComputeError> {
+    /// 🧮️ Drives `job` to a terminal outcome on [`global_worker_pool`]. Every worker closure
+    /// performs exactly one fuel- and wall-bounded [`drive_step`]; resumable outcomes enqueue a fresh
+    /// closure on the context lane. The admission permit spans the whole job. Cancellation is checked
+    /// before admission and inside every step, while an absolute deadline cancels the job and returns
+    /// [`ComputeError::DeadlineExceeded`].
+    pub async fn run_job<J: InteractiveJob + 'static, R: HostAsyncRuntime>(&self, runtime: &R, _scope: &ScopeHandle, ctx: OperationContext, job: J) -> Result<StepOutcome, ComputeError> {
         let lane = Lane::from_context_lane(ctx.lane);
-        self.run_in_lane(runtime, ctx, lane, work).await
+        let Some(permit) = self.acquire_job_permit(runtime, &ctx).await? else { return Ok(StepOutcome::Cancelled) };
+        if ctx.cancel.is_cancelled().await {
+            return Ok(StepOutcome::Cancelled);
+        }
+        let (result_tx, result_rx) = oneshot::channel();
+        let state = Arc::new(Mutex::new(ComputeJobDriveState { job, ctx: ctx.clone(), lane, preview_sequence: 0, sender: Some(result_tx), _permit: permit }));
+        schedule_compute_job_step(&self.pool, state);
+        match ctx.deadline_ms {
+            Some(deadline_ms) => match select2(result_rx, runtime.sleep_until(deadline_ms)).await {
+                Either::Left(result) => result.map_err(|_| ComputeError::WorkerLost),
+                Either::Right(()) => {
+                    ctx.cancel.cancel().await;
+                    Err(ComputeError::DeadlineExceeded)
+                }
+            },
+            None => result_rx.await.map_err(|_| ComputeError::WorkerLost),
+        }
     }
 
     /// 🌐️ Runs a blocking platform-I/O boundary on the pool's dedicated fair I/O lane.
     pub async fn run_io<T: Send + 'static, R: HostAsyncRuntime>(&self, runtime: &R, _scope: &ScopeHandle, ctx: OperationContext, work: impl FnOnce() -> T + Send + 'static) -> Result<T, ComputeError> {
         self.run_in_lane(runtime, ctx, Lane::Io, work).await
+    }
+
+    async fn acquire_job_permit<R: HostAsyncRuntime>(&self, runtime: &R, ctx: &OperationContext) -> Result<Option<OwnedPermit>, ComputeError> {
+        loop {
+            if ctx.cancel.is_cancelled().await {
+                return Ok(None);
+            }
+            let now_ms = runtime.now_ms().await;
+            if ctx.deadline_ms.is_some_and(|deadline| now_ms >= deadline) {
+                return Err(ComputeError::DeadlineExceeded);
+            }
+            let poll_deadline = ctx.deadline_ms.map_or(now_ms.saturating_add(1), |deadline| deadline.min(now_ms.saturating_add(1)));
+            match select2(self.admission.acquire_owned(), runtime.sleep_until(poll_deadline)).await {
+                Either::Left(permit) => return Ok(Some(permit)),
+                Either::Right(()) => {}
+            }
+        }
     }
 
     async fn run_in_lane<T: Send + 'static, R: HostAsyncRuntime>(&self, runtime: &R, ctx: OperationContext, lane: Lane, work: impl FnOnce() -> T + Send + 'static) -> Result<T, ComputeError> {
@@ -692,6 +759,54 @@ impl ComputePool {
             None => result_rx.await.map_err(|_| ComputeError::WorkerLost),
         }
     }
+}
+
+struct ComputeJobDriveState<J> {
+    job: J,
+    ctx: OperationContext,
+    lane: Lane,
+    preview_sequence: u64,
+    sender: Option<oneshot::Sender<StepOutcome>>,
+    _permit: OwnedPermit,
+}
+
+fn compute_job_budget(lane: Lane) -> (InteractiveStage, u64, u64) {
+    match lane {
+        Lane::Interactive => (InteractiveStage::InteractiveStep, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS),
+        Lane::UserVisible => (InteractiveStage::UserVisibleSimStep, USER_VISIBLE_LANE_FUEL, USER_VISIBLE_LANE_WALL_MS),
+        Lane::Background | Lane::Io | Lane::Timer => (InteractiveStage::BackgroundStep, BACKGROUND_LANE_FUEL, BACKGROUND_LANE_WALL_MS),
+        Lane::Maintenance => (InteractiveStage::BackgroundStep, MAINTENANCE_LANE_FUEL, MAINTENANCE_LANE_WALL_MS),
+    }
+}
+
+fn schedule_compute_job_step<J: InteractiveJob + 'static>(pool: &WorkerPool, state: Arc<Mutex<ComputeJobDriveState<J>>>) {
+    let next_pool = pool.clone();
+    let lane = state.lock().expect("ComputeJobDriveState mutex poisoned").lane;
+    pool.submit(
+        lane,
+        Box::new(move || {
+            let terminal = {
+                let mut state = state.lock().expect("ComputeJobDriveState mutex poisoned");
+                let (stage, fuel, wall_ms) = compute_job_budget(state.lane);
+                let budget = StepBudget::new(fuel, default_now_ms().saturating_add(wall_ms));
+                let operation = OperationId(state.ctx.trace.0);
+                let generation = JobGeneration(u64::from(state.ctx.generation));
+                let cancel = state.ctx.cancel.clone();
+                let ComputeJobDriveState { job, preview_sequence, sender, .. } = &mut *state;
+                let outcome = drive_step(job, "os-services.compute-job", operation, generation, stage, budget, cancel, default_now_ms, preview_sequence);
+                if outcome.is_terminal() {
+                    Some((sender.take().expect("terminal compute job has a result sender"), outcome))
+                } else {
+                    None
+                }
+            };
+            if let Some((sender, outcome)) = terminal {
+                let _ = sender.send(outcome);
+            } else {
+                schedule_compute_job_step(&next_pool, state);
+            }
+        }),
+    );
 }
 //#endregion 🧮️ComputePool
 
@@ -838,11 +953,11 @@ impl HttpBody for BufferedHttpBody {
 }
 
 /// 🌐️ Wraps a legacy [`HttpTransport`] (today's ONLY shipped transport) as an [`AsyncHttpTransport`]
-/// by running the whole blocking call through [`ComputePool::run_blocking`] and replaying the
+/// by running the whole blocking call through [`ComputePool::run_io`] and replaying the
 /// buffered result as one [`BufferedHttpBody`] chunk. `runtime`/`scope` are captured at
 /// CONSTRUCTION time (unlike `HttpPool::fetch`'s own `runtime`/`scope` parameters) because
 /// [`AsyncHttpTransport::start`] itself takes neither — a transport that needs to reach
-/// `ComputePool::run_blocking` must own that context itself.
+/// `ComputePool::run_io` must own that context itself.
 // 🔀️ dedyn-fw-os-misc: `TokioHostRuntime`, not `<R: HostAsyncRuntime>` — this is the ONE production
 // spawn site for HTTP transport work, and R3 requires Send-ness be obtained STRUCTURALLY (a known
 // concrete future type at the spawn site), never by bounding a generic. `TokioHostRuntime` is this
@@ -888,14 +1003,19 @@ impl AsyncHttpTransport for BlockingHttpTransport {
 struct TokenBucket {
     remaining_bytes: u64,
     capacity_bytes: u64,
+    refill_epoch: u64,
 }
 
 impl TokenBucket {
-    // 🚫️async: E1-adjacent — pure in-memory arithmetic, no suspension point, whose consumers include
-    // `Entry::or_insert_with`'s closure (`std`-fixed `FnOnce() -> V`, cannot be async) at every
-    // `HttpPool` call site below. See R9.
-    fn new(capacity_bytes: u64) -> TokenBucket {
-        TokenBucket { remaining_bytes: capacity_bytes, capacity_bytes }
+    fn new_at(capacity_bytes: u64, refill_epoch: u64) -> TokenBucket {
+        TokenBucket { remaining_bytes: capacity_bytes, capacity_bytes, refill_epoch }
+    }
+
+    fn observe_refill_epoch(&mut self, refill_epoch: u64) {
+        if self.refill_epoch < refill_epoch {
+            self.remaining_bytes = self.capacity_bytes;
+            self.refill_epoch = refill_epoch;
+        }
     }
 
     // 🚫️async: E1-adjacent — same reasoning as `new` above (R9).
@@ -951,6 +1071,8 @@ pub struct HttpPool {
     transport: HttpPoolTransport,
     buckets: Arc<Mutex<HashMap<PackageId, TokenBucket>>>,
     bytes_per_minute_cap: u64,
+    refill_epoch: Arc<AtomicU64>,
+    refill_driver_started: Arc<AtomicBool>,
     outstanding: Arc<Mutex<HashMap<ActorId, u32>>>,
     outstanding_cap: u32,
 }
@@ -968,54 +1090,59 @@ impl HttpPool {
     }
 
     pub fn new_now(transport: Arc<dyn HttpTransport>, compute: Arc<ComputePool>, bytes_per_minute_cap: u64, outstanding_cap: u32) -> HttpPool {
-        HttpPool { transport: HttpPoolTransport::Blocking { transport, compute }, buckets: Arc::new(Mutex::new(HashMap::new())), bytes_per_minute_cap, outstanding: Arc::new(Mutex::new(HashMap::new())), outstanding_cap: outstanding_cap.max(1) }
+        HttpPool {
+            transport: HttpPoolTransport::Blocking { transport, compute },
+            buckets: Arc::new(Mutex::new(HashMap::new())),
+            bytes_per_minute_cap,
+            refill_epoch: Arc::new(AtomicU64::new(0)),
+            refill_driver_started: Arc::new(AtomicBool::new(false)),
+            outstanding: Arc::new(Mutex::new(HashMap::new())),
+            outstanding_cap: outstanding_cap.max(1),
+        }
     }
 
     /// 🌐️ For a real [`AsyncHttpTransport`] (a sibling packet's real async client) that needs no
     /// [`ComputePool`] of its own — the transport already does real async I/O.
     pub async fn new_with_async_transport(transport: Arc<dyn AsyncHttpTransport>, bytes_per_minute_cap: u64, outstanding_cap: u32) -> HttpPool {
-        HttpPool { transport: HttpPoolTransport::Async(transport), buckets: Arc::new(Mutex::new(HashMap::new())), bytes_per_minute_cap, outstanding: Arc::new(Mutex::new(HashMap::new())), outstanding_cap: outstanding_cap.max(1) }
+        HttpPool {
+            transport: HttpPoolTransport::Async(transport),
+            buckets: Arc::new(Mutex::new(HashMap::new())),
+            bytes_per_minute_cap,
+            refill_epoch: Arc::new(AtomicU64::new(0)),
+            refill_driver_started: Arc::new(AtomicBool::new(false)),
+            outstanding: Arc::new(Mutex::new(HashMap::new())),
+            outstanding_cap: outstanding_cap.max(1),
+        }
     }
 
     /// ♻️ Test/operator hook for a manual top-up outside the once-a-minute driver — see
     /// [`TokenBucket::refill`]'s doc.
     pub async fn refill_package_budget(&self, package: &PackageId, bytes: u64) {
-        self.buckets.lock().expect("HttpPool buckets mutex poisoned").entry(package.clone()).or_insert_with(|| TokenBucket::new(self.bytes_per_minute_cap)).refill(bytes);
+        let refill_epoch = self.refill_epoch.load(Ordering::SeqCst);
+        let mut buckets = self.buckets.lock().expect("HttpPool buckets mutex poisoned");
+        let bucket = buckets.entry(package.clone()).or_insert_with(|| TokenBucket::new_at(self.bytes_per_minute_cap, refill_epoch));
+        bucket.observe_refill_epoch(refill_epoch);
+        bucket.refill(bytes);
     }
 
     /// 🔍️ `package`'s remaining bytes this minute — untracked packages read as a full bucket
     /// (nothing has been charged against them yet).
     pub async fn remaining_package_budget(&self, package: &PackageId) -> u64 {
-        self.buckets.lock().expect("HttpPool buckets mutex poisoned").get(package).map_or(self.bytes_per_minute_cap, |bucket| bucket.remaining_bytes)
+        let refill_epoch = self.refill_epoch.load(Ordering::SeqCst);
+        let mut buckets = self.buckets.lock().expect("HttpPool buckets mutex poisoned");
+        let Some(bucket) = buckets.get_mut(package) else { return self.bytes_per_minute_cap };
+        bucket.observe_refill_epoch(refill_epoch);
+        bucket.remaining_bytes
     }
 
-    /// ▶️ Submits the refill driver as ONE dedicated job on `pool`'s [`Lane::Maintenance`] lane:
-    /// sleeps `interval_ms` (production callers pass [`HTTP_BUCKET_REFILL_INTERVAL_MS`]; a test
-    /// injects a short interval instead of waiting on a real 60-second tick), then tops EVERY
-    /// currently-tracked package's bucket back toward its cap, forever. Same
-    /// [`block_on`]-drives-the-loop-forever shape as [`TimerWheel::spawn_driver`] — see that method's
-    /// `🚨️ HONEST GAP` doc, which applies here too.
+    /// ▶️ Starts one finite maintenance turn per refill interval. A turn advances a shared epoch
+    /// in O(1); each package observes that epoch and refills lazily on its next access, so no turn
+    /// scans an unbounded package map or occupies a worker while waiting.
     // 🚫️async: E1-adjacent — no suspension point of its own (only SUBMITS the job). See R9.
     pub fn spawn_refill_driver(&self, pool: &WorkerPool, interval_ms: u64) {
-        let buckets = self.buckets.clone();
-        let cap = self.bytes_per_minute_cap;
-        let driver_pool = pool.clone();
-        pool.submit(
-            Lane::Maintenance,
-            Box::new(move || {
-                let pool = driver_pool;
-                block_on(async move {
-                    loop {
-                        let now_ms = pool.now_ms();
-                        pool.timer().sleep_until(now_ms + interval_ms).await;
-                        let mut buckets = buckets.lock().expect("HttpPool buckets mutex poisoned");
-                        for bucket in buckets.values_mut() {
-                            bucket.refill(cap);
-                        }
-                    }
-                });
-            }),
-        );
+        if self.refill_driver_started.compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst).is_ok() {
+            schedule_http_refill_turn(pool, self.refill_epoch.clone(), interval_ms.max(1));
+        }
     }
 
     /// 🌊️ Starts `request` and returns as soon as the head is known, plus a [`HttpPoolBody`] the
@@ -1036,8 +1163,10 @@ impl HttpPool {
         }
         let outbound_bytes = (request.body.len() + request.url.len()) as u64;
         let admitted = {
+            let refill_epoch = self.refill_epoch.load(Ordering::SeqCst);
             let mut buckets = self.buckets.lock().expect("HttpPool buckets mutex poisoned");
-            let bucket = buckets.entry(package.clone()).or_insert_with(|| TokenBucket::new(self.bytes_per_minute_cap));
+            let bucket = buckets.entry(package.clone()).or_insert_with(|| TokenBucket::new_at(self.bytes_per_minute_cap, refill_epoch));
+            bucket.observe_refill_epoch(refill_epoch);
             bucket.try_consume(outbound_bytes)
         };
         if !admitted {
@@ -1063,7 +1192,9 @@ impl HttpPool {
             HttpPoolTransport::Async(async_transport) => async_transport.start(&ctx, request).await,
         };
         match start_result {
-            Ok((head, body)) => Ok((head, HttpPoolBody { inner: body, package, actor, buckets: self.buckets.clone(), bytes_per_minute_cap: self.bytes_per_minute_cap, outstanding: self.outstanding.clone(), finished: false })),
+            Ok((head, body)) => {
+                Ok((head, HttpPoolBody { inner: body, package, actor, buckets: self.buckets.clone(), bytes_per_minute_cap: self.bytes_per_minute_cap, refill_epoch: self.refill_epoch.clone(), outstanding: self.outstanding.clone(), finished: false }))
+            }
             Err(error) => {
                 release_outstanding_slot(&self.outstanding, actor);
                 Err(error)
@@ -1084,6 +1215,19 @@ impl HttpPool {
     }
 }
 
+fn schedule_http_refill_turn(pool: &WorkerPool, refill_epoch: Arc<AtomicU64>, interval_ms: u64) {
+    let deadline_ms = pool.now_ms().saturating_add(interval_ms);
+    let turn_pool = pool.clone();
+    pool.submit_at(
+        deadline_ms,
+        Lane::Maintenance,
+        Box::new(move || {
+            refill_epoch.fetch_add(1, Ordering::SeqCst);
+            schedule_http_refill_turn(&turn_pool, refill_epoch, interval_ms);
+        }),
+    );
+}
+
 /// 🌊️ A [`HttpPool::fetch`]'d body: wraps the transport's own [`HttpBody`], charging the
 /// per-package byte bucket for the REAL length of every chunk actually pulled (never an estimate),
 /// and releasing the actor's outstanding slot exactly once — on EOF, on a mid-body budget abort, or
@@ -1097,6 +1241,7 @@ pub struct HttpPoolBody {
     actor: ActorId,
     buckets: Arc<Mutex<HashMap<PackageId, TokenBucket>>>,
     bytes_per_minute_cap: u64,
+    refill_epoch: Arc<AtomicU64>,
     outstanding: Arc<Mutex<HashMap<ActorId, u32>>>,
     finished: bool,
 }
@@ -1123,8 +1268,10 @@ impl HttpPoolBody {
         match self.inner.next_chunk().await {
             Ok(Some(chunk)) => {
                 let admitted = {
+                    let refill_epoch = self.refill_epoch.load(Ordering::SeqCst);
                     let mut buckets = self.buckets.lock().expect("HttpPool buckets mutex poisoned");
-                    let bucket = buckets.entry(self.package.clone()).or_insert_with(|| TokenBucket::new(self.bytes_per_minute_cap));
+                    let bucket = buckets.entry(self.package.clone()).or_insert_with(|| TokenBucket::new_at(self.bytes_per_minute_cap, refill_epoch));
+                    bucket.observe_refill_epoch(refill_epoch);
                     bucket.try_consume(chunk.len() as u64)
                 };
                 if !admitted {
@@ -1225,12 +1372,12 @@ struct StorageState<R: HostAsyncRuntime> {
 // 🚫️async: E5 executor bridge — see the doc comment directly above (kept short here, within the
 // codemod's 6-line lookback, since the full rationale needed more room than that).
 fn resolve_ready<F: Future>(fut: F) -> F::Output {
-    let waker = std::task::Waker::noop();
-    let mut cx = std::task::Context::from_waker(waker);
+    let waker = Waker::noop();
+    let mut cx = Context::from_waker(waker);
     let mut fut = std::pin::pin!(fut);
     match fut.as_mut().poll(&mut cx) {
-        std::task::Poll::Ready(value) => value,
-        std::task::Poll::Pending => unreachable!(
+        Poll::Ready(value) => value,
+        Poll::Pending => unreachable!(
             "resolve_ready: storage_try_dispatch only ever polls a future documented to never \
              suspend — a Pending here means that contract was violated"
         ),
@@ -1309,7 +1456,7 @@ fn storage_try_dispatch<R: HostAsyncRuntime + 'static>(state: &Arc<StorageState<
 /// completion, whether the op succeeds or fails); [`storage_try_dispatch`] — triggered on submit and
 /// again on every completion — pulls the highest-priority ready job while `in_flight <
 /// max_in_flight`. [`StorageTicket::await_result`] races `ctx.deadline_ms` internally now (same
-/// `tokio::select!` idiom [`ComputePool::run_blocking`] already uses) — see that method's doc; a
+/// same absolute-deadline race [`ComputePool::run_io`] uses) — see that method's doc; a
 /// caller with its own external deadline-racing wrapper built against the OLD "not wired" gap (see
 /// the crate report's `## honest gaps`) can drop it.
 pub struct StorageScheduler<R: HostAsyncRuntime>(Arc<StorageState<R>>);
@@ -1405,9 +1552,10 @@ pub enum PublishOutcome {
 }
 
 enum Mailbox {
-    LatestWins(Option<Vec<u8>>),
-    Coalesced { pending: HashMap<String, Vec<u8>>, order: VecDeque<String> },
-    LosslessBounded { cap: u32, pending: VecDeque<Vec<u8>> },
+    LatestWins { max_bytes: u64, pending: Option<Vec<u8>> },
+    Coalesced { cap: u32, max_bytes: u64, used_bytes: u64, pending: HashMap<String, Vec<u8>>, order: VecDeque<String> },
+    Ring { cap: u32, max_bytes: u64, used_bytes: u64, pending: VecDeque<Vec<u8>> },
+    LosslessBounded { cap: u32, max_bytes: u64, used_bytes: u64, pending: VecDeque<Vec<u8>> },
     ByteCredit { remaining: u64 },
 }
 
@@ -1418,9 +1566,10 @@ impl Mailbox {
     // `WheelCore` above.
     fn new(policy: &ChannelPolicy) -> Mailbox {
         match policy {
-            ChannelPolicy::LatestWins { max_bytes: _ } => Mailbox::LatestWins(None),
-            ChannelPolicy::Coalesced { key: _, max_items: _, max_bytes: _ } => Mailbox::Coalesced { pending: HashMap::new(), order: VecDeque::new() },
-            ChannelPolicy::LosslessBounded { max_items, max_bytes: _ } => Mailbox::LosslessBounded { cap: *max_items, pending: VecDeque::new() },
+            ChannelPolicy::LatestWins { max_bytes } => Mailbox::LatestWins { max_bytes: *max_bytes, pending: None },
+            ChannelPolicy::Coalesced { key: _, max_items, max_bytes } => Mailbox::Coalesced { cap: *max_items, max_bytes: *max_bytes, used_bytes: 0, pending: HashMap::new(), order: VecDeque::new() },
+            ChannelPolicy::Ring { max_items, max_bytes } => Mailbox::Ring { cap: *max_items, max_bytes: *max_bytes, used_bytes: 0, pending: VecDeque::new() },
+            ChannelPolicy::LosslessBounded { max_items, max_bytes } => Mailbox::LosslessBounded { cap: *max_items, max_bytes: *max_bytes, used_bytes: 0, pending: VecDeque::new() },
             ChannelPolicy::ByteCredit { max_items: _, max_bytes } => Mailbox::ByteCredit { remaining: *max_bytes },
         }
     }
@@ -1431,31 +1580,78 @@ impl Mailbox {
     // 🚫️async: E1-adjacent — see `Mailbox::new`'s tag above (R9).
     fn publish(&mut self, coalesce_key: Option<&str>, payload: Vec<u8>) -> PublishOutcome {
         match self {
-            Mailbox::LatestWins(slot) => {
-                let collapsed = slot.is_some();
-                *slot = Some(payload);
+            Mailbox::LatestWins { max_bytes, pending } => {
+                if payload.len() as u64 > *max_bytes {
+                    return PublishOutcome::RejectedInsufficientCredit;
+                }
+                let collapsed = pending.is_some();
+                *pending = Some(payload);
                 if collapsed {
                     PublishOutcome::Collapsed
                 } else {
                     PublishOutcome::Delivered
                 }
             }
-            Mailbox::Coalesced { pending, order } => {
+            Mailbox::Coalesced { cap, max_bytes, used_bytes, pending, order } => {
                 let key = coalesce_key.unwrap_or_default().to_string();
-                let collapsed = pending.insert(key.clone(), payload).is_some();
-                if !collapsed {
-                    order.push_back(key);
+                let cost = payload.len() as u64;
+                if *cap == 0 {
+                    return PublishOutcome::RejectedFull { cap: *cap };
                 }
+                if cost > *max_bytes {
+                    return PublishOutcome::RejectedInsufficientCredit;
+                }
+                let mut collapsed = false;
+                if let Some(previous) = pending.remove(&key) {
+                    *used_bytes = used_bytes.saturating_sub(previous.len() as u64);
+                    order.retain(|queued| queued != &key);
+                    collapsed = true;
+                }
+                while pending.len() as u32 >= *cap || used_bytes.saturating_add(cost) > *max_bytes {
+                    let Some(oldest) = order.pop_front() else { break };
+                    if let Some(previous) = pending.remove(&oldest) {
+                        *used_bytes = used_bytes.saturating_sub(previous.len() as u64);
+                        collapsed = true;
+                    }
+                }
+                pending.insert(key.clone(), payload);
+                order.push_back(key);
+                *used_bytes = used_bytes.saturating_add(cost);
                 if collapsed {
                     PublishOutcome::Collapsed
                 } else {
                     PublishOutcome::Delivered
                 }
             }
-            Mailbox::LosslessBounded { cap, pending } => {
+            Mailbox::Ring { cap, max_bytes, used_bytes, pending } => {
+                let cost = payload.len() as u64;
+                if *cap == 0 {
+                    return PublishOutcome::RejectedFull { cap: *cap };
+                }
+                if cost > *max_bytes {
+                    return PublishOutcome::RejectedInsufficientCredit;
+                }
+                let mut collapsed = false;
+                while pending.len() as u32 >= *cap || used_bytes.saturating_add(cost) > *max_bytes {
+                    let Some(previous) = pending.pop_front() else { break };
+                    *used_bytes = used_bytes.saturating_sub(previous.len() as u64);
+                    collapsed = true;
+                }
+                pending.push_back(payload);
+                *used_bytes = used_bytes.saturating_add(cost);
+                if collapsed {
+                    PublishOutcome::Collapsed
+                } else {
+                    PublishOutcome::Delivered
+                }
+            }
+            Mailbox::LosslessBounded { cap, max_bytes, used_bytes, pending } => {
                 if pending.len() as u32 >= *cap {
                     PublishOutcome::RejectedFull { cap: *cap }
+                } else if used_bytes.saturating_add(payload.len() as u64) > *max_bytes {
+                    PublishOutcome::RejectedInsufficientCredit
                 } else {
+                    *used_bytes = used_bytes.saturating_add(payload.len() as u64);
                     pending.push_back(payload);
                     PublishOutcome::Delivered
                 }
@@ -1477,17 +1673,21 @@ impl Mailbox {
     // 🚫️async: E1-adjacent — see `Mailbox::new`'s tag above (R9).
     fn drain(&mut self) -> Vec<Vec<u8>> {
         match self {
-            Mailbox::LatestWins(slot) => slot.take().into_iter().collect(),
-            Mailbox::Coalesced { pending, order } => {
+            Mailbox::LatestWins { pending, .. } => pending.take().into_iter().collect(),
+            Mailbox::Coalesced { used_bytes, pending, order, .. } => {
                 let mut out = Vec::new();
                 while let Some(key) = order.pop_front() {
                     if let Some(value) = pending.remove(&key) {
                         out.push(value);
                     }
                 }
+                *used_bytes = 0;
                 out
             }
-            Mailbox::LosslessBounded { pending, .. } => pending.drain(..).collect(),
+            Mailbox::Ring { used_bytes, pending, .. } | Mailbox::LosslessBounded { used_bytes, pending, .. } => {
+                *used_bytes = 0;
+                pending.drain(..).collect()
+            }
             Mailbox::ByteCredit { .. } => Vec::new(),
         }
     }
@@ -1502,7 +1702,7 @@ struct Subscriber {
 /// 📮️ Indexed topic router: [`EventRouter::subscribe`]/`unsubscribe` register a
 /// `(ActorId, ChannelPolicy)` per topic; [`EventRouter::publish`]/`send_message` deliver into
 /// a per-`(topic, actor)` [`Mailbox`] built from the subscriber's OWN declared policy —
-/// `LatestWins`/`Coalesced` collapse, `LosslessBounded` rejects rather than growing past `cap`,
+/// `LatestWins`/`Coalesced`/`Ring` collapse, `LosslessBounded` rejects rather than growing past `cap`,
 /// exactly the backpressure vocabulary `semio_framework_async::ChannelPolicy` declares. Draining a
 /// mailbox into a real [`CompletionSink::complete`] call with a real actor generation is a later
 /// packet's job — see the crate report's `## honest gaps`; this region's own contract (the
@@ -1738,11 +1938,88 @@ mod tests {
         sleep_ms(&runtime, 4 * PARK_POLL_INTERVAL_MS).await;
         assert!(ran.load(Ordering::SeqCst), "unparked scope must eventually run the held work");
     }
+
+    #[semio_framework_async_macros::async_test]
+    async fn pending_scoped_future_releases_the_only_worker_between_polls() {
+        let pool = test_pool(1);
+        let runtime = TokioHostRuntime::with_pool(pool.clone());
+        let scope = runtime.open_scope(ScopeOwner::Service("finite-future-turn"), None).await;
+        let ctx = test_ctx(0, scope.cancel.clone()).await;
+        let wait_pool = pool.clone();
+        let completed = Arc::new(AtomicBool::new(false));
+        let completed_after_wait = Arc::clone(&completed);
+        let deadline = pool.now_ms() + 80;
+        runtime
+            .spawn_scoped(
+                &scope,
+                ctx,
+                Box::pin(async move {
+                    wait_pool.timer().sleep_until(deadline).await;
+                    completed_after_wait.store(true, Ordering::SeqCst);
+                }),
+            )
+            .await;
+        sleep_ms(&runtime, 5).await;
+        let (signal_tx, signal_rx) = std::sync::mpsc::channel();
+        pool.submit(Lane::Interactive, Box::new(move || signal_tx.send(()).expect("signal receiver alive")));
+        signal_rx.recv_timeout(Duration::from_millis(40)).expect("pending future must not pin the only worker");
+        assert!(!completed.load(Ordering::SeqCst), "delayed future completed before its deadline");
+        sleep_ms(&runtime, 100).await;
+        assert!(completed.load(Ordering::SeqCst), "timer wake must schedule the future's next finite turn");
+        pool.shutdown();
+    }
     //#endregion 🌳️ScopeTableTests
 
     //#region 🧮️ComputePoolTests
+    struct CountingComputeJob {
+        current: Arc<AtomicU32>,
+        observed_max: Arc<AtomicU32>,
+        remaining_steps: u8,
+        entered: bool,
+    }
+
+    impl InteractiveJob for CountingComputeJob {
+        fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> StepOutcome {
+            if cx.is_cancelled() {
+                if self.entered {
+                    self.current.fetch_sub(1, Ordering::SeqCst);
+                    self.entered = false;
+                }
+                return StepOutcome::Cancelled;
+            }
+            if cx.should_yield() {
+                return StepOutcome::Yield;
+            }
+            if !self.entered {
+                let now = self.current.fetch_add(1, Ordering::SeqCst) + 1;
+                self.observed_max.fetch_max(now, Ordering::SeqCst);
+                self.entered = true;
+            }
+            cx.consume_fuel(1);
+            if self.remaining_steps > 0 {
+                self.remaining_steps -= 1;
+                return StepOutcome::Yield;
+            }
+            self.current.fetch_sub(1, Ordering::SeqCst);
+            self.entered = false;
+            StepOutcome::Complete(semio_framework_job::CommitCandidate { state: Vec::new(), output: Vec::new() })
+        }
+    }
+
+    struct NeverCompleteComputeJob;
+
+    impl InteractiveJob for NeverCompleteComputeJob {
+        fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> StepOutcome {
+            if cx.is_cancelled() {
+                return StepOutcome::Cancelled;
+            }
+            cx.consume_fuel(1);
+            StepOutcome::Yield
+        }
+    }
+
     #[semio_framework_async_macros::async_test]
-    async fn run_blocking_never_exceeds_the_compute_bound_under_a_burst() {
+    async fn interactive_jobs_never_exceed_the_compute_bound_under_a_burst() {
         const COMPUTE_CAPACITY: u32 = 3;
         let runtime = TokioHostRuntime::with_pool(test_pool(2));
         let pool = ComputePool::new(COMPUTE_CAPACITY).await;
@@ -1758,14 +2035,8 @@ mod tests {
             let observed_max = observed_max.clone();
             let ctx = test_ctx(i as u64, scope.cancel.clone()).await;
             handles.push(async move {
-                pool.run_blocking(runtime, scope, ctx, move || {
-                    let now = current.fetch_add(1, Ordering::SeqCst) + 1;
-                    observed_max.fetch_max(now, Ordering::SeqCst);
-                    std::thread::sleep(Duration::from_millis(25));
-                    current.fetch_sub(1, Ordering::SeqCst);
-                })
-                .await
-                .expect("run_blocking without a deadline must not fail");
+                let job = CountingComputeJob { current, observed_max, remaining_steps: 8, entered: false };
+                pool.run_job(runtime, scope, ctx, job).await.expect("interactive job without a deadline must not fail");
             });
         }
         futures_join_all(handles).await;
@@ -1774,22 +2045,17 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
-    async fn run_blocking_deadline_actually_fires_and_the_late_result_is_not_awaited() {
+    async fn interactive_job_deadline_cancels_the_resumable_job() {
         let runtime = TokioHostRuntime::with_pool(test_pool(4));
         let pool = ComputePool::new(4).await;
         let scope = runtime.open_scope(ScopeOwner::Service("compute-deadline"), None).await;
-        let (unblock_tx, unblock_rx) = std::sync::mpsc::channel::<()>();
         let now = runtime.now_ms().await;
         let mut ctx = test_ctx(0, scope.cancel.clone()).await;
         ctx.deadline_ms = Some(now + 40);
-        let outcome = pool
-            .run_blocking(&runtime, &scope, ctx, move || {
-                unblock_rx.recv().expect("test should unblock this thread");
-                7
-            })
-            .await;
-        assert_eq!(outcome, Err(ComputeError::DeadlineExceeded), "a deadline shorter than the blocking work must lose the race");
-        let _ = unblock_tx.send(());
+        let cancel = ctx.cancel.clone();
+        let outcome = pool.run_job(&runtime, &scope, ctx, NeverCompleteComputeJob).await;
+        assert_eq!(outcome, Err(ComputeError::DeadlineExceeded), "a non-terminal job must stop at its absolute deadline");
+        assert!(cancel.is_cancelled().await, "deadline propagation must cancel the running job");
     }
 
     /// 🌀️ A self-contained cooperative yield with no tokio `rt`-feature dependency (this crate no
@@ -1799,13 +2065,13 @@ mod tests {
     struct Yield(bool);
     impl Future for Yield {
         type Output = ();
-        fn poll(mut self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<()> {
+        fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<()> {
             if self.0 {
-                std::task::Poll::Ready(())
+                Poll::Ready(())
             } else {
                 self.0 = true;
                 cx.waker().wake_by_ref();
-                std::task::Poll::Pending
+                Poll::Pending
             }
         }
     }
@@ -1817,7 +2083,7 @@ mod tests {
         while !pending.is_empty() {
             let mut still_pending = Vec::new();
             for mut fut in pending {
-                if Future::poll(fut.as_mut(), &mut std::task::Context::from_waker(std::task::Waker::noop())) == std::task::Poll::Pending {
+                if Future::poll(fut.as_mut(), &mut Context::from_waker(Waker::noop())) == Poll::Pending {
                     still_pending.push(fut);
                 }
             }
@@ -1893,13 +2159,24 @@ mod tests {
         wheel.disarm(id);
         assert!(wheel.arm(plugin, 1, 0, 0, 200, None).is_ok());
     }
+
+    #[semio_framework_async_macros::async_test]
+    async fn wheel_core_expiry_batch_preserves_due_remainder() {
+        let mut wheel = WheelCore::new(32).await;
+        let plugin = PackageId("batch".to_string());
+        for actor in 0..20 {
+            wheel.arm(plugin.clone(), actor, 0, 0, 100, None).expect("timer arm");
+        }
+        assert_eq!(wheel.pop_expired_batch(100, 8).len(), 8);
+        assert_eq!(wheel.pop_expired_batch(100, 8).len(), 8);
+        assert_eq!(wheel.pop_expired_batch(100, 8).len(), 4);
+        assert!(wheel.pop_expired_batch(100, 8).is_empty());
+    }
     //#endregion ⏲️WheelCoreTests
 
     //#region ⏲️TimerWheelDriverTests
     /// ⏱️ Polls `sink.recorded()` on a short real-time tick until it is non-empty or `timeout`
-    /// elapses — replaces `ManualRuntime`'s deterministic-clock `drive()`/`set_now_ms()` idiom, which
-    /// [`TimerWheel::spawn_driver`] can no longer use (it drives real [`WorkerPool`] worker threads
-    /// on the real wall clock now, not an injected one).
+    /// elapses while finite timer turns use the pool's real monotonic clock.
     async fn wait_for_completions(sink: &MockCompletionSink, timeout: Duration) -> Vec<CompletionRecord> {
         let start = std::time::Instant::now();
         loop {
@@ -1925,10 +2202,7 @@ mod tests {
         assert_eq!(recorded[0].actor, 42);
         assert_eq!(recorded[0].generation, 3);
         assert_eq!(recorded[0].lane, 1);
-        // 🚨️ Deliberately no `pool.shutdown()` here: `spawn_driver`'s job never returns (see its
-        // `🚨️ HONEST GAP` doc), so `shutdown()` would join a thread that never exits and hang this
-        // test forever. `pool`/its one permanently-blocked worker thread are leaked until the test
-        // process itself exits — a bounded, test-only cost, not a production one.
+        pool.shutdown();
     }
     //#endregion ⏲️TimerWheelDriverTests
 
@@ -2145,6 +2419,36 @@ mod tests {
     }
 
     #[semio_framework_async_macros::async_test]
+    async fn event_router_ring_overwrites_oldest_by_item_and_byte_bounds() {
+        let router = EventRouter::new();
+        let topic = Topic("diagnostics".to_string());
+        let actor = ActorId(6);
+        router.subscribe(topic.clone(), actor, ChannelPolicy::Ring { max_items: 3, max_bytes: 4 }).await;
+        assert_eq!(router.publish(&topic, None, b"aa").await, vec![(actor, PublishOutcome::Delivered)]);
+        assert_eq!(router.publish(&topic, None, b"bb").await, vec![(actor, PublishOutcome::Delivered)]);
+        assert_eq!(router.publish(&topic, None, b"cc").await, vec![(actor, PublishOutcome::Collapsed)]);
+        assert_eq!(router.drain(&topic, actor).await, vec![b"bb".to_vec(), b"cc".to_vec()]);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn event_router_payload_bytes_are_enforced_for_every_queueing_policy() {
+        let router = EventRouter::new();
+        let latest = Topic("bounded.latest".to_string());
+        let coalesced = Topic("bounded.coalesced".to_string());
+        let lossless = Topic("bounded.lossless".to_string());
+        let actor = ActorId(7);
+        router.subscribe(latest.clone(), actor, ChannelPolicy::LatestWins { max_bytes: 2 }).await;
+        router.subscribe(coalesced.clone(), actor, ChannelPolicy::Coalesced { key: "entity".to_string(), max_items: 2, max_bytes: 4 }).await;
+        router.subscribe(lossless.clone(), actor, ChannelPolicy::LosslessBounded { max_items: 4, max_bytes: 3 }).await;
+        assert_eq!(router.publish(&latest, None, b"xxx").await, vec![(actor, PublishOutcome::RejectedInsufficientCredit)]);
+        assert_eq!(router.publish(&coalesced, Some("a"), b"aaa").await, vec![(actor, PublishOutcome::Delivered)]);
+        assert_eq!(router.publish(&coalesced, Some("b"), b"bb").await, vec![(actor, PublishOutcome::Collapsed)]);
+        assert_eq!(router.drain(&coalesced, actor).await, vec![b"bb".to_vec()]);
+        assert_eq!(router.publish(&lossless, None, b"aa").await, vec![(actor, PublishOutcome::Delivered)]);
+        assert_eq!(router.publish(&lossless, None, b"bb").await, vec![(actor, PublishOutcome::RejectedInsufficientCredit)]);
+    }
+
+    #[semio_framework_async_macros::async_test]
     async fn event_router_byte_credit_rejects_when_insufficient_and_admits_after_refund_style_new_bucket() {
         let router = EventRouter::new();
         let topic = Topic("stream.frames".to_string());
@@ -2256,7 +2560,7 @@ mod tests {
         let package = PackageId("pkg-refill".to_string());
         {
             let mut buckets = pool.buckets.lock().unwrap();
-            buckets.entry(package.clone()).or_insert_with(|| TokenBucket::new(100)).try_consume(70);
+            buckets.entry(package.clone()).or_insert_with(|| TokenBucket::new_at(100, 0)).try_consume(70);
         }
         assert_eq!(pool.remaining_package_budget(&package).await, 30);
 
@@ -2270,6 +2574,20 @@ mod tests {
             assert!(start.elapsed() < Duration::from_secs(5), "the refill driver must actually run its loop and top the bucket back up on its own tick");
             std::thread::sleep(Duration::from_millis(5));
         }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn finite_timer_and_refill_drivers_do_not_starve_a_single_worker() {
+        let workers = test_pool(1);
+        let wheel = TimerWheel::new(10).await;
+        wheel.spawn_driver(&workers, Arc::new(MockCompletionSink::new().await));
+        let compute = Arc::new(ComputePool::with_pool(1, workers.clone()));
+        let http = HttpPool::new(Arc::new(UnwiredHttpTransport), compute, 100, 1).await;
+        http.spawn_refill_driver(&workers, 10);
+        let (tx, rx) = std::sync::mpsc::channel();
+        workers.submit(Lane::Interactive, Box::new(move || tx.send(()).expect("interactive signal")));
+        rx.recv_timeout(Duration::from_secs(1)).expect("finite service drivers must leave the only worker available");
+        workers.shutdown();
     }
 
     /// 🌐️ A test-only `AsyncHttpTransport`/`HttpBody` over a REAL local TCP socket — the harness the
@@ -2297,7 +2615,7 @@ mod tests {
             let ctx = self.ctx.clone();
             Box::pin(async move {
                 let outcome = compute
-                    .run_blocking(runtime.as_ref(), &scope, ctx, move || {
+                    .run_io(runtime.as_ref(), &scope, ctx, move || {
                         use std::io::Read;
                         let mut buf = [0u8; 64];
                         let mut guard = stream.lock().expect("test socket mutex poisoned");

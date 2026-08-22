@@ -41,10 +41,10 @@ pub struct Fem2dConfig {
 /// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
 impl store::ArtifactDsl for Fem2dConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    async fn envelope_id() -> &'static str {
+    fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -52,7 +52,7 @@ impl store::ArtifactDsl for Fem2dConfig {
         let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -61,12 +61,12 @@ impl store::ArtifactDsl for Fem2dConfig {
 
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for Fem2dConfig {
-    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -74,7 +74,7 @@ impl store::ArtifactPack for Fem2dConfig {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    async fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -122,7 +122,7 @@ pub enum Fem2dConfigMutation {
 
 //#region 🔖️OpCodec
 impl protocol::OpText for Fem2dConfigMutation {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -133,7 +133,7 @@ impl protocol::OpText for Fem2dConfigMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -143,7 +143,7 @@ impl protocol::OpText for Fem2dConfigMutation {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for Fem2dConfigMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -156,7 +156,7 @@ impl protocol::OpBinary for Fem2dConfigMutation {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -178,7 +178,7 @@ impl protocol::OpBinary for Fem2dConfigMutation {
 impl Mutation<Fem2dConfig> for Fem2dConfigMutation {
     type Diff = Fem2dConfig;
 
-    async fn diff(&self, base: &Fem2dConfig) -> protocol::MutationOutcome<Fem2dConfig> {
+    fn diff(&self, base: &Fem2dConfig) -> protocol::MutationOutcome<Fem2dConfig> {
         let mut next = base.clone();
         match self {
             Fem2dConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
@@ -193,7 +193,7 @@ impl Mutation<Fem2dConfig> for Fem2dConfigMutation {
         protocol::MutationOutcome::new(next)
     }
 
-    async fn inverse(&self, base: &Fem2dConfig) -> Vec<Self> {
+    fn inverse(&self, base: &Fem2dConfig) -> Vec<Self> {
         vec![Fem2dConfigMutation::Snapshot { config: base.clone() }]
     }
 }
@@ -204,8 +204,8 @@ impl Mutation<Fem2dConfig> for Fem2dConfigMutation {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn fem2d_config_default_is_static_display_with_default_camera_and_locale() {
+    #[test]
+    fn fem2d_config_default_is_static_display_with_default_camera_and_locale() {
         let config = Fem2dConfig::default();
         assert_eq!(config.result_mode, "static");
         assert!(config.result_source_id.is_none());
@@ -216,8 +216,8 @@ mod tests {
 
     /// 🧮️ `Fem2dConfig`'s `MutationDiff` is a whole-record replace, mirroring `ShootingConfig`'s
     /// identical B1 pilot pattern: `apply` ignores `base` entirely.
-    #[semio_framework_async_macros::async_test]
-    async fn fem2d_config_operation_diff_is_a_whole_record_replace() {
+    #[test]
+    fn fem2d_config_operation_diff_is_a_whole_record_replace() {
         let base = Fem2dConfig::default();
         let mut replacement = Fem2dConfig::default();
         replacement.locale = "de-DE".into();
@@ -229,8 +229,8 @@ mod tests {
         assert_eq!(absorbed, replacement);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn config_operation_backwards_always_restores_the_pre_operation_snapshot() {
+    #[test]
+    fn config_operation_backwards_always_restores_the_pre_operation_snapshot() {
         let base = Fem2dConfig::default();
         let camera = FemCamera { x: 1.0, y: 2.0, zoom: 3.0 };
         let op = Fem2dConfigMutation::SetCamera { camera: camera.clone() };
@@ -241,8 +241,8 @@ mod tests {
         assert_eq!(backwards[0].diff(&next).diff(), &base);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn set_result_display_config_operation_round_trips() {
+    #[test]
+    fn set_result_display_config_operation_round_trips() {
         let base = Fem2dConfig::default();
         let op = Fem2dConfigMutation::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 2 };
         let next = op.diff(&base).diff().clone();
@@ -251,16 +251,16 @@ mod tests {
         assert_eq!(next.result_mode_index, 2);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn set_locale_config_operation_round_trips() {
+    #[test]
+    fn set_locale_config_operation_round_trips() {
         let base = Fem2dConfig::default();
         let op = Fem2dConfigMutation::SetLocale { value: "de-DE".into() };
         let next = op.diff(&base).diff().clone();
         assert_eq!(next.locale, "de-DE");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn fem2d_config_operation_text_round_trips_every_variant() {
+    #[test]
+    fn fem2d_config_operation_text_round_trips_every_variant() {
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dConfigMutation::Snapshot { config: Fem2dConfig::default() });
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dConfigMutation::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 1 });
         semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dConfigMutation::SetCamera { camera: FemCamera { x: 1.0, y: 2.0, zoom: 1.5 } });

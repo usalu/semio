@@ -20,70 +20,100 @@ use crate::drawing::*;
 use crate::os_store::{create_document_envelope, ArtifactCommand};
 use crate::registry::*;
 use crate::vcs::*;
+use semio_framework::io::resolve_ready;
 
 // #region ⚠️ Errors
 /// 🧯️ `FlowHost`'s error type — wraps JSON codec failures, the `dag` crate's own `DagError`, and
 /// this crate's own graph-editing validation failures. Every variant's Display text is byte-for-byte
 /// identical to the `String` it replaces, so downstream `.to_string()` call sites (wasm_bindgen
 /// `JsValue` bridging, JSON error envelopes) are unaffected.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum FlowCoreError {
-    #[error(transparent)]
-    Json(#[from] serde_json::Error),
-    #[error(transparent)]
-    Dag(#[from] dag::DagError),
-    #[error("widget id already exists: {0}")]
+    Json(serde_json::Error),
+    Dag(dag::DagError),
     WidgetIdExists(String),
-    #[error("unknown widget: {0}")]
     UnknownWidget(String),
-    #[error("unknown neuron widget: {0}")]
     UnknownNeuronWidget(String),
-    #[error("{0} is not variadic")]
     NotVariadicInput(String),
-    #[error("{0} is not variadic output")]
     NotVariadicOutput(String),
-    #[error("{0} is not a neuron")]
     NotNeuron(String),
-    #[error("widget is not a neuron: {0}")]
     WidgetNotNeuron(String),
-    #[error("{0} reached max input ports")]
     MaxInputPortsReached(String),
-    #[error("{0} reached max output ports")]
     MaxOutputPortsReached(String),
-    #[error("unknown input port: {0}")]
     UnknownInputPort(String),
-    #[error("unknown output port: {0}")]
     UnknownOutputPort(String),
-    #[error("{widget} requires at least {min} inputs")]
     MinInputPorts { widget: String, min: usize },
-    #[error("{widget} requires at least {min} outputs")]
     MinOutputPorts { widget: String, min: usize },
-    #[error("{0} has no output port")]
     NoOutputPort(String),
-    #[error("{0} has no input port")]
     NoInputPort(String),
-    #[error("cannot connect widget to itself")]
     SelfConnection,
-    #[error("cannot insert widget between itself")]
     SelfInsertion,
-    #[error("connection would create cycle")]
     CycleWouldBeCreated,
-    #[error("connection already exists")]
     ConnectionAlreadyExists,
-    #[error("unknown synapse: {0}")]
     UnknownSynapse(String),
-    #[error("unknown widget layout: {0}")]
     UnknownWidgetLayout(String),
-    #[error("select at least two widgets to collapse")]
     CollapseNeedsTwoWidgets,
-    #[error("selection contains unknown widgets")]
     CollapseUnknownWidgets,
-    #[error("cannot collapse clusters")]
     CollapseContainsClusters,
-    #[error("unknown cluster: {0}")]
     UnknownCluster(String),
-    #[error("widget is not a cluster: {0}")]
     WidgetNotCluster(String),
+}
+
+impl std::fmt::Display for FlowCoreError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Json(error) => std::fmt::Display::fmt(error, formatter),
+            Self::Dag(error) => std::fmt::Display::fmt(error, formatter),
+            Self::WidgetIdExists(id) => write!(formatter, "widget id already exists: {id}"),
+            Self::UnknownWidget(id) => write!(formatter, "unknown widget: {id}"),
+            Self::UnknownNeuronWidget(id) => write!(formatter, "unknown neuron widget: {id}"),
+            Self::NotVariadicInput(id) => write!(formatter, "{id} is not variadic"),
+            Self::NotVariadicOutput(id) => write!(formatter, "{id} is not variadic output"),
+            Self::NotNeuron(id) => write!(formatter, "{id} is not a neuron"),
+            Self::WidgetNotNeuron(id) => write!(formatter, "widget is not a neuron: {id}"),
+            Self::MaxInputPortsReached(id) => write!(formatter, "{id} reached max input ports"),
+            Self::MaxOutputPortsReached(id) => write!(formatter, "{id} reached max output ports"),
+            Self::UnknownInputPort(id) => write!(formatter, "unknown input port: {id}"),
+            Self::UnknownOutputPort(id) => write!(formatter, "unknown output port: {id}"),
+            Self::MinInputPorts { widget, min } => write!(formatter, "{widget} requires at least {min} inputs"),
+            Self::MinOutputPorts { widget, min } => write!(formatter, "{widget} requires at least {min} outputs"),
+            Self::NoOutputPort(id) => write!(formatter, "{id} has no output port"),
+            Self::NoInputPort(id) => write!(formatter, "{id} has no input port"),
+            Self::SelfConnection => formatter.write_str("cannot connect widget to itself"),
+            Self::SelfInsertion => formatter.write_str("cannot insert widget between itself"),
+            Self::CycleWouldBeCreated => formatter.write_str("connection would create cycle"),
+            Self::ConnectionAlreadyExists => formatter.write_str("connection already exists"),
+            Self::UnknownSynapse(id) => write!(formatter, "unknown synapse: {id}"),
+            Self::UnknownWidgetLayout(id) => write!(formatter, "unknown widget layout: {id}"),
+            Self::CollapseNeedsTwoWidgets => formatter.write_str("select at least two widgets to collapse"),
+            Self::CollapseUnknownWidgets => formatter.write_str("selection contains unknown widgets"),
+            Self::CollapseContainsClusters => formatter.write_str("cannot collapse clusters"),
+            Self::UnknownCluster(id) => write!(formatter, "unknown cluster: {id}"),
+            Self::WidgetNotCluster(id) => write!(formatter, "widget is not a cluster: {id}"),
+        }
+    }
+}
+
+impl std::error::Error for FlowCoreError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Json(error) => Some(error),
+            Self::Dag(error) => Some(error),
+            _ => None,
+        }
+    }
+}
+
+impl From<serde_json::Error> for FlowCoreError {
+    fn from(error: serde_json::Error) -> Self {
+        Self::Json(error)
+    }
+}
+
+impl From<dag::DagError> for FlowCoreError {
+    fn from(error: dag::DagError) -> Self {
+        Self::Dag(error)
+    }
 }
 // #endregion ⚠️ Errors
 
@@ -140,7 +170,7 @@ impl FlowHost {
         // 🌱️ A throwaway placeholder, same as `dag` below — `rebuild_dag` (via `sync_from_dag`)
         // settles auto-computed layout onto `self.fixture` before the real undo/redo baseline is
         // captured, so a fresh host never starts with a spurious undoable step.
-        let history_store = FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", FlowFixture::default(), None)).expect("failed to create flow history store");
+        let history_store = resolve_ready(FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", FlowFixture::default(), None))).expect("failed to create flow history store");
         let mut host = Self {
             fixture,
             dag: DagHost::from_fixture(DagFixture { schema: "dag.fixture".into(), camera: dag::DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
@@ -166,7 +196,7 @@ impl FlowHost {
             pending_extension_eval: None,
         };
         host.rebuild_dag();
-        host.history_store = FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", host.fixture.clone(), None)).expect("failed to create flow history store");
+        host.history_store = resolve_ready(FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", host.fixture.clone(), None))).expect("failed to create flow history store");
         host
     }
 
@@ -205,7 +235,7 @@ impl FlowHost {
         if reset_history {
             // 🌱️ Captured AFTER `rebuild_dag` (see `from_fixture_with_cache`'s matching comment) so the
             // new undo/redo baseline is the settled, auto-laid-out fixture, not the raw input.
-            self.history_store = FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", self.fixture.clone(), None)).expect("failed to create flow history store");
+            self.history_store = resolve_ready(FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", self.fixture.clone(), None))).expect("failed to create flow history store");
             self.pending_change = false;
             self.gesture_active = false;
         }
@@ -1797,7 +1827,7 @@ impl FlowHost {
     fn flush_pending_change(&mut self) {
         if self.pending_change {
             self.pending_change = false;
-            let _ = self.history_store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::SetFixture { fixture: self.fixture.clone() }], description: None });
+            let _ = resolve_ready(self.history_store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::SetFixture { fixture: self.fixture.clone() }], description: None }));
         }
     }
 
@@ -1820,9 +1850,9 @@ impl FlowHost {
     fn commit_gesture_history(&mut self) {
         if self.gesture_active {
             self.gesture_active = false;
-            let committed = self.history_store.snapshot().unwrap_or_else(|_| self.fixture.clone());
+            let committed = resolve_ready(self.history_store.snapshot()).unwrap_or_else(|_| self.fixture.clone());
             if Self::content_changed(&committed, &self.fixture) {
-                let _ = self.history_store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::SetFixture { fixture: self.fixture.clone() }], description: None });
+                let _ = resolve_ready(self.history_store.dispatch(ArtifactCommand::Apply { mutations: vec![FlowMutation::SetFixture { fixture: self.fixture.clone() }], description: None }));
             }
         }
     }
@@ -1831,10 +1861,10 @@ impl FlowHost {
     pub fn undo(&mut self) -> bool {
         self.flush_pending_change();
         let camera = self.fixture.camera.clone();
-        if self.history_store.dispatch(ArtifactCommand::Undo).is_err() {
+        if resolve_ready(self.history_store.dispatch(ArtifactCommand::Undo)).is_err() {
             return false;
         }
-        let Ok(mut restored) = self.history_store.snapshot() else {
+        let Ok(mut restored) = resolve_ready(self.history_store.snapshot()) else {
             return false;
         };
         restored.camera = camera;
@@ -1846,10 +1876,10 @@ impl FlowHost {
     /// ↪️ Re-applies a fixture content snapshot undone earlier, keeping the current camera.
     pub fn redo(&mut self) -> bool {
         let camera = self.fixture.camera.clone();
-        if self.history_store.dispatch(ArtifactCommand::Redo).is_err() {
+        if resolve_ready(self.history_store.dispatch(ArtifactCommand::Redo)).is_err() {
             return false;
         }
-        let Ok(mut restored) = self.history_store.snapshot() else {
+        let Ok(mut restored) = resolve_ready(self.history_store.snapshot()) else {
             return false;
         };
         restored.camera = camera;
@@ -1860,12 +1890,12 @@ impl FlowHost {
 
     /// ↩️ Whether a content undo step is available.
     pub fn can_undo(&self) -> bool {
-        self.pending_change || !self.history_store.applied_edit_ids().is_empty()
+        self.pending_change || !resolve_ready(self.history_store.applied_edit_ids()).is_empty()
     }
 
     /// ↪️ Whether a content redo step is available.
     pub fn can_redo(&self) -> bool {
-        !self.history_store.redo_edit_ids().is_empty()
+        !resolve_ready(self.history_store.redo_edit_ids()).is_empty()
     }
     // #endregion History
 }

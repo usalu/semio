@@ -7,6 +7,6 @@ use semio_framework_plugin::{LocalizedLabel, UtilityCategory, UtilityDefinition}
 pub const UTILITY_ID: &str = "select";
 
 /// 🧱️ Stitched into the app manifest by `crate::editor::puzzle5d::create_puzzle5d_app`.
-pub async fn definition(label: LocalizedLabel) -> UtilityDefinition {
+pub fn definition(label: LocalizedLabel) -> UtilityDefinition {
     UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new(UTILITY_ID, label, "mouse-pointer") }
 }

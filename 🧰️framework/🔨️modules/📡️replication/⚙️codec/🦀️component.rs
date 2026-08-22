@@ -5,37 +5,148 @@ use crate::diagnostic::FaultOrigin;
 
 //#region 🔖️Errors
 /// @emoji 🚨️ The one error type every `pack_*` public fn returns; never leaks `std::io::Error`.
-#[derive(thiserror::Error, Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum PackError {
-    #[error("bad magic")]
     BadMagic,
-    #[error("unsupported version {major}.{minor}")]
     UnsupportedVersion { major: u16, minor: u16 },
-    #[error("unknown required feature bits {0:#x}")]
     UnknownRequiredFlags(u32),
-    #[error("truncated at offset {0}")]
     Truncated(u64),
-    #[error("checksum mismatch in {segment} at offset {offset}")]
     ChecksumMismatch { segment: &'static str, offset: u64 },
-    #[error("content hash mismatch")]
     ContentHashMismatch,
-    #[error("limit exceeded: {0}")]
     LimitExceeded(&'static str),
-    #[error("malformed {what} at offset {offset}: {detail}")]
     Malformed { what: &'static str, offset: u64, detail: String },
-    #[error("non-canonical encoding: {0}")]
     NonCanonical(&'static str),
-    #[error("unsupported codec {0}")]
     UnsupportedCodec(u8),
-    #[error("schema error: {0}")]
     Schema(String),
-    #[error("io error: {0}")]
     Io(String),
 }
 
-crate::fault_from_thiserror!(PackError, FaultOrigin::Module, "module.pack");
+impl std::fmt::Display for PackError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::BadMagic => formatter.write_str("bad magic"),
+            Self::UnsupportedVersion { major, minor } => write!(formatter, "unsupported version {major}.{minor}"),
+            Self::UnknownRequiredFlags(flags) => write!(formatter, "unknown required feature bits {flags:#x}"),
+            Self::Truncated(offset) => write!(formatter, "truncated at offset {offset}"),
+            Self::ChecksumMismatch { segment, offset } => write!(formatter, "checksum mismatch in {segment} at offset {offset}"),
+            Self::ContentHashMismatch => formatter.write_str("content hash mismatch"),
+            Self::LimitExceeded(limit) => write!(formatter, "limit exceeded: {limit}"),
+            Self::Malformed { what, offset, detail } => write!(formatter, "malformed {what} at offset {offset}: {detail}"),
+            Self::NonCanonical(detail) => write!(formatter, "non-canonical encoding: {detail}"),
+            Self::UnsupportedCodec(codec) => write!(formatter, "unsupported codec {codec}"),
+            Self::Schema(message) => write!(formatter, "schema error: {message}"),
+            Self::Io(message) => write!(formatter, "io error: {message}"),
+        }
+    }
+}
+
+impl std::error::Error for PackError {}
+
+crate::fault_from_error!(PackError, FaultOrigin::Module, "module.pack");
 
 //#endregion 🔖️Errors
+
+//#region 🔤️Base64
+const BASE64_STANDARD_ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+/// 🔤️ Strict RFC 4648 standard-base64 decoding failure.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Base64Error {
+    InvalidLength,
+    InvalidByte { index: usize, byte: u8 },
+    InvalidPadding,
+    NonCanonicalTrailingBits,
+}
+
+impl std::fmt::Display for Base64Error {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::InvalidLength => formatter.write_str("base64 length must be a multiple of four"),
+            Self::InvalidByte { index, byte } => write!(formatter, "invalid base64 byte {byte:#04x} at index {index}"),
+            Self::InvalidPadding => formatter.write_str("invalid base64 padding"),
+            Self::NonCanonicalTrailingBits => formatter.write_str("non-canonical base64 trailing bits"),
+        }
+    }
+}
+
+impl std::error::Error for Base64Error {}
+
+/// 🔤️ Encodes bytes with the padded RFC 4648 standard alphabet.
+pub fn base64_standard_encode(bytes: &[u8]) -> String {
+    let mut encoded = String::with_capacity(bytes.len().div_ceil(3) * 4);
+    for chunk in bytes.chunks(3) {
+        let first = chunk[0];
+        let second = chunk.get(1).copied().unwrap_or(0);
+        let third = chunk.get(2).copied().unwrap_or(0);
+        encoded.push(BASE64_STANDARD_ALPHABET[(first >> 2) as usize] as char);
+        encoded.push(BASE64_STANDARD_ALPHABET[(((first & 0x03) << 4) | (second >> 4)) as usize] as char);
+        if chunk.len() >= 2 {
+            encoded.push(BASE64_STANDARD_ALPHABET[(((second & 0x0f) << 2) | (third >> 6)) as usize] as char);
+        } else {
+            encoded.push('=');
+        }
+        if chunk.len() == 3 {
+            encoded.push(BASE64_STANDARD_ALPHABET[(third & 0x3f) as usize] as char);
+        } else {
+            encoded.push('=');
+        }
+    }
+    encoded
+}
+
+fn base64_standard_sextet(byte: u8, index: usize) -> Result<u8, Base64Error> {
+    match byte {
+        b'A'..=b'Z' => Ok(byte - b'A'),
+        b'a'..=b'z' => Ok(byte - b'a' + 26),
+        b'0'..=b'9' => Ok(byte - b'0' + 52),
+        b'+' => Ok(62),
+        b'/' => Ok(63),
+        _ => Err(Base64Error::InvalidByte { index, byte }),
+    }
+}
+
+/// 🔤️ Decodes padded RFC 4648 standard base64 and rejects whitespace, misplaced padding, and
+/// non-canonical unused bits.
+pub fn base64_standard_decode(encoded: &[u8]) -> Result<Vec<u8>, Base64Error> {
+    if !encoded.len().is_multiple_of(4) {
+        return Err(Base64Error::InvalidLength);
+    }
+    let mut decoded = Vec::with_capacity(encoded.len() / 4 * 3);
+    for (group_index, chunk) in encoded.as_chunks::<4>().0.iter().enumerate() {
+        let offset = group_index * 4;
+        let last = offset + 4 == encoded.len();
+        if chunk[0] == b'=' || chunk[1] == b'=' {
+            return Err(Base64Error::InvalidPadding);
+        }
+        let first = base64_standard_sextet(chunk[0], offset)?;
+        let second = base64_standard_sextet(chunk[1], offset + 1)?;
+        decoded.push((first << 2) | (second >> 4));
+        if chunk[2] == b'=' {
+            if !last || chunk[3] != b'=' {
+                return Err(Base64Error::InvalidPadding);
+            }
+            if second & 0x0f != 0 {
+                return Err(Base64Error::NonCanonicalTrailingBits);
+            }
+            continue;
+        }
+        let third = base64_standard_sextet(chunk[2], offset + 2)?;
+        decoded.push((second << 4) | (third >> 2));
+        if chunk[3] == b'=' {
+            if !last {
+                return Err(Base64Error::InvalidPadding);
+            }
+            if third & 0x03 != 0 {
+                return Err(Base64Error::NonCanonicalTrailingBits);
+            }
+            continue;
+        }
+        let fourth = base64_standard_sextet(chunk[3], offset + 3)?;
+        decoded.push((third << 6) | fourth);
+    }
+    Ok(decoded)
+}
+//#endregion 🔤️Base64
 
 //#region 🔖️Limits
 /// @emoji 🛡️ Corruption-hardening ceilings every decoder must validate against before
@@ -211,6 +322,7 @@ impl<'a> ByteReader<'a> {
 }
 
 /// @emoji ✍️ An append-only byte buffer with typed little-endian and varint writers.
+#[derive(Default)]
 pub struct ByteWriter {
     buf: Vec<u8>,
 }
@@ -257,12 +369,6 @@ impl ByteWriter {
     }
 }
 
-impl Default for ByteWriter {
-    // 🚫️async: E1 impl of externally-declared `Default` trait
-    fn default() -> Self {
-        Self { buf: Vec::new() }
-    }
-}
 //#endregion 🔖️Bytes
 
 //#region 🔖️Crc
@@ -395,6 +501,35 @@ impl CompressionCodec for DeflateCodec {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    //#region 🔤️Base64
+    #[test]
+    fn base64_standard_matches_rfc_4648_vectors() {
+        let vectors: &[(&[u8], &str)] = &[(b"", ""), (b"f", "Zg=="), (b"fo", "Zm8="), (b"foo", "Zm9v"), (b"foob", "Zm9vYg=="), (b"fooba", "Zm9vYmE="), (b"foobar", "Zm9vYmFy")];
+        for &(raw, encoded) in vectors {
+            assert_eq!(base64_standard_encode(raw), encoded);
+            assert_eq!(base64_standard_decode(encoded.as_bytes()), Ok(raw.to_vec()));
+        }
+    }
+
+    #[test]
+    fn base64_standard_round_trips_every_byte_and_chunk_remainder() {
+        let raw: Vec<u8> = (0u8..=u8::MAX).chain([0, 1, 2, 3, 4]).collect();
+        let encoded = base64_standard_encode(&raw);
+        assert_eq!(base64_standard_decode(encoded.as_bytes()), Ok(raw));
+    }
+
+    #[test]
+    fn base64_standard_rejects_malformed_and_noncanonical_inputs() {
+        assert_eq!(base64_standard_decode(b"Zg"), Err(Base64Error::InvalidLength));
+        assert_eq!(base64_standard_decode(b"Z g="), Err(Base64Error::InvalidByte { index: 1, byte: b' ' }));
+        assert_eq!(base64_standard_decode(b"=m9v"), Err(Base64Error::InvalidPadding));
+        assert_eq!(base64_standard_decode(b"Zm=v"), Err(Base64Error::InvalidPadding));
+        assert_eq!(base64_standard_decode(b"Zg==Zm8="), Err(Base64Error::InvalidPadding));
+        assert_eq!(base64_standard_decode(b"Zh=="), Err(Base64Error::NonCanonicalTrailingBits));
+        assert_eq!(base64_standard_decode(b"Zm9="), Err(Base64Error::NonCanonicalTrailingBits));
+    }
+    //#endregion 🔤️Base64
 
     //#region 🔖️Limits
     #[test]

@@ -5,14 +5,16 @@
 
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use crate::editor::puzzle2d::{fixture_edges, fixture_nodes, puzzle_extension_id, Puzzle2dScene, PUZZLE2D_FIXTURE_SCHEMA};
-use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasChildren};
+use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants
 pub const PUZZLE2D_PLAY_BODY_PROPERTIES: &str = "puzzle2d.play.properties";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -30,12 +32,14 @@ pub async fn definition() -> PanelTabDefinition {
 /// render against and always falls through to the document summary. Flagged to the coordinator as
 /// the same framework-level gap noted throughout this crate's other panels — not fixed here
 /// (framework file, out of this crate's remit).
-pub async fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> UiNode {
-    ui_stack_vertical(vec![
-        ui_text(Label::data(format!("{}: {PUZZLE2D_FIXTURE_SCHEMA}", labels.schema.as_str()))),
-        ui_text(Label::data(format!("{}: {}", labels.extension.as_str(), puzzle_extension_id()))),
-        ui_text(Label::data(format!("{}: {}", labels.nodes.as_str(), fixture_nodes(&envelope.fixture).len()))),
-        ui_text(Label::data(format!("{}: {}", labels.edges.as_str(), fixture_edges(&envelope.fixture).len()))),
-    ])
+pub fn render(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> BuiltNode {
+    ui::column()
+        .children(vec![
+            ui::text(format!("{}: {PUZZLE2D_FIXTURE_SCHEMA}", labels.schema.as_str())).build(),
+            ui::text(format!("{}: {}", labels.extension.as_str(), puzzle_extension_id())).build(),
+            ui::text(format!("{}: {}", labels.nodes.as_str(), fixture_nodes(&envelope.fixture).len())).build(),
+            ui::text(format!("{}: {}", labels.edges.as_str(), fixture_edges(&envelope.fixture).len())).build(),
+        ])
+        .build()
 }
 //#endregion 🔖️Render

@@ -1,5 +1,5 @@
 dialect protocol
-protocol 2d.diff
+protocol fem2d.diff
 version 1
 schema stdio.json
 start record

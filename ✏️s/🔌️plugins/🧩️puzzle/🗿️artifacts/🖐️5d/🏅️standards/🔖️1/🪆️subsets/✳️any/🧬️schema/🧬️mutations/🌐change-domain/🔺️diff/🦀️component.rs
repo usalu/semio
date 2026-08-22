@@ -3,7 +3,7 @@ use crate::artifacts::puzzle5d::diff::Puzzle5dDiff;
 use crate::artifacts::puzzle5d::Puzzle5dSnapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::mutation::ChangeDomain, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
+pub fn diff(payload: &super::mutation::ChangeDomain, base: &Puzzle5dSnapshot) -> protocol::MutationOutcome<Puzzle5dDiff> {
     // 🌐️ `domain` is a document-root singleton field (not a catalog member addressed by id), so
     // there is no missing-target case — only the no-op check applies.
     if payload.new_domain == base.domain {

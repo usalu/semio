@@ -1,5 +1,7 @@
 //! 🖼️ 🖼️ Animate present app commands command — `set-frame`.
 
+#![allow(clippy::result_large_err)]
+
 use crate::artifacts::present::mutations::resize_source_frame::mutation::ResizeSourceFrame;
 use crate::artifacts::present::op::PresentMutation;
 use crate::artifacts::present::{FigureTileFrame, PresentSnapshot};
@@ -15,6 +17,6 @@ pub struct SetFrame {
     pub frame: FigureTileFrame,
 }
 
-pub async fn handle(payload: &SetFrame, _doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
+pub fn handle(payload: &SetFrame, _doc: &ArtifactView<'_, PresentSnapshot>, _cfg: &ConfigView<'_, PresentConfig>, _ctx: &mut PresentDispatchCtx) -> Result<Emit<PresentMutation, PresentConfigMutation>, Fault> {
     Ok(Emit::mutations(vec![PresentMutation::ResizeSourceFrame(ResizeSourceFrame { new_frame: payload.frame.clone() })]))
 }

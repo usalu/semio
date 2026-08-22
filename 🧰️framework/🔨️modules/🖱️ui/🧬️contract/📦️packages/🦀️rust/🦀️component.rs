@@ -26,7 +26,6 @@ use std::collections::HashMap;
 /// string. The localization/terminology resolution that used to happen via `LabelText::fill` still
 /// happens upstream of the runtime (manifest/host), before a `Label` ever reaches this contract.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(transparent)]
 pub struct Label(pub String);
 
@@ -56,7 +55,6 @@ impl std::fmt::Display for Label {
 /// counterpart, added per the packet brief for the layouts those two collapsed variants could not
 /// previously express as a single node.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum ContainerRole {
     #[default]
@@ -78,7 +76,6 @@ pub enum ContainerRole {
 /// packet's own report for the grep evidence — adding it back is a one-variant change, not a design
 /// change, if a plugin needs it later).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum InputKind {
     #[default]
@@ -92,7 +89,6 @@ pub enum InputKind {
 
 /// 📍️ Where a [`RowAction`] paints: on the tree row itself, or folded into the row's context menu.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum RowActionPlacement {
     #[default]
@@ -105,7 +101,6 @@ pub enum RowActionPlacement {
 /// 📥️ Hover-state copy for a [`ContainerProps::drop_overlay`] — shown while a drag is over the
 /// container, ahead of its `Drop`-triggered [`crate::ActionBinding`] firing on release.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct DropOverlaySpec {
     pub title: Label,
@@ -116,7 +111,6 @@ pub struct DropOverlaySpec {
 
 /// 🔽️ One option of a [`Component::Select`].
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct SelectItem {
     pub value: String,
@@ -125,7 +119,6 @@ pub struct SelectItem {
 
 /// 🗝️ One row of a [`Component::KeyValueList`].
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct KeyValueEntry {
     pub label: Label,
@@ -136,7 +129,6 @@ pub struct KeyValueEntry {
 /// `action` reuses [`crate::ActionBinding`] rather than a second parallel action-id type, since a row
 /// action is exactly a binding fired unconditionally on click (no `Trigger` ambiguity to add here).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct RowAction {
     /// 🖼️ Icon key. See [`ButtonProps::icon`] for why this is a plain `String`, not a closed enum.
@@ -160,7 +152,6 @@ fn is_default_row_action_placement(value: &RowActionPlacement) -> bool {
 /// NOT live here — they are `crate::LayoutSpec`, on the record. The old `Field`'s single
 /// `child: Box<UiNode>` is simply `children[0]` on the record; there is nothing left to special-case.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ContainerProps {
     #[serde(default, skip_serializing_if = "is_default_container_role")]
@@ -186,7 +177,6 @@ fn is_default_container_role(value: &ContainerRole) -> bool {
 
 /// 📝️ Props for `Component::Text`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TextProps {
     pub value: Label,
@@ -199,7 +189,6 @@ pub struct TextProps {
 /// 🔘️ Props for `Component::Button`. `action` moved to the record's `bindings` (keyed by
 /// `Trigger::Activate`); `style` moved to the record's `crate::StyleSpec`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ButtonProps {
     /// 🖼️ Icon key. The old `IconName` is generated per-consuming-crate via a `#[path]` mount (see
@@ -216,13 +205,11 @@ pub struct ButtonProps {
 /// (`presence`, `menu`) now lives on the record, so this is intentionally empty — kept as its own
 /// struct (rather than a unit variant) purely for structural symmetry with every other component.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct SeparatorProps {}
 
 /// ⌨️ Props for `Component::Input`. `on_change` moved to the record's `bindings`
 /// (`Trigger::Change`/`Trigger::Commit`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct InputProps {
     #[serde(default, skip_serializing_if = "is_default_input_kind")]
@@ -251,7 +238,6 @@ fn is_default_input_kind(value: &InputKind) -> bool {
 
 /// 🔽️ Props for `Component::Select`. `on_change` moved to the record's `bindings`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct SelectProps {
     pub value: String,
@@ -264,7 +250,6 @@ pub struct SelectProps {
 /// `UiToggleNode` smuggled it through `presence.selected`, exactly the implicit coupling this
 /// contract exists to remove. `on_change` moved to the record's `bindings`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ToggleProps {
     pub on: bool,
@@ -275,7 +260,6 @@ pub struct ToggleProps {
 
 /// 🗝️ Props for `Component::KeyValueList`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct KeyValueListProps {
     pub entries: Vec<KeyValueEntry>,
@@ -283,7 +267,6 @@ pub struct KeyValueListProps {
 
 /// 🎚️ Props for `Component::Slider`. `on_change` moved to the record's `bindings`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct SliderProps {
     pub value: f64,
@@ -297,7 +280,6 @@ pub struct SliderProps {
 /// 🔢️ Props for `Component::NumberStepper`. `on_absolute`/`on_delta` both moved to the record's
 /// `bindings`, distinguished by `Trigger`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct NumberStepperProps {
     pub value: f64,
@@ -307,7 +289,6 @@ pub struct NumberStepperProps {
 
 /// 💍️ Props for `Component::Ring`. `on_change` moved to the record's `bindings`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct RingProps {
     pub orb_id: String,
@@ -316,7 +297,6 @@ pub struct RingProps {
 
 /// 🖼️ Props for `Component::IconSelect`. `on_change` moved to the record's `bindings`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct IconSelectProps {
     pub value: String,
@@ -329,7 +309,6 @@ pub struct IconSelectProps {
 /// (`Component::TreeSection` / `Component::TreeItem`) reached through the record's `children`.
 /// `drop_action` moved to the record's `bindings` (`Trigger::Drop`).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TreeProps {
     /// 🕹️ Binds this tree to an app-declared `InteractionDefinition` domain — selection/hover for
@@ -340,7 +319,6 @@ pub struct TreeProps {
 
 /// 🌲️ Props for `Component::TreeSection` — a labeled, collapsible grouping of `TreeItem` children.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TreeSectionProps {
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -356,7 +334,6 @@ pub struct TreeSectionProps {
 /// type). The row's primary click action (old `action: Option<ActionDescriptor>`) moved to the
 /// record's `bindings` (`Trigger::Activate`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TreeItemProps {
     pub label: Label,
@@ -380,7 +357,6 @@ pub struct TreeItemProps {
 
 /// 🖼️ Props for `Component::Image`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ImageProps {
     pub src: String,
@@ -393,7 +369,6 @@ pub struct ImageProps {
 /// address string (the old three-part addressing is a concern of whatever resolves `extension` to a
 /// slot, not of this contract).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ExtensionProps {
     pub extension: String,
@@ -416,7 +391,6 @@ pub struct ExtensionProps {
 /// `crate::SurfaceProps` (a single pack-encoded payload keyed by a `doc_schema` id), so the variants
 /// are all comparably small.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum Component {
     Container(ContainerProps),
@@ -445,6 +419,7 @@ pub enum Component {
 mod tests {
     use super::*;
 
+    #[allow(clippy::needless_pass_by_value)]
     fn component_round_trips(component: Component) {
         let first = serde_json::to_string(&component).expect("serialize");
         let deserialized: Component = serde_json::from_str(&first).expect("deserialize");

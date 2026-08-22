@@ -9,10 +9,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-// For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
-import storybook from "eslint-plugin-storybook";
-import globals from "globals";
-import tseslint from "typescript-eslint";
+import { createUiReactLintConfig } from "../../../../../../../.storybook/🟦️lint-tooling.ts";
 // #endregion 🔌️Adapters
 
 // #region 🗄️Configuration
@@ -21,28 +18,6 @@ import tseslint from "typescript-eslint";
 
 // Default ESLint flat configuration export with no custom rules.
 // Export MUST be an array of ESLint config objects.
-export default tseslint.config(
-  {
-    ignores: ["node_modules/**", "storybook-static/**"],
-  },
-  {
-    files: ["**/*.{ts,tsx}"],
-    languageOptions: {
-      parser: tseslint.parser,
-      ecmaVersion: "latest",
-      sourceType: "module",
-      globals: {
-        ...globals.browser,
-        ...globals.node,
-      },
-      parserOptions: {
-        ecmaFeatures: {
-          jsx: true,
-        },
-      },
-    },
-  },
-  storybook.configs["flat/recommended"],
-);
+export default createUiReactLintConfig();
 
 // #endregion 🗄️Configuration

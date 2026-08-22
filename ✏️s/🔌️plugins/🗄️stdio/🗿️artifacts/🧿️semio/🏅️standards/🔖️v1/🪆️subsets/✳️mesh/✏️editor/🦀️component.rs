@@ -8,7 +8,7 @@ use crate::editor::semio_mesh::modes::edit;
 use crate::editor::semio_mesh::modes::edit::windows::main;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode,
+    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
 };
 use store::EngineHandles;
 
@@ -111,7 +111,7 @@ impl ArtifactEditor for SemioMeshEditor {
             vertex_index: args.vertex_index,
             new_point,
         });
-        Ok(Emit::mutations(vec![mutation]).await)
+        Ok(Emit::mutations(vec![mutation]))
     }
 
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::ComponentTree {

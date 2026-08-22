@@ -8,7 +8,7 @@ use crate::editor::puzzle3d::{puzzle3d_action, PUZZLE3D_PLAY_CONTROLLER_ID, PUZZ
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 
 /// 🌀️ Window option for when vortex markers are emitted — Always (every object) or Selected (hovered/selected only).
-pub async fn show_measure(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeasure {
+pub fn show_measure(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeasure {
     WindowMeasure::Select {
         id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-vortex-show"),
         label: Some(labels.vortex_show.into()),
@@ -22,7 +22,7 @@ pub async fn show_measure(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) ->
 }
 
 /// 🧭️ Window option for how vortex direction arrows are drawn — Outwards (tip away from point) or Inwards (tip on point).
-pub async fn direction_measure(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeasure {
+pub fn direction_measure(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeasure {
     WindowMeasure::Select {
         id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-vortex-direction"),
         label: Some(labels.vortex_direction.into()),

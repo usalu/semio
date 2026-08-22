@@ -70,7 +70,7 @@ export const UI_RIBBON_PARENT_CATEGORIES: readonly UiRibbonParentCategory[] = [
 
 export type UiRibbonParentEntries = { readonly [K in UiRibbonParentCategory]: UiLabelValue };
 
-type DeepUiTranslationKeys<T, Prefix extends string = ""> = T extends UiLabelValue
+export type DeepUiTranslationKeys<T, Prefix extends string = ""> = T extends UiLabelValue
   ? Prefix extends ""
     ? never
     : Prefix
@@ -461,6 +461,24 @@ export type UiTranslationSchema = {
       readonly linkUrlPrompt: UiLabelValue;
     };
     readonly surfaceContextMenu: {
+      readonly architecture: UiLabelValue;
+      readonly attraction: UiLabelValue;
+      readonly block: UiLabelValue;
+      readonly edge: UiLabelValue;
+      readonly entry: UiLabelValue;
+      readonly feature: UiLabelValue;
+      readonly group: UiLabelValue;
+      readonly handle: UiLabelValue;
+      readonly layer: UiLabelValue;
+      readonly object: UiLabelValue;
+      readonly part: UiLabelValue;
+      readonly path: UiLabelValue;
+      readonly pixel: UiLabelValue;
+      readonly position: UiLabelValue;
+      readonly reference: UiLabelValue;
+      readonly route: UiLabelValue;
+      readonly slider: UiLabelValue;
+      readonly vortex: UiLabelValue;
       readonly file: UiLabelValue;
       readonly workspace: UiLabelValue;
       readonly canvas: UiLabelValue;

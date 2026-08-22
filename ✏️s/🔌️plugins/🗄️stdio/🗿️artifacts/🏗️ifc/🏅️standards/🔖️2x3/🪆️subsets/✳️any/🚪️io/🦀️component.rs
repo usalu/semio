@@ -20,14 +20,14 @@ pub const IFC2X3_SCHEMA_NAME: &str = "IFC2X3";
 /// 📥️ Decodes IFC2X3 SPF bytes into an [`Ifc2x3Snapshot`]. Real standard-specific validation
 /// beyond generic Part-21 parsing: rejects any file whose `FILE_SCHEMA` doesn't declare
 /// `IFC2X3` (so this decoder never silently accepts an IFC4 or plain STEP AP214 file).
-pub async fn decode_ifc2x3(bytes: &[u8]) -> Result<Ifc2x3Snapshot, String> {
+pub fn decode_ifc2x3(bytes: &[u8]) -> Result<Ifc2x3Snapshot, String> {
     let text = std::str::from_utf8(bytes).map_err(|e| format!("ifc2x3: not valid utf-8: {e}"))?;
     let document = parse_part21(text).map_err(|e| format!("ifc2x3 parse: {e}"))?;
     let declares_ifc2x3 = document.header.file_schema.iter().any(|v| v.as_list().map(|items| items.iter().any(|item| item.as_str() == Some(IFC2X3_SCHEMA_NAME))).unwrap_or(false));
     if !declares_ifc2x3 {
         return Err(format!("ifc2x3: FILE_SCHEMA does not declare {IFC2X3_SCHEMA_NAME}"));
     }
-    Ok(Ifc2x3Snapshot { schema: STDIO_IFC2X3_DOCUMENT_SCHEMA.into(), document, edm_preamble: parse_edm_preamble(text).await })
+    Ok(Ifc2x3Snapshot { schema: STDIO_IFC2X3_DOCUMENT_SCHEMA.into(), document, edm_preamble: parse_edm_preamble(text) })
 }
 
 /// 📤️ Regenerates valid IFC2X3 SPF bytes from a snapshot. Losslessness is `write_part21`'s job
@@ -40,7 +40,7 @@ pub fn encode_ifc2x3(snapshot: &Ifc2x3Snapshot) -> Result<Vec<u8>, String> {
 //#endregion 🔖️Codec
 
 //#region 🏭️EdmPreamble
-async fn parse_edm_preamble(text: &str) -> Option<Ifc2x3EdmPreamble> {
+fn parse_edm_preamble(text: &str) -> Option<Ifc2x3EdmPreamble> {
     let lines = text.lines().map(|line| line.trim_end_matches('\r')).collect::<Vec<_>>();
     let start = lines.iter().position(|line| *line == "/******************************************************************************************")?;
     let end = lines[start + 1..].iter().position(|line| *line == "******************************************************************************************/")? + start + 1;
@@ -69,7 +69,7 @@ async fn parse_edm_preamble(text: &str) -> Option<Ifc2x3EdmPreamble> {
 }
 
 impl Part21Preamble for Ifc2x3EdmPreamble {
-    async fn write_preamble(&self, out: &mut String, line_ending: &str) {
+    fn write_preamble(&self, out: &mut String, line_ending: &str) {
         out.push_str("/******************************************************************************************");
         out.push_str(line_ending);
         for (label, value) in [

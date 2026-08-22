@@ -18,7 +18,6 @@ role = "tool"
 [dependencies]
 trinity = { path = "../../../../../../../../✏️s/🔌️plugins/🔱️trinity/📦️packages/🦀️rust", package = "semio-s-plugin-trinity" }
 semio-framework-os-kernel = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
-thiserror = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

@@ -257,7 +257,7 @@ pub struct Mp4Snapshot {
     pub tracks: Vec<Mp4Track>,
 }
 
-async fn default_schema() -> String {
+fn default_schema() -> String {
     STDIO_MP4_DOCUMENT_SCHEMA.into()
 }
 

@@ -224,12 +224,12 @@ function parseStringMap(value: unknown, path: string): Record<string, string> {
 
 function parseThemeIcons(value: unknown, path: string): UiThemeIcons {
   const obj = requireRecord(value, path);
-  const out: UiThemeIcons = {};
-  if ("aliases" in obj) out.aliases = parseStringMap(obj.aliases, `${path}.aliases`);
-  if ("variants" in obj) out.variants = parseStringMap(obj.variants, `${path}.variants`);
-  if ("themedAliases" in obj) out.themedAliases = parseStringMap(obj.themedAliases, `${path}.themedAliases`);
-  if ("themedVariants" in obj) out.themedVariants = parseStringMap(obj.themedVariants, `${path}.themedVariants`);
-  return out;
+  return {
+    ...(obj.aliases === undefined ? {} : { aliases: parseStringMap(obj.aliases, `${path}.aliases`) }),
+    ...(obj.variants === undefined ? {} : { variants: parseStringMap(obj.variants, `${path}.variants`) }),
+    ...(obj.themedAliases === undefined ? {} : { themedAliases: parseStringMap(obj.themedAliases, `${path}.themedAliases`) }),
+    ...(obj.themedVariants === undefined ? {} : { themedVariants: parseStringMap(obj.themedVariants, `${path}.themedVariants`) }),
+  };
 }
 
 function parseAppearance(value: unknown, path: string): Record<ThemePaletteGroup, Record<string, ThemePaintRef>> {

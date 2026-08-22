@@ -2067,7 +2067,7 @@ export function synthesizeLocalizedLabel(label: string | LocalizedLabel): Locali
  * `LocalizedLabel` on the wire — a `{ native: { en, de }, reuse: { en, de } }` matrix — instead of the
  * plain string these fields used to be. Falls back gracefully (reuse→native, missing locale→en, missing
  * entirely→"") so a stale/partial payload never throws; also tolerates a bare `string` defensively since
- * the ts-rs mirror for these fields is still `unknown`/stale (see `framework/core/rs/lib.rs`'s
+ * the owned schema mirror for these fields is still `unknown`/stale (see `framework/core/rs/lib.rs`'s
  * `LocalizedLabel` follow-up notes) — some call sites may still see the pre-migration shape until that
  * typegen lands. */
 export function resolveManifestLabel(label: LocalizedLabel | string | undefined, terminology: string, locale: string): string {

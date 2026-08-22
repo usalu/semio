@@ -7,7 +7,7 @@ use serde_json::Value;
 /// `view_state.active_utility_id`/`active_utility_by_window_id` — the host no longer owns that state,
 /// `Puzzle5dConfig` does), so this arm must itself write the new value before clearing in-progress
 /// engagement scratch and refreshing the placement engine.
-pub async fn set_active(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
+pub fn set_active(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     if let Some(utility_id) = args.and_then(|value| value.get("utilityId")).and_then(|value| value.as_str()) {
         ctx.scene.runtime.active_utility_by_window_id.insert(ctx.window_id.to_string(), utility_id.to_string());
         ctx.scene.active_utility = utility_id.to_string();

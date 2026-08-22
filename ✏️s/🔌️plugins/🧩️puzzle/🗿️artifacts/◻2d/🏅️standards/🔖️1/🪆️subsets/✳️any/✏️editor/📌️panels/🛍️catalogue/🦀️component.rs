@@ -3,8 +3,10 @@
 //! rows are drag sources for the canvas; every row also adds a node on click.
 
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
-use crate::editor::puzzle2d::{inferred_kind_entries, kind_catalog_entries, puzzle2d_action};
-use semio_framework_plugin::{tree_item, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use crate::editor::puzzle2d::{inferred_kind_entries, kind_catalog_entries, PUZZLE2D_PLAY_CONTROLLER_ID};
+use semio_framework_plugin::{
+    tree_item_with_action, tree_item_with_action_draggable, ActionFactory, BuiltNode, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 
@@ -16,7 +18,7 @@ const PUZZLE2D_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "Katalog"),
@@ -28,11 +30,11 @@ pub async fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-async fn catalog_kind_label(entry: &Value) -> String {
+fn catalog_kind_label(entry: &Value) -> String {
     entry.get("name").and_then(|value| value.as_str()).filter(|value| !value.is_empty()).or_else(|| entry.get("id").and_then(|value| value.as_str())).unwrap_or("kind").into()
 }
 
-async fn puzzle2d_catalog_item_drag_data(slice: &str, kind_id: &str, entry: &Value) -> HashMap<String, String> {
+fn puzzle2d_catalog_item_drag_data(slice: &str, kind_id: &str, entry: &Value) -> HashMap<String, String> {
     let mut payload = json!({ "kindId": kind_id, "catalogSlice": slice });
     if let Some(obj) = payload.as_object_mut() {
         if let Some(shape) = entry.get("shape") {
@@ -54,51 +56,36 @@ async fn puzzle2d_catalog_item_drag_data(slice: &str, kind_id: &str, entry: &Val
     HashMap::from([(PUZZLE2D_CATALOGUE_DRAG_MIME.to_string(), payload.to_string())])
 }
 
-async fn kind_catalog_section(section_id: &str, slice: &str, label: impl Into<Label>, entries: &[Value], labels: &Puzzle2dLabels) -> UiTreeSectionNode {
-    let items: Vec<UiTreeItemNode> = entries
+fn kind_catalog_items(section_id: &str, slice: &str, entries: &[Value]) -> Vec<BuiltNode> {
+    let actions = ActionFactory::new(PUZZLE2D_PLAY_CONTROLLER_ID);
+    entries
         .iter()
         .enumerate()
         .map(|(index, entry)| {
             let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind");
             let draggable = slice == "nodes";
-            UiTreeItemNode {
-                presence: UiPresence::default(),
-                id: format!("{section_id}.{index}.{kind_id}"),
-                label: Label::data(catalog_kind_label(entry)),
-                description: Some(kind_id.into()),
-                icon_id: None,
-                default_open: None,
-                action: Some(puzzle2d_action("addNode", Some(json!({ "kind": kind_id })))),
-                actions: None,
-                draggable: draggable.then_some(true),
-                drag_data: draggable.then(|| puzzle2d_catalog_item_drag_data(slice, kind_id, entry)),
-                items: None,
-                control: None,
-                dimmed: None,
-                menu: None,
+            let id = format!("{section_id}.{index}.{kind_id}");
+            let action = actions.action("addNode", Some(json!({ "kind": kind_id })));
+            if draggable {
+                tree_item_with_action_draggable(id, catalog_kind_label(entry), Some(kind_id.into()), action, &json!(puzzle2d_catalog_item_drag_data(slice, kind_id, entry)))
+            } else {
+                tree_item_with_action(id, catalog_kind_label(entry), Some(kind_id.into()), action)
             }
         })
-        .collect();
-    UiTreeSectionNode { presence: UiPresence::default(), id: section_id.into(), label: Some(label.into()), default_open: Some(true), items: if items.is_empty() { vec![tree_item(format!("{section_id}.empty"), labels.none)] } else { items } }
+        .collect()
 }
 
-pub async fn render(fixture: &Value, labels: &Puzzle2dLabels) -> UiNode {
+pub fn render(fixture: &Value, labels: &Puzzle2dLabels) -> BuiltNode {
     let inferred_nodes = inferred_kind_entries(fixture, "nodes");
     let inferred_handles = inferred_kind_entries(fixture, "handles");
     let inferred_edges = inferred_kind_entries(fixture, "edges");
     let node_entries = kind_catalog_entries(fixture, "nodes").unwrap_or(inferred_nodes.as_slice());
     let handle_entries = kind_catalog_entries(fixture, "handles").unwrap_or(inferred_handles.as_slice());
     let edge_entries = kind_catalog_entries(fixture, "edges").unwrap_or(inferred_edges.as_slice());
-    UiNode::Tree(UiTreeNode {
-        presence: UiPresence::default(),
-        sections: vec![
-            kind_catalog_section("puzzle2d-play-kinds.nodes", "nodes", labels.nodes, node_entries, labels),
-            kind_catalog_section("puzzle2d-play-kinds.handles", "handles", labels.handles, handle_entries, labels),
-            kind_catalog_section("puzzle2d-play-kinds.edges", "edges", labels.edges, edge_entries, labels),
-        ],
-        drop_action: None,
-        menu: None,
-        interaction_domain: None,
-    })
+    PanelTreeBuilder::new("puzzle2d-play-kinds")
+        .section_or_placeholder("puzzle2d-play-kinds.nodes", Some(labels.nodes.as_str().into()), true, kind_catalog_items("puzzle2d-play-kinds.nodes", "nodes", node_entries), labels.none.as_str())
+        .section_or_placeholder("puzzle2d-play-kinds.handles", Some(labels.handles.as_str().into()), true, kind_catalog_items("puzzle2d-play-kinds.handles", "handles", handle_entries), labels.none.as_str())
+        .section_or_placeholder("puzzle2d-play-kinds.edges", Some(labels.edges.as_str().into()), true, kind_catalog_items("puzzle2d-play-kinds.edges", "edges", edge_entries), labels.none.as_str())
+        .build()
 }
 //#endregion 🔖️Render

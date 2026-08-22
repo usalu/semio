@@ -1,0 +1,13 @@
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	7392	`Result<component::app::Plugin<PA>, component::app::PluginAssemblyError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	7421	`Result<component::app::Plugin<PA>, component::app::PluginAssemblyError>` is not a future
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs	554	the `?` operator can only be applied to values that implement `Try`
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs	563	the `?` operator can only be applied to values that implement `Try`
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs	579	the `?` operator can only be applied to values that implement `Try`
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs	582	the `?` operator can only be applied to values that implement `Try`
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs	586	the `?` operator can only be applied to values that implement `Try`
+E0599	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs	595	no method named `into_runtime` found for opaque type `impl std::future::Future<Output = ArtifactRegistrationPlan>` in the current scope
+E0308	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs	604	mismatched types
+E0599	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs	609	no method named `map_err` found for opaque type `impl std::future::Future<Output = Result<(), ContributionRegistrationError>>` in the current scope
+E0599	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs	612	no method named `with_runtime_registry` found for opaque type `impl std::future::Future<Output = component::app::Plugin<_>>` in the current scope
+E0599	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs	637	no method named `map_err` found for opaque type `impl Future<Output = Result<ArtifactAssemblyTransaction, ...>>` in the current scope
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs	638	the `?` operator can only be applied to values that implement `Try`

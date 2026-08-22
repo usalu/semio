@@ -35,54 +35,77 @@ pub mod board_host {
 
     //#region ⚠️ Errors
     /// ⚠️ Errors from board host theme/catalog/layout JSON mutators and manifest validation.
-    #[derive(Debug, thiserror::Error)]
+    #[derive(Debug)]
     pub enum NormalPortError {
-        #[error(transparent)]
-        Json(#[from] serde_json::Error),
-        #[error("setLinkSessionJson: {0}")]
-        ExternalLinkPreviewJson(#[source] serde_json::Error),
-        #[error("setBrushSessionJson: {0}")]
-        BrushSessionJson(#[source] serde_json::Error),
-        #[error("setFixtureDropPreviewJson: {0}")]
-        FixtureDropPreviewJson(#[source] serde_json::Error),
-        #[error("{0}")]
+        Json(serde_json::Error),
+        ExternalLinkPreviewJson(serde_json::Error),
+        BrushSessionJson(serde_json::Error),
+        FixtureDropPreviewJson(serde_json::Error),
         Theme(String),
-        #[error("gridFactor must be finite and in (0, 1e6]")]
         GridFactorOutOfRange,
-        #[error("expected JSON array of compatibility objects")]
         CompatNotArray,
-        #[error("{0} row must be object")]
         RowNotObject(&'static str),
-        #[error("compat row missing string source")]
         CompatSourceMissing,
-        #[error("compat row missing string target")]
         CompatTargetMissing,
-        #[error("compat specificity must be general|node|edge|handle|wire|vortex, got {0:?}")]
         InvalidCompatSpecificity(String),
-        #[error("{0} kind row must use name, not legacy label")]
         LegacyLabelField(&'static str),
-        #[error("kind catalogs root must be object")]
         KindCatalogsRootNotObject,
-        #[error("{0} id missing")]
         IdMissing(&'static str),
-        #[error("handle kind color missing")]
         HandleKindColorMissing,
-        #[error("invalid handle kind color {0:?}")]
         InvalidHandleKindColor(String),
-        #[error("node kind handle handleKind missing")]
         NodeKindHandleKindMissing,
-        #[error("node kind handle angle missing")]
         NodeKindHandleAngleMissing,
-        #[error("edge tip row {0:?} invalid")]
         EdgeTipRowInvalid(String),
-        #[error("unknown manifest id {0}")]
         UnknownManifestId(String),
-        #[error("catalog missing {0} kind {1:?}")]
         CatalogMissingKind(&'static str, String),
-        #[error("setFixtureDropPreviewJson: preview payload missing nodeKind, screen/world point, or size")]
         FixtureDropPreviewInvalid,
-        #[error("invalid color on handle {0}: {1:?}")]
         InvalidHandleColor(String, String),
+    }
+
+    impl std::fmt::Display for NormalPortError {
+        fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                Self::Json(error) => write!(formatter, "{error}"),
+                Self::ExternalLinkPreviewJson(error) => write!(formatter, "setLinkSessionJson: {error}"),
+                Self::BrushSessionJson(error) => write!(formatter, "setBrushSessionJson: {error}"),
+                Self::FixtureDropPreviewJson(error) => write!(formatter, "setFixtureDropPreviewJson: {error}"),
+                Self::Theme(message) => formatter.write_str(message),
+                Self::GridFactorOutOfRange => formatter.write_str("gridFactor must be finite and in (0, 1e6]"),
+                Self::CompatNotArray => formatter.write_str("expected JSON array of compatibility objects"),
+                Self::RowNotObject(row) => write!(formatter, "{row} row must be object"),
+                Self::CompatSourceMissing => formatter.write_str("compat row missing string source"),
+                Self::CompatTargetMissing => formatter.write_str("compat row missing string target"),
+                Self::InvalidCompatSpecificity(value) => write!(formatter, "compat specificity must be general|node|edge|handle|wire|vortex, got {value:?}"),
+                Self::LegacyLabelField(row) => write!(formatter, "{row} kind row must use name, not legacy label"),
+                Self::KindCatalogsRootNotObject => formatter.write_str("kind catalogs root must be object"),
+                Self::IdMissing(row) => write!(formatter, "{row} id missing"),
+                Self::HandleKindColorMissing => formatter.write_str("handle kind color missing"),
+                Self::InvalidHandleKindColor(color) => write!(formatter, "invalid handle kind color {color:?}"),
+                Self::NodeKindHandleKindMissing => formatter.write_str("node kind handle handleKind missing"),
+                Self::NodeKindHandleAngleMissing => formatter.write_str("node kind handle angle missing"),
+                Self::EdgeTipRowInvalid(row) => write!(formatter, "edge tip row {row:?} invalid"),
+                Self::UnknownManifestId(id) => write!(formatter, "unknown manifest id {id}"),
+                Self::CatalogMissingKind(catalog, kind) => write!(formatter, "catalog missing {catalog} kind {kind:?}"),
+                Self::FixtureDropPreviewInvalid => formatter.write_str("setFixtureDropPreviewJson: preview payload missing nodeKind, screen/world point, or size"),
+                Self::InvalidHandleColor(handle, color) => write!(formatter, "invalid color on handle {handle}: {color:?}"),
+            }
+        }
+    }
+
+    impl std::error::Error for NormalPortError {
+        fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+            match self {
+                Self::Json(error) => std::error::Error::source(error),
+                Self::ExternalLinkPreviewJson(error) | Self::BrushSessionJson(error) | Self::FixtureDropPreviewJson(error) => Some(error),
+                _ => None,
+            }
+        }
+    }
+
+    impl From<serde_json::Error> for NormalPortError {
+        fn from(error: serde_json::Error) -> Self {
+            Self::Json(error)
+        }
     }
     //#endregion ⚠️ Errors
 
@@ -215,42 +238,6 @@ pub mod board_host {
         icon_kind: Option<String>,
     }
 
-    #[derive(Clone, Debug)]
-    struct FillVirtualNode {
-        node_kind: String,
-        x: f64,
-        y: f64,
-        shape: NodeShape,
-        radius: f64,
-        width: f64,
-        height: f64,
-    }
-
-    #[derive(Clone, Debug)]
-    struct FillVirtualHandle {
-        node_id: String,
-        handle_kind: String,
-        template: NodeKindHandleTemplate,
-    }
-
-    #[derive(Clone, Debug, Default)]
-    struct FillAccum {
-        connected_handles: BTreeSet<String>,
-        placements: Vec<(String, String, BrushPreviewSnapshot)>,
-        virtual_nodes: HashMap<String, FillVirtualNode>,
-        virtual_handles: HashMap<String, FillVirtualHandle>,
-        virtual_bounds: Vec<WorldBox>,
-        next_serial: u32,
-    }
-
-    #[derive(Clone, Debug)]
-    struct BrushFillSession {
-        accum: FillAccum,
-        state: u64,
-        max_count: usize,
-        stalled: bool,
-    }
-
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
     enum BoardFillShape {
         Circle,
@@ -292,7 +279,7 @@ pub mod board_host {
     }
 
     /// 📸️ Send-only immutable input captured from a board host before fill work enters a worker.
-    #[derive(Clone, Debug, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
     pub struct BoardFillSnapshot {
         nodes: Vec<BoardFillNodeSnapshot>,
         handles: Vec<BoardFillHandleSnapshot>,
@@ -360,6 +347,7 @@ pub mod board_host {
 
     #[derive(Clone, Debug, Serialize, Deserialize)]
     struct BoardFillJobState {
+        #[serde(skip, default)]
         snapshot: BoardFillSnapshot,
         stage: BoardFillStage,
         max_count: usize,
@@ -388,6 +376,7 @@ pub mod board_host {
         stalled: bool,
         rejection: Option<String>,
         search_count: u64,
+        preview_sequence: u64,
     }
 
     /// 📡️ Latest bounded fill search projection, separate from authoritative placements.
@@ -410,6 +399,7 @@ pub mod board_host {
     pub struct BoardFillJob {
         operation: semio_framework_job::Operation,
         state: BoardFillJobState,
+        snapshot_checkpoint: Vec<u8>,
     }
 
     #[derive(Clone, Debug)]
@@ -518,8 +508,6 @@ pub mod board_host {
         brush_alt_pressed: bool,
         /// @emoji ✨️ Suggestions menu opened a slot outside brush utility — use suggestion offset and highlight source handle.
         brush_slot_suggestions_active: bool,
-        /// @emoji 🪣️ Resumable greedy fill session for chunked WASM builds.
-        brush_fill_session: Option<BrushFillSession>,
         pub port_mode: GraphPortMode,
     }
 
@@ -584,7 +572,6 @@ pub mod board_host {
                 brush_handle_kind_weights: HashMap::new(),
                 brush_alt_pressed: false,
                 brush_slot_suggestions_active: false,
-                brush_fill_session: None,
                 port_mode: GraphPortMode::Ported,
             }
         }
@@ -1851,45 +1838,6 @@ pub mod board_host {
             best.map(|(_, id)| id)
         }
 
-        fn brush_kind_weight(weights: &HashMap<String, f64>, id: &str, uniform_fallback: f64) -> f64 {
-            weights.get(id).copied().filter(|w| w.is_finite() && *w > 0.0).unwrap_or(uniform_fallback)
-        }
-
-        fn brush_next_seed(state: u64) -> u64 {
-            state.wrapping_mul(6364136223846793005).wrapping_add(1)
-        }
-
-        fn brush_weighted_sample_index(weights: &[f64], seed: u64) -> usize {
-            let wsum: f64 = weights.iter().sum();
-            if wsum <= 0.0 {
-                return 0;
-            }
-            let unit = (seed as f64) / (u64::MAX as f64);
-            let mut r = unit * wsum;
-            for (i, w) in weights.iter().enumerate() {
-                if r <= *w || i + 1 == weights.len() {
-                    return i;
-                }
-                r -= w;
-            }
-            weights.len().saturating_sub(1)
-        }
-
-        fn brush_weighted_order_strings(ids: &mut Vec<String>, seed: u64, weight_map: &HashMap<String, f64>) {
-            if ids.len() < 2 {
-                return;
-            }
-            let uniform = 1.0 / ids.len() as f64;
-            let mut remaining: Vec<String> = std::mem::take(ids);
-            let mut state = seed;
-            while !remaining.is_empty() {
-                let weights: Vec<f64> = remaining.iter().map(|id| Self::brush_kind_weight(weight_map, id.as_str(), uniform)).collect();
-                state = Self::brush_next_seed(state);
-                let pick = Self::brush_weighted_sample_index(&weights, state);
-                ids.push(remaining.remove(pick));
-            }
-        }
-
         fn brush_compatible_candidates(&self, source: &HandleData) -> Vec<BrushCandidate> {
             let sn = self.nodes.get(&source.node_id).map(|n| n.node_kind.as_str()).unwrap_or("");
             let sh = source.handle_kind.as_str();
@@ -2131,12 +2079,12 @@ pub mod board_host {
                     BoardFillNodeSnapshot { id: node.id.clone(), bounds: [bounds.min_x, bounds.min_y, bounds.max_x, bounds.max_y] }
                 })
                 .collect();
-            let empty = FillAccum::default();
             let handles = self
                 .handles
                 .values()
                 .filter_map(|handle| {
-                    let slot = self.fill_slot_center_world(&empty, &handle.id)?;
+                    let anchor = self.brush_handle_anchor_world(handle)?;
+                    let slot = self.handle_slot_center_world(&handle.node_id, anchor, self.suggestion_offset)?;
                     Some(BoardFillHandleSnapshot {
                         id: handle.id.clone(),
                         node_kind: self.nodes.get(&handle.node_id)?.node_kind.clone(),
@@ -2194,265 +2142,6 @@ pub mod board_host {
             }
         }
 
-        fn fill_preview_bounds(preview: &BrushPreviewSnapshot) -> WorldBox {
-            match preview.shape {
-                NodeShape::Rectangle => WorldBox { min_x: preview.x - preview.width / 2.0, min_y: preview.y - preview.height / 2.0, max_x: preview.x + preview.width / 2.0, max_y: preview.y + preview.height / 2.0 },
-                NodeShape::Circle => WorldBox { min_x: preview.x - preview.radius, min_y: preview.y - preview.radius, max_x: preview.x + preview.radius, max_y: preview.y + preview.radius },
-            }
-        }
-
-        fn fill_handle_connected(&self, accum: &FillAccum, handle_id: &str) -> bool {
-            accum.connected_handles.contains(handle_id) || self.handle_has_incident_edge(handle_id)
-        }
-
-        fn fill_collect_free_handles(&self, accum: &FillAccum) -> Vec<String> {
-            let mut out = Vec::new();
-            for (id, h) in &self.handles {
-                if self.handle_effectively_visible(id.as_str()) && !self.fill_handle_connected(accum, id.as_str()) {
-                    out.push(id.clone());
-                }
-                let _ = h;
-            }
-            for (id, vh) in &accum.virtual_handles {
-                if !accum.connected_handles.contains(id) && accum.virtual_nodes.contains_key(&vh.node_id) {
-                    out.push(id.clone());
-                }
-            }
-            out
-        }
-
-        fn fill_source_node_and_handle_kind(&self, accum: &FillAccum, handle_id: &str) -> Option<(String, String)> {
-            if let Some(h) = self.handles.get(handle_id) {
-                let nk = self.nodes.get(&h.node_id)?.node_kind.clone();
-                return Some((nk, h.handle_kind.clone()));
-            }
-            let vh = accum.virtual_handles.get(handle_id)?;
-            let node_kind = accum.virtual_nodes.get(&vh.node_id)?.node_kind.clone();
-            Some((node_kind, vh.handle_kind.clone()))
-        }
-
-        fn fill_virtual_handle_anchor_world(node: &FillVirtualNode, tmpl: &NodeKindHandleTemplate) -> Point {
-            let center = Point::new(node.x, node.y);
-            match node.shape {
-                NodeShape::Circle => handle_position_on_circle(center, node.radius, tmpl.angle),
-                NodeShape::Rectangle => handle_position_on_rectangle(center, node.width, node.height, tmpl.angle),
-            }
-        }
-
-        fn fill_slot_center_world(&self, accum: &FillAccum, handle_id: &str) -> Option<Point> {
-            if let Some(h) = self.handles.get(handle_id) {
-                let hw = self.brush_handle_anchor_world(h)?;
-                return self.handle_slot_center_world(h.node_id.as_str(), hw, self.suggestion_offset);
-            }
-            let vh = accum.virtual_handles.get(handle_id)?;
-            let node = accum.virtual_nodes.get(&vh.node_id)?;
-            let hw = Self::fill_virtual_handle_anchor_world(node, &vh.template);
-            let nc = Point::new(node.x, node.y);
-            let normal = normalize_or_zero(hw - nc);
-            Some(hw + normal * self.suggestion_offset)
-        }
-
-        fn fill_weight_for_handle(&self, accum: &FillAccum, handle_id: &str, uniform: f64) -> f64 {
-            let hk = if let Some(h) = self.handles.get(handle_id) { h.handle_kind.as_str() } else { accum.virtual_handles.get(handle_id).map(|vh| vh.handle_kind.as_str()).unwrap_or("") };
-            Self::brush_kind_weight(&self.brush_handle_kind_weights, hk, uniform)
-        }
-
-        fn fill_order_handles(&self, accum: &FillAccum, handles: &mut Vec<String>, seed: u64) {
-            if handles.len() < 2 {
-                return;
-            }
-            let uniform = 1.0 / handles.len() as f64;
-            let mut remaining = std::mem::take(handles);
-            let mut state = seed;
-            while !remaining.is_empty() {
-                let weights: Vec<f64> = remaining.iter().map(|id| self.fill_weight_for_handle(accum, id.as_str(), uniform)).collect();
-                state = Self::brush_next_seed(state);
-                let pick = Self::brush_weighted_sample_index(&weights, state);
-                handles.push(remaining.remove(pick));
-            }
-        }
-
-        fn fill_compatible_node_kind_ids(&self, accum: &FillAccum, source_handle_id: &str) -> Vec<String> {
-            let Some((sn, sh)) = self.fill_source_node_and_handle_kind(accum, source_handle_id) else {
-                return Vec::new();
-            };
-            let mut out: Vec<String> = Vec::new();
-            for (kind_id, kind) in &self.node_kinds {
-                if kind.handles.is_empty() {
-                    continue;
-                }
-                let tn = kind_id.as_str();
-                let compatible = kind.handles.iter().any(|t| self.link_kinds_compatible_for_brush(sn.as_str(), sh.as_str(), tn, t.handle_kind.as_str()));
-                if compatible {
-                    out.push(kind_id.clone());
-                }
-            }
-            out
-        }
-
-        fn fill_pick_target_handle_index(&self, sn: &str, sh: &str, node_kind_id: &str, kind: &NodeKindDef, seed: u64) -> Option<usize> {
-            let tn = node_kind_id;
-            let mut compatible: Vec<(usize, f64)> = Vec::new();
-            for (i, tmpl) in kind.handles.iter().enumerate() {
-                if !self.link_kinds_compatible_for_brush(sn, sh, tn, tmpl.handle_kind.as_str()) {
-                    continue;
-                }
-                let w = Self::brush_kind_weight(&self.brush_handle_kind_weights, tmpl.handle_kind.as_str(), 1.0);
-                compatible.push((i, w));
-            }
-            if compatible.is_empty() {
-                return None;
-            }
-            let weights: Vec<f64> = compatible.iter().map(|(_, w)| *w).collect();
-            let pick = Self::brush_weighted_sample_index(&weights, seed);
-            Some(compatible[pick].0)
-        }
-
-        fn fill_build_preview(&self, accum: &FillAccum, source_handle_id: &str, node_kind_id: &str, seed: u64) -> Option<BrushPreviewSnapshot> {
-            let center = self.fill_slot_center_world(accum, source_handle_id)?;
-            let (sn, sh) = self.fill_source_node_and_handle_kind(accum, source_handle_id)?;
-            let kind = self.node_kinds.get(node_kind_id)?;
-            let target_handle_index = self.fill_pick_target_handle_index(sn.as_str(), sh.as_str(), node_kind_id, kind, seed)?;
-            let radius = self.brush_node_size * 0.5 * kind.scale;
-            let (width, height) = if kind.shape == NodeShape::Rectangle { (self.brush_node_size * kind.scale, self.brush_node_size * kind.scale) } else { (radius * 2.0, radius * 2.0) };
-            Some(BrushPreviewSnapshot {
-                source_handle_id: source_handle_id.to_string(),
-                node_kind_id: node_kind_id.to_string(),
-                x: center.x,
-                y: center.y,
-                shape: kind.shape,
-                radius,
-                width,
-                height,
-                handles: kind.handles.clone(),
-                target_handle_index,
-                icon_kind: kind.icon.clone(),
-            })
-        }
-
-        fn fill_collides(&self, accum: &FillAccum, preview: &BrushPreviewSnapshot) -> bool {
-            let bounds = Self::fill_preview_bounds(preview);
-            for n in self.nodes.values() {
-                if world_boxes_overlap(bounds, self.node_world_bounds(n, 0.0)) {
-                    return true;
-                }
-            }
-            for vb in &accum.virtual_bounds {
-                if world_boxes_overlap(bounds, *vb) {
-                    return true;
-                }
-            }
-            false
-        }
-
-        fn fill_apply_placement(accum: &mut FillAccum, preview: BrushPreviewSnapshot) {
-            let serial = accum.next_serial;
-            accum.next_serial += 1;
-            let node_id = format!("puzzle2d.fill.{serial}");
-            let edge_id = format!("puzzle2d.fill.edge.{serial}");
-            let target_handle_id = format!("{node_id}:h{}", preview.target_handle_index);
-            accum.connected_handles.insert(preview.source_handle_id.clone());
-            accum.connected_handles.insert(target_handle_id);
-            accum.virtual_bounds.push(Self::fill_preview_bounds(&preview));
-            accum.virtual_nodes.insert(node_id.clone(), FillVirtualNode { node_kind: preview.node_kind_id.clone(), x: preview.x, y: preview.y, shape: preview.shape, radius: preview.radius, width: preview.width, height: preview.height });
-            for (i, tmpl) in preview.handles.iter().enumerate() {
-                let hid = format!("{node_id}:h{i}");
-                if accum.connected_handles.contains(&hid) {
-                    continue;
-                }
-                accum.virtual_handles.insert(hid, FillVirtualHandle { node_id: node_id.clone(), handle_kind: tmpl.handle_kind.clone(), template: tmpl.clone() });
-            }
-            accum.placements.push((node_id, edge_id, preview));
-        }
-
-        fn brush_fill_try_place_once(&self, accum: &mut FillAccum, state: &mut u64, max: usize) -> bool {
-            if accum.placements.len() >= max {
-                return false;
-            }
-            let mut free = self.fill_collect_free_handles(accum);
-            if free.is_empty() {
-                return false;
-            }
-            *state = Self::brush_next_seed(*state);
-            self.fill_order_handles(accum, &mut free, *state);
-            for source_handle_id in &free {
-                let mut kinds = self.fill_compatible_node_kind_ids(accum, source_handle_id.as_str());
-                if kinds.is_empty() {
-                    continue;
-                }
-                *state = Self::brush_next_seed(*state);
-                Self::brush_weighted_order_strings(&mut kinds, *state, &self.brush_node_kind_weights);
-                for node_kind_id in &kinds {
-                    *state = Self::brush_next_seed(*state);
-                    let Some(preview) = self.fill_build_preview(accum, source_handle_id.as_str(), node_kind_id.as_str(), *state) else {
-                        continue;
-                    };
-                    if self.fill_collides(accum, &preview) {
-                        continue;
-                    }
-                    Self::fill_apply_placement(accum, preview);
-                    return true;
-                }
-            }
-            false
-        }
-
-        fn brush_fill_placements_json(accum: &FillAccum, from: usize) -> Vec<serde_json::Value> {
-            accum.placements.iter().skip(from).map(|(node_id, edge_id, preview)| Self::brush_place_json(preview, node_id.as_str(), edge_id.as_str())).collect()
-        }
-
-        /// @emoji 🪣️ Deterministic frontier fill sequence (weighted distribution + AABB collision).
-        pub fn brush_fill_json(&self, max_count: u32, seed: u64) -> String {
-            let mut accum = FillAccum::default();
-            let max = max_count.min(1000) as usize;
-            let mut state = seed;
-            while accum.placements.len() < max {
-                if !self.brush_fill_try_place_once(&mut accum, &mut state, max) {
-                    break;
-                }
-            }
-            let placements = Self::brush_fill_placements_json(&accum, 0);
-            serde_json::json!({ "placements": placements }).to_string()
-        }
-
-        /// @emoji 🪣️ Starts a resumable fill session for chunked builds.
-        pub fn brush_fill_session_begin(&mut self, max_count: u32, seed: u64) {
-            self.brush_fill_session = Some(BrushFillSession { accum: FillAccum::default(), state: seed, max_count: max_count.min(1000) as usize, stalled: false });
-        }
-
-        /// @emoji 🪣️ Clears the resumable fill session.
-        pub fn brush_fill_session_clear(&mut self) {
-            self.brush_fill_session = None;
-        }
-
-        /// @emoji 🪣️ Places up to `chunk_budget` fill nodes and returns new placements since the last step.
-        pub fn brush_fill_session_step(&mut self, chunk_budget: u32) -> String {
-            let Some(mut session) = self.brush_fill_session.take() else {
-                return serde_json::json!({ "placements": [], "done": true, "count": 0 }).to_string();
-            };
-            if session.stalled || session.accum.placements.len() >= session.max_count {
-                let done = session.stalled || session.accum.placements.len() >= session.max_count;
-                let count = session.accum.placements.len();
-                self.brush_fill_session = Some(session);
-                return serde_json::json!({ "placements": [], "done": done, "count": count }).to_string();
-            }
-            let before = session.accum.placements.len();
-            let budget = chunk_budget.clamp(1, 64) as usize;
-            for _ in 0..budget {
-                if session.accum.placements.len() >= session.max_count {
-                    break;
-                }
-                if !self.brush_fill_try_place_once(&mut session.accum, &mut session.state, session.max_count) {
-                    session.stalled = true;
-                    break;
-                }
-            }
-            let placements = Self::brush_fill_placements_json(&session.accum, before);
-            let done = session.stalled || session.accum.placements.len() >= session.max_count;
-            let count = session.accum.placements.len();
-            self.brush_fill_session = Some(session);
-            serde_json::json!({ "placements": placements, "done": done, "count": count }).to_string()
-        }
         //#endregion 🪣️Fill
 
         //#region 🧵️FillJob
@@ -2460,16 +2149,12 @@ pub mod board_host {
 
     impl BoardFillJob {
         pub fn new(snapshot: BoardFillSnapshot, max_count: u32, seed: u64, base_revision: u64, generation: u64) -> Self {
-            let operation = semio_framework_job::Operation::new(
-                semio_framework_job::allocate_operation_id(),
-                semio_framework_job::RevisionId(base_revision),
-                semio_framework_job::Generation(generation),
-                seed,
-            );
+            let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(base_revision), semio_framework_job::Generation(generation), seed);
             Self::with_operation(snapshot, max_count, operation)
         }
 
         pub fn with_operation(snapshot: BoardFillSnapshot, max_count: u32, operation: semio_framework_job::Operation) -> Self {
+            let snapshot_checkpoint = serde_json::to_vec(&snapshot).expect("board fill snapshot is serializable");
             Self {
                 operation,
                 state: BoardFillJobState {
@@ -2501,12 +2186,28 @@ pub mod board_host {
                     stalled: false,
                     rejection: None,
                     search_count: 0,
+                    preview_sequence: 0,
                 },
+                snapshot_checkpoint,
             }
         }
 
         pub fn restore(checkpoint: &[u8], operation: semio_framework_job::Operation) -> Result<Self, serde_json::Error> {
-            Ok(Self { operation, state: serde_json::from_slice(checkpoint)? })
+            if checkpoint.len() < 8 || &checkpoint[..4] != b"P2F1" {
+                return Err(serde_json::Error::io(std::io::Error::new(std::io::ErrorKind::InvalidData, "invalid board fill checkpoint header")));
+            }
+            let snapshot_len = u32::from_le_bytes(checkpoint[4..8].try_into().expect("checkpoint length prefix")) as usize;
+            let snapshot_end = 8_usize.saturating_add(snapshot_len);
+            if snapshot_end > checkpoint.len() {
+                return Err(serde_json::Error::io(std::io::Error::new(std::io::ErrorKind::UnexpectedEof, "truncated board fill checkpoint snapshot")));
+            }
+            let snapshot_checkpoint = checkpoint[8..snapshot_end].to_vec();
+            let snapshot: BoardFillSnapshot = serde_json::from_slice(&snapshot_checkpoint)?;
+            let mut state: BoardFillJobState = serde_json::from_slice(&checkpoint[snapshot_end..])?;
+            state.snapshot = snapshot;
+            let mut operation = operation;
+            operation.preview_sequence = state.preview_sequence;
+            Ok(Self { operation, state, snapshot_checkpoint })
         }
 
         pub fn operation(&self) -> semio_framework_job::Operation {
@@ -2514,7 +2215,14 @@ pub mod board_host {
         }
 
         pub fn checkpoint_bytes(&self) -> Vec<u8> {
-            serde_json::to_vec(&self.state).expect("board fill checkpoint is serializable")
+            let state = serde_json::to_vec(&self.state).expect("board fill checkpoint state is serializable");
+            let snapshot_len = u32::try_from(self.snapshot_checkpoint.len()).expect("board fill snapshot checkpoint fits u32");
+            let mut checkpoint = Vec::with_capacity(8 + self.snapshot_checkpoint.len() + state.len());
+            checkpoint.extend_from_slice(b"P2F1");
+            checkpoint.extend_from_slice(&snapshot_len.to_le_bytes());
+            checkpoint.extend_from_slice(&self.snapshot_checkpoint);
+            checkpoint.extend_from_slice(&state);
+            checkpoint
         }
 
         pub fn placements(&self) -> &[serde_json::Value] {
@@ -2730,7 +2438,7 @@ pub mod board_host {
         fn accept_candidate(&mut self) -> semio_framework_job::StepOutcome {
             let Some(preview) = self.state.current_preview.clone() else {
                 self.reject_candidate("missing-preview");
-                return self.preview_outcome();
+                return self.preview_outcome(self.state.preview_sequence);
             };
             let kind = self.state.snapshot.kinds[preview.kind_index].clone();
             let serial = self.state.next_serial;
@@ -2788,7 +2496,7 @@ pub mod board_host {
             }
             self.state.placements.push(placement);
             self.state.stage = BoardFillStage::PublishPlanPrefix;
-            semio_framework_job::StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: self.checkpoint_bytes(), applied_progress: self.state.placements.len() as u64 })
+            semio_framework_job::StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: Vec::new(), applied_progress: self.state.placements.len() as u64 })
         }
 
         fn publish_prefix(&mut self) -> semio_framework_job::StepOutcome {
@@ -2803,7 +2511,7 @@ pub mod board_host {
                 self.state.current_preview = None;
                 self.state.stage = BoardFillStage::PrepareSources;
             }
-            self.preview_outcome()
+            self.preview_outcome(self.state.preview_sequence)
         }
 
         fn reject_candidate(&mut self, reason: &str) {
@@ -2835,12 +2543,7 @@ pub mod board_host {
 
         fn preview(&self, sequence: u64) -> BoardFillPreview {
             let target_handle_id = self.state.current_target.and_then(|index| self.state.sources.get(index)).map(|source| source.id.clone());
-            let candidate_node_kind_id = self
-                .state
-                .current_candidate
-                .and_then(|index| self.state.candidates.get(index))
-                .and_then(|candidate| self.state.snapshot.kinds.get(candidate.kind_index))
-                .map(|kind| kind.id.clone());
+            let candidate_node_kind_id = self.state.current_candidate.and_then(|index| self.state.candidates.get(index)).and_then(|candidate| self.state.snapshot.kinds.get(candidate.kind_index)).map(|kind| kind.id.clone());
             let tested_collision_id = match self.state.stage {
                 BoardFillStage::ScanHostCollision => self.state.snapshot.nodes.get(self.state.host_collision_cursor.saturating_sub(1)).map(|node| node.id.clone()),
                 BoardFillStage::ScanVirtualCollision => self.state.virtual_nodes.get(self.state.virtual_collision_cursor.saturating_sub(1)).map(|node| node.id.clone()),
@@ -2861,8 +2564,8 @@ pub mod board_host {
             }
         }
 
-        fn preview_outcome(&self) -> semio_framework_job::StepOutcome {
-            semio_framework_job::StepOutcome::PreviewReady(serde_json::to_vec(&self.preview(self.operation.preview_sequence)).expect("board fill preview is serializable"))
+        fn preview_outcome(&self, sequence: u64) -> semio_framework_job::StepOutcome {
+            semio_framework_job::StepOutcome::PreviewReady(serde_json::to_vec(&self.preview(sequence)).expect("board fill preview is serializable"))
         }
 
         fn complete(&self) -> semio_framework_job::StepOutcome {
@@ -2919,16 +2622,25 @@ pub mod board_host {
                     self.scan_virtual_collision();
                     None
                 }
-                BoardFillStage::AcceptCandidate => return self.accept_candidate(),
-                BoardFillStage::PublishPlanPrefix => return self.publish_prefix(),
+                BoardFillStage::AcceptCandidate => Some(self.accept_candidate()),
+                BoardFillStage::PublishPlanPrefix => Some(self.publish_prefix()),
                 BoardFillStage::Complete => return self.complete(),
             };
             context.consume_fuel(1);
             if context.is_cancelled() {
                 return semio_framework_job::StepOutcome::Cancelled;
             }
-            self.operation.preview_sequence = context.next_preview_sequence();
-            outcome.unwrap_or_else(|| self.preview_outcome())
+            let preview_sequence = context.next_preview_sequence();
+            self.operation.preview_sequence = preview_sequence.saturating_add(1);
+            self.state.preview_sequence = self.operation.preview_sequence;
+            match outcome {
+                Some(semio_framework_job::StepOutcome::PreviewReady(_)) | None => self.preview_outcome(preview_sequence),
+                Some(semio_framework_job::StepOutcome::CheckpointReady(mut checkpoint)) => {
+                    checkpoint.state = self.checkpoint_bytes();
+                    semio_framework_job::StepOutcome::CheckpointReady(checkpoint)
+                }
+                Some(outcome) => outcome,
+            }
         }
     }
 
@@ -5328,18 +5040,18 @@ pub mod board_host {
         }
 
         fn append_cached_world_content(&self, scene: &mut Scene, lod: BoardDrawLod) {
-            let gen = self.content_scene_generation;
+            let generation = self.content_scene_generation;
             let cam_aff = self.camera_content_affine();
             let overlay_ids = self.interaction_overlay_entity_ids();
             let mut fill_layer = Scene::new();
             self.append_nodes_and_handles_with_overlay_chrome(&mut fill_layer, None, lod, true, None, &overlay_ids, NodeHandlePaintLayer::Fill);
             scene.append(&fill_layer, Some(cam_aff));
             let mut cache = self.world_content_cache.borrow_mut();
-            let needs_rebuild = cache.as_ref().map(|c| c.0 != gen || c.1 != lod).unwrap_or(true);
+            let needs_rebuild = cache.as_ref().map(|c| c.0 != generation || c.1 != lod).unwrap_or(true);
             if needs_rebuild {
                 let mut content = Scene::new();
                 self.append_nodes_and_handles(&mut content, None, lod, true, None, StyleChromePass::CachedBase, NodeHandlePaintLayer::Icons);
-                *cache = Some((gen, lod, content));
+                *cache = Some((generation, lod, content));
             }
             if let Some(cached) = cache.as_ref() {
                 scene.append(&cached.2, Some(cam_aff));

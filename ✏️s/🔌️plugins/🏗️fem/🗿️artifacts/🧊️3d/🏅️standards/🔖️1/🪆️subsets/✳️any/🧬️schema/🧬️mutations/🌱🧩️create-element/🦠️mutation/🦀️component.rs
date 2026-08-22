@@ -17,16 +17,16 @@ pub struct CreateElement {
 impl MutationKind<Fem3dSnapshot, Fem3dMutation> for CreateElement {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "element", kind: "create-element", record: "CreatedElement" };
 
-    async fn diff(&self, base: &Fem3dSnapshot) -> protocol::MutationOutcome<crate::artifacts::fem3d::diff::Fem3dDiff> {
+    fn diff(&self, base: &Fem3dSnapshot) -> protocol::MutationOutcome<crate::artifacts::fem3d::diff::Fem3dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {
+    fn inverse(&self, base: &Fem3dSnapshot) -> Vec<Fem3dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Create element \"{}\"", element_id(&self.element))
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![element_id(&self.element).to_string()]
     }
 }

@@ -14,12 +14,12 @@ use crate::artifacts::present::{PresentSnapshot, PRESENT_DOCUMENT_SCHEMA};
 pub const PRESENT_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio");
 
 /// 📖️ Parses `.present` DSL text into a `PresentSnapshot`.
-pub async fn parse_dsl(text: &str) -> Result<PresentSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<PresentSnapshot, store::TextError> {
     <PresentSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `PresentSnapshot` back to `.present` DSL text.
-pub async fn print_dsl(deck: &PresentSnapshot) -> String {
+pub fn print_dsl(deck: &PresentSnapshot) -> String {
     store::ArtifactDsl::print_dsl(deck)
 }
 
@@ -28,31 +28,31 @@ pub async fn print_dsl(deck: &PresentSnapshot) -> String {
 /// handle is exactly two strings (`child_id`, the target's `ArtifactRef` flattened via `to_uri()`),
 /// never the child's own content. Text-only (the binary facet uses its own LEB128-length-prefixed
 /// scheme, see `../💾️binary/🦀️component.rs`).
-async fn hex_encode(bytes: &[u8]) -> String {
+fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
-async fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
+fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+    if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
     (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
 }
-async fn enc_str(s: &str) -> String {
+fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
-async fn dec_str(s: &str) -> Result<String, String> {
+fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
-async fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
+fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
     enc_str(&r.to_uri())
 }
-async fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
+fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
     store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
 }
-async fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
+fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
     format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
 }
-async fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
+fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
     let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))?;
     let parts: Vec<&str> = inner.splitn(2, ',').collect();
     let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
@@ -61,10 +61,10 @@ async fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
 //#endregion 🔖️ChildCodecPrimitives
 
 //#region 🔖️TextPrimitives
-async fn print_present_snapshot_body(s: &PresentSnapshot) -> String {
+fn print_present_snapshot_body(s: &PresentSnapshot) -> String {
     format!("schema={}\npresentation={}\nanimation={}", enc_str(&s.schema), enc_child(&s.presentation), enc_child(&s.animation))
 }
-async fn parse_present_snapshot_body(body: &str) -> Result<PresentSnapshot, String> {
+fn parse_present_snapshot_body(body: &str) -> Result<PresentSnapshot, String> {
     let mut schema = None;
     let mut presentation = None;
     let mut animation = None;
@@ -97,17 +97,17 @@ async fn parse_present_snapshot_body(body: &str) -> Result<PresentSnapshot, Stri
 /// trait impl, not an import/export mirror).
 impl store::ArtifactDsl for PresentSnapshot {
     const EXTENSION: &'static str = "present";
-    async fn envelope_id() -> &'static str {
+    fn envelope_id() -> &'static str {
         PRESENT_DOCUMENT_SCHEMA
     }
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
         parse_present_snapshot_body(body).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
     }
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         let body = print_present_snapshot_body(self);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -123,14 +123,14 @@ mod tests {
     use crate::artifacts::present::schema::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
     use store::os_store::test_support;
 
-    #[semio_framework_async_macros::async_test]
-    async fn dsl_round_trip_default_present_snapshot() {
+    #[test]
+    fn dsl_round_trip_default_present_snapshot() {
         test_support::assert_dsl_round_trip(&default_present_snapshot());
         test_support::assert_dsl_pack_equivalence(&default_present_snapshot());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn dsl_round_trip_present_deck_with_tiles() {
+    #[test]
+    fn dsl_round_trip_present_deck_with_tiles() {
         let deck = default_present_snapshot();
         let (source, _) = crate::artifacts::present::present_working_scene(&deck);
         let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
@@ -139,8 +139,8 @@ mod tests {
         test_support::assert_dsl_pack_equivalence(&deck);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn present_dsl_round_trips_bundled_default_example() {
+    #[test]
+    fn present_dsl_round_trips_bundled_default_example() {
         let deck = parse_dsl(PRESENT_EXAMPLE_TEXT).expect("🎞️default.present must parse");
         test_support::assert_dsl_round_trip(&deck);
         test_support::assert_dsl_pack_equivalence(&deck);

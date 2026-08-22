@@ -22,7 +22,7 @@ enum EnergyModelMutationDsl {
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl OpText for EnergyModelMutationDsl {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -33,7 +33,7 @@ impl OpText for EnergyModelMutationDsl {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -42,33 +42,33 @@ impl OpText for EnergyModelMutationDsl {
 }
 
 impl protocol::OpBinary for EnergyModelMutationDsl {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
 //#endregion 🔖️HandcraftedOpCodecs
 
-async fn energy_model_mutation_to_dsl(mutation: &EnergyModelMutation) -> EnergyModelMutationDsl {
+fn energy_model_mutation_to_dsl(mutation: &EnergyModelMutation) -> EnergyModelMutationDsl {
     match mutation {
         EnergyModelMutation::ReplaceModel(payload) => EnergyModelMutationDsl::ReplaceModel { new_model_json: payload.new_model_json.clone() },
     }
 }
 
-async fn energy_model_mutation_from_dsl(mutation: EnergyModelMutationDsl) -> EnergyModelMutation {
+fn energy_model_mutation_from_dsl(mutation: EnergyModelMutationDsl) -> EnergyModelMutation {
     match mutation {
         EnergyModelMutationDsl::ReplaceModel { new_model_json } => EnergyModelMutation::ReplaceModel(replace_model::mutation::ReplaceModel { new_model_json }),
     }
 }
 
 impl OpText for EnergyModelMutation {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         Ok(energy_model_mutation_from_dsl(<EnergyModelMutationDsl as OpText>::parse_op(line)?))
     }
 
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         <EnergyModelMutationDsl as OpText>::print_op(&energy_model_mutation_to_dsl(self))
     }
 }
@@ -76,11 +76,11 @@ impl OpText for EnergyModelMutation {
 /// ⚡️ Binary mirror of the `OpText` bridge above — `EnergyModelMutationDsl` already derives
 /// `OpBinary` via `#[derive(dsl::DslEnum)]`, so this is a pure to/from-dsl forward.
 impl protocol::OpBinary for EnergyModelMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         energy_model_mutation_to_dsl(self).encode_op()
     }
 
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         Ok(energy_model_mutation_from_dsl(EnergyModelMutationDsl::decode_op(bytes)?))
     }
 }

@@ -3,14 +3,15 @@
 use crate::artifacts::present::PresentSnapshot;
 use crate::editor::animate::terminology::AnimatePresentLabels;
 use crate::editor::animate::PRESENT_INTERACTION_DOMAIN;
-use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiNode, UiTreeItemNode, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use semio_framework_ui_contract::{BuiltNode, Label};
 
 //#region 🔖️Constants
 pub const PRESENT_PLAY_BODY_DOCUMENT: &str = "animate.present.play.document";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_ARTIFACT_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL, "Dokument"),
@@ -25,10 +26,13 @@ pub async fn definition() -> PanelTabDefinition {
 /// 🕹️ No per-row selection `action`: the tree is bound to the `tiles` interaction domain via
 /// `.interaction_domain(...)` below, so the framework auto-injects `interactionSelect` for row
 /// clicks — never declare that yourself (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-pub async fn render(deck: &PresentSnapshot, labels: &AnimatePresentLabels) -> UiNode {
+pub fn render(deck: &PresentSnapshot, labels: &AnimatePresentLabels) -> BuiltNode {
     let (_, tiles) = crate::artifacts::present::present_working_scene(deck);
-    let items: Vec<UiTreeItemNode> = tiles.iter().map(|tile| tree_item_desc(tile.id.clone(), Label::data(tile.name.clone()), Some(format!("x={:.3} y={:.3} w={:.3} h={:.3}", tile.crop.x, tile.crop.y, tile.crop.width, tile.crop.height)))).collect();
-    PanelTreeBuilder::new("animate-present-play").section_or_placeholder("animate-present-play.tiles", Some(labels.tiles_section.into()), true, items, labels.no_tiles).interaction_domain(PRESENT_INTERACTION_DOMAIN).build()
+    let items: Vec<BuiltNode> = tiles.iter().map(|tile| tree_item_desc(tile.id.clone(), Label::from(tile.name.clone()), Some(format!("x={:.3} y={:.3} w={:.3} h={:.3}", tile.crop.x, tile.crop.y, tile.crop.width, tile.crop.height)))).collect();
+    PanelTreeBuilder::new("animate-present-play")
+        .section_or_placeholder("animate-present-play.tiles", Some(Label::from(labels.tiles_section.as_str())), true, items, Label::from(labels.no_tiles.as_str()))
+        .interaction_domain(PRESENT_INTERACTION_DOMAIN)
+        .build()
 }
 //#endregion 🔖️Render
 
@@ -42,9 +46,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn document_lists_seeded_tiles() {
         use semio_framework_plugin::testkit::meta;
-        let mut app = present_app();
-        app.dispatch_typed(PresentCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 1, columns: 2 }), &meta("local")).expect("seed grid");
-        let document = render_body(&mut app, PRESENT_PLAY_BODY_DOCUMENT);
+        let mut app = present_app().await;
+        app.dispatch_typed(PresentCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 1, columns: 2 }), &meta("local")).await.expect("seed grid");
+        let document = render_body(&mut app, PRESENT_PLAY_BODY_DOCUMENT).await;
         assert!(document.contains("tile-r0-c0"));
     }
 

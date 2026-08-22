@@ -249,7 +249,7 @@ use crate::artifacts::raster::{RasterSnapshot, RasterTransform};
 
 pub async fn create_raster_id(prefix: &str) -> String {
     let next = {
-        let hex = blake3::hash(concat!(file!(), line!()).as_bytes()).to_hex();
+        let hex = framework_hash::hash_bytes(concat!(file!(), line!()).as_bytes());
         u64::from_str_radix(&hex[..8], 16).unwrap_or(1)
     };
     format!("{prefix}-{next}")

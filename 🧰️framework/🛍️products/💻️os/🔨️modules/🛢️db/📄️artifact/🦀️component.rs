@@ -133,12 +133,12 @@ pub const DB_PATHMAP_SCHEMA: &str = "db.pathmap.v1";
 
 /// @emoji 🎯️ `DslValue` object pathmap -> `store::pack_rt::encode_wire_value` bytes.
 async fn encode_pathmap(value: &DslValue) -> Vec<u8> {
-    store::pack_rt::encode_wire_value(value).await
+    store::pack_rt::encode_wire_value(value)
 }
 
 /// @emoji 🎯️ Inverse of `encode_pathmap`.
 async fn decode_pathmap(bytes: &[u8]) -> Result<DslValue, DbError> {
-    store::pack_rt::decode_wire_value(bytes).await.map_err(wire_err)
+    store::pack_rt::decode_wire_value(bytes).map_err(wire_err)
 }
 
 /// @emoji 🧰️ Public convenience for every crate above this one that hand-builds a `DB_PATHMAP_SCHEMA`
@@ -230,19 +230,19 @@ where
     P: serde::Serialize,
     Op: protocol::Mutation<P>,
 {
-    let diff = op.diff(base).await;
-    let post = diff.diff().await.apply(base).await.map_err(|error| DbError::InvalidArgument(error.to_string()))?;
+    let diff = op.diff(base);
+    let post = diff.diff().apply(base).map_err(|error| DbError::InvalidArgument(error.to_string()))?;
     let forward = DslValue::Object(vec![(path.to_string(), dsl::to_dsl_value(&post).map_err(dsl_err)?)]);
     let backward = DslValue::Object(vec![(path.to_string(), dsl::to_dsl_value(base).map_err(dsl_err)?)]);
     let schema = protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string());
     Ok(protocol::MutationEnvelope {
-        mutation_id: op.mutation_id().await.unwrap_or(default_mutation_id),
+        mutation_id: op.mutation_id().unwrap_or(default_mutation_id),
         document_id: document,
-        actor: op.author_id().await.unwrap_or(default_actor),
-        dependencies: op.dependencies().await,
+        actor: op.author_id().unwrap_or(default_actor),
+        dependencies: op.dependencies(),
         diff: protocol::ArtifactDiff { schema: schema.clone(), payload: encode_pathmap(&forward).await },
         inverse: protocol::InverseMutation { schema, payload: encode_pathmap(&backward).await },
-        timestamp: op.timestamp().await.unwrap_or(default_timestamp),
+        timestamp: op.timestamp().unwrap_or(default_timestamp),
     })
 }
 //#endregion 🔖️Bridge
@@ -287,10 +287,10 @@ async fn grade_conflict_record(record: &db_conflict::ConflictRecord) -> protocol
     match &record.kind {
         db_conflict::ConflictKind::TouchedRegion(regions) => {
             let target: Vec<String> = regions.iter().map(|region| region.path.clone()).collect();
-            protocol::MutationMessage::warn("mutation.clamped", format!("command {} touches region(s) also touched by concurrent command {}", record.command_id.0, record.conflicting_with.0)).await.at(target).await
+            protocol::MutationMessage::warn("mutation.clamped", format!("command {} touches region(s) also touched by concurrent command {}", record.command_id.0, record.conflicting_with.0)).at(target)
         }
         db_conflict::ConflictKind::Constraint(description) => {
-            protocol::MutationMessage::fatal("mutation.invariant", format!("command {} violates constraint '{description}' held by concurrent command {}", record.command_id.0, record.conflicting_with.0)).await.at([description.clone()]).await
+            protocol::MutationMessage::fatal("mutation.invariant", format!("command {} violates constraint '{description}' held by concurrent command {}", record.command_id.0, record.conflicting_with.0)).at([description.clone()])
         }
     }
 }
@@ -380,7 +380,7 @@ impl DocumentState {
             match value {
                 Some(dsl_value) => {
                     let bytes = store::pack_rt::encode_wire_value(dsl_value);
-                    values = values.insert(path.clone(), bytes.await);
+                    values = values.insert(path.clone(), bytes);
                 }
                 None => values = values.remove(path),
             }
@@ -519,6 +519,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
     /// Errors `AlreadyExists` if `document` already has WAL segments in `storage`.
     // 🚫️async: E5 executor bridge — an authority pool turn is a synchronous job, so the
     // engine drives its async storage calls to completion inside that finite turn.
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn create(document: protocol::ArtifactId, storage: Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<ArtifactEngine<A, V>, DbError> {
         let core_id = db_actor::block_on(to_core_document_id(&document));
         let wal = db_actor::block_on(async { db_wal::ArtifactWal::create(&storage.wal().await, core_id.clone(), db_wal::GroupCommitPolicy::default(), now_ms).await })?;
@@ -532,6 +533,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
     /// AFTER the snapshot's own `head_seq` (a full-from-genesis replay when there is no snapshot
     /// yet).
     // 🚫️async: E5 executor bridge — see `create`'s doc; same finite-turn bridge.
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn open(document: protocol::ArtifactId, storage: &Arc<db_storage::DbBackend>, config: ArtifactEngineConfig<A, V>, now_ms: u64) -> Result<(ArtifactEngine<A, V>, MaterializeReport), DbError> {
         let core_id = db_actor::block_on(to_core_document_id(&document));
         let mut report = MaterializeReport::default();
@@ -575,7 +577,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
                 db_wal::WalRecord::TxBegin { .. } => batch_ids.clear(),
                 db_wal::WalRecord::Command(bytes) => {
                     let mut pos = 0usize;
-                    let envelope = db_actor::block_on(protocol::decode_envelope(&bytes, &mut pos)).map_err(|err| DbError::Corrupt(format!("wal command record is not a valid operation envelope: {err}")))?;
+                    let envelope = protocol::decode_envelope(&bytes, &mut pos).map_err(|err| DbError::Corrupt(format!("wal command record is not a valid operation envelope: {err}")))?;
                     seen += 1;
                     batch_ids.insert(envelope.mutation_id.0.clone());
                     if seen <= applied_head_seq {
@@ -700,7 +702,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
             // semio_hub bootstrap/catch-up, so this crate's own write-and-read-back convention below must
             // agree with it byte-for-byte.
             let mut envelope_bytes = Vec::new();
-            protocol::encode_envelope(envelope, &mut envelope_bytes).await;
+            protocol::encode_envelope(envelope, &mut envelope_bytes);
             check_len(envelope_bytes.len() as u64, self.config.limits.max_command_bytes, "db_artifact::envelope_bytes")?;
 
             // base-resolve/deps + execute
@@ -746,8 +748,8 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         for record in db_conflict::ConflictDetector::new().detect(&probe).iter().filter(|record| new_ids.contains(record.command_id.0.as_str()) || new_ids.contains(record.conflicting_with.0.as_str())) {
             messages.push(grade_conflict_record(record).await);
         }
-        if let Some(worst) = protocol::worst_level(&messages).await {
-            if options.policy.rejects(worst).await {
+        if let Some(worst) = protocol::worst_level(&messages) {
+            if options.policy.rejects(worst) {
                 return Err(DbError::Rejected { policy: options.policy, worst, messages });
             }
         }
@@ -772,26 +774,26 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         records.push(db_wal::WalRecord::Frontier(new_frontier.clone()));
 
         // WAL append + durability (ArtifactWal::submit wraps `records` in its own TxBegin/TxCommit)
-        let wal_facet = db_actor::block_on(self.storage.wal());
-        db_actor::block_on(self.wal.submit(&wal_facet, &records, options.durability, now_ms))?;
+        let wal_facet = self.storage.wal().await;
+        self.wal.submit(&wal_facet, &records, options.durability, now_ms).await?;
         drop(wal_facet);
         self.frontier = new_frontier.clone();
 
         // publish: durable indices
-        let index_facet = db_actor::block_on(self.storage.index());
+        let index_facet = self.storage.index().await;
         let command_index = db_index::CommandIndex::new(&index_facet, self.document.clone()).await;
         let inverse_index = db_index::InverseIndex::new(&index_facet, self.document.clone()).await;
         let actor_seq_index = db_index::ActorSeqIndex::new(&index_facet, self.document.clone()).await;
-        db_actor::block_on(db_index::FrontierIndex::new(&index_facet, self.document.clone()).await.record(&new_frontier))?;
+        db_index::FrontierIndex::new(&index_facet, self.document.clone()).await.record(&new_frontier).await?;
         let base_seq = self.frontier.head_seq - newly_applied.len() as u64;
         for (offset, (envelope, _, _)) in newly_applied.iter().enumerate() {
             let seq = base_seq + offset as u64 + 1;
             let location = db_index::RecordLocation { segment: self.wal.active_segment_index().await, offset: seq, len: 1 };
-            db_actor::block_on(command_index.record(seq, location))?;
-            db_actor::block_on(inverse_index.record(seq, location))?;
+            command_index.record(seq, location).await?;
+            inverse_index.record(seq, location).await?;
             let core_actor = to_core_actor_id(&envelope.actor).await;
             let actor_seq = *self.actor_seq.get(&envelope.actor.0).unwrap_or(&0);
-            db_actor::block_on(actor_seq_index.record(&core_actor, actor_seq, seq))?;
+            actor_seq_index.record(&core_actor, actor_seq, seq).await?;
         }
 
         // project: run every registered projection over each newly-applied envelope
@@ -799,7 +801,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         if !projection_classes.is_empty() {
             let engine = db_projection::ProjectionEngine::new(&index_facet, self.document.clone(), projection_classes).await?;
             for (offset, (envelope, touched, _)) in newly_applied.iter().enumerate() {
-                db_actor::block_on(engine.apply_envelope(base_seq + offset as u64 + 1, envelope, touched))?;
+                engine.apply_envelope(base_seq + offset as u64 + 1, envelope, touched).await?;
             }
         }
         drop(index_facet);
@@ -854,7 +856,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
             dependencies: vec![target.clone()],
             diff: protocol::ArtifactDiff { schema: original.inverse.schema.clone(), payload: encode_pathmap(&entries_to_value(&undo_diff_entries)).await },
             inverse: protocol::InverseMutation { schema: original.diff.schema, payload: encode_pathmap(&entries_to_value(&redo_inverse_entries)).await },
-            timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms).await,
+            timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms),
         };
         self.submit(CommandBatch::new(vec![compensating]).await?, SubmitOptions::default(), now_ms).await
     }
@@ -882,9 +884,9 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
     pub async fn snapshot_now(&self, now_ms: u64) -> Result<u64, DbError> {
         let entries: Vec<(String, Option<Vec<u8>>)> = self.state.values.iter().map(|(path, bytes)| (path.clone(), Some(bytes.clone()))).collect();
         let page = db_state::Page::new(encode_state_page(&entries).await);
-        let snapshot_facet = db_actor::block_on(self.storage.snapshot());
+        let snapshot_facet = self.storage.snapshot().await;
         let snapshot_manager = db_snapshot::SnapshotManager::new(&snapshot_facet).await;
-        let origin = if db_actor::block_on(snapshot_manager.load_latest(&self.document))?.is_some() { db_snapshot::SnapshotOrigin::Incremental } else { db_snapshot::SnapshotOrigin::FullBaseline };
+        let origin = if snapshot_manager.load_latest(&self.document).await?.is_some() { db_snapshot::SnapshotOrigin::Incremental } else { db_snapshot::SnapshotOrigin::FullBaseline };
         let body = db_snapshot::SnapshotBody {
             head_seq: self.frontier.head_seq,
             commit_seq: self.frontier.commit_seq,
@@ -896,7 +898,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
             roots: vec![page.hash],
             created_at_ms: now_ms,
         };
-        db_actor::block_on(snapshot_manager.publish(&self.document, origin, &[page], body))
+        snapshot_manager.publish(&self.document, origin, &[page], body).await
     }
     //#endregion 🔖️Snapshot
 
@@ -911,15 +913,15 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
     // ownership question onto every caller for no benefit.
     #[allow(clippy::needless_pass_by_value)]
     pub async fn query(&self, query: db_query::Query, consistency: db_query::Consistency) -> Result<db_query::QueryResult, DbError> {
-        let index_facet = db_actor::block_on(self.storage.index());
+        let index_facet = self.storage.index().await;
         let resolver = db_query::IndexConsistencyResolver { commits: db_index::CommitIndex::new(&index_facet, self.document.clone()).await, frontiers: db_index::FrontierIndex::new(&index_facet, self.document.clone()).await };
         // A fresh document has no recorded frontier yet; canonical reads still succeed via the
         // in-memory frontier, so only consult the resolver for modes that truly need the index.
         if !matches!(consistency, db_query::Consistency::Canonical) {
-            db_actor::block_on(db_query::resolve_consistency(&consistency, &resolver))?;
+            db_query::resolve_consistency(&consistency, &resolver).await?;
         }
         let source = StateQuerySource(&self.state.values);
-        db_actor::block_on(db_query::execute(&query, &source, None::<&db_query::NoFullTextLookup>, &db_query::QueryLimits::default()))
+        db_query::execute(&query, &source, None::<&db_query::NoFullTextLookup>, &db_query::QueryLimits::default()).await
     }
 
     /// @emoji 📡️ Registers a live query, returning its subscription id — new this revision.
@@ -941,7 +943,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         let limits = db_query::QueryLimits::default();
         let mut diffs = Vec::new();
         for (id, live_query) in self.live_queries.iter_mut() {
-            if let Ok(diff) = db_actor::block_on(live_query.refresh(&source, None::<&db_query::NoFullTextLookup>, &limits)) {
+            if let Ok(diff) = live_query.refresh(&source, None::<&db_query::NoFullTextLookup>, &limits).await {
                 if !diff.added.is_empty() || !diff.removed.is_empty() || !diff.updated.is_empty() {
                     diffs.push((*id, diff));
                 }
@@ -984,7 +986,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
             dependencies: Vec::new(),
             diff: protocol::ArtifactDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&entries_to_value(&dsl_entries)).await },
             inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::Object(vec![])).await },
-            timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms).await,
+            timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms),
         };
         self.previews.publish(db_preview::PublishPreviewRequest { document: self.document.clone(), actor: ActorId("preview".to_string()), key: format!("preview-{now_ms}"), base: self.frontier.clone(), envelope, touched, ttl_ms: None, now_ms })
     }
@@ -996,7 +998,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         for (entry_path, value) in diff_entries(&preview.envelope.diff).await? {
             if entry_path == path {
                 return match value {
-                    Some(dsl_value) => Ok(Some(store::pack_rt::encode_wire_value(&dsl_value).await)),
+                    Some(dsl_value) => Ok(Some(store::pack_rt::encode_wire_value(&dsl_value))),
                     None => Ok(None),
                 };
             }
@@ -1054,21 +1056,21 @@ impl<'a> db_query::QuerySource for StateQuerySource<'a> {
 /// @emoji 📸️ This crate's own snapshot page convention (opaque to `db_snapshot`/`db_storage`): the
 /// whole `DocumentState` as of the snapshot's frontier, one entry per stored path.
 async fn encode_state_page(entries: &[(String, Option<Vec<u8>>)]) -> Vec<u8> {
-    let mut writer = pack::ByteWriter::new().await;
-    writer.write_varint_u64(entries.len() as u64).await;
+    let mut writer = pack::ByteWriter::new();
+    writer.write_varint_u64(entries.len() as u64);
     for (path, value) in entries {
-        writer.write_varint_u64(path.len() as u64).await;
-        writer.write_bytes(path.as_bytes()).await;
+        writer.write_varint_u64(path.len() as u64);
+        writer.write_bytes(path.as_bytes());
         match value {
             Some(bytes) => {
-                writer.write_u8(1).await;
-                writer.write_varint_u64(bytes.len() as u64).await;
-                writer.write_bytes(bytes).await;
+                writer.write_u8(1);
+                writer.write_varint_u64(bytes.len() as u64);
+                writer.write_bytes(bytes);
             }
-            None => writer.write_u8(0).await,
+            None => writer.write_u8(0),
         }
     }
-    writer.into_bytes().await
+    writer.into_bytes()
 }
 
 const MAX_STATE_PAGE_ENTRIES: u64 = 10_000_000;
@@ -1079,19 +1081,19 @@ const MAX_STATE_PAGE_VALUE_BYTES: u64 = 256 * 1024 * 1024;
 type StatePageEntries = Vec<(String, Option<Vec<u8>>)>;
 
 async fn decode_state_page(bytes: &[u8]) -> Result<StatePageEntries, DbError> {
-    let mut reader = pack::ByteReader::new(bytes).await;
-    let count = reader.read_varint_u64().await?;
+    let mut reader = pack::ByteReader::new(bytes);
+    let count = reader.read_varint_u64()?;
     check_len(count, MAX_STATE_PAGE_ENTRIES, "db_artifact::snapshot_page_entries")?;
     let mut entries = Vec::with_capacity(count as usize);
     for _ in 0..count {
-        let path_len = reader.read_varint_u64().await?;
+        let path_len = reader.read_varint_u64()?;
         check_len(path_len, MAX_STATE_PAGE_PATH_BYTES, "db_artifact::snapshot_page_path")?;
-        let path_bytes = reader.read_bytes(path_len as usize).await?.to_vec();
+        let path_bytes = reader.read_bytes(path_len as usize)?.to_vec();
         let path = String::from_utf8(path_bytes).map_err(|_| DbError::Corrupt("snapshot page path is not valid utf-8".to_string()))?;
-        let value = if reader.read_u8().await? == 1 {
-            let len = reader.read_varint_u64().await?;
+        let value = if reader.read_u8()? == 1 {
+            let len = reader.read_varint_u64()?;
             check_len(len, MAX_STATE_PAGE_VALUE_BYTES, "db_artifact::snapshot_page_value")?;
-            Some(reader.read_bytes(len as usize).await?.to_vec())
+            Some(reader.read_bytes(len as usize)?.to_vec())
         } else {
             None
         };
@@ -1147,12 +1149,14 @@ pub enum ArtifactMessage {
 /// one finite `WorkerPool` turn; no job waits for the next message and no authority owns an OS
 /// thread. `db_state::PMap` uses `Arc`-shared HAMT nodes, making the engine movable between turns
 /// without sharing mutable actor state or weakening its single-consumer mailbox semantics.
+#[cfg(not(target_arch = "wasm32"))]
 pub struct ArtifactAuthority {
     address: db_actor::Address<ArtifactMessage>,
     cancel: Arc<dyn Fn() + Send + Sync>,
     done: std::sync::Mutex<Option<db_actor::ReplyReceiver<()>>>,
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 struct ArtifactRunner<A: AuthzHook + 'static, V: VersionGraph + 'static> {
     pool: Arc<semio_framework_async::WorkerPool>,
     address: db_actor::Address<ArtifactMessage>,
@@ -1166,6 +1170,7 @@ struct ArtifactRunner<A: AuthzHook + 'static, V: VersionGraph + 'static> {
     terminal: std::sync::atomic::AtomicBool,
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
     fn schedule(self: &Arc<Self>) {
         use std::sync::atomic::Ordering;
@@ -1253,6 +1258,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 impl ArtifactAuthority {
     /// @emoji 🚀️ Builds the engine on the injected pool and resolves only after construction, so
     /// a caller never receives an authority whose engine failed to open.
@@ -1357,7 +1363,7 @@ mod tests {
             dependencies: deps.iter().map(|dep| protocol::MutationId((*dep).to_string())).collect(),
             diff: protocol::ArtifactDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::Object(object)).await },
             inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&DslValue::Object(vec![])).await },
-            timestamp: protocol::HybridLogicalTimestamp::new(0, 0).await,
+            timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         }
     }
 
@@ -1383,10 +1389,10 @@ mod tests {
         struct AddDiff(i64);
 
         impl protocol::MutationDiff<Counter> for AddDiff {
-            async fn apply(&self, base: &Counter) -> protocol::MutationApplyResult<Counter> {
+            fn apply(&self, base: &Counter) -> protocol::MutationApplyResult<Counter> {
                 Ok(Counter(base.0 + self.0))
             }
-            async fn absorb(&mut self, other: Self) {
+            fn absorb(&mut self, other: Self) {
                 self.0 += other.0;
             }
         }
@@ -1396,10 +1402,10 @@ mod tests {
 
         impl protocol::Mutation<Counter> for Add {
             type Diff = AddDiff;
-            async fn diff(&self, _base: &Counter) -> protocol::MutationOutcome<AddDiff> {
-                protocol::MutationOutcome::new(AddDiff(self.0)).await
+            fn diff(&self, _base: &Counter) -> protocol::MutationOutcome<AddDiff> {
+                protocol::MutationOutcome::new(AddDiff(self.0))
             }
-            async fn inverse(&self, _base: &Counter) -> Vec<Self> {
+            fn inverse(&self, _base: &Counter) -> Vec<Self> {
                 vec![Add(-self.0)]
             }
         }
@@ -1408,7 +1414,7 @@ mod tests {
         async fn envelope_from_operation_uses_operation_and_diff_traits() {
             let base = Counter(10);
             let op = Add(5);
-            let envelope = envelope_from_operation(document_id().await, "counter", &op, &base, protocol::ActorId("alice".to_string()), protocol::MutationId("op-add-1".to_string()), protocol::HybridLogicalTimestamp::new(1, 0).await).await.unwrap();
+            let envelope = envelope_from_operation(document_id().await, "counter", &op, &base, protocol::ActorId("alice".to_string()), protocol::MutationId("op-add-1".to_string()), protocol::HybridLogicalTimestamp::new(1, 0)).await.unwrap();
             let entries = diff_entries(&envelope.diff).await.unwrap();
             assert_eq!(entries.len(), 1);
             let (path, value) = &entries[0];
@@ -1580,7 +1586,7 @@ mod tests {
             dependencies: Vec::new(),
             diff: protocol::ArtifactDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&dsl::to_dsl_value(&serde_json::json!({ "x": 1 })).expect("dsl")).await },
             inverse: protocol::InverseMutation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&dsl::to_dsl_value(&serde_json::json!({ "x": null })).expect("dsl")).await },
-            timestamp: protocol::HybridLogicalTimestamp::new(0, 0).await,
+            timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         };
         engine.submit(CommandBatch::new(vec![original]).await.unwrap(), SubmitOptions::default(), 0).await.unwrap();
         assert!(engine.get("x").await.is_some());
@@ -1655,7 +1661,7 @@ mod tests {
         let mut engine = ArtifactEngine::create(document_id().await, storage, ArtifactEngineConfig::default(), 0).unwrap();
         engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("greeting", serde_json::json!("hello"))]).await]).await.unwrap(), SubmitOptions::default(), 0).await.unwrap();
 
-        let query = db_query::Query::new().await.filter(db_query::Predicate::Eq(db_query::Path::empty().push_field("path"), db_query::Value::Text("greeting".to_string())));
+        let query = db_query::Query::new().filter(db_query::Predicate::Eq(db_query::Path::empty().push_field("path"), db_query::Value::Text("greeting".to_string())));
         let result = engine.query(query, db_query::Consistency::Canonical).await.unwrap();
         assert_eq!(result.rows.len(), 1);
     }
@@ -1664,7 +1670,7 @@ mod tests {
     async fn live_query_refresh_reports_no_further_diff_right_after_submit_already_refreshed_it() {
         let storage = storage().await;
         let mut engine = ArtifactEngine::create(document_id().await, storage, ArtifactEngineConfig::default(), 0).unwrap();
-        let id = engine.subscribe(db_query::LiveQuerySpec { query: db_query::Query::new().await, consistency: db_query::Consistency::Canonical }).await;
+        let id = engine.subscribe(db_query::LiveQuerySpec { query: db_query::Query::new(), consistency: db_query::Consistency::Canonical }).await;
         engine.submit(CommandBatch::new(vec![envelope("op-1", &[], "alice", &[("x", serde_json::json!(1))]).await]).await.unwrap(), SubmitOptions::default(), 0).await.unwrap();
         let diffs = engine.refresh_live_queries().await;
         assert!(diffs.is_empty());

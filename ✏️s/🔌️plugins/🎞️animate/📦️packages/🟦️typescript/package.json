@@ -12,9 +12,9 @@
   "dependencies": {
     "@semio-tech/framework": "workspace:*",
     "@semio-tech/ui-react": "workspace:*",
+    "pdfjs-dist": "^5.4.296",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "react-pdf": "^10.3.0",
     "rehype-stringify": "^10.0.1",
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
@@ -25,7 +25,6 @@
   "devDependencies": {
     "@types/react": "^19.2.8",
     "@types/react-dom": "^19.2.3",
-    "@types/reveal.js": "^5.2.0",
     "@vitejs/plugin-react": "^5.1.2",
     "typescript": "^5.9.3",
     "vitest": "^4.0.17"

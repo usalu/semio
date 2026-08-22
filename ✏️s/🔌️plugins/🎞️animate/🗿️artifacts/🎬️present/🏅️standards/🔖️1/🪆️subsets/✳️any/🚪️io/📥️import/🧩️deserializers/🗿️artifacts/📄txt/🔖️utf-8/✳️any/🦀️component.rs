@@ -15,7 +15,7 @@ pub struct TxtIntoPresent;
 impl Deserializer<PresentSnapshot> for TxtIntoPresent {
     const FROM: Dialect = TXT_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(_payload: &IoPayload) -> IoResult<PresentSnapshot> {
+    async fn deserialize(_payload: &IoPayload) -> IoResult<PresentSnapshot> {
         Err(IoError { message: "txt import not yet implemented".into(), diagnostics: Vec::new() })
     }
 }

@@ -77,7 +77,7 @@ impl ArtifactViewer for GisTerrainViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_gisterrain_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_gisterrain_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(GISTERRAIN_DIALECT)
         .document(["semio", "gis", "3d"])
         .icon_id("gis3d")

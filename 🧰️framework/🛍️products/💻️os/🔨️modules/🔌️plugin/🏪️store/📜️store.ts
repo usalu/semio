@@ -4,8 +4,8 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, watch, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
-import { strToU8, unzipSync, zipSync } from "fflate";
 import { decodePackValue, encodePackValue } from "@semio-tech/framework-os";
+import { decodeOwnedZip, encodeOwnedZip } from "./🟦️zip.ts";
 import {
   PLUGIN_HOST_SHIM_FILE,
   SHARD_WORKER_FILE,
@@ -120,7 +120,7 @@ function unwrapSemioEnvelope(bytes: Uint8Array): Uint8Array {
 
 /** @emoji 📨 Wraps deflate zip bytes in the Wave-1.A semio binary envelope (`os.extension.pack v1`). */
 export function wrapExtensionPackageEnvelope(zipBytes: Uint8Array): Uint8Array {
-  const tokenBytes = strToU8(EXTENSION_PACKAGE_ENVELOPE_TOKEN);
+  const tokenBytes = new TextEncoder().encode(EXTENSION_PACKAGE_ENVELOPE_TOKEN);
   const out = new Uint8Array(SEMIO_BINARY_MAGIC.length + 4 + tokenBytes.length + zipBytes.length);
   out.set(SEMIO_BINARY_MAGIC, 0);
   new DataView(out.buffer, out.byteOffset + 8, 4).setUint32(0, tokenBytes.length, true);
@@ -133,25 +133,21 @@ function buildExtensionZipPayload(manifest: ExtensionPackageManifestRecord, comp
   if (componentWasm.length === 0) throw new Error("extension component.wasm is empty");
   if (manifest.packageFormat !== EXTENSION_PACKAGE_FORMAT) throw new Error(`invalid extension package format ${manifest.packageFormat}`);
   const manifestBytes = encodePackValue(manifest);
-  const files: Record<string, Uint8Array> = {
-    [EXTENSION_MANIFEST_ZIP_ENTRY_EMOJI]: manifestBytes,
-    [EXTENSION_COMPONENT_FILE]: componentWasm,
-  };
+  const files = new Map<string, Uint8Array>([
+    [EXTENSION_MANIFEST_ZIP_ENTRY_EMOJI, manifestBytes],
+    [EXTENSION_COMPONENT_FILE, componentWasm],
+  ]);
   const assetNames = [...assets.keys()].sort();
   for (const name of assetNames) {
     const payload = assets.get(name);
     if (!payload) continue;
-    files[name.startsWith("assets/") ? name : `assets/${name}`] = payload;
+    files.set(name.startsWith("assets/") ? name : `assets/${name}`, payload);
   }
-  return zipSync(files, { level: 6 });
+  return encodeOwnedZip(files);
 }
 
 /** @emoji 📦 Packs manifest + wasip2 component bytes into a `.sxt` stream (semio envelope + deterministic deflate zip). */
-export function packExtensionPackage(input: {
-  readonly manifest: ExtensionPackageManifestRecord;
-  readonly componentWasm: Uint8Array;
-  readonly assets?: ReadonlyMap<string, Uint8Array>;
-}): Uint8Array {
+export function packExtensionPackage(input: { readonly manifest: ExtensionPackageManifestRecord; readonly componentWasm: Uint8Array; readonly assets?: ReadonlyMap<string, Uint8Array> }): Uint8Array {
   const zipBytes = buildExtensionZipPayload(input.manifest, input.componentWasm, input.assets ?? new Map());
   return wrapExtensionPackageEnvelope(zipBytes);
 }
@@ -161,9 +157,9 @@ export function extensionPackageContentHash(bytes: Uint8Array): string {
   return packageContentHash(bytes);
 }
 
-function zipEntryBytes(files: Record<string, Uint8Array>, predicate: (name: string) => boolean): Uint8Array | undefined {
-  const key = Object.keys(files).find(predicate);
-  return key ? files[key] : undefined;
+function zipEntryBytes(files: ReadonlyMap<string, Uint8Array>, predicate: (name: string) => boolean): Uint8Array | undefined {
+  for (const [name, payload] of files) if (predicate(name)) return payload;
+  return undefined;
 }
 
 function decodeExtensionManifest(manifestBytes: Uint8Array): ExtensionManifestRecord {
@@ -201,7 +197,7 @@ export function unpackExtensionPackage(bytes: Uint8Array): {
 } {
   const packageHash = packageContentHash(bytes);
   const zipBytes = unwrapSemioEnvelope(bytes);
-  const files = unzipSync(zipBytes);
+  const files = decodeOwnedZip(zipBytes);
   const manifestBytes =
     zipEntryBytes(files, (name) => name === EXTENSION_MANIFEST_ZIP_ENTRY_EMOJI || name.endsWith(EXTENSION_MANIFEST_ZIP_ENTRY)) ??
     (() => {
@@ -213,7 +209,7 @@ export function unpackExtensionPackage(bytes: Uint8Array): {
       throw new Error(`extension package missing ${EXTENSION_COMPONENT_FILE}`);
     })();
   const assets = new Map<string, Uint8Array>();
-  for (const [name, payload] of Object.entries(files)) {
+  for (const [name, payload] of files) {
     if (name === EXTENSION_COMPONENT_FILE || name.endsWith(EXTENSION_MANIFEST_ZIP_ENTRY) || name.endsWith(EXTENSION_MANIFEST_ZIP_ENTRY_EMOJI)) continue;
     if (name.startsWith("assets/")) assets.set(name.slice("assets/".length), payload);
   }
@@ -286,11 +282,7 @@ function writeWatchMarker(installRoot: string, event: ExtensionSourceEvent): voi
 
 /** @emoji 🏪 Creates an extension store rooted at `installRoot`, using `materializer` for browser or native layouts. */
 
-export function createExtensionStore(options: {
-  readonly installRoot: string;
-  readonly repoRoot: string;
-  readonly materializer: ExtensionMaterializer;
-}): ExtensionStore {
+export function createExtensionStore(options: { readonly installRoot: string; readonly repoRoot: string; readonly materializer: ExtensionMaterializer }): ExtensionStore {
   const { installRoot, repoRoot, materializer } = options;
   const preview2VendorDir = join(installRoot, "_vendor/@bytecodealliance/preview2-shim");
   const materializeCtx: PluginWebMaterializeContext = { repoRoot, preview2VendorDir };
@@ -425,3 +417,59 @@ export function semioExtensionStoreVitePlugin(options: { readonly installRoot: s
   };
 }
 //#endregion 🔌️ExtensionStoreVitePlugin
+
+//#region 🧪️Tests
+if (import.meta.vitest) {
+  const { describe, expect, it } = import.meta.vitest;
+  const legacyFflateZip = Uint8Array.from(
+    Buffer.from(
+      "UEsDBBQAAAgIAAAAIQAAHXf+kQAAAJwAAAAVAAAA8J+bgu+4j21hbmlmZXN0LnNlbWlvY2U11DPSM+ZPy6woKS1K1Tu8JzcnsbSEpSg1MYWxmP/D/OUr3+/oV3CDSDMyCgqws/MkJxYkJmXmZJZkphbzMLIxsfMm5+eVFGUmlZZk5ucV8zCws6dWlKTmpRSzMbNzg5nFQAnPFDZGdtacxKTUHDYWdt6CxOTsxPRUt/yi3MQSVgYw+GDPzl6WWgRSzcYAAFBLAwQUAAAACAAAACEAzjNLHAoAAAAIAAAADgAAAGNvbXBvbmVudC53YXNtY0gszmVkYGAAAFBLAwQUAAAICAAAACEA2f/rzhIAAAAQAAAAGAAAAGFzc2V0cy9pY29ucy/wn6ep77iPLnR4dHMvOrwntSpT4cP8nt73O/q5AFBLAQIUABQAAAgIAAAAIQAAHXf+kQAAAJwAAAAVAAAAAAAAAAAAAAAAAAAAAADwn5uC77iPbWFuaWZlc3Quc2VtaW9QSwECFAAUAAAACAAAACEAzjNLHAoAAAAIAAAADgAAAAAAAAAAAAAAAADEAAAAY29tcG9uZW50Lndhc21QSwECFAAUAAAICAAAACEA2f/rzhIAAAAQAAAAGAAAAAAAAAAAAAAAAAD6AAAAYXNzZXRzL2ljb25zL/Cfp6nvuI8udHh0UEsFBgAAAAADAAMAxQAAAEIBAAAAAA==",
+      "base64",
+    ),
+  );
+  const fixtureManifest: ExtensionPackageManifestRecord = {
+    extensionId: "fixture.ümlaut",
+    label: "🧩️ Fixture",
+    version: "1.2.3",
+    extends: "s",
+    capabilities: ["read"],
+    contributions: [],
+    packageFormat: 1,
+  };
+  const fixtureWasm = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]);
+  const fixtureAsset = new TextEncoder().encode("Grüezi 🌍️\n");
+
+  describe("extension package ZIP ownership", () => {
+    it("decodes the pinned fflate UTF-8/DEFLATE fixture and preserves its hash", () => {
+      expect(extensionPackageContentHash(legacyFflateZip)).toBe("43675c79f03ba52f45cc57eecabee2a9334e93957128e7975a2979528d14efa9");
+      const unpacked = unpackExtensionPackage(wrapExtensionPackageEnvelope(legacyFflateZip));
+      expect(unpacked.manifest).toMatchObject({ extensionId: fixtureManifest.extensionId, label: fixtureManifest.label, version: fixtureManifest.version });
+      expect(unpacked.wasmBytes).toEqual(fixtureWasm);
+      expect(unpacked.assets.get("icons/🧩️.txt")).toEqual(fixtureAsset);
+    });
+
+    it("encodes deterministic synchronous packages with UTF-8 asset names", () => {
+      const input = { manifest: fixtureManifest, componentWasm: fixtureWasm, assets: new Map([["icons/🧩️.txt", fixtureAsset]]) };
+      const first = packExtensionPackage(input);
+      const second = packExtensionPackage(input);
+      expect(first).toEqual(second);
+      const unpacked = unpackExtensionPackage(first);
+      expect(unpacked.packageHash).toBe(extensionPackageContentHash(first));
+      expect(unpacked.manifest).toMatchObject({ extensionId: fixtureManifest.extensionId, label: fixtureManifest.label, version: fixtureManifest.version });
+      expect(unpacked.wasmBytes).toEqual(fixtureWasm);
+      expect(unpacked.assets.get("icons/🧩️.txt")).toEqual(fixtureAsset);
+    });
+
+    it("rejects an entry whose declared expansion exceeds the owned bound", () => {
+      const packed = packExtensionPackage({ manifest: fixtureManifest, componentWasm: fixtureWasm });
+      const zipStart = 12 + new TextEncoder().encode(EXTENSION_PACKAGE_ENVELOPE_TOKEN).length;
+      const corrupted = packed.slice(zipStart);
+      const data = new DataView(corrupted.buffer, corrupted.byteOffset, corrupted.byteLength);
+      const end = corrupted.length - 22;
+      const central = data.getUint32(end + 16, true);
+      data.setUint32(central + 24, 256 * 1024 * 1024 + 1, true);
+      expect(() => unpackExtensionPackage(wrapExtensionPackageEnvelope(corrupted))).toThrow("decoded size limit");
+    });
+  });
+}
+//#endregion 🧪️Tests

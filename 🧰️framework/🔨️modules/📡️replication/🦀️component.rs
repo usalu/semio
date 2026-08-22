@@ -85,8 +85,8 @@ async fn slice_content_chain(slice: &[u8]) -> Result<[u8; 32], ProtocolError> {
     let mut concat = Vec::new();
     while let Some(frame) = cursor.next_frame().await? {
         let frame_bytes = &slice[frame.offset as usize..(frame.offset + frame.frame_len().await) as usize];
-        concat.extend_from_slice(&hasher.hash(frame_bytes).await);
+        concat.extend_from_slice(&hasher.hash(frame_bytes));
     }
-    Ok(hasher.hash(&concat).await)
+    Ok(hasher.hash(&concat))
 }
 //#endregion 🔖️Sync

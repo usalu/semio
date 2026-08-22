@@ -89,7 +89,7 @@ pub fn process3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 /// 📇️ A non-palette action declaration (dispatched by UI wiring/keybindings, never surfaced in the
 /// command palette) with the given execution kind.
 fn internal_action(id: &str, label: impl Into<LocalizedLabel>, kind: ActionKind) -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, kind) }
+    ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(id, label, kind) }
 }
 
 /// 🧰️ Host effect that programmatically switches the workpiece window's active utility — the active
@@ -448,7 +448,7 @@ impl ArtifactEditor for Process3dPlayApp {
 /// frame by `ArtifactEditor::window_measures`, never frozen into the manifest.
 pub fn create_process3d_app() -> AppDefinition {
     Editor::builder(crate::artifacts::process3d::PROCESS3D_DIALECT)
-            .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
+            .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
             .document(["semio", "process", "3d"])
             .artifact_kind(ArtifactKindSpec {
                 id: "3d.process".into(),

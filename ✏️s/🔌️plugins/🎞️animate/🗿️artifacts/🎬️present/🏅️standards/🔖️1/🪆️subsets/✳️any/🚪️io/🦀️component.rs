@@ -16,7 +16,7 @@
 //! tested either way.
 
 //#region 🔖️IoDeclaration
-pub async fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
+pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use crate::artifacts::present::standards::v1::subsets::any::io::export::serializers::artifacts as export;
     use crate::artifacts::present::standards::v1::subsets::any::io::import::deserializers::artifacts as import;
     use crate::artifacts::present::{PresentMutation, PresentSnapshot, ANIMATE_DIALECT, PRESENT_DOCUMENT_SCHEMA};
@@ -24,25 +24,25 @@ pub async fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     use semio_framework_plugin::app::declarations::{IoDeclaration, LanguagePair, NativeCodecs};
     use std::sync::OnceLock;
 
-    async fn entries() -> &'static [IoEntry] {
+    fn entries() -> &'static [IoEntry] {
         static ENTRIES: OnceLock<Vec<IoEntry>> = OnceLock::new();
         ENTRIES
             .get_or_init(|| {
                 vec![
-                    serializer_entry::<PresentSnapshot, export::json::v_rfc8259::any::PresentIntoJson>(ANIMATE_DIALECT),
-                    deserializer_entry::<PresentSnapshot, import::json::v_rfc8259::any::JsonIntoPresent>(ANIMATE_DIALECT),
-                    serializer_entry::<PresentSnapshot, export::md::v_commonmark::any::PresentIntoMd>(ANIMATE_DIALECT),
-                    deserializer_entry::<PresentSnapshot, import::md::v_commonmark::any::MdIntoPresent>(ANIMATE_DIALECT),
-                    serializer_entry::<PresentSnapshot, export::pdf::v1_4::any::PresentIntoPdf>(ANIMATE_DIALECT),
-                    deserializer_entry::<PresentSnapshot, import::pdf::v1_4::any::PdfIntoPresent>(ANIMATE_DIALECT),
-                    serializer_entry::<PresentSnapshot, export::pptx::v_ecma_376::any::PresentIntoPptx>(ANIMATE_DIALECT),
-                    deserializer_entry::<PresentSnapshot, import::pptx::v_ecma_376::any::PptxIntoPresent>(ANIMATE_DIALECT),
-                    serializer_entry::<PresentSnapshot, export::svg::v1_1::any::PresentIntoSvg>(ANIMATE_DIALECT),
-                    deserializer_entry::<PresentSnapshot, import::svg::v1_1::any::SvgIntoPresent>(ANIMATE_DIALECT),
-                    serializer_entry::<PresentSnapshot, export::png::v1_2::any::PresentIntoPng>(ANIMATE_DIALECT),
-                    deserializer_entry::<PresentSnapshot, import::png::v1_2::any::PngIntoPresent>(ANIMATE_DIALECT),
-                    serializer_entry::<PresentSnapshot, export::txt::v_utf_8::any::PresentIntoTxt>(ANIMATE_DIALECT),
-                    deserializer_entry::<PresentSnapshot, import::txt::v_utf_8::any::TxtIntoPresent>(ANIMATE_DIALECT),
+                    semio_framework_plugin::resolve_ready(serializer_entry::<PresentSnapshot, export::json::v_rfc8259::any::PresentIntoJson>(ANIMATE_DIALECT)),
+                    semio_framework_plugin::resolve_ready(deserializer_entry::<PresentSnapshot, import::json::v_rfc8259::any::JsonIntoPresent>(ANIMATE_DIALECT)),
+                    semio_framework_plugin::resolve_ready(serializer_entry::<PresentSnapshot, export::md::v_commonmark::any::PresentIntoMd>(ANIMATE_DIALECT)),
+                    semio_framework_plugin::resolve_ready(deserializer_entry::<PresentSnapshot, import::md::v_commonmark::any::MdIntoPresent>(ANIMATE_DIALECT)),
+                    semio_framework_plugin::resolve_ready(serializer_entry::<PresentSnapshot, export::pdf::v1_4::any::PresentIntoPdf>(ANIMATE_DIALECT)),
+                    semio_framework_plugin::resolve_ready(deserializer_entry::<PresentSnapshot, import::pdf::v1_4::any::PdfIntoPresent>(ANIMATE_DIALECT)),
+                    semio_framework_plugin::resolve_ready(serializer_entry::<PresentSnapshot, export::pptx::v_ecma_376::any::PresentIntoPptx>(ANIMATE_DIALECT)),
+                    semio_framework_plugin::resolve_ready(deserializer_entry::<PresentSnapshot, import::pptx::v_ecma_376::any::PptxIntoPresent>(ANIMATE_DIALECT)),
+                    semio_framework_plugin::resolve_ready(serializer_entry::<PresentSnapshot, export::svg::v1_1::any::PresentIntoSvg>(ANIMATE_DIALECT)),
+                    semio_framework_plugin::resolve_ready(deserializer_entry::<PresentSnapshot, import::svg::v1_1::any::SvgIntoPresent>(ANIMATE_DIALECT)),
+                    semio_framework_plugin::resolve_ready(serializer_entry::<PresentSnapshot, export::png::v1_2::any::PresentIntoPng>(ANIMATE_DIALECT)),
+                    semio_framework_plugin::resolve_ready(deserializer_entry::<PresentSnapshot, import::png::v1_2::any::PngIntoPresent>(ANIMATE_DIALECT)),
+                    semio_framework_plugin::resolve_ready(serializer_entry::<PresentSnapshot, export::txt::v_utf_8::any::PresentIntoTxt>(ANIMATE_DIALECT)),
+                    semio_framework_plugin::resolve_ready(deserializer_entry::<PresentSnapshot, import::txt::v_utf_8::any::TxtIntoPresent>(ANIMATE_DIALECT)),
                 ]
             })
             .as_slice()
@@ -69,7 +69,7 @@ pub async fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 /// its output is round-tripped through stdio's own real SVG codec (`parse_svg_xml`/`write_svg_xml`)
 /// before being returned, which both validates it is genuinely spec-conformant SVG and exercises the
 /// real stdio engine rather than returning the framework helper's raw string untouched.
-pub async fn animate_present_document_json_to_svg(value: &serde_json::Value) -> Result<(String, u32, u32), String> {
+pub fn animate_present_document_json_to_svg(value: &serde_json::Value) -> Result<(String, u32, u32), String> {
     use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::{parse_svg_xml, write_svg_xml};
     let (svg, width, height) = semio_framework_os::title_card_svg(value, "Animate Present", 1280, 720)?;
     let doc = parse_svg_xml(&svg)?;
@@ -86,7 +86,7 @@ pub async fn animate_present_document_json_to_svg(value: &serde_json::Value) -> 
 /// `w5a--report.md`'s stdio_gaps rather than invented. The framework helpers stay (shared,
 /// non-duplicative utilities, not local ad-hoc codec code); the SVG they produce is still round-
 /// tripped through stdio's real SVG codec before rasterization, same as the title-card path.
-pub async fn animate_present_document_json_from_dwg(drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> Result<serde_json::Value, String> {
+pub fn animate_present_document_json_from_dwg(drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> Result<serde_json::Value, String> {
     use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::{parse_svg_xml, write_svg_xml};
     let (svg, width, height) = semio_framework_os::dwg_drawing_to_svg(drawing)?;
     let validated_svg = write_svg_xml(&parse_svg_xml(&svg)?);
@@ -103,21 +103,21 @@ mod tests {
     use super::*;
     use serde_json::json;
 
-    #[semio_framework_async_macros::async_test]
-    async fn animate_present_document_json_to_svg_embeds_title() {
+    #[test]
+    fn animate_present_document_json_to_svg_embeds_title() {
         let (svg, width, height) = animate_present_document_json_to_svg(&json!({ "title": "My Deck" })).expect("svg");
         assert!(svg.contains("My Deck"));
         assert_eq!((width, height), (1280, 720));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn animate_present_document_json_to_svg_falls_back_to_app_label_without_title() {
+    #[test]
+    fn animate_present_document_json_to_svg_falls_back_to_app_label_without_title() {
         let (svg, _, _) = animate_present_document_json_to_svg(&json!({})).expect("svg fallback");
         assert!(svg.contains("Animate Present"));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn from_dwg_builds_single_slide_deck_from_entity() {
+    #[test]
+    fn from_dwg_builds_single_slide_deck_from_entity() {
         let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing {
             layers: vec![semio_s_plugin_stdio::artifacts::dwg::DwgLayer::default()],
             entities: vec![semio_s_plugin_stdio::artifacts::dwg::DwgEntity {
@@ -137,8 +137,8 @@ mod tests {
         assert!(source.src.starts_with("data:image/png;base64,"));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn from_dwg_never_errors_on_empty_drawing() {
+    #[test]
+    fn from_dwg_never_errors_on_empty_drawing() {
         let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
         let document = animate_present_document_json_from_dwg(&drawing).expect("from_dwg on empty drawing");
         let deck: crate::artifacts::present::PresentSnapshot = serde_json::from_value(document).expect("deck");

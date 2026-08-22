@@ -2,6 +2,6 @@
 
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
 
-pub async fn close_vortex_suggestions(ctx: &mut Puzzle3dActionCtx<'_>) {
+pub fn close_vortex_suggestions(ctx: &mut Puzzle3dActionCtx<'_>) {
     ctx.scene.runtime.suggestion_menu = None;
 }

@@ -6,7 +6,7 @@ use crate::editor::puzzle5d::quat_mul;
 use crate::editor::puzzle5d::Puzzle5dActionCtx;
 use serde_json::Value;
 
-pub async fn rotate_selection(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
+pub fn rotate_selection(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     let ids = mesh_selection_ids(args, &ctx.selected_part_ids());
     let ax = args.and_then(|value| value.get("ax")).and_then(|value| value.as_f64()).unwrap_or(0.0);
     let ay = args.and_then(|value| value.get("ay")).and_then(|value| value.as_f64()).unwrap_or(0.0);

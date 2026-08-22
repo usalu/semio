@@ -6,7 +6,7 @@
 //!
 //! 🚫️async: E6 sync payload encoding — no `async fn` anywhere in this module.
 
-use crate::pack::{self, PackError};
+use crate::pack::PackError;
 use crate::SceneDoc;
 use ui_contract::{SurfaceDoc, SurfaceKind, SurfaceProps};
 
@@ -43,7 +43,7 @@ impl std::error::Error for SurfaceDocError {}
 /// `SceneDoc` struct uses either) — the `expect` documents that invariant rather than silently
 /// swallowing a codec bug a future `SceneDoc` impl might introduce.
 pub fn encode<T: SceneDoc>(kind: SurfaceKind, doc: &T) -> SurfaceProps {
-    let bytes = pack::to_bytes(doc).expect("SceneDoc payloads are plain data this crate's pack codec fully covers");
+    let bytes = doc.encode_pack().expect("SceneDoc payloads are plain data this crate's pack codec fully covers");
     SurfaceProps { kind, doc_schema: T::SCHEMA.into(), doc: SurfaceDoc { bytes }, ..Default::default() }
 }
 
@@ -54,14 +54,14 @@ pub fn decode<T: SceneDoc>(props: &SurfaceProps) -> Result<T, SurfaceDocError> {
     if props.doc_schema != T::SCHEMA {
         return Err(SurfaceDocError::SchemaMismatch { expected: T::SCHEMA, actual: props.doc_schema.clone() });
     }
-    pack::from_bytes(&props.doc.bytes).map_err(SurfaceDocError::Decode)
+    T::decode_pack(&props.doc.bytes).map_err(SurfaceDocError::Decode)
 }
 //#endregion 🔖️EncodeDecode
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{TableScene, World3dScene};
+    use crate::{Board2dScene, TableScene, World3dScene};
 
     #[test]
     fn table_scene_round_trips_byte_identical() {
@@ -69,6 +69,22 @@ mod tests {
         let props = encode(SurfaceKind::Table, &scene);
         assert_eq!(props.doc_schema, "table@1");
         let back: TableScene = decode(&props).expect("decode");
+        assert_eq!(scene, back);
+    }
+
+    #[test]
+    fn board_scene_round_trips_with_absent_optional_fields() {
+        let scene = Board2dScene::base("{}".into(), "{}".into(), true);
+        let props = encode(SurfaceKind::Board2d, &scene);
+        let back: Board2dScene = decode(&props).expect("decode");
+        assert_eq!(scene, back);
+    }
+
+    #[test]
+    fn world_scene_round_trips_with_absent_optional_fields() {
+        let scene = World3dScene::base("{}".into(), "[]".into(), "[]".into(), "{}".into());
+        let props = encode(SurfaceKind::World3d, &scene);
+        let back: World3dScene = decode(&props).expect("decode");
         assert_eq!(scene, back);
     }
 

@@ -1632,6 +1632,7 @@ pub enum JoinMode {
 /// tight on both sides (`[id:TEXT x:NUM]`) since it's a fixed one-shot header, not a
 /// space-joined element list; a space appears before a keyword-led block's `{` (`children {
 /// ... }`) but never before a glued composite's `{` (`data={ ... }`).
+#[derive(Default)]
 pub struct Writer {
     chunks: Vec<Chunk>,
     indent: usize,
@@ -1652,14 +1653,6 @@ enum Chunk {
         lang: String,
         content: String,
     },
-}
-
-impl Default for Writer {
-    // 🚫️async: E1 impl of externally-declared `Default` — signature fixed outside this repo, so it
-    // cannot go through the async `Writer::new()` and instead duplicates its (trivial) body — see R9
-    fn default() -> Self {
-        Self { chunks: Vec::new(), indent: 0 }
-    }
 }
 
 impl Writer {

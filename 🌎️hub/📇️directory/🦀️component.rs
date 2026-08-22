@@ -17,17 +17,26 @@
 pub mod error {
     /// @emoji 🧯️ Opaque directory error — never wraps a backend driver's error type, so no `sqlx`/
     /// `neo4rs`/`rusqlite` type ever crosses this crate's public API.
-    #[derive(Debug, thiserror::Error)]
+    #[derive(Debug)]
     pub enum DirectoryError {
-        #[error("not found: {0}")]
         NotFound(String),
-        #[error("conflict: {0}")]
         Conflict(String),
-        #[error("unauthorized")]
         Unauthorized,
-        #[error("backend error: {0}")]
         Backend(String),
     }
+
+    impl std::fmt::Display for DirectoryError {
+        fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                Self::NotFound(detail) => write!(formatter, "not found: {detail}"),
+                Self::Conflict(detail) => write!(formatter, "conflict: {detail}"),
+                Self::Unauthorized => formatter.write_str("unauthorized"),
+                Self::Backend(detail) => write!(formatter, "backend error: {detail}"),
+            }
+        }
+    }
+
+    impl std::error::Error for DirectoryError {}
 
     pub type DirectoryResult<T> = Result<T, DirectoryError>;
 }

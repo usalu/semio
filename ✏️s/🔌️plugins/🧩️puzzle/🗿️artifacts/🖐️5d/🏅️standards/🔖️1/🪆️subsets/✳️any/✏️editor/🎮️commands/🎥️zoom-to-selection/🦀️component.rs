@@ -5,7 +5,7 @@ use crate::editor::puzzle5d::{gumball_target_world, Puzzle5dActionCtx};
 /// 🔍️ `zoomToSelection`/`focusSelection`: recenters both cameras on the selection, preserving the
 /// volume camera's orbit offset. Aborts (emitting nothing at all) when nothing is selected — the
 /// pre-migration `return Emit::default()`.
-pub async fn zoom_to_selection(ctx: &mut Puzzle5dActionCtx<'_>) {
+pub fn zoom_to_selection(ctx: &mut Puzzle5dActionCtx<'_>) {
     let part_ids = ctx.selected_part_ids();
     let Some(target) = gumball_target_world(ctx.scene, &part_ids) else {
         ctx.abort = true;

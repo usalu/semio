@@ -739,7 +739,7 @@ pub fn screen_select_components(
                         let point = [screen[0], screen[1]];
                         let inside = marquee_contains_point(point, &local_polygon, rectangle, rect_bounds);
                         if inside {
-                            let id = mesh.vertex_ids.get(vertex_index).map(|value| value.to_string()).unwrap_or_else(|| vertex_index.to_string());
+                            let id = mesh.vertex_ids.get(vertex_index).map_or_else(|| vertex_index.to_string(), |value| value.to_string());
                             selected.insert(id);
                         }
                     }
@@ -754,7 +754,7 @@ pub fn screen_select_components(
                         if !marquee_segment_selected(a_screen, b_screen, &local_polygon, rectangle, rect_bounds, crossing) {
                             continue;
                         }
-                        let id = mesh.edge_ids.get(edge_index).map(|value| value.to_string()).unwrap_or_else(|| edge_index.to_string());
+                        let id = mesh.edge_ids.get(edge_index).map_or_else(|| edge_index.to_string(), |value| value.to_string());
                         selected.insert(id);
                     }
                 }
@@ -775,7 +775,7 @@ pub fn screen_select_components(
                         if !marquee_triangle_selected(&screens, &local_polygon, rectangle, rect_bounds, crossing) {
                             continue;
                         }
-                        let id = mesh.face_ids.get(tri_index).map(|value| value.to_string()).unwrap_or_else(|| tri_index.to_string());
+                        let id = mesh.face_ids.get(tri_index).map_or_else(|| tri_index.to_string(), |value| value.to_string());
                         selected.insert(id);
                     }
                 }
@@ -1441,8 +1441,7 @@ mod tests {
 
     #[test]
     fn orbit_controller_orbit_clamps_pitch() {
-        let mut orbit = OrbitController::default();
-        orbit.pitch = 1.49;
+        let mut orbit = OrbitController { pitch: 1.49, ..Default::default() };
         orbit.orbit(0.0, 1000.0);
         assert!((orbit.pitch - 1.5).abs() < 1e-5, "pitch={}", orbit.pitch);
         orbit.pitch = -1.49;
@@ -1460,8 +1459,7 @@ mod tests {
 
     #[test]
     fn orbit_controller_zoom_clamps_distance_bounds() {
-        let mut orbit = OrbitController::default();
-        orbit.distance = 1.0;
+        let mut orbit = OrbitController { distance: 1.0, ..Default::default() };
         orbit.zoom(100_000.0);
         assert!((orbit.distance - 0.5).abs() < 1e-4, "distance={}", orbit.distance);
         orbit.distance = 400.0;

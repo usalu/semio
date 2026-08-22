@@ -16,12 +16,12 @@ pub const PUZZLE5D_NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../📚️ex
 pub const PUZZLE5D_CAPSULE_DREAM_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🌙️capsule-dream/🖼️assets/🗣️dream.dsl.semio");
 
 /// 📖️ Parses `.puzzle5d` DSL text into a `Puzzle5dSnapshot`.
-pub async fn parse_dsl(text: &str) -> Result<Puzzle5dSnapshot, store::TextError> {
+pub fn parse_dsl(text: &str) -> Result<Puzzle5dSnapshot, store::TextError> {
     <Puzzle5dSnapshot as store::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Puzzle5dSnapshot` back to `.puzzle5d` DSL text.
-pub async fn print_dsl(document: &Puzzle5dSnapshot) -> String {
+pub fn print_dsl(document: &Puzzle5dSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
@@ -33,8 +33,8 @@ mod tests {
         Puzzle5dCompatSpecificity, Puzzle5dFastener, Puzzle5dGrip, Puzzle5dGrip2d, Puzzle5dGrip3d, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d, Puzzle5dPartAnchor, Puzzle5dScale,
     };
 
-    #[semio_framework_async_macros::async_test]
-    async fn puzzle5d_projection_dsl_round_trips() {
+    #[test]
+    fn puzzle5d_projection_dsl_round_trips() {
         let empty = Puzzle5dSnapshot::default();
         semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&empty);
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&empty);
@@ -83,8 +83,8 @@ mod tests {
     /// 📜️ Both real example fixtures (migrated from the legacy `.5d.json` shape — see ticket
     /// 🎫️convertpuzzle2d3d5dtotypeddslderiveengine) parse as `.puzzle5d` DSL text and round-trip
     /// through `print_dsl`/`parse_dsl` exactly.
-    #[semio_framework_async_macros::async_test]
-    async fn puzzle5d_example_fixtures_parse_and_round_trip_as_dsl() {
+    #[test]
+    fn puzzle5d_example_fixtures_parse_and_round_trip_as_dsl() {
         for (name, dsl_text) in [("forest", PUZZLE5D_CONCRETE_FOREST_EXAMPLE_TEXT), ("tower", PUZZLE5D_NAKAGIN_EXAMPLE_TEXT)] {
             let projection = parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{name} example fixture parses as dsl: {error}"));
             semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&projection);
@@ -101,18 +101,19 @@ mod tests {
     /// `command_envelope_round_trip_holds_for_an_applied_operation`). Uses a single `#[dsl(block)]`
     /// `SetPart` operation (not a `#[dsl(table)]` collection), so this is unaffected by the
     /// known table-column pack bug noted above.
-    #[semio_framework_async_macros::async_test]
-    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
+    #[test]
+    fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::puzzle5d::op::Puzzle5dMutation;
         use crate::artifacts::puzzle5d::spr::Puzzle5dStore;
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand};
 
-        let mut store = Puzzle5dStore::new(create_document_envelope(crate::artifacts::puzzle5d::PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None));
+        let mut store = semio_framework::io::resolve_ready(Puzzle5dStore::new(create_document_envelope(crate::artifacts::puzzle5d::PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None))).expect("store");
         let part = Puzzle5dPart { id: "p1".into(), anchor: Puzzle5dPartAnchor::Fixed, part_kind: None, part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::puzzle5d::mutations::create_part(part, None)], description: None }).expect("apply");
-        let edit: &Edit<Puzzle5dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        semio_framework::io::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::puzzle5d::mutations::create_part(part, None)], description: None })).expect("apply");
+        let envelope = semio_framework::io::resolve_ready(store.envelope());
+        let edit: &Edit<Puzzle5dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
+        semio_framework::io::resolve_ready(semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())));
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

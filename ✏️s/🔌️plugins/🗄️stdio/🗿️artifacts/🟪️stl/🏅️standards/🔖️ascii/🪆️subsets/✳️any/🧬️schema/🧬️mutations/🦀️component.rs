@@ -130,10 +130,10 @@ impl Mutation<StlSnapshot> for StlMutation {
 /// `snapshot` reuse `🔺️diff::component`'s `pub(crate)` value codecs verbatim (`enc_vec3`,
 /// `enc_vertices`, `enc_triangle`) plus this file's own `enc_snapshot` (the one type `🔺️diff`
 /// doesn't need — only `SetSnapshot`'s payload does).
-async fn enc_snapshot(s: &StlSnapshot) -> String {
+fn enc_snapshot(s: &StlSnapshot) -> String {
     format!("[{},{},[{}]]", diff::hex_encode_str(&s.schema), diff::hex_encode_str(&s.solid_name), s.triangles.iter().map(diff::enc_triangle).collect::<Vec<_>>().join(","),)
 }
-async fn dec_snapshot(s: &str) -> Result<StlSnapshot, String> {
+fn dec_snapshot(s: &str) -> Result<StlSnapshot, String> {
     let parts = diff::split_top_level(diff::strip_brackets(s)?, ',');
     let [schema, solid_name, triangles] = parts.as_slice() else {
         return Err(format!("snapshot: expected 3 fields, got {}", parts.len()));
@@ -153,7 +153,7 @@ fn print_stl_op(m: &StlMutation) -> String {
         StlMutation::SetTriangleVertices { index, vertices } => format!("set-triangle-vertices index={index} vertices={}", diff::enc_vertices(vertices)),
     }
 }
-async fn parse_stl_op(line: &str) -> Result<StlMutation, String> {
+fn parse_stl_op(line: &str) -> Result<StlMutation, String> {
     if line == "no-mutation" {
         return Ok(StlMutation::NoMutation);
     }
@@ -165,7 +165,7 @@ async fn parse_stl_op(line: &str) -> Result<StlMutation, String> {
         args.iter().find_map(|t| t.strip_prefix(probe.as_str())).ok_or_else(|| format!("stl op: missing '{key}=' in {line:?}"))
     };
     match keyword {
-        "set-snapshot" => Ok(StlMutation::SetSnapshot { snapshot: dec_snapshot(get("snapshot")?).await? }),
+        "set-snapshot" => Ok(StlMutation::SetSnapshot { snapshot: dec_snapshot(get("snapshot")?)? }),
         "set-solid-name" => Ok(StlMutation::SetSolidName { name: diff::hex_decode_str(get("name")?)? }),
         "insert-triangle" => Ok(StlMutation::InsertTriangle { index: diff::parse_usize(get("index")?)?, triangle: diff::dec_triangle(get("triangle")?)? }),
         "remove-triangle" => Ok(StlMutation::RemoveTriangle { index: diff::parse_usize(get("index")?)? }),
@@ -190,7 +190,7 @@ impl OpText for StlMutation {
 /// varint-framed binary all the way down, reusing `diff`'s `pub(crate)` binary value codecs
 /// (`enc_triangle_bin`/`dec_triangle_bin`) rather than duplicating them — same intra-artifact
 /// reuse pattern this file's own text `enc_snapshot` already establishes over `diff::enc_triangle`.
-async fn enc_snapshot_bin(s: &StlSnapshot, out: &mut Vec<u8>) {
+fn enc_snapshot_bin(s: &StlSnapshot, out: &mut Vec<u8>) {
     diff::write_str_bin(out, &s.schema);
     diff::write_str_bin(out, &s.solid_name);
     store::pack_rt::write_varint_u64(out, s.triangles.len() as u64);

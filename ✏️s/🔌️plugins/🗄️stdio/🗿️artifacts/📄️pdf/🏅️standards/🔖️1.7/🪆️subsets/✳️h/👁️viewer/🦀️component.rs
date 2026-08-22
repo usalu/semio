@@ -84,13 +84,13 @@ impl ArtifactViewer for Pdf17HViewer {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_pdf17_h_viewer() -> semio_framework_plugin::AppDefinition {
     let builder = Viewer::builder(PDF17H_DIALECT);
-    let builder = semio_framework_plugin::resolve_ready(builder.document(["stdio", "pdf", "1.7", "h"]));
-    let builder = semio_framework_plugin::resolve_ready(builder.icon_id("file-text"));
-    let builder = semio_framework_plugin::resolve_ready(builder.mode_def(view::definition()));
-    let builder = semio_framework_plugin::resolve_ready(builder.default_mode_id(view::PDF17H_VIEW_MODE_ID));
-    let builder = semio_framework_plugin::resolve_ready(builder.window_kind_def(main::definition()));
-    let builder = semio_framework_plugin::resolve_ready(builder.default_layout(view::layout()));
-    semio_framework_plugin::resolve_ready(builder.build_definition())
+    let builder = builder.document(["stdio", "pdf", "1.7", "h"]);
+    let builder = builder.icon_id("file-text");
+    let builder = builder.mode_def(view::definition());
+    let builder = builder.default_mode_id(view::PDF17H_VIEW_MODE_ID);
+    let builder = builder.window_kind_def(main::definition());
+    let builder = builder.default_layout(view::layout());
+    builder.build_definition()
 }
 //#endregion 🔖️Manifest
 

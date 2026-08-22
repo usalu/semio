@@ -16,16 +16,16 @@ pub struct CreateNode {
 impl MutationKind<Fem2dSnapshot, Fem2dMutation> for CreateNode {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "node", kind: "create-node", record: "CreatedNode" };
 
-    async fn diff(&self, base: &Fem2dSnapshot) -> protocol::MutationOutcome<crate::artifacts::fem2d::diff::Fem2dDiff> {
+    fn diff(&self, base: &Fem2dSnapshot) -> protocol::MutationOutcome<crate::artifacts::fem2d::diff::Fem2dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Fem2dSnapshot) -> Vec<Fem2dMutation> {
+    fn inverse(&self, base: &Fem2dSnapshot) -> Vec<Fem2dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Create node \"{}\"", self.node.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.node.id.clone()]
     }
 }

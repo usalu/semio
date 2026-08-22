@@ -1,0 +1,35 @@
+
+running 21 tests
+test mesh::tests::boundary_faces_area_matches_extruded_box_surface ... ok
+test mesh::tests::extrude_quad_mesh_volume_matches_area_times_height ... ok
+test mesh::tests::extrude_tri_mesh_volume_matches_area_times_height ... ok
+test mesh::tests::mesh_job_is_previewing_deterministic_and_step_bounded ... ok
+test mesh::tests::mesh_job_large_boundary_never_runs_to_completion_in_one_step ... 
+thread 'mesh::tests::mesh_job_large_boundary_never_runs_to_completion_in_one_step' (99768450) panicked at ✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️component.rs:1349:9:
+worst large-boundary mesh job step was 28.919875ms
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+FAILED
+test mesh::tests::mesh_job_observes_cancellation_before_mutating ... ok
+test mesh::tests::owned_bowyer_watson_matches_reference_domain_invariants ... ok
+test mesh::tests::point_in_polygon_returns_false_for_degenerate_polygon ... ok
+test mesh::tests::quad_grid_has_expected_topology ... ok
+test mesh::tests::refined_mesh_respects_min_angle ... ok
+test mesh::tests::split_to_tets_passes_through_existing_tet4_cells ... ok
+test mesh::tests::split_to_tets_preserves_volume ... ok
+test mesh::tests::split_to_tets_shared_faces_are_parity_consistent ... ok
+test mesh::tests::to_quadratic_welds_shared_edges ... ok
+test mesh::tests::tri_mesh_quality_detects_inverted_winding_and_handles_empty_mesh ... ok
+test mesh::tests::triangulate_honors_constrained_boundary_edges ... ok
+test mesh::tests::triangulate_rejects_degenerate_hole ... ok
+test mesh::tests::triangulate_rejects_degenerate_outer_boundary ... ok
+test mesh::tests::triangulate_respects_hole_area ... ok
+test mesh::tests::triangulate_square_area_matches_input ... ok
+test mesh::tests::volume_mesh_quality_detects_inverted_cell ... ok
+
+failures:
+
+failures:
+    mesh::tests::mesh_job_large_boundary_never_runs_to_completion_in_one_step
+
+test result: FAILED. 20 passed; 1 failed; 0 ignored; 0 measured; 734 filtered out; finished in 2.55s
+

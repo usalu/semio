@@ -6,7 +6,7 @@
 
 // #region 🔌️Adapters
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
+import { ownedSchema as z } from "../../../../🟦️validation";
 import { readFileSync, readdirSync, statSync } from "fs";
 import { join, relative } from "path";
 // #endregion 🔌️Adapters

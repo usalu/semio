@@ -135,6 +135,7 @@ fn leaf_context(node: &UiNode) -> LeafContext {
 }
 
 /// 🧮️ `taffy::NodeId` lookup for one retained `UiTree` (not authoritative UI state).
+#[cfg(test)]
 struct TaffyNodeMapping {
     by_ui: HashMap<NodeId, taffy::NodeId>,
     known: Vec<NodeId>,
@@ -144,13 +145,20 @@ struct TaffyNodeMapping {
 /// mapping between them. Used only by the `engine` façade (a later milestone); never exposed
 /// outside the crate.
 pub(crate) struct LayoutEngine {
+    #[cfg(test)]
     taffy: TaffyTree<LeafContext>,
+    #[cfg(test)]
     nodes: TaffyNodeMapping,
 }
 
 impl Default for LayoutEngine {
     fn default() -> Self {
-        Self { taffy: TaffyTree::new(), nodes: TaffyNodeMapping { by_ui: HashMap::new(), known: Vec::new() } }
+        Self {
+            #[cfg(test)]
+            taffy: TaffyTree::new(),
+            #[cfg(test)]
+            nodes: TaffyNodeMapping { by_ui: HashMap::new(), known: Vec::new() },
+        }
     }
 }
 
@@ -366,6 +374,13 @@ impl LayoutJob {
     }
 
     fn prune_removed(&mut self, engine: &mut LayoutEngine, tree: &UiTree) -> Option<(usize, usize)> {
+        #[cfg(not(test))]
+        {
+            let _ = (engine, tree);
+            self.stage = LayoutJobStage::MeasureFallback;
+            return None;
+        }
+        #[cfg(test)]
         if let Some(&id) = engine.nodes.known.get(self.prune_index) {
             if !tree.contains(id) {
                 if let Some(taffy_id) = engine.nodes.by_ui.remove(&id) {
@@ -375,13 +390,23 @@ impl LayoutJob {
             self.prune_index += 1;
             return Some((1, 0));
         }
-        engine.nodes.known.clear();
-        engine.nodes.known.reserve(self.preorder.len());
-        self.stage = if self.preorder.len() > MAX_TAFFY_SLICE_NODES { LayoutJobStage::MeasureFallback } else { LayoutJobStage::SyncNodes };
-        None
+        #[cfg(test)]
+        {
+            engine.nodes.known.clear();
+            engine.nodes.known.reserve(self.preorder.len());
+            self.stage = if self.preorder.len() > MAX_TAFFY_SLICE_NODES { LayoutJobStage::MeasureFallback } else { LayoutJobStage::SyncNodes };
+            None
+        }
     }
 
     fn sync_node(&mut self, engine: &mut LayoutEngine, tree: &UiTree) -> Option<(usize, usize)> {
+        #[cfg(not(test))]
+        {
+            let _ = (engine, tree);
+            self.stage = LayoutJobStage::MeasureFallback;
+            return None;
+        }
+        #[cfg(test)]
         if let Some(&id) = self.postorder.get(self.sync_index) {
             let node = tree.node(id).expect("sync cursor names a retained node");
             let flex_grow_child = node.parent.and_then(|parent| tree.node(parent)).is_some_and(|parent| matches!(parent.spec.0, UiNode::Stack(_) | UiNode::Field(_)));
@@ -390,31 +415,43 @@ impl LayoutJob {
             self.sync_index += 1;
             return Some((1, 0));
         }
-        self.stage = LayoutJobStage::SolveLayout;
-        None
+        #[cfg(test)]
+        {
+            self.stage = LayoutJobStage::SolveLayout;
+            None
+        }
     }
 
     fn solve(&mut self, engine: &mut LayoutEngine, atlas: &mut FontAtlas) -> (usize, usize) {
-        let root_taffy = engine.nodes.by_ui[&self.root];
-        let mut root_style = engine.taffy.style(root_taffy).cloned().unwrap_or_default();
-        root_style.size = Size { width: length(self.available_width), height: length(self.available_height) };
-        let _ = engine.taffy.set_style(root_taffy, root_style);
-        let available = Size { width: AvailableSpace::Definite(self.available_width), height: AvailableSpace::Definite(self.available_height) };
-        let _ = engine.taffy.compute_layout_with_measure(root_taffy, available, |known_dimensions, available_space, _node_id, node_context, _style| {
-            if let (Some(width), Some(height)) = (known_dimensions.width, known_dimensions.height) {
-                return Size { width, height };
-            }
-            match node_context {
-                Some(LeafContext::Text(text)) => {
-                    let max_width = known_dimensions.width.or_else(|| available_space.width.into_option());
-                    let (measured_w, measured_h) = atlas.measure(text, max_width);
-                    Size { width: known_dimensions.width.unwrap_or(measured_w), height: known_dimensions.height.unwrap_or(measured_h) }
+        #[cfg(not(test))]
+        {
+            let _ = (engine, atlas);
+            self.stage = LayoutJobStage::MeasureFallback;
+            return (0, 0);
+        }
+        #[cfg(test)]
+        {
+            let root_taffy = engine.nodes.by_ui[&self.root];
+            let mut root_style = engine.taffy.style(root_taffy).cloned().unwrap_or_default();
+            root_style.size = Size { width: length(self.available_width), height: length(self.available_height) };
+            let _ = engine.taffy.set_style(root_taffy, root_style);
+            let available = Size { width: AvailableSpace::Definite(self.available_width), height: AvailableSpace::Definite(self.available_height) };
+            let _ = engine.taffy.compute_layout_with_measure(root_taffy, available, |known_dimensions, available_space, _node_id, node_context, _style| {
+                if let (Some(width), Some(height)) = (known_dimensions.width, known_dimensions.height) {
+                    return Size { width, height };
                 }
-                _ => Size::ZERO,
-            }
-        });
-        self.stage = LayoutJobStage::CollectResults;
-        (1, 0)
+                match node_context {
+                    Some(LeafContext::Text(text)) => {
+                        let max_width = known_dimensions.width.or_else(|| available_space.width.into_option());
+                        let (measured_w, measured_h) = atlas.measure(text, max_width);
+                        Size { width: known_dimensions.width.unwrap_or(measured_w), height: known_dimensions.height.unwrap_or(measured_h) }
+                    }
+                    _ => Size::ZERO,
+                }
+            });
+            self.stage = LayoutJobStage::CollectResults;
+            (1, 0)
+        }
     }
 
     fn measure_fallback(&mut self, tree: &UiTree, atlas: &mut FontAtlas) -> Option<(usize, usize)> {
@@ -517,6 +554,13 @@ impl LayoutJob {
     }
 
     fn collect_result(&mut self, engine: &LayoutEngine, tree: &UiTree, atlas: &mut FontAtlas) -> Option<(usize, usize)> {
+        #[cfg(not(test))]
+        {
+            let _ = (engine, tree, atlas);
+            self.stage = LayoutJobStage::PublishResults;
+            return None;
+        }
+        #[cfg(test)]
         if let Some(&id) = self.preorder.get(self.result_index) {
             if let Some(&taffy_id) = engine.nodes.by_ui.get(&id) {
                 if let Ok(layout) = engine.taffy.layout(taffy_id) {
@@ -533,8 +577,11 @@ impl LayoutJob {
             self.result_index += 1;
             return Some((1, 0));
         }
-        self.stage = LayoutJobStage::PublishResults;
-        None
+        #[cfg(test)]
+        {
+            self.stage = LayoutJobStage::PublishResults;
+            None
+        }
     }
 
     fn publish(&mut self, tree: &mut UiTree, _atlas: &mut FontAtlas) {
@@ -646,6 +693,7 @@ impl LayoutEngine {
         taffy_id
     }
 
+    #[cfg(test)]
     fn sync_one(&mut self, tree: &UiTree, theme: &Theme, id: NodeId, flex_grow_child: bool) -> taffy::NodeId {
         let node = tree.node(id).expect("sync_one called with a live NodeId");
         let dirty = node.flags.contains(NodeFlags::DIRTY_LAYOUT);
@@ -668,6 +716,7 @@ impl LayoutEngine {
         taffy_id
     }
 
+    #[cfg(test)]
     fn style_with_grow(&self, node: &UiNode, theme: &Theme, flex_grow_child: bool) -> Style {
         let mut style = style_for(node);
         match node {

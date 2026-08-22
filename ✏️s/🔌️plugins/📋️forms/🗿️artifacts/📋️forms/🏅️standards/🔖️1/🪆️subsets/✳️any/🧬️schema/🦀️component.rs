@@ -243,7 +243,7 @@ pub async fn json_f64_value(value: &Value) -> f64 {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.forms.forms` — twenty handcrafted schema leaves.
-pub async fn forms_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn forms_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.forms.forms",
         artifact: schema::FacetLeaves {

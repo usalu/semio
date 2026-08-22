@@ -9,6 +9,7 @@ use crate::wfc_engine::diag::{DiagLevel, Event, EventSink, Metrics};
 use crate::wfc_engine::domain::{DomainStore, RestrictResult};
 use crate::wfc_engine::heuristics::{self, ObserveHeuristic};
 use crate::wfc_engine::ids::{DecisionId, NodeId, PatternId};
+use crate::wfc_engine::job::{WfcJob, WfcJobConfig, WfcSampler};
 use crate::wfc_engine::model::CompiledModel;
 use crate::wfc_engine::nogood::{NogoodConfig, NogoodIndex};
 use crate::wfc_engine::outcome::{ContradictionReport, PartialState, RunReport, Solution, SolveOutcome, UnsatReport};
@@ -464,12 +465,79 @@ fn initialize<T: Topology>(model: &CompiledModel, topo: &T, init_domains: Option
 /// 🌳️ Applies `init_domains` (or full domains) and `fixed` pins, runs initial propagation, then
 /// drives search per `config` until solved, proven unsatisfiable, or a budget/restart limit stops
 /// the attempt. `init_domains`, when present, must have one entry per node.
-pub(crate) fn solve<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)]) -> SolveOutcome {
-    solve_inner(model, topo, config, seed, init_domains, fixed, None, None)
+pub(crate) fn solve<T: Topology + Clone + Send>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)]) -> SolveOutcome {
+    drive_batch_job(model, topo, config, seed, init_domains, fixed, None)
 }
 
-pub(crate) fn solve_cancellable<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], cancel: &CancelToken) -> SolveOutcome {
-    solve_inner(model, topo, config, seed, init_domains, fixed, Some(cancel), None)
+pub(crate) fn solve_cancellable<T: Topology + Clone + Send>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], cancel: &CancelToken) -> SolveOutcome {
+    drive_batch_job(model, topo, config, seed, init_domains, fixed, Some(cancel))
+}
+
+fn drive_batch_job<T: Topology + Clone + Send>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], cancel: Option<&CancelToken>) -> SolveOutcome {
+    use semio_framework_job::{allocate_operation_id, root_cancel_token, Generation, InteractiveJob, Operation, RevisionId, StepBudget, StepContext};
+
+    if config.mode == SearchMode::RestartOnly || config.nogood.enabled {
+        return solve_inner(model, topo, config, seed, init_domains, fixed, cancel, None);
+    }
+
+    let start = std::time::Instant::now();
+    let operation = Operation::new(allocate_operation_id(), RevisionId(0), Generation(0), seed);
+    let job_config = WfcJobConfig {
+        sampler: match config.sampler {
+            ValueSampler::WeightedRoulette => WfcSampler::WeightedRoulette,
+            ValueSampler::Uniform => WfcSampler::Uniform,
+        },
+    };
+    let mut job = WfcJob::new(operation, model.clone(), topo.clone(), job_config, init_domains.map(<[PatternSet]>::to_vec), fixed.to_vec());
+    let mut sequence = 0;
+    let mut batch_slices = 0u32;
+    loop {
+        let masks = job.domain_masks();
+        let decided = masks.iter().map(|domain| (domain.count_ones() == 1).then(|| domain.first_set().expect("singleton WFC domain"))).collect();
+        let partial = PartialState { domains: masks, decided };
+        let (observations, propagations, backtracks) = job.metrics();
+        let metrics = Metrics { observations, propagations, backtracks, elapsed_millis: start.elapsed().as_millis() as u64, ..Metrics::default() };
+        let run_report = |terminal: Event, observed: &[(NodeId, PatternId)]| {
+            let mut events = Vec::new();
+            if config.diag_level >= DiagLevel::Decisions {
+                events.extend(observed.iter().map(|&(node, chosen)| Event::Observed { node, chosen }));
+            }
+            if config.diag_level != DiagLevel::Off {
+                events.push(terminal);
+            }
+            RunReport { metrics, model_fingerprint: model.fingerprint(), seed, events }
+        };
+        if cancel.is_some_and(CancelToken::is_cancelled) {
+            return SolveOutcome::Cancelled { partial, report: run_report(Event::BudgetExceeded, job.observed()) };
+        }
+        if config.budget.max_observations.is_some_and(|limit| observations >= limit) || config.budget.max_backtracks.is_some_and(|limit| backtracks >= limit) || config.budget.max_millis.is_some_and(|limit| metrics.elapsed_millis >= limit) {
+            return SolveOutcome::BudgetExceeded { partial, report: run_report(Event::BudgetExceeded, job.observed()) };
+        }
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(4_096, u64::MAX), root_cancel_token(), || 0, &mut sequence);
+        batch_slices += 1;
+        if batch_slices > 16 {
+            return solve_inner(model, topo, config, seed, init_domains, fixed, cancel, None);
+        }
+        match job.step(&mut context) {
+            semio_framework_job::StepOutcome::Complete(_) => {
+                let commit = job.commit().expect("completed WFC batch job has commit");
+                let assignment = commit.assignment.into_iter().map(PatternId).collect();
+                return SolveOutcome::Solved(Solution { assignment, report: run_report(Event::Solved, job.observed()) });
+            }
+            semio_framework_job::StepOutcome::Fault(fault) if fault.detail == b"wfc-unsatisfiable" => {
+                let report = run_report(Event::Contradiction { node: NodeId(0) }, job.observed());
+                if config.mode == SearchMode::RestartOnly {
+                    return SolveOutcome::Contradiction(ContradictionReport { node: NodeId(0), report });
+                }
+                return SolveOutcome::Unsatisfiable(UnsatReport { proven: true, report });
+            }
+            semio_framework_job::StepOutcome::Fault(_) => {
+                return SolveOutcome::Contradiction(ContradictionReport { node: NodeId(0), report: run_report(Event::Contradiction { node: NodeId(0) }, job.observed()) });
+            }
+            semio_framework_job::StepOutcome::Cancelled => return SolveOutcome::Cancelled { partial, report: run_report(Event::BudgetExceeded, job.observed()) },
+            semio_framework_job::StepOutcome::Yield | semio_framework_job::StepOutcome::PreviewReady(_) | semio_framework_job::StepOutcome::CheckpointReady(_) => {}
+        }
+    }
 }
 
 /// 🌳️ Like [`solve`], but also applies every constraint's initial restriction and rejects (via an

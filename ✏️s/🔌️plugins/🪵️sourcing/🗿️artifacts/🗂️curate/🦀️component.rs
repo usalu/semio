@@ -254,7 +254,7 @@ pub async fn stock_of(document: &CurateSnapshot) -> Vec<ObjectKind> {
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
 /// `crate::editor::sourcing::create_sourcing_curate_app`'s `🔖️Manifest` region.
-pub async fn artifact_kind() -> ArtifactKindSpec {
+pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "catalogue.sourcing".into(),
         name: "Sourcing Curation".into(),
@@ -323,7 +323,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
 /// `declaration()`/`ArtifactDeclaration::builder(...)` channel outright (atomic cutover with the
 /// plugin root edit — no dual registration). `localization: &[]` is a documented shortfall: the
 /// real en/de localized names still live on `definition()`'s kept capability rows (debt D1).
-pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::SourcingApps> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.sourcing.curate").expect("canonical sourcing.curate kind"), localization: &[], standards: vec![crate::artifacts::curate::standards::v1::standard()] }

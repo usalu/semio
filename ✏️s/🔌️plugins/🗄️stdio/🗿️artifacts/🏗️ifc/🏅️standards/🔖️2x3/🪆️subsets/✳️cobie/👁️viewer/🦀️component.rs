@@ -9,7 +9,7 @@ use crate::artifacts::ifc::standards::v2x3::subsets::cobie::schema::snapshot::If
 use crate::viewer::ifc2x3_cobie::modes::view;
 use crate::viewer::ifc2x3_cobie::modes::view::windows::main;
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Dialect

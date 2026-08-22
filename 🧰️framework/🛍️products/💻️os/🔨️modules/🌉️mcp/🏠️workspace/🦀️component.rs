@@ -13,25 +13,20 @@
 //! backbone propagation pipeline end to end (§`🔖️ProbeDocument` below), it uses a generic
 //! JSON-valued document of its own — never a note-specific type this crate has no business knowing.
 
-use crate::__semio_dispatch_ArtifactChannel;
-use crate::__semio_dispatch_GatewayBackend;
-use crate::actions::MockArtifactChannel;
-use crate::{CapabilityOwner, Catalog, ContextSummary, GatewayBackend, GatewayError, GatewayErrorCode, NullBackend, Resource, ResourceContent, SearchFilters};
+use crate::actions::{ArtifactChannel, MockArtifactChannel};
+use crate::{
+    AppCommand, AppFrame, CapabilityOwner, Catalog, ContextSummary, Fault, GatewayBackend, GatewayError, GatewayErrorCode, InvocationReport, NullBackend, PreparedActionReport, Resource,
+    ResourceContent, RevisionStamp, SearchFilters, SearchHit,
+};
 use semio_framework_dispatch_macros::dyn_enum_close;
-use semio_framework_plugin_host::{GuestRuntime, GuestRuntimes};
+use semio_framework_plugin_host::OwnedRuntime;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
 fn workspace_worker_pool() -> Arc<semio_framework_async::WorkerPool> {
-    static POOL: std::sync::OnceLock<semio_framework_async::WorkerPool> = std::sync::OnceLock::new();
-    Arc::new(
-        POOL.get_or_init(|| {
-            let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
-            semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, cores))
-        })
-        .clone(),
-    )
+    let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
+    Arc::new(semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores)))
 }
 
 //#region 🔖️PluginPaths
@@ -308,7 +303,7 @@ pub struct PluginActivationOutcome {
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn activate_plugin_instance(
-    runtime: &GuestRuntimes,
+    runtime: &OwnedRuntime,
     repo_root: &Path,
     entry: &PluginRegistryEntry,
     descriptor: &semio_framework::PackageDescriptor,
@@ -320,9 +315,9 @@ pub fn activate_plugin_instance(
     let bytes = std::fs::read(&wasm_path).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("reading {}: {error}", wasm_path.display())))?;
     let package_hash = framework_hash::hash_bytes(&bytes).into_bytes();
     let package = semio_framework_plugin_host::PackageRef { package: semio_framework_plugin_host::PackageId(entry.plugin_id.clone()), hash: semio_framework_plugin_host::PackageHash(package_hash.try_into().unwrap_or([0u8; 32])) };
-    let compiled = runtime.compile(&package, &bytes).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("compiling `{}`: {error}", entry.plugin_id)))?;
+    let compiled = runtime.compile_component(&package, &bytes).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("compiling `{}`: {error}", entry.plugin_id)))?;
 
-    let actor = semio_framework_actor::ActorId::new(plugin_ordinal, 0, 1, 0);
+    let actor = semio_framework::io::resolve_ready(semio_framework_actor::ActorId::new(plugin_ordinal, 0, 1, 0));
     // 🎟️ Every capability the descriptor requests is granted with a zero token/no expiry — the REAL
     // broker (`P6-actions-policy`'s `AgentBroker`) belongs one layer up, gating which scopes an agent
     // principal is even allowed to request before an instance is ever opened; this is the narrowest
@@ -330,8 +325,8 @@ pub fn activate_plugin_instance(
     // decision this packet is authorized to make for real (§2 of the brief: `🛡️policy` is P6's).
     let caps: Vec<semio_framework::kernel::BrokerCapabilityGrant> =
         descriptor.capability_requests.iter().map(|request| semio_framework::kernel::BrokerCapabilityGrant { token: semio_framework::CapabilityToken(0), id: request.id.clone(), scope: request.scope.clone(), expires_ms: None }).collect();
-    let budget = semio_framework::kernel::Budget { fuel: 10_000_000, deadline_ms: 5_000, max_effects: 256, max_patch_bytes: 1 << 20, max_frames: 256 };
-    let mut instance = runtime.instantiate(&compiled, actor, &caps, &budget).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("instantiating `{}`: {error}", entry.plugin_id)))?;
+    let budget = owned_interactive_budget();
+    let mut instance = runtime.instantiate_actor(&compiled, actor).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("instantiating `{}`: {error}", entry.plugin_id)))?;
 
     let open_event = semio_framework::kernel::Event::InstanceOpen {
         instance: semio_framework::kernel::PluginInstanceId(format!("{}#{}", entry.plugin_id, actor_label)),
@@ -342,7 +337,7 @@ pub fn activate_plugin_instance(
         capabilities: caps,
         quotas: descriptor.quotas.clone(),
     };
-    let turn = semio_framework_plugin_host::poll_ready(runtime.execute_turn(&mut instance, &[open_event], budget)).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("`{}` InstanceOpen turn faulted: {error}", entry.plugin_id)))?;
+    let turn = runtime.execute_actor_turn(&mut instance, &[open_event], budget).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("`{}` InstanceOpen turn faulted: {error}", entry.plugin_id)))?;
     let turn_status = format!("{:?}", turn.status);
     let outcome = PluginActivationOutcome { plugin_id: entry.plugin_id.clone(), app_id: app_ref.app_id.clone(), actor, turn_status, effects_emitted: turn.effects.len(), fuel_used: turn.fuel_used };
     Ok((instance, outcome))
@@ -368,82 +363,151 @@ pub fn activate_plugin_instance(
 /// never a fabricated result.
 #[cfg(not(target_arch = "wasm32"))]
 pub struct PluginArtifactChannel {
-    runtime: Arc<GuestRuntimes>,
-    repo_root: PathBuf,
+    runtime: Arc<OwnedRuntime>,
+    compiled: semio_framework_plugin_host::CompiledHandle,
     entry: PluginRegistryEntry,
     descriptor: semio_framework::PackageDescriptor,
     app_ref: semio_framework::AppRef,
     actor_label: String,
     instances: HashMap<u32, semio_framework_plugin_host::GuestInstance>,
+    opening: HashMap<u32, semio_framework_plugin_host::GuestInstance>,
+    pending_exchanges: HashMap<u32, PendingExchange>,
     next_seq: u64,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct PendingExchange {
+    command: store::AppCommand,
+    seq: u64,
+    awaiting_response: bool,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn owned_interactive_budget() -> semio_framework::kernel::Budget {
+    semio_framework::kernel::Budget { fuel: 2_000_000, deadline_ms: 8, max_effects: 256, max_patch_bytes: 1 << 20, max_frames: 256 }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 impl PluginArtifactChannel {
     pub fn new(repo_root: PathBuf, entry: PluginRegistryEntry, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String) -> Result<Self, GatewayError> {
-        let runtime: Arc<GuestRuntimes> = Arc::new(GuestRuntimes::Wasmtime(
-            semio_framework_plugin_host::WasmtimeRuntime::new(semio_framework_plugin_host::SharedEngineConfig::default()).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("building the shared wasmtime engine: {error}")))?,
-        ));
-        Ok(Self { runtime, repo_root, entry, descriptor, app_ref, actor_label, instances: HashMap::new(), next_seq: 1 })
+        let runtime = Arc::new(OwnedRuntime::new());
+        let wasm_path = resolve_plugin_wasm_path(&repo_root, &entry)?;
+        let bytes = std::fs::read(&wasm_path).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("reading {}: {error}", wasm_path.display())))?;
+        let package_hash = framework_hash::hash_bytes(&bytes).into_bytes();
+        let package = semio_framework_plugin_host::PackageRef { package: semio_framework_plugin_host::PackageId(entry.plugin_id.clone()), hash: semio_framework_plugin_host::PackageHash(package_hash.try_into().unwrap_or([0u8; 32])) };
+        let compiled = runtime.compile_component(&package, &bytes).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("compiling `{}`: {error}", entry.plugin_id)))?;
+        Ok(Self { runtime, compiled, entry, descriptor, app_ref, actor_label, instances: HashMap::new(), opening: HashMap::new(), pending_exchanges: HashMap::new(), next_seq: 1 })
     }
 
-    fn not_wired(what: &str, detail: impl std::fmt::Display) -> crate::actions::Fault {
-        crate::actions::Fault { code: "channel.not-wired".to_string(), message: format!("{what}: {detail}") }
+    fn not_wired(what: &str, detail: impl std::fmt::Display) -> Fault {
+        Fault { code: "channel.not-wired".to_string(), message: format!("{what}: {detail}") }
     }
 
-    fn transport_fault(error: GatewayError) -> crate::actions::Fault {
-        crate::actions::Fault { code: "channel.transport-error".to_string(), message: format!("{:?}: {}", error.code, error.message) }
+    fn budget_fault(what: &str) -> Fault {
+        Fault { code: "budget.exceeded".to_string(), message: format!("{what} yielded after the 8 ms owned-interpreter slice; retry to resume") }
     }
 
-    fn ensure_instance(&mut self, instance: u32) -> Result<(), crate::actions::Fault> {
+    fn ensure_instance(&mut self, instance: u32) -> Result<(), Fault> {
         if self.instances.contains_key(&instance) {
             return Ok(());
         }
-        let (guest, outcome) = activate_plugin_instance(self.runtime.as_ref(), &self.repo_root, &self.entry, &self.descriptor, &self.app_ref, &self.actor_label, (instance as u16).wrapping_add(1)).map_err(Self::transport_fault)?;
-        if outcome.turn_status != "Idle" && outcome.turn_status != "MoreWork" {
-            return Err(Self::not_wired("InstanceOpen did not settle cleanly", outcome.turn_status));
+        if !self.opening.contains_key(&instance) {
+            let actor = semio_framework::io::resolve_ready(semio_framework_actor::ActorId::new((instance as u16).wrapping_add(1), 0, 1, 0));
+            let guest = self.runtime.instantiate_actor(&self.compiled, actor).map_err(|error| Self::not_wired("instantiate", error))?;
+            self.opening.insert(instance, guest);
         }
-        self.instances.insert(instance, guest);
-        Ok(())
+        let caps: Vec<semio_framework::kernel::BrokerCapabilityGrant> = self
+            .descriptor
+            .capability_requests
+            .iter()
+            .map(|request| semio_framework::kernel::BrokerCapabilityGrant { token: semio_framework::CapabilityToken(0), id: request.id.clone(), scope: request.scope.clone(), expires_ms: None })
+            .collect();
+        let event = semio_framework::kernel::Event::InstanceOpen {
+            instance: semio_framework::kernel::PluginInstanceId(format!("{}#{}", self.entry.plugin_id, self.actor_label)),
+            app_id: semio_framework::kernel::AppInstanceId(self.app_ref.app_id.clone()),
+            actor: self.actor_label.clone(),
+            config: Vec::new(),
+            assets: Vec::new(),
+            capabilities: caps,
+            quotas: self.descriptor.quotas.clone(),
+        };
+        let guest = self.opening.get_mut(&instance).expect("opening instance was inserted");
+        match self.runtime.execute_actor_turn(guest, &[event], owned_interactive_budget()) {
+            Ok(turn) if matches!(turn.status, semio_framework::kernel::TurnStatus::Idle | semio_framework::kernel::TurnStatus::MoreWork) => {
+                let guest = self.opening.remove(&instance).expect("opening instance completed");
+                self.instances.insert(instance, guest);
+                Err(Self::budget_fault("InstanceOpen completed"))
+            }
+            Ok(turn) => Err(Self::not_wired("InstanceOpen did not settle cleanly", format!("{:?}", turn.status))),
+            Err(semio_framework_plugin_host::TurnFault::DeadlineExceeded | semio_framework_plugin_host::TurnFault::FuelExhausted) => Err(Self::budget_fault("InstanceOpen")),
+            Err(error) => Err(Self::not_wired("InstanceOpen", error)),
+        }
     }
 
     /// 🔁️ One `AppCommand` -> real `Event::AppCommandEvent{instance, seq, command: wire(command)}` ->
     /// `execute_turn` -> the matching `Effect::Respond{req, result}` decoded as a real `AppFrame`.
-    fn exchange_one_real(&mut self, instance: u32, real_command: store::AppCommand) -> Result<store::AppFrame, crate::actions::Fault> {
-        let seq = self.next_seq;
-        self.next_seq += 1;
-        let command_bytes = store::encode_app_command(&real_command);
+    fn exchange_one_real(&mut self, instance: u32, real_command: store::AppCommand) -> Result<store::AppFrame, Fault> {
+        let (seq, awaiting_response) = match self.pending_exchanges.get(&instance) {
+            Some(pending) if pending.command == real_command => (pending.seq, pending.awaiting_response),
+            Some(_) => return Err(Self::not_wired("exchange", format!("instance {instance} already has another resumable command"))),
+            None => {
+                let seq = self.next_seq;
+                self.next_seq += 1;
+                self.pending_exchanges.insert(instance, PendingExchange { command: real_command.clone(), seq, awaiting_response: false });
+                (seq, false)
+            }
+        };
+        let command_bytes = semio_framework::io::resolve_ready(store::encode_app_command(&real_command));
         let guest = self.instances.get_mut(&instance).ok_or_else(|| Self::not_wired("exchange", format!("no open instance {instance}")))?;
-        let budget = semio_framework::kernel::Budget { fuel: 10_000_000, deadline_ms: 5_000, max_effects: 256, max_patch_bytes: 1 << 20, max_frames: 256 };
         let event = semio_framework::kernel::Event::AppCommandEvent { instance: semio_framework::kernel::PluginInstanceId(format!("{}#{}", self.entry.plugin_id, self.actor_label)), seq, command: command_bytes };
-        let turn = semio_framework_plugin_host::poll_ready(self.runtime.execute_turn(guest, &[event], budget)).map_err(|error| Self::not_wired("execute_turn", error))?;
+        let events = if awaiting_response { &[][..] } else { std::slice::from_ref(&event) };
+        let turn = match self.runtime.execute_actor_turn(guest, events, owned_interactive_budget()) {
+            Ok(turn) => turn,
+            Err(semio_framework_plugin_host::TurnFault::DeadlineExceeded | semio_framework_plugin_host::TurnFault::FuelExhausted) => return Err(Self::budget_fault("AppCommand")),
+            Err(error) => {
+                self.pending_exchanges.remove(&instance);
+                return Err(Self::not_wired("execute_turn", error));
+            }
+        };
         for effect in turn.effects {
             if let semio_framework::kernel::Effect::Respond { req, result } = effect {
                 if req.0 != seq {
                     continue;
                 }
+                self.pending_exchanges.remove(&instance);
                 return match result {
-                    semio_framework::kernel::RequestOutcome::Ok(bytes) => store::decode_app_frame(&bytes).map_err(|error| Self::not_wired("decoding AppFrame", error)),
-                    semio_framework::kernel::RequestOutcome::Err(bytes) => Err(crate::actions::Fault { code: "mutation.rejected".to_string(), message: format!("guest rejected seq {seq} ({} bytes of fault detail)", bytes.len()) }),
+                    semio_framework::kernel::RequestOutcome::Ok(bytes) => semio_framework::io::resolve_ready(store::decode_app_frame(&bytes)).map_err(|error| Self::not_wired("decoding AppFrame", error)),
+                    semio_framework::kernel::RequestOutcome::Err(bytes) => Err(Fault { code: "mutation.rejected".to_string(), message: format!("guest rejected seq {seq} ({} bytes of fault detail)", bytes.len()) }),
                 };
             }
         }
-        Err(Self::not_wired("execute_turn", format!("no Effect::Respond for seq {seq} in this turn (status {:?})", turn.status)))
+        if matches!(turn.status, semio_framework::kernel::TurnStatus::MoreWork) {
+            if let Some(pending) = self.pending_exchanges.get_mut(&instance) {
+                pending.awaiting_response = true;
+            }
+            Err(Self::budget_fault("AppCommand response"))
+        } else {
+            self.pending_exchanges.remove(&instance);
+            Err(Self::not_wired("execute_turn", format!("no Effect::Respond for seq {seq} in this turn (status {:?})", turn.status)))
+        }
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl crate::actions::ArtifactChannel for PluginArtifactChannel {
-    fn exchange(&mut self, instance: u32, commands: Vec<crate::actions::AppCommand>) -> Result<Vec<crate::actions::AppFrame>, crate::actions::Fault> {
+impl ArtifactChannel for PluginArtifactChannel {
+    fn exchange(&mut self, instance: u32, commands: Vec<AppCommand>) -> Result<Vec<AppFrame>, Fault> {
+        if commands.len() != 1 {
+            return Err(Self::not_wired("exchange", format!("expected exactly one command, received {}", commands.len())));
+        }
         self.ensure_instance(instance)?;
         let mut frames = Vec::with_capacity(commands.len());
         for command in commands {
             let frame = match command {
-                crate::actions::AppCommand::ReadHistory => match self.exchange_one_real(instance, store::AppCommand::ReadHistory { seq: 0 })? {
+                AppCommand::ReadHistory => match self.exchange_one_real(instance, store::AppCommand::ReadHistory { seq: 0 })? {
                     store::AppFrame::HistorySnapshot { history_patch, .. } => {
                         let value = store::pack_rt::decode_wire_value(&history_patch).map_err(|error| Self::not_wired("decoding HistoryPatch", error))?;
                         let patch: semio_framework::kernel::HistoryPatch = store::from_dsl_value(value).map_err(|error| Self::not_wired("decoding HistoryPatch", error))?;
-                        crate::actions::AppFrame::HistorySnapshot(crate::schema::RevisionStamp {
+                        AppFrame::HistorySnapshot(RevisionStamp {
                             artifact_id: self.entry.plugin_id.clone(),
                             head_edit_id: patch.upserts.first().map(|entry| entry.action_id.clone()).unwrap_or_default(),
                             cursor: patch.cursor.to_string(),
@@ -451,14 +515,14 @@ impl crate::actions::ArtifactChannel for PluginArtifactChannel {
                     }
                     other => return Err(Self::not_wired("ReadHistory", format!("unexpected real AppFrame variant {other:?}"))),
                 },
-                crate::actions::AppCommand::PureCommand { capability_id, .. } => {
-                    return Err(Self::not_wired("PureCommand", format!("`{capability_id}` needs a headless ActionAddress convention this packet does not invent — see this region's own doc")))
+                AppCommand::PureCommand { capability_id, .. } => {
+                    return Err(Self::not_wired("PureCommand", format!("`{capability_id}` needs a headless ActionAddress convention this packet does not invent — see this region's own doc")));
                 }
-                crate::actions::AppCommand::TransactionPrepare { .. } => return Err(Self::not_wired("TransactionPrepare", "same ActionAddress gap as PureCommand")),
-                crate::actions::AppCommand::TransactionCommit { .. } => return Err(Self::not_wired("TransactionCommit", "no prior real TransactionPrepare to commit")),
-                crate::actions::AppCommand::TransactionRollback { .. } => return Err(Self::not_wired("TransactionRollback", "no prior real TransactionPrepare to roll back")),
-                crate::actions::AppCommand::TransactionUndo { .. } => return Err(Self::not_wired("TransactionUndo", "no real committed transaction group to undo")),
-                crate::actions::AppCommand::TransactionRedo { .. } => return Err(Self::not_wired("TransactionRedo", "no real undone transaction group to redo")),
+                AppCommand::TransactionPrepare { .. } => return Err(Self::not_wired("TransactionPrepare", "same ActionAddress gap as PureCommand")),
+                AppCommand::TransactionCommit { .. } => return Err(Self::not_wired("TransactionCommit", "no prior real TransactionPrepare to commit")),
+                AppCommand::TransactionRollback { .. } => return Err(Self::not_wired("TransactionRollback", "no prior real TransactionPrepare to roll back")),
+                AppCommand::TransactionUndo { .. } => return Err(Self::not_wired("TransactionUndo", "no real committed transaction group to undo")),
+                AppCommand::TransactionRedo { .. } => return Err(Self::not_wired("TransactionRedo", "no real undone transaction group to redo")),
             };
             frames.push(frame);
         }
@@ -491,7 +555,7 @@ pub struct HeadlessWorkspace {
     catalog: Arc<Catalog>,
     /// 🧵️ Every document this workspace has opened a live `ProbeStore`/backbone attachment for —
     /// `artifact_open`/`ensure_probe_artifact` populate this; `resolve_context`/`read_resource` read
-    /// through it first before falling back to a cold `FolderSqliteStorage` read.
+    /// through it first before falling back to a cold `FolderEventLogStorage` read.
     open_probes: Mutex<HashMap<String, ProbeStore>>,
 }
 
@@ -524,7 +588,7 @@ impl HeadlessWorkspace {
     /// 🗂️ Every document id currently known to this workspace: the union of (a) every id this
     /// workspace has itself opened a live `ProbeStore` for (`self.open_probes` — populated
     /// SYNCHRONOUSLY by `ensure_probe_artifact`, before this call can ever see it) and (b) whatever
-    /// is already durably persisted on disk (`FolderSqliteStorage`'s `document` table).
+    /// is already durably persisted on disk (`FolderEventLogStorage`'s document events).
     ///
     /// 🪲️ Post-unblock fix (see `📓️terra-P7-report.md`'s "## post-unblock fixes"): this used to
     /// consult ONLY (b). `ArtifactHost::open`'s actor persists asynchronously on its own thread —
@@ -537,8 +601,8 @@ impl HeadlessWorkspace {
     pub fn workspace_artifact_ids(&self) -> Result<Vec<String>, GatewayError> {
         let mut ids: std::collections::BTreeSet<String> = self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).keys().cloned().collect();
         if let WorkspaceOrigin::Folder { path } = &self.origin {
-            let storage = store::sync::FolderSqliteStorage::new(path.clone());
-            let persisted = storage.document_ids().map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("listing {}: {error}", path.display())))?;
+            let storage = store::sync::FolderEventLogStorage::new(path.clone());
+            let persisted = semio_framework::io::resolve_ready(storage.document_ids()).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("listing {}: {error}", path.display())))?;
             ids.extend(persisted);
         }
         Ok(ids.into_iter().collect())
@@ -546,19 +610,19 @@ impl HeadlessWorkspace {
 
     /// 📖️ One document's real pack+spr bytes: the LIVE in-memory `ProbeStore` snapshot
     /// (`ArtifactStore::snapshot_pack`, real bytes, no cross-thread wait) when this workspace has one
-    /// open for `artifact_id`, else a cold `FolderSqliteStorage` read (host-opaque either way — no
+    /// open for `artifact_id`, else a cold `FolderEventLogStorage` read (host-opaque either way — no
     /// codec, no interpretation). `None` for a hub binding with no live store open, or a folder id
     /// with neither an open store nor a persisted row. Same race fix as `workspace_artifact_ids` —
     /// see that method's own doc.
     pub fn read_artifact_bytes(&self, artifact_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, GatewayError> {
         if let Some(probe_store) = self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(artifact_id) {
-            let files = probe_store.snapshot_pack().map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("snapshotting `{artifact_id}`: {error}")))?;
+            let files = semio_framework::io::resolve_ready(probe_store.snapshot_pack()).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("snapshotting `{artifact_id}`: {error}")))?;
             return Ok(Some((files.pack, files.spr)));
         }
         match &self.origin {
             WorkspaceOrigin::Folder { path } => {
-                let storage = store::sync::FolderSqliteStorage::new(path.clone());
-                storage.read(artifact_id).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("reading `{artifact_id}`: {error}")))
+                let storage = store::sync::FolderEventLogStorage::new(path.clone());
+                semio_framework::io::resolve_ready(storage.read(artifact_id)).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("reading `{artifact_id}`: {error}")))
             }
             WorkspaceOrigin::Hub { .. } => Ok(None),
         }
@@ -570,30 +634,42 @@ impl HeadlessWorkspace {
     /// `ArtifactEvent::RemoteMutations` come back as guest events"). Applies `initial` as the FIRST
     /// commit only if the document has no history yet, so re-running this against an already-seeded
     /// workspace is idempotent and never double-commits. Returns the resulting `RevisionStamp`.
-    pub fn ensure_probe_artifact(&self, artifact_id: &str, initial: serde_json::Value) -> Result<crate::RevisionStamp, GatewayError> {
-        let mut guard = self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        if !guard.contains_key(artifact_id) {
-            let envelope = store::create_document_envelope::<ProbeSnapshot, ProbeMutation>(PROBE_SCHEMA, artifact_id, ProbeSnapshot::default(), None);
-            let mut probe_store = ProbeStore::new(envelope).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("constructing probe store for `{artifact_id}`: {error}")))?;
-            let channels = self.artifact_host.open(store::sync::ArtifactActorConfig {
-                document_id: artifact_id.to_string(),
-                schema: PROBE_SCHEMA.to_string(),
-                bindings: vec![self.origin.persistence_binding()],
-                watch_external: self.origin.watch_external(),
-                actor: self.actor_label(),
-            });
-            probe_store.attach_backbone(Box::new(channels.channel_backbone)).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("attaching backbone for `{artifact_id}`: {error}")))?;
-            guard.insert(artifact_id.to_string(), probe_store);
-        }
-        let probe_store = guard.get_mut(artifact_id).expect("just inserted or already present");
-        if probe_store.applied_edit_ids().is_empty() {
+    pub async fn ensure_probe_artifact(&self, artifact_id: &str, initial: serde_json::Value) -> Result<RevisionStamp, GatewayError> {
+        let existing = self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(artifact_id);
+        let mut probe_store = match existing {
+            Some(probe_store) => probe_store,
+            None => {
+                let envelope = store::create_document_envelope::<ProbeSnapshot, ProbeMutation>(PROBE_SCHEMA, artifact_id, ProbeSnapshot::default(), None);
+                let mut probe_store = ProbeStore::new(envelope).await.map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("constructing probe store for `{artifact_id}`: {error}")))?;
+                let channels = self
+                    .artifact_host
+                    .open(store::sync::ArtifactActorConfig {
+                        document_id: artifact_id.to_string(),
+                        schema: PROBE_SCHEMA.to_string(),
+                        bindings: vec![self.origin.persistence_binding()],
+                        watch_external: self.origin.watch_external(),
+                        actor: self.actor_label(),
+                    })
+                    .await;
+                probe_store
+                    .attach_backbone(store::Backbones::Channel(channels.channel_backbone))
+                    .await
+                    .map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("attaching backbone for `{artifact_id}`: {error}")))?;
+                probe_store
+            }
+        };
+        if probe_store.applied_edit_ids().await.is_empty() {
             probe_store
                 .dispatch(store::ArtifactCommand::Apply { mutations: vec![ProbeMutation::SetValue(initial)], description: Some("os.agent headless seed".to_string()) })
+                .await
                 .map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("seeding `{artifact_id}`: {error}")))?;
-            self.artifact_host.send(artifact_id, store::sync::ArtifactActorMsg::LocalMutations { envelopes: Vec::new() });
+            self.artifact_host.send(artifact_id, store::sync::ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).await;
         }
-        let head_edit_id = probe_store.applied_edit_ids().last().cloned().unwrap_or_default();
-        Ok(crate::RevisionStamp { artifact_id: artifact_id.to_string(), head_edit_id, cursor: probe_store.applied_edit_ids().len().to_string() })
+        let applied_edit_ids = probe_store.applied_edit_ids().await;
+        let head_edit_id = applied_edit_ids.last().cloned().unwrap_or_default();
+        let revision = RevisionStamp { artifact_id: artifact_id.to_string(), head_edit_id, cursor: applied_edit_ids.len().to_string() };
+        self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(artifact_id.to_string(), probe_store);
+        Ok(revision)
     }
 
     /// 🔌️ Best-effort real activation attempt for `plugin_id` — see `activate_plugin_instance`'s own
@@ -606,11 +682,9 @@ impl HeadlessWorkspace {
         let descriptor = load_package_descriptor(&entry.owner_root)?;
         let editor_app = descriptor.manifest.apps.iter().find(|app| app.role == semio_framework::AppRole::Editor).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("plugin `{plugin_id}` declares no editor app")))?;
         let app_ref = semio_framework::AppRef { plugin_id: plugin_id.to_string(), app_id: editor_app.id.clone() };
-        let runtime = GuestRuntimes::Wasmtime(
-            semio_framework_plugin_host::WasmtimeRuntime::new(semio_framework_plugin_host::SharedEngineConfig::default()).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("building the shared wasmtime engine: {error}")))?,
-        );
+        let runtime = OwnedRuntime::new();
         let (guest, outcome) = activate_plugin_instance(&runtime, &repo_root, entry, &descriptor, &app_ref, &self.actor_label(), 1)?;
-        runtime.drop_instance(guest);
+        runtime.drop_actor(guest);
         Ok(outcome)
     }
 
@@ -636,13 +710,13 @@ impl GatewayBackend for HeadlessWorkspace {
         Ok(crate::resolve_context(&self.catalog, self.session_id.clone(), principal, self.scopes.clone(), active_artifact_id, "en"))
     }
 
-    fn search_capabilities(&self, query: &str) -> Result<Vec<crate::SearchHit>, GatewayError> {
+    fn search_capabilities(&self, query: &str) -> Result<Vec<SearchHit>, GatewayError> {
         let filters = SearchFilters { kind: Vec::new(), owner: None, artifact_kind: None, requires_scope: None };
         let hits = crate::search(&self.catalog, query, &filters);
         Ok(hits
             .into_iter()
             .filter_map(|hit| {
-                self.catalog.get(&hit.capability_id).map(|capability| crate::SearchHit {
+                self.catalog.get(&hit.capability_id).map(|capability| SearchHit {
                     capability_id: capability.id.to_string(),
                     title: capability.title.clone(),
                     description: capability.description.clone(),
@@ -666,11 +740,11 @@ impl GatewayBackend for HeadlessWorkspace {
     /// `🛡️policy` are P6's and are being written right now in parallel — do not touch them"). This
     /// backend defines its side of the seam honestly rather than half-implementing P6's job: a
     /// well-formed `PLUGIN_UNAVAILABLE`, never fabricated.
-    fn prepare_action(&self, _capability_id: &str, _input: serde_json::Value, _expected_revision: Option<crate::RevisionStamp>) -> Result<crate::PreparedActionReport, GatewayError> {
+    fn prepare_action(&self, _capability_id: &str, _input: serde_json::Value, _expected_revision: Option<RevisionStamp>) -> Result<PreparedActionReport, GatewayError> {
         Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "action.prepare's transaction protocol is P6-actions-policy's territory, not yet wired to this workspace").retryable())
     }
 
-    fn invoke_action(&self, _prepared_handle: &str, _idempotency_key: Option<&str>) -> Result<crate::InvocationReport, GatewayError> {
+    fn invoke_action(&self, _prepared_handle: &str, _idempotency_key: Option<&str>) -> Result<InvocationReport, GatewayError> {
         Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "action.invoke's transaction protocol is P6-actions-policy's territory, not yet wired to this workspace").retryable())
     }
 
@@ -728,7 +802,7 @@ impl GatewayBackend for Arc<HeadlessWorkspace> {
         (**self).resolve_context(principal)
     }
 
-    fn search_capabilities(&self, query: &str) -> Result<Vec<crate::SearchHit>, GatewayError> {
+    fn search_capabilities(&self, query: &str) -> Result<Vec<SearchHit>, GatewayError> {
         (**self).search_capabilities(query)
     }
 
@@ -736,11 +810,11 @@ impl GatewayBackend for Arc<HeadlessWorkspace> {
         (**self).describe_capabilities(capability_id)
     }
 
-    fn prepare_action(&self, capability_id: &str, input: serde_json::Value, expected_revision: Option<crate::RevisionStamp>) -> Result<crate::PreparedActionReport, GatewayError> {
+    fn prepare_action(&self, capability_id: &str, input: serde_json::Value, expected_revision: Option<RevisionStamp>) -> Result<PreparedActionReport, GatewayError> {
         (**self).prepare_action(capability_id, input, expected_revision)
     }
 
-    fn invoke_action(&self, prepared_handle: &str, idempotency_key: Option<&str>) -> Result<crate::InvocationReport, GatewayError> {
+    fn invoke_action(&self, prepared_handle: &str, idempotency_key: Option<&str>) -> Result<InvocationReport, GatewayError> {
         (**self).invoke_action(prepared_handle, idempotency_key)
     }
 
@@ -777,7 +851,7 @@ impl HeadlessWorkspace {
                 Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "artifact schema resolution needs a live plugin instance's `describe()`/manifest, not yet reachable from this workspace for an arbitrary artifact kind").retryable())
             }
             Some("history") => match self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(artifact_id) {
-                Some(probe_store) => Ok(vec![ResourceContent { uri: uri.to_string(), mime_type: Some("application/json".to_string()), text: Some(serde_json::json!({ "appliedEditIds": probe_store.applied_edit_ids() }).to_string()), blob: None }]),
+                Some(probe_store) => Ok(vec![ResourceContent { uri: uri.to_string(), mime_type: Some("application/json".to_string()), text: Some(serde_json::json!({ "appliedEditIds": semio_framework::io::resolve_ready(probe_store.applied_edit_ids()) }).to_string()), blob: None }]),
                 None => Err(GatewayError::new(GatewayErrorCode::NotFound, format!("`{artifact_id}` has no open history in this workspace"))),
             },
             Some("validation") => Ok(vec![ResourceContent { uri: uri.to_string(), mime_type: Some("application/json".to_string()), text: Some(serde_json::json!({ "valid": true, "messages": [] }).to_string()), blob: None }]),
@@ -813,7 +887,7 @@ mod quick {
 
     #[test]
     fn open_folder_creates_the_directory_if_missing() {
-        let dir = tempfile::tempdir().expect("tempdir");
+        let dir = store::test_support::tempdir().expect("tempdir");
         let target = dir.path().join("nested").join("space");
         let workspace = HeadlessWorkspace::open_folder(target.clone(), "agent:test".to_string(), vec!["workspace.read".to_string()], empty_catalog()).expect("opens and creates");
         assert!(target.is_dir());
@@ -822,38 +896,38 @@ mod quick {
 
     #[test]
     fn a_fresh_folder_workspace_lists_zero_artifacts() {
-        let dir = tempfile::tempdir().expect("tempdir");
+        let dir = store::test_support::tempdir().expect("tempdir");
         let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog()).expect("opens");
         assert_eq!(workspace.workspace_artifact_ids().expect("list"), Vec::<String>::new());
     }
 
-    #[test]
-    fn ensure_probe_artifact_seeds_a_real_revision_and_is_idempotent() {
-        let dir = tempfile::tempdir().expect("tempdir");
+    #[tokio::test]
+    async fn ensure_probe_artifact_seeds_a_real_revision_and_is_idempotent() {
+        let dir = store::test_support::tempdir().expect("tempdir");
         let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog()).expect("opens");
-        let first = workspace.ensure_probe_artifact("probe-a", serde_json::json!({ "text": "hello" })).expect("seed");
+        let first = workspace.ensure_probe_artifact("probe-a", serde_json::json!({ "text": "hello" })).await.expect("seed");
         assert_eq!(first.artifact_id, "probe-a");
         assert!(!first.head_edit_id.is_empty(), "a genuinely applied edit has a real edit id");
-        let second = workspace.ensure_probe_artifact("probe-a", serde_json::json!({ "text": "should not apply" })).expect("idempotent re-open");
+        let second = workspace.ensure_probe_artifact("probe-a", serde_json::json!({ "text": "should not apply" })).await.expect("idempotent re-open");
         assert_eq!(first.head_edit_id, second.head_edit_id, "re-calling ensure_probe_artifact never double-commits");
     }
 
-    #[test]
-    fn resolve_context_reports_the_open_probe_artifact_as_active() {
-        let dir = tempfile::tempdir().expect("tempdir");
+    #[tokio::test]
+    async fn resolve_context_reports_the_open_probe_artifact_as_active() {
+        let dir = store::test_support::tempdir().expect("tempdir");
         let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), vec!["workspace.read".to_string()], empty_catalog()).expect("opens");
-        workspace.ensure_probe_artifact("probe-b", serde_json::json!({ "n": 1 })).expect("seed");
+        workspace.ensure_probe_artifact("probe-b", serde_json::json!({ "n": 1 })).await.expect("seed");
         let summary = workspace.resolve_context("agent:test").expect("resolve");
         assert_eq!(summary.principal, "agent:test");
         assert_eq!(summary.active_artifact_id.as_deref(), Some("probe-b"));
         assert!(!summary.session_id.is_empty());
     }
 
-    #[test]
-    fn read_resource_artifact_returns_real_bytes_after_a_commit() {
-        let dir = tempfile::tempdir().expect("tempdir");
+    #[tokio::test]
+    async fn read_resource_artifact_returns_real_bytes_after_a_commit() {
+        let dir = store::test_support::tempdir().expect("tempdir");
         let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog()).expect("opens");
-        workspace.ensure_probe_artifact("probe-c", serde_json::json!({ "n": 42 })).expect("seed");
+        workspace.ensure_probe_artifact("probe-c", serde_json::json!({ "n": 42 })).await.expect("seed");
         let contents = workspace.read_resource("semio://artifact/probe-c").expect("read");
         let body: serde_json::Value = serde_json::from_str(contents[0].text.as_ref().expect("text body")).expect("json body");
         assert!(body["packBytes"].as_u64().unwrap_or(0) > 0, "a real committed edit persists non-empty pack bytes: {body}");
@@ -861,7 +935,7 @@ mod quick {
 
     #[test]
     fn read_resource_on_an_unknown_artifact_is_not_found_not_fabricated() {
-        let dir = tempfile::tempdir().expect("tempdir");
+        let dir = store::test_support::tempdir().expect("tempdir");
         let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog()).expect("opens");
         let error = workspace.read_resource("semio://artifact/does-not-exist").expect_err("must not fabricate");
         assert_eq!(error.code, GatewayErrorCode::NotFound);
@@ -869,7 +943,7 @@ mod quick {
 
     #[test]
     fn prepare_action_and_invoke_action_are_a_well_formed_plugin_unavailable_not_a_panic() {
-        let dir = tempfile::tempdir().expect("tempdir");
+        let dir = store::test_support::tempdir().expect("tempdir");
         let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:test".to_string(), Vec::new(), empty_catalog()).expect("opens");
         let prepare_error = workspace.prepare_action("cad.editor.translateSelection", serde_json::json!({}), None).expect_err("P6 territory");
         assert_eq!(prepare_error.code, GatewayErrorCode::PluginUnavailable);
@@ -907,7 +981,7 @@ mod long {
 
     #[tokio::test]
     async fn a_headless_commit_propagates_to_a_second_host_on_the_same_folder() {
-        let dir = tempfile::tempdir().expect("tempdir");
+        let dir = store::test_support::tempdir().expect("tempdir");
         let agent = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:writer".to_string(), Vec::new(), empty_catalog()).expect("agent opens");
         let shell_host = store::sync::ArtifactHost::new(workspace_worker_pool());
         // 🪲️ Post-unblock fix (see `📓️terra-P7-report.md`'s "## post-unblock fixes"): `subscribe`
@@ -919,32 +993,34 @@ mod long {
         // it. This was this test's own bug, not a gap in `ArtifactHost` or in headless propagation —
         // `Ok(Err(Closed))` (not a timeout) was the tell: the channel was closed from the first poll,
         // never merely slow.
-        let shell_channels = shell_host.open(store::sync::ArtifactActorConfig {
+        let shell_channels = shell_host
+            .open(store::sync::ArtifactActorConfig {
             document_id: "shared-doc".to_string(),
             schema: PROBE_SCHEMA.to_string(),
             bindings: vec![store::sync::PersistenceBinding::Folder { path: dir.path().to_path_buf() }],
             watch_external: true,
             actor: "shell".to_string(),
-        });
-        let mut shell_events = shell_host.subscribe("shared-doc");
+            })
+            .await;
+        let mut shell_events = shell_host.subscribe("shared-doc").await;
         // 🎧️ A second `ProbeStore` (the "live shell") attaches its own backbone end so the store
         // machinery ingests what `subscribe` reports, mirroring how a real shell would.
         let shell_envelope = store::create_document_envelope::<ProbeSnapshot, ProbeMutation>(PROBE_SCHEMA, "shared-doc", ProbeSnapshot::default(), None);
-        let mut shell_store = ProbeStore::new(shell_envelope).expect("shell store");
-        shell_store.attach_backbone(Box::new(shell_channels.channel_backbone)).expect("attach");
+        let mut shell_store = ProbeStore::new(shell_envelope).await.expect("shell store");
+        shell_store.attach_backbone(store::Backbones::Channel(shell_channels.channel_backbone)).await.expect("attach");
 
-        agent.ensure_probe_artifact("shared-doc", serde_json::json!({ "from": "agent" })).expect("agent commits headlessly");
+        agent.ensure_probe_artifact("shared-doc", serde_json::json!({ "from": "agent" })).await.expect("agent commits headlessly");
 
         // 🪲️ Post-unblock fix (see `📓️terra-P7-report.md`'s "## post-unblock fixes"): the agent's
         // own actor persists ASYNCHRONOUSLY, on its own thread — `ensure_probe_artifact` returns as
         // soon as the LOCAL store applied the mutation, before the bytes are necessarily on disk yet.
-        // Wait for the REAL persisted row (`FolderSqliteStorage::read`, the exact same pattern
+        // Wait for the REAL persisted event (`FolderEventLogStorage::read`, the exact same pattern
         // `🏪️store/🔄️sync/🦀️component.rs`'s own `folder_external_edit_delivers_remote_operations`
         // test uses) before expecting the shell's side to see anything.
-        let storage = store::sync::FolderSqliteStorage::new(dir.path().to_path_buf());
+        let storage = store::sync::FolderEventLogStorage::new(dir.path().to_path_buf());
         let write_deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(5);
         loop {
-            if matches!(storage.read("shared-doc"), Ok(Some(_))) {
+            if matches!(storage.read("shared-doc").await, Ok(Some(_))) {
                 break;
             }
             if tokio::time::Instant::now() >= write_deadline {
@@ -961,7 +1037,7 @@ mod long {
         // propagation path, the same deterministic nudge the reference test already establishes as
         // this codebase's own convention for exercising this property without flaking on OS notify
         // latency.
-        shell_channels.cmd_tx.send(store::sync::ArtifactActorMsg::ExternalChanged).expect("poke the shell actor to re-read");
+        shell_host.send("shared-doc", store::sync::ArtifactActorMsg::ExternalChanged).await;
 
         // 🪲️ Widened from 5s to 20s after real flakiness investigation (not a blind bump): with
         // `[DEBUG]` tracing temporarily attached, 9 of 10 runs delivered `RemoteMutations` in well
@@ -980,8 +1056,8 @@ mod long {
                 other => panic!("no RemoteMutations before the 20s deadline: {other:?}"),
             }
         }
-        shell_store.tick().expect("shell ingests the propagated edit");
-        assert_eq!(shell_store.snapshot().expect("shell snapshot").0["from"], "agent", "the shell's own store now sees the agent's headless commit");
+        shell_store.tick().await.expect("shell ingests the propagated edit");
+        assert_eq!(shell_store.snapshot().await.expect("shell snapshot").0["from"], "agent", "the shell's own store now sees the agent's headless commit");
     }
 
     #[test]
@@ -1008,7 +1084,7 @@ mod long {
             eprintln!("skipped: note.wasm not built at target/wasm32-wasip2/{{debug,wasm-release}}");
             return;
         }
-        let dir = tempfile::tempdir().expect("tempdir");
+        let dir = store::test_support::tempdir().expect("tempdir");
         let workspace = HeadlessWorkspace::open_folder(dir.path().to_path_buf(), "agent:activation-test".to_string(), Vec::new(), empty_catalog()).expect("opens");
         match workspace.attempt_plugin_activation("note") {
             Ok(outcome) => {

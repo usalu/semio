@@ -13,7 +13,7 @@ use std::sync::atomic::Ordering;
 
 /// 🚚️ Drops one unlocked, visible object at an absolute world position and attracts its first vortex
 /// onto every other vortex inside `proximity_radius` that is not already connected to it.
-pub async fn world_relocate(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
+pub fn world_relocate(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     let object_id = args.and_then(|value| value.get("objectId")).and_then(|value| value.as_str()).unwrap_or("").to_string();
     let position = args
         .and_then(|value| value.get("position"))

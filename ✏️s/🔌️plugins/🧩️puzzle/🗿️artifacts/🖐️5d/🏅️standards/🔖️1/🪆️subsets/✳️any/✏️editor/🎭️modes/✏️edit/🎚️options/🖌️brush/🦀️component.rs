@@ -17,7 +17,7 @@ use serde_json::json;
 use std::collections::HashMap;
 
 //#region 🔖️Distribution
-async fn kind_weight_measures(prefix: &str, action: &str, ids: &[String], weights: &HashMap<String, f64>) -> Vec<WindowMeasure> {
+fn kind_weight_measures(prefix: &str, action: &str, ids: &[String], weights: &HashMap<String, f64>) -> Vec<WindowMeasure> {
     ids.iter()
         .map(|kind_id| {
             let weight = weights.get(kind_id).copied().unwrap_or_else(|| if ids.is_empty() { 0.0 } else { 1.0 / ids.len() as f64 });
@@ -39,7 +39,7 @@ async fn kind_weight_measures(prefix: &str, action: &str, ids: &[String], weight
         .collect()
 }
 
-async fn distribution_children(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> Vec<WindowMeasure> {
+fn distribution_children(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> Vec<WindowMeasure> {
     let part_ids = puzzle5d_kind_ids(&envelope.document, "parts");
     let grip_ids = puzzle5d_kind_ids(&envelope.document, "grips");
     vec![
@@ -79,7 +79,7 @@ async fn distribution_children(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels
 
 //#region 🔖️Measure
 /// 🖌️ The Brush utility's Utility Options group, collected by both windows' `window_measures()`.
-pub async fn measure(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> WindowMeasure {
+pub fn measure(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> WindowMeasure {
     let mut children = vec![
         WindowMeasure::Slider {
             id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-suggestion-offset"),

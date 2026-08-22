@@ -56,7 +56,6 @@ async fn plugin_panels(apps: &[AppDefinition]) -> Vec<PanelTabDefinition> {
 /// single-plugin wasm instance every entry with `owner == plugin_id` is this package's own.
 async fn plugin_inference_services(plugin_id: &str) -> Vec<ContributedInferenceMetadata> {
     crate::app::list_artifact_inference_services()
-        .await
         .unwrap_or_default()
         .into_iter()
         .filter(|metadata| metadata.owner == plugin_id)
@@ -126,8 +125,8 @@ async fn plugin_contributions(manifest: &PluginManifest) -> ContributionSet {
     }
 }
 
-pub async fn describe_plugin() -> Vec<u8> {
-    let manifest = crate::plugin_runtime::plugin_manifest().await;
+pub async fn describe_plugin<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>) -> Vec<u8> {
+    let manifest = crate::plugin_runtime::plugin_manifest(runtime).await;
     let extras = crate::plugin_runtime::plugin_descriptor_extras().await;
     let contributions = plugin_contributions(&manifest).await;
     let descriptor = PackageDescriptor {

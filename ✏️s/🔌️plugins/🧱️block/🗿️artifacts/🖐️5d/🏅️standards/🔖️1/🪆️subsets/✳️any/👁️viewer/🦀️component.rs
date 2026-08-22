@@ -82,7 +82,7 @@ impl ArtifactViewer for Block5dViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_block5d_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_block5d_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(BLOCK5D_DIALECT)
         .document(["semio", "block", "5d"])
         .icon_id("layers")

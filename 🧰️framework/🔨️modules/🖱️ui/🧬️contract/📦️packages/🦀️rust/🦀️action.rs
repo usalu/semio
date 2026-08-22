@@ -16,7 +16,6 @@ use std::collections::BTreeMap;
 /// migrate a stale action instead of silently invoking the wrong one — the one axis the old stringly
 /// pair never carried.
 #[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ActionId {
     pub scope: String,
@@ -50,7 +49,6 @@ impl std::fmt::Display for ActionId {
 /// implicit "the" action every node carried with a closed, named set, so one node can bind several
 /// distinct moments (e.g. `Change` while typing, `Commit` on blur) without inventing parallel fields.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum Trigger {
     #[default]
@@ -69,7 +67,6 @@ pub enum Trigger {
 /// old `on_change`/`action`/`drop_action`/... field scattered across the wgpu target's per-component
 /// node structs — a record's `bindings: Vec<ActionBinding>` is the one place any of them now live.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ActionBinding {
     pub trigger: Trigger,
@@ -85,7 +82,6 @@ pub struct ActionBinding {
 /// 📋️ A reference to a resolved context menu — replaces the old `UiMenuRef`'s `DslValue` args with
 /// the crate-neutral [`UiValue`].
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct MenuRef {
     pub id: String,
@@ -98,7 +94,6 @@ pub struct MenuRef {
 /// intent (one whose `revision` trails the surface's current revision by more than one) instead of
 /// applying it against geometry the user never actually saw.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiIntent {
     pub surface: crate::SurfaceId,
@@ -127,7 +122,7 @@ pub struct UiIntent {
 /// `🦀️document.rs` avoids inline recursion by addressing children through [`crate::UiNodeId`] instead
 /// of nesting a node inside another; `UiValue` is the deliberate exception because it does not
 /// describe document shape at all, it describes an arbitrary opaque payload (action args, extension
-/// props) that genuinely IS JSON-shaped, and `Vec`/`BTreeMap` already give ts-rs an indirection to
+/// props) that genuinely IS JSON-shaped, and `Vec`/`BTreeMap` already give the schema an indirection to
 /// resolve (heap-allocated, not an inline field) rather than the infinitely-sized-struct problem
 /// direct node-in-node nesting would create.
 ///
@@ -136,7 +131,6 @@ pub struct UiIntent {
 /// safe by construction. `From`/`Into` conversions between `UiValue` and `DslValue` belong in the
 /// os-kernel crate, never here.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(untagged)]
 pub enum UiValue {
     #[default]
@@ -161,6 +155,7 @@ mod tests {
         assert_eq!(ActionId::new("app".into(), "submit".into(), 3).to_string(), "app.submit@3");
     }
 
+    #[allow(clippy::needless_pass_by_value)]
     fn value_round_trips(value: UiValue) {
         let first = serde_json::to_string(&value).expect("serialize");
         let deserialized: UiValue = serde_json::from_str(&first).expect("deserialize");

@@ -11,7 +11,7 @@
 // #region 🔌️Adapters
 import type { IntroductionDefinition } from "@semio-tech/framework-core";
 import { UIIntroduction } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 // #endregion 🔌️Adapters
 

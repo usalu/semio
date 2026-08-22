@@ -30,10 +30,10 @@ pub struct PresentConfig {
 /// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
 impl store::ArtifactDsl for PresentConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
-    async fn envelope_id() -> &'static str {
+    fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
     }
-    async fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
@@ -41,7 +41,7 @@ impl store::ArtifactDsl for PresentConfig {
         let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Document })?;
         Self::__dsl_from_record(&record)
     }
-    async fn print_dsl(&self) -> String {
+    fn print_dsl(&self) -> String {
         let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
@@ -50,12 +50,12 @@ impl store::ArtifactDsl for PresentConfig {
 
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
 impl store::ArtifactPack for PresentConfig {
-    async fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
-    async fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if envelope.envelope_id() != <Self as store::ArtifactDsl>::envelope_id() {
             return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.envelope_id())));
@@ -63,7 +63,7 @@ impl store::ArtifactPack for PresentConfig {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
-    async fn record_spec() -> Option<dsl::RecordSpec> {
+    fn record_spec() -> Option<dsl::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
@@ -95,7 +95,7 @@ pub enum PresentConfigMutation {
 
 //#region 🔖️OpCodec
 impl protocol::OpText for PresentConfigMutation {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -106,7 +106,7 @@ impl protocol::OpText for PresentConfigMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -116,7 +116,7 @@ impl protocol::OpText for PresentConfigMutation {
 
 /// 🎯️ Handcrafted OpBinary (P6).
 impl protocol::OpBinary for PresentConfigMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
@@ -129,7 +129,7 @@ impl protocol::OpBinary for PresentConfigMutation {
         out.extend_from_slice(&body);
         Ok(out)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         const OP_BINARY_FORMAT: u8 = 1;
         let mut reader = store::pack_rt::ByteReader::new(bytes);
         let format = reader.read_u8()?;
@@ -151,7 +151,7 @@ impl protocol::OpBinary for PresentConfigMutation {
 impl Mutation<PresentConfig> for PresentConfigMutation {
     type Diff = PresentConfig;
 
-    async fn diff(&self, base: &PresentConfig) -> protocol::MutationOutcome<PresentConfig> {
+    fn diff(&self, base: &PresentConfig) -> protocol::MutationOutcome<PresentConfig> {
         let mut next = base.clone();
         match self {
             PresentConfigMutation::SetEngagementInput { value } => next.engagement_input = value.clone(),
@@ -160,7 +160,7 @@ impl Mutation<PresentConfig> for PresentConfigMutation {
         protocol::MutationOutcome::new(next)
     }
 
-    async fn inverse(&self, base: &PresentConfig) -> Vec<Self> {
+    fn inverse(&self, base: &PresentConfig) -> Vec<Self> {
         match self {
             PresentConfigMutation::SetEngagementInput { .. } => vec![PresentConfigMutation::SetEngagementInput { value: base.engagement_input.clone() }],
             PresentConfigMutation::SetLocale { .. } => vec![PresentConfigMutation::SetLocale { value: base.locale.clone() }],
@@ -174,23 +174,23 @@ impl Mutation<PresentConfig> for PresentConfigMutation {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn present_config_default_matches_the_existing_runtime_defaults() {
+    #[test]
+    fn present_config_default_matches_the_existing_runtime_defaults() {
         let config = PresentConfig::default();
         assert!(config.engagement_input.is_empty());
         assert_eq!(config.locale, "en-US");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn present_config_dsl_round_trips() {
+    #[test]
+    fn present_config_dsl_round_trips() {
         let config = PresentConfig { engagement_input: "2x2".into(), locale: "de-DE".into() };
         let text = store::ArtifactDsl::print_dsl(&config);
         let parsed = <PresentConfig as store::ArtifactDsl>::parse_dsl(&text).expect("config dsl round trip");
         assert_eq!(parsed, config);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn present_config_pack_round_trips() {
+    #[test]
+    fn present_config_pack_round_trips() {
         let config = PresentConfig { engagement_input: "add".into(), locale: "en-US".into() };
         let bytes = store::ArtifactPack::encode_pack(&config);
         let decoded = <PresentConfig as store::ArtifactPack>::decode_pack(&bytes).expect("config pack round trip");
@@ -198,7 +198,7 @@ mod tests {
     }
 
     //#region 🔖️ConfigMutationTests
-    async fn round_trip_config(config: &PresentConfig, operation: &PresentConfigMutation) -> PresentConfig {
+    fn round_trip_config(config: &PresentConfig, operation: &PresentConfigMutation) -> PresentConfig {
         let forward = operation.diff(config).diff().clone();
         let backwards = operation.inverse(config);
         assert_eq!(backwards.len(), 1);
@@ -207,22 +207,22 @@ mod tests {
         forward
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn config_set_engagement_input_round_trips() {
+    #[test]
+    fn config_set_engagement_input_round_trips() {
         let config = PresentConfig::default();
         let next = round_trip_config(&config, &PresentConfigMutation::SetEngagementInput { value: "2x2".into() });
         assert_eq!(next.engagement_input, "2x2");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn config_set_locale_round_trips() {
+    #[test]
+    fn config_set_locale_round_trips() {
         let config = PresentConfig::default();
         let next = round_trip_config(&config, &PresentConfigMutation::SetLocale { value: "de-DE".into() });
         assert_eq!(next.locale, "de-DE");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn config_op_text_round_trips_every_variant() {
+    #[test]
+    fn config_op_text_round_trips_every_variant() {
         store::os_store::test_support::assert_op_line_round_trip(&PresentConfigMutation::SetEngagementInput { value: "add".into() });
         store::os_store::test_support::assert_op_line_round_trip(&PresentConfigMutation::SetLocale { value: "en-US".into() });
     }

@@ -9,7 +9,7 @@
 // #endregion 🧲️Header
 
 import { Field, Input } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Meta, StoryObj } from "../../🧪️story";
 
 // 🏷️#region 🏷️Field
 const meta = {

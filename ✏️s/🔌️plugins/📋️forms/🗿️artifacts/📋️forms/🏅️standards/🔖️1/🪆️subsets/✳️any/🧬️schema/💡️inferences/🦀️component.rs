@@ -64,7 +64,7 @@ impl ArtifactInferrer for FormsInferrer {
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.forms.forms.inference`'s facet leaves into the OS-wide inference catalog — call
 /// once at plugin init, alongside `forms_artifact_schema_descriptor`'s registration.
-pub async fn forms_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn forms_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.forms.forms.inference",
         inference: schema::FacetLeaves {

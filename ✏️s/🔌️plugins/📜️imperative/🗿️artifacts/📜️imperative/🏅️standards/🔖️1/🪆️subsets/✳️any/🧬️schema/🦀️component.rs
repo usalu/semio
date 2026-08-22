@@ -33,7 +33,7 @@ pub struct ImperativeArtifact {
 //#endregion 🔖️Artifact
 
 //#region 🔖️Conversions
-async fn default_contributions_json() -> String {
+fn default_contributions_json() -> String {
     "[]".into()
 }
 
@@ -46,17 +46,17 @@ impl Default for ImperativeArtifact {
 
 impl ImperativeArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> crate::artifacts::imperative::ImperativeSnapshot {
+    pub fn to_snapshot(&self) -> crate::artifacts::imperative::ImperativeSnapshot {
         crate::artifacts::imperative::ImperativeSnapshot { schema: self.schema.clone(), flow: self.flow.clone(), text: self.text.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub async fn from_snapshot(snapshot: crate::artifacts::imperative::ImperativeSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::artifacts::imperative::ImperativeSnapshot) -> Self {
         Self { schema: snapshot.schema, flow: snapshot.flow, text: snapshot.text, ..Self::default() }
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: crate::artifacts::imperative::ImperativeSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::artifacts::imperative::ImperativeSnapshot) {
         self.schema = snapshot.schema;
         self.flow = snapshot.flow;
         self.text = snapshot.text;
@@ -66,7 +66,7 @@ impl ImperativeArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.imperative.imperative` — twenty handcrafted schema leaves.
-pub async fn imperative_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn imperative_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.imperative.imperative",
         artifact: schema::FacetLeaves {
@@ -124,10 +124,10 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<ImperativeSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self { snapshot: <ImperativeSnapshot as store::ArtifactDsl>::parse_dsl(text)?, diagnostics: Vec::new() })
         }
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<ImperativeSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self { snapshot: <ImperativeSnapshot as store::ArtifactPack>::decode_pack(bytes)?, diagnostics: Vec::new() })
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <ImperativeMutation as protocol::Mutation<ImperativeSnapshot>>::diff(&mutation, &self.snapshot);
@@ -226,7 +226,7 @@ semio_framework_plugin::derive_artifact_facets!(
 /// `ImperativeWorkingScene`'s doc comment) — building the canonical default directly here, then
 /// printing it to regenerate the fixture text (see `📚️examples/🎬️demo/🖼️assets/🗣️example.dsl.semio`),
 /// is the honest source of truth, matching `writer`'s/`flow`'s own fixture-builder precedent.
-async fn default_path() -> crate::artifacts::imperative::Path {
+fn default_path() -> crate::artifacts::imperative::Path {
     use crate::artifacts::imperative::{Dictionary, Path, Step};
     use neural_engine::{Atom, Value};
     Path {
@@ -240,7 +240,7 @@ async fn default_path() -> crate::artifacts::imperative::Path {
 /// 📄️ The default `imperative` document — {@link default_path}'s two steps, empty seed. Relocated
 /// from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — pure
 /// over document types, no app-runtime parameter, so it belongs beside the schema it builds.
-pub async fn default_snapshot() -> crate::artifacts::imperative::ImperativeSnapshot {
+pub fn default_snapshot() -> crate::artifacts::imperative::ImperativeSnapshot {
     crate::artifacts::imperative::imperative_snapshot_with_content("imperative.document", &default_path(), &std::collections::BTreeMap::new())
 }
 //#endregion 🔖️DocumentHelpers

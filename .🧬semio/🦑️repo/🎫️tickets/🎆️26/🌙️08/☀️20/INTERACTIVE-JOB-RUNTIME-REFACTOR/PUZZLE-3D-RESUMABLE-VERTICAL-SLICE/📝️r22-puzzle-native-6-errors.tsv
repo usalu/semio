@@ -1,0 +1,122 @@
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs	67	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1849	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs	70	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	2404	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs	79	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1733	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1033	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1081	mismatched types
+E0599	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	841	no method named `build` found for opaque type `impl Future<Output = semio_framework_plugin::Menu<'_>>` in the current scope
+E0599	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	883	no method named `item` found for opaque type `impl Future<Output = semio_framework_plugin::Menu<'_>>` in the current scope
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🎲️board/🦀️component.rs	90	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/◻2d/🪛️utilities/🖌️brush/🦀️component.rs	15	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️main/🦀️component.rs	47	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/◻2d/🪛️utilities/🪣️fill/🦀️component.rs	15	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/◻2d/🪛️utilities/🖱️select/🦀️component.rs	11	mismatched types
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️3d/🦀️component.rs	88	the trait bound `impl Future<Output = std::string::String>: From<&str>` is not satisfied
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1989	`ActionDefinition` is not a future
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1995	`ActionDefinition` is not a future
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1996	`ActionDefinition` is not a future
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1997	`ActionDefinition` is not a future
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1998	`ActionDefinition` is not a future
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	2019	`ActionDefinition` is not a future
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1989	`ActionDefinition` is not a future
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🪛️utilities/🖌️brush/🦀️component.rs	15	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🪛️utilities/🔄️transform/🦀️component.rs	15	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🪛️utilities/🧊️volume-brush/🦀️component.rs	15	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🪛️utilities/🚚️world-relocate/🦀️component.rs	12	mismatched types
+E0599	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1118	no method named `action` found for opaque type `impl Future<Output = semio_framework_plugin::Menu<'_>>` in the current scope
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎥️set-projection/🦀️component.rs	13	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎥️set-projection/🦀️component.rs	15	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	92	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs	15	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🎚️options/🎥️projection/🦀️component.rs	12	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🤝️engagement-submit/🦀️component.rs	10	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🎚️options/☀️sun/🦀️component.rs	11	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🪣️fill/🦀️component.rs	19	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🦀️component.rs	121	mismatched types
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🦀️component.rs	132	the trait bound `impl Future<Output = std::string::String>: From<&str>` is not satisfied
+E0277	/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/src/macros.rs	279	the trait bound `impl Future<Output = std::string::String>: serde::Serialize` is not satisfied
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️3d/🦀️component.rs	106	mismatched types
+E0277	/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/src/macros.rs	279	the trait bound `impl Future<Output = std::string::String>: serde::Serialize` is not satisfied
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️3d/🎚️options/☀️sun/🦀️component.rs	12	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️3d/🪛️utilities/🔄️transform/🦀️component.rs	17	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️3d/🪛️utilities/🔄️transform/🦀️component.rs	22	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️3d/🪛️utilities/🔄️transform/🦀️component.rs	27	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️main/🦀️component.rs	71	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️3d/🪛️utilities/🚚️world-relocate/🦀️component.rs	11	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️main/🦀️component.rs	80	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️main/🦀️component.rs	81	mismatched types
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️3d/🦀️component.rs	43	the trait bound `impl Future<Output = std::string::String>: From<&str>` is not satisfied
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️3d/🦀️component.rs	43	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️3d/🦀️component.rs	51	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧊️3d/🦀️component.rs	77	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	2054	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	2117	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	2258	`match` arms have incompatible types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	2503	mismatched types
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	2584	`ActionDefinition` is not a future
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	2587	`ActionDefinition` is not a future
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	2588	`ActionDefinition` is not a future
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	2594	`ActionDefinition` is not a future
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	2599	`ActionDefinition` is not a future
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	2601	`ActionDefinition` is not a future
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	2602	`ActionDefinition` is not a future
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	2613	`ActionDefinition` is not a future
+E0277	/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/src/macros.rs	279	the trait bound `impl Future<Output = std::string::String>: serde::Serialize` is not satisfied
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	2641	`ActionDefinition` is not a future
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🦀️component.rs	171	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	2667	mismatched types
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	2689	the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	2691	mismatched types
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	2700	the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	2711	the trait bound `std::string::String: From<impl Future<Output = std::string::String>>` is not satisfied
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	2712	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	2714	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	113	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	2725	mismatched types
+E0599	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1875	no method named `item` found for opaque type `impl Future<Output = semio_framework_plugin::Menu<'_>>` in the current scope
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	2726	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1890	mismatched types
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	2584	`ActionDefinition` is not a future
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs	46	the trait bound `semio_framework_plugin::plugin_app_close_prelude::Label: From<semio_framework_plugin::Label>` is not satisfied
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs	46	mismatched types
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs	48	a value of type `Vec<UiTreeItemNode>` cannot be built from an iterator over elements of type `BuiltNode`
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs	53	the trait bound `semio_framework_plugin::plugin_app_close_prelude::Label: From<semio_framework_plugin::Label>` is not satisfied
+E0599	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🦀️component.rs	174	no method named `contains` found for opaque type `impl Future<Output = std::string::String>` in the current scope
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🦀️component.rs	176	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs	53	mismatched types
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs	55	a value of type `Vec<UiTreeItemNode>` cannot be built from an iterator over elements of type `BuiltNode`
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🦀️component.rs	177	mismatched types
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs	57	the trait bound `semio_framework_plugin::plugin_app_close_prelude::Label: From<LabelText>` is not satisfied
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs	57	the trait bound `semio_framework_plugin::plugin_app_close_prelude::Label: From<LabelText>` is not satisfied
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs	82	the trait bound `semio_framework_plugin::plugin_app_close_prelude::Label: From<LabelText>` is not satisfied
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️catalogue/🦀️component.rs	82	mismatched types
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1151	`ActionDefinition` is not a future
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1151	`ActionDefinition` is not a future
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs	57	mismatched types
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1193	`ActionDefinition` is not a future
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1195	`ActionDefinition` is not a future
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs	58	the trait bound `semio_framework_plugin::plugin_app_close_prelude::Label: From<LabelText>` is not satisfied
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1197	`ActionDefinition` is not a future
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs	58	the trait bound `semio_framework_plugin::plugin_app_close_prelude::Label: From<LabelText>` is not satisfied
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1199	`ActionDefinition` is not a future
+E0599	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1892	no method named `item` found for opaque type `impl Future<Output = semio_framework_plugin::Menu<'_>>` in the current scope
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🦀️component.rs	179	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1201	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🦀️component.rs	179	mismatched types
+E0277	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1193	`ActionDefinition` is not a future
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs	58	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📄️artifact/🦀️component.rs	56	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🦀️component.rs	181	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️component.rs	19	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	114	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🛠️tools/🪣️fill/🦀️component.rs	16	mismatched types
+E0599	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1895	no method named `build` found for opaque type `impl Future<Output = semio_framework_plugin::Menu<'_>>` in the current scope
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️overview/🪛️utilities/🖌️brush/🦀️component.rs	11	mismatched types
+E0308	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️overview/🪛️utilities/🖱️select/🦀️component.rs	11	mismatched types
+E0599	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1903	no method named `item` found for opaque type `impl Future<Output = semio_framework_plugin::Menu<'_>>` in the current scope
+E0599	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs	165	no method named `map_err` found for opaque type `impl Future<Output = Result<<... as ArtifactBuilder>::Snapshot, ...>>` in the current scope
+E0599	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs	1911	no method named `item` found for opaque type `impl Future<Output = semio_framework_plugin::Menu<'_>>` in the current scope
+E0599	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs	139	no method named `map_err` found for opaque type `impl Future<Output = Result<<... as ArtifactBuilder>::Snapshot, ...>>` in the current scope
+E0599	✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/./././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️component.rs	145	no method named `map_err` found for opaque type `impl Future<Output = Result<<... as ArtifactBuilder>::Snapshot, ...>>` in the current scope

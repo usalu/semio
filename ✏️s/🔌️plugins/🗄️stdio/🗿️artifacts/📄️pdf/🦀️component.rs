@@ -27,26 +27,21 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = crate::registry::format_descriptors_for("pdf")?;
-    let builder = semio_framework_plugin::resolve_ready(semio_framework_plugin::ArtifactDeclaration::builder(definition));
-    let builder = semio_framework_plugin::resolve_ready(builder.schema(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::pdf_artifact_schema_descriptor()));
-    let builder = semio_framework_plugin::resolve_ready(builder.formats(formats));
-    let builder = semio_framework_plugin::resolve_ready(builder.schemas([crate::artifacts::pdf::standards::v1_4::subsets::any::schema::pdf_artifact_schema_descriptor()]));
-    let builder =
-        semio_framework_plugin::resolve_ready(builder.inferences([
-            crate::artifacts::pdf::standards::v1_7::subsets::any::schema::inferences::pdf17_artifact_inference_descriptor(),
-            crate::artifacts::pdf::standards::v1_4::subsets::any::schema::inferences::pdf_artifact_inference_descriptor(),
-        ]));
-    let builder = semio_framework_plugin::resolve_ready(builder.composers(crate::artifacts::pdf::standards::v1_7::subsets::any::io::io_registry::entries()));
-    let builder = semio_framework_plugin::resolve_ready(builder.composers(crate::artifacts::pdf::standards::v1_4::subsets::any::io::io_registry::entries()));
-    let builder = semio_framework_plugin::resolve_ready(builder.subset_validators(pdf_1_7_subset_validators()));
-    let builder = semio_framework_plugin::resolve_ready(builder.subset_validators(pdf_1_4_subset_validators()));
-    let builder = semio_framework_plugin::resolve_ready(builder.languages(pilot_languages_1_7()));
-    let builder = semio_framework_plugin::resolve_ready(builder.languages(pilot_languages_1_4()));
-    let builder = semio_framework_plugin::resolve_ready(builder.document_codec_bare::<PdfSnapshot, PdfMutation>(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::STDIO_PDF17_DOCUMENT_SCHEMA));
-    let builder = semio_framework_plugin::resolve_ready(
-        builder.document_codec_bare::<crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PdfSnapshot, crate::artifacts::pdf::standards::v1_4::subsets::any::schema::mutations::PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA),
-    );
-    semio_framework_plugin::resolve_ready(builder.try_build())
+    let builder = semio_framework_plugin::ArtifactDeclaration::builder(definition);
+    let builder = builder.schema(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::pdf_artifact_schema_descriptor());
+    let builder = builder.formats(formats);
+    let builder = builder.schemas([crate::artifacts::pdf::standards::v1_4::subsets::any::schema::pdf_artifact_schema_descriptor()]);
+    let builder = builder
+        .inferences([crate::artifacts::pdf::standards::v1_7::subsets::any::schema::inferences::pdf17_artifact_inference_descriptor(), crate::artifacts::pdf::standards::v1_4::subsets::any::schema::inferences::pdf_artifact_inference_descriptor()]);
+    let builder = builder.composers(crate::artifacts::pdf::standards::v1_7::subsets::any::io::io_registry::entries());
+    let builder = builder.composers(crate::artifacts::pdf::standards::v1_4::subsets::any::io::io_registry::entries());
+    let builder = builder.subset_validators(pdf_1_7_subset_validators());
+    let builder = builder.subset_validators(pdf_1_4_subset_validators());
+    let builder = builder.languages(pilot_languages_1_7());
+    let builder = builder.languages(pilot_languages_1_4());
+    let builder = builder.document_codec_bare::<PdfSnapshot, PdfMutation>(crate::artifacts::pdf::standards::v1_7::subsets::any::schema::snapshot::STDIO_PDF17_DOCUMENT_SCHEMA);
+    let builder = builder.document_codec_bare::<crate::artifacts::pdf::standards::v1_4::subsets::any::schema::snapshot::PdfSnapshot, crate::artifacts::pdf::standards::v1_4::subsets::any::schema::mutations::PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA);
+    builder.try_build()
 }
 
 /// 🛡️ `standards::v1_7`'s six real subsets (`a`/`x`/`e`/`ua`/`vt`/`h`), re-derived (not moved) from

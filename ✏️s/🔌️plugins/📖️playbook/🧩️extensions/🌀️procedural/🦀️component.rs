@@ -5,10 +5,12 @@ use flow::{export_solid_json, import_solid_json, tessellate_geometry};
 use flow::{flow_neuron_kind_infos_json, forms_bridge::flow_fixture_to_form_spec, FlowFixture, FlowHost, Widget};
 use protocol::{Mutation, MutationDiff};
 use semio_framework::mesh_from_indexed;
+use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{
     app_labels, build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppLabels, ArtifactApp,
-    ArtifactView, ConfigView, DraftView, Emit, ExecutionMode, ExtensionBundle, Fault, Label, Locale, LocalizedLabel, NoDraft, NoDraftMutation, Plugin, SurfaceKind, Terminology, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence,
+    ArtifactView, ConfigView, DraftView, Emit, ExecutionMode, ExtensionBundle, Fault, Label, Locale, LocalizedLabel, NoDraft, NoDraftMutation, Plugin, PluginApp, SurfaceKind, Terminology, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence,
     UiSliderNode, UiToggleNode, WorldSunConfig,
 };
 use serde::{Deserialize, Serialize};
@@ -33,6 +35,15 @@ const ACTION_IMPORT_SOLID: &str = "importSolidGeometry";
 const SOLID_MEDIA_FORMATS: [&str; 4] = ["step", "obj", "stl", "glb"];
 const SOLID_EXPORT_DEFLECTION: f64 = 0.1;
 const SOLID_IMPORT_TOLERANCE: f64 = 0.1;
+
+//#region 🗃️Apps
+/// 🗃️ Closed runtime app fleet for the procedural playbook module surface.
+semio_framework_dispatch_macros::dyn_enum_close! {
+    pub enum ProceduralModuleApps: PluginApp {
+        Module(semio_framework_plugin::VcsArtifactApp<ModuleApp>),
+    }
+}
+//#endregion 🗃️Apps
 // 🩹️ Was `include_str!` of procedural's example fixture; procedural migrated that fixture to a
 // handcrafted DSL (`store::ArtifactDsl`) that this module (which parses the content as a raw
 // `FlowFixture`, not a `Procedural3dDocument`) doesn't read — inlined the same flow-fixture JSON
@@ -682,7 +693,7 @@ impl protocol::OpBinary for Command {
 
 //#region 🔖️App
 #[derive(Default)]
-struct ModuleApp;
+pub struct ModuleApp;
 
 impl ArtifactApp for ModuleApp {
     type Snapshot = ModuleRenderPayload;
@@ -765,7 +776,7 @@ impl ArtifactApp for ModuleApp {
 /// definition-time mistake) as a `PluginAssemblyError` this crate's `plugin()` entry point can
 /// propagate, instead of a guest panic that would trap the wasm instance for good (a trapped
 /// `wasm32-wasip2` instance cannot unwind — see `AppBuilder::try_build_definition`'s docs).
-async fn create_module_app() -> Result<App, semio_framework_plugin::PluginAssemblyError> {
+fn create_module_app() -> Result<App, semio_framework_plugin::PluginAssemblyError> {
     App::try_from_builder(
         App::builder(MODULE_APP_ID, LocalizedLabel::native("Playbook Module Procedural", "Playbook-Modul Prozedural"))
             .document(["semio", "forms"])
@@ -790,12 +801,12 @@ async fn create_module_app() -> Result<App, semio_framework_plugin::PluginAssemb
 }
 
 /// 🎛️ The shared `format` Select over the solid interchange formats, defaulting to OBJ (the handlers' default).
-async fn solid_format_arg() -> ActionArgDef {
+fn solid_format_arg() -> ActionArgDef {
     ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), SOLID_MEDIA_FORMATS.iter().map(|format| ActionArgOption::new(*format, LocalizedLabel::data(format.to_uppercase()))).collect()).default_value("obj")
 }
 
-async fn module_plugin_bundle() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
-    Plugin::builder(MODULE_PLUGIN_ID).label("Playbook Module Procedural").version("0.1.0").foreign_document_codec::<ModuleApp>(MODULE_DOCUMENT_SCHEMA).document_app::<ModuleApp>(create_module_app()?).try_build()
+fn module_plugin_bundle() -> Result<Plugin<ProceduralModuleApps>, semio_framework_plugin::PluginAssemblyError> {
+    Plugin::<ProceduralModuleApps>::builder(MODULE_PLUGIN_ID).label("Playbook Module Procedural").version("0.1.0").foreign_document_codec::<ModuleApp>(MODULE_DOCUMENT_SCHEMA).document_app::<ModuleApp>(create_module_app()?).try_build()
 }
 
 async fn module_extension_bundle() -> ExtensionBundle {
@@ -813,7 +824,7 @@ async fn module_extension_bundle() -> ExtensionBundle {
     )
 }
 
-semio_framework_plugin::plugin_exports!(module_plugin_bundle);
+semio_framework_plugin::plugin_exports!(module_plugin_bundle, ProceduralModuleApps);
 semio_framework_plugin::extension_exports!(module_extension_bundle);
 //#endregion 🔖️App
 

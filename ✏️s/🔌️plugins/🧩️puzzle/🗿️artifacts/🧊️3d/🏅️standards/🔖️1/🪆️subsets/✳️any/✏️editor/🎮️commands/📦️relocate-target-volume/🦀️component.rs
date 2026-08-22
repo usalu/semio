@@ -4,7 +4,7 @@ use crate::editor::puzzle3d::{value_as_vec3, Puzzle3dActionCtx};
 use serde_json::{json, Value};
 
 /// 🚚️ Absolute pose push from the gumball for one unlocked target volume.
-pub async fn relocate_target_volume(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
+pub fn relocate_target_volume(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     let volume_id = args.and_then(|value| value.get("volumeId")).and_then(|value| value.as_str()).unwrap_or("");
     let after = args.and_then(|value| value.get("after"));
     let (Some(volume), Some(after)) = (ctx.scene.fixture.target_volumes.iter_mut().find(|volume| volume.id == volume_id && !volume.locked), after) else {

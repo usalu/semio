@@ -8,12 +8,12 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group";
-import { cva } from "class-variance-authority";
 // 🧱️core: reactHostPort imported directly from 🫀️core/Ports, NOT via the barrel — this component calls
 // reactHostPort.createContext at module top level, which requires a non-circular import (see
 // 🧱️elements/🔌️Ports/🟦️component.tsx's header comment for why the barrel import caused a real bug).
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
+import { styleVariants } from "../../🔨️modules/🏷️style-variants/🟦️component.ts";
 import { surfaceClass } from "../../🔨️modules/🌈️surface-presentation/🟦️component.ts";
 import { ControlHotkeyBadge } from "../../🔨️modules/⌨️control-hotkey-presentation/🟦️component.tsx";
 import { chromeControlGroupClass, chromeControlItemClass, chromeControlItemOnClass } from "../../🔨️modules/🎛️chrome-control-presentation/🟦️component.ts";
@@ -26,7 +26,7 @@ import { renderControlIcon, type ControlIcon } from "../🔣️Icons/🟦️comp
 // Group of mutually exclusive or multi-select toggles.
 // Consumers MUST provide items with distinct values.
 
-const toggleVariants = cva(cn(chromeControlItemClass, chromeControlItemOnClass, "aspect-square"));
+const toggleVariants = styleVariants(cn(chromeControlItemClass, chromeControlItemOnClass, "aspect-square"));
 
 /**
  * ToggleGroupContext holds the data fields for a ToggleGroupContext record.

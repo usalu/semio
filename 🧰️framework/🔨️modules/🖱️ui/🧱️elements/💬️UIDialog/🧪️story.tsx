@@ -11,7 +11,7 @@
 // #region 🔌️Adapters
 import { argControl, type ActionArgDef, type DialogDefinition } from "@semio-tech/framework";
 import { UIDialog } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "../../🧪️story";
 import { useState } from "react";
 // #endregion 🔌️Adapters
 

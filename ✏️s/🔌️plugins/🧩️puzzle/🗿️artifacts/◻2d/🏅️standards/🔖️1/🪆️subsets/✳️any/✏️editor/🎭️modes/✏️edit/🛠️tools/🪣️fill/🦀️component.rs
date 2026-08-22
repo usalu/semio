@@ -12,12 +12,12 @@ pub const PUZZLE2D_FILL_COUNT_MAX: u32 = 1000;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the app manifest by `crate::editor::puzzle2d::create_puzzle2d_app`.
-pub async fn definition(label: LocalizedLabel) -> ToolDefinition {
-    ToolDefinition::new(TOOL_ID, label, "paint-bucket")
+pub fn definition(label: LocalizedLabel) -> ToolDefinition {
+    semio_framework::io::resolve_ready(ToolDefinition::new(TOOL_ID, label, "paint-bucket"))
 }
 
 /// 🎚️ The fill-count slider, surfaced in the mode-level tool panel while the fill tool is active.
-pub async fn measures(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> WindowMeasure {
+pub fn measures(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> WindowMeasure {
     let accepted = envelope.runtime.fill_job_preview.as_ref().and_then(|preview| preview.get("accepted_count").or_else(|| preview.get("acceptedCount"))).and_then(serde_json::Value::as_u64).unwrap_or(0) as f64;
     let running = envelope.runtime.fill_job_checkpoint.is_some();
     WindowMeasure::Group {
@@ -65,8 +65,8 @@ mod tests {
     use crate::editor::puzzle2d::testkit::*;
 
     /// 🛠️ Fill's count slider is a tool measure keyed by the fill tool id, not a window utility-options group.
-    #[semio_framework_async_macros::async_test]
-    async fn fill_count_slider_is_a_tool_measure() {
+    #[test]
+    fn fill_count_slider_is_a_tool_measure() {
         let labels = puzzle2d_labels(&Puzzle2dConfig::default());
         let host = puzzle_board_host();
         let fill_runtime = Puzzle2dPlayRuntime { fill_count: 3, ..Puzzle2dPlayRuntime::default() };

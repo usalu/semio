@@ -26,7 +26,7 @@ pub fn assembly(definition: semio_framework_plugin::ArtifactDefinition) -> Resul
 /// `any`. See `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🦀️component.rs`'s `artifact()` doc
 /// comment for the `localization: &[]` deferral rationale (identical here).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::plugin::StdioApps> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.stdio.txt").expect("canonical stdio.txt kind"), localization: &[], standards: vec![crate::artifacts::txt::standards::v_utf_8::standard()] }

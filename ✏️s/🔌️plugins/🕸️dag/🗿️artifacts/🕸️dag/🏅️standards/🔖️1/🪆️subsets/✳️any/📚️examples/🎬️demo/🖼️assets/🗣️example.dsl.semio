@@ -1,4 +1,37 @@
 semio dag.dag.dsl v1
-schema=6461672e646167
-nodes=5b7b226964223a22736c696465722d61222c226e616d65223a2241222c22616262726576696174696f6e223a22222c2269636f6e223a22222c2278223a302e302c2279223a302e302c227769647468223a37322e302c22686569676874223a31342e302c2270726f70657274696573223a7b7d2c226b696e64223a22636f6d7075746174696f6e222c22696e70757473223a5b5d2c226f757470757473223a5b5d2c2276617269616469635f696e70757473223a66616c73652c2276617269616469635f6f757470757473223a66616c73657d2c7b226964223a22736c696465722d62222c226e616d65223a2242222c22616262726576696174696f6e223a22222c2269636f6e223a22222c2278223a3230302e302c2279223a302e302c227769647468223a37322e302c22686569676874223a31342e302c2270726f70657274696573223a7b7d2c226b696e64223a22636f6d7075746174696f6e222c22696e70757473223a5b5d2c226f757470757473223a5b5d2c2276617269616469635f696e70757473223a66616c73652c2276617269616469635f6f757470757473223a66616c73657d5d
-edges=5b7b226964223a22656467652d31222c22736f75726365223a22736c696465722d61406f7574222c22746172676574223a22736c696465722d6240696e222c22726f7574655374796c65223a2262657a696572222c2270726f70657274696573223a7b7d7d5d
+schema=dag.fixture nodes=[ id=slider name=Amount abbreviation=Amount icon="emoji:🎚️" x=-400 y=-40 width=70 height=14 properties={
+}
+slider min=0 max=10 step=0.5 value=5 output=id=out label=value code="" abbreviation="" full-name="" cardinality="!" shape=semicircle visible=true id=mode name=Mode abbreviation=Mode icon="emoji:📋️" x=-400 y=80 width=56 height=28 properties={
+}
+select selected=0 options=[ Add Multiply Max ] output=id=out label=mode code="" abbreviation="" full-name="" cardinality="!" shape=semicircle visible=true id=scale name=Scale abbreviation=Scale icon="emoji:📐️" x=-120 y=-40 width=104 height=14 properties={
+}
+computation variadic-inputs=false variadic-outputs=false
+inputs [id:TEXT label:TEXT code:TEXT abbreviation:TEXT full-name:TEXT type:TEXT default:VAL value:VAL connected:BOOL artifact-kind:TEXT cardinality:TEXT shape:ENUM visible:BOOL resolved:BOOL] {
+  in value "" "" "" _ _ _ _ _ "!" semicircle true _
+}
+outputs [id:TEXT label:TEXT code:TEXT abbreviation:TEXT full-name:TEXT type:TEXT default:VAL value:VAL connected:BOOL artifact-kind:TEXT cardinality:TEXT shape:ENUM visible:BOOL resolved:BOOL] {
+  out scaled "" "" "" _ _ _ _ _ "!" semicircle true _
+}
+id=combine name=Combine abbreviation=Combine icon="emoji:🔀️" x=120 y=0 width=104 height=28 properties={
+}
+computation variadic-inputs=false variadic-outputs=false
+inputs [id:TEXT label:TEXT code:TEXT abbreviation:TEXT full-name:TEXT type:TEXT default:VAL value:VAL connected:BOOL artifact-kind:TEXT cardinality:TEXT shape:ENUM visible:BOOL resolved:BOOL] {
+  a a "" "" "" _ _ _ _ _ "!" semicircle true _
+  b b "" "" "" _ _ _ _ _ "!" semicircle true _
+}
+outputs [id:TEXT label:TEXT code:TEXT abbreviation:TEXT full-name:TEXT type:TEXT default:VAL value:VAL connected:BOOL artifact-kind:TEXT cardinality:TEXT shape:ENUM visible:BOOL resolved:BOOL] {
+  out merged "" "" "" _ _ _ _ _ "!" semicircle true _
+}
+id=screen name=Preview abbreviation=Preview icon="emoji:🖥️" x=400 y=0 width=200 height=140 properties={
+}
+screen media=kind=svg src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 60'%3E%3Crect fill='%233c78d8' width='100' height='60'/%3E%3Ctext x='50' y='35' text-anchor='middle' fill='white' font-size='12'%3EDAG%3C/text%3E%3C/svg%3E" input=id=in label=result code="" abbreviation="" full-name="" cardinality="!" shape=semicircle visible=true ]
+edges [id:TEXT source:TEXT target:TEXT route-style:ENUM properties:MAP] {
+  e1 "slider@out" "scale@in" bezier {
+  }
+  e2 "scale@out" "combine@a" bezier {
+  }
+  e3 "mode@out" "combine@b" bezier {
+  }
+  e4 "combine@out" "screen@in" bezier {
+  }
+}

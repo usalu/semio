@@ -6,18 +6,27 @@
 
 // #region 🔖️Error
 /// ⚠️ Fallible-construction and fallible-inversion error type shared by every distribution in this crate.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum ProbabilityError {
     /// 🚫️ A constructor argument (e.g. `std_dev`, `dof`, `n`) fell outside its valid range.
-    #[error("invalid parameter {name} = {value}")]
     InvalidParameter { name: &'static str, value: f64 },
     /// 🚫️ A call-site argument (e.g. a `quantile` probability) fell outside its valid domain.
-    #[error("{name} = {value} outside domain")]
     OutOfDomain { name: &'static str, value: f64 },
     /// 🚫️ An iterative numerical method (series, continued fraction, Newton/bisection) ran out of iterations.
-    #[error("no convergence in {what}")]
     NoConvergence { what: &'static str },
 }
+
+impl std::fmt::Display for ProbabilityError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::InvalidParameter { name, value } => write!(formatter, "invalid parameter {name} = {value}"),
+            Self::OutOfDomain { name, value } => write!(formatter, "{name} = {value} outside domain"),
+            Self::NoConvergence { what } => write!(formatter, "no convergence in {what}"),
+        }
+    }
+}
+
+impl std::error::Error for ProbabilityError {}
 // #endregion 🔖️Error
 
 // #region 🔖️Special
@@ -876,6 +885,19 @@ impl Multinomial {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn probability_error_contract_is_owned_and_stable() {
+        let errors = [
+            (ProbabilityError::InvalidParameter { name: "sigma", value: 2.5 }, "invalid parameter sigma = 2.5"),
+            (ProbabilityError::OutOfDomain { name: "p", value: -1.0 }, "p = -1 outside domain"),
+            (ProbabilityError::NoConvergence { what: "quantile" }, "no convergence in quantile"),
+        ];
+        for (error, message) in errors {
+            assert_eq!(error.to_string(), message);
+            assert!(std::error::Error::source(&error).is_none());
+        }
+    }
 
     // #region 🔖️SpecialTests
     #[test]

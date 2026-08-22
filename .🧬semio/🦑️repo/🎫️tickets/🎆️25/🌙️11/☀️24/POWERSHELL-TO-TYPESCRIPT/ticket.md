@@ -135,9 +135,9 @@ Deleted all migrated `.ps1` files (31 files total), excluding:
 
 ### Script Execution
 
-| Before                                                | After             |
-| ----------------------------------------------------- | ----------------- |
-| `powershell -ExecutionPolicy Bypass -File script.ps1` | `tsx script.ts`   |
+| Before                                                | After               |
+| ----------------------------------------------------- | ------------------- |
+| `powershell -ExecutionPolicy Bypass -File script.ps1` | `tsx script.ts`     |
 | `.\script.ps1`                                        | `tsx ./📜️script.ts` |
 
 ## Testing

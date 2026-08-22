@@ -1,7 +1,7 @@
 // #region platform
 //! 🖥️ Root shell: apps, URI chrome, panel toggles, and shared action bus.
 
-use crate::action_bus::{ActionBus, NoToolJobFactories};
+use crate::action_bus::ActionBus;
 use crate::ui::AppDefinition;
 
 #[derive(Clone, Debug, PartialEq, Eq, Default)]
@@ -19,7 +19,7 @@ pub struct PlatformSpec {
 }
 
 pub struct Platform {
-    pub action_bus: ActionBus<NoToolJobFactories>,
+    pub action_bus: ActionBus,
     pub apps: Vec<AppDefinition>,
     pub active_app_id: String,
     pub generation: u64,
@@ -34,7 +34,7 @@ impl Platform {
     pub async fn new(spec: Option<PlatformSpec>) -> Self {
         let spec = spec.unwrap_or_default();
         let panel_visibility = spec.initial_panel_visibility.clone().unwrap_or_default();
-        Self { action_bus: ActionBus::new(), apps: Vec::new(), active_app_id: spec.default_active_app_id.clone().unwrap_or_default(), generation: 0, chrome_generation: 0, uri: "/".into(), panel_visibility, id: spec.id, name: spec.name }
+        Self { action_bus: ActionBus::production(), apps: Vec::new(), active_app_id: spec.default_active_app_id.clone().unwrap_or_default(), generation: 0, chrome_generation: 0, uri: "/".into(), panel_visibility, id: spec.id, name: spec.name }
     }
 
     pub async fn add_app(&mut self, app: AppDefinition) {

@@ -34,6 +34,7 @@ use semio_framework_actor::ActorId as RuntimeActorId;
 // `semio_framework_actor` (e.g. `🏃️run`, which only depends on THIS crate) still needs a path to
 // name them in order to construct one, exactly the way `GuestRuntime`/`GuestInstance`/`Budget`
 // already reach it through this crate's own public API.
+use crate::interpreter::{CoreStepOutcome, HostCall, OwnedSemioArtifact, OwnedSemioExport, OwnedSemioInstance, StepControl, Value};
 pub use semio_framework_actor::{PackageHash, PackageId};
 use semio_framework_async::{Lane, ProcessKind, WorkerPool, WorkerPoolConfig};
 #[cfg(test)]
@@ -41,7 +42,7 @@ use std::collections::VecDeque;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::AtomicBool;
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::{Arc, Mutex};
 use wasmtime::component::{Component, Linker, ResourceTable};
 use wasmtime::{Config, Engine, InstanceAllocationStrategy, PoolingAllocationConfig, ResourceLimiter, Store};
 use wasmtime_wasi::{WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
@@ -52,27 +53,67 @@ use wasmtime_wasi::{WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
 /// 🧯️ Errors from the host's engine/component/call-boundary plumbing (`SharedWasmtimeEngine`,
 /// `WasmtimeRuntime`, `PluginInstanceHandle`'s post-turn job dispatch).
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum PluginHostError {
-    #[error("io: {0}")]
-    Io(#[from] std::io::Error),
-    #[error("json: {0}")]
-    Json(#[from] serde_json::Error),
-    #[error("wasmtime: {0}")]
+    Io(std::io::Error),
+    Json(serde_json::Error),
     Wasmtime(String),
-    #[error("plugin: {0}")]
     Plugin(String),
-    #[error("io route conflict for {key:?}: {existing_plugin} already owns it; {incoming_plugin} cannot replace it")]
-    IoRouteConflict { key: semio_framework::IoKey, existing_plugin: String, incoming_plugin: String },
+    IoRouteConflict {
+        key: semio_framework::IoKey,
+        existing_plugin: String,
+        incoming_plugin: String,
+    },
     /// 🌉️ CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM (W1-D): the NEW `(ArtifactDialect,
     /// ArtifactDialect)`-keyed graph's own conflict — separate from `IoRouteConflict` above (OLD
     /// `IoKey`-keyed graph), since the two mechanisms are additive and independently registered.
-    #[error("io entry route conflict for {from:?} -> {into:?}: {existing_plugin} already owns it; {incoming_plugin} cannot replace it")]
-    IoEntryRouteConflict { from: semio_framework::io_schema::ArtifactDialect, into: semio_framework::io_schema::ArtifactDialect, existing_plugin: String, incoming_plugin: String },
-    #[error("plugin runtime conflict for {plugin_id}")]
-    PluginRuntimeConflict { plugin_id: String },
-    #[error("{0} lock poisoned")]
+    IoEntryRouteConflict {
+        from: semio_framework::io_schema::ArtifactDialect,
+        into: semio_framework::io_schema::ArtifactDialect,
+        existing_plugin: String,
+        incoming_plugin: String,
+    },
+    PluginRuntimeConflict {
+        plugin_id: String,
+    },
     LockPoisoned(&'static str),
+}
+
+impl std::fmt::Display for PluginHostError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Io(error) => write!(formatter, "io: {error}"),
+            Self::Json(error) => write!(formatter, "json: {error}"),
+            Self::Wasmtime(message) => write!(formatter, "wasmtime: {message}"),
+            Self::Plugin(message) => write!(formatter, "plugin: {message}"),
+            Self::IoRouteConflict { key, existing_plugin, incoming_plugin } => write!(formatter, "io route conflict for {key:?}: {existing_plugin} already owns it; {incoming_plugin} cannot replace it"),
+            Self::IoEntryRouteConflict { from, into, existing_plugin, incoming_plugin } => write!(formatter, "io entry route conflict for {from:?} -> {into:?}: {existing_plugin} already owns it; {incoming_plugin} cannot replace it"),
+            Self::PluginRuntimeConflict { plugin_id } => write!(formatter, "plugin runtime conflict for {plugin_id}"),
+            Self::LockPoisoned(name) => write!(formatter, "{name} lock poisoned"),
+        }
+    }
+}
+
+impl std::error::Error for PluginHostError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Io(error) => Some(error),
+            Self::Json(error) => Some(error),
+            _ => None,
+        }
+    }
+}
+
+impl From<std::io::Error> for PluginHostError {
+    fn from(error: std::io::Error) -> Self {
+        Self::Io(error)
+    }
+}
+
+impl From<serde_json::Error> for PluginHostError {
+    fn from(error: serde_json::Error) -> Self {
+        Self::Json(error)
+    }
 }
 
 //#endregion ⚠️ Errors
@@ -88,7 +129,6 @@ pub enum PluginHostError {
 /// either: the one-per-process `Engine` (pooling allocator + on-demand fallback + fuel/epoch config),
 /// the 1 ms epoch ticker, a generic per-store `ResourceLimiter`, and the compiled-artifact cache.
 /// Wiring plan once A1/A3 land is in `📓️terra-B1-host-native-report.md`.
-
 /// ⚙️ Knobs for [`build_shared_engine`] — mirrors §2's pooling-allocator list verbatim. Plain fields
 /// rather than a `Budget`-derived config (A3's type) so this compiles today; `WasmtimeRuntime` will
 /// build one from `Budget` fields with a one-line call once A3 lands.
@@ -181,13 +221,8 @@ pub async fn build_shared_engine(cfg: SharedEngineConfig) -> Result<(Engine, boo
 }
 
 //#region 🧵️PluginHostWorkerPool
-/// 🧵️ This crate's OWN process-wide `WorkerPool` singleton (P1f) — same idiom as
-/// `semio-framework-os-services`'s `global_worker_pool`/`🌎️hub`'s `hub_worker_pool`: the repo has
-/// not yet converged on threading ONE pool handle through every crate that needs one (P1a/P1c/P1d's
-/// own reports name this as a later-phase unification, not a P1 requirement), so each crate that
-/// needs pool-scheduled background work owns a lazily-constructed singleton of its own rather than
-/// spinning up a fresh, unaccounted `WorkerPool` (and its own `worker_count` OS threads) per call
-/// site. `ProcessKind::InteractiveNative` — this crate is loaded by both interactive hosts (the
+/// 🧵️ Returns the process-wide `WorkerPool` owned by `semio-framework-async`.
+/// `ProcessKind::InteractiveNative` — this crate is loaded by both interactive hosts (the
 /// renderer) and headless ones (`🏃️run`, the MCP gateway, the `semio-shard` child binary), and
 /// `InteractiveNative`'s only cost for a headless caller is reserving one core it was never going to
 /// saturate anyway, the same tradeoff `global_worker_pool` already accepted.
@@ -201,15 +236,9 @@ pub async fn build_shared_engine(cfg: SharedEngineConfig) -> Result<(Engine, boo
 /// sub-millisecond periodic jobs, multiplying total host thread count by however many shard processes
 /// are running. No other caller (the renderer, `🏃️run`, the MCP gateway) sets this variable, so they
 /// keep the full-parallelism default.
-static PLUGIN_HOST_WORKER_POOL: OnceLock<WorkerPool> = OnceLock::new();
-
 pub(crate) fn plugin_host_worker_pool() -> WorkerPool {
-    PLUGIN_HOST_WORKER_POOL
-        .get_or_init(|| {
-            let cores = std::env::var("SEMIO_PLUGIN_HOST_WORKER_COUNT").ok().and_then(|value| value.parse::<usize>().ok()).filter(|count| *count > 0).unwrap_or_else(|| std::thread::available_parallelism().map_or(1, std::num::NonZero::get));
-            WorkerPool::new(WorkerPoolConfig::new(ProcessKind::InteractiveNative, cores))
-        })
-        .clone()
+    let cores = std::env::var("SEMIO_PLUGIN_HOST_WORKER_COUNT").ok().and_then(|value| value.parse::<usize>().ok()).filter(|count| *count > 0).unwrap_or_else(|| std::thread::available_parallelism().map_or(1, std::num::NonZero::get));
+    semio_framework_async::process_worker_pool(WorkerPoolConfig::new(ProcessKind::InteractiveNative, cores))
 }
 //#endregion 🧵️PluginHostWorkerPool
 
@@ -496,7 +525,6 @@ mod shared_wasmtime_engine_tests {
 /// `RuntimeActorId` never shadows `kernel::ActorId` (`📌️important.md`'s naming-hazard note) — this
 /// file does not import `kernel::ActorId` at all, only `semio_framework_actor::ActorId` (aliased
 /// `RuntimeActorId` in the top-of-file `use`).
-
 /// 📦️ What [`GuestRuntime::compile`] compiles — a package identity plus the content hash that also
 /// keys the compiled-artifact cache (`shared_engine_config_hash`/`compiled_cache_path` above).
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -512,11 +540,12 @@ pub struct PackageRef {
 pub struct CompiledHandle {
     pub package_hash: [u8; 32],
     component: Option<Arc<Component>>,
+    owned: Option<Arc<OwnedSemioArtifact>>,
 }
 
 impl std::fmt::Debug for CompiledHandle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("CompiledHandle").field("package_hash", &hex_encode(&self.package_hash)).field("has_component", &self.component.is_some()).finish()
+        f.debug_struct("CompiledHandle").field("package_hash", &hex_encode(&self.package_hash)).field("has_component", &self.component.is_some()).field("has_owned_actor", &self.owned.is_some()).finish()
     }
 }
 
@@ -547,11 +576,12 @@ enum GuestInstanceState {
     // a NEW dead-code warning instead of fixing one.
     #[allow(dead_code)]
     Mock(MockInstanceState),
+    Owned(OwnedInstanceState),
     Wasmtime(WasmtimeInstanceState),
 }
 
 /// ⛽️ `jobs.wit`'s `job-budget` record, mirrored field-for-field (design-abi.md §1).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct JobBudget {
     pub fuel: u64,
     pub deadline_ms: u32,
@@ -593,18 +623,40 @@ pub enum JobStep {
 
 /// 🧯️ Why a turn or job step didn't produce a result — distinct from [`PluginHostError`] (host-side
 /// plumbing faults): every `GuestRuntime::execute_turn`/`step_job` failure is one of these.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum TurnFault {
-    #[error(transparent)]
-    Host(#[from] PluginHostError),
-    #[error("guest instance has no more scripted/actual turns")]
+    Host(PluginHostError),
     Exhausted,
-    #[error("guest trapped: {0}")]
     Trapped(String),
-    #[error("epoch deadline exceeded")]
     DeadlineExceeded,
-    #[error("fuel exhausted")]
     FuelExhausted,
+}
+
+impl std::fmt::Display for TurnFault {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Host(error) => std::fmt::Display::fmt(error, formatter),
+            Self::Exhausted => formatter.write_str("guest instance has no more scripted/actual turns"),
+            Self::Trapped(message) => write!(formatter, "guest trapped: {message}"),
+            Self::DeadlineExceeded => formatter.write_str("epoch deadline exceeded"),
+            Self::FuelExhausted => formatter.write_str("fuel exhausted"),
+        }
+    }
+}
+
+impl std::error::Error for TurnFault {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Host(error) => Some(error),
+            _ => None,
+        }
+    }
+}
+
+impl From<PluginHostError> for TurnFault {
+    fn from(error: PluginHostError) -> Self {
+        Self::Host(error)
+    }
 }
 
 /// 🐎️ Host-side driver for one actor's execution — `design-runtime.md` §2. `WasmtimeRuntime` (the
@@ -757,7 +809,7 @@ impl MockGuestRuntime {
 #[cfg(test)]
 impl GuestRuntime for MockGuestRuntime {
     async fn compile(&self, package: &PackageRef, _bytes: &[u8]) -> Result<CompiledHandle, PluginHostError> {
-        Ok(CompiledHandle { package_hash: package.hash.0, component: None })
+        Ok(CompiledHandle { package_hash: package.hash.0, component: None, owned: None })
     }
 
     async fn instantiate(&self, _compiled: &CompiledHandle, actor: RuntimeActorId, _caps: &[BrokerCapabilityGrant], _budget: &Budget) -> Result<GuestInstance, PluginHostError> {
@@ -922,6 +974,524 @@ mod mock_guest_runtime_tests {
     }
 }
 //#endregion 🔖️MockGuestRuntime
+
+//#region 🧠️OwnedRuntime
+
+const OWNED_RESULT_LIMIT: usize = 64 * 1024 * 1024;
+const OWNED_CHECKPOINT_MAGIC: &[u8; 8] = b"SMOWNH01";
+const OWNED_STEP_FUEL: u64 = 4_096;
+const OWNED_SLICE_DEADLINE_MS: u32 = 8;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+enum OwnedOperation {
+    Describe,
+    Poll,
+    StartJob,
+    StepJob,
+    CancelJob,
+    Checkpoint,
+    Restore,
+}
+
+impl OwnedOperation {
+    fn export(self) -> OwnedSemioExport {
+        match self {
+            Self::Describe => OwnedSemioExport::Describe,
+            Self::Poll => OwnedSemioExport::Poll,
+            Self::StartJob => OwnedSemioExport::StartJob,
+            Self::StepJob => OwnedSemioExport::StepJob,
+            Self::CancelJob => OwnedSemioExport::CancelJob,
+            Self::Checkpoint => OwnedSemioExport::Checkpoint,
+            Self::Restore => OwnedSemioExport::Restore,
+        }
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+enum OwnedStage {
+    Allocate { input: Vec<u8> },
+    Call,
+    Deallocate { output: Vec<u8> },
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+struct OwnedPending {
+    operation: OwnedOperation,
+    stage: OwnedStage,
+    fuel_used: u64,
+}
+
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+struct OwnedCheckpointMetadata {
+    pending: Option<OwnedPending>,
+    guest_checkpoint: Option<Vec<u8>>,
+    context: i32,
+    next_resource: i32,
+    instance_id: u32,
+}
+
+struct OwnedInstanceState {
+    artifact: Arc<OwnedSemioArtifact>,
+    actor: OwnedSemioInstance,
+    pending: Option<OwnedPending>,
+    context: i32,
+    next_resource: i32,
+    instance_id: u32,
+}
+
+#[derive(serde::Serialize)]
+struct OwnedPollInput<'a> {
+    events: &'a [Event],
+    budget: Budget,
+    close_instances: Vec<u32>,
+}
+
+#[derive(serde::Serialize)]
+struct OwnedStartJobInput<'a> {
+    job: u64,
+    kind: &'a str,
+    input: Vec<u8>,
+}
+
+#[derive(serde::Serialize)]
+struct OwnedStepJobInput {
+    job: u64,
+    budget: JobBudget,
+}
+
+#[derive(serde::Serialize)]
+struct OwnedCancelJobInput {
+    job: u64,
+}
+
+#[derive(serde::Serialize)]
+struct OwnedRestoreInput<'a> {
+    state: &'a [u8],
+}
+
+struct OwnedInvocation {
+    output: Vec<u8>,
+    fuel_used: u64,
+}
+
+pub struct OwnedRuntime {
+    next_instance_id: std::sync::atomic::AtomicU32,
+}
+
+impl Default for OwnedRuntime {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl OwnedRuntime {
+    pub fn new() -> Self {
+        Self { next_instance_id: std::sync::atomic::AtomicU32::new(1) }
+    }
+
+    pub fn compile_component(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError> {
+        let artifact = OwnedSemioArtifact::parse(bytes).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
+        Ok(CompiledHandle { package_hash: package.hash.0, component: None, owned: Some(Arc::new(artifact)) })
+    }
+
+    pub fn instantiate_actor(&self, compiled: &CompiledHandle, actor: RuntimeActorId) -> Result<GuestInstance, PluginHostError> {
+        let artifact = compiled.owned.as_ref().ok_or_else(|| PluginHostError::Plugin("CompiledHandle has no repository-owned actor artifact".to_string()))?;
+        let owned = artifact.instantiate().map_err(|error| PluginHostError::Plugin(error.to_string()))?;
+        if owned.startup_active() {
+            return Err(PluginHostError::Plugin("owned actor has an undriven start function".to_string()));
+        }
+        let instance_id = self.next_instance_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        Ok(GuestInstance { actor, state: GuestInstanceState::Owned(OwnedInstanceState { artifact: Arc::clone(artifact), actor: owned, pending: None, context: 0, next_resource: 1, instance_id }) })
+    }
+
+    pub fn execute_actor_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault> {
+        let state = owned_state_mut(inst)?;
+        let close_instances = events.iter().filter(|event| matches!(event, Event::InstanceClose)).map(|_| state.instance_id).collect();
+        let input = serde_json::to_vec(&OwnedPollInput { events, budget, close_instances }).map_err(PluginHostError::from)?;
+        begin_owned_operation(state, OwnedOperation::Poll, Some(input))?;
+        let invocation = resume_owned_operation(state, OwnedOperation::Poll, budget.fuel, budget.deadline_ms)?;
+        let mut result: TurnResult = decode_owned_result(&invocation.output)?;
+        result.fuel_used = invocation.fuel_used;
+        Ok(result)
+    }
+
+    pub fn drop_actor(&self, _inst: GuestInstance) {}
+
+    pub async fn describe(&self, compiled: &CompiledHandle, budget: Budget) -> Result<Vec<u8>, TurnFault> {
+        let mut instance = self.instantiate_actor(compiled, RuntimeActorId(0)).map_err(TurnFault::Host)?;
+        let state = owned_state_mut(&mut instance)?;
+        begin_owned_operation(state, OwnedOperation::Describe, None)?;
+        resume_owned_operation(state, OwnedOperation::Describe, budget.fuel, budget.deadline_ms).map(|invocation| invocation.output)
+    }
+}
+
+impl GuestRuntime for OwnedRuntime {
+    async fn compile(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError> {
+        self.compile_component(package, bytes)
+    }
+
+    async fn instantiate(&self, compiled: &CompiledHandle, actor: RuntimeActorId, _caps: &[BrokerCapabilityGrant], _budget: &Budget) -> Result<GuestInstance, PluginHostError> {
+        self.instantiate_actor(compiled, actor)
+    }
+
+    async fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault> {
+        self.execute_actor_turn(inst, events, budget)
+    }
+
+    async fn start_job(&self, inst: &mut GuestInstance, job: u64, kind: &str, input: Vec<u8>) -> Result<(), TurnFault> {
+        let state = owned_state_mut(inst)?;
+        let input = serde_json::to_vec(&OwnedStartJobInput { job, kind, input }).map_err(PluginHostError::from)?;
+        begin_owned_operation(state, OwnedOperation::StartJob, Some(input))?;
+        let invocation = resume_owned_operation(state, OwnedOperation::StartJob, u64::MAX, 1_000)?;
+        decode_owned_result(&invocation.output)
+    }
+
+    async fn step_job(&self, inst: &mut GuestInstance, job: u64, budget: JobBudget) -> Result<JobStep, TurnFault> {
+        let state = owned_state_mut(inst)?;
+        let input = serde_json::to_vec(&OwnedStepJobInput { job, budget }).map_err(PluginHostError::from)?;
+        begin_owned_operation(state, OwnedOperation::StepJob, Some(input))?;
+        let invocation = resume_owned_operation(state, OwnedOperation::StepJob, budget.fuel, budget.deadline_ms)?;
+        decode_owned_result(&invocation.output)
+    }
+
+    async fn cancel_job(&self, inst: &mut GuestInstance, job: u64) -> Result<(), TurnFault> {
+        let state = owned_state_mut(inst)?;
+        if state.pending.as_ref().is_some_and(|pending| pending.operation != OwnedOperation::CancelJob) {
+            cancel_owned_operation(state)?;
+        }
+        let input = serde_json::to_vec(&OwnedCancelJobInput { job }).map_err(PluginHostError::from)?;
+        begin_owned_operation(state, OwnedOperation::CancelJob, Some(input))?;
+        let invocation = resume_owned_operation(state, OwnedOperation::CancelJob, u64::MAX, OWNED_SLICE_DEADLINE_MS)?;
+        decode_owned_result(&invocation.output)
+    }
+
+    async fn checkpoint(&self, inst: &mut GuestInstance) -> Result<Vec<u8>, PluginHostError> {
+        let state = match &mut inst.state {
+            GuestInstanceState::Owned(state) => state,
+            _ => return Err(PluginHostError::Plugin("checkpoint called on a non-owned GuestInstance".to_string())),
+        };
+        let guest_checkpoint = if state.pending.is_none() {
+            begin_owned_operation(state, OwnedOperation::Checkpoint, None).map_err(turn_fault_host)?;
+            let invocation = resume_owned_operation(state, OwnedOperation::Checkpoint, 100_000_000, 1_000).map_err(turn_fault_host)?;
+            Some(decode_owned_result::<Vec<u8>>(&invocation.output).map_err(turn_fault_host)?)
+        } else {
+            None
+        };
+        let metadata = OwnedCheckpointMetadata { pending: state.pending.clone(), guest_checkpoint, context: state.context, next_resource: state.next_resource, instance_id: state.instance_id };
+        let metadata = serde_json::to_vec(&metadata)?;
+        let actor = state.actor.checkpoint();
+        let mut checkpoint = Vec::with_capacity(20 + metadata.len() + actor.len());
+        checkpoint.extend_from_slice(OWNED_CHECKPOINT_MAGIC);
+        checkpoint.extend_from_slice(&(metadata.len() as u32).to_le_bytes());
+        checkpoint.extend_from_slice(&(actor.len() as u64).to_le_bytes());
+        checkpoint.extend_from_slice(&metadata);
+        checkpoint.extend_from_slice(&actor);
+        Ok(checkpoint)
+    }
+
+    async fn restore(&self, inst: &mut GuestInstance, checkpoint: &[u8]) -> Result<(), PluginHostError> {
+        let state = match &mut inst.state {
+            GuestInstanceState::Owned(state) => state,
+            _ => return Err(PluginHostError::Plugin("restore called on a non-owned GuestInstance".to_string())),
+        };
+        if checkpoint.get(..8) != Some(OWNED_CHECKPOINT_MAGIC) {
+            return Err(PluginHostError::Plugin("invalid owned host checkpoint header".to_string()));
+        }
+        let metadata_length =
+            checkpoint.get(8..12).and_then(|bytes| bytes.try_into().ok()).map(u32::from_le_bytes).map(|length| length as usize).ok_or_else(|| PluginHostError::Plugin("truncated owned host checkpoint metadata length".to_string()))?;
+        let actor_length =
+            checkpoint.get(12..20).and_then(|bytes| bytes.try_into().ok()).map(u64::from_le_bytes).and_then(|length| usize::try_from(length).ok()).ok_or_else(|| PluginHostError::Plugin("invalid owned host checkpoint actor length".to_string()))?;
+        let metadata_end = 20usize.checked_add(metadata_length).ok_or_else(|| PluginHostError::Plugin("owned host checkpoint metadata length overflow".to_string()))?;
+        let actor_end = metadata_end.checked_add(actor_length).ok_or_else(|| PluginHostError::Plugin("owned host checkpoint actor length overflow".to_string()))?;
+        if actor_end != checkpoint.len() {
+            return Err(PluginHostError::Plugin("owned host checkpoint length mismatch".to_string()));
+        }
+        let metadata: OwnedCheckpointMetadata = serde_json::from_slice(&checkpoint[20..metadata_end])?;
+        state.actor = state.artifact.restore(&checkpoint[metadata_end..]).map_err(|error| PluginHostError::Plugin(error.to_string()))?;
+        state.pending = metadata.pending;
+        state.context = metadata.context;
+        state.next_resource = metadata.next_resource;
+        state.instance_id = metadata.instance_id;
+        if let Some(guest_checkpoint) = metadata.guest_checkpoint {
+            let input = serde_json::to_vec(&OwnedRestoreInput { state: &guest_checkpoint })?;
+            begin_owned_operation(state, OwnedOperation::Restore, Some(input)).map_err(turn_fault_host)?;
+            let invocation = resume_owned_operation(state, OwnedOperation::Restore, 100_000_000, 1_000).map_err(turn_fault_host)?;
+            decode_owned_result::<()>(&invocation.output).map_err(turn_fault_host)?;
+        }
+        Ok(())
+    }
+
+    async fn drop_instance(&self, inst: GuestInstance) {
+        self.drop_actor(inst);
+    }
+}
+
+fn owned_state_mut(inst: &mut GuestInstance) -> Result<&mut OwnedInstanceState, TurnFault> {
+    match &mut inst.state {
+        GuestInstanceState::Owned(state) => Ok(state),
+        _ => Err(TurnFault::Trapped("owned runtime called on a non-owned GuestInstance".to_string())),
+    }
+}
+
+fn begin_owned_operation(state: &mut OwnedInstanceState, operation: OwnedOperation, input: Option<Vec<u8>>) -> Result<(), TurnFault> {
+    if let Some(pending) = &state.pending {
+        return if pending.operation == operation { Ok(()) } else { Err(TurnFault::Trapped(format!("owned operation {:?} is still active", pending.operation))) };
+    }
+    let stage = match input {
+        Some(input) => {
+            state.actor.begin(OwnedSemioExport::Allocate, vec![Value::I32(i32::try_from(input.len()).map_err(|_| TurnFault::Trapped("owned input exceeds wasm32 address space".to_string()))?)])?;
+            OwnedStage::Allocate { input }
+        }
+        None => {
+            state.actor.begin(operation.export(), Vec::new())?;
+            OwnedStage::Call
+        }
+    };
+    state.pending = Some(OwnedPending { operation, stage, fuel_used: 0 });
+    Ok(())
+}
+
+fn resume_owned_operation(state: &mut OwnedInstanceState, operation: OwnedOperation, fuel: u64, deadline_ms: u32) -> Result<OwnedInvocation, TurnFault> {
+    let started = std::time::Instant::now();
+    let mut remaining = fuel;
+    loop {
+        if started.elapsed() >= std::time::Duration::from_millis(u64::from(deadline_ms)) {
+            return Err(TurnFault::DeadlineExceeded);
+        }
+        if remaining == 0 {
+            return Err(TurnFault::FuelExhausted);
+        }
+        let mut pending = state.pending.take().ok_or_else(|| TurnFault::Trapped("owned operation has no resumable state".to_string()))?;
+        if pending.operation != operation {
+            state.pending = Some(pending);
+            return Err(TurnFault::Trapped("owned operation resume type mismatch".to_string()));
+        }
+        let grant = remaining.min(OWNED_STEP_FUEL);
+        match state.actor.step(grant, StepControl::default()) {
+            CoreStepOutcome::Yield { fuel_used } => {
+                pending.fuel_used = pending.fuel_used.saturating_add(fuel_used);
+                remaining = remaining.saturating_sub(fuel_used);
+                state.pending = Some(pending);
+                if fuel_used == 0 {
+                    return Err(TurnFault::Trapped("owned interpreter yielded without consuming fuel".to_string()));
+                }
+            }
+            CoreStepOutcome::HostCall { fuel_used, call } => {
+                pending.fuel_used = pending.fuel_used.saturating_add(fuel_used);
+                remaining = remaining.saturating_sub(fuel_used);
+                let results = reply_owned_host(state, &call).map_err(|error| TurnFault::Trapped(error.to_string()))?;
+                state.actor.resume_host(call.id, Ok(results))?;
+                state.pending = Some(pending);
+            }
+            CoreStepOutcome::Complete { fuel_used, values } => {
+                pending.fuel_used = pending.fuel_used.saturating_add(fuel_used);
+                remaining = remaining.saturating_sub(fuel_used);
+                match pending.stage {
+                    OwnedStage::Allocate { input } => {
+                        let [Value::I32(pointer)] = values.as_slice() else { return Err(TurnFault::Trapped("owned allocator returned an invalid pointer".to_string())) };
+                        write_owned_memory(&mut state.actor, *pointer, &input)?;
+                        state.actor.begin(operation.export(), vec![Value::I32(*pointer), Value::I32(input.len() as i32)])?;
+                        pending.stage = OwnedStage::Call;
+                        state.pending = Some(pending);
+                    }
+                    OwnedStage::Call => {
+                        let output = state.actor.read_bytes_result(&values, OWNED_RESULT_LIMIT)?;
+                        let [Value::I64(pair)] = values.as_slice() else { return Err(TurnFault::Trapped("owned call returned an invalid pointer/length pair".to_string())) };
+                        let pair = *pair as u64;
+                        state.actor.begin(OwnedSemioExport::Deallocate, vec![Value::I32(pair as u32 as i32), Value::I32((pair >> 32) as u32 as i32)])?;
+                        pending.stage = OwnedStage::Deallocate { output };
+                        state.pending = Some(pending);
+                    }
+                    OwnedStage::Deallocate { output } => return Ok(OwnedInvocation { output, fuel_used: pending.fuel_used }),
+                }
+            }
+            CoreStepOutcome::Cancelled { fuel_used } => return Err(TurnFault::Trapped(format!("owned operation cancelled after {fuel_used} instructions"))),
+            CoreStepOutcome::Fault { error, .. } => return Err(TurnFault::Trapped(error.to_string())),
+        }
+    }
+}
+
+fn cancel_owned_operation(state: &mut OwnedInstanceState) -> Result<(), TurnFault> {
+    match state.actor.step(1, StepControl { cancelled: true }) {
+        CoreStepOutcome::HostCall { call, .. } => {
+            state.actor.resume_host(call.id, Err("owned operation cancelled".to_string()))?;
+            if !matches!(state.actor.step(1, StepControl { cancelled: true }), CoreStepOutcome::Cancelled { .. }) {
+                return Err(TurnFault::Trapped("owned interpreter did not acknowledge cancellation".to_string()));
+            }
+        }
+        CoreStepOutcome::Cancelled { .. } => {}
+        _ => return Err(TurnFault::Trapped("owned interpreter did not acknowledge cancellation".to_string())),
+    }
+    state.pending = None;
+    Ok(())
+}
+
+fn reply_owned_host(state: &mut OwnedInstanceState, call: &HostCall) -> Result<Vec<Value>, PluginHostError> {
+    let values = match (call.module.as_str(), call.name.as_str()) {
+        ("semio:framework/pure@1.0.0", "now-ms") => vec![Value::I64(std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as i64))],
+        ("semio:framework/pure@1.0.0", "log") | ("semio:framework/pure@1.0.0", "trace-span") => Vec::new(),
+        ("$root", "[context-get-0]") => vec![Value::I32(state.context)],
+        ("$root", "[context-set-0]") => {
+            let [Value::I32(context)] = call.arguments.as_slice() else { return Err(PluginHostError::Plugin("invalid owned context-set argument".to_string())) };
+            state.context = *context;
+            Vec::new()
+        }
+        ("$root", "[waitable-set-new]")
+        | ("wasi:io/streams@0.2.0", "[method]output-stream.subscribe")
+        | ("wasi:clocks/monotonic-clock@0.2.0", "subscribe-duration")
+        | ("wasi:cli/stdin@0.2.0", "get-stdin")
+        | ("wasi:cli/stdout@0.2.0", "get-stdout")
+        | ("wasi:cli/stderr@0.2.0", "get-stderr") => {
+            let resource = state.next_resource;
+            state.next_resource = state.next_resource.wrapping_add(1).max(1);
+            vec![Value::I32(resource)]
+        }
+        ("$root", "[waitable-set-poll]") => vec![Value::I32(0)],
+        ("$root", "[waitable-join]")
+        | ("$root", "[waitable-set-drop]")
+        | ("[export]$root", "[task-cancel]")
+        | ("wasi:io/poll@0.2.0", "[method]pollable.block")
+        | ("wasi:io/error@0.2.0", "[resource-drop]error")
+        | ("wasi:io/poll@0.2.0", "[resource-drop]pollable")
+        | ("wasi:io/streams@0.2.0", "[resource-drop]input-stream")
+        | ("wasi:io/streams@0.2.0", "[resource-drop]output-stream") => Vec::new(),
+        ("wasi:clocks/monotonic-clock@0.2.0", "now") => vec![Value::I64(0)],
+        ("wasi:random/insecure-seed@0.2.9", "insecure-seed") => {
+            write_owned_zeroes(&mut state.actor, owned_argument_i32(call, 0)?, 16)?;
+            Vec::new()
+        }
+        ("wasi:cli/environment@0.2.0", "get-environment") => {
+            write_owned_zeroes(&mut state.actor, owned_argument_i32(call, 0)?, 8)?;
+            Vec::new()
+        }
+        ("wasi:clocks/wall-clock@0.2.0", "now") => {
+            write_owned_zeroes(&mut state.actor, owned_argument_i32(call, 0)?, 16)?;
+            Vec::new()
+        }
+        ("wasi:cli/terminal-stdin@0.2.0", "get-terminal-stdin") | ("wasi:cli/terminal-stdout@0.2.0", "get-terminal-stdout") | ("wasi:cli/terminal-stderr@0.2.0", "get-terminal-stderr") => {
+            write_owned_zeroes(&mut state.actor, owned_argument_i32(call, 0)?, 8)?;
+            Vec::new()
+        }
+        ("wasi:io/poll@0.2.0", "poll") => {
+            write_owned_zeroes(&mut state.actor, owned_argument_i32(call, 2)?, 8)?;
+            Vec::new()
+        }
+        ("wasi:io/streams@0.2.0", "[method]output-stream.check-write") => {
+            let pointer = owned_argument_i32(call, 1)?;
+            write_owned_zeroes(&mut state.actor, pointer, 16)?;
+            write_owned_memory(&mut state.actor, pointer.wrapping_add(8), &65_536u64.to_le_bytes()).map_err(turn_fault_host)?;
+            Vec::new()
+        }
+        ("wasi:io/streams@0.2.0", "[method]output-stream.write") => {
+            write_owned_zeroes(&mut state.actor, owned_argument_i32(call, 3)?, 16)?;
+            Vec::new()
+        }
+        ("wasi:io/streams@0.2.0", "[method]output-stream.blocking-flush") => {
+            write_owned_zeroes(&mut state.actor, owned_argument_i32(call, 1)?, 16)?;
+            Vec::new()
+        }
+        _ => return Err(PluginHostError::Plugin(format!("owned host import {}::{} is unavailable", call.module, call.name))),
+    };
+    if values.len() != call.results.len() || values.iter().zip(&call.results).any(|(value, expected)| value.value_type() != *expected) {
+        return Err(PluginHostError::Plugin(format!("owned host import {}::{} returned the wrong shape", call.module, call.name)));
+    }
+    Ok(values)
+}
+
+fn owned_argument_i32(call: &HostCall, index: usize) -> Result<i32, PluginHostError> {
+    match call.arguments.get(index) {
+        Some(Value::I32(value)) => Ok(*value),
+        _ => Err(PluginHostError::Plugin(format!("owned host import {}::{} argument {index} is not i32", call.module, call.name))),
+    }
+}
+
+fn write_owned_zeroes(actor: &mut OwnedSemioInstance, pointer: i32, length: usize) -> Result<(), PluginHostError> {
+    write_owned_memory(actor, pointer, &vec![0; length]).map_err(turn_fault_host)
+}
+
+fn write_owned_memory(actor: &mut OwnedSemioInstance, pointer: i32, bytes: &[u8]) -> Result<(), TurnFault> {
+    let start = pointer as u32 as usize;
+    let memory = actor.memory_mut().ok_or_else(|| TurnFault::Trapped("owned actor memory is unavailable".to_string()))?;
+    let end = start.checked_add(bytes.len()).filter(|end| *end <= memory.len()).ok_or_else(|| TurnFault::Trapped("owned input is outside guest memory".to_string()))?;
+    memory[start..end].copy_from_slice(bytes);
+    Ok(())
+}
+
+fn decode_owned_result<T: serde::de::DeserializeOwned>(bytes: &[u8]) -> Result<T, TurnFault> {
+    let result: Result<T, Vec<u8>> = serde_json::from_slice(bytes).map_err(PluginHostError::from)?;
+    result.map_err(|error| TurnFault::Trapped(String::from_utf8_lossy(&error).into_owned()))
+}
+
+fn turn_fault_host(fault: TurnFault) -> PluginHostError {
+    match fault {
+        TurnFault::Host(error) => error,
+        other => PluginHostError::Plugin(other.to_string()),
+    }
+}
+
+impl From<crate::interpreter::CoreError> for TurnFault {
+    fn from(error: crate::interpreter::CoreError) -> Self {
+        Self::Trapped(error.to_string())
+    }
+}
+
+#[cfg(test)]
+mod owned_runtime_tests {
+    use super::*;
+
+    fn budget() -> Budget {
+        Budget { fuel: 500_000_000, deadline_ms: 60_000, max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 64 }
+    }
+
+    async fn cancel_to_completion(runtime: &OwnedRuntime, instance: &mut GuestInstance, job: u64) {
+        let started = std::time::Instant::now();
+        loop {
+            match runtime.cancel_job(instance, job).await {
+                Ok(()) => return,
+                Err(TurnFault::DeadlineExceeded | TurnFault::FuelExhausted) if started.elapsed() < std::time::Duration::from_secs(60) => {}
+                Err(error) => panic!("cancel owned job {job}: {error}"),
+            }
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn configured_component_executes_owned_describe_reactor_jobs_cancel_and_checkpoint_restore() {
+        let Some(path) = std::env::var_os("SEMIO_OWNED_COMPONENT_FIXTURE") else { return };
+        let bytes = std::fs::read(path).expect("read owned component fixture");
+        let runtime = OwnedRuntime::new();
+        let package = PackageRef { package: PackageId("owned-fixture".to_string()), hash: PackageHash([9; 32]) };
+        let compiled = runtime.compile(&package, &bytes).await.expect("compile owned fixture");
+        let descriptor = runtime.describe(&compiled, budget()).await.expect("execute owned describe");
+        assert!(!descriptor.is_empty(), "owned describe returned no bytes");
+
+        let mut resumed = runtime.instantiate(&compiled, RuntimeActorId(40), &[], &budget()).await.expect("instantiate resumable owned fixture");
+        let one_instruction = Budget { fuel: 1, ..budget() };
+        assert!(matches!(runtime.execute_turn(&mut resumed, &[], one_instruction).await, Err(TurnFault::FuelExhausted)));
+        let mid_call = runtime.checkpoint(&mut resumed).await.expect("checkpoint fuel-yielded owned turn");
+        runtime.restore(&mut resumed, &mid_call).await.expect("restore fuel-yielded owned turn");
+        assert!(runtime.execute_turn(&mut resumed, &[], budget()).await.expect("resume fuel-yielded owned turn").fuel_used > 1);
+
+        let mut cancelled = runtime.instantiate(&compiled, RuntimeActorId(42), &[], &budget()).await.expect("instantiate cancellable owned fixture");
+        assert!(matches!(runtime.execute_turn(&mut cancelled, &[], one_instruction).await, Err(TurnFault::FuelExhausted)));
+        cancel_to_completion(&runtime, &mut cancelled, 69).await;
+
+        let mut instance = runtime.instantiate(&compiled, RuntimeActorId(41), &[], &budget()).await.expect("instantiate owned fixture");
+        let turn = runtime.execute_turn(&mut instance, &[], budget()).await.expect("execute owned empty turn");
+        assert!(turn.fuel_used > 0, "owned turn did not report interpreter fuel");
+
+        runtime.start_job(&mut instance, 70, "semio.test-owned-checkpoint", Vec::new()).await.expect("start checkpointed owned job");
+        let checkpoint = runtime.checkpoint(&mut instance).await.expect("checkpoint owned instance");
+        cancel_to_completion(&runtime, &mut instance, 70).await;
+        runtime.restore(&mut instance, &checkpoint).await.expect("restore owned checkpoint");
+        assert!(matches!(runtime.step_job(&mut instance, 70, JobBudget { fuel: 10_000_000, deadline_ms: 10_000 }).await.expect("step restored owned job"), JobStep::Failed { .. }));
+
+        runtime.start_job(&mut instance, 71, "semio.test-owned-cancel", Vec::new()).await.expect("start cancellable owned job");
+        cancel_to_completion(&runtime, &mut instance, 71).await;
+        assert!(matches!(runtime.step_job(&mut instance, 71, JobBudget { fuel: 10_000_000, deadline_ms: 10_000 }).await.expect("step cancelled owned job"), JobStep::Failed { .. }));
+    }
+}
+
+//#endregion 🧠️OwnedRuntime
 
 //#region 🐎️WasmtimeRuntime
 /// 🧬️ The real `impl GuestRuntime for WasmtimeRuntime` — `design-runtime.md` §2. Nested `mod
@@ -1229,7 +1799,7 @@ impl GuestRuntime for WasmtimeRuntime {
     async fn compile(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError> {
         let cache_path = compiled_cache_path(&self.cache_root, &self.engine_config_hash, &package.hash.0).await;
         if let Some(component) = load_compiled_component(&self.engine, &cache_path).await {
-            return Ok(CompiledHandle { package_hash: package.hash.0, component: Some(Arc::new(component)) });
+            return Ok(CompiledHandle { package_hash: package.hash.0, component: Some(Arc::new(component)), owned: None });
         }
         let component = Component::from_binary(&self.engine, bytes).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         // 🚫️async: R13/R14 corollary — `let _ = <async call>;` used to suppress the lint while
@@ -1239,7 +1809,7 @@ impl GuestRuntime for WasmtimeRuntime {
         // write must not fail `compile` itself), so the `Result` still discards, only the future
         // is now actually driven.
         let _ = store_compiled_component(&component, &cache_path).await;
-        Ok(CompiledHandle { package_hash: package.hash.0, component: Some(Arc::new(component)) })
+        Ok(CompiledHandle { package_hash: package.hash.0, component: Some(Arc::new(component)), owned: None })
     }
 
     async fn instantiate(&self, compiled: &CompiledHandle, actor: RuntimeActorId, caps: &[BrokerCapabilityGrant], budget: &Budget) -> Result<GuestInstance, PluginHostError> {
@@ -1459,6 +2029,7 @@ impl GuestRuntime for WasmtimeRuntime {
 /// calls — so it stays a bare value, one indirection (the enum's own `Arc<GuestRuntimes>` wrapper at
 /// every call site) instead of two.
 pub enum GuestRuntimes {
+    Owned(OwnedRuntime),
     Wasmtime(WasmtimeRuntime),
     // 🔮️ a later packet adds `AsyncActor(AsyncPluginRuntime)` here, backed by wasmtime's
     // `component-model-async` — do not mount `⏳️runtime.rs` from this packet (out of scope, needs a
@@ -1472,6 +2043,7 @@ pub enum GuestRuntimes {
 impl GuestRuntime for GuestRuntimes {
     async fn compile(&self, package: &PackageRef, bytes: &[u8]) -> Result<CompiledHandle, PluginHostError> {
         match self {
+            Self::Owned(r) => r.compile(package, bytes).await,
             Self::Wasmtime(r) => r.compile(package, bytes).await,
             #[cfg(test)]
             Self::Mock(r) => r.compile(package, bytes).await,
@@ -1482,6 +2054,7 @@ impl GuestRuntime for GuestRuntimes {
 
     async fn instantiate(&self, compiled: &CompiledHandle, actor: RuntimeActorId, caps: &[BrokerCapabilityGrant], budget: &Budget) -> Result<GuestInstance, PluginHostError> {
         match self {
+            Self::Owned(r) => r.instantiate(compiled, actor, caps, budget).await,
             Self::Wasmtime(r) => r.instantiate(compiled, actor, caps, budget).await,
             #[cfg(test)]
             Self::Mock(r) => r.instantiate(compiled, actor, caps, budget).await,
@@ -1492,6 +2065,7 @@ impl GuestRuntime for GuestRuntimes {
 
     async fn execute_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault> {
         match self {
+            Self::Owned(r) => r.execute_turn(inst, events, budget).await,
             Self::Wasmtime(r) => r.execute_turn(inst, events, budget).await,
             #[cfg(test)]
             Self::Mock(r) => r.execute_turn(inst, events, budget).await,
@@ -1502,6 +2076,7 @@ impl GuestRuntime for GuestRuntimes {
 
     async fn start_job(&self, inst: &mut GuestInstance, job: u64, kind: &str, input: Vec<u8>) -> Result<(), TurnFault> {
         match self {
+            Self::Owned(r) => r.start_job(inst, job, kind, input).await,
             Self::Wasmtime(r) => r.start_job(inst, job, kind, input).await,
             #[cfg(test)]
             Self::Mock(r) => r.start_job(inst, job, kind, input).await,
@@ -1512,6 +2087,7 @@ impl GuestRuntime for GuestRuntimes {
 
     async fn step_job(&self, inst: &mut GuestInstance, job: u64, budget: JobBudget) -> Result<JobStep, TurnFault> {
         match self {
+            Self::Owned(r) => r.step_job(inst, job, budget).await,
             Self::Wasmtime(r) => r.step_job(inst, job, budget).await,
             #[cfg(test)]
             Self::Mock(r) => r.step_job(inst, job, budget).await,
@@ -1522,6 +2098,7 @@ impl GuestRuntime for GuestRuntimes {
 
     async fn cancel_job(&self, inst: &mut GuestInstance, job: u64) -> Result<(), TurnFault> {
         match self {
+            Self::Owned(r) => r.cancel_job(inst, job).await,
             Self::Wasmtime(r) => r.cancel_job(inst, job).await,
             #[cfg(test)]
             Self::Mock(r) => r.cancel_job(inst, job).await,
@@ -1532,6 +2109,7 @@ impl GuestRuntime for GuestRuntimes {
 
     async fn checkpoint(&self, inst: &mut GuestInstance) -> Result<Vec<u8>, PluginHostError> {
         match self {
+            Self::Owned(r) => r.checkpoint(inst).await,
             Self::Wasmtime(r) => r.checkpoint(inst).await,
             #[cfg(test)]
             Self::Mock(r) => r.checkpoint(inst).await,
@@ -1542,6 +2120,7 @@ impl GuestRuntime for GuestRuntimes {
 
     async fn restore(&self, inst: &mut GuestInstance, state: &[u8]) -> Result<(), PluginHostError> {
         match self {
+            Self::Owned(r) => r.restore(inst, state).await,
             Self::Wasmtime(r) => r.restore(inst, state).await,
             #[cfg(test)]
             Self::Mock(r) => r.restore(inst, state).await,
@@ -1552,6 +2131,7 @@ impl GuestRuntime for GuestRuntimes {
 
     async fn drop_instance(&self, inst: GuestInstance) {
         match self {
+            Self::Owned(r) => r.drop_instance(inst).await,
             Self::Wasmtime(r) => r.drop_instance(inst).await,
             #[cfg(test)]
             Self::Mock(r) => r.drop_instance(inst).await,
@@ -1564,6 +2144,11 @@ impl GuestRuntime for GuestRuntimes {
 impl From<WasmtimeRuntime> for GuestRuntimes {
     fn from(r: WasmtimeRuntime) -> Self {
         Self::Wasmtime(r)
+    }
+}
+impl From<OwnedRuntime> for GuestRuntimes {
+    fn from(r: OwnedRuntime) -> Self {
+        Self::Owned(r)
     }
 }
 #[cfg(test)]
@@ -1644,7 +2229,6 @@ async fn wit_turn_status_to_kernel(status: wit_reactor::TurnStatus) -> TurnStatu
 
 /// 🎁️ Every effect that carries a `req: request-id` becomes `RequestId(req)` — one line, so it's
 /// inlined at each call site below rather than its own helper.
-
 /// 🐛️ Guest → host: WIT `effect` (`📜️wit/📜️effects.wit`) to `semio_framework::kernel::Effect`.
 /// `Err` is returned (never a silently-wrong `Effect`) for `io-run` — the one variant with no
 /// kernel counterpart yet (`## blocked-on` in the report).
@@ -3271,16 +3855,38 @@ pub struct PluginGraph {
     state: Mutex<BTreeMap<String, PluginManifest>>,
 }
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum PluginGraphError {
-    #[error(transparent)]
-    Graph(#[from] semio_framework::DependencyGraphError),
-    #[error("plugin `{plugin_id}` cannot be unloaded: still depended on by {dependents:?}")]
+    Graph(semio_framework::DependencyGraphError),
     UnloadBlocked { plugin_id: String, dependents: Vec<String> },
-    #[error("plugin `{plugin_id}` is not registered")]
     Unknown { plugin_id: String },
-    #[error("plugin graph lock poisoned")]
     LockPoisoned,
+}
+
+impl std::fmt::Display for PluginGraphError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Graph(error) => std::fmt::Display::fmt(error, formatter),
+            Self::UnloadBlocked { plugin_id, dependents } => write!(formatter, "plugin `{plugin_id}` cannot be unloaded: still depended on by {dependents:?}"),
+            Self::Unknown { plugin_id } => write!(formatter, "plugin `{plugin_id}` is not registered"),
+            Self::LockPoisoned => formatter.write_str("plugin graph lock poisoned"),
+        }
+    }
+}
+
+impl std::error::Error for PluginGraphError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Graph(error) => Some(error),
+            _ => None,
+        }
+    }
+}
+
+impl From<semio_framework::DependencyGraphError> for PluginGraphError {
+    fn from(error: semio_framework::DependencyGraphError) -> Self {
+        Self::Graph(error)
+    }
 }
 
 impl PluginGraph {
@@ -3403,7 +4009,7 @@ mod plugin_graph_tests {
     async fn manifest(plugin_id: &str, version: &str, deps: &[(&str, &str)]) -> PluginManifest {
         let mut dependencies = Vec::with_capacity(deps.len());
         for (id, req) in deps {
-            dependencies.push(semio_framework::PluginDependency::new(*id, semio_framework::VersionReq::parse(req).unwrap()).await);
+            dependencies.push(semio_framework::PluginDependency::new(*id, semio_framework::VersionReq::parse(req).unwrap()));
         }
         PluginManifest {
             plugin_id: plugin_id.to_string(),
@@ -3632,7 +4238,7 @@ impl ArtifactMutationRouter {
                     if contributor != plugin_id {
                         return Err(PluginHostError::Plugin(format!("mutation roster row {:?} claims contributor `{contributor}` but was reported by plugin `{plugin_id}`", entry.mutation_id)));
                     }
-                    let owner_plugin = semio_framework::io::ArtifactKindId::parse(artifact_kind).await.map_err(PluginHostError::Plugin)?.plugin().await.to_string();
+                    let owner_plugin = semio_framework::io::ArtifactKindId::parse(artifact_kind).map_err(PluginHostError::Plugin)?.plugin().to_string();
                     if !dependencies.iter().any(|dependency| dependency.plugin_id == owner_plugin) {
                         return Err(PluginHostError::Plugin(format!("plugin `{plugin_id}` contributes a mutation on `{artifact_kind}` (owner `{owner_plugin}`) without declaring `{owner_plugin}` as a dependency (contract §4 rule 1)")));
                     }
@@ -3676,8 +4282,8 @@ impl ArtifactMutationRouter {
                 None => MutationOwnership::Owner { plugin_id: plugin_id.clone() },
             });
         }
-        if let Ok(parsed) = semio_framework::io::ArtifactKindId::parse(artifact_kind).await {
-            if let Some((plugin_id, _entry)) = routes.get(&(parsed.plugin().await.to_string(), mutation_id.to_string())) {
+        if let Ok(parsed) = semio_framework::io::ArtifactKindId::parse(artifact_kind) {
+            if let Some((plugin_id, _entry)) = routes.get(&(parsed.plugin().to_string(), mutation_id.to_string())) {
                 return Ok(MutationOwnership::Owner { plugin_id: plugin_id.clone() });
             }
         }
@@ -3757,7 +4363,7 @@ mod artifact_mutation_router_tests {
         let router = ArtifactMutationRouter::new();
         router.register_roster("owner", &[], vec![owner_entry("widget.doc#set-color").await]).await.unwrap();
         let dependency = semio_framework::PluginDependency::new("owner", semio_framework::VersionReq::Any);
-        router.register_roster("contributor", &[dependency.await], vec![contributed_entry("widget.doc#contributor:annotate", "contributor", "s.owner.widget").await]).await.unwrap();
+        router.register_roster("contributor", &[dependency], vec![contributed_entry("widget.doc#contributor:annotate", "contributor", "s.owner.widget").await]).await.unwrap();
 
         assert_eq!(router.resolve("s.owner.widget", "widget.doc#set-color").await.unwrap(), MutationOwnership::Owner { plugin_id: "owner".into() });
         assert_eq!(router.resolve("s.owner.widget", "widget.doc#contributor:annotate").await.unwrap(), MutationOwnership::Contributed { plugin_id: "contributor".into() });
@@ -3786,7 +4392,7 @@ mod artifact_mutation_router_tests {
         let router = ArtifactMutationRouter::new();
         router.register_roster("owner", &[], vec![owner_entry("widget.doc#set-color").await]).await.unwrap();
         let dependency = semio_framework::PluginDependency::new("owner", semio_framework::VersionReq::Any);
-        router.register_roster("contributor", &[dependency.await], vec![contributed_entry("widget.doc#contributor:annotate", "contributor", "s.owner.widget").await]).await.unwrap();
+        router.register_roster("contributor", &[dependency], vec![contributed_entry("widget.doc#contributor:annotate", "contributor", "s.owner.widget").await]).await.unwrap();
         router.unregister_plugin("contributor").await.unwrap();
         assert_eq!(router.roster().await.unwrap().len(), 1);
         assert!(router.resolve("s.owner.widget", "widget.doc#set-color").await.is_ok());
@@ -3956,12 +4562,54 @@ pub struct TransactionOutcome {
 }
 
 /// 🧯 Contract freeze §5's frozen rejection taxonomy, typed.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum TransactionError {
-    #[error("{code}: {message}")]
     Rejected { code: String, message: String },
-    #[error("plugin host error: {0}")]
-    Host(#[from] PluginHostError),
+    Host(PluginHostError),
+}
+
+impl std::fmt::Display for TransactionError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Rejected { code, message } => write!(formatter, "{code}: {message}"),
+            Self::Host(error) => write!(formatter, "plugin host error: {error}"),
+        }
+    }
+}
+
+impl std::error::Error for TransactionError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Host(error) => Some(error),
+            Self::Rejected { .. } => None,
+        }
+    }
+}
+
+impl From<PluginHostError> for TransactionError {
+    fn from(error: PluginHostError) -> Self {
+        Self::Host(error)
+    }
+}
+
+#[cfg(test)]
+mod owned_error_tests {
+    use super::*;
+    use std::error::Error;
+
+    #[semio_framework_async_macros::async_test]
+    async fn owned_errors_preserve_display_source_and_from() {
+        let host = PluginHostError::from(std::io::Error::new(std::io::ErrorKind::Other, "disk"));
+        assert_eq!(host.to_string(), "io: disk");
+        assert!(host.source().is_some());
+        let turn = TurnFault::from(host);
+        assert_eq!(turn.to_string(), "io: disk");
+        assert!(turn.source().is_some());
+        let transaction = TransactionError::from(PluginHostError::Plugin("broken".into()));
+        assert_eq!(transaction.to_string(), "plugin host error: plugin: broken");
+        assert!(transaction.source().is_some());
+        assert_eq!(PluginGraphError::Unknown { plugin_id: "missing".into() }.to_string(), "plugin `missing` is not registered");
+    }
 }
 
 impl TransactionError {
@@ -4290,7 +4938,7 @@ mod host_transaction_coordinator_tests {
     }
 
     async fn dependency(id: &str) -> semio_framework::PluginDependency {
-        semio_framework::PluginDependency::new(id, semio_framework::VersionReq::Any).await
+        semio_framework::PluginDependency::new(id, semio_framework::VersionReq::Any)
     }
 
     #[semio_framework_async_macros::async_test]
@@ -4748,7 +5396,7 @@ impl AppRouter {
                     gaps.push(semio_framework::Fault::new(
                         semio_framework::FaultOrigin::Framework,
                         semio_framework::FaultCode::new("surface.missing-owner-surface"),
-                        format!("`{}` (owned by `{owner}`) has no registered {} surface", dialect.to_coordinate(), role.as_str().await),
+                        format!("`{}` (owned by `{owner}`) has no registered {} surface", dialect.to_coordinate(), role.as_str()),
                     ));
                 }
             }
@@ -4841,7 +5489,7 @@ mod app_router_tests {
     async fn fixture_manifest(plugin_id: &str, dependency_ids: Vec<&str>, artifact_kinds: Vec<semio_framework::ArtifactKindSpec>, apps: Vec<semio_framework::AppDefinition>) -> PluginManifest {
         let mut dependencies = Vec::with_capacity(dependency_ids.len());
         for id in dependency_ids {
-            dependencies.push(semio_framework::PluginDependency::new(id, semio_framework::VersionReq::Any).await);
+            dependencies.push(semio_framework::PluginDependency::new(id, semio_framework::VersionReq::Any));
         }
         PluginManifest {
             plugin_id: plugin_id.into(),
@@ -5000,7 +5648,7 @@ impl OpeningResolver {
         if let Some(first) = candidates.into_iter().next() {
             return Ok(first);
         }
-        Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("surface.unknown-dialect"), format!("no {} surface registered for `{}`", role.as_str().await, dialect.to_coordinate())))
+        Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("surface.unknown-dialect"), format!("no {} surface registered for `{}`", role.as_str(), dialect.to_coordinate())))
     }
 }
 
@@ -5045,7 +5693,7 @@ mod opening_resolver_tests {
                     topic_contributions: Vec::new(),
                     commands: Vec::new(),
                     artifact_kinds: Vec::new(),
-                    dependencies: vec![semio_framework::PluginDependency::new("cad", semio_framework::VersionReq::Any).await],
+                    dependencies: vec![semio_framework::PluginDependency::new("cad", semio_framework::VersionReq::Any)],
                     contributions: Vec::new(),
                 },
             )

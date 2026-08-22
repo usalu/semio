@@ -34,8 +34,8 @@ fn expected_after() -> PresentSnapshot {
 
 /// ▶️ Clearing an already-empty deck carries `before` to exactly the committed `after`, leaving the
 /// composed deck handle untouched.
-#[semio_framework_async_macros::async_test]
-async fn applies_to_committed_after() {
+#[test]
+fn applies_to_committed_after() {
     let base = before();
     let snapshot = apply_present_mutation(&base, &mutation()).expect("an empty diff still applies cleanly");
     assert_eq!(snapshot, expected_after(), "replace-tiles/no-ops-when-the-collection-is-already-empty: applied state differs from committed after-snapshot");
@@ -45,8 +45,8 @@ async fn applies_to_committed_after() {
 /// 🔺️ The delta is exactly the committed all-null `PresentDiff` — `replace-tiles` compares the
 /// WHOLE collection by value before building anything, so a wholesale swap for an equal collection
 /// never reaches `diff_set_presentation`.
-#[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+#[test]
+fn produces_committed_diff() {
     let outcome = <PresentMutation as protocol::Mutation<PresentSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
@@ -55,8 +55,8 @@ async fn produces_committed_diff() {
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to present's own diff type.
-#[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+#[test]
+fn committed_diff_is_canonical() {
     let decoded: PresentDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
@@ -65,8 +65,8 @@ async fn committed_diff_is_canonical() {
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after`, with the
 /// deck slot never set.
-#[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+#[test]
+fn committed_diff_applies_to_after() {
     let decoded: PresentDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert!(decoded.presentation.is_none(), "a collection-identity replace must leave the composed deck slot unset");
     let produced = <PresentDiff as protocol::MutationDiff<PresentSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
@@ -75,8 +75,8 @@ async fn committed_diff_applies_to_after() {
 
 /// 🔣️ Both committed snapshots and the committed mutation are already canonical — `newTiles` is a
 /// real empty array, the "clear" gesture, not an omitted field.
-#[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+#[test]
+fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: PresentSnapshot = serde_json::from_str(text).expect("snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
@@ -92,8 +92,8 @@ async fn committed_json_is_canonical() {
 /// 🎯️ The declared outcome holds: `applied`, with one untargeted Warning `mutation.no-op`.
 /// `replace-tiles` addresses the collection as a whole, so it has no missing-target branch at all —
 /// this warning is its ONLY diagnostic.
-#[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+#[test]
+fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "replace-tiles/no-ops-when-the-collection-is-already-empty declares an applied outcome");
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("the declared outcome carries messages");
@@ -106,8 +106,8 @@ async fn declared_outcome_holds() {
 
 /// ↩️ `replace-tiles`' inverse is unconditional and BASE-derived: one `replace-tiles` carrying the
 /// pre-state collection wholesale — here the empty collection — never a per-tile plan.
-#[semio_framework_async_macros::async_test]
-async fn inverse_restores_the_whole_base_collection() {
+#[test]
+fn inverse_restores_the_whole_base_collection() {
     let base = before();
     let inverse = inverse_present_mutation(&base, &mutation());
     assert_eq!(inverse.len(), 1, "replace-tiles always undoes with exactly one wholesale step, got {inverse:?}");

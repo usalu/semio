@@ -11,12 +11,12 @@ use serde_json::json;
 pub const UTILITY_ID: &str = "volumeBrush";
 
 /// 🧱️ Stitched into the app manifest by `crate::editor::puzzle3d::create_puzzle3d_app`.
-pub async fn definition(label: LocalizedLabel) -> UtilityDefinition {
+pub fn definition(label: LocalizedLabel) -> UtilityDefinition {
     UtilityDefinition::new(UTILITY_ID, label, "volume-brush")
 }
 
 /// 🧊️ Voxel width/depth/height measures for the Volume Brush utility.
-pub async fn voxel_dim_measures(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
+pub fn voxel_dim_measures(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
     let [w, d, h] = runtime.voxel_dims;
     let axis_slider = |axis: &str, label: LabelText, value: u32| WindowMeasure::Slider {
         id: format!("puzzle3d-voxel-{axis}"),
@@ -36,7 +36,7 @@ pub async fn voxel_dim_measures(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabe
 }
 
 /// 🧊️ Utility Options for the Volume Brush utility — the voxel dimension sliders for Alt+click painting.
-pub async fn options(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeasure {
+pub fn options(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeasure {
     WindowMeasure::Group {
         id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-utility-options-volume-brush"),
         label: labels.volume_brush.into(),

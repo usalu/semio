@@ -98,7 +98,7 @@ impl Block2dArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.block.block2d` — twenty handcrafted schema leaves.
-pub async fn block2d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn block2d_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.block.block2d",
         artifact: schema::FacetLeaves {

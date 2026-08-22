@@ -287,7 +287,7 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn vav_system_cools_mixed_air() {
         let system = AirSystem::Vav { supply_fan: test_fan(), return_fan: None, cooling: test_cooling(), heating: None, min_flow_m3_s: 1.0, max_flow_m3_s: 4.0 };
         let req = AirSystemRequest {
@@ -309,7 +309,7 @@ mod tests {
         assert!(out.supply_fan_power_w > 0.0);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn economizer_detected_when_oa_cooler() {
         let system = AirSystem::Cav { supply_fan: test_fan(), return_fan: None, cooling: test_cooling(), heating: None, design_flow_m3_s: 2.0 };
         let req = AirSystemRequest {
@@ -329,7 +329,7 @@ mod tests {
         assert!(out.economizer_active);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn doas_conditions_outdoor_air() {
         let system = AirSystem::Doas { supply_fan: test_fan(), cooling: test_cooling(), heating: Some(HeatingCoil::Electric { capacity_w: 10_000.0, efficiency: 1.0 }), erv_effectiveness: 0.7, design_oa_m3_s: 0.5 };
         let req = AirSystemRequest {

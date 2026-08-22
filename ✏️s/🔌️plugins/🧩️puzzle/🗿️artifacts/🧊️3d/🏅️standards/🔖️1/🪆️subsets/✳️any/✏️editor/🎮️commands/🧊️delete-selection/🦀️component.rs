@@ -3,7 +3,7 @@
 use crate::editor::puzzle3d::Puzzle3dActionCtx;
 use std::collections::HashSet;
 
-pub async fn delete_selection(ctx: &mut Puzzle3dActionCtx<'_>) {
+pub fn delete_selection(ctx: &mut Puzzle3dActionCtx<'_>) {
     let object_ids: Vec<String> = ctx.selected_object_ids();
     let vortex_ids: HashSet<String> = ctx.selected_vortex_ids().into_iter().collect();
     let attraction_ids: Vec<String> = ctx.selected_attraction_ids();

@@ -76,12 +76,12 @@ impl Default for Puzzle2dArtifact {
 
 impl Puzzle2dArtifact {
     /// 📸️ Persisted subset.
-    pub async fn to_snapshot(&self) -> Puzzle2dSnapshot {
+    pub fn to_snapshot(&self) -> Puzzle2dSnapshot {
         Puzzle2dSnapshot { schema: self.schema.clone(), camera: self.camera.clone(), nodes: self.nodes.clone(), edges: self.edges.clone(), meta: self.meta.clone() }
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, leaving UI fields at defaults.
-    pub async fn from_snapshot(snapshot: Puzzle2dSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: Puzzle2dSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             camera: snapshot.camera,
@@ -114,7 +114,7 @@ impl Puzzle2dArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub async fn set_snapshot(&mut self, snapshot: Puzzle2dSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: Puzzle2dSnapshot) {
         self.schema = snapshot.schema;
         self.camera = snapshot.camera;
         self.nodes = snapshot.nodes;
@@ -126,7 +126,7 @@ impl Puzzle2dArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.puzzle.puzzle2d` — twenty handcrafted schema leaves.
-pub async fn puzzle2d_artifact_schema_descriptor() -> artifact_schema::ArtifactSchemaDescriptor {
+pub fn puzzle2d_artifact_schema_descriptor() -> artifact_schema::ArtifactSchemaDescriptor {
     artifact_schema::ArtifactSchemaDescriptor {
         id: "s.puzzle.puzzle2d",
         artifact: artifact_schema::FacetLeaves {
@@ -182,10 +182,10 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         async fn from_text(text: &str) -> Result<Self, store::TextError> {
-            Ok(Self::from_snapshot(<Puzzle2dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self { snapshot: <Puzzle2dSnapshot as store::ArtifactDsl>::parse_dsl(text)?, diagnostics: Vec::new() })
         }
         async fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<Puzzle2dSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self { snapshot: <Puzzle2dSnapshot as store::ArtifactPack>::decode_pack(bytes)?, diagnostics: Vec::new() })
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
@@ -277,7 +277,7 @@ semio_framework_plugin::derive_artifact_facets!(
 //#region 🔖️DocumentHelpers
 /// 📄️ Rehomed from the deleted `⚙️engine` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
 /// W1e): a pure default-snapshot constructor over document types, no `AppIo`/app dependency.
-pub async fn empty_puzzle2d_snapshot() -> Puzzle2dSnapshot {
+pub fn empty_puzzle2d_snapshot() -> Puzzle2dSnapshot {
     Puzzle2dSnapshot::default()
 }
 //#endregion 🔖️DocumentHelpers

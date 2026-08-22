@@ -1,7 +1,6 @@
 // #region 🔌️Adapters
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "vitest/config";
 // #endregion 🔌️Adapters
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -9,7 +8,7 @@ const root = dirname(fileURLToPath(import.meta.url));
 /** @emoji 🧪️ Vitest for `@semio-tech/ui-styling` (inline `import.meta.vitest` in `🟦️vite-elements-assets.ts`:
  * `tileProxyVitePlugin`/`staticDirVitePlugin`/`meshCollectionVitePlugin`/`playgroundAssetVitePlugins`,
  * every other in-source `describe` block in that file, and `script.ts`'s 🌓️Levels generator tests). */
-export default defineConfig({
+export default {
   root,
   resolve: {
     alias: {
@@ -25,4 +24,4 @@ export default defineConfig({
     includeSource: ["🟦️vite-elements-assets.ts", "📜️script.ts"],
     passWithNoTests: false,
   },
-});
+};

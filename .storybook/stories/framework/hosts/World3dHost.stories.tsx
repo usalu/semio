@@ -8,7 +8,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useCallback, useState, type ReactElement } from "react";
 
 import { World3dHost } from "@semio-tech/framework-renderer-react";

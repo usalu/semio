@@ -73,29 +73,30 @@ pub mod derived_composition {
     /// 🔎️ Real dispatch: re-encodes the decoded inner snapshot through ITS OWN subset's
     /// `ArtifactPack`, then calls that subset's own registered `SubsetValidator::validate` — genuine
     /// reuse of all 13 already-tested invariant checks, never duplicated here.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn dispatch_validate(snapshot: &SemioSnapshot) -> Vec<Diagnostic> {
+    async fn dispatch_validate(snapshot: &SemioSnapshot) -> Vec<Diagnostic> {
         match &snapshot.subset {
-            SemioSubsetSnapshot::Brep(s) => SemioBrepValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot as store::ArtifactPack>::encode_pack(s))),
-            SemioSubsetSnapshot::Mesh(s) => SemioMeshValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot as store::ArtifactPack>::encode_pack(s))),
-            SemioSubsetSnapshot::Model(s) => SemioModelValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot as store::ArtifactPack>::encode_pack(s))),
-            SemioSubsetSnapshot::Value(s) => SemioValueValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot as store::ArtifactPack>::encode_pack(s))),
-            SemioSubsetSnapshot::Document(s) => SemioDocumentValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot as store::ArtifactPack>::encode_pack(s))),
-            SemioSubsetSnapshot::Cad(s) => SemioCadValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot as store::ArtifactPack>::encode_pack(s))),
-            SemioSubsetSnapshot::Drawing(s) => SemioDrawingValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(s))),
-            SemioSubsetSnapshot::Image(s) => SemioImageValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot as store::ArtifactPack>::encode_pack(s))),
-            SemioSubsetSnapshot::Video(s) => SemioVideoValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot as store::ArtifactPack>::encode_pack(s))),
-            SemioSubsetSnapshot::Audio(s) => SemioAudioValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot as store::ArtifactPack>::encode_pack(s))),
-            SemioSubsetSnapshot::Animation(s) => SemioAnimationValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot as store::ArtifactPack>::encode_pack(s))),
-            SemioSubsetSnapshot::Presentation(s) => {
-                SemioPresentationValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(s)))
+            SemioSubsetSnapshot::Brep(s) => SemioBrepValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Mesh(s) => SemioMeshValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Model(s) => SemioModelValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Value(s) => SemioValueValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Document(s) => SemioDocumentValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Cad(s) => SemioCadValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Drawing(s) => SemioDrawingValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Image(s) => SemioImageValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Video(s) => SemioVideoValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Audio(s) => SemioAudioValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Animation(s) => {
+                SemioAnimationValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot as store::ArtifactPack>::encode_pack(s))).await
             }
-            SemioSubsetSnapshot::Flow(s) => SemioFlowValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot as store::ArtifactPack>::encode_pack(s))),
-            SemioSubsetSnapshot::Text(s) => SemioTextValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot as store::ArtifactPack>::encode_pack(s))),
-            SemioSubsetSnapshot::Table(s) => SemioTableValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot as store::ArtifactPack>::encode_pack(s))),
-            SemioSubsetSnapshot::Graph(s) => SemioGraphValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot as store::ArtifactPack>::encode_pack(s))),
-            SemioSubsetSnapshot::Object(s) => SemioObjectValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot as store::ArtifactPack>::encode_pack(s))),
-            SemioSubsetSnapshot::Kit(s) => SemioKitValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot as store::ArtifactPack>::encode_pack(s))),
+            SemioSubsetSnapshot::Presentation(s) => {
+                SemioPresentationValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(s))).await
+            }
+            SemioSubsetSnapshot::Flow(s) => SemioFlowValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Text(s) => SemioTextValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Table(s) => SemioTableValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Graph(s) => SemioGraphValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Object(s) => SemioObjectValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot as store::ArtifactPack>::encode_pack(s))).await,
+            SemioSubsetSnapshot::Kit(s) => SemioKitValidator::validate(&IoPayload::Binary(<crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot as store::ArtifactPack>::encode_pack(s))).await,
         }
     }
 
@@ -108,7 +109,7 @@ pub mod derived_composition {
                 IoPayload::Text(text) => <SemioSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
             };
             match decoded {
-                Some(snapshot) => dispatch_validate(&snapshot),
+                Some(snapshot) => dispatch_validate(&snapshot).await,
                 None => vec![Diagnostic {
                     code: dsl::FaultCode::new("stdio.semio.any.validate-decode-failed"),
                     severity: dsl::Severity::Warning,

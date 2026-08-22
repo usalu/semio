@@ -3,13 +3,13 @@
 /** @emoji 🔎️ `ShellSearch` — the OS shell's two fuzzy-search command surfaces: `UISearch` (the global
  * command palette over an arbitrary `UISearchItem[]`) and `UIFind`/`UIFindProvider` (an in-document
  * find-in-content surface a window registers `UIFindItem[]` into via `useUIFind`). Both share one
- * `Fuse`-backed grouped-results layout on top of `CommandDialog`.
+ * owned fuzzy-ranked grouped-results layout on top of `CommandDialog`.
  */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
 import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
-import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, Fuse, type FuseResult } from "@semio-tech/ui-react";
+import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, rankFuzzyItems, type FuzzySearchResult } from "@semio-tech/ui-react";
 import { shellLabel } from "../ShellHelpers/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
@@ -39,25 +39,21 @@ export function UISearch({
   readonly emptyMessage?: string;
 }) {
   const [query, setQuery] = useState("");
-  const fuse = useMemo(
+  const results = useMemo(
     () =>
-      new Fuse(items, {
-        keys: [
-          { name: "label", weight: 2 },
-          { name: "description", weight: 1 },
-          { name: "category", weight: 0.5 },
+      rankFuzzyItems(items, query, {
+        fields: [
+          { read: (item) => item.label, weight: 2 },
+          { read: (item) => item.description, weight: 1 },
+          { read: (item) => item.category, weight: 0.5 },
         ],
         threshold: 0.4,
-        includeScore: true,
+        limit: 20,
       }),
-    [items],
+    [items, query],
   );
-  const results = useMemo(() => {
-    if (query.trim()) return fuse.search(query).slice(0, 20);
-    return items.slice(0, 20).map((item, idx) => ({ item, refIndex: idx, score: 0 }) as FuseResult<UISearchItem>);
-  }, [fuse, items, query]);
   const grouped = useMemo(() => {
-    const groups: Record<string, FuseResult<UISearchItem>[]> = {};
+    const groups: Record<string, FuzzySearchResult<UISearchItem>[]> = {};
     for (const result of results) {
       const category = result.item.category || "";
       if (!groups[category]) groups[category] = [];
@@ -171,25 +167,21 @@ export function UIFind({
   const findContext = useContext(UIFindContext);
   const findItems = findContext?.findItems ?? [];
   const triggerFindItem = findContext?.triggerFindItem;
-  const fuse = useMemo(
+  const results = useMemo(
     () =>
-      new Fuse(findItems, {
-        keys: [
-          { name: "label", weight: 2 },
-          { name: "description", weight: 1 },
-          { name: "category", weight: 0.5 },
+      rankFuzzyItems(findItems, query, {
+        fields: [
+          { read: (item) => item.label, weight: 2 },
+          { read: (item) => item.description, weight: 1 },
+          { read: (item) => item.category, weight: 0.5 },
         ],
         threshold: 0.4,
-        includeScore: true,
+        limit: 20,
       }),
-    [findItems],
+    [findItems, query],
   );
-  const results = useMemo(() => {
-    if (query.trim()) return fuse.search(query).slice(0, 20);
-    return findItems.slice(0, 20).map((item, idx) => ({ item, refIndex: idx, score: 0 }) as FuseResult<UIFindItem>);
-  }, [findItems, fuse, query]);
   const grouped = useMemo(() => {
-    const groups: Record<string, FuseResult<UIFindItem>[]> = {};
+    const groups: Record<string, FuzzySearchResult<UIFindItem>[]> = {};
     for (const result of results) {
       const category = result.item.category || "";
       if (!groups[category]) groups[category] = [];

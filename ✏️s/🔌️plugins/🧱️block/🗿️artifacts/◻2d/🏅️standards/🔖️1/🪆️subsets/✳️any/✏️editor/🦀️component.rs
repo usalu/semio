@@ -225,7 +225,7 @@ impl ArtifactEditor for Block2dPlayApp {
 //#endregion 🔖️Block2dPlayApp
 
 //#region 🔖️Manifest
-pub async fn create_block2d_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_block2d_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::block2d::BLOCK2D_DIALECT)
             .document(["semio", "block", "2d"])
             .artifact_kind(artifact_kind())

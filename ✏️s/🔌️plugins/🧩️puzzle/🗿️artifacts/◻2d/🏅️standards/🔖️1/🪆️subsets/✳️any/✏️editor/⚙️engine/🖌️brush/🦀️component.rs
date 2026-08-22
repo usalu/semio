@@ -11,10 +11,74 @@ mod tests {
     use crate::editor::puzzle2d::engine::board_host::testkit::*;
     use crate::editor::puzzle2d::engine::canvas::Point;
     use crate::editor::puzzle2d::engine::{handle_position_on_circle, BoardHost, HandleDescJson, NodeDescJson, SceneDescriptorJson};
+    use infinite_canvas::BoardFillJob;
+    use semio_framework_job::{BatchDriveConfig, BatchJobParams, InteractiveStage, Operation, StepBudget, StepOutcome};
     use serde_json::json;
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_brush_slot_emits_preview_and_place_on_leave() {
+    fn run_fill_job(mut job: BoardFillJob) -> (Vec<serde_json::Value>, Vec<u64>, std::time::Duration) {
+        let operation = job.operation();
+        let mut sequence = operation.preview_sequence;
+        let mut previews = Vec::new();
+        let mut max_step = std::time::Duration::ZERO;
+        for _ in 0..1_000_000 {
+            let started = std::time::Instant::now();
+            let outcome = semio_framework_job::drive_step(
+                &mut job,
+                "puzzle2d.fill.test",
+                operation.operation,
+                operation.generation,
+                InteractiveStage::InteractiveStep,
+                StepBudget::new(1, u64::MAX),
+                semio_framework_job::root_cancel_token(),
+                || 0,
+                &mut sequence,
+            );
+            max_step = max_step.max(started.elapsed());
+            match outcome {
+                StepOutcome::PreviewReady(bytes) => {
+                    let preview: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+                    previews.push(preview.get("sequence").and_then(serde_json::Value::as_u64).unwrap());
+                }
+                StepOutcome::CheckpointReady(_) | StepOutcome::Yield => {}
+                StepOutcome::Complete(candidate) => {
+                    let value: serde_json::Value = serde_json::from_slice(&candidate.output).unwrap();
+                    return (value.get("placements").and_then(serde_json::Value::as_array).cloned().unwrap_or_default(), previews, max_step);
+                }
+                StepOutcome::Cancelled | StepOutcome::Fault(_) => panic!("fill job ended without a commit"),
+            }
+        }
+        panic!("fill job exceeded the bounded test drive");
+    }
+
+    fn frontier_fill_host() -> BoardHost {
+        let mut host = BoardHost::new();
+        host.set_size(800, 600, 1.0);
+        host.set_suggestion_offset(40.0);
+        host.set_brush_node_size(40.0);
+        host.set_board_kind_catalogs_from_json(
+            &serde_json::json!({
+                "handleKinds": [
+                    {"id": "parent", "name": "Parent", "color": "#888888"},
+                    {"id": "child", "name": "Child", "color": "#888888"}
+                ],
+                "nodeKinds": [{
+                    "id": "brush.kind",
+                    "name": "Brush Kind",
+                    "handles": [
+                        { "handleKind": "child", "angle": 0.0 },
+                        { "handleKind": "child", "angle": 3.141592653589793 }
+                    ]
+                }]
+            })
+            .to_string(),
+        )
+        .unwrap();
+        host.sync_descriptor(&link_test_scene_no_edge()).unwrap();
+        host
+    }
+
+    #[test]
+    fn board_host_brush_slot_emits_preview_and_place_on_leave() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_active_utility("brush");
@@ -85,8 +149,8 @@ mod tests {
         assert!(ev2.contains("edgeId"));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_brush_open_slot_suggestions_commit_and_cancel() {
+    #[test]
+    fn board_host_brush_open_slot_suggestions_commit_and_cancel() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 2.0);
@@ -161,8 +225,8 @@ mod tests {
         assert!(!ev_cancel.contains("brushPlace"), "cancel should not place, got: {ev_cancel}");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_brush_slot_commit_survives_pointer_move_out_of_slot() {
+    #[test]
+    fn board_host_brush_slot_commit_survives_pointer_move_out_of_slot() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_active_utility("brush");
@@ -195,8 +259,8 @@ mod tests {
         assert!(ev.contains("brushPlace"), "expected brushPlace when leaving slot with Alt, got: {ev}");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_brush_slot_skips_place_on_leave_without_alt() {
+    #[test]
+    fn board_host_brush_slot_skips_place_on_leave_without_alt() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_active_utility("brush");
@@ -227,8 +291,8 @@ mod tests {
         assert!(!ev.contains("brushPlace"), "expected no brushPlace without Alt, got: {ev}");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_brush_fill_frontier_deterministic_and_collision_limited() {
+    #[test]
+    fn board_host_brush_fill_frontier_deterministic_and_collision_limited() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_suggestion_offset(40.0);
@@ -252,21 +316,19 @@ mod tests {
         )
         .unwrap();
         h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
-        let first = h.brush_fill_json(3, 42);
-        let second = h.brush_fill_json(3, 42);
+        let (first, first_previews, max_step) = run_fill_job(BoardFillJob::new(h.board_fill_snapshot(), 3, 42, 0, 1));
+        let (second, _, _) = run_fill_job(BoardFillJob::new(h.board_fill_snapshot(), 3, 42, 0, 1));
         assert_eq!(first, second, "fill must be deterministic for the same seed");
-        let v: serde_json::Value = serde_json::from_str(&first).unwrap();
-        let placements = v.get("placements").and_then(|x| x.as_array()).unwrap();
-        assert!(!placements.is_empty(), "expected at least one fill placement");
-        assert!(placements.len() <= 3);
-        let many = h.brush_fill_json(1000, 99);
-        let many_v: serde_json::Value = serde_json::from_str(&many).unwrap();
-        let many_n = many_v.get("placements").and_then(|x| x.as_array()).map_or(0, |a| a.len());
-        assert!(many_n < 1000, "collision should cap fill before 1000 on a tight scene");
+        assert!(!first.is_empty(), "expected at least one fill placement");
+        assert!(first.len() <= 3);
+        assert!(first_previews.windows(2).all(|pair| pair[0] < pair[1]), "preview sequences must increase monotonically");
+        assert!(max_step < std::time::Duration::from_millis(8), "bounded fill step took {max_step:?}");
+        let (many, _, _) = run_fill_job(BoardFillJob::new(h.board_fill_snapshot(), 1000, 99, 0, 1));
+        assert!(many.len() < 1000, "collision should cap fill before 1000 on a tight scene");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_brush_fill_session_step_matches_brush_fill_json() {
+    #[test]
+    fn board_host_brush_fill_checkpoint_restore_matches_uninterrupted_replay() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_suggestion_offset(40.0);
@@ -290,23 +352,127 @@ mod tests {
         )
         .unwrap();
         h.sync_descriptor(&link_test_scene_no_edge()).unwrap();
-        let expected: serde_json::Value = serde_json::from_str(&h.brush_fill_json(12, 77)).unwrap();
-        h.brush_fill_session_begin(12, 77);
-        let mut stepped: Vec<serde_json::Value> = Vec::new();
-        let mut done = false;
-        while !done {
-            let chunk: serde_json::Value = serde_json::from_str(&h.brush_fill_session_step(4)).unwrap();
-            done = chunk.get("done").and_then(|x| x.as_bool()).unwrap_or(true);
-            if let Some(rows) = chunk.get("placements").and_then(|x| x.as_array()) {
-                stepped.extend(rows.iter().cloned());
+        let snapshot = h.board_fill_snapshot();
+        let operation = Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(7), semio_framework_job::Generation(3), 77);
+        let (expected, _, _) = run_fill_job(BoardFillJob::with_operation(snapshot.clone(), 12, operation));
+        let mut interrupted = BoardFillJob::with_operation(snapshot, 12, operation);
+        let mut sequence = 0;
+        for _ in 0..41 {
+            let outcome = semio_framework_job::drive_step(
+                &mut interrupted,
+                "puzzle2d.fill.checkpoint",
+                operation.operation,
+                operation.generation,
+                InteractiveStage::InteractiveStep,
+                StepBudget::new(1, u64::MAX),
+                semio_framework_job::root_cancel_token(),
+                || 0,
+                &mut sequence,
+            );
+            assert!(!outcome.is_terminal());
+        }
+        let resumed = BoardFillJob::restore(&interrupted.checkpoint_bytes(), operation).unwrap();
+        let (actual, previews, _) = run_fill_job(resumed);
+        assert_eq!(actual, expected);
+        assert!(previews.first().copied().unwrap_or(sequence) >= sequence);
+    }
+
+    #[test]
+    fn board_fill_job_cancel_and_supersession_leave_checkpoint_unchanged() {
+        use semio_framework_job::InteractiveJob;
+
+        let host = frontier_fill_host();
+        let mut job = BoardFillJob::new(host.board_fill_snapshot(), 32, 9, 11, 4);
+        let operation = job.operation();
+        let before = job.checkpoint_bytes();
+        let cancel = semio_framework_job::root_cancel_token();
+        cancel.cancel_now();
+        let mut sequence = 0;
+        let mut cancelled = semio_framework_job::StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), cancel, || 0, &mut sequence);
+        assert_eq!(job.step(&mut cancelled), StepOutcome::Cancelled);
+        assert_eq!(job.checkpoint_bytes(), before);
+        let mut stale = semio_framework_job::StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, &mut sequence);
+        assert!(matches!(job.step(&mut stale), StepOutcome::Fault(_)));
+        assert_eq!(job.checkpoint_bytes(), before);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn board_fill_job_is_byte_identical_across_worker_counts() {
+        let host = frontier_fill_host();
+        let mut outputs = Vec::new();
+        for worker_count in [1usize, 2, 4] {
+            let operation = Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(2), semio_framework_job::Generation(8), 91);
+            let job = BoardFillJob::with_operation(host.board_fill_snapshot(), 24, operation);
+            let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, worker_count));
+            let params = BatchJobParams {
+                operation: operation.operation,
+                generation: operation.generation,
+                cancel: semio_framework_job::root_cancel_token(),
+                config: BatchDriveConfig { site: "puzzle2d.fill.workers", stage: InteractiveStage::BackgroundStep, fuel_per_step: 1, step_budget_ms: 7 },
+                now_ms: semio_framework_job::default_now_ms,
+            };
+            let receiver = semio_framework_job::run_on_worker(&pool, semio_framework_async::Lane::Background, job, params);
+            let outcome = receiver.recv_timeout(std::time::Duration::from_secs(10)).expect("fill worker did not finish");
+            pool.shutdown();
+            match outcome {
+                StepOutcome::Complete(candidate) => outputs.push(candidate.output),
+                other => panic!("worker_count={worker_count} ended with {other:?}"),
             }
         }
-        h.brush_fill_session_clear();
-        assert_eq!(stepped, expected.get("placements").and_then(|x| x.as_array()).cloned().unwrap_or_default());
+        assert!(outputs.windows(2).all(|pair| pair[0] == pair[1]));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_fixture_drop_preview_json_paints_while_select_utility_active() {
+    #[test]
+    fn board_fill_job_large_host_has_no_step_at_or_above_eight_ms() {
+        let mut host = frontier_fill_host();
+        let mut descriptor = link_test_scene_no_edge();
+        for index in 0..1_024 {
+            let node_id = format!("stress.{index}");
+            descriptor.nodes.push(NodeDescJson {
+                id: node_id.clone(),
+                x: (index % 64) as f64 * 1_000.0 + 10_000.0,
+                y: (index / 64) as f64 * 1_000.0 + 10_000.0,
+                draggable: Some(true),
+                selected: None,
+                style: None,
+                text: None,
+                icon_kind: None,
+                node_kind: Some("source.kind".into()),
+                user_data: None,
+                visible: None,
+                locked: None,
+                root: None,
+                shape: Some("circle".into()),
+                radius: Some(20.0),
+                width: None,
+                height: None,
+                scale: None,
+            });
+            descriptor.handles.push(HandleDescJson {
+                id: format!("{node_id}:h0"),
+                node_id,
+                angle: 0.0,
+                radius: None,
+                scale: None,
+                selected: None,
+                visible: None,
+                locked: None,
+                style: None,
+                handle_kind: Some("child".into()),
+                color: None,
+                icon_kind: None,
+                user_data: None,
+            });
+        }
+        host.sync_descriptor(&descriptor).unwrap();
+        let (_, previews, max_step) = run_fill_job(BoardFillJob::new(host.board_fill_snapshot(), 2, 123, 0, 1));
+        assert!(previews.len() > 2_000, "large host did not expose cursor progress");
+        assert!(max_step < std::time::Duration::from_millis(8), "adversarial fill step took {max_step:?}");
+    }
+
+    #[test]
+    fn board_host_fixture_drop_preview_json_paints_while_select_utility_active() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_active_utility("select");
@@ -318,8 +484,8 @@ mod tests {
         assert!(h.encoded_scene_hint() > 0);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_fixture_drop_preview_uses_catalog_shape_and_icon_at_overview_lod() {
+    #[test]
+    fn board_host_fixture_drop_preview_uses_catalog_shape_and_icon_at_overview_lod() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 0.05);
@@ -345,8 +511,8 @@ mod tests {
         assert!(hint_cleared != hint_with_preview || hint_with_preview > 0);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_brush_session_mirror_json_shows_preview_without_pointer() {
+    #[test]
+    fn board_host_brush_session_mirror_json_shows_preview_without_pointer() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_active_utility("brush");
@@ -386,8 +552,8 @@ mod tests {
         assert!(h.encoded_scene_hint() > 0);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_brush_candidates_sorted_by_handle_proximity() {
+    #[test]
+    fn board_host_brush_candidates_sorted_by_handle_proximity() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 1.0);
@@ -434,8 +600,8 @@ mod tests {
         assert_eq!(first_kind, Some("heavy"));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_brush_lists_every_compatible_handle_per_node_kind() {
+    #[test]
+    fn board_host_brush_lists_every_compatible_handle_per_node_kind() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 1.0);
@@ -477,8 +643,8 @@ mod tests {
         assert!(indices.contains(&1));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_fill_base_core_rectangular_excludes_cylindric_tambour() {
+    #[test]
+    fn board_host_fill_base_core_rectangular_excludes_cylindric_tambour() {
         const BASE_KIND: &str = "Base";
         const CYLINDRIC_TAMBOUR_KIND: &str = "Cylindric Tambour";
         const FIRST_STOREY_KIND: &str = "First Storey Tambour";
@@ -548,16 +714,15 @@ mod tests {
             selection_exit_highlight_ids: vec![],
         };
         h.sync_descriptor(&desc).unwrap();
-        let out: serde_json::Value = serde_json::from_str(&h.brush_fill_json(1, 7)).unwrap();
-        let placements = out.get("placements").and_then(|x| x.as_array()).unwrap();
+        let (placements, _, _) = run_fill_job(BoardFillJob::new(h.board_fill_snapshot(), 1, 7, 0, 1));
         assert_eq!(placements.len(), 1, "expected one fill placement on base");
         let node_kind = placements[0].get("nodeKind").and_then(|x| x.as_str()).unwrap_or("");
         assert_ne!(node_kind, CYLINDRIC_TAMBOUR_KIND, "cylindric tambour must not stack on rectangular core");
         assert_eq!(node_kind, FIRST_STOREY_KIND, "first storey tambour matches rectangular core stack");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_brush_door_tambour_left_excludes_capital_with_metabolism_compat_rules() {
+    #[test]
+    fn board_host_brush_door_tambour_left_excludes_capital_with_metabolism_compat_rules() {
         const DOOR_TAMBOUR_LEFT: &str = "door tambour left";
         const CAPITAL_KIND: &str = "Capital";
         let mut h = BoardHost::new();
@@ -639,8 +804,8 @@ mod tests {
         assert!(!ids.iter().any(|id| id == CAPITAL_KIND), "door tambour left must not suggest Capital, got: {ids:?}");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_brush_slot_accepts_pointer_on_node_body_at_overview_lod() {
+    #[test]
+    fn board_host_brush_slot_accepts_pointer_on_node_body_at_overview_lod() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         set_overview_lod(&mut h);
@@ -671,8 +836,8 @@ mod tests {
         assert!(ev.contains("brushCandidates"), "expected brushCandidates, got: {ev}");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn board_host_brush_slot_accepts_pointer_on_indirect_ring_anchor() {
+    #[test]
+    fn board_host_brush_slot_accepts_pointer_on_indirect_ring_anchor() {
         let mut h = BoardHost::new();
         h.set_size(800, 600, 1.0);
         h.set_camera(0.0, 0.0, 1.0);

@@ -18,7 +18,6 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use dashmap::DashMap;
 use db::db_storage::PayloadStorage as _;
 use directory::os_directory::{
     self, ConnectionView, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryConnectionPhase, DirectoryEvent, DirectoryPresenceActor, DirectoryReadModel, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentView,
@@ -27,6 +26,7 @@ use directory::os_directory::{
 use futures::stream::SplitSink;
 use futures::{SinkExt, StreamExt};
 use protocol::{decode_client_frame, encode_server_frame, AckStage, ActorId, ApplyOutcome, ArtifactId as ProtocolArtifactId, ClientFrame, Lane, MutationEnvelope, RuntimeFrontierSummary, ServerFrame};
+use semio_framework_async::ShardedMap;
 use semio_hub::directory::error::DirectoryError;
 use semio_hub::directory::model::{InviteRecord, SpaceRole, SyncSessionRecord};
 #[cfg(feature = "sqlite")]
@@ -42,18 +42,54 @@ use tokio::sync::broadcast;
 /// @emoji 🧯️ Top-level startup error — the only fallible paths outside a document/WS session are
 /// opening `db::Database`'s storage backend, connecting the directory backend, and binding the
 /// HTTP listener.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 enum HubError {
-    #[error(transparent)]
-    Directory(#[from] DirectoryError),
-    #[error(transparent)]
-    Db(#[from] db::DbError),
-    #[error("io error: {0}")]
-    Io(#[from] std::io::Error),
-    #[error("unknown OS_HUB_STORAGE_BACKEND: {0}")]
+    Directory(DirectoryError),
+    Db(db::DbError),
+    Io(std::io::Error),
     UnknownStorageBackend(String),
-    #[error("unknown OS_HUB_DIRECTORY_BACKEND: {0}")]
     UnknownDirectoryBackend(String),
+}
+
+impl std::fmt::Display for HubError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Directory(error) => std::fmt::Display::fmt(error, formatter),
+            Self::Db(error) => std::fmt::Display::fmt(error, formatter),
+            Self::Io(error) => write!(formatter, "io error: {error}"),
+            Self::UnknownStorageBackend(backend) => write!(formatter, "unknown OS_HUB_STORAGE_BACKEND: {backend}"),
+            Self::UnknownDirectoryBackend(backend) => write!(formatter, "unknown OS_HUB_DIRECTORY_BACKEND: {backend}"),
+        }
+    }
+}
+
+impl std::error::Error for HubError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Directory(error) => Some(error),
+            Self::Db(error) => Some(error),
+            Self::Io(error) => Some(error),
+            Self::UnknownStorageBackend(_) | Self::UnknownDirectoryBackend(_) => None,
+        }
+    }
+}
+
+impl From<DirectoryError> for HubError {
+    fn from(error: DirectoryError) -> Self {
+        Self::Directory(error)
+    }
+}
+
+impl From<db::DbError> for HubError {
+    fn from(error: db::DbError) -> Self {
+        Self::Db(error)
+    }
+}
+
+impl From<std::io::Error> for HubError {
+    fn from(error: std::io::Error) -> Self {
+        Self::Io(error)
+    }
 }
 //#endregion ⚠️ Errors
 
@@ -128,22 +164,22 @@ struct HubState {
     /// sessions on the same document is this crate's own, deliberately thin responsibility — it
     /// never itself decides ordering or durability, only re-broadcasts what `db` already committed
     /// or what a preview/presence frame carries verbatim.
-    fanout: Arc<DashMap<String, broadcast::Sender<ServerFrame>>>,
+    fanout: Arc<ShardedMap<String, broadcast::Sender<ServerFrame>>>,
     /// @emoji 👥️ `(scope_key, actor)` -> that actor's presence session (contract §C7.3) — ephemeral,
     /// never durable (mirrors the preview lane's own law), rebuilt from nothing on hub restart. The
     /// roster is document-wide now (contract §C7.0): `ServerFrame::Presence` fans out on `fanout`, not
     /// a surface-scoped channel; a peer's `surface` travels INSIDE its `PresencePeer` bytes, stamped
     /// by the client actor, never decoded by this hub.
-    presence: Arc<DashMap<(String, String), PresenceSession>>,
+    presence: Arc<ShardedMap<(String, String), PresenceSession>>,
     /// @emoji 🎨️ Contract §C7.3 session colors: `space_id` -> that space's live `(actor -> palette
     /// index)` leases. `acquire_color`/`release_color` below are the only mutators. Never persisted.
-    session_colors: Arc<DashMap<String, SpaceColors>>,
+    session_colors: Arc<ShardedMap<String, SpaceColors>>,
     /// @emoji 🦵️ Wave 1.B admin kick: `syncSessionId` (the `SyncSessionRecord.id`/`ConnectionView.
     /// syncSessionId` the directory hands out on connect) -> a `Notify` the WS loop `select!`s on
     /// alongside its socket/broadcast reads. `POST /admin/api/connections/{syncSessionId}/close`
     /// fires it; the loop observes the wake-up and closes the connection on its own next tick —
     /// this map never itself closes a socket, only signals the session that owns it to.
-    session_kicks: Arc<DashMap<String, Arc<tokio::sync::Notify>>>,
+    session_kicks: Arc<ShardedMap<String, Arc<tokio::sync::Notify>>>,
     /// @emoji 🧬️ W5.7: `scope_key` -> the first non-zero `store::ArtifactCodec::pack_schema_hash`
     /// a client's `Hello` declared for that document — pinned in-memory, never durable (durable
     /// pinning belongs in the db catalog once it grows a column for it; this wave's scope is the
@@ -151,7 +187,7 @@ struct HubState {
     /// rejected with an `error_frame("schema-hash-mismatch", ...)` before `Welcome` — catches two
     /// builds of the same app disagreeing on a document's field shape. A zero hash always skips
     /// validation (schema-agnostic client, see `ArtifactCodec::pack_schema_hash`'s own doc).
-    schema_hashes: Arc<DashMap<String, [u8; 32]>>,
+    schema_hashes: Arc<ShardedMap<String, [u8; 32]>>,
     /// @emoji 🧩️ Wave 1.B: installed runtime extensions mirrored from dev `/extensions` static dir —
     /// populated by hub deploy copy / sideload; `GET /extensions` lists `install.json` rows.
     extensions_root: std::path::PathBuf,
@@ -165,58 +201,65 @@ struct HubState {
 
 impl HubState {
     fn fanout_for(&self, key: &str) -> broadcast::Sender<ServerFrame> {
-        if let Some(existing) = self.fanout.get(key) {
-            return existing.clone();
-        }
-        let (tx, _rx) = broadcast::channel(256);
-        self.fanout.entry(key.to_string()).or_insert(tx).clone()
+        self.fanout.get_or_insert_with_cloned(key.to_string(), || broadcast::channel(256).0)
     }
 
     /// @emoji 👥️ The document-wide roster's raw peer bytes (contract §C7.3) — entries whose `peer` is
     /// still `None` (handshake-only, no `ClientFrame::Presence` published yet) are excluded.
     fn presence_peers(&self, key: &str) -> Vec<Vec<u8>> {
-        self.presence.iter().filter(|entry| entry.key().0 == key).filter_map(|entry| entry.value().peer.clone()).collect()
+        let mut peers = Vec::new();
+        self.presence.for_each(|(scope, _), session| {
+            if scope == key {
+                peers.extend(session.peer.clone());
+            }
+        });
+        peers
     }
 
     /// @emoji 📡️ Amendment 3 to C1: the SAME roster as `presence_peers`, shaped as
     /// `DirectoryPresenceActor`s the hub already knows without ever decoding a peer's bytes.
     fn directory_presence_actors(&self, key: &str) -> Vec<DirectoryPresenceActor> {
-        self.presence
-            .iter()
-            .filter(|entry| entry.key().0 == key && entry.value().peer.is_some())
-            .map(|entry| DirectoryPresenceActor { actor: entry.key().1.clone(), user_id: entry.value().user_id.clone(), surface: entry.value().surface.clone(), color: entry.value().color })
-            .collect()
+        let mut actors = Vec::new();
+        self.presence.for_each(|(scope, actor), session| {
+            if scope == key && session.peer.is_some() {
+                actors.push(DirectoryPresenceActor { actor: actor.clone(), user_id: session.user_id.clone(), surface: session.surface.clone(), color: session.color });
+            }
+        });
+        actors
     }
 
     /// @emoji 🎨️ Contract §C7.3: an existing lease for `actor` in `space` is ref-counted and its
     /// index reused; otherwise the lowest index in `0..=255` not currently held by any live actor of
     /// `space`, wrapping `n % 256` once all 256 are taken.
     fn acquire_color(&self, space: &str, actor: &str) -> u8 {
-        let mut colors = self.session_colors.entry(space.to_string()).or_default();
-        if let Some(lease) = colors.by_actor.get_mut(actor) {
-            lease.refs += 1;
-            return lease.index;
-        }
-        let used: std::collections::BTreeSet<u8> = colors.by_actor.values().map(|lease| lease.index).collect();
-        let index = (0..=255u8).find(|candidate| !used.contains(candidate)).unwrap_or((colors.by_actor.len() as u32 % 256) as u8);
-        colors.by_actor.insert(actor.to_string(), ColorLease { index, refs: 1 });
-        index
+        self.session_colors.mutate_or_default(space.to_string(), |colors| {
+            if let Some(lease) = colors.by_actor.get_mut(actor) {
+                lease.refs += 1;
+                return lease.index;
+            }
+            let used: std::collections::BTreeSet<u8> = colors.by_actor.values().map(|lease| lease.index).collect();
+            let index = (0..=255u8).find(|candidate| !used.contains(candidate)).unwrap_or((colors.by_actor.len() as u32 % 256) as u8);
+            colors.by_actor.insert(actor.to_string(), ColorLease { index, refs: 1 });
+            index
+        })
     }
 
     /// @emoji 🎨️ `refs -= 1`, dropping the lease at 0 — freed on the last disconnect of that actor's
     /// shell session across all of its document sockets in `space`.
     fn release_color(&self, space: &str, actor: &str) {
-        let Some(mut colors) = self.session_colors.get_mut(space) else { return };
-        let drop_lease = match colors.by_actor.get_mut(actor) {
-            Some(lease) => {
-                lease.refs = lease.refs.saturating_sub(1);
-                lease.refs == 0
+        self.session_colors.with_mut(space, |colors| {
+            let Some(colors) = colors else { return };
+            let drop_lease = match colors.by_actor.get_mut(actor) {
+                Some(lease) => {
+                    lease.refs = lease.refs.saturating_sub(1);
+                    lease.refs == 0
+                }
+                None => false,
+            };
+            if drop_lease {
+                colors.by_actor.remove(actor);
             }
-            None => false,
-        };
-        if drop_lease {
-            colors.by_actor.remove(actor);
-        }
+        });
     }
 
     /// @emoji 🗂️ Get-or-create: a document is lazily minted in `db`'s catalog on its first Hello,
@@ -497,7 +540,7 @@ fn merge_policy_from_env() -> protocol::MergePolicy {
         Some("normal") => protocol::MergePolicy::Normal,
         Some("vigilant") => protocol::MergePolicy::Vigilant,
         Some(other) => {
-            tracing::warn!("unknown OS_HUB_MERGE_POLICY '{other}' (expected laissez-faire|normal|vigilant), defaulting to normal");
+            eprintln!("[WARN] unknown OS_HUB_MERGE_POLICY '{other}' (expected laissez-faire|normal|vigilant), defaulting to normal");
             protocol::MergePolicy::default()
         }
     }
@@ -628,9 +671,11 @@ async fn handle_client_frame(
             true
         }
         ClientFrame::Presence { peer } => {
-            if let Some(mut entry) = state.presence.get_mut(&(key.to_string(), actor.0.clone())) {
-                entry.peer = Some(peer);
-            }
+            state.presence.with_mut(&(key.to_string(), actor.0.clone()), |entry| {
+                if let Some(entry) = entry {
+                    entry.peer = Some(peer);
+                }
+            });
             let _ = fanout.send(ServerFrame::Presence { peers: state.presence_peers(key) });
             state.directory_service.publish(DirectoryStreamMessage::Presence { space_id: space_id.to_string(), document_id: document_id.to_string(), actors: state.directory_presence_actors(key) });
             true
@@ -659,7 +704,7 @@ async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, sur
 
     let key = scope_key(&space_id, &document_id);
     if pack_schema_hash != [0u8; 32] {
-        let pinned = *state.schema_hashes.entry(key.clone()).or_insert(pack_schema_hash);
+        let pinned = state.schema_hashes.get_or_insert_with_cloned(key.clone(), || pack_schema_hash);
         if pinned != pack_schema_hash {
             let _ = sender.send(error_frame("schema-hash-mismatch", "pack schema hash does not match the hash already pinned for this document").await).await;
             return;
@@ -877,7 +922,7 @@ async fn connection_view(state: &HubState, session: &SyncSessionRecord) -> Conne
         None => None,
     };
     let scope = scope_key(&session.space_id, &session.document_id);
-    let presence_known = state.presence.get(&(scope, session.client_label.clone())).is_some_and(|entry| entry.peer.is_some());
+    let presence_known = state.presence.with(&(scope, session.client_label.clone()), |entry| entry.is_some_and(|entry| entry.peer.is_some()));
     ConnectionView {
         sync_session_id: session.id.clone(),
         space_id: session.space_id.clone(),
@@ -1357,7 +1402,7 @@ async fn admin_close_connection(Path(sync_session_id): Path<String>, headers: He
     if !is_admin(&state, &headers, Some(peer)) {
         return StatusCode::UNAUTHORIZED;
     }
-    match state.session_kicks.get(&sync_session_id) {
+    match state.session_kicks.get_cloned(&sync_session_id) {
         Some(notify) => {
             notify.notify_one();
             StatusCode::NO_CONTENT
@@ -1378,7 +1423,7 @@ async fn admin_revoke_user_sessions(Path(user_id): Path<String>, headers: Header
     }
     let Ok(sessions) = state.directory.list_active_sync_sessions(None).await else { return StatusCode::INTERNAL_SERVER_ERROR };
     for session in sessions.iter().filter(|session| session.user_id.as_deref() == Some(user_id.as_str())) {
-        if let Some(notify) = state.session_kicks.get(&session.id) {
+        if let Some(notify) = state.session_kicks.get_cloned(&session.id) {
             notify.notify_one();
         }
     }
@@ -1562,13 +1607,9 @@ fn router(state: HubState) -> Router {
 /// (`ProcessKind::HeadlessBatch`: no UI thread to reserve a core for), sized to the process's visible
 /// core count.
 fn hub_worker_pool() -> Arc<db::semio_framework_async::WorkerPool> {
-    static POOL: std::sync::OnceLock<Arc<db::semio_framework_async::WorkerPool>> = std::sync::OnceLock::new();
-    POOL.get_or_init(|| {
-        let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
-        let config = db::semio_framework_async::WorkerPoolConfig::new(db::semio_framework_async::ProcessKind::HeadlessBatch, cores);
-        Arc::new(db::semio_framework_async::WorkerPool::new(config))
-    })
-    .clone()
+    let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
+    let config = db::semio_framework_async::WorkerPoolConfig::new(db::semio_framework_async::ProcessKind::HeadlessBatch, cores);
+    Arc::new(db::semio_framework_async::process_worker_pool(config))
 }
 
 async fn connect_db(data_dir: &std::path::Path) -> Result<db::Database, HubError> {
@@ -1653,7 +1694,6 @@ async fn connect_directory(data_dir: &std::path::Path) -> Result<Arc<HubDirector
 
 #[tokio::main]
 async fn main() -> Result<(), HubError> {
-    tracing_subscriber::fmt::init();
     let port: u16 = std::env::var("OS_HUB_PORT").ok().and_then(|value| value.parse().ok()).unwrap_or(8787);
     let data_dir = std::env::var("OS_HUB_DATA").map_or_else(|_| std::path::PathBuf::from("./.🧬semio/🌐hub/"), std::path::PathBuf::from);
     std::fs::create_dir_all(&data_dir)?;
@@ -1668,7 +1708,7 @@ async fn main() -> Result<(), HubError> {
         // 🛡️ Contract §C0/§C2: no configured token ⇒ a loopback peer is implicitly admin (dev
         // default) — logged loudly once so this is never a silent surprise in a deployment that
         // forgot to set `OS_HUB_ADMIN_TOKEN`.
-        tracing::warn!("OS_HUB_ADMIN_TOKEN is not set — /admin/api/* and document sharing fall back to loopback-peer-is-admin (dev default); set OS_HUB_ADMIN_TOKEN to require a bearer token instead");
+        eprintln!("[WARN] OS_HUB_ADMIN_TOKEN is not set — /admin/api/* and document sharing fall back to loopback-peer-is-admin (dev default); set OS_HUB_ADMIN_TOKEN to require a bearer token instead");
     }
     let admin_dir = std::env::var("OS_HUB_ADMIN_DIR").map(std::path::PathBuf::from).unwrap_or_else(|_| std::path::PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🔨️modules/🛡️admin/📦️packages/🟦️typescript/📤️dist")));
     let extensions_root = std::env::var("OS_HUB_EXTENSIONS_DIR").map(std::path::PathBuf::from).unwrap_or_else(|_| data_dir.join("extension-modules"));
@@ -1679,16 +1719,16 @@ async fn main() -> Result<(), HubError> {
         directory_service,
         admin_token,
         admin_dir,
-        fanout: Arc::new(DashMap::new()),
-        presence: Arc::new(DashMap::new()),
-        session_colors: Arc::new(DashMap::new()),
-        session_kicks: Arc::new(DashMap::new()),
-        schema_hashes: Arc::new(DashMap::new()),
+        fanout: Arc::new(ShardedMap::new()),
+        presence: Arc::new(ShardedMap::new()),
+        session_colors: Arc::new(ShardedMap::new()),
+        session_kicks: Arc::new(ShardedMap::new()),
+        schema_hashes: Arc::new(ShardedMap::new()),
         extensions_root,
         merge_policy: merge_policy_from_env(),
     };
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
-    tracing::info!("os-hub listening on http://{addr}");
+    eprintln!("[INFO] os-hub listening on http://{addr}");
     let listener = tokio::net::TcpListener::bind(addr).await?;
     axum::serve(listener, router(state).into_make_service_with_connect_info::<SocketAddr>()).await?;
     Ok(())
@@ -1724,7 +1764,7 @@ mod tests {
 
     async fn test_state() -> HubState {
         let dir = tempdir("db");
-        let database = db::Database::open_at(&dir, db::Profile::Test).await.expect("open db");
+        let database = db::Database::open_at(&dir, db::Profile::Test).await.expect("open db").with_pool(hub_worker_pool());
         let directory = SqliteDirectory::connect(":memory:").await.expect("connect directory");
         directory.seed().await.expect("seed");
         let directory: Arc<HubDirectories> = Arc::new(directory.into());
@@ -1735,11 +1775,11 @@ mod tests {
             directory_service,
             admin_token: None,
             admin_dir: dir.join("admin-dist"),
-            fanout: Arc::new(DashMap::new()),
-            presence: Arc::new(DashMap::new()),
-            session_colors: Arc::new(DashMap::new()),
-            session_kicks: Arc::new(DashMap::new()),
-            schema_hashes: Arc::new(DashMap::new()),
+            fanout: Arc::new(ShardedMap::new()),
+            presence: Arc::new(ShardedMap::new()),
+            session_colors: Arc::new(ShardedMap::new()),
+            session_kicks: Arc::new(ShardedMap::new()),
+            schema_hashes: Arc::new(ShardedMap::new()),
             extensions_root: dir.join("extension-modules"),
             merge_policy: protocol::MergePolicy::default(),
         }

@@ -419,7 +419,6 @@ pub mod tiles {
 // #region 🔖️VectorTiles
 pub mod vector_tiles {
     use super::Color;
-    use prost::Message;
 
     /// OpenFreeMap planet tiles (OpenMapTiles schema, OSM) — max generated zoom.
     pub const MAP_VECTOR_TILE_MAX_Z: u32 = 14;
@@ -455,43 +454,31 @@ pub mod vector_tiles {
         pub properties: std::collections::BTreeMap<String, String>,
     }
 
-    #[derive(Clone, PartialEq, Message)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     struct RawTile {
-        #[prost(uint32, optional, tag = "15")]
         version: Option<u32>,
-        #[prost(message, repeated, tag = "3")]
         layers: Vec<RawLayer>,
     }
 
-    #[derive(Clone, PartialEq, Message)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     struct RawLayer {
-        #[prost(uint32, optional, tag = "15")]
         version: Option<u32>,
-        #[prost(string, optional, tag = "1")]
         name: Option<String>,
-        #[prost(message, repeated, tag = "2")]
         features: Vec<RawFeature>,
-        #[prost(string, repeated, tag = "3")]
         keys: Vec<String>,
-        #[prost(message, repeated, tag = "4")]
         values: Vec<RawValue>,
-        #[prost(uint32, optional, tag = "5")]
         extent: Option<u32>,
     }
 
-    #[derive(Clone, PartialEq, Message)]
+    #[derive(Clone, Debug, Default, PartialEq)]
     struct RawFeature {
-        #[prost(uint64, optional, tag = "1")]
         id: Option<u64>,
-        #[prost(uint64, repeated, packed = "true", tag = "2")]
         tags: Vec<u64>,
-        #[prost(enumeration = "RawGeomType", optional, tag = "3")]
         geom_type: Option<i32>,
-        #[prost(uint32, repeated, packed = "true", tag = "4")]
         geometry: Vec<u32>,
     }
 
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, prost::Enumeration)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
     #[repr(i32)]
     enum RawGeomType {
         Unknown = 0,
@@ -500,21 +487,284 @@ pub mod vector_tiles {
         Polygon = 3,
     }
 
-    #[derive(Clone, PartialEq, Message)]
+    impl TryFrom<i32> for RawGeomType {
+        type Error = ();
+
+        fn try_from(value: i32) -> Result<Self, Self::Error> {
+            match value {
+                0 => Ok(Self::Unknown),
+                1 => Ok(Self::Point),
+                2 => Ok(Self::LineString),
+                3 => Ok(Self::Polygon),
+                _ => Err(()),
+            }
+        }
+    }
+
+    #[derive(Clone, Debug, Default, PartialEq)]
     struct RawValue {
-        #[prost(string, optional, tag = "1")]
         string_value: Option<String>,
-        #[prost(float, optional, tag = "2")]
         float_value: Option<f32>,
-        #[prost(double, optional, tag = "3")]
         double_value: Option<f64>,
-        #[prost(int64, optional, tag = "4")]
         int_value: Option<i64>,
-        #[prost(uint64, optional, tag = "5")]
         uint_value: Option<u64>,
-        #[prost(bool, optional, tag = "7")]
         bool_value: Option<bool>,
     }
+
+    //#region 🧩️OwnedProtobuf
+    /// 🧩️ A bounded protobuf decode failure with the byte offset at which parsing stopped.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct MvtDecodeError {
+        offset: usize,
+        message: String,
+    }
+
+    impl MvtDecodeError {
+        fn new(offset: usize, message: impl Into<String>) -> Self {
+            Self { offset, message: message.into() }
+        }
+    }
+
+    impl std::fmt::Display for MvtDecodeError {
+        fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(formatter, "MVT protobuf decode failed at byte {}: {}", self.offset, self.message)
+        }
+    }
+
+    impl std::error::Error for MvtDecodeError {}
+
+    struct ProtoCursor<'a> {
+        bytes: &'a [u8],
+        offset: usize,
+    }
+
+    impl<'a> ProtoCursor<'a> {
+        fn new(bytes: &'a [u8]) -> Self {
+            Self { bytes, offset: 0 }
+        }
+
+        fn is_empty(&self) -> bool {
+            self.offset == self.bytes.len()
+        }
+
+        fn error(&self, message: impl Into<String>) -> MvtDecodeError {
+            MvtDecodeError::new(self.offset, message)
+        }
+
+        fn read_byte(&mut self) -> Result<u8, MvtDecodeError> {
+            let byte = self.bytes.get(self.offset).copied().ok_or_else(|| self.error("truncated input"))?;
+            self.offset += 1;
+            Ok(byte)
+        }
+
+        fn read_varint(&mut self) -> Result<u64, MvtDecodeError> {
+            let start = self.offset;
+            let mut value = 0u64;
+            for index in 0..10u32 {
+                let byte = self.read_byte()?;
+                if index == 9 && byte > 1 {
+                    return Err(MvtDecodeError::new(start, "varint overflows u64"));
+                }
+                value |= u64::from(byte & 0x7f) << (index * 7);
+                if byte & 0x80 == 0 {
+                    return Ok(value);
+                }
+            }
+            Err(MvtDecodeError::new(start, "unterminated varint"))
+        }
+
+        fn read_key(&mut self) -> Result<(u32, u8), MvtDecodeError> {
+            let start = self.offset;
+            let key = self.read_varint()?;
+            let tag = u32::try_from(key >> 3).map_err(|_| MvtDecodeError::new(start, "field tag overflows u32"))?;
+            if tag == 0 {
+                return Err(MvtDecodeError::new(start, "field tag zero is invalid"));
+            }
+            Ok((tag, (key & 0x07) as u8))
+        }
+
+        fn read_exact(&mut self, length: usize) -> Result<&'a [u8], MvtDecodeError> {
+            let end = self.offset.checked_add(length).ok_or_else(|| self.error("length overflows address space"))?;
+            let bytes = self.bytes.get(self.offset..end).ok_or_else(|| self.error("length-delimited field is truncated"))?;
+            self.offset = end;
+            Ok(bytes)
+        }
+
+        fn read_length_delimited(&mut self) -> Result<&'a [u8], MvtDecodeError> {
+            let length = usize::try_from(self.read_varint()?).map_err(|_| self.error("field length overflows usize"))?;
+            self.read_exact(length)
+        }
+
+        fn read_string(&mut self) -> Result<String, MvtDecodeError> {
+            let start = self.offset;
+            String::from_utf8(self.read_length_delimited()?.to_vec()).map_err(|_| MvtDecodeError::new(start, "string field is not UTF-8"))
+        }
+
+        fn read_fixed32(&mut self) -> Result<u32, MvtDecodeError> {
+            Ok(u32::from_le_bytes(self.read_exact(4)?.try_into().expect("fixed32 length")))
+        }
+
+        fn read_fixed64(&mut self) -> Result<u64, MvtDecodeError> {
+            Ok(u64::from_le_bytes(self.read_exact(8)?.try_into().expect("fixed64 length")))
+        }
+
+        fn require_wire(&self, actual: u8, expected: u8) -> Result<(), MvtDecodeError> {
+            if actual == expected {
+                Ok(())
+            } else {
+                Err(self.error(format!("wire type {actual} does not match expected type {expected}")))
+            }
+        }
+
+        fn skip(&mut self, wire: u8) -> Result<(), MvtDecodeError> {
+            match wire {
+                0 => {
+                    self.read_varint()?;
+                }
+                1 => {
+                    self.read_exact(8)?;
+                }
+                2 => {
+                    self.read_length_delimited()?;
+                }
+                5 => {
+                    self.read_exact(4)?;
+                }
+                _ => return Err(self.error(format!("unsupported wire type {wire}"))),
+            }
+            Ok(())
+        }
+    }
+
+    fn decode_packed_u64(bytes: &[u8]) -> Result<Vec<u64>, MvtDecodeError> {
+        let mut cursor = ProtoCursor::new(bytes);
+        let mut values = Vec::new();
+        while !cursor.is_empty() {
+            values.push(cursor.read_varint()?);
+        }
+        Ok(values)
+    }
+
+    fn decode_raw_value(bytes: &[u8]) -> Result<RawValue, MvtDecodeError> {
+        let mut cursor = ProtoCursor::new(bytes);
+        let mut value = RawValue::default();
+        while !cursor.is_empty() {
+            let (tag, wire) = cursor.read_key()?;
+            match tag {
+                1 => {
+                    cursor.require_wire(wire, 2)?;
+                    value.string_value = Some(cursor.read_string()?);
+                }
+                2 => {
+                    cursor.require_wire(wire, 5)?;
+                    value.float_value = Some(f32::from_bits(cursor.read_fixed32()?));
+                }
+                3 => {
+                    cursor.require_wire(wire, 1)?;
+                    value.double_value = Some(f64::from_bits(cursor.read_fixed64()?));
+                }
+                4 => {
+                    cursor.require_wire(wire, 0)?;
+                    value.int_value = Some(cursor.read_varint()? as i64);
+                }
+                5 => {
+                    cursor.require_wire(wire, 0)?;
+                    value.uint_value = Some(cursor.read_varint()?);
+                }
+                7 => {
+                    cursor.require_wire(wire, 0)?;
+                    value.bool_value = Some(cursor.read_varint()? != 0);
+                }
+                _ => cursor.skip(wire)?,
+            }
+        }
+        Ok(value)
+    }
+
+    fn decode_raw_feature(bytes: &[u8]) -> Result<RawFeature, MvtDecodeError> {
+        let mut cursor = ProtoCursor::new(bytes);
+        let mut feature = RawFeature::default();
+        while !cursor.is_empty() {
+            let (tag, wire) = cursor.read_key()?;
+            match tag {
+                1 => {
+                    cursor.require_wire(wire, 0)?;
+                    feature.id = Some(cursor.read_varint()?);
+                }
+                2 if wire == 2 => feature.tags.extend(decode_packed_u64(cursor.read_length_delimited()?)?),
+                2 if wire == 0 => feature.tags.push(cursor.read_varint()?),
+                2 => return Err(cursor.error(format!("wire type {wire} is invalid for feature tags"))),
+                3 => {
+                    cursor.require_wire(wire, 0)?;
+                    feature.geom_type = Some(cursor.read_varint()? as i32);
+                }
+                4 if wire == 2 => {
+                    feature.geometry.extend(decode_packed_u64(cursor.read_length_delimited()?)?.into_iter().map(|value| value as u32));
+                }
+                4 if wire == 0 => feature.geometry.push(cursor.read_varint()? as u32),
+                4 => return Err(cursor.error(format!("wire type {wire} is invalid for feature geometry"))),
+                _ => cursor.skip(wire)?,
+            }
+        }
+        Ok(feature)
+    }
+
+    fn decode_raw_layer(bytes: &[u8]) -> Result<RawLayer, MvtDecodeError> {
+        let mut cursor = ProtoCursor::new(bytes);
+        let mut layer = RawLayer::default();
+        while !cursor.is_empty() {
+            let (tag, wire) = cursor.read_key()?;
+            match tag {
+                1 => {
+                    cursor.require_wire(wire, 2)?;
+                    layer.name = Some(cursor.read_string()?);
+                }
+                2 => {
+                    cursor.require_wire(wire, 2)?;
+                    layer.features.push(decode_raw_feature(cursor.read_length_delimited()?)?);
+                }
+                3 => {
+                    cursor.require_wire(wire, 2)?;
+                    layer.keys.push(cursor.read_string()?);
+                }
+                4 => {
+                    cursor.require_wire(wire, 2)?;
+                    layer.values.push(decode_raw_value(cursor.read_length_delimited()?)?);
+                }
+                5 => {
+                    cursor.require_wire(wire, 0)?;
+                    layer.extent = Some(cursor.read_varint()? as u32);
+                }
+                15 => {
+                    cursor.require_wire(wire, 0)?;
+                    layer.version = Some(cursor.read_varint()? as u32);
+                }
+                _ => cursor.skip(wire)?,
+            }
+        }
+        Ok(layer)
+    }
+
+    fn decode_raw_tile(bytes: &[u8]) -> Result<RawTile, MvtDecodeError> {
+        let mut cursor = ProtoCursor::new(bytes);
+        let mut tile = RawTile::default();
+        while !cursor.is_empty() {
+            let (tag, wire) = cursor.read_key()?;
+            match tag {
+                3 => {
+                    cursor.require_wire(wire, 2)?;
+                    tile.layers.push(decode_raw_layer(cursor.read_length_delimited()?)?);
+                }
+                15 => {
+                    cursor.require_wire(wire, 0)?;
+                    tile.version = Some(cursor.read_varint()? as u32);
+                }
+                _ => cursor.skip(wire)?,
+            }
+        }
+        Ok(tile)
+    }
+    //#endregion 🧩️OwnedProtobuf
 
     fn zigzag_decode(n: u32) -> i32 {
         ((n >> 1) as i32) ^ (-((n & 1) as i32))
@@ -646,6 +896,29 @@ pub mod vector_tiles {
             ((n << 1) ^ (n >> 31)) as u32
         }
 
+        fn varint(mut value: u64) -> Vec<u8> {
+            let mut bytes = Vec::new();
+            loop {
+                let byte = (value & 0x7f) as u8;
+                value >>= 7;
+                bytes.push(if value == 0 { byte } else { byte | 0x80 });
+                if value == 0 {
+                    return bytes;
+                }
+            }
+        }
+
+        fn push_varint_field(bytes: &mut Vec<u8>, tag: u8, value: u64) {
+            bytes.extend(varint(u64::from(tag) << 3));
+            bytes.extend(varint(value));
+        }
+
+        fn push_bytes_field(bytes: &mut Vec<u8>, tag: u8, value: &[u8]) {
+            bytes.extend(varint((u64::from(tag) << 3) | 2));
+            bytes.extend(varint(value.len() as u64));
+            bytes.extend(value);
+        }
+
         #[test]
         fn mvt_segment_is_tile_seam_on_extent_bbox() {
             let extent = 4096;
@@ -688,10 +961,60 @@ pub mod vector_tiles {
             assert_eq!(lines[0], vec![(0.0, 0.0), (10.0, 0.0)]);
             assert_eq!(lines[1], vec![(100.0, 100.0), (110.0, 100.0)]);
         }
+
+        #[test]
+        fn owned_protobuf_decodes_layer_properties_and_point_geometry() {
+            let mut value = Vec::new();
+            push_bytes_field(&mut value, 1, b"road");
+
+            let mut feature = Vec::new();
+            push_varint_field(&mut feature, 1, 42);
+            let mut tags = Vec::new();
+            tags.extend(varint(0));
+            tags.extend(varint(0));
+            push_bytes_field(&mut feature, 2, &tags);
+            push_varint_field(&mut feature, 3, 1);
+            let mut geometry = Vec::new();
+            geometry.extend(varint(9));
+            geometry.extend(varint(zigzag(1) as u64));
+            geometry.extend(varint(zigzag(2) as u64));
+            push_bytes_field(&mut feature, 4, &geometry);
+
+            let mut layer = Vec::new();
+            push_bytes_field(&mut layer, 1, b"places");
+            push_bytes_field(&mut layer, 2, &feature);
+            push_bytes_field(&mut layer, 3, b"name");
+            push_bytes_field(&mut layer, 4, &value);
+            push_varint_field(&mut layer, 5, 8192);
+            push_varint_field(&mut layer, 15, 2);
+
+            let mut tile = Vec::new();
+            push_bytes_field(&mut tile, 3, &layer);
+            let decoded = super::decode_mvt(&tile).expect("owned protobuf tile");
+            assert_eq!(decoded.layers.len(), 1);
+            assert_eq!(decoded.layers[0].name, "places");
+            assert_eq!(decoded.layers[0].extent, 8192);
+            assert_eq!(decoded.layers[0].features[0].id, Some(42));
+            assert_eq!(decoded.layers[0].features[0].geom_type, GeomType::Point);
+            assert_eq!(decoded.layers[0].features[0].points, [(1.0, 2.0)]);
+            assert_eq!(decoded.layers[0].features[0].properties.get("name").map(String::as_str), Some("road"));
+        }
+
+        #[test]
+        fn owned_protobuf_skips_unknown_fields_and_rejects_malformed_wire_data() {
+            let mut empty_layer = Vec::new();
+            empty_layer.extend(varint((9 << 3) | 5));
+            empty_layer.extend([1, 2, 3, 4]);
+            let mut tile = Vec::new();
+            push_bytes_field(&mut tile, 3, &empty_layer);
+            assert_eq!(super::decode_mvt(&tile).expect("unknown fixed field").layers.len(), 1);
+            assert!(super::decode_mvt(&[0x1a, 0x02, 0x0a]).is_err());
+            assert!(super::decode_mvt(&[0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x02]).is_err());
+        }
     }
 
     pub fn decode_mvt(bytes: &[u8]) -> Result<VectorTile, super::FrameworkSurfaceTiledMapError> {
-        let raw = RawTile::decode(bytes)?;
+        let raw = decode_raw_tile(bytes)?;
         let mut layers = Vec::new();
         for layer in raw.layers {
             let extent = layer.extent.filter(|e| *e > 0).unwrap_or(DEFAULT_MVT_EXTENT);
@@ -1634,14 +1957,49 @@ impl LabelDeclutter {
 
 //#region ⚠️ Errors
 /// ⚠️ Tiled-map host errors — JSON decode failures, raster tile decode failures, and vector-tile protobuf decode failures.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum FrameworkSurfaceTiledMapError {
-    #[error(transparent)]
-    Json(#[from] serde_json::Error),
-    #[error(transparent)]
-    Image(#[from] image::ImageError),
-    #[error(transparent)]
-    Mvt(#[from] prost::DecodeError),
+    Json(serde_json::Error),
+    Image(image::ImageError),
+    Mvt(vector_tiles::MvtDecodeError),
+}
+
+impl std::fmt::Display for FrameworkSurfaceTiledMapError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Json(error) => error.fmt(formatter),
+            Self::Image(error) => error.fmt(formatter),
+            Self::Mvt(error) => error.fmt(formatter),
+        }
+    }
+}
+
+impl std::error::Error for FrameworkSurfaceTiledMapError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Json(error) => Some(error),
+            Self::Image(error) => Some(error),
+            Self::Mvt(error) => Some(error),
+        }
+    }
+}
+
+impl From<serde_json::Error> for FrameworkSurfaceTiledMapError {
+    fn from(error: serde_json::Error) -> Self {
+        Self::Json(error)
+    }
+}
+
+impl From<image::ImageError> for FrameworkSurfaceTiledMapError {
+    fn from(error: image::ImageError) -> Self {
+        Self::Image(error)
+    }
+}
+
+impl From<vector_tiles::MvtDecodeError> for FrameworkSurfaceTiledMapError {
+    fn from(error: vector_tiles::MvtDecodeError) -> Self {
+        Self::Mvt(error)
+    }
 }
 //#endregion ⚠️ Errors
 
@@ -2955,7 +3313,7 @@ impl MapSession {
         let ph = ((lh as f64 * dpr).round() as u32).max(1);
         let canvas = canvas.clone();
         future_to_promise(async move {
-            let (render_ctx, renderer, surface) = canvas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).map_err(|e| JsValue::from_str(&e))?;
+            let (render_ctx, renderer, surface) = canvas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
             let mut g = inner.borrow_mut();
             if g.gpu.gpu_ready() {
                 return Err(JsValue::from_str("canvas surface already attached"));

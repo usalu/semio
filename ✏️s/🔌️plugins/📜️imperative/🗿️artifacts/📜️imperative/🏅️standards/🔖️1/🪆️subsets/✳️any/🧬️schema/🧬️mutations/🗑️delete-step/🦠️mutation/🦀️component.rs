@@ -15,23 +15,23 @@ pub struct DeleteStep {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn delete_step(path_ref: PathRef, id: String) -> ImperativeMutation {
+pub fn delete_step(path_ref: PathRef, id: String) -> ImperativeMutation {
     ImperativeMutation::DeleteStep(DeleteStep { path_ref, id })
 }
 
 impl protocol::MutationKind<ImperativeSnapshot, ImperativeMutation> for DeleteStep {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "step", kind: "delete-step", record: "DeletedStep" };
 
-    async fn diff(&self, base: &ImperativeSnapshot) -> protocol::MutationOutcome<ImperativeDiff> {
+    fn diff(&self, base: &ImperativeSnapshot) -> protocol::MutationOutcome<ImperativeDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &ImperativeSnapshot) -> Vec<ImperativeMutation> {
+    fn inverse(&self, base: &ImperativeSnapshot) -> Vec<ImperativeMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Delete step \"{}\"", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

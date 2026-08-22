@@ -2,16 +2,16 @@
 
 use crate::artifacts::imperative::ImperativeSnapshot;
 use crate::editor::imperative::engine::ImperativeHost;
-use semio_framework_plugin::{build_text_editor_scene, LocalizedLabel, SurfaceKind, TextEditorScene, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::app::{TextView, TextWindowKit, WindowKit};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const IMPERATIVE_PLAY_WINDOW_SCRIPT: &str = "imperative-script";
 pub const IMPERATIVE_PLAY_BODY_SCRIPT: &str = "imperative.play.script";
-const IMPERATIVE_PLAY_SURFACE_SCRIPT: &str = "imperative.play.script";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: IMPERATIVE_PLAY_WINDOW_SCRIPT.into(),
         label: LocalizedLabel::native("Script", "Skript"),
@@ -32,9 +32,9 @@ pub async fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub async fn render(document: &ImperativeSnapshot) -> UiNode {
+pub fn render(document: &ImperativeSnapshot) -> BuiltNode {
     let host = ImperativeHost::from_snapshot(document.clone());
-    build_text_editor_scene(IMPERATIVE_PLAY_SURFACE_SCRIPT, crate::editor::imperative::IMPERATIVE_PLAY_APP_ID, TextEditorScene::base(host.compile_text(), Some("imperative".into()), None))
+    TextWindowKit::render(&TextView { text: host.compile_text(), language: Some("imperative".into()), read_only: true })
 }
 //#endregion 🔖️Render
 
@@ -46,8 +46,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_script_editor() {
-        let mut app = imperative_app();
-        assert!(render_body(&mut app, IMPERATIVE_PLAY_BODY_SCRIPT).contains("text-editor"));
+        let mut app = imperative_app().await;
+        assert!(render_body(&mut app, IMPERATIVE_PLAY_BODY_SCRIPT).await.contains("text-editor"));
     }
 }
 //#endregion 🧪️Tests

@@ -1,5 +1,5 @@
 /** ️tests for example capsule-dream. */
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "../../../../../../../../../../../../🧪️artifact.ts";
 import { dslPath, id } from "../🟦️component.ts";
 
 describe("capsule-dream example", () => {

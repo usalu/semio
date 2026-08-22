@@ -1,0 +1,922 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+   Compiling semio-framework-trace v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust)
+   Compiling semio-framework-replication v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust)
+   Compiling semio-framework-geometry v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust)
+   Compiling semio-framework-hash v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust)
+   Compiling semio-framework-os-kernel-dsl-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust)
+   Compiling semio-framework-ui-styling v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust)
+   Compiling semio-framework-ui v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust)
+   Compiling semio-framework-schema v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust)
+   Compiling semio-framework-mesh-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust)
+   Compiling semio-framework-dispatch-macros v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust)
+🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/../../🦀️component.rs:379:21: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust/../../🦀️component.rs:394:21: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+   Compiling semio-framework-schema-derive v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust)
+   Compiling semio-framework-graph v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust)
+warning: `semio-framework-dispatch-macros` (lib) generated 2 warnings
+   Compiling semio-framework-os-kernel-neural-engine v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust)
+   Compiling semio-framework-number v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔢️number/📦️packages/🦀️rust)
+   Compiling semio-framework-async-macros v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust)
+   Compiling semio-framework-async v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust)
+   Compiling semio-framework-ui-contract v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust)
+   Compiling semio-framework-math v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust)
+   Compiling semio-framework-pack v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust)
+   Compiling semio-framework-job v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust)
+   Compiling semio-framework-ui-scene v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust)
+   Compiling semio-framework-os-kernel v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust)
+   Compiling semio-framework-ui-runtime v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust)
+   Compiling semio-framework-actor v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust)
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13124:6: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13125:42: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13125:97: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13126:64: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13127:9: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13129:49: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13129:101: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13130:21: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🏪️store/🦀️component.rs:13131:55: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2400:9: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2415:9: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:2418:9: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:501:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:502:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:513:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:514:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:515:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:522:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:541:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:542:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:720:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:721:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:722:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:732:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:733:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:734:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/../../../../🔨️modules/🚪️io/🦀️component.rs:1212:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/⌨️cli/🦀️component.rs:83:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/./../../🔨️modules/🎒️pack/⌨️cli/🦀️component.rs:86:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+warning: `semio-framework-os-kernel` (lib) generated 29 warnings (run `cargo fix --lib -p semio-framework-os-kernel` to apply 9 suggestions)
+   Compiling semio-framework-3d v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust)
+   Compiling semio-framework v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust)
+🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/../../🦀️component.rs:241:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/../../🦀️component.rs:242:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/../../🦀️component.rs:243:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/../../🦀️component.rs:283:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/../../🦀️component.rs:286:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+warning: `semio-framework-schema` (lib) generated 5 warnings
+🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:501:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:502:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:513:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:514:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:515:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:522:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:541:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:542:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:720:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:721:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:722:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:732:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:733:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:734:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:1212:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2400:9: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2415:9: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🚪️io/🦀️component.rs:2418:9: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5055:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5056:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5057:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/../🎠️kernel/🦀️component.rs:1243:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/../🎠️kernel/🦀️component.rs:1244:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/../🎠️kernel/🦀️component.rs:1245:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/../🎠️kernel/🦀️component.rs:1246:5: warning: use of `async fn` in public traits is discouraged as auto trait bounds cannot be specified
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust)
+warning: `semio-framework` (lib) generated 25 warnings
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs:8:44: warning: unused import: `HashMap`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10578:5: warning: unused doc comment
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:112:47: warning: unused import: `PresentCx`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:140:9: warning: unused import: `ui_wgpu::wgpu::UiMenuRef`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:147:67: warning: unused imports: `ContextMenuPoint` and `ContextMenuResponse`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:183:9: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5600:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5609:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5638:31: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5733:31: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5755:31: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5766:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5778:31: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5792:33: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5794:27: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:5809:9: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7321:64: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7355:68: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:7366:68: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9097:26: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9106:29: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9151:31: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9162:32: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:9164:9: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:10823:18: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13446:31: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13588:66: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13704:13: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13739:13: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13815:13: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13853:27: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13854:13: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13886:13: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13919:13: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13951:78: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:13952:13: warning: unnecessary qualification
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21525:13: warning: ambiguous glob re-exports: the name `ActionId` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21528:13: warning: ambiguous glob re-exports: the name `tree_item` in the value namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21528:13: warning: ambiguous glob re-exports: the name `PeerMark` in the type namespace is first re-exported here
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:112:38: warning: unused import: `Present`
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:110:5: warning: field `key` is never read
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:122:13: warning: field `0` is never read
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:123:12: warning: fields `artifact_ops`, `config_ops`, and `draft_ops` are never read
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:124:11: warning: field `0` is never read
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:133:5: warning: fields `instance`, `meta`, and `outcome` are never read
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../⚛️reactor/🦀️component.rs:279:15: warning: function `cancel_instance_tasks` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🌐host/📖️body/🦀️component.rs:17:7: warning: constant `DIRECT_READ_CHUNK` is never used
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3028:119: warning: call to `.clone()` on a reference in this situation does nothing: help: remove this redundant call
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:3062:119: warning: call to `.clone()` on a reference in this situation does nothing: help: remove this redundant call
+warning: `semio-framework-plugin` (lib) generated 49 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 37 suggestions)
+   Compiling semio-s-plugin-stdio v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust)
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:8:1: warning: unused doc comment: rustdoc does not generate documentation for macro invocations
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:11:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:11:58: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:12:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:12:58: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:13:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:13:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:14:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:14:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:15:27: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:15:66: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:16:27: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:16:66: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:17:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:17:58: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:18:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:18:58: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:19:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:19:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:20:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:20:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:21:28: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:21:67: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:22:28: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:22:67: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:23:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:23:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:24:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:24:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:25:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:25:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:26:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:26:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:27:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:27:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:28:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:28:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:29:24: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:29:63: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:30:24: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:30:63: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:31:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:31:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:32:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:32:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:33:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:33:58: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:34:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:34:58: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:35:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:35:58: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:36:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:36:58: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:37:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:37:58: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:38:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:38:58: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:39:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:39:58: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:40:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:40:58: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:41:20: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:41:59: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:42:20: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:42:59: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:43:18: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:43:57: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:44:18: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:44:57: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:45:25: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:45:64: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:46:25: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:46:64: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:47:28: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:47:67: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:48:28: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:48:67: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:49:26: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:49:65: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:50:26: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:50:65: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:51:24: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:51:63: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:52:24: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:52:63: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:53:25: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:53:64: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:54:25: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:54:64: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:55:27: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:55:66: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:56:27: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:56:66: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:57:26: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:57:65: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:58:26: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:58:65: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:59:25: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:59:64: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:60:25: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:60:64: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:61:30: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:61:69: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:62:30: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:62:69: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:63:24: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:63:63: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:64:24: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:64:63: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:65:26: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:65:65: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:66:26: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:66:65: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:67:24: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:67:63: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:68:24: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:68:63: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:69:29: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:69:68: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:70:29: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:70:68: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:71:25: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:71:64: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:72:25: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:72:64: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:73:26: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:73:65: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:74:26: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:74:65: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:75:26: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:75:65: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:76:26: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:76:65: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:77:33: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:77:72: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:78:33: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:78:72: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:79:26: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:79:65: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:80:26: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:80:65: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:81:26: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:81:65: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:82:26: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:82:65: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:83:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:83:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:84:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:84:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:85:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:85:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:86:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:86:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:87:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:87:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:88:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:88:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:89:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:89:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:90:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:90:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:91:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:91:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:92:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:92:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:93:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:93:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:94:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:94:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:95:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:95:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:96:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:96:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:97:25: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:97:64: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:98:25: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:98:64: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:99:27: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:99:66: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:100:27: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:100:66: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:101:26: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:101:65: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:102:26: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:102:65: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:103:25: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:103:64: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:104:25: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:104:64: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:105:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:105:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:106:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:106:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:107:25: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:107:64: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:108:25: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:108:64: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:109:25: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:109:64: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:110:25: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:110:64: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:111:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:111:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:112:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:112:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:113:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:113:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:114:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:114:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:115:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:115:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:116:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:116:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:117:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:117:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:118:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:118:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:119:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:119:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:120:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:120:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:121:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:121:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:122:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:122:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:123:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:123:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:124:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:124:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:125:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:125:58: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:126:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:126:58: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:127:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:127:58: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:128:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:128:58: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:129:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:129:58: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:130:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:130:58: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:131:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:131:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:132:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:132:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:133:25: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:133:64: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:134:25: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:134:64: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:135:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:135:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:136:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:136:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:137:24: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:137:63: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:138:24: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:138:63: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:139:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:139:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:140:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:140:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:141:21: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:141:60: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:142:21: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:142:60: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:143:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:143:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:144:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:144:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:145:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:145:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:146:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:146:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:147:21: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:147:60: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:148:21: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:148:60: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:149:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:149:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:150:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:150:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:151:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:151:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:152:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:152:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:153:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:153:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:154:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:154:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:155:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:155:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:156:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:156:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:157:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:157:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:158:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:158:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:159:20: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:159:59: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:160:20: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:160:59: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:161:26: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:161:65: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:162:26: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:162:65: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:163:32: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:163:71: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:164:32: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:164:71: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:165:20: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:165:59: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:166:20: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:166:59: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:167:26: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:167:65: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:168:26: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:168:65: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:169:32: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:169:71: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:170:32: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:170:71: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:171:20: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:171:59: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:172:20: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:172:59: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:173:26: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:173:65: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:174:26: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:174:65: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:175:32: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:175:71: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:176:32: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:176:71: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:177:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:177:58: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:178:19: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:178:58: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:179:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:179:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:180:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:180:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:181:27: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:181:66: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:182:27: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:182:66: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:183:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:183:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:184:23: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:184:62: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:185:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:185:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:186:22: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/../../🦀️component.rs:186:61: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:114:1: warning: unused doc comment
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:53:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:54:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:55:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:56:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:57:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:58:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:59:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:60:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:61:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:62:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:63:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:64:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:65:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:66:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:67:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:68:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:69:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:70:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🦀️component.rs:71:5: warning: unnecessary qualification
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:240: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:240: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/✏️editor/🦀️component.rs:11:240: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:240: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:240: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/✏️editor/🦀️component.rs:11:240: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:240: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:240: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:240: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic/✏️editor/🦀️component.rs:11:240: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/✏️editor/🦀️component.rs:11:240: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:240: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:240: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:240: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:240: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:240: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:240: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️kit/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️text/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc1/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc2/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc3/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc4/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc5/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cobie/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cv20/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️sav/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/✏️editor/🦀️component.rs:10:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/✏️editor/🦀️component.rs:10:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/✏️editor/🦀️component.rs:12:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/✏️editor/🦀️component.rs:15:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/✏️editor/🦀️component.rs:15:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/✏️editor/🦀️component.rs:14:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/✏️editor/🦀️component.rs:14:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🦀️component.rs:12:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🦀️component.rs:13:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🦀️component.rs:13:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🦀️component.rs:11:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🦀️component.rs:17:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🦀️component.rs:17:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🦀️component.rs:16:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/✏️editor/🦀️component.rs:15:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/✏️editor/🦀️component.rs:13:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/✏️editor/🦀️component.rs:14:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/✏️editor/🦀️component.rs:14:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/✏️editor/🦀️component.rs:13:237: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:12:189: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:12:189: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️baseline/👁️viewer/🦀️component.rs:12:189: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:12:189: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:12:189: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️baseline/👁️viewer/🦀️component.rs:12:189: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:12:189: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:12:189: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:12:189: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️basic/👁️viewer/🦀️component.rs:12:189: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️tiny/👁️viewer/🦀️component.rs:12:189: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:12:189: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:12:189: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:12:189: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:12:189: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:12:189: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:12:189: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️kit/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️text/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc1/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc2/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc3/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc4/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc5/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cobie/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cv20/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️sav/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:10:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:10:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:10:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:10:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/👁️viewer/🦀️component.rs:10:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:10:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/👁️viewer/🦀️component.rs:10:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:10:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/👁️viewer/🦀️component.rs:11:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/👁️viewer/🦀️component.rs:11:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:10:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/👁️viewer/🦀️component.rs:11:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/👁️viewer/🦀️component.rs:11:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:12:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/👁️viewer/🦀️component.rs:13:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/👁️viewer/🦀️component.rs:13:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:11:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:11:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/👁️viewer/🦀️component.rs:11:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:11:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:11:211: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🦀️component.rs:98:5: warning: unused implementer of `Future` that must be used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🦀️component.rs:99:5: warning: unused implementer of `Future` that must be used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🦀️component.rs:75:5: warning: unused implementer of `Future` that must be used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🦀️component.rs:76:5: warning: unused implementer of `Future` that must be used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:1458:5: warning: unused implementer of `Future` that must be used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🚪️io/📐️part21/🦀️component.rs:733:9: warning: unused implementer of `Future` that must be used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:392:5: warning: unused implementer of `Future` that must be used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/🦀️component.rs:419:5: warning: unused implementer of `Future` that must be used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🚪️io/🦀️component.rs:420:5: warning: unused implementer of `Future` that must be used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:317:5: warning: unused implementer of `Future` that must be used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🧬️schema/🦀️component.rs:318:5: warning: unused implementer of `Future` that must be used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🚪️io/🦀️component.rs:145:5: warning: unused implementer of `Future` that must be used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🚪️io/🦀️component.rs:146:5: warning: unused implementer of `Future` that must be used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🚪️io/🦀️component.rs:48:9: warning: unused implementer of `Future` that must be used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🚪️io/🦀️component.rs:761:5: warning: unused implementer of `Future` that must be used
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././././././../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🚪️io/🦀️component.rs:496:5: warning: unused implementer of `Future` that must be used
+warning: `semio-s-plugin-stdio` (lib) generated 545 warnings (run `cargo fix --lib -p semio-s-plugin-stdio` to apply 527 suggestions)
+   Compiling semio-s-plugin-fem v0.1.0 (/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust)
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:344:28: error[E0425]: cannot find function `assert_mutation_inverse_law` in module `protocol::testkit`: not found in `protocol::testkit`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:348:28: error[E0425]: cannot find function `assert_mutation_diff_absorb_law` in module `protocol::testkit`: not found in `protocol::testkit`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:355:28: error[E0425]: cannot find function `assert_mutation_inverse_law` in module `protocol::testkit`: not found in `protocol::testkit`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:362:28: error[E0425]: cannot find function `assert_mutation_inverse_law` in module `protocol::testkit`: not found in `protocol::testkit`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:366:28: error[E0425]: cannot find function `assert_mutation_diff_absorb_law` in module `protocol::testkit`: not found in `protocol::testkit`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:389:28: error[E0425]: cannot find function `assert_fatal_never_applies` in module `protocol::testkit`: not found in `protocol::testkit`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:396:28: error[E0425]: cannot find function `assert_missing_target_is_error` in module `protocol::testkit`: not found in `protocol::testkit`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:402:28: error[E0425]: cannot find function `assert_missing_target_is_error` in module `protocol::testkit`: not found in `protocol::testkit`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:408:28: error[E0425]: cannot find function `assert_missing_target_is_error` in module `protocol::testkit`: not found in `protocol::testkit`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:417:28: error[E0425]: cannot find function `assert_missing_target_is_error` in module `protocol::testkit`: not found in `protocol::testkit`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:423:28: error[E0425]: cannot find function `assert_missing_target_is_error` in module `protocol::testkit`: not found in `protocol::testkit`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:429:28: error[E0425]: cannot find function `assert_missing_target_is_error` in module `protocol::testkit`: not found in `protocol::testkit`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:50:63: error[E0433]: cannot find module or crate `update_analysis_settings` in this scope: use of unresolved module or unlinked crate `update_analysis_settings`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:96:63: error[E0433]: cannot find module or crate `update_analysis_settings` in this scope: use of unresolved module or unlinked crate `update_analysis_settings`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:359:28: error[E0425]: cannot find function `assert_mutation_inverse_law` in module `protocol::testkit`: not found in `protocol::testkit`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:363:28: error[E0425]: cannot find function `assert_mutation_diff_absorb_law` in module `protocol::testkit`: not found in `protocol::testkit`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:370:28: error[E0425]: cannot find function `assert_mutation_inverse_law` in module `protocol::testkit`: not found in `protocol::testkit`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:377:28: error[E0425]: cannot find function `assert_mutation_inverse_law` in module `protocol::testkit`: not found in `protocol::testkit`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:381:28: error[E0425]: cannot find function `assert_mutation_diff_absorb_law` in module `protocol::testkit`: not found in `protocol::testkit`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:403:28: error[E0425]: cannot find function `assert_missing_target_is_error` in module `protocol::testkit`: not found in `protocol::testkit`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:409:28: error[E0425]: cannot find function `assert_missing_target_is_error` in module `protocol::testkit`: not found in `protocol::testkit`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:415:28: error[E0425]: cannot find function `assert_missing_target_is_error` in module `protocol::testkit`: not found in `protocol::testkit`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:424:28: error[E0425]: cannot find function `assert_missing_target_is_error` in module `protocol::testkit`: not found in `protocol::testkit`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:430:28: error[E0425]: cannot find function `assert_missing_target_is_error` in module `protocol::testkit`: not found in `protocol::testkit`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:436:28: error[E0425]: cannot find function `assert_missing_target_is_error` in module `protocol::testkit`: not found in `protocol::testkit`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:443:28: error[E0425]: cannot find function `assert_fatal_never_applies` in module `protocol::testkit`: not found in `protocol::testkit`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:48:63: error[E0433]: cannot find module or crate `update_analysis_settings` in this scope: use of unresolved module or unlinked crate `update_analysis_settings`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:92:63: error[E0433]: cannot find module or crate `update_analysis_settings` in this scope: use of unresolved module or unlinked crate `update_analysis_settings`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-node/🦀️component.rs:65:82: error[E0433]: cannot find type `FemElement` in this scope: use of undeclared type `FemElement`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-node/🦀️component.rs:67:82: error[E0433]: cannot find type `FemElement` in this scope: use of undeclared type `FemElement`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-node/🦀️component.rs:89:113: error[E0433]: cannot find type `FemDof` in this scope: use of undeclared type `FemDof`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-node/🦀️component.rs:89:125: error[E0433]: cannot find type `FemDof` in this scope: use of undeclared type `FemDof`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-node/🦀️component.rs:90:106: error[E0433]: cannot find type `FemDof` in this scope: use of undeclared type `FemDof`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-node/🦀️component.rs:90:118: error[E0433]: cannot find type `FemDof` in this scope: use of undeclared type `FemDof`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:344:19: warning: `testkit` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:348:19: warning: `testkit` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:355:19: warning: `testkit` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:362:19: warning: `testkit` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:366:19: warning: `testkit` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:389:19: warning: `testkit` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:396:19: warning: `testkit` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:402:19: warning: `testkit` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:408:19: warning: `testkit` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:417:19: warning: `testkit` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:423:19: warning: `testkit` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:429:19: warning: `testkit` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:359:19: warning: `testkit` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:363:19: warning: `testkit` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:370:19: warning: `testkit` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:377:19: warning: `testkit` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:381:19: warning: `testkit` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:403:19: warning: `testkit` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:409:19: warning: `testkit` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:415:19: warning: `testkit` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:424:19: warning: `testkit` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:430:19: warning: `testkit` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:436:19: warning: `testkit` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:443:19: warning: `testkit` is ambiguous: ambiguous name
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️component.rs:1756:31: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️component.rs:1770:31: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️component.rs:1786:13: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️component.rs:1792:29: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/🏗️model/🦀️component.rs:150:1: warning: unused doc comment
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/🏗️model/🦀️component.rs:304:6: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/🏗️model/🦀️component.rs:305:35: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/🏗️model/🦀️component.rs:305:63: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:115:9: warning: unused import: `protocol::SemanticMutation`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:63:25: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:65:43: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:66:42: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:67:39: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:68:39: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:69:42: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:70:42: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:71:42: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:72:43: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs:116:9: warning: unused import: `protocol::SemanticMutation`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:61:25: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:63:43: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:64:42: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:65:39: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:66:39: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:67:42: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:68:42: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:69:43: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:623:50: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:624:49: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:631:50: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:632:49: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:639:50: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:640:49: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs:16:12: warning: unnecessary braces around function argument
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:904:50: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:905:49: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:912:50: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:913:49: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:920:50: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:921:49: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️component.rs:16:12: warning: unnecessary braces around function argument
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏋️add-nodal-load/🦀️component.rs:99:59: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏋️add-nodal-load/🦀️component.rs:108:46: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏋️add-nodal-load/🦀️component.rs:118:73: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:11:180: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:11:189: warning: unused import: `UiNode`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/../../🦀️component.rs:9:1: warning: unused doc comment: rustdoc does not generate documentation for macro invocations
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/../../🦀️component.rs:12:21: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/../../🦀️component.rs:12:60: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/../../🦀️component.rs:13:21: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/../../🦀️component.rs:13:60: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/../../🦀️component.rs:14:21: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/../../🦀️component.rs:14:60: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/../../🦀️component.rs:15:21: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/../../🦀️component.rs:15:60: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/../../🦀️component.rs:34:44: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/📦️glue.rs:1539:57: warning: unnecessary qualification
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:110:27: error[E0609]: no field `nodes` on type `impl Future<Output = Fem2dSnapshot>`: field not available in `impl Future`, but it is available in its `Output`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️component.rs:111:27: error[E0609]: no field `nodes` on type `impl Future<Output = Fem3dSnapshot>`: field not available in `impl Future`, but it is available in its `Output`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/📦️glue.rs:1539:1: error[E0308]: mismatched types: expected future, found `Option<_>`, this expression has type `(impl Future<Output = Option<Vec<u8>>>, impl Future<Output = ...>)`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📚️set-active-example/🦀️component.rs:35:36: error[E0308]: mismatched types: expected `HistoryView`, found future
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📚️set-active-example/🦀️component.rs:50:79: error[E0308]: mismatched types: expected `&ArtifactView<'_, Fem3dSnapshot>`, found `&impl Future<Output = ...>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📚️set-active-example/🦀️component.rs:75:80: error[E0308]: mismatched types: expected `&ArtifactView<'_, Fem3dSnapshot>`, found `&impl Future<Output = ...>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-node/🦀️component.rs:43:39: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️component.rs:48:32: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️remove-selection/🦀️component.rs:58:39: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏋️add-nodal-load/🦀️component.rs:96:39: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-node/🦀️component.rs:51:39: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️set-analysis-settings/🦀️component.rs:41:40: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️remove-selection/🦀️component.rs:60:32: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏋️add-nodal-load/🦀️component.rs:106:39: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-node/🦀️component.rs:59:39: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:814:37: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-node/🦀️component.rs:61:83: error[E0614]: type `f64` cannot be dereferenced: can't be dereferenced
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:635:9: error[E0308]: mismatched types: expected `VcsArtifactApp<EditorApp<Fem3dPlayApp>>`, found future
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:648:9: error[E0308]: mismatched types: expected `VcsArtifactApp<EditorApp<Fem3dPlayApp>>`, found future
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏋️add-nodal-load/🦀️component.rs:115:43: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️remove-selection/🦀️component.rs:67:32: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:815:137: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-node/🦀️component.rs:70:39: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:652:53: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<semio_framework_plugin::InvocationResult, dsl::Fault>>` in the current scope: method not found in `impl Future<Output = Result<semio_framework_plugin::InvocationResult, dsl::Fault>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏋️add-nodal-load/🦀️component.rs:117:39: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:834:39: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:836:48: error[E0308]: mismatched types: expected `&HistoryView`, found `&impl Future<Output = HistoryView>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:837:101: error[E0308]: mismatched types: expected `&ArtifactView<'_, Fem3dSnapshot>`, found `&impl Future<Output = ...>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎥️set-camera/🦀️component.rs:36:37: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:853:48: error[E0308]: mismatched types: expected `&HistoryView`, found `&impl Future<Output = HistoryView>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:854:99: error[E0308]: mismatched types: expected `&ArtifactView<'_, Fem3dSnapshot>`, found `&impl Future<Output = ...>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:656:82: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<semio_framework_plugin::ComponentTree, dsl::Fault>>` in the current scope: method not found in `impl Future<Output = Result<semio_framework_plugin::ComponentTree, dsl::Fault>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️remove-selection/🦀️component.rs:74:40: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏋️add-nodal-load/🦀️component.rs:125:38: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎥️set-camera/🦀️component.rs:39:35: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:863:39: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:865:48: error[E0308]: mismatched types: expected `&HistoryView`, found `&impl Future<Output = HistoryView>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:875:70: error[E0308]: mismatched types: expected `&ArtifactView<'_, Fem3dSnapshot>`, found `&impl Future<Output = ...>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏋️add-nodal-load/🦀️component.rs:127:32: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️remove-selection/🦀️component.rs:77:32: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-node/🦀️component.rs:58:35: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📚️set-active-example/🦀️component.rs:48:48: error[E0308]: mismatched types: expected `&HistoryView`, found `&impl Future<Output = HistoryView>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📚️set-active-example/🦀️component.rs:51:79: error[E0308]: mismatched types: expected `&ArtifactView<'_, Fem2dSnapshot>`, found `&impl Future<Output = ...>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📚️set-active-example/🦀️component.rs:64:48: error[E0308]: mismatched types: expected `&HistoryView`, found `&impl Future<Output = HistoryView>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📚️set-active-example/🦀️component.rs:67:80: error[E0308]: mismatched types: expected `&ArtifactView<'_, Fem2dSnapshot>`, found `&impl Future<Output = ...>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️component.rs:33:37: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏋️add-nodal-load/🦀️component.rs:87:35: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️remove-selection/🦀️component.rs:60:38: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:875:76: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<Emit<Fem3dMutation, ..., ...>, ...>>` in the current scope: method not found in `impl Future<Output = Result<Emit<Fem3dMutation, ..., ...>, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏋️add-nodal-load/🦀️component.rs:134:33: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-node/🦀️component.rs:65:41: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗣️set-locale/🦀️component.rs:36:35: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:891:37: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = std::option::Option<AppIo>>` in the current scope: method not found in `impl Future<Output = std::option::Option<AppIo>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️remove-selection/🦀️component.rs:62:38: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏋️add-nodal-load/🦀️component.rs:89:38: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:939:9: error[E0277]: can't compare `std::string::String` with `impl Future<Output = std::string::String>`: no implementation for `std::string::String == impl Future<Output = std::string::String>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:939:9: error[E0277]: `impl Future<Output = std::string::String>` doesn't implement `Debug`: the trait `Debug` is not implemented for `impl Future<Output = std::string::String>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️set-analysis-settings/🦀️component.rs:45:39: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏋️add-nodal-load/🦀️component.rs:141:39: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-node/🦀️component.rs:67:41: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️remove-selection/🦀️component.rs:66:32: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-result-display/🦀️component.rs:35:37: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏋️add-nodal-load/🦀️component.rs:91:35: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏋️add-nodal-load/🦀️component.rs:150:32: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-node/🦀️component.rs:74:39: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-result-display/🦀️component.rs:38:35: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️remove-selection/🦀️component.rs:67:32: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:596:45: error[E0609]: no field `fields` on type `impl Future<Output = ConfigSpec>`: field not available in `impl Future`, but it is available in its `Output`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏋️add-nodal-load/🦀️component.rs:98:39: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs:67:218: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<ArtifactStore<Fem2dSnapshot, ...>, ...>>` in the current scope: method not found in `impl Future<Output = Result<ArtifactStore<Fem2dSnapshot, ...>, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-node/🦀️component.rs:83:35: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-node/🦀️component.rs:34:39: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:611:37: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = std::option::Option<AppIo>>` in the current scope: method not found in `impl Future<Output = std::option::Option<AppIo>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏋️add-nodal-load/🦀️component.rs:109:38: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:444:9: error[E0308]: mismatched types: expected `VcsArtifactApp<EditorApp<Fem2dPlayApp>>`, found future
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-node/🦀️component.rs:90:35: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:457:9: error[E0308]: mismatched types: expected `VcsArtifactApp<EditorApp<Fem2dPlayApp>>`, found future
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏋️add-nodal-load/🦀️component.rs:111:40: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:665:37: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧱️add-node/🦀️component.rs:97:37: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:461:53: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<semio_framework_plugin::InvocationResult, dsl::Fault>>` in the current scope: method not found in `impl Future<Output = Result<semio_framework_plugin::InvocationResult, dsl::Fault>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏋️add-nodal-load/🦀️component.rs:120:38: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:666:162: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:465:82: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<semio_framework_plugin::ComponentTree, dsl::Fault>>` in the current scope: method not found in `impl Future<Output = Result<semio_framework_plugin::ComponentTree, dsl::Fault>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:677:13: error[E0308]: mismatched types: expected future, found `(_, _)`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:708:48: error[E0308]: mismatched types: expected `&HistoryView`, found `&impl Future<Output = HistoryView>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:709:102: error[E0308]: mismatched types: expected `&ArtifactView<'_, Fem2dSnapshot>`, found `&impl Future<Output = ...>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:714:62: error[E0308]: mismatched types: expected `&HistoryView`, found `&impl Future<Output = HistoryView>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:715:70: error[E0308]: mismatched types: expected `&ArtifactView<'_, Fem2dSnapshot>`, found `&impl Future<Output = ...>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏋️add-nodal-load/🦀️component.rs:122:32: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:715:82: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<Emit<Fem2dMutation, ..., ...>, ...>>` in the current scope: method not found in `impl Future<Output = Result<Emit<Fem2dMutation, ..., ...>, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:720:74: error[E0308]: mismatched types: expected `&[u8]`, found `Vec<u8>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:729:48: error[E0308]: mismatched types: expected `&HistoryView`, found `&impl Future<Output = HistoryView>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:730:101: error[E0308]: mismatched types: expected `&ArtifactView<'_, Fem2dSnapshot>`, found `&impl Future<Output = ...>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:753:48: error[E0308]: mismatched types: expected `&HistoryView`, found `&impl Future<Output = HistoryView>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏋️add-nodal-load/🦀️component.rs:130:33: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:754:101: error[E0308]: mismatched types: expected `&ArtifactView<'_, Fem2dSnapshot>`, found `&impl Future<Output = ...>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:766:48: error[E0308]: mismatched types: expected `&HistoryView`, found `&impl Future<Output = HistoryView>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:767:104: error[E0308]: mismatched types: expected `&ArtifactView<'_, Fem2dSnapshot>`, found `&impl Future<Output = ...>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:776:48: error[E0308]: mismatched types: expected `&HistoryView`, found `&impl Future<Output = HistoryView>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:779:70: error[E0308]: mismatched types: expected `&ArtifactView<'_, Fem2dSnapshot>`, found `&impl Future<Output = ...>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏋️add-nodal-load/🦀️component.rs:138:38: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:779:76: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<Emit<Fem2dMutation, ..., ...>, ...>>` in the current scope: method not found in `impl Future<Output = Result<Emit<Fem2dMutation, ..., ...>, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏋️add-nodal-load/🦀️component.rs:140:40: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:796:48: error[E0308]: mismatched types: expected `&HistoryView`, found `&impl Future<Output = HistoryView>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:799:70: error[E0308]: mismatched types: expected `&ArtifactView<'_, Fem2dSnapshot>`, found `&impl Future<Output = ...>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:61:198: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<ArtifactStore<Fem3dSnapshot, ...>, ...>>` in the current scope: method not found in `impl Future<Output = Result<ArtifactStore<Fem3dSnapshot, ...>, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏋️add-nodal-load/🦀️component.rs:150:41: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>` in the current scope: method not found in `impl Future<Output = Result<<... as ArtifactApp>::Snapshot, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:799:76: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<Emit<Fem2dMutation, ..., ...>, ...>>` in the current scope: method not found in `impl Future<Output = Result<Emit<Fem2dMutation, ..., ...>, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././././././././../../🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs:63:198: error[E0599]: no method named `expect` found for opaque type `impl Future<Output = Result<ArtifactStore<Fem2dSnapshot, ...>, ...>>` in the current scope: method not found in `impl Future<Output = Result<ArtifactStore<Fem2dSnapshot, ...>, ...>>`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:627:34: warning: unused import: `ArtifactApp`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/◻2d/🕸️meshing/🦀️component.rs:9:40: warning: unused import: `Element`
+✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/./../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/🧊️3d/🕸️meshing/🦀️component.rs:8:31: warning: unused import: `Element`
+warning: `semio-s-plugin-fem` (lib test) generated 84 warnings
+error: could not compile `semio-s-plugin-fem` (lib test) due to 145 previous errors; 108 warnings emitted

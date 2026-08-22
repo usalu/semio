@@ -85,7 +85,7 @@ export function normalizeWindowSilhouetteChips(chips: readonly WindowSilhouetteC
     .map((chip) => ({ left: Math.max(minX, Math.min(chip.left, maxX)), right: Math.max(minX, Math.min(chip.right, maxX)) }))
     .filter((chip) => chip.right - chip.left > WINDOW_SILHOUETTE_CHIP_EPSILON)
     .sort((a, b) => a.left - b.left || a.right - b.right);
-  const merged: WindowSilhouetteChip[] = [];
+  const merged: { left: number; right: number }[] = [];
   for (const chip of normalized) {
     const last = merged[merged.length - 1];
     if (!last || chip.left > last.right + WINDOW_SILHOUETTE_CHIP_EPSILON) merged.push({ ...chip });

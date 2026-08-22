@@ -32,7 +32,7 @@ import {
   type PanelDock,
   type PanelTabDockMove,
 } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState, type ReactNode } from "react";
 // #endregion 🔌️Adapters
 

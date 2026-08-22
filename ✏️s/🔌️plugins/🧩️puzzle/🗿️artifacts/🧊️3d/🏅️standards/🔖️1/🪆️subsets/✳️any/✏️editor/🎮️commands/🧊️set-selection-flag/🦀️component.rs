@@ -6,7 +6,7 @@ use serde_json::Value;
 
 /// 🙈️ Explicit `{entity, ids}` (the document tree's row actions) patches exactly those; otherwise the
 /// whole live object/vortex/target-volume selection is flagged at once (the context menu's path).
-pub async fn set_selection_flag(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
+pub fn set_selection_flag(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     let flag = args.and_then(|value| value.get("flag")).and_then(|value| value.as_str()).unwrap_or("hidden");
     let value = args.and_then(|value| value.get("value")).and_then(|value| value.as_bool()).unwrap_or(true);
     let entity = args.and_then(|value| value.get("entity")).and_then(|value| value.as_str());

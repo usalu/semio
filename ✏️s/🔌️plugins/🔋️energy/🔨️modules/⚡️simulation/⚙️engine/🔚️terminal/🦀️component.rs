@@ -129,7 +129,7 @@ impl AirTerminal {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn cav_constant_flow() {
         let term = AirTerminal::Cav { max_flow_m3_s: 0.3 };
         let req = TerminalRequest {
@@ -149,7 +149,7 @@ mod tests {
         assert!((out.discharge_temperature_c - 13.0).abs() < 1e-6);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn vav_reheat_adds_heat() {
         let term = AirTerminal::VavReheat { min_flow_m3_s: 0.05, max_flow_m3_s: 0.4, reheat: HeatingCoil::Electric { capacity_w: 5000.0, efficiency: 1.0 } };
         let req = TerminalRequest {
@@ -169,7 +169,7 @@ mod tests {
         assert!(out.discharge_temperature_c > req.supply_temperature_c);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn dual_duct_mixes_temperatures() {
         let term = AirTerminal::DualDuct { hot_max_m3_s: 0.2, cold_max_m3_s: 0.3, mixing_damper: 0.5 };
         let req = TerminalRequest {

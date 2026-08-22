@@ -7,7 +7,7 @@ use crate::artifacts::present::PresentSnapshot;
 /// 🔺️ Reads the working-scene `(source, tiles)` off `base.presentation`, relocates the addressed
 /// tile to `to_index` (clamped), and mints a new content-addressed `presentation` handle for the
 /// result — real handcrafted construction from `(payload, base)`, never apply-then-capture.
-pub async fn diff(payload: &ReorderTiles, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
+pub fn diff(payload: &ReorderTiles, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
     let (source, mut tiles) = crate::artifacts::present::present_working_scene(base);
     let Some(from) = tiles.iter().position(|tile| tile.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Tile \"{}\" does not exist.", payload.id), ["tiles".to_string(), payload.id.clone()]);

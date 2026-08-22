@@ -64,15 +64,15 @@ pub(crate) fn resolve_blocks<'a>(body: &'a [DocBlock], segments: &[DocPathSegmen
         Some((seg, rest)) => match seg {
             DocPathSegment::Quote { block_index } => {
                 let DocBlock::Quote { blocks } = body.get(*block_index)? else { return None };
-                Box::pin(resolve_blocks(blocks, rest))
+                resolve_blocks(blocks, rest)
             }
             DocPathSegment::ListItem { block_index, item } => {
                 let DocBlock::List { items, .. } = body.get(*block_index)? else { return None };
-                Box::pin(resolve_blocks(&items.get(*item)?.blocks, rest))
+                resolve_blocks(&items.get(*item)?.blocks, rest)
             }
             DocPathSegment::TableCell { block_index, row, cell } => {
                 let DocBlock::Table { rows } = body.get(*block_index)? else { return None };
-                Box::pin(resolve_blocks(&rows.get(*row)?.cells.get(*cell)?.blocks, rest))
+                resolve_blocks(&rows.get(*row)?.cells.get(*cell)?.blocks, rest)
             }
         },
     }
@@ -108,17 +108,17 @@ fn wrap_body_diff(path: &DocBlockPath, leaf: DocBlockLeaf) -> SemioDocumentDiff 
                 let inner = go(rest, index, leaf);
                 match seg {
                     DocPathSegment::Quote { block_index } => {
-                        let qd = DocBlockDiff::Quote(DocQuoteDiff { blocks: Some(Box::pin(inner)) });
+                        let qd = DocBlockDiff::Quote(DocQuoteDiff { blocks: Some(inner) });
                         BlocksDiff { modified: vec![IndexModified { index: *block_index, diff: qd }], ..Default::default() }
                     }
                     DocPathSegment::ListItem { block_index, item } => {
-                        let item_diff = crate::artifacts::semio::standards::v1::subsets::document::schema::diff::DocListItemDiff { blocks: Some(Box::pin(inner)) };
+                        let item_diff = crate::artifacts::semio::standards::v1::subsets::document::schema::diff::DocListItemDiff { blocks: Some(inner) };
                         let items_diff: ListItemsDiff = IndexedTripleDiff { modified: vec![IndexModified { index: *item, diff: item_diff }], ..Default::default() };
                         let ld = DocBlockDiff::List(crate::artifacts::semio::standards::v1::subsets::document::schema::diff::DocListDiff { ordered: None, items: Some(items_diff) });
                         BlocksDiff { modified: vec![IndexModified { index: *block_index, diff: ld }], ..Default::default() }
                     }
                     DocPathSegment::TableCell { block_index, row, cell } => {
-                        let cell_diff = DocTableCellDiff { blocks: Some(Box::pin(inner)) };
+                        let cell_diff = DocTableCellDiff { blocks: Some(inner) };
                         let cells_diff: TableCellsDiff = IndexedTripleDiff { modified: vec![IndexModified { index: *cell, diff: cell_diff }], ..Default::default() };
                         let row_diff = DocTableRowDiff { cells: Some(cells_diff) };
                         let rows_diff: TableRowsDiff = IndexedTripleDiff { modified: vec![IndexModified { index: *row, diff: row_diff }], ..Default::default() };

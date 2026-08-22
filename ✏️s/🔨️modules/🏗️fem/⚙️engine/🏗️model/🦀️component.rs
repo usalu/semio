@@ -293,17 +293,26 @@ pub struct StaticResult {
 
 //#region ⚠️ Errors
 /// ⚠️ Everything that can go wrong building or solving a [`Model`].
-#[derive(Clone, Debug, PartialEq, thiserror::Error)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum FemError {
-    #[error("model has no nodes")]
     EmptyModel,
-    #[error("duplicate node id: {0}")]
     DuplicateNodeId(String),
-    #[error("reference to unknown node id: {0}")]
     DanglingNodeRef(String),
-    #[error("stiffness matrix is singular — model is a mechanism or under-constrained")]
     Singular,
 }
+
+impl std::fmt::Display for FemError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::EmptyModel => formatter.write_str("model has no nodes"),
+            Self::DuplicateNodeId(id) => write!(formatter, "duplicate node id: {id}"),
+            Self::DanglingNodeRef(id) => write!(formatter, "reference to unknown node id: {id}"),
+            Self::Singular => formatter.write_str("stiffness matrix is singular — model is a mechanism or under-constrained"),
+        }
+    }
+}
+
+impl std::error::Error for FemError {}
 //#endregion ⚠️ Errors
 
 // #region 🔖️DofMap

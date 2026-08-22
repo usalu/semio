@@ -83,7 +83,7 @@ impl RewriteArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.trinity.rewrite` — twenty handcrafted schema leaves.
-pub async fn rewrite_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn rewrite_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.trinity.rewrite",
         artifact: schema::FacetLeaves {

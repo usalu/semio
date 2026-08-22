@@ -10,7 +10,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildTaskManagerTableScene, createTaskManagerDispatcher, taskManagerColumns, taskManagerRowAction, taskManagerRows, TaskManagerPanel, type TaskManagerLabels, type TaskManagerRow } from "./🟦️component.tsx";
 import { ActivationRegistry, type ShardBudget } from "../../../../../../../🔨️modules/🎠️kernel/🟦️component.ts";

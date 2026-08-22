@@ -37,15 +37,15 @@ fn before() -> PresentSnapshot {
     let PresentMutation::ReorderTiles(payload) = mutation() else {
         panic!("no-ops-when-the-tile-is-already-at-that-index's committed mutation must be a reorder-tiles");
     };
-    let tile = FigureTileDraft { id: payload.id.clone(), name: "Hero".into(), crop: FigureTileFrame { x: 0.25, y: 0.25, width: 0.5, height: 0.5 } };
+    let tile = FigureTileDraft { id: payload.id, name: "Hero".into(), crop: FigureTileFrame { x: 0.25, y: 0.25, width: 0.5, height: 0.5 } };
     cache_present_working_scene(&snapshot.presentation.child_id, &default_figure_tile_source(), &[tile]);
     snapshot
 }
 
 /// ▶️ Reordering a tile onto the slot it already occupies carries `before` to exactly the committed
 /// `after`, leaving the composed deck handle untouched.
-#[semio_framework_async_macros::async_test]
-async fn applies_to_committed_after() {
+#[test]
+fn applies_to_committed_after() {
     let base = before();
     let snapshot = apply_present_mutation(&base, &mutation()).expect("an empty diff still applies cleanly");
     assert_eq!(snapshot, expected_after(), "reorder-tiles/no-ops-when-the-tile-is-already-at-that-index: applied state differs from committed after-snapshot");
@@ -54,8 +54,8 @@ async fn applies_to_committed_after() {
 
 /// 🔺️ The delta is exactly the committed all-null `PresentDiff`: the guard fires after the removal
 /// arithmetic but before the reinsertion, so no reordered deck is ever built.
-#[semio_framework_async_macros::async_test]
-async fn produces_committed_diff() {
+#[test]
+fn produces_committed_diff() {
     let outcome = <PresentMutation as protocol::Mutation<PresentSnapshot>>::diff(&mutation(), &before());
     let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
@@ -64,8 +64,8 @@ async fn produces_committed_diff() {
 }
 
 /// 🔣️ The committed diff is itself canonical and decodes to present's own diff type.
-#[semio_framework_async_macros::async_test]
-async fn committed_diff_is_canonical() {
+#[test]
+fn committed_diff_is_canonical() {
     let decoded: PresentDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
     let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
@@ -75,8 +75,8 @@ async fn committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after`. Order lives in
 /// the composed deck, and this diff leaves that slot unset — the ordering-pinning assertion this
 /// verb specifically needs.
-#[semio_framework_async_macros::async_test]
-async fn committed_diff_applies_to_after() {
+#[test]
+fn committed_diff_applies_to_after() {
     let decoded: PresentDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert!(decoded.presentation.is_none(), "a positional no-op must leave the order-bearing presentation slot unset");
     let produced = <PresentDiff as protocol::MutationDiff<PresentSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
@@ -84,8 +84,8 @@ async fn committed_diff_applies_to_after() {
 }
 
 /// 🔣️ Both committed snapshots and the committed mutation are already canonical.
-#[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+#[test]
+fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: PresentSnapshot = serde_json::from_str(text).expect("snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
@@ -99,8 +99,8 @@ async fn committed_json_is_canonical() {
 }
 
 /// 🎯️ The declared outcome holds: `applied`, with one untargeted Warning `mutation.no-op`.
-#[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+#[test]
+fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("applied"), "reorder-tiles/no-ops-when-the-tile-is-already-at-that-index declares an applied outcome");
     let declared = outcome.get("messages").and_then(serde_json::Value::as_array).expect("the declared outcome carries messages");
@@ -113,8 +113,8 @@ async fn declared_outcome_holds() {
 
 /// ↩️ `reorder-tiles`' inverse is BASE-derived: it moves the tile back to the index it currently
 /// holds. Here that index IS the requested one, so replaying it leaves the deck exactly as it was.
-#[semio_framework_async_macros::async_test]
-async fn inverse_moves_the_tile_back_to_its_base_index() {
+#[test]
+fn inverse_moves_the_tile_back_to_its_base_index() {
     let base = before();
     let inverse = inverse_present_mutation(&base, &mutation());
     assert_eq!(inverse.len(), 1, "reorder-tiles undoes with exactly one step, got {inverse:?}");

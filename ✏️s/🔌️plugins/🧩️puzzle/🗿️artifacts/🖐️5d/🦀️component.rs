@@ -10,10 +10,31 @@ use serde::{Deserialize, Serialize};
 
 //#region ⚠️ Errors
 /// 🧯️ Puzzle 5d precompute session errors — delegates entirely to `puzzle_3d`'s own precompute-session error.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum Puzzle5dError {
-    #[error(transparent)]
-    Puzzle3d(#[from] crate::artifacts::puzzle3d::Puzzle3dError),
+    Puzzle3d(crate::artifacts::puzzle3d::Puzzle3dError),
+}
+
+impl std::fmt::Display for Puzzle5dError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Puzzle3d(error) => write!(formatter, "{error}"),
+        }
+    }
+}
+
+impl std::error::Error for Puzzle5dError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Puzzle3d(error) => std::error::Error::source(error),
+        }
+    }
+}
+
+impl From<crate::artifacts::puzzle3d::Puzzle3dError> for Puzzle5dError {
+    fn from(error: crate::artifacts::puzzle3d::Puzzle3dError) -> Self {
+        Self::Puzzle3d(error)
+    }
 }
 //#endregion ⚠️ Errors
 
@@ -107,16 +128,16 @@ impl<'de> Deserialize<'de> for Puzzle5dScale {
 /// elsewhere) rather than `Shape::Value` — `scale=2` (uniform) and `scale=2,3,4` (per-axis) print/
 /// parse as plain packed literals, no bespoke Shape variant needed.
 impl dsl::DslField for Puzzle5dScale {
-    async fn shape() -> dsl::Shape {
+    fn shape() -> dsl::Shape {
         dsl::Shape::Tuple(Box::new(dsl::Shape::Float), None)
     }
-    async fn to_value(&self) -> dsl::FieldValue {
+    fn to_value(&self) -> dsl::FieldValue {
         match self {
             Puzzle5dScale::Uniform(scale) => dsl::FieldValue::Tuple(vec![dsl::FieldValue::Float(*scale)]),
             Puzzle5dScale::Vec3(vec3) => dsl::FieldValue::Tuple(vec3.iter().map(|axis| dsl::FieldValue::Float(*axis)).collect()),
         }
     }
-    async fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
             dsl::FieldValue::Tuple(items) if items.len() == 1 => match &items[0] {
                 dsl::FieldValue::Float(scale) => Ok(Puzzle5dScale::Uniform(*scale)),
@@ -208,7 +229,7 @@ pub enum Puzzle5dPartAnchor {
 }
 
 impl Puzzle5dPartAnchor {
-    async fn is_fixed(&self) -> bool {
+    fn is_fixed(&self) -> bool {
         matches!(self, Self::Fixed)
     }
 }
@@ -345,7 +366,7 @@ pub struct Puzzle5dRepresentation {
     pub description: String,
 }
 
-async fn default_grip_direction() -> [f64; 3] {
+fn default_grip_direction() -> [f64; 3] {
     [0.0, 0.0, 1.0]
 }
 
@@ -604,10 +625,10 @@ pub struct Puzzle5dKindCatalogsExtra {
 }
 
 //#region 🔖️RowConverters
-pub async fn kit_type_from_part_kind(k: &Puzzle5dCatalogPartKind) -> SemioKitType {
+pub fn kit_type_from_part_kind(k: &Puzzle5dCatalogPartKind) -> SemioKitType {
     SemioKitType { id: k.id.clone(), name: k.name.clone(), category: "part".into() }
 }
-pub async fn part_kind_extra_from_part_kind(k: &Puzzle5dCatalogPartKind) -> Puzzle5dCatalogPartKindExtra {
+pub fn part_kind_extra_from_part_kind(k: &Puzzle5dCatalogPartKind) -> Puzzle5dCatalogPartKindExtra {
     Puzzle5dCatalogPartKindExtra {
         id: k.id.clone(),
         label: k.label.clone(),
@@ -623,7 +644,7 @@ pub async fn part_kind_extra_from_part_kind(k: &Puzzle5dCatalogPartKind) -> Puzz
         authors: k.authors.clone(),
     }
 }
-pub async fn part_kind_from_parts(kit_type: &SemioKitType, extra: &Puzzle5dCatalogPartKindExtra) -> Puzzle5dCatalogPartKind {
+pub fn part_kind_from_parts(kit_type: &SemioKitType, extra: &Puzzle5dCatalogPartKindExtra) -> Puzzle5dCatalogPartKind {
     Puzzle5dCatalogPartKind {
         id: kit_type.id.clone(),
         name: kit_type.name.clone(),
@@ -641,11 +662,11 @@ pub async fn part_kind_from_parts(kit_type: &SemioKitType, extra: &Puzzle5dCatal
     }
 }
 
-pub async fn kit_type_from_grip_kind(k: &Puzzle5dCatalogGripKind) -> SemioKitType {
+pub fn kit_type_from_grip_kind(k: &Puzzle5dCatalogGripKind) -> SemioKitType {
     let name = k.label.clone().or_else(|| k.code.clone()).unwrap_or_default();
     SemioKitType { id: k.id.clone(), name, category: "grip".into() }
 }
-pub async fn grip_kind_extra_from_grip_kind(k: &Puzzle5dCatalogGripKind) -> Puzzle5dCatalogGripKindExtra {
+pub fn grip_kind_extra_from_grip_kind(k: &Puzzle5dCatalogGripKind) -> Puzzle5dCatalogGripKindExtra {
     Puzzle5dCatalogGripKindExtra {
         id: k.id.clone(),
         code: k.code.clone(),
@@ -658,7 +679,7 @@ pub async fn grip_kind_extra_from_grip_kind(k: &Puzzle5dCatalogGripKind) -> Puzz
         default_rope_kind: k.default_rope_kind.clone(),
     }
 }
-pub async fn grip_kind_from_parts(kit_type: &SemioKitType, extra: &Puzzle5dCatalogGripKindExtra) -> Puzzle5dCatalogGripKind {
+pub fn grip_kind_from_parts(kit_type: &SemioKitType, extra: &Puzzle5dCatalogGripKindExtra) -> Puzzle5dCatalogGripKind {
     let _ = kit_type;
     Puzzle5dCatalogGripKind {
         id: extra.id.clone(),
@@ -673,23 +694,23 @@ pub async fn grip_kind_from_parts(kit_type: &SemioKitType, extra: &Puzzle5dCatal
     }
 }
 
-pub async fn kit_type_from_fastener_kind(k: &Puzzle5dCatalogFastenerKind) -> SemioKitType {
+pub fn kit_type_from_fastener_kind(k: &Puzzle5dCatalogFastenerKind) -> SemioKitType {
     SemioKitType { id: k.id.clone(), name: k.name.clone(), category: "fastener".into() }
 }
-pub async fn fastener_kind_extra_from_fastener_kind(k: &Puzzle5dCatalogFastenerKind) -> Puzzle5dCatalogFastenerKindExtra {
+pub fn fastener_kind_extra_from_fastener_kind(k: &Puzzle5dCatalogFastenerKind) -> Puzzle5dCatalogFastenerKindExtra {
     Puzzle5dCatalogFastenerKindExtra { id: k.id.clone(), label: k.label.clone() }
 }
-pub async fn fastener_kind_from_parts(kit_type: &SemioKitType, extra: &Puzzle5dCatalogFastenerKindExtra) -> Puzzle5dCatalogFastenerKind {
+pub fn fastener_kind_from_parts(kit_type: &SemioKitType, extra: &Puzzle5dCatalogFastenerKindExtra) -> Puzzle5dCatalogFastenerKind {
     Puzzle5dCatalogFastenerKind { id: kit_type.id.clone(), name: kit_type.name.clone(), label: extra.label.clone() }
 }
 
-pub async fn kit_type_from_rope_kind(k: &Puzzle5dCatalogRopeKind) -> SemioKitType {
+pub fn kit_type_from_rope_kind(k: &Puzzle5dCatalogRopeKind) -> SemioKitType {
     SemioKitType { id: k.id.clone(), name: k.name.clone(), category: "rope".into() }
 }
-pub async fn rope_kind_extra_from_rope_kind(k: &Puzzle5dCatalogRopeKind) -> Puzzle5dCatalogRopeKindExtra {
+pub fn rope_kind_extra_from_rope_kind(k: &Puzzle5dCatalogRopeKind) -> Puzzle5dCatalogRopeKindExtra {
     Puzzle5dCatalogRopeKindExtra { id: k.id.clone(), label: k.label.clone(), default_fastener_kind: k.default_fastener_kind.clone() }
 }
-pub async fn rope_kind_from_parts(kit_type: &SemioKitType, extra: &Puzzle5dCatalogRopeKindExtra) -> Puzzle5dCatalogRopeKind {
+pub fn rope_kind_from_parts(kit_type: &SemioKitType, extra: &Puzzle5dCatalogRopeKindExtra) -> Puzzle5dCatalogRopeKind {
     Puzzle5dCatalogRopeKind { id: kit_type.id.clone(), name: kit_type.name.clone(), label: extra.label.clone(), default_fastener_kind: extra.default_fastener_kind.clone() }
 }
 //#endregion 🔖️RowConverters
@@ -698,13 +719,13 @@ pub async fn rope_kind_from_parts(kit_type: &SemioKitType, extra: &Puzzle5dCatal
 /// 🔀️ `Puzzle5dKindCatalogs` → the shared `SemioKitType` half of the composed catalog child (all
 /// four kind lists flattened into one `category`-tagged list, matching `SemioKitSnapshot.types`'s
 /// own id-keyed, category-differentiated shape).
-pub async fn kind_catalogs_kit_types(catalogs: &Puzzle5dKindCatalogs) -> Vec<SemioKitType> {
+pub fn kind_catalogs_kit_types(catalogs: &Puzzle5dKindCatalogs) -> Vec<SemioKitType> {
     catalogs.parts.iter().map(kit_type_from_part_kind).chain(catalogs.grips.iter().map(kit_type_from_grip_kind)).chain(catalogs.fasteners.iter().map(kit_type_from_fastener_kind)).chain(catalogs.ropes.iter().map(kit_type_from_rope_kind)).collect()
 }
 
 /// 🔀️ `Puzzle5dKindCatalogs` → the puzzle5d-owned overflow half. Lossless together with
 /// `kind_catalogs_kit_types`: every field of every row lands in exactly one of the two halves.
-pub async fn kind_catalogs_extra_from_kind_catalogs(catalogs: &Puzzle5dKindCatalogs) -> Puzzle5dKindCatalogsExtra {
+pub fn kind_catalogs_extra_from_kind_catalogs(catalogs: &Puzzle5dKindCatalogs) -> Puzzle5dKindCatalogsExtra {
     Puzzle5dKindCatalogsExtra {
         parts: catalogs.parts.iter().map(part_kind_extra_from_part_kind).collect(),
         grips: catalogs.grips.iter().map(grip_kind_extra_from_grip_kind).collect(),
@@ -718,7 +739,7 @@ pub async fn kind_catalogs_extra_from_kind_catalogs(catalogs: &Puzzle5dKindCatal
 /// per category. A `SemioKitType` with no matching `*Extra` row (composed-child content the working-
 /// scene cache hasn't seen yet — see `kind_catalogs_of`'s doc comment) is silently dropped rather than
 /// fabricated with placeholder fields.
-pub async fn kind_catalogs_from_kit_types_and_extra(types: &[SemioKitType], extra: &Puzzle5dKindCatalogsExtra) -> Puzzle5dKindCatalogs {
+pub fn kind_catalogs_from_kit_types_and_extra(types: &[SemioKitType], extra: &Puzzle5dKindCatalogsExtra) -> Puzzle5dKindCatalogs {
     let by_category = |category: &str| -> std::collections::HashMap<&str, &SemioKitType> { types.iter().filter(|t| t.category == category).map(|t| (t.id.as_str(), t)).collect() };
     let part_types = by_category("part");
     let grip_types = by_category("grip");
@@ -735,14 +756,14 @@ pub async fn kind_catalogs_from_kit_types_and_extra(types: &[SemioKitType], extr
 /// 🔀️ The full kind-catalogs' shared half, as a fresh (design-less, link-less, object/model/
 /// properties-less) `SemioKitSnapshot` — content-addressed by `kind_catalogs_child_handle` below,
 /// never embedded inline in `Puzzle5dSnapshot`.
-pub async fn kind_catalogs_kit_snapshot(catalogs: &Puzzle5dKindCatalogs) -> SemioKitSnapshot {
+pub fn kind_catalogs_kit_snapshot(catalogs: &Puzzle5dKindCatalogs) -> SemioKitSnapshot {
     SemioKitSnapshot { types: kind_catalogs_kit_types(catalogs), ..SemioKitSnapshot::default() }
 }
 
 /// 🪪️ Content-addressed child handle for a kind-catalogs bundle — hashes the deterministic JSON of
 /// the derived `SemioKitType` list so peers replaying the same catalogs converge on the same
 /// `child_id` (never a random/incrementing id), mirroring `sourcing`'s `catalog_child_handle`.
-pub async fn kind_catalogs_child_handle(catalogs: &Puzzle5dKindCatalogs) -> store::ArtifactChild<SemioKitSnapshot> {
+pub fn kind_catalogs_child_handle(catalogs: &Puzzle5dKindCatalogs) -> store::ArtifactChild<SemioKitSnapshot> {
     use std::hash::{Hash, Hasher};
     let types = kind_catalogs_kit_types(catalogs);
     let canonical = serde_json::to_string(&types).unwrap_or_default();
@@ -773,11 +794,11 @@ thread_local! {
     static PUZZLE5D_KIND_CATALOGS_SCRATCH: std::cell::RefCell<std::collections::HashMap<String, SemioKitSnapshot>> = std::cell::RefCell::new(std::collections::HashMap::new());
 }
 
-async fn kind_catalogs_scratch_set(child_id: &str, kit_snapshot: SemioKitSnapshot) {
+fn kind_catalogs_scratch_set(child_id: &str, kit_snapshot: SemioKitSnapshot) {
     PUZZLE5D_KIND_CATALOGS_SCRATCH.with(|cell| cell.borrow_mut().insert(child_id.to_string(), kit_snapshot));
 }
 
-async fn kind_catalogs_scratch_get(child_id: &str) -> Option<SemioKitSnapshot> {
+fn kind_catalogs_scratch_get(child_id: &str) -> Option<SemioKitSnapshot> {
     PUZZLE5D_KIND_CATALOGS_SCRATCH.with(|cell| cell.borrow().get(child_id).cloned())
 }
 //#endregion 🔖️KindCatalogScratch
@@ -786,7 +807,7 @@ async fn kind_catalogs_scratch_get(child_id: &str) -> Option<SemioKitSnapshot> {
 /// without building a whole `Puzzle5dSnapshot` — for fixture loaders that parse the persisted
 /// snapshot from DSL text (which never embeds child content) but still need the SAME content-
 /// addressed handle's catalogs resolvable immediately after loading.
-pub async fn seed_kind_catalogs_scratch(catalogs: &Puzzle5dKindCatalogs) {
+pub fn seed_kind_catalogs_scratch(catalogs: &Puzzle5dKindCatalogs) {
     let handle = kind_catalogs_child_handle(catalogs);
     kind_catalogs_scratch_set(&handle.child_id, kind_catalogs_kit_snapshot(catalogs));
 }
@@ -796,7 +817,7 @@ pub async fn seed_kind_catalogs_scratch(catalogs: &Puzzle5dKindCatalogs) {
 /// export/inference/mutation paths can resolve the handle immediately. Returns the handle plus the
 /// overflow half — the two fields a `Puzzle5dSnapshot`/`Puzzle5dArtifact`/`Puzzle5dDiff` now carry in
 /// place of the old inline `Puzzle5dKindCatalogs` field.
-pub async fn split_and_seed_kind_catalogs(catalogs: Option<Puzzle5dKindCatalogs>) -> (Option<store::ArtifactChild<SemioKitSnapshot>>, Option<Puzzle5dKindCatalogsExtra>) {
+pub fn split_and_seed_kind_catalogs(catalogs: Option<Puzzle5dKindCatalogs>) -> (Option<store::ArtifactChild<SemioKitSnapshot>>, Option<Puzzle5dKindCatalogsExtra>) {
     match catalogs {
         None => (None, None),
         Some(catalogs) => {
@@ -810,7 +831,7 @@ pub async fn split_and_seed_kind_catalogs(catalogs: Option<Puzzle5dKindCatalogs>
 /// 👁️ The one accessor every render/export/inference/mutation call site funnels through to read the
 /// full reassembled kind-catalogs bundle back in its original `Puzzle5dKindCatalogs` shape — see
 /// `PUZZLE5D_KIND_CATALOGS_SCRATCH`'s doc comment for the staleness gap.
-pub async fn kind_catalogs_of(handle: &Option<store::ArtifactChild<SemioKitSnapshot>>, extra: &Option<Puzzle5dKindCatalogsExtra>) -> Option<Puzzle5dKindCatalogs> {
+pub fn kind_catalogs_of(handle: &Option<store::ArtifactChild<SemioKitSnapshot>>, extra: &Option<Puzzle5dKindCatalogsExtra>) -> Option<Puzzle5dKindCatalogs> {
     let handle = handle.as_ref()?;
     let kit_snapshot = kind_catalogs_scratch_get(&handle.child_id).unwrap_or_default();
     let extra = extra.clone().unwrap_or_default();
@@ -824,7 +845,7 @@ pub async fn kind_catalogs_of(handle: &Option<store::ArtifactChild<SemioKitSnaps
 //#region 🔖️ArtifactKind
 /// 🗿️ The `5d.puzzle` artifact kind — lifted out of the pre-consolidation manifest builder chain so
 /// the artifact, not the app, owns its own identity.
-pub async fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "5d.puzzle".into(),
         name: "5D Puzzle".into(),
@@ -850,7 +871,7 @@ pub async fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// per ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) has NO `ArtifactDeclaration`
 /// field — same OS media-host 14-function family flagged on puzzle2d's `declaration()` doc — so it
 /// stays wired through `🧩️puzzle/🦀️component.rs`'s own `.setup()`, not here.
-pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
 
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
@@ -897,7 +918,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
 /// .composers(...).languages(...).document_codec(...)` chain, deleted outright, no dual channel) as
 /// the ONLY registration channel for schema/io/viewer/editor rows. `definition()` (old
 /// `ArtifactDefinition`/capability rows, above) is kept per debt D1.
-pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::PuzzleApps> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.puzzle.puzzle5d").expect("canonical puzzle5d kind"), localization: &[], standards: vec![crate::artifacts::puzzle5d::standards::v1::standard()] }
@@ -908,7 +929,7 @@ pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDe
 /// existed as a side-effecting `register_pilot_languages()` before M1 but was never called from
 /// anywhere (dead code, confirmed by grep) — wiring it into `declaration()`'s `.languages(...)` is
 /// this conversion's one real bug fix: puzzle5d's own grammars were never actually registered.
-pub async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -976,8 +997,8 @@ pub use crate::artifacts::puzzle5d::op::Puzzle5dPlaySnapshot;
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn fastener_defaults_include_diagram_xy() {
+    #[test]
+    fn fastener_defaults_include_diagram_xy() {
         let fastener: Puzzle5dFastener = serde_json::from_value(serde_json::json!({
             "id": "f1",
             "source": "p1:g0",
@@ -990,8 +1011,8 @@ mod tests {
         assert_eq!(fastener.rotation, 0.0);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn fastener_round_trips_eight_transform_params() {
+    #[test]
+    fn fastener_round_trips_eight_transform_params() {
         let fastener = Puzzle5dFastener { id: "f1".into(), source: "p1:g0".into(), target: "p2:g0".into(), fastener_kind: Some("fk".into()), gap: 1.0, shift: 2.0, rise: 3.0, rotation: 4.0, turn: 5.0, tilt: 6.0, x: 7.0, y: 8.0 };
         let value = serde_json::to_value(&fastener).unwrap();
         assert_eq!(value["x"], 7.0);
@@ -1000,16 +1021,16 @@ mod tests {
         assert_eq!(back, fastener);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn part_anchor_defaults_to_fixed() {
+    #[test]
+    fn part_anchor_defaults_to_fixed() {
         let part: Puzzle5dPart = serde_json::from_value(serde_json::json!({ "id": "p1" })).unwrap();
         assert_eq!(part.anchor, Puzzle5dPartAnchor::Fixed);
         let derived: Puzzle5dPart = serde_json::from_value(serde_json::json!({ "id": "p2", "anchor": "derived" })).unwrap();
         assert_eq!(derived.anchor, Puzzle5dPartAnchor::Derived);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn kind_compatibility_unifies_important_and_specificity() {
+    #[test]
+    fn kind_compatibility_unifies_important_and_specificity() {
         let row: Puzzle5dKindCompatibility = serde_json::from_value(serde_json::json!({
             "source": "a",
             "target": "b",
@@ -1029,8 +1050,8 @@ mod tests {
         assert_eq!(sparse.specificity, Puzzle5dCompatSpecificity::General);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn catalog_part_kind_carries_representations_and_grip_templates() {
+    #[test]
+    fn catalog_part_kind_carries_representations_and_grip_templates() {
         let kind = Puzzle5dCatalogPartKind {
             id: "hex".into(),
             name: "Hex".into(),
@@ -1066,14 +1087,14 @@ mod tests {
         assert_eq!(back.authors[0].name, "Ada");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn grip_template_direction_defaults_to_positive_z() {
+    #[test]
+    fn grip_template_direction_defaults_to_positive_z() {
         let template: Puzzle5dGripTemplate = serde_json::from_value(serde_json::json!({ "id": "g0" })).unwrap();
         assert_eq!(template.direction, [0.0, 0.0, 1.0]);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn catalog_grip_kind_is_port_like() {
+    #[test]
+    fn catalog_grip_kind_is_port_like() {
         let kind = Puzzle5dCatalogGripKind {
             id: "b-l".into(),
             code: Some("BL".into()),

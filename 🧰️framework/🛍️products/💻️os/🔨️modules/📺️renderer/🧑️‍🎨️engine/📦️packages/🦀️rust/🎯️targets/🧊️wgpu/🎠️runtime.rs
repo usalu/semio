@@ -176,6 +176,12 @@ impl ParallelRuntime {
         self.kernel.complete(actor, &actor_result, now_ms).await
     }
 
+    /// 🎭️ Completes a turn already returned across the shard wire in the actor scheduler's native
+    /// result shape, avoiding a lossy actor → kernel → actor round trip for scheduler bookkeeping.
+    pub async fn complete_actor(&mut self, actor: ActorId, result: &semio_framework_actor::TurnResult, now_ms: u64) -> Result<FailureEscalation, KernelError> {
+        self.kernel.complete(actor, result, now_ms).await
+    }
+
     /// 🌀️ Drains every `ShardOutcome` CURRENTLY buffered across every shard's `OutcomeSink` — never
     /// blocks. Malformed bytes cannot reach here (an `OutcomeSink` only ever holds successfully
     /// decoded outcomes — decoding happens once, inside `ShardExecutor::run`).

@@ -294,7 +294,7 @@ pub(crate) fn cancel_instance_tasks(instance: u32) {
 
 /// 📸️ `checkpoint::checkpoint` body — unconditional (no WIT type in its signature, only
 /// `Vec<u8>`/kernel types), unlike `poll`/the `wit_*`/`kernel_*_to_wit` bridge below.
-pub async fn checkpoint_now() -> Result<Vec<u8>, semio_framework::Fault> {
+pub async fn checkpoint_now<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>) -> Result<Vec<u8>, semio_framework::Fault> {
     let instances = OPEN_INSTANCES.with(|open| open.borrow().clone());
     let timers = ARMED_TIMERS.with(|timers| timers.borrow().clone());
     let pending = REGISTRY.with(|registry| registry.pending_ids().into_iter().map(|id| id.0).collect());
@@ -304,7 +304,7 @@ pub async fn checkpoint_now() -> Result<Vec<u8>, semio_framework::Fault> {
     // into the pack, one `TaskRestart{instance, command}` per such task.
     let task_restarts: Vec<checkpoint::TaskRestart> =
         TASK_RECORDS.with(|records| records.borrow().values().filter_map(|record| record.restart.as_ref().map(|command| checkpoint::TaskRestart { instance: record.instance, command: command.clone() })).collect());
-    checkpoint::checkpoint(&instances, timers, pending, task_restarts).await
+    checkpoint::checkpoint(runtime, &instances, timers, pending, task_restarts).await
 }
 
 /// 📸️ `checkpoint::restore` body — re-arms the timer list from the restored pack;
@@ -314,13 +314,13 @@ pub async fn checkpoint_now() -> Result<Vec<u8>, semio_framework::Fault> {
 /// `TASK_RESUMES` as an ordinary `Command` resume (the SAME resume path a live task's own
 /// `TaskResolution::Command` takes), drained by the first `poll` after restore — restoring is a
 /// pure state-load, it must not itself re-enter app dispatch.
-pub async fn restore_now(state: &[u8]) -> Result<(), semio_framework::Fault> {
-    let pack = checkpoint::restore(state).await?;
+pub async fn restore_now<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, state: &[u8]) -> Result<(), semio_framework::Fault> {
+    let pack = checkpoint::restore(runtime, state).await?;
     let instances = pack.instances().await;
     let armed_timers = pack.timers().await.to_vec();
     let mut pending_resumes = Vec::new();
     for restart in pack.task_restarts().await {
-        let meta = crate::app::ActionMeta { actor: crate::plugin_runtime::instance_actor(restart.instance).await, instance_id: restart.instance };
+        let meta = crate::app::ActionMeta { actor: crate::plugin_runtime::instance_actor(runtime, restart.instance).await, instance_id: restart.instance };
         pending_resumes.push(PendingResume { instance: restart.instance, meta, outcome: TaskResumeOutcome::Command(restart.command.clone()) });
     }
     OPEN_INSTANCES.with(|open| {
@@ -349,7 +349,7 @@ pub use wit_bridge::drain_task_resumes;
 /// build (mirrors the OLD `host_port`'s per-function `#[cfg(...)]` pattern, just hoisted to one
 /// module instead of repeated per function).
 #[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
-pub use wit_bridge::poll;
+pub use wit_bridge::{poll, poll_kernel};
 
 #[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
 mod wit_bridge {
@@ -376,10 +376,33 @@ mod wit_bridge {
     /// ▶️ The real `reactor::poll` body — see module doc for the shape. `events`/`budget` are the
     /// WIT-generated types from `exports::semio::framework::reactor`; the return is that same
     /// module's `TurnResult`.
-    pub fn poll(
+    pub fn poll<PA: crate::app::PluginApp>(
+        runtime: &crate::plugin_runtime::PluginRuntime<PA>,
         events: Vec<crate::component::component::exports::semio::framework::reactor::Event>,
         budget: crate::component::component::exports::semio::framework::reactor::Budget,
     ) -> Result<crate::component::component::exports::semio::framework::reactor::TurnResult, semio_framework::Fault> {
+        let mut close_instances = Vec::new();
+        let mut kernel_events = Vec::with_capacity(events.len());
+        for event in events {
+            if let WitReactorEvent::InstanceClose(ref payload) = event {
+                close_instances.push(payload.instance);
+            }
+            kernel_events.push(wit_event_to_kernel(event));
+        }
+        let kernel_budget = semio_framework::kernel::Budget { fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
+        let result = poll_kernel(runtime, kernel_events, kernel_budget, &close_instances)?;
+        Ok(kernel_turn_result_to_wit(result, budget))
+    }
+
+    /// 🧠️ Repository-owned actor ABI entrypoint. The component-model wrapper above and the native
+    /// interpreter both call this exact kernel reducer, so WIT lifting is no longer the production
+    /// host's semantic authority.
+    pub fn poll_kernel<PA: crate::app::PluginApp>(
+        runtime: &crate::plugin_runtime::PluginRuntime<PA>,
+        events: Vec<Event>,
+        _budget: semio_framework::kernel::Budget,
+        close_instances: &[u32],
+    ) -> Result<semio_framework::kernel::TurnResult, semio_framework::Fault> {
         let mut app_commands: HashMap<u32, Vec<Vec<u8>>> = HashMap::new();
         let mut dirty_render: Vec<(u32, String)> = Vec::new();
         // 🎯️ M1 (ticket 26/08/17 `design-unified.md`): intents that survived the revision guard below,
@@ -387,22 +410,16 @@ mod wit_bridge {
         // `app_commands`, so a mutation from an app command this same turn is already visible.
         let mut dirty_intents: HashMap<u32, Vec<ui_contract::UiIntent>> = HashMap::new();
 
+        for numeric_instance in close_instances {
+            cancel_instance_tasks(*numeric_instance);
+            REGISTRY.with(|registry| registry.cancel_instance(*numeric_instance));
+            INSTANCE_QUOTAS.with(|quotas| {
+                quotas.borrow_mut().remove(numeric_instance);
+            });
+        }
+
         for event in events {
-            // 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): `Event::InstanceClose`
-            // cancellation happens here, off the RAW wit payload's `instance` id, before `event` is
-            // consumed by `wit_event_to_kernel` below (which cannot carry it — see the `use` doc
-            // above). Tasks are cancelled BEFORE the registry sweep so a task's own parked
-            // `RequestFuture` is already gone by the time `cancel_instance` runs (that call is then
-            // defense-in-depth, not the primary cleanup — see its own doc).
-            if let WitReactorEvent::InstanceClose(ref payload) = event {
-                let numeric_instance = payload.instance;
-                cancel_instance_tasks(numeric_instance);
-                REGISTRY.with(|registry| registry.cancel_instance(numeric_instance));
-                INSTANCE_QUOTAS.with(|quotas| {
-                    quotas.borrow_mut().remove(&numeric_instance);
-                });
-            }
-            match wit_event_to_kernel(event) {
+            match event {
                 Event::InstanceOpen { instance, app_id, actor, quotas, .. } => {
                     let numeric_instance = instance.0.parse::<u32>().unwrap_or(0);
                     // 🚫️async: E5 executor bridge (× 2) — `plugin_create_app_with_id`/`set_instance_actor`
@@ -410,10 +427,10 @@ mod wit_bridge {
                     // real); `resolve_ready` is safe here for the same "world actor has no host-async
                     // import" reason as this file's other WIT-boundary bridges. R13: previously a BARE
                     // dropped future (`let _ = ...`/un-awaited statement) — now genuinely resolved.
-                    let _ = semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_create_app_with_id(numeric_instance, &app_id.0));
+                    let _ = semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_create_app_with_id(runtime, numeric_instance, &app_id.0));
                     // 🪪️ Channel v12 (A4) retired the `AppCommand::Hello` handshake that used to record
                     // this — lifecycle now arrives here as `Event::InstanceOpen` (design-abi.md §4).
-                    semio_framework::io::resolve_ready(crate::plugin_runtime::set_instance_actor(numeric_instance, actor));
+                    semio_framework::io::resolve_ready(crate::plugin_runtime::set_instance_actor(runtime, numeric_instance, actor));
                     OPEN_INSTANCES.with(|open| open.borrow_mut().push((numeric_instance, app_id.0)));
                     // 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): `spawn_task`'s
                     // quota gate is the first real reader — `quotas` used to be silently discarded here
@@ -435,7 +452,7 @@ mod wit_bridge {
                 // mark-dirty" interim — see `📓️terra-sdk-wire-report.md`'s M1 section for the full route.
                 Event::UiIntent { instance, intent } => {
                     let numeric_instance = instance.0.parse::<u32>().unwrap_or(0);
-                    if let Ok(intent_value) = semio_framework::io::resolve_ready(store::pack_rt::decode_wire_value(&intent)) {
+                    if let Ok(intent_value) = store::pack_rt::decode_wire_value(&intent) {
                         if let Ok(intent) = dsl::from_dsl_value::<ui_contract::UiIntent>(intent_value) {
                             let current_revision = PATCHES.with(|patches| patches.revision(&intent.surface.0));
                             if !is_stale_intent(intent.revision, current_revision, DEFAULT_REVISION_TOLERANCE) {
@@ -500,7 +517,7 @@ mod wit_bridge {
         for (instance, commands) in app_commands {
             // 🚫️async: E5 executor bridge — `plugin_exchange` stays genuinely `async fn`; safe to
             // resolve synchronously here for the same reason as this file's other WIT-boundary bridges.
-            match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_exchange(instance, &commands)) {
+            match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_exchange(runtime, instance, &commands)) {
                 Ok(output) => {
                     for frame_bytes in output.frames {
                         route_app_frame(instance, &frame_bytes, &mut effects);
@@ -516,7 +533,7 @@ mod wit_bridge {
                     }
                     for one in &output.events {
                         if let Ok(event) = decode_wire_app_event(one) {
-                            effects.push(Effect::PublishEvent { topic: event.kind, payload: semio_framework::io::resolve_ready(store::pack_rt::encode_wire_value(&event.payload)) });
+                            effects.push(Effect::PublishEvent { topic: event.kind, payload: store::pack_rt::encode_wire_value(&event.payload) });
                         }
                     }
                 }
@@ -534,7 +551,7 @@ mod wit_bridge {
         for (instance, intents) in dirty_intents {
             // 🚫️async: E5 executor bridge — `plugin_dispatch_intents` stays genuinely `async fn`; safe to
             // resolve synchronously here for the same reason as `plugin_exchange` above.
-            match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_dispatch_intents(instance, &intents)) {
+            match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_dispatch_intents(runtime, instance, &intents)) {
                 Ok(output) => {
                     for frame_bytes in output.frames {
                         route_app_frame(instance, &frame_bytes, &mut effects);
@@ -546,7 +563,7 @@ mod wit_bridge {
                     }
                     for one in &output.events {
                         if let Ok(event) = decode_wire_app_event(one) {
-                            effects.push(Effect::PublishEvent { topic: event.kind, payload: semio_framework::io::resolve_ready(store::pack_rt::encode_wire_value(&event.payload)) });
+                            effects.push(Effect::PublishEvent { topic: event.kind, payload: store::pack_rt::encode_wire_value(&event.payload) });
                         }
                     }
                 }
@@ -574,7 +591,7 @@ mod wit_bridge {
             // `plugin_exchange` call above for the same safety argument. `PatchTracker::diff` (`sdk-flip`,
             // 26/08/20) is plain sync — R9: a keyed tree diff is a pure computation with nothing of its
             // own to await, matching every other `SurfaceReconciler` method it wraps.
-            if let Ok(tree) = semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_render(instance, "window", "{}")) {
+            if let Ok(tree) = semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_render(runtime, instance, "window", "{}")) {
                 if let Some(patch) = PATCHES.with(|patches| patches.diff(&surface, &tree)) {
                     // Collected into `ui_patches` below via a second pass so `effects` above stays the
                     // single accumulation point for the non-UI half of the turn.
@@ -586,7 +603,7 @@ mod wit_bridge {
             // into `PRESENCE` right after its render — the SAME turn that presented the tree also records
             // its presence. NEVER touches `PENDING_PATCHES`/the document store — the whole point of this
             // separate channel (see `PresenceHub`'s own doc: a mouse-move must never bump a revision).
-            for update in semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_take_presence(instance)) {
+            for update in semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_take_presence(runtime, instance)) {
                 PRESENCE.with(|hub| {
                     let mut hub = hub.borrow_mut();
                     hub.record_own(update.surface.clone(), update.node_key.clone(), update.own, update.ttl_ms);
@@ -609,7 +626,7 @@ mod wit_bridge {
         // next one. A resume can itself spawn more tasks (`dispatch_emit` runs for real), so the
         // executor may have fresh ready work by the time this returns — folded into `more_work` below
         // rather than requiring a second `run_until_idle` pass this turn (the next `poll` picks it up).
-        let resumes_remain = drain_task_resumes(&mut effects, 64);
+        let resumes_remain = drain_task_resumes(runtime, &mut effects, 64);
         let more_work = more_work || resumes_remain || EXECUTOR.with(|executor| executor.has_ready());
 
         let ui_patches: Vec<UiPatch> = PENDING_PATCHES.with(|pending| std::mem::take(&mut *pending.borrow_mut()));
@@ -623,8 +640,7 @@ mod wit_bridge {
         });
         let status = if more_work { TurnStatus::MoreWork } else { TurnStatus::Idle };
 
-        let result = semio_framework::kernel::TurnResult { ui_patches, effects, presence, next_wake: ARMED_TIMERS.with(|timers| timers.borrow().first().copied()), status, fuel_used: 0 };
-        Ok(kernel_turn_result_to_wit(result, budget))
+        Ok(semio_framework::kernel::TurnResult { ui_patches, effects, presence, next_wake: ARMED_TIMERS.with(|timers| timers.borrow().first().copied()), status, fuel_used: 0 })
     }
 
     thread_local! {
@@ -661,7 +677,7 @@ mod wit_bridge {
             // until whichever packet updates `📡️spr/🧵️channel` re-frames this variant to match (flagged
             // in `📓️terra-wit-flip-report.md`'s consumer inventory; not fixed here, out of `OWNS`).
             protocol::AppFrame::UiPatch { surface, kind: _, revision, base_revision, ops, .. } => {
-                let Ok(ops_value) = semio_framework::io::resolve_ready(store::pack_rt::decode_wire_value(&ops)) else { return };
+                let Ok(ops_value) = store::pack_rt::decode_wire_value(&ops) else { return };
                 let Ok(ops) = dsl::from_dsl_value::<Vec<UiPatchOp>>(ops_value) else { return };
                 PENDING_PATCHES.with(|pending| pending.borrow_mut().push(UiPatch { surface: surface.into(), base_revision: ui_contract::UiRevision(base_revision), revision: ui_contract::UiRevision(revision), ops }));
             }
@@ -685,7 +701,7 @@ mod wit_bridge {
     ///
     /// Returns whether entries remain queued (the round cap was hit) — folded into `poll`'s
     /// `turn-status::more-work` so a saturated resume queue is never silently dropped.
-    pub fn drain_task_resumes(effects: &mut Vec<Effect>, max_rounds: u32) -> bool {
+    pub fn drain_task_resumes<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, effects: &mut Vec<Effect>, max_rounds: u32) -> bool {
         for _ in 0..max_rounds {
             let Some(resume) = TASK_RESUMES.with(|resumes| resumes.borrow_mut().pop_front()) else {
                 return false;
@@ -700,7 +716,7 @@ mod wit_bridge {
             };
             // 🚫️async: E5 executor bridge — `plugin_resume_task` stays genuinely `async fn`; see
             // `poll`'s `plugin_exchange` call for the same safety argument.
-            let output = semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_resume_task(resume.instance, &resume.meta, input));
+            let output = semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_resume_task(runtime, resume.instance, &resume.meta, input));
             for frame_bytes in output.frames {
                 route_app_frame(resume.instance, &frame_bytes, effects);
             }
@@ -711,7 +727,7 @@ mod wit_bridge {
             }
             for one in &output.events {
                 if let Ok(event) = decode_wire_app_event(one) {
-                    effects.push(Effect::PublishEvent { topic: event.kind, payload: semio_framework::io::resolve_ready(store::pack_rt::encode_wire_value(&event.payload)) });
+                    effects.push(Effect::PublishEvent { topic: event.kind, payload: store::pack_rt::encode_wire_value(&event.payload) });
                 }
             }
         }
@@ -722,12 +738,12 @@ mod wit_bridge {
     // (out of `path_scope`, `🏪️store/**`); `resolve_ready` is safe here for the same reason as
     // `kernel_effect_to_wit`'s own `pack` helper above — `world actor` imports no `host-async`.
     fn decode_wire_effect(bytes: &[u8]) -> Result<Effect, ()> {
-        let value = semio_framework::io::resolve_ready(store::pack_rt::decode_wire_value(bytes)).map_err(|_| ())?;
+        let value = store::pack_rt::decode_wire_value(bytes).map_err(|_| ())?;
         dsl::from_dsl_value(value).map_err(|_| ())
     }
 
     fn decode_wire_app_event(bytes: &[u8]) -> Result<semio_framework::kernel::AppEvent, ()> {
-        let value = semio_framework::io::resolve_ready(store::pack_rt::decode_wire_value(bytes)).map_err(|_| ())?;
+        let value = store::pack_rt::decode_wire_value(bytes).map_err(|_| ())?;
         dsl::from_dsl_value(value).map_err(|_| ())
     }
 
@@ -737,7 +753,7 @@ mod wit_bridge {
     /// `instance_task_quota`'s `unwrap_or(16)`) on a decode failure rather than failing `InstanceOpen`
     /// outright.
     fn decode_wire_quotas(bytes: &[u8]) -> semio_framework::kernel::QuotaSchema {
-        semio_framework::io::resolve_ready(store::pack_rt::decode_wire_value(bytes)).ok().and_then(|value| dsl::from_dsl_value(value).ok()).unwrap_or_default()
+        store::pack_rt::decode_wire_value(bytes).ok().and_then(|value| dsl::from_dsl_value(value).ok()).unwrap_or_default()
     }
 
     /// 🔀️ WIT `event` → kernel `Event`. Thin field-for-field translation — the WIT side already
@@ -863,7 +879,7 @@ mod wit_bridge {
     // this packet's `path_scope`, `🏪️store/**`); safe to resolve synchronously here for the same "world
     // actor has no host-async import" reason as this file's other WIT-boundary bridges.
     fn pack_patch_field<T: serde::Serialize>(value: &T) -> Vec<u8> {
-        semio_framework::io::resolve_ready(store::pack_rt::encode_wire_value(&dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null)))
+        store::pack_rt::encode_wire_value(&dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null))
     }
 
     /// 🩹️ Wire payload for `patch-set-activity`'s `activity: pack` field. `component.wit`'s
@@ -908,7 +924,7 @@ mod wit_bridge {
         // boundary, no suspension point of its own) — `resolve_ready` is safe here because `world
         // actor` imports no `host-async`, so this store call never has anything real to suspend on.
         fn pack<T: serde::Serialize>(value: &T) -> Vec<u8> {
-            semio_framework::io::resolve_ready(store::pack_rt::encode_wire_value(&dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null)))
+            store::pack_rt::encode_wire_value(&dsl::to_dsl_value(value).unwrap_or(dsl::DslValue::Null))
         }
         match effect {
             Effect::OpenWindow { req, kind, params } => wit::Effect::OpenWindow(wit_effects::OpenWindowEffect { req: req.0, params: wit_effects::OpenWindowParams { kind: kind.0, params: pack(&params) } }),

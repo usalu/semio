@@ -5,7 +5,7 @@
 // flattens to one row per graph node — id/label/x/y, dropping edges/geometry/equation — txt is an
 // honest not-yet-implemented stub). Shaped inline (no generated `IoEntryDescriptor` type checked in
 // anywhere yet in this repo) so this file has no fragile forward reference; swap for a real import
-// once ts-rs generation lands.
+// once owned schema generation lands.
 export interface IoEntryDescriptorMirror {
   from: string;
   into: string;

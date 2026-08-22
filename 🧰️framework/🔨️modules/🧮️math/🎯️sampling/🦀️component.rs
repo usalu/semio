@@ -1052,7 +1052,7 @@ pub struct StreamKey {
 }
 
 async fn mix64(x: u64) -> u64 {
-    geometry::random::SplitMix64::new(x).await.next_u64().await
+    geometry::random::SplitMix64::new(x).next_u64()
 }
 
 async fn stream_seed(key: StreamKey) -> u64 {
@@ -1208,30 +1208,30 @@ pub struct XoshiroSource(geometry::random::Rng);
 
 impl XoshiroSource {
     pub async fn from_seed(seed: u64) -> Self {
-        Self(geometry::random::Rng::from_seed(seed).await)
+        Self(geometry::random::Rng::from_seed(seed))
     }
 }
 
 impl RandomSource for XoshiroSource {
     async fn next_u64(&mut self) -> u64 {
-        self.0.next_u64().await
+        self.0.next_u64()
     }
 
     async fn split(&self, key: StreamKey) -> RandomSources {
-        let state = self.0.state().await;
+        let state = self.0.state();
         let seed = mix64(state[0] ^ state[1] ^ stream_seed(key).await).await;
         Self::from_seed(seed).await.into()
     }
 
     async fn snapshot(&self) -> RngSnapshot {
-        RngSnapshot { kind: RngKind::Xoshiro, words: self.0.state().await }
+        RngSnapshot { kind: RngKind::Xoshiro, words: self.0.state() }
     }
 
     async fn restore(&mut self, snapshot: &RngSnapshot) -> Result<(), SamplingError> {
         if snapshot.kind != RngKind::Xoshiro {
             return Err(SamplingError::Corrupted { reason: "rng snapshot kind mismatch: expected xoshiro" });
         }
-        self.0 = geometry::random::Rng::from_state(snapshot.words).await;
+        self.0 = geometry::random::Rng::from_state(snapshot.words);
         Ok(())
     }
 }

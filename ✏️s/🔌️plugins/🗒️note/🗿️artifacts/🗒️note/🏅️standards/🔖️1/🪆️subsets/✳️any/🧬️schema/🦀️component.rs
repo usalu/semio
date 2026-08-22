@@ -158,7 +158,7 @@ impl NoteArtifact {
 
 //#region 🔖️Descriptor
 /// 🧬️ Descriptor for `s.note.note` — twenty handcrafted schema leaves.
-pub async fn note_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
+pub fn note_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor {
     schema::ArtifactSchemaDescriptor {
         id: "s.note.note",
         artifact: schema::FacetLeaves {

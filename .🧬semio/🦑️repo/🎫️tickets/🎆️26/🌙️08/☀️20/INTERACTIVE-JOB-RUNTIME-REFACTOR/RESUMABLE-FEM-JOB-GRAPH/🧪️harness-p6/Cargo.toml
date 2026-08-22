@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 semio-framework-job = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
 semio-framework-async = { path = "../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust", features = ["entrypoint"] }
+semio-framework-dispatch-macros = { path = "../../../../../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust" }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["float_roundtrip"] }
 thiserror = "2"

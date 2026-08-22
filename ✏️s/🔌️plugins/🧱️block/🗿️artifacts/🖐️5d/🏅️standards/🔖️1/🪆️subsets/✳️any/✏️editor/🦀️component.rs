@@ -221,7 +221,7 @@ impl ArtifactEditor for Block5dPlayApp {
 /// the subset's own `📚️examples/🎬️{hexagonal-cut-concrete-forest-left,nakagin-capsule}` facet
 /// (untouched, already wired in `📦️glue.rs`'s Examples region) is the modern, role-agnostic
 /// replacement surface for app-level example registration.
-pub async fn create_block5d_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_block5d_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::block5d::BLOCK5D_DIALECT)
             .document(["semio", "block", "5d"])
             .artifact_kind(artifact_kind())

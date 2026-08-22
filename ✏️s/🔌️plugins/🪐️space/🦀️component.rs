@@ -25,8 +25,10 @@ use semio_framework_os::{
 };
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os::{document_backbone_ref, VcsError};
+use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
-use semio_framework_plugin::{app_labels, ExecutionMode, Plugin};
+use semio_framework_plugin::plugin_app_close_prelude::*;
+use semio_framework_plugin::{app_labels, ExecutionMode, Plugin, PluginApp};
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, LazyLock, Mutex, OnceLock};
 use store::{BackbonePorts, LocalStorageBackbonePort};
@@ -529,6 +531,17 @@ pub async fn home_space_rows(directory: &store::os_directory::DirectoryReadModel
 //#endregion 🔖️HomeSpaceRows
 
 //#region 🔌️Registration
+/// 🗃️ Closed runtime app fleet for the home, space-index, and studio surfaces.
+semio_framework_dispatch_macros::dyn_enum_close! {
+    pub enum SpaceApps: PluginApp {
+        HomeEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::home::HomeApp>>),
+        HomeViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::home::HomeViewer>>),
+        SpaceIndexEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::space_index::SpaceIndexEditor>>),
+        SpaceIndexViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::space_index::SpaceIndexViewer>>),
+        Studio(semio_framework_plugin::VcsArtifactApp<crate::engine::space::SpaceApp>),
+    }
+}
+
 /// 🔌️ Builds the S Studio plugin surface for host registration. `.artifact(…)` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) builds all artifact, app-schema, and codec
 /// contributions as immutable data before the aggregate registration commit. `.activation(…)`/
@@ -538,8 +551,8 @@ pub async fn home_space_rows(directory: &store::os_directory::DirectoryReadModel
 /// execution (grepped for `.handler(…)`, a `🧩️extensions/` dir, and self-tick loops — none found,
 /// despite this crate having the heaviest `Effect` usage in the repo), and one `documents.write` ask
 /// covering both editors' persisted mutations. No quota declared — no measured need found.
-pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
-    Plugin::builder("s")
+pub async fn plugin() -> Result<Plugin<SpaceApps>, semio_framework_plugin::PluginAssemblyError> {
+    Plugin::<SpaceApps>::builder("s")
         .label("S Studio")
         .version("0.1.0")
         .local_backbone_storage()

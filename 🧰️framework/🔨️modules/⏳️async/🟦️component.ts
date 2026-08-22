@@ -1,4 +1,4 @@
-/** ⏳️ TypeScript surface for `semio-framework-async`: the ts-rs mirror of the pure async-runtime
+/** ⏳️ TypeScript surface for `semio-framework-async`: the owned-schema mirror of the pure async-runtime
  * vocabulary (`TraceId`/`CapabilityTokenId`/`CancelState`/`ScopeId`/`ScopeDrainReport`/
  * `ChannelPolicy`/`ThreadPlan`/`ThreadRole`). Regenerate via
  * `bun nx run @semio-tech/framework-async-rs:typegen`.
@@ -31,7 +31,7 @@ export interface WebAsyncScope {
 }
 
 /** 🌳️ TS-side mirror of the Rust `ScopeOwner` shape this seam would need — hand-written because
- * `ScopeOwner` itself is intentionally excluded from the ts-rs mirror above (see its Rust doc
+ * `ScopeOwner` itself is intentionally excluded from the generated mirror above (see its Rust doc
  * comment: it is in-process identity, not wire data). Kept local to this seam rather than promoted
  * to the generated mirror until a real web host gives it a use.
  */

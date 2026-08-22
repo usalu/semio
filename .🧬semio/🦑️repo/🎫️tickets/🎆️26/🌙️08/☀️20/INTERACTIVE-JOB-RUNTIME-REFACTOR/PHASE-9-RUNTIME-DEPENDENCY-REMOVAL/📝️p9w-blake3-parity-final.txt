@@ -1,0 +1,4 @@
+[DEBUG] semantic_fingerprint=[250, 74, 204, 25, 91, 24, 60, 7, 57, 60, 240, 40, 61, 163, 253, 76, 239, 198, 182, 56, 230, 23, 142, 223, 149, 26, 49, 145, 142, 66, 200, 236]
+[DEBUG] brep_handle=a63eafbdcde2275214b073904583c60e7888e7c567c3fe41c5051f1bcc21dece
+[DEBUG] blake3_boundary=pass
+exit=0

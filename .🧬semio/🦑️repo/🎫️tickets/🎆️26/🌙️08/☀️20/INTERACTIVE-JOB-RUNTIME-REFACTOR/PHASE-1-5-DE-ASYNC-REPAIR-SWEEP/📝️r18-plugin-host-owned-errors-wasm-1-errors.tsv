@@ -1,0 +1,1 @@
+none	/Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.52.3/src/lib.rs:478	Only features sync,macros,io-util,rt,time are supported on wasm.

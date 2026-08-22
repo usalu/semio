@@ -314,8 +314,8 @@ pub fn demo_dwg_snapshot() -> DwgSnapshot {
 #[cfg(not(target_arch = "wasm32"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_schema_specs() {
-    dsl::registry::register_schema_spec("stdio.dwg", DwgSnapshot::__dsl_spec);
-    dsl::registry::register_schema_spec("stdio.dwg#diff", crate::artifacts::dwg::schema::diff::DwgDiff::__dsl_diff_spec);
+    semio_framework_plugin::resolve_ready(dsl::registry::register_schema_spec("stdio.dwg", DwgSnapshot::__dsl_spec));
+    semio_framework_plugin::resolve_ready(dsl::registry::register_schema_spec("stdio.dwg#diff", crate::artifacts::dwg::schema::diff::DwgDiff::__dsl_diff_spec));
 }
 
 #[cfg(target_arch = "wasm32")]

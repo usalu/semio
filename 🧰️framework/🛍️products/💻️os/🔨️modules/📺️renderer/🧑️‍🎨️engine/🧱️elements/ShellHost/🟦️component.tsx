@@ -151,6 +151,8 @@ import {
  * `🧰️framework/🛍️products/💻️os/🟦️component.ts` (that package's own root) imports them from for its
  * own `encode`/`decodeMutationEnvelopesPack` helpers above. */
 import { mutationEnvelopeFromWire, mutationEnvelopeToWire, type MutationEnvelope } from "@semio-tech/framework-replication";
+
+const shellReplicationPackCodec = { encode: encodePackValue, decode: decodePackValue };
 /** 🪪️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C3 — the config-lane
  * identity facet's documentId/schema + fold. `@semio-tech/framework-os/backbone-worker` is the
  * package's own subpath export for this (`💻️os/📦️packages/🟦️typescript/🟦️glue.backbone-worker.ts`),
@@ -546,7 +548,7 @@ function reportUnwiredUiIntent(intent: UiIntent): void {
   console.error("[os-shell] UiIntent dispatch has no plugin-facing channel yet", intent);
 }
 
-/** 🩹️ `WindowKindDefinition.label` has no ts-rs mirror yet (`unknown` — see that generated type's own
+/** 🩹️ `WindowKindDefinition.label` has no owned schema mirror yet (`unknown` — see that generated type's own
  * doc comment, and `resolveManifestLabel`'s "some call sites may still see the pre-migration shape
  * until that typegen lands" note) — asserts each window kind's real, documented label shape for the
  * `*LayoutSeed`/`retitleWindowLayoutNode` helpers that still declare their `windowKinds` param
@@ -1430,7 +1432,7 @@ function FrameworkOsShellInner({
           encodeBackboneMessage({
             kind: "mutations",
             envelopes: event.envelopes.map((envelope, index) =>
-              mutationEnvelopeToWire(envelope, { actor: 0, physical_ms: Date.now(), logical: index + 1 }),
+              mutationEnvelopeToWire(envelope, { actor: 0, physical_ms: Date.now(), logical: index + 1 }, shellReplicationPackCodec),
             ),
           }),
         ]);
@@ -2327,7 +2329,7 @@ function FrameworkOsShellInner({
       if (parsed.kind === "mutations") {
         actorMessage = {
           kind: "localMutations",
-          envelopes: parsed.envelopes.map((envelope) => mutationEnvelopeFromWire(envelope)),
+          envelopes: parsed.envelopes.map((envelope) => mutationEnvelopeFromWire(envelope, shellReplicationPackCodec)),
         };
       } else if (parsed.kind === "snapshot") {
         actorMessage = { kind: "localSnapshot", pack: Array.from(parsed.pack), spr: Array.from(parsed.spr) };
@@ -4798,7 +4800,7 @@ function FrameworkOsShellInner({
    * with a command-palette-triggered one in the history panel regardless of which path triggered it. */
   const noteOsCommand = useCallback(
     (commandId: string, detail?: Record<string, unknown>) => {
-      // 🩹️ `CommandDefinition.label` has no ts-rs mirror yet (`unknown` — see that generated type's own
+      // 🩹️ `CommandDefinition.label` has no owned schema mirror yet (`unknown` — see that generated type's own
       // doc comment); resolved the same way every other manifest label in this file is.
       const rawLabel = osCommands.find((entry) => entry.id === commandId)?.label as LocalizedLabel | string | undefined;
       const label = rawLabel !== undefined ? resolveManifestLabel(rawLabel, uiTerminology, uiLocale) : commandId;
@@ -6454,7 +6456,7 @@ function FrameworkOsShellInner({
       const argCarrying = (definition.args?.length ?? 0) > 0;
       items.push({
         id: `command.${commandAddressKey(address).replaceAll(":", ".")}`,
-        // 🩹️ CommandDefinition.label has no ts-rs mirror yet (unknown) — resolved the same way every
+        // 🩹️ CommandDefinition.label has no owned schema mirror yet (unknown) — resolved the same way every
         // other manifest label in this file is.
         label: (() => { const resolved = resolveManifestLabel(definition.label as LocalizedLabel | string, uiTerminology, uiLocale); return argCarrying ? `${resolved}…` : resolved; })(),
         description: commandKeybindingChords(definition, detectCommandPlatform(typeof navigator !== "undefined" ? `${navigator.platform} ${navigator.userAgent}` : "")).join(",") || undefined,

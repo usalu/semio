@@ -9,7 +9,7 @@
 // #endregion 🧲️Header
 
 import { Canvas, DiagramSkeleton, HorizontalWindows, Window } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "../../🧪️story";
 
 // 🔷️#region ⚙️Canvas
 const meta = {

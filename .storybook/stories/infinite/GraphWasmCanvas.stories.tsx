@@ -5,7 +5,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState, type ReactElement } from "react";
 
 import { GraphWasmCanvas } from "../../../framework/product/os/module/infinite/canvas/react-renderer/index.tsx";

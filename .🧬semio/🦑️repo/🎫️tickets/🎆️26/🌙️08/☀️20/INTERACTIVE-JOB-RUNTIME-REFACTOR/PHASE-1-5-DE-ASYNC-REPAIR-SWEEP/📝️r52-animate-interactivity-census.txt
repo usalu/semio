@@ -1,0 +1,4 @@
+✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎞️animation/🦀️component.rs:73:    /// ✏️ Draw/create path progressively.
+✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎞️animation/🦀️component.rs:897:    /// 🛤️ Reveal a traced path progressively.
+✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/⏱️rate/🦀️component.rs:8:    //! 📈️ Rate functions mapping linear time α ∈ [0,1] to eased progress.
+✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️component.rs:23:    /// ⌨️ In-progress engagement-bar input draft — was `AnimatePresentPlayRuntime::engagement_input`.

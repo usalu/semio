@@ -145,8 +145,8 @@ pub struct MergeReport {
 mod tests {
     use super::*;
 
-    async fn hlc(actor: u64, physical_ms: u64) -> crate::ids::HybridLogicalTimestamp {
-        crate::ids::HybridLogicalTimestamp::new(actor, physical_ms).await
+    fn hlc(actor: u64, physical_ms: u64) -> crate::ids::HybridLogicalTimestamp {
+        crate::ids::HybridLogicalTimestamp::new(actor, physical_ms)
     }
 
     //#region 🔖️ConflictId
@@ -156,7 +156,7 @@ mod tests {
         let ids = vec![crate::ids::MutationId("op-2".into()), crate::ids::MutationId("op-1".into())];
         let ids_reordered = vec![crate::ids::MutationId("op-1".into()), crate::ids::MutationId("op-2".into())];
         let kind = ConflictKind::Degraded { edit_ids: vec!["e1".into()] };
-        let stamp = hlc(1, 100).await;
+        let stamp = hlc(1, 100);
 
         let a = ConflictId::new(&kind, &artifact, &ids, &stamp).await;
         let b = ConflictId::new(&kind, &artifact, &ids_reordered, &stamp).await;
@@ -170,7 +170,7 @@ mod tests {
         let different_kind_id = ConflictId::new(&different_kind, &artifact, &ids, &stamp).await;
         assert_ne!(a, different_kind_id, "Quarantined vs Degraded with the same mutation ids must diverge");
 
-        let different_hlc = ConflictId::new(&kind, &artifact, &ids, &hlc(1, 200).await).await;
+        let different_hlc = ConflictId::new(&kind, &artifact, &ids, &hlc(1, 200)).await;
         assert_ne!(a, different_hlc);
     }
     //#endregion 🔖️ConflictId
@@ -178,7 +178,7 @@ mod tests {
     //#region 🔖️Reports
     #[semio_framework_async_macros::async_test]
     async fn dispatch_report_carries_worst_and_messages() {
-        let report = DispatchReport { policy: crate::MergePolicy::Vigilant, worst: Some(crate::diagnostic::Severity::Warning), messages: vec![crate::MutationMessage::warn("mutation.clamped", "value clamped to range").await] };
+        let report = DispatchReport { policy: crate::MergePolicy::Vigilant, worst: Some(crate::diagnostic::Severity::Warning), messages: vec![crate::MutationMessage::warn("mutation.clamped", "value clamped to range")] };
         assert_eq!(report.worst, Some(crate::diagnostic::Severity::Warning));
         assert_eq!(report.messages.len(), 1);
     }
@@ -189,7 +189,7 @@ mod tests {
             policy: crate::MergePolicy::Normal,
             accepted: true,
             insertion_index: 3,
-            replayed: vec![EditMessages { edit_id: "e1".into(), messages: vec![crate::MutationMessage::info("mutation.cascade", "cascaded").await] }],
+            replayed: vec![EditMessages { edit_id: "e1".into(), messages: vec![crate::MutationMessage::info("mutation.cascade", "cascaded")] }],
             worst: Some(crate::diagnostic::Severity::Info),
             conflict: None,
         };
@@ -205,12 +205,12 @@ mod tests {
         let artifact = crate::ids::ArtifactId("doc-1".into());
         let quarantined = ConflictKind::Quarantined { envelopes: Vec::new() };
         let degraded = ConflictKind::Degraded { edit_ids: vec!["e1".into()] };
-        let stamp = hlc(1, 100).await;
+        let stamp = hlc(1, 100);
         let conflict = Conflict {
             id: ConflictId::new(&quarantined, &artifact, &[], &stamp).await,
             kind: quarantined,
             status: ConflictStatus::Open,
-            messages: vec![crate::MutationMessage::error("mutation.target-missing", "target missing").await],
+            messages: vec![crate::MutationMessage::error("mutation.target-missing", "target missing")],
             actors: vec![crate::ids::ActorId("actor-1".into())],
             timestamp: stamp,
         };

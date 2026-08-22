@@ -10,7 +10,7 @@ use serde_json::Value;
 /// the action carries none explicitly — the inspector panel itself no longer renders per-entity
 /// controls (see `panels::inspection::render`'s doc comment), so every real caller today passes `ids`
 /// explicitly; the fallback stays for any future caller that does not.
-pub async fn patch_inspector(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
+pub fn patch_inspector(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     let entity = args.and_then(|value| value.get("entity")).and_then(|value| value.as_str()).unwrap_or("");
     let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
     let ids = args.and_then(|value| value.get("ids")).and_then(|value| serde_json::from_value::<Vec<String>>(value.clone()).ok()).filter(|ids| !ids.is_empty()).unwrap_or_else(|| {

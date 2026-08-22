@@ -143,7 +143,7 @@ impl WorkloadGen {
                 dependencies: Vec::new(),
                 diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact::encode_pathmap_json(&serde_json::Value::Object(payload)).await.unwrap_or_default() },
                 inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact::encode_pathmap_json(&serde_json::Value::Object(inverse_payload)).await.unwrap_or_default() },
-                timestamp: protocol::HybridLogicalTimestamp::new(0, index as u64).await,
+                timestamp: protocol::HybridLogicalTimestamp::new(0, index as u64),
             });
         }
         out
@@ -508,6 +508,7 @@ impl CrashHarnessReport {
 /// law.
 pub struct CrashHarness;
 
+#[cfg(not(target_arch = "wasm32"))]
 impl CrashHarness {
     /// @emoji 💥️ For `seed`/`op_count`'s deterministic `WorkloadGen::disjoint_batch` workload:
     /// discovers the true `WalStorage::append` call count of a fault-free run (the document's own
@@ -576,6 +577,7 @@ async fn as_fault(storage: &DbBackend) -> &FaultStorage {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 async fn run_workload_against(document: &protocol::ArtifactId, ops: &[protocol::MutationEnvelope], storage: Arc<DbBackend>) {
     let mut engine = db_artifact::ArtifactEngine::create(document.clone(), storage, db_artifact::ArtifactEngineConfig::default(), 0).expect("testkit: baseline engine create must not fault");
     for (i, envelope) in ops.iter().enumerate() {
@@ -586,6 +588,7 @@ async fn run_workload_against(document: &protocol::ArtifactId, ops: &[protocol::
 
 /// @emoji 💥️ Like `run_workload_against`, but stops silently at the first injected fault instead of
 /// panicking — the fault IS the point, simulating a crash mid-workload.
+#[cfg(not(target_arch = "wasm32"))]
 async fn run_workload_until_fault(document: &protocol::ArtifactId, ops: &[protocol::MutationEnvelope], storage: Arc<DbBackend>) {
     let created = db_artifact::ArtifactEngine::create(document.clone(), storage, db_artifact::ArtifactEngineConfig::default(), 0);
     let mut engine = match created {
@@ -600,6 +603,7 @@ async fn run_workload_until_fault(document: &protocol::ArtifactId, ops: &[protoc
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 async fn recovered_state_matches_prefix(recovered: &db_artifact::ArtifactEngine, ops: &[protocol::MutationEnvelope], expected_committed: usize) -> bool {
     if recovered.frontier().await.head_seq != expected_committed as u64 {
         return false;
@@ -614,6 +618,7 @@ async fn recovered_state_matches_prefix(recovered: &db_artifact::ArtifactEngine,
 //#endregion 🔖️CrashHarness
 
 //#region 🔖️Laws
+#[cfg(not(target_arch = "wasm32"))]
 async fn temp_dir(name: &str) -> std::path::PathBuf {
     let mut dir = std::env::temp_dir();
     let nonce = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_nanos());
@@ -631,6 +636,7 @@ async fn single_envelope_batch(envelope: protocol::MutationEnvelope) -> db_artif
 /// seeded workload converges on a byte-identical `Frontier` (proving the generator itself, and the
 /// whole submit→WAL→materialize pipeline, are both deterministic — not just idempotent once).
 /// Drives real `db_engine::Database::open_at` over `FsStorage` (see module doc).
+#[cfg(not(target_arch = "wasm32"))]
 pub async fn assert_replay_deterministic(seed: u64, op_count: usize) {
     let document = protocol::ArtifactId(format!("testkit-replay-{seed:x}"));
     let ops = WorkloadGen::new(seed).disjoint_batch(&document, op_count.max(1)).await;
@@ -675,6 +681,7 @@ pub async fn assert_replay_deterministic(seed: u64, op_count: usize) {
 /// frontier as a replica that never snapshots and reopens via full-from-genesis replay. Drives real
 /// `db_artifact::ArtifactEngine::{create, submit, snapshot_now, open}` over two independent
 /// `MemoryStorage` backends (see module doc on why this law is driven one layer below the facade).
+#[cfg(not(target_arch = "wasm32"))]
 pub async fn assert_snapshot_plus_suffix_equals_replay(seed: u64, before_snapshot: usize, after_snapshot: usize) {
     let document = protocol::ArtifactId(format!("testkit-snap-{seed:x}"));
     let ops = WorkloadGen::new(seed).disjoint_batch(&document, before_snapshot + after_snapshot.max(1)).await;
@@ -758,7 +765,7 @@ pub async fn assert_projection_rebuild_equals_incremental(seed: u64, op_count: u
         let seq = (i + 1) as u64;
         let mut touched = db_state::TouchedSet::new();
         touched.record(db_state::TouchedRegion::write(format!("path-{i}")));
-        final_incremental = db_actor::block_on(incremental_engine.apply_envelope(seq, envelope, &touched)).expect("apply_envelope");
+        final_incremental = incremental_engine.apply_envelope(seq, envelope, &touched).await.expect("apply_envelope");
         events.push((seq, envelope.clone(), touched));
     }
 
@@ -782,7 +789,7 @@ async fn schema_erased_envelope(document: &protocol::ArtifactId, mutation_id: &s
         dependencies: Vec::new(),
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact::encode_pathmap_json(&serde_json::Value::Object(payload)).await.unwrap_or_default() },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact::encode_pathmap_json(&serde_json::Value::Object(inverse_payload)).await.unwrap_or_default() },
-        timestamp: protocol::HybridLogicalTimestamp::new(0, 0).await,
+        timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
     }
 }
 
@@ -790,6 +797,7 @@ async fn schema_erased_envelope(document: &protocol::ArtifactId, mutation_id: &s
 /// inverse exactly; undoing THAT undo (a redo, via the compensating envelope's own flipped inverse
 /// — `db_artifact::ArtifactEngine::undo`'s "inverse of inverse" mechanism) must restore the exact
 /// original value. Drives a real `db_artifact::ArtifactEngine` over `MemoryStorage`.
+#[cfg(not(target_arch = "wasm32"))]
 pub async fn assert_inverse_undo_roundtrip(seed: u64) {
     let document = protocol::ArtifactId(format!("testkit-undo-{seed:x}"));
     let storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_actor::block_on(db_storage::MemoryStorage::new())));
@@ -816,6 +824,7 @@ pub async fn assert_inverse_undo_roundtrip(seed: u64) {
 /// catches up across two resumed batches, must both converge to the EXACT same `Frontier` as the
 /// canonical source they are replicating from — real `db_sync::{replay_sync_state, missing_commands}`
 /// missing-command transfer over real `db_artifact::ArtifactEngine` replicas.
+#[cfg(not(target_arch = "wasm32"))]
 pub async fn assert_sync_convergence(seed: u64, op_count: usize) {
     let document = protocol::ArtifactId(format!("testkit-sync-{seed:x}"));
     let document_core = ArtifactId(document.0.clone());
@@ -859,14 +868,14 @@ pub async fn assert_sync_convergence(seed: u64, op_count: usize) {
 /// exist for. Generic over any real `&impl CatalogStorage` backend (exercised against both
 /// `MemoryStorage` and `FsStorage` in this crate's own tests).
 pub async fn assert_fencing_excludes_stale_writer(storage: &impl CatalogStorage) {
-    let stale_epoch = db_actor::block_on(storage.read_root()).expect("read_root").map_or(EpochFence::INITIAL, |(_, fence)| fence);
-    let winner_epoch = db_actor::block_on(storage.cas_root(stale_epoch, b"writer-a")).expect("the first writer presenting the current epoch must win");
+    let stale_epoch = storage.read_root().await.expect("read_root").map_or(EpochFence::INITIAL, |(_, fence)| fence);
+    let winner_epoch = storage.cas_root(stale_epoch, b"writer-a").await.expect("the first writer presenting the current epoch must win");
     assert_ne!(winner_epoch, stale_epoch, "a successful cas_root must advance the epoch");
 
-    let stale_attempt = db_actor::block_on(storage.cas_root(stale_epoch, b"writer-b-should-be-rejected"));
+    let stale_attempt = storage.cas_root(stale_epoch, b"writer-b-should-be-rejected").await;
     assert!(matches!(stale_attempt, Err(DbError::Fenced { .. })), "a writer presenting a superseded epoch must be fenced, not silently accepted");
 
-    let (root_bytes, root_epoch) = db_actor::block_on(storage.read_root()).expect("read_root").expect("root must exist after the winning write");
+    let (root_bytes, root_epoch) = storage.read_root().await.expect("read_root").expect("root must exist after the winning write");
     assert_eq!(root_bytes, b"writer-a", "the fenced writer must never have overwritten the root");
     assert_eq!(root_epoch, winner_epoch);
 }
@@ -875,6 +884,7 @@ pub async fn assert_fencing_excludes_stale_writer(storage: &impl CatalogStorage)
 /// the document's WAL, never create a new segment, and never advance the committed frontier — while
 /// still correctly shadowing the committed value for the preview's own reader. Drives a real
 /// `db_artifact::ArtifactEngine` (backed by a real `db_preview::PreviewStore`) over `MemoryStorage`.
+#[cfg(not(target_arch = "wasm32"))]
 pub async fn assert_preview_never_durable(seed: u64) {
     let document = protocol::ArtifactId(format!("testkit-preview-{seed:x}"));
     let storage: Arc<DbBackend> = Arc::new(DbBackend::Memory(db_actor::block_on(db_storage::MemoryStorage::new())));
@@ -940,7 +950,7 @@ pub async fn assert_overlay_structural_sharing(writes: usize) {
 //#endregion 🔖️Laws
 
 //#region 🧪️Tests
-#[cfg(test)]
+#[cfg(all(test, not(target_arch = "wasm32")))]
 mod tests {
     use super::*;
     use std::cell::RefCell;

@@ -3,7 +3,7 @@ use crate::artifacts::puzzle2d::diff::Puzzle2dDiff;
 use crate::artifacts::puzzle2d::Puzzle2dSnapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::mutation::ReplaceKindCatalogs, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+pub fn diff(payload: &super::mutation::ReplaceKindCatalogs, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
     // 🗂️ `meta.kindCatalogs` lives on the document-root singleton `meta` (not a catalog member
     // addressed by id), so there is no missing-target case — only the no-op check applies.
     if payload.new_catalogs == base.meta.kind_catalogs {

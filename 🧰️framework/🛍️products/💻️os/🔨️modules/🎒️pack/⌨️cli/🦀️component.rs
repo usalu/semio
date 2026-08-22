@@ -15,7 +15,7 @@ use std::path::Path;
 /// @emoji 🧬️ Demonstration-only schema: no keyword, three keyed scalar fields — mirrors `pack`
 /// facade's own `sample_spec` test fixture so a pack file built by any wave-0 crate's tests
 /// round-trips through this CLI unmodified.
-async fn sample_spec() -> crate::os_dsl::schema::RecordSpec {
+fn sample_spec() -> crate::os_dsl::schema::RecordSpec {
     crate::os_dsl::schema::RecordSpec::new(
         None,
         crate::os_dsl::schema::RecordLayout::Lines,
@@ -29,7 +29,7 @@ async fn sample_spec() -> crate::os_dsl::schema::RecordSpec {
 
 /// @emoji 🧬️ Demonstration-only schema exercising a keyword and a `List` shape, distinct from
 /// `sample_spec` — e.g. `note title="Todo" body="write the CLI" tags=[ "wave0" "pack" ]`.
-async fn note_spec() -> crate::os_dsl::schema::RecordSpec {
+fn note_spec() -> crate::os_dsl::schema::RecordSpec {
     crate::os_dsl::schema::RecordSpec::new(
         Some("note"),
         crate::os_dsl::schema::RecordLayout::Lines,
@@ -42,9 +42,8 @@ async fn note_spec() -> crate::os_dsl::schema::RecordSpec {
 }
 
 /// @emoji 📇️ Closed set of the two demonstration schema entries the built-in registry knows.
-/// Enum dispatch, not a `fn() -> RecordSpec` pointer table — `sample_spec`/`note_spec` are
-/// `async fn`s now, and an `async fn` item's pointer type is unnameable, so it cannot live in a
-/// fn-pointer-typed slot (R2 E4). The registry closed set fits O1's enum-dispatch shape exactly.
+/// Enum dispatch keeps the registry closed set explicit while each schema constructor remains a
+/// synchronous, allocation-only function.
 #[derive(Clone, Copy)]
 enum SchemaKind {
     Sample,
@@ -52,25 +51,25 @@ enum SchemaKind {
 }
 
 impl SchemaKind {
-    async fn spec(self) -> crate::os_dsl::schema::RecordSpec {
+    fn spec(self) -> crate::os_dsl::schema::RecordSpec {
         match self {
-            SchemaKind::Sample => sample_spec().await,
-            SchemaKind::Note => note_spec().await,
+            SchemaKind::Sample => sample_spec(),
+            SchemaKind::Note => note_spec(),
         }
     }
 }
 
 /// @emoji 📇️ The built-in `--schema <name>` registry. `TODO(wave2)`: app crates own the real
 /// 49-kind registry; this stays a fixed 2-entry demonstration table forever in `pack_cli`.
-async fn schema_registry() -> HashMap<&'static str, SchemaKind> {
+fn schema_registry() -> HashMap<&'static str, SchemaKind> {
     let mut registry: HashMap<&'static str, SchemaKind> = HashMap::new();
     registry.insert("sample", SchemaKind::Sample);
     registry.insert("note", SchemaKind::Note);
     registry
 }
 
-async fn registry_names() -> String {
-    let mut names: Vec<&'static str> = schema_registry().await.keys().copied().collect();
+fn registry_names() -> String {
+    let mut names: Vec<&'static str> = schema_registry().keys().copied().collect();
     names.sort_unstable();
     names.join(", ")
 }
@@ -97,13 +96,10 @@ struct BuiltinRegistry;
 
 impl SchemaResolver for BuiltinRegistry {
     async fn resolve(&self, schema: &str) -> Option<crate::os_dsl::schema::RecordSpec> {
-        match schema_registry().await.get(schema).copied() {
-            Some(kind) => Some(kind.spec().await),
-            None => None,
-        }
+        schema_registry().get(schema).copied().map(|kind| kind.spec())
     }
     async fn names(&self) -> Vec<String> {
-        let mut names: Vec<String> = schema_registry().await.keys().map(|s| s.to_string()).collect();
+        let mut names: Vec<String> = schema_registry().keys().map(|s| s.to_string()).collect();
         names.sort_unstable();
         names
     }
@@ -341,11 +337,11 @@ async fn cmd_to_dsl(rest: &[String]) -> i32 {
         return 2;
     };
     let Some(schema_name) = flags.get("schema") else {
-        eprintln!("pack: to-dsl requires --schema <name> (registry: {})", registry_names().await);
+        eprintln!("pack: to-dsl requires --schema <name> (registry: {})", registry_names());
         return 2;
     };
     let Some(spec) = resolve_schema(schema_name).await else {
-        eprintln!("pack: unknown --schema '{schema_name}'; available: {}", registry_names().await);
+        eprintln!("pack: unknown --schema '{schema_name}'; available: {}", registry_names());
         return 2;
     };
     let bytes = match std::fs::read(path) {
@@ -386,7 +382,7 @@ async fn cmd_from_dsl(rest: &[String]) -> i32 {
         return 2;
     };
     let Some(schema_name) = flags.get("schema") else {
-        eprintln!("pack: from-dsl requires --schema <name> (registry: {})", registry_names().await);
+        eprintln!("pack: from-dsl requires --schema <name> (registry: {})", registry_names());
         return 2;
     };
     let Some(out_path) = flags.get("out") else {
@@ -394,7 +390,7 @@ async fn cmd_from_dsl(rest: &[String]) -> i32 {
         return 2;
     };
     let Some(spec) = resolve_schema(schema_name).await else {
-        eprintln!("pack: unknown --schema '{schema_name}'; available: {}", registry_names().await);
+        eprintln!("pack: unknown --schema '{schema_name}'; available: {}", registry_names());
         return 2;
     };
     let text = match std::fs::read_to_string(path) {
@@ -479,7 +475,7 @@ async fn cmd_diff(rest: &[String]) -> i32 {
 
     if let Some(schema_name) = flags.get("schema") {
         let Some(spec) = resolve_schema(schema_name).await else {
-            eprintln!("pack: unknown --schema '{schema_name}'; available: {}", registry_names().await);
+            eprintln!("pack: unknown --schema '{schema_name}'; available: {}", registry_names());
             return 2;
         };
         let options = crate::os_pack::DecodeOptions::default();
@@ -540,7 +536,7 @@ async fn print_help() {
     println!("  pack from-dsl <file> --schema <name> --out <file>");
     println!("  pack diff <file-a> <file-b> [--schema <name>]\n");
     println!("SCHEMA REGISTRY (wave 0 scope):");
-    println!("  to-dsl/from-dsl/diff --schema resolve against a tiny built-in registry ({}) defined", registry_names().await);
+    println!("  to-dsl/from-dsl/diff --schema resolve against a tiny built-in registry ({}) defined", registry_names());
     println!("  locally in this crate for demonstration only. Full schema resolution across the 49 app");
     println!("  document kinds is out of scope for pack_cli — that wiring belongs to the app crates in");
     println!("  wave 2. inspect/verify/hash never need a schema (self-describing decode).");
@@ -588,7 +584,7 @@ mod tests {
         std::env::temp_dir().join(format!("pack_cli_test_{}_{counter}_{name}", std::process::id()))
     }
 
-    async fn sample_record(name: &str, age: u64, active: bool) -> crate::os_dsl::schema::RecordValue {
+    fn sample_record(name: &str, age: u64, active: bool) -> crate::os_dsl::schema::RecordValue {
         let mut fields = HashMap::new();
         fields.insert(1, crate::os_dsl::schema::FieldValue::Text(name.to_string()));
         fields.insert(2, crate::os_dsl::schema::FieldValue::UInt(age));
@@ -596,10 +592,10 @@ mod tests {
         crate::os_dsl::schema::RecordValue { fields }
     }
 
-    async fn sample_pack_bytes(name: &str, age: u64, active: bool) -> Vec<u8> {
+    fn sample_pack_bytes(name: &str, age: u64, active: bool) -> Vec<u8> {
         let spec = sample_spec();
         let record = sample_record(name, age, active);
-        crate::os_pack::encode_document(&spec.await, &record.await, &crate::os_pack::EncodeOptions::default()).await.unwrap()
+        crate::os_pack::encode_document(&spec, &record, &crate::os_pack::EncodeOptions::default()).unwrap()
     }
     //#endregion 🔖️Fixtures
 
@@ -608,7 +604,7 @@ mod tests {
     async fn cli_inspect_verify_hash_on_valid_pack() {
         let bytes = sample_pack_bytes("Ada Lovelace", 42, true);
         let path = temp_path("valid.spk").await;
-        std::fs::write(&path, &bytes.await).unwrap();
+        std::fs::write(&path, &bytes).unwrap();
         let path_str = path.to_string_lossy().to_string();
 
         assert_eq!(main_impl(&[String::from("inspect"), path_str.clone()]).await, 0);
@@ -623,7 +619,7 @@ mod tests {
     //#region 🔖️Corrupt
     #[semio_framework_async_macros::async_test]
     async fn cli_verify_fails_on_corrupted_pack_without_panicking() {
-        let mut bytes = sample_pack_bytes("Grace Hopper", 85, false).await;
+        let mut bytes = sample_pack_bytes("Grace Hopper", 85, false);
         let mid = bytes.len() / 2;
         bytes[mid] ^= 0xFF;
         let path = temp_path("corrupt.spk").await;
@@ -641,7 +637,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn cli_handles_truncated_pack_without_panicking() {
-        let bytes = sample_pack_bytes("Alan Turing", 41, true).await;
+        let bytes = sample_pack_bytes("Alan Turing", 41, true);
         let truncated = &bytes[..bytes.len() / 2];
         let path = temp_path("truncated.spk").await;
         std::fs::write(&path, truncated).unwrap();
@@ -668,7 +664,7 @@ mod tests {
     async fn cli_to_dsl_and_from_dsl_round_trip_via_registry() {
         let bytes = sample_pack_bytes("Ada Lovelace", 42, true);
         let path = temp_path("roundtrip.spk").await;
-        std::fs::write(&path, &bytes.await).unwrap();
+        std::fs::write(&path, &bytes).unwrap();
         let path_str = path.to_string_lossy().to_string();
 
         assert_eq!(main_impl(&[String::from("to-dsl"), path_str.clone(), String::from("--schema"), String::from("sample")]).await, 0);
@@ -679,7 +675,7 @@ mod tests {
         let spec = sample_spec();
         let record = sample_record("Grace Hopper", 7, false);
         let mut writer = crate::os_dsl::schema::Writer::new();
-        crate::os_dsl::schema::print_record(&record.await, &spec.await, &mut writer);
+        crate::os_dsl::schema::print_record(&record, &spec, &mut writer);
         std::fs::write(&dsl_path, writer.render(crate::os_dsl::schema::JoinMode::Document)).unwrap();
         let dsl_path_str = dsl_path.to_string_lossy().to_string();
 

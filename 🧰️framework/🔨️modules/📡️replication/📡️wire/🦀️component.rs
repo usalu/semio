@@ -539,7 +539,7 @@ mod tests {
             dependencies: Vec::new(),
             diff: crate::causal::ArtifactDiff { schema: crate::ids::SchemaId("diff.v1".to_string()), payload: format!("value:{id}").into_bytes() },
             inverse: crate::causal::InverseMutation { schema: crate::ids::SchemaId("diff.v1".to_string()), payload: Vec::new() },
-            timestamp: crate::ids::HybridLogicalTimestamp::new(1, 0).await,
+            timestamp: crate::ids::HybridLogicalTimestamp::new(1, 0),
         }
     }
 
@@ -913,7 +913,7 @@ mod presence_pack_serde {
         match value {
             None => serializer.serialize_none(),
             Some(bytes) => {
-                let encoded = ::base64::Engine::encode(&::base64::engine::general_purpose::STANDARD, bytes);
+                let encoded = crate::base64_standard_encode(bytes);
                 serializer.serialize_some(&encoded)
             }
         }
@@ -925,7 +925,7 @@ mod presence_pack_serde {
         match encoded {
             None => Ok(None),
             Some(s) => {
-                let bytes = ::base64::Engine::decode(&::base64::engine::general_purpose::STANDARD, s.as_bytes()).map_err(serde::de::Error::custom)?;
+                let bytes = crate::base64_standard_decode(s.as_bytes()).map_err(serde::de::Error::custom)?;
                 Ok(Some(bytes))
             }
         }
@@ -1151,9 +1151,9 @@ mod presence_codec_tests {
         // varint_u64, so flipping a bit in the encoded byte stream doesn't map 1:1 onto a logical
         // flag bit. Bit 10 is one past the frozen 0..=9 range — no field on this struct sets it.
         let mut bytes = Vec::new();
-        crate::write_str(&mut bytes, "peer-5").await;
-        crate::wire::write_varint_u64(&mut bytes, 1 << 10).await;
-        crate::wire::write_varint_u64(&mut bytes, 1000).await;
+        crate::write_str(&mut bytes, "peer-5");
+        crate::wire::write_varint_u64(&mut bytes, 1 << 10);
+        crate::wire::write_varint_u64(&mut bytes, 1000);
         let err = decode_presence_peer(&bytes).await.unwrap_err();
         assert!(matches!(err, crate::ProtocolError::Malformed { what: "presence peer flags", .. }));
     }
@@ -1218,7 +1218,6 @@ mod presence_codec_tests {
 // this code moved with it, verbatim except `validate_state`'s fixtures (see `InteractionOutline`).
 /// 🐁️ One domain's hover behavior — see `semio_framework::InteractionDefinition::hover`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct HoverSpec {
     #[serde(default = "default_true")]
@@ -1245,7 +1244,6 @@ impl Default for HoverSpec {
 
 /// 🖱️ One domain's selection behavior — see `semio_framework::InteractionDefinition::selection`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct SelectionSpec {
     /// 🪜️ Non-empty; the first entry is the domain's default mode.
@@ -1264,7 +1262,6 @@ pub struct SelectionSpec {
 /// 🌳️ Where a domain's target ids come from, and thus what `DomainTopology` (if any) is available for
 /// range selection and transitive hover/select closures.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum HierarchyProvider {
     /// 🪨️ No parent/child structure — range and transitive closures degrade to the single target.
@@ -1279,7 +1276,6 @@ pub enum HierarchyProvider {
 
 /// 🔢️ How many targets may be selected at once within a domain.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum SelectionMode {
     Single,
@@ -1288,7 +1284,6 @@ pub enum SelectionMode {
 
 /// 🎯️ How a surface gathers targets for one `interactionSelect` dispatch.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum SelectionMethod {
     Pick,
@@ -1298,7 +1293,6 @@ pub enum SelectionMethod {
 
 /// 🧮️ Set algebra applied when merging new targets into the current selection — see `next_selection`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum MergeMode {
     Replace,
@@ -1322,7 +1316,6 @@ fn default_pointer_channels() -> Vec<String> {
 /// 🎯️ One addressed target: a granularity id plus the target's own id (u32 domain ids are stringified
 /// at the app boundary before reaching this module).await.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct InteractionTarget {
     pub granularity: String,
@@ -1332,20 +1325,17 @@ pub struct InteractionTarget {
 /// 🖱️ One domain's current selection: the active granularity, the selected ids, and the anchor id
 /// range selection pivots from.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct DomainSelection {
     pub granularity: String,
     pub ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub anchor_id: Option<String>,
 }
 
 /// 🐁️ One domain's current hover on one channel: the transitive closure (root first) when
 /// `HoverSpec::transitive`, otherwise just the raw hovered ids.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct DomainHover {
     pub channel: String,
@@ -1355,7 +1345,6 @@ pub struct DomainHover {
 /// 🗺️ Own persisted-local selection (`Interaction` history lane).await + ephemeral-local hover, keyed by
 /// domain id — the framework-owned counterpart to what every per-app config used to hand-roll.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct InteractionState {
     pub selection: BTreeMap<String, DomainSelection>,
@@ -1368,20 +1357,17 @@ pub struct InteractionState {
 //#region 🔖️Topology
 /// 🌳️ One node of a domain's topology: its own granularity and its parent id (`None` = a root).await.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TopologyNode {
     pub id: String,
     pub granularity: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub parent: Option<String>,
 }
 
 /// 🌲️ One domain's topology, pre-order: `ordered`'s sequence IS the range-selection order, and every
 /// node's descendants form a contiguous run immediately following it.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct DomainTopology {
     pub ordered: Vec<TopologyNode>,
@@ -1443,7 +1429,6 @@ async fn visit_descendants(id: &str, children: &BTreeMap<String, Vec<String>>, o
 /// 🗺️ Every domain's topology for one app instance, keyed by domain id — `ArtifactApp::interaction_topology`
 /// returns this (wave 3).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct InteractionTopology {
     pub domains: BTreeMap<String, DomainTopology>,
@@ -1454,7 +1439,6 @@ pub struct InteractionTopology {
 /// 🖱️ One `next_selection` call's input: the batch of targets (a single pick or a marquee gather),
 /// the merge mode to apply, and the currently active selection mode.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct SelectionInput {
     pub targets: Vec<InteractionTarget>,
@@ -1557,7 +1541,6 @@ async fn dedup_preserving_order(ids: Vec<String>) -> Vec<String> {
 //#region 🔖️HoverMachine
 /// 🐁️ One `next_hover` call's input: the channel and the batch of hovered targets (empty = clear).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct HoverInput {
     pub channel: String,
@@ -1599,7 +1582,6 @@ pub async fn next_hover(spec: &HoverSpec, topo: &DomainTopology, input: &HoverIn
 /// needs — `semio-framework`'s `InteractionDefinition::outline()` builds one of these per call since
 /// this crate cannot name `InteractionDefinition` itself (see this region's header comment).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct InteractionOutline {
     pub id: String,
@@ -1674,7 +1656,6 @@ pub async fn validate_state(defs: &[InteractionOutline], topo: &InteractionTopol
 /// selection/hover generically. Only explicit ids broadcast; receivers expand transitive closures via
 /// their own topology.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct PresenceInteraction {
     pub app_id: String,
@@ -1684,7 +1665,6 @@ pub struct PresenceInteraction {
 /// 📡️ One domain's broadcast slice of `PresenceInteraction` — the peer-facing mirror of a domain's
 /// `DomainSelection`/`DomainHover`, flattened to raw explicit ids (no transitive expansion on the wire).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct PresenceDomain {
     pub domain: String,
@@ -2038,7 +2018,7 @@ mod interaction_tests {
         state.active_granularity.insert("graph".into(), "face".into());
 
         let validated = validate_state(&[def], &topo, &state).await;
-        assert!(validated.selection.get("mesh").is_none(), "undeclared domain dropped");
+        assert!(!validated.selection.contains_key("mesh"), "undeclared domain dropped");
         assert_eq!(validated.active_granularity.get("graph").map(String::as_str), Some("node"), "undeclared granularity resets to the default");
     }
 

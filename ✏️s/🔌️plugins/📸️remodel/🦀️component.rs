@@ -1,7 +1,19 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
+use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
-use semio_framework_plugin::{ExecutionMode, Plugin};
+use semio_framework_plugin::plugin_app_close_prelude::*;
+use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+
+//#region 🗃️Apps
+/// 🗃️ Closed runtime app fleet for the remodel editor and viewer surfaces.
+semio_framework_dispatch_macros::dyn_enum_close! {
+    pub enum RemodelApps: PluginApp {
+        Editor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::remodel::RemodelPlayApp>>),
+        Viewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::remodel::RemodelViewer>>),
+    }
+}
+//#endregion 🗃️Apps
 
 /// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) replaces the old `.setup(engine::register)`
@@ -9,8 +21,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// one thing it used to survive for, registered automatically below. Ticket
 /// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: the former single `.document_app(...)` call
 /// split into an independent `.editor()` + `.viewer()` pair, one surface per role.
-pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
-    Plugin::builder("remodel")
+pub fn plugin() -> Result<Plugin<RemodelApps>, semio_framework_plugin::PluginAssemblyError> {
+    Plugin::<RemodelApps>::builder("remodel")
         .label("Remodel")
         .version("0.1.0")
         .artifact(crate::artifacts::remodel::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)

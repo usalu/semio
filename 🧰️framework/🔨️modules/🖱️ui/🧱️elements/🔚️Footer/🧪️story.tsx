@@ -9,7 +9,7 @@
 // #endregion 🧲️Header
 
 import { Footer, createIconComponent, fundedByZukunftBauFooterItem, navbarFillItem } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "../../🧪️story";
 
 // 🔷️#region 🎮️Footer
 const CheckCircle2 = createIconComponent("check-circle2");

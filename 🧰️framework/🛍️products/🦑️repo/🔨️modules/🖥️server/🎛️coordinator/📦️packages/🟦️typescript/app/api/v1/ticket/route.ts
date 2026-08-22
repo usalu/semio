@@ -12,7 +12,7 @@
 
 // #region 🔌️Adapters
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
+import { ownedSchema as z } from "../../../../🟦️validation";
 import { upsertTicket, getTicket, listTickets, insertTicketFiles, listClaimsByTicket, type Ticket } from "@/lib";
 import { requireAuth, isAuthError } from "@/lib";
 import { publishEvent } from "@/lib";

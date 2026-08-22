@@ -13,20 +13,19 @@
 //! `Canvas2dScene` approach, is the honest fit.
 
 use crate::artifacts::present::{FigureTileFrame, PresentSnapshot};
-use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
+use semio_framework_ui_contract::{surface, Buildable, BuiltNode, HasBase};
+use semio_framework_ui_scene::{encode, Canvas2dScene};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "animate-view-tile-editor";
 pub const BODY_KEY: &str = "animate.view.tile-editor";
 const SURFACE_ID: &str = "animate.present.view";
-/// 👁️ Read-only counterpart of the editor's `PRESENT_PLAY_APP_ID` controller id — kept distinct so a
-/// viewer session's canvas-2d controller can never be mistaken for an editor session's.
-const ANIMATE_VIEW_CONTROLLER_ID: &str = "animate-present-view";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::animate::create_animate_present_viewer`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Tile editor", "Kacheleditor"),
@@ -63,13 +62,13 @@ struct AnimateViewTileLayer {
     data_url: Option<String>,
 }
 
-async fn frame_to_canvas(frame: &FigureTileFrame, scale: f64) -> (f64, f64, f64, f64) {
+fn frame_to_canvas(frame: &FigureTileFrame, scale: f64) -> (f64, f64, f64, f64) {
     (frame.x * scale, frame.y * scale, frame.width * scale, frame.height * scale)
 }
 
 /// 👁️ Pure `PresentSnapshot -> layers JSON` read: the same source-figure-plus-crop-tiles content the
 /// editor's own canvas renders, with no selection/engagement overlay (a viewer has neither).
-async fn deck_to_canvas_layers(deck: &PresentSnapshot) -> String {
+fn deck_to_canvas_layers(deck: &PresentSnapshot) -> String {
     const SCALE: f64 = 1000.0;
     let (source, tiles) = crate::artifacts::present::present_working_scene(deck);
     let mut layers = Vec::new();
@@ -94,8 +93,9 @@ async fn deck_to_canvas_layers(deck: &PresentSnapshot) -> String {
 //#endregion 🔖️CanvasLayers
 
 //#region 🔖️Render
-pub async fn render(deck: &PresentSnapshot) -> UiNode {
-    build_canvas_2d_scene(SURFACE_ID, ANIMATE_VIEW_CONTROLLER_ID, Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: deck_to_canvas_layers(deck) })
+pub fn render(deck: &PresentSnapshot) -> BuiltNode {
+    let scene = Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: deck_to_canvas_layers(deck) };
+    surface(encode(semio_framework_ui_contract::SurfaceKind::Canvas2d, &scene)).id(SURFACE_ID).build()
 }
 //#endregion 🔖️Render
 
@@ -105,15 +105,15 @@ mod tests {
     use super::*;
     use serde_json::Value;
 
-    #[semio_framework_async_macros::async_test]
-    async fn renders_canvas_2d_scene() {
+    #[test]
+    fn renders_canvas_2d_scene() {
         let deck = crate::artifacts::present::default_present_snapshot();
         let json_str = serde_json::to_string(&render(&deck)).unwrap();
         assert!(json_str.contains("canvas-2d") || json_str.contains("Canvas2d"));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn definition_declares_the_canvas_2d_surface_and_body_key() {
+    #[test]
+    fn definition_declares_the_canvas_2d_surface_and_body_key() {
         let definition = definition();
         assert_eq!(definition.body_key, BODY_KEY);
         assert!(matches!(definition.surface_kind, SurfaceKind::Canvas2d));
@@ -121,8 +121,8 @@ mod tests {
         assert!(definition.actions.is_empty(), "a viewer window declares no mutating actions");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn source_frame_renders_as_actual_image_layer_behind_tiles() {
+    #[test]
+    fn source_frame_renders_as_actual_image_layer_behind_tiles() {
         let deck = crate::artifacts::present::default_present_snapshot();
         let layers_json = deck_to_canvas_layers(&deck);
         let layers: Vec<Value> = serde_json::from_str(&layers_json).unwrap();
@@ -134,8 +134,8 @@ mod tests {
         assert_eq!(source_layer.get("dataUrl").and_then(|v| v.as_str()), Some(source.src.as_str()));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn deck_to_canvas_layers_omits_data_url_when_source_has_no_image() {
+    #[test]
+    fn deck_to_canvas_layers_omits_data_url_when_source_has_no_image() {
         let base = crate::artifacts::present::default_present_snapshot();
         let (mut source, tiles) = crate::artifacts::present::present_working_scene(&base);
         source.src = String::new();

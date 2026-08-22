@@ -15,7 +15,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#region 🔖️HandcraftedOpCodecs
 /// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl protocol::OpText for PresentMutation {
-    async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let variants = <Self as dsl::DslVariants>::variants();
         for (keyword, spec_fn) in &variants {
             let probe = format!("{} ", keyword);
@@ -26,7 +26,7 @@ impl protocol::OpText for PresentMutation {
         }
         Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
     }
-    async fn print_op(&self) -> String {
+    fn print_op(&self) -> String {
         let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
         let variants = <Self as dsl::DslVariants>::variants();
         let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
@@ -35,10 +35,10 @@ impl protocol::OpText for PresentMutation {
 }
 
 impl protocol::OpBinary for PresentMutation {
-    async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
         dsl::variants_binary::encode_op(self)
     }
-    async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         dsl::variants_binary::decode_op(bytes)
     }
 }
@@ -54,10 +54,10 @@ mod tests {
     use store::os_store::test_support;
 
     async fn round_trip(deck: &PresentSnapshot, operation: &PresentMutation) -> PresentSnapshot {
-        let (forward, _messages) = vcs::apply_mutation(deck, operation).expect("valid mutation");
+        let (forward, _messages) = vcs::apply_mutation(deck, operation).await.expect("valid mutation");
         let mut restored = forward.clone();
         for back in protocol::Mutation::inverse(operation, deck) {
-            let (next, _messages) = vcs::apply_mutation(&restored, &back).expect("valid inverse mutation");
+            let (next, _messages) = vcs::apply_mutation(&restored, &back).await.expect("valid inverse mutation");
             restored = next;
         }
         assert_eq!(&restored, deck, "inverse() must exactly restore the pre-operation deck");
@@ -69,9 +69,9 @@ mod tests {
         let deck = default_present_snapshot();
         let (source, _) = crate::artifacts::present::present_working_scene(&deck);
         let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
-        let seeded = round_trip(&deck, &PresentMutation::ReplaceTiles(replace_tiles::mutation::ReplaceTiles { new_tiles: tiles }));
+        let seeded = round_trip(&deck, &PresentMutation::ReplaceTiles(replace_tiles::mutation::ReplaceTiles { new_tiles: tiles })).await;
         assert_eq!(crate::artifacts::present::present_working_scene(&seeded).1.len(), 4);
-        let cleared = round_trip(&seeded, &PresentMutation::ReplaceTiles(replace_tiles::mutation::ReplaceTiles { new_tiles: Vec::new() }));
+        let cleared = round_trip(&seeded, &PresentMutation::ReplaceTiles(replace_tiles::mutation::ReplaceTiles { new_tiles: Vec::new() })).await;
         assert!(crate::artifacts::present::present_working_scene(&cleared).1.is_empty());
     }
 
@@ -79,13 +79,13 @@ mod tests {
     async fn tile_create_rename_resize_delete_round_trip() {
         let deck = default_present_snapshot();
         let tile = FigureTileDraft { id: "t1".into(), name: "A".into(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } };
-        let added = round_trip(&deck, &PresentMutation::CreateTile(create_tile::mutation::CreateTile { index: 0, tile }));
+        let added = round_trip(&deck, &PresentMutation::CreateTile(create_tile::mutation::CreateTile { index: 0, tile })).await;
         assert_eq!(crate::artifacts::present::present_working_scene(&added).1.len(), 1);
-        let renamed = round_trip(&added, &PresentMutation::RenameTile(rename_tile::mutation::RenameTile { id: "t1".into(), new_name: "Renamed".into() }));
+        let renamed = round_trip(&added, &PresentMutation::RenameTile(rename_tile::mutation::RenameTile { id: "t1".into(), new_name: "Renamed".into() })).await;
         assert_eq!(crate::artifacts::present::present_working_scene(&renamed).1[0].name, "Renamed");
-        let recropped = round_trip(&renamed, &PresentMutation::ResizeTileCrop(resize_tile_crop::mutation::ResizeTileCrop { id: "t1".into(), new_crop: FigureTileFrame { x: 0.3, y: 0.3, width: 0.4, height: 0.4 } }));
+        let recropped = round_trip(&renamed, &PresentMutation::ResizeTileCrop(resize_tile_crop::mutation::ResizeTileCrop { id: "t1".into(), new_crop: FigureTileFrame { x: 0.3, y: 0.3, width: 0.4, height: 0.4 } })).await;
         assert_eq!(crate::artifacts::present::present_working_scene(&recropped).1[0].crop.width, 0.4);
-        let removed = round_trip(&recropped, &PresentMutation::DeleteTile(delete_tile::mutation::DeleteTile { id: "t1".into() }));
+        let removed = round_trip(&recropped, &PresentMutation::DeleteTile(delete_tile::mutation::DeleteTile { id: "t1".into() })).await;
         assert!(crate::artifacts::present::present_working_scene(&removed).1.is_empty());
     }
 

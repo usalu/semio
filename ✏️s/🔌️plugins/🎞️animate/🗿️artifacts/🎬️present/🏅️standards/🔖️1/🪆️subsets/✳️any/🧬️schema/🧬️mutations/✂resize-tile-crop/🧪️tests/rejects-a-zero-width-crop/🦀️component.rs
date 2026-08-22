@@ -38,15 +38,15 @@ fn before() -> PresentSnapshot {
     let PresentMutation::ResizeTileCrop(payload) = mutation() else {
         panic!("rejects-a-zero-width-crop's committed mutation must be a resize-tile-crop");
     };
-    let tile = FigureTileDraft { id: payload.id.clone(), name: "Hero".into(), crop: FigureTileFrame { x: 0.25, y: 0.25, width: 0.5, height: 0.5 } };
+    let tile = FigureTileDraft { id: payload.id, name: "Hero".into(), crop: FigureTileFrame { x: 0.25, y: 0.25, width: 0.5, height: 0.5 } };
     cache_present_working_scene(&snapshot.presentation.child_id, &default_figure_tile_source(), &[tile]);
     snapshot
 }
 
 /// ▶️ A rejected `resize-tile-crop` leaves the document byte-identical to the committed `after` —
 /// the healthy crop in the deck is not overwritten on the way to the rejection.
-#[semio_framework_async_macros::async_test]
-async fn rejection_leaves_the_document_at_the_committed_after() {
+#[test]
+fn rejection_leaves_the_document_at_the_committed_after() {
     let base = before();
     let snapshot = apply_present_mutation(&base, &mutation()).expect("an empty diff still applies cleanly");
     assert_eq!(snapshot, expected_after(), "resize-tile-crop/rejects-a-zero-width-crop: applied state differs from committed after-snapshot");
@@ -56,8 +56,8 @@ async fn rejection_leaves_the_document_at_the_committed_after() {
 /// 🚨️ A zero-width crop is FATAL `mutation.invariant` — a different code AND a different level from
 /// the `mutation.target-missing` a bad id would raise, addressed at the tile whose geometry is at
 /// stake.
-#[semio_framework_async_macros::async_test]
-async fn a_zero_width_crop_is_a_fatal_invariant() {
+#[test]
+fn a_zero_width_crop_is_a_fatal_invariant() {
     let produced = <PresentMutation as protocol::Mutation<PresentSnapshot>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &PresentDiff::default(), "a rejecting resize-tile-crop must carry the identity diff");
     let messages = produced.messages();
@@ -68,8 +68,8 @@ async fn a_zero_width_crop_is_a_fatal_invariant() {
 }
 
 /// 🚷 The diff is DECLARED absent, not an invented empty patch.
-#[semio_framework_async_macros::async_test]
-async fn the_committed_diff_is_declared_absent() {
+#[test]
+fn the_committed_diff_is_declared_absent() {
     assert!(DIFF_ABSENT.is_empty(), "🔺️diff/🚫️component.absent must be an empty marker, not a stand-in patch");
     let produced = <PresentMutation as protocol::Mutation<PresentSnapshot>>::diff(&mutation(), &before());
     assert_eq!(produced.diff(), &PresentDiff::default(), "resize-tile-crop/rejects-a-zero-width-crop: a Fatal outcome must produce no delta at all");
@@ -78,8 +78,8 @@ async fn the_committed_diff_is_declared_absent() {
 /// 🔣️ Both committed snapshots and the committed mutation are already canonical. The committed crop
 /// is deliberately finite with a zero WIDTH and a healthy HEIGHT, so it clears the finiteness guard
 /// and lands squarely on the positive-extent one.
-#[semio_framework_async_macros::async_test]
-async fn committed_json_is_canonical() {
+#[test]
+fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
         let decoded: PresentSnapshot = serde_json::from_str(text).expect("snapshot decodes");
         let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
@@ -96,8 +96,8 @@ async fn committed_json_is_canonical() {
 }
 
 /// 🎯️ The declared rejection — status, code and path — is exactly what the diff builder emits.
-#[semio_framework_async_macros::async_test]
-async fn declared_outcome_holds() {
+#[test]
+fn declared_outcome_holds() {
     let outcome: serde_json::Value = serde_json::from_str(OUTCOME).expect("outcome decodes");
     assert_eq!(outcome.get("status").and_then(serde_json::Value::as_str), Some("rejected"), "resize-tile-crop/rejects-a-zero-width-crop declares a rejected outcome");
     let produced = <PresentMutation as protocol::Mutation<PresentSnapshot>>::diff(&mutation(), &before());
@@ -110,8 +110,8 @@ async fn declared_outcome_holds() {
 /// ↩️ `resize-tile-crop`'s inverse is BASE-derived from the target's CURRENT crop and never looks at
 /// the payload's rect — so even a refused degenerate resize inverts to a healthy restore of the
 /// crop the deck still holds.
-#[semio_framework_async_macros::async_test]
-async fn inverse_restores_the_healthy_base_crop_not_the_refused_rect() {
+#[test]
+fn inverse_restores_the_healthy_base_crop_not_the_refused_rect() {
     let inverse = inverse_present_mutation(&before(), &mutation());
     assert_eq!(inverse.len(), 1, "resize-tile-crop undoes with exactly one step once its target exists, got {inverse:?}");
     let PresentMutation::ResizeTileCrop(undo) = &inverse[0] else {
@@ -123,8 +123,8 @@ async fn inverse_restores_the_healthy_base_crop_not_the_refused_rect() {
 
 /// 🪪️ The fixture is bound to `resize-tile-crop`'s own descriptor, whose address reaches all the way
 /// down to the `crop` field — one segment deeper than the diagnostic's tile-level address.
-#[semio_framework_async_macros::async_test]
-async fn semantics_bind_this_fixture_to_resize_tile_crop() {
+#[test]
+fn semantics_bind_this_fixture_to_resize_tile_crop() {
     let semantics = <PresentMutation as protocol::SemanticMutation<PresentSnapshot>>::semantics(&mutation());
     assert_eq!((semantics.verb, semantics.entity, semantics.kind, semantics.record), ("resize", "tile-crop", "resize-tile-crop", "ResizedTileCrop"), "the fixture must be bound to resize-tile-crop's own descriptor");
     assert_eq!(<PresentMutation as protocol::SemanticMutation<PresentSnapshot>>::target(&mutation()), vec!["tiles".to_string(), "t-hero".to_string(), "crop".to_string()], "resize-tile-crop addresses the collection, the tile, and the crop field");

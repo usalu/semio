@@ -71,7 +71,7 @@ impl ArtifactViewer for RemodelViewer {
 //#endregion 🔖️Viewer
 
 //#region 🔖️Manifest
-pub async fn create_remodel_viewer() -> semio_framework_plugin::AppDefinition {
+pub fn create_remodel_viewer() -> semio_framework_plugin::AppDefinition {
     Viewer::builder(REMODEL_DIALECT)
         .document(["semio", "remodel"])
         .icon_id("remodel-app")

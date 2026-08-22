@@ -1,7 +1,21 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
+use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
-use semio_framework_plugin::{ExecutionMode, HostMediaHandlerDeclaration, Plugin};
+use semio_framework_plugin::plugin_app_close_prelude::*;
+use semio_framework_plugin::{ExecutionMode, HostMediaHandlerDeclaration, Plugin, PluginApp};
+
+//#region 🗃️Apps
+/// 🗃️ Closed runtime app fleet for both GIS artifact surfaces.
+semio_framework_dispatch_macros::dyn_enum_close! {
+    pub enum GisApps: PluginApp {
+        Gis2dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::gis2d::Gis2dPlayApp>>),
+        GisMapViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::gismap::GisMapViewer>>),
+        Gis3dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::gis3d::Gis3dPlayApp>>),
+        GisTerrainViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::gisterrain::GisTerrainViewer>>),
+    }
+}
+//#endregion 🗃️Apps
 
 /// 🔌️ Builds the plugin surface for host registration. `.artifact(…)` (ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M1) declares both owned artifacts (`gismap`,
@@ -9,8 +23,8 @@ use semio_framework_plugin::{ExecutionMode, HostMediaHandlerDeclaration, Plugin}
 /// automatically by each `.editor()` call below. `.editor()`/`.viewer()` (ticket
 /// 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET) replace the retired `.document_app()` — each
 /// subset now registers an independent editor and viewer surface.
-pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
-    Plugin::builder("gis")
+pub fn plugin() -> Result<Plugin<GisApps>, semio_framework_plugin::PluginAssemblyError> {
+    Plugin::<GisApps>::builder("gis")
         .label("GIS")
         .version("0.1.0")
         .artifact(crate::artifacts::gismap::declaration().map_err(semio_framework_plugin::PluginAssemblyError::definition)?)

@@ -12,7 +12,6 @@ use serde::{Deserialize, Serialize};
 /// no full ramp exists there yet, so this scale is the shape this packet's own brief specifies
 /// verbatim (`None,Xs,Sm,Md,Lg,Xl,…`) pending a registrar-added token set — flagged in the packet report.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum SpaceToken {
     #[default]
@@ -28,7 +27,6 @@ pub enum SpaceToken {
 /// 📏️ How a node sizes itself along one axis relative to its parent's flow — `Fixed` still names a
 /// [`SpaceToken`], never a pixel value.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum Sizing {
     #[default]
@@ -39,7 +37,6 @@ pub enum Sizing {
 
 /// ↔️ The main axis a [`StackLayout`] or [`WindowLayoutNode::Split`] lays its children along.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum Axis {
     #[default]
@@ -50,7 +47,6 @@ pub enum Axis {
 /// ↕️ Cross-axis alignment — the CSS `align-items` equivalent, `Stretch` default so a node fills its
 /// cross axis unless it opts out.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum Align {
     Start,
@@ -63,7 +59,6 @@ pub enum Align {
 
 /// ↔️ Main-axis distribution — the CSS `justify-content` equivalent.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum Justify {
     #[default]
@@ -77,7 +72,6 @@ pub enum Justify {
 
 /// 🔲️ One grid track's sizing rule — `Fraction` is a proportion count, never a pixel width.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum GridTrack {
     #[default]
@@ -90,7 +84,6 @@ pub enum GridTrack {
 
 /// 🖱️ Which axes a [`ScrollLayout`] permits overflow scrolling on.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum ScrollAxes {
     #[default]
@@ -103,7 +96,6 @@ pub enum ScrollAxes {
 /// 🧭️ A logical 9-point placement, `Start`/`End` rather than `Left`/`Right` so it stays correct under
 /// RTL locales without a renderer-side flip (CLAUDE.md's multi-language accessibility mandate).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum Anchor {
     TopStart,
@@ -121,7 +113,6 @@ pub enum Anchor {
 /// 📐️ Per-side padding that costs one [`SpaceToken`] on the wire in the common uniform case, instead
 /// of four always-present fields — mirrors CSS shorthand's 1/2/4-value forms.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum EdgeSpace {
     All(SpaceToken),
@@ -138,7 +129,6 @@ impl Default for EdgeSpace {
 
 /// 📚️ A one-axis flex-like arrangement — expressible by CSS flex, a taffy tree, or a native stack.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct StackLayout {
     pub axis: Axis,
@@ -152,7 +142,6 @@ pub struct StackLayout {
 
 /// 🔲️ A two-dimensional track arrangement — expressible by CSS grid or a taffy grid tree.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct GridLayout {
     pub columns: Vec<GridTrack>,
@@ -167,7 +156,6 @@ pub struct GridLayout {
 /// 🪟️ A positioning context whose children stack on top of one another anchored to the box —
 /// modals, popovers, tooltips.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct OverlayLayout {
     pub anchor: Anchor,
@@ -177,7 +165,6 @@ pub struct OverlayLayout {
 
 /// 🖱️ A viewport clipping its content and permitting overflow scroll on the named axes.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ScrollLayout {
     pub axes: ScrollAxes,
@@ -187,7 +174,6 @@ pub struct ScrollLayout {
 
 /// 📌️ A freeform positioning context — children carry their own placement outside normal flow.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct AbsoluteLayout {
     pub sizing_width: Sizing,
@@ -196,7 +182,6 @@ pub struct AbsoluteLayout {
 
 /// 🍃️ A childless terminal node's own box sizing — text, image, and other atomic components.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct LeafLayout {
     pub width: Sizing,
@@ -207,7 +192,6 @@ pub struct LeafLayout {
 /// flex/grid, by a taffy tree, and by native stacks alike. No CSS strings, no taffy types, no pixel
 /// geometry: every metric is a closed enum over [`SpaceToken`].
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum LayoutSpec {
     /// 🍃️ A node that participates in its parent's layout but imposes none of its own.
@@ -234,7 +218,6 @@ impl Default for LayoutSpec {
 /// 🪟️ Corner of a window stack where a tab chip docks. Ported verbatim from the wgpu target's
 /// `WindowStackCorner`.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum WindowStackCorner {
     #[default]
@@ -251,7 +234,6 @@ pub enum WindowStackCorner {
 /// `alias = "activeId"` serde alias on the old stack node is dropped — greenfield, fixtures
 /// re-handcrafted, no compatibility requirement.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum WindowLayoutNode {
     Window {
@@ -283,7 +265,6 @@ pub enum WindowLayoutNode {
 /// 🪟️ The window-shell root. Moved here from the wgpu target's `WindowLayout` — same name, one
 /// recursive `WindowLayoutNode` root instead of the old `WindowLayoutRoot` `Axis`/`Stack` union.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct WindowLayout {
     pub root: WindowLayoutNode,

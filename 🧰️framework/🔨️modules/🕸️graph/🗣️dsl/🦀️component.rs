@@ -9,46 +9,82 @@
 
 // #region ⚠️ Errors
 /// 🚧️ Unified failure mode for jack parsing/execution, wire-literal parsing, and fixture ingestion.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum GraphDslError {
     /// 🧾️ Fixture or query-result JSON failed to parse or serialize.
-    #[error("invalid json: {0}")]
-    Json(#[from] serde_json::Error),
+    Json(serde_json::Error),
     /// 🔤️ A string literal was never closed (Jack's own dual-quote pre-scan, `dsl_core` only
     /// natively lexes `"..."`).
-    #[error("unterminated string literal")]
     UnterminatedString,
     /// ❓️ A byte outside the token grammar was found (Jack's own pre-scan for `'`/`"`/`!=`, ahead
     /// of delegating the rest of the alphabet to `os_dsl::lex`).
-    #[error("unexpected character '{0}'")]
     UnexpectedChar(char),
     /// 🔢️ A numeric literal did not parse as a float (defensive — `os_dsl::lex` only ever
     /// accumulates well-formed digit runs, so this should be unreachable in practice).
-    #[error("invalid number literal: {0}")]
-    NumberFormat(#[from] std::num::ParseFloatError),
+    NumberFormat(std::num::ParseFloatError),
     /// ➡️ Parser expected one token shape and found another.
-    #[error("expected {expected}, got {found}")]
     UnexpectedToken { expected: String, found: String },
     /// 🪝️ A wire-literal edge was missing a mandatory `@port` on one of its endpoints (this
     /// module's own DAG domain rule, enforced on top of the unified wire grammar).
-    #[error("edge target requires @port")]
     EdgeTargetMissingPort,
     /// 🕸️ A jack pattern had no nodes.
-    #[error("empty pattern")]
     EmptyPattern,
     /// 🚫️ CREATE/DELETE/SET/MERGE are not supported on read-only queryable graphs.
-    #[error("mutating jack clauses are not supported on this graph domain")]
     UnsupportedMutation,
     /// 🚧️ WITH/UNWIND/CALL parse into the AST but aren't wired into the executor yet — prep work
     /// for unifying semio_compose_rs's Architect query language onto Jack (see the repo-wide unified-DSL
     /// plan, Wave 2 / P9).
-    #[error("WITH/UNWIND/CALL clauses are not yet executable")]
     UnsupportedClause,
     /// 🔡️ A lexical/grammar error surfaced verbatim by the unified `dsl_core`/`dsl_schema` engine —
     /// used by both the wire-literal delegate (`dsl_core::parse_wire_text`) and Jack's
     /// `dsl_core`-backed lexer.
-    #[error("{0}")]
-    Lex(#[from] dsl_core::os_dsl::TextError),
+    Lex(dsl_core::os_dsl::TextError),
+}
+
+impl std::fmt::Display for GraphDslError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Json(error) => write!(formatter, "invalid json: {error}"),
+            Self::UnterminatedString => formatter.write_str("unterminated string literal"),
+            Self::UnexpectedChar(character) => write!(formatter, "unexpected character '{character}'"),
+            Self::NumberFormat(error) => write!(formatter, "invalid number literal: {error}"),
+            Self::UnexpectedToken { expected, found } => write!(formatter, "expected {expected}, got {found}"),
+            Self::EdgeTargetMissingPort => formatter.write_str("edge target requires @port"),
+            Self::EmptyPattern => formatter.write_str("empty pattern"),
+            Self::UnsupportedMutation => formatter.write_str("mutating jack clauses are not supported on this graph domain"),
+            Self::UnsupportedClause => formatter.write_str("WITH/UNWIND/CALL clauses are not yet executable"),
+            Self::Lex(error) => error.fmt(formatter),
+        }
+    }
+}
+
+impl std::error::Error for GraphDslError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Json(error) => Some(error),
+            Self::NumberFormat(error) => Some(error),
+            Self::Lex(error) => Some(error),
+            _ => None,
+        }
+    }
+}
+
+impl From<serde_json::Error> for GraphDslError {
+    fn from(error: serde_json::Error) -> Self {
+        Self::Json(error)
+    }
+}
+
+impl From<std::num::ParseFloatError> for GraphDslError {
+    fn from(error: std::num::ParseFloatError) -> Self {
+        Self::NumberFormat(error)
+    }
+}
+
+impl From<dsl_core::os_dsl::TextError> for GraphDslError {
+    fn from(error: dsl_core::os_dsl::TextError) -> Self {
+        Self::Lex(error)
+    }
 }
 // #endregion ⚠️ Errors
 

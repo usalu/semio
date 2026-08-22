@@ -5,9 +5,9 @@ use crate::editor::puzzle3d::{apply_puzzle3d_fill_count, apply_puzzle3d_focus_se
 use semio_framework_plugin::strip_engagement_prefix;
 use serde_json::Value;
 
-pub async fn engagement_submit(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
+pub fn engagement_submit(ctx: &mut Puzzle3dActionCtx<'_>, args: Option<&Value>) {
     let raw = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("").trim().to_string();
-    if let Some(rest) = strip_engagement_prefix(&raw, "fill") {
+    if let Some(rest) = semio_framework::io::resolve_ready(strip_engagement_prefix(&raw, "fill")) {
         ctx.scene.active_utility = "fill".into();
         drive_precompute(&mut ctx.app.precompute.borrow_mut(), ctx.scene);
         let count = rest.parse::<u32>().ok().unwrap_or(ctx.scene.runtime.fill_count).min(PUZZLE3D_FILL_COUNT_MAX);

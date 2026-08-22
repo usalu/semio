@@ -1,0 +1,59 @@
+    Blocking waiting for file lock on package cache
+   Compiling semio-energy-focused v0.0.0 (/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/RESUMABLE-WFC-PUZZLE2D-AND-ENERGY-JOBS/🧪️energy-focused)
+warning: variable does not need to be mutable
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🦀️component.rs:980:25
+    |
+980 |     fn drive_energy_job(mut job: EnergyJob) -> (EnergyJob, Vec<EnergyJobPreview>, usize, Vec<u8>, std::time::Duration) {
+    |                         ----^^^
+    |                         |
+    |                         help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `stage` is never used
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌰️kernel/🦀️component.rs:259:19
+    |
+225 | impl TimestepWork {
+    | ----------------- method in this implementation
+...
+259 |     pub(crate) fn stage(&self) -> TimestepStage {
+    |                   ^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: associated function `simulate_secondary` is never used
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🌰️kernel/🦀️component.rs:713:8
+    |
+657 | impl SimulationKernel {
+    | --------------------- associated function in this implementation
+...
+713 |     fn simulate_secondary(model: &Model, config: &SimulationConfig, _pre: &PrecomputedModel, state: &mut SimulationModel, weather: ...
+    |        ^^^^^^^^^^^^^^^^^^
+
+warning: associated functions `resolve_weather` and `synthetic_weather_year` are never used
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🦀️component.rs:847:8
+    |
+824 | impl Engine {
+    | ----------- associated functions in this implementation
+...
+847 |     fn resolve_weather(config: &SimulationConfig) -> Vec<WeatherRecord> {
+    |        ^^^^^^^^^^^^^^^
+...
+858 |     fn synthetic_weather_year() -> Vec<WeatherRecord> {
+    |        ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `design_day_weather` is never used
+   --> /Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🦀️component.rs:890:4
+    |
+890 | fn design_day_weather(dry_bulb_c: f64) -> Vec<WeatherRecord> {
+    |    ^^^^^^^^^^^^^^^^^^
+
+warning: `semio-energy-focused` (lib test) generated 5 warnings (run `cargo fix --lib -p semio-energy-focused --tests` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 6.92s
+     Running unittests lib.rs (.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/RESUMABLE-WFC-PUZZLE2D-AND-ENERGY-JOBS/🧪️target-p7-energy-focused/debug/deps/semio_energy_focused-8354f642b552efbc)
+
+running 1 test
+test sim::tests::adversarial_timestep_work_unit_stays_below_watchdog ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 240 filtered out; finished in 0.08s
+

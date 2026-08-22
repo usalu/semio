@@ -1,181 +1,167 @@
-//! 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): contract-parity test over the
-//! ONE world `🧬️schema/📜️component.wit` now declares. Two invariants, both mechanical:
-//!
-//! 1. **Effect ↔ import parity** — every completable `effects.effect` case (the poll round trip)
-//!    has a matching awaitable `host-async` import taking the SAME `*-params` record, so the two
-//!    calling conventions inside one world can never drift apart.
-//! 2. **The collapsed shape itself** — exactly one world (`actor`), importing exactly `pure` +
-//!    `host-async`, with all seven of its exports declared `async func` and the deliberate sync
-//!    survivors (`pure`'s three, `host-async`'s `emit`/`emit-patch`) still sync.
-//!
-//! Parses the WIT with `wit-parser` directly — the same crate BOTH generators
-//! (`wasmtime::component::bindgen!`, `wit_bindgen::generate!`) resolve the whole package through —
-//! rather than compiling a component, so a drift fails a native `cargo test` immediately instead of
-//! surfacing later as a runtime ABI mismatch nobody notices until a real host/guest pairing traps.
-//!
-//! Mounted from `📦️glue.rs` behind `#[cfg(test)]` — never compiled into the shipped crate, and
-//! deliberately NOT added to `🦀️component.rs`, which other packets in this ticket are live in.
+//! 🧪️ Owned source-level parity checks for the single plugin WIT world.
 
 #[cfg(test)]
 mod tests {
-    use std::collections::BTreeSet;
+    use std::collections::{BTreeMap, BTreeSet};
+    use std::fs;
     use std::path::PathBuf;
 
-    use wit_parser::{Field, Function, FunctionKind, InterfaceId, PackageId, Resolve, Type, TypeDefKind, World, WorldId, WorldKey};
+    //#region 🧬️OwnedWitInspection
 
-    /// 📂️ `🧬️schema/`, resolved relative to THIS crate's manifest dir (`📦️packages/🦀️rust`) — the
-    /// exact same relative path `actor_bindings`'s `wasmtime::component::bindgen!` call in
-    /// `🦀️component.rs` already uses, so a directory move breaks both at once rather than silently
-    /// diverging.
-    async fn schema_dir() -> PathBuf {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../🧬️schema")
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    struct Field {
+        name: String,
+        ty: String,
     }
 
-    /// 🌊️ `http-request` is the one effect case whose async import is deliberately renamed —
-    /// `http-fetch` reads better for a call that returns a response, and the packet brief
-    /// introduces the pair exactly this way. Every other completable effect keeps its case name
-    /// verbatim as its `host-async` function name.
-    async fn async_fn_name_for(effect_case: &str) -> &str {
-        match effect_case {
-            "http-request" => "http-fetch",
-            other => other,
-        }
+    #[derive(Clone, Debug, Eq, PartialEq)]
+    struct Function {
+        name: String,
+        is_async: bool,
+        params: Vec<Field>,
+        result: Option<String>,
     }
 
-    /// 🚪️ `respond` is the one `req`-bearing effect that deliberately does NOT get a `host-async`
-    /// import: it answers a HOST-issued `request` event, it does not await a HOST-issued completion
-    /// of its own, so it stays reachable only through `emit` (`effects.wit`'s `respond-effect` doc
-    /// comment explains the direction). Any OTHER `req`-bearing case failing this test's generic
-    /// rule is a real drift, not a documented exception.
-    async fn is_documented_emit_only_exception(effect_case: &str) -> bool {
-        effect_case == "respond"
+    fn schema_path() -> PathBuf {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../🧬️schema/📜️component.wit")
     }
 
-    async fn record_fields<'a>(resolve: &'a Resolve, ty: &Type) -> &'a [Field] {
-        let Type::Id(id) = ty else { panic!("expected a named record type, found {ty:?}") };
-        match &resolve.types[*id].kind {
-            TypeDefKind::Record(record) => &record.fields,
-            other => panic!("expected a record, found {other:?}"),
-        }
+    fn source() -> String {
+        let source = fs::read_to_string(schema_path()).expect("plugin WIT schema must be readable");
+        source.lines().map(|line| line.split_once("//").map_or(line, |(code, _)| code)).collect::<Vec<_>>().join("\n")
     }
 
-    /// 🧷️ Resolves a [`Type`] through the alias chain that `use` creates, down to the `TypeDef` that
-    /// actually defines it. `use effects.{blob-load-params}` does NOT reuse the original `TypeId` —
-    /// `wit-parser` materialises a fresh `TypeDef` whose kind is `TypeDefKind::Type(original)`. So two
-    /// genuinely-shared types compare UNEQUAL by raw id, and only their roots may be compared. Without
-    /// this, these tests reported drift for a schema that is correct: `host-async` really does
-    /// `use effects.{…-params, effect}`, which is exactly the sharing the `*-params` refactor exists
-    /// to guarantee.
-    async fn canonical_type(resolve: &Resolve, ty: Type) -> Type {
-        let mut current = ty;
-        loop {
-            let Type::Id(id) = current else { return current };
-            match &resolve.types[id].kind {
-                TypeDefKind::Type(inner) => current = *inner,
-                _ => return Type::Id(id),
+    fn normalize(value: &str) -> String {
+        value.chars().filter(|character| !character.is_whitespace()).collect()
+    }
+
+    fn matching_close(source: &str, open: usize, opening: u8, closing: u8) -> usize {
+        let mut depth = 0usize;
+        for (offset, byte) in source.as_bytes()[open..].iter().enumerate() {
+            if *byte == opening {
+                depth += 1;
+            } else if *byte == closing {
+                depth -= 1;
+                if depth == 0 {
+                    return open + offset;
+                }
             }
         }
+        panic!("unclosed WIT delimiter at byte {open}")
     }
 
-    /// 🧬️ One parse of `🧬️schema/📜️component.wit` per test, kept cheap and side-effect-free — this
-    /// never touches the filesystem outside `🧬️schema/`, never writes, and never depends on a prior
-    /// `cargo build` having run.
-    struct SchemaFixture {
-        resolve: Resolve,
-        package: PackageId,
+    fn named_block<'a>(source: &'a str, kind: &str, name: &str) -> &'a str {
+        let marker = format!("{kind} {name}");
+        let start = source.find(&marker).unwrap_or_else(|| panic!("missing WIT {kind} `{name}`"));
+        let open = source[start + marker.len()..].find('{').map(|offset| start + marker.len() + offset).unwrap_or_else(|| panic!("WIT {kind} `{name}` has no body"));
+        let close = matching_close(source, open, b'{', b'}');
+        &source[open + 1..close]
     }
 
-    impl SchemaFixture {
-        async fn load() -> Self {
-            let mut resolve = Resolve::new();
-            let (package, _sources) = resolve.push_path(schema_dir().await).expect(
-                "🧬️schema/📜️component.wit must parse under wit-parser 0.252.0 — the exact version \
-                 wasmtime 47.0.3 (this crate's own `wasmtime` dependency) resolves this package with",
-            );
-            Self { resolve, package }
-        }
-
-        async fn interface(&self, name: &str) -> InterfaceId {
-            *self.resolve.packages[self.package].interfaces.get(name).unwrap_or_else(|| panic!("interface `{name}` must exist in 🧬️schema/📜️component.wit"))
-        }
-
-        async fn world(&self, name: &str) -> WorldId {
-            *self.resolve.packages[self.package].worlds.get(name).unwrap_or_else(|| panic!("world `{name}` must exist in 🧬️schema/📜️component.wit"))
-        }
-
-        async fn effect_variant_cases(&self) -> &[wit_parser::Case] {
-            let effects = &self.resolve.interfaces[self.interface("effects").await];
-            let effect_type_id = *effects.types.get("effect").expect("variant `effect` must exist in `effects`");
-            match &self.resolve.types[effect_type_id].kind {
-                TypeDefKind::Variant(variant) => &variant.cases,
-                other => panic!("`effects.effect` must be a variant, found {other:?}"),
+    fn split_top_level(source: &str, delimiter: char) -> Vec<&str> {
+        let mut result = Vec::new();
+        let mut start = 0usize;
+        let mut depth = 0usize;
+        for (index, character) in source.char_indices() {
+            match character {
+                '<' | '(' | '{' | '[' => depth += 1,
+                '>' | ')' | '}' | ']' => depth = depth.saturating_sub(1),
+                _ => {}
+            }
+            if character == delimiter && depth == 0 {
+                result.push(source[start..index].trim());
+                start = index + character.len_utf8();
             }
         }
+        let tail = source[start..].trim();
+        if !tail.is_empty() {
+            result.push(tail);
+        }
+        result
     }
 
-    /// 🎯️ THE test: every `effects.effect` case whose payload record carries `req: request-id` has
-    /// a same-named (modulo the one documented rename) `async func` in `host-async` whose params
-    /// are EXACTLY that record's own fields minus `req` — proving the async import reuses the
-    /// `*-params` payload rather than inventing a parallel shape. Every `req`-bearing case without a
-    /// `host-async` counterpart must be the one documented `respond` exception. This also
-    /// automatically flags any FUTURE completable effect added to `effects.effect` that forgets its
-    /// `host-async` counterpart.
-    #[semio_framework_async_macros::async_test]
-    async fn every_req_bearing_effect_has_a_matching_host_async_import() {
-        let fixture = SchemaFixture::load().await;
-        let host_async = &fixture.resolve.interfaces[fixture.interface("host-async").await];
+    fn fields(source: &str) -> Vec<Field> {
+        split_top_level(source, ',')
+            .into_iter()
+            .filter(|entry| !entry.is_empty())
+            .map(|entry| {
+                let (name, ty) = entry.split_once(':').unwrap_or_else(|| panic!("invalid WIT field `{entry}`"));
+                Field { name: name.trim().to_string(), ty: normalize(ty) }
+            })
+            .collect()
+    }
 
+    fn record_fields(interface: &str, name: &str) -> Vec<Field> {
+        fields(named_block(interface, "record", name))
+    }
+
+    fn variant_cases(interface: &str, name: &str) -> Vec<(String, Option<String>)> {
+        split_top_level(named_block(interface, "variant", name), ',')
+            .into_iter()
+            .filter(|entry| !entry.is_empty())
+            .map(|entry| {
+                if let Some(open) = entry.find('(') {
+                    let close = matching_close(entry, open, b'(', b')');
+                    (entry[..open].trim().to_string(), Some(normalize(&entry[open + 1..close])))
+                } else {
+                    (entry.trim().to_string(), None)
+                }
+            })
+            .collect()
+    }
+
+    fn parse_function(line: &str) -> Function {
+        let (name, signature) = line.split_once(':').unwrap_or_else(|| panic!("invalid WIT function `{line}`"));
+        let signature = signature.trim();
+        let is_async = signature.starts_with("async func(");
+        let marker = if is_async { "async func(" } else { "func(" };
+        let open = signature.find('(').unwrap_or_else(|| panic!("function `{name}` has no parameter list"));
+        assert!(signature.starts_with(marker), "unsupported WIT function shape `{line}`");
+        let close = matching_close(signature, open, b'(', b')');
+        let remainder = signature[close + 1..].trim().trim_end_matches(';').trim();
+        Function { name: name.trim().to_string(), is_async, params: fields(&signature[open + 1..close]), result: remainder.strip_prefix("->").map(normalize) }
+    }
+
+    fn functions(interface: &str) -> BTreeMap<String, Function> {
+        interface.lines().map(str::trim).filter(|line| line.contains(": func(") || line.contains(": async func(")).map(parse_function).map(|function| (function.name.clone(), function)).collect()
+    }
+
+    fn declarations(source: &str, keyword: &str) -> BTreeSet<String> {
+        source.lines().filter_map(|line| line.trim().strip_prefix(keyword)).filter_map(|tail| tail.split_whitespace().next()).map(|name| name.trim_end_matches('{').to_string()).collect()
+    }
+
+    fn world_members(world: &str, keyword: &str) -> BTreeSet<String> {
+        world.lines().filter_map(|line| line.trim().strip_prefix(keyword)).map(|name| name.trim().trim_end_matches(';').to_string()).collect()
+    }
+
+    //#endregion 🧬️OwnedWitInspection
+
+    //#region 🧪️ContractParity
+
+    #[test]
+    fn every_req_bearing_effect_has_a_matching_host_async_import() {
+        let source = source();
+        let effects = named_block(&source, "interface", "effects");
+        let host = functions(named_block(&source, "interface", "host-async"));
         let mut checked = BTreeSet::new();
-        for case in fixture.effect_variant_cases().await {
-            let Some(payload_ty) = &case.ty else { continue };
-            let fields = record_fields(&fixture.resolve, payload_ty).await;
-            let has_req = fields.iter().any(|field| field.name == "req");
-            if !has_req {
+        for (case, payload) in variant_cases(effects, "effect") {
+            let Some(payload) = payload else { continue };
+            let payload_fields = record_fields(effects, &payload);
+            if !payload_fields.iter().any(|field| field.name == "req") {
                 continue;
             }
-
-            if is_documented_emit_only_exception(&case.name).await {
-                assert!(
-                    !host_async.functions.contains_key(case.name.as_str()),
-                    "`{}` is documented as emit-only (answers a host-issued request, never awaits a \
-                     host-issued completion of its own) but a `host-async` function of the same name \
-                     now exists — either the exception is stale or this is a real drift",
-                    case.name
-                );
+            if case == "respond" {
+                assert!(!host.contains_key("respond"));
                 continue;
             }
-
-            let async_name = async_fn_name_for(&case.name).await;
-            let function: &Function = host_async.functions.get(async_name).unwrap_or_else(|| {
-                panic!(
-                    "effect case `{}` carries `req: request-id` but `host-async` has no `{}` async \
-                     import — every completable effect needs a matching host-async counterpart",
-                    case.name, async_name
-                )
-            });
-            assert_eq!(function.kind, FunctionKind::AsyncFreestanding, "`host-async.{async_name}` must be declared `async func`");
-
-            let expected_params: Vec<&Field> = fields.iter().filter(|field| field.name != "req").collect();
-            assert_eq!(function.params.len(), expected_params.len(), "`host-async.{async_name}` param count must match `{}`'s fields minus `req`", case.name);
-            for (param, field) in function.params.iter().zip(expected_params.iter()) {
-                assert_eq!(&param.name, &field.name, "`host-async.{async_name}` param name must match `{}.{}`'s field name", case.name, field.name);
-                assert_eq!(
-                    canonical_type(&fixture.resolve, param.ty).await,
-                    canonical_type(&fixture.resolve, field.ty).await,
-                    "`host-async.{async_name}` param `{}` must reuse the SAME type as `{}.{}` — a new \
-                     type here would be exactly the drift the `*-params` refactor exists to prevent",
-                    param.name,
-                    case.name,
-                    field.name
-                );
-            }
-
-            checked.insert(case.name.clone());
+            let async_name = if case == "http-request" { "http-fetch" } else { &case };
+            let function = host.get(async_name).unwrap_or_else(|| panic!("missing host-async import `{async_name}` for effect `{case}`"));
+            assert!(function.is_async, "host-async.{async_name} must be async");
+            let expected = payload_fields.into_iter().filter(|field| field.name != "req").collect::<Vec<_>>();
+            assert_eq!(function.params, expected, "host-async.{async_name} must reuse `{case}` payload fields");
+            checked.insert(case);
         }
-
-        // 🧬️ Positive sanity: the ~21 canonical `*-params`-wrapped effects really were exercised
-        // above, not silently skipped by an empty `effect` variant or a payload-resolution bug.
-        for expected in [
+        let expected = [
             "storage-read",
             "storage-write",
             "storage-delete",
@@ -198,194 +184,87 @@ mod tests {
             "request-file-open",
             "request-media-frames",
             "request-capability",
-        ] {
-            assert!(checked.contains(expected), "expected effect case `{expected}` to have been checked");
-        }
+        ]
+        .into_iter()
+        .map(String::from)
+        .collect::<BTreeSet<_>>();
+        assert_eq!(checked, expected);
     }
 
-    /// 🧬️ `spawn-job` is covered separately: `spawn-job-effect` was never wrapped in a `*-params`
-    /// record (it correlates by `job: u64`, not `req: request-id`), so it falls outside the generic
-    /// req-driven rule above. The packet brief still specifies an async import for it, taking its
-    /// exact existing fields.
-    #[semio_framework_async_macros::async_test]
-    async fn spawn_job_has_a_matching_host_async_import_despite_carrying_no_req() {
-        let fixture = SchemaFixture::load().await;
-        let host_async = &fixture.resolve.interfaces[fixture.interface("host-async").await];
-
-        let case = fixture.effect_variant_cases().await.iter().find(|case| case.name == "spawn-job").expect("`spawn-job` case must exist in `effects.effect`");
-        let fields = record_fields(&fixture.resolve, case.ty.as_ref().expect("spawn-job carries a payload")).await;
-        assert!(
-            !fields.iter().any(|field| field.name == "req"),
-            "this test's premise (`spawn-job-effect` carries no `req`) is stale — merge it into the \
-             generic req-driven test above instead"
-        );
-
-        let function = host_async.functions.get("spawn-job").expect("`host-async.spawn-job` must exist");
-        assert_eq!(function.kind, FunctionKind::AsyncFreestanding);
-        assert_eq!(function.params.len(), fields.len());
-        for (param, field) in function.params.iter().zip(fields.iter()) {
-            assert_eq!(&param.name, &field.name);
-            assert_eq!(canonical_type(&fixture.resolve, param.ty).await, canonical_type(&fixture.resolve, field.ty).await);
-        }
+    #[test]
+    fn spawn_job_reuses_the_effect_payload() {
+        let source = source();
+        let effects = named_block(&source, "interface", "effects");
+        let payload = variant_cases(effects, "effect").into_iter().find_map(|(case, payload)| (case == "spawn-job").then_some(payload).flatten()).expect("spawn-job effect must carry a payload");
+        let expected = record_fields(effects, &payload);
+        assert!(!expected.iter().any(|field| field.name == "req"));
+        let host = functions(named_block(&source, "interface", "host-async"));
+        let function = host.get("spawn-job").expect("host-async.spawn-job must exist");
+        assert!(function.is_async);
+        assert_eq!(function.params, expected);
     }
 
-    /// 🚪️ Every `effect` case — regardless of whether it carries `req` — is reachable through
-    /// `host-async.emit`, which takes the whole `effect` variant as its one argument rather than a
-    /// hand-written signature per case. This is the "no `req` ⇒ reachable through `emit`" half of
-    /// the contract, and it also covers `respond`.
-    #[semio_framework_async_macros::async_test]
-    async fn emit_carries_the_whole_effect_variant() {
-        let fixture = SchemaFixture::load().await;
-        let effects = &fixture.resolve.interfaces[fixture.interface("effects").await];
-        let host_async = &fixture.resolve.interfaces[fixture.interface("host-async").await];
-        let effect_type_id = *effects.types.get("effect").expect("variant `effect` must exist");
-
-        let emit: &Function = host_async.functions.get("emit").expect("`host-async.emit` must exist");
-        assert_eq!(emit.kind, FunctionKind::Freestanding, "`emit` must be fire-and-forget, not `async func`");
-        assert_eq!(emit.params.len(), 1, "`emit` must take exactly the `effect` variant");
-        assert_eq!(canonical_type(&fixture.resolve, emit.params[0].ty).await, canonical_type(&fixture.resolve, Type::Id(effect_type_id)).await, "`emit`'s parameter must be THE SAME `effect` type `effects.effect` defines, not a copy");
-
-        assert!(host_async.functions.contains_key("emit-patch"), "`host-async.emit-patch` must exist");
+    #[test]
+    fn emit_carries_the_effect_variant() {
+        let source = source();
+        let host = functions(named_block(&source, "interface", "host-async"));
+        let emit = host.get("emit").expect("host-async.emit must exist");
+        assert!(!emit.is_async);
+        assert_eq!(emit.params, vec![Field { name: "value".into(), ty: "effect".into() }]);
+        assert!(emit.result.is_none());
+        assert!(host.contains_key("emit-patch"));
     }
 
-    /// 🌍️ B1 world-collapse: `actor` is not merely still present, it is the ONLY world. `world
-    /// actor-async` and `interface runner` were deleted, and a future packet that resurrects a
-    /// second world — or leaves a stray probe/spike world behind in the live schema — fails here
-    /// immediately rather than at a bindgen call site nobody re-reads.
-    #[semio_framework_async_macros::async_test]
-    async fn exactly_one_world_exists() {
-        let fixture = SchemaFixture::load().await;
-        let worlds: BTreeSet<String> = fixture.resolve.packages[fixture.package].worlds.keys().cloned().collect();
-        assert_eq!(worlds, BTreeSet::from(["actor".to_string()]), "`semio:framework` must declare exactly one world, `actor` — B1 world-collapse deleted `actor-async`");
-        assert!(
-            !fixture.resolve.packages[fixture.package].interfaces.contains_key("runner"),
-            "`interface runner` was deleted with `world actor-async` — the collapsed world's turn-loop entry point is `reactor::poll`, not a long-lived `stream<event>`"
-        );
+    #[test]
+    fn exactly_one_world_exists() {
+        let source = source();
+        assert_eq!(declarations(&source, "world "), BTreeSet::from(["actor".to_string()]));
+        assert!(!declarations(&source, "interface ").contains("runner"));
     }
 
-    /// 🌍️ The one world's export surface is unchanged by the collapse; its FUNCTIONAL import
-    /// surface is the actual change — `{pure}` became `{pure, host-async}`.
-    ///
-    /// 🧬️ The import check is deliberately NOT "the import set equals `{pure, host-async}`" —
-    /// `wit-parser` also surfaces every interface an EXPORTED interface's function signatures merely
-    /// reference types from (`reactor` → `use types/effects/events/ui`, `events` → `use
-    /// capabilities` too) as a `WorldItem::Interface` in `world.imports`, even though none of those
-    /// interfaces declare a single `func` for a host to implement. That is `wit-parser` doing
-    /// exactly what it must to resolve the exported functions' argument/return types — it is not
-    /// this world quietly growing a new host-callable import. The invariant the docs mean is
-    /// function-level: no interface OTHER than `pure`/`host-async` contributes a callable
-    /// `func`/`async func`.
-    #[semio_framework_async_macros::async_test]
-    async fn world_actor_exports_and_imports_exactly() {
-        let fixture = SchemaFixture::load().await;
-        let actor = &fixture.resolve.worlds[fixture.world("actor").await];
-
-        // 🚫️async: E1 pure accessor, consumed only from sync closures (`export_names`/
-        // `functional_import_names`/`type_only_import_names` below build `BTreeSet::collect()` over
-        // a plain iterator) — see R9.
-        fn world_key_name(resolve: &Resolve, key: &WorldKey) -> String {
-            match key {
-                WorldKey::Name(name) => name.clone(),
-                WorldKey::Interface(id) => resolve.interfaces[*id].name.clone().unwrap_or_default(),
-            }
-        }
-
-        let export_names = |world: &World| -> BTreeSet<String> { world.exports.keys().map(|key| world_key_name(&fixture.resolve, key)).collect() };
-
-        // 🚪️ Every import whose interface declares at least one function — the ONLY imports a
-        // generated `Host` trait actually needs an `impl` for.
-        let functional_import_names = |world: &World| -> BTreeSet<String> {
-            world
-                .imports
-                .iter()
-                .filter_map(|(key, item)| {
-                    let wit_parser::WorldItem::Interface { id, .. } = item else { return None };
-                    let has_functions = !fixture.resolve.interfaces[*id].functions.is_empty();
-                    has_functions.then(|| world_key_name(&fixture.resolve, key))
-                })
-                .collect()
-        };
-        // 🧬️ The complementary set: imports present ONLY because an export's function signature
-        // references one of their types, never because a host must implement a function.
-        let type_only_import_names = |world: &World| -> BTreeSet<String> {
-            world
-                .imports
-                .iter()
-                .filter_map(|(key, item)| {
-                    let wit_parser::WorldItem::Interface { id, .. } = item else { return None };
-                    let has_functions = !fixture.resolve.interfaces[*id].functions.is_empty();
-                    (!has_functions).then(|| world_key_name(&fixture.resolve, key))
-                })
-                .collect()
-        };
-
-        let expected_exports: BTreeSet<String> = ["reactor", "jobs", "checkpoint", "describe"].into_iter().map(String::from).collect();
-        assert_eq!(export_names(actor), expected_exports, "the collapse changed `world actor`'s IMPORTS, never its exports");
-        assert_eq!(functional_import_names(actor), BTreeSet::from(["pure".to_string(), "host-async".to_string()]), "`world actor` must import exactly `pure` and `host-async` for anything callable — this is the collapse's actual functional change");
-        // 🧬️ Positive sanity: this world DOES pull in type-only interfaces transitively (proving
-        // the distinction above is real, not vacuously true because nothing showed up here).
-        assert!(!type_only_import_names(actor).is_empty(), "expected `world actor` to have at least one type-only implicit import");
+    #[test]
+    fn actor_world_has_the_exact_explicit_boundary() {
+        let source = source();
+        let actor = named_block(&source, "world", "actor");
+        assert_eq!(world_members(actor, "import "), BTreeSet::from(["host-async".to_string(), "pure".to_string()]));
+        assert_eq!(world_members(actor, "export "), ["checkpoint", "describe", "jobs", "reactor"].into_iter().map(String::from).collect());
     }
 
-    /// ⚡️ S7, reproduced on this ticket: a plain sync `func` EXPORT is uncallable on any Store
-    /// configured with `wasm_component_model_async(true)`, and `world actor`'s `host-async` import
-    /// REQUIRES such a Store — so all seven exports had to become `async func` together. Scoped
-    /// deliberately to exports-of-`world actor`, NOT "every func in the package": `pure`'s three
-    /// funcs and `host-async`'s `emit`/`emit-patch` stay plain `func` by design (no suspension
-    /// point / deliberate one-way doors), so a package-wide assertion would be actively wrong.
-    #[semio_framework_async_macros::async_test]
-    async fn every_export_of_world_actor_is_async_func() {
-        let fixture = SchemaFixture::load().await;
-        let actor = &fixture.resolve.worlds[fixture.world("actor").await];
-
-        let mut seen: BTreeSet<String> = BTreeSet::new();
-        for item in actor.exports.values() {
-            let wit_parser::WorldItem::Interface { id, .. } = item else { panic!("`world actor` must export interfaces only, never a bare func or type") };
-            let interface = &fixture.resolve.interfaces[*id];
-            let interface_name = interface.name.clone().unwrap_or_default();
-            for function in interface.functions.values() {
-                assert_eq!(function.kind, FunctionKind::AsyncFreestanding, "`{interface_name}.{}` must be declared `async func` — a sync export is uncallable on the async-configured Store `host-async` requires (S7)", function.name);
+    #[test]
+    fn every_actor_export_is_async() {
+        let source = source();
+        let mut seen = BTreeSet::new();
+        for interface_name in ["reactor", "jobs", "checkpoint", "describe"] {
+            for function in functions(named_block(&source, "interface", interface_name)).into_values() {
+                assert!(function.is_async, "{interface_name}.{} must be async", function.name);
                 seen.insert(format!("{interface_name}.{}", function.name));
             }
         }
-
-        // 🧬️ Positive sanity: all seven exports really were walked, not silently skipped by an
-        // empty export map or a `WorldItem` shape this loop does not recognise.
-        let expected: BTreeSet<String> = ["reactor.poll", "jobs.start-job", "jobs.step-job", "jobs.cancel-job", "checkpoint.checkpoint", "checkpoint.restore", "describe.describe"].into_iter().map(String::from).collect();
-        assert_eq!(seen, expected, "`world actor`'s export surface is exactly these seven functions");
-
-        // 🚫️ The deliberate sync survivors, asserted explicitly so a future blanket "make every
-        // func async" sweep cannot quietly take them along.
-        let pure = &fixture.resolve.interfaces[fixture.interface("pure").await];
+        let expected = ["reactor.poll", "jobs.start-job", "jobs.step-job", "jobs.cancel-job", "checkpoint.checkpoint", "checkpoint.restore", "describe.describe"].into_iter().map(String::from).collect();
+        assert_eq!(seen, expected);
+        let pure = functions(named_block(&source, "interface", "pure"));
         for name in ["log", "now-ms", "trace-span"] {
-            let function = pure.functions.get(name).unwrap_or_else(|| panic!("`pure.{name}` must exist"));
-            assert_eq!(function.kind, FunctionKind::Freestanding, "`pure.{name}` stays sync — no I/O, no suspension point");
+            assert!(!pure.get(name).unwrap_or_else(|| panic!("pure.{name} must exist")).is_async);
         }
     }
 
-    /// 🛡️ Every `host-async` import except the two documented fire-and-forget doors returns a
-    /// `result<_, _>`. A future import declared with a bare return type would let a real host-side
-    /// fault decode as that type's Rust default (an empty `Vec<u8>` instead of a propagated error)
-    /// rather than failing loud — a silent data-correctness bug this test turns into a test-time
-    /// failure. `emit`/`emit-patch` are the exceptions and are asserted to return NOTHING.
-    #[semio_framework_async_macros::async_test]
-    async fn every_fallible_host_async_import_returns_a_result() {
-        let fixture = SchemaFixture::load().await;
-        let host_async = &fixture.resolve.interfaces[fixture.interface("host-async").await];
-
+    #[test]
+    fn every_fallible_host_import_returns_result() {
+        let source = source();
+        let host = functions(named_block(&source, "interface", "host-async"));
         let mut checked = 0usize;
-        for function in host_async.functions.values() {
+        for function in host.values() {
             if matches!(function.name.as_str(), "emit" | "emit-patch") {
-                assert!(function.result.is_none(), "`host-async.{}` is a deliberate one-way door — it must return nothing", function.name);
-                assert_eq!(function.kind, FunctionKind::Freestanding, "`host-async.{}` is fire-and-forget, not `async func`", function.name);
+                assert!(!function.is_async);
+                assert!(function.result.is_none());
                 continue;
             }
-            assert_eq!(function.kind, FunctionKind::AsyncFreestanding, "`host-async.{}` must be declared `async func`", function.name);
-            let result = function.result.unwrap_or_else(|| panic!("`host-async.{}` must return a `result<_, _>`, not nothing", function.name));
-            let Type::Id(id) = canonical_type(&fixture.resolve, result).await else { panic!("`host-async.{}` must return a `result<_, _>`, found a primitive", function.name) };
-            assert!(matches!(fixture.resolve.types[id].kind, TypeDefKind::Result(_)), "`host-async.{}` must return a `result<_, _>` so a host fault propagates instead of decoding as a default value", function.name);
+            assert!(function.is_async, "host-async.{} must be async", function.name);
+            assert!(function.result.as_deref().is_some_and(|result| result.starts_with("result<")));
             checked += 1;
         }
-        assert_eq!(checked, 24, "expected all 24 fallible `host-async` imports to have been checked");
+        assert_eq!(checked, 24);
     }
+
+    //#endregion 🧪️ContractParity
 }

@@ -9,7 +9,7 @@ use crate::artifacts::jpg::standards::v_jfif_1_01::subsets::baseline::schema::sn
 use crate::artifacts::jpg::{JPG_BASELINE_DIALECT, STDIO_JPG_DOCUMENT_SCHEMA};
 use crate::viewer::jpg_baseline::modes::view;
 use crate::viewer::jpg_baseline::modes::view::windows::main;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command

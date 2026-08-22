@@ -28,6 +28,7 @@ semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", p
 # plugin crate's own `📦️glue.rs` already uses (see `🔌️plugin/📦️packages/🦀️rust/📦️glue.rs`) — for
 # `store::pack_rt::{encode_wire_value,decode_wire_value}` / `dsl::{to_dsl_value,from_dsl_value}`.
 semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-plugin-host = { path = "../../../🖥️host/📦️packages/🦀️rust" }
 # 🐎️ `world actor`'s only DECLARED import is `pure` (log/now-ms/trace-span, `📜️wit/📜️pure.wit`),
 # but a real `wasm32-wasip2` build also imports `wasi:io/poll` and friends TRANSITIVELY through the
 # Rust target's own runtime shim, so satisfying `pure` alone fails instantiation on every genuinely
@@ -38,7 +39,7 @@ semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust
 # wasm_component_model_async`, `Store::run_concurrent` and `Accessor` are all required here.
 wasmtime = { version = "47.0.3", features = ["cranelift", "component-model", "component-model-async"] }
 wasmtime-wasi = "47.0.3"
-sha2 = "0.10"
+semio-framework-hash = { path = "../../../../../../../🔨️modules/#⃣hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 # ⏳️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): `block_on` for `📦️main.rs`, the
 # process entry point — R4 allow-list clause 1 (binary / `main` executor entry points).
 semio-framework-async = { workspace = true }

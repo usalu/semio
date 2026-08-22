@@ -1,5 +1,5 @@
 /** 🖥️ TypeScript twin of the Rust shell-state SSOT (`🦀️component.rs`): the same `ShellState` +
- * `ShellCommand` + `ShellEvent` + `ShellError` vocabulary (re-exported from the ts-rs mirror at
+ * `ShellCommand` + `ShellEvent` + `ShellError` vocabulary (re-exported from the owned-schema mirror at
  * `./🤖️generated/🟦️shell.js`) plus an independent `reduce()` implementation with the same
  * semantics. This file is NOT generated — it is hand-written to the same contract the Rust
  * `reduce` implements, and the parity fixtures under `../🧫️fixtures/*.json` are what keeps the two

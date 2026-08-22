@@ -10,7 +10,7 @@
 
 // #region 🔌️Adapters
 import { SelectionMarquee } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 // #endregion 🔌️Adapters
 
 // ⬚️#region 🔖️SelectionMarquee

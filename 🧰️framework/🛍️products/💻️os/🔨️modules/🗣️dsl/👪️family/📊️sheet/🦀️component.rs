@@ -102,7 +102,7 @@ pub async fn parse_trace_text(text: &str) -> Result<Trace, TextError> {
     let name = name_token.text.as_str().to_string();
     let equals_index = 1;
     if tokens.get(equals_index).map(|t| t.kind) != Some(TokenKind::Equals) {
-        return Err(TextError::new("expected `=` after the trace name", tokens.get(equals_index).map(|t| t.span).unwrap_or(TextSpan::at(1, 1))));
+        return Err(TextError::new("expected `=` after the trace name", tokens.get(equals_index).map_or(TextSpan::at(1, 1), |t| t.span)));
     }
 
     let arrow_index = find_arrow_after(&tokens, equals_index).await.ok_or_else(|| TextError::new("expected `->` closing the trace's expression", TextSpan::at(1, 1)))?;
@@ -110,8 +110,7 @@ pub async fn parse_trace_text(text: &str) -> Result<Trace, TextError> {
     let expr_end = tokens[arrow_index].byte_range.0 as usize;
     let expr = parse_expr_text(text[expr_start..expr_end].trim())?;
 
-    let value_token =
-        tokens.get(arrow_index + 1).filter(|t| matches!(t.kind, TokenKind::Float | TokenKind::Int)).ok_or_else(|| TextError::new("expected a number after `->`", tokens.get(arrow_index + 1).map(|t| t.span).unwrap_or(TextSpan::at(1, 1))))?;
+    let value_token = tokens.get(arrow_index + 1).filter(|t| matches!(t.kind, TokenKind::Float | TokenKind::Int)).ok_or_else(|| TextError::new("expected a number after `->`", tokens.get(arrow_index + 1).map_or(TextSpan::at(1, 1), |t| t.span)))?;
     let value: f64 = value_token.text.as_str().parse().map_err(|_| TextError::new(format!("not a valid number: {}", value_token.text.as_str()), value_token.span))?;
 
     if tokens.len() > arrow_index + 2 {

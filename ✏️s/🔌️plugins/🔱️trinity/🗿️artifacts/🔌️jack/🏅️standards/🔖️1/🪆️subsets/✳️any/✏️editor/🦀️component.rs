@@ -422,7 +422,7 @@ use crate::editor::jack::modes::edit;
 /// not ported — `EditorBuilder::build_definition()` returns a bare `AppDefinition`, discarding
 /// `App.examples` entirely (SDK gap, see this packet's notes file; the subset's own
 /// `📚️examples/🎬️demo` facet is the likely intended replacement mechanism).
-pub async fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(TRINITY_JACK_DIALECT).document(["semio", "trinity", "jack"])
             .artifact_kind(ArtifactKindSpec {
                 id: "graph.trinity".into(),
@@ -463,19 +463,19 @@ pub async fn create_trinity_jack_app() -> semio_framework_plugin::AppDefinition 
                 PanelGroup::Details,
                 TRINITY_JACK_PLAY_BODY_INSPECTION,
             )
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
             .mutation("patchNodes", LocalizedLabel::native("Patch Nodes", "Knoten aktualisieren"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation).with_category("transform"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("runQuery", LocalizedLabel::native("Run Jack Query", "Jack-Abfrage ausführen"), ActionKind::Mutation).with_category("methods"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("loadExampleQuery", LocalizedLabel::native("Load Example Query", "Beispielabfrage laden"), ActionKind::Mutation).with_category("open"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation).with_category("mode"))
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation).with_category("transform"))
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("runQuery", LocalizedLabel::native("Run Jack Query", "Jack-Abfrage ausführen"), ActionKind::Mutation).with_category("methods"))
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("loadExampleQuery", LocalizedLabel::native("Load Example Query", "Beispielabfrage laden"), ActionKind::Mutation).with_category("open"))
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::Mutation).with_category("mode"))
             // 🛠️ Dev-only whole-fixture import — kept out of the command palette.
-            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::new_catalog("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Mutation) })
+            .action_with(semio_framework_plugin::ActionDefinition { in_palette: false, ..semio_framework_plugin::ActionDefinition::bounded_catalog("setFixtureJson", LocalizedLabel::native("Set Fixture Json", "Fixture-JSON festlegen"), ActionKind::Mutation) })
             .view_action("setViewport", LocalizedLabel::native("Set Graph Viewport", "Graph-Ansicht festlegen"))
             .view_action("textEdit", LocalizedLabel::native("Edit Jack Query", "Jack-Abfrage bearbeiten"))
             .view_action("textSelect", LocalizedLabel::native("Select Jack Query Text", "Jack-Abfragetext auswählen"))
             .view_action("requestCompletions", LocalizedLabel::native("Request Completions", "Vervollständigungen anfordern"))
-            .action_with(semio_framework_plugin::ActionDefinition::new_catalog("formatDocument", LocalizedLabel::native("Format Jack Query", "Jack-Abfrage formatieren"), ActionKind::View).with_category("utilities"))
+            .action_with(semio_framework_plugin::ActionDefinition::bounded_catalog("formatDocument", LocalizedLabel::native("Format Jack Query", "Jack-Abfrage formatieren"), ActionKind::View).with_category("utilities"))
             .view_action("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"))
             .view_action("editorEngagementInput", LocalizedLabel::native("Editor Engagement Input", "Editor-Eingabe"))
             .view_action("graphEngagementInput", LocalizedLabel::native("Graph Engagement Input", "Graph-Eingabe"))

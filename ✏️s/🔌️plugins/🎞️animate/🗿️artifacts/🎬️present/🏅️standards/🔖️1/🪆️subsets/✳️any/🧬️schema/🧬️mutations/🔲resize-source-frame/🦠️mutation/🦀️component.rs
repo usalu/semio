@@ -21,19 +21,19 @@ pub struct ResizeSourceFrame {
 impl MutationKind<PresentSnapshot, PresentMutation> for ResizeSourceFrame {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "resize", entity: "source-frame", kind: "resize-source-frame", record: "ResizedSourceFrame" };
 
-    async fn diff(&self, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
+    fn diff(&self, base: &PresentSnapshot) -> protocol::MutationOutcome<PresentDiff> {
         super::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &PresentSnapshot) -> Vec<PresentMutation> {
+    fn inverse(&self, base: &PresentSnapshot) -> Vec<PresentMutation> {
         super::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Resize source frame to {:.2}x{:.2}", self.new_frame.width, self.new_frame.height)
     }
 
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec!["source".into(), "frame".into()]
     }
 }

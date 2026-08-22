@@ -16,7 +16,7 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { core, renderer } from "@semio-tech/cad-js";
 const { InteractionCanvas, InteractionSpatialView, r3fPreviewKernel, useInteractionRuntime, useInteractionSnapshot, useTessellation } = renderer;

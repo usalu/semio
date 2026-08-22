@@ -264,41 +264,43 @@ pub(crate) fn resolve_object_kind_mesh_url(kind_id: &str, catalogs: &KindCatalog
 }
 
 pub(crate) fn brush_compatible_candidates(target: &AttractionVortexContext, catalogs: &KindCatalogBundle, rules: &[KindCompatEntry], host_rules: &BrushHostRules) -> Vec<BrushCompatibleCandidate> {
-    let target_vk = target.vortex_kind.as_deref().unwrap_or("");
-    let stack_top_target = target_vk.ends_with(" top");
-    let stack_bottom_target = target_vk.ends_with(" bottom");
     let mut scored: Vec<(BrushCompatibleCandidate, i64)> = Vec::new();
     let mut seen = std::collections::HashSet::new();
-    for kind in &catalogs.objects {
-        if kind.representations.iter().all(|r| r.url.trim().is_empty()) || kind.vortices.is_empty() {
-            continue;
-        }
-        for (source_vortex_index, template) in kind.vortices.iter().enumerate() {
-            let source_vk = template.vortex_kind.as_deref().unwrap_or("");
-            if stack_top_target && !brush_stack_mate_pair(source_vk, target_vk) {
-                continue;
-            }
-            if stack_bottom_target && !brush_stack_mate_pair(source_vk, target_vk) {
-                continue;
-            }
-            let attracting = AttractionVortexContext { object_kind: Some(kind.id.clone()), vortex_kind: Some(source_vk.to_string()) };
-            if !vortices_attraction_compatible_for_drag(&attracting, target, rules, catalogs) {
-                continue;
-            }
-            let candidate = BrushCompatibleCandidate { object_kind_id: kind.id.clone(), source_vortex_index };
-            if !host_accepts_candidate(host_rules, target, &candidate, template) {
-                continue;
-            }
+    for (kind_index, kind) in catalogs.objects.iter().enumerate() {
+        for source_vortex_index in 0..kind.vortices.len() {
+            let Some((candidate, rank)) = brush_fill_candidate_at(target, catalogs, rules, host_rules, kind_index, source_vortex_index) else { continue };
             let key = format!("{}\u{1}{}", candidate.object_kind_id, candidate.source_vortex_index);
             if !seen.insert(key) {
                 continue;
             }
-            let rank = brush_candidate_rank(&candidate, template, target);
             scored.push((candidate, rank));
         }
     }
     scored.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.object_kind_id.cmp(&b.0.object_kind_id)).then_with(|| a.0.source_vortex_index.cmp(&b.0.source_vortex_index)));
     scored.into_iter().map(|(c, _)| c).collect()
+}
+
+pub(crate) fn brush_fill_candidate_at(target: &AttractionVortexContext, catalogs: &KindCatalogBundle, rules: &[KindCompatEntry], host_rules: &BrushHostRules, kind_index: usize, source_vortex_index: usize) -> Option<(BrushCompatibleCandidate, i64)> {
+    let kind = catalogs.objects.get(kind_index)?;
+    if kind.representations.iter().all(|representation| representation.url.trim().is_empty()) {
+        return None;
+    }
+    let template = kind.vortices.get(source_vortex_index)?;
+    let source_vk = template.vortex_kind.as_deref().unwrap_or("");
+    let target_vk = target.vortex_kind.as_deref().unwrap_or("");
+    if (target_vk.ends_with(" top") || target_vk.ends_with(" bottom")) && !brush_stack_mate_pair(source_vk, target_vk) {
+        return None;
+    }
+    let attracting = AttractionVortexContext { object_kind: Some(kind.id.clone()), vortex_kind: Some(source_vk.to_string()) };
+    if !vortices_attraction_compatible_for_drag(&attracting, target, rules, catalogs) {
+        return None;
+    }
+    let candidate = BrushCompatibleCandidate { object_kind_id: kind.id.clone(), source_vortex_index };
+    if !host_accepts_candidate(host_rules, target, &candidate, template) {
+        return None;
+    }
+    let rank = brush_candidate_rank(&candidate, template, target);
+    Some((candidate, rank))
 }
 
 pub(crate) fn blocked_vortex_full_ids(attractions: &[AttractionProps]) -> std::collections::HashSet<String> {
@@ -498,7 +500,7 @@ pub fn apply_brush_placement_to_fixture(fixture: &Fixture, payload: &BrushPlaceP
 }
 
 /// 🪪️ Content-addressed brush object id — keyed by fixture size and placement payload (no global counter).
-fn brush_object_id(fixture: &Fixture, payload: &BrushPlacePayload) -> String {
+pub(crate) fn brush_object_id(fixture: &Fixture, payload: &BrushPlacePayload) -> String {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
     let mut hasher = DefaultHasher::new();
@@ -523,6 +525,7 @@ fn brush_object_id(fixture: &Fixture, payload: &BrushPlacePayload) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::puzzle3d::schema::ObjectKindRepresentation;
 
     #[test]
     fn fill_distribution_excludes_zero_weight_vortices() {

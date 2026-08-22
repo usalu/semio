@@ -55,20 +55,42 @@ pub type TopicId = canvas::board::NodeId;
 
 //#region ⚠️ Errors
 /// 🧯️ WIRES extension errors — fixture (de)serialization and fixed-identity-set validation failures.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum WiresError {
-    #[error(transparent)]
-    Json(#[from] serde_json::Error),
-    #[error("fixture root must be object")]
+    Json(serde_json::Error),
     FixtureRootNotObject,
-    #[error("schema must be reasoning.wires.fixture")]
     SchemaMismatch,
-    #[error("identities array missing")]
     IdentitiesMissing,
-    #[error("relationships array missing")]
     RelationshipsMissing,
-    #[error("identity {0} is not in the fixed WIRES identity set")]
     IdentityNotAllowed(TopicId),
+}
+
+impl std::fmt::Display for WiresError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Json(error) => write!(formatter, "{error}"),
+            Self::FixtureRootNotObject => formatter.write_str("fixture root must be object"),
+            Self::SchemaMismatch => formatter.write_str("schema must be reasoning.wires.fixture"),
+            Self::IdentitiesMissing => formatter.write_str("identities array missing"),
+            Self::RelationshipsMissing => formatter.write_str("relationships array missing"),
+            Self::IdentityNotAllowed(identity) => write!(formatter, "identity {identity} is not in the fixed WIRES identity set"),
+        }
+    }
+}
+
+impl std::error::Error for WiresError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Json(error) => std::error::Error::source(error),
+            _ => None,
+        }
+    }
+}
+
+impl From<serde_json::Error> for WiresError {
+    fn from(error: serde_json::Error) -> Self {
+        Self::Json(error)
+    }
 }
 //#endregion ⚠️ Errors
 

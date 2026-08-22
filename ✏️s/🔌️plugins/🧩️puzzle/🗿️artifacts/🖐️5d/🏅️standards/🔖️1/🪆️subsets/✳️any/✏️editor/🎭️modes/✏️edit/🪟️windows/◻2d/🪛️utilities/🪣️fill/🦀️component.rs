@@ -11,6 +11,6 @@ use semio_framework_plugin::{LocalizedLabel, UtilityDefinition};
 pub const UTILITY_ID: &str = "fill";
 
 /// 🧱️ Stitched into the app manifest by `crate::editor::puzzle5d::create_puzzle5d_app`.
-pub async fn definition(label: LocalizedLabel) -> UtilityDefinition {
+pub fn definition(label: LocalizedLabel) -> UtilityDefinition {
     UtilityDefinition::new(UTILITY_ID, label, "paint-bucket")
 }

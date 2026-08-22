@@ -2,16 +2,15 @@
 
 use crate::artifacts::present::{PresentSnapshot, PRESENT_DOCUMENT_SCHEMA};
 use crate::editor::animate::terminology::AnimatePresentLabels;
-use semio_framework_plugin::{
-    ui_inspector_groups_to_tree, ui_inspector_readonly_field, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-};
+use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_framework_ui_contract::{column, field, section, text, Buildable, BuiltNode, HasBase, HasChildren, Label};
 
 //#region 🔖️Constants
 pub const PRESENT_PLAY_BODY_DETAILS: &str = "animate.present.play.details";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -30,18 +29,12 @@ pub async fn definition() -> PanelTabDefinition {
 /// `handle`/`copy_fragment`/`cut_operations` are). Documented reduced-fidelity gap, same shape as
 /// `🖍️draw`'s `properties` panel (`🎛️apps/🖍️draw/📌️panels/🔍️properties/🦀️component.rs`): falls through
 /// to a schema/tile-count summary until a resolved-selection render path exists.
-pub async fn render(deck: &PresentSnapshot, labels: &AnimatePresentLabels) -> UiNode {
+pub fn render(deck: &PresentSnapshot, labels: &AnimatePresentLabels) -> BuiltNode {
     let (_, tiles) = crate::artifacts::present::present_working_scene(deck);
-    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
-        id: "animate-present-play-inspector.empty".into(),
-        label: semio_framework_plugin::Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL),
-        default_open: Some(true),
-        presence: UiPresence::default(),
-        fields: vec![
-            ui_inspector_readonly_field("animate-present-play-inspector.schema", labels.details_schema_field, PRESENT_DOCUMENT_SCHEMA),
-            ui_inspector_readonly_field("animate-present-play-inspector.tiles", labels.details_tiles_field, tiles.len().to_string()),
-        ],
-    }])
+    let schema = field(Label::from(labels.details_schema_field.as_str())).id("animate-present-play-inspector.schema").child(text(Label::from(PRESENT_DOCUMENT_SCHEMA)).build()).build();
+    let tile_count = field(Label::from(labels.details_tiles_field.as_str())).id("animate-present-play-inspector.tiles").child(text(Label::from(tiles.len().to_string())).build()).build();
+    let summary = section(Label::from(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)).id("animate-present-play-inspector.empty").default_open(true).children(vec![schema, tile_count]).build();
+    column().id("animate-present-play-inspector").child(summary).build()
 }
 //#endregion 🔖️Render
 
@@ -62,8 +55,8 @@ mod tests {
     /// MECHANISM), so the panel is a schema/tile-count summary regardless of selection now.
     #[semio_framework_async_macros::async_test]
     async fn details_panel_reports_schema_and_tile_count() {
-        let mut app = present_app();
-        let json_str = render_body(&mut app, PRESENT_PLAY_BODY_DETAILS);
+        let mut app = present_app().await;
+        let json_str = render_body(&mut app, PRESENT_PLAY_BODY_DETAILS).await;
         assert!(json_str.contains(PRESENT_DOCUMENT_SCHEMA));
     }
 }

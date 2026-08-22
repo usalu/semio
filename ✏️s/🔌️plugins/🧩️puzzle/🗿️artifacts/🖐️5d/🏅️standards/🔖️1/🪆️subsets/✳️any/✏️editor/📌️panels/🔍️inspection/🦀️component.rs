@@ -5,14 +5,16 @@
 
 use crate::editor::puzzle5d::terminology::Puzzle5dLabels;
 use crate::editor::puzzle5d::Puzzle5dScene;
-use semio_framework_plugin::{ui_declarative_sections_to_tree, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_framework_plugin::plugin_app_close_prelude::{Buildable, BuiltNode, HasBase, HasChildren};
+use semio_framework_plugin::{LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants
 pub const BODY_KEY: &str = "puzzle.5d.play.inspector";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-pub async fn definition() -> PanelTabDefinition {
+pub fn definition() -> PanelTabDefinition {
     PanelTabDefinition {
         kind: PanelTabKind::App(FRAMEWORK_PANEL_TAB_INSPECTION_ID.into()),
         label: LocalizedLabel::native(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "Inspektion"),
@@ -30,20 +32,14 @@ pub async fn definition() -> PanelTabDefinition {
 /// render against and always falls through to the document summary below. Flagged to the coordinator
 /// as the same framework-level gap noted on `puzzle5d_brush_target_grip` — not fixed here (framework
 /// file, out of this crate's remit).
-pub async fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> UiNode {
-    ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
-        id: "puzzle5d-play-inspector.empty".into(),
-        label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
-        default_open: Some(true),
-        children: vec![
-            ui_text(Label::data(format!("{}: {}", labels.schema.as_str(), envelope.document.schema))),
-            ui_text(Label::data(format!("{}: {}", labels.parts.as_str(), envelope.document.parts.len()))),
-            ui_text(Label::data(format!("{}: {}", labels.fasteners.as_str(), envelope.document.fasteners.len()))),
-            ui_text(Label::data(format!("{}: {}", labels.utility.as_str(), envelope.active_utility))),
-        ],
-        presence: UiPresence::default(),
-        menu: None,
-    }])
+pub fn render(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> BuiltNode {
+    let rows = vec![
+        ui::text(format!("{}: {}", labels.schema.as_str(), envelope.document.schema)).id("puzzle5d-play-inspector.schema").build(),
+        ui::text(format!("{}: {}", labels.parts.as_str(), envelope.document.parts.len())).id("puzzle5d-play-inspector.parts").build(),
+        ui::text(format!("{}: {}", labels.fasteners.as_str(), envelope.document.fasteners.len())).id("puzzle5d-play-inspector.fasteners").build(),
+        ui::text(format!("{}: {}", labels.utility.as_str(), envelope.active_utility)).id("puzzle5d-play-inspector.utility").build(),
+    ];
+    PanelTreeBuilder::new("puzzle5d-play-inspector").section("puzzle5d-play-inspector.empty", Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()), true, rows).build()
 }
 //#endregion 🔖️Render
 
@@ -53,8 +49,8 @@ mod tests {
     use super::*;
     use crate::editor::puzzle5d::testkit::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn empty_selection_renders_the_document_summary() {
+    #[test]
+    fn empty_selection_renders_the_document_summary() {
         let mut app = app();
         assert!(render_body(&mut app, BODY_KEY).contains("puzzle5d-play-inspector.empty"));
     }

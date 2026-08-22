@@ -80,25 +80,25 @@ impl Diagnostics {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn fatal_has_correct_severity() {
         let e = Error::fatal("bad model");
         assert_eq!(e.severity, Severity::Fatal);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn severe_and_warning_severities() {
         assert_eq!(Error::severe("x").severity, Severity::Severe);
         assert_eq!(Error::warning("x").severity, Severity::Warning);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn with_context_sets_context() {
         let e = Error::fatal("bad").with_context("zone1");
         assert_eq!(e.context.as_deref(), Some("zone1"));
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn display_includes_context_when_present() {
         let with_ctx = Error::severe("oops").with_context("surf1");
         assert!(format!("{with_ctx}").contains("surf1"));
@@ -106,7 +106,7 @@ mod tests {
         assert!(!format!("{without_ctx}").contains('('));
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn diagnostics_push_has_fatal_and_merge() {
         let mut diag = Diagnostics::default();
         assert!(!diag.has_fatal());

@@ -4,7 +4,7 @@
 // bridges to (json exercises an exact struct mapping, md wraps the full `.wires` DSL text
 // losslessly, csv/txt/svg/png are honest not-yet-implemented/no-op stubs — same fidelity/sniffs
 // shape either way). Shaped inline (no generated `IoEntryDescriptor` type checked in anywhere yet
-// in this repo) so this file has no fragile forward reference; swap for a real import once ts-rs
+// in this repo) so this file has no fragile forward reference; swap for a real import once owned schema exporter
 // generation lands.
 export interface IoEntryDescriptorMirror {
   from: string;

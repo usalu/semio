@@ -1722,12 +1722,21 @@ mod testing {
     //#region ⚠️ Errors
 
     /// ⚠️ Why an [`Invariant`] check or [`run_conformance`] fixture failed.
-    #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+    #[derive(Debug, Clone, PartialEq, Eq)]
     pub enum FsmError {
         /// 🧭️ A model-checked invariant or conformance step reported a violation.
-        #[error("{0}")]
         Violation(String),
     }
+
+    impl std::fmt::Display for FsmError {
+        fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                Self::Violation(message) => formatter.write_str(message),
+            }
+        }
+    }
+
+    impl std::error::Error for FsmError {}
 
     //#endregion ⚠️ Errors
 

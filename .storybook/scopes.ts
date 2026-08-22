@@ -14,11 +14,11 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
-import type { Plugin } from "vite";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { discoverPackages, loadTaxonomy, readSemioMarkerSubTable } from "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import type { PlaygroundAssetSpec } from "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts";
+import type { OwnedBuildPlugin } from "../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️build-tooling.ts";
 
 export type { PlaygroundAssetSpec };
 
@@ -37,7 +37,7 @@ export type StoryScope = {
   /** Static-dir / tile-proxy / mesh-collection assets served via the existing `playgroundAssetVitePlugins` dispatcher. */
   readonly assets?: readonly PlaygroundAssetSpec[];
   /** Lazy scope-gated Vite plugins (only imported when this scope is active). */
-  readonly vitePlugins?: () => Promise<Plugin[]>;
+  readonly vitePlugins?: () => Promise<OwnedBuildPlugin[]>;
   /**
    * Explicit story glob(s) for this scope, overriding the default `./stories/<id>/**` derivation —
    * added for `26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE` W7 story co-location, where a scope's

@@ -64,8 +64,8 @@ fn child_seed(macro_seed: u64, node: NodeId) -> u64 {
 #[allow(dead_code)] // exercised today only by this module's own tests; see HierarchyOutcome's note
 pub(crate) fn solve_hierarchy<MT, CT>(macro_model: &CompiledModel, macro_topo: &MT, macro_config: &SearchConfig, macro_seed: u64, child_model_for: impl Fn(NodeId, PatternId) -> (CompiledModel, CT, SearchConfig)) -> HierarchyOutcome
 where
-    MT: Topology,
-    CT: Topology,
+    MT: Topology + Clone + Send,
+    CT: Topology + Clone + Send,
 {
     let macro_solution = match search::solve(macro_model, macro_topo, macro_config, macro_seed, None, &[]) {
         SolveOutcome::Solved(sol) => sol,

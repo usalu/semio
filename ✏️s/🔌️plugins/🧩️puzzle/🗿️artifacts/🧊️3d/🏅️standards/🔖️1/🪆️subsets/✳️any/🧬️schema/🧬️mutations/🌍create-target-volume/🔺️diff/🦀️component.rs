@@ -4,7 +4,7 @@ use crate::artifacts::puzzle3d::diff::{Puzzle3dDiff, Puzzle3dTargetVolumesDelta}
 use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 
 //#region 🔖️Diff
-pub async fn diff(payload: &super::mutation::CreateTargetVolume, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
+pub fn diff(payload: &super::mutation::CreateTargetVolume, base: &Puzzle3dSnapshot) -> protocol::MutationOutcome<Puzzle3dDiff> {
     if base.target_volumes.iter().any(|entry| entry.id == payload.target_volume.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("{} already exists", "target volume"), vec![payload.target_volume.id.clone()]);
     }

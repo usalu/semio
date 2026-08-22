@@ -1,7 +1,16 @@
 //! 🔌️ Plugin root contract — typestate `Plugin::builder` registration for this owner.
 
+use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
-use semio_framework_plugin::{ExecutionMode, Plugin};
+use semio_framework_plugin::plugin_app_close_prelude::*;
+use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
+
+//#region 🗃️Apps
+/// 🗃️ Closed runtime app fleet for the declaration-owned DAG surfaces.
+semio_framework_dispatch_macros::dyn_enum_close! {
+    pub enum DagApps: PluginApp {}
+}
+//#endregion 🗃️Apps
 
 /// 🔌️ Builds the plugin surface for host registration. `.declare_artifact(…)` (ticket
 /// 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM design.md §1/§2) is the ONLY registration
@@ -15,8 +24,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin};
 /// reasoning the `🎬️sequence` W4 pass documented). `.activation()`/`.execution()`/`.requests()`
 /// are unrelated microkernel-actor-runtime wiring (ticket MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME,
 /// live peer) — untouched by this pass.
-pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
-    Plugin::builder("dag")
+pub async fn plugin() -> Result<Plugin<DagApps>, semio_framework_plugin::PluginAssemblyError> {
+    Plugin::<DagApps>::builder("dag")
         .label("DAG")
         .version("0.1.0")
         .declare_artifact(crate::artifacts::dag::artifact())

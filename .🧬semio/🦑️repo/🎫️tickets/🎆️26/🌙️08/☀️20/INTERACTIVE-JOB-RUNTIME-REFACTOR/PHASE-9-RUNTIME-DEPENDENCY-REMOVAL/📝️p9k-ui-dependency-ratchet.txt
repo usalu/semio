@@ -1,0 +1,6 @@
+direct_manifest_unicode_width=0
+direct_manifest_pollster=0
+ui_source_unicode_width=0
+ui_source_pollster=0
+tui_tree_forbidden_rows=0
+wgpu_tree_pollster_rows=0

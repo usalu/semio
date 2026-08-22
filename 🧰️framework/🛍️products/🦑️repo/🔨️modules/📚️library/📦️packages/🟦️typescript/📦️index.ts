@@ -6,8 +6,8 @@
 //#region 🔌️Adapters
 import { ephemeralBox } from "@semio-tech/framework";
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { chmodSync, existsSync, fstatSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
-import { devNull, homedir } from "node:os";
+import { chmodSync, existsSync, fstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { devNull, homedir, tmpdir } from "node:os";
 import { basename, dirname, join, normalize, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
@@ -1128,6 +1128,40 @@ export async function runTestBudgeted(cmd: string, args: string[], opts: { cwd?:
   if (signal || code !== 0) process.exit(code ?? 1);
 }
 
+/** 📦️Runs a build-budgeted command while capturing metadata and replaying diagnostics only on failure. */
+async function runTestCapturedBudgeted(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv; budgetMs: number; onTimeoutHint?: string }): Promise<string> {
+  const child = spawn(cmd, args, { stdio: ["inherit", "pipe", "pipe"], cwd: opts.cwd, env: opts.env ?? process.env, detached: process.platform !== "win32" });
+  let stdout = "";
+  let stderr = "";
+  child.stdout?.setEncoding("utf8");
+  child.stdout?.on("data", (chunk: string) => {
+    stdout += chunk;
+  });
+  child.stderr?.setEncoding("utf8");
+  child.stderr?.on("data", (chunk: string) => {
+    stderr += chunk;
+  });
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    if (child.pid) killBudgetTree(child.pid);
+  }, opts.budgetMs);
+  const { code, signal } = await new Promise<{ code: number | null; signal: NodeJS.Signals | null }>((resolveExit, rejectExit) => {
+    child.on("error", rejectExit);
+    child.on("exit", (exitCode, exitSignal) => resolveExit({ code: exitCode, signal: exitSignal }));
+  }).finally(() => clearTimeout(timer));
+  if (timedOut) {
+    if (stderr) process.stderr.write(stderr);
+    console.error(`[budget] ${cmd} ${args.join(" ")} exceeded ${opts.budgetMs}ms — killed. ${budgetTimeoutHint(cmd, opts.onTimeoutHint)}`);
+    process.exit(1);
+  }
+  if (signal || code !== 0) {
+    if (stderr) process.stderr.write(stderr);
+    process.exit(code ?? 1);
+  }
+  return stdout;
+}
+
 //#region 🦀️CargoPackageResolver
 interface CrateIndexRecord {
   dir: string;
@@ -1322,8 +1356,8 @@ export function resolveCargoPackageNames(packages: string[], cwd: string): strin
 //#endregion 🦀️CargoPackageResolver
 
 /**
- * 🦀️Warm-builds test binaries — bounded by [[buildBudgetMs]], NOT the test-level budget, but never unbounded —
- * then runs `cargo nextest run` under the active level's budget and [[nextest.toml]] profile (per-test
+ * 🦀️Warm-builds the exact test runner invocation — bounded by [[buildBudgetMs]], NOT the test-level budget,
+ * but never unbounded — then runs assertions under the active level's budget and [[nextest.toml]] profile (per-test
  * `slow-timeout`), appending cumulative `--skip <level>::` filters for every level above it (tests live in
  * `mod quick`/`mod long`/`mod exhaustive` submodules inside `mod tests`; unscoped tests are `fundamental`).
  * Splits `extraArgs` on an existing `--` so callers passing their own libtest args (e.g. `--nocapture`) still
@@ -1363,17 +1397,33 @@ export async function runCargoTestBudgeted(packages: string[], cwd: string, extr
     return;
   }
 
+  if (cargoNextestAvailable()) {
+    const metadataDir = mkdtempSync(join(tmpdir(), "semio-nextest-"));
+    const binariesMetadataPath = join(metadataDir, "binaries-metadata.json");
+    try {
+      const binariesMetadata = await runTestCapturedBudgeted(
+        "cargo",
+        ["nextest", "list", "--list-type", "binaries-only", "--message-format", "json", ...profileArgs, ...packageArgs, ...cargoArgs],
+        { cwd, env, budgetMs: buildBudgetMs(), onTimeoutHint: budgetTimeoutHint("cargo") },
+      );
+      writeFileSync(binariesMetadataPath, binariesMetadata);
+      await runTestBudgeted(
+        "cargo",
+        ["nextest", "run", "--binaries-metadata", binariesMetadataPath, "--no-tests", "warn", "--status-level", "fail", "--final-status-level", "fail", ...profileArgs, "--", ...libtestArgs, ...skipArgs],
+        { cwd, env, budgetMs: testLevelBudgetMs(level) },
+      );
+    } finally {
+      rmSync(metadataDir, { recursive: true, force: true });
+    }
+    return;
+  }
+  console.error("[budget] cargo-nextest not installed — falling back to cargo test (run setup or: cargo install cargo-nextest --locked)");
   await runTestBudgeted("cargo", ["build", "--tests", ...packageArgs], {
     cwd,
     env,
     budgetMs: buildBudgetMs(),
     onTimeoutHint: budgetTimeoutHint("cargo"),
   });
-  if (cargoNextestAvailable()) {
-    await runTestBudgeted("cargo", ["nextest", "run", "--no-tests", "warn", ...profileArgs, ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs], { cwd, env });
-    return;
-  }
-  console.error("[budget] cargo-nextest not installed — falling back to cargo test (run setup or: cargo install cargo-nextest --locked)");
   await runTestBudgeted("cargo", ["test", ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs], { cwd, env });
 }
 
@@ -1481,8 +1531,8 @@ export function runProbe(cmd: string, args: string[], opts: RunCmdOpts = {}): Ru
   }
   return {
     status: result.status,
-    stdout: typeof result.stdout === "string" ? result.stdout : (result.stdout?.toString() ?? ""),
-    stderr: typeof result.stderr === "string" ? result.stderr : (result.stderr?.toString() ?? ""),
+    stdout: result.stdout ?? "",
+    stderr: result.stderr ?? "",
     signal: result.signal,
   };
 }

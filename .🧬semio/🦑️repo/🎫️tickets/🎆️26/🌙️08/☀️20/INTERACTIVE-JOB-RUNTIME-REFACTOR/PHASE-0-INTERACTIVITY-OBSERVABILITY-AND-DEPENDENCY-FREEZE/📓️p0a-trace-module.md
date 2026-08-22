@@ -163,3 +163,11 @@ on the thread-role default state (each thread-role test explicitly sets the role
 - Modified: `/Users/ueli/Documents/semio/Cargo.toml` (added workspace member +
   `[workspace.dependencies]` alias `semio-framework-trace`)
 - Created (this file): `📓️p0a-trace-module.md`
+
+## 2026-08-22 Regression Checkpoint
+
+The 4,096-slot bounded trace ring now stores its fixed capacity in a boxed slice. This preserves the
+same bounded semantics while avoiding a large lazy inline-array initialization on deeply nested
+default-stack dispatch frames. The change fixed the shared Puzzle/Energy viewer-guard stack overflow.
+`cargo test -p semio-framework-trace` was rerun after the change and passed **13/13**; the added
+I/O-boundary thread-role test accounts for the count increase from the original packet.

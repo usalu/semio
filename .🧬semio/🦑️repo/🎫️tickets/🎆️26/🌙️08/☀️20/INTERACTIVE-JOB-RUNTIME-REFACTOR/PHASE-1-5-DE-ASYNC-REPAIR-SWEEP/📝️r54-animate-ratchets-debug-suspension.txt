@@ -1,0 +1,35 @@
+# Direct dependency ratchet
+# Full direct manifest
+[dependencies]
+semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false }
+geometry = { path = "../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }
+semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
+semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
+semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
+semio-framework-ui-contract = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-framework-ui-scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
+framework_hash = { package = "semio-framework-hash", path = "../../../../../🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust" }
+semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust" }
+serde.workspace = true
+serde_json.workspace = true
+blake3 = "1"
+
+# 🎬️ animate engine topic file
+kurbo = "0.13.1"
+usvg = "0.45.1"
+typst = "0.14.2"
+typst-svg = "0.14.2"
+typst-assets = { version = "0.14.2", features = ["fonts"] }
+
+# 🎥️ animate_video engine topic file
+vello = { version = "0.7.0", features = ["wgpu", "wgpu_default"] }
+wgpu = "27.0.1"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+
+[features]
+# DEBUG census
+# suspension census count
+async_fn=146
+await=240

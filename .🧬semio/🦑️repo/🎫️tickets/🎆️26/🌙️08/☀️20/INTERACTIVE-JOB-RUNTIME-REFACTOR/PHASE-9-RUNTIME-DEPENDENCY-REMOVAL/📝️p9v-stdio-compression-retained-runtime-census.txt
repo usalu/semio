@@ -1,0 +1,42 @@
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/Cargo.toml:35:flate2 = { workspace = true }
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/Cargo.toml:52:libz-sys = { workspace = true }
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:622:    let mut stream = libz_sys::z_stream {
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:639:        let initialized = libz_sys::deflateInit2_(&mut stream, 4, libz_sys::Z_DEFLATED, -15, memory, libz_sys::Z_DEFAULT_STRATEGY, libz_sys::zlibVersion(), size_of::<libz_sys::z_stream>() as i32);
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:640:        if initialized != libz_sys::Z_OK {
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:643:        let tuned = libz_sys::deflateTune(&mut stream, good, lazy, nice, chain);
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:644:        if tuned != libz_sys::Z_OK {
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:645:            let _ = libz_sys::deflateEnd(&mut stream);
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:648:        let capacity = (libz_sys::deflateBound(&mut stream, data.len() as libz_sys::uLong) as usize).checked_add(32).ok_or("raw DEFLATE output capacity overflow")?;
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:655:        let flushed = if sync { libz_sys::deflate(&mut stream, libz_sys::Z_SYNC_FLUSH) } else { libz_sys::Z_OK };
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:656:        let finished = if flushed == libz_sys::Z_OK && (!sync || stream.avail_in == 0) {
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:660:            libz_sys::deflate(&mut stream, libz_sys::Z_FINISH)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:662:            libz_sys::Z_STREAM_ERROR
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:665:        let ended = libz_sys::deflateEnd(&mut stream);
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:666:        if flushed != libz_sys::Z_OK || finished != libz_sys::Z_STREAM_END || ended != libz_sys::Z_OK {
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:677:    let mut encoder = flate2::write::DeflateEncoder::new(Vec::new(), flate2::Compression::default());
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:683:pub fn deflate_raw_deterministic(data: &[u8]) -> Result<Vec<u8>, String> {
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:688:pub fn deflate_raw_deterministic_high_search(data: &[u8]) -> Result<Vec<u8>, String> {
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:693:pub fn deflate_raw_deterministic_compact_high_search(data: &[u8]) -> Result<Vec<u8>, String> {
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:835:    let mut encoder = flate2::write::ZlibEncoder::new(Vec::new(), flate2::Compression::new(9));
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:841:unsafe extern "C" fn illustrator_zlib_allocate(_opaque: *mut std::ffi::c_void, items: libz_sys::uInt, item_size: libz_sys::uInt) -> *mut std::ffi::c_void {
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:879:pub(crate) fn zlib_compress_illustrator(data: &[u8]) -> Result<Vec<u8>, String> {
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:880:    let input_length = libz_sys::uInt::try_from(data.len()).map_err(|_| "zlib input exceeds uInt".to_string())?;
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:881:    let mut stream = libz_sys::z_stream {
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:897:    let initialized = unsafe { libz_sys::deflateInit2_(&mut stream, 6, libz_sys::Z_DEFLATED, 12, 5, libz_sys::Z_DEFAULT_STRATEGY, libz_sys::zlibVersion(), size_of::<libz_sys::z_stream>() as std::ffi::c_int) };
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:898:    if initialized != libz_sys::Z_OK {
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:901:    let bound = unsafe { libz_sys::deflateBound(&mut stream, data.len() as libz_sys::uLong) } as usize;
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:903:    let output_length = libz_sys::uInt::try_from(output.len()).map_err(|_| "zlib output bound exceeds uInt".to_string());
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:909:        let partial = unsafe { libz_sys::deflate(&mut stream, libz_sys::Z_PARTIAL_FLUSH) };
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:910:        if partial != libz_sys::Z_OK || stream.avail_in != 0 {
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:913:        let finish = unsafe { libz_sys::deflate(&mut stream, libz_sys::Z_FINISH) };
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:914:        if finish != libz_sys::Z_STREAM_END {
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:919:    let ended = unsafe { libz_sys::deflateEnd(&mut stream) };
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:920:    if ended != libz_sys::Z_OK {
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:928:pub(crate) fn zlib_compress_illustrator(data: &[u8]) -> Result<Vec<u8>, String> {
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:1075:            let candidate = deflate_raw_deterministic_compact_high_search(&input).expect("compress fixture OLE");
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/🦀️component.rs:1102:        let actual = zlib_compress_illustrator(&decoded).expect("encode Illustrator stream");
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:593:                    crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::deflate_raw_deterministic_compact_high_search(&entry.data)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:595:                    crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::deflate_raw_deterministic_high_search(&entry.data)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🚪️io/🦀️component.rs:597:                    crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::deflate_raw_deterministic(&entry.data)
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🚪️io/🦀️component.rs:2138:                    crate::artifacts::deflate::standards::v_rfc1950::subsets::any::io::zlib_compress_illustrator(&predicted).expect("logical Illustrator stream is zlib-encodable")
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/🧬️schema/🎲️entropy-internals/🦀️component.rs:6142:    //! top of it. Zero external dependencies — no `flate2`, no `zstd`, nothing beyond `std`.

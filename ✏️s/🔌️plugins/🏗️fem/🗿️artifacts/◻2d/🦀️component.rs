@@ -91,7 +91,7 @@ pub enum FemElement {
 }
 
 /// 🪪️ A `FemElement`'s stable id, across both variants.
-pub async fn element_id(element: &FemElement) -> &str {
+pub fn element_id(element: &FemElement) -> &str {
     match element {
         FemElement::Bar { id, .. } | FemElement::Beam { id, .. } => id,
     }
@@ -146,7 +146,7 @@ pub enum FemLoad {
 }
 
 /// 🪪️ A `FemLoad`'s stable id, across every variant.
-pub async fn load_id(load: &FemLoad) -> &str {
+pub fn load_id(load: &FemLoad) -> &str {
     match load {
         FemLoad::Nodal { id, .. } | FemLoad::MemberUdl { id, .. } | FemLoad::Area { id, .. } => id,
     }
@@ -246,7 +246,7 @@ pub use crate::artifacts::fem2d::schema::Fem2dArtifact;
 /// wire-level `Data`×`Value` (see WORKFLOWS-END-TO-END-TYPED-PORTS-REAL-SCHEMA-FLOW-CONFIG-ON-NODE's
 /// port recipe). Lifted verbatim out of the pre-migration `fem2d_ui::create_fem2d_app`'s
 /// `.artifact_kind(...)` call so the app's manifest can call this instead of inlining the literal.
-pub async fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     semio_framework_plugin::ArtifactKindSpec {
         id: "computation.fem2d".into(),
         name: "FEM 2D Results".into(),
@@ -273,7 +273,7 @@ pub async fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKind
 /// registers `Fem2dPlayApp`'s CONFIG/PRESENCE schema, an app-scope concern `ArtifactDeclaration` deliberately has
 /// no field for (see that struct's own doc) — `register_app_schema_descriptor` is not in §6's
 /// artifact-scoped function set.
-pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
         ("s.fem2d.standard.v1", "standard", "1", &[], None),
@@ -322,7 +322,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
 /// .composers(...).languages(...).document_codec(...)` chain, deleted outright, no dual channel) as
 /// the ONLY registration channel for schema/io/viewer/editor rows. `definition()` (old
 /// `ArtifactDefinition`/capability rows, above) is kept per debt D1.
-pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::FemApps> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.fem.fem2d").expect("canonical fem2d kind"), localization: &[], standards: vec![crate::artifacts::fem2d::standards::v1::standard()] }
@@ -331,7 +331,7 @@ pub async fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDe
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`, mirroring
 /// `🗒️note`'s own `pilot_languages()` convention.
-pub async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {

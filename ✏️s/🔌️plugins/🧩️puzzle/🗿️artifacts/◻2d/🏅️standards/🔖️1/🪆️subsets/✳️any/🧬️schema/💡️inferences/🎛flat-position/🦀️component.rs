@@ -34,7 +34,7 @@ pub struct Puzzle2dFlatPosition {
 /// 📐️ Computes `flat-position` by running the existing `fastened_layout_snapshot` compose-parity
 /// BFS on a snapshot clone and reading back every node's resolved `(x, y)` — deterministic because
 /// `fastened_layout_snapshot` itself walks `nodes`/`edges` in fixture order with no randomness.
-pub async fn compute_flat_position(snapshot: &Puzzle2dSnapshot) -> Puzzle2dFlatPosition {
+pub fn compute_flat_position(snapshot: &Puzzle2dSnapshot) -> Puzzle2dFlatPosition {
     let mut resolved = snapshot.clone();
     fastened_layout_snapshot(&mut resolved);
     let positions = resolved.nodes.iter().map(|node| (node.id.clone(), Puzzle2dFlatPositionXy { x: node.x, y: node.y })).collect();
@@ -49,7 +49,7 @@ mod tests {
     use crate::artifacts::puzzle2d::{Puzzle2dEdge, Puzzle2dHandle, Puzzle2dNode, Puzzle2dNodeAnchor};
 
     //#region 🧸️Fixtures
-    async fn parent_child_snapshot() -> Puzzle2dSnapshot {
+    fn parent_child_snapshot() -> Puzzle2dSnapshot {
         // p (Fixed, off-origin) --e-- c (Derived): edge x/y offsets place c relative to p.
         let p = Puzzle2dNode { id: "p".into(), x: 5.0, y: 7.0, anchor: Puzzle2dNodeAnchor::Fixed, handles: vec![Puzzle2dHandle { id: "h".into(), ..Default::default() }], ..Default::default() };
         let c = Puzzle2dNode { id: "c".into(), anchor: Puzzle2dNodeAnchor::Derived, handles: vec![Puzzle2dHandle { id: "h".into(), ..Default::default() }], ..Default::default() };
@@ -59,19 +59,19 @@ mod tests {
     //#endregion 🧸️Fixtures
 
     //#region 🧪️FlatPositionLaws
-    #[semio_framework_async_macros::async_test]
-    async fn inference_determinism_law() {
+    #[test]
+    fn inference_determinism_law() {
         let snapshot = parent_child_snapshot();
         assert_eq!(compute_flat_position(&snapshot), compute_flat_position(&snapshot));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn inference_default_law() {
+    #[test]
+    fn inference_default_law() {
         assert_eq!(compute_flat_position(&Puzzle2dSnapshot::default()), Puzzle2dFlatPosition::default());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn fixed_parent_keeps_its_coordinates_and_derived_child_offsets_by_edge_xy() {
+    #[test]
+    fn fixed_parent_keeps_its_coordinates_and_derived_child_offsets_by_edge_xy() {
         let flat = compute_flat_position(&parent_child_snapshot());
         let p = flat.positions.get("p").expect("p present");
         assert_eq!(p.x, 5.0);

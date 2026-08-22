@@ -69,9 +69,12 @@ export default defineConfig({
   cacheDir: path.join(repoRoot, "node_modules/.vite-mit-bestand-demonstrator"),
   publicDir: path.join(playDir, "public"),
   assetsInclude: ["**/*.wasm"],
+  worker: { format: "es" },
   resolve: {
     alias: [
       ...playgroundSceneHostResolveAliases(repoRoot),
+      { find: "@semio-tech/ui-react/test", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️render.ts") },
+      { find: "@semio-tech/ui-react/runtime", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️runtime.ts") },
       { find: "@semio-tech/ui-react", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx") },
       { find: "@semio-tech/assets", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts") },
       { find: "@semio-tech/ui-styling", replacement: path.resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript") },
@@ -117,7 +120,7 @@ export default defineConfig({
   ],
   optimizeDeps: {
     entries: [path.join(playDir, "🌐️index.html")],
-    include: ["react-reconciler", "react-reconciler/constants", "three", "@react-three/fiber", "fuse.js"],
+    include: ["three", "@react-three/fiber"],
     exclude: ["playwright", "playwright-core", "chromium-bidi", "fsevents", ...FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE],
   },
   build: semioViteProductionBuild(),

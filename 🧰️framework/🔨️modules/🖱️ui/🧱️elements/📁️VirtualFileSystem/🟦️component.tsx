@@ -7,7 +7,6 @@
 
 // #region 🔌️Adapters
 import * as React from "react";
-import { format, formatDistanceToNow } from "date-fns";
 import { type IconName } from "@semio-tech/assets";
 // 🧱️core: uiDataLabel/UiLabel imported directly from 🫀️core/UiLabel, NOT via the barrel — this component
 // calls uiDataLabel(...) at module top level (inside a top-level demo-fixture object literal), which
@@ -16,10 +15,9 @@ import { type IconName } from "@semio-tech/assets";
 import { type UiLabel, uiDataLabel } from "../🏷️UiLabel/🟦️component.tsx";
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
 import { TableAvatar } from "../📻️TableAvatar/🟦️component.tsx";
-import { Table } from "../🦴️Skeletons/🧪️story.tsx";
-import { type TableColumn, type TableProps, type HierarchicalRowData, type DragDropConfig } from "../📊️Table/🟦️component.tsx";
+import { Table, type TableColumn, type TableProps, type HierarchicalRowData, type DragDropConfig } from "../📊️Table/🟦️component.tsx";
 import { type TreeSelectionMode, normalizeTreeSelectedIds, getTreeNextSelectionState } from "../🪵️Tree/🟦️component.tsx";
-import { useLabel } from "../🏷️Label/🟦️component.tsx";
+import { useLabel, useUiTranslation } from "../🏷️Label/🟦️component.tsx";
 import { Icon } from "../🔣️Icons/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
@@ -232,8 +230,32 @@ export function buildVirtualFileSystemDescriptorValues(
   return values;
 }
 
+/** @emoji 🗓️ Formats a VFS timestamp without delegating calendar or relative-time behavior to a package dependency. */
+export function formatVirtualFileSystemTime(date: Date, presentation: "date" | "datetime" | "relative", locale: string, now: Date = new Date()): string {
+  if (presentation === "relative") {
+    const seconds = (date.getTime() - now.getTime()) / 1_000;
+    const absoluteSeconds = Math.abs(seconds);
+    const [amount, unit]: readonly [number, Intl.RelativeTimeFormatUnit] =
+      absoluteSeconds < 60
+        ? [Math.round(seconds), "second"]
+        : absoluteSeconds < 3_600
+          ? [Math.round(seconds / 60), "minute"]
+          : absoluteSeconds < 86_400
+            ? [Math.round(seconds / 3_600), "hour"]
+            : absoluteSeconds < 2_592_000
+              ? [Math.round(seconds / 86_400), "day"]
+              : absoluteSeconds < 31_536_000
+                ? [Math.round(seconds / 2_592_000), "month"]
+                : [Math.round(seconds / 31_536_000), "year"];
+    return new Intl.RelativeTimeFormat(locale, { numeric: "always" }).format(amount, unit);
+  }
+  const pad = (value: number) => String(value).padStart(2, "0");
+  const calendarDate = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  return presentation === "date" ? calendarDate : `${calendarDate} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 /** @emoji 📁️ Renders one descriptor cell for a {@link VirtualFileSystemRow}. */
-export function renderVirtualFileSystemDescriptorCell(descriptorKind: DescriptorKind, value: FileNodeDescriptorValue | undefined): React.ReactNode {
+export function renderVirtualFileSystemDescriptorCell(descriptorKind: DescriptorKind, value: FileNodeDescriptorValue | undefined, locale: string): React.ReactNode {
   if (!value || value.presentation !== descriptorKind.presentation) return "";
   switch (value.presentation) {
     case "text":
@@ -243,12 +265,12 @@ export function renderVirtualFileSystemDescriptorCell(descriptorKind: Descriptor
       if (Number.isNaN(parsed)) return value.iso;
       const date = new Date(parsed);
       if (descriptorKind.presentation === "time" && descriptorKind.format === "relative") {
-        return formatDistanceToNow(date, { addSuffix: true });
+        return formatVirtualFileSystemTime(date, "relative", locale);
       }
       if (descriptorKind.presentation === "time" && descriptorKind.format === "date") {
-        return format(date, "yyyy-MM-dd");
+        return formatVirtualFileSystemTime(date, "date", locale);
       }
-      return format(date, "yyyy-MM-dd HH:mm");
+      return formatVirtualFileSystemTime(date, "datetime", locale);
     }
     case "avatar":
       return <TableAvatar name={value.name} icon={value.icon} />;
@@ -258,7 +280,7 @@ export function renderVirtualFileSystemDescriptorCell(descriptorKind: Descriptor
 }
 
 /** @emoji 📁️ Builds {@link TableColumn} entries from {@link VirtualFileSystemSchema} descriptor columns. */
-export function buildVirtualFileSystemDescriptorColumns(schema: VirtualFileSystemSchema): TableColumn<VirtualFileSystemRow>[] {
+export function buildVirtualFileSystemDescriptorColumns(schema: VirtualFileSystemSchema, locale: string): TableColumn<VirtualFileSystemRow>[] {
   const columns: TableColumn<VirtualFileSystemRow>[] = [];
   for (const columnId of schema.descriptorColumnIds) {
     const resolved = resolveVirtualFileSystemDescriptorBinding(schema, columnId);
@@ -271,7 +293,7 @@ export function buildVirtualFileSystemDescriptorColumns(schema: VirtualFileSyste
       accessor: (row) => {
         const fileNodeKind = schema.fileNodeKinds[row.fileNodeKindId];
         if (!fileNodeKind?.descriptors.some((entry) => entry.id === columnId)) return "";
-        return renderVirtualFileSystemDescriptorCell(descriptorKind, row.descriptorValues?.[columnId]);
+        return renderVirtualFileSystemDescriptorCell(descriptorKind, row.descriptorValues?.[columnId], locale);
       },
     });
   }
@@ -467,6 +489,8 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
   const nameLabel = useLabel("ui.common.name");
   const collapseLabel = useLabel("ui.common.collapse");
   const expandLabel = useLabel("ui.common.expand");
+  const { i18n } = useUiTranslation();
+  const locale = i18n.resolvedLanguage ?? i18n.language;
   const [uncontrolledSelectedRowIds, setUncontrolledSelectedRowIds] = reactHostPort.useState<Set<string>>(() => new Set(normalizeVirtualFileSystemSelectedRowIds(defaultSelectedRowIds, selectionMode)));
   const selectionAnchorRowIdRef = reactHostPort.useRef<string | undefined>(normalizeVirtualFileSystemSelectedRowIds(defaultSelectedRowIds, selectionMode)[0]);
   const orderedRowIds = reactHostPort.useMemo(() => getVirtualFileSystemOrderedRowIds(rows), [rows]);
@@ -531,10 +555,10 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
           </div>
         ),
       },
-      ...buildVirtualFileSystemDescriptorColumns(schema),
+      ...buildVirtualFileSystemDescriptorColumns(schema, locale),
     ];
     return [...base, ...extraColumns];
-  }, [extraColumns, onToggleExpand, schema, nameLabel, collapseLabel, expandLabel]);
+  }, [extraColumns, onToggleExpand, schema, nameLabel, collapseLabel, expandLabel, locale]);
 
   return (
     <Table<VirtualFileSystemRow>

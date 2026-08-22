@@ -6,10 +6,10 @@
 //! reconstruct a `Fem3dSnapshot` from). `stdio.zip`/`stdio.png` were deleted outright in both
 //! directions: fem3d has no real archive-bundle or raster-visualization capability to honestly
 //! back them (see ticket w5a--report.md's `stdio_gaps`/rationale).
-pub async fn import_stdio_kinds() -> &'static [&'static str] {
+pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.csv", "stdio.json", "stdio.md", "stdio.txt"]
 }
-pub async fn export_stdio_kinds() -> &'static [&'static str] {
+pub fn export_stdio_kinds() -> &'static [&'static str] {
     &["stdio.csv", "stdio.json", "stdio.md", "stdio.obj", "stdio.stl", "stdio.txt"]
 }
 //#region 🎹️DerivedComposition
@@ -41,7 +41,7 @@ pub mod derived_composition {
                         AnalyzeSource::Text(t) => AnalyzeSource::Text(*t),
                         AnalyzeSource::Binary(b) => AnalyzeSource::Binary(*b),
                     };
-                    let analysis = Fem3dAnalyzer::analyze(&[native]);
+                    let analysis = semio_framework_plugin::resolve_ready(Fem3dAnalyzer::analyze(&[native]));
                     if let Some(snapshot) = analysis.parts.snapshot {
                         return Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics });
                     }
@@ -119,13 +119,13 @@ pub mod io_registry {
     const FEM3D_DIALECT: Dialect = Dialect { artifact_kind: "s.fem3d", standard: StandardId("1"), subset: SubsetId("*") };
     const FEM3D_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
 
-    async fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::fem3d::Fem3dSnapshot, ComposeError> {
+    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::artifacts::fem3d::Fem3dSnapshot, ComposeError> {
         if let Some(source) = sources.iter().find(|s| s.dialect == FEM3D_DIALECT) {
             let builder = match &source.payload {
-                IoPayload::Text(t) => Fem3dAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
-                IoPayload::Binary(b) => Fem3dAnyBuilder::from_binary(b).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
+                IoPayload::Text(t) => semio_framework_plugin::resolve_ready(Fem3dAnyBuilder::from_text(t)).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
+                IoPayload::Binary(b) => semio_framework_plugin::resolve_ready(Fem3dAnyBuilder::from_binary(b)).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
             };
-            return builder.build().map_err(|diagnostics| ComposeError { message: "Fem3dComposer export: build() failed".into(), diagnostics });
+            return semio_framework_plugin::resolve_ready(builder.build()).map_err(|diagnostics| ComposeError { message: "Fem3dComposer export: build() failed".into(), diagnostics });
         }
         if let Some(source) = sources.iter().find(|s| s.dialect == FEM3D_JSON_BRIDGE_DIALECT) {
             // 🌉 The OS dispatch layer (export_os_app_instance_media_kind) deals in already-
@@ -141,7 +141,7 @@ pub mod io_registry {
     }
 
     const EXPORT_CSV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId("*") };
-    async fn compose_export_csv(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    fn compose_export_csv(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
             let bytes = crate::artifacts::fem3d::io::export::serializers::artifacts::csv::v_rfc4180::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -149,7 +149,7 @@ pub mod io_registry {
         })
     }
     const EXPORT_MD_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId("*") };
-    async fn compose_export_md(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    fn compose_export_md(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
             let bytes = crate::artifacts::fem3d::io::export::serializers::artifacts::md::v_commonmark::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -157,7 +157,7 @@ pub mod io_registry {
         })
     }
     const EXPORT_JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
-    async fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    fn compose_export_json(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
             let bytes = crate::artifacts::fem3d::io::export::serializers::artifacts::json::v_rfc8259::any::serialize_bytes(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -171,7 +171,7 @@ pub mod io_registry {
     /// capability to honestly back a `.zip`/`.png` export — their old leaves wrote raw JSON bytes
     /// under a fabricated format name.
     const EXPORT_STL_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.stl", standard: StandardId("ascii"), subset: SubsetId("*") };
-    async fn compose_export_stl(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    fn compose_export_stl(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
             let bytes = crate::artifacts::fem3d::io::export::serializers::artifacts::stl::v_ascii::any::export(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -179,7 +179,7 @@ pub mod io_registry {
         })
     }
     const EXPORT_OBJ_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.obj", standard: StandardId("3.0"), subset: SubsetId("*") };
-    async fn compose_export_obj(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+    fn compose_export_obj(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
             let snapshot = rebuild_native_snapshot(sources)?;
             let bytes = crate::artifacts::fem3d::io::export::serializers::artifacts::obj::v3_0::any::export(&snapshot).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?;
@@ -188,7 +188,7 @@ pub mod io_registry {
     }
     //#endregion 🔖️ExportEntries
 
-    pub async fn entries() -> &'static [ComposerEntry] {
+    pub fn entries() -> &'static [ComposerEntry] {
         ENTRIES
             .get_or_init(|| {
                 vec![

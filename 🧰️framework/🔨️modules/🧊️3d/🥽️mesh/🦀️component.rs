@@ -93,19 +93,28 @@ pub enum MirrorAxis {
 
 //#region ⚠️ Errors
 /// ⚠️ Half-edge mesh kernel operation failure.
-#[derive(Debug, Clone, PartialEq, thiserror::Error)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum MeshKernelError {
-    #[error("invalid handle")]
     InvalidHandle,
-    #[error("mesh is non-manifold")]
     NonManifold,
-    #[error("degenerate operation")]
     DegenerateOperation,
-    #[error("empty selection")]
     EmptySelection,
-    #[error("invalid input: {0}")]
     InvalidInput(String),
 }
+
+impl std::fmt::Display for MeshKernelError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::InvalidHandle => formatter.write_str("invalid handle"),
+            Self::NonManifold => formatter.write_str("mesh is non-manifold"),
+            Self::DegenerateOperation => formatter.write_str("degenerate operation"),
+            Self::EmptySelection => formatter.write_str("empty selection"),
+            Self::InvalidInput(detail) => write!(formatter, "invalid input: {detail}"),
+        }
+    }
+}
+
+impl std::error::Error for MeshKernelError {}
 //#endregion ⚠️ Errors
 
 pub type MeshResult<T> = Result<T, MeshKernelError>;

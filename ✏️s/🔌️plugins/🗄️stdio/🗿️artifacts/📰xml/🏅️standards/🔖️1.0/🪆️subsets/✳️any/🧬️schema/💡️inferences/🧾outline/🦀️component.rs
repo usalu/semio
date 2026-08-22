@@ -28,7 +28,7 @@ fn walk(node: &XmlNode, depth: u32) -> (u32, u32) {
             let mut count = 1u32;
             let mut max_depth = depth;
             for child in children {
-                let (c, d) = Box::pin(walk(child, depth + 1));
+                let (c, d) = walk(child, depth + 1);
                 count += c;
                 max_depth = max_depth.max(d);
             }

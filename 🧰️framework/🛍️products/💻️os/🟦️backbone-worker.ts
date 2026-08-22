@@ -61,7 +61,7 @@ function decodeWorkerRequest(message: BackboneWorkerWireMessage): BackboneWorker
   return decodeBackboneWorkerRequest(message.wire);
 }
 
-const workerScope = typeof self !== "undefined" ? (self as unknown as DedicatedWorkerGlobalScope) : null;
+const workerScope = typeof self !== "undefined" && !("document" in self) ? (self as unknown as DedicatedWorkerGlobalScope) : null;
 
 if (workerScope) {
   workerScope.onmessage = (messageEvent: MessageEvent<unknown>) => {

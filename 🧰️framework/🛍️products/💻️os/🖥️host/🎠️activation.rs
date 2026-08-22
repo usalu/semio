@@ -30,8 +30,9 @@
 //! `ShardExecutor` THREADS plus K `semio-os-host-kernel-shard-forward-*` outcome-forwarder threads
 //! polling `ThreadTransport::recv_deadline` every 250ms. Both kinds of thread are gone.
 //! [`ShardExecutor`] is now a logical affinity unit scheduled onto one shared, process-wide
-//! `semio_framework_async::WorkerPool` (`ProcessKind::HeadlessBatch` — this facade's own callers are
-//! sequential, one-shot CLI runs with no UI thread to reserve a core for); turn outcomes flow back via
+//! `semio_framework_async::WorkerPool` (`ProcessKind::InteractiveNative` — this host boundary shares
+//! the process contract with plugin and renderer subsystems, so reserving the UI core cannot depend
+//! on which subsystem reaches the singleton first); turn outcomes flow back via
 //! [`semio_framework_plugin_host::shard::executor::OutcomeSink`], pushed directly by whichever pool
 //! worker executed the turn — "completion notification through the pool," never a polled channel.
 
@@ -39,7 +40,7 @@
 
 use semio_framework::kernel::{BrokerCapabilityGrant, Budget as TurnBudget};
 use semio_framework_actor::{ActivationEvent, ActorId, ActorKind, Backpressure, Decision, Envelope, FailureEscalation, Kernel, KernelError, Lane, PackageId, ShardKind, WindowId};
-use semio_framework_async::{ProcessKind, WorkerPool, WorkerPoolConfig};
+use semio_framework_async::{ProcessKind, WorkerPoolConfig};
 use semio_framework_plugin_host::shard::executor::{OutcomeSink, ShardExecutor};
 use semio_framework_plugin_host::shard::{to_actor_turn_result, ShardFrame, ShardOutcome};
 use semio_framework_plugin_host::{CompiledHandle, GuestRuntime, GuestRuntimes};
@@ -60,7 +61,7 @@ pub struct NativeKernelRuntime {
 }
 
 impl NativeKernelRuntime {
-    /// ▶️ Builds one process-wide [`WorkerPool`] (`ProcessKind::HeadlessBatch` — see the module doc),
+    /// ▶️ Acquires the interactive host process's one [`WorkerPool`] (`ProcessKind::InteractiveNative`),
     /// `shard_count.max(1)` real [`ShardExecutor`]s sharing it, and one [`Kernel`]. No threads are
     /// spawned by this constructor — every [`ShardExecutor`] is pool-scheduled, only actually running
     /// a job once its first `ShardFrame` arrives via [`Self::activate`]/[`Self::tick_and_dispatch`].
@@ -68,7 +69,7 @@ impl NativeKernelRuntime {
         let shard_count = shard_count.max(1);
         let kernel = Kernel::new(ShardKind::Native, shard_count, exclusive_reserve, grants_per_tick).await;
         let cores = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1);
-        let pool = Arc::new(WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, cores)));
+        let pool = Arc::new(semio_framework_async::process_worker_pool(WorkerPoolConfig::new(ProcessKind::InteractiveNative, cores)));
         let outcomes = OutcomeSink::new();
         let mut shards = Vec::with_capacity(shard_count as usize);
         for _ in 0..shard_count {
@@ -199,7 +200,7 @@ impl NativeKernelRuntime {
 /// the kernel-`Budget` side; defaulted from `lane` via `lane_defaults::budget_for`, same documented
 /// gap shape as the wgpu target's own copy.
 pub async fn actor_budget_from_turn_budget(budget: TurnBudget, lane: Lane) -> semio_framework_actor::Budget {
-    let base = semio_framework_actor::lane_defaults::budget_for(lane).await;
+    let base = semio_framework_actor::lane_defaults::budget_for(lane);
     semio_framework_actor::Budget { fuel: budget.fuel, wall_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, ..base }
 }
 //#endregion 🔖️BudgetBridge

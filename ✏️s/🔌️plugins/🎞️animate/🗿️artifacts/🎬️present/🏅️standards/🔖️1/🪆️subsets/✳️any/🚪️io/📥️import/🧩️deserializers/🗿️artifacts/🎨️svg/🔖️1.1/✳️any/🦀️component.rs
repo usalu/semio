@@ -15,13 +15,13 @@ pub struct SvgIntoPresent;
 impl Deserializer<PresentSnapshot> for SvgIntoPresent {
     const FROM: Dialect = SVG_DIALECT;
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(payload: &IoPayload) -> IoResult<PresentSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<PresentSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "SvgIntoPresent: expected a binary svg payload".to_string(), diagnostics: Vec::new() });
         };
         let snapshot = <PresentSnapshot as store::ArtifactPack>::decode_pack(bytes)
             .or_else(|_| <PresentSnapshot as store::ArtifactDsl>::parse_dsl(&String::from_utf8_lossy(bytes)))
             .map_err(|error| IoError { message: format!("SvgIntoPresent: {error}"), diagnostics: Vec::new() })?;
-        Ok(IoOutcome::clean(snapshot))
+        Ok(IoOutcome::clean(snapshot).await)
     }
 }

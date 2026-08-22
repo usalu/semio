@@ -8,7 +8,7 @@ use crate::artifacts::wav::standards::riff_pcm::subsets::any::schema::snapshot::
 use crate::artifacts::wav::{STDIO_WAV_DOCUMENT_SCHEMA, WAV_DIALECT};
 use crate::editor::wav::modes::edit;
 use crate::editor::wav::modes::edit::windows::main;
-use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode};
+use semio_framework_plugin::{ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
 use serde::{Deserialize, Serialize};
 use store::EngineHandles;
 

@@ -3,6 +3,7 @@
 use crate::material::{R_FILM_EXTERIOR_M2K_W, R_FILM_INTERIOR_M2K_W};
 use crate::num::newton_raphson;
 use crate::units::STEFAN_BOLTZMANN;
+use serde::{Deserialize, Serialize};
 
 // #region 🔖️ConvectionModels
 /// 🌬️ Exterior convection correlation (wind-adaptive McAdams-type).
@@ -50,7 +51,7 @@ impl InteriorConvectionModel {
 
 // #region 🔖️ConductionState
 /// 🌡️ Simplified first-order CTF conduction state (one history state per surface).
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ConductionState {
     pub ctf_c0_w_m2k: f64,
     pub ctf_c1_w_m2k: f64,
@@ -151,33 +152,33 @@ pub fn overall_u_value_w_m2k(construction_u: f64) -> f64 {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn exterior_h_increases_with_wind() {
         let model = ExteriorConvectionModel::default();
         assert!(model.h_w_m2k(5.0) > model.h_w_m2k(0.0));
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn interior_h_increases_with_delta_t() {
         let model = InteriorConvectionModel::default();
         assert!(model.h_w_m2k(30.0, 20.0) > model.h_w_m2k(21.0, 20.0));
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn ctf_flux_sign_correct() {
         let state = ConductionState::from_u_and_capacitance(0.3, 50_000.0, 3600.0);
         let flux = state.heat_flux_w_m2(0.0, 20.0);
         assert!(flux < 0.0);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn steady_flux_cold_outside() {
         let q = steady_opaque_flux_w_m2(-5.0, 20.0, 0.25);
         assert!(q < 0.0);
         assert!((q - (-6.25)).abs() < 0.01);
     }
 
-    #[semio_framework_async_macros::async_test]
+    #[test]
     fn interior_surface_balance_near_air() {
         let balance = solve_interior_surface_temp(22.0, -2.0, 0.0, &InteriorConvectionModel::default());
         assert!(balance.surface_temp_c > 22.0);

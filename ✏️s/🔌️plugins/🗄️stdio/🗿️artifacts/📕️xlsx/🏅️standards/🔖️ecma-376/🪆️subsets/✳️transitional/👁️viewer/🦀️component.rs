@@ -10,7 +10,7 @@ use crate::artifacts::xlsx::standards::v_ecma_376::subsets::any::schema::snapsho
 use crate::artifacts::xlsx::{XlsxMutation, XlsxSnapshot, STDIO_XLSX_DOCUMENT_SCHEMA};
 use crate::viewer::xlsx::standards::v_ecma_376::subsets::transitional::modes::view;
 use crate::viewer::xlsx::standards::v_ecma_376::subsets::transitional::modes::view::windows::main;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId, ViewEmit, Viewer};
 
 //#region 🔖️Dialect
 /// 🪪️ Duplicated from the sibling mutation-capable surface's own coordinate — see that file's doc

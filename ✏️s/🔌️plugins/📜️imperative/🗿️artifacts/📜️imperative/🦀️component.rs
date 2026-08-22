@@ -30,7 +30,7 @@ pub const IMPERATIVE_DIALECT: semio_framework_plugin::app::Dialect =
     semio_framework_plugin::app::Dialect { artifact_kind: "s.imperative.imperative", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
 
 /// 🌱️ View of a snapshot seed map as a neural [`Dictionary`] for execution.
-pub async fn seed_dictionary(seed: &BTreeMap<String, Value>) -> Dictionary {
+pub fn seed_dictionary(seed: &BTreeMap<String, Value>) -> Dictionary {
     serde_json::from_value(serde_json::to_value(seed).expect("seed serializes")).expect("seed is a dictionary")
 }
 
@@ -83,7 +83,7 @@ pub type ImperativeTextChild = store::ArtifactChild<SemioTextSnapshot>;
 /// derived, honestly redundant "next in sequence" view (`kind = "sequence"`) between adjacent
 /// siblings; decode never reads them back — step order is recovered from `nodes`' own `Vec` order,
 /// which every encode path here preserves (append-only, never reordered independently of `path`).
-pub async fn flow_content_snapshot_from_path(path: &Path) -> SemioFlowSnapshot {
+pub fn flow_content_snapshot_from_path(path: &Path) -> SemioFlowSnapshot {
     let mut nodes = Vec::with_capacity(path.steps.len());
     let mut edges = Vec::new();
     for (index, step) in path.steps.iter().enumerate() {
@@ -104,7 +104,7 @@ pub async fn flow_content_snapshot_from_path(path: &Path) -> SemioFlowSnapshot {
 /// (see that function's doc comment); the reserved `__bodies` param round-trips back into
 /// `Step::bodies`, every other param round-trips back into `step.params` via JSON-decode. `edges`
 /// are never read (a purely derived view, see above).
-pub async fn path_from_flow_content_snapshot(snapshot: &SemioFlowSnapshot) -> Path {
+pub fn path_from_flow_content_snapshot(snapshot: &SemioFlowSnapshot) -> Path {
     let steps = snapshot
         .nodes
         .iter()
@@ -133,7 +133,7 @@ pub async fn path_from_flow_content_snapshot(snapshot: &SemioFlowSnapshot) -> Pa
 /// run's `content` (`language`/`marks` unused, always empty) — never split per-key into runs
 /// (there is no natural per-key "prose" to split), and an empty seed maps to zero runs so the
 /// default snapshot's `runs` stays empty like every other subset's default.
-pub async fn text_content_snapshot_from_seed(seed: &BTreeMap<String, Value>) -> SemioTextSnapshot {
+pub fn text_content_snapshot_from_seed(seed: &BTreeMap<String, Value>) -> SemioTextSnapshot {
     let runs = if seed.is_empty() { Vec::new() } else { vec![SemioTextRun { language: String::new(), content: serde_json::to_string(seed).unwrap_or_default(), marks: Vec::new() }] };
     SemioTextSnapshot { schema: STDIO_SEMIOTEXT_DOCUMENT_SCHEMA.into(), runs }
 }
@@ -141,7 +141,7 @@ pub async fn text_content_snapshot_from_seed(seed: &BTreeMap<String, Value>) -> 
 /// 🌉 Inverse of [`text_content_snapshot_from_seed`] — concatenates every run's `content` (the
 /// common, lossless case is exactly one, or zero for an empty seed) and JSON-decodes the result;
 /// an empty/unparseable join honestly reads back as an empty seed rather than panicking.
-pub async fn seed_from_text_content_snapshot(snapshot: &SemioTextSnapshot) -> BTreeMap<String, Value> {
+pub fn seed_from_text_content_snapshot(snapshot: &SemioTextSnapshot) -> BTreeMap<String, Value> {
     let joined: String = snapshot.runs.iter().map(|run| run.content.as_str()).collect();
     if joined.is_empty() {
         return BTreeMap::new();
@@ -152,7 +152,7 @@ pub async fn seed_from_text_content_snapshot(snapshot: &SemioTextSnapshot) -> BT
 /// 🕸️ Deterministic content-addressed CHILD handle for `flow` — same `(child_id, target)` for an
 /// identical `path`, a different pair once the content actually changes; mirrors `writer`'s
 /// `document_child_handle`/`flow`'s own `flow_content_child_handle`.
-pub async fn imperative_flow_child_handle(path: &Path) -> ImperativeFlowChild {
+pub fn imperative_flow_child_handle(path: &Path) -> ImperativeFlowChild {
     use std::hash::{Hash, Hasher};
     let snapshot = flow_content_snapshot_from_path(path);
     let content_json = serde_json::to_string(&snapshot).unwrap_or_default();
@@ -166,7 +166,7 @@ pub async fn imperative_flow_child_handle(path: &Path) -> ImperativeFlowChild {
 }
 
 /// 🕸️ `seed`'s content-addressed CHILD handle, the `text`-side twin of [`imperative_flow_child_handle`].
-pub async fn imperative_text_child_handle(seed: &BTreeMap<String, Value>) -> ImperativeTextChild {
+pub fn imperative_text_child_handle(seed: &BTreeMap<String, Value>) -> ImperativeTextChild {
     use std::hash::{Hash, Hasher};
     let snapshot = text_content_snapshot_from_seed(seed);
     let content_json = serde_json::to_string(&snapshot).unwrap_or_default();
@@ -207,30 +207,30 @@ thread_local! {
 /// 📝 Seeds the `flow` scratch cache for a handle — call whenever new `Path` content is about to
 /// become a document's `flow` field (every mutation-diff/fixture builder in this plugin does, via
 /// [`imperative_flow_child_handle_and_cache`]).
-pub async fn cache_imperative_flow(child_id: &str, path: &Path) {
+pub fn cache_imperative_flow(child_id: &str, path: &Path) {
     IMPERATIVE_FLOW_SCRATCH.with(|cache| cache.borrow_mut().insert(child_id.to_string(), path.clone()));
 }
 
 /// 📝 `seed`-side twin of [`cache_imperative_flow`].
-pub async fn cache_imperative_seed(child_id: &str, seed: &BTreeMap<String, Value>) {
+pub fn cache_imperative_seed(child_id: &str, seed: &BTreeMap<String, Value>) {
     IMPERATIVE_SEED_SCRATCH.with(|cache| cache.borrow_mut().insert(child_id.to_string(), seed.clone()));
 }
 
 /// 🔎 Reads the cached live `Path` for a `flow` child handle — an empty `Path` (never a panic) when
 /// nothing has cached it yet (see [`ImperativeWorkingScene`]'s doc comment for why that can happen).
-pub async fn imperative_flow_for_handle(handle: &ImperativeFlowChild) -> Path {
+pub fn imperative_flow_for_handle(handle: &ImperativeFlowChild) -> Path {
     IMPERATIVE_FLOW_SCRATCH.with(|cache| cache.borrow().get(&handle.child_id).cloned().unwrap_or_default())
 }
 
 /// 🔎 `seed`-side twin of [`imperative_flow_for_handle`].
-pub async fn imperative_seed_for_handle(handle: &ImperativeTextChild) -> BTreeMap<String, Value> {
+pub fn imperative_seed_for_handle(handle: &ImperativeTextChild) -> BTreeMap<String, Value> {
     IMPERATIVE_SEED_SCRATCH.with(|cache| cache.borrow().get(&handle.child_id).cloned().unwrap_or_default())
 }
 
 /// 🔎 Reads BOTH composed children's live content off a snapshot's two handles — the single read
 /// call site every render/mutation-diff/inference/export path in this plugin uses instead of the
 /// old direct `.path`/`.seed` field access.
-pub async fn imperative_working_scene(snapshot: &ImperativeSnapshot) -> ImperativeWorkingScene {
+pub fn imperative_working_scene(snapshot: &ImperativeSnapshot) -> ImperativeWorkingScene {
     ImperativeWorkingScene { path: imperative_flow_for_handle(&snapshot.flow), seed: imperative_seed_for_handle(&snapshot.text) }
 }
 
@@ -238,14 +238,14 @@ pub async fn imperative_working_scene(snapshot: &ImperativeSnapshot) -> Imperati
 /// one call — the standard way every mutation-diff/fixture builder in this plugin creates a `flow`
 /// field value; never construct a handle without also caching, or [`imperative_flow_for_handle`]
 /// will read back empty.
-pub async fn imperative_flow_child_handle_and_cache(path: &Path) -> ImperativeFlowChild {
+pub fn imperative_flow_child_handle_and_cache(path: &Path) -> ImperativeFlowChild {
     let handle = imperative_flow_child_handle(path);
     cache_imperative_flow(&handle.child_id, path);
     handle
 }
 
 /// 🏗️ `seed`-side twin of [`imperative_flow_child_handle_and_cache`].
-pub async fn imperative_text_child_handle_and_cache(seed: &BTreeMap<String, Value>) -> ImperativeTextChild {
+pub fn imperative_text_child_handle_and_cache(seed: &BTreeMap<String, Value>) -> ImperativeTextChild {
     let handle = imperative_text_child_handle(seed);
     cache_imperative_seed(&handle.child_id, seed);
     handle
@@ -254,7 +254,7 @@ pub async fn imperative_text_child_handle_and_cache(seed: &BTreeMap<String, Valu
 /// 🏗️ Builds a full [`ImperativeSnapshot`] from literal `Path`/seed content — the standard fixture/
 /// import constructor replacing the old 3-field `ImperativeSnapshot { schema, path, seed }` struct
 /// literal now that `flow`/`text` are composed child handles, not plain fields.
-pub async fn imperative_snapshot_with_content(schema: &str, path: &Path, seed: &BTreeMap<String, Value>) -> ImperativeSnapshot {
+pub fn imperative_snapshot_with_content(schema: &str, path: &Path, seed: &BTreeMap<String, Value>) -> ImperativeSnapshot {
     ImperativeSnapshot { schema: schema.into(), flow: imperative_flow_child_handle_and_cache(path), text: imperative_text_child_handle_and_cache(seed) }
 }
 
@@ -263,7 +263,7 @@ pub async fn imperative_snapshot_with_content(schema: &str, path: &Path, seed: &
 /// (the "mint+cache whole handle, never apply-then-capture" pattern `writer`'s `diff_set_text`/
 /// `flow`'s `diff_replace_content` both establish). `text`/`seed` is left untouched (`None`) since
 /// no mutation triad in this plugin edits `seed` — it is write-once at document construction.
-pub async fn diff_replace_flow(path: &Path) -> ImperativeDiff {
+pub fn diff_replace_flow(path: &Path) -> ImperativeDiff {
     ImperativeDiff { flow: Some(imperative_flow_child_handle_and_cache(path)), ..Default::default() }
 }
 //#endregion 🔖️WorkingScene
@@ -289,7 +289,7 @@ pub async fn diff_replace_flow(path: &Path) -> ImperativeDiff {
 /// artifact must not depend on its app, so both stayed artifact-side rather than moving to the app),
 /// reached below by their full qualified path. `bootstrap_imperative_runtime` stays `pub` (widened from
 /// its former `pub(crate)`) since the app engine module now reaches it by the same long qualified path.
-pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
     let rows: &[(&str, &str, &str, &[(&str, &str)], Option<(&str, &str)>)] = &[
         ("s.imperative.standard.v1", "standard", "1", &[], None),
@@ -323,7 +323,7 @@ pub async fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, 
     Ok(definition)
 }
 
-pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
+pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     crate::artifacts::imperative::standards::v1::subsets::any::io::bootstrap_imperative_runtime();
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
         .schema(crate::artifacts::imperative::schema::imperative_artifact_schema_descriptor())
@@ -338,7 +338,7 @@ pub async fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration
 /// and leaked to a `&'static` slice since `dsl::passthrough_hooks` isn't `const fn`. Private:
 /// `declaration()` above is its only caller (moved here with it from `⚙️engine`, ticket
 /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE reloc-g7 — kept unexported, not widened).
-async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
+fn pilot_languages() -> &'static [dsl::LanguageSpec] {
     static LANGUAGES: std::sync::OnceLock<Vec<dsl::LanguageSpec>> = std::sync::OnceLock::new();
     LANGUAGES
         .get_or_init(|| {
@@ -402,7 +402,7 @@ async fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
 /// `crate::editor::imperative::create_imperative_app`'s `🔖️Manifest` region.
-pub async fn artifact_kind() -> ArtifactKindSpec {
+pub fn artifact_kind() -> ArtifactKindSpec {
     ArtifactKindSpec {
         id: "computation.imperative".into(),
         name: "Imperative".into(),

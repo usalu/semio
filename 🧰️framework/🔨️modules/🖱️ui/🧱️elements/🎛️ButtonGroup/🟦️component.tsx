@@ -8,9 +8,9 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
-import { cva } from "class-variance-authority";
 import { reactHostPort } from "../🔌️Ports/🟦️component.tsx";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️component.ts";
+import { styleVariants, type StyleVariantProps } from "../../🔨️modules/🏷️style-variants/🟦️component.ts";
 import { borderElementClass } from "../../🔨️modules/📏️border-presentation/🟦️component.ts";
 import { ControlHotkeyBadge } from "../../🔨️modules/⌨️control-hotkey-presentation/🟦️component.tsx";
 import { chromeControlGroupClass, chromeControlItemClass } from "../../🔨️modules/🎛️chrome-control-presentation/🟦️component.ts";
@@ -26,7 +26,7 @@ import { type ControlIcon, renderControlIcon } from "../🔣️Icons/🟦️comp
 /**
  * buttonGroupItemVariants holds the data fields for a buttonGroupItemVariants record.
  **/
-const buttonGroupItemVariants = cva(cn(chromeControlItemClass, "aspect-square"), {
+const buttonGroupItemVariants = styleVariants(cn(chromeControlItemClass, "aspect-square"), {
   variants: {
     variant: {
       default: "",
@@ -91,6 +91,14 @@ function ButtonGroup({ className, detailPanelWidthMode = "fit", id, showLabel, c
 /**
  * ButtonGroupItem holds the data fields for a ButtonGroupItem record.
  **/
+type ButtonGroupItemProps = React.ComponentProps<"button"> &
+  StyleVariantProps<typeof buttonGroupItemVariants> & {
+    id?: string;
+    icon: ControlIcon;
+    text?: string;
+    asChild?: boolean;
+  };
+
 function ButtonGroupItem({
   className,
   children,
@@ -98,13 +106,9 @@ function ButtonGroupItem({
   icon,
   text,
   asChild = false,
+  variant,
   ...props
-}: React.ComponentProps<"button"> & {
-  id?: string;
-  icon: ControlIcon;
-  text?: string;
-  asChild?: boolean;
-}) {
+}: ButtonGroupItemProps) {
   const context = reactHostPort.useContext(ButtonGroupContext);
   const level = context.level ?? "base";
   const Comp = asChild ? Slot : "button";
@@ -121,7 +125,7 @@ function ButtonGroupItem({
       title={tooltipText}
       data-level={context.level || level}
       className={cn(
-        buttonGroupItemVariants(),
+        buttonGroupItemVariants({ variant }),
         inlineText ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel" : "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
         inlineText && "flex items-center gap-single py-single px-double w-auto aspect-auto",
         className,

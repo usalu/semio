@@ -21,8 +21,6 @@ semio-framework-job = { path = "../../🔨️modules/🧵️job/📦️packages/
 gltf = { version = "1.4.1", default-features = false, features = ["utils"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
-thiserror = { workspace = true }
-ts-rs = { workspace = true, optional = true }
 ui_wgpu = { path = "../../🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"] }
 semio-framework-hash = { path = "../../🔨️modules/#⃣hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-mesh-engine = { path = "../../🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust", package = "semio-framework-mesh-engine" }
@@ -30,10 +28,9 @@ semio-framework-mesh-engine = { path = "../../🔨️modules/🔺️mesh-engine/
 semio-framework-os-kernel = { path = "../../🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 
 [dev-dependencies]
-pretty_assertions = "1.4.1"
 semio-framework-async-macros = { path = "../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 
 [features]
 # 🧬️ Generates the TypeScript mirror for boundary/protocol types (see `<owner>/🤖️generated/🟦️manifest.ts`);
-# never enabled by default so `ts-rs` never affects the plain `cargo build`/`cargo test` path.
-typegen = ["dep:ts-rs", "ui_wgpu/typegen", "semio-framework-os-kernel/typegen"]
+# never enabled by default so schema projection never affects the plain build/test path.
+typegen = []

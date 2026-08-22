@@ -70,6 +70,12 @@ fn to_core_actor_id(id: &protocol::ActorId) -> ActorId {
 async fn now_ms() -> u64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as u64)
 }
+
+#[cfg(test)]
+fn test_worker_pool() -> Arc<WorkerPool> {
+    static POOL: std::sync::OnceLock<Arc<WorkerPool>> = std::sync::OnceLock::new();
+    POOL.get_or_init(|| Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 4)))).clone()
+}
 //#endregion 🔖️Ids
 
 //#region 🔖️Frontier
@@ -181,7 +187,7 @@ async fn replay_history(storage: &db_storage::DbBackend, core_document: &Artifac
             db_wal::WalRecord::TxBegin { .. } => pending_operation_ids.clear(),
             db_wal::WalRecord::Command(bytes) => {
                 let mut pos = 0usize;
-                let envelope = protocol::decode_envelope(&bytes, &mut pos).await.map_err(|err| DbError::Corrupt(format!("history: wal command record is not a valid operation envelope: {err}")))?;
+                let envelope = protocol::decode_envelope(&bytes, &mut pos).map_err(|err| DbError::Corrupt(format!("history: wal command record is not a valid operation envelope: {err}")))?;
                 pending_operation_ids.push(envelope.mutation_id);
             }
             db_wal::WalRecord::Frontier(frontier) if !pending_operation_ids.is_empty() => {
@@ -291,7 +297,7 @@ pub mod vcs_integration {
     impl store::ArtifactDsl for HashProjection {
         const EXTENSION: &'static str = "dbhash";
 
-        async fn parse_dsl(text: &str) -> Result<HashProjection, store::TextError> {
+        fn parse_dsl(text: &str) -> Result<HashProjection, store::TextError> {
             let trimmed = text.trim();
             if trimmed.len() != 64 || !trimmed.bytes().all(|byte| byte.is_ascii_hexdigit()) {
                 return Err(store::TextError::new("expected 64 lowercase hex characters", store::TextSpan::at(1, 1)));
@@ -303,7 +309,7 @@ pub mod vcs_integration {
             Ok(HashProjection { latest_hash })
         }
 
-        async fn print_dsl(&self) -> String {
+        fn print_dsl(&self) -> String {
             let mut out = String::with_capacity(64);
             for byte in self.latest_hash {
                 use std::fmt::Write;
@@ -314,10 +320,10 @@ pub mod vcs_integration {
     }
 
     impl store::ArtifactPack for HashProjection {
-        async fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
             Ok(self.latest_hash.to_vec())
         }
-        async fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
             let latest_hash: [u8; 32] = bytes.try_into().map_err(|_| store::PackError::Schema("HashProjection pack must be exactly 32 bytes".to_string()))?;
             Ok(HashProjection { latest_hash })
         }
@@ -329,14 +335,14 @@ pub mod vcs_integration {
     }
 
     impl protocol::MutationDiff<HashProjection> for HashDiff {
-        async fn apply(&self, base: &HashProjection) -> protocol::MutationApplyResult<HashProjection> {
+        fn apply(&self, base: &HashProjection) -> protocol::MutationApplyResult<HashProjection> {
             Ok(match self.hash {
                 Some(hash) => HashProjection { latest_hash: hash },
                 None => base.clone(),
             })
         }
 
-        async fn absorb(&mut self, other: HashDiff) {
+        fn absorb(&mut self, other: HashDiff) {
             if other.hash.is_some() {
                 self.hash = other.hash;
             }
@@ -353,21 +359,21 @@ pub mod vcs_integration {
     impl protocol::Mutation<HashProjection> for HashMutation {
         type Diff = HashDiff;
 
-        async fn diff(&self, _base: &HashProjection) -> protocol::MutationOutcome<HashDiff> {
-            protocol::MutationOutcome::new(HashDiff { hash: Some(self.hash) }).await
+        fn diff(&self, _base: &HashProjection) -> protocol::MutationOutcome<HashDiff> {
+            protocol::MutationOutcome::new(HashDiff { hash: Some(self.hash) })
         }
 
         /// @emoji ↩️ The true inverse: an operation that would restore `base`'s hash — not a
         /// no-op placeholder.
-        async fn inverse(&self, base: &HashProjection) -> Vec<HashMutation> {
+        fn inverse(&self, base: &HashProjection) -> Vec<HashMutation> {
             vec![HashMutation { hash: base.latest_hash, author: self.author.clone(), timestamp: self.timestamp }]
         }
 
-        async fn author_id(&self) -> Option<protocol::ActorId> {
+        fn author_id(&self) -> Option<protocol::ActorId> {
             self.author.clone()
         }
 
-        async fn timestamp(&self) -> Option<protocol::HybridLogicalTimestamp> {
+        fn timestamp(&self) -> Option<protocol::HybridLogicalTimestamp> {
             self.timestamp
         }
     }
@@ -382,7 +388,7 @@ pub mod vcs_integration {
         out
     }
 
-    async fn hex_decode(text: &str) -> Result<[u8; 32], String> {
+    fn hex_decode(text: &str) -> Result<[u8; 32], String> {
         if text.len() != 64 || !text.bytes().all(|byte| byte.is_ascii_hexdigit()) {
             return Err("expected 64 lowercase hex characters".to_string());
         }
@@ -395,7 +401,7 @@ pub mod vcs_integration {
 
     /// @emoji 🎯️ Single-line text form: `hash=<hex64>[ author=<id>][ ts=<actor>,<physical_ms>,<logical>]`.
     impl protocol::OpText for HashMutation {
-        async fn print_op(&self) -> String {
+        fn print_op(&self) -> String {
             let mut out = format!("hash={}", hex_encode(&self.hash));
             if let Some(author) = &self.author {
                 out.push_str(&format!(" author={}", author.0));
@@ -405,7 +411,7 @@ pub mod vcs_integration {
             }
             out
         }
-        async fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        fn parse_op(line: &str) -> Result<Self, store::TextError> {
             let err = |detail: String| store::TextError::new(detail, store::TextSpan::at(1, 1));
             let mut hash = None;
             let mut author = None;
@@ -413,7 +419,7 @@ pub mod vcs_integration {
             for token in line.split_whitespace() {
                 let (key, value) = token.split_once('=').ok_or_else(|| err(format!("malformed token '{token}'")))?;
                 match key {
-                    "hash" => hash = Some(hex_decode(value).await.map_err(err)?),
+                    "hash" => hash = Some(hex_decode(value).map_err(err)?),
                     "author" => author = Some(protocol::ActorId(value.to_string())),
                     "ts" => {
                         let parts: Vec<&str> = value.split(',').collect();
@@ -435,22 +441,22 @@ pub mod vcs_integration {
     /// @emoji 🎯️ Binary form: `hash 32 bytes | presence u8 (bit0=author, bit1=timestamp) | [author
     /// len varint + utf8 bytes] | [timestamp: actor/physical_ms/logical varint each]`.
     impl protocol::OpBinary for HashMutation {
-        async fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
             let mut out = self.hash.to_vec();
             let presence = (self.author.is_some() as u8) | ((self.timestamp.is_some() as u8) << 1);
             out.push(presence);
             if let Some(author) = &self.author {
-                pack::os_pack::write_varint_u64(&mut out, author.0.len() as u64).await;
+                pack::os_pack::write_varint_u64(&mut out, author.0.len() as u64);
                 out.extend_from_slice(author.0.as_bytes());
             }
             if let Some(ts) = &self.timestamp {
-                pack::os_pack::write_varint_u64(&mut out, ts.actor).await;
-                pack::os_pack::write_varint_u64(&mut out, ts.physical_ms).await;
-                pack::os_pack::write_varint_u64(&mut out, ts.logical).await;
+                pack::os_pack::write_varint_u64(&mut out, ts.actor);
+                pack::os_pack::write_varint_u64(&mut out, ts.physical_ms);
+                pack::os_pack::write_varint_u64(&mut out, ts.logical);
             }
             Ok(out)
         }
-        async fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
             let malformed = |detail: String| protocol::ProtocolError::Malformed { what: "hash op", offset: 0, detail };
             if bytes.len() < 33 {
                 return Err(malformed("truncated hash op".to_string()));
@@ -459,7 +465,7 @@ pub mod vcs_integration {
             let presence = bytes[32];
             let mut pos = 33usize;
             let author = if presence & 0b01 != 0 {
-                let len = pack::os_pack::read_varint_u64(bytes, &mut pos).await.map_err(|error| malformed(error.to_string()))? as usize;
+                let len = pack::os_pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))? as usize;
                 let end = pos + len;
                 let text = std::str::from_utf8(bytes.get(pos..end).ok_or_else(|| malformed("truncated author".to_string()))?).map_err(|error| malformed(error.to_string()))?.to_string();
                 pos = end;
@@ -468,9 +474,9 @@ pub mod vcs_integration {
                 None
             };
             let timestamp = if presence & 0b10 != 0 {
-                let actor = pack::os_pack::read_varint_u64(bytes, &mut pos).await.map_err(|error| malformed(error.to_string()))?;
-                let physical_ms = pack::os_pack::read_varint_u64(bytes, &mut pos).await.map_err(|error| malformed(error.to_string()))?;
-                let logical = pack::os_pack::read_varint_u64(bytes, &mut pos).await.map_err(|error| malformed(error.to_string()))?;
+                let actor = pack::os_pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
+                let physical_ms = pack::os_pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
+                let logical = pack::os_pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
                 Some(protocol::HybridLogicalTimestamp { actor, physical_ms, logical })
             } else {
                 None
@@ -563,7 +569,7 @@ pub mod vcs_integration {
             let work = async {
                 let mut stores = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?;
                 let store = stores.get_mut(&document.0).ok_or_else(|| DbError::Internal(format!("vcs_integration: store insertion disappeared for {}", document.0)))?;
-                let operation = HashMutation { hash: change.content_hash.0, author: Some(protocol::ActorId(change.author.0.clone())), timestamp: Some(protocol::HybridLogicalTimestamp::new(0, change.timestamp_ms).await) };
+                let operation = HashMutation { hash: change.content_hash.0, author: Some(protocol::ActorId(change.author.0.clone())), timestamp: Some(protocol::HybridLogicalTimestamp::new(0, change.timestamp_ms)) };
                 store.dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], description: Some(change.message.clone()) }).await.map_err(map_vcs_error)?;
                 Ok(store.envelope().await.vcs.edits.last().map(|edit| edit.id.clone()).unwrap_or_default())
             };
@@ -820,7 +826,11 @@ impl Database<db_artifact::AllowAll> {
     pub async fn open_at(root: &std::path::Path, profile: Profile) -> Result<Database<db_artifact::AllowAll>, DbError> {
         let fs = db_actor::block_on(db_storage::FsStorage::open_inline(root))?;
         let storage: Arc<db_storage::DbBackend> = Arc::new(db_storage::DbBackend::Fs(fs));
-        Database::open(DbConfig::for_profile(profile), storage).await
+        let database = Database::open(DbConfig::for_profile(profile), storage).await?;
+        #[cfg(test)]
+        return Ok(database.with_pool(test_worker_pool()));
+        #[cfg(not(test))]
+        Ok(database)
     }
 
     /// @emoji 🚀️ Like `open`, but with a caller-supplied `Emit` sink (e.g. a `db_observe::WriterSink`
@@ -1226,24 +1236,24 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn hash_operation_text_and_binary_round_trip_with_every_field_present_and_absent() {
         let bare = HashMutation { hash: [7u8; 32], author: None, timestamp: None };
-        assert_eq!(HashMutation::parse_op(&bare.print_op().await).await.unwrap().hash, bare.hash);
-        assert!(HashMutation::parse_op(&bare.print_op().await).await.unwrap().author.is_none());
-        assert_eq!(HashMutation::decode_op(&bare.encode_op().await.unwrap()).await.unwrap(), bare);
+        assert_eq!(HashMutation::parse_op(&bare.print_op()).unwrap().hash, bare.hash);
+        assert!(HashMutation::parse_op(&bare.print_op()).unwrap().author.is_none());
+        assert_eq!(HashMutation::decode_op(&bare.encode_op().unwrap()).unwrap(), bare);
 
         let full = HashMutation { hash: [9u8; 32], author: Some(protocol::ActorId("actor-1".into())), timestamp: Some(protocol::HybridLogicalTimestamp { actor: 1, physical_ms: 2, logical: 3 }) };
-        let reparsed = HashMutation::parse_op(&full.print_op().await).await.unwrap();
+        let reparsed = HashMutation::parse_op(&full.print_op()).unwrap();
         assert_eq!(reparsed.hash, full.hash);
         assert_eq!(reparsed.author, full.author);
         assert_eq!(reparsed.timestamp, full.timestamp);
-        let redecoded = HashMutation::decode_op(&full.encode_op().await.unwrap()).await.unwrap();
+        let redecoded = HashMutation::decode_op(&full.encode_op().unwrap()).unwrap();
         assert_eq!(redecoded, full);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn hash_projection_pack_round_trips() {
         let projection = HashProjection { latest_hash: [3u8; 32] };
-        let bytes = projection.encode_pack().await;
-        assert_eq!(HashProjection::decode_pack(&bytes).await.unwrap(), projection);
+        let bytes = projection.encode_pack();
+        assert_eq!(HashProjection::decode_pack(&bytes).unwrap(), projection);
     }
 
     //#region 🧸️Fixtures
@@ -1266,7 +1276,7 @@ mod tests {
             dependencies: deps.iter().map(|dep| protocol::MutationId((*dep).to_string())).collect(),
             diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact::encode_pathmap_json(&serde_json::Value::Object(payload)).await.unwrap() },
             inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact::encode_pathmap_json(&serde_json::Value::Object(serde_json::Map::new())).await.unwrap() },
-            timestamp: protocol::HybridLogicalTimestamp::new(0, 0).await,
+            timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         }
     }
     //#endregion 🧸️Fixtures

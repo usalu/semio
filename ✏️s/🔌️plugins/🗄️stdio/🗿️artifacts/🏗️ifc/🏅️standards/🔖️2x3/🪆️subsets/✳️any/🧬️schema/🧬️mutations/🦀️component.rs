@@ -95,7 +95,7 @@ impl Mutation<Ifc2x3Snapshot> for Ifc2x3Mutation {
 /// `split_top_level`/...) rather than duplicating them a second time in this file — same
 /// intra-artifact-reuse split `4`'s own `🧬️mutations/🦀️component.rs` uses. Grammar: `keyword
 /// arg=value ...` (space-separated), one match arm per variant.
-async fn enc_ifc2x3_snapshot_into(s: &Ifc2x3Snapshot, out: &mut String) {
+fn enc_ifc2x3_snapshot_into(s: &Ifc2x3Snapshot, out: &mut String) {
     out.push('[');
     out.push_str(&enc_str(&s.schema));
     out.push(',');
@@ -106,7 +106,7 @@ async fn enc_ifc2x3_snapshot_into(s: &Ifc2x3Snapshot, out: &mut String) {
     out.push_str(&enc_optional_edm_preamble(&s.edm_preamble));
     out.push(']');
 }
-async fn dec_ifc2x3_snapshot(s: &str) -> Result<Ifc2x3Snapshot, String> {
+fn dec_ifc2x3_snapshot(s: &str) -> Result<Ifc2x3Snapshot, String> {
     let fields = split_top_level(strip_brackets(s)?, ',');
     let [schema, header, instances, edm_preamble] = fields.as_slice() else {
         return Err(format!("ifc2x3 snapshot: expected 4 fields, got {}", fields.len()));
@@ -128,14 +128,14 @@ fn print_ifc2x3_mutation(m: &Ifc2x3Mutation) -> String {
         Ifc2x3Mutation::SetHeader { header } => format!("set-header header={}", enc_part21_header(header)),
     }
 }
-async fn parse_ifc2x3_mutation(line: &str) -> Result<Ifc2x3Mutation, String> {
+fn parse_ifc2x3_mutation(line: &str) -> Result<Ifc2x3Mutation, String> {
     if line == "no-mutation" {
         return Ok(Ifc2x3Mutation::NoMutation);
     }
     let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
     let (arg_key, arg_val) = rest.split_once('=').ok_or_else(|| format!("ifc2x3 mutation: missing arg for {keyword:?}"))?;
     match (keyword, arg_key) {
-        ("set-snapshot", "snapshot") => Ok(Ifc2x3Mutation::SetSnapshot { snapshot: dec_ifc2x3_snapshot(arg_val).await? }),
+        ("set-snapshot", "snapshot") => Ok(Ifc2x3Mutation::SetSnapshot { snapshot: dec_ifc2x3_snapshot(arg_val)? }),
         ("upsert-instance", "instance") => Ok(Ifc2x3Mutation::UpsertInstance { instance: dec_part21_instance(arg_val)? }),
         ("remove-instance", "id") => Ok(Ifc2x3Mutation::RemoveInstance { id: arg_val.parse().map_err(|e: std::num::ParseIntError| e.to_string())? }),
         ("set-header", "header") => Ok(Ifc2x3Mutation::SetHeader { header: dec_part21_header(arg_val)? }),
@@ -158,7 +158,7 @@ impl protocol::OpText for Ifc2x3Mutation {
 /// `write_str_bin` primitives for the SHARED `Part21Instance`/`Part21Header`/`Part21Value` shape
 /// (same intra-artifact-reuse split the TEXT codec above already uses); only `Ifc2x3Snapshot`'s own
 /// binary shape is genuinely new here.
-async fn enc_ifc2x3_snapshot_bin(s: &Ifc2x3Snapshot, out: &mut Vec<u8>) {
+fn enc_ifc2x3_snapshot_bin(s: &Ifc2x3Snapshot, out: &mut Vec<u8>) {
     write_str_bin(out, &s.schema);
     enc_part21_header_bin(&s.document.header, out);
     store::pack_rt::write_varint_u64(out, s.document.instances.len() as u64);

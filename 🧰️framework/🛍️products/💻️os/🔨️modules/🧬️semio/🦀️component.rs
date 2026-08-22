@@ -5,17 +5,26 @@ use std::sync::{Mutex, OnceLock};
 
 //#region 🔖️Errors
 /// @emoji ⚠️ Envelope parse or registry lookup failure.
-#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SemioError {
-    #[error("invalid semio preamble: {0}")]
     InvalidPreamble(String),
-    #[error("invalid binary semio header: {0}")]
     InvalidBinaryHeader(String),
-    #[error("unknown semio envelope: {0}")]
     UnknownEnvelope(String),
-    #[error("ambiguous semio envelope match")]
     AmbiguousEnvelope,
 }
+
+impl std::fmt::Display for SemioError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::InvalidPreamble(detail) => write!(formatter, "invalid semio preamble: {detail}"),
+            Self::InvalidBinaryHeader(detail) => write!(formatter, "invalid binary semio header: {detail}"),
+            Self::UnknownEnvelope(detail) => write!(formatter, "unknown semio envelope: {detail}"),
+            Self::AmbiguousEnvelope => formatter.write_str("ambiguous semio envelope match"),
+        }
+    }
+}
+
+impl std::error::Error for SemioError {}
 
 pub type SemioResult<T> = Result<T, SemioError>;
 //#endregion 🔖️Errors
@@ -243,13 +252,13 @@ pub fn resolve(bytes: &[u8]) -> SemioResult<SemioHandler> {
     let envelope = sniff(bytes)?;
     let key = registry_key(&envelope);
     let state = registry_state().lock().expect("semio registry");
-    state.by_key.get(&key).copied().ok_or_else(|| SemioError::UnknownEnvelope(key))
+    state.by_key.get(&key).copied().ok_or(SemioError::UnknownEnvelope(key))
 }
 
 /// @emoji ✅ Runs the registered handler for these bytes.
 pub fn verify(bytes: &[u8]) -> SemioResult<()> {
     let handler = resolve(bytes)?;
-    handler(bytes).map_err(|detail| SemioError::InvalidPreamble(detail))
+    handler(bytes).map_err(SemioError::InvalidPreamble)
 }
 //#endregion 🔖️Registry
 

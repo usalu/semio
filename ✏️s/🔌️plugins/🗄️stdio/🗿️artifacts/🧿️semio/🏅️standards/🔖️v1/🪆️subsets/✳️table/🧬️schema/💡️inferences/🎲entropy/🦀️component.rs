@@ -84,22 +84,22 @@ impl store::InferredField<SemioTableSnapshot> for ColumnEntropy {
     const FIELD_ID: &'static str = "s.stdio.semio.table.inference.entropy";
     const SCHEMA_VERSION: u32 = 1;
 
-    async fn reads() -> &'static [&'static str] {
+    fn reads() -> &'static [&'static str] {
         &["columns", "rows"]
     }
 
-    async fn plan(snapshot: &SemioTableSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
+    fn plan(snapshot: &SemioTableSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
         snapshot.columns.iter().map(|c| store::InferenceStep { key: c.name.clone(), parents: Vec::new() }).collect()
     }
 
     /// 🔑 Canonical dependency-input bytes — EXACTLY this column's own symbol-occurrence counts, in
     /// deterministic sorted-symbol order, nothing else — an unrelated column's edit must still hit
     /// the cache, proven by the incrementality-law test below.
-    async fn dep_input(snapshot: &SemioTableSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
+    fn dep_input(snapshot: &SemioTableSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
         serde_json::to_vec(&column_symbol_counts(snapshot, key)).unwrap_or_default()
     }
 
-    async fn compute(snapshot: &SemioTableSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
+    fn compute(snapshot: &SemioTableSnapshot, key: &Self::Key, _parents: &[Self::Value]) -> Self::Value {
         let counts = column_symbol_counts(snapshot, key);
         let count = counts.iter().sum::<u64>() as u32;
         let distinct = counts.len() as u32;

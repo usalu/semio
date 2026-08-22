@@ -385,7 +385,7 @@ macro_rules! forward_to_deserialize_num {
     };
 }
 
-impl<'de, 'a> serde::Deserializer<'de> for &'a mut PackDeserializer<'de> {
+impl<'de> serde::Deserializer<'de> for &mut PackDeserializer<'de> {
     type Error = PackError;
 
     fn deserialize_any<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value, PackError> {

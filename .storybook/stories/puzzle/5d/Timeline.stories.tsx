@@ -6,7 +6,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { HistoryColumn } from "@semio-tech/ui-react";
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from "react";
 

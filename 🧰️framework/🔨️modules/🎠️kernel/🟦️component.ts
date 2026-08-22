@@ -6,7 +6,7 @@ import type { ShellLocale, ShellTerminology, LocalizedLabel } from "../🛂️ma
 
 import type {
   PluginManifest,
-  PluginUiNode,
+  BuiltNode,
   PluginViewState,
   ProgramContributionEntry,
   WindowLayout,
@@ -236,8 +236,8 @@ export type PluginWasmHandle = {
 export function buildContributionsJson(loaded: ReadonlyArray<{ readonly pluginId: string; readonly manifest: PluginManifest }>): string {
   const entries: ProgramContributionEntry[] = [];
   for (const entry of loaded) {
-    for (const contribution of entry.manifest.contributions ?? []) {
-      entries.push({ pluginId: entry.pluginId, contribution });
+    for (const topicContribution of entry.manifest.topicContributions ?? []) {
+      entries.push({ pluginId: entry.pluginId, topicContribution });
     }
   }
   return JSON.stringify(entries);
@@ -305,17 +305,16 @@ export async function ensureContributorInstance(pluginId: string, appId: string,
   return instanceId;
 }
 
-export async function resolveExternalSlots(node: PluginUiNode, context: ExternalSlotResolverContext): Promise<PluginUiNode> {
-  if (node.type === "externalSlot") {
-    const pluginId = String(node.pluginId ?? "");
-    const appId = String(node.appId ?? pluginId);
+export async function resolveExternalSlots(node: BuiltNode, context: ExternalSlotResolverContext): Promise<BuiltNode> {
+  if (node.component.type === "extension") {
+    const [pluginId = "", appId = pluginId] = node.component.extension.split("/");
     const handle = context.plugins.get(pluginId);
     if (!handle) {
-      return { type: "text", value: `Extension unavailable: ${pluginId}` };
+      return { ...node, component: { type: "text", value: `Extension unavailable: ${pluginId}`, emphasize: null, dataAttributes: null }, children: [] };
     }
     const instanceId = await ensureContributorInstance(pluginId, appId, context);
     if (instanceId == null) {
-      return { type: "text", value: `Extension unavailable: ${pluginId}` };
+      return { ...node, component: { type: "text", value: `Extension unavailable: ${pluginId}`, emphasize: null, dataAttributes: null }, children: [] };
     }
     // 🚧️ Rendering a contributor's UI body now goes through `AppChannelClient.refreshUi`
     // (`RefreshUi` → `UiSection` over the app-channel handle, os-product `🔖️AppChannelClient` region)
@@ -323,17 +322,11 @@ export async function resolveExternalSlots(node: PluginUiNode, context: External
     // exact call site is the dedicated follow-up work package this ticket flags for the React
     // renderer's dispatch/refresh loops — until then an external slot degrades to unavailable
     // rather than silently guessing at `SectionProbe.kind`/body-key framing.
-    return { type: "text", value: `Extension unavailable: ${pluginId}` };
+    return { ...node, component: { type: "text", value: `Extension unavailable: ${pluginId}`, emphasize: null, dataAttributes: null }, children: [] };
   }
-  if (node.type === "stack" && Array.isArray(node.children)) {
-    const children = await Promise.all(node.children.map((child) => resolveExternalSlots(child as PluginUiNode, context)));
-    return { ...node, children };
-  }
-  if (node.type === "section" && Array.isArray(node.children)) {
-    const children = await Promise.all(node.children.map((child) => resolveExternalSlots(child as PluginUiNode, context)));
-    return { ...node, children };
-  }
-  return node;
+  if (node.children.length === 0) return node;
+  const children = await Promise.all(node.children.map((child) => resolveExternalSlots(child, context)));
+  return children.every((child, index) => child === node.children[index]) ? node : { ...node, children };
 }
 
 export type PluginRegistryEntry = {
@@ -424,7 +417,7 @@ export type ArtifactContributionDescriptor = {
 /** 🎯️ Fully-qualified dialect coordinate — mirrors Rust `ArtifactDialect`
  * (`🔨️modules/🚪️io/🦀️component.rs:50`, re-exported off `🛂️manifest/🦀️component.rs`). Duplicated
  * locally rather than imported from `🛂️manifest/🟦️component.ts`'s generated `AppDefinition` twin:
- * that twin's `apps` field is still `Record<string, unknown>[]` pending the ts-rs regen for
+ * that twin's `apps` field is still `Record<string, unknown>[]` pending the owned schema regeneration for
  * contract freeze §1 C1, so this file reads the wire shape structurally instead of depending on a
  * codegen timing this lease doesn't control — same idiom as the 🔖️PluginDependency/
  * 🔖️ArtifactContribution regions above. */
@@ -514,7 +507,7 @@ function surfaceFault(code: string, message: string, scope: FaultScope = {}): Fa
 
 /** 🗂️ The minimal per-plugin shape {@link AppRouter} needs — deliberately narrower than (and
  * structurally compatible with) `🛂️manifest/🟦️component.ts`'s `PluginManifest`: `apps` stays
- * `Record<string, unknown>[]` there pending the C1 ts-rs regen, and `artifactKinds` (this
+ * `Record<string, unknown>[]` there pending the C1 owned schema regeneration, and `artifactKinds` (this
  * plugin's OWNED kinds, Rust `PluginManifest.artifact_kinds`, `🛂️manifest/🦀️component.rs:3218`)
  * isn't mirrored on that type at all yet. A caller passes the real `PluginManifest` array straight
  * through once it starts carrying `artifactKinds` — nothing here needs to change. */

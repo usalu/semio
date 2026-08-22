@@ -4,21 +4,19 @@
 
 // #region 🔌️Adapters
 import { ephemeralBox, ephemeralMap } from "@semio-tech/framework";
-import mdx from "@mdx-js/rollup";
-import tailwindcss from "@tailwindcss/vite";
-import react from "@vitejs/plugin-react";
-import rehypeAutolinkHeadings from "rehype-autolink-headings";
-import rehypeSlug from "rehype-slug";
-import remarkFrontmatter from "remark-frontmatter";
-import remarkGfm from "remark-gfm";
-import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { createServer, type Server } from "node:http";
 import { cpSync, createReadStream, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { Connect, Plugin } from "vite";
-import { defineConfig, type UserConfig } from "vite";
+import {
+  defineOwnedBuildConfig,
+  uiReactBuildPlugin,
+  uiTailwindBuildPlugins,
+  type OwnedBuildConfig,
+  type OwnedBuildMiddleware,
+  type OwnedBuildPlugin,
+} from "../📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️build-tooling.ts";
 import {
   PLAYGROUND_PORTS,
   allPlaygroundReservedPorts,
@@ -48,7 +46,7 @@ export {
 
 //#region 🔖️ViteElementsAssets
 /** @emoji 📦️ Relative-base Vite build defaults for playground static sites (iframe + subdomain safe). */
-export function playgroundStaticSiteBuildOptions(overrides?: UserConfig["build"]): NonNullable<UserConfig["build"]> {
+export function playgroundStaticSiteBuildOptions(overrides?: OwnedBuildConfig["build"]): NonNullable<OwnedBuildConfig["build"]> {
   return {
     target: "esnext",
     outDir: "dist",
@@ -58,7 +56,7 @@ export function playgroundStaticSiteBuildOptions(overrides?: UserConfig["build"]
 }
 
 /** @emoji 🚀️ Production Vite `build` defaults: minify, strip console/debugger, no sourcemaps. */
-export function semioViteProductionBuild(overrides?: UserConfig["build"]): NonNullable<UserConfig["build"]> {
+export function semioViteProductionBuild(overrides?: OwnedBuildConfig["build"]): NonNullable<OwnedBuildConfig["build"]> {
   return {
     target: "es2022",
     sourcemap: false,
@@ -80,7 +78,7 @@ export function isPlaygroundOptimizedDepUrl(url: string): boolean {
 }
 
 /** @emoji 🧱️ Stubs vitest and testing-library when test regions enter the browser graph. */
-export function playgroundVitestDevStubPlugin(): Plugin {
+export function playgroundVitestDevStubPlugin(): OwnedBuildPlugin {
   const vitestStubId = "\0playground-vitest-dev-stub";
   const testingLibraryStubId = "\0playground-testing-library-dev-stub";
   return {
@@ -190,7 +188,7 @@ function workspaceWasmPkgResolveCandidates(repoRoot: string, pkgName: string, su
 }
 
 /** @emoji 🧱️ Stubs missing wasm pkg imports until `nx run …:wasm` artifacts exist. */
-export function playgroundFlowWasmDevStubPlugin(repoRoot: string): Plugin {
+export function playgroundFlowWasmDevStubPlugin(repoRoot: string): OwnedBuildPlugin {
   return {
     name: "playground-flow-wasm-dev-stub",
     enforce: "pre",
@@ -225,7 +223,7 @@ export function playgroundFlowWasmDevStubPlugin(repoRoot: string): Plugin {
 }
 
 /** @emoji 🧱️ Stubs Playwright when test-only regions are pulled into the browser graph. */
-export function playgroundPlaywrightDevStubPlugin(): Plugin {
+export function playgroundPlaywrightDevStubPlugin(): OwnedBuildPlugin {
   return {
     name: "playground-playwright-dev-stub",
     enforce: "pre",
@@ -243,7 +241,7 @@ export function playgroundPlaywrightDevStubPlugin(): Plugin {
 }
 
 /** @emoji 🔄️ Full-reload connected clients when a stale optimized-dep chunk returns 504. */
-export function playgroundStaleOptimizeDepPlugin(): Plugin {
+export function playgroundStaleOptimizeDepPlugin(): OwnedBuildPlugin {
   return {
     name: "playground-stale-optimize-dep",
     configureServer(server) {
@@ -264,8 +262,8 @@ export function playgroundStaleOptimizeDepPlugin(): Plugin {
 }
 
 /** @emoji 🖼️ Dev/preview CSP so playgrounds can be iframe-embedded locally. */
-export function playgroundIframeEmbedHeadersPlugin(): Plugin {
-  const useHeaders: Connect.NextHandleFunction = (_req, res, next) => {
+export function playgroundIframeEmbedHeadersPlugin(): OwnedBuildPlugin {
+  const useHeaders: OwnedBuildMiddleware = (_req, res, next) => {
     res.setHeader("Content-Security-Policy", "frame-ancestors *");
     res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
     res.setHeader("Cross-Origin-Embedder-Policy", "credentialless");
@@ -295,7 +293,7 @@ function contentTypeForUiAsset(filePath: string): string | undefined {
   return undefined;
 }
 
-function createUiAssetsMiddleware(assetsRoot: string): Connect.NextHandleFunction {
+function createUiAssetsMiddleware(assetsRoot: string): OwnedBuildMiddleware {
   const assetsRootResolved = resolve(assetsRoot);
   return (req, res, next) => {
     if (!req.url?.startsWith("/asset/")) {
@@ -321,7 +319,7 @@ function createUiAssetsMiddleware(assetsRoot: string): Connect.NextHandleFunctio
 /** @emoji 🌐️ Connect middleware: serve a `mesh-collection` spec's GLBs at `{route}/<name>.glb` (first
  * matching root wins; `{route}/<placeholder-basename>` always serves `spec.placeholder`). Generalizes
  * the previous puzzle-3d-only `/mesh/*` middleware — driven entirely by the spec, no app names. */
-function createMeshCollectionMiddleware(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "mesh-collection" }>): Connect.NextHandleFunction {
+function createMeshCollectionMiddleware(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "mesh-collection" }>): OwnedBuildMiddleware {
   const route = spec.route.endsWith("/") ? spec.route : `${spec.route}/`;
   const rootsResolved = spec.roots.map((root) => resolve(repoRoot, root));
   const placeholderResolved = resolve(repoRoot, spec.placeholder);
@@ -385,7 +383,7 @@ function copyMeshCollectionGlbs(roots: readonly string[], dest: string): void {
  * `spec.filterFromExamples` is reserved for a future per-locked-example basename filter (no source
  * data populates it yet, so every declared spec currently copies its full collection — matches the
  * puzzle-3d-only plugin this replaces, whose equivalent filter was already permanently inert). */
-export function meshCollectionVitePlugin(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "mesh-collection" }>): Plugin[] {
+export function meshCollectionVitePlugin(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "mesh-collection" }>): OwnedBuildPlugin[] {
   const serveMeshes = createMeshCollectionMiddleware(repoRoot, spec);
   const meshRoots = spec.roots.map((root) => resolve(repoRoot, root));
   const placeholderMesh = resolve(repoRoot, spec.placeholder);
@@ -449,7 +447,7 @@ function semioHostBootHeadTags(): { readonly tag: string; readonly attrs?: Recor
 }
 
 /** @emoji 🎬️ Vite: inject early appearance + theme + stylesheet link into play `🌐️index.html` to avoid unstyled flashes — additive tag injection onto each play's own hand-authored `🌐️index.html`, sharing its boot-head fragment ({@link semioHostBootHeadTags}) with {@link semioHostHtmlVitePlugin} instead of duplicating the style/script assembly. */
-export function playgroundPlayBootHtmlPlugin(): Plugin {
+export function playgroundPlayBootHtmlPlugin(): OwnedBuildPlugin {
   return {
     name: "playground-play-boot-html",
     transformIndexHtml: {
@@ -500,7 +498,7 @@ export function semioFaviconSvgMarkup(svgPath: string): string | undefined {
 /** @emoji 🔖️ Resolved favicon content for one host: inline SVG markup plus an optional ICO fallback path. */
 type FaviconContent = { readonly svgMarkup?: string; readonly icoPath?: string };
 
-function createFaviconMiddleware(content: FaviconContent): Connect.NextHandleFunction {
+function createFaviconMiddleware(content: FaviconContent): OwnedBuildMiddleware {
   return (req, res, next) => {
     const url = req.url?.split(/[?#]/, 1)[0];
     if (url === "/favicon.svg" && content.svgMarkup) {
@@ -518,7 +516,7 @@ function createFaviconMiddleware(content: FaviconContent): Connect.NextHandleFun
 }
 
 /** @emoji 🔖️ Vite: serve and copy the given favicon content at `/favicon.svg` and `/🖼️favicon.ico`. */
-function faviconVitePlugins(content: FaviconContent): Plugin[] {
+function faviconVitePlugins(content: FaviconContent): OwnedBuildPlugin[] {
   const serveFavicon = createFaviconMiddleware(content);
   let outDir = resolve(process.cwd(), "dist");
   return [
@@ -554,7 +552,7 @@ function faviconVitePlugins(content: FaviconContent): Plugin[] {
 }
 
 /** @emoji 🔖️ Vite: serve and copy semio emblem favicons at `/favicon.svg` and `/🖼️favicon.ico`. */
-export function semioFaviconVitePlugin(repoRoot: string): Plugin[] {
+export function semioFaviconVitePlugin(repoRoot: string): OwnedBuildPlugin[] {
   const favicons = semioFaviconSources(repoRoot);
   return faviconVitePlugins({ svgMarkup: semioFaviconSvgMarkup(favicons.svg), icoPath: favicons.ico });
 }
@@ -571,7 +569,7 @@ export type ShellBrandHostChrome = {
 /** @emoji 🚫️ Vite: writes `dist/.nojekyll` on every build (unconditionally — any static host that runs
  * Jekyll, e.g. GitHub Pages, silently drops files/dirs starting with `_` otherwise, breaking Vite's own
  * `__vite-browser-external-*.js` shim chunk) and `dist/🌐️CNAME` when a brand declares `cnameHost`. */
-function staticDeployMarkerVitePlugins(cnameHost: string | undefined): Plugin[] {
+function staticDeployMarkerVitePlugins(cnameHost: string | undefined): OwnedBuildPlugin[] {
   let outDir = resolve(process.cwd(), "dist");
   return [
     {
@@ -598,7 +596,7 @@ export function rewriteSpaFallbackToEmojiEntry(url: string, entryPath: string): 
   return `${entryPath}${rest.join("")}`;
 }
 
-function semioEmojiIndexHtmlRootRewrite(entry: string): Connect.NextHandleFunction {
+function semioEmojiIndexHtmlRootRewrite(entry: string): OwnedBuildMiddleware {
   return (req, _res, next) => {
     const url = req.url ?? "";
     if (url === "/" || url.startsWith("/?")) req.url = `${entry}${url.slice(1)}`;
@@ -606,7 +604,7 @@ function semioEmojiIndexHtmlRootRewrite(entry: string): Connect.NextHandleFuncti
   };
 }
 
-function semioEmojiIndexHtmlSpaFallbackRewrite(entry: string): Connect.NextHandleFunction {
+function semioEmojiIndexHtmlSpaFallbackRewrite(entry: string): OwnedBuildMiddleware {
   return (req, _res, next) => {
     const url = req.url ?? "";
     const nextUrl = rewriteSpaFallbackToEmojiEntry(url, entry);
@@ -617,7 +615,7 @@ function semioEmojiIndexHtmlSpaFallbackRewrite(entry: string): Connect.NextHandl
 
 /** @emoji 🌐️ Vite: treat hand-authored `🌐️index.html` as the app index (`/` + build input). Vite's default
  * `index.html` name does not match the constitutional emoji entry filename. */
-export function semioEmojiIndexHtmlVitePlugin(rootDir: string, fileName = "🌐️index.html"): Plugin {
+export function semioEmojiIndexHtmlVitePlugin(rootDir: string, fileName = "🌐️index.html"): OwnedBuildPlugin {
   const entry = `/${fileName}`;
   let outDir = "";
   return {
@@ -658,7 +656,7 @@ export function semioEmojiIndexHtmlVitePlugin(rootDir: string, fileName = "🌐�
 }
 
 /** @emoji 🏷️ Vite: brand-aware host chrome — rewrites the `<title>` to the brand's `windowTitle`, serves/copies the brand mark at `/favicon.svg` (ICO only when the brand provides one), and writes the static-deploy markers above; no brand ⇒ canonical semio favicons (still with `.nojekyll`). */
-export function semioBrandHtmlVitePlugins(repoRoot: string, brand: ShellBrandHostChrome | undefined): Plugin[] {
+export function semioBrandHtmlVitePlugins(repoRoot: string, brand: ShellBrandHostChrome | undefined): OwnedBuildPlugin[] {
   if (!brand) return [...semioFaviconVitePlugin(repoRoot), ...staticDeployMarkerVitePlugins(undefined)];
   return [
     ...faviconVitePlugins({ svgMarkup: brand.logoSvg, icoPath: brand.faviconIcoPath ? resolve(repoRoot, brand.faviconIcoPath) : undefined }),
@@ -731,7 +729,7 @@ export function semioHostHtmlString(spec: SemioHostHtmlSpec): string {
  * static-deploy markers ({@link staticDeployMarkerVitePlugins} — `.nojekyll` always, `🌐️CNAME` when
  * `spec.cnameHost` is set) — one call wires an app's whole boot + deploy surface instead of a
  * hand-authored `🌐️index.html` plus a separate build-output step. */
-export function semioHostHtmlVitePlugin(repoRoot: string, spec: SemioHostHtmlSpec): Plugin[] {
+export function semioHostHtmlVitePlugin(repoRoot: string, spec: SemioHostHtmlSpec): OwnedBuildPlugin[] {
   return [
     ...semioFaviconVitePlugin(repoRoot),
     ...staticDeployMarkerVitePlugins(spec.cnameHost),
@@ -800,7 +798,7 @@ export function resolveSemioAssetRoot(repoRoot: string): string {
   return assetsRoot;
 }
 
-function uiAssetsVitePluginsForRoot(assetsRoot: string): Plugin[] {
+function uiAssetsVitePluginsForRoot(assetsRoot: string): OwnedBuildPlugin[] {
   let outDir = resolve(process.cwd(), "dist");
   const serveAssets = createUiAssetsMiddleware(assetsRoot);
   return [
@@ -834,12 +832,12 @@ function uiAssetsVitePluginsForRoot(assetsRoot: string): Plugin[] {
 }
 
 /** @emoji 🌐️ Vite: serve and copy `@semio-tech/assets` at `/asset/*` for palette fonts and cursors. */
-export function semioAssetsVitePlugin(repoRoot: string): Plugin[] {
+export function semioAssetsVitePlugin(repoRoot: string): OwnedBuildPlugin[] {
   return uiAssetsVitePluginsForRoot(resolveSemioAssetRoot(repoRoot));
 }
 
 /** @emoji 🌐️ @deprecated Use {@link semioAssetsVitePlugin} — caller-supplied roots caused silent font 404s. */
-export function uiAssetsVitePlugin(assetsRoot: string): Plugin[] {
+export function uiAssetsVitePlugin(assetsRoot: string): OwnedBuildPlugin[] {
   const fontDir = resolve(assetsRoot, "🔤️fonts");
   if (!existsSync(assetsRoot) || !existsSync(fontDir)) {
     throw new Error(`uiAssetsVitePlugin: invalid asset root ${assetsRoot} (missing 🔤️fonts); use semioAssetsVitePlugin(repoRoot)`);
@@ -884,7 +882,7 @@ export function duplicateNamedImportsForModule(source: string, moduleId: string)
 const PRESENTATION_RENDERER_VITEST_START = "//#region 🧪️Tests";
 
 /** @emoji ✂️ Drops vitest regions from animate present renderer in browser dev. */
-export function animatePresentRendererVitestStripPlugin(animatePresentIndexPath: string): Plugin {
+export function animatePresentRendererVitestStripPlugin(animatePresentIndexPath: string): OwnedBuildPlugin {
   return {
     name: "animate-present-renderer-vitest-strip",
     enforce: "pre",
@@ -909,11 +907,11 @@ export type PlaygroundPlayViteOptions = {
   /** @emoji 🎯️ When set, `import.meta.env.PLAYGROUND_APP_KIND` gates browser boot in that play's `index.ts`. */
   readonly playEntryKind?: string;
   readonly extraAliases?: ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }>;
-  readonly extraPlugins?: readonly Plugin[];
+  readonly extraPlugins?: readonly OwnedBuildPlugin[];
   readonly watchIgnored?: readonly string[];
-  readonly build?: UserConfig["build"];
-  readonly server?: UserConfig["server"];
-  readonly optimizeDeps?: UserConfig["optimizeDeps"];
+  readonly build?: OwnedBuildConfig["build"];
+  readonly server?: OwnedBuildConfig["server"];
+  readonly optimizeDeps?: OwnedBuildConfig["optimizeDeps"];
   readonly resolveDedupe?: readonly string[];
 };
 
@@ -1233,7 +1231,7 @@ async function fetchTileProxyTileToCache(cacheRoot: string, upstream: string, z:
 /** @emoji 🌐️ Connect middleware serving `{route}/{z}/{x}/{y}.{ext}` tiles from `cacheRoot`, fetching
  * (and caching) from `upstream` on a miss — generalizes the previous OSM/OpenFreeMap/Terrarium
  * middlewares into one route-driven implementation. */
-function createTileProxyMiddleware(route: string, cacheRoot: string, upstream: string, mode: GisMapTileServeMode): Connect.NextHandleFunction {
+function createTileProxyMiddleware(route: string, cacheRoot: string, upstream: string, mode: GisMapTileServeMode): OwnedBuildMiddleware {
   const prefix = route.endsWith("/") ? route : `${route}/`;
   const pattern = new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(\\d+)/(\\d+)/(\\d+)\\.(\\w+)(?:\\?.*)?$`);
   return async (req, res, next) => {
@@ -1281,11 +1279,11 @@ function createTileProxyMiddleware(route: string, cacheRoot: string, upstream: s
 /** @emoji 🌐️ Generic dev/preview/build Vite plugin pair for one `tile-proxy` asset spec — replaces the
  * previous `gisMapTilesVitePlugins`/`terrainTilesVitePlugins`/`osmTileProxyVitePlugin`/
  * `mapLibreVectorTileProxyVitePlugin` quartet with a single spec-driven implementation. */
-export function tileProxyVitePlugin(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "tile-proxy" }>, mode: GisMapTileServeMode = "fetch"): Plugin[] {
+export function tileProxyVitePlugin(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "tile-proxy" }>, mode: GisMapTileServeMode = "fetch"): OwnedBuildPlugin[] {
   const cacheRoot = resolve(repoRoot, ".🧬semio/🗺️map", spec.cache);
   const serveTiles = createTileProxyMiddleware(spec.route, cacheRoot, spec.upstream, mode);
   let outDir = resolve(process.cwd(), "dist");
-  const plugins: Plugin[] = [
+  const plugins: OwnedBuildPlugin[] = [
     {
       name: `tile-proxy-serve${spec.route}`,
       enforce: "pre",
@@ -1321,7 +1319,7 @@ export function tileProxyVitePlugin(repoRoot: string, spec: Extract<PlaygroundAs
  * static-dir) — wgpu Trunk proxies and native-bin `SEMIO_ASSET_BASE_URL` hit this instead of Vite. */
 export function startAssetServer(repoRoot: string, port: number, specs: readonly PlaygroundAssetSpec[], mode: GisMapTileServeMode = "fetch", host = "127.0.0.1"): Server {
   const seen = new Set<string>();
-  const middlewares: Connect.NextHandleFunction[] = [];
+  const middlewares: OwnedBuildMiddleware[] = [];
   for (const spec of specs) {
     const key = `${spec.kind}:${spec.route}`;
     if (seen.has(key)) continue;
@@ -1354,9 +1352,9 @@ export function startAssetServer(repoRoot: string, port: number, specs: readonly
 /** @emoji 🚦️ Dispatches every declared `[[package.metadata.semio.assets]]` spec to its generic Vite
  * plugin factory — the single driver a dev `vite.config` calls with a playground's resolved `assets`
  * metadata instead of hand-picking per-app plugin factories. */
-export function playgroundAssetVitePlugins(repoRoot: string, specs: readonly PlaygroundAssetSpec[], mode: GisMapTileServeMode = "fetch"): Plugin[] {
+export function playgroundAssetVitePlugins(repoRoot: string, specs: readonly PlaygroundAssetSpec[], mode: GisMapTileServeMode = "fetch"): OwnedBuildPlugin[] {
   const seen = new Set<string>();
-  const plugins: Plugin[] = [];
+  const plugins: OwnedBuildPlugin[] = [];
   for (const spec of specs) {
     const key = `${spec.kind}:${spec.route}`;
     if (seen.has(key)) {
@@ -1387,7 +1385,7 @@ export const FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE = [
 ] as const;
 
 /** @emoji 🧭️ Workspace Vite resolve preset: dedupe, fs.allow, optimizeDeps.exclude, scene-host aliases. */
-export function createWorkspaceViteResolveConfig(repoRoot: string, extraAliases: ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }> = []): Pick<UserConfig, "resolve" | "server" | "optimizeDeps"> {
+export function createWorkspaceViteResolveConfig(repoRoot: string, extraAliases: ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }> = []): Pick<OwnedBuildConfig, "resolve" | "server" | "optimizeDeps"> {
   return {
     resolve: {
       alias: [...extraAliases],
@@ -1429,7 +1427,7 @@ function contentTypeForStaticDirAsset(filePath: string): string | undefined {
 }
 
 /** @emoji 🗂️ Connect middleware: serve one `static-dir` spec's files at `{route}/…`. */
-function createStaticDirMiddleware(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "static-dir" }>): Connect.NextHandleFunction {
+function createStaticDirMiddleware(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "static-dir" }>): OwnedBuildMiddleware {
   const fixtureRoot = resolve(repoRoot, spec.root);
   const route = spec.route.endsWith("/") ? spec.route : `${spec.route}/`;
   return (req, res, next) => {
@@ -1464,7 +1462,7 @@ function createStaticDirMiddleware(repoRoot: string, spec: Extract<PlaygroundAss
 /** @emoji 🖼️ Generic dev/build Vite plugin pair for one `static-dir` asset spec: serves and copies
  * `spec.root` at `spec.route` — replaces the previous `cadFixtureVitePlugin`/`infiniteFixtureVitePlugin`
  * pair (byte-identical serving logic, now route/root-driven instead of hardcoded per fixture tree). */
-export function staticDirVitePlugin(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "static-dir" }>): Plugin[] {
+export function staticDirVitePlugin(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "static-dir" }>): OwnedBuildPlugin[] {
   const serveFixture = createStaticDirMiddleware(repoRoot, spec);
   const fixtureRoot = resolve(repoRoot, spec.root);
   const destName = spec.route.replace(/^\//, "");
@@ -1555,7 +1553,7 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
       : [];
   const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot, [...extraAliases, ...osHubAliases]);
   const workerStubPlugins = [playgroundPlaywrightDevStubPlugin(), playgroundVitestDevStubPlugin()];
-  return defineConfig({
+  return defineOwnedBuildConfig({
     root: playDir,
     base: "./",
     publicDir: resolve(playDir, "public"),
@@ -1573,8 +1571,8 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
       ...semioAssetsVitePlugin(repoRoot),
       ...semioFaviconVitePlugin(repoRoot),
       ...playgroundAssetVitePlugins(repoRoot, PLAYGROUND_PLAY_STATIC_ASSETS),
-      tailwindcss(),
-      react(),
+      ...uiTailwindBuildPlugins(),
+      uiReactBuildPlugin(),
       playgroundPlaywrightDevStubPlugin(),
       playgroundVitestDevStubPlugin(),
       playgroundIframeEmbedHeadersPlugin(),
@@ -1932,4 +1930,3 @@ if (import.meta.vitest) {
   });
 }
 //#endregion 🔖️ViteElementsAssets
-

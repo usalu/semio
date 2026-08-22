@@ -7,7 +7,6 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { ephemeralMap } from "@semio-tech/framework";
-import { useHotkeys } from "react-hotkeys-hook";
 import { formatKeybindingShortcut } from "../⌨️keybinding-text-interpretation/🟦️component.ts";
 import { reactHostPort } from "../../🧱️elements/🔌️Ports/🟦️component.tsx";
 import { resolveControlLabelId } from "../../🧱️elements/🚗️UiDriver/🟦️component.tsx";
@@ -41,10 +40,102 @@ export type ControlKeybindingCallback = () => void;
 export interface ControlKeybindingOptions {
   readonly enabled?: boolean;
   readonly enableOnFormTags?: boolean;
+  readonly preventDefault?: boolean;
 }
 
 /** @emoji ⌨️ Dependency values that keep a control-keybinding callback current. */
 export type ControlKeybindingDependencies = ReadonlyArray<unknown>;
+
+interface OwnedHotkeyChord {
+  readonly alt: boolean;
+  readonly control: boolean;
+  readonly key: string;
+  readonly meta: boolean;
+  readonly shift: boolean;
+}
+
+/** @emoji 🍎 Whether the browser platform uses Command as its primary modifier. */
+export function isAppleHotkeyPlatform(platform: string): boolean {
+  return /mac|iphone|ipad|ipod/i.test(platform);
+}
+
+/** @emoji 🧹 Normalizes browser key names and keybinding aliases to one comparison token. */
+export function normalizeHotkeyKey(key: string): string {
+  if (key === " ") return "space";
+  const normalized = key.trim().toLowerCase();
+  if (normalized === "spacebar") return "space";
+  if (normalized === "esc") return "escape";
+  if (normalized === "left") return "arrowleft";
+  if (normalized === "right") return "arrowright";
+  if (normalized === "up") return "arrowup";
+  if (normalized === "down") return "arrowdown";
+  return normalized;
+}
+
+/** @emoji 🧩 Parses one comma-separated hotkey declaration into strict modifier chords. */
+export function parseOwnedHotkeyChords(keys: string, applePlatform: boolean): readonly OwnedHotkeyChord[] {
+  const chords: OwnedHotkeyChord[] = [];
+  for (const rawChord of keys.split(",")) {
+    const tokens = rawChord.split("+").map((token) => normalizeHotkeyKey(token)).filter(Boolean);
+    if (tokens.length === 0) continue;
+    let alt = false;
+    let control = false;
+    let meta = false;
+    let shift = false;
+    let key = "";
+    for (const token of tokens) {
+      if (token === "alt" || token === "option") alt = true;
+      else if (token === "ctrl" || token === "control") control = true;
+      else if (token === "meta" || token === "cmd" || token === "command") meta = true;
+      else if (token === "mod") {
+        if (applePlatform) meta = true;
+        else control = true;
+      } else if (token === "shift") shift = true;
+      else key = token;
+    }
+    if (key) chords.push({ alt, control, key, meta, shift });
+  }
+  return chords;
+}
+
+/** @emoji 🎯 Matches one keyboard event against an already-normalized owned chord. */
+export function keyboardEventMatchesOwnedHotkey(event: KeyboardEvent, chord: OwnedHotkeyChord): boolean {
+  return normalizeHotkeyKey(event.key) === chord.key
+    && event.altKey === chord.alt
+    && event.ctrlKey === chord.control
+    && event.metaKey === chord.meta
+    && event.shiftKey === chord.shift;
+}
+
+/** @emoji ✍️ Whether a keyboard event originated from a form or editable text surface. */
+export function isHotkeyFormTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false;
+  return target.matches("input,textarea,select,[contenteditable]:not([contenteditable='false'])");
+}
+
+/** @emoji 🌙 Owned React hotkey listener with strict chord matching and deterministic cleanup. */
+export function useHotkeys(keys: string, callback: ControlKeybindingCallback, options: ControlKeybindingOptions = {}, dependencies: ControlKeybindingDependencies = []): void {
+  const callbackRef = reactHostPort.useRef(callback);
+  callbackRef.current = callback;
+  const platform = typeof navigator === "undefined" ? "" : navigator.platform;
+  const chords = reactHostPort.useMemo(() => parseOwnedHotkeyChords(keys, isAppleHotkeyPlatform(platform)), [keys, platform]);
+  const enabled = options.enabled ?? true;
+  const enableOnFormTags = options.enableOnFormTags ?? false;
+  const preventDefault = options.preventDefault ?? false;
+  void dependencies;
+
+  reactHostPort.useEffect(() => {
+    if (!enabled || chords.length === 0 || typeof window === "undefined") return;
+    const onKeyDown = (event: KeyboardEvent): void => {
+      if (!enableOnFormTags && isHotkeyFormTarget(event.target)) return;
+      if (!chords.some((chord) => keyboardEventMatchesOwnedHotkey(event, chord))) return;
+      if (preventDefault) event.preventDefault();
+      callbackRef.current();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [chords, enabled, enableOnFormTags, preventDefault]);
+}
 
 /** @emoji ⌨️ Last-wins action-to-keys map from app keybindings. */
 export function buildKeysByActionId(keybindings: readonly ControlKeybindingDefinition[]): ReadonlyMap<string, string> {

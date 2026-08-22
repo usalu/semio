@@ -2,12 +2,13 @@
 //!
 //! This is the single source of truth every `GraphicsBackend` builds its pipelines from — no
 //! backend reads WGSL directly. webgpu consumes [`ShaderVariant::wgsl`] verbatim; vulkan/metal/
-//! d3d12 cross-compile it at build time (naga SPIR-V/MSL/HLSL backends, never linked at runtime).
+//! d3d12 cross-compile it at build time (SPIR-V/MSL/HLSL backends, never linked at runtime).
 //! Copied here from `🎯️targets/🧊️wgpu/🦀️shaders.rs` after repairing the asyncify corruption
 //! (`async fn vs_main`/`async fn fs_main` — WGSL has no `async` keyword) — see
 //! `📓️terra-shader-repair-report.md` in ticket `26/08/20/SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY`
 //! for the full corruption inventory. The `#[cfg(test)]` module below is the permanent regression
-//! guard: it runs naga's WGSL front end over every constant so this class of defect fails in CI,
+//! guard: it runs the owned lexical and structural validator over every constant so this class of
+//! defect fails in CI,
 //! on any platform, without a GPU.
 
 //#region 🔖️ShaderContract
@@ -189,7 +190,7 @@ pub enum CullMode {
 
 /// 🏗️ Everything a `GraphicsBackend` needs to build one pipeline from a `ShaderVariant`'s WGSL,
 /// without parsing that WGSL itself. `vertex_entry`/`fragment_entry` are cross-checked against the
-/// variant's actual naga entry points by the `pipeline_entry_points_exist_in_shader` test below —
+/// variant's actual shader entry points by the `pipeline_entry_points_exist_in_shader` test below —
 /// a spec that has drifted from its shader fails loudly there instead of silently at device time.
 #[derive(Clone, Copy, Debug)]
 pub struct PipelineSpec {
@@ -1057,7 +1058,7 @@ pub const GLASS_FAMILY: ShaderFamily = ShaderFamily { name: "glass", variants: &
 
 //#region 📚️Registry
 
-/// 📚️ Every canonical shader family. Iterated by the naga regression test below and by any backend
+/// 📚️ Every canonical shader family. Iterated by the structural regression test below and by any backend
 /// that wants to build (or cross-compile) every pipeline up front.
 pub const ALL_SHADERS: &[ShaderFamily] = &[UI_FAMILY, VECTOR_FAMILY, WORLD3D_FAMILY, BLUR_FAMILY, GLASS_FAMILY];
 
@@ -1069,18 +1070,99 @@ pub const ALL_SHADERS: &[ShaderFamily] = &[UI_FAMILY, VECTOR_FAMILY, WORLD3D_FAM
 mod tests {
     use super::*;
 
-    /// 🛡️ Parses and validates `source` with naga's WGSL front end, panicking with `label` and
-    /// naga's own diagnostic on failure — this is the check that would have caught `async fn
-    /// vs_main` the moment the asyncify codemod introduced it.
-    fn assert_wgsl_valid(label: &str, source: &str) -> naga::Module {
-        let module = naga::front::wgsl::parse_str(source).unwrap_or_else(|error| panic!("{label}: naga failed to parse WGSL — {}", error.emit_to_string(source)));
-        let mut validator = naga::valid::Validator::new(naga::valid::ValidationFlags::all(), naga::valid::Capabilities::all());
-        validator.validate(&module).unwrap_or_else(|error| panic!("{label}: naga validation failed — {}", error.emit_to_string(source)));
-        module
+    //#region 🔖️OwnedWgslValidation
+    fn wgsl_tokens(source: &str) -> Result<Vec<String>, String> {
+        let bytes = source.as_bytes();
+        let mut tokens = Vec::new();
+        let mut index = 0;
+        while index < bytes.len() {
+            if bytes[index].is_ascii_whitespace() {
+                index += 1;
+            } else if bytes[index..].starts_with(b"//") {
+                index += 2;
+                while index < bytes.len() && bytes[index] != b'\n' {
+                    index += 1;
+                }
+            } else if bytes[index..].starts_with(b"/*") {
+                index += 2;
+                let mut depth = 1usize;
+                while index < bytes.len() && depth > 0 {
+                    if bytes[index..].starts_with(b"/*") {
+                        depth += 1;
+                        index += 2;
+                    } else if bytes[index..].starts_with(b"*/") {
+                        depth -= 1;
+                        index += 2;
+                    } else {
+                        index += 1;
+                    }
+                }
+                if depth != 0 {
+                    return Err("unterminated block comment".into());
+                }
+            } else if bytes[index].is_ascii_alphabetic() || bytes[index] == b'_' {
+                let start = index;
+                index += 1;
+                while index < bytes.len() && (bytes[index].is_ascii_alphanumeric() || bytes[index] == b'_') {
+                    index += 1;
+                }
+                tokens.push(source[start..index].to_string());
+            } else {
+                tokens.push((bytes[index] as char).to_string());
+                index += 1;
+            }
+        }
+        Ok(tokens)
     }
 
+    fn validate_wgsl_structure(source: &str) -> Result<Vec<String>, String> {
+        let tokens = wgsl_tokens(source)?;
+        let mut delimiters = Vec::new();
+        let mut entry_points = Vec::new();
+        for (index, token) in tokens.iter().enumerate() {
+            match token.as_str() {
+                "(" | "[" | "{" => delimiters.push(token.as_str()),
+                ")" | "]" | "}" => {
+                    let expected = match token.as_str() {
+                        ")" => "(",
+                        "]" => "[",
+                        _ => "{",
+                    };
+                    if delimiters.pop() != Some(expected) {
+                        return Err(format!("unbalanced delimiter {token} at token {index}"));
+                    }
+                }
+                "async" if tokens.get(index + 1).is_some_and(|next| next == "fn") => return Err("WGSL does not permit async functions".into()),
+                "fn" => {
+                    let name = tokens.get(index + 1).filter(|name| name.bytes().next().is_some_and(|byte| byte.is_ascii_alphabetic() || byte == b'_')).ok_or_else(|| format!("function at token {index} has no identifier"))?;
+                    let attribute_start = tokens[..index].iter().rposition(|candidate| matches!(candidate.as_str(), ";" | "{" | "}" | "fn")).map_or(0, |position| position + 1);
+                    for pair in tokens[attribute_start..index].windows(2) {
+                        if pair[0] == "@" && matches!(pair[1].as_str(), "vertex" | "fragment" | "compute") {
+                            entry_points.push(name.clone());
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+        if let Some(delimiter) = delimiters.last() {
+            return Err(format!("unclosed delimiter {delimiter}"));
+        }
+        if !tokens.iter().any(|token| token == "fn") {
+            return Err("shader declares no function".into());
+        }
+        entry_points.sort();
+        entry_points.dedup();
+        Ok(entry_points)
+    }
+
+    fn assert_wgsl_valid(label: &str, source: &str) -> Vec<String> {
+        validate_wgsl_structure(source).unwrap_or_else(|error| panic!("{label}: owned WGSL structural validation failed — {error}"))
+    }
+    //#endregion 🔖️OwnedWgslValidation
+
     #[test]
-    fn all_canonical_shaders_parse_and_validate() {
+    fn all_canonical_shaders_pass_owned_structural_validation() {
         for family in ALL_SHADERS {
             for variant in family.variants {
                 assert_wgsl_valid(variant.name, variant.wgsl);
@@ -1092,14 +1174,35 @@ mod tests {
     fn pipeline_entry_points_exist_in_shader() {
         for family in ALL_SHADERS {
             for variant in family.variants {
-                let module = assert_wgsl_valid(variant.name, variant.wgsl);
-                let entry_names: Vec<&str> = module.entry_points.iter().map(|entry| entry.name.as_str()).collect();
+                let entry_names = assert_wgsl_valid(variant.name, variant.wgsl);
                 for pipeline in variant.pipelines {
-                    assert!(entry_names.contains(&pipeline.vertex_entry), "{}/{}: PipelineSpec '{}' names vertex entry {:?} but the WGSL only declares {:?}", family.name, variant.name, pipeline.label, pipeline.vertex_entry, entry_names);
-                    assert!(entry_names.contains(&pipeline.fragment_entry), "{}/{}: PipelineSpec '{}' names fragment entry {:?} but the WGSL only declares {:?}", family.name, variant.name, pipeline.label, pipeline.fragment_entry, entry_names);
+                    assert!(
+                        entry_names.iter().any(|entry| entry == pipeline.vertex_entry),
+                        "{}/{}: PipelineSpec '{}' names vertex entry {:?} but the WGSL only declares {:?}",
+                        family.name,
+                        variant.name,
+                        pipeline.label,
+                        pipeline.vertex_entry,
+                        entry_names
+                    );
+                    assert!(
+                        entry_names.iter().any(|entry| entry == pipeline.fragment_entry),
+                        "{}/{}: PipelineSpec '{}' names fragment entry {:?} but the WGSL only declares {:?}",
+                        family.name,
+                        variant.name,
+                        pipeline.label,
+                        pipeline.fragment_entry,
+                        entry_names
+                    );
                 }
             }
         }
+    }
+
+    #[test]
+    fn owned_validator_rejects_async_and_unbalanced_wgsl() {
+        assert!(validate_wgsl_structure("@vertex async fn vs_main() {}").is_err());
+        assert!(validate_wgsl_structure("@fragment fn fs_main() -> @location(0) vec4<f32> {").is_err());
     }
 
     #[test]

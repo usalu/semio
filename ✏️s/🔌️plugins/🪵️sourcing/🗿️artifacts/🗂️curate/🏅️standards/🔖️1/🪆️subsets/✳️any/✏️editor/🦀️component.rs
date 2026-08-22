@@ -288,14 +288,14 @@ pub async fn reset_document_effect(document: &CurateSnapshot) -> semio_framework
 /// 🙈️ An internal document operation kept out of the command palette — the curate/DnD arms that mutate
 /// the persisted `CurateSnapshot` but are only ever dispatched from window chrome.
 async fn hidden_operation(id: &str, label: impl Into<LocalizedLabel>) -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, ActionKind::Mutation) }
+    ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(id, label, ActionKind::Mutation) }
 }
 
 /// 🙈️👁️ The filter/sort/selection/world-pick arms emit ONLY `config_mutations`, so (unlike
 /// `hidden_operation` above) they're declared `ActionKind::View`, letting `VcsArtifactApp`'s
 /// kind-discipline check actually enforce "must not emit document operations".
 async fn hidden_view_action(id: &str, label: impl Into<LocalizedLabel>) -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, ActionKind::View) }
+    ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(id, label, ActionKind::View) }
 }
 
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
@@ -307,9 +307,9 @@ async fn hidden_view_action(id: &str, label: impl Into<LocalizedLabel>) -> Actio
 /// stay reachable through the `setActiveExample` action (`action_args` below) and this subset's own
 /// `📚️examples` facet, just no longer wired into the manifest's `examples` list. See
 /// `📓️w2-cad-report.md`'s "SDK gaps found" #4 for the same gap hit by the pilot packet.
-pub async fn create_sourcing_curate_app() -> AppDefinition {
+pub fn create_sourcing_curate_app() -> AppDefinition {
     Editor::builder(crate::artifacts::curate::SOURCING_DIALECT)
-            .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
+            .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
             .document(["semio", "sourcing", "curate"])
             .artifact_kind(crate::artifacts::curate::artifact_kind())
             .artifact_kind(ArtifactKindSpec {

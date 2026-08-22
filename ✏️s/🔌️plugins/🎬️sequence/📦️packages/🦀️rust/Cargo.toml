@@ -31,8 +31,8 @@ semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀
 imperative_engine = { path = "../../../../../✏️s/🔨️modules/📜️imperative/📦️packages/🦀️rust", package = "semio-s-imperative" }
 infinite_canvas = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
+semio-framework-dispatch-macros = { path = "../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
-thiserror.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 
@@ -48,4 +48,3 @@ wasm-bindgen = "0.2.106"
 wasm-bindgen-futures = "0.4.71"
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }
 js-sys = "0.3.83"
-

@@ -12,7 +12,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️compo
 //#endregion 📖️SemioGrammar
 
 //#region 🔖️Apply
-async fn apply_identified_delta<T: Clone>(items: &[T], removed: &[String], added: &[T], patched: &[(String, Option<T>)], reordered: &Option<Vec<String>>, id_of: impl Fn(&T) -> &str) -> protocol::MutationApplyResult<Vec<T>> {
+fn apply_identified_delta<T: Clone>(items: &[T], removed: &[String], added: &[T], patched: &[(String, Option<T>)], reordered: &Option<Vec<String>>, id_of: impl Fn(&T) -> &str) -> protocol::MutationApplyResult<Vec<T>> {
     let mut next = items.to_vec();
     let mut seen = std::collections::HashSet::new();
     for id in removed {
@@ -68,7 +68,7 @@ async fn apply_identified_delta<T: Clone>(items: &[T], removed: &[String], added
 
 macro_rules! apply_col {
     ($fn:ident, $ty:ty, $delta:ty, $field:ident) => {
-        pub async fn $fn(items: &[$ty], delta: &$delta) -> protocol::MutationApplyResult<Vec<$ty>> {
+        pub fn $fn(items: &[$ty], delta: &$delta) -> protocol::MutationApplyResult<Vec<$ty>> {
             let patched: Vec<_> = delta.patched.iter().map(|entry| (entry.id.clone(), entry.patch.replacement.clone())).collect();
             apply_identified_delta(items, &delta.removed, &delta.added, &patched, &delta.reordered, |item| &item.id)
         }
@@ -81,7 +81,7 @@ apply_col!(apply_references_delta, Puzzle3dReference, Puzzle3dReferencesDelta, r
 
 impl Puzzle3dDiff {
     /// 🧬️ Applies every sparse entry onto a full artifact.
-    pub async fn apply_to_artifact(&self, artifact: &Puzzle3dArtifact) -> protocol::MutationApplyResult<Puzzle3dArtifact> {
+    pub fn apply_to_artifact(&self, artifact: &Puzzle3dArtifact) -> protocol::MutationApplyResult<Puzzle3dArtifact> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -210,7 +210,7 @@ impl Puzzle3dDiff {
 }
 
 impl MutationDiff<Puzzle3dSnapshot> for Puzzle3dDiff {
-    async fn apply(&self, snapshot: &Puzzle3dSnapshot) -> protocol::MutationApplyResult<Puzzle3dSnapshot> {
+    fn apply(&self, snapshot: &Puzzle3dSnapshot) -> protocol::MutationApplyResult<Puzzle3dSnapshot> {
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -240,7 +240,7 @@ impl MutationDiff<Puzzle3dSnapshot> for Puzzle3dDiff {
             next
         })
     }
-    async fn absorb(&mut self, other: Self) {
+    fn absorb(&mut self, other: Self) {
         if other.artifact.is_some() {
             *self = other;
             return;
@@ -294,7 +294,13 @@ impl MutationDiff<Puzzle3dSnapshot> for Puzzle3dDiff {
                         Some(existing) => {
                             existing.removed.extend(delta.removed);
                             existing.added.extend(delta.added);
-                            existing.patched.extend(delta.patched);
+                            for patch in delta.patched {
+                                if let Some(previous) = existing.patched.iter_mut().find(|entry| entry.id == patch.id) {
+                                    *previous = patch;
+                                } else {
+                                    existing.patched.push(patch);
+                                }
+                            }
                             if delta.reordered.is_some() {
                                 existing.reordered = delta.reordered;
                             }

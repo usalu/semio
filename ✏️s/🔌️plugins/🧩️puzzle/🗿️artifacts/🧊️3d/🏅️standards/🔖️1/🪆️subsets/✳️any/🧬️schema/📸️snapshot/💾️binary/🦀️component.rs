@@ -11,12 +11,12 @@ use crate::artifacts::puzzle3d::Puzzle3dSnapshot;
 use store::PackError;
 
 /// 📦️ Encodes a `Puzzle3dSnapshot` to its binary pack form.
-pub async fn encode(document: &Puzzle3dSnapshot) -> Vec<u8> {
+pub fn encode(document: &Puzzle3dSnapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `Puzzle3dSnapshot` from its binary pack form.
-pub async fn decode(bytes: &[u8]) -> Result<Puzzle3dSnapshot, PackError> {
+pub fn decode(bytes: &[u8]) -> Result<Puzzle3dSnapshot, PackError> {
     <Puzzle3dSnapshot as store::ArtifactPack>::decode_pack(bytes)
 }
 
@@ -26,8 +26,8 @@ mod tests {
     use super::*;
     use crate::artifacts::puzzle3d::dsl;
 
-    #[semio_framework_async_macros::async_test]
-    async fn pack_round_trips_and_agrees_with_dsl() {
+    #[test]
+    fn pack_round_trips_and_agrees_with_dsl() {
         let document = dsl::parse_dsl(dsl::PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT).expect("parse concrete-forest example");
         semio_framework_os_kernel::os_store::test_support::assert_dsl_pack_equivalence(&document);
         let bytes = encode(&document);
@@ -39,19 +39,20 @@ mod tests {
     /// `Puzzle3dMutation`'s `Edit` round-trips through `protocol::MutationEnvelope`s beside this
     /// file's existing dsl/pack round-trip law (same pattern as `dag`'s own
     /// `command_envelope_round_trip_holds_for_an_applied_operation`).
-    #[semio_framework_async_macros::async_test]
-    async fn command_envelope_round_trip_holds_for_an_applied_operation() {
+    #[test]
+    fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use crate::artifacts::puzzle3d::op::Puzzle3dMutation;
         use crate::artifacts::puzzle3d::spr::Puzzle3dStore;
         use crate::artifacts::puzzle3d::{Puzzle3dObject, PUZZLE_3D_SCHEMA};
         use protocol::{ArtifactId, Edit, SchemaId};
         use store::{create_document_envelope, ArtifactCommand};
 
-        let mut store = Puzzle3dStore::new(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", Puzzle3dSnapshot::default(), None));
+        let mut store = semio_framework::io::resolve_ready(Puzzle3dStore::new(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", Puzzle3dSnapshot::default(), None))).expect("store");
         let object = Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::puzzle3d::mutations::create_object(object, None)], description: None }).expect("apply");
-        let edit: &Edit<Puzzle3dMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle3dSnapshot, Puzzle3dMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        semio_framework::io::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::puzzle3d::mutations::create_object(object, None)], description: None })).expect("apply");
+        let envelope = semio_framework::io::resolve_ready(store.envelope());
+        let edit: &Edit<Puzzle3dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
+        semio_framework::io::resolve_ready(semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle3dSnapshot, Puzzle3dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())));
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

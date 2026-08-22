@@ -1,0 +1,30 @@
+	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	13608	method should be `async` or return a future, but it is synchronous
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	15286	the `?` operator can only be applied to values that implement `Try`
+E0308	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	13503	mismatched types
+E0599	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🏗️builder/🦀️component.rs	637	no method named `map_err` found for opaque type `impl Future<Output = Result<ArtifactAssemblyTransaction, ...>>` in the current scope
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	15318	`impl std::future::Future<Output = Vec<semio_framework::CapabilityRequirement>>` is not an iterator
+E0308	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	13507	mismatched types
+E0308	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	13540	mismatched types
+E0599	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	15324	no method named `map_err` found for opaque type `impl std::future::Future<Output = Result<(), SchemaDescriptorRegistryError>>` in the current scope
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3791	`impl std::future::Future<Output = &'static str>` doesn't implement `std::fmt::Display`
+E0599	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	4053	no method named `map_err` found for opaque type `impl Future<Output = Result<(), ArtifactAssemblyRegistryError>>` in the current scope
+E0599	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	15325	no method named `map_err` found for opaque type `impl std::future::Future<Output = Result<(), SchemaDescriptorRegistryError>>` in the current scope
+E0308	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	4175	mismatched types
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3821	`impl std::future::Future<Output = &'static str>` doesn't implement `std::fmt::Display`
+E0308	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3336	mismatched types
+E0599	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	15326	no method named `map_err` found for opaque type `impl std::future::Future<Output = Result<(), ArtifactInferenceRegistrationError>>` in the current scope
+E0599	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3938	no method named `register` found for opaque type `impl std::future::Future<Output = ArtifactInferenceServiceRegistry>` in the current scope
+E0308	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3943	mismatched types
+E0308	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	3982	mismatched types
+E0599	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	15329	no method named `map_err` found for opaque type `impl Future<Output = Result<ArtifactAssemblyTransaction, ...>>` in the current scope
+E0599	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	4008	no method named `map_err` found for opaque type `impl std::future::Future<Output = Result<(), ArtifactInferenceRegistrationError>>` in the current scope
+E0609	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	4014	no field `mutation_id` on type `impl std::future::Future<Output = WireMutationRosterEntry>`
+E0277	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	4015	can't compare `WireMutationRosterEntry` with `impl std::future::Future<Output = WireMutationRosterEntry>`
+E0609	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	4016	no field `mutation_id` on type `impl std::future::Future<Output = WireMutationRosterEntry>`
+E0609	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	4019	no field `mutation_id` on type `impl std::future::Future<Output = WireMutationRosterEntry>`
+E0599	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	15330	no method named `map_err` found for opaque type `impl std::future::Future<Output = Result<(), DocumentCodecRegistryError>>` in the current scope
+E0271	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	15331	type mismatch resolving `<Vec<impl Future<Output = FormatDescriptor>> as IntoIterator>::Item == FormatDescriptor`
+E0599	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	15331	no method named `map_err` found for opaque type `impl std::future::Future<Output = Result<(), semio_framework::FormatRegistryError>>` in the current scope
+E0271	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	15331	type mismatch resolving `<Vec<impl Future<Output = FormatDescriptor>> as IntoIterator>::Item == FormatDescriptor`
+E0308	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	4019	mismatched types
+E0599	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs	15334	no method named `map_err` found for opaque type `impl Future<Output = Result<(), IoRegistryError>>` in the current scope

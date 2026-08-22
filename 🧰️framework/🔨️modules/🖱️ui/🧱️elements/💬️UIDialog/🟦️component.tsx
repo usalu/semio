@@ -14,7 +14,7 @@ import { veilClass } from "../../🔨️modules/🌈️surface-presentation/🟦
 import { useControlKeybinding } from "../../🔨️modules/⌨️control-keybinding-context/🟦️component.tsx";
 import { useLabel } from "../🏷️Label/🟦️component.tsx";
 import { Surface } from "../🌈️Surface/🟦️component.tsx";
-import { GLASS_OVERLAY_BOX_CLASS } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+import { detectShellLocale, GLASS_OVERLAY_BOX_CLASS, resolveUiLocalizedText, uiI18n, useShellScopeOptional, useUiTerminology } from "../../📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
 import { Button } from "../🔘️Button/🟦️component.tsx";
 // #endregion 🔌️Adapters
 
@@ -34,6 +34,11 @@ export type UIDialogProps = {
  * cancel (Escape, veil click, or the Cancel button) all funnel through `onCancel`. */
 export const UIDialog: React.FC<UIDialogProps> = ({ dialog, seedArgs, renderField, onSubmit, onCancel }) => {
   const cancelLabel = useLabel("ui.common.cancel");
+  const shellScope = useShellScopeOptional();
+  const { terminology } = useUiTerminology();
+  const locale = detectShellLocale(shellScope?.i18n.resolvedLanguage ?? uiI18n.resolvedLanguage);
+  const text = (value: unknown) => resolveUiLocalizedText(value, terminology, locale);
+  const body = text(dialog.body);
   const [staged, setStaged] = reactHostPort.useState<Record<string, unknown>>({});
   const effective = reactHostPort.useMemo(() => effectiveActionArgs(dialog.args, staged, seedArgs), [dialog.args, staged, seedArgs]);
   const missing = reactHostPort.useMemo(() => missingRequiredArgs(dialog.args, effective), [dialog.args, effective]);
@@ -50,21 +55,21 @@ export const UIDialog: React.FC<UIDialogProps> = ({ dialog, seedArgs, renderFiel
     <>
       <div data-level="dialog" className={cn(veilClass, "z-tutorial fixed inset-0 pointer-events-auto")} onClick={onCancel} />
       <Surface data-slot="dialog-box" level="dialog" fill="glass" className={cn(GLASS_OVERLAY_BOX_CLASS, "top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]")}>
-        <h3 className="mb-single text-sm font-medium">{dialog.title}</h3>
-        {dialog.body && <p className="mb-double text-xs text-muted-foreground">{dialog.body}</p>}
+        <h3 className="mb-single text-sm font-medium">{text(dialog.title)}</h3>
+        {body && <p className="mb-double text-xs text-muted-foreground">{body}</p>}
         {dialog.args.length > 0 && (
           <div className="mb-double flex flex-col gap-single">
             {dialog.args.map((def) => (
               <div key={def.id} className="flex flex-col gap-tiny">
-                <span className="text-xs text-muted-foreground">{def.label}</span>
+                <span className="text-xs text-muted-foreground">{text(def.label)}</span>
                 {renderField(def, effective[def.id], (value) => setStaged((prev) => ({ ...prev, [def.id]: value })))}
               </div>
             ))}
           </div>
         )}
         <div className="flex items-center justify-between gap-single">
-          <Button id="ui.dialog.cancel" variant="ghost" icon="x" text={dialog.cancelLabel ?? cancelLabel} onClick={onCancel} />
-          <Button id="ui.dialog.submit" icon="check" text={dialog.submitLabel} disabled={!canSubmit} onClick={submit} />
+          <Button id="ui.dialog.cancel" variant="ghost" icon="x" text={dialog.cancelLabel ? text(dialog.cancelLabel) : cancelLabel} onClick={onCancel} />
+          <Button id="ui.dialog.submit" icon="check" text={text(dialog.submitLabel)} disabled={!canSubmit} onClick={submit} />
         </div>
       </Surface>
     </>

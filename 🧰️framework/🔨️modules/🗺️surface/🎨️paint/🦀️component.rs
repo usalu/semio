@@ -202,14 +202,43 @@ fn parse_document(json: &str) -> Result<RasterDocument, FrameworkSurfacePaintErr
 
 //#region ⚠️ Errors
 /// ⚠️ Raster-paint host errors — JSON decode failures, unsupported document schema, and image decode failures.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum FrameworkSurfacePaintError {
-    #[error(transparent)]
-    Json(#[from] serde_json::Error),
-    #[error(transparent)]
-    Image(#[from] image::ImageError),
-    #[error("unsupported schema {0}")]
+    Json(serde_json::Error),
+    Image(image::ImageError),
     UnsupportedSchema(String),
+}
+
+impl std::fmt::Display for FrameworkSurfacePaintError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Json(error) => error.fmt(formatter),
+            Self::Image(error) => error.fmt(formatter),
+            Self::UnsupportedSchema(schema) => write!(formatter, "unsupported schema {schema}"),
+        }
+    }
+}
+
+impl std::error::Error for FrameworkSurfacePaintError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Json(error) => Some(error),
+            Self::Image(error) => Some(error),
+            Self::UnsupportedSchema(_) => None,
+        }
+    }
+}
+
+impl From<serde_json::Error> for FrameworkSurfacePaintError {
+    fn from(error: serde_json::Error) -> Self {
+        Self::Json(error)
+    }
+}
+
+impl From<image::ImageError> for FrameworkSurfacePaintError {
+    fn from(error: image::ImageError) -> Self {
+        Self::Image(error)
+    }
 }
 //#endregion ⚠️ Errors
 
@@ -1019,7 +1048,7 @@ impl RasterSession {
         }
         let canvas = canvas.clone();
         future_to_promise(async move {
-            let (render_ctx, renderer, surface) = canvas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).map_err(|e| JsValue::from_str(&e))?;
+            let (render_ctx, renderer, surface) = canvas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
             let mut g = inner.borrow_mut();
             if g.gpu.gpu_ready() {
                 g.set_logical_size(lw, lh, dpr, pw, ph);

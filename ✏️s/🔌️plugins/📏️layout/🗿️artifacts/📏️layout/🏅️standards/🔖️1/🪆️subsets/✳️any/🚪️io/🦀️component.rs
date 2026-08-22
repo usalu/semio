@@ -106,22 +106,65 @@ pub use derived_composition::*;
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES); the app engine's scene/export functions
 /// (`✏️editor/⚙️engine`) reach it by qualified path — an app depending on its artifact is normal
 /// direction, not a layering violation.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
 pub enum LayoutError {
-    #[error("json: {0}")]
-    Json(#[from] serde_json::Error),
-    #[error("unexpected schema {0}")]
+    Json(serde_json::Error),
     UnexpectedSchema(String),
-    #[error("page {0} not found")]
     PageNotFound(String),
-    #[error("png: {0}")]
-    Png(#[from] png::EncodingError),
-    #[error("zip: {0}")]
-    Zip(#[from] zip::result::ZipError),
-    #[error("io: {0}")]
-    Io(#[from] std::io::Error),
-    #[error("svg: {0}")]
+    Png(png::EncodingError),
+    Zip(zip::result::ZipError),
+    Io(std::io::Error),
     Svg(String),
+}
+
+impl std::fmt::Display for LayoutError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Json(error) => write!(formatter, "json: {error}"),
+            Self::UnexpectedSchema(schema) => write!(formatter, "unexpected schema {schema}"),
+            Self::PageNotFound(page) => write!(formatter, "page {page} not found"),
+            Self::Png(error) => write!(formatter, "png: {error}"),
+            Self::Zip(error) => write!(formatter, "zip: {error}"),
+            Self::Io(error) => write!(formatter, "io: {error}"),
+            Self::Svg(message) => write!(formatter, "svg: {message}"),
+        }
+    }
+}
+
+impl std::error::Error for LayoutError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Json(error) => Some(error),
+            Self::Png(error) => Some(error),
+            Self::Zip(error) => Some(error),
+            Self::Io(error) => Some(error),
+            Self::UnexpectedSchema(_) | Self::PageNotFound(_) | Self::Svg(_) => None,
+        }
+    }
+}
+
+impl From<serde_json::Error> for LayoutError {
+    fn from(error: serde_json::Error) -> Self {
+        Self::Json(error)
+    }
+}
+
+impl From<png::EncodingError> for LayoutError {
+    fn from(error: png::EncodingError) -> Self {
+        Self::Png(error)
+    }
+}
+
+impl From<zip::result::ZipError> for LayoutError {
+    fn from(error: zip::result::ZipError) -> Self {
+        Self::Zip(error)
+    }
+}
+
+impl From<std::io::Error> for LayoutError {
+    fn from(error: std::io::Error) -> Self {
+        Self::Io(error)
+    }
 }
 //#endregion ⚠️Errors
 

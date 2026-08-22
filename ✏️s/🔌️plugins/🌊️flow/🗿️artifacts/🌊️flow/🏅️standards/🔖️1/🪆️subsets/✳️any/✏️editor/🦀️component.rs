@@ -54,7 +54,7 @@ pub async fn flow_action(action: &str, args: Option<Value>) -> ActionDescriptor 
 
 /// 🙈️ An action that exists for dispatch but never appears in the command palette.
 async fn flow_internal_action(id: &str, label: LocalizedLabel, kind: ActionKind) -> ActionDefinition {
-    ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog(id, label, kind) }
+    ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(id, label, kind) }
 }
 //#endregion 🔖️Constants
 
@@ -432,8 +432,8 @@ pub async fn focus_selection_camera(fixture: &FlowSnapshot, config: &FlowConfig,
 /// out inline.
 pub async fn create_flow_app() -> AppDefinition {
     Editor::builder(crate::artifacts::flow::FLOW_DIALECT)
-        .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
-        .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View) })
+        .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
+        .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), "runtime", ActionKind::View) })
         .document(["semio", "flow"])
         .artifact_kind(crate::artifacts::flow::artifact_kind())
         .icon_id("flow")
@@ -455,24 +455,25 @@ pub async fn create_flow_app() -> AppDefinition {
         .mutation("removeWidget", LocalizedLabel::native("Remove Widget", "Widget entfernen"))
         // 🌉️ COMPOSITE — plans create-widget then connect-widgets (ticket 26/08/16/…-COMPOSITE-MUTATIONS).
         .mutation("duplicateWidget", LocalizedLabel::native("Duplicate Widget", "Widget duplizieren"))
+        .action_interactive_job("duplicateWidget", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)
         // 🗂️ Referenced by flow_context_menu_items — categorized for grouped-context-menu disclosure.
-        .action_with(ActionDefinition::new_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
+        .action_with(ActionDefinition::bounded_catalog("deleteSelection", LocalizedLabel::native("Delete Selection", "Auswahl löschen"), ActionKind::Mutation).with_category("selection"))
         .mutation("disconnect", LocalizedLabel::native("Disconnect", "Trennen"))
         .mutation("connectMediaPorts", LocalizedLabel::native("Connect Ports", "Anschlüsse verbinden"))
         .mutation("moveMediaNode", LocalizedLabel::native("Move Node", "Knoten verschieben"))
-        .action_with(ActionDefinition::new_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation).with_category("transform"))
+        .action_with(ActionDefinition::bounded_catalog("reorganize", LocalizedLabel::native("Reorganize", "Neu anordnen"), ActionKind::Mutation).with_category("transform"))
         .mutation("patchFlowWidgets", LocalizedLabel::native("Patch Widgets", "Widgets aktualisieren"))
         .mutation("renameFlowWidget", LocalizedLabel::native("Rename Widget", "Widget umbenennen"))
         .mutation("nodeGraphEdit", LocalizedLabel::native("Node Graph Edit", "Knotengraph bearbeiten"))
         .mutation("spotlightCommit", LocalizedLabel::native("Spotlight Commit", "Spotlight bestätigen"))
         // 🧩️ Dynamic extension-provided action — id resolved at runtime, kept out of the palette.
-        .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new_catalog("runExtensionAction", LocalizedLabel::native("Run Extension Action", "Erweiterungsaktion ausführen"), ActionKind::Mutation) })
+        .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog("runExtensionAction", LocalizedLabel::native("Run Extension Action", "Erweiterungsaktion ausführen"), ActionKind::Mutation) })
         // 👁️ Ephemeral view/config actions — mutate config, emit no document operations. Selection/
         // hover verbs (`setSelection`/`clearSelection`/`selectAll`/`selectNode`/`nodeGraphSelect`/
         // `nodeGraphHover`/`graphPointerDown`) are no longer declared here: framework-owned, injected
         // via `.interaction(...)` below (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
         .view_action("evaluate", LocalizedLabel::native("Evaluate", "Auswerten"))
-        .action_with(ActionDefinition::new_catalog("focusSelection", LocalizedLabel::native("Zoom to Selection", "Auf Auswahl zoomen"), ActionKind::View).with_category("view"))
+        .action_with(ActionDefinition::bounded_catalog("focusSelection", LocalizedLabel::native("Zoom to Selection", "Auf Auswahl zoomen"), ActionKind::View).with_category("view"))
         .action_with(flow_internal_action("nodeGraphViewport", LocalizedLabel::native("Node Graph Viewport", "Knotengraph-Ansicht"), ActionKind::View))
         .action_with(flow_internal_action("setLodMode", LocalizedLabel::native("Set LOD Mode", "LOD-Modus festlegen"), ActionKind::View))
         .action_with(flow_internal_action("setProximityDistance", LocalizedLabel::native("Set Proximity Distance", "Näheabstand festlegen"), ActionKind::View))

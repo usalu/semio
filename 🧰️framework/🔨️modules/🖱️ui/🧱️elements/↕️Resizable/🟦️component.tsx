@@ -84,7 +84,7 @@ function installResizableCornerInterceptor(): void {
     "pointerdown",
     (event) => {
       if (event.button !== 0) return;
-      const corner = (event.target as Element | null)?.closest<ResizableJoinCornerElement>('[data-slot="resizable-corner"]');
+      const corner = event.target instanceof Element ? event.target.closest<ResizableJoinCornerElement>('[data-slot="resizable-corner"]') : null;
       if (!corner) return;
       const spec = readResizableJoinCornerSpec(corner);
       if (!spec || !corner.__composeResizableJoinCornerResize) return;

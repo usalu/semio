@@ -3,7 +3,7 @@
 //! runtime), a cooperative `CancellationToken`, and a `ReadScheduler` that coalesces overlapping
 //! reads, dedups identical in-flight requests, and orders contention through a priority-aware
 //! `BoundedDemand` backpressure primitive. No `unsafe`, no hard `tokio` dependency — concurrency
-//! is built on `std::sync` primitives plus the lightweight `futures-lite` combinators.
+//! is built on `std::sync` primitives plus the repository-owned async combinators.
 
 //#region 🔖️AsyncSource
 use std::cmp::Ordering as CmpOrdering;
@@ -27,6 +27,9 @@ pub trait AsyncPackSource: Send + Sync {
     // 🚫️async: no suspension point — every implementor answers from an already-known length
     // (see `pack_http::SharedState::len`'s doc comment); deliberately synchronous by contract.
     fn len(&self) -> u64;
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
     async fn read_at(&self, offset: u64, len: usize) -> Result<Vec<u8>, PackError>;
 }
 
@@ -95,7 +98,7 @@ impl Default for CancellationToken {
 
 /// 👀️ Resolves with a cancellation error the moment `token` is cancelled, driven purely by
 /// `CancellationToken::cancel`'s waker registration — never polls in a loop or sleeps. Raced via
-/// `futures_lite::future::or` against the real read/wait future so cancellation always wins as
+/// `semio_framework_async::race2` against the real read/wait future so cancellation always wins as
 /// soon as it is observed.
 struct CancelWatch<'a> {
     token: &'a CancellationToken,
@@ -248,10 +251,13 @@ impl<S: AsyncPackSource> ReadScheduler<S> {
         }
         let (group, is_leader) = self.join_or_create_group(request.range);
         if is_leader {
-            futures_lite::future::yield_now().await;
+            semio_framework_async::yield_once().await;
         }
-        let outcome: Result<Arc<Vec<u8>>, PackError> =
-            if is_leader { futures_lite::future::or(self.dispatch_leader(&group, request.priority), CancelWatch { token: cancel }).await } else { futures_lite::future::or(WaitForGroup { group: group.clone() }, CancelWatch { token: cancel }).await };
+        let outcome: Result<Arc<Vec<u8>>, PackError> = if is_leader {
+            semio_framework_async::race2(self.dispatch_leader(&group, request.priority), CancelWatch { token: cancel }).await
+        } else {
+            semio_framework_async::race2(WaitForGroup { group: group.clone() }, CancelWatch { token: cancel }).await
+        };
         if is_leader {
             self.finalize_group(&group, outcome.clone());
         }
@@ -462,7 +468,7 @@ impl<'a> Future for AcquireFuture<'a> {
 //#endregion 🔖️Backpressure
 
 //#region 🧪️Tests
-// 🚫️async: every `futures_lite::future::block_on(...)` in this module drives one `#[test] fn` —
+// 🚫️async: every `semio_framework_async::block_on(...)` in this module drives one `#[test] fn` —
 // each is its own synchronous test-harness entry point, the same role `fn main` plays for a
 // binary (R4 item 1), so none are converted to `.await` here. See
 // `📓️terra-pack-waker-report.md` for the full site-by-site census.
@@ -511,7 +517,7 @@ mod tests {
         }
 
         async fn read_at(&self, _offset: u64, _len: usize) -> Result<Vec<u8>, PackError> {
-            futures_lite::future::pending::<()>().await;
+            std::future::pending::<()>().await;
             unreachable!("HangingSource::read_at never resolves")
         }
     }
@@ -560,7 +566,7 @@ mod tests {
         });
 
         let counted = CountingPoll { inner: CancelWatch { token: &token }, polls: polls.clone() };
-        let result = futures_lite::future::block_on(counted);
+        let result = semio_framework_async::block_on(counted);
 
         canceller.join().unwrap();
         assert!(result.is_err(), "CancelWatch must resolve once the other thread cancels");
@@ -580,7 +586,7 @@ mod tests {
         let request_a = ReadRequest { range: ByteRange { offset: 0, len: 50 }, priority: LoadPriority::Requested };
         let request_b = ReadRequest { range: ByteRange { offset: 30, len: 50 }, priority: LoadPriority::Requested };
 
-        let (result_a, result_b) = futures_lite::future::block_on(futures_lite::future::zip(scheduler.read(request_a, &cancel), scheduler.read(request_b, &cancel)));
+        let (result_a, result_b) = semio_framework_async::block_on(semio_framework_async::join2(scheduler.read(request_a, &cancel), scheduler.read(request_b, &cancel)));
 
         assert_eq!(result_a.unwrap(), data[0..50].to_vec());
         assert_eq!(result_b.unwrap(), data[30..80].to_vec());
@@ -595,7 +601,7 @@ mod tests {
         let cancel = CancellationToken::new();
         let request = ReadRequest { range: ByteRange { offset: 5, len: 10 }, priority: LoadPriority::Visible };
 
-        let (result_a, result_b) = futures_lite::future::block_on(futures_lite::future::zip(scheduler.read(request, &cancel), scheduler.read(request, &cancel)));
+        let (result_a, result_b) = semio_framework_async::block_on(semio_framework_async::join2(scheduler.read(request, &cancel), scheduler.read(request, &cancel)));
 
         assert_eq!(result_a.unwrap(), data[5..15].to_vec());
         assert_eq!(result_b.unwrap(), data[5..15].to_vec());
@@ -612,7 +618,7 @@ mod tests {
         let far_apart_a = ReadRequest { range: ByteRange { offset: 0, len: 4 }, priority: LoadPriority::Visible };
         let far_apart_b = ReadRequest { range: ByteRange { offset: 30, len: 4 }, priority: LoadPriority::Visible };
 
-        let (result_a, result_b) = futures_lite::future::block_on(futures_lite::future::zip(scheduler.read(far_apart_a, &cancel), scheduler.read(far_apart_b, &cancel)));
+        let (result_a, result_b) = semio_framework_async::block_on(semio_framework_async::join2(scheduler.read(far_apart_a, &cancel), scheduler.read(far_apart_b, &cancel)));
 
         assert!(result_a.is_ok());
         assert!(result_b.is_ok());
@@ -631,7 +637,7 @@ mod tests {
         });
 
         let request = ReadRequest { range: ByteRange { offset: 0, len: 1 }, priority: LoadPriority::Critical };
-        let result = futures_lite::future::block_on(scheduler.read(request, &cancel));
+        let result = semio_framework_async::block_on(scheduler.read(request, &cancel));
 
         canceller.join().unwrap();
         assert!(result.is_err(), "a cancelled read must short-circuit rather than hang until the source resolves");
@@ -644,7 +650,7 @@ mod tests {
         cancel.cancel();
 
         let request = ReadRequest { range: ByteRange { offset: 0, len: 1 }, priority: LoadPriority::Background };
-        let result = futures_lite::future::block_on(scheduler.read(request, &cancel));
+        let result = semio_framework_async::block_on(scheduler.read(request, &cancel));
         assert!(result.is_err());
     }
     //#endregion 🔖️Scheduler
@@ -718,9 +724,9 @@ mod tests {
         let demand = BoundedDemand::new(2);
         assert_eq!(demand.capacity(), 2);
         assert_eq!(demand.in_flight(), 0);
-        let permit_a = futures_lite::future::block_on(demand.acquire(LoadPriority::Requested));
+        let permit_a = semio_framework_async::block_on(demand.acquire(LoadPriority::Requested));
         assert_eq!(demand.in_flight(), 1);
-        let permit_b = futures_lite::future::block_on(demand.acquire(LoadPriority::Requested));
+        let permit_b = semio_framework_async::block_on(demand.acquire(LoadPriority::Requested));
         assert_eq!(demand.in_flight(), 2);
         drop(permit_a);
         assert_eq!(demand.in_flight(), 1);

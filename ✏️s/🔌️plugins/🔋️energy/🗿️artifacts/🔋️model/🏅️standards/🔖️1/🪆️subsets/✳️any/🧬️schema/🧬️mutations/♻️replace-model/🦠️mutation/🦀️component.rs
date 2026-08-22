@@ -20,15 +20,15 @@ pub struct ReplaceModel {
 impl protocol::MutationKind<EnergyModelSnapshot, EnergyModelMutation> for ReplaceModel {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "model", kind: "replace-model", record: "ReplacedModel" };
 
-    async fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
+    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         crate::artifacts::model::mutations::replace_model::diff::diff(self, base)
     }
 
-    async fn inverse(&self, base: &EnergyModelSnapshot) -> Vec<EnergyModelMutation> {
+    fn inverse(&self, base: &EnergyModelSnapshot) -> Vec<EnergyModelMutation> {
         crate::artifacts::model::mutations::replace_model::inverse::inverse(self, base)
     }
 
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         "Replace energy model".to_string()
     }
 }

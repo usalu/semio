@@ -32,19 +32,19 @@ const PUZZLE2D_VIEW_DEFAULT_CAMERA_FOV: f64 = 45.0;
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::puzzle2d::create_puzzle2d_viewer`.
-pub async fn definition() -> WindowKindDefinition {
+pub fn definition() -> WindowKindDefinition {
     MeshWindowKit::window_kind()
 }
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-async fn is_rectangle(node: &Puzzle2dNode) -> bool {
+fn is_rectangle(node: &Puzzle2dNode) -> bool {
     node.shape.as_deref() == Some("rectangle") || (node.shape.is_none() && node.width.is_some())
 }
 
 /// 👁️ Read-only twin of the editor's own node placement — real per-node position/kind/label, flattened
 /// onto `z = 0` (duplicated shape math, not imported, per `policyViewerPurityBreaches`).
-async fn world_instances_json(snapshot: &Puzzle2dSnapshot) -> String {
+fn world_instances_json(snapshot: &Puzzle2dSnapshot) -> String {
     let instances: Vec<serde_json::Value> = snapshot
         .nodes
         .iter()
@@ -70,7 +70,7 @@ async fn world_instances_json(snapshot: &Puzzle2dSnapshot) -> String {
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-async fn world_meshes_json() -> String {
+fn world_meshes_json() -> String {
     serde_json::to_string(&[
         serde_json::json!({ "id": PUZZLE2D_VIEW_CIRCLE_MESH_KIND, "data": mesh_from_kind(PUZZLE2D_VIEW_CIRCLE_MESH_KIND) }),
         serde_json::json!({ "id": PUZZLE2D_VIEW_RECTANGLE_MESH_KIND, "data": mesh_from_kind(PUZZLE2D_VIEW_RECTANGLE_MESH_KIND) }),
@@ -80,7 +80,7 @@ async fn world_meshes_json() -> String {
 
 /// 👁️ Pure `Puzzle2dSnapshot -> UiNode` read: default overhead camera, no selection/utility/engagement
 /// overlay, real node positions/shapes read straight off the document.
-pub async fn render(document: &Puzzle2dSnapshot) -> UiNode {
+pub fn render(document: &Puzzle2dSnapshot) -> semio_framework_plugin::plugin_app_close_prelude::BuiltNode {
     let view = MeshView {
         camera_json: world3d_camera_json(PUZZLE2D_VIEW_DEFAULT_CAMERA_POSITION, PUZZLE2D_VIEW_DEFAULT_CAMERA_TARGET, PUZZLE2D_VIEW_DEFAULT_CAMERA_FOV),
         meshes_json: world_meshes_json(),
@@ -96,20 +96,20 @@ pub async fn render(document: &Puzzle2dSnapshot) -> UiNode {
 mod tests {
     use super::*;
 
-    #[semio_framework_async_macros::async_test]
-    async fn definition_declares_the_shared_mesh_window_kit() {
+    #[test]
+    fn definition_declares_the_shared_mesh_window_kit() {
         let def = definition();
         assert_eq!(def.id, MeshWindowKit::KIND_ID);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn render_produces_a_scene_node_for_the_default_document() {
+    #[test]
+    fn render_produces_a_scene_node_for_the_default_document() {
         let document = Puzzle2dSnapshot::default();
         let _node = render(&document);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn render_places_rectangle_and_circle_nodes_at_their_real_positions() {
+    #[test]
+    fn render_places_rectangle_and_circle_nodes_at_their_real_positions() {
         let mut document = Puzzle2dSnapshot::default();
         document.nodes.push(Puzzle2dNode { id: "n1".into(), shape: Some("circle".into()), x: 10.0, y: 20.0, radius: Some(5.0), ..Default::default() });
         document.nodes.push(Puzzle2dNode { id: "n2".into(), shape: Some("rectangle".into()), x: 30.0, y: 40.0, width: Some(12.0), height: Some(8.0), ..Default::default() });

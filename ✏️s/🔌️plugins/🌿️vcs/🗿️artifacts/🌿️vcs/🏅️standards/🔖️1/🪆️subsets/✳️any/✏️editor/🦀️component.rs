@@ -156,7 +156,7 @@ impl ArtifactEditor for VcsPlayApp {
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
-pub async fn create_vcs_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_vcs_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(crate::artifacts::vcs::VCS_DIALECT)
             .document(["semio", "vcs"])
             .artifact_kind(crate::artifacts::vcs::artifact_kind())

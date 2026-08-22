@@ -34,7 +34,3 @@ swash = { version = "0.2.6", default-features = false, features = ["render", "st
 
 [dev-dependencies]
 serde_json = { version = "1.0.140" }
-# 🧪️ Validates every canonical WGSL entry point at test time. This is the permanent regression guard for
-# the shader corruption an asyncify pass introduced (`async fn vs_main`, which WGSL has no such keyword
-# for) — a class of defect that compiles clean in Rust and only fails when a device builds a pipeline.
-naga = { version = "27", features = ["wgsl-in"] }

@@ -1,0 +1,800 @@
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/././../../🗿️artifacts/📸️remodel/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:23:
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, AppIo, ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, FaultCode, FaultOrigin, GlbExporter, GranularityDefinition,
+-    HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, MeshExporter, NoDraft, NoDraftMutation,
+-    InteractiveJobClassification, SelectionMethod, SelectionMode, SelectionSpec, UiNode, UtilityCategory, UtilityDefinition, WindowMeasure,
++    HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaPortDirection, MediaPortSpec, MediaType, MergeMode,
++    MeshExporter, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode, UtilityCategory, UtilityDefinition, WindowMeasure,
+ };
+ use serde_json::Value;
+ use std::collections::HashMap;
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/✏️editor/🦀️component.rs:8:
+ use crate::editor::las::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/✏️editor/🦀️component.rs:8:
+ use crate::editor::ply::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/✏️editor/🦀️component.rs:12:
+ use crate::editor::epw::modes::edit;
+ use crate::editor::epw::modes::edit::windows::main;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use serde::{Deserialize, Serialize};
+ use store::EngineHandles;
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/✏️editor/🦀️component.rs:10:
+ use crate::editor::zip::any::modes::edit;
+ use crate::editor::zip::any::modes::edit::windows::main;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use serde::{Deserialize, Serialize};
+ use store::EngineHandles;
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/./././../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️iso21320/✏️editor/🦀️component.rs:11:
+ use crate::editor::zip::iso21320::modes::edit;
+ use crate::editor::zip::iso21320::modes::edit::windows::main;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use serde::{Deserialize, Serialize};
+ use store::EngineHandles;
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🦀️component.rs:8:
+ use crate::editor::pptx::standards::v_ecma_376::subsets::any::modes::edit;
+ use crate::editor::pptx::standards::v_ecma_376::subsets::any::modes::edit::windows::main;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use serde::{Deserialize, Serialize};
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🦀️component.rs:8:
+ use crate::editor::pptx::standards::v_ecma_376::subsets::strict::modes::edit;
+ use crate::editor::pptx::standards::v_ecma_376::subsets::strict::modes::edit::windows::main;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use serde::{Deserialize, Serialize};
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🦀️component.rs:8:
+ use crate::editor::pptx::standards::v_ecma_376::subsets::transitional::modes::edit;
+ use crate::editor::pptx::standards::v_ecma_376::subsets::transitional::modes::edit::windows::main;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use serde::{Deserialize, Serialize};
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/✏️editor/🦀️component.rs:8:
+ use crate::editor::ifc2x3_any::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cobie/✏️editor/🦀️component.rs:8:
+ use crate::editor::ifc2x3_cobie::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️cv20/✏️editor/🦀️component.rs:8:
+ use crate::editor::ifc2x3_cv20::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️sav/✏️editor/🦀️component.rs:8:
+ use crate::editor::ifc2x3_sav::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/✏️editor/🦀️component.rs:8:
+ use crate::editor::ifc4_any::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:8:
+ use crate::editor::bcf::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/✏️editor/🦀️component.rs:9:
+ use crate::editor::txt::modes::edit;
+ use crate::editor::txt::modes::edit::windows::main;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use serde::{Deserialize, Serialize};
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/✏️editor/🦀️component.rs:7:
+ use crate::editor::csv::modes::edit;
+ use crate::editor::csv::modes::edit::windows::main;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use serde::{Deserialize, Serialize};
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/✏️editor/🦀️component.rs:8:
+ use crate::editor::step_any::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc1/✏️editor/🦀️component.rs:8:
+ use crate::editor::step_cc1::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc2/✏️editor/🦀️component.rs:8:
+ use crate::editor::step_cc2::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc3/✏️editor/🦀️component.rs:8:
+ use crate::editor::step_cc3::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc4/✏️editor/🦀️component.rs:8:
+ use crate::editor::step_cc4::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc5/✏️editor/🦀️component.rs:8:
+ use crate::editor::step_cc5::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️cc6/✏️editor/🦀️component.rs:8:
+ use crate::editor::step_cc6::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/✏️editor/🦀️component.rs:7:
+ use crate::editor::tsv::modes::edit;
+ use crate::editor::tsv::modes::edit::windows::main;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use serde::{Deserialize, Serialize};
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🦀️component.rs:14:
+ use crate::editor::xlsx::standards::v_ecma_376::subsets::any::modes::edit;
+ use crate::editor::xlsx::standards::v_ecma_376::subsets::any::modes::edit::windows::main;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use serde::{Deserialize, Serialize};
+ use store::EngineHandles;
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🦀️component.rs:14:
+ use crate::editor::xlsx::standards::v_ecma_376::subsets::strict::modes::edit;
+ use crate::editor::xlsx::standards::v_ecma_376::subsets::strict::modes::edit::windows::main;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use serde::{Deserialize, Serialize};
+ use store::EngineHandles;
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🦀️component.rs:13:
+ use crate::editor::xlsx::standards::v_ecma_376::subsets::transitional::modes::edit;
+ use crate::editor::xlsx::standards::v_ecma_376::subsets::transitional::modes::edit::windows::main;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use serde::{Deserialize, Serialize};
+ use store::EngineHandles;
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/✏️editor/🦀️component.rs:9:
+ use crate::editor::docx::standards::v_ecma_376::subsets::any::modes::edit;
+ use crate::editor::docx::standards::v_ecma_376::subsets::any::modes::edit::windows::main;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use serde::{Deserialize, Serialize};
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️strict/✏️editor/🦀️component.rs:10:
+ use crate::editor::docx::standards::v_ecma_376::subsets::strict::modes::edit;
+ use crate::editor::docx::standards::v_ecma_376::subsets::strict::modes::edit::windows::main;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use serde::{Deserialize, Serialize};
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././././././../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️transitional/✏️editor/🦀️component.rs:10:
+ use crate::editor::docx::standards::v_ecma_376::subsets::transitional::modes::edit;
+ use crate::editor::docx::standards::v_ecma_376::subsets::transitional::modes::edit::windows::main;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use serde::{Deserialize, Serialize};
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/✏️editor/🦀️component.rs:11:
+ use crate::editor::xml_any::modes::edit;
+ use crate::editor::xml_any::modes::edit::windows::main;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use serde::{Deserialize, Serialize};
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️valid/✏️editor/🦀️component.rs:11:
+ use crate::editor::xml_valid::modes::edit;
+ use crate::editor::xml_valid::modes::edit::windows::main;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use serde::{Deserialize, Serialize};
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/✏️editor/🦀️component.rs:12:
+ use crate::editor::json_any::modes::edit;
+ use crate::editor::json_any::modes::edit::windows::main;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use serde::{Deserialize, Serialize};
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️i-json/✏️editor/🦀️component.rs:12:
+ use crate::editor::json_i_json::modes::edit;
+ use crate::editor::json_i_json::modes::edit::windows::main;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use serde::{Deserialize, Serialize};
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/✏️editor/🦀️component.rs:8:
+ use crate::editor::dwg_ac1018::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/✏️editor/🦀️component.rs:8:
+ use crate::editor::dwg_ac1024::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/✏️editor/🦀️component.rs:8:
+ use crate::editor::dxf::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/✏️editor/🦀️component.rs:8:
+ use crate::editor::stl::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/✏️editor/🦀️component.rs:8:
+ use crate::editor::gltf::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/✏️editor/🦀️component.rs:8:
+ use crate::editor::obj::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/✏️editor/🦀️component.rs:8:
+ use crate::editor::semio_animation::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/✏️editor/🦀️component.rs:8:
+ use crate::editor::semio_any::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio/✏️editor/🦀️component.rs:8:
+ use crate::editor::semio_audio::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/✏️editor/🦀️component.rs:8:
+ use crate::editor::semio_brep::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/✏️editor/🦀️component.rs:8:
+ use crate::editor::semio_cad::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/✏️editor/🦀️component.rs:8:
+ use crate::editor::semio_document::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/✏️editor/🦀️component.rs:8:
+ use crate::editor::semio_drawing::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️flow/✏️editor/🦀️component.rs:8:
+ use crate::editor::semio_flow::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️graph/✏️editor/🦀️component.rs:8:
+ use crate::editor::semio_graph::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/✏️editor/🦀️component.rs:8:
+ use crate::editor::semio_image::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️kit/✏️editor/🦀️component.rs:8:
+ use crate::editor::semio_kit::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/✏️editor/🦀️component.rs:8:
+ use crate::editor::semio_mesh::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/✏️editor/🦀️component.rs:8:
+ use crate::editor::semio_model::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/✏️editor/🦀️component.rs:8:
+ use crate::editor::semio_object::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/✏️editor/🦀️component.rs:8:
+ use crate::editor::semio_presentation::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️table/✏️editor/🦀️component.rs:8:
+ use crate::editor::semio_table::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️text/✏️editor/🦀️component.rs:8:
+ use crate::editor::semio_text::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️value/✏️editor/🦀️component.rs:8:
+ use crate::editor::semio_value::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/././../../🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video/✏️editor/🦀️component.rs:8:
+ use crate::editor::semio_video::modes::edit::windows::main;
+ use semio_framework_plugin::app::InteractionView;
+ use semio_framework_plugin::{
+-    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId
++    ArtifactEditor, ArtifactView, ConfigView, Dialect, DraftView, Editor, Emit, Fault, Label, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, StandardId, SubsetId,
+ };
+ use store::EngineHandles;
+ 
+Diff in /Users/ueli/Documents/semio/🧰️framework/📦️packages/🦀️rust/../../🔨️modules/🛂️manifest/🦀️component.rs:5283:
+     #[semio_framework_async_macros::async_test]
+     async fn resolve_window_actions_explicit_scoping() {
+         let app =
+-            app_with(vec![ActionDefinition::bounded_catalog("add", LocalizedLabel::data("Add"), ActionKind::Mutation), ActionDefinition::bounded_catalog("remove", LocalizedLabel::data("Remove"), ActionKind::Mutation)], vec![ActionRef::new("add")]).await;
++            app_with(vec![ActionDefinition::bounded_catalog("add", LocalizedLabel::data("Add"), ActionKind::Mutation), ActionDefinition::bounded_catalog("remove", LocalizedLabel::data("Remove"), ActionKind::Mutation)], vec![ActionRef::new("add")])
++                .await;
+         let window = app.window_kinds.first();
+         let resolved: Vec<&str> = resolve_window_actions(&app, window).await.iter().map(|a| a.id.as_str()).collect();
+         assert_eq!(resolved, vec!["add"], "window ownership replaces app-level orphan fallback");
+Diff in /Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻2d/📦️packages/🦀️rust/../../🔀️booleans/🦀️component.rs:167:
+     let dx = segment.to.x - segment.from.x;
+     let dy = segment.to.y - segment.from.y;
+     if dx.abs() >= dy.abs() {
+-        if dx == 0.0 { 0.0 } else { (point.x - segment.from.x) / dx }
++        if dx == 0.0 {
++            0.0
++        } else {
++            (point.x - segment.from.x) / dx
++        }
+     } else if dy == 0.0 {
+         0.0
+     } else {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻2d/📦️packages/🦀️rust/../../🔀️booleans/🦀️component.rs:274:
+     if source_segments.len() > MAX_INPUT_EDGES {
+         return Err(DrawingError::InvalidInput(format!("boolean input exceeds {MAX_INPUT_EDGES} linear edges")));
+     }
+-    let scale = source_segments
+-        .iter()
+-        .flat_map(|segment| [segment.from.x.abs(), segment.from.y.abs(), segment.to.x.abs(), segment.to.y.abs()])
+-        .fold(1.0_f64, f64::max);
++    let scale = source_segments.iter().flat_map(|segment| [segment.from.x.abs(), segment.from.y.abs(), segment.to.x.abs(), segment.to.y.abs()]).fold(1.0_f64, f64::max);
+     let epsilon = scale * RELATIVE_EPSILON;
+     let mut split_parameters = vec![vec![0.0, 1.0]; source_segments.len()];
+     for left in 0..source_segments.len() {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻2d/📦️packages/🦀️rust/../../🔀️booleans/🦀️component.rs:307:
+     for ((from, to), segment) in atomic.into_iter().zip(arrangement_segments.iter().copied()) {
+         let midpoint = interpolate(segment, 0.5);
+         let length = squared_distance(segment.from, segment.to).sqrt();
+-        let nearest = source_segments
+-            .iter()
+-            .map(|candidate| point_segment_distance(midpoint, *candidate))
+-            .filter(|distance| *distance > epsilon)
+-            .fold(f64::INFINITY, f64::min);
++        let nearest = source_segments.iter().map(|candidate| point_segment_distance(midpoint, *candidate)).filter(|distance| *distance > epsilon).fold(f64::INFINITY, f64::min);
+         let offset = (length * 1.0e-6).min(scale * 1.0e-7).min(nearest * 0.2).max(scale * f64::EPSILON * 16.0);
+         let normal = Point { x: -(segment.to.y - segment.from.y) / length, y: (segment.to.x - segment.from.x) / length };
+         let left = Point { x: midpoint.x + normal.x * offset, y: midpoint.y + normal.y * offset };
+Diff in /Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻2d/📦️packages/🦀️rust/../../🔀️booleans/🦀️component.rs:354:
+ 
+ fn rotate_canonical(ring: &mut [Point]) {
+     let exterior = signed_area(ring) > 0.0;
+-    let index = (0..ring.len())
+-        .min_by(|left, right| {
+-            ring[*left]
+-                .x
+-                .total_cmp(&ring[*right].x)
+-                .then_with(|| if exterior { ring[*left].y.total_cmp(&ring[*right].y) } else { ring[*right].y.total_cmp(&ring[*left].y) })
+-        })
+-        .unwrap_or(0);
++    let index = (0..ring.len()).min_by(|left, right| ring[*left].x.total_cmp(&ring[*right].x).then_with(|| if exterior { ring[*left].y.total_cmp(&ring[*right].y) } else { ring[*right].y.total_cmp(&ring[*left].y) })).unwrap_or(0);
+     ring.rotate_left(index);
+ }
+ 
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:6914:
+                 vec![ActionArgOption { value: "en".into(), label: LocalizedLabel::data("English") }, ActionArgOption { value: "de".into(), label: LocalizedLabel::data("Deutsch") }],
+             )
+             .required()]),
+-            CommandDefinition::bounded_catalog("os.setTerminology", LocalizedLabel::data("Set Terminology"), "language", ActionKind::Shell).with_args([ActionArgDef::select("value", LocalizedLabel::data("Terminology"), terminology_options).required()]),
++            CommandDefinition::bounded_catalog("os.setTerminology", LocalizedLabel::data("Set Terminology"), "language", ActionKind::Shell)
++                .with_args([ActionArgDef::select("value", LocalizedLabel::data("Terminology"), terminology_options).required()]),
+             CommandDefinition::bounded_catalog("os.setThemeId", LocalizedLabel::data("Set Theme"), "appearance", ActionKind::Shell).with_args([ActionArgDef::select(
+                 "value",
+                 LocalizedLabel::data("Theme"),
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/../../../../🧱️elements/Shell/🧊️component.rs:7465:
+     #[test]
+     fn identical_local_command_ids_have_collision_free_owner_keys() {
+         let local_id = "refresh";
+-        let app = test_app(vec![CommandDefinition::bounded_catalog(local_id, LocalizedLabel::data("Refresh App"), "app", ActionKind::View)], vec![CommandDefinition::bounded_catalog(local_id, LocalizedLabel::data("Refresh Mode"), "mode", ActionKind::View)]);
++        let app = test_app(
++            vec![CommandDefinition::bounded_catalog(local_id, LocalizedLabel::data("Refresh App"), "app", ActionKind::View)],
++            vec![CommandDefinition::bounded_catalog(local_id, LocalizedLabel::data("Refresh Mode"), "mode", ActionKind::View)],
++        );
+         let plugin_manifest = PluginManifest {
+             plugin_id: "plugin".into(),
+             label: "Plugin".into(),
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe/📦️packages/🦀️rust/../../../🧠️interpreter/🦀️component.rs:732:
+             | ("wasi:cli/stdout@0.2.0", "get-stdout")
+             | ("wasi:cli/stderr@0.2.0", "get-stderr") => vec![Value::I32(self.take_resource())],
+             ("$root", "[waitable-set-poll]") => vec![Value::I32(0)],
+-            ("$root", "[waitable-join]")
+-            | ("$root", "[waitable-set-drop]")
+-            | ("[export]$root", "[task-cancel]")
+-            | ("wasi:io/poll@0.2.0", "[method]pollable.block") => vec![],
++            ("$root", "[waitable-join]") | ("$root", "[waitable-set-drop]") | ("[export]$root", "[task-cancel]") | ("wasi:io/poll@0.2.0", "[method]pollable.block") => vec![],
+             ("wasi:random/insecure-seed@0.2.9", "insecure-seed") => {
+                 self.write_zeroes(actor, argument_i32(call, 0)?, 16)?;
+                 vec![]
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe/📦️packages/🦀️rust/../../../🧠️interpreter/🦀️component.rs:748:
+                 self.write_zeroes(actor, argument_i32(call, 0)?, 16)?;
+                 vec![]
+             }
+-            ("wasi:cli/terminal-stdin@0.2.0", "get-terminal-stdin")
+-            | ("wasi:cli/terminal-stdout@0.2.0", "get-terminal-stdout")
+-            | ("wasi:cli/terminal-stderr@0.2.0", "get-terminal-stderr") => {
++            ("wasi:cli/terminal-stdin@0.2.0", "get-terminal-stdin") | ("wasi:cli/terminal-stdout@0.2.0", "get-terminal-stdout") | ("wasi:cli/terminal-stderr@0.2.0", "get-terminal-stderr") => {
+                 self.write_zeroes(actor, argument_i32(call, 0)?, 8)?;
+                 vec![]
+             }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe/📦️packages/🦀️rust/📦️glue.rs:404:
+             assert!(!paths.is_empty(), "differential component suite is empty");
+             for path in paths {
+                 let bytes = fs::read(&path).unwrap_or_else(|error| panic!("read differential component {}: {error}", path.display()));
+-                let oracle = execute_describe_wasmtime(&bytes, &path)
+-                    .await
+-                    .unwrap_or_else(|error| panic!("execute Wasmtime descriptor oracle for {}: {error}", path.display()));
+-                let artifact = interpreter::SemioActorArtifact::parse(&bytes)
+-                    .unwrap_or_else(|error| panic!("parse owned Semio actor {}: {error}", path.display()));
+-                let mut session = interpreter::SemioDescribeSession::start(&artifact, 64 * 1024 * 1024)
+-                    .unwrap_or_else(|error| panic!("start owned describe session for {}: {error}", path.display()));
++                let oracle = execute_describe_wasmtime(&bytes, &path).await.unwrap_or_else(|error| panic!("execute Wasmtime descriptor oracle for {}: {error}", path.display()));
++                let artifact = interpreter::SemioActorArtifact::parse(&bytes).unwrap_or_else(|error| panic!("parse owned Semio actor {}: {error}", path.display()));
++                let mut session = interpreter::SemioDescribeSession::start(&artifact, 64 * 1024 * 1024).unwrap_or_else(|error| panic!("start owned describe session for {}: {error}", path.display()));
+                 let mut total_fuel = 0;
+                 let mut restored = false;
+                 let owned = loop {
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe/📦️packages/🦀️rust/📦️glue.rs:420:
+                             assert!(total_fuel <= DESCRIBE_FUEL_BUDGET, "owned describe exceeded oracle fuel cap for {}", path.display());
+                             if !restored {
+                                 let checkpoint = session.checkpoint();
+-                                session = interpreter::SemioDescribeSession::restore(&artifact, &checkpoint)
+-                                    .unwrap_or_else(|error| panic!("restore owned describe checkpoint for {}: {error}", path.display()));
++                                session = interpreter::SemioDescribeSession::restore(&artifact, &checkpoint).unwrap_or_else(|error| panic!("restore owned describe checkpoint for {}: {error}", path.display()));
+                                 assert_eq!(session.checkpoint(), checkpoint, "checkpoint changed after restoring {}", path.display());
+                                 restored = true;
+                             }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️describe/📦️packages/🦀️rust/📦️glue.rs:436:
+                 };
+                 assert_eq!(owned, oracle, "owned descriptor differs from Wasmtime for {}", path.display());
+                 assert!(total_fuel > 0, "owned describe consumed no fuel for {}", path.display());
+-                let mut cancelled = interpreter::SemioDescribeSession::start(&artifact, 64 * 1024 * 1024)
+-                    .unwrap_or_else(|error| panic!("start cancellation probe for {}: {error}", path.display()));
+-                assert!(
+-                    matches!(
+-                        cancelled.step(1, interpreter::StepControl { cancelled: true }),
+-                        interpreter::SemioDescribeStepOutcome::Cancelled { fuel_used: 0 }
+-                    ),
+-                    "owned cancellation did not stop {} before its first instruction",
+-                    path.display()
+-                );
++                let mut cancelled = interpreter::SemioDescribeSession::start(&artifact, 64 * 1024 * 1024).unwrap_or_else(|error| panic!("start cancellation probe for {}: {error}", path.display()));
++                assert!(matches!(cancelled.step(1, interpreter::StepControl { cancelled: true }), interpreter::SemioDescribeStepOutcome::Cancelled { fuel_used: 0 }), "owned cancellation did not stop {} before its first instruction", path.display());
+             }
+         }
+     }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:12995:
+             let cores = std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1);
+             let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores));
+             let worker_future = semio_framework_job::run_on_worker_async(&pool, semio_framework_async::Lane::Interactive, dispatch.job, params);
+-            let outcome = worker_future
+-                .await
+-                .map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.worker-closed"), "interactive tool worker result channel closed"))?;
++            let outcome = worker_future.await.map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.worker-closed"), "interactive tool worker result channel closed"))?;
+             if let Some(elapsed_us) = semio_framework_job::watchdog_step_overrun_us(operation_id, generation) {
+                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.step-overrun"), format!("tool command '{verb}' exceeded the 8 ms step ceiling ({elapsed_us} µs)")));
+             }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:19105:
+                 })
+                 .collect();
+             assert_eq!(registered, declared);
+-            let platform_visible = platform
+-                .action_bus
+-                .keys()
+-                .into_iter()
+-                .filter(|key| key.controller_id == controller_id)
+-                .map(|key| key.tool_id)
+-                .collect::<std::collections::BTreeSet<_>>();
++            let platform_visible = platform.action_bus.keys().into_iter().filter(|key| key.controller_id == controller_id).map(|key| key.tool_id).collect::<std::collections::BTreeSet<_>>();
+             assert_eq!(platform_visible, declared);
+             let before = platform.action_bus.dispatch_count();
+             app.dispatch_typed(TestCommand::IncrementViaCommand, &meta()).await.expect("typed command traverses the shared production bus");
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21830:
+     ArtifactDefinitionError,
+     ArtifactDefinitionRegistry,
+     ArtifactDeserializer,
+-    ToolCommandCatalog,
+     ArtifactEditor,
+     ArtifactExecutableIdentity,
+     ArtifactIdentity,
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/../../🦀️component.rs:21919:
+     PresenceView,
+     StandardId,
+     SubsetId,
++    ToolCommandCatalog,
+     TransientView,
+     TreeNode,
+     TwoDSvgDocumentRenderer,
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../../🧠️interpreter/🦀️component.rs:732:
+             | ("wasi:cli/stdout@0.2.0", "get-stdout")
+             | ("wasi:cli/stderr@0.2.0", "get-stderr") => vec![Value::I32(self.take_resource())],
+             ("$root", "[waitable-set-poll]") => vec![Value::I32(0)],
+-            ("$root", "[waitable-join]")
+-            | ("$root", "[waitable-set-drop]")
+-            | ("[export]$root", "[task-cancel]")
+-            | ("wasi:io/poll@0.2.0", "[method]pollable.block") => vec![],
++            ("$root", "[waitable-join]") | ("$root", "[waitable-set-drop]") | ("[export]$root", "[task-cancel]") | ("wasi:io/poll@0.2.0", "[method]pollable.block") => vec![],
+             ("wasi:random/insecure-seed@0.2.9", "insecure-seed") => {
+                 self.write_zeroes(actor, argument_i32(call, 0)?, 16)?;
+                 vec![]
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../../🧠️interpreter/🦀️component.rs:748:
+                 self.write_zeroes(actor, argument_i32(call, 0)?, 16)?;
+                 vec![]
+             }
+-            ("wasi:cli/terminal-stdin@0.2.0", "get-terminal-stdin")
+-            | ("wasi:cli/terminal-stdout@0.2.0", "get-terminal-stdout")
+-            | ("wasi:cli/terminal-stderr@0.2.0", "get-terminal-stderr") => {
++            ("wasi:cli/terminal-stdin@0.2.0", "get-terminal-stdin") | ("wasi:cli/terminal-stdout@0.2.0", "get-terminal-stdout") | ("wasi:cli/terminal-stderr@0.2.0", "get-terminal-stderr") => {
+                 self.write_zeroes(actor, argument_i32(call, 0)?, 8)?;
+                 vec![]
+             }
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust/../../⚡️effects/🦀️component.rs:38:
+ use semio_framework::{DslValue, MediaType};
+ use semio_framework_actor::{ActorId as RuntimeActorId, Envelope, Lane as ActorLane, Origin, PackageId, Payload};
+ use semio_framework_async::{CancelToken, CapabilityTokenId, ChannelPolicy, HostAsyncRuntime, HostFuture, OperationContext, ScopeDrainReport, ScopeHandle, ScopeOwner, TraceId};
+-use semio_framework_job::{InteractiveJob, JobFault, StepContext, StepOutcome};
+ #[cfg(test)]
+ use semio_framework_job::CommitCandidate;
++use semio_framework_job::{InteractiveJob, JobFault, StepContext, StepOutcome};
+ use semio_framework_os_services::{
+     CompletionSink, ComputeError, ComputePool, EventRouter, HttpPool, HttpPoolError, HttpRequest as ServiceHttpRequest, HttpResponse as ServiceHttpResponse, PublishOutcome, StorageError, StorageScheduler, TimerError, TimerWheel, Topic,
+ };
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:40:
+ 
+ use semio_framework_actor::{ActorId, PackageId};
+ use semio_framework_async::{
+-    block_on, oneshot, select2, CancelState, CancelToken, ChannelPolicy, Either, HostAsyncRuntime, HostFuture, Lane, OperationContext, OwnedPermit, ProcessKind, ScopeDrainReport, ScopeHandle, ScopeId, ScopeOwner, Semaphore, WorkerPool, WorkerPoolConfig,
++    block_on, oneshot, select2, CancelState, CancelToken, ChannelPolicy, Either, HostAsyncRuntime, HostFuture, Lane, OperationContext, OwnedPermit, ProcessKind, ScopeDrainReport, ScopeHandle, ScopeId, ScopeOwner, Semaphore, WorkerPool,
++    WorkerPoolConfig,
+ };
+ use semio_framework_job::{
+-    default_now_ms, drive_step, Generation as JobGeneration, InteractiveJob, InteractiveStage, OperationId, StepBudget, StepOutcome, BACKGROUND_LANE_FUEL, BACKGROUND_LANE_WALL_MS, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS, MAINTENANCE_LANE_FUEL,
+-    MAINTENANCE_LANE_WALL_MS, USER_VISIBLE_LANE_FUEL, USER_VISIBLE_LANE_WALL_MS,
++    default_now_ms, drive_step, Generation as JobGeneration, InteractiveJob, InteractiveStage, OperationId, StepBudget, StepOutcome, BACKGROUND_LANE_FUEL, BACKGROUND_LANE_WALL_MS, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS,
++    MAINTENANCE_LANE_FUEL, MAINTENANCE_LANE_WALL_MS, USER_VISIBLE_LANE_FUEL, USER_VISIBLE_LANE_WALL_MS,
+ };
+ 
+ //#region 🧵️GlobalWorkerPool
+Diff in /Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust/../../🦀️component.rs:2035:
+             let ctx = test_ctx(i as u64, scope.cancel.clone()).await;
+             handles.push(async move {
+                 let job = CountingComputeJob { current, observed_max, remaining_steps: 8, entered: false };
+-                pool.run_job(runtime, scope, ctx, job)
+-                .await
+-                .expect("interactive job without a deadline must not fail");
++                pool.run_job(runtime, scope, ctx, job).await.expect("interactive job without a deadline must not fail");
+             });
+         }
+         futures_join_all(handles).await;

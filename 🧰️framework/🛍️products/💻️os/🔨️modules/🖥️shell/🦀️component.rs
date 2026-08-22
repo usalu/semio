@@ -22,15 +22,105 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
+//#region 🧬️SchemaMetadata
+#[cfg(feature = "typegen")]
+pub mod schema_metadata {
+    use std::collections::HashSet;
+
+    /// 🧬️ One versioned shell wire type and its owned TypeScript projection.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub struct SchemaMetadata {
+        pub name: &'static str,
+        pub version: u16,
+        pub typescript: &'static str,
+    }
+
+    pub const TYPES: &[SchemaMetadata] = &[
+        SchemaMetadata { name: "ActiveSession", version: 1, typescript: r##"export type ActiveSession = { pluginId: string, appId: string, instanceId: number, };"## },
+        SchemaMetadata { name: "Anchor", version: 1, typescript: r##"export type Anchor = "left" | "right" | "top" | "bottom";"## },
+        SchemaMetadata { name: "AppRole", version: 1, typescript: r##"export type AppRole = string;"## },
+        SchemaMetadata { name: "ArtifactSyncStatus", version: 1, typescript: r##"export type ArtifactSyncStatus = { "kind": "clean" } | { "kind": "dirty" } | { "kind": "syncing" } | { "kind": "errored", message: string, };"## },
+        SchemaMetadata { name: "ByAnchor", version: 1, typescript: r##"export type ByAnchor<T> = { left: T, right: T, top: T, bottom: T, };"## },
+        SchemaMetadata { name: "Conflict", version: 1, typescript: r##"export type Conflict = { conflictId: string, documentId: string, description: string, };"## },
+        SchemaMetadata { name: "DialogState", version: 1, typescript: r##"export type DialogState = { dialogId: string, seedArgs: unknown, };"## },
+        SchemaMetadata { name: "DockUiState", version: 1, typescript: r##"export type DockUiState = { layout: LayoutNode | null, panelsVisible: ByAnchor<boolean>, };"## },
+        SchemaMetadata { name: "ExtraWindowInstance", version: 1, typescript: r##"export type ExtraWindowInstance = { windowId: string, kind: string, params: unknown, };"## },
+        SchemaMetadata { name: "IconName", version: 1, typescript: r##"export type IconName = string;"## },
+        SchemaMetadata { name: "LayoutNode", version: 1, typescript: r##"export type LayoutNode = { "kind": "leaf", windowId: string, } | { "kind": "split", orientation: SplitOrientation, children: Array<LayoutNode>, sizes: Array<number>, };"## },
+        SchemaMetadata { name: "LoadedPlugin", version: 1, typescript: r##"export type LoadedPlugin = { pluginId: string, moduleUrl: string, label: string | null, };"## },
+        SchemaMetadata { name: "MergePolicy", version: 1, typescript: r##"export type MergePolicy = "preferLocal" | "preferRemote" | "manual";"## },
+        SchemaMetadata { name: "NoticeKind", version: 1, typescript: r##"export type NoticeKind = "info" | "success" | "warning" | "error";"## },
+        SchemaMetadata { name: "PluginPanelStatus", version: 1, typescript: r##"export type PluginPanelStatus = { "kind": "open" } | { "kind": "collapsed" } | { "kind": "errored", message: string, };"## },
+        SchemaMetadata { name: "PluginSupervisorState", version: 1, typescript: r##"export type PluginSupervisorState = { healthy: boolean, restartCount: number, lastSignalMs: number | null, };"## },
+        SchemaMetadata { name: "ShellCapability", version: 1, typescript: r##"export type ShellCapability = { id: string, title: string, description: string, schema: unknown, observableOnly: boolean, };"## },
+        SchemaMetadata {
+            name: "ShellCommand",
+            version: 1,
+            typescript: r##"export type ShellCommand = { "type": "registerLoadedPlugin", plugin: LoadedPlugin, } | { "type": "unregisterLoadedPlugin", pluginId: string, } | { "type": "setPluginStatus", pluginId: string, status: PluginPanelStatus, } | { "type": "setPluginSupervisorState", pluginId: string, state: PluginSupervisorState, } | { "type": "setActiveSession", session: ActiveSession | null, } | { "type": "setSessionError", error: string | null, } | { "type": "setAppLabelOverride", appId: string, labelKey: string, value: string | null, } | { "type": "setActionPaneFolded", windowId: string, folded: boolean, } | { "type": "setActionPaneExpanded", windowId: string, actionId: string | null, } | { "type": "stageActionArg", windowId: string, actionId: string, argId: string, value: unknown, } | { "type": "resetActionArgs", windowId: string, actionId: string, } | { "type": "setActiveUtility", windowId: string, utilityId: string | null, } | { "type": "setActiveTool", toolId: string | null, } | { "type": "setCommandExpanded", commandId: string | null, } | { "type": "stageCommandArg", commandId: string, argId: string, value: unknown, } | { "type": "resetCommandArgs", commandId: string, } | { "type": "setPanelVisible", anchor: Anchor, visible: boolean, } | { "type": "setPanelSize", anchor: Anchor, size: number, } | { "type": "setPanelPath", anchor: Anchor, path: Array<string>, } | { "type": "setDockOverride", dock: LayoutNode | null, } | { "type": "setPanelPathMemory", panelKey: string, path: string | null, } | { "type": "setTreeOpenState", treeId: string, open: boolean, } | { "type": "hydrateDockUi", dock: DockUiState | null, } | { "type": "resetDock" } | { "type": "focusWindow", windowId: string | null, } | { "type": "setShellLayout", layout: LayoutNode | null, } | { "type": "setActiveExample", exampleId: string, } | { "type": "setMobilePanelPath", path: Array<string>, } | { "type": "setMobilePanelVisible", visible: boolean, } | { "type": "setExtraWindows", windows: Array<ExtraWindowInstance>, } | { "type": "setWindowTitle", windowId: string, title: string, } | { "type": "setWindowIcon", windowId: string, icon: IconName, } | { "type": "setSearchOpen", open: boolean, } | { "type": "setFindOpen", open: boolean, } | { "type": "autoStartIntroduction", key: string, } | { "type": "setIntroductionStep", stepIndex: number | null, } | { "type": "completeIntroductionInteraction", interactionIndex: number, } | { "type": "openDialog", dialogId: string, seedArgs: unknown, } | { "type": "closeDialog", dialogId: string | null, } | { "type": "showTransientNotice", notice: TransientNotice, } | { "type": "dismissTransientNotice" } | { "type": "setOpenWithFocusRole", role: AppRole | null, } | { "type": "setActiveTutorial", tutorialId: string | null, } | { "type": "setUiAppearance", appearance: UiAppearance, } | { "type": "setUiLayout", layout: UiChromeLayout, } | { "type": "setUiDriver", driverId: string, } | { "type": "setUiCustomDriver", driverId: string, driver: UiDriver | null, } | { "type": "setUiDriverDraft", draft: UiDriver | null, } | { "type": "setUiLocale", locale: UiLocale, } | { "type": "setUiTerminology", terminologyId: string, } | { "type": "setUiTheme", themeId: string, } | { "type": "setUiCustomTheme", themeId: string, theme: UiTheme | null, } | { "type": "setUiThemeDraft", draft: UiTheme | null, } | { "type": "setUiKeybindingOverride", controlId: string, keys: string | null, } | { "type": "setSyncBackboneUri", uri: string | null, } | { "type": "setSyncCardKind", kind: SyncCardKind | null, } | { "type": "setSyncDraftPath", path: string, } | { "type": "setDocumentSyncStatus", documentId: string, status: ArtifactSyncStatus, } | { "type": "setMergePolicy", policy: MergePolicy, } | { "type": "setConflicts", conflicts: Array<Conflict>, } | { "type": "selectConflict", conflictId: string | null, } | { "type": "setStorageScope", scope: ShellScope, } | { "type": "setOpeningPreference", role: string, dialectId: string | null, };"##,
+        },
+        SchemaMetadata {
+            name: "ShellError",
+            version: 1,
+            typescript: r##"export type ShellError = { "kind": "emptyIdentifier", field: string, } | { "kind": "unknownPlugin", pluginId: string, } | { "kind": "unknownDialog", dialogId: string, } | { "kind": "unknownConflict", conflictId: string, } | { "kind": "invalidPanelSize", anchor: Anchor, size: number, };"##,
+        },
+        SchemaMetadata {
+            name: "ShellEvent",
+            version: 1,
+            typescript: r##"export type ShellEvent = { "type": "applied", capabilityId: string, revision: number, } | { "type": "windowFocusChanged", previous: string | null, current: string | null, } | { "type": "activeUtilityChanged", windowId: string, previous: string | null, current: string | null, } | { "type": "activeToolChanged", previous: string | null, current: string | null, } | { "type": "dockReset" } | { "type": "dialogOpened", dialogId: string, } | { "type": "dialogClosed", dialogId: string, };"##,
+        },
+        SchemaMetadata { name: "ShellScope", version: 1, typescript: r##"export type ShellScope = "localStorage" | "memory";"## },
+        SchemaMetadata {
+            name: "ShellState",
+            version: 1,
+            typescript: r##"export type ShellState = { revision: number, loadedPlugins: Array<LoadedPlugin>, pluginStatusById: { [key in string]?: PluginPanelStatus }, pluginSupervisorById: { [key in string]?: PluginSupervisorState }, activeSession: ActiveSession | null, sessionError: string | null, appLabelsOverlay: { [key in string]?: { [key in string]?: string } }, actionPaneFoldedByWindow: { [key in string]?: boolean }, actionPaneExpandedByWindow: { [key in string]?: string | null }, stagedActionArgs: unknown, activeUtilityByWindow: { [key in string]?: string | null }, activeToolId: string | null, commandPanelExpanded: string | null, stagedCommandArgs: unknown, panelsVisible: ByAnchor<boolean>, panelsSize: ByAnchor<number>, panelsPath: ByAnchor<Array<string>>, dockOverride: LayoutNode | null, panelPathMemory: { [key in string]?: string }, treeOpenStates: { [key in string]?: boolean }, activeWindowId: string | null, shellLayout: LayoutNode | null, activeExampleId: string, mobilePanelPath: Array<string>, mobilePanelVisible: boolean, extraWindows: Array<ExtraWindowInstance>, windowTitlesById: { [key in string]?: string }, windowIconsById: { [key in string]?: IconName }, searchOpen: boolean, findOpen: boolean, introductionStepIndex: number | null, introductionAutoStartedKeys: Array<string>, introductionCompletedInteractions: Array<number>, dialogStack: Array<DialogState>, transientNotice: TransientNotice | null, openWithFocusRole: AppRole | null, activeTutorialId: string | null, uiAppearance: UiAppearance, uiLayout: UiChromeLayout, uiDriverId: string, uiCustomDrivers: { [key in string]?: UiDriver }, uiDriverDraft: UiDriver | null, uiLocale: UiLocale, uiTerminology: string, uiThemeId: string, uiCustomThemes: { [key in string]?: UiTheme }, uiThemeDraft: UiTheme | null, uiKeybindingOverrides: { [key in string]?: string }, syncBackboneUri: string | null, syncCardKind: SyncCardKind | null, syncDraftPath: string, syncStatusByDocument: { [key in string]?: ArtifactSyncStatus }, mergePolicy: MergePolicy, conflicts: Array<Conflict>, selectedConflictId: string | null, storageScope: ShellScope, openingPreferences: { [key in string]?: string }, };"##,
+        },
+        SchemaMetadata { name: "SplitOrientation", version: 1, typescript: r##"export type SplitOrientation = "horizontal" | "vertical";"## },
+        SchemaMetadata { name: "SyncCardKind", version: 1, typescript: r##"export type SyncCardKind = "file" | "folder" | "remote";"## },
+        SchemaMetadata { name: "TransientNotice", version: 1, typescript: r##"export type TransientNotice = { message: string, kind: NoticeKind, expiresAtMs: number | null, };"## },
+        SchemaMetadata { name: "UiAppearance", version: 1, typescript: r##"export type UiAppearance = "system" | "light" | "dark";"## },
+        SchemaMetadata { name: "UiChromeLayout", version: 1, typescript: r##"export type UiChromeLayout = "default" | "compact";"## },
+        SchemaMetadata { name: "UiDriver", version: 1, typescript: r##"export type UiDriver = { driverId: string, label: string, config: unknown, };"## },
+        SchemaMetadata { name: "UiLocale", version: 1, typescript: r##"export type UiLocale = "en" | "de";"## },
+        SchemaMetadata { name: "UiTheme", version: 1, typescript: r##"export type UiTheme = { themeId: string, label: string, tokens: { [key in string]?: string }, };"## },
+    ];
+
+    /// 🔍️ Rejects unversioned, duplicate, or name-mismatched schema rows before generation.
+    pub fn validate() -> Result<(), String> {
+        let mut names = HashSet::with_capacity(TYPES.len());
+        for metadata in TYPES {
+            if metadata.version == 0 {
+                return Err(format!("schema '{}' has version zero", metadata.name));
+            }
+            if !names.insert(metadata.name) {
+                return Err(format!("duplicate schema '{}'", metadata.name));
+            }
+            let prefix = format!("export type {}", metadata.name);
+            if !metadata.typescript.starts_with(&prefix) {
+                return Err(format!("schema '{}' declaration has a mismatched name", metadata.name));
+            }
+        }
+        Ok(())
+    }
+
+    /// 🟦️ Renders the stable language projection consumed by every shell host.
+    pub fn render_typescript() -> String {
+        let mut output = String::from("/** @generated by bun nx run @semio-tech/framework-os-shell-rs:typegen from 🖥️shell owned schema metadata. Do not edit. */\n\n");
+        for metadata in TYPES {
+            output.push_str(metadata.typescript);
+            output.push_str("\n\n");
+        }
+        output
+    }
+}
+//#endregion 🧬️SchemaMetadata
+
 /// 🧩️ Free-form staged/seed argument payload (action args, command args, dialog seed args).
-/// `serde_json::Value` has no `ts_rs::TS` impl, so every field of this type is annotated
-/// `#[cfg_attr(feature = "typegen", ts(type = "unknown"))]` at its use site.
+/// The owned schema metadata projects this deliberately open value as TypeScript `unknown`.
 pub type JsonValue = serde_json::Value;
 
 //#region 🧭️Anchor
 /// 🧭️ The four docking edges a panel can attach to.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum Anchor {
     Left,
@@ -47,7 +137,6 @@ impl Anchor {
 /// avoids the "enum as HashMap key" JSON-serialization pitfall (serde_json map keys must reduce
 /// to strings; a 4-field struct sidesteps the question entirely and is simpler to reason about).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ByAnchor<T> {
     pub left: T,
@@ -84,7 +173,6 @@ impl<T: Clone> ByAnchor<T> {
 //#region 🧱️LayoutNode
 /// 🧱️ How two child regions of a split are arranged.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum SplitOrientation {
     Horizontal,
@@ -99,7 +187,6 @@ pub enum SplitOrientation {
 /// (window ids at the leaves, nested splits), so one recursive type serves both; reconciling this
 /// with the real tree types is later-packet adoption work.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum LayoutNode {
     Leaf { window_id: String },
@@ -109,7 +196,6 @@ pub enum LayoutNode {
 /// 🗂️ Restored dock UI state (`HYDRATE_DOCK_UI` row) — a layout tree plus per-anchor visibility,
 /// the shape the audit's `DockUiState` payload carries.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct DockUiState {
     pub layout: Option<LayoutNode>,
@@ -121,19 +207,16 @@ pub struct DockUiState {
 /// 🪟️ One spawned/extra window instance (audit `ExtraWindowInstance`). `params` mirrors the same
 /// free-form seed shape `OpenWindow`'s kernel effect carries.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ExtraWindowInstance {
     pub window_id: String,
     pub kind: String,
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
     pub params: Option<JsonValue>,
 }
 
 /// 🖼️ Stable icon identifier. Local newtype mirror — the real `IconName` lives in the UI token
 /// crate this module must not depend on (§4).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct IconName(pub String);
 //#endregion 🪟️Windows
 
@@ -142,7 +225,6 @@ pub struct IconName(pub String);
 /// never captured by the audit; this is a minimal domain-shaped mirror sufficient for identity +
 /// registry semantics, reconciled at adoption time).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct LoadedPlugin {
     pub plugin_id: String,
@@ -152,7 +234,6 @@ pub struct LoadedPlugin {
 
 /// 🪟️ Plugin panel open/collapsed UI state (audit: "plugin panel UI state (open/collapsed)").
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PluginPanelStatus {
     Open,
@@ -164,21 +245,18 @@ pub enum PluginPanelStatus {
 /// A minimal local mirror — the full failure ladder lives in the actor runtime crate this module
 /// must not depend on (§4); this is the shell-observable projection of it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct PluginSupervisorState {
     pub healthy: bool,
     pub restart_count: u32,
     /// `u64`, but the wire format is plain JSON (this module has no binary codec), so the TS
-    /// mirror must be `number` not ts-rs' default `bigint` — millisecond epoch timestamps never
+    /// mirror is explicitly `number`, since millisecond epoch timestamps never
     /// approach `u64::MAX`, let alone JS's `Number.MAX_SAFE_INTEGER`.
-    #[cfg_attr(feature = "typegen", ts(type = "number | null"))]
     pub last_signal_ms: Option<u64>,
 }
 
 /// 🎯️ The active app instance binding (audit: "active app instance binding").
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ActiveSession {
     pub plugin_id: String,
@@ -193,17 +271,14 @@ pub struct ActiveSession {
 /// of the tricky paths the packet brief calls out explicitly; a flat `Option` cannot represent a
 /// confirm dialog opened on top of a settings dialog.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct DialogState {
     pub dialog_id: String,
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
     pub seed_args: Option<JsonValue>,
 }
 
 /// 🔔️ Severity of a [`TransientNotice`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum NoticeKind {
     Info,
@@ -214,28 +289,24 @@ pub enum NoticeKind {
 
 /// 🔔️ A non-blocking auto-dismiss notice.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TransientNotice {
     pub message: String,
     pub kind: NoticeKind,
     /// See [`PluginSupervisorState::last_signal_ms`]'s docstring for why this is `number`, not
-    /// ts-rs' default `bigint`, in the TS mirror.
-    #[cfg_attr(feature = "typegen", ts(type = "number | null"))]
+    /// a wider integer projection, in the TypeScript mirror.
     pub expires_at_ms: Option<u64>,
 }
 
 /// 🎭️ Which role group the Open panel should focus. Local newtype mirror (§4) — the real
 /// `AppRole` enumeration lives in the plugin manifest surface this module must not depend on.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct AppRole(pub String);
 //#endregion 🔔️Overlays
 
 //#region 🎨️UiPreferences
 /// 🎨️ Appearance preference.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum UiAppearance {
     System,
@@ -246,7 +317,6 @@ pub enum UiAppearance {
 /// 📐️ UI chrome density (matches the `os.setDriver` command's declared select options
 /// default/compact — audit §5).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum UiChromeLayout {
     Default,
@@ -259,7 +329,6 @@ pub enum UiChromeLayout {
 /// type still needs a technical fallback value for [`ShellState::default`], documented there.
 /// English first, then German, per CLAUDE.md.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum UiLocale {
     En,
@@ -269,18 +338,15 @@ pub enum UiLocale {
 /// 🚗️ A user-defined UI driver (audit: `uiCustomDrivers`/`uiDriverDraft`). Its full shape was
 /// never captured by the audit; `config` carries whatever driver-specific data the real type has.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiDriver {
     pub driver_id: String,
     pub label: String,
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
     pub config: JsonValue,
 }
 
 /// 🎨️ A user-defined UI theme (audit: `uiCustomThemes`/`uiThemeDraft`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiTheme {
     pub theme_id: String,
@@ -292,7 +358,6 @@ pub struct UiTheme {
 //#region 🔄️Sync
 /// 🗂️ Check-in target type (audit: "check-in file/folder/remote type").
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum SyncCardKind {
     File,
@@ -302,7 +367,6 @@ pub enum SyncCardKind {
 
 /// 🩺️ Per-document sync health (audit: `ArtifactSyncStatus`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ArtifactSyncStatus {
     Clean,
@@ -315,7 +379,6 @@ pub enum ArtifactSyncStatus {
 //#region 🤝️Merge
 /// 🤝️ Conflict resolution strategy (audit: `MergePolicy`, persisted).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum MergePolicy {
     PreferLocal,
@@ -325,7 +388,6 @@ pub enum MergePolicy {
 
 /// ⚠️ One open conflict on the roster (audit: `Conflict`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct Conflict {
     pub conflict_id: String,
@@ -337,7 +399,6 @@ pub struct Conflict {
 //#region 💾️Host
 /// 💾️ Storage backend for shell state persistence (ShellHost `scope` useState, audit §2).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum ShellScope {
     LocalStorage,
@@ -351,12 +412,10 @@ pub enum ShellScope {
 /// absent; see `📓️terra-P9-report.md` "Rows excluded" for the row-by-row justification. `revision`
 /// increments on every successfully applied [`ShellCommand`]; a rejected command never changes it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ShellState {
     /// See [`PluginSupervisorState::last_signal_ms`]'s docstring for why this is `number`, not
-    /// ts-rs' default `bigint`, in the TS mirror.
-    #[cfg_attr(feature = "typegen", ts(type = "number"))]
+    /// a wider integer projection, in the TypeScript mirror.
     pub revision: u64,
 
     //#region 🔌️PluginRuntime
@@ -379,7 +438,6 @@ pub struct ShellState {
     pub action_pane_folded_by_window: HashMap<String, bool>,
     pub action_pane_expanded_by_window: HashMap<String, Option<String>>,
     /// window_id -> action_id -> arg_id -> value.
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
     pub staged_action_args: HashMap<String, HashMap<String, HashMap<String, JsonValue>>>,
     pub active_utility_by_window: HashMap<String, Option<String>>,
     pub active_tool_id: Option<String>,
@@ -388,7 +446,6 @@ pub struct ShellState {
     //#region 🎮️CommandPalette
     pub command_panel_expanded: Option<String>,
     /// command_id -> arg_id -> value.
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
     pub staged_command_args: HashMap<String, HashMap<String, JsonValue>>,
     //#endregion 🎮️CommandPalette
 
@@ -539,244 +596,92 @@ impl Default for ShellState {
 /// single-key upsert/remove command (`value: None` removes) rather than a whole-map replacement,
 /// which is both wire-safe and small-diff-friendly for an LLM caller.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "type", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ShellCommand {
     // ── Plugin runtime — audit UPSERT_LOADED_PLUGIN/REMOVE_LOADED_PLUGIN/SET_PLUGIN_STATUS/SET_PLUGIN_SUPERVISOR/SET_SESSION/SET_ERROR
-    RegisterLoadedPlugin {
-        plugin: LoadedPlugin,
-    },
-    UnregisterLoadedPlugin {
-        plugin_id: String,
-    },
-    SetPluginStatus {
-        plugin_id: String,
-        status: PluginPanelStatus,
-    },
-    SetPluginSupervisorState {
-        plugin_id: String,
-        state: PluginSupervisorState,
-    },
-    SetActiveSession {
-        session: Option<ActiveSession>,
-    },
-    SetSessionError {
-        error: Option<String>,
-    },
+    RegisterLoadedPlugin { plugin: LoadedPlugin },
+    UnregisterLoadedPlugin { plugin_id: String },
+    SetPluginStatus { plugin_id: String, status: PluginPanelStatus },
+    SetPluginSupervisorState { plugin_id: String, state: PluginSupervisorState },
+    SetActiveSession { session: Option<ActiveSession> },
+    SetSessionError { error: Option<String> },
 
     // ── App labels — audit SET_APP_LABELS_OVERLAY
-    SetAppLabelOverride {
-        app_id: String,
-        label_key: String,
-        value: Option<String>,
-    },
+    SetAppLabelOverride { app_id: String, label_key: String, value: Option<String> },
 
     // ── Action rail — audit SET_ACTION_PANE_FOLDED/SET_ACTION_PANE_EXPANDED/STAGE_ACTION_ARG/RESET_ACTION_ARGS/SET_ACTIVE_UTILITY/SET_ACTIVE_TOOL
-    SetActionPaneFolded {
-        window_id: String,
-        folded: bool,
-    },
-    SetActionPaneExpanded {
-        window_id: String,
-        action_id: Option<String>,
-    },
-    StageActionArg {
-        window_id: String,
-        action_id: String,
-        arg_id: String,
-        #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
-        value: JsonValue,
-    },
-    ResetActionArgs {
-        window_id: String,
-        action_id: String,
-    },
-    SetActiveUtility {
-        window_id: String,
-        utility_id: Option<String>,
-    },
-    SetActiveTool {
-        tool_id: Option<String>,
-    },
+    SetActionPaneFolded { window_id: String, folded: bool },
+    SetActionPaneExpanded { window_id: String, action_id: Option<String> },
+    StageActionArg { window_id: String, action_id: String, arg_id: String, value: JsonValue },
+    ResetActionArgs { window_id: String, action_id: String },
+    SetActiveUtility { window_id: String, utility_id: Option<String> },
+    SetActiveTool { tool_id: Option<String> },
 
     // ── Command palette — audit SET_COMMAND_EXPANDED/STAGE_COMMAND_ARG/RESET_COMMAND_ARGS
-    SetCommandExpanded {
-        command_id: Option<String>,
-    },
-    StageCommandArg {
-        command_id: String,
-        arg_id: String,
-        #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
-        value: JsonValue,
-    },
-    ResetCommandArgs {
-        command_id: String,
-    },
+    SetCommandExpanded { command_id: Option<String> },
+    StageCommandArg { command_id: String, arg_id: String, value: JsonValue },
+    ResetCommandArgs { command_id: String },
 
     // ── Panel layout — audit SET_PANEL_VISIBLE/SET_PANEL_SIZE/SET_PANEL_PATH/SET_DOCK_OVERRIDE/SET_PANEL_PATH_MEMORY/SET_TREE_OPEN_STATE/HYDRATE_DOCK_UI/RESET_DOCK/SET_ACTIVE_WINDOW_ID/SET_SHELL_LAYOUT/SET_ACTIVE_EXAMPLE_ID/SET_MOBILE_PANEL_PATH/SET_MOBILE_PANEL_VISIBLE/SET_EXTRA_WINDOW_INSTANCES/SET_WINDOW_TITLE/SET_WINDOW_ICON
-    SetPanelVisible {
-        anchor: Anchor,
-        visible: bool,
-    },
-    SetPanelSize {
-        anchor: Anchor,
-        size: f32,
-    },
-    SetPanelPath {
-        anchor: Anchor,
-        path: Vec<String>,
-    },
-    SetDockOverride {
-        dock: Option<LayoutNode>,
-    },
-    SetPanelPathMemory {
-        panel_key: String,
-        path: Option<String>,
-    },
-    SetTreeOpenState {
-        tree_id: String,
-        open: bool,
-    },
-    HydrateDockUi {
-        dock: Option<DockUiState>,
-    },
+    SetPanelVisible { anchor: Anchor, visible: bool },
+    SetPanelSize { anchor: Anchor, size: f32 },
+    SetPanelPath { anchor: Anchor, path: Vec<String> },
+    SetDockOverride { dock: Option<LayoutNode> },
+    SetPanelPathMemory { panel_key: String, path: Option<String> },
+    SetTreeOpenState { tree_id: String, open: bool },
+    HydrateDockUi { dock: Option<DockUiState> },
     ResetDock,
-    FocusWindow {
-        window_id: Option<String>,
-    },
-    SetShellLayout {
-        layout: Option<LayoutNode>,
-    },
-    SetActiveExample {
-        example_id: String,
-    },
-    SetMobilePanelPath {
-        path: Vec<String>,
-    },
-    SetMobilePanelVisible {
-        visible: bool,
-    },
-    SetExtraWindows {
-        windows: Vec<ExtraWindowInstance>,
-    },
-    SetWindowTitle {
-        window_id: String,
-        title: String,
-    },
-    SetWindowIcon {
-        window_id: String,
-        icon: IconName,
-    },
+    FocusWindow { window_id: Option<String> },
+    SetShellLayout { layout: Option<LayoutNode> },
+    SetActiveExample { example_id: String },
+    SetMobilePanelPath { path: Vec<String> },
+    SetMobilePanelVisible { visible: bool },
+    SetExtraWindows { windows: Vec<ExtraWindowInstance> },
+    SetWindowTitle { window_id: String, title: String },
+    SetWindowIcon { window_id: String, icon: IconName },
 
     // ── Overlays / dialogs — audit SET_SEARCH_OPEN/SET_FIND_OPEN/AUTO_START_INTRODUCTION/SET_INTRODUCTION_STEP/COMPLETE_INTRODUCTION_INTERACTION/SET_DIALOG/SET_TRANSIENT_NOTICE/SET_OPEN_WITH_FOCUS_ROLE
-    SetSearchOpen {
-        open: bool,
-    },
-    SetFindOpen {
-        open: bool,
-    },
-    AutoStartIntroduction {
-        key: String,
-    },
-    SetIntroductionStep {
-        step_index: Option<u32>,
-    },
-    CompleteIntroductionInteraction {
-        interaction_index: u32,
-    },
-    OpenDialog {
-        dialog_id: String,
-        #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
-        seed_args: Option<JsonValue>,
-    },
-    CloseDialog {
-        dialog_id: Option<String>,
-    },
-    ShowTransientNotice {
-        notice: TransientNotice,
-    },
+    SetSearchOpen { open: bool },
+    SetFindOpen { open: bool },
+    AutoStartIntroduction { key: String },
+    SetIntroductionStep { step_index: Option<u32> },
+    CompleteIntroductionInteraction { interaction_index: u32 },
+    OpenDialog { dialog_id: String, seed_args: Option<JsonValue> },
+    CloseDialog { dialog_id: Option<String> },
+    ShowTransientNotice { notice: TransientNotice },
     DismissTransientNotice,
-    SetOpenWithFocusRole {
-        role: Option<AppRole>,
-    },
+    SetOpenWithFocusRole { role: Option<AppRole> },
 
     // ── Tutorial (semantic subset) — audit SET_TUTORIAL
-    SetActiveTutorial {
-        tutorial_id: Option<String>,
-    },
+    SetActiveTutorial { tutorial_id: Option<String> },
 
     // ── UI preferences — audit SET_UI_APPEARANCE/SET_UI_LAYOUT/SET_UI_DRIVER_ID/SET_UI_CUSTOM_DRIVERS/SET_UI_DRIVER_DRAFT/SET_UI_LOCALE/SET_UI_TERMINOLOGY/SET_UI_THEME_ID/SET_UI_CUSTOM_THEMES/SET_UI_THEME_DRAFT/SET_UI_KEYBINDING_OVERRIDES
-    SetUiAppearance {
-        appearance: UiAppearance,
-    },
-    SetUiLayout {
-        layout: UiChromeLayout,
-    },
-    SetUiDriver {
-        driver_id: String,
-    },
-    SetUiCustomDriver {
-        driver_id: String,
-        driver: Option<UiDriver>,
-    },
-    SetUiDriverDraft {
-        draft: Option<UiDriver>,
-    },
-    SetUiLocale {
-        locale: UiLocale,
-    },
-    SetUiTerminology {
-        terminology_id: String,
-    },
-    SetUiTheme {
-        theme_id: String,
-    },
-    SetUiCustomTheme {
-        theme_id: String,
-        theme: Option<UiTheme>,
-    },
-    SetUiThemeDraft {
-        draft: Option<UiTheme>,
-    },
-    SetUiKeybindingOverride {
-        control_id: String,
-        keys: Option<String>,
-    },
+    SetUiAppearance { appearance: UiAppearance },
+    SetUiLayout { layout: UiChromeLayout },
+    SetUiDriver { driver_id: String },
+    SetUiCustomDriver { driver_id: String, driver: Option<UiDriver> },
+    SetUiDriverDraft { draft: Option<UiDriver> },
+    SetUiLocale { locale: UiLocale },
+    SetUiTerminology { terminology_id: String },
+    SetUiTheme { theme_id: String },
+    SetUiCustomTheme { theme_id: String, theme: Option<UiTheme> },
+    SetUiThemeDraft { draft: Option<UiTheme> },
+    SetUiKeybindingOverride { control_id: String, keys: Option<String> },
 
     // ── Sync — audit SET_SYNC_BACKBONE_URI/SET_SYNC_CARD_KIND/SET_SYNC_DRAFT_PATH/SET_SYNC_STATUS_FOR_DOCUMENT
-    SetSyncBackboneUri {
-        uri: Option<String>,
-    },
-    SetSyncCardKind {
-        kind: Option<SyncCardKind>,
-    },
-    SetSyncDraftPath {
-        path: String,
-    },
-    SetDocumentSyncStatus {
-        document_id: String,
-        status: ArtifactSyncStatus,
-    },
+    SetSyncBackboneUri { uri: Option<String> },
+    SetSyncCardKind { kind: Option<SyncCardKind> },
+    SetSyncDraftPath { path: String },
+    SetDocumentSyncStatus { document_id: String, status: ArtifactSyncStatus },
 
     // ── Merge / conflicts — audit SET_MERGE_POLICY/SET_CONFLICTS/SET_SELECTED_CONFLICT_ID
-    SetMergePolicy {
-        policy: MergePolicy,
-    },
-    SetConflicts {
-        conflicts: Vec<Conflict>,
-    },
-    SelectConflict {
-        conflict_id: Option<String>,
-    },
+    SetMergePolicy { policy: MergePolicy },
+    SetConflicts { conflicts: Vec<Conflict> },
+    SelectConflict { conflict_id: Option<String> },
 
     // ── Host prefs — ShellHost `scope`/`openingPreferences` useState (audit §2)
-    SetStorageScope {
-        scope: ShellScope,
-    },
-    SetOpeningPreference {
-        role: String,
-        dialect_id: Option<String>,
-    },
+    SetStorageScope { scope: ShellScope },
+    SetOpeningPreference { role: String, dialect_id: Option<String> },
 }
 //#endregion 🎮️ShellCommand
 
@@ -790,14 +695,12 @@ pub enum ShellCommand {
 /// duplication; the specific variants exist only where `reduce` does something beyond the literal
 /// field write the command names.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "type", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ShellEvent {
     /// Always emitted, exactly once, as the last event of every accepted command. `revision` is
-    /// `number`, not ts-rs' default `bigint` — see [`PluginSupervisorState::last_signal_ms`].
+    /// `number` — see [`PluginSupervisorState::last_signal_ms`].
     Applied {
         capability_id: String,
-        #[cfg_attr(feature = "typegen", ts(type = "number"))]
         revision: u64,
     },
     /// Focus moved — either directly (`FocusWindow`) or automatically (the previously-focused
@@ -831,21 +734,29 @@ pub enum ShellEvent {
 /// 🚨️ Why a command was rejected. `reduce` never panics; every invalid transition returns one of
 /// these instead of silently no-oping (packet §4: "invalid transitions return `ShellError` rather
 /// than silently no-oping").
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, thiserror::Error, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ShellError {
-    #[error("empty identifier for {field}")]
     EmptyIdentifier { field: String },
-    #[error("unknown plugin: {plugin_id}")]
     UnknownPlugin { plugin_id: String },
-    #[error("unknown dialog: {dialog_id}")]
     UnknownDialog { dialog_id: String },
-    #[error("unknown conflict: {conflict_id}")]
     UnknownConflict { conflict_id: String },
-    #[error("invalid panel size for {anchor:?}: {size}")]
     InvalidPanelSize { anchor: Anchor, size: f32 },
 }
+
+impl std::fmt::Display for ShellError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::EmptyIdentifier { field } => write!(formatter, "empty identifier for {field}"),
+            Self::UnknownPlugin { plugin_id } => write!(formatter, "unknown plugin: {plugin_id}"),
+            Self::UnknownDialog { dialog_id } => write!(formatter, "unknown dialog: {dialog_id}"),
+            Self::UnknownConflict { conflict_id } => write!(formatter, "unknown conflict: {conflict_id}"),
+            Self::InvalidPanelSize { anchor, size } => write!(formatter, "invalid panel size for {anchor:?}: {size}"),
+        }
+    }
+}
+
+impl std::error::Error for ShellError {}
 //#endregion 🚨️ShellError
 
 //#region 🧮️reduce
@@ -1236,7 +1147,6 @@ pub fn reduce(state: &ShellState, command: &ShellCommand, now_ms: u64) -> Result
 /// packet) compiles into its tool catalog. Defined locally (packet §3: "do NOT depend on the
 /// gateway crate or on `🛂️manifest`").
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ShellCapability {
     /// Stable dotted id, e.g. `ui.window.focus`. Reuses the wgpu shell's existing informal
@@ -1247,7 +1157,6 @@ pub struct ShellCapability {
     pub title: String,
     pub description: String,
     /// JSON Schema for this variant's payload (schemars-derived from [`ShellCommand`]).
-    #[cfg_attr(feature = "typegen", ts(type = "unknown"))]
     pub schema: JsonValue,
     /// True for commands that only stage/observe data (no mutation with externally-visible
     /// consequence beyond the field itself) — none of today's commands are observable-only, this
@@ -1451,9 +1360,7 @@ mod tests {
 
     #[test]
     fn focus_after_closing_focused_window_reassigns() {
-        let mut state = ShellState::default();
-        state.extra_windows = vec![window("w1"), window("w2")];
-        state.active_window_id = Some("w2".to_string());
+        let state = ShellState { extra_windows: vec![window("w1"), window("w2")], active_window_id: Some("w2".to_string()), ..ShellState::default() };
         let (next, events) = reduce(&state, &ShellCommand::SetExtraWindows { windows: vec![window("w1")] }, 1000).expect("accepted");
         assert_eq!(next.active_window_id, Some("w1".to_string()));
         assert!(events.iter().any(|e| matches!(e, ShellEvent::WindowFocusChanged { previous: Some(p), current: Some(c) } if p == "w2" && c == "w1")));
@@ -1461,8 +1368,7 @@ mod tests {
 
     #[test]
     fn mode_tool_mutual_exclusion_tool_clears_utility() {
-        let mut state = ShellState::default();
-        state.active_window_id = Some("w1".to_string());
+        let mut state = ShellState { active_window_id: Some("w1".to_string()), ..ShellState::default() };
         state.active_utility_by_window.insert("w1".to_string(), Some("inspect".to_string()));
         let (next, events) = reduce(&state, &ShellCommand::SetActiveTool { tool_id: Some("draw".to_string()) }, 1000).expect("accepted");
         assert_eq!(next.active_tool_id, Some("draw".to_string()));
@@ -1483,8 +1389,7 @@ mod tests {
 
     #[test]
     fn dock_reset_clears_override_and_emits_event() {
-        let mut state = ShellState::default();
-        state.dock_override = Some(LayoutNode::Leaf { window_id: "w1".to_string() });
+        let state = ShellState { dock_override: Some(LayoutNode::Leaf { window_id: "w1".to_string() }), ..ShellState::default() };
         let (next, events) = reduce(&state, &ShellCommand::ResetDock, 1000).expect("accepted");
         assert_eq!(next.dock_override, None);
         assert!(events.iter().any(|e| matches!(e, ShellEvent::DockReset)));
@@ -1525,37 +1430,13 @@ mod tests {
     #[cfg(feature = "typegen")]
     #[test]
     fn exports_typescript_bindings() {
-        use ts_rs::TS;
-        Anchor::export_all().expect("Anchor");
-        ByAnchor::<bool>::export_all().expect("ByAnchor<bool>");
-        SplitOrientation::export_all().expect("SplitOrientation");
-        LayoutNode::export_all().expect("LayoutNode");
-        DockUiState::export_all().expect("DockUiState");
-        ExtraWindowInstance::export_all().expect("ExtraWindowInstance");
-        IconName::export_all().expect("IconName");
-        LoadedPlugin::export_all().expect("LoadedPlugin");
-        PluginPanelStatus::export_all().expect("PluginPanelStatus");
-        PluginSupervisorState::export_all().expect("PluginSupervisorState");
-        ActiveSession::export_all().expect("ActiveSession");
-        DialogState::export_all().expect("DialogState");
-        NoticeKind::export_all().expect("NoticeKind");
-        TransientNotice::export_all().expect("TransientNotice");
-        AppRole::export_all().expect("AppRole");
-        UiAppearance::export_all().expect("UiAppearance");
-        UiChromeLayout::export_all().expect("UiChromeLayout");
-        UiLocale::export_all().expect("UiLocale");
-        UiDriver::export_all().expect("UiDriver");
-        UiTheme::export_all().expect("UiTheme");
-        SyncCardKind::export_all().expect("SyncCardKind");
-        ArtifactSyncStatus::export_all().expect("ArtifactSyncStatus");
-        MergePolicy::export_all().expect("MergePolicy");
-        Conflict::export_all().expect("Conflict");
-        ShellScope::export_all().expect("ShellScope");
-        ShellState::export_all().expect("ShellState");
-        ShellCommand::export_all().expect("ShellCommand");
-        ShellEvent::export_all().expect("ShellEvent");
-        ShellError::export_all().expect("ShellError");
-        ShellCapability::export_all().expect("ShellCapability");
+        schema_metadata::validate().unwrap();
+        let rendered = schema_metadata::render_typescript();
+        if let Some(path) = std::env::var_os("SEMIO_TYPEGEN_OUT") {
+            std::fs::write(path, &rendered).unwrap();
+        } else {
+            assert_eq!(rendered, include_str!("🤖️generated/🟦️shell.ts"));
+        }
     }
 
     /// 🏭️ Dev-only fixture generator — NOT part of the public API, gated by `#[ignore]` so a plain
@@ -1769,7 +1650,7 @@ mod tests {
         write_err("error-close-dialog-unknown-id", base.clone(), ShellCommand::CloseDialog { dialog_id: Some("missing".to_string()) });
         write_err("error-select-unknown-conflict", base.clone(), ShellCommand::SelectConflict { conflict_id: Some("missing".to_string()) });
         write_err("error-set-panel-size-negative", base.clone(), ShellCommand::SetPanelSize { anchor: Anchor::Left, size: -5.0 });
-        write_err("error-set-window-title-empty-id", base.clone(), ShellCommand::SetWindowTitle { window_id: String::new(), title: "x".to_string() });
+        write_err("error-set-window-title-empty-id", base, ShellCommand::SetWindowTitle { window_id: String::new(), title: "x".to_string() });
 
         let count = fs::read_dir(&dir).expect("read fixtures dir").filter(|e| e.as_ref().unwrap().path().extension().and_then(|x| x.to_str()) == Some("json")).count();
         println!("wrote {count} fixtures to {}", dir.display());

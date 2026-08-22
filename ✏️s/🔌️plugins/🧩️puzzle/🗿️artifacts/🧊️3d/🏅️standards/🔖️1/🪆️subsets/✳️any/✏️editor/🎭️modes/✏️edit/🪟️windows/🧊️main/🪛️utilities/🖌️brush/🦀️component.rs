@@ -11,14 +11,14 @@ use semio_framework_plugin::{LocalizedLabel, MeasureSelectItem, UtilityDefinitio
 pub const UTILITY_ID: &str = "brush";
 
 /// 🧱️ Stitched into the app manifest by `crate::editor::puzzle3d::create_puzzle3d_app`.
-pub async fn definition(label: LocalizedLabel) -> UtilityDefinition {
+pub fn definition(label: LocalizedLabel) -> UtilityDefinition {
     UtilityDefinition::new(UTILITY_ID, label, "paintbrush")
 }
 
 /// 🖌️ Utility Options for the Brush utility. Tagged with this utility's id as a routing envelope
 /// only; `partition_window_measures` unwraps the children so the utility bar shows the option tree
 /// directly (no nested "Brush"/"Pinsel" header — the utility toggle already owns that row).
-pub async fn options(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> WindowMeasure {
+pub fn options(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> WindowMeasure {
     let mut children = vec![
         WindowMeasure::Slider {
             id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-brush-overlap-budget"),

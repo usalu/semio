@@ -30,7 +30,7 @@ use std::task::{Context, Poll, Waker};
 use semio_framework::{MediaClass, MediaForm, MediaType};
 use semio_framework_actor::{ActorId as RuntimeActorId, PackageId};
 use semio_framework_async::{CancelToken, CapabilityTokenId, HostAsyncRuntime, HostFuture, OperationContext, ScopeHandle, TraceId};
-use semio_framework_os_services::{ComputeError, HttpRequest as ServiceHttpRequest, StorageError, TokioHostRuntime};
+use semio_framework_os_services::{HttpRequest as ServiceHttpRequest, StorageError, TokioHostRuntime};
 use wasmtime::component::{Accessor, Destination, HasSelf, StreamProducer, StreamReader, StreamResult, VecBuffer};
 use wasmtime::{ResourceLimiter, StoreContextMut};
 use wasmtime_wasi::{WasiCtx, WasiCtxView, WasiView};
@@ -375,8 +375,8 @@ async fn wake_chunk_shared(shared: &Mutex<ChunkShared>) {
     }
 }
 
-/// 🐌️ `blob-read`'s fallback per the mission's own instruction: `RouterEffectHandler::handle`
-/// (`BlobLoad`) is a single buffered `ComputePool::run_blocking` call — there is no chunked blob
+/// 🐌️ `blob-read`'s fallback per the mission's own instruction: the `BlobLoad` router
+/// job returns one buffered result — there is no chunked blob
 /// backend anywhere in this codebase today, and adding one would mean editing
 /// `⚡️effects/🦀️component.rs`/`semio-framework-os-services`, both out of this packet's owned paths.
 /// One already-`done` chunk is therefore the honest, real behaviour, not a placeholder.
@@ -589,16 +589,16 @@ impl wit_host_async::Host for AsyncActorHostState {
 //#region ⏳️host_async::HostWithStore (the 24 async imports)
 /// ⏳️ Shared tail for the 9 imports `⚡️effects/🦀️component.rs`'s `RouterEffectHandler` already
 /// answers (`blob-load`/`blob-write`/`document-read`/`document-write`/`io-compose`/`cache-derive`/
-/// `cache-read`/`invoke-extension`/`dispatch-action`) — one `ComputePool::run_blocking` call,
-/// awaited inline, resolving the guest's future directly (the routing rule this whole file follows).
+/// `cache-read`/`invoke-extension`/`dispatch-action`) — one explicit resumable router job, driven
+/// one bounded step per worker closure and awaited inline to resolve the guest's future.
 async fn run_router_effect(call: &CallContext, effect: crate::effects::RouterEffect, name: &str) -> Result<Vec<u8>, Vec<u8>> {
-    let router_handler = call.router_handler.clone();
-    let result = call.services.compute.run_blocking(call.services.runtime.as_ref(), &call.scope, call.ctx.clone(), move || router_handler.handle(effect)).await;
+    let result = crate::effects::run_router_effect_job(call.services.compute.as_ref(), call.services.runtime.as_ref(), &call.scope, call.ctx.clone(), &call.router_handler, effect).await;
     match result {
-        Ok(Ok(bytes)) => Ok(bytes),
-        Ok(Err(error)) => Err(fault_bytes("router-error", error.to_string()).await),
-        Err(ComputeError::DeadlineExceeded) => Err(fault_bytes("deadline-exceeded", format!("{name} exceeded its deadline")).await),
-        Err(ComputeError::WorkerLost) => Err(fault_bytes("worker-lost", format!("{name} worker lost")).await),
+        crate::effects::RouterEffectJobOutcome::Complete(bytes) => Ok(bytes),
+        crate::effects::RouterEffectJobOutcome::Cancelled => Err(fault_bytes("capability-revoked", format!("{name} cancelled")).await),
+        crate::effects::RouterEffectJobOutcome::Fault(error) => Err(fault_bytes("router-error", error).await),
+        crate::effects::RouterEffectJobOutcome::DeadlineExceeded => Err(fault_bytes("deadline-exceeded", format!("{name} exceeded its deadline")).await),
+        crate::effects::RouterEffectJobOutcome::WorkerLost => Err(fault_bytes("worker-lost", format!("{name} worker lost")).await),
     }
 }
 

@@ -4,9 +4,25 @@
 //! only the identity/metadata/compatibility/representation/camera shapes common to every dimension live
 //! here, reached as `crate::*` from every `🗿️artifacts/<a>` node.
 
+use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
-use semio_framework_plugin::{ExecutionMode, Plugin};
+use semio_framework_plugin::plugin_app_close_prelude::*;
+use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 use serde::{Deserialize, Serialize};
+
+//#region 🗃️Apps
+/// 🗃️ Closed runtime app fleet for the block editor and viewer surfaces.
+semio_framework_dispatch_macros::dyn_enum_close! {
+    pub enum BlockApps: PluginApp {
+        Block2dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::block2d::Block2dPlayApp>>),
+        Block2dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::block2d::Block2dViewer>>),
+        Block3dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::block3d::Block3dPlayApp>>),
+        Block3dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::block3d::Block3dViewer>>),
+        Block5dEditor(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::block5d::Block5dPlayApp>>),
+        Block5dViewer(semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::block5d::Block5dViewer>>),
+    }
+}
+//#endregion 🗃️Apps
 
 //#region 🔖️Identity
 /// 🪪️ The single kind definition a block document edits — name/label/variant/description/icon/unit
@@ -151,8 +167,8 @@ pub struct BlockMeta {
 /// crate's migration proof: one `OnArtifactKind` event per owned kind, read live from each
 /// dimension's own `artifact_kind().id`, `Isolated` execution, one `documents.write` ask covering
 /// all three editors' persisted mutations.
-pub async fn plugin() -> Result<Plugin, semio_framework_plugin::PluginAssemblyError> {
-    Plugin::builder("block")
+pub fn plugin() -> Result<Plugin<BlockApps>, semio_framework_plugin::PluginAssemblyError> {
+    Plugin::<BlockApps>::builder("block")
         .label("Block")
         .version("0.1.0")
         .declare_artifact(crate::artifacts::block2d::artifact())

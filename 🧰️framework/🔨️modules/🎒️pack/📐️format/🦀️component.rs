@@ -940,7 +940,7 @@ mod tests {
         bytes.extend_from_slice(&0u16.to_le_bytes());
         bytes.extend_from_slice(&REQUIRED_COMPRESSED.to_le_bytes());
         bytes.extend_from_slice(&OPTIONAL_CANONICAL.to_le_bytes());
-        let crc = crc32c(&bytes[0..20]).await;
+        let crc = crc32c(&bytes[0..20]);
         bytes.extend_from_slice(&crc.to_le_bytes());
         bytes.extend_from_slice(&[0u8; 8]);
         assert_eq!(bytes.len(), HEADER_SIZE);
@@ -1009,7 +1009,7 @@ mod tests {
         bytes.extend_from_slice(&hash);
         bytes.extend_from_slice(&0u64.to_le_bytes());
         assert_eq!(bytes.len(), FOOTER_SIZE - 4);
-        let crc = crc32c(&bytes).await;
+        let crc = crc32c(&bytes);
         bytes.extend_from_slice(&crc.to_le_bytes());
         assert_eq!(bytes.len(), FOOTER_SIZE);
 

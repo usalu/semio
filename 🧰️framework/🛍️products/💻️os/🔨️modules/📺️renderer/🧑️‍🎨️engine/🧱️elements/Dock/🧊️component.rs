@@ -1552,6 +1552,7 @@ mod tests {
 
     use crate::shell::ShellState;
     use semio_framework::{AppDefinition, AppRole, ArtifactDialect, ModeDefinition, PanelGroup, PanelTabDefinition, PanelTabKind, WindowKindDefinition};
+    use ui_wgpu::wgpu::LocalizedLabel;
     use ui_wgpu::wgpu::{create_default_layout, WindowOptions};
 
     fn sample_app(window_ids: &[&str], layout: Option<WindowLayout>) -> AppDefinition {
@@ -1603,8 +1604,8 @@ mod tests {
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
             artifact_kinds: Vec::new(),
-            config: semio_framework::ConfigSpec::empty(),
-            command_grammar: semio_framework::CommandGrammar::empty(),
+            config: semio_framework_async::block_on(semio_framework::ConfigSpec::empty()),
+            command_grammar: semio_framework_async::block_on(semio_framework::CommandGrammar::empty()),
             io: semio_framework::AppIo::default(),
         }
     }
@@ -2056,7 +2057,7 @@ mod tests {
         let path = vec![];
         dock.close_active_in_stack(&path);
         if let DockNode::Stack { windows, active } = &dock.root {
-            assert_eq!(windows, &vec!["b".to_string()]);
+            assert_eq!(dock_tab_ids(windows), vec!["b".to_string()]);
             assert_eq!(active, "b");
         } else {
             panic!("expected stack");
@@ -2128,14 +2129,14 @@ mod tests {
         app.utilities =
             vec![UtilityDefinition::new("utility.a", LocalizedLabel::data("Utility A"), "circle"), UtilityDefinition { allows_actions_while_active: true, ..UtilityDefinition::new("utility.b", LocalizedLabel::data("Utility B"), "square") }];
         let actions = vec![
-            ActionDefinition::new_catalog("zeroArg", LocalizedLabel::data("Zero Arg"), ActionKind::View),
+            ActionDefinition::bounded_catalog("zeroArg", LocalizedLabel::data("Zero Arg"), ActionKind::View),
             ActionDefinition {
                 args: vec![
                     ActionArgDef::text("name", LocalizedLabel::data("Name")).required(),
                     ActionArgDef { default: Some(semio_framework::to_dsl_value(&serde_json::json!(true)).expect("toggle default")), ..ActionArgDef::toggle("flag", LocalizedLabel::data("Flag")) },
                 ],
                 keys: Some("mod+e".into()),
-                ..ActionDefinition::new_catalog("withArgs", LocalizedLabel::data("With Args"), ActionKind::View)
+                ..ActionDefinition::bounded_catalog("withArgs", LocalizedLabel::data("With Args"), ActionKind::View)
             },
         ];
         // Scope utility.a + both actions to `main`; leave utility.b an orphan referenced by no window.

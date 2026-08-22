@@ -2862,8 +2862,9 @@ pub mod viewer {
 //#region 🔖️Plugin
 #[path = "../../🦀️component.rs"]
 mod plugin;
+pub use plugin::PuzzleApps;
 #[cfg(feature = "plugin-entry")]
-semio_framework_plugin::plugin_exports!(plugin::plugin);
+semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::PuzzleApps);
 
 //#region 📚️Examples
 #[path = "."]
@@ -2898,6 +2899,7 @@ pub mod examples {
     pub mod puzzle5d {
         #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌙️capsule-dream/🦀️component.rs"]
         pub mod capsule_dream;
+        #[cfg(test)]
         #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌙️capsule-dream/🧪️tests/🦀️test.rs"]
         mod capsule_dream_tests;
         #[path = "../../🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🦀️component.rs"]

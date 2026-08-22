@@ -9,7 +9,7 @@
 // #endregion 🧲️Header
 
 import { Scrollable } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "../../🧪️story";
 
 // 🔷️#region 🎮️Scrollable
 const meta = {

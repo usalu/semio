@@ -22,13 +22,22 @@ use serde_json::Value;
 use tokio::sync::{broadcast, mpsc};
 
 //#region 🔖️Errors
-#[derive(Debug, thiserror::Error, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum SyncError {
-    #[error("vcs error: {0}")]
     Vcs(String),
-    #[error("actor error: {0}")]
     Actor(String),
 }
+
+impl std::fmt::Display for SyncError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Vcs(detail) => write!(formatter, "vcs error: {detail}"),
+            Self::Actor(detail) => write!(formatter, "actor error: {detail}"),
+        }
+    }
+}
+
+impl std::error::Error for SyncError {}
 //#endregion 🔖️Errors
 
 //#region 🔖️EnvelopeSerde
@@ -93,7 +102,7 @@ mod envelope_serde {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum PersistenceBinding {
-    /// @emoji 📁️ Local canonical store. A directory uses the multi-document `folder://` sqlite store;
+    /// @emoji 📁️ Local canonical store. A directory uses the multi-document `folder://` event log;
     /// a `*.json` path uses the single-blob `file://` export format.
     Folder { path: std::path::PathBuf },
     /// @emoji ☁️ A semio_hub node reachable over WebSocket
@@ -136,7 +145,7 @@ pub enum ArtifactActorMsg {
         envelopes: Vec<MutationEnvelope>,
     },
     /// @emoji 📡️ Broadcasts this peer's presence/selection to the semio_hub.
-    PresenceHeartbeat { peer: PresencePeer },
+    PresenceHeartbeat { peer: Box<PresencePeer> },
     /// @emoji 👻️ Publishes an ephemeral, best-effort UI-state blob on the semio_hub's uncredited preview
     /// lane (`crate::os_spr::wire::ClientFrame::PreviewPublish`) — e.g. a drag ghost or live cursor;
     /// `seq` is a per-`key` monotone counter so a receiver can drop stale-arriving previews.
@@ -250,7 +259,7 @@ pub mod backbone_worker_wire {
         },
         Send {
             document_id: String,
-            message: ArtifactActorMsg,
+            message: Box<ArtifactActorMsg>,
         },
     }
 
@@ -460,7 +469,7 @@ async fn hub_ws_url(base_url: &str, space_id: &str, document_id: &str, surface: 
 async fn rollback_envelope(envelope: &MutationEnvelope) -> MutationEnvelope {
     let undo_id = MutationId(format!("{}~undo", envelope.mutation_id.0));
     MutationEnvelope {
-        mutation_id: undo_id.clone(),
+        mutation_id: undo_id,
         document_id: envelope.document_id.clone(),
         actor: envelope.actor.clone(),
         dependencies: vec![envelope.mutation_id.clone()],
@@ -655,7 +664,7 @@ impl PresenceHeartbeatProducer {
 
     /// @emoji 📡️ Offers the newest whole peer snapshot and returns it only when this document's
     /// cadence permits a publish. A backward-moving clock conservatively waits for the next interval.
-    pub async fn offer(&mut self, now_ms: u64, peer: PresencePeer) -> Option<PresencePeer> {
+    pub fn offer(&mut self, now_ms: u64, peer: PresencePeer) -> Option<PresencePeer> {
         self.pending = Some(peer);
         let due = self.last_sent_at_ms.is_none_or(|last| now_ms.saturating_sub(last) >= self.interval_ms);
         if !due {
@@ -665,7 +674,7 @@ impl PresenceHeartbeatProducer {
         self.pending.take()
     }
 
-    pub async fn pending(&self) -> Option<&PresencePeer> {
+    pub fn pending(&self) -> Option<&PresencePeer> {
         self.pending.as_ref()
     }
 }
@@ -750,11 +759,11 @@ impl ArtifactHost {
     /// @emoji 💓️ Offers a generic cursor/viewport/app-presence heartbeat for one open document.
     /// Returns `true` only when the host actually queued a publish; faster offers are coalesced onto
     /// the document's producer and cannot flood the preview lane.
-    pub async fn presence_heartbeat(&self, document_id: &str, now_ms: u64, peer: PresencePeer) -> bool {
+    pub fn presence_heartbeat(&self, document_id: &str, now_ms: u64, peer: PresencePeer) -> bool {
         let mut documents = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let Some(document) = documents.get_mut(document_id) else { return false };
-        let Some(peer) = document.presence.offer(now_ms, peer).await else { return false };
-        let sent = document.cmd_tx.send(ArtifactActorMsg::PresenceHeartbeat { peer }).is_ok();
+        let Some(peer) = document.presence.offer(now_ms, peer) else { return false };
+        let sent = document.cmd_tx.send(ArtifactActorMsg::PresenceHeartbeat { peer: Box::new(peer) }).is_ok();
         #[cfg(not(target_arch = "wasm32"))]
         (document.schedule)();
         sent
@@ -804,7 +813,7 @@ impl Drop for ArtifactHost {
 #[cfg(not(target_arch = "wasm32"))]
 mod native_actor {
     use super::*;
-    use futures_util::{FutureExt, SinkExt, StreamExt};
+    use futures::{FutureExt, SinkExt, StreamExt};
     use std::collections::HashSet;
     use std::path::{Path, PathBuf};
     use std::sync::Arc;
@@ -813,8 +822,8 @@ mod native_actor {
     use tokio_tungstenite::tungstenite::Message;
 
     type WsStream = tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
-    type WsSink = futures_util::stream::SplitSink<WsStream, Message>;
-    type WsRead = futures_util::stream::SplitStream<WsStream>;
+    type WsSink = futures::stream::SplitSink<WsStream, Message>;
+    type WsRead = futures::stream::SplitStream<WsStream>;
 
     struct HubConn {
         write: WsSink,
@@ -827,7 +836,7 @@ mod native_actor {
     /// needed). `Pack` requires the schema codec for both authoritative DSL fallback validation
     /// and synchronized text mirrors.
     enum FolderEndpoint {
-        Sqlite { storage: FolderSqliteStorage, document_id: String, schema: String },
+        EventLog { storage: FolderEventLogStorage, document_id: String, schema: String },
         Pack { storage: FolderTextStorage, document_id: String, extension: String, schema: String },
     }
 
@@ -838,7 +847,7 @@ mod native_actor {
         /// fallback, a row is always written pack+spr together); `Err` = a real storage failure.
         async fn read(&self) -> Result<Option<(Vec<u8>, Vec<u8>)>, String> {
             match self {
-                FolderEndpoint::Sqlite { storage, document_id, .. } => storage.read(document_id).await.map_err(|error| error.to_string()),
+                FolderEndpoint::EventLog { storage, document_id, .. } => storage.read(document_id).await.map_err(|error| error.to_string()),
                 FolderEndpoint::Pack { storage, document_id, extension, schema } => {
                     if let Some(pack_files) = storage.read_pack(document_id, extension).await.map_err(|error| error.to_string())? {
                         return Ok(Some((pack_files.pack, pack_files.spr)));
@@ -858,7 +867,7 @@ mod native_actor {
         /// and schema codec; a missing or unavailable codec aborts the write before storage changes.
         async fn write(&self, pack: &[u8], spr: &[u8]) -> Result<(), String> {
             match self {
-                FolderEndpoint::Sqlite { storage, document_id, schema } => storage.write(document_id, schema, pack, spr).await.map_err(|error| error.to_string()),
+                FolderEndpoint::EventLog { storage, document_id, schema } => storage.write(document_id, schema, pack, spr).await.map_err(|error| error.to_string()),
                 FolderEndpoint::Pack { storage, document_id, extension, schema } => {
                     let codec = crate::os_store::document_codec(schema).await.map_err(|error| error.to_string())?.ok_or_else(|| format!("no document codec registered for schema {schema:?} — cannot persist synchronized pack mirrors"))?;
                     let mirror = (codec.print_mirror)(pack, spr).await.map_err(|error| error.to_string())?;
@@ -872,6 +881,7 @@ mod native_actor {
     /// @emoji 🎭️ One document's backbone actor: drains the store's outbound queue to persist + relay,
     /// ingests semio_hub/file changes back into the store, and keeps subscribers current with status/events.
     pub(super) struct ArtifactActor {
+        pool: Arc<semio_framework_async::WorkerPool>,
         document_id: String,
         schema: String,
         actor: String,
@@ -914,14 +924,13 @@ mod native_actor {
         last_written_hash: Option<String>,
         remote_state: RemoteState,
         last_status: Option<ArtifactSyncStatus>,
-        watcher: Option<notify::RecommendedWatcher>,
-        fs_rx: Option<mpsc::UnboundedReceiver<()>>,
+        watcher: Option<semio_framework_os_services::OwnedFileChangeWatcher>,
         fs_deadline: Option<Instant>,
         started: bool,
     }
 
     impl ArtifactActor {
-        pub(super) async fn new(config: ArtifactActorConfig, remote: ChannelBackboneRemote, cmd_rx: mpsc::UnboundedReceiver<ArtifactActorMsg>, events: broadcast::Sender<ArtifactEvent>) -> Self {
+        pub(super) async fn new(pool: Arc<semio_framework_async::WorkerPool>, config: ArtifactActorConfig, remote: ChannelBackboneRemote, cmd_rx: mpsc::UnboundedReceiver<ArtifactActorMsg>, events: broadcast::Sender<ArtifactEvent>) -> Self {
             let mut folder = None;
             let mut folder_watch_path = None;
             let mut hub_base_url = None;
@@ -948,6 +957,7 @@ mod native_actor {
             }
             let hlc_seed = actor_seed(&config.actor).await;
             Self {
+                pool,
                 document_id: config.document_id,
                 schema: config.schema,
                 actor: config.actor,
@@ -980,7 +990,6 @@ mod native_actor {
                 remote_state: RemoteState::Detached,
                 last_status: None,
                 watcher: None,
-                fs_rx: None,
                 fs_deadline: None,
                 started: false,
             }
@@ -1016,10 +1025,8 @@ mod native_actor {
                 self.connect_task = None;
                 self.finish_connect_hub(connection).await;
             }
-            if let Some(rx) = self.fs_rx.as_mut() {
-                if rx.try_recv().is_ok() {
-                    self.fs_deadline = Some(Instant::now() + Duration::from_millis(200));
-                }
+            if self.watcher.as_mut().is_some_and(|watcher| watcher.poll_changed()) {
+                self.fs_deadline = Some(Instant::now() + Duration::from_millis(200));
             }
             let now = Instant::now();
             if self.reconnect_at.is_some_and(|deadline| deadline <= now) {
@@ -1051,10 +1058,7 @@ mod native_actor {
             }
             if self.watch_external {
                 if let Some(watch_path) = self.folder_watch_path.clone() {
-                    if let Some((watcher, fs_rx)) = install_watcher(&watch_path).await {
-                        self.watcher = Some(watcher);
-                        self.fs_rx = Some(fs_rx);
-                    }
+                    self.watcher = Some(install_watcher(&watch_path, self.pool.clone()));
                 }
             }
         }
@@ -1475,14 +1479,14 @@ mod native_actor {
 
     /// @emoji 🔀️ A binding path with a file extension addresses one document's text blob directly
     /// (`Text`, generalizing the deleted single-file `FileJsonStorage` beyond `.json`); an extensionless
-    /// directory path is the canonical multi-document sqlite store (`Sqlite`).
+    /// directory path is the canonical multi-document append-only store (`EventLog`).
     async fn build_folder_endpoint(path: &Path, document_id: &str, schema: &str) -> FolderEndpoint {
         match path.extension().and_then(|ext| ext.to_str()) {
             Some(extension) => {
                 let folder = path.parent().map(|parent| parent.to_path_buf()).unwrap_or_else(|| PathBuf::from("."));
                 FolderEndpoint::Pack { storage: FolderTextStorage::new(folder).await, document_id: document_id.to_string(), extension: extension.to_string(), schema: schema.to_string() }
             }
-            None => FolderEndpoint::Sqlite { storage: FolderSqliteStorage::new(path.to_path_buf()).await, document_id: document_id.to_string(), schema: schema.to_string() },
+            None => FolderEndpoint::EventLog { storage: FolderEventLogStorage::new(path.to_path_buf()), document_id: document_id.to_string(), schema: schema.to_string() },
         }
     }
 
@@ -1496,21 +1500,10 @@ mod native_actor {
         }
     }
 
-    /// @emoji 👁️ Installs a `notify` watcher over the binding's on-disk directory, forwarding raw
-    /// change events into an async channel (debounced by the actor's 200ms deadline).
-    async fn install_watcher(watch_path: &Path) -> Option<(notify::RecommendedWatcher, mpsc::UnboundedReceiver<()>)> {
-        use notify::Watcher;
-        let watch_root = watch_path.parent().map(|parent| parent.to_path_buf()).unwrap_or_else(|| watch_path.to_path_buf());
-        let _ = std::fs::create_dir_all(&watch_root);
-        let (tx, rx) = mpsc::unbounded_channel();
-        let mut watcher = notify::recommended_watcher(move |result: Result<notify::Event, notify::Error>| {
-            if result.is_ok() {
-                let _ = tx.send(());
-            }
-        })
-        .ok()?;
-        watcher.watch(&watch_root, notify::RecursiveMode::NonRecursive).ok()?;
-        Some((watcher, rx))
+    /// @emoji 👁️ Creates the owned non-recursive watcher; its first probe establishes a
+    /// baseline and later snapshots feed the actor's existing 200 ms debounce.
+    fn install_watcher(watch_path: &Path, pool: Arc<semio_framework_async::WorkerPool>) -> semio_framework_os_services::OwnedFileChangeWatcher {
+        semio_framework_os_services::OwnedFileChangeWatcher::new(watch_path, pool)
     }
 
     async fn hub_next(conn: &mut Option<HubConn>) -> Option<Result<Message, tokio_tungstenite::tungstenite::Error>> {
@@ -1579,7 +1572,7 @@ mod native_actor {
         cmd_rx: mpsc::UnboundedReceiver<ArtifactActorMsg>,
         events: broadcast::Sender<ArtifactEvent>,
     ) -> Arc<dyn Fn() + Send + Sync> {
-        let actor = ArtifactActor::new(config, remote, cmd_rx, events).await;
+        let actor = ArtifactActor::new(pool.clone(), config, remote, cmd_rx, events).await;
         let runner = Arc::new(ActorRunner {
             pool,
             runtime: tokio::runtime::Handle::current(),
@@ -2068,86 +2061,228 @@ pub async fn load_fixtures(dir: &std::path::Path) -> Vec<ActorFixture> {
 //#endregion 🔖️Fixtures
 
 //#region 🔖️FolderStorage
-/// @emoji 🗄️ Pure multi-document sqlite persistence (`folder://`), the canonical local store. Rows
-/// are keyed by document id: `document(id, schema, pack, spr, updated_at)` — `pack` (initial
-/// snapshot) + `spr` (real inverse/binary op payloads/cursor, see `crate::os_store::print_document_spr`)
-/// are the AUTHORITATIVE pair, both `NOT NULL`; there is no JSON column (a greenfield rule — every
-/// row is written pack+spr together, never one without the other). No `Backbone` impl: the actor
-/// layer drives this from its own thread; this crate only owns the sqlite schema.
+/// @emoji 📜️ Owned append-only folder event log. Documents are written as indivisible
+/// `(schema, pack, spr)` snapshot events; blobs are content-addressed put/delete events. Reads fold
+/// the log deterministically, so persistence follows the repo's event-sourced model without a CRUD
+/// database. Every record is length-delimited and checksummed; an incomplete final record from a
+/// process interruption is ignored, while corruption in a complete record is reported.
 #[cfg(not(target_arch = "wasm32"))]
-pub struct FolderSqliteStorage {
+#[derive(Clone)]
+pub struct FolderEventLogStorage {
     folder: std::path::PathBuf,
+    writer: std::sync::Arc<std::sync::Mutex<()>>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl FolderSqliteStorage {
-    pub async fn new(folder: std::path::PathBuf) -> Self {
-        Self { folder }
+const FOLDER_EVENT_MAGIC: &[u8; 8] = b"SEMIOEL1";
+
+#[cfg(not(target_arch = "wasm32"))]
+const MAX_FOLDER_EVENT_BYTES: u64 = 16 * 1024 * 1024 * 1024;
+
+#[cfg(not(target_arch = "wasm32"))]
+const DOCUMENT_PUT_EVENT: u8 = 1;
+
+#[cfg(not(target_arch = "wasm32"))]
+const BLOB_PUT_EVENT: u8 = 2;
+
+#[cfg(not(target_arch = "wasm32"))]
+const BLOB_DELETE_EVENT: u8 = 3;
+
+#[cfg(not(target_arch = "wasm32"))]
+struct FolderEvent {
+    kind: u8,
+    updated_at_ms: u64,
+    key: String,
+    metadata: String,
+    primary: Vec<u8>,
+    secondary: Vec<u8>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct FolderEventReader<'a> {
+    bytes: &'a [u8],
+    cursor: usize,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl<'a> FolderEventReader<'a> {
+    fn take(&mut self, len: usize) -> Result<&'a [u8], vcs::VcsError> {
+        let end = self.cursor.checked_add(len).ok_or_else(|| vcs::VcsError::Backbone("folder event length overflow".into()))?;
+        let value = self.bytes.get(self.cursor..end).ok_or_else(|| vcs::VcsError::Backbone("truncated folder event".into()))?;
+        self.cursor = end;
+        Ok(value)
     }
 
-    async fn db_path(&self) -> std::path::PathBuf {
-        self.folder.join(".semio").join("documents.db")
+    fn u8(&mut self) -> Result<u8, vcs::VcsError> {
+        Ok(self.take(1)?[0])
     }
 
-    async fn connection(&self) -> Result<rusqlite::Connection, vcs::VcsError> {
-        let semio_dir = self.folder.join(".semio");
-        std::fs::create_dir_all(&semio_dir).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        let conn = rusqlite::Connection::open(self.db_path().await).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        Self::ensure_schema(&conn).await?;
-        Ok(conn)
+    fn u32(&mut self) -> Result<u32, vcs::VcsError> {
+        Ok(u32::from_le_bytes(self.take(4)?.try_into().unwrap()))
     }
 
-    async fn ensure_schema(conn: &rusqlite::Connection) -> Result<(), vcs::VcsError> {
-        conn.execute_batch(
-            "CREATE TABLE IF NOT EXISTS document (\
-                 id TEXT PRIMARY KEY,\
-                 schema TEXT,\
-                 pack BLOB NOT NULL,\
-                 spr BLOB NOT NULL,\
-                 updated_at INTEGER NOT NULL\
-             );\
-             CREATE TABLE IF NOT EXISTS blobs (\
-                 hash TEXT PRIMARY KEY,\
-                 media_type TEXT NOT NULL,\
-                 size INTEGER NOT NULL,\
-                 bytes BLOB NOT NULL\
-             );",
-        )
-        .map_err(|e| vcs::VcsError::Backbone(e.to_string()))
+    fn u64(&mut self) -> Result<u64, vcs::VcsError> {
+        Ok(u64::from_le_bytes(self.take(8)?.try_into().unwrap()))
     }
 
-    /// @emoji 📖️ Reads the stored `(pack, spr)` bytes for `document_id`, or `None` if no row exists.
-    pub async fn read(&self, document_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, vcs::VcsError> {
-        use rusqlite::OptionalExtension;
-        let conn = self.connection().await?;
-        conn.query_row("SELECT pack, spr FROM document WHERE id = ?1", [document_id], |row| Ok((row.get::<_, Vec<u8>>(0)?, row.get::<_, Vec<u8>>(1)?))).optional().map_err(|e| vcs::VcsError::Backbone(e.to_string()))
+    fn text(&mut self) -> Result<String, vcs::VcsError> {
+        let len = self.u32()? as usize;
+        String::from_utf8(self.take(len)?.to_vec()).map_err(|error| vcs::VcsError::Backbone(error.to_string()))
     }
 
-    /// @emoji ✍️ Upserts `document_id`'s `(pack, spr)` bytes together (schema id, `updated_at` stamp)
-    /// — both are written in the same statement, never independently.
-    pub async fn write(&self, document_id: &str, schema: &str, pack: &[u8], spr: &[u8]) -> Result<(), vcs::VcsError> {
-        let conn = self.connection().await?;
-        conn.execute(
-            "INSERT INTO document (id, schema, pack, spr, updated_at) VALUES (?1, ?2, ?3, ?4, ?5) \
-             ON CONFLICT(id) DO UPDATE SET schema = excluded.schema, pack = excluded.pack, spr = excluded.spr, updated_at = excluded.updated_at",
-            rusqlite::params![document_id, schema, pack, spr, now_ms().await as i64],
-        )
-        .map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+    fn data(&mut self) -> Result<Vec<u8>, vcs::VcsError> {
+        let len = usize::try_from(self.u64()?).map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
+        Ok(self.take(len)?.to_vec())
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl FolderEventLogStorage {
+    pub fn new(folder: std::path::PathBuf) -> Self {
+        static WRITERS: std::sync::OnceLock<std::sync::Mutex<std::collections::HashMap<std::path::PathBuf, std::sync::Weak<std::sync::Mutex<()>>>>> = std::sync::OnceLock::new();
+        let canonical_key = std::fs::canonicalize(&folder).unwrap_or_else(|_| folder.clone());
+        let mut writers = WRITERS.get_or_init(Default::default).lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        let writer = writers.get(&canonical_key).and_then(std::sync::Weak::upgrade).unwrap_or_else(|| {
+            let writer = std::sync::Arc::new(std::sync::Mutex::new(()));
+            writers.insert(canonical_key, std::sync::Arc::downgrade(&writer));
+            writer
+        });
+        Self { folder, writer }
+    }
+
+    fn event_path(&self) -> std::path::PathBuf {
+        self.folder.join(".semio").join("events.semio")
+    }
+
+    fn checksum(bytes: &[u8]) -> u64 {
+        bytes.iter().fold(0xcbf29ce484222325, |hash, byte| (hash ^ u64::from(*byte)).wrapping_mul(0x100000001b3))
+    }
+
+    fn encode_event(event: &FolderEvent) -> Result<Vec<u8>, vcs::VcsError> {
+        let mut bytes = Vec::new();
+        bytes.push(event.kind);
+        bytes.extend_from_slice(&event.updated_at_ms.to_le_bytes());
+        Self::encode_text(&mut bytes, &event.key)?;
+        Self::encode_text(&mut bytes, &event.metadata)?;
+        Self::encode_data(&mut bytes, &event.primary)?;
+        Self::encode_data(&mut bytes, &event.secondary)?;
+        Ok(bytes)
+    }
+
+    fn encode_text(output: &mut Vec<u8>, value: &str) -> Result<(), vcs::VcsError> {
+        let len = u32::try_from(value.len()).map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
+        output.extend_from_slice(&len.to_le_bytes());
+        output.extend_from_slice(value.as_bytes());
         Ok(())
     }
 
-    /// @emoji 📇️ Lists every stored document id (newest write first), for a folder-wide index.
+    fn encode_data(output: &mut Vec<u8>, value: &[u8]) -> Result<(), vcs::VcsError> {
+        let len = u64::try_from(value.len()).map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
+        output.extend_from_slice(&len.to_le_bytes());
+        output.extend_from_slice(value);
+        Ok(())
+    }
+
+    fn decode_event(bytes: &[u8]) -> Result<FolderEvent, vcs::VcsError> {
+        let mut reader = FolderEventReader { bytes, cursor: 0 };
+        let event = FolderEvent { kind: reader.u8()?, updated_at_ms: reader.u64()?, key: reader.text()?, metadata: reader.text()?, primary: reader.data()?, secondary: reader.data()? };
+        if !matches!(event.kind, DOCUMENT_PUT_EVENT | BLOB_PUT_EVENT | BLOB_DELETE_EVENT) {
+            return Err(vcs::VcsError::Backbone(format!("unknown folder event kind {}", event.kind)));
+        }
+        if reader.cursor != bytes.len() {
+            return Err(vcs::VcsError::Backbone("folder event has trailing bytes".into()));
+        }
+        Ok(event)
+    }
+
+    fn append(&self, event: &FolderEvent) -> Result<(), vcs::VcsError> {
+        use std::io::Write;
+        let payload = Self::encode_event(event)?;
+        if payload.len() as u64 > MAX_FOLDER_EVENT_BYTES {
+            return Err(vcs::VcsError::Backbone("folder event exceeds the 16 GiB record boundary".into()));
+        }
+        let _guard = self.writer.lock().map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
+        let semio_dir = self.folder.join(".semio");
+        std::fs::create_dir_all(&semio_dir).map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
+        let mut file = std::fs::OpenOptions::new().create(true).append(true).open(self.event_path()).map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
+        file.write_all(FOLDER_EVENT_MAGIC).map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
+        file.write_all(&(payload.len() as u64).to_le_bytes()).map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
+        file.write_all(&Self::checksum(&payload).to_le_bytes()).map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
+        file.write_all(&payload).map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
+        file.sync_data().map_err(|error| vcs::VcsError::Backbone(error.to_string()))
+    }
+
+    fn events(&self) -> Result<Vec<FolderEvent>, vcs::VcsError> {
+        use std::io::Read;
+        let _guard = self.writer.lock().map_err(|error| vcs::VcsError::Backbone(error.to_string()))?;
+        let mut file = match std::fs::File::open(self.event_path()) {
+            Ok(file) => file,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
+            Err(error) => return Err(vcs::VcsError::Backbone(error.to_string())),
+        };
+        let mut events = Vec::new();
+        loop {
+            let mut magic = [0; 8];
+            match file.read_exact(&mut magic) {
+                Ok(()) => {}
+                Err(error) if error.kind() == std::io::ErrorKind::UnexpectedEof => break,
+                Err(error) => return Err(vcs::VcsError::Backbone(error.to_string())),
+            }
+            if &magic != FOLDER_EVENT_MAGIC {
+                return Err(vcs::VcsError::Backbone("invalid folder event magic".into()));
+            }
+            let mut header = [0; 16];
+            match file.read_exact(&mut header) {
+                Ok(()) => {}
+                Err(error) if error.kind() == std::io::ErrorKind::UnexpectedEof => break,
+                Err(error) => return Err(vcs::VcsError::Backbone(error.to_string())),
+            }
+            let len = u64::from_le_bytes(header[..8].try_into().unwrap());
+            if len > MAX_FOLDER_EVENT_BYTES {
+                return Err(vcs::VcsError::Backbone(format!("folder event length {len} exceeds the record boundary")));
+            }
+            let expected_checksum = u64::from_le_bytes(header[8..].try_into().unwrap());
+            let mut payload = vec![0; usize::try_from(len).map_err(|error| vcs::VcsError::Backbone(error.to_string()))?];
+            match file.read_exact(&mut payload) {
+                Ok(()) => {}
+                Err(error) if error.kind() == std::io::ErrorKind::UnexpectedEof => break,
+                Err(error) => return Err(vcs::VcsError::Backbone(error.to_string())),
+            }
+            if Self::checksum(&payload) != expected_checksum {
+                return Err(vcs::VcsError::Backbone("folder event checksum mismatch".into()));
+            }
+            events.push(Self::decode_event(&payload)?);
+        }
+        Ok(events)
+    }
+
+    /// @emoji 📖️ Folds the latest stored `(pack, spr)` event for `document_id`.
+    pub async fn read(&self, document_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, vcs::VcsError> {
+        Ok(self.events()?.into_iter().rev().find(|event| event.kind == DOCUMENT_PUT_EVENT && event.key == document_id).map(|event| (event.primary, event.secondary)))
+    }
+
+    /// @emoji ✍️ Appends an indivisible document snapshot event.
+    pub async fn write(&self, document_id: &str, schema: &str, pack: &[u8], spr: &[u8]) -> Result<(), vcs::VcsError> {
+        self.append(&FolderEvent { kind: DOCUMENT_PUT_EVENT, updated_at_ms: now_ms().await, key: document_id.into(), metadata: schema.into(), primary: pack.into(), secondary: spr.into() })
+    }
+
+    /// @emoji 📇️ Lists latest document events in newest-write-first order.
     pub async fn document_ids(&self) -> Result<Vec<String>, vcs::VcsError> {
-        let conn = self.connection().await?;
-        let mut statement = conn.prepare("SELECT id FROM document ORDER BY updated_at DESC").map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        let ids = statement.query_map([], |row| row.get::<_, String>(0)).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?.collect::<Result<Vec<_>, _>>().map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        Ok(ids)
+        let mut latest = std::collections::HashMap::<String, u64>::new();
+        for event in self.events()? {
+            if event.kind == DOCUMENT_PUT_EVENT {
+                latest.insert(event.key, event.updated_at_ms);
+            }
+        }
+        let mut ids = latest.into_iter().collect::<Vec<_>>();
+        ids.sort_by(|(left_id, left_time), (right_id, right_time)| right_time.cmp(left_time).then_with(|| left_id.cmp(right_id)));
+        Ok(ids.into_iter().map(|(id, _)| id).collect())
     }
 }
 
 /// @emoji 🗃️ Textual persistence for one folder of documents: `<id>.<ext>` holds the DSL text (initial
 /// snapshot), `<id>.<ext>.ops` holds the append-only op log (see `crate::os_store::print_document_text`/
-/// `crate::os_store::parse_document_text`). No `Backbone` impl: like `FolderSqliteStorage` above, this actor
+/// `crate::os_store::parse_document_text`). No `Backbone` impl: like `FolderEventLogStorage` above, this actor
 /// layer drives it from its own thread; this crate only owns the file format. Additive alongside the
 /// sqlite storage today — a technology adopts it by implementing `ArtifactDsl`/`OpText` and having
 /// its sync endpoint construct one of these instead; nothing currently reads or writes through it
@@ -2275,35 +2410,34 @@ impl FolderTextStorage {
 
 //#region 🔖️BlobStoreImpl
 
-/// @emoji 🗄️ `FolderSqliteStorage`'s `blobs(hash, media_type, size, bytes)` table (bootstrapped
-/// alongside `document` in `ensure_schema`) — one whole-blob `BLOB` column is plenty for v1; this
-/// crate's other tables don't chunk large payloads either, and the `crate::os_store::BlobStore` trait itself stays
-/// whole-blob regardless of how a given backend chooses to store the bytes internally.
+/// @emoji 🗄️ Content-addressed blob events in [`FolderEventLogStorage`].
 #[cfg(not(target_arch = "wasm32"))]
-impl crate::os_store::BlobStore for FolderSqliteStorage {
+impl crate::os_store::BlobStore for FolderEventLogStorage {
     async fn put(&self, bytes: &[u8], media_type: &str) -> Result<crate::os_store::BlobRef, vcs::VcsError> {
         let hash = semio_framework_hash::hash_bytes(bytes);
-        let conn = self.connection().await?;
-        conn.execute("INSERT OR IGNORE INTO blobs (hash, media_type, size, bytes) VALUES (?1, ?2, ?3, ?4)", rusqlite::params![hash, media_type, bytes.len() as i64, bytes]).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        Ok(crate::os_store::BlobRef { hash, size: bytes.len() as u64, media_type: media_type.to_string() })
+        self.append(&FolderEvent { kind: BLOB_PUT_EVENT, updated_at_ms: now_ms().await, key: hash.clone(), metadata: media_type.into(), primary: bytes.into(), secondary: Vec::new() })?;
+        Ok(crate::os_store::BlobRef { hash, size: bytes.len() as u64, media_type: media_type.into() })
     }
 
     async fn get(&self, hash: &str) -> Result<Option<Vec<u8>>, vcs::VcsError> {
-        use rusqlite::OptionalExtension;
-        let conn = self.connection().await?;
-        conn.query_row("SELECT bytes FROM blobs WHERE hash = ?1", [hash], |row| row.get(0)).optional().map_err(|e| vcs::VcsError::Backbone(e.to_string()))
+        for event in self.events()?.into_iter().rev() {
+            if event.key == hash {
+                return match event.kind {
+                    BLOB_PUT_EVENT => Ok(Some(event.primary)),
+                    BLOB_DELETE_EVENT => Ok(None),
+                    _ => continue,
+                };
+            }
+        }
+        Ok(None)
     }
 
     async fn has(&self, hash: &str) -> Result<bool, vcs::VcsError> {
-        let conn = self.connection().await?;
-        let count: i64 = conn.query_row("SELECT COUNT(*) FROM blobs WHERE hash = ?1", [hash], |row| row.get(0)).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        Ok(count > 0)
+        Ok(self.get(hash).await?.is_some())
     }
 
     async fn delete(&self, hash: &str) -> Result<(), vcs::VcsError> {
-        let conn = self.connection().await?;
-        conn.execute("DELETE FROM blobs WHERE hash = ?1", [hash]).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        Ok(())
+        self.append(&FolderEvent { kind: BLOB_DELETE_EVENT, updated_at_ms: now_ms().await, key: hash.into(), metadata: String::new(), primary: Vec::new(), secondary: Vec::new() })
     }
 }
 //#endregion 🔖️BlobStoreImpl
@@ -2757,18 +2891,18 @@ mod tests {
         let mut producer = PresenceHeartbeatProducer::new(100);
         let mut first = sample_presence_peer_with_interaction().await;
         first.views = vec![crate::os_spr::PresenceWindowView { window_id: "w1".into(), space: "canvas".into(), kind: crate::os_spr::PresenceViewKind::Canvas { x: 1.0, y: 2.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None }];
-        assert_eq!(producer.offer(1_000, first.clone()).await, Some(first));
+        assert_eq!(producer.offer(1_000, first.clone()), Some(first));
 
         let mut intermediate = sample_presence_peer_with_interaction().await;
         intermediate.views = vec![crate::os_spr::PresenceWindowView { window_id: "w1".into(), space: "canvas".into(), kind: crate::os_spr::PresenceViewKind::Canvas { x: 3.0, y: 4.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None }];
-        assert_eq!(producer.offer(1_040, intermediate).await, None);
+        assert_eq!(producer.offer(1_040, intermediate), None);
 
         let mut latest = sample_presence_peer_with_interaction().await;
         latest.views = vec![crate::os_spr::PresenceWindowView { window_id: "w1".into(), space: "canvas".into(), kind: crate::os_spr::PresenceViewKind::Canvas { x: 5.0, y: 6.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None }];
-        assert_eq!(producer.offer(1_099, latest.clone()).await, None);
-        assert_eq!(producer.pending().await, Some(&latest));
-        assert_eq!(producer.offer(1_100, latest.clone()).await, Some(latest));
-        assert!(producer.pending().await.is_none());
+        assert_eq!(producer.offer(1_099, latest.clone()), None);
+        assert_eq!(producer.pending(), Some(&latest));
+        assert_eq!(producer.offer(1_100, latest.clone()), Some(latest));
+        assert!(producer.pending().is_none());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -2779,16 +2913,16 @@ mod tests {
         host.inner.lock().unwrap().insert("doc".into(), OpenDocument { cmd_tx, events, presence: PresenceHeartbeatProducer::default(), schedule: std::sync::Arc::new(|| {}) });
 
         let first = sample_presence_peer_with_interaction().await;
-        assert!(host.presence_heartbeat("doc", 500, first.clone()).await);
-        assert!(matches!(cmd_rx.try_recv(), Ok(ArtifactActorMsg::PresenceHeartbeat { peer }) if peer == first));
+        assert!(host.presence_heartbeat("doc", 500, first.clone()));
+        assert!(matches!(cmd_rx.try_recv(), Ok(ArtifactActorMsg::PresenceHeartbeat { peer }) if *peer == first));
 
         let mut latest = sample_presence_peer_with_interaction().await;
         latest.ui = Some(crate::os_spr::PresenceUi { hovered_path: Some("row[0]#changed".into()), focused_path: None, pressed_path: None });
-        assert!(!host.presence_heartbeat("doc", 550, latest.clone()).await);
+        assert!(!host.presence_heartbeat("doc", 550, latest.clone()));
         assert!(cmd_rx.try_recv().is_err(), "sub-interval offer must not publish");
-        assert!(host.presence_heartbeat("doc", 600, latest.clone()).await);
-        assert!(matches!(cmd_rx.try_recv(), Ok(ArtifactActorMsg::PresenceHeartbeat { peer }) if peer == latest));
-        assert!(!host.presence_heartbeat("missing", 700, sample_presence_peer_with_interaction().await).await);
+        assert!(host.presence_heartbeat("doc", 600, latest.clone()));
+        assert!(matches!(cmd_rx.try_recv(), Ok(ArtifactActorMsg::PresenceHeartbeat { peer }) if *peer == latest));
+        assert!(!host.presence_heartbeat("missing", 700, sample_presence_peer_with_interaction().await));
     }
     //#endregion 🧪️PresenceInteraction
 
@@ -2821,7 +2955,7 @@ mod tests {
     mod actor_tests {
         use super::*;
         use crate::os_spr::{decode_client_frame, encode_server_frame};
-        use futures_util::{SinkExt, StreamExt};
+        use futures::{SinkExt, StreamExt};
         use std::sync::Arc;
         use std::time::Duration;
         use tokio::sync::{broadcast as tokio_broadcast, Mutex};
@@ -2879,7 +3013,7 @@ mod tests {
         #[tokio::test]
         async fn folder_external_edit_delivers_remote_operations() {
             ensure_demo_codec_registered().await;
-            let dir = tempfile::tempdir().expect("tempdir");
+            let dir = crate::os_store::test_support::tempdir().expect("tempdir");
             let host = ArtifactHost::new(test_pool());
             let channels = host.open(ArtifactActorConfig { document_id: "doc-a".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() }).await;
             let mut events = host.subscribe("doc-a").await;
@@ -2891,7 +3025,7 @@ mod tests {
             channels.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake");
 
             // Wait until the actor has persisted the local edit to the folder db as real pack+spr bytes.
-            let storage = FolderSqliteStorage::new(dir.path().to_path_buf()).await;
+            let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
             let (pack, spr) = wait_until_value("persisted edit on disk", || async {
                 let (pack, spr) = storage.read("doc-a").await.expect("read")?;
                 if spr_op_ids(&spr).await.ok()?.is_empty() {
@@ -3299,7 +3433,7 @@ mod tests {
         async fn replay_fixture(fixture: &ActorFixture) {
             ensure_demo_codec_registered().await;
             let codec = crate::os_store::document_codec(&fixture.schema).await.expect("codec registry available").unwrap_or_else(|| panic!("no codec registered for fixture schema {:?}", fixture.schema));
-            let dir = tempfile::tempdir().expect("tempdir");
+            let dir = crate::os_store::test_support::tempdir().expect("tempdir");
             let host = ArtifactHost::new(test_pool());
             let channels = host
                 .open(ArtifactActorConfig { document_id: fixture.document_id.clone(), schema: fixture.schema.clone(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() })
@@ -3307,7 +3441,7 @@ mod tests {
             let mut events = host.subscribe(&fixture.document_id).await;
             let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>(&fixture.schema, &fixture.document_id, DemoSnapshot { n: 0 }, None).await).await.expect("valid fixture store");
             store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");
-            let storage = FolderSqliteStorage::new(dir.path().to_path_buf()).await;
+            let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
             wait_until(&format!("seed snapshot for {} on disk", fixture.document_id), || async { storage.read(&fixture.document_id).await.expect("read").is_some() }).await;
 
             // Lockstep: apply each stimulus, then wait for its paired expected event before the next
@@ -3371,15 +3505,15 @@ mod tests {
     }
     //#endregion 🧪️Actor
 
-    /// @emoji 🎯️ `FolderSqliteStorage` is now a pure `(pack, spr)` byte-blob store — schema-agnostic,
+    /// @emoji 🎯️ `FolderEventLogStorage` is a pure `(pack, spr)` event store — schema-agnostic,
     /// no JSON/codec involvement at this layer (that lives one level up, in `FolderEndpoint`, tested
     /// via `folder_external_edit_delivers_remote_operations`). This test exercises exactly the
-    /// storage mechanics: per-id keying, upsert-in-place, and the folder-wide index.
+    /// storage mechanics: per-id folding, append-only replacement, and the folder-wide index.
     #[cfg(not(target_arch = "wasm32"))]
     #[semio_framework_async_macros::async_test]
-    async fn folder_sqlite_storage_round_trips_by_document_id() {
-        let dir = tempfile::tempdir().expect("tempdir");
-        let storage = FolderSqliteStorage::new(dir.path().to_path_buf()).await;
+    async fn folder_event_log_storage_round_trips_by_document_id() {
+        let dir = crate::os_store::test_support::tempdir().expect("tempdir");
+        let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
         assert_eq!(storage.read("doc-a").await.expect("read empty"), None, "absent document reads as None");
 
         storage.write("doc-a", "demo/v1", b"pack-a", b"spr-a").await.expect("write a");
@@ -3388,7 +3522,7 @@ mod tests {
         assert_eq!(storage.read("doc-b").await.expect("read b").expect("some b"), (b"pack-b".to_vec(), b"spr-b".to_vec()));
 
         storage.write("doc-a", "demo/v1", b"pack-a2", b"spr-a2").await.expect("upsert a");
-        assert_eq!(storage.read("doc-a").await.expect("reread a").expect("some a2"), (b"pack-a2".to_vec(), b"spr-a2".to_vec()), "writing the same id upserts pack+spr together in place");
+        assert_eq!(storage.read("doc-a").await.expect("reread a").expect("some a2"), (b"pack-a2".to_vec(), b"spr-a2".to_vec()), "the latest snapshot event replaces the projection");
 
         let mut ids = storage.document_ids().await.expect("document ids");
         ids.sort();
@@ -3396,14 +3530,14 @@ mod tests {
     }
 
     /// @emoji 🔐️ The endpoint-level save→load→undo proof: a store's undo/redo position survives a
-    /// full write/read cycle through the ACTUAL `FolderSqliteStorage` byte storage (`store`'s own
+    /// full write/read cycle through the ACTUAL `FolderEventLogStorage` byte storage (`store`'s own
     /// `save_load_undo_proof_pack_spr_round_trip_preserves_undo_redo_position` proves the pure
     /// in-memory pack/spr encoding; this proves the folder persistence layer built on top of it).
     #[cfg(not(target_arch = "wasm32"))]
     #[semio_framework_async_macros::async_test]
-    async fn folder_sqlite_storage_round_trips_undo_position_through_pack_spr() {
-        let dir = tempfile::tempdir().expect("tempdir");
-        let storage = FolderSqliteStorage::new(dir.path().to_path_buf()).await;
+    async fn folder_event_log_storage_round_trips_undo_position_through_pack_spr() {
+        let dir = crate::os_store::test_support::tempdir().expect("tempdir");
+        let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
 
         let mut store = ArtifactStore::new(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "doc-a", DemoSnapshot { n: 0 }, None).await).await.expect("valid folder store");
         store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], description: None }).await.expect("apply e1");
@@ -3434,7 +3568,7 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[semio_framework_async_macros::async_test]
     async fn folder_text_storage_round_trips_dsl_and_appends_ops() {
-        let dir = tempfile::tempdir().expect("tempdir");
+        let dir = crate::os_store::test_support::tempdir().expect("tempdir");
         let storage = FolderTextStorage::new(dir.path().to_path_buf()).await;
         assert_eq!(storage.read("demo", "demo").await.expect("read empty"), None, "absent document reads as None");
 
@@ -3470,7 +3604,7 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[semio_framework_async_macros::async_test]
     async fn folder_text_storage_round_trips_pack() {
-        let dir = tempfile::tempdir().expect("tempdir");
+        let dir = crate::os_store::test_support::tempdir().expect("tempdir");
         let storage = FolderTextStorage::new(dir.path().to_path_buf()).await;
         assert_eq!(storage.read_pack("demo", "demo").await.expect("read empty"), None, "absent pack reads as None");
 
@@ -3516,8 +3650,8 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[semio_framework_async_macros::async_test]
     async fn blob_store_put_get_dedupes_idempotently() {
-        let dir = tempfile::tempdir().expect("tempdir");
-        let storage = FolderSqliteStorage::new(dir.path().to_path_buf()).await;
+        let dir = crate::os_store::test_support::tempdir().expect("tempdir");
+        let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
         let bytes = b"hello content-addressed world";
         assert!(!storage.has("not-a-real-hash").await.expect("has on empty store"));
 
@@ -3537,5 +3671,24 @@ mod tests {
         storage.delete(&first.hash).await.expect("delete");
         assert!(!storage.has(&first.hash).await.expect("has after delete"));
         assert_eq!(storage.get(&first.hash).await.expect("get after delete"), None);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[semio_framework_async_macros::async_test]
+    async fn folder_event_log_ignores_an_incomplete_tail_and_coordinates_handles() {
+        use std::io::Write;
+
+        let dir = crate::os_store::test_support::tempdir().expect("tempdir");
+        let first = FolderEventLogStorage::new(dir.path().to_path_buf());
+        let second = FolderEventLogStorage::new(dir.path().to_path_buf());
+        first.write("doc-a", "demo/v1", b"pack-a", b"spr-a").await.expect("first handle write");
+        second.write("doc-b", "demo/v1", b"pack-b", b"spr-b").await.expect("second handle write");
+
+        let mut file = std::fs::OpenOptions::new().append(true).open(first.event_path()).expect("open event log");
+        file.write_all(&FOLDER_EVENT_MAGIC[..3]).expect("partial crash tail");
+        file.sync_data().expect("sync crash tail");
+
+        assert_eq!(first.read("doc-a").await.expect("read a").expect("doc a"), (b"pack-a".to_vec(), b"spr-a".to_vec()));
+        assert_eq!(second.read("doc-b").await.expect("read b").expect("doc b"), (b"pack-b".to_vec(), b"spr-b".to_vec()));
     }
 }

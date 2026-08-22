@@ -3993,7 +3993,7 @@ mod tests {
         let action = pick_select_action(&state, screen[0], screen[1], inner, false, false).expect("pick action");
         assert_eq!(action.action, "worldPick");
         let args = action.args.expect("args");
-        assert_eq!(args["id"], json!(1));
+        assert_eq!(args["id"].as_f64(), Some(1.0));
     }
 
     //#region 🔖️WorldInteractionVerbs

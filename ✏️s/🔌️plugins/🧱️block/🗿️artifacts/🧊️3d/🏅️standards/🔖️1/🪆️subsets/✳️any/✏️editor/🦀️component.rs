@@ -320,7 +320,7 @@ impl ArtifactEditor for Block3dPlayApp {
 //#endregion 🔖️Block3dPlayApp
 
 //#region 🔖️Manifest
-pub async fn create_block3d_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_block3d_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(BLOCK3D_DIALECT)
         .artifact_kind(artifact_kind())
         // 🗂️ The puzzle3d catalog artifact this surface's `"catalog:out"` port produces — see

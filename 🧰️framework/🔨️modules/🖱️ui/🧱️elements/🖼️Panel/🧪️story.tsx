@@ -13,7 +13,7 @@
 
 import { Panel, PanelChromeTabBar, singleTreeLeaf } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "../../🧪️story";
 import { useState, type ComponentType } from "react";
 
 // #region 🧭️Panel

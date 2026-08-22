@@ -182,9 +182,9 @@ impl ArtifactEditor for PlaybookPlayApp {
 /// 🧱️ The manifest stitch: one call per taxonomy node, each sourced from that node's own `definition()`.
 /// Only the leaf action/keybinding declarations (which have no dedicated `_def` passthrough) are written
 /// out inline.
-pub async fn create_playbook_play_app() -> semio_framework_plugin::AppDefinition {
+pub fn create_playbook_play_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(PLAYBOOK_DIALECT)
-        .command(CommandDefinition { in_palette: false, ..CommandDefinition::new_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
+        .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
         .document(["semio", "playbook"])
         .artifact_kind(artifact_kind())
         .mode_def(builder::definition())

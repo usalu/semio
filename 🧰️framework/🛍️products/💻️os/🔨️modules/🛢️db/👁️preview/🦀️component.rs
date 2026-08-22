@@ -255,25 +255,13 @@ const ORACLE_PREVIEW_TAG: &str = "db-preview::oracle::preview";
 const ORACLE_LANDED_TAG: &str = "db-preview::oracle::landed";
 
 impl ConflictOracle for DbConflictOracle {
-    // 🚫️async: E5 executor bridge — `ConflictOracle::conflicts` is sync (see the trait's own
-    // doc), but `protocol::HybridLogicalTimestamp::new` is a genuinely async external-crate call
-    // (out of this packet's scope); bridged via `db_actor::block_on` rather than making the
-    // whole trait async again for one impl's sake.
     fn conflicts(&self, preview_touched: &TouchedSet, landed_touched: &TouchedSet) -> bool {
-        let mut preview_command = db_conflict::CommandTouch::new(
-            protocol::MutationId(ORACLE_PREVIEW_TAG.to_string()),
-            protocol::ActorId(ORACLE_PREVIEW_TAG.to_string()),
-            db_conflict::CommandKind::from(ORACLE_PREVIEW_TAG),
-            db_actor::block_on(protocol::HybridLogicalTimestamp::new(0, 0)),
-        );
+        let mut preview_command =
+            db_conflict::CommandTouch::new(protocol::MutationId(ORACLE_PREVIEW_TAG.to_string()), protocol::ActorId(ORACLE_PREVIEW_TAG.to_string()), db_conflict::CommandKind::from(ORACLE_PREVIEW_TAG), protocol::HybridLogicalTimestamp::new(0, 0));
         preview_command.touched = preview_touched.clone();
 
-        let mut landed_command = db_conflict::CommandTouch::new(
-            protocol::MutationId(ORACLE_LANDED_TAG.to_string()),
-            protocol::ActorId(ORACLE_LANDED_TAG.to_string()),
-            db_conflict::CommandKind::from(ORACLE_LANDED_TAG),
-            db_actor::block_on(protocol::HybridLogicalTimestamp::new(1, 0)),
-        );
+        let mut landed_command =
+            db_conflict::CommandTouch::new(protocol::MutationId(ORACLE_LANDED_TAG.to_string()), protocol::ActorId(ORACLE_LANDED_TAG.to_string()), db_conflict::CommandKind::from(ORACLE_LANDED_TAG), protocol::HybridLogicalTimestamp::new(1, 0));
         landed_command.touched = landed_touched.clone();
 
         !self.detector.detect(&[preview_command, landed_command]).is_empty()

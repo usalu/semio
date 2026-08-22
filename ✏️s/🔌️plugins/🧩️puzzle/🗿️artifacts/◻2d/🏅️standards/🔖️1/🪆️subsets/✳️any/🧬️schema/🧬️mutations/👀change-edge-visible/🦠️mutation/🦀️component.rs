@@ -15,23 +15,23 @@ pub struct ChangeEdgeVisible {
 }
 
 /// 🏗️ Builder — wraps the payload in its dispatch variant.
-pub async fn change_edge_visible(id: String, new_visible: Option<bool>) -> Puzzle2dMutation {
+pub fn change_edge_visible(id: String, new_visible: Option<bool>) -> Puzzle2dMutation {
     Puzzle2dMutation::ChangeEdgeVisible(ChangeEdgeVisible { id, new_visible })
 }
 
 impl protocol::MutationKind<Puzzle2dSnapshot, Puzzle2dMutation> for ChangeEdgeVisible {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "edge", kind: "change-edge-visible", record: "ChangedEdgeVisible" };
 
-    async fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
+    fn diff(&self, base: &Puzzle2dSnapshot) -> protocol::MutationOutcome<Puzzle2dDiff> {
         super::diff::diff(self, base)
     }
-    async fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
+    fn inverse(&self, base: &Puzzle2dSnapshot) -> Vec<Puzzle2dMutation> {
         super::inverse::inverse(self, base)
     }
-    async fn label(&self) -> String {
+    fn label(&self) -> String {
         format!("Change edge \"{}\" visible", self.id)
     }
-    async fn target(&self) -> Vec<String> {
+    fn target(&self) -> Vec<String> {
         vec![self.id.clone()]
     }
 }

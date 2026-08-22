@@ -171,11 +171,11 @@ impl store::InferredField<SemioDrawingSnapshot> for DrawFlattenedScene {
     const FIELD_ID: &'static str = "s.stdio.semio.drawing.inference.flattenedScene";
     const SCHEMA_VERSION: u32 = 1;
 
-    async fn reads() -> &'static [&'static str] {
+    fn reads() -> &'static [&'static str] {
         &["layers", "styles"]
     }
 
-    async fn plan(snapshot: &SemioDrawingSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
+    fn plan(snapshot: &SemioDrawingSnapshot) -> Vec<store::InferenceStep<Self::Key>> {
         let mut steps = Vec::new();
         for (layer_idx, layer) in snapshot.layers.iter().enumerate() {
             walk(&layer.root, layer_idx, &mut Vec::new(), None, &mut steps);
@@ -183,7 +183,7 @@ impl store::InferredField<SemioDrawingSnapshot> for DrawFlattenedScene {
         steps
     }
 
-    async fn dep_input(snapshot: &SemioDrawingSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
+    fn dep_input(snapshot: &SemioDrawingSnapshot, key: &Self::Key, _parents: &[Self::Key]) -> Vec<u8> {
         let np = node_path_from_key(key);
         let mut bytes = Vec::new();
         match node_at(snapshot, &np) {
@@ -205,7 +205,7 @@ impl store::InferredField<SemioDrawingSnapshot> for DrawFlattenedScene {
         bytes
     }
 
-    async fn compute(snapshot: &SemioDrawingSnapshot, key: &Self::Key, parents: &[Self::Value]) -> Self::Value {
+    fn compute(snapshot: &SemioDrawingSnapshot, key: &Self::Key, parents: &[Self::Value]) -> Self::Value {
         let np = node_path_from_key(key);
         let parent_transform = parents.first().map(|p| p.world_transform).unwrap_or_else(SemioTransform::identity);
         match node_at(snapshot, &np) {

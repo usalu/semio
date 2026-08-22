@@ -41,7 +41,7 @@ pub const WHEEL_ZOOM_SETTLE_SECONDS: f64 = 0.120;
 pub const CARET_BLINK_SECONDS: f64 = 0.500;
 
 /// 🧩️ Native plugin hot-swap mtime poll cadence — this packet's own replacement for the old
-/// every-`frame()`-tick `std::fs::metadata` stat storm; a coarse ~1 s poll per the packet brief.
+/// every-`frame()`-tick plugin-artifact scan storm; a coarse ~1 s poll per the packet brief.
 pub const NATIVE_HOT_SWAP_POLL_SECONDS: f64 = 1.0;
 
 //#endregion ⏳️Constants
@@ -179,12 +179,12 @@ pub fn on_asset_ready(scheduler: &mut FrameScheduler) {
 
 /// 🧩️ Coarse ~1 s poll gate for native plugin hot-swap mtime checks — replaces the old
 /// `poll_native_plugin_hot_swap` call sitting unconditionally at the top of every `frame()` (a
-/// `std::fs::metadata` stat per plugin, every single tick under `ControlFlow::Poll`). `is_due` is a
+/// plugin-artifact metadata request per plugin, every single tick under `ControlFlow::Poll`). `is_due` is a
 /// pure predicate over an explicit `now_seconds` — deliberately **not** coupled to any
 /// `FrameScheduler` (unlike this file's other deadline sources): `AppRuntime` (native-only,
 /// `app_now_ms()`-clocked, no access to `OsHost`'s scheduler — see `os_host.rs`'s own docstring on why
 /// the two live in different ownership scopes) calls this with its own self-consistent clock purely
-/// to gate the `std::fs::metadata` calls; `OsHost::redraw` separately re-arms a plain periodic
+/// to gate the worker I/O-lane scan submissions; `OsHost::redraw` separately re-arms a plain periodic
 /// scheduler deadline (its own clock) so a fully idle window still wakes roughly every
 /// `NATIVE_HOT_SWAP_POLL_SECONDS` to give this gate a chance to open at all — two independent,
 /// individually-correct pieces rather than one that needs both clocks to agree.

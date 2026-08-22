@@ -8,19 +8,17 @@
 
 // #endregion 🧲️Header
 
-// #region 🔌️Adapters
-// PostCSS program configuration for the js library.
-// Configuration MUST use the @tailwindcss/postcss program.
-
-import { Config } from "postcss-load-config";
-// #endregion 🔌️Adapters
-
 // #region 🗄️Configuration
+/** 🪡️ Owns the PostCSS configuration surface consumed by this package. */
+export interface OwnedPostcssConfig {
+  readonly plugins: Readonly<Record<string, Readonly<Record<string, never>>>>;
+}
+
 /**
  * PostCSS configuration with the Tailwind CSS PostCSS program.
  * Config MUST include the @tailwindcss/postcss program.
  **/
-const config: Config = {
+const config: OwnedPostcssConfig = {
   plugins: {
     "@tailwindcss/postcss": {},
   },

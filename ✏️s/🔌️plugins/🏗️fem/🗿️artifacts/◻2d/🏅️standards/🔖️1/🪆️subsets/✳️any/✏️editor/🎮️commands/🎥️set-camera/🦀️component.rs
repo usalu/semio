@@ -19,7 +19,7 @@ pub struct SetCamera {
     pub zoom: f64,
 }
 
-pub async fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
+pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation>, Fault> {
     Ok(Emit::config(vec![Fem2dConfigMutation::SetCamera { camera: FemCamera { x: payload.x, y: payload.y, zoom: payload.zoom } }]))
 }
 
@@ -33,10 +33,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn set_camera_action_writes_config_not_artifact_mutations() {
         let mut app = fem2d_app();
-        let before = app.snapshot().expect("snapshot");
-        let result = dispatch(&mut app, Fem2dCommand::SetCamera(SetCamera { x: 1.0, y: 2.0, zoom: 1.5 }));
+        let before = semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot");
+        let result = dispatch(&mut app, Fem2dCommand::SetCamera(SetCamera { x: 1.0, y: 2.0, zoom: 1.5 })).await;
         assert!(result.mutations.is_empty(), "setCamera must not emit a document VCS operation");
-        assert_eq!(app.snapshot().expect("snapshot"), before, "the document must be unchanged by a config-only command");
+        assert_eq!(semio_framework_plugin::resolve_ready(app.snapshot()).expect("snapshot"), before, "the document must be unchanged by a config-only command");
     }
 }
 //#endregion 🧪️Tests

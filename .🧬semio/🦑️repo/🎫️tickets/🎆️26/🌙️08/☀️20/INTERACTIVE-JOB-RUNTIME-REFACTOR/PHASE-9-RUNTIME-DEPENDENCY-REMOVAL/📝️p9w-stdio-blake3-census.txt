@@ -1,0 +1,6 @@
+stdio manifest/source direct blake3 census
+framework hash call census
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/⚙️engine/🦀️component.rs:483:        let handle = GeometryHandle(semio_framework_hash::hash_bytes(payload.as_bytes()));
+✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/📦️glue.rs:44:    Ok(hash_hex_bytes(&semio_framework_hash::hash_bytes(&encoded)))
+manifest framework hash row
+40:semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/#⃣hash/📦️packages/🦀️rust", package = "semio-framework-hash" }

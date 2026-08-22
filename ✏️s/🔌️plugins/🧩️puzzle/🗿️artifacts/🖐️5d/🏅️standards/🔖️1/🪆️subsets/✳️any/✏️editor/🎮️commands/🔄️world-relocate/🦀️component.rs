@@ -10,7 +10,7 @@ use serde_json::Value;
 
 /// 🚚️ Drops one part at an explicit world origin, then auto-fastens its first grip to every other
 /// grip that lands within [`PUZZLE5D_PROXIMITY_RADIUS`].
-pub async fn world_relocate(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
+pub fn world_relocate(ctx: &mut Puzzle5dActionCtx<'_>, args: Option<&Value>) {
     let object_id = args.and_then(|value| value.get("objectId")).and_then(|value| value.as_str()).unwrap_or("");
     let position = args.and_then(|value| value.get("position")).and_then(|value| serde_json::from_value::<[f64; 3]>(value.clone()).ok());
     let (Some(part), Some(position)) = (ctx.scene.document.parts.iter_mut().find(|part| part.id == object_id), position) else {

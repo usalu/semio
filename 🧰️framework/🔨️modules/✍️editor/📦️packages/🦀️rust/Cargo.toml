@@ -36,11 +36,9 @@ ui_styling = { path = "../../../🖱️ui/🎨️styling/📦️packages/🦀️
 infinite_canvas = { path = "../../../../🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
 serde = { workspace = true }
 serde_json = { workspace = true }
-thiserror = { workspace = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 js-sys = "0.3.83"
 wasm-bindgen = { workspace = true }
 wasm-bindgen-futures = "0.4.71"
 web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }
-

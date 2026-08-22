@@ -57,7 +57,7 @@ impl ArtifactInferrer for crate::artifacts::playbook::standards::v1::subsets::an
 //#region 🔖️Descriptor
 /// 💡️ Registers `s.playbook.playbook.inference`'s facet leaves into the OS-wide inference catalog
 /// — call once at plugin init, alongside `playbook_artifact_schema_descriptor`'s registration.
-pub async fn playbook_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
+pub fn playbook_artifact_inference_descriptor() -> schema::ArtifactInferenceDescriptor {
     schema::ArtifactInferenceDescriptor {
         id: "s.playbook.playbook.inference",
         inference: schema::FacetLeaves {

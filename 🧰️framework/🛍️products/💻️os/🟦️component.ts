@@ -26,6 +26,8 @@ import { decodeClientFrame, decodePresencePeer, decodeServerFrame, encodeClientF
  * for its backbone-envelope and app-channel codecs rather than keeping a second copy. */
 import { decodeCausalEnvelopeBatch, encodeCausalEnvelopeBatch, readBool, readBytes, readF64, readHash32, readStr, readU8, readVarintU64, readVecBytes, readVecEnvelope, readVecStr, writeBool, writeBytes, writeF64, writeHash32, writeStr, writeVarintU64, writeVecBytes, writeVecEnvelope, writeVecStr } from "@semio-tech/framework-replication";
 
+const replicationPackCodec = { encode: encodePackValue, decode: decodePackValue };
+
 //#region 🔖️Backbone
 export const FRAMEWORK_SYNC_CONTROLLER_ID = "framework.sync";
 
@@ -209,25 +211,24 @@ export async function readBackboneEnvelope(uri: string, signal?: AbortSignal): P
  * Schreibt die vollständigen Bundle-Bytes für `uri`; wird bei einem Fehler bewusst NICHT wiederholt,
  * da ein doppelt angewandter Schreibvorgang nicht sicher ausgeschlossen werden kann. */
 export async function writeBackboneEnvelope(uri: string, bundle: Uint8Array, signal?: AbortSignal): Promise<void> {
+  const body = Uint8Array.from(bundle).buffer;
   if (uri.startsWith("remote://")) {
     const remote = parseRemoteBackboneUri(uri);
     if (!remote) throw new Error(`invalid remote backbone uri: ${uri}`);
     const response = await fetchWithTimeout(
       remoteEnvelopeUrl(remote),
-      { method: "PUT", headers: { "content-type": BACKBONE_OCTET_STREAM }, body: bundle },
+      { method: "PUT", headers: { "content-type": BACKBONE_OCTET_STREAM }, body },
       { timeoutMs: BACKBONE_ENVELOPE_HTTP_TIMEOUT_MS, signal },
     );
     if (!response.ok) throw new Error(`remote backbone write failed (${response.status})`);
-    console.log("[DEBUG] remote backbone synced", uri);
     return;
   }
   const response = await fetchWithTimeout(
     `${BACKBONE_ENDPOINT_PATH}?uri=${encodeURIComponent(uri)}`,
-    { method: "PUT", headers: { "content-type": BACKBONE_OCTET_STREAM }, body: bundle },
+    { method: "PUT", headers: { "content-type": BACKBONE_OCTET_STREAM }, body },
     { timeoutMs: BACKBONE_ENVELOPE_HTTP_TIMEOUT_MS, signal },
   );
   if (!response.ok) throw new Error(`backbone write failed (${response.status})`);
-  console.log("[DEBUG] backbone synced", uri);
 }
 
 if (import.meta.vitest) {
@@ -599,28 +600,28 @@ export type BackboneWorkerResponse =
 
 function wireArtifactActorMsg(message: ArtifactActorMsg): unknown {
   if (message.kind === "localMutations") {
-    return { kind: "localMutations", envelopes: encodeCausalEnvelopeBatch(message.envelopes) };
+    return { kind: "localMutations", envelopes: encodeCausalEnvelopeBatch(message.envelopes, replicationPackCodec) };
   }
   return message;
 }
 
 function parseArtifactActorMsg(message: Record<string, unknown>): ArtifactActorMsg {
   if (message.kind === "localMutations" && Array.isArray(message.envelopes) && message.envelopes.every((entry) => typeof entry === "number")) {
-    return { kind: "localMutations", envelopes: decodeCausalEnvelopeBatch(message.envelopes as readonly number[]) };
+    return { kind: "localMutations", envelopes: decodeCausalEnvelopeBatch(message.envelopes as readonly number[], replicationPackCodec) };
   }
   return message as ArtifactActorMsg;
 }
 
 function wireArtifactEvent(event: ArtifactEvent): unknown {
   if (event.kind === "remoteMutations") {
-    return { kind: "remoteMutations", envelopes: encodeCausalEnvelopeBatch(event.envelopes) };
+    return { kind: "remoteMutations", envelopes: encodeCausalEnvelopeBatch(event.envelopes, replicationPackCodec) };
   }
   return event;
 }
 
 function parseArtifactEvent(event: Record<string, unknown>): ArtifactEvent {
   if (event.kind === "remoteMutations" && Array.isArray(event.envelopes) && event.envelopes.every((entry) => typeof entry === "number")) {
-    return { kind: "remoteMutations", envelopes: decodeCausalEnvelopeBatch(event.envelopes as readonly number[]) };
+    return { kind: "remoteMutations", envelopes: decodeCausalEnvelopeBatch(event.envelopes as readonly number[], replicationPackCodec) };
   }
   return event as ArtifactEvent;
 }
@@ -1058,7 +1059,7 @@ export function decodeScenePackField(encoded: string): unknown {
 
 /** @emoji 📤️ `protocol::encode_envelopes` batch as a {@link packValueToBase64} string for `applyMutations`. */
 export function encodeMutationEnvelopesPack(envelopes: readonly MutationEnvelope[]): string {
-  return packValueToBase64(Array.from(encodeCausalEnvelopeBatch(envelopes)));
+  return packValueToBase64(Array.from(encodeCausalEnvelopeBatch(envelopes, replicationPackCodec)));
 }
 
 /** @emoji 📥️ Inverse of {@link encodeMutationEnvelopesPack}. */
@@ -1067,7 +1068,7 @@ export function decodeMutationEnvelopesPack(pack: string): MutationEnvelope[] {
   if (!Array.isArray(wire) || !wire.every((entry) => typeof entry === "number")) {
     throw new Error("decodeMutationEnvelopesPack: expected pack byte array");
   }
-  return decodeCausalEnvelopeBatch(wire as readonly number[]);
+  return decodeCausalEnvelopeBatch(wire as readonly number[], replicationPackCodec);
 }
 //#endregion 🔖️PublicApi
 //#endregion 🔖️PackValueCodec
@@ -1282,7 +1283,7 @@ export function encodeAppCommand(cmd: AppCommandValue): Uint8Array {
     writeVarintU64(out, cmd.ApplyEnvelopes.seq);
     writeVecEnvelope(
       out,
-      cmd.ApplyEnvelopes.envelopes.map((envelope, index) => mutationEnvelopeToWire(envelope, { actor: 0, physical_ms: 0, logical: index + 1 })),
+      cmd.ApplyEnvelopes.envelopes.map((envelope, index) => mutationEnvelopeToWire(envelope, { actor: 0, physical_ms: 0, logical: index + 1 }, replicationPackCodec)),
     );
   } else if ("LoadDocument" in cmd) {
     out.push(APP_COMMAND_TAGS.LoadDocument);
@@ -1428,7 +1429,7 @@ export function decodeAppCommand(bytes: Uint8Array): AppCommandValue {
     case APP_COMMAND_TAGS.ApplyEnvelopes: {
       const seq = readVarintU64(bytes, pos);
       const wire = readVecEnvelope(bytes, pos);
-      return { ApplyEnvelopes: { seq, envelopes: wire.map(mutationEnvelopeFromWire) } };
+      return { ApplyEnvelopes: { seq, envelopes: wire.map((envelope) => mutationEnvelopeFromWire(envelope, replicationPackCodec)) } };
     }
     case APP_COMMAND_TAGS.LoadDocument: {
       const seq = readVarintU64(bytes, pos);
@@ -3141,7 +3142,7 @@ export function mediaAcceptFilterKinds(formatArtifactKinds: readonly string[]): 
 // package's `🧪️vitest.config.ts` (`include`/`includeSource` list only THIS file and
 // `🟦️backbone-worker.ts`), hosts the in-source parity test against the Rust twin's golden fixture.
 import { emptyDirectoryReadModel, fold, foldAll, isDirectoryCommandKind, isDirectoryEventBodyKind, isDirectoryStreamMessageKind } from "./🔨️modules/📇️directory/🟦️component.ts";
-import type { DirectoryEvent, DirectoryReadModel } from "./🔨️modules/📇️directory/🟦️component.ts";
+import type { DirectoryReadModel } from "./🔨️modules/📇️directory/🟦️component.ts";
 
 export type {
   ConnectionView,
