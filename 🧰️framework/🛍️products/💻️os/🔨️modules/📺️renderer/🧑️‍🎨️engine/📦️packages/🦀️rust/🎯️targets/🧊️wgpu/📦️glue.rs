@@ -2790,7 +2790,10 @@ async fn run_renderer_io(request: semio_framework_os_services::NativeIoRequest) 
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) mod kernel_runtime {
     use semio_framework::kernel::{BrokerCapabilityGrant, Budget as TurnBudget, Effect, Event, MessageEndpoint, QuotaSchema, TurnResult, UiPatch as KernelUiPatch};
-    use semio_framework_actor::{intersect_capabilities, ActivationEvent, ActorId, ActorKind, Backpressure, CapabilityGrant, Envelope, Lane, Origin, PackageHash, PackageId, Payload};
+    use semio_framework_actor::{
+        intersect_capabilities, ActivationEvent, ActorId, ActorKind, Backpressure, CapabilityGrant, Envelope, JobProgressIdentity, JobProgressKind, JobProgressLiveAuthority, JobProgressOverlayStore, JobProgressReceipt, JobProgressRejected,
+        JobPublication, JobTurn, Lane, Origin, PackageHash, PackageId, Payload,
+    };
     use semio_framework_plugin_host::shard::ShardOutcome;
     use semio_framework_plugin_host::{GuestRuntime, GuestRuntimes, OwnedRuntime, PackageRef};
     use std::collections::HashMap;
@@ -2809,6 +2812,181 @@ pub(crate) mod kernel_runtime {
     };
 
     static SEQ: AtomicU64 = AtomicU64::new(1);
+
+    const JOB_PROGRESS_PRESENTATION_CAPACITY: usize = 64;
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum JobProgressPresentationState {
+        Vacant,
+        Reserved,
+        Ready,
+        CheckedOut,
+        Presented,
+    }
+
+    #[derive(Clone, Copy, Debug)]
+    struct JobProgressPresentationSlot {
+        epoch: u64,
+        admission_sequence: u64,
+        state: JobProgressPresentationState,
+        identity: JobProgressIdentity,
+        kind: JobProgressKind,
+        applied_progress: u64,
+    }
+
+    impl JobProgressPresentationSlot {
+        fn vacant() -> Self {
+            Self {
+                epoch: 0,
+                admission_sequence: 0,
+                state: JobProgressPresentationState::Vacant,
+                identity: JobProgressIdentity { actor: ActorId(0), job: 0, operation: 0, base_revision: 0, generation: 0, step_sequence: 0, preview_sequence: 0 },
+                kind: JobProgressKind::Yield,
+                applied_progress: 0,
+            }
+        }
+    }
+
+    struct JobProgressPresentationBridge {
+        slots: [JobProgressPresentationSlot; JOB_PROGRESS_PRESENTATION_CAPACITY],
+        reserve_cursor: usize,
+        next_admission_sequence: u64,
+    }
+
+    impl JobProgressPresentationBridge {
+        fn new() -> Self {
+            Self { slots: [JobProgressPresentationSlot::vacant(); JOB_PROGRESS_PRESENTATION_CAPACITY], reserve_cursor: 0, next_admission_sequence: 1 }
+        }
+
+        fn reserve(&mut self, identity: JobProgressIdentity, kind: JobProgressKind, applied_progress: u64) -> Option<JobProgressPresentationToken> {
+            let index = (0..JOB_PROGRESS_PRESENTATION_CAPACITY)
+                .map(|offset| (self.reserve_cursor + offset) % JOB_PROGRESS_PRESENTATION_CAPACITY)
+                .find(|index| self.slots[*index].state == JobProgressPresentationState::Vacant && self.slots[*index].epoch != u64::MAX)?;
+            let admission_sequence = self.next_admission_sequence;
+            self.next_admission_sequence = self.next_admission_sequence.checked_add(1)?;
+            let slot = &mut self.slots[index];
+            slot.epoch = slot.epoch.checked_add(1)?;
+            slot.admission_sequence = admission_sequence;
+            slot.state = JobProgressPresentationState::Reserved;
+            slot.identity = identity;
+            slot.kind = kind;
+            slot.applied_progress = applied_progress;
+            self.reserve_cursor = (index + 1) % JOB_PROGRESS_PRESENTATION_CAPACITY;
+            Some(JobProgressPresentationToken { index, epoch: slot.epoch })
+        }
+
+        fn publish(&mut self, token: JobProgressPresentationToken) -> bool {
+            let Some(slot) = self.slots.get_mut(token.index) else { return false };
+            if slot.epoch != token.epoch || slot.state != JobProgressPresentationState::Reserved {
+                return false;
+            }
+            slot.state = JobProgressPresentationState::Ready;
+            true
+        }
+
+        fn cancel(&mut self, token: JobProgressPresentationToken) -> bool {
+            let Some(slot) = self.slots.get_mut(token.index) else { return false };
+            if slot.epoch != token.epoch || !matches!(slot.state, JobProgressPresentationState::Reserved | JobProgressPresentationState::Ready) {
+                return false;
+            }
+            slot.state = JobProgressPresentationState::Vacant;
+            true
+        }
+
+        fn can_cancel(&self, token: JobProgressPresentationToken) -> bool {
+            self.slots.get(token.index).is_some_and(|slot| slot.epoch == token.epoch && matches!(slot.state, JobProgressPresentationState::Reserved | JobProgressPresentationState::Ready))
+        }
+
+        fn take(&mut self) -> Option<JobProgressPresentationLease> {
+            let index = self.oldest_ready_index()?;
+            let slot = &mut self.slots[index];
+            slot.state = JobProgressPresentationState::CheckedOut;
+            Some(JobProgressPresentationLease { token: JobProgressPresentationToken { index, epoch: slot.epoch }, identity: slot.identity, kind: slot.kind, applied_progress: slot.applied_progress, terminal: false })
+        }
+
+        fn oldest_ready_index(&self) -> Option<usize> {
+            self.slots.iter().enumerate().filter(|(_, slot)| slot.state == JobProgressPresentationState::Ready).min_by_key(|(_, slot)| slot.admission_sequence).map(|(index, _)| index)
+        }
+
+        fn return_lease(&mut self, token: JobProgressPresentationToken) -> bool {
+            let Some(slot) = self.slots.get_mut(token.index) else { return false };
+            if slot.epoch != token.epoch || slot.state != JobProgressPresentationState::CheckedOut {
+                return false;
+            }
+            slot.state = JobProgressPresentationState::Ready;
+            true
+        }
+
+        fn presented(&mut self, token: JobProgressPresentationToken) -> bool {
+            let Some(slot) = self.slots.get_mut(token.index) else { return false };
+            if slot.epoch != token.epoch || slot.state != JobProgressPresentationState::CheckedOut {
+                return false;
+            }
+            slot.state = JobProgressPresentationState::Presented;
+            true
+        }
+
+        fn release_presented(&mut self, token: JobProgressPresentationToken) -> bool {
+            let Some(slot) = self.slots.get_mut(token.index) else { return false };
+            if slot.epoch != token.epoch || slot.state != JobProgressPresentationState::Presented {
+                return false;
+            }
+            slot.state = JobProgressPresentationState::Vacant;
+            true
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.slots.iter().all(|slot| slot.state == JobProgressPresentationState::Vacant)
+        }
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    struct JobProgressPresentationToken {
+        index: usize,
+        epoch: u64,
+    }
+
+    pub(crate) struct JobProgressPresentationLease {
+        token: JobProgressPresentationToken,
+        identity: JobProgressIdentity,
+        kind: JobProgressKind,
+        applied_progress: u64,
+        terminal: bool,
+    }
+
+    impl JobProgressPresentationLease {
+        pub(crate) fn visual(&self) -> (JobProgressKind, u64) {
+            (self.kind, self.applied_progress)
+        }
+
+        pub(crate) fn acknowledge_presented(&mut self) -> bool {
+            if self.terminal {
+                return false;
+            }
+            let admitted = KernelClient::get().try_acknowledge_job_progress(self.token);
+            self.terminal = admitted;
+            admitted
+        }
+    }
+
+    impl Drop for JobProgressPresentationLease {
+        fn drop(&mut self) {
+            if !self.terminal {
+                let returned = job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").return_lease(self.token);
+                assert!(returned, "job-progress presentation lease must return to its exact generation slot");
+            }
+        }
+    }
+
+    fn job_progress_presentation_bridge() -> &'static Mutex<JobProgressPresentationBridge> {
+        static BRIDGE: OnceLock<Mutex<JobProgressPresentationBridge>> = OnceLock::new();
+        BRIDGE.get_or_init(|| Mutex::new(JobProgressPresentationBridge::new()))
+    }
+
+    pub(crate) fn take_job_progress_presentation() -> Option<JobProgressPresentationLease> {
+        job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").take()
+    }
+
     fn next_seq() -> u64 {
         SEQ.fetch_add(1, Ordering::Relaxed)
     }
@@ -3062,6 +3240,12 @@ pub(crate) mod kernel_runtime {
         CloseRejectedEvents {
             owner: RejectedKernelEvents,
         },
+        CloseRealm {
+            owner: Arc<KernelCloseSubmission>,
+        },
+        AcknowledgeJobProgress {
+            token: JobProgressPresentationToken,
+        },
     }
 
     impl KernelRequest {
@@ -3071,7 +3255,7 @@ pub(crate) mod kernel_runtime {
                 Self::CloseRejectedCommandBuild { owner, .. } => (owner.remaining_pages(), owner.remaining_bytes()),
                 Self::CreateApp { owner } => (0, owner.remaining_bytes()),
                 Self::Exchange { event, .. } => (0, event.remaining_bytes()),
-                Self::DestroyApp { .. } | Self::CloseRejectedEvents { .. } => (0, 0),
+                Self::DestroyApp { .. } | Self::CloseRealm { .. } | Self::CloseRejectedEvents { .. } | Self::AcknowledgeJobProgress { .. } => (0, 0),
             }
         }
     }
@@ -3146,6 +3330,7 @@ pub(crate) mod kernel_runtime {
 
     struct KernelCloseSubmission {
         instance: u32,
+        realm: bool,
         generation: u64,
         queue: Arc<KernelRequestQueue>,
         pool: semio_framework_async::WorkerPool,
@@ -3205,7 +3390,8 @@ pub(crate) mod kernel_runtime {
             }
             let wake = Waker::from(self.clone());
             self.phase.store(KERNEL_CLOSE_QUEUED, std::sync::atomic::Ordering::Release);
-            match self.queue.try_push(KernelRequest::DestroyApp { owner: self.clone() }, Arc::new(ResponseSlot::default()), Some(&wake)) {
+            let request = if self.realm { KernelRequest::CloseRealm { owner: self.clone() } } else { KernelRequest::DestroyApp { owner: self.clone() } };
+            match self.queue.try_push(request, Arc::new(ResponseSlot::default()), Some(&wake)) {
                 Ok(()) => {}
                 Err((request, slot)) => {
                     drop(request);
@@ -3369,6 +3555,10 @@ pub(crate) mod kernel_runtime {
             KernelFuture { slot: Arc::new(ResponseSlot::default()), request: Some(request), queue: self.queue.clone() }
         }
 
+        fn try_acknowledge_job_progress(&self, token: JobProgressPresentationToken) -> bool {
+            self.queue.try_push(KernelRequest::AcknowledgeJobProgress { token }, Arc::new(ResponseSlot::default()), None).is_ok()
+        }
+
         pub(crate) async fn create_app(&self, wasm_path: PathBuf, plugin_id: String, app_id: String) -> Result<u32, String> {
             match self.submit(KernelRequest::CreateApp { owner: CreateAppRequestOwner::new(wasm_path, plugin_id, app_id) }).await {
                 KernelOutcome::Created(result) => result,
@@ -3379,6 +3569,22 @@ pub(crate) mod kernel_runtime {
         pub(crate) fn begin_destroy_app(&self, instance: u32) -> KernelCloseHandle {
             let owner = Arc::new(KernelCloseSubmission {
                 instance,
+                realm: false,
+                generation: next_seq(),
+                queue: self.queue.clone(),
+                pool: crate::renderer_worker_pool(),
+                registry: Arc::downgrade(&self.close_submissions),
+                phase: std::sync::atomic::AtomicU8::new(KERNEL_CLOSE_UNADMITTED),
+            });
+            let handle = KernelCloseHandle { owner };
+            let _ = handle.poll();
+            handle
+        }
+
+        pub(crate) fn begin_close_realm(&self) -> KernelCloseHandle {
+            let owner = Arc::new(KernelCloseSubmission {
+                instance: u32::MAX,
+                realm: true,
                 generation: next_seq(),
                 queue: self.queue.clone(),
                 pool: crate::renderer_worker_pool(),
@@ -3804,6 +4010,25 @@ pub(crate) mod kernel_runtime {
         node: UiNode,
     }
 
+    struct PendingJobProgressPresentation {
+        token: JobProgressPresentationToken,
+        receipt: JobProgressReceipt,
+    }
+
+    struct ClosingKernelApp {
+        instance: u32,
+        actors: [ActorId; JOB_PROGRESS_ACTIVE_CAPACITY],
+        actor_count: usize,
+        begin_cursor: usize,
+        unregister_cursor: usize,
+    }
+
+    impl ClosingKernelApp {
+        fn contains(&self, actor: ActorId) -> bool {
+            self.actors[..self.actor_count].contains(&actor)
+        }
+    }
+
     struct KernelPoolState {
         guest_runtime: Arc<GuestRuntimes>,
         /// 🎠️ terra-kernel-loop: the real multi-shard engine — replaces the single physical
@@ -3835,6 +4060,12 @@ pub(crate) mod kernel_runtime {
         queued_command_closes: semio_framework::kernel::CommandDriverRegistry<1>,
         rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry<1>,
         rejected_events: Option<RejectedKernelEvents>,
+        job_progress: JobProgressOverlayStore,
+        rejected_job_progress: [Option<JobProgressRejected>; 64],
+        pending_job_progress_presentations: [Option<PendingJobProgressPresentation>; JOB_PROGRESS_PRESENTATION_CAPACITY],
+        closing_apps: [Option<ClosingKernelApp>; JOB_PROGRESS_ACTIVE_CAPACITY],
+        fault_closing_actors: [Option<ActorId>; JOB_PROGRESS_ACTIVE_CAPACITY],
+        realm_progress_close_started: bool,
     }
 
     impl KernelPoolState {
@@ -3861,10 +4092,55 @@ pub(crate) mod kernel_runtime {
                 queued_command_closes: semio_framework::kernel::CommandDriverRegistry::new(),
                 rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry::new(),
                 rejected_events: None,
+                job_progress: JobProgressOverlayStore::new(),
+                rejected_job_progress: std::array::from_fn(|_| None),
+                pending_job_progress_presentations: std::array::from_fn(|_| None),
+                closing_apps: std::array::from_fn(|_| None),
+                fault_closing_actors: [None; JOB_PROGRESS_ACTIVE_CAPACITY],
+                realm_progress_close_started: false,
             }
         }
 
         fn command_maintenance_step(&mut self) -> bool {
+            if let Some(close_index) = self.fault_closing_actors.iter().position(Option::is_some) {
+                let actor = self.fault_closing_actors[close_index].expect("fault close actor");
+                if let Some(pending_index) = self.pending_job_progress_presentations.iter().position(|pending| pending.as_ref().is_some_and(|pending| pending.receipt.identity().actor == actor)) {
+                    let token = self.pending_job_progress_presentations[pending_index].as_ref().expect("fault pending presentation").token;
+                    if !job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").cancel(token) {
+                        return false;
+                    }
+                    let pending = self.pending_job_progress_presentations[pending_index].take().expect("cancelled fault presentation");
+                    if self.job_progress.abort(pending.receipt).is_err() {
+                        let _ = self.job_progress.begin_close_actor(actor);
+                    }
+                    return false;
+                }
+                if self.job_progress.begin_close_actor(actor).is_ok() {
+                    self.fault_closing_actors[close_index] = None;
+                }
+                return false;
+            }
+            if self.job_progress.has_close_work() {
+                let now = semio_framework_job::default_now_ms();
+                let mut preview_sequence = 0;
+                let mut context = semio_framework_job::StepContext::new(
+                    semio_framework_job::OperationId(0),
+                    semio_framework_job::Generation(0),
+                    semio_framework_job::StepBudget::new(1, now.saturating_add(semio_framework_job::MAINTENANCE_LANE_WALL_MS)),
+                    semio_framework_job::root_cancel_token(),
+                    semio_framework_job::default_now_ms,
+                    &mut preview_sequence,
+                );
+                let _ = self.job_progress.close_step(&mut context);
+                return !self.command_maintenance_pending();
+            }
+            if let Some(index) = self.rejected_job_progress.iter().position(Option::is_some) {
+                let rejected = self.rejected_job_progress[index].take().expect("fixed rejected job-progress slot is occupied");
+                if let Err(rejected) = self.job_progress.retain_rejected(rejected) {
+                    self.rejected_job_progress[index] = Some(rejected);
+                }
+                return !self.command_maintenance_pending();
+            }
             if self.retained_command_closes.has_close_work() {
                 let _ = self.retained_command_closes.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
                 return !self.retained_command_closes.has_close_work() && !self.queued_command_closes.has_close_work() && self.rejected_command_builds.terminal_is_empty();
@@ -3888,7 +4164,147 @@ pub(crate) mod kernel_runtime {
         }
 
         fn command_maintenance_pending(&self) -> bool {
-            self.retained_command_closes.has_close_work() || self.queued_command_closes.has_close_work() || !self.rejected_command_builds.terminal_is_empty() || self.rejected_events.is_some()
+            self.fault_closing_actors.iter().flatten().any(|actor| {
+                self.pending_job_progress_presentations
+                    .iter()
+                    .find(|pending| pending.as_ref().is_some_and(|pending| pending.receipt.identity().actor == *actor))
+                    .is_none_or(|pending| job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").can_cancel(pending.as_ref().expect("matching pending presentation").token))
+            }) || self.job_progress.has_close_work()
+                || self.rejected_job_progress.iter().any(Option::is_some)
+                || self.retained_command_closes.has_close_work()
+                || self.queued_command_closes.has_close_work()
+                || !self.rejected_command_builds.terminal_is_empty()
+                || self.rejected_events.is_some()
+        }
+
+        fn begin_fault_close(&mut self, actor: ActorId) {
+            if self.fault_closing_actors.iter().flatten().any(|closing| *closing == actor) {
+                return;
+            }
+            if let Some(slot) = self.fault_closing_actors.iter_mut().find(|slot| slot.is_none()) {
+                *slot = Some(actor);
+            } else {
+                self.job_progress.begin_close_all();
+            }
+        }
+
+        fn acknowledge_job_progress(&mut self, token: JobProgressPresentationToken) {
+            if !job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").presented(token) {
+                return;
+            }
+            let Some(pending) = self.pending_job_progress_presentations[token.index].take() else {
+                let _ = job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").release_presented(token);
+                return;
+            };
+            if pending.token != token {
+                self.pending_job_progress_presentations[token.index] = Some(pending);
+                return;
+            }
+            let receipt = pending.receipt;
+            if let Err((fault, receipt)) = self.job_progress.acknowledge(receipt) {
+                let actor = receipt.identity().actor;
+                if self.job_progress.abort(receipt).is_err() {
+                    let _ = self.job_progress.begin_close_actor(actor);
+                }
+                crate::log_debug(&format!("kernel: presented job-progress ACK failed closed: {fault}"));
+            }
+            let _ = job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").release_presented(token);
+        }
+
+        fn begin_job_progress(&mut self, actor: ActorId, turn: &JobTurn) -> Result<bool, String> {
+            let live = JobProgressLiveAuthority::new(turn.operation.operation, turn.operation.base_revision, turn.operation.generation);
+            if self.job_progress.live_authority(actor, turn.job) == Some(live) {
+                return Ok(false);
+            }
+            self.job_progress.begin_operation(actor, turn.job, live).map_err(|fault| fault.to_string())?;
+            Ok(true)
+        }
+
+        fn retain_job_progress_rejection(&mut self, rejected: JobProgressRejected) {
+            let rejected = match self.job_progress.retain_rejected(rejected) {
+                Ok(()) => return,
+                Err(rejected) => rejected,
+            };
+            let slot = self.rejected_job_progress.iter_mut().find(|slot| slot.is_none()).expect("one kernel decision cannot exceed the fixed 64-actor rejected-publication handback registry");
+            *slot = Some(rejected);
+        }
+
+        fn publish_job_progress(&mut self, actor: ActorId, authority: JobTurn, publication: JobPublication) {
+            let live = JobProgressLiveAuthority::new(authority.operation.operation, authority.operation.base_revision, authority.operation.generation);
+            let stable_identity_matches = authority.step_sequence == 0
+                && authority.operation.preview_sequence == 0
+                && authority.job == publication.turn.job
+                && authority.operation.operation == publication.turn.operation.operation
+                && authority.operation.base_revision == publication.turn.operation.base_revision
+                && authority.operation.generation == publication.turn.operation.generation;
+            if !stable_identity_matches {
+                self.retain_job_progress_rejection(JobProgressRejected::new(semio_framework_actor::JobProgressFault::Stale, publication));
+                return;
+            }
+            match self.job_progress.live_authority(actor, authority.job) {
+                Some(expected) if expected == live => {}
+                None => {
+                    if let Err(fault) = self.job_progress.begin_operation(actor, authority.job, live) {
+                        self.retain_job_progress_rejection(JobProgressRejected::new(fault, publication));
+                        return;
+                    }
+                }
+                Some(_) => {
+                    self.retain_job_progress_rejection(JobProgressRejected::new(semio_framework_actor::JobProgressFault::Stale, publication));
+                    return;
+                }
+            }
+            let now = semio_framework_job::default_now_ms();
+            let mut preview_sequence = publication.turn.operation.preview_sequence;
+            let mut context = semio_framework_job::StepContext::new(
+                semio_framework_job::OperationId(publication.turn.operation.operation),
+                semio_framework_job::Generation(publication.turn.operation.generation),
+                semio_framework_job::StepBudget::new(2, now.saturating_add(semio_framework_job::INTERACTIVE_LANE_WALL_MS)),
+                semio_framework_job::root_cancel_token(),
+                semio_framework_job::default_now_ms,
+                &mut preview_sequence,
+            );
+            let admission = match self.job_progress.preflight(&mut context, actor, &publication, live) {
+                Ok(admission) => admission,
+                Err(fault) => {
+                    self.retain_job_progress_rejection(JobProgressRejected::new(fault, publication));
+                    return;
+                }
+            };
+            let identity = JobProgressIdentity::from_publication(actor, &publication);
+            let kind = match &publication.outcome {
+                semio_framework_actor::JobStepOutcome::Yield => JobProgressKind::Yield,
+                semio_framework_actor::JobStepOutcome::PreviewReady { .. } => JobProgressKind::Preview,
+                semio_framework_actor::JobStepOutcome::CheckpointReady { .. } => JobProgressKind::Checkpoint,
+                semio_framework_actor::JobStepOutcome::Complete { .. } => JobProgressKind::CommitValidated,
+                semio_framework_actor::JobStepOutcome::Cancelled => JobProgressKind::Cancelled,
+                semio_framework_actor::JobStepOutcome::Fault { .. } => JobProgressKind::Fault,
+            };
+            let applied_progress = match &publication.outcome {
+                semio_framework_actor::JobStepOutcome::CheckpointReady { checkpoint } => checkpoint.applied_progress,
+                _ => publication.turn.step_sequence,
+            };
+            let Some(presentation_token) = job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").reserve(identity, kind, applied_progress) else {
+                self.retain_job_progress_rejection(JobProgressRejected::new(semio_framework_actor::JobProgressFault::Busy, publication));
+                return;
+            };
+            let receipt = match self.job_progress.publish_reserved(&mut context, admission, publication, live) {
+                Ok(receipt) => receipt,
+                Err(rejected) => {
+                    let _ = job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").cancel(presentation_token);
+                    self.retain_job_progress_rejection(rejected);
+                    return;
+                }
+            };
+            if self.pending_job_progress_presentations[presentation_token.index].is_some() || !job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").publish(presentation_token) {
+                let _ = job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").cancel(presentation_token);
+                let actor = receipt.identity().actor;
+                if self.job_progress.abort(receipt).is_err() {
+                    let _ = self.job_progress.begin_close_actor(actor);
+                }
+                return;
+            }
+            self.pending_job_progress_presentations[presentation_token.index] = Some(PendingJobProgressPresentation { token: presentation_token, receipt });
         }
 
         fn plugin_ordinal(&mut self, plugin_id: &str) -> u16 {
@@ -4027,25 +4443,93 @@ pub(crate) mod kernel_runtime {
             }
         }
 
-        async fn destroy_app(&mut self, instance: u32) {
+        async fn destroy_app_step(&mut self, instance: u32) -> bool {
             let _ = self.retained_command_closes.begin_close_key(u64::from(instance));
             let _ = self.queued_command_closes.begin_close_key(u64::from(instance));
-            if let Some(actor) = self.instances.remove(&instance) {
-                // 🧩️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): cascade
-                // teardown — `Kernel::deactivate` walks `actor`'s cascade subtree leaves-first and
-                // removes every extension from the KERNEL's own bookkeeping (mailbox/shard/failure
-                // state); each removed id ALSO needs its own `ParallelRuntime::unregister` to retire
-                // the shard-side `GuestInstance` — the two are separate teardown halves, matching
-                // `Kernel`'s own purity boundary (no transport inside the pure crate). Falls back to
-                // unregistering just `actor` if `Kernel::deactivate` errors (e.g. already gone) —
-                // the pre-existing single-actor behaviour this method had before this packet.
-                let removed = self.runtime.kernel_mut().deactivate(actor).await.unwrap_or_else(|_| vec![actor]);
-                for id in removed {
-                    self.runtime.unregister(id).await;
+            let close_index = self.closing_apps.iter().position(|slot| slot.as_ref().is_some_and(|close| close.instance == instance));
+            let close_index = match close_index {
+                Some(index) => index,
+                None => {
+                    let Some(actor) = self.instances.remove(&instance) else { return true };
+                    let removed = self.runtime.kernel_mut().deactivate(actor).await.unwrap_or_else(|_| vec![actor]);
+                    if removed.len() > JOB_PROGRESS_ACTIVE_CAPACITY {
+                        let _ = self.job_progress.begin_close_all();
+                        return false;
+                    }
+                    let Some(index) = self.closing_apps.iter().position(Option::is_none) else {
+                        let _ = self.job_progress.begin_close_all();
+                        return false;
+                    };
+                    let mut actors = [ActorId(0); JOB_PROGRESS_ACTIVE_CAPACITY];
+                    let actor_count = removed.len();
+                    actors[..actor_count].copy_from_slice(&removed);
+                    self.closing_apps[index] = Some(ClosingKernelApp { instance, actors, actor_count, begin_cursor: 0, unregister_cursor: 0 });
+                    return false;
                 }
+            };
+            let mut closing = self.closing_apps[close_index].take().expect("closing app slot");
+            if let Some(index) = self.pending_job_progress_presentations.iter().position(|pending| pending.as_ref().is_some_and(|pending| closing.contains(pending.receipt.identity().actor))) {
+                let token = self.pending_job_progress_presentations[index].as_ref().expect("pending presentation").token;
+                if !job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").cancel(token) {
+                    self.closing_apps[close_index] = Some(closing);
+                    return false;
+                }
+                let pending = self.pending_job_progress_presentations[index].take().expect("cancelled pending presentation");
+                let actor = pending.receipt.identity().actor;
+                if self.job_progress.abort(pending.receipt).is_err() {
+                    let _ = self.job_progress.begin_close_actor(actor);
+                }
+                self.closing_apps[close_index] = Some(closing);
+                return false;
+            }
+            if closing.begin_cursor < closing.actor_count {
+                let actor = closing.actors[closing.begin_cursor];
+                if self.job_progress.begin_close_actor(actor).is_ok() {
+                    closing.begin_cursor += 1;
+                }
+                self.closing_apps[close_index] = Some(closing);
+                return false;
+            }
+            if closing.unregister_cursor < closing.actor_count {
+                self.runtime.unregister(closing.actors[closing.unregister_cursor]).await;
+                closing.unregister_cursor += 1;
+                self.closing_apps[close_index] = Some(closing);
+                return false;
+            }
+            if closing.actors[..closing.actor_count].iter().any(|actor| !self.job_progress.actor_terminal_is_empty(*actor)) {
+                let _ = self.command_maintenance_step();
+                self.closing_apps[close_index] = Some(closing);
+                return false;
             }
             self.retained.retain(|(inst, _), _| *inst != instance);
             self.pending_rejections.retain(|(inst, _), _| *inst != instance);
+            true
+        }
+
+        fn close_realm_progress_step(&mut self) -> bool {
+            if let Some(index) = self.pending_job_progress_presentations.iter().position(Option::is_some) {
+                let token = self.pending_job_progress_presentations[index].as_ref().expect("realm pending presentation").token;
+                if !job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").cancel(token) {
+                    return false;
+                }
+                let pending = self.pending_job_progress_presentations[index].take().expect("cancelled realm presentation");
+                let actor = pending.receipt.identity().actor;
+                if self.job_progress.abort(pending.receipt).is_err() {
+                    let _ = self.job_progress.begin_close_actor(actor);
+                }
+                return false;
+            }
+            if !self.realm_progress_close_started {
+                self.job_progress.begin_close_all();
+                self.realm_progress_close_started = true;
+                return false;
+            }
+            if !self.job_progress.terminal_is_empty() || self.rejected_job_progress.iter().any(Option::is_some) || !job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").terminal_is_empty() {
+                let _ = self.command_maintenance_step();
+                return false;
+            }
+            self.realm_progress_close_started = false;
+            true
         }
 
         async fn exchange(&mut self, instance: u32, mut events: Vec<Event>) -> Result<ExchangeOutcome, String> {
@@ -4163,7 +4647,18 @@ pub(crate) mod kernel_runtime {
                 }
             }
             for envelope in &envelopes {
+                let began_job = match &envelope.payload {
+                    Payload::JobStep { turn } => self.begin_job_progress(actor, turn)?,
+                    Payload::Cancel { .. } => {
+                        self.job_progress.begin_close_actor(actor).map_err(|fault| fault.to_string())?;
+                        false
+                    }
+                    _ => false,
+                };
                 if !matches!(self.runtime.submit(envelope).await, Backpressure::Accept) {
+                    if began_job {
+                        let _ = self.job_progress.begin_close_actor(actor);
+                    }
                     crate::log_debug(&format!("kernel: run_turn submit for actor {} was not Accept-ed (mailbox pressure)", actor.0));
                 }
             }
@@ -4179,15 +4674,16 @@ pub(crate) mod kernel_runtime {
                 if outcomes.len() < decision.run.len() {
                     return Err("kernel: shard produced no outcome for this turn".to_string());
                 }
-                for outcome in &outcomes {
+                for outcome in outcomes {
                     match outcome {
                         ShardOutcome::Turn { actor: reported, result } => {
-                            let decoded = decode_actor_turn_result(result)?;
-                            let _ = self.runtime.complete_actor(ActorId(*reported), result, self.now_ms).await;
-                            if *reported == actor.0 {
+                            let decoded = decode_actor_turn_result(&result)?;
+                            let _ = self.runtime.complete_actor(ActorId(reported), &result, self.now_ms).await;
+                            if reported == actor.0 {
                                 turn_result = Some(decoded);
                             }
                         }
+                        ShardOutcome::Job { actor: reported, authority, publication } => self.publish_job_progress(ActorId(reported), authority, publication),
                         // 🎠️ terra-kernel-loop: a trap must ALSO reach `Kernel::complete` — otherwise
                         // the failure ladder (`FailureState::on_signal`) never sees it, staying just as
                         // inert for the trap path as `Kernel::complete` being uncalled at all used to
@@ -4196,24 +4692,25 @@ pub(crate) mod kernel_runtime {
                         // is synthesized from its `message` — the same shape `apply_turn_result`'s
                         // caller already treats a fault as `TurnStatus::Faulted` for retry purposes.
                         ShardOutcome::Fault { actor: reported, message } => {
+                            self.begin_fault_close(ActorId(reported));
                             let faulted = semio_framework_actor::TurnResult {
                                 ui_patches: Vec::new(),
                                 effects: Vec::new(),
                                 command_ingress: Vec::new(),
                                 next_wake: None,
-                                status: semio_framework_actor::TurnStatus::Faulted { detail: message.clone().into_bytes() },
+                                status: semio_framework_actor::TurnStatus::Faulted { detail: message.as_bytes().to_vec() },
                                 usage: semio_framework_actor::Usage::default(),
                             };
-                            let _ = self.runtime.complete_actor(ActorId(*reported), &faulted, self.now_ms).await;
-                            if *reported == actor.0 {
-                                fault = Some(message.clone());
+                            let _ = self.runtime.complete_actor(ActorId(reported), &faulted, self.now_ms).await;
+                            if reported == actor.0 {
+                                fault = Some(message);
                             }
                         }
                         // 🚧️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (K1, landed mid-session):
-                        // `ShardOutcome` grew `Job`/`Checkpoint`/`Resumed`/`Cancelled` for job-stepping
-                        // and the newly-wired `Payload::Suspend`/`Resume`/`Cancel` dispatch. This
-                        // kernel pool state machine never sends those payloads (only `run_turn`'s own
-                        // `Payload::Event`), so any of them reaching here — for `actor` OR any other
+                        // `ShardOutcome` also carries checkpoint/resume/cancel control responses.
+                        // This kernel pool state machine does not consume those control responses;
+                        // a `Job` publication is handled by the explicit owner-moving arm above.
+                        // Any remaining control response reaching here — for `actor` OR any other
                         // actor `Kernel::tick` happened to grant in the SAME call — is silently
                         // ignored rather than aborting an otherwise-successful turn; unlike the
                         // ORIGINAL `Fault`/`Job` handling this replaces, this loop may observe outcomes
@@ -4410,6 +4907,10 @@ pub(crate) mod kernel_runtime {
                     owner.finish(KernelCloseStatus::Fault);
                     (true, 1, 0, 0)
                 }
+                KernelRequest::CloseRealm { owner } => {
+                    owner.finish(KernelCloseStatus::Fault);
+                    (true, 1, 0, 0)
+                }
                 KernelRequest::Exchange { event, .. } => {
                     let (terminal, processed, released) = event.close_step(maximum_bytes);
                     (terminal, processed, released, 0)
@@ -4417,6 +4918,10 @@ pub(crate) mod kernel_runtime {
                 KernelRequest::CloseRejectedEvents { owner } => {
                     let (terminal, processed) = owner.close_step();
                     (terminal, processed, 0, 0)
+                }
+                KernelRequest::AcknowledgeJobProgress { token } => {
+                    let returned = job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").return_lease(*token);
+                    (returned, usize::from(returned), 0, 0)
                 }
             };
             state.command_pages -= page_released;
@@ -4512,8 +5017,25 @@ pub(crate) mod kernel_runtime {
                     KernelOutcome::Created(state.create_app(wasm_path, plugin_id, app_id).await)
                 }
                 KernelRequest::DestroyApp { owner } => {
-                    state.destroy_app(owner.instance).await;
-                    owner.finish(KernelCloseStatus::Complete);
+                    if state.destroy_app_step(owner.instance).await {
+                        owner.finish(KernelCloseStatus::Complete);
+                    } else {
+                        owner.phase.store(KERNEL_CLOSE_READY, std::sync::atomic::Ordering::Release);
+                        let _ = owner.try_schedule();
+                    }
+                    continue;
+                }
+                KernelRequest::CloseRealm { owner } => {
+                    if state.close_realm_progress_step() {
+                        owner.finish(KernelCloseStatus::Complete);
+                    } else {
+                        owner.phase.store(KERNEL_CLOSE_READY, std::sync::atomic::Ordering::Release);
+                        let _ = owner.try_schedule();
+                    }
+                    continue;
+                }
+                KernelRequest::AcknowledgeJobProgress { token } => {
+                    state.acknowledge_job_progress(token);
                     continue;
                 }
                 KernelRequest::Exchange { instance, event } => KernelOutcome::Exchanged(state.exchange(instance, vec![event.into_event()]).await),
@@ -4537,10 +5059,65 @@ pub(crate) mod kernel_runtime {
     mod semantic_document_tests {
         use super::*;
 
+        #[test]
+        fn mounted_job_progress_presentation_bridge_is_fixed_fifo_and_generation_checked() {
+            let mut bridge = JobProgressPresentationBridge::new();
+            let identity = |ordinal: usize| JobProgressIdentity { actor: ActorId(ordinal as u64 + 1), job: 7, operation: ordinal as u64 + 11, base_revision: 13, generation: 17, step_sequence: 0, preview_sequence: 1 };
+            let mut tokens = Vec::new();
+            for ordinal in 0..JOB_PROGRESS_PRESENTATION_CAPACITY {
+                let token = bridge.reserve(identity(ordinal), JobProgressKind::Preview, ordinal as u64).expect("fixed presentation slot");
+                assert!(bridge.publish(token));
+                tokens.push(token);
+            }
+            assert!(bridge.reserve(identity(999), JobProgressKind::Preview, 0).is_none(), "capacity +1 must reject before publication ownership moves");
+            for (ordinal, token) in tokens.into_iter().enumerate() {
+                let mut lease = bridge.take().expect("FIFO presentation lease");
+                assert_eq!(lease.identity, identity(ordinal));
+                assert_eq!(lease.token, token);
+                assert!(bridge.presented(token));
+                lease.terminal = true;
+                assert!(bridge.release_presented(token));
+                assert!(!bridge.release_presented(token), "duplicate generation release is rejected");
+            }
+            assert!(bridge.take().is_none());
+            assert!(bridge.terminal_is_empty(), "realm witness requires every fixed presentation slot to be vacant");
+        }
+
+        #[test]
+        fn cancelled_head_does_not_strand_later_ready_presentations() {
+            let mut bridge = JobProgressPresentationBridge::new();
+            let identity = |actor: u64| JobProgressIdentity { actor: ActorId(actor), job: 7, operation: actor + 11, base_revision: 13, generation: 17, step_sequence: 0, preview_sequence: 1 };
+            let head = bridge.reserve(identity(1), JobProgressKind::Preview, 1).expect("head");
+            let middle = bridge.reserve(identity(2), JobProgressKind::Preview, 2).expect("middle");
+            let tail = bridge.reserve(identity(3), JobProgressKind::Preview, 3).expect("tail");
+            assert!(bridge.publish(head));
+            assert!(bridge.publish(middle));
+            assert!(bridge.publish(tail));
+            assert!(bridge.cancel(head));
+
+            let mut returned = bridge.take().expect("cancelled head is skipped");
+            assert_eq!(returned.token, middle);
+            assert!(bridge.return_lease(middle));
+            returned.terminal = true;
+            let mut middle_lease = bridge.take().expect("returned oldest lease retains admitted order");
+            assert_eq!(middle_lease.token, middle);
+            assert!(bridge.presented(middle));
+            middle_lease.terminal = true;
+            assert!(bridge.release_presented(middle));
+
+            let mut tail_lease = bridge.take().expect("tail remains reachable after cancelled hole");
+            assert_eq!(tail_lease.token, tail);
+            assert!(bridge.presented(tail));
+            tail_lease.terminal = true;
+            assert!(bridge.release_presented(tail));
+            assert!(bridge.terminal_is_empty());
+        }
+
         fn destroy_request(instance: u32) -> KernelRequest {
             KernelRequest::DestroyApp {
                 owner: Arc::new(KernelCloseSubmission {
                     instance,
+                    realm: false,
                     generation: u64::from(instance) + 1,
                     queue: Arc::new(KernelRequestQueue::default()),
                     pool: crate::renderer_worker_pool(),
@@ -4553,6 +5130,7 @@ pub(crate) mod kernel_runtime {
         fn close_submission(registry: &Arc<KernelCloseSubmissionRegistry>, instance: u32, generation: u64) -> Arc<KernelCloseSubmission> {
             Arc::new(KernelCloseSubmission {
                 instance,
+                realm: false,
                 generation,
                 queue: Arc::new(KernelRequestQueue::default()),
                 pool: crate::renderer_worker_pool(),
@@ -7602,6 +8180,8 @@ pub(crate) struct AppFrameBuild {
     theme_dark: bool,
     fullscreen: Option<bool>,
     cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>,
+    #[cfg(not(target_arch = "wasm32"))]
+    job_progress: Option<kernel_runtime::JobProgressPresentationLease>,
 }
 
 struct AppFrameAfterChrome {
@@ -7610,6 +8190,8 @@ struct AppFrameAfterChrome {
     deferred_actions: Vec<ActionDescriptor>,
     fullscreen: Option<bool>,
     cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>,
+    #[cfg(not(target_arch = "wasm32"))]
+    job_progress: Option<kernel_runtime::JobProgressPresentationLease>,
     retirement: Option<AppFramePreparation>,
 }
 
@@ -7633,7 +8215,16 @@ impl AppFrameAfterChrome {
                 }
                 return true;
             };
-            let build = AppFrameBuild { input, engine_packets: self.engine_packets.take().unwrap_or_default(), cursor: SemioCursor::Default, theme_dark: false, fullscreen: self.fullscreen.take(), cursor_wake: self.cursor_wake.take() };
+            let build = AppFrameBuild {
+                input,
+                engine_packets: self.engine_packets.take().unwrap_or_default(),
+                cursor: SemioCursor::Default,
+                theme_dark: false,
+                fullscreen: self.fullscreen.take(),
+                cursor_wake: self.cursor_wake.take(),
+                #[cfg(not(target_arch = "wasm32"))]
+                job_progress: self.job_progress.take(),
+            };
             self.retirement = Some(build.into_preparation());
             return false;
         }
@@ -8121,7 +8712,12 @@ impl AppFrameTransaction {
                 let cursor = self.raster_uploads.get_or_insert_with(Default::default);
                 match cursor.step() {
                     scenes::PendingRasterUploadStep::Pending => AppFrameTransactionStep::Pending,
-                    scenes::PendingRasterUploadStep::Upload(mut producer) => {
+                    scenes::PendingRasterUploadStep::Upload(checked_out) => {
+                        let Ok(mut producer) = checked_out.take() else {
+                            runtime.record_frame_fault("frame raster producer checkout was stale");
+                            self.phase = AppFrameTransactionPhase::Terminal;
+                            return AppFrameTransactionStep::Fault;
+                        };
                         let partial = self.after_chrome.as_mut().expect("chrome phase precedes raster uploads");
                         let input = partial.resource_input.as_mut().expect("chrome resource input");
                         if input.raster_producers.len().saturating_add(input.uploads.len()) >= input.limits.max_upload_items {
@@ -8222,6 +8818,8 @@ pub(crate) struct AppFramePresentation {
     theme_dark: bool,
     fullscreen: Option<bool>,
     cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>,
+    #[cfg(not(target_arch = "wasm32"))]
+    job_progress: Option<kernel_runtime::JobProgressPresentationLease>,
 }
 
 impl AppFrameBuild {
@@ -8233,6 +8831,8 @@ impl AppFrameBuild {
             theme_dark: self.theme_dark,
             fullscreen: self.fullscreen,
             cursor_wake: self.cursor_wake,
+            #[cfg(not(target_arch = "wasm32"))]
+            job_progress: self.job_progress,
             terminal: false,
         }
     }
@@ -8245,6 +8845,8 @@ pub(crate) struct AppFramePreparation {
     theme_dark: bool,
     fullscreen: Option<bool>,
     cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>,
+    #[cfg(not(target_arch = "wasm32"))]
+    job_progress: Option<kernel_runtime::JobProgressPresentationLease>,
     terminal: bool,
 }
 
@@ -8271,7 +8873,16 @@ impl AppFramePreparation {
             return None;
         }
         let packet = self.job.take_packet()?;
-        Some(AppFramePresentation { packet: Some(packet), engine_packets: self.engine_packets.take()?, cursor: self.cursor, theme_dark: self.theme_dark, fullscreen: self.fullscreen, cursor_wake: self.cursor_wake.take() })
+        Some(AppFramePresentation {
+            packet: Some(packet),
+            engine_packets: self.engine_packets.take()?,
+            cursor: self.cursor,
+            theme_dark: self.theme_dark,
+            fullscreen: self.fullscreen,
+            cursor_wake: self.cursor_wake.take(),
+            #[cfg(not(target_arch = "wasm32"))]
+            job_progress: self.job_progress.take(),
+        })
     }
 
     pub(crate) fn close_step(&mut self) -> bool {
@@ -8280,6 +8891,10 @@ impl AppFramePreparation {
             return false;
         }
         if self.cursor_wake.take().is_some() {
+            return false;
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        if self.job_progress.take().is_some() {
             return false;
         }
         let Some(packets) = self.engine_packets.as_mut() else { return true };
@@ -8295,7 +8910,16 @@ impl AppFramePreparation {
     }
 
     pub(crate) fn terminal_is_empty(&self) -> bool {
-        self.job.terminal_is_empty() && self.engine_packets.is_none() && self.cursor_wake.is_none()
+        self.job.terminal_is_empty() && self.engine_packets.is_none() && self.cursor_wake.is_none() && {
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                self.job_progress.is_none()
+            }
+            #[cfg(target_arch = "wasm32")]
+            {
+                true
+            }
+        }
     }
 }
 
@@ -8322,6 +8946,7 @@ enum AppPresentPhase {
     Stage,
     Render,
     Acknowledge,
+    ProgressAcknowledge,
     Aborted,
     Directives,
 }
@@ -8378,11 +9003,24 @@ impl AppFramePresentation {
         if self.cursor_wake.take().is_some() {
             return false;
         }
+        #[cfg(not(target_arch = "wasm32"))]
+        if self.job_progress.take().is_some() {
+            return false;
+        }
         true
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.packet.is_none() && self.engine_packets.is_empty() && self.cursor_wake.is_none()
+        self.packet.is_none() && self.engine_packets.is_empty() && self.cursor_wake.is_none() && {
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                self.job_progress.is_none()
+            }
+            #[cfg(target_arch = "wasm32")]
+            {
+                true
+            }
+        }
     }
 }
 
@@ -8780,6 +9418,16 @@ impl AppPresenter {
                 self.raster_operation_authority.release(raster_witness).map_err(str::to_owned)?;
                 cursor.raster_witness = None;
                 self.retirement = Some(AppPresentedRetirement::commit(replacement.take_previous(), raster_witness));
+                cursor.phase = AppPresentPhase::ProgressAcknowledge;
+                Ok(AppPresentStep::Pending)
+            }
+            AppPresentPhase::ProgressAcknowledge => {
+                #[cfg(not(target_arch = "wasm32"))]
+                if let Some(progress) = cursor.frame.job_progress.as_mut() {
+                    if !progress.acknowledge_presented() {
+                        return Ok(AppPresentStep::Pending);
+                    }
+                }
                 cursor.phase = AppPresentPhase::Fullscreen;
                 Ok(AppPresentStep::Pending)
             }
@@ -9030,6 +9678,18 @@ impl AppRuntime {
             let interaction = interaction.as_mut().expect("checked interaction availability");
             interaction.shell.render_chrome(draw, overlay, atlas, icons, &mut interaction.input, &interaction.theme, &mut engine_resources, &mut world_resources);
         }
+        #[cfg(not(target_arch = "wasm32"))]
+        let job_progress = kernel_runtime::take_job_progress_presentation();
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(progress) = job_progress.as_ref() {
+            let (kind, applied) = progress.visual();
+            let color = match kind {
+                semio_framework_actor::JobProgressKind::CommitValidated => ui_wgpu::wgpu::Rgba::from_srgb8(36, 158, 91, 255),
+                semio_framework_actor::JobProgressKind::Cancelled | semio_framework_actor::JobProgressKind::Fault => ui_wgpu::wgpu::Rgba::from_srgb8(218, 74, 74, 255),
+                _ => ui_wgpu::wgpu::Rgba::from_srgb8(67, 132, 245, 255),
+            };
+            self.overlay.push_solid_overlay([12.0, 12.0, 24.0 + applied.min(100) as f32 * 2.0, 4.0], color);
+        }
         let engine_packets = engine_resources.take_packets();
         let cursor_wake = match world_resources.take_cursor_wake() {
             Ok(token) => token,
@@ -9043,7 +9703,16 @@ impl AppRuntime {
         if let Some(upload) = icon_upload {
             resource_input.uploads.push(upload);
         }
-        AppFrameAfterChrome { resource_input: Some(resource_input), engine_packets: Some(engine_packets), deferred_actions, fullscreen, cursor_wake, retirement: None }
+        AppFrameAfterChrome {
+            resource_input: Some(resource_input),
+            engine_packets: Some(engine_packets),
+            deferred_actions,
+            fullscreen,
+            cursor_wake,
+            #[cfg(not(target_arch = "wasm32"))]
+            job_progress,
+            retirement: None,
+        }
     }
 
     fn frame_after_input(&mut self, handle: &AppHandle, mut partial: AppFrameAfterChrome) -> AppFrameBuild {
@@ -9052,6 +9721,8 @@ impl AppRuntime {
         let engine_packets = partial.engine_packets.take().expect("chrome engine packets");
         let fullscreen = partial.fullscreen.take();
         let cursor_wake = partial.cursor_wake.take();
+        #[cfg(not(target_arch = "wasm32"))]
+        let job_progress = partial.job_progress.take();
         let flush_tutorial = !self.shell.tutorial_pending_document_ops.is_empty();
         if self.atlas.take_dirty() {
             resource_input.uploads.push(ui_wgpu::wgpu::PreparedRenderUpload::GlyphAtlas { pixels: self.atlas.pixels.clone(), width: self.atlas.width, height: self.atlas.height });
@@ -9077,7 +9748,16 @@ impl AppRuntime {
         resource_input.draw = std::mem::take(&mut self.draw);
         resource_input.overlay = Some(std::mem::take(&mut self.overlay));
         resource_input.time_seconds = time_seconds;
-        let frame = AppFrameBuild { input: resource_input, engine_packets, cursor, theme_dark: self.theme_dark, fullscreen, cursor_wake };
+        let frame = AppFrameBuild {
+            input: resource_input,
+            engine_packets,
+            cursor,
+            theme_dark: self.theme_dark,
+            fullscreen,
+            cursor_wake,
+            #[cfg(not(target_arch = "wasm32"))]
+            job_progress,
+        };
         #[cfg(target_arch = "wasm32")]
         let pump_sync = false;
         if pump_sync || !deferred_actions.is_empty() || flush_tutorial {

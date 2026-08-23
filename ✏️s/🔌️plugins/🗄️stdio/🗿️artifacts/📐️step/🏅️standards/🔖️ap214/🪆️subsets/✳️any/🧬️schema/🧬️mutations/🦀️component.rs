@@ -58,6 +58,24 @@ pub enum StepMutation {
         arg_index: usize,
     },
 }
+
+/// 📇️ Kebab-case spelling of every `StepMutation` variant, in declaration order -- the exhaustive
+/// mutation catalog `../🧪️oracle/🔣️component.json`'s `kinds` array is required to match verbatim
+/// (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest; the
+/// framework never parses Rust to check it itself).
+pub const KINDS: &[&str] = &[
+    "no-mutation",
+    "set-snapshot",
+    "set-file-description",
+    "set-file-name",
+    "set-file-schema",
+    "insert-entity",
+    "remove-entity",
+    "set-entity-name",
+    "set-entity-arg",
+    "insert-entity-arg",
+    "remove-entity-arg",
+];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -558,6 +576,33 @@ mod tests {
             let encoded = mutation.encode_op().unwrap_or_else(|e| panic!("encode_op({mutation:?}) failed: {e}"));
             let decoded = StepMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
+        }
+    }
+
+    /// 🧪️ Wave-7 gate: `KINDS` must match the enum's own variants, in declaration order, and its
+    /// spellings must match `print_op`'s own keyword for each — the two lists the mutation catalog
+    /// (`../🧪️oracle/🔣️component.json`) and the feature file are checked against never drift apart.
+    #[semio_framework_async_macros::async_test]
+    async fn kinds_const_matches_enum_variants_in_declaration_order() {
+        let base = base_snapshot();
+        let one_per_variant = vec![
+            StepMutation::NoMutation,
+            StepMutation::SetSnapshot { snapshot: base.clone() },
+            StepMutation::SetFileDescription { file_description: StepFileDescription::default() },
+            StepMutation::SetFileName { file_name: StepFileName::default() },
+            StepMutation::SetFileSchema { file_schema: StepFileSchema::default() },
+            StepMutation::InsertEntity { index: 0, entity: entity(50, "NEW", vec![]) },
+            StepMutation::RemoveEntity { id: 2 },
+            StepMutation::SetEntityName { id: 1, name: "RENAMED".into() },
+            StepMutation::SetEntityArg { id: 1, arg_index: 1, value: SV::Real(9.0) },
+            StepMutation::InsertEntityArg { id: 1, arg_index: 2, value: SV::Enum("T".into()) },
+            StepMutation::RemoveEntityArg { id: 1, arg_index: 0 },
+        ];
+        assert_eq!(one_per_variant.len(), KINDS.len(), "one_per_variant must cover every KINDS entry exactly once");
+        for (mutation, kind) in one_per_variant.iter().zip(KINDS.iter()) {
+            let printed = mutation.print_op();
+            let keyword = printed.split(' ').next().unwrap_or(&printed);
+            assert_eq!(keyword, *kind, "KINDS order must match the enum's own OpText keyword order for {mutation:?}");
         }
     }
 }

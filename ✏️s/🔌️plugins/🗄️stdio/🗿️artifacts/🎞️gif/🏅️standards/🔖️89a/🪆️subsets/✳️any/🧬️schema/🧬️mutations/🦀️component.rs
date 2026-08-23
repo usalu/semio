@@ -108,6 +108,86 @@ pub enum GifMutation {
 }
 //#endregion 🔖️Mutations
 
+//#region 🔖️Kinds
+impl GifMutation {
+    /// 🏷️ Kebab-case kind spelling — the exact vocabulary `.../🧪️oracle/🔣️component.json`'s
+    /// `mutationCatalogs[].kinds` declares and the exhaustive mutation test case's Scenario Outline
+    /// row ids equal. Hand-matched (never derived) so `kinds_matches_every_variant_and_manifest`
+    /// below actually catches drift instead of restating the enum.
+    pub fn kind(&self) -> &'static str {
+        match self {
+            GifMutation::NoMutation => "no-mutation",
+            GifMutation::SetSnapshot { .. } => "set-snapshot",
+            GifMutation::SetScreenSize { .. } => "set-screen-size",
+            GifMutation::SetGlobalColorTable { .. } => "set-global-color-table",
+            GifMutation::SetBackgroundColorIndex { .. } => "set-background-color-index",
+            GifMutation::SetPixelAspectRatio { .. } => "set-pixel-aspect-ratio",
+            GifMutation::SetLoopCount { .. } => "set-loop-count",
+            GifMutation::InsertFrame { .. } => "insert-frame",
+            GifMutation::RemoveFrame { .. } => "remove-frame",
+            GifMutation::MoveFrame { .. } => "move-frame",
+            GifMutation::SetFrameGeometry { .. } => "set-frame-geometry",
+            GifMutation::SetFramePixels { .. } => "set-frame-pixels",
+            GifMutation::SetFrameInterlace { .. } => "set-frame-interlace",
+            GifMutation::SetFrameDelay { .. } => "set-frame-delay",
+            GifMutation::SetFrameDisposal { .. } => "set-frame-disposal",
+            GifMutation::SetFrameTransparency { .. } => "set-frame-transparency",
+            GifMutation::SetFrameUserInput { .. } => "set-frame-user-input",
+            GifMutation::InsertComment { .. } => "insert-comment",
+            GifMutation::RemoveComment { .. } => "remove-comment",
+            GifMutation::AddAppExtension { .. } => "add-app-extension",
+            GifMutation::RemoveAppExtension { .. } => "remove-app-extension",
+        }
+    }
+}
+
+/// 🏷️ Every declared kind, kebab-case — mirrors the catalog's `mutationCatalogs[].kinds` exactly.
+pub const KINDS: &[&str] = &[
+    "no-mutation",
+    "set-snapshot",
+    "set-screen-size",
+    "set-global-color-table",
+    "set-background-color-index",
+    "set-pixel-aspect-ratio",
+    "set-loop-count",
+    "insert-frame",
+    "remove-frame",
+    "move-frame",
+    "set-frame-geometry",
+    "set-frame-pixels",
+    "set-frame-interlace",
+    "set-frame-delay",
+    "set-frame-disposal",
+    "set-frame-transparency",
+    "set-frame-user-input",
+    "insert-comment",
+    "remove-comment",
+    "add-app-extension",
+    "remove-app-extension",
+];
+
+#[cfg(test)]
+mod kinds_tests {
+    use super::*;
+
+    /// 🧪️ Keeps the declaration honest: `KINDS` must equal every variant's `kind()` (via
+    /// `demo_mutation_cases()`, which already covers all 21 variants) with none missing or stray,
+    /// and the oracle catalog manifest must declare every one of them — the framework never parses
+    /// Rust, so this is the only thing that can catch the two drifting apart.
+    #[semio_framework_async_macros::async_test]
+    async fn kinds_matches_every_variant_and_manifest() {
+        let from_variants: std::collections::BTreeSet<&str> = demo_mutation_cases().iter().map(GifMutation::kind).collect();
+        let from_kinds: std::collections::BTreeSet<&str> = KINDS.iter().copied().collect();
+        assert_eq!(from_variants, from_kinds, "KINDS must equal every GifMutation variant's kind()");
+        assert_eq!(KINDS.len(), 21, "KINDS must list exactly the declared 21 kinds");
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        for kind in KINDS {
+            assert!(manifest.contains(&format!("\"{kind}\"")), "oracle catalog manifest must declare kind {kind:?}");
+        }
+    }
+}
+//#endregion 🔖️Kinds
+
 /// 🧪️ P2-FG2: representative `GifMutation` (89a) cases for `ops_grammar_conformance_law`/
 /// `protocol_walk_law` (`../../../../⚙️engine/🦀️component.rs`'s `conformance_laws` module) —
 /// every one of the 21 real variants, incl. `Some`/`None` shapes of every `Option<T>` field

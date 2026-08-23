@@ -1,0 +1,39 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution to the repository test platform — the STL ascii `any` mutation vocabulary and the reference implementation that exercises it. The shared stdio manifest already registers `stl-io` under the `stl-mesh` capability for creation/projection; that entry cannot cover mutation because it never declared the capability, so this subset registers its own oracle id against the SAME package for the `stl-ascii-mutate` capability instead of reusing the shared one (would fail the contract with oracle-capability-mismatch).",
+  "oracles": [
+    {
+      "id": "stl-io-ascii-mutate",
+      "ecosystem": "rust",
+      "package": "stl_io",
+      "version": "0.8",
+      "capabilities": [
+        "stl-ascii-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-mesh-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/hmeyer/stl_io",
+      "rationale": "The reference binary/ASCII STL reader of the Rust ecosystem, used here to perform every declared `StlMutation` kind independently of this repository's own codec by round-tripping the triangle soup through `IndexedMesh`/`write_stl`. `stl_io` 0.8's own top-level doc comment states 'Writing is limited to binary STL' — confirmed in its source (`writer.rs` hardcodes a zeroed 80-byte header) — so it can express neither an ASCII body nor the solid name in either direction. `set-solid-name`, the one declared kind whose whole payload IS that name, is therefore applied as a direct ASCII header/trailer substitution on the same real document instead of routing through `stl_io`; the other 6 kinds round-trip through it unmodified. Comparison is projection-based (`semantic-mesh-v1`'s resolved-corner triangle soup), so the byte FORM the oracle emits never has to match the subject's own ASCII output.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "stl-ascii-any",
+      "capability": "stl-ascii-mutate",
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "set-solid-name",
+        "insert-triangle",
+        "remove-triangle",
+        "set-triangle-normal",
+        "set-triangle-vertices"
+      ]
+    }
+  ]
+}

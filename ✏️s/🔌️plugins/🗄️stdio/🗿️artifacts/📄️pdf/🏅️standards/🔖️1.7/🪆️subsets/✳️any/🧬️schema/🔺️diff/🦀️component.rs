@@ -1315,6 +1315,32 @@ pub fn diff_append_page_content(base: &PdfSnapshot, index: usize, text: &str) ->
     };
     PdfDiff { pages: Some(PdfPagesDiff { modified: vec![PdfPageModified { index, diff: PdfPageDiff { text: Some(new_text), ..Default::default() } }], ..Default::default() }), ..Default::default() }
 }
+/// ✏️️ Replaces page `index`'s authoring text outright (unlike `AppendPageContent`, no read of the
+/// prior text is needed to build the FORWARD diff -- only its `inverse` reads `base`).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_page_content(index: usize, text: &str) -> PdfDiff {
+    PdfDiff { pages: Some(PdfPagesDiff { modified: vec![PdfPageModified { index, diff: PdfPageDiff { text: Some(text.to_string()), ..Default::default() } }], ..Default::default() }), ..Default::default() }
+}
+/// 🔄️ Sets page `index`'s resolved `/Rotate` value (reuses `PdfPageDiff::rotate`, already carried
+/// for `SetSnapshot`'s own sparse `between()` diffing -- no new diff field needed).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_set_page_rotation(index: usize, rotation: i32) -> PdfDiff {
+    PdfDiff { pages: Some(PdfPagesDiff { modified: vec![PdfPageModified { index, diff: PdfPageDiff { rotate: Some(rotation), ..Default::default() } }], ..Default::default() }), ..Default::default() }
+}
+/// 🔀️ Moves the page at BASE-state index `from` to FINAL-state index `to` -- `removed`/`added`
+/// compose the move (no dedicated "moved" slot on `PdfPagesDiff`), same shape as
+/// `PptxMutation::MoveSlide`'s own `diff_move_slide` over `PptxSlidesDiff`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn diff_move_page(base: &PdfSnapshot, from: usize, to: usize) -> PdfDiff {
+    let Some(page) = base.pages.get(from) else { return PdfDiff::default() };
+    // 🧭️ `to` is clamped to the post-removal length (same guard `PptxMutation::MoveSlide`'s own
+    // `diff_move_slide` needs -- `apply_pages_diff`'s `Vec::insert` panics past that bound).
+    let final_to = to.min(base.pages.len().saturating_sub(1));
+    if from == final_to {
+        return PdfDiff::default();
+    }
+    PdfDiff { pages: Some(PdfPagesDiff { removed: vec![from], added: vec![PdfPageAdded { index: final_to, page: page.clone() }], ..Default::default() }), ..Default::default() }
+}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff_set_info(info: PdfInfo) -> PdfDiff {
     PdfDiff { info: Some(info), ..Default::default() }

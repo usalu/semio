@@ -1,0 +1,9 @@
+4 high-priority breach(es) across 1 rule(s):
+      4  testing/dependency
+
+  testing/dependency  ✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️component.rs  Production source imports the registered oracle image-bmp-3-mutate
+  testing/dependency  ✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️component.rs  Production source imports the registered oracle image-tiff-6-0-mutate
+  testing/dependency  🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️component.rs  Production source imports the registered oracle image-bmp-3-mutate
+  testing/dependency  🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️component.rs  Production source imports the registered oracle image-tiff-6-0-mutate
+
+full breach set (including non-blocking priorities): /Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/breaches/testing.json

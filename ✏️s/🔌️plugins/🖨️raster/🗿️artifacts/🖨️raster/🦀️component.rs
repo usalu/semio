@@ -1,10 +1,321 @@
 //! 🖼️ Raster artifact — document entities (constitutional: general).
 
-use std::collections::BTreeMap;
-
 //#region 🔖️Constants
 pub const RASTER_DOCUMENT_SCHEMA: &str = "raster.document";
+pub const RASTER_OWNED_MAP_CAPACITY: usize = 64;
+pub const RASTER_OWNED_MAP_PAGE_CAPACITY: usize = 8;
+const RASTER_OWNED_MAP_PAGE_COUNT: usize = RASTER_OWNED_MAP_CAPACITY / RASTER_OWNED_MAP_PAGE_CAPACITY;
 //#endregion 🔖️Constants
+
+//#region 🗂️OwnedMap
+struct RasterOwnedMapPage<V> {
+    entries: [Option<(String, V)>; RASTER_OWNED_MAP_PAGE_CAPACITY],
+}
+
+impl<V> RasterOwnedMapPage<V> {
+    fn new() -> Self {
+        Self { entries: std::array::from_fn(|_| None) }
+    }
+}
+
+pub(crate) struct RasterOwnedMapPageBacking<V> {
+    page: Option<Box<RasterOwnedMapPage<V>>>,
+}
+
+impl<V> RasterOwnedMapPageBacking<V> {
+    pub(crate) fn byte_len(&self) -> usize {
+        std::mem::size_of::<RasterOwnedMapPage<V>>()
+    }
+
+    pub(crate) fn release(mut self) {
+        drop(self.page.take());
+    }
+}
+
+pub struct RasterOwnedMapRejected<V> {
+    pub key: String,
+    pub value: V,
+    pub reason: &'static str,
+}
+
+pub struct RasterOwnedMap<V> {
+    pages: [Option<Box<RasterOwnedMapPage<V>>>; RASTER_OWNED_MAP_PAGE_COUNT],
+    order: [u8; RASTER_OWNED_MAP_CAPACITY],
+    length: usize,
+}
+
+impl<V> RasterOwnedMap<V> {
+    pub fn new() -> Self {
+        Self { pages: std::array::from_fn(|_| None), order: [0; RASTER_OWNED_MAP_CAPACITY], length: 0 }
+    }
+
+    pub fn len(&self) -> usize {
+        self.length
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.length == 0
+    }
+
+    pub(crate) fn allocated_page_count(&self) -> usize {
+        self.pages.iter().filter(|page| page.is_some()).count()
+    }
+
+    pub(crate) fn page_backing_bytes() -> usize {
+        std::mem::size_of::<RasterOwnedMapPage<V>>()
+    }
+
+    fn entry(&self, slot: usize) -> Option<&(String, V)> {
+        self.pages.get(slot / RASTER_OWNED_MAP_PAGE_CAPACITY)?.as_ref()?.entries.get(slot % RASTER_OWNED_MAP_PAGE_CAPACITY)?.as_ref()
+    }
+
+    fn entry_mut(&mut self, slot: usize) -> Option<&mut (String, V)> {
+        self.pages.get_mut(slot / RASTER_OWNED_MAP_PAGE_CAPACITY)?.as_mut()?.entries.get_mut(slot % RASTER_OWNED_MAP_PAGE_CAPACITY)?.as_mut()
+    }
+
+    fn ordered_slot(&self, index: usize) -> Option<usize> {
+        (index < self.length).then(|| self.order[index] as usize)
+    }
+
+    fn ordered_position(&self, key: &str) -> Result<usize, usize> {
+        let mut left = 0;
+        let mut right = self.length;
+        while left < right {
+            let middle = left + (right - left) / 2;
+            let slot = self.order[middle] as usize;
+            match self.entry(slot).expect("Raster owned map order addresses an occupied slot").0.as_str().cmp(key) {
+                std::cmp::Ordering::Less => left = middle + 1,
+                std::cmp::Ordering::Greater => right = middle,
+                std::cmp::Ordering::Equal => return Ok(middle),
+            }
+        }
+        Err(left)
+    }
+
+    fn free_slot(&self) -> Option<usize> {
+        (0..RASTER_OWNED_MAP_CAPACITY).find(|slot| self.entry(*slot).is_none() && self.pages[*slot / RASTER_OWNED_MAP_PAGE_CAPACITY].is_some())
+    }
+
+    pub(crate) fn page_required_for_insert(&self, key: &str) -> bool {
+        self.ordered_position(key).is_err() && self.free_slot().is_none() && self.length < RASTER_OWNED_MAP_CAPACITY
+    }
+
+    pub(crate) fn admit_one_page(&mut self) -> Result<(), &'static str> {
+        let page = self.pages.iter_mut().find(|page| page.is_none()).ok_or("raster-map.page-capacity")?;
+        *page = Some(Box::new(RasterOwnedMapPage::new()));
+        Ok(())
+    }
+
+    pub(crate) fn insert_pre_admitted(&mut self, key: String, value: V) -> Result<Option<V>, RasterOwnedMapRejected<V>> {
+        match self.ordered_position(&key) {
+            Ok(position) => {
+                let slot = self.order[position] as usize;
+                let entry = self.entry_mut(slot).expect("Raster owned map replacement slot remains occupied");
+                Ok(Some(std::mem::replace(&mut entry.1, value)))
+            }
+            Err(position) => {
+                if self.length >= RASTER_OWNED_MAP_CAPACITY {
+                    return Err(RasterOwnedMapRejected { key, value, reason: "raster-map.item-capacity" });
+                }
+                let Some(slot) = self.free_slot() else {
+                    return Err(RasterOwnedMapRejected { key, value, reason: "raster-map.page-not-admitted" });
+                };
+                for index in (position..self.length).rev() {
+                    self.order[index + 1] = self.order[index];
+                }
+                self.pages[slot / RASTER_OWNED_MAP_PAGE_CAPACITY].as_mut().expect("Raster owned map page is admitted").entries[slot % RASTER_OWNED_MAP_PAGE_CAPACITY] = Some((key, value));
+                self.order[position] = slot as u8;
+                self.length += 1;
+                Ok(None)
+            }
+        }
+    }
+
+    pub fn insert(&mut self, key: String, value: V) -> Result<Option<V>, RasterOwnedMapRejected<V>> {
+        if self.page_required_for_insert(&key) {
+            if self.admit_one_page().is_err() {
+                return Err(RasterOwnedMapRejected { key, value, reason: "raster-map.page-capacity" });
+            }
+        }
+        self.insert_pre_admitted(key, value)
+    }
+
+    pub fn get(&self, key: &str) -> Option<&V> {
+        let position = self.ordered_position(key).ok()?;
+        Some(&self.entry(self.order[position] as usize)?.1)
+    }
+
+    pub fn get_mut(&mut self, key: &str) -> Option<&mut V> {
+        let position = self.ordered_position(key).ok()?;
+        Some(&mut self.entry_mut(self.order[position] as usize)?.1)
+    }
+
+    pub fn contains_key(&self, key: &str) -> bool {
+        self.ordered_position(key).is_ok()
+    }
+
+    pub fn remove_entry(&mut self, key: &str) -> Option<(String, V)> {
+        let position = self.ordered_position(key).ok()?;
+        let slot = self.order[position] as usize;
+        let entry = self.pages[slot / RASTER_OWNED_MAP_PAGE_CAPACITY].as_mut()?.entries[slot % RASTER_OWNED_MAP_PAGE_CAPACITY].take()?;
+        for index in position + 1..self.length {
+            self.order[index - 1] = self.order[index];
+        }
+        self.length -= 1;
+        Some(entry)
+    }
+
+    pub fn remove(&mut self, key: &str) -> Option<V> {
+        self.remove_entry(key).map(|(_, value)| value)
+    }
+
+    pub(crate) fn take_last_entry(&mut self) -> Option<(String, V)> {
+        let slot = self.ordered_slot(self.length.checked_sub(1)?)?;
+        let entry = self.pages[slot / RASTER_OWNED_MAP_PAGE_CAPACITY].as_mut()?.entries[slot % RASTER_OWNED_MAP_PAGE_CAPACITY].take()?;
+        self.length -= 1;
+        Some(entry)
+    }
+
+    pub(crate) fn take_empty_page_backing(&mut self) -> Option<RasterOwnedMapPageBacking<V>> {
+        let page = self.pages.iter_mut().find(|page| page.as_ref().is_some_and(|page| page.entries.iter().all(Option::is_none)))?;
+        Some(RasterOwnedMapPageBacking { page: page.take() })
+    }
+
+    pub fn iter(&self) -> RasterOwnedMapIter<'_, V> {
+        RasterOwnedMapIter { map: self, index: 0 }
+    }
+
+    pub fn keys(&self) -> RasterOwnedMapKeys<'_, V> {
+        RasterOwnedMapKeys { inner: self.iter() }
+    }
+}
+
+impl<V> Default for RasterOwnedMap<V> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<V: Clone> Clone for RasterOwnedMap<V> {
+    fn clone(&self) -> Self {
+        let mut result = Self::new();
+        for (key, value) in self {
+            result.insert(key.clone(), value.clone()).expect("Raster owned map clone preserves admitted capacity");
+        }
+        result
+    }
+}
+
+impl<V: std::fmt::Debug> std::fmt::Debug for RasterOwnedMap<V> {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.debug_map().entries(self.iter()).finish()
+    }
+}
+
+impl<V: PartialEq> PartialEq for RasterOwnedMap<V> {
+    fn eq(&self, other: &Self) -> bool {
+        self.iter().eq(other.iter())
+    }
+}
+
+impl<V: Eq> Eq for RasterOwnedMap<V> {}
+
+pub struct RasterOwnedMapIter<'a, V> {
+    map: &'a RasterOwnedMap<V>,
+    index: usize,
+}
+
+impl<'a, V> Iterator for RasterOwnedMapIter<'a, V> {
+    type Item = (&'a String, &'a V);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let slot = self.map.ordered_slot(self.index)?;
+        self.index += 1;
+        let (key, value) = self.map.entry(slot)?;
+        Some((key, value))
+    }
+}
+
+pub struct RasterOwnedMapKeys<'a, V> {
+    inner: RasterOwnedMapIter<'a, V>,
+}
+
+impl<'a, V> Iterator for RasterOwnedMapKeys<'a, V> {
+    type Item = &'a String;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next().map(|(key, _)| key)
+    }
+}
+
+impl<'a, V> IntoIterator for &'a RasterOwnedMap<V> {
+    type Item = (&'a String, &'a V);
+    type IntoIter = RasterOwnedMapIter<'a, V>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+impl<V: serde::Serialize> serde::Serialize for RasterOwnedMap<V> {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::SerializeMap;
+
+        let mut map = serializer.serialize_map(Some(self.length))?;
+        for (key, value) in self {
+            map.serialize_entry(key, value)?;
+        }
+        map.end()
+    }
+}
+
+impl<'de, V: serde::Deserialize<'de>> serde::Deserialize<'de> for RasterOwnedMap<V> {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        struct Visitor<V>(std::marker::PhantomData<V>);
+
+        impl<'de, V: serde::Deserialize<'de>> serde::de::Visitor<'de> for Visitor<V> {
+            type Value = RasterOwnedMap<V>;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                formatter.write_str("a bounded Raster string map")
+            }
+
+            fn visit_map<A: serde::de::MapAccess<'de>>(self, mut source: A) -> Result<Self::Value, A::Error> {
+                let mut result = RasterOwnedMap::new();
+                while let Some((key, value)) = source.next_entry::<String, V>()? {
+                    result.insert(key, value).map_err(|rejected| serde::de::Error::custom(rejected.reason))?;
+                }
+                Ok(result)
+            }
+        }
+
+        deserializer.deserialize_map(Visitor(std::marker::PhantomData))
+    }
+}
+
+impl<V: dsl::DslField> dsl::DslField for RasterOwnedMap<V> {
+    fn shape() -> dsl::Shape {
+        dsl::Shape::Map(Box::new(V::shape()))
+    }
+
+    fn to_value(&self) -> dsl::FieldValue {
+        let mut entries = Vec::with_capacity(self.length);
+        for (key, value) in self {
+            entries.push((key.clone(), value.to_value()));
+        }
+        dsl::FieldValue::Map(entries)
+    }
+
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        let dsl::FieldValue::Map(entries) = value else { return Err(format!("expected Map, found {value:?}")) };
+        let mut result = Self::new();
+        for (key, value) in entries {
+            result.insert(key.clone(), V::from_value(value)?).map_err(|rejected| rejected.reason.to_string())?;
+        }
+        Ok(result)
+    }
+}
+//#endregion 🗂️OwnedMap
 
 //#region 🔖️Types
 pub async fn default_one() -> f64 {
@@ -146,7 +457,7 @@ pub enum RasterLayerNode {
         #[dsl(key = "kind")]
         adjustment_kind: String,
         #[serde(default)]
-        params: BTreeMap<String, dsl::DslValue>,
+        params: RasterOwnedMap<dsl::DslValue>,
     },
 }
 

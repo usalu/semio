@@ -8,7 +8,7 @@
 
 //#region 🔌️Adapters
 import { createHash } from "node:crypto";
-import { cpSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { constants, cpSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { type BreachRecord, TEST_LEVELS, type TestLevel, findRepoRoot, getRepoMetaDir, runProbe, testLevelBudgetMs } from "../../../📚️library/📦️packages/🟦️typescript/📦️index.ts";
 //#endregion 🔌️Adapters
@@ -173,6 +173,8 @@ export type ParsedFeature = Readonly<{
   oracle: string | null;
   noOracleDecision: string | null;
   comparison: ComparisonProfile | null;
+  /** 🦠️ The mutation catalog this feature claims to cover exhaustively, from `@mutations-<id>`. */
+  mutationCatalog: string | null;
   background: readonly FeatureStep[];
   scenarios: readonly FeatureScenario[];
   errors: readonly string[];
@@ -350,6 +352,7 @@ export function parseFeature(source: string): ParsedFeature {
   const oracle = tagValue(featureTags, "@oracle-");
   const noOracleDecision = tagValue(featureTags, "@no-oracle-");
   const comparisonRaw = tagValue(featureTags, "@comparison-");
+  const mutationCatalog = tagValue(featureTags, "@mutations-");
   // 🧭️The parser records the declared profile; whether that profile EXISTS is registry knowledge and
   // is checked in the contract phase, so the Gherkin profile stays independent of which formats the
   // repository happens to own today.
@@ -361,7 +364,7 @@ export function parseFeature(source: string): ParsedFeature {
     seen.add(scenario.id);
   }
 
-  return { name: featureName, description: descriptionLines.join("\n").trim(), tags: featureTags, capability, oracle, noOracleDecision, comparison, background, scenarios, errors };
+  return { name: featureName, description: descriptionLines.join("\n").trim(), tags: featureTags, capability, oracle, noOracleDecision, comparison, mutationCatalog, background, scenarios, errors };
 }
 
 function dedent(body: readonly string[]): string {
@@ -521,6 +524,17 @@ export type OracleEntry = Readonly<{ id: string; ecosystem: string; package: str
 /** 📇️ A recorded decision that a capability legitimately has no credible reference implementation. */
 export type NoOracleDecision = Readonly<{ id: string; capabilities: readonly string[]; rationale: string; substitutes: readonly string[] }>;
 
+/**
+ * 🦠️ One owner's declared mutation vocabulary for an artifact: the complete list of mutation kinds
+ * the implementation can apply. This is the ground truth the completeness gate holds a feature
+ * against, so "exhaustive" becomes a machine-checked claim instead of a hand-counted one.
+ *
+ * The framework never parses implementation source to learn this list — that would make it depend on
+ * a language and on the shape of somebody else's enum. The OWNER declares it here and proves the
+ * declaration honest with its own adjacent test.
+ */
+export type MutationCatalog = Readonly<{ id: string; capability: string; kinds: readonly string[]; deferredKinds?: readonly string[] }>;
+
 /** 🧩️ A native crate/package an owner contributes so its adapters can reach their reference libraries. */
 export type OracleHostPackage = Readonly<{ implementation: Implementation; package: string; path: string; features?: readonly string[] }>;
 
@@ -537,11 +551,13 @@ export type TestContribution = Readonly<{
   noOracleDecisions: readonly NoOracleDecision[];
   comparisonProfiles: readonly ComparisonProfileSpec[];
   oracleHostPackages: readonly OracleHostPackage[];
+  /** 🦠️ The mutation vocabularies this owner claims exhaustive coverage of. */
+  mutationCatalogs: readonly MutationCatalog[];
   /** 🔒️ Where this owner stands on the migration ladder, declared by the owner itself. */
   migrationStatus?: Readonly<Record<string, string>>;
 }>;
 
-export type OracleRegistry = Readonly<{ schemaVersion: number; oracles: readonly OracleEntry[]; noOracleDecisions: readonly NoOracleDecision[]; comparisonProfiles: readonly ComparisonProfileSpec[]; oracleHostPackages: readonly OracleHostPackage[]; contributions: readonly TestContribution[] }>;
+export type OracleRegistry = Readonly<{ schemaVersion: number; oracles: readonly OracleEntry[]; noOracleDecisions: readonly NoOracleDecision[]; comparisonProfiles: readonly ComparisonProfileSpec[]; oracleHostPackages: readonly OracleHostPackage[]; mutationCatalogs: readonly MutationCatalog[]; contributions: readonly TestContribution[] }>;
 
 function readContribution(repoRoot: string, owner: string, manifestPath: string): TestContribution | null {
   let parsed: Record<string, unknown>;
@@ -557,6 +573,7 @@ function readContribution(repoRoot: string, owner: string, manifestPath: string)
     noOracleDecisions: (parsed.noOracleDecisions as NoOracleDecision[] | undefined) ?? [],
     comparisonProfiles: (parsed.comparisonProfiles as ComparisonProfileSpec[] | undefined) ?? [],
     oracleHostPackages: (parsed.oracleHostPackages as OracleHostPackage[] | undefined) ?? [],
+    mutationCatalogs: (parsed.mutationCatalogs as MutationCatalog[] | undefined) ?? [],
     migrationStatus: (parsed.migrationStatus as Record<string, string> | undefined) ?? {},
   };
 }
@@ -616,6 +633,7 @@ export function loadOracleRegistry(repoRoot: string): OracleRegistry {
     noOracleDecisions: [...(core.noOracleDecisions ?? []), ...contributions.flatMap((entry) => entry.noOracleDecisions)],
     comparisonProfiles: [...CORE_COMPARISON_PROFILES, ...(core.comparisonProfiles ?? []), ...contributions.flatMap((entry) => entry.comparisonProfiles)],
     oracleHostPackages: [...(core.oracleHostPackages ?? []), ...contributions.flatMap((entry) => entry.oracleHostPackages)],
+    mutationCatalogs: [...(core.mutationCatalogs ?? []), ...contributions.flatMap((entry) => entry.mutationCatalogs)],
     contributions,
   };
 }
@@ -634,11 +652,11 @@ export function oracleHostPackagesFor(registry: OracleRegistry, owner: string, i
 
 //#region 🧫️Fixtures
 /** 🧫️ One resolved fixture — explicit scheme, never shadow-based, digest pinned at plan time. */
-export type ResolvedFixture = Readonly<{ uri: string; scope: "shared" | "local"; name: string; path: string; digest: string }>;
+export type ResolvedFixture = Readonly<{ uri: string; scope: "shared" | "local" | "asset"; name: string; path: string; digest: string }>;
 
-const FIXTURE_URI_RE = /\b(shared|local):\/\/([^\s"'`,;)\]]+)/g;
+const FIXTURE_URI_RE = /\b(shared|local|asset):\/\/([^\s"'`,;)\]]+)/g;
 
-/** 🧫️ Extracts every `shared://` / `local://` reference appearing anywhere in a feature's text. */
+/** 🧫️ Extracts every `shared://` / `local://` / `asset://` reference appearing anywhere in a feature's text. */
 export function fixtureUrisIn(feature: ParsedFeature): string[] {
   const haystack = [feature.description, ...feature.background.flatMap((step) => [step.text, step.docString ?? "", ...(step.dataTable ?? []).flat()]), ...feature.scenarios.flatMap((scenario) => scenario.steps.flatMap((step) => [step.text, step.docString ?? "", ...(step.dataTable ?? []).flat()]))].join("\n");
   const uris = new Set<string>();
@@ -650,13 +668,18 @@ export function fixtureUrisIn(feature: ParsedFeature): string[] {
  * 🧫️ Resolves fixture URIs against the owner and case fixture directories. Resolution is explicit:
  * a `local://` name never shadows a `shared://` one, so adding a case-local file can never silently
  * change what an existing scenario reads.
+ *
+ * `asset://` resolves against the OWNER ROOT rather than a fixture directory. Real-world artifacts
+ * are already committed where the domain keeps them (examples, assets), and they are large; copying
+ * a multi-megabyte document into a fixtures directory would duplicate history for no gain. The path
+ * escape guard and the plan-time digest pin are identical for all three schemes.
  */
 export function resolveFixtures(repoRoot: string, discovered: DiscoveredCase, uris: readonly string[]): { fixtures: ResolvedFixture[]; missing: string[] } {
   const fixtures: ResolvedFixture[] = [];
   const missing: string[] = [];
   for (const uri of uris) {
-    const [scheme, name] = uri.split("://") as ["shared" | "local", string];
-    const baseRel = scheme === "shared" ? discovered.sharedFixtureDir : discovered.localFixtureDir;
+    const [scheme, name] = uri.split("://") as ["shared" | "local" | "asset", string];
+    const baseRel = scheme === "shared" ? discovered.sharedFixtureDir : scheme === "asset" ? discovered.owner : discovered.localFixtureDir;
     if (baseRel === null) {
       missing.push(uri);
       continue;
@@ -998,6 +1021,47 @@ function breach(kind: TestingBreachKind, id: string, scope: string, summary: str
 }
 
 /**
+ * 🦠️ The completeness gate. A feature that tags `@mutations-<catalog>` claims to exercise the WHOLE
+ * declared mutation vocabulary of an artifact; this turns that claim into arithmetic. Every kind the
+ * owner declares must appear as both a `mutate-<kind>` scenario (the mutation actually applied and
+ * compared against the reference implementation) and an `inverse-<kind>` scenario (the algebraic law
+ * that the mutation is undoable), or the case is not exhaustive and says so.
+ *
+ * The framework reads a DECLARED list, never implementation source: which language the artifact is
+ * written in, and whether its vocabulary is an enum, a descriptor table or a directory of leaves, is
+ * the owner's business. The owner proves the declaration matches its own code with its own test.
+ */
+export function mutationCoverageBreaches(discovered: DiscoveredCase, feature: ParsedFeature, registry: OracleRegistry): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  if (feature.mutationCatalog === null) return breaches;
+  const catalog = registry.mutationCatalogs.find((entry) => entry.id === feature.mutationCatalog);
+  if (catalog === undefined) {
+    breaches.push(breach("testing/contract", "unknown-mutation-catalog", discovered.featurePath, `Unknown mutation catalog @mutations-${feature.mutationCatalog}`, "A catalog is the declared vocabulary a feature is measured against; claiming one that is not declared measures the feature against nothing.", `Declare the catalog in the owner's ${"🧪️oracle"} contribution manifest.`));
+    return breaches;
+  }
+  if (catalog.capability !== "" && feature.capability !== null && catalog.capability !== feature.capability) {
+    breaches.push(breach("testing/contract", "mutation-catalog-capability-mismatch", discovered.featurePath, `Catalog ${catalog.id} declares capability ${catalog.capability} but the feature declares ${feature.capability}`, "A vocabulary belongs to the capability it mutates; pointing a feature at another capability's catalog would report coverage of behaviour it never exercises.", "Align the feature's @capability- tag with the catalog, or claim the matching catalog."));
+  }
+  const ids = new Set(feature.scenarios.map((scenario) => scenario.id));
+  const missingMutate = catalog.kinds.filter((kind) => !ids.has(`mutate-${kind}`));
+  const missingInverse = catalog.kinds.filter((kind) => !ids.has(`inverse-${kind}`));
+  if (missingMutate.length > 0) {
+    breaches.push(breach("testing/contract", "mutation-kind-uncovered", discovered.featurePath, `${missingMutate.length} of ${catalog.kinds.length} mutation kind(s) in catalog ${catalog.id} have no mutate scenario: ${missingMutate.join(", ")}`, "Exhaustive coverage is the claim this feature makes by tagging the catalog. An unexercised kind is a mutation the implementation may corrupt with nothing to notice.", `Add a row to the Examples table for each kind so the scenario id ${"mutate-<kind>"} exists.`));
+  }
+  if (missingInverse.length > 0) {
+    breaches.push(breach("testing/contract", "mutation-inverse-uncovered", discovered.featurePath, `${missingInverse.length} mutation kind(s) in catalog ${catalog.id} have no inverse scenario: ${missingInverse.join(", ")}`, "A mutation that cannot be undone breaks the undo history the whole event-sourced runtime rests on, and the failure only ever shows up in a user's session.", `Add the kind to the inverse-law Examples table so the scenario id ${"inverse-<kind>"} exists.`));
+  }
+  const stray = [...ids].filter((id) => id.startsWith("mutate-") && !catalog.kinds.includes(id.slice("mutate-".length)));
+  if (stray.length > 0) {
+    breaches.push(breach("testing/contract", "mutation-kind-undeclared", discovered.featurePath, `Scenario(s) ${stray.join(", ")} exercise mutation kinds the catalog does not declare`, "The catalog is what the completeness gate counts against; a kind exercised but not declared means the declared vocabulary is out of date and the gate is measuring the wrong set.", "Add the kind to the catalog, or rename the scenario if it is not a mutation case."));
+  }
+  if ((catalog.deferredKinds ?? []).length > 0) {
+    breaches.push(breach("testing/contract", "mutation-kinds-deferred", discovered.featurePath, `Catalog ${catalog.id} defers ${(catalog.deferredKinds ?? []).length} kind(s): ${(catalog.deferredKinds ?? []).join(", ")}`, "A deferred kind is untested surface that no longer shows up as missing. Recording it keeps the debt visible instead of letting the gate report green over it.", "Cover the kinds and empty deferredKinds, or state why they cannot exist.", "medium"));
+  }
+  return breaches;
+}
+
+/**
  * 🧾️ The contract phase: everything checkable without executing a single test. A case that fails
  * here can never be reported as passing, because the plan the hosts would receive is not well formed.
  */
@@ -1055,9 +1119,11 @@ export function validateCaseContract(repoRoot: string, discovered: DiscoveredCas
     }
   }
 
+  breaches.push(...mutationCoverageBreaches(discovered, feature, registry));
+
   const uris = fixtureUrisIn(feature);
   for (const uri of resolveFixtures(repoRoot, discovered, uris).missing) {
-    breaches.push(breach("testing/fixture", "missing-fixture", discovered.featurePath, `Fixture ${uri} does not resolve`, "Fixture lookup is explicit, so an unresolved URI is a contract error rather than a runtime surprise.", `Add the file under ${uri.startsWith("shared://") ? `${discovered.owner}/${taxonomy.testFixturesDirName}` : `${discovered.caseDir}/${taxonomy.testFixturesDirName}`}.`));
+    breaches.push(breach("testing/fixture", "missing-fixture", discovered.featurePath, `Fixture ${uri} does not resolve`, "Fixture lookup is explicit, so an unresolved URI is a contract error rather than a runtime surprise.", `Add the file under ${uri.startsWith("shared://") ? `${discovered.owner}/${taxonomy.testFixturesDirName}` : uri.startsWith("asset://") ? discovered.owner : `${discovered.caseDir}/${taxonomy.testFixturesDirName}`}.`));
   }
 
   const referenced = new Set(uris.map((uri) => uri.split("://")[1]));
@@ -1133,7 +1199,13 @@ export function oracleImportsInProduction(repoRoot: string): { path: string; ora
   const hostRoots = [...contributionRoots, ...registry.oracles.map((entry) => entry.hostPath).filter((value): value is string => value !== undefined)];
   const caseDirs = new Set(discoverTestCases(repoRoot).map((entry) => entry.caseDir));
   const names = registry.oracles.map((entry) => [entry.id, entry.package.replace(/-/g, "_"), entry.package] as const);
-  const isTestOwned = (rel: string): boolean => caseDirs.has(rel) || hostRoots.some((root) => rel === root || rel.startsWith(`${root}/`)) || rel === TEST_DOMAIN_REL_PATH || rel.startsWith(`${TEST_DOMAIN_REL_PATH}/`);
+  // 🧩️A contribution directory is test-owned because of WHAT IT IS, which the taxonomy names, not
+  // because its manifest happens to parse. Deriving ownership from the discovered manifests alone
+  // made a directory production source the moment its JSON was absent or malformed — so an owner
+  // adding one would see its own reference libraries reported as a production dependency.
+  const contributionDir = testTaxonomy(repoRoot).testContributionDirName;
+  const inContributionDir = (rel: string): boolean => rel.split("/").includes(contributionDir);
+  const isTestOwned = (rel: string): boolean => caseDirs.has(rel) || inContributionDir(rel) || hostRoots.some((root) => rel === root || rel.startsWith(`${root}/`)) || rel === TEST_DOMAIN_REL_PATH || rel.startsWith(`${TEST_DOMAIN_REL_PATH}/`);
   // 🔒️Recorded, shrink-only production debt: a package that was ALREADY production-reachable before
   // it was registered as an oracle. The path is named in the registry entry so the debt is visible
   // in the report instead of silently excused, and `dependency` prints it every run.
@@ -1216,6 +1288,18 @@ export function validateAllContracts(repoRoot: string, cases: readonly Discovere
   // 🔒️Shrink-only migration ratchet: the legacy backlog may only get smaller. Reported as one
   // ratcheted count per area rather than thousands of individual findings, so the signal stays
   // meaningful while Phase 6 migrates owners.
+  // 🦠️A declared mutation vocabulary that no feature claims is worse than an undeclared one: it reads
+  // as covered surface in the manifest while nothing exercises it.
+  //
+  // 🔍️The claimed set is derived from a FULL discovery rather than from `cases`. Callers narrow the
+  // sweep — every generated Nx target runs `--case <one>` — and a repository-wide question answered
+  // over one caller's selection would report every other case's catalog as unclaimed.
+  const claimed = new Set(discoverTestCases(repoRoot).map((discovered) => parseFeature(readFileSync(join(repoRoot, discovered.featurePath), "utf8")).mutationCatalog).filter((id): id is string => id !== null));
+  for (const catalog of registry.mutationCatalogs) {
+    if (claimed.has(catalog.id)) continue;
+    breaches.push(breach("testing/contract", "mutation-catalog-unclaimed", catalog.id, `Mutation catalog ${catalog.id} (${catalog.kinds.length} kinds) is claimed by no feature`, "The catalog declares what an artifact can do to itself. Declared and unclaimed means the whole vocabulary is untested while the manifest suggests otherwise.", `Add a case whose feature tags @mutations-${catalog.id}, or remove the catalog.`));
+  }
+
   const baseline = loadMigrationBaseline(repoRoot);
   const byArea = surveyUnmanagedTests(repoRoot).reduce((map, entry) => map.set(entry.area, (map.get(entry.area) ?? 0) + 1), new Map<string, number>());
   for (const [area, count] of [...byArea].sort((a, b) => b[1] - a[1])) {
@@ -1229,10 +1313,10 @@ export function validateAllContracts(repoRoot: string, cases: readonly Discovere
 
 //#region 🧹️Clean
 /** 🧹️ One removable generated test artifact, classified for the report. */
-export type TestCleanRemoval = Readonly<{ category: string; path: string; files: number; bytes: number; reason: "all" | "stale" | "incomplete" }>;
+export type TestCleanRemoval = Readonly<{ category: string; path: string; files: number; bytes: number; reason: "all" | "stale" | "incomplete" | "oversized" }>;
 
 /** 🧹️ What a clean run did (or, in dry mode, would do) — identical structure either way. */
-export type TestCleanReport = Readonly<{ dry: boolean; removals: readonly TestCleanRemoval[]; protectedPaths: readonly string[]; skippedUnmarked: readonly string[] }>;
+export type TestCleanReport = Readonly<{ dry: boolean; removals: readonly TestCleanRemoval[]; protectedPaths: readonly string[]; skippedUnmarked: readonly string[]; retained: readonly { category: string; path: string; files: number; bytes: number }[] }>;
 
 function countTree(abs: string): { files: number; bytes: number } {
   let files = 0;
@@ -1265,14 +1349,15 @@ function countTree(abs: string): { files: number; bytes: number } {
  * beneath the canonical test-output root, must carry an ownership marker, and symlinks are never
  * followed — so no tracked fixture, no source file and no excluded path can be reached from here.
  */
-export function cleanTestOutputs(repoRoot: string, opts: { dry?: boolean; stale?: boolean; liveTestIds?: ReadonlySet<string> } = {}): TestCleanReport {
+export function cleanTestOutputs(repoRoot: string, opts: { dry?: boolean; stale?: boolean; over?: number; liveTestIds?: ReadonlySet<string> } = {}): TestCleanReport {
   const dry = opts.dry ?? false;
   const taxonomy = testTaxonomy(repoRoot);
   const root = resolve(testCacheRoot(repoRoot));
   const removals: TestCleanRemoval[] = [];
+  const retained: { category: string; path: string; files: number; bytes: number }[] = [];
   const skippedUnmarked: string[] = [];
   const protectedPaths = [relative(repoRoot, join(getRepoMetaDir(repoRoot), "⚡️cache")).split(sep).join("/")];
-  if (!existsSync(root)) return { dry, removals, protectedPaths, skippedUnmarked };
+  if (!existsSync(root)) return { dry, removals, protectedPaths, skippedUnmarked, retained };
 
   for (const child of taxonomy.testOutputChildDirs) {
     const childRoot = join(root, child);
@@ -1293,13 +1378,22 @@ export function cleanTestOutputs(repoRoot: string, opts: { dry?: boolean; stale?
       }
       const isStale = opts.liveTestIds !== undefined && !opts.liveTestIds.has(marker.testId);
       const isIncomplete = !existsSync(join(abs, "🏁️done"));
-      if (opts.stale === true && !isStale && !isIncomplete) continue;
       const { files, bytes } = countTree(abs);
-      removals.push({ category: child, path: relative(repoRoot, abs).split(sep).join("/"), files, bytes, reason: isStale ? "stale" : isIncomplete ? "incomplete" : "all" });
+      const rel = relative(repoRoot, abs).split(sep).join("/");
+      // 📏️`--over` prunes by size alone. A case that reads a real-world artifact copies it into every
+      // work directory it runs in, so the cache grows with the size of the evidence rather than with
+      // the number of tests, and a selective sweep is the only one worth running by then.
+      const isOversized = opts.over !== undefined && bytes > opts.over;
+      const selective = opts.stale === true || opts.over !== undefined;
+      if (selective && !isStale && !isIncomplete && !isOversized) {
+        retained.push({ category: child, path: rel, files, bytes });
+        continue;
+      }
+      removals.push({ category: child, path: rel, files, bytes, reason: isStale ? "stale" : isIncomplete ? "incomplete" : isOversized ? "oversized" : "all" });
       if (!dry) rmSync(abs, { recursive: true, force: true });
     }
   }
-  return { dry, removals, protectedPaths, skippedUnmarked };
+  return { dry, removals, protectedPaths, skippedUnmarked, retained };
 }
 
 /** 🧹️ Renders a clean report; dry-run and applied output differ only in the action verb. */
@@ -1312,6 +1406,8 @@ export function formatCleanReport(repoRoot: string, report: TestCleanReport): st
     lines.push(`[clean test] ${category}: ${rows.length} (files=${rows.reduce((n, r) => n + r.files, 0)} bytes=${rows.reduce((n, r) => n + r.bytes, 0)})`);
   }
   for (const row of report.removals) lines.push(`[clean test] ${verb} ${row.category} ${row.path} (${row.reason}, files=${row.files}, bytes=${row.bytes})`);
+  const kept = report.retained.reduce((acc, row) => ({ files: acc.files + row.files, bytes: acc.bytes + row.bytes }), { files: 0, bytes: 0 });
+  if (report.retained.length > 0) lines.push(`[clean test] retained ${report.retained.length} (files=${kept.files} bytes=${kept.bytes})`);
   for (const path of report.skippedUnmarked) lines.push(`[clean test] skipped-unmarked ${path}`);
   for (const path of report.protectedPaths) lines.push(`[clean test] protected ${path}`);
   return lines.join("\n");
@@ -1547,7 +1643,11 @@ export function makeAdapterContext(repoRoot: string, plan: TestCasePlan, scenari
       const source = lookup(uri);
       const target = join(workDir, as ?? basename(source));
       mkdirSync(dirname(target), { recursive: true });
-      cpSync(source, target);
+      // 🧫️Clone-on-write where the filesystem offers it. Real-world fixtures are megabytes and every
+      // work directory takes its own copy, so this is the difference between a constant and a linear
+      // cost. It must stay a COPY and never a hard link — the caller is handed a MUTABLE path, and a
+      // link would let a mutation scenario write through into the committed fixture.
+      cpSync(source, target, { mode: constants.COPYFILE_FICLONE });
       return target;
     },
   };
@@ -1562,8 +1662,13 @@ export function planExecution(repoRoot: string, discovered: DiscoveredCase, leve
   const workDir = join(testCacheDir(repoRoot, "work"), `${discovered.projectName}-${role}-${implementation}`);
   const outputDir = join(testCacheDir(repoRoot, "results"), `${discovered.projectName}-${role}-${implementation}`);
   const ownerId = `${discovered.owner}::${discovered.case}`;
-  markOutputDir(repoRoot, workDir, { testId: ownerId, cacheKey });
-  markOutputDir(repoRoot, outputDir, { testId: ownerId, cacheKey });
+  // 🏁️A directory being planned is by definition not finished. Clearing any completion marker left
+  // by a previous run keeps "in progress" and "complete" honest across re-runs, which is what stops
+  // `clean test --stale` from removing a live run's state.
+  for (const dir of [workDir, outputDir]) {
+    markOutputDir(repoRoot, dir, { testId: ownerId, cacheKey });
+    rmSync(join(dir, "🏁️done"), { force: true });
+  }
   const plan: TestCasePlan = { ...base, role, implementation, workDir, outputDir, resultsPath: join(outputDir, "📤️results.jsonl") };
   const planPath = join(workDir, "📋️plan.json");
   writeFileSync(planPath, `${JSON.stringify(plan, null, 2)}\n`);

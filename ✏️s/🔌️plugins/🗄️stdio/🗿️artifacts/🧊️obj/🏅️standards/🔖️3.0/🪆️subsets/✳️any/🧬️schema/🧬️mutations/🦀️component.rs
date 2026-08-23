@@ -117,6 +117,35 @@ pub enum ObjMutation {
     /// 🕳️ Replaces the whole retained unknown-statement list.
     SetUnknownStatements { unknown_statements: Vec<ObjUnknownStatement> },
 }
+
+/// 🏷️ Kebab-case spelling of every `ObjMutation` variant, in declaration order — the vocabulary the
+/// `obj-3-0-any` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and the exhaustive
+/// mutate/inverse test case measures itself against. `kinds_cover_every_variant` below is what keeps
+/// this list honest against the enum it names, since the framework never parses Rust.
+pub const KINDS: &[&str] = &[
+    "no-mutation",
+    "set-snapshot",
+    "insert-vertex",
+    "remove-vertex",
+    "set-vertex",
+    "insert-texcoord",
+    "remove-texcoord",
+    "set-texcoord",
+    "insert-normal",
+    "remove-normal",
+    "set-normal",
+    "insert-face",
+    "remove-face",
+    "set-face",
+    "set-group",
+    "remove-group",
+    "set-object",
+    "remove-object",
+    "set-mtllib",
+    "set-usemtl",
+    "set-smoothing-groups",
+    "set-unknown-statements",
+];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -612,6 +641,50 @@ mod tests {
         }
     }
     //#endregion 🔖️OpTextBinaryRoundtripLaw
+
+    //#region 🔖️KindsCoverageLaw
+    /// 🏷️ `KINDS` must name exactly the enum's variants (kebab-case), one entry each — an
+    /// exhaustive `match` so the compiler itself fails the moment a variant is added, renamed or
+    /// removed without this list being updated alongside it. The manifest side of the same claim
+    /// (`../../🧪️oracle/🔣️component.json`'s `obj-3-0-any` catalog `kinds`) is checked by the
+    /// mutate/inverse test case's own contract gate, which fails if the two lists ever diverge.
+    #[semio_framework_async_macros::async_test]
+    async fn kinds_cover_every_variant() {
+        fn kind_of(mutation: &ObjMutation) -> &'static str {
+            match mutation {
+                ObjMutation::NoMutation => "no-mutation",
+                ObjMutation::SetSnapshot { .. } => "set-snapshot",
+                ObjMutation::InsertVertex { .. } => "insert-vertex",
+                ObjMutation::RemoveVertex { .. } => "remove-vertex",
+                ObjMutation::SetVertex { .. } => "set-vertex",
+                ObjMutation::InsertTexCoord { .. } => "insert-texcoord",
+                ObjMutation::RemoveTexCoord { .. } => "remove-texcoord",
+                ObjMutation::SetTexCoord { .. } => "set-texcoord",
+                ObjMutation::InsertNormal { .. } => "insert-normal",
+                ObjMutation::RemoveNormal { .. } => "remove-normal",
+                ObjMutation::SetNormal { .. } => "set-normal",
+                ObjMutation::InsertFace { .. } => "insert-face",
+                ObjMutation::RemoveFace { .. } => "remove-face",
+                ObjMutation::SetFace { .. } => "set-face",
+                ObjMutation::SetGroup { .. } => "set-group",
+                ObjMutation::RemoveGroup { .. } => "remove-group",
+                ObjMutation::SetObject { .. } => "set-object",
+                ObjMutation::RemoveObject { .. } => "remove-object",
+                ObjMutation::SetMtllib { .. } => "set-mtllib",
+                ObjMutation::SetUsemtl { .. } => "set-usemtl",
+                ObjMutation::SetSmoothingGroups { .. } => "set-smoothing-groups",
+                ObjMutation::SetUnknownStatements { .. } => "set-unknown-statements",
+            }
+        }
+        let mut exercised: Vec<&str> = demo_mutation_cases().iter().map(kind_of).collect();
+        exercised.sort_unstable();
+        exercised.dedup();
+        let mut declared: Vec<&str> = KINDS.to_vec();
+        declared.sort_unstable();
+        assert_eq!(exercised, declared, "KINDS must name exactly the variants demo_mutation_cases() exercises");
+        assert_eq!(KINDS.len(), 22, "obj-3-0-any declares 22 ObjMutation variants");
+    }
+    //#endregion 🔖️KindsCoverageLaw
 }
 //#endregion 🧪️Tests
 

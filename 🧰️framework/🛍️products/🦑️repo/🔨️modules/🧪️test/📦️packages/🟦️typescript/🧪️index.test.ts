@@ -13,7 +13,7 @@ import { join, relative, sep } from "node:path";
 
 /** 🧭️ Repo-relative, forward-slashed path — the shape every discovered record carries. */
 const relativeToRepo = (root: string, target: string): string => relative(root, target).split(sep).join("/");
-import { CORE_COMPARISON_PROFILES, discoverTestContributions, profileTable, coreProfileTable, canonicalize, oracleImportsInProduction, computeCoverageMetrics, enforceMetricGates, validateCaseContract, cleanTestOutputs, compareProjections, digest, discoverTestCases, fixtureUrisIn, isExcludedTestPath, loadMigrationBaseline, migrationStatusByOwner, loadOracleRegistry, markOutputDir, parseFeature, MIGRATION_STATUSES, projectionHash, ratchetDependencies, readOutputMarker, repoRootFromHere, setDigest, surveyUnmanagedTests, testCacheDir, testProjectName, testTaxonomy, validateAllContracts, validateResult } from "./📦️index.ts";
+import { CORE_COMPARISON_PROFILES, mutationCoverageBreaches, resolveFixtures, discoverTestContributions, profileTable, coreProfileTable, canonicalize, oracleImportsInProduction, computeCoverageMetrics, enforceMetricGates, validateCaseContract, cleanTestOutputs, compareProjections, digest, discoverTestCases, fixtureUrisIn, isExcludedTestPath, loadMigrationBaseline, migrationStatusByOwner, loadOracleRegistry, markOutputDir, parseFeature, MIGRATION_STATUSES, projectionHash, ratchetDependencies, readOutputMarker, repoRootFromHere, setDigest, surveyUnmanagedTests, testCacheDir, testProjectName, testTaxonomy, validateAllContracts, validateResult } from "./📦️index.ts";
 //#endregion 🔌️Adapters
 
 const repoRoot = repoRootFromHere();
@@ -149,7 +149,10 @@ describe("⚖️ comparison profiles", () => {
     const subject = { version: "1.7", pageCount: 1, objectNumber: 9, creationDate: "B", pages: [{ mediaBox: [0, 0, 595, 842.00001] }] };
     expect(compareProjections("semantic-pdf-v1", oracle, subject, contributed()).equal).toBe(true);
     expect(compareProjections("semantic-pdf-v1", oracle, { ...subject, pageCount: 2 }, contributed()).equal).toBe(false);
-  });
+  },
+  // ⏱️ First touch of the contributed profile table walks the whole repository for owner manifests,
+  // which is well past bun's 5 s default on a loaded machine.
+  30_000);
 
   test("utf8-text-v1 normalizes line endings and trailing whitespace only", () => {
     expect(compareProjections("utf8-text-v1", "a\r\nb  \n", "a\nb\n").equal).toBe(true);
@@ -523,3 +526,75 @@ describe("🧩️ open/closed", () => {
 });
 
 //#endregion 🧪️Tests
+
+describe("🦠️ mutation completeness gate", () => {
+  // 🦠️A synthetic owner keeps the gate's arithmetic independent of whichever formats happen to be
+  // committed today — the framework is not allowed to know that PDF or PNG exist.
+  const owner = "🧪️synthetic/📦️artifact";
+  const discovered = { owner, ownerName: "📦️artifact", case: "mutate-thing", caseDir: `${owner}/🧪️tests/mutate-thing`, featurePath: `${owner}/🧪️tests/mutate-thing/component.feature`, adapters: {}, sharedFixtureDir: null, localFixtureDir: null, projectName: "test-synthetic-000000-mutate-thing" } as unknown as import("./📦️index.ts").DiscoveredCase;
+  const catalog = { id: "thing-v1", capability: "thing-mutate", kinds: ["set-name", "remove-item"] };
+  const registry = { schemaVersion: 1, oracles: [], noOracleDecisions: [], comparisonProfiles: [], oracleHostPackages: [], mutationCatalogs: [catalog], contributions: [] } as unknown as import("./📦️index.ts").OracleRegistry;
+  const feature = (scenarioIds: readonly string[], tag = "@mutations-thing-v1"): import("./📦️index.ts").ParsedFeature =>
+    parseFeature([`@capability-thing-mutate`, `@no-oracle-none`, tag, "Feature: Mutate a thing", ...scenarioIds.flatMap((id) => [`  @id-${id}`, "  @level-exhaustive", "  @mode-differential", `  Scenario: ${id}`, "    Given a thing", "    Then it changed"])].join("\n"));
+
+  test("a feature covering every declared kind twice reports nothing", () => {
+    expect(mutationCoverageBreaches(discovered, feature(["mutate-set-name", "inverse-set-name", "mutate-remove-item", "inverse-remove-item"]), registry)).toEqual([]);
+  });
+
+  test("an untested mutation kind is a breach naming the kind", () => {
+    const ids = mutationCoverageBreaches(discovered, feature(["mutate-set-name", "inverse-set-name", "inverse-remove-item"]), registry);
+    expect(ids.map((entry) => entry.id)).toContain("mutation-kind-uncovered");
+    expect(ids.some((entry) => entry.summary.includes("remove-item"))).toBe(true);
+  });
+
+  // 🔁️A mutation that cannot be undone breaks undo for a real user, so the inverse half is held to
+  // the same standard as the mutation half rather than being optional evidence.
+  test("a kind that is applied but never inverted is a breach of its own", () => {
+    const ids = mutationCoverageBreaches(discovered, feature(["mutate-set-name", "inverse-set-name", "mutate-remove-item"]), registry);
+    expect(ids.map((entry) => entry.id)).toContain("mutation-inverse-uncovered");
+  });
+
+  test("exercising a kind the catalog does not declare is a breach, so the declared set cannot drift", () => {
+    const ids = mutationCoverageBreaches(discovered, feature(["mutate-set-name", "inverse-set-name", "mutate-remove-item", "inverse-remove-item", "mutate-invented-kind"]), registry);
+    expect(ids.map((entry) => entry.id)).toContain("mutation-kind-undeclared");
+  });
+
+  test("claiming a catalog that is not declared anywhere is a breach", () => {
+    expect(mutationCoverageBreaches(discovered, feature([], "@mutations-does-not-exist"), registry).map((entry) => entry.id)).toContain("unknown-mutation-catalog");
+  });
+
+  test("a feature that claims no catalog is left alone", () => {
+    expect(mutationCoverageBreaches(discovered, parseFeature("@capability-thing-mutate\nFeature: Something else\n  @id-a\n  @level-quick\n  @mode-conformance\n  Scenario: a\n    Given x\n    Then y"), registry)).toEqual([]);
+  });
+
+  test("deferring kinds is recorded rather than silently accepted", () => {
+    const deferring = { ...registry, mutationCatalogs: [{ ...catalog, deferredKinds: ["rotate-item"] }] } as unknown as import("./📦️index.ts").OracleRegistry;
+    expect(mutationCoverageBreaches(discovered, feature(["mutate-set-name", "inverse-set-name", "mutate-remove-item", "inverse-remove-item"]), deferring).map((entry) => entry.id)).toContain("mutation-kinds-deferred");
+  });
+});
+
+describe("🧫️ real-world artifact fixtures", () => {
+  // 🧫️A multi-megabyte real document is read where the domain already keeps it. Copying it into a
+  // fixtures directory would duplicate megabytes of git history for no gain.
+  const thesis = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/📚️examples/🎓️bachelor-thesis/🖼️assets/📄️bachelor-thesis.pdf";
+  const owner = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf";
+  const discovered = { owner, ownerName: "📄️pdf", case: "c", caseDir: `${owner}/🧪️tests/c`, featurePath: `${owner}/🧪️tests/c/component.feature`, adapters: {}, sharedFixtureDir: null, localFixtureDir: null, projectName: "p" } as unknown as import("./📦️index.ts").DiscoveredCase;
+
+  test("asset:// resolves against the owner root and pins the real artifact's digest", () => {
+    if (!existsSync(join(repoRoot, thesis))) return;
+    const uri = `asset://${thesis.slice(`${owner}/`.length)}`;
+    const { fixtures, missing } = resolveFixtures(repoRoot, discovered, [uri]);
+    expect(missing).toEqual([]);
+    expect(fixtures[0].scope).toBe("asset");
+    expect(fixtures[0].path).toBe(thesis);
+    expect(fixtures[0].digest.length).toBeGreaterThan(0);
+  });
+
+  test("asset:// cannot escape the owner root", () => {
+    expect(resolveFixtures(repoRoot, discovered, ["asset://../../../../../../etc/hosts"]).missing.length).toBe(1);
+  });
+
+  test("the three fixture schemes are all extracted from a feature's text", () => {
+    expect(fixtureUrisIn(parseFeature("@capability-x\nFeature: f\n  @id-s\n  @level-quick\n  @mode-conformance\n  Scenario: s\n    Given asset://a/b.pdf and shared://c.png and local://d.csv\n    Then y"))).toEqual(["asset://a/b.pdf", "local://d.csv", "shared://c.png"]);
+  });
+});

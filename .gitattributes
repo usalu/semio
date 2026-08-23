@@ -19,3 +19,30 @@ repo/hooks/* text eol=lf
 *.wasm binary
 *.pack.semio binary
 *.spr.semio binary
+
+# 🧫️ Real-world artifact fixtures. `* text=auto` leaves these to git's content heuristic; a binary
+# that heuristic misreads gets line-ending normalized on checkout and is then corrupt for every
+# byte-exact round-trip test that reads it.
+*.pdf binary
+*.glb binary
+*.gltf binary
+*.3dm binary
+*.dwg binary
+*.mp4 binary
+*.mp3 binary
+*.avi binary
+*.wav binary
+*.bmp binary
+*.tif binary
+*.tiff binary
+*.stl binary
+*.ply binary
+*.las binary
+*.laz binary
+*.xlsx binary
+*.docx binary
+*.pptx binary
+*.bcf binary
+*.ttf binary
+*.woff binary
+*.woff2 binary

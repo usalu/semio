@@ -63,6 +63,14 @@ pub enum MdMutation {
 }
 //#endregion 🔖️Mutations
 
+//#region 🔖️Kinds
+/// 🗂️ Kebab-case spelling of every `MdMutation` variant, declaration order, mirrored by this
+/// subset's `🧪️oracle/🔣️component.json` mutation catalog (`md-commonmark-any`). The completeness
+/// gate reads that JSON catalog, never this enum, so `kinds_match_enum_variants_and_catalog` below
+/// is what keeps the two lists honest.
+pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "insert-block", "remove-block", "replace-block", "set-inlines"];
+//#endregion 🔖️Kinds
+
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` -- the diff is the single semantics source, never a separate imperative
@@ -413,6 +421,33 @@ mod op_codec_tests {
             let decoded = MdMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
         }
+    }
+
+    /// 🧪️ `kinds_match_enum_variants_and_catalog`: `KINDS` lists every `MdMutation` variant
+    /// exactly once (the `match` below has no wildcard arm, so a new variant fails to compile
+    /// here first) AND matches the mutation catalog this subset's `🧪️oracle/🔣️component.json`
+    /// declares, in the same order — the framework's completeness gate reads that JSON, never this
+    /// enum, so this test is the only thing tying the two declarations together.
+    #[semio_framework_async_macros::async_test]
+    async fn kinds_match_enum_variants_and_catalog() {
+        // 🚫️async: E1 pure inherent helper, no I/O — see R9
+        fn kebab_of(mutation: &MdMutation) -> &'static str {
+            match mutation {
+                MdMutation::NoMutation => "no-mutation",
+                MdMutation::SetSnapshot { .. } => "set-snapshot",
+                MdMutation::InsertBlock { .. } => "insert-block",
+                MdMutation::RemoveBlock { .. } => "remove-block",
+                MdMutation::ReplaceBlock { .. } => "replace-block",
+                MdMutation::SetInlines { .. } => "set-inlines",
+            }
+        }
+        let variant_kinds: std::collections::BTreeSet<&str> = demo_mutation_cases().iter().map(kebab_of).collect();
+        let declared_kinds: std::collections::BTreeSet<&str> = KINDS.iter().copied().collect();
+        assert_eq!(variant_kinds, declared_kinds, "KINDS must list every MdMutation variant exactly once");
+
+        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../🧪️oracle/🔣️component.json")).expect("valid catalog JSON");
+        let catalog_kinds: Vec<&str> = manifest["mutationCatalogs"][0]["kinds"].as_array().expect("mutationCatalogs[0].kinds array").iter().map(|value| value.as_str().expect("kind is a string")).collect();
+        assert_eq!(catalog_kinds, KINDS.to_vec(), "the manifest's mutationCatalogs[0].kinds must match KINDS exactly, declaration order included");
     }
 }
 //#endregion 🧪️Tests

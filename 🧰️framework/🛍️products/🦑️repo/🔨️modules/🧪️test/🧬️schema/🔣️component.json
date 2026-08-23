@@ -71,12 +71,13 @@
       "properties": {
         "uri": {
           "type": "string",
-          "pattern": "^(shared|local)://.+$"
+          "pattern": "^(shared|local|asset)://.+$"
         },
         "scope": {
           "enum": [
             "shared",
-            "local"
+            "local",
+            "asset"
           ]
         },
         "name": {
@@ -578,6 +579,12 @@
           "items": {
             "$ref": "#/$defs/NoOracleDecision"
           }
+        },
+        "mutationCatalogs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MutationCatalog"
+          }
         }
       }
     },
@@ -663,6 +670,44 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "MutationCatalog": {
+      "type": "object",
+      "description": "🦠️ The complete mutation vocabulary an owner declares for one artifact. The completeness gate holds a feature tagged @mutations-<id> against this list: every kind needs a mutate-<kind> and an inverse-<kind> scenario, so exhaustive coverage is arithmetic rather than a claim.",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "capability",
+        "kinds"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "capability": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kinds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "deferredKinds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true,
+          "description": "🚧️ Kinds knowingly left uncovered. Recorded so the gap stays visible instead of reading as green."
         }
       }
     }

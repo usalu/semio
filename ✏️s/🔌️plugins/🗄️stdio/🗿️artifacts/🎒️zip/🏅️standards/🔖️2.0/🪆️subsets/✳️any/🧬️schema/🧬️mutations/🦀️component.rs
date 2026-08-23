@@ -38,6 +38,29 @@ pub enum ZipMutation {
 }
 //#endregion 🔖️Model
 
+//#region 🔖️Kinds
+/// 🦠️ Kebab-case spelling of every `ZipMutation` variant, in declaration order — the exact `kinds`
+/// list `../../🧪️oracle/🔣️component.json`'s `mutationCatalogs` entry must declare. The framework
+/// never parses this enum; `kinds_matches_enum_variants_and_manifest` below is what keeps the two
+/// declarations honest against each other.
+pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-archive-comment", "add-entry", "remove-entry", "rename-entry", "set-entry-data"];
+
+/// 🏷️ The `KINDS` spelling of one mutation's own variant. An exhaustive match (no wildcard arm), so
+/// a new variant that forgets its kebab spelling here fails to compile rather than failing silently.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn kind_of(mutation: &ZipMutation) -> &'static str {
+    match mutation {
+        ZipMutation::NoMutation => "no-mutation",
+        ZipMutation::SetSnapshot { .. } => "set-snapshot",
+        ZipMutation::SetArchiveComment { .. } => "set-archive-comment",
+        ZipMutation::AddEntry { .. } => "add-entry",
+        ZipMutation::RemoveEntry { .. } => "remove-entry",
+        ZipMutation::RenameEntry { .. } => "rename-entry",
+        ZipMutation::SetEntryData { .. } => "set-entry-data",
+    }
+}
+//#endregion 🔖️Kinds
+
 //#region 🔖️Algebra
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn apply_zip_mutation(snapshot: &mut ZipSnapshot, mutation: &ZipMutation) -> protocol::MutationOutcome<ZipDiff> {
@@ -157,6 +180,19 @@ mod tests {
                 next
             });
         }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn kinds_matches_enum_variants_and_manifest() {
+        let observed: std::collections::BTreeSet<&str> = demo_mutation_cases().iter().map(kind_of).collect();
+        let declared: std::collections::BTreeSet<&str> = KINDS.iter().copied().collect();
+        assert_eq!(observed, declared, "KINDS must list exactly the kebab-case spelling of every ZipMutation variant");
+        assert_eq!(KINDS.len(), demo_mutation_cases().len(), "KINDS must cover every variant exactly once, with no duplicates");
+
+        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../🧪️oracle/🔣️component.json")).expect("valid oracle manifest JSON");
+        let catalog_kinds: std::collections::BTreeSet<String> = manifest["mutationCatalogs"][0]["kinds"].as_array().expect("mutationCatalogs[0].kinds array").iter().map(|value| value.as_str().expect("kind is a string").to_string()).collect();
+        let declared_owned: std::collections::BTreeSet<String> = KINDS.iter().map(|kind| kind.to_string()).collect();
+        assert_eq!(catalog_kinds, declared_owned, "the oracle manifest's mutationCatalogs[0].kinds must match KINDS exactly");
     }
 }
 

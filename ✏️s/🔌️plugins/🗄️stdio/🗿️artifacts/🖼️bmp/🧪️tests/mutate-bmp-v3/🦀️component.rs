@@ -1,0 +1,249 @@
+//! 🦀️ BMP v3/any exhaustive mutation case — Rust adapter, structured like
+//! `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🧪️tests/edit-existing-pdf/🦀️component.rs`: oracle
+//! handlers at top level, subject handlers inside `#[cfg(feature = "sut")] mod subject`, both
+//! projected through the same INDEPENDENT `image` reader (`project_bmp_mutation`) before comparison.
+//!
+//! Every `mutate-<kind>`/`inverse-<kind>` pair is registered from the ONE `KINDS` list this file,
+//! the catalog manifest and the vocabulary's own `KINDS` constant all separately spell out —
+//! `bun ./📜️script.ts contract` is what keeps all three honest against each other (the framework
+//! never parses Rust to check it itself).
+//!
+//! The oracle side never touches this repository's own codec: `oracle_apply_mutation`/
+//! `oracle_undo_mutation` (this subset's own `🧪️oracle/🦀️component.rs`) perform every kind
+//! independently against the registered `image` reference crate. The subject side fully parses the
+//! real document into the typed `BmpSnapshot` and re-serializes from it — never splices bytes.
+
+use semio_repo_test_host::{Adapter, Context, Json, Outcome};
+use semio_s_plugin_stdio_test_oracle::artifacts::bmp::standards::v_v3::subsets::any::{oracle_apply_mutation, oracle_undo_mutation, project_bmp_mutation};
+
+//#region 🔖️Kinds
+/// 📇️ Mirrors `../../🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs`'s own
+/// `KINDS` and `../../🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️oracle/🔣️component.json`'s
+/// `mutationCatalogs[0].kinds` — kept in the SAME declaration order in all three; a mismatch is
+/// caught loudly (either by the contract phase, or by the runner's own "no registration for
+/// scenario" error) rather than silently.
+const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-header-fields", "insert-palette-entry", "remove-palette-entry", "set-palette-entry", "set-pixel-data"];
+//#endregion 🔖️Kinds
+
+//#region 🔖️Input
+const INPUT: &str = "shared://🖼️rathaus-ahlen-grundriss.bmp";
+
+/// 🧫️ Copies the immutable real fixture into the work directory and returns the mutable copy's
+/// bytes — the committed 250 KB-source, 2334x2560, 8-bit palette architectural floor plan
+/// (`rathaus-ahlen-grundriss.bmp`, derived once — see `component.feature`'s own description) is
+/// never written to.
+fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
+    let copy = ctx.copy_fixture(INPUT, Some("input.bmp"))?;
+    std::fs::read(&copy).map_err(|error| error.to_string())
+}
+
+fn no_mutation_spec() -> Json {
+    Json::Object(vec![("kind".to_string(), Json::String("no-mutation".to_string())), ("params".to_string(), Json::Object(Vec::new()))])
+}
+//#endregion 🔖️Input
+
+//#region 🔖️Oracle
+fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
+    let input = mutable_input(ctx)?;
+    let spec = ctx.doc_json()?;
+    let bytes = oracle_apply_mutation(&input, &spec)?;
+    let projection = project_bmp_mutation(&bytes)?;
+    Ok(Outcome::with_raw(bytes, projection))
+}
+
+fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
+    let input = mutable_input(ctx)?;
+    let spec = ctx.doc_json()?;
+    let bytes = oracle_undo_mutation(&input, &spec)?;
+    let projection = project_bmp_mutation(&bytes)?;
+    Ok(Outcome::with_raw(bytes, projection))
+}
+
+fn identity_round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
+    let input = mutable_input(ctx)?;
+    let bytes = oracle_apply_mutation(&input, &no_mutation_spec())?;
+    let projection = project_bmp_mutation(&bytes)?;
+    Ok(Outcome::with_raw(bytes, projection))
+}
+//#endregion 🔖️Oracle
+
+//#region 🔖️Subject
+#[cfg(feature = "sut")]
+mod subject {
+    use super::mutable_input;
+    use protocol::Mutation;
+    use semio_repo_test_host::{Context, Json, Outcome};
+    use semio_s_plugin_stdio_test_oracle::artifacts::bmp::standards::v_v3::subsets::any::project_bmp_mutation;
+    use semio_s_plugin_stdio::artifacts::bmp::standards::v_v3::subsets::any::io::{decode_bmp, encode_bmp};
+    use semio_s_plugin_stdio::artifacts::bmp::standards::v_v3::subsets::any::schema::mutations::{apply_bmp_mutation, BmpMutation};
+    use semio_s_plugin_stdio::artifacts::bmp::standards::v_v3::subsets::any::schema::snapshot::{BmpPaletteEntry, BmpRowOrder};
+    use semio_s_plugin_stdio::artifacts::bmp::BmpSnapshot;
+
+    //#region 🔖️Json
+    fn num(params: &Json, key: &str) -> Option<f64> {
+        match params.get(key) {
+            Some(Json::Number(value)) => Some(*value),
+            _ => None,
+        }
+    }
+    fn as_str(params: &Json, key: &str) -> Option<&str> {
+        match params.get(key) {
+            Some(Json::String(value)) => Some(value.as_str()),
+            _ => None,
+        }
+    }
+    fn as_arr(value: &Json) -> &[Json] {
+        match value {
+            Json::Array(items) => items,
+            _ => &[],
+        }
+    }
+    fn num_at(items: &[Json], index: usize) -> Option<f64> {
+        match items.get(index) {
+            Some(Json::Number(value)) => Some(*value),
+            _ => None,
+        }
+    }
+    fn fill_quad(params: &Json) -> Vec<u8> {
+        let fill = as_arr(params.get("fill").unwrap_or(&Json::Null));
+        (0..4).map(|index| num_at(fill, index).unwrap_or(0.0) as u8).collect()
+    }
+    fn solid_pixels(width: u32, height: u32, quad: &[u8]) -> Vec<u8> {
+        let mut pixels = Vec::with_capacity(width as usize * height as usize * 4);
+        for _ in 0..(width as usize * height as usize) {
+            pixels.extend_from_slice(quad);
+        }
+        pixels
+    }
+    fn entry_from(value: &Json) -> BmpPaletteEntry {
+        BmpPaletteEntry { b: num(value, "b").unwrap_or(0.0) as u8, g: num(value, "g").unwrap_or(0.0) as u8, r: num(value, "r").unwrap_or(0.0) as u8, reserved: num(value, "reserved").unwrap_or(0.0) as u8 }
+    }
+    //#endregion 🔖️Json
+
+    //#region 🔖️MutationFromSpec
+    /// 🔮️ Builds the real typed `BmpMutation` the feature's `{"kind","params"}` docstring
+    /// describes — the ONLY channel from the scenario's authored parameters to the production
+    /// mutation pipeline; `apply_bmp_mutation` does the rest.
+    fn mutation_from_spec(kind: &str, params: &Json, base: &BmpSnapshot) -> Result<BmpMutation, String> {
+        match kind {
+            "no-mutation" => Ok(BmpMutation::NoMutation),
+            "set-snapshot" => {
+                let width = num(params, "width").unwrap_or(1.0).max(1.0) as u32;
+                let height = num(params, "height").unwrap_or(1.0).max(1.0) as u32;
+                let quad = fill_quad(params);
+                let snapshot = BmpSnapshot {
+                    schema: base.schema.clone(),
+                    header_size: 40,
+                    width,
+                    height,
+                    row_order: BmpRowOrder::BottomUp,
+                    planes: 1,
+                    bits_per_pixel: 24,
+                    compression: 0,
+                    image_size: 0,
+                    x_pixels_per_meter: base.x_pixels_per_meter,
+                    y_pixels_per_meter: base.y_pixels_per_meter,
+                    colors_used: 0,
+                    colors_important: 0,
+                    palette: Vec::new(),
+                    pixels: solid_pixels(width, height, &quad),
+                };
+                Ok(BmpMutation::SetSnapshot { snapshot })
+            }
+            // 🧾️ `header_size`/`planes`/`bits_per_pixel`/`compression` are FORCED by `encode_bmp`
+            // regardless of the snapshot (its own documented `EncodeScopeNote`) — `row_order` is
+            // the one field here with a real, honoured effect (drives the on-disk row direction),
+            // so it is the one this kind exercises.
+            "set-header-fields" => Ok(BmpMutation::SetHeaderFields {
+                header_size: None,
+                width: None,
+                height: None,
+                row_order: as_str(params, "row_order").map(|value| if value == "top-down" { BmpRowOrder::TopDown } else { BmpRowOrder::BottomUp }),
+                planes: None,
+                bits_per_pixel: None,
+                compression: None,
+                image_size: None,
+                x_pixels_per_meter: None,
+                y_pixels_per_meter: None,
+                colors_used: None,
+                colors_important: None,
+            }),
+            "insert-palette-entry" => Ok(BmpMutation::InsertPaletteEntry { index: num(params, "index").unwrap_or(0.0) as usize, entry: entry_from(params.get("entry").unwrap_or(&Json::Null)) }),
+            "remove-palette-entry" => Ok(BmpMutation::RemovePaletteEntry { index: num(params, "index").unwrap_or(0.0) as usize }),
+            "set-palette-entry" => Ok(BmpMutation::SetPaletteEntry { index: num(params, "index").unwrap_or(0.0) as usize, entry: entry_from(params.get("entry").unwrap_or(&Json::Null)) }),
+            "set-pixel-data" => Ok(BmpMutation::SetPixelData { pixels: solid_pixels(base.width, base.height, &fill_quad(params)) }),
+            other => Err(format!("mutation kind {other:?} has no subject implementation")),
+        }
+    }
+    //#endregion 🔖️MutationFromSpec
+
+    //#region 🔖️Handlers
+    pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
+        let mut snapshot = decode_bmp(&mutable_input(ctx)?).map_err(|error| format!("decode_bmp failed: {error}"))?;
+        let spec = ctx.doc_json()?;
+        let mutation = mutation_from_spec(&spec.str("kind"), spec.get("params").unwrap_or(&Json::Null), &snapshot)?;
+        let _ = apply_bmp_mutation(&mut snapshot, &mutation);
+        let bytes = encode_bmp(&snapshot).map_err(|error| format!("encode_bmp failed: {error}"))?;
+        let projection = project_bmp_mutation(&bytes)?;
+        Ok(Outcome::with_raw(bytes, projection))
+    }
+
+    /// ↩️ Applies the forward mutation, then applies EVERY mutation `BmpMutation::inverse` returns
+    /// (the vocabulary's own algebraic law, index-aware, computed against the pre-forward `base`)
+    /// — the real production undo pipeline, not a hand-derived counter-mutation.
+    pub fn undo(ctx: &Context) -> Result<Outcome, String> {
+        let base = decode_bmp(&mutable_input(ctx)?).map_err(|error| format!("decode_bmp failed: {error}"))?;
+        let spec = ctx.doc_json()?;
+        let mutation = mutation_from_spec(&spec.str("kind"), spec.get("params").unwrap_or(&Json::Null), &base)?;
+        let mut snapshot = base.clone();
+        let _ = apply_bmp_mutation(&mut snapshot, &mutation);
+        for inverse in <BmpMutation as Mutation<BmpSnapshot>>::inverse(&mutation, &base) {
+            let _ = apply_bmp_mutation(&mut snapshot, &inverse);
+        }
+        let bytes = encode_bmp(&snapshot).map_err(|error| format!("encode_bmp failed: {error}"))?;
+        let projection = project_bmp_mutation(&bytes)?;
+        Ok(Outcome::with_raw(bytes, projection))
+    }
+
+    /// 🚫️ The no-byte-pass-through tripwire: `decode_bmp` → `print_dsl` (the DSL hex-dump text
+    /// codec — BMP has no separate textual format of its own, see `../../../🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs`)
+    /// → `parse_dsl` → `encode_bmp` is the ONLY channel from input to output; identical output
+    /// bytes would mean the input was smuggled through rather than parsed.
+    pub fn identity_round_trip(ctx: &Context) -> Result<Outcome, String> {
+        let input = mutable_input(ctx)?;
+        let snapshot = decode_bmp(&input).map_err(|error| format!("decode_bmp failed: {error}"))?;
+        let text = <BmpSnapshot as store::ArtifactDsl>::print_dsl(&snapshot);
+        let reparsed = <BmpSnapshot as store::ArtifactDsl>::parse_dsl(&text).map_err(|error| format!("parse_dsl failed: {error:?}"))?;
+        let output = encode_bmp(&reparsed).map_err(|error| format!("encode_bmp failed: {error}"))?;
+        if output == input {
+            return Err("byte pass-through: output is bit-identical to the input".into());
+        }
+        let projection = project_bmp_mutation(&output)?;
+        Ok(Outcome::with_raw(output, projection))
+    }
+    //#endregion 🔖️Handlers
+}
+//#endregion 🔖️Subject
+
+//#region 🔖️Registration
+/// 🧭️ Registration entry point the generated host calls. One `mutate-<kind>`/`inverse-<kind>`
+/// pair per declared kind, plus the standalone `identity-round-trip` scenario.
+pub fn adapter() -> Adapter {
+    let mut built = Adapter::new("rust");
+    for &kind in KINDS {
+        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle);
+        built = built.oracle(&format!("inverse-{kind}"), inverse_oracle);
+        #[cfg(feature = "sut")]
+        {
+            built = built.subject(&format!("mutate-{kind}"), subject::mutate);
+            built = built.subject(&format!("inverse-{kind}"), subject::undo);
+        }
+    }
+    built = built.oracle("identity-round-trip", identity_round_trip_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("identity-round-trip", subject::identity_round_trip);
+    }
+    built
+}
+//#endregion 🔖️Registration

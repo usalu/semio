@@ -1,0 +1,13 @@
+[workspace]
+
+[package]
+name = "tsv-iana-any-fixture-gen"
+version = "0.0.0"
+edition = "2021"
+
+[[bin]]
+name = "tsv-iana-any-fixture-gen"
+path = "src/main.rs"
+
+[dependencies]
+csv = "1"

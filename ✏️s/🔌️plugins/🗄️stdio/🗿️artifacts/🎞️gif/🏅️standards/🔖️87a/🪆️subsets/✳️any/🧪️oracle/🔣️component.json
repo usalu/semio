@@ -1,0 +1,23 @@
+{
+  "oracles": [
+    {
+      "id": "gif-87a-mutate",
+      "ecosystem": "rust",
+      "package": "gif",
+      "version": "0.13",
+      "capabilities": ["gif-87a-mutate"],
+      "comparisonProfiles": ["semantic-raster-v1"],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/image-rs/image-gif",
+      "rationale": "The `gif` crate's reader accepts GIF87a's own magic (`Version::V87a`) natively, so it doubles as an independent GIF87a parser and mutator for this subset's own mutation vocabulary — screen/GCT/image-sequence, no GCE-shaped kinds, since 87a genuinely has none. Distinct from the shared `gif` entry in the plugin-root manifest: that one declares `gif-raster` (round-trip creation), this one declares `gif-87a-mutate` (the capability this wave's feature tags), per subset."
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "gif-87a-any",
+      "capability": "gif-87a-mutate",
+      "kinds": ["no-mutation", "set-snapshot", "set-screen-size", "set-global-color-table", "set-background-color-index", "set-pixel-aspect-ratio", "insert-image", "remove-image", "move-image", "set-image-geometry", "set-image-pixels", "set-image-interlace"]
+    }
+  ]
+}

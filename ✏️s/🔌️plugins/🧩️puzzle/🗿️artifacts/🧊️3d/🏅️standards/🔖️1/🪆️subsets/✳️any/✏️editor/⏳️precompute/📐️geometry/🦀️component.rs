@@ -127,21 +127,31 @@ impl Pose3d {
 }
 
 #[derive(Clone)]
-pub(crate) struct CollisionShape(parry3d::shape::SharedShape);
+pub(crate) struct CollisionShape {
+    shape: parry3d::shape::SharedShape,
+    retained_items: usize,
+    retained_bytes: usize,
+    page_bounded: bool,
+}
 
 impl CollisionShape {
     pub(crate) fn from_triangle_mesh(vertices: &[Point3d], indices: Vec<[u32; 3]>) -> Self {
         let verts: Vec<nalgebra::Point3<f32>> = vertices.iter().map(|p| p.0).collect();
+        let vertex_bytes = verts.capacity().saturating_mul(std::mem::size_of::<nalgebra::Point3<f32>>());
+        let index_bytes = indices.capacity().saturating_mul(std::mem::size_of::<[u32; 3]>());
+        let retained_items = usize::from(vertex_bytes != 0) + usize::from(index_bytes != 0);
+        let retained_bytes = vertex_bytes.saturating_add(index_bytes);
+        let page_bounded = vertex_bytes <= 16 * 1024 && index_bytes <= 16 * 1024;
         let mesh = parry3d::shape::TriMesh::with_flags(verts, indices, parry3d::shape::TriMeshFlags::ORIENTED | parry3d::shape::TriMeshFlags::MERGE_DUPLICATE_VERTICES);
-        Self(parry3d::shape::SharedShape::new(mesh))
+        Self { shape: parry3d::shape::SharedShape::new(mesh), retained_items, retained_bytes, page_bounded }
     }
     pub(crate) fn contains_point(&self, pose: &Pose3d, point: &Point3d) -> bool {
-        self.0.contains_point(&pose.0, &point.0)
+        self.shape.contains_point(&pose.0, &point.0)
     }
 }
 
 fn shapes_intersect(pose_a: &Pose3d, a: &CollisionShape, pose_b: &Pose3d, b: &CollisionShape) -> bool {
-    parry3d::query::intersection_test(&pose_a.0, &*a.0, &pose_b.0, &*b.0).unwrap_or(false)
+    parry3d::query::intersection_test(&pose_a.0, &*a.shape, &pose_b.0, &*b.shape).unwrap_or(false)
 }
 //#endregion 🔒️GeometryAdapter
 
@@ -278,6 +288,18 @@ pub(crate) struct CollisionBody {
     pub(crate) parts: Vec<CollisionMeshPart>,
     pub(crate) local_bounds_min: Point3d,
     pub(crate) local_bounds_max: Point3d,
+}
+
+impl CollisionBody {
+    pub(crate) fn retained_parts_backing_credit(&self) -> Option<(usize, usize)> {
+        let bytes = self.parts.capacity().checked_mul(std::mem::size_of::<CollisionMeshPart>())?;
+        (self.parts.capacity() <= 32 && bytes <= 16 * 1024).then_some((usize::from(bytes != 0), bytes))
+    }
+
+    pub(crate) fn retained_part_credit(&self, index: usize) -> Option<(usize, usize)> {
+        let part = self.parts.get(index)?;
+        part.shape.page_bounded.then_some((part.shape.retained_items, part.shape.retained_bytes))
+    }
 }
 
 pub(crate) fn collision_body_from_buffers(positions: &[f32], indices: &[u32]) -> Option<CollisionBody> {
@@ -431,6 +453,52 @@ pub(crate) struct CollisionSpatialIndex {
     entries: BTreeMap<String, CollisionAabb>,
     cells: BTreeMap<(i32, i32, i32), Vec<String>>,
     oversized: BTreeSet<String>,
+    retiring_key: Option<String>,
+    retiring_ids: Option<Vec<String>>,
+    collection_backings: CollisionIndexCollectionBackings,
+}
+
+#[derive(Clone, Debug)]
+struct CollisionIndexCollectionBackings {
+    pages: [Option<Box<[u8; 16 * 1024]>>; 3],
+}
+
+impl CollisionIndexCollectionBackings {
+    fn new() -> Self {
+        Self { pages: std::array::from_fn(|_| Some(Box::new([0; 16 * 1024]))) }
+    }
+
+    fn retire_one(&mut self) -> bool {
+        let Some(page) = self.pages.iter_mut().find(|page| page.is_some()) else { return false };
+        page.take();
+        true
+    }
+
+    fn terminal_owners_empty(&self) -> bool {
+        self.pages.iter().all(Option::is_none)
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum CollisionIndexOwnerCensusStep {
+    Pending { items: usize, bytes: usize },
+    Complete,
+    Rejected,
+}
+
+#[derive(Default)]
+pub(crate) struct CollisionIndexOwnerCensusCursor {
+    section: u8,
+    index: usize,
+    inner: usize,
+}
+
+fn collision_index_string_credit(value: &String) -> Option<(usize, usize)> {
+    (value.capacity() <= 16 * 1024).then_some((usize::from(value.capacity() != 0), value.capacity()))
+}
+
+fn collision_index_fixed_backing_credit(occupied: usize, retained: bool) -> Option<(usize, usize)> {
+    (occupied <= 32 && retained).then_some((1, 16 * 1024))
 }
 
 impl CollisionSpatialIndex {
@@ -438,7 +506,7 @@ impl CollisionSpatialIndex {
 
     pub(crate) fn new(cell_size: f32) -> Self {
         assert!(cell_size.is_finite() && cell_size > 0.0);
-        Self { cell_size, entries: BTreeMap::new(), cells: BTreeMap::new(), oversized: BTreeSet::new() }
+        Self { cell_size, entries: BTreeMap::new(), cells: BTreeMap::new(), oversized: BTreeSet::new(), retiring_key: None, retiring_ids: None, collection_backings: CollisionIndexCollectionBackings::new() }
     }
 
     pub(crate) fn upsert(&mut self, id: String, bounds: CollisionAabb) {
@@ -496,6 +564,128 @@ impl CollisionSpatialIndex {
 
     pub(crate) fn entry_intersects(&self, id: &str, bounds: CollisionAabb) -> bool {
         self.entries.get(id).is_some_and(|candidate| candidate.intersects(&bounds))
+    }
+
+    pub(crate) fn retire_one_owner(&mut self) -> bool {
+        if let Some(key) = self.retiring_key.as_mut() {
+            if key.capacity() != 0 {
+                drop(std::mem::take(key));
+                return false;
+            }
+            self.retiring_key.take();
+            return false;
+        }
+        if let Some(ids) = self.retiring_ids.as_mut() {
+            if let Some(id) = ids.pop() {
+                self.retiring_key = Some(id);
+                return false;
+            }
+            if ids.capacity() != 0 {
+                drop(std::mem::take(ids));
+                return false;
+            }
+            self.retiring_ids.take();
+            return false;
+        }
+        if let Some((key, _)) = self.entries.pop_first() {
+            self.retiring_key = Some(key);
+            return false;
+        }
+        if let Some((_, ids)) = self.cells.pop_first() {
+            self.retiring_ids = Some(ids);
+            return false;
+        }
+        if let Some(key) = self.oversized.pop_first() {
+            self.retiring_key = Some(key);
+            return false;
+        }
+        if self.collection_backings.retire_one() {
+            return false;
+        }
+        true
+    }
+
+    pub(crate) fn terminal_owners_empty(&self) -> bool {
+        self.entries.is_empty() && self.cells.is_empty() && self.oversized.is_empty() && self.retiring_key.is_none() && self.retiring_ids.is_none() && self.collection_backings.terminal_owners_empty()
+    }
+
+    pub(crate) fn census_one_owner(&self, cursor: &mut CollisionIndexOwnerCensusCursor) -> CollisionIndexOwnerCensusStep {
+        let credit = match cursor.section {
+            0 => collision_index_fixed_backing_credit(self.entries.len(), self.collection_backings.pages[0].is_some()),
+            1 => match self.entries.keys().nth(cursor.index) {
+                Some(id) => collision_index_string_credit(id).and_then(|(items, bytes)| items.checked_add(1).map(|items| (items, bytes))),
+                None => {
+                    cursor.section += 1;
+                    cursor.index = 0;
+                    return CollisionIndexOwnerCensusStep::Pending { items: 0, bytes: 0 };
+                }
+            },
+            2 => collision_index_fixed_backing_credit(self.cells.len(), self.collection_backings.pages[1].is_some()),
+            3 => match self.cells.values().nth(cursor.index) {
+                Some(ids) if cursor.inner == 0 => {
+                    let Some(bytes) = ids.capacity().checked_mul(std::mem::size_of::<String>()).filter(|bytes| ids.capacity() <= 32 && *bytes <= 16 * 1024) else {
+                        return CollisionIndexOwnerCensusStep::Rejected;
+                    };
+                    cursor.inner = 1;
+                    return CollisionIndexOwnerCensusStep::Pending { items: usize::from(bytes != 0) + 1, bytes };
+                }
+                Some(ids) => match ids.get(cursor.inner - 1) {
+                    Some(id) => collision_index_string_credit(id),
+                    None => {
+                        cursor.index += 1;
+                        cursor.inner = 0;
+                        return CollisionIndexOwnerCensusStep::Pending { items: 0, bytes: 0 };
+                    }
+                },
+                None => {
+                    cursor.section += 1;
+                    cursor.index = 0;
+                    cursor.inner = 0;
+                    return CollisionIndexOwnerCensusStep::Pending { items: 0, bytes: 0 };
+                }
+            },
+            4 => collision_index_fixed_backing_credit(self.oversized.len(), self.collection_backings.pages[2].is_some()),
+            5 => match self.oversized.iter().nth(cursor.index) {
+                Some(id) => collision_index_string_credit(id).and_then(|(items, bytes)| items.checked_add(1).map(|items| (items, bytes))),
+                None => {
+                    cursor.section += 1;
+                    cursor.index = 0;
+                    return CollisionIndexOwnerCensusStep::Pending { items: 0, bytes: 0 };
+                }
+            },
+            6 => self.retiring_key.as_ref().map_or(Some((0, 0)), collision_index_string_credit),
+            7 => {
+                let Some(ids) = &self.retiring_ids else {
+                    cursor.section += 1;
+                    return CollisionIndexOwnerCensusStep::Pending { items: 0, bytes: 0 };
+                };
+                if cursor.inner == 0 {
+                    let Some(bytes) = ids.capacity().checked_mul(std::mem::size_of::<String>()).filter(|bytes| ids.capacity() <= 32 && *bytes <= 16 * 1024) else {
+                        return CollisionIndexOwnerCensusStep::Rejected;
+                    };
+                    cursor.inner = 1;
+                    return CollisionIndexOwnerCensusStep::Pending { items: usize::from(bytes != 0), bytes };
+                } else {
+                    match ids.get(cursor.inner - 1) {
+                        Some(id) => collision_index_string_credit(id),
+                        None => {
+                            cursor.section += 1;
+                            return CollisionIndexOwnerCensusStep::Pending { items: 0, bytes: 0 };
+                        }
+                    }
+                }
+            }
+            _ => return CollisionIndexOwnerCensusStep::Complete,
+        };
+        let Some((items, bytes)) = credit else { return CollisionIndexOwnerCensusStep::Rejected };
+        if matches!(cursor.section, 1 | 5) {
+            cursor.index += 1;
+        } else if matches!(cursor.section, 3 | 7) && cursor.inner != 0 {
+            cursor.inner += 1;
+        } else {
+            cursor.section += 1;
+        }
+        CollisionIndexOwnerCensusStep::Pending { items, bytes }
     }
 
     fn covered_cells(&self, bounds: CollisionAabb) -> Option<Vec<(i32, i32, i32)>> {
@@ -1068,6 +1258,39 @@ mod tests {
         assert_eq!(index.query(near), vec!["near".to_string(), "world".to_string()]);
         assert_eq!(index.query(world), vec!["near".to_string(), "world".to_string()]);
         assert!(index.remove("world"));
+    }
+
+    #[test]
+    fn spatial_index_close_retains_bucket_values_and_retires_one_credited_owner_per_grant() {
+        fn retained_credit(index: &CollisionSpatialIndex) -> (usize, usize) {
+            let mut cursor = CollisionIndexOwnerCensusCursor::default();
+            let mut credit = (0usize, 0usize);
+            loop {
+                match index.census_one_owner(&mut cursor) {
+                    CollisionIndexOwnerCensusStep::Pending { items, bytes } => {
+                        credit.0 = credit.0.checked_add(items).expect("bounded items");
+                        credit.1 = credit.1.checked_add(bytes).expect("bounded bytes");
+                    }
+                    CollisionIndexOwnerCensusStep::Complete => return credit,
+                    CollisionIndexOwnerCensusStep::Rejected => panic!("bounded credit"),
+                }
+            }
+        }
+
+        let mut index = CollisionSpatialIndex::new(2.0);
+        index.upsert("alpha-owned".into(), CollisionAabb { min: [-1.0; 3], max: [1.0; 3] });
+        index.upsert("oversized-owned".into(), CollisionAabb { min: [-1.0e9; 3], max: [1.0e9; 3] });
+        let mut grants = 0;
+        while !index.terminal_owners_empty() {
+            let before = retained_credit(&index);
+            assert!(!index.retire_one_owner(), "a populated spatial index cannot bulk-retire in one grant");
+            let after = retained_credit(&index);
+            assert!(before.0.saturating_sub(after.0) <= 1, "one close grant releases at most one exact allocation/root");
+            assert!(before.1.saturating_sub(after.1) <= 16 * 1024, "one close grant releases at most one admitted page");
+            grants += 1;
+        }
+        assert!(grants > 4, "entry, bucket vector, nested ids, and oversized key retire independently");
+        assert!(index.retire_one_owner());
     }
 
     #[test]

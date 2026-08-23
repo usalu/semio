@@ -1,0 +1,13 @@
+[workspace]
+
+[package]
+name = "gif87a-fixture-derive"
+version = "0.0.0"
+edition = "2021"
+
+[[bin]]
+name = "gif87a-fixture-derive"
+path = "src/main.rs"
+
+[dependencies]
+gif = "0.13"

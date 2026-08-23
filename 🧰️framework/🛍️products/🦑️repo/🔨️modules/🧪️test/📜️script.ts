@@ -369,6 +369,10 @@ function executeOne(repoRoot: string, discovered: DiscoveredCase, level: TestLev
     problems.push(`${discovered.caseDir}: ${implementation} ${role} host exited ${probe.status} without emitting results`);
     if (probe.stderr.trim() !== "") problems.push(probe.stderr.trimEnd());
   }
+  // 🏁️Both generated directories are marked, not just the results one. An unmarked work directory
+  // reads as permanently interrupted, and `clean test --stale` would then delete the work directory
+  // of a run that is still executing in a parallel session.
+  markRunComplete(plan.workDir);
   markRunComplete(plan.outputDir);
   return { results, problems: [...problems, ...readProblems.map((problem) => `${discovered.caseDir}: ${problem}`)] };
 }
@@ -553,8 +557,14 @@ class CleanScript extends Script {
   run(segments: string[]): void {
     const dry = segments.includes("--dry");
     const stale = segments.includes("--stale");
+    const overIndex = segments.indexOf("--over");
+    const over = overIndex === -1 ? undefined : Number(segments[overIndex + 1]);
+    if (over !== undefined && !Number.isFinite(over)) {
+      console.error("[clean test] --over needs a byte count, for example `--over 104857600`");
+      process.exit(1);
+    }
     const liveTestIds = new Set(discoverTestCases(this.repoRoot).map((entry) => `${entry.owner}::${entry.case}`));
-    const report = cleanTestOutputs(this.repoRoot, { dry, stale, liveTestIds: stale ? liveTestIds : undefined });
+    const report = cleanTestOutputs(this.repoRoot, { dry, stale, over, liveTestIds: stale ? liveTestIds : undefined });
     console.log(formatCleanReport(this.repoRoot, report));
     // 🚫️Which areas may never be touched is taxonomy vocabulary; this router names none of them.
     const leaked = report.removals.filter((row) => isExcludedTestPath(this.repoRoot, row.path));

@@ -74,6 +74,11 @@ pub enum BmpMutation {
         pixels: Vec<u8>,
     },
 }
+
+/// 🏷️ Kebab-case spelling of every `BmpMutation` variant, including `NoMutation` and `SetSnapshot`
+/// — the wave-7 mutation catalog contract (`../../🧪️oracle/🔣️component.json`'s `mutationCatalogs[].kinds`)
+/// mirrors this list verbatim; `kinds_matches_enum_and_manifest` (below) is what keeps the two honest.
+pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-header-fields", "insert-palette-entry", "remove-palette-entry", "set-palette-entry", "set-pixel-data"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -515,6 +520,50 @@ mod tests {
         }
     }
     //#endregion 🔖️OpTextBinaryRoundtripLaw
+
+    //#region 🔖️KindsLaw
+    /// 🏷️ `KINDS` covers every variant exactly once — the exhaustive match fails to compile the
+    /// moment a variant is added or renamed without updating `KINDS` alongside it.
+    #[semio_framework_async_macros::async_test]
+    async fn kinds_matches_enum_variants() {
+        fn kebab_of(mutation: &BmpMutation) -> &'static str {
+            match mutation {
+                BmpMutation::NoMutation => "no-mutation",
+                BmpMutation::SetSnapshot { .. } => "set-snapshot",
+                BmpMutation::SetHeaderFields { .. } => "set-header-fields",
+                BmpMutation::InsertPaletteEntry { .. } => "insert-palette-entry",
+                BmpMutation::RemovePaletteEntry { .. } => "remove-palette-entry",
+                BmpMutation::SetPaletteEntry { .. } => "set-palette-entry",
+                BmpMutation::SetPixelData { .. } => "set-pixel-data",
+            }
+        }
+        let mut seen: Vec<&'static str> = demo_mutation_cases().iter().map(kebab_of).collect();
+        seen.sort();
+        seen.dedup();
+        assert_eq!(seen, {
+            let mut expected: Vec<&'static str> = KINDS.to_vec();
+            expected.sort();
+            expected
+        });
+        assert_eq!(KINDS.len(), 7, "KINDS must list every BmpMutation variant exactly once");
+    }
+
+    /// 🏷️ `KINDS` matches the wave-7 mutation catalog's declared `kinds` — the framework never
+    /// parses Rust, so this test is what keeps the manifest and the enum from drifting apart.
+    #[semio_framework_async_macros::async_test]
+    async fn kinds_matches_manifest_catalog() {
+        const MANIFEST: &str = include_str!("../../🧪️oracle/🔣️component.json");
+        let parsed: serde_json::Value = serde_json::from_str(MANIFEST).expect("oracle manifest must be valid JSON");
+        let catalogs = parsed.get("mutationCatalogs").and_then(|value| value.as_array()).expect("manifest must declare mutationCatalogs");
+        let catalog = catalogs.first().expect("manifest must declare at least one mutation catalog");
+        let declared: Vec<String> = catalog.get("kinds").and_then(|value| value.as_array()).expect("catalog must declare kinds").iter().map(|value| value.as_str().expect("kind must be a string").to_string()).collect();
+        let mut declared_sorted = declared.clone();
+        declared_sorted.sort();
+        let mut expected_sorted: Vec<String> = KINDS.iter().map(|kind| kind.to_string()).collect();
+        expected_sorted.sort();
+        assert_eq!(declared_sorted, expected_sorted, "manifest kinds {:?} must match KINDS {:?}", declared, KINDS);
+    }
+    //#endregion 🔖️KindsLaw
 }
 //#endregion 🧪️Tests
 

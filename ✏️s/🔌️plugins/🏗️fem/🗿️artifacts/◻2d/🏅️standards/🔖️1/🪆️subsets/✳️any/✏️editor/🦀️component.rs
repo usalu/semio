@@ -22,7 +22,7 @@ use crate::model::{Dof, ElementResult};
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_plugin::{
     built_text_node, create_default_layout, ActionArgDef, ActionArgOption, AppIo, ArtifactEditor, ArtifactView, ConfigSpec, ConfigView, DraftView, Editor, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
-    MediaType, NoDraft, NoDraftMutation,
+    MediaType, NoDraft, NoDraftMutation, PluginCloseStep,
 };
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -217,6 +217,22 @@ impl ArtifactEditor for Fem2dPlayApp {
         Some(fem2d_io())
     }
 
+    fn mounted_job_maintenance_step(instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        Ok(crate::editor::fem2d::session::maintenance_step(instance_id, maximum_items, maximum_bytes))
+    }
+
+    fn mounted_job_close_step(instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+        Ok(crate::editor::fem2d::session::close_step(instance_id, maximum_items, maximum_bytes))
+    }
+
+    fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {
+        crate::editor::fem2d::session::terminal_is_empty(instance_id)
+    }
+
+    fn mounted_job_needs_snapshot_read(operation: semio_framework_plugin::AppRenderOperationContext) -> bool {
+        crate::editor::fem2d::session::needs_snapshot_read(operation)
+    }
+
     /// 🎞️ `"document:out"` reproduces the trait's default whole-document pack (overriding `export_media`
     /// shadows the trait's provided body for every port on this app, not just the new one). `"results:out"`
     /// runs every load case/combination's analysis fresh and returns them as plain JSON text in a
@@ -298,6 +314,10 @@ impl ArtifactEditor for Fem2dPlayApp {
         command.dispatch(doc, cfg)
     }
 
+    async fn pending_effects(doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, Fem2dConfig>) -> Vec<semio_framework::kernel::Effect> {
+        crate::editor::fem2d::session::reconcile(doc)
+    }
+
     /// 🎯️ Fem2d has no user-visible config defaults to expose (all of `addRegion`'s
     /// `thickness`/`meshSize` defaults are baked directly into its handler, not user-configurable
     /// settings) — declaring `ConfigSpec::empty()` explicitly keeps the typed channel surface
@@ -309,7 +329,7 @@ impl ArtifactEditor for Fem2dPlayApp {
     async fn render(body_key: &str, doc: &ArtifactView<'_, Fem2dSnapshot>, cfg: &ConfigView<'_, Fem2dConfig>) -> semio_framework_plugin::ComponentTree {
         let camera = &cfg.snapshot.camera;
         semio_framework_plugin::built_to_component_tree(match body_key {
-            model_window::BODY_KEY => model_window::render(doc.snapshot, camera),
+            model_window::BODY_KEY => crate::editor::fem2d::session::with_live_visual(doc.render_operation(), |visual| model_window::render_with_progress(doc.snapshot, camera, visual)),
             results_window::BODY_KEY => results_window::render(doc.snapshot, &config_result_display(cfg.snapshot), camera),
             _ => built_text_node(Label::data(format!("Unknown body: {body_key}"))),
         })

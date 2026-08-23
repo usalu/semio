@@ -24,6 +24,10 @@ pub enum WavMutation {
     SetOtherChunks { chunks: Vec<RiffChunk> },
 }
 
+/// 🦠️ Kebab-case spelling of every `WavMutation` variant — the exhaustive vocabulary the mutation
+/// oracle catalog (`../../🧪️oracle/🔣️component.json`) is measured against. Order matches the enum.
+pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-fmt", "set-data", "set-other-chunks"];
+
 impl Mutation<WavSnapshot> for WavMutation {
     type Diff = WavDiff;
 
@@ -147,6 +151,39 @@ mod tests {
         }
     }
     //#endregion inverse_law
+
+    //#region kinds_matches_enum_and_manifest
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn kind_of(m: &WavMutation) -> &'static str {
+        match m {
+            WavMutation::NoMutation => "no-mutation",
+            WavMutation::SetSnapshot { .. } => "set-snapshot",
+            WavMutation::SetFmt { .. } => "set-fmt",
+            WavMutation::SetData { .. } => "set-data",
+            WavMutation::SetOtherChunks { .. } => "set-other-chunks",
+        }
+    }
+
+    /// 🧪️ `KINDS` must name exactly the enum's own variants (the match above is exhaustive, so a
+    /// variant added without updating `kind_of` fails to compile) AND exactly the mutation catalog's
+    /// declared `kinds` — the framework never parses Rust, so this test is what keeps the manifest
+    /// honest.
+    #[semio_framework_async_macros::async_test]
+    async fn kinds_matches_enum_variants_and_manifest() {
+        let base = base_snapshot();
+        let mut from_enum: Vec<&str> = variants(&base).iter().map(kind_of).collect();
+        from_enum.sort_unstable();
+        from_enum.dedup();
+        let mut from_const = KINDS.to_vec();
+        from_const.sort_unstable();
+        assert_eq!(from_const, from_enum, "KINDS must name exactly the enum's variants");
+
+        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../🧪️oracle/🔣️component.json")).expect("valid oracle manifest JSON");
+        let mut from_manifest: Vec<String> = manifest["mutationCatalogs"][0]["kinds"].as_array().expect("mutationCatalogs[0].kinds").iter().map(|value| value.as_str().expect("kind is a string").to_string()).collect();
+        from_manifest.sort_unstable();
+        assert_eq!(from_const, from_manifest.iter().map(String::as_str).collect::<Vec<_>>(), "KINDS must name exactly the manifest's declared kinds");
+    }
+    //#endregion kinds_matches_enum_and_manifest
 
     //#region op_text_binary_roundtrip_law
     #[semio_framework_async_macros::async_test]

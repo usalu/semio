@@ -96,7 +96,53 @@ pub enum PdfMutation {
     RemoveTrailerEntry {
         key: String,
     },
+    /// 🔀️ Moves the page at BASE-state index `from` to FINAL-state index `to` -- same shape as
+    /// `PptxMutation::MoveSlide`, PDF's own precedent for a reorder mutation.
+    MovePage {
+        from: usize,
+        to: usize,
+    },
+    /// ✏️️ REPLACES page `index`'s authoring text outright. Distinct from `AppendPageContent`,
+    /// which only ever grows the text and (for lack of a natural counterpart) falls back to
+    /// `SetSnapshot` for its own inverse -- this variant reads the prior text from `base` and
+    /// carries a proper, minimal `SetPageContent` inverse instead.
+    SetPageContent {
+        index: usize,
+        text: String,
+    },
+    /// 🔄️ Sets page `index`'s resolved `/Rotate` value (degrees, one of 0/90/180/270 per ISO
+    /// 32000-1 §7.7.3.4 -- `PdfPage::rotate`/`PdfPageDiff::rotate` already carry the wider `i32`
+    /// the codec round-trips; `u16` is this mutation's own, narrower authoring surface).
+    SetPageRotation {
+        index: usize,
+        rotation: u16,
+    },
 }
+
+/// 📇️ Kebab-case spelling of every `PdfMutation` variant, in declaration order -- the exhaustive
+/// mutation catalog `../🧪️oracle/🔣️component.json`'s `kinds` array is required to match verbatim
+/// (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest; the
+/// framework never parses Rust to check it itself).
+pub const KINDS: &[&str] = &[
+    "no-mutation",
+    "set-snapshot",
+    "insert-page",
+    "remove-page",
+    "set-page-media-box",
+    "set-page-crop-box",
+    "append-page-content",
+    "set-info",
+    "insert-object",
+    "remove-object",
+    "set-object-value",
+    "set-dict-entry",
+    "remove-dict-entry",
+    "set-trailer-entry",
+    "remove-trailer-entry",
+    "move-page",
+    "set-page-content",
+    "set-page-rotation",
+];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -137,6 +183,9 @@ impl Mutation<PdfSnapshot> for PdfMutation {
             PdfMutation::RemoveDictEntry { id, path, key } => diff::diff_remove_dict_entry(base, *id, path, key),
             PdfMutation::SetTrailerEntry { key, value } => diff::diff_set_trailer_entry(base, key, value.clone()),
             PdfMutation::RemoveTrailerEntry { key } => diff::diff_remove_trailer_entry(base, key),
+            PdfMutation::MovePage { from, to } => diff::diff_move_page(base, *from, *to),
+            PdfMutation::SetPageContent { index, text } => diff::diff_set_page_content(*index, text),
+            PdfMutation::SetPageRotation { index, rotation } => diff::diff_set_page_rotation(*index, *rotation as i32),
         })
     }
 
@@ -186,6 +235,25 @@ impl Mutation<PdfSnapshot> for PdfMutation {
                 Some(e) => vec![PdfMutation::SetTrailerEntry { key: key.clone(), value: e.value.clone() }],
                 None => vec![PdfMutation::NoMutation],
             },
+            PdfMutation::MovePage { from, to } => match base.pages.get(*from) {
+                // 🧭️ Mirrors `diff_move_page`'s own clamp: after the removal the page lands at
+                // `min(to, len-1)`, so moving IT back to `from` restores the original order exactly
+                // (same reasoning `PptxMutation::MoveSlide`'s inverse documents).
+                Some(_) => {
+                    let len = base.pages.len();
+                    let final_pos = (*to).min(len.saturating_sub(1));
+                    vec![PdfMutation::MovePage { from: final_pos, to: *from }]
+                }
+                None => vec![PdfMutation::NoMutation],
+            },
+            PdfMutation::SetPageContent { index, .. } => {
+                let prior = base.pages.get(*index).map(|p| p.text.clone()).unwrap_or_default();
+                vec![PdfMutation::SetPageContent { index: *index, text: prior }]
+            }
+            PdfMutation::SetPageRotation { index, .. } => {
+                let prior = base.pages.get(*index).map(|p| p.rotate).unwrap_or(0);
+                vec![PdfMutation::SetPageRotation { index: *index, rotation: prior.rem_euclid(360) as u16 }]
+            }
         }
     }
 }
@@ -283,6 +351,9 @@ fn print_pdf_mutation(m: &PdfMutation) -> String {
         PdfMutation::RemoveDictEntry { id, path, key } => format!("remove-dict-entry id={} path={} key={}", enc_objref(id), enc_path(path), enc_str(key)),
         PdfMutation::SetTrailerEntry { key, value } => format!("set-trailer-entry key={} value={}", enc_str(key), enc_pdf_object(value)),
         PdfMutation::RemoveTrailerEntry { key } => format!("remove-trailer-entry key={}", enc_str(key)),
+        PdfMutation::MovePage { from, to } => format!("move-page from={from} to={to}"),
+        PdfMutation::SetPageContent { index, text } => format!("set-page-content index={index} text={}", enc_str(text)),
+        PdfMutation::SetPageRotation { index, rotation } => format!("set-page-rotation index={index} rotation={rotation}"),
     }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -309,6 +380,9 @@ fn parse_pdf_mutation(line: &str) -> Result<PdfMutation, String> {
         "remove-dict-entry" => Ok(PdfMutation::RemoveDictEntry { id: dec_objref(arg("id")?)?, path: dec_path(arg("path")?)?, key: dec_str(arg("key")?)? }),
         "set-trailer-entry" => Ok(PdfMutation::SetTrailerEntry { key: dec_str(arg("key")?)?, value: dec_pdf_object(arg("value")?)? }),
         "remove-trailer-entry" => Ok(PdfMutation::RemoveTrailerEntry { key: dec_str(arg("key")?)? }),
+        "move-page" => Ok(PdfMutation::MovePage { from: usize_arg("from")?, to: usize_arg("to")? }),
+        "set-page-content" => Ok(PdfMutation::SetPageContent { index: usize_arg("index")?, text: dec_str(arg("text")?)? }),
+        "set-page-rotation" => Ok(PdfMutation::SetPageRotation { index: usize_arg("index")?, rotation: arg("rotation")?.parse().map_err(|e: std::num::ParseIntError| e.to_string())? }),
         other => Err(format!("pdf mutation: unknown keyword {other:?}")),
     }
 }
@@ -347,6 +421,9 @@ impl OpBinary for PdfMutation {
             PdfMutation::RemoveDictEntry { .. } => 12,
             PdfMutation::SetTrailerEntry { .. } => 13,
             PdfMutation::RemoveTrailerEntry { .. } => 14,
+            PdfMutation::MovePage { .. } => 15,
+            PdfMutation::SetPageContent { .. } => 16,
+            PdfMutation::SetPageRotation { .. } => 17,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -398,6 +475,18 @@ impl OpBinary for PdfMutation {
                 enc_pdf_object_bin(value, &mut out);
             }
             PdfMutation::RemoveTrailerEntry { key } => write_str_lp(&mut out, key),
+            PdfMutation::MovePage { from, to } => {
+                store::pack_rt::write_varint_u64(&mut out, *from as u64);
+                store::pack_rt::write_varint_u64(&mut out, *to as u64);
+            }
+            PdfMutation::SetPageContent { index, text } => {
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                write_str_lp(&mut out, text);
+            }
+            PdfMutation::SetPageRotation { index, rotation } => {
+                store::pack_rt::write_varint_u64(&mut out, *index as u64);
+                store::pack_rt::write_varint_u64(&mut out, *rotation as u64);
+            }
         }
         Ok(out)
     }
@@ -469,6 +558,21 @@ impl OpBinary for PdfMutation {
                 Ok(PdfMutation::SetTrailerEntry { key, value })
             }
             14 => Ok(PdfMutation::RemoveTrailerEntry { key: read_str_lp(&mut reader).map_err(|e| malformed("op key", reader.position(), e))? }),
+            15 => {
+                let from = reader.read_varint_u64().map_err(|e| malformed("op from", reader.position(), e.to_string()))? as usize;
+                let to = reader.read_varint_u64().map_err(|e| malformed("op to", reader.position(), e.to_string()))? as usize;
+                Ok(PdfMutation::MovePage { from, to })
+            }
+            16 => {
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let text = read_str_lp(&mut reader).map_err(|e| malformed("op text", reader.position(), e))?;
+                Ok(PdfMutation::SetPageContent { index, text })
+            }
+            17 => {
+                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let rotation = reader.read_varint_u64().map_err(|e| malformed("op rotation", reader.position(), e.to_string()))? as u16;
+                Ok(PdfMutation::SetPageRotation { index, rotation })
+            }
             other => Err(malformed("op tag", 1, format!("unknown PdfMutation tag {other}"))),
         }?;
         if reader.remaining() != 0 {
@@ -543,6 +647,9 @@ mod tests {
             PdfMutation::RemoveDictEntry { id: oref(1, 0), path: vec![], key: "Type".into() },
             PdfMutation::SetTrailerEntry { key: "Prev".into(), value: PdfObject::Int(100) },
             PdfMutation::RemoveTrailerEntry { key: "Size".into() },
+            PdfMutation::MovePage { from: 0, to: 2 },
+            PdfMutation::SetPageContent { index: 0, text: "replaced".into() },
+            PdfMutation::SetPageRotation { index: 0, rotation: 90 },
         ];
         for m in cases {
             let mut snap = base.clone();
@@ -578,6 +685,15 @@ mod tests {
         round_trips(&base, PdfMutation::SetTrailerEntry { key: "Prev".into(), value: PdfObject::Int(100) });
         round_trips(&base, PdfMutation::SetTrailerEntry { key: "Size".into(), value: PdfObject::Int(4) });
         round_trips(&base, PdfMutation::RemoveTrailerEntry { key: "Size".into() });
+        round_trips(&base, PdfMutation::MovePage { from: 0, to: 2 });
+        round_trips(&base, PdfMutation::MovePage { from: 2, to: 0 });
+        round_trips(&base, PdfMutation::MovePage { from: 1, to: 1 }); // no-op move
+        round_trips(&base, PdfMutation::MovePage { from: 0, to: 99 }); // clamped to len-1
+        round_trips(&base, PdfMutation::MovePage { from: 99, to: 0 }); // out-of-range from: no-op
+        round_trips(&base, PdfMutation::SetPageContent { index: 0, text: "replaced text".into() });
+        round_trips(&base, PdfMutation::SetPageContent { index: 99, text: "out of range".into() });
+        round_trips(&base, PdfMutation::SetPageRotation { index: 0, rotation: 90 });
+        round_trips(&base, PdfMutation::SetPageRotation { index: 99, rotation: 180 }); // out of range: no-op
     }
 
     #[test]
@@ -659,6 +775,9 @@ mod tests {
             PdfMutation::RemoveDictEntry { id: oref(1, 0), path: vec![], key: "Type".into() },
             PdfMutation::SetTrailerEntry { key: "Prev".into(), value: PdfObject::Int(100) },
             PdfMutation::RemoveTrailerEntry { key: "Size".into() },
+            PdfMutation::MovePage { from: 0, to: 2 },
+            PdfMutation::SetPageContent { index: 0, text: "replaced text\nsecond line".into() },
+            PdfMutation::SetPageRotation { index: 0, rotation: 270 },
         ];
         for mutation in mutations {
             let printed = mutation.print_op();
@@ -672,6 +791,43 @@ mod tests {
         }
     }
     //#endregion op_codec_roundtrip_law
+
+    //#region kinds_law
+    /// 🧪️ Keeps `KINDS` honest against the enum it claims to spell: every variant's
+    /// `print_pdf_mutation` keyword, in the SAME declaration order `OpBinary`'s own tag match
+    /// uses, must equal `KINDS` entry-for-entry -- the framework never parses Rust to check this
+    /// itself (see `KINDS`'s own doc comment), so this test is the one thing that does.
+    #[test]
+    fn kinds_const_matches_enum_variants_in_declaration_order() {
+        let base = base_snapshot();
+        let one_per_variant = vec![
+            PdfMutation::NoMutation,
+            PdfMutation::SetSnapshot { snapshot: base.clone() },
+            PdfMutation::InsertPage { index: 0, page: sample_page(9) },
+            PdfMutation::RemovePage { index: 0 },
+            PdfMutation::SetPageMediaBox { index: 0, media_box: [0.0, 0.0, 1.0, 1.0] },
+            PdfMutation::SetPageCropBox { index: 0, crop_box: None },
+            PdfMutation::AppendPageContent { index: 0, text: "x".into() },
+            PdfMutation::SetInfo { info: PdfInfo::default() },
+            PdfMutation::InsertObject { id: oref(3, 0), value: PdfObject::Null },
+            PdfMutation::RemoveObject { id: oref(1, 0) },
+            PdfMutation::SetObjectValue { id: oref(1, 0), value: PdfObject::Null },
+            PdfMutation::SetDictEntry { id: oref(1, 0), path: vec![], key: "K".into(), value: PdfObject::Null },
+            PdfMutation::RemoveDictEntry { id: oref(1, 0), path: vec![], key: "K".into() },
+            PdfMutation::SetTrailerEntry { key: "K".into(), value: PdfObject::Null },
+            PdfMutation::RemoveTrailerEntry { key: "K".into() },
+            PdfMutation::MovePage { from: 0, to: 1 },
+            PdfMutation::SetPageContent { index: 0, text: "x".into() },
+            PdfMutation::SetPageRotation { index: 0, rotation: 0 },
+        ];
+        assert_eq!(one_per_variant.len(), KINDS.len(), "one_per_variant must cover every KINDS entry exactly once");
+        for (mutation, kind) in one_per_variant.iter().zip(KINDS.iter()) {
+            let printed = mutation.print_op();
+            let keyword = printed.split(' ').next().unwrap_or(&printed);
+            assert_eq!(keyword, *kind, "KINDS order must match the enum's own OpText keyword order for {mutation:?}");
+        }
+    }
+    //#endregion kinds_law
 }
 //#endregion Tests
 

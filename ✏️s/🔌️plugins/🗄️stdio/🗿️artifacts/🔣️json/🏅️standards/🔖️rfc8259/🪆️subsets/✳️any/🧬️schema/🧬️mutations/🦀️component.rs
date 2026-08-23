@@ -93,6 +93,11 @@ pub enum JsonMutation {
     },
 }
 
+/// 🧾️ Kebab-case spelling of every `JsonMutation` variant, in declaration order — the exhaustive
+/// mutation catalog `json-rfc8259-any` (`../../🧪️oracle/🔣️component.json`) is measured against
+/// this exact list. `kinds_match_enum_and_catalog` proves it never drifts from either side.
+pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-member", "remove-member", "insert-array-element", "remove-array-element", "set-scalar"];
+
 impl Default for JsonMutation {
     fn default() -> Self {
         JsonMutation::NoMutation
@@ -638,6 +643,44 @@ mod tests {
         }
     }
     //#endregion 🔖️OpCodecTests
+
+    //#region 🔖️KindsConformanceLaw
+    /// 🧾️ Proves `KINDS` never drifts from either side it must stay honest against: the ENUM
+    /// (every variant, in declaration order) and the sibling oracle manifest's `kinds` array, read
+    /// as text since the framework never parses Rust.
+    #[semio_framework_async_macros::async_test]
+    async fn kinds_match_enum_and_catalog() {
+        fn kind_of(mutation: &JsonMutation) -> &'static str {
+            match mutation {
+                JsonMutation::NoMutation => "no-mutation",
+                JsonMutation::SetSnapshot { .. } => "set-snapshot",
+                JsonMutation::SetMember { .. } => "set-member",
+                JsonMutation::RemoveMember { .. } => "remove-member",
+                JsonMutation::InsertArrayElement { .. } => "insert-array-element",
+                JsonMutation::RemoveArrayElement { .. } => "remove-array-element",
+                JsonMutation::SetScalar { .. } => "set-scalar",
+            }
+        }
+        let samples = [
+            JsonMutation::NoMutation,
+            JsonMutation::SetSnapshot { snapshot: JsonSnapshot::default() },
+            JsonMutation::SetMember { path: vec![], key: String::new(), value: JsonValue::Null },
+            JsonMutation::RemoveMember { path: vec![], key: String::new() },
+            JsonMutation::InsertArrayElement { path: vec![], index: 0, value: JsonValue::Null },
+            JsonMutation::RemoveArrayElement { path: vec![], index: 0 },
+            JsonMutation::SetScalar { path: vec![], value: JsonValue::Null },
+        ];
+        let from_enum: Vec<&'static str> = samples.iter().map(kind_of).collect();
+        assert_eq!(from_enum, KINDS, "KINDS must list every JsonMutation variant, in declaration order");
+
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let needle = "\"kinds\": [";
+        let start = manifest.find(needle).expect("manifest declares a kinds array") + needle.len();
+        let end = start + manifest[start..].find(']').expect("kinds array is closed");
+        let declared: Vec<String> = manifest[start..end].split(',').map(|entry| entry.trim().trim_matches('"').to_string()).filter(|entry| !entry.is_empty()).collect();
+        assert_eq!(declared, KINDS, "the oracle manifest's kinds must match JsonMutation exactly");
+    }
+    //#endregion 🔖️KindsConformanceLaw
 }
 //#endregion 🧪️Tests
 

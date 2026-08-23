@@ -244,8 +244,8 @@ pub use input::{DragAxis, DragState, HitKind, HitTarget, InputState, KeyAction, 
 pub use prepared::OffscreenPresentToken;
 #[cfg(feature = "wgpu-engine")]
 pub use prepared::{
-    PreparedPresenterWitness, PreparedRasterGeneration, PreparedRasterPages, PreparedRasterProducer, PreparedRasterProducerStep, PreparedRasterRejected, PreparedRenderEviction, PreparedRenderGate, PreparedRenderInput, PreparedRenderJob,
-    PreparedRenderLimits, PreparedRenderPacket, PreparedRenderReceiver, PreparedRenderRejection, PreparedRenderReplacement, PreparedRenderUpload, PreparedRenderUsage, RenderDirective, UiPresentToken, PREPARED_RASTER_PAGE_BYTES,
+    PreparedPresenterWitness, PreparedRasterGeneration, PreparedRasterPages, PreparedRasterProducer, PreparedRasterProducerStep, PreparedRasterRejected, PreparedRasterReservation, PreparedRenderEviction, PreparedRenderGate, PreparedRenderInput,
+    PreparedRenderJob, PreparedRenderLimits, PreparedRenderPacket, PreparedRenderReceiver, PreparedRenderRejection, PreparedRenderReplacement, PreparedRenderUpload, PreparedRenderUsage, RenderDirective, UiPresentToken, PREPARED_RASTER_PAGE_BYTES,
 };
 #[cfg(feature = "wgpu-engine")]
 // 🎬️ Relocated out of this crate into `semio-framework-ui-scene`'s `math` module (ticket

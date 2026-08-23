@@ -8496,6 +8496,8 @@ pub mod app {
         /// its own `ArtifactVcs` history (never an inline subtree). See {@link ChildContentView}.
         pub children: ChildContentView,
         operation: Option<AppOperationContext>,
+        render_operation: Option<AppRenderOperationContext>,
+        snapshot_read: std::sync::Mutex<Option<store::SnapshotRead<P>>>,
     }
 
     /// 🪪️ Durable authority captured once at public command admission and copied into every
@@ -8506,6 +8508,17 @@ pub mod app {
         pub parent_document_id: String,
         pub operation_id: u64,
         pub generation: u64,
+        pub canonical_base_revision: [u8; 32],
+    }
+
+    /// 🎨️ Fixed authority for one live renderer-observed document revision. Unlike a command
+    /// operation, this carries no user invocation id: it binds an app-owned retained background job to
+    /// the exact instance, base revision and store generation observed by the renderer/refresh pass.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub struct AppRenderOperationContext {
+        pub app_instance_id: u32,
+        pub base_revision: semio_framework_job::RevisionId,
+        pub generation: semio_framework_job::Generation,
         pub canonical_base_revision: [u8; 32],
     }
 
@@ -8531,16 +8544,20 @@ pub mod app {
         /// shape every leaf app and test uses. Prefer this over a struct literal: lane views grow
         /// over time, and a constructor absorbs that growth without touching every call site.
         pub async fn new(snapshot: &'a P, history: &'a HistoryView) -> Self {
-            Self { snapshot, history, children: ChildContentView::EMPTY, operation: None }
+            Self { snapshot, history, children: ChildContentView::EMPTY, operation: None, render_operation: None, snapshot_read: std::sync::Mutex::new(None) }
         }
 
         /// 🏗️ A view over a composing document, wired to its live child stores.
         pub async fn with_children(snapshot: &'a P, history: &'a HistoryView, children: ChildContentView) -> Self {
-            Self { snapshot, history, children, operation: None }
+            Self { snapshot, history, children, operation: None, render_operation: None, snapshot_read: std::sync::Mutex::new(None) }
         }
 
         async fn with_dispatch_context(snapshot: &'a P, history: &'a HistoryView, children: ChildContentView, operation: AppOperationContext) -> Self {
-            Self { snapshot, history, children, operation: Some(operation) }
+            Self { snapshot, history, children, operation: Some(operation), render_operation: None, snapshot_read: std::sync::Mutex::new(None) }
+        }
+
+        async fn with_render_context(snapshot: &'a P, history: &'a HistoryView, children: ChildContentView, render_operation: AppRenderOperationContext, snapshot_read: Option<store::SnapshotRead<P>>) -> Self {
+            Self { snapshot, history, children, operation: None, render_operation: Some(render_operation), snapshot_read: std::sync::Mutex::new(snapshot_read) }
         }
 
         /// 🪪️ Returns the actual public job authority for command handlers.
@@ -8551,6 +8568,18 @@ pub mod app {
         /// 🪪️ Optional form for render/test-only views which do not enter command authority.
         pub fn operation_optional(&self) -> Option<&AppOperationContext> {
             self.operation.as_ref()
+        }
+
+        /// 🎨️ Returns the immutable identity observed by a live render/refresh pass.
+        pub fn render_operation(&self) -> Option<AppRenderOperationContext> {
+            self.render_operation
+        }
+
+        /// 🧵️ Transfers the one registered immutable snapshot-read lease to a retained worker
+        /// owner. Contention and a second take fail closed without cloning the underlying snapshot.
+        pub fn take_snapshot_read(&self) -> Result<store::SnapshotRead<P>, Fault> {
+            let mut owner = self.snapshot_read.try_lock().map_err(|_| plugin_sdk_fault("the live snapshot-read lease is busy"))?;
+            owner.take().ok_or_else(|| plugin_sdk_fault("the artifact view has no transferable live snapshot-read lease"))
         }
     }
 
@@ -11326,6 +11355,24 @@ pub mod app {
         /// 📜️ Exact owner-local bounded reducer proofs. Empty grants no execution authority.
         fn bounded_first_step_tool_proofs() -> Vec<ArtifactBoundedFirstStepProof> {
             Vec::new()
+        }
+        /// 🧹️ Advances one owner-local mounted background-job cleanup opportunity while the
+        /// application remains live.
+        fn mounted_job_maintenance_step(_instance_id: u32, _maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            Ok(PluginCloseStep::Complete)
+        }
+        /// 🧹️ Advances one owner-local mounted background-job close opportunity.
+        fn mounted_job_close_step(_instance_id: u32, _maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            Ok(PluginCloseStep::Complete)
+        }
+        /// 🧹️ Exact terminal witness paired with `mounted_job_close_step`.
+        fn mounted_jobs_terminal_is_empty(_instance_id: u32) -> bool {
+            true
+        }
+        /// 🔍️ Requests an opaque immutable snapshot lease only when the mounted owner has
+        /// admitted genuinely new work. The default path issues no lease.
+        fn mounted_job_needs_snapshot_read(_operation: AppRenderOperationContext) -> bool {
+            false
         }
         /// 🧩️ Registers only app-owned exact factories. The empty default contributes no execution
         /// authority; implementations must bind every factory's `Owner` associated type to `Self`.
@@ -15708,6 +15755,35 @@ pub mod app {
             Ok(ArtifactEnvelopeDecodeOperationHandle { operation, generation })
         }
 
+        /// 🔎️ Rejects stale, closed, full, or over-byte page ingress before the producer copies its raw owner.
+        pub fn preflight_artifact_envelope_ingress_page(&self, handle: ArtifactEnvelopeDecodeOperationHandle, page_bytes: usize) -> Result<(), Fault> {
+            if self.artifact_generation_now() != handle.generation {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.ingress-stale"), "artifact envelope generation changed before page preflight"));
+            }
+            let ingress = self.envelope_ingress.get(handle.operation.0).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.ingress-handle"), "unknown artifact envelope ingress handle"))?;
+            if ingress.closing {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.ingress-closing"), "artifact envelope ingress is closing"));
+            }
+            ingress
+                .pages
+                .as_ref()
+                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.ingress-owner"), "artifact envelope ingress lost its exact page authority"))?
+                .preflight_page_bytes(page_bytes)
+                .map_err(|fault| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.ingress-page"), format!("artifact envelope page preflight was rejected before owner construction: {fault:?}")))
+        }
+
+        /// 📨️ Runs the bounded page producer only after the same mutable ingress authority accepts its extent.
+        pub fn construct_and_admit_artifact_envelope_ingress_page<Build>(&mut self, handle: ArtifactEnvelopeDecodeOperationHandle, page_bytes: usize, build: Build) -> Result<(), Fault>
+        where
+            Build: FnOnce() -> store::ArtifactEnvelopeDecodePage,
+        {
+            self.preflight_artifact_envelope_ingress_page(handle, page_bytes)?;
+            let ingress = self.envelope_ingress.get_mut(handle.operation.0).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.ingress-handle"), "unknown artifact envelope ingress handle after preflight"))?;
+            let pages = ingress.pages.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.ingress-owner"), "artifact envelope ingress lost its exact page authority after preflight"))?;
+            build().admit_preflighted_into(pages);
+            Ok(())
+        }
+
         /// 📥️ Moves one exact fixed page into a pre-admitted operation or returns that page
         /// untouched with the fault. No page clone or aggregate command buffer is constructed.
         pub fn admit_artifact_envelope_ingress_page(&mut self, handle: ArtifactEnvelopeDecodeOperationHandle, page: store::ArtifactEnvelopeDecodePage) -> Result<(), (Fault, store::ArtifactEnvelopeDecodePage)> {
@@ -18526,6 +18602,15 @@ pub mod app {
                 self.close_started = true;
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
+            if let Some(instance_id) = self.live_runtime_instance_id {
+                let mounted = A::mounted_job_close_step(instance_id, maximum_items.min(1), maximum_bytes)?;
+                if mounted != PluginCloseStep::Complete {
+                    return Ok(mounted);
+                }
+                if !A::mounted_jobs_terminal_is_empty(instance_id) {
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-mounted-false-terminal"), "mounted app jobs reported Complete without an exact terminal-empty witness"));
+                }
+            }
             if self.close_cancellation_cursor < TOOL_CANCELLATION_SLOTS {
                 let released = self.tool_cancellations.cleanup_slot(self.close_cancellation_cursor)?;
                 self.close_cancellation_cursor = self.close_cancellation_cursor.saturating_add(1);
@@ -18964,7 +19049,7 @@ pub mod app {
                 return pump.drive(|| store.take_returned_snapshot_read_retirement().map_err(|error| error.into_fault()), maximum_items, maximum_bytes);
             }
             let stage = self.maintenance_stage;
-            self.maintenance_stage = (self.maintenance_stage + 1) % 15;
+            self.maintenance_stage = (self.maintenance_stage + 1) % 16;
             match stage {
                 0 => {
                     let Some((index, operation_id)) = self.tool_operations.next_id_from(self.maintenance_tool_cursor) else {
@@ -19289,6 +19374,10 @@ pub mod app {
                 14 => match self.drive_store_replacement_jobs(maximum_items, maximum_bytes, false)? {
                     PluginCloseStep::Complete => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
                     step => Ok(step),
+                },
+                15 => match self.live_runtime_instance_id {
+                    Some(instance_id) => A::mounted_job_maintenance_step(instance_id, maximum_items.min(1), maximum_bytes),
+                    None => Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }),
                 },
                 _ => unreachable!("fixed maintenance stage"),
             }
@@ -19791,10 +19880,17 @@ pub mod app {
                 self.stamp_and_cache_interaction_ui(&mut node, &interaction_state, &effective_body_key).await;
                 return Ok(node);
             }
+            let canonical_base_revision = self.store.content_revision().await;
+            let render_operation = AppRenderOperationContext {
+                app_instance_id: self.live_runtime_instance_id.unwrap_or_default(),
+                base_revision: semio_framework_job::RevisionId(u64::from_be_bytes(canonical_base_revision[..8].try_into().expect("revision lane width"))),
+                generation: semio_framework_job::Generation(self.store.generation().await),
+                canonical_base_revision,
+            };
             let mut node = {
                 let VcsArtifactApp { app: _, cache, child_content_root, .. } = self;
                 let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-                let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root)).await;
+                let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, None).await;
                 let cfg = ConfigView { snapshot: config.as_ref() };
                 A::render(&effective_body_key, &doc, &cfg).await
             };
@@ -19837,9 +19933,24 @@ pub mod app {
             if self.refresh_cache().await.is_err() {
                 return Vec::new();
             }
+            let canonical_base_revision = self.store.content_revision().await;
+            let render_operation = AppRenderOperationContext {
+                app_instance_id: self.live_runtime_instance_id.unwrap_or_default(),
+                base_revision: semio_framework_job::RevisionId(u64::from_be_bytes(canonical_base_revision[..8].try_into().expect("revision lane width"))),
+                generation: semio_framework_job::Generation(self.store.generation().await),
+                canonical_base_revision,
+            };
+            let snapshot_read = if A::mounted_job_needs_snapshot_read(render_operation) {
+                match self.store.snapshot_read().await {
+                    Ok(snapshot_read) => Some(snapshot_read),
+                    Err(_) => return Vec::new(),
+                }
+            } else {
+                None
+            };
             let VcsArtifactApp { app: _, cache, child_content_root, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root)).await;
+            let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, snapshot_read).await;
             let cfg = ConfigView { snapshot: config.as_ref() };
             A::pending_effects(&doc, &cfg).await
         }
@@ -20796,6 +20907,22 @@ pub mod app {
             Vec::new()
         }
 
+        fn mounted_job_maintenance_step(_instance_id: u32, _maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            Ok(PluginCloseStep::Complete)
+        }
+
+        fn mounted_job_close_step(_instance_id: u32, _maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            Ok(PluginCloseStep::Complete)
+        }
+
+        fn mounted_jobs_terminal_is_empty(_instance_id: u32) -> bool {
+            true
+        }
+
+        fn mounted_job_needs_snapshot_read(_operation: AppRenderOperationContext) -> bool {
+            false
+        }
+
         /// 🧩️ Author-owned forwarding seam for factories whose concrete runtime owner is the
         /// framework's `EditorApp<Self>` adapter.
         fn register_tool_job_factories(_registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
@@ -21181,6 +21308,18 @@ pub mod app {
         }
         fn bounded_first_step_tool_proofs() -> Vec<ArtifactBoundedFirstStepProof> {
             E::bounded_first_step_tool_proofs()
+        }
+        fn mounted_job_maintenance_step(instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            E::mounted_job_maintenance_step(instance_id, maximum_items, maximum_bytes)
+        }
+        fn mounted_job_close_step(instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            E::mounted_job_close_step(instance_id, maximum_items, maximum_bytes)
+        }
+        fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {
+            E::mounted_jobs_terminal_is_empty(instance_id)
+        }
+        fn mounted_job_needs_snapshot_read(operation: AppRenderOperationContext) -> bool {
+            E::mounted_job_needs_snapshot_read(operation)
         }
         fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, Self>) -> Result<(), Fault> {
             E::register_tool_job_factories(registry)

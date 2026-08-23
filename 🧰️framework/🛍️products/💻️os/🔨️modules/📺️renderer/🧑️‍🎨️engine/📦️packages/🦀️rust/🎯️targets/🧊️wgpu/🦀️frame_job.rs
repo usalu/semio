@@ -524,6 +524,8 @@ mod tests {
             theme_dark: false,
             fullscreen: None,
             cursor_wake: None,
+            #[cfg(not(target_arch = "wasm32"))]
+            job_progress: None,
         };
         let mut phase = ActiveFramePhase::Prepare(build.into_preparation());
         for _ in 0..100 {

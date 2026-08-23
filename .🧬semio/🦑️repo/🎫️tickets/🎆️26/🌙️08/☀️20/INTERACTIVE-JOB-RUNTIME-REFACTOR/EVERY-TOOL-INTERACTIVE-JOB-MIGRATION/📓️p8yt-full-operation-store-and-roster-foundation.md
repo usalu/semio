@@ -2133,3 +2133,40 @@ retirement, pool saturation, and terminal slot reuse.
 Verdict: **AUDIT-READY, not accepted.** The governed-bootstrap rejection is source-repaired and its
 permanent non-build evidence is green. Phase 8 remains fail-closed at **0/884** pending independent
 re-audit and separately serialized compile/runtime evidence.
+
+## Trinity Rewrite retained-load cohort
+
+The next-smallest live placeholder cohort is Trinity Rewrite. All remaining owners tied at one raw
+whole-buffer symbol, and Rewrite was selected because its bridge already targets the independently
+accepted Trinity Jack snapshot/mutation domain, requiring no second codec or domain owner.
+
+The whole-String constructor and direct `RefCell<TrinityGraphStore>` command/projection bridge are
+removed. `TrinityRewriteArtifactVcs` now owns the accepted
+`VcsArtifactApp<EditorApp<TrinityJackPlayApp>>` and exposes only generation-tagged
+begin/page/seal/poll/cancel/close. Each page is an inline 4 KiB owner; credits are capped at 64 pages
+and 256 KiB; polling grants one maintenance item/page; terminal results require exact ACK; close
+grants one item/page and withholds terminal completion until the shared retained authorities are
+empty. The default/request path does not parse or construct an envelope and no compatibility API
+recreates the old whole-buffer route.
+
+The permanent verifier adds a live Rewrite predicate and fourteen baseline/mutation checks for
+whole-buffer resurrection, dynamic pages, generation erasure, growable buffers, rejected-page
+loss, missing seal, unbounded polling, missing ACK/cancel, bulk close, and cap/saturation/close
+fixture removal. The source cap fixture covers exact maximum, zero, and both `+1` boundaries.
+
+### Trinity Rewrite source gates
+
+| Gate | Result |
+| --- | --- |
+| edition-2021 scoped rustfmt/parser | **PASS** |
+| permanent tool-job verifier self-test | **PASS: 299 clean** |
+| deterministic tool-job ledgers | **PASS**: byte-identical outputs, SHA-256 `f12335f43c5f7e2fc790aa11282cf2f2525062ce76cbe71e8571a1aac6ecb5ce` |
+| full verifier | expected global **RED**: **0/884**, 18 failure classes; no Rewrite-specific failure |
+| broad interactivity DENY | concurrent **RED outside this packet**: one P1 DB-engine replay-history census finding; no Rewrite finding |
+| raw whole-buffer symbol census | **PASS**: decreased from 14 to **13** = one shared definition + twelve live callers; Rewrite zero |
+| scoped diff checks | **PASS** |
+| Cargo/Nx/native/Wasm/browser/network/runtime | **not run by instruction** |
+
+Verdict: **SOURCE-AUDIT-READY, not accepted.** The exact implementation and caller census are in
+`p8yu-trinity-rewrite-retained-load-cohort-2026-08-23.md` and
+`p8yu-next-live-placeholder-census-2026-08-23.md`. No second cohort was started.

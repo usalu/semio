@@ -146,7 +146,10 @@ pub(crate) struct OsHostRetirement {
     ui_token: Option<ui_host::UiThreadToken>,
     snapshot_sink: Option<RenderSnapshotSink>,
     frame_build: Option<crate::frame_job::FrameBuildHandle>,
+    raster_uploads: Option<crate::scenes::PendingRasterAuthorityClose>,
     cursor_wake_requested: Option<crate::infinite_world::world::WorldCursorWakeToken>,
+    #[cfg(not(target_arch = "wasm32"))]
+    kernel_progress_close: Option<crate::kernel_runtime::KernelCloseHandle>,
 }
 
 impl OsHost {
@@ -192,7 +195,10 @@ impl OsHost {
             ui_token: Some(ui_token),
             snapshot_sink: Some(snapshot_sink),
             frame_build: Some(frame_build),
+            raster_uploads: Some(crate::scenes::begin_pending_raster_authority_close()),
             cursor_wake_requested,
+            #[cfg(not(target_arch = "wasm32"))]
+            kernel_progress_close: Some(crate::kernel_runtime::KernelClient::get().begin_close_realm()),
         }
     }
 
@@ -217,6 +223,16 @@ impl OsHostRetirement {
                 return false;
             }
             self.frame_build = None;
+            return false;
+        }
+        if let Some(raster_uploads) = self.raster_uploads.as_mut() {
+            if !raster_uploads.close_step() {
+                return false;
+            }
+            if !raster_uploads.terminal_is_empty() {
+                return false;
+            }
+            self.raster_uploads = None;
             return false;
         }
         if let Some(events) = self.events.as_mut() {
@@ -245,6 +261,17 @@ impl OsHostRetirement {
                 return false;
             }
         }
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(close) = self.kernel_progress_close.as_ref() {
+            match close.poll() {
+                crate::kernel_runtime::KernelCloseStatus::Complete => {
+                    self.kernel_progress_close = None;
+                    return false;
+                }
+                crate::kernel_runtime::KernelCloseStatus::Pending | crate::kernel_runtime::KernelCloseStatus::AdmissionBlocked => return false,
+                crate::kernel_runtime::KernelCloseStatus::Fault => return false,
+            }
+        }
         for owner in [&mut self.snapshot_sink as &mut dyn RetirementOwner, &mut self.ui_token, &mut self.hot_swap, &mut self.caret, &mut self.clock, &mut self.kernel, &mut self.scheduler, &mut self.runtime, &mut self.presenter] {
             if owner.retire() {
                 return false;
@@ -265,7 +292,18 @@ impl OsHostRetirement {
             && self.ui_token.is_none()
             && self.snapshot_sink.is_none()
             && self.frame_build.is_none()
+            && self.raster_uploads.is_none()
             && self.cursor_wake_requested.is_none()
+            && {
+                #[cfg(not(target_arch = "wasm32"))]
+                {
+                    self.kernel_progress_close.is_none()
+                }
+                #[cfg(target_arch = "wasm32")]
+                {
+                    true
+                }
+            }
     }
 }
 
@@ -283,6 +321,7 @@ impl Drop for OsHostRetirement {
             &mut self.presenter,
             &mut self.events,
             &mut self.frame_build,
+            &mut self.raster_uploads,
         ] {
             owner.forget();
         }

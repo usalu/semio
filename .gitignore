@@ -612,3 +612,13 @@ nul
 **/📦️packages/**/Cargo.lock
 
 **/partial_movie_files/
+
+# 🧫️ Test fixtures are evidence, not build output. Several generic template blocks in this file
+# swallow real fixture filenames: `*.obj` (a VisualStudio object-file rule) silently untracks every
+# Wavefront mesh fixture, the numeric-extension rules above hit any versioned name, and `*.log`,
+# `*.tmp`, `*.meta`, `*.bak`, `out`, `temp`, `generated`, `reports`, `build`, `dist` hit both files
+# and directories inside a fixtures tree. A swallowed fixture does not fail loudly — it fails on a
+# fresh clone, as an unresolved fixture URI in somebody else's contract run. Un-ignore the whole
+# fixtures tree explicitly, the same way the taxonomy dirs above are rescued.
+!**/🧫️fixtures/
+!**/🧫️fixtures/**

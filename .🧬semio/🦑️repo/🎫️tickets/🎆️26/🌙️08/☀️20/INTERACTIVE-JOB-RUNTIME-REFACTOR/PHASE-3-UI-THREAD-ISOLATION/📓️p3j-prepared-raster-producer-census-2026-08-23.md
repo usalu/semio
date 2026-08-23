@@ -4,11 +4,11 @@
 
 This census covers only the prepared-pixel ownership boundary immediately upstream of the accepted fixed raster table. The accepted table, atlas/icon/glyph/surface/Vello paths, platform submission, and runtime architecture are outside this packet.
 
-## Accepted consumer boundary
+## Baseline consumer boundary
 
 `PreparedRenderUpload::Raster` is consumed by `Gpu::apply_prepared_upload_step`, which delegates to the accepted generation-keyed raster upload authority. That consumer already limits a GPU write opportunity to one row/page of at most 16 KiB. Its current input, however, is still one contiguous `Vec<u8>`.
 
-There are exactly two production constructors of `PreparedRenderUpload::Raster`:
+At the census boundary there were exactly two production constructors of `PreparedRenderUpload::Raster`:
 
 1. Product renderer glue moves a Canvas/Paint `PendingRasterUpload` into the prepared input.
 2. Infinite World `World3dBuildContext::ensure_world_plane_texture` clones a cached reference image slice with `pixels.to_vec()`.
@@ -37,16 +37,15 @@ The current `image` crate PNG/JPEG decoder requires one complete caller-provided
 
 ## Selected implementation boundary
 
-The smallest complete adjacent group is the shared prepared-raster producer and handoff:
+The smallest complete adjacent group selected for this packet is the Canvas/Paint prepared-raster producer and handoff:
 
 - Replace the contiguous `PreparedRenderUpload::Raster` payload with a fixed-capacity page authority whose page size is at most 16 KiB.
 - Add exact item/byte/dimension/key preflight before the prepared page authority accepts ownership.
 - Make Canvas conversion from its one codec-owned backing resumable, advancing one page per `PendingRasterUploadCursor` grant and moving the backing rather than cloning it.
-- Make Infinite World retain a generation-tagged producer cursor instead of cloning the cached slice during scene construction; each producer grant copies at most one admitted page and publication moves the completed page authority by value.
 - Retire cancel/stale/fault owners one key/page/scalar per grant and preserve the last accepted raster generation.
 
-The non-streaming PNG/JPEG decode backing and the World reference cache's original decoded backing remain visible residuals for a later semantic codec/cache packet. This packet does not claim those backend decode calls are interaction-bounded.
+Infinite World's cached-slice clone is a distinct producer with different borrowed-source lifetime and cache ownership. It remains the next adjacent packet rather than being partially adapted here. The non-streaming PNG/JPEG decode backing and the World reference cache's original decoded backing likewise remain visible residuals for a later semantic codec/cache packet. This packet does not claim those backend decode calls are interaction-bounded.
 
 ## Required discriminators
 
-Permanent source fixtures must reject a reintroduced contiguous `PreparedRenderUpload::Raster` pixel `Vec`, Canvas slice `to_vec`, World slice `to_vec`, dynamic page growth, and generation-free handoff. Semantic fixtures must cover exact page/item/byte cap and cap+1, page pointer identity, stale-generation/ABA rejection, mid-producer cancellation, one page per grant, exact terminal retirement, and by-value completed handoff.
+Permanent source fixtures for the selected group must reject a reintroduced Canvas slice `to_vec`, dynamic page growth, ordinary backing drop before credit release, and generation-free handoff. Semantic fixtures must cover exact page/item/byte cap and cap+1, page pointer identity, stale-generation/ABA rejection, mid-producer cancellation, one page per grant, exact terminal retirement, and by-value completed handoff. The census retains the World `to_vec` witness as an explicit residual rather than claiming it was remediated.

@@ -26,6 +26,11 @@ pub enum PdfMutation {
         snapshot: PdfSnapshot,
     },
 }
+
+/// 🦠️ Kebab-case spelling of every `PdfMutation` variant, in declaration order — the ground truth
+/// `oracle_mutation_kinds_law` below checks itself against, and what `🧪️oracle/🔣️component.json`'s
+/// `mutationCatalogs[].kinds` must equal. Ticket 26/08/23/END-TO-END-TESTING-REFACTOR wave 7.
+pub const KINDS: &[&str] = &["no-mutation", "set-snapshot"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -144,6 +149,38 @@ mod tests {
         }
     }
     //#endregion inverse_law
+
+    //#region kinds_law
+    /// 🧪️ Wave 7: `KINDS` is the ONLY place the catalog's honesty rests on, since the framework
+    /// never parses this enum -- one arm here mirrors every enum variant (kept in sync by hand,
+    /// caught by this test the moment they drift), and the other mirrors the manifest's declared
+    /// `kinds`, which are byte-identical strings at plan time (verified separately by the contract
+    /// gate against `🧪️oracle/🔣️component.json`).
+    #[semio_framework_async_macros::async_test]
+    async fn oracle_mutation_kinds_law_matches_enum_variants() {
+        let variants = [PdfMutation::NoMutation, PdfMutation::SetSnapshot { snapshot: PdfSnapshot::default() }];
+        assert_eq!(KINDS.len(), variants.len(), "KINDS must list exactly one kebab-case entry per PdfMutation variant");
+        for (kind, variant) in KINDS.iter().zip(variants.iter()) {
+            let matches = match (*kind, variant) {
+                ("no-mutation", PdfMutation::NoMutation) => true,
+                ("set-snapshot", PdfMutation::SetSnapshot { .. }) => true,
+                _ => false,
+            };
+            assert!(matches, "KINDS entry {kind:?} does not correspond to variant {variant:?} in declaration order");
+        }
+    }
+
+    const MANIFEST_KINDS_JSON: &str = include_str!("../../🧪️oracle/🔣️component.json");
+
+    #[semio_framework_async_macros::async_test]
+    async fn oracle_mutation_kinds_law_matches_manifest_catalog() {
+        assert!(MANIFEST_KINDS_JSON.contains("\"kinds\""), "manifest must declare a mutationCatalogs[].kinds array");
+        for kind in KINDS {
+            let needle = format!("\"{kind}\"");
+            assert!(MANIFEST_KINDS_JSON.contains(&needle), "🧪️oracle/🔣️component.json must declare kind {kind:?} (KINDS and the manifest must be kept byte-identical)");
+        }
+    }
+    //#endregion kinds_law
 
     //#region op_text_binary_roundtrip_law
     /// 🧪️ F6: `protocol::OpText`/`OpBinary` LAW, exercised for every variant incl. `SetSnapshot`'s

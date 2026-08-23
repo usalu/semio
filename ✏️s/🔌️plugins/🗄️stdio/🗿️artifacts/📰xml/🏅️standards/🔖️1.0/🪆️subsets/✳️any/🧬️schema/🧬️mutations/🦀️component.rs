@@ -92,6 +92,13 @@ pub enum XmlMutation {
         text: String,
     },
 }
+
+/// 📇️ Kebab-case spelling of every `XmlMutation` variant, in declaration order -- the exhaustive
+/// mutation catalog `../🧪️oracle/🔣️component.json`'s `kinds` array is required to match verbatim
+/// (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest; the
+/// framework never parses Rust to check it itself). Mirrors `print_xml_mutation`'s own keyword match
+/// entry-for-entry, so `KINDS[i]` is exactly what `print_op()` emits for the enum's `i`-th variant.
+pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-declaration", "set-doctype", "insert-element", "remove-element", "set-attribute", "set-text"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -487,6 +494,36 @@ mod op_codec_tests {
             assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
         }
     }
+
+    //#region kinds_law
+    /// 🧪️ Keeps `KINDS` honest against the enum it claims to spell: every variant's
+    /// `print_xml_mutation` keyword, in the SAME declaration order `OpBinary`'s own tag match uses,
+    /// must equal `KINDS` entry-for-entry -- the framework never parses Rust to check this itself
+    /// (see `KINDS`'s own doc comment), so this test is the one thing that does. `KINDS` is also
+    /// kept textually identical, by hand, to `../🧪️oracle/🔣️component.json`'s own `kinds` array.
+    #[test]
+    fn kinds_const_matches_enum_variants_in_declaration_order() {
+        use crate::artifacts::xml::schema::snapshot::XmlAttr;
+
+        let base = XmlSnapshot::default();
+        let one_per_variant = vec![
+            XmlMutation::NoMutation,
+            XmlMutation::SetSnapshot { snapshot: base.clone() },
+            XmlMutation::SetDeclaration { declaration: None },
+            XmlMutation::SetDoctype { doctype: None },
+            XmlMutation::InsertElement { path: XmlNodePath(vec![]), index: 0, node: XmlNode::Element { name: "x".into(), attrs: vec![XmlAttr { name: "a".into(), value: "1".into() }], children: vec![] } },
+            XmlMutation::RemoveElement { path: XmlNodePath(vec![]), index: 0 },
+            XmlMutation::SetAttribute { path: XmlNodePath(vec![0]), name: "x".into(), value: None },
+            XmlMutation::SetText { path: XmlNodePath(vec![0]), text: "x".into() },
+        ];
+        assert_eq!(one_per_variant.len(), KINDS.len(), "one_per_variant must cover every KINDS entry exactly once");
+        for (mutation, kind) in one_per_variant.iter().zip(KINDS.iter()) {
+            let printed = mutation.print_op();
+            let keyword = printed.split(' ').next().unwrap_or(&printed);
+            assert_eq!(keyword, *kind, "KINDS order must match the enum's own OpText keyword order for {mutation:?}");
+        }
+    }
+    //#endregion kinds_law
 }
 //#endregion 🧪️Tests
 

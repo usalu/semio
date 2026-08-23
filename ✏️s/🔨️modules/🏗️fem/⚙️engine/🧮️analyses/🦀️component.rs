@@ -8,6 +8,7 @@ use crate::model::{BeamStation, Dof, Element, ElementContext, ElementResult, Ele
 use crate::sparse::{ldlt_factor, rcm_order, subspace_iteration, Coo, Csr, EigenPairs, LdltFactor};
 use semio_framework_job::{CommitCandidate, InteractiveJob, JobFault, Operation, StepContext, StepOutcome};
 use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
 
 // #region 🔖️Model
 /// 📦️ A named load case: nodal loads, member UDLs, and an optional self-weight contribution.
@@ -128,6 +129,18 @@ impl FemJobGraph {
             completed_units: self.state.completed_units,
             total_units: self.state.plans.iter().map(|plan| plan.units).sum(),
         }
+    }
+
+    /// 🧹️ Retires at most one retained plan owner. `true` is an exact empty witness.
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        let bytes = std::mem::size_of::<FemStagePlan>();
+        if maximum_bytes < bytes {
+            return (false, 0, 0);
+        }
+        if self.state.plans.pop().is_some() {
+            return (false, 1, bytes);
+        }
+        (true, 0, 0)
     }
 }
 
@@ -481,6 +494,383 @@ impl AssemblyPlan {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum AssemblyConstructionStage {
+    ReserveDofs,
+    ValidateNodePairs,
+    ValidateElementReferences,
+    RetireElementReferences,
+    ValidateSupportReferences,
+    DiscoverDofs,
+    RetireDofReferences,
+    EmitDofs,
+    ReservePermutation,
+    BuildPermutation,
+    ReserveConstraints,
+    InitializeConstraints,
+    MarkConstraints,
+    ReserveFree,
+    BuildFree,
+    ReserveCompact,
+    InitializeCompact,
+    BuildCompact,
+    ReservePartitions,
+    BuildPartitions,
+    ReserveMergeCursors,
+    BuildMergeCursors,
+    Complete,
+}
+
+/// 🧵️ Retained mounted-session assembly-plan construction. Each call performs one reference
+/// comparison, DOF insertion, scalar initialization or fixed-capacity allocation opportunity.
+pub struct AssemblyJobConstruction {
+    model: Option<Arc<AnalysisModel>>,
+    operation: Operation,
+    partition_count: usize,
+    stage: AssemblyConstructionStage,
+    node_outer: usize,
+    node_inner: usize,
+    element_cursor: usize,
+    reference_cursor: usize,
+    reference_node_cursor: usize,
+    pending_node_ids: Vec<String>,
+    support_cursor: usize,
+    support_node_cursor: usize,
+    dof_node_cursor: usize,
+    dof_element_cursor: usize,
+    dof_reference_cursor: usize,
+    dof_emit_cursor: usize,
+    active_dofs: [bool; 6],
+    constraint_support_cursor: usize,
+    constraint_dof_cursor: usize,
+    constraint_order_cursor: usize,
+    scalar_cursor: usize,
+    plan: AssemblyPlan,
+    constrained_old: Vec<bool>,
+    partitions: Vec<AssemblyPartitionBuffer>,
+    full_merge_cursors: Vec<usize>,
+    free_merge_cursors: Vec<usize>,
+    job: Option<AssemblyJob<'static>>,
+    close_lane: u8,
+}
+
+impl AssemblyJobConstruction {
+    pub fn new_owned(model: Arc<AnalysisModel>, operation: Operation, partition_count: usize) -> Result<Self, Arc<AnalysisModel>> {
+        if partition_count == 0 || model.nodes.is_empty() {
+            return Err(model);
+        }
+        Ok(Self {
+            model: Some(model),
+            operation,
+            partition_count,
+            stage: AssemblyConstructionStage::ReserveDofs,
+            node_outer: 0,
+            node_inner: 1,
+            element_cursor: 0,
+            reference_cursor: 0,
+            reference_node_cursor: 0,
+            pending_node_ids: Vec::new(),
+            support_cursor: 0,
+            support_node_cursor: 0,
+            dof_node_cursor: 0,
+            dof_element_cursor: 0,
+            dof_reference_cursor: 0,
+            dof_emit_cursor: 0,
+            active_dofs: [false; 6],
+            constraint_support_cursor: 0,
+            constraint_dof_cursor: 0,
+            constraint_order_cursor: 0,
+            scalar_cursor: 0,
+            plan: AssemblyPlan { dof_map: DofMap { index: HashMap::new(), order: Vec::new() }, inv_perm: Vec::new(), ndof: 0, free_new: Vec::new(), compact_of_new: Vec::new() },
+            constrained_old: Vec::new(),
+            partitions: Vec::new(),
+            full_merge_cursors: Vec::new(),
+            free_merge_cursors: Vec::new(),
+            job: None,
+            close_lane: 0,
+        })
+    }
+
+    fn model(&self) -> Result<&AnalysisModel, FemError> {
+        self.model.as_deref().ok_or(FemError::EmptyModel)
+    }
+
+    pub fn step_one(&mut self) -> Result<bool, FemError> {
+        match self.stage {
+            AssemblyConstructionStage::ReserveDofs => {
+                let maximum_dofs = self.model()?.nodes.len().checked_mul(6).ok_or(FemError::Singular)?;
+                self.plan.dof_map.order.try_reserve_exact(maximum_dofs).map_err(|_| FemError::Singular)?;
+                self.plan.dof_map.index.try_reserve(maximum_dofs).map_err(|_| FemError::Singular)?;
+                self.stage = AssemblyConstructionStage::ValidateNodePairs;
+            }
+            AssemblyConstructionStage::ValidateNodePairs => {
+                let model = Arc::clone(self.model.as_ref().ok_or(FemError::EmptyModel)?);
+                if self.node_outer >= model.nodes.len() {
+                    self.stage = AssemblyConstructionStage::ValidateElementReferences;
+                } else if self.node_inner >= model.nodes.len() {
+                    self.node_outer += 1;
+                    self.node_inner = self.node_outer + 1;
+                } else {
+                    if model.nodes[self.node_outer].id == model.nodes[self.node_inner].id {
+                        return Err(FemError::DuplicateNodeId(model.nodes[self.node_outer].id.clone()));
+                    }
+                    self.node_inner += 1;
+                }
+            }
+            AssemblyConstructionStage::ValidateElementReferences => {
+                let model = Arc::clone(self.model.as_ref().ok_or(FemError::EmptyModel)?);
+                if self.element_cursor >= model.elements.len() {
+                    self.stage = AssemblyConstructionStage::ValidateSupportReferences;
+                } else if self.pending_node_ids.is_empty() {
+                    self.pending_node_ids = model.elements[self.element_cursor].node_ids();
+                } else if self.reference_cursor >= self.pending_node_ids.len() {
+                    self.stage = AssemblyConstructionStage::RetireElementReferences;
+                } else if self.reference_node_cursor >= model.nodes.len() {
+                    return Err(FemError::DanglingNodeRef(self.pending_node_ids[self.reference_cursor].clone()));
+                } else if model.nodes[self.reference_node_cursor].id == self.pending_node_ids[self.reference_cursor] {
+                    self.reference_cursor += 1;
+                    self.reference_node_cursor = 0;
+                } else {
+                    self.reference_node_cursor += 1;
+                }
+            }
+            AssemblyConstructionStage::RetireElementReferences => {
+                if self.pending_node_ids.pop().is_none() {
+                    self.element_cursor += 1;
+                    self.reference_cursor = 0;
+                    self.reference_node_cursor = 0;
+                    self.stage = AssemblyConstructionStage::ValidateElementReferences;
+                }
+            }
+            AssemblyConstructionStage::ValidateSupportReferences => {
+                let model = Arc::clone(self.model.as_ref().ok_or(FemError::EmptyModel)?);
+                if self.support_cursor >= model.supports.len() {
+                    self.element_cursor = 0;
+                    self.stage = AssemblyConstructionStage::DiscoverDofs;
+                } else if self.support_node_cursor >= model.nodes.len() {
+                    return Err(FemError::DanglingNodeRef(model.supports[self.support_cursor].node_id.clone()));
+                } else if model.nodes[self.support_node_cursor].id == model.supports[self.support_cursor].node_id {
+                    self.support_cursor += 1;
+                    self.support_node_cursor = 0;
+                } else {
+                    self.support_node_cursor += 1;
+                }
+            }
+            AssemblyConstructionStage::DiscoverDofs => {
+                let model = Arc::clone(self.model.as_ref().ok_or(FemError::EmptyModel)?);
+                if self.dof_node_cursor >= model.nodes.len() {
+                    self.stage = AssemblyConstructionStage::ReservePermutation;
+                } else if self.dof_element_cursor >= model.elements.len() {
+                    self.dof_emit_cursor = 0;
+                    self.stage = AssemblyConstructionStage::EmitDofs;
+                } else if self.pending_node_ids.is_empty() {
+                    self.pending_node_ids = model.elements[self.dof_element_cursor].node_ids();
+                    self.dof_reference_cursor = 0;
+                } else if self.dof_reference_cursor >= self.pending_node_ids.len() {
+                    self.stage = AssemblyConstructionStage::RetireDofReferences;
+                } else {
+                    if self.pending_node_ids[self.dof_reference_cursor] == model.nodes[self.dof_node_cursor].id {
+                        for dof in model.elements[self.dof_element_cursor].dofs_per_node() {
+                            self.active_dofs[dof.index()] = true;
+                        }
+                    }
+                    self.dof_reference_cursor += 1;
+                }
+            }
+            AssemblyConstructionStage::RetireDofReferences => {
+                if self.pending_node_ids.pop().is_none() {
+                    self.dof_element_cursor += 1;
+                    self.dof_reference_cursor = 0;
+                    self.stage = AssemblyConstructionStage::DiscoverDofs;
+                }
+            }
+            AssemblyConstructionStage::EmitDofs => {
+                if self.dof_emit_cursor >= self.active_dofs.len() {
+                    self.dof_node_cursor += 1;
+                    self.dof_element_cursor = 0;
+                    self.active_dofs = [false; 6];
+                    self.stage = AssemblyConstructionStage::DiscoverDofs;
+                } else {
+                    if self.active_dofs[self.dof_emit_cursor] {
+                        let dof = [Dof::Tx, Dof::Ty, Dof::Tz, Dof::Rx, Dof::Ry, Dof::Rz][self.dof_emit_cursor];
+                        let node_id = self.model()?.nodes[self.dof_node_cursor].id.clone();
+                        let index = self.plan.dof_map.order.len();
+                        self.plan.dof_map.index.insert((node_id.clone(), dof), index);
+                        self.plan.dof_map.order.push((node_id, dof));
+                    }
+                    self.dof_emit_cursor += 1;
+                }
+            }
+            AssemblyConstructionStage::ReservePermutation => {
+                self.plan.ndof = self.plan.dof_map.len();
+                self.plan.inv_perm.try_reserve_exact(self.plan.ndof).map_err(|_| FemError::Singular)?;
+                self.stage = AssemblyConstructionStage::BuildPermutation;
+            }
+            AssemblyConstructionStage::BuildPermutation => {
+                if self.plan.inv_perm.len() < self.plan.ndof {
+                    self.plan.inv_perm.push(self.plan.inv_perm.len());
+                } else {
+                    self.stage = AssemblyConstructionStage::ReserveConstraints;
+                }
+            }
+            AssemblyConstructionStage::ReserveConstraints => {
+                self.constrained_old.try_reserve_exact(self.plan.ndof).map_err(|_| FemError::Singular)?;
+                self.stage = AssemblyConstructionStage::InitializeConstraints;
+            }
+            AssemblyConstructionStage::InitializeConstraints => {
+                if self.constrained_old.len() < self.plan.ndof {
+                    self.constrained_old.push(false);
+                } else {
+                    self.support_cursor = 0;
+                    self.stage = AssemblyConstructionStage::MarkConstraints;
+                }
+            }
+            AssemblyConstructionStage::MarkConstraints => {
+                let model = Arc::clone(self.model.as_ref().ok_or(FemError::EmptyModel)?);
+                if self.constraint_support_cursor >= model.supports.len() {
+                    self.stage = AssemblyConstructionStage::ReserveFree;
+                } else if self.constraint_dof_cursor >= model.supports[self.constraint_support_cursor].fixed.len() {
+                    self.constraint_support_cursor += 1;
+                    self.constraint_dof_cursor = 0;
+                    self.constraint_order_cursor = 0;
+                } else if self.constraint_order_cursor >= self.plan.dof_map.order.len() {
+                    self.constraint_dof_cursor += 1;
+                    self.constraint_order_cursor = 0;
+                } else {
+                    let support = &model.supports[self.constraint_support_cursor];
+                    if self.plan.dof_map.order[self.constraint_order_cursor] == (support.node_id.clone(), support.fixed[self.constraint_dof_cursor]) {
+                        self.constrained_old[self.constraint_order_cursor] = true;
+                        self.constraint_dof_cursor += 1;
+                        self.constraint_order_cursor = 0;
+                    } else {
+                        self.constraint_order_cursor += 1;
+                    }
+                }
+            }
+            AssemblyConstructionStage::ReserveFree => {
+                self.plan.free_new.try_reserve_exact(self.plan.ndof).map_err(|_| FemError::Singular)?;
+                self.scalar_cursor = 0;
+                self.stage = AssemblyConstructionStage::BuildFree;
+            }
+            AssemblyConstructionStage::BuildFree => {
+                if self.scalar_cursor < self.plan.ndof {
+                    if !self.constrained_old[self.scalar_cursor] {
+                        self.plan.free_new.push(self.scalar_cursor);
+                    }
+                    self.scalar_cursor += 1;
+                } else {
+                    self.stage = AssemblyConstructionStage::ReserveCompact;
+                }
+            }
+            AssemblyConstructionStage::ReserveCompact => {
+                self.plan.compact_of_new.try_reserve_exact(self.plan.ndof).map_err(|_| FemError::Singular)?;
+                self.stage = AssemblyConstructionStage::InitializeCompact;
+            }
+            AssemblyConstructionStage::InitializeCompact => {
+                if self.plan.compact_of_new.len() < self.plan.ndof {
+                    self.plan.compact_of_new.push(None);
+                } else {
+                    self.scalar_cursor = 0;
+                    self.stage = AssemblyConstructionStage::BuildCompact;
+                }
+            }
+            AssemblyConstructionStage::BuildCompact => {
+                if let Some(new_index) = self.plan.free_new.get(self.scalar_cursor).copied() {
+                    self.plan.compact_of_new[new_index] = Some(self.scalar_cursor);
+                    self.scalar_cursor += 1;
+                } else {
+                    self.stage = AssemblyConstructionStage::ReservePartitions;
+                }
+            }
+            AssemblyConstructionStage::ReservePartitions => {
+                self.partitions.try_reserve_exact(self.partition_count).map_err(|_| FemError::Singular)?;
+                self.stage = AssemblyConstructionStage::BuildPartitions;
+            }
+            AssemblyConstructionStage::BuildPartitions => {
+                if self.partitions.len() < self.partition_count {
+                    self.partitions.push(AssemblyPartitionBuffer::default());
+                } else {
+                    self.stage = AssemblyConstructionStage::ReserveMergeCursors;
+                }
+            }
+            AssemblyConstructionStage::ReserveMergeCursors => {
+                self.full_merge_cursors.try_reserve_exact(self.partition_count).map_err(|_| FemError::Singular)?;
+                self.free_merge_cursors.try_reserve_exact(self.partition_count).map_err(|_| FemError::Singular)?;
+                self.stage = AssemblyConstructionStage::BuildMergeCursors;
+            }
+            AssemblyConstructionStage::BuildMergeCursors => {
+                if self.full_merge_cursors.len() < self.partition_count {
+                    self.full_merge_cursors.push(0);
+                } else if self.free_merge_cursors.len() < self.partition_count {
+                    self.free_merge_cursors.push(0);
+                } else {
+                    let model = self.model.take().ok_or(FemError::EmptyModel)?;
+                    let model_signature = self.operation.operation.0 ^ self.operation.base_revision.0.rotate_left(17) ^ self.operation.generation.0.rotate_left(33);
+                    let plan = std::mem::replace(&mut self.plan, AssemblyPlan { dof_map: DofMap { index: HashMap::new(), order: Vec::new() }, inv_perm: Vec::new(), ndof: 0, free_new: Vec::new(), compact_of_new: Vec::new() });
+                    self.job = Some(AssemblyJob {
+                        state: AssemblyCheckpoint {
+                            stage: AssemblyJobStage::ElementTriplets,
+                            total_elements: model.elements.len(),
+                            element_cursor: 0,
+                            pending: None,
+                            partitions: std::mem::take(&mut self.partitions),
+                            full_merge_cursors: std::mem::take(&mut self.full_merge_cursors),
+                            free_merge_cursors: std::mem::take(&mut self.free_merge_cursors),
+                            merged_full: Vec::new(),
+                            merged_free: Vec::new(),
+                            checkpoint_due: false,
+                            preview_due: false,
+                            resume_target: 0,
+                        },
+                        model: AnalysisModelOwner::Owned(model),
+                        operation: self.operation,
+                        model_signature,
+                        plan,
+                        close_lane: 0,
+                    });
+                    self.stage = AssemblyConstructionStage::Complete;
+                }
+            }
+            AssemblyConstructionStage::Complete => return Ok(true),
+        }
+        Ok(false)
+    }
+
+    pub fn take_complete(&mut self) -> Option<AssemblyJob<'static>> {
+        (self.stage == AssemblyConstructionStage::Complete).then(|| self.job.take()).flatten()
+    }
+
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        if maximum_bytes < 128 {
+            return (false, 0, 0);
+        }
+        if let Some(job) = self.job.as_mut() {
+            let (terminal, items, bytes) = job.close_step(maximum_bytes);
+            if !terminal {
+                return (false, items, bytes);
+            }
+            self.job = None;
+            return (false, 1, std::mem::size_of::<AssemblyJob<'static>>());
+        }
+        if self.pending_node_ids.pop().is_some() || self.plan.dof_map.order.pop().is_some() || self.plan.inv_perm.pop().is_some() || self.plan.free_new.pop().is_some() || self.plan.compact_of_new.pop().is_some() {
+            return (false, 1, std::mem::size_of::<usize>());
+        }
+        if self.plan.dof_map.index.extract_if(|_, _| true).next().is_some() {
+            return (false, 1, std::mem::size_of::<((String, Dof), usize)>());
+        }
+        if self.constrained_old.pop().is_some() || self.full_merge_cursors.pop().is_some() || self.free_merge_cursors.pop().is_some() {
+            return (false, 1, std::mem::size_of::<usize>());
+        }
+        if self.partitions.pop().is_some() {
+            return (false, 1, std::mem::size_of::<AssemblyPartitionBuffer>());
+        }
+        if self.model.take().is_some() {
+            return (false, 1, std::mem::size_of::<Arc<AnalysisModel>>());
+        }
+        (true, 0, 0)
+    }
+}
+
 struct UnfactoredSystem {
     plan: AssemblyPlan,
     k_full_coo: Coo,
@@ -488,19 +878,40 @@ struct UnfactoredSystem {
 }
 
 /// 🧮️ Persistent per-element assembly with worker-local triplets and a stable k-way merge.
+enum AnalysisModelOwner<'model> {
+    Borrowed(&'model AnalysisModel),
+    Owned(Arc<AnalysisModel>),
+}
+
+impl std::ops::Deref for AnalysisModelOwner<'_> {
+    type Target = AnalysisModel;
+
+    fn deref(&self) -> &Self::Target {
+        match self {
+            Self::Borrowed(model) => model,
+            Self::Owned(model) => model.as_ref(),
+        }
+    }
+}
+
 pub struct AssemblyJob<'model> {
-    model: &'model AnalysisModel,
+    model: AnalysisModelOwner<'model>,
     operation: Operation,
     model_signature: u64,
     plan: AssemblyPlan,
     state: AssemblyCheckpoint,
+    close_lane: u8,
 }
 
 impl<'model> AssemblyJob<'model> {
     pub fn new(model: &'model AnalysisModel, operation: Operation, partition_count: usize) -> Result<Self, FemError> {
+        Self::from_owner(AnalysisModelOwner::Borrowed(model), operation, partition_count)
+    }
+
+    fn from_owner(model: AnalysisModelOwner<'model>, operation: Operation, partition_count: usize) -> Result<Self, FemError> {
         assert!(partition_count > 0, "assembly requires at least one worker-local partition");
-        let plan = AssemblyPlan::prepare(model)?;
-        let model_signature = assembly_model_signature(model);
+        let plan = AssemblyPlan::prepare(&model)?;
+        let model_signature = assembly_model_signature(&model);
         Ok(Self {
             model,
             operation,
@@ -520,6 +931,7 @@ impl<'model> AssemblyJob<'model> {
                 preview_due: false,
                 resume_target: 0,
             },
+            close_lane: 0,
         })
     }
 
@@ -552,6 +964,112 @@ impl<'model> AssemblyJob<'model> {
             full_triplets: self.state.partitions.iter().map(|partition| partition.full.len()).sum(),
             free_triplets: self.state.partitions.iter().map(|partition| partition.free.len()).sum(),
             assembled_element_ids: self.model.elements.iter().take(self.state.element_cursor).map(|element| element.id().to_string()).collect(),
+        }
+    }
+
+    /// 🧹️ Retires exactly one nested assembly owner per call. The model root is deliberately
+    /// retained until the caller observes `true`; mounted sessions keep a separate exact model root
+    /// while dropping the resulting shallow assembly shell.
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        if maximum_bytes < 128 {
+            return (false, 0, 0);
+        }
+        loop {
+            let released_bytes = match self.close_lane {
+                0 => {
+                    if let Some(pending) = self.state.pending.as_mut() {
+                        if let Some(_) = pending.stiffness.pop() {
+                            std::mem::size_of::<f64>()
+                        } else if let Some(_) = pending.indices_new.pop() {
+                            std::mem::size_of::<usize>()
+                        } else {
+                            self.state.pending = None;
+                            std::mem::size_of::<PendingElementAssembly>()
+                        }
+                    } else {
+                        self.close_lane += 1;
+                        continue;
+                    }
+                }
+                1 => {
+                    if let Some(partition) = self.state.partitions.last_mut() {
+                        if partition.full.pop().is_some() || partition.free.pop().is_some() {
+                            std::mem::size_of::<AssemblyTriplet>()
+                        } else {
+                            self.state.partitions.pop();
+                            std::mem::size_of::<AssemblyPartitionBuffer>()
+                        }
+                    } else {
+                        self.close_lane += 1;
+                        continue;
+                    }
+                }
+                2 => match self.state.full_merge_cursors.pop() {
+                    Some(_) => std::mem::size_of::<usize>(),
+                    None => {
+                        self.close_lane += 1;
+                        continue;
+                    }
+                },
+                3 => match self.state.free_merge_cursors.pop() {
+                    Some(_) => std::mem::size_of::<usize>(),
+                    None => {
+                        self.close_lane += 1;
+                        continue;
+                    }
+                },
+                4 => match self.state.merged_full.pop() {
+                    Some(_) => std::mem::size_of::<AssemblyTriplet>(),
+                    None => {
+                        self.close_lane += 1;
+                        continue;
+                    }
+                },
+                5 => match self.state.merged_free.pop() {
+                    Some(_) => std::mem::size_of::<AssemblyTriplet>(),
+                    None => {
+                        self.close_lane += 1;
+                        continue;
+                    }
+                },
+                6 => match self.plan.dof_map.index.extract_if(|_, _| true).next() {
+                    Some((_, _)) => std::mem::size_of::<((String, Dof), usize)>(),
+                    None => {
+                        self.close_lane += 1;
+                        continue;
+                    }
+                },
+                7 => match self.plan.dof_map.order.pop() {
+                    Some(_) => std::mem::size_of::<(String, Dof)>(),
+                    None => {
+                        self.close_lane += 1;
+                        continue;
+                    }
+                },
+                8 => match self.plan.inv_perm.pop() {
+                    Some(_) => std::mem::size_of::<usize>(),
+                    None => {
+                        self.close_lane += 1;
+                        continue;
+                    }
+                },
+                9 => match self.plan.free_new.pop() {
+                    Some(_) => std::mem::size_of::<usize>(),
+                    None => {
+                        self.close_lane += 1;
+                        continue;
+                    }
+                },
+                10 => match self.plan.compact_of_new.pop() {
+                    Some(_) => std::mem::size_of::<Option<usize>>(),
+                    None => {
+                        self.close_lane += 1;
+                        continue;
+                    }
+                },
+                _ => return (true, 0, 0),
+            };
+            return (false, 1, released_bytes);
         }
     }
 
@@ -640,6 +1158,185 @@ impl<'model> AssemblyJob<'model> {
             k_ff_coo.add(entry.row as usize, entry.col as usize, entry.value);
         }
         Some(UnfactoredSystem { plan: self.plan, k_full_coo, k_ff_coo })
+    }
+
+    /// 🧵️ Transfers the completed full stiffness matrix into a retained iterative child.
+    /// `None` is the exact false-terminal witness; no partial matrix escapes before assembly completes.
+    pub fn into_full_matrix(self) -> Option<Csr> {
+        self.finish().map(|system| system.k_full_coo.to_csr())
+    }
+}
+
+impl AssemblyJob<'static> {
+    /// 🧵️ Worker-session constructor retaining an immutable model root across bounded turns.
+    pub fn new_owned(model: Arc<AnalysisModel>, operation: Operation, partition_count: usize) -> Result<Self, FemError> {
+        Self::from_owner(AnalysisModelOwner::Owned(model), operation, partition_count)
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum AssemblyCsrBuildStage {
+    ReserveRows,
+    InitializeRows,
+    Sort,
+    ReserveIndices,
+    ReserveValues,
+    Merge,
+    ReserveIndptr,
+    Indptr,
+    Complete,
+}
+
+/// 🧵️ Retained completed-assembly to CSR conversion. Every sort comparison, duplicate
+/// merge, row count and output entry advances in a distinct worker opportunity.
+pub struct AssemblyCsrBuild {
+    assembly: Option<AssemblyJob<'static>>,
+    entries: Vec<AssemblyTriplet>,
+    stage: AssemblyCsrBuildStage,
+    sort_outer: usize,
+    sort_inner: usize,
+    merge_cursor: usize,
+    row_cursor: usize,
+    row_counts: Vec<u32>,
+    indptr: Vec<u32>,
+    indices: Vec<u32>,
+    values: Vec<f64>,
+    last_key: Option<(u32, u32)>,
+    matrix: Option<Csr>,
+}
+
+impl AssemblyCsrBuild {
+    pub fn new(mut assembly: AssemblyJob<'static>) -> Result<Self, AssemblyJob<'static>> {
+        if assembly.state.stage != AssemblyJobStage::Complete {
+            return Err(assembly);
+        }
+        let entries = std::mem::take(&mut assembly.state.merged_full);
+        Ok(Self {
+            assembly: Some(assembly),
+            entries,
+            stage: AssemblyCsrBuildStage::ReserveRows,
+            sort_outer: 1,
+            sort_inner: 1,
+            merge_cursor: 0,
+            row_cursor: 0,
+            row_counts: Vec::new(),
+            indptr: Vec::new(),
+            indices: Vec::new(),
+            values: Vec::new(),
+            last_key: None,
+            matrix: None,
+        })
+    }
+
+    pub fn step_one(&mut self) -> Result<bool, &'static [u8]> {
+        let n = self.assembly.as_ref().ok_or(b"fem.assembly-csr-owner-missing" as &'static [u8])?.plan.ndof;
+        match self.stage {
+            AssemblyCsrBuildStage::ReserveRows => {
+                self.row_counts.try_reserve_exact(n).map_err(|_| b"fem.assembly-csr-row-allocation" as &'static [u8])?;
+                self.stage = AssemblyCsrBuildStage::InitializeRows;
+            }
+            AssemblyCsrBuildStage::InitializeRows => {
+                if self.row_counts.len() < n {
+                    self.row_counts.push(0);
+                } else {
+                    self.stage = AssemblyCsrBuildStage::Sort;
+                }
+            }
+            AssemblyCsrBuildStage::Sort => {
+                if self.sort_outer >= self.entries.len() {
+                    self.stage = AssemblyCsrBuildStage::ReserveIndices;
+                } else if self.sort_inner > 0 {
+                    let left = self.sort_inner - 1;
+                    let right = self.sort_inner;
+                    let left_key = (self.entries[left].row, self.entries[left].col, self.entries[left].sequence);
+                    let right_key = (self.entries[right].row, self.entries[right].col, self.entries[right].sequence);
+                    if right_key < left_key {
+                        self.entries.swap(left, right);
+                        self.sort_inner -= 1;
+                    } else {
+                        self.sort_outer += 1;
+                        self.sort_inner = self.sort_outer;
+                    }
+                } else {
+                    self.sort_outer += 1;
+                    self.sort_inner = self.sort_outer;
+                }
+            }
+            AssemblyCsrBuildStage::ReserveIndices => {
+                self.indices.try_reserve_exact(self.entries.len()).map_err(|_| b"fem.assembly-csr-index-allocation" as &'static [u8])?;
+                self.stage = AssemblyCsrBuildStage::ReserveValues;
+            }
+            AssemblyCsrBuildStage::ReserveValues => {
+                self.values.try_reserve_exact(self.entries.len()).map_err(|_| b"fem.assembly-csr-value-allocation" as &'static [u8])?;
+                self.stage = AssemblyCsrBuildStage::Merge;
+            }
+            AssemblyCsrBuildStage::Merge => {
+                if let Some(entry) = self.entries.get(self.merge_cursor).copied() {
+                    let key = (entry.row, entry.col);
+                    if self.last_key == Some(key) {
+                        *self.values.last_mut().expect("duplicate has prior value") += entry.value;
+                    } else {
+                        self.indices.push(entry.col);
+                        self.values.push(entry.value);
+                        self.row_counts[entry.row as usize] = self.row_counts[entry.row as usize].checked_add(1).ok_or(b"fem.assembly-csr-row-overflow")?;
+                        self.last_key = Some(key);
+                    }
+                    self.merge_cursor += 1;
+                } else {
+                    self.stage = AssemblyCsrBuildStage::ReserveIndptr;
+                }
+            }
+            AssemblyCsrBuildStage::ReserveIndptr => {
+                self.indptr.try_reserve_exact(n + 1).map_err(|_| b"fem.assembly-csr-indptr-allocation" as &'static [u8])?;
+                self.indptr.push(0);
+                self.stage = AssemblyCsrBuildStage::Indptr;
+            }
+            AssemblyCsrBuildStage::Indptr => {
+                if let Some(count) = self.row_counts.get(self.row_cursor).copied() {
+                    let next = self.indptr.last().copied().unwrap_or(0).checked_add(count).ok_or(b"fem.assembly-csr-indptr-overflow")?;
+                    self.indptr.push(next);
+                    self.row_cursor += 1;
+                } else {
+                    self.matrix = Some(Csr::from_owned_parts(n, std::mem::take(&mut self.indptr), std::mem::take(&mut self.indices), std::mem::take(&mut self.values)));
+                    self.stage = AssemblyCsrBuildStage::Complete;
+                }
+            }
+            AssemblyCsrBuildStage::Complete => return Ok(true),
+        }
+        Ok(false)
+    }
+
+    pub fn take_complete(&mut self) -> Option<Csr> {
+        (self.stage == AssemblyCsrBuildStage::Complete).then(|| self.matrix.take()).flatten()
+    }
+
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        if let Some(assembly) = self.assembly.as_mut() {
+            let (terminal, items, bytes) = assembly.close_step(maximum_bytes);
+            if !terminal {
+                return (false, items, bytes);
+            }
+            self.assembly = None;
+            return (false, 1, std::mem::size_of::<AssemblyJob<'static>>());
+        }
+        if self.entries.pop().is_some() {
+            return (false, 1, std::mem::size_of::<AssemblyTriplet>());
+        }
+        if self.row_counts.pop().is_some() || self.indptr.pop().is_some() || self.indices.pop().is_some() {
+            return (false, 1, std::mem::size_of::<u32>());
+        }
+        if self.values.pop().is_some() {
+            return (false, 1, std::mem::size_of::<f64>());
+        }
+        if let Some(matrix) = self.matrix.as_mut() {
+            let (terminal, bytes) = matrix.close_step();
+            if !terminal {
+                return (false, 1, bytes);
+            }
+            self.matrix = None;
+            return (false, 1, std::mem::size_of::<Csr>());
+        }
+        (true, 0, 0)
     }
 }
 

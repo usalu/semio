@@ -57,6 +57,9 @@ struct SnapshotReadLeaseRegistryState {
 struct SnapshotReadLeaseRegistry {
     state: Mutex<SnapshotReadLeaseRegistryState>,
     returned: std::sync::atomic::AtomicUsize,
+    authority_sequence: std::sync::atomic::AtomicU64,
+    authority_generation: std::sync::atomic::AtomicU64,
+    authority_revision: [std::sync::atomic::AtomicU64; 4],
 }
 
 impl SnapshotReadLeaseRegistry {
@@ -76,7 +79,37 @@ impl SnapshotReadLeaseRegistry {
                 cleanup_cursor: 0,
             }),
             returned: std::sync::atomic::AtomicUsize::new(0),
+            authority_sequence: std::sync::atomic::AtomicU64::new(0),
+            authority_generation: std::sync::atomic::AtomicU64::new(0),
+            authority_revision: std::array::from_fn(|_| std::sync::atomic::AtomicU64::new(0)),
         }
+    }
+
+    fn publish_authority(&self, generation: u64, revision: [u8; 32]) -> bool {
+        let sequence = self.authority_sequence.load(std::sync::atomic::Ordering::Acquire);
+        let Some(terminal_sequence) = sequence.checked_add(2) else { return false };
+        if sequence & 1 != 0 || self.authority_sequence.compare_exchange(sequence, sequence + 1, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+            return false;
+        }
+        self.authority_generation.store(generation, std::sync::atomic::Ordering::Relaxed);
+        for (word, bytes) in self.authority_revision.iter().zip(revision.chunks_exact(8)) {
+            word.store(u64::from_le_bytes(bytes.try_into().expect("fixed revision lane")), std::sync::atomic::Ordering::Relaxed);
+        }
+        self.authority_sequence.store(terminal_sequence, std::sync::atomic::Ordering::Release);
+        true
+    }
+
+    fn authority_matches(&self, generation: u64, revision: [u8; 32]) -> bool {
+        let first = self.authority_sequence.load(std::sync::atomic::Ordering::Acquire);
+        if first == 0 || first & 1 != 0 || self.authority_generation.load(std::sync::atomic::Ordering::Relaxed) != generation {
+            return false;
+        }
+        for (word, bytes) in self.authority_revision.iter().zip(revision.chunks_exact(8)) {
+            if word.load(std::sync::atomic::Ordering::Relaxed) != u64::from_le_bytes(bytes.try_into().expect("fixed revision lane")) {
+                return false;
+            }
+        }
+        first == self.authority_sequence.load(std::sync::atomic::Ordering::Acquire)
     }
 
     fn try_issue<T: Send + Sync + 'static>(self: &Arc<Self>, owner: Arc<T>) -> Result<SnapshotReadLease, Arc<T>> {
@@ -208,6 +241,13 @@ impl<T: ?Sized> SnapshotRead<T> {
     /// 👁️ Borrows the captured immutable value without exposing its owner.
     pub fn get(&self) -> &T {
         self.owner.as_deref().expect("live snapshot read owner is present")
+    }
+
+    /// 🔐️ Revalidates this lease against the store-owned event authority without reading
+    /// a session-local registry. A concurrent publication produces an odd or changed sequence and
+    /// therefore fails closed.
+    pub fn commit_authority_matches(&self, generation: u64, revision: [u8; 32]) -> bool {
+        self.lease.as_ref().is_some_and(|lease| lease.registry.authority_matches(generation, revision))
     }
 }
 
@@ -3934,27 +3974,43 @@ impl OwnedSchemaDecodePages {
         Ok(Self { slots: slots.into_boxed_slice(), page_count: 0, byte_count: 0, maximum_bytes: credits.maximum_bytes, sealed: false })
     }
 
-    /// @emoji 📥️ Moves one exact page owner into its pre-reserved slot or returns it untouched.
-    pub fn admit_page(&mut self, page: OwnedSchemaDecodePage) -> Result<(), (OwnedSchemaDecodeAdmissionFault, OwnedSchemaDecodePage)> {
+    /// @emoji 🔎️ Validates one page extent before a producer constructs its fixed owner.
+    pub fn preflight_page_bytes(&self, page_bytes: usize) -> Result<(), OwnedSchemaDecodeAdmissionFault> {
         if self.sealed {
-            return Err((OwnedSchemaDecodeAdmissionFault::Sealed, page));
+            return Err(OwnedSchemaDecodeAdmissionFault::Sealed);
         }
         if self.page_count == self.slots.len() {
-            return Err((OwnedSchemaDecodeAdmissionFault::PageCapacity, page));
+            return Err(OwnedSchemaDecodeAdmissionFault::PageCapacity);
         }
         if self.page_count != 0 && unsafe { self.slots[self.page_count - 1].assume_init_ref() }.len() != OWNED_SCHEMA_DECODE_PAGE_BYTES {
-            return Err((OwnedSchemaDecodeAdmissionFault::PartialPageBeforeTerminal, page));
+            return Err(OwnedSchemaDecodeAdmissionFault::PartialPageBeforeTerminal);
         }
-        let Some(next_bytes) = self.byte_count.checked_add(page.len()) else {
-            return Err((OwnedSchemaDecodeAdmissionFault::ByteCapacity, page));
-        };
+        if page_bytes > OWNED_SCHEMA_DECODE_PAGE_BYTES {
+            return Err(OwnedSchemaDecodeAdmissionFault::ByteCapacity);
+        }
+        let Some(next_bytes) = self.byte_count.checked_add(page_bytes) else { return Err(OwnedSchemaDecodeAdmissionFault::ByteCapacity) };
         if next_bytes > self.maximum_bytes {
-            return Err((OwnedSchemaDecodeAdmissionFault::ByteCapacity, page));
+            return Err(OwnedSchemaDecodeAdmissionFault::ByteCapacity);
         }
+        Ok(())
+    }
+
+    /// @emoji 📥️ Moves one exact page owner into its pre-reserved slot or returns it untouched.
+    pub fn admit_page(&mut self, page: OwnedSchemaDecodePage) -> Result<(), (OwnedSchemaDecodeAdmissionFault, OwnedSchemaDecodePage)> {
+        if let Err(fault) = self.preflight_page_bytes(page.len()) {
+            return Err((fault, page));
+        }
+        self.admit_preflighted_page(page);
+        Ok(())
+    }
+
+    /// @emoji 📨️ Commits the page built by a producer callback after the same mutable authority preflighted it.
+    pub fn admit_preflighted_page(&mut self, page: OwnedSchemaDecodePage) {
+        debug_assert!(self.preflight_page_bytes(page.len()).is_ok());
+        let next_bytes = self.byte_count + page.len();
         self.slots[self.page_count].write(page);
         self.page_count += 1;
         self.byte_count = next_bytes;
-        Ok(())
     }
 
     /// @emoji 🔒️ Seals the exact admitted byte extent before tokenization begins.
@@ -6457,9 +6513,20 @@ impl ArtifactEnvelopeDecodePage {
         Ok(Self { inner: OwnedSchemaDecodePage { bytes, len: len as u16 } })
     }
 
+    /// @emoji 📄️ Constructs the fixed page inside a producer callback whose extent was already accepted.
+    pub fn from_preflighted_array(bytes: [u8; ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES], len: usize) -> Self {
+        debug_assert!(len <= ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
+        Self { inner: OwnedSchemaDecodePage { bytes, len: len as u16 } }
+    }
+
     /// @emoji 📥️ Moves this exact page into pre-reserved schema storage or returns it untouched.
     pub fn admit_into(self, pages: &mut OwnedSchemaDecodePages) -> Result<(), (OwnedSchemaDecodeAdmissionFault, Self)> {
         pages.admit_page(self.inner).map_err(|(fault, inner)| (fault, Self { inner }))
+    }
+
+    /// @emoji 📨️ Commits this page after the same mutable ingress authority ran its producer preflight.
+    pub fn admit_preflighted_into(self, pages: &mut OwnedSchemaDecodePages) {
+        pages.admit_preflighted_page(self.inner);
     }
 
     pub fn len(&self) -> usize {
@@ -12295,6 +12362,9 @@ where
 
     /// 🧵️ Immutable O(1) snapshot capability for worker and composition boundaries.
     pub async fn snapshot_read(&self) -> Result<SnapshotRead<P>, VcsError> {
+        if !self.snapshot_read_leases.publish_authority(self.generation, self.content_revision) {
+            return Err(VcsError::ValidationFailed("snapshot read commit authority is busy or exhausted".into()));
+        }
         let owner = Arc::clone(&*self.current);
         let lease = self.snapshot_read_leases.try_issue(owner.clone()).map_err(|_| VcsError::ValidationFailed("snapshot read lease registry is busy, saturated, or exhausted".into()))?;
         Ok(SnapshotRead::new(owner, lease))
@@ -14071,6 +14141,7 @@ where
         self.clock = candidate.clock;
         self.initial_digest = candidate.initial_digest;
         self.content_revision = candidate.content_revision;
+        assert!(self.snapshot_read_leases.publish_authority(self.generation, self.content_revision), "single-owner store publication must advance its snapshot commit authority");
         self.push_revision_replacement_reserved(revision_accumulator);
         candidate.owned_disposer_terminal = true;
         Ok(())
@@ -14370,6 +14441,7 @@ where
             self.displaced_retirements.push_reserved(Box::new(ArtifactStoreStringVectorRetirement::new(redo_retired)));
         }
         self.content_revision = self.revision_accumulator.revision(self.current_checkpoint_id.as_deref());
+        assert!(self.snapshot_read_leases.publish_authority(self.generation, self.content_revision), "single-owner store bump must advance its snapshot commit authority");
         Ok(())
     }
 }
@@ -17479,6 +17551,20 @@ mod tests {
             drop(owner);
         }
         assert!(registry.terminal_is_empty());
+    }
+
+    #[test]
+    fn snapshot_commit_authority_rejects_stale_generation_and_revision() {
+        let registry = Arc::new(SnapshotReadLeaseRegistry::new());
+        let first = [7; 32];
+        let second = [9; 32];
+        assert!(registry.publish_authority(4, first));
+        assert!(registry.authority_matches(4, first));
+        assert!(!registry.authority_matches(5, first));
+        assert!(!registry.authority_matches(4, second));
+        assert!(registry.publish_authority(5, second));
+        assert!(!registry.authority_matches(4, first));
+        assert!(registry.authority_matches(5, second));
     }
 
     #[test]

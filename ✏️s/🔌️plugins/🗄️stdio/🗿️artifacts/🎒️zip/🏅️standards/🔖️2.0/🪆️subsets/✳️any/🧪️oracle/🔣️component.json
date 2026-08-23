@@ -1,0 +1,50 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ ZIP 2.0/✳️any's own contribution to the repository test platform — its mutation oracle registration and its declared mutation vocabulary (wave 7, ticket 26/08/23/END-TO-END-TESTING-REFACTOR). Discovered by convention alongside ✏️s/🔌️plugins/🗄️stdio's own top-level manifest; merged into one registry, no central edit required.",
+  "oracles": [
+    {
+      "id": "zip-2-0-mutate",
+      "ecosystem": "rust",
+      "package": "zip",
+      "version": "6",
+      "capabilities": ["zip-2-0-mutate"],
+      "comparisonProfiles": ["semantic-archive-mutate-v1"],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/zip-rs/zip2",
+      "rationale": "The reference ZIP reader/writer of the Rust ecosystem, driven here through the full add/remove/rename/set-data/set-comment/set-snapshot mutation vocabulary this subset declares, with the archive-level comment kept live (never ignored) so `set-archive-comment` is a real, checked mutation and not a no-op. Distinct id and capability from the top-level `zip` entry's `zip-archive` (plain create/read/remove-member evidence): reusing that entry outside its surveyed capability would fail the contract's oracle-capability-mismatch check, and a mutation vocabulary belongs to the subset that declares it, not to the format generally.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "zip-2-0-any",
+      "capability": "zip-2-0-mutate",
+      "kinds": ["no-mutation", "set-snapshot", "set-archive-comment", "add-entry", "remove-entry", "rename-entry", "set-entry-data"]
+    }
+  ],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-archive-mutate-v1",
+      "description": "ZIP archives compared as a SET of members by name, uncompressed size and content digest, PLUS the archive-level comment as a normative field. Entry order, compression method and level, timestamps, attributes and the extra field remain writer freedom. Differs from the base `semantic-archive-v1` profile only in that `comment` is NOT ignored: this subset's vocabulary declares `set-archive-comment` as one of its mutation kinds, so the comment has to actually participate in the comparison for that mutation to be a checked test rather than a no-op.",
+      "arrays": "set",
+      "ignoreKeys": [
+        "compressedSize",
+        "compressionMethod",
+        "compressionLevel",
+        "modified",
+        "created",
+        "accessed",
+        "externalAttributes",
+        "internalAttributes",
+        "extraField",
+        "crcOrder",
+        "centralDirectoryOffset",
+        "byteLength",
+        "fileSize"
+      ]
+    }
+  ]
+}

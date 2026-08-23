@@ -28,9 +28,11 @@
 /// point: `db::Database::open_at(pool, root, db::Profile::Dev)` stands up a
 /// document database over `FsStorage`.
 pub use crate::db_engine::{
-    take_database_capability_open_terminal, take_next_database_capability_open_terminal, ArtifactHandle, ArtifactHistoryTerminalConstructionFault, ArtifactHistoryTerminalHandle, ArtifactSpec, CatalogEntry, CatalogView, CommandReceipt, Consistency,
-    Database, DatabaseCapabilityOpenCloseStep, DatabaseCapabilityOpenFuture, DatabaseCapabilityOpenProgress, DatabaseCapabilityOpenRejected, DatabaseCapabilityOpenResult, DatabaseCapabilityOpenTerminalHandle, DbHealth, HistoryEntry, HistoryView,
-    LiveQuery, LiveQuerySpec, PreviewHandle, Query, QueryStream, SecurityAuthzHook, SnapshotFuture, SnapshotKind, SnapshotReceipt, SubmitFuture,
+    take_database_capability_open_terminal, take_database_catalog_read_terminal, take_next_database_capability_open_terminal, ArtifactHandle, ArtifactHistoryTerminalConstructionFault, ArtifactHistoryTerminalHandle, ArtifactSpec, CatalogEntry,
+    CatalogView, CommandReceipt, Consistency, Database, DatabaseCapabilityOpenCloseStep, DatabaseCapabilityOpenFuture, DatabaseCapabilityOpenProgress, DatabaseCapabilityOpenRejected, DatabaseCapabilityOpenResult,
+    DatabaseCapabilityOpenTerminalHandle, DatabaseCapabilityOpenTerminalResult, DatabaseCatalogReadCloseStep, DatabaseCatalogReadFuture, DatabaseCatalogReadProgress, DatabaseCatalogReadRejected, DatabaseCatalogReadResult,
+    DatabaseCatalogReadTerminalHandle, DatabaseCatalogReadTerminalResult, DatabaseCatalogRootKey, DbHealth, HistoryEntry, HistoryView, LiveQuery, LiveQuerySpec, PreviewHandle, Query, QueryStream, SecurityAuthzHook, SnapshotFuture, SnapshotKind,
+    SnapshotReceipt, SubmitFuture,
 };
 
 /// 🗄️🌿️ The real `vcs`-backed `VersionGraph` — the ONLY place in the whole `db` family

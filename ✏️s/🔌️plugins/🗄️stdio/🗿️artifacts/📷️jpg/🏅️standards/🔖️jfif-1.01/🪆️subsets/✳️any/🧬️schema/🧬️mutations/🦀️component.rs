@@ -94,6 +94,10 @@ pub enum JpgMutation {
         quality: Option<u8>,
     },
 }
+
+/// 🦠️ Kebab-case spelling of every `JpgMutation` variant — the exhaustive vocabulary the mutation
+/// oracle catalog (`../../🧪️oracle/🔣️component.json`) is measured against. Order matches the enum.
+pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-jfif-header", "set-quant-table", "remove-quant-table", "set-huffman-table", "remove-huffman-table", "set-restart-interval", "insert-other-segment", "remove-other-segment", "set-pixels", "set-re-encode-quality"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -715,6 +719,46 @@ mod tests {
         }
     }
     //#endregion 🔖️inverse_law
+
+    //#region 🔖️kinds_matches_enum_and_manifest
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn kind_of(m: &JpgMutation) -> &'static str {
+        match m {
+            JpgMutation::NoMutation => "no-mutation",
+            JpgMutation::SetSnapshot { .. } => "set-snapshot",
+            JpgMutation::SetJfifHeader { .. } => "set-jfif-header",
+            JpgMutation::SetQuantTable { .. } => "set-quant-table",
+            JpgMutation::RemoveQuantTable { .. } => "remove-quant-table",
+            JpgMutation::SetHuffmanTable { .. } => "set-huffman-table",
+            JpgMutation::RemoveHuffmanTable { .. } => "remove-huffman-table",
+            JpgMutation::SetRestartInterval { .. } => "set-restart-interval",
+            JpgMutation::InsertOtherSegment { .. } => "insert-other-segment",
+            JpgMutation::RemoveOtherSegment { .. } => "remove-other-segment",
+            JpgMutation::SetPixels { .. } => "set-pixels",
+            JpgMutation::SetReEncodeQuality { .. } => "set-re-encode-quality",
+        }
+    }
+
+    /// 🧪️ `KINDS` must name exactly the enum's own variants (the match above is exhaustive, so a
+    /// variant added without updating `kind_of` fails to compile) AND exactly the mutation catalog's
+    /// declared `kinds` — the framework never parses Rust, so this test is what keeps the manifest
+    /// honest.
+    #[test]
+    fn kinds_matches_enum_variants_and_manifest() {
+        let base = base_snapshot();
+        let mut from_enum: Vec<&str> = all_variants(&base).iter().map(kind_of).collect();
+        from_enum.sort_unstable();
+        from_enum.dedup();
+        let mut from_const = KINDS.to_vec();
+        from_const.sort_unstable();
+        assert_eq!(from_const, from_enum, "KINDS must name exactly the enum's variants");
+
+        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../🧪️oracle/🔣️component.json")).expect("valid oracle manifest JSON");
+        let mut from_manifest: Vec<String> = manifest["mutationCatalogs"][0]["kinds"].as_array().expect("mutationCatalogs[0].kinds").iter().map(|value| value.as_str().expect("kind is a string").to_string()).collect();
+        from_manifest.sort_unstable();
+        assert_eq!(from_const, from_manifest.iter().map(String::as_str).collect::<Vec<_>>(), "KINDS must name exactly the manifest's declared kinds");
+    }
+    //#endregion 🔖️kinds_matches_enum_and_manifest
 
     //#region 🔖️absorb_law
     fn assert_absorb_law(base: &JpgSnapshot, m1: JpgMutation, m2: JpgMutation) {

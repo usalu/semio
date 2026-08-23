@@ -1,0 +1,53 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution to the repository test platform, distinct from the shared ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️component.json manifest: that file registers the `png` reference crate under the `png-raster` capability its own create-and-round-trip-png case exercises; this file registers the SAME package under a distinct id and the `png-1-2-mutate` capability this subset's exhaustive mutation case (`mutate-png-1-2`) actually tags, per the wave 7 fleet brief's oracle-registration gotcha (reusing the shared entry fails the contract with `oracle-capability-mismatch`).",
+  "oracles": [
+    {
+      "id": "png-png-1-2-mutate",
+      "ecosystem": "rust",
+      "package": "png",
+      "version": "0.18",
+      "capabilities": ["png-1-2-mutate"],
+      "comparisonProfiles": ["semantic-raster-v1"],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/image-rs/image-png",
+      "rationale": "The same reference PNG encoder/decoder the shared png-raster entry already approves, registered under its own id and capability so this subset's exhaustive PngMutation catalog (17 kinds: header, palette, transparency, the typed ancillary set, text chunks, pixels and unknown-chunk retention) is measured against a reference implementation surveyed for exactly that capability rather than borrowing a neighbour's. Every mutation is applied independently against the `png` crate's own Encoder/Decoder API — never by reusing this repository's own decode_png/encode_png — so the comparison stays a genuine cross-check.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "productionDebt": {
+        "reachableFrom": [
+          "🧰️framework/🛍️products/💻️os/🖥️host/🦀️component.rs"
+        ],
+        "owner": "🧰️framework/🛍️products/💻️os/🖥️host",
+        "plan": "Same pre-existing production reachability the shared ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️component.json `png` entry already records (the OS host rasterizes SVG to PNG through this crate) — the dependency-classification gate classifies by reachability, not manifest placement, so registering the SAME package under a second id/capability here surfaces the same debt a second time rather than hiding it. Phase 7 target: once the OS host's PNG writing moves behind ✏️s/🔌️plugins/🗄️stdio's own encode_png, both this entry and the shared one lose their productionDebt and testOnly becomes a fact."
+      }
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "png-1-2-any",
+      "capability": "png-1-2-mutate",
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "set-header",
+        "set-palette",
+        "set-transparency",
+        "set-gamma",
+        "set-chromaticities",
+        "set-srgb-intent",
+        "set-physical-dims",
+        "set-timestamp",
+        "set-background",
+        "insert-text-chunk",
+        "remove-text-chunk",
+        "set-text-chunk",
+        "set-pixels",
+        "insert-unknown-chunk",
+        "remove-unknown-chunk"
+      ]
+    }
+  ]
+}

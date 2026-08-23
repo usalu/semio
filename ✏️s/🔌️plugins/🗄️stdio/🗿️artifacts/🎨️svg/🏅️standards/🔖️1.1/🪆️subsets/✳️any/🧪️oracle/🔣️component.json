@@ -1,0 +1,48 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🎨️ This subset's own contribution to the repository test platform: `quick-xml` 0.42 registered as the independent reference reader/writer for SVG 1.1 `any` mutation coverage, the exhaustive 11-kind `SvgMutation` vocabulary it is measured against, and the tolerant-numeric comparison profile the decomposed `viewBox`/`transform` geometry needs. The shared stdio manifest does not register `quick-xml` under any `svg-*` capability at all (only the 📰xml 1.0 subset, a sibling owner, reaches it for its own vocabulary), so this is a first registration, not a reuse.",
+  "oracles": [
+    {
+      "id": "quick-xml-svg-1-1-mutate",
+      "ecosystem": "rust",
+      "package": "quick-xml",
+      "version": "0.42",
+      "capabilities": ["svg-1-1-mutate"],
+      "comparisonProfiles": ["semantic-svg-1-1-v1"],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/tafia/quick-xml",
+      "rationale": "quick-xml is a general streaming XML reader AND writer (not SVG-specific), used here as the independent parser/serializer against which this subset's own hand-rolled `xml_document_from_text`/`xml_document_to_text` codec is measured. This subset's oracle module (../🧪️oracle/🦀️component.rs) builds its own small in-memory element tree from quick-xml's event stream, applies each declared `SvgMutation` kind to that tree using independently hand-written viewBox/transform grammars (never importing this subset's production parsers), and re-serializes with quick-xml's `Writer`. The projection sorts attributes by name (SVG attribute order is writer freedom, never normative) and decomposes the `viewBox`/`transform` attribute STRINGS into typed numeric geometry rather than comparing their raw text, since two independently-written formatters are not guaranteed to produce byte-identical number formatting even when the underlying value is identical -- everything else (attribute names/values, element names, text/CDATA/comment/PI content, namespace-declaration attributes, xlink:href) is compared as exact raw strings.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "svg-1-1-any",
+      "capability": "svg-1-1-mutate",
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "set-declaration",
+        "set-doctype",
+        "insert-element",
+        "remove-element",
+        "set-element-name",
+        "set-attribute",
+        "set-text",
+        "set-view-box",
+        "set-transform"
+      ]
+    }
+  ],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-svg-1-1-v1",
+      "description": "SVG 1.1 mutation round trips compared structurally: element/text/CDATA/comment/PI tree shape and content exact, attributes compared as a name-sorted set (SVG attribute order is real writer freedom -- see this subset's own `write_svg_xml`, which never claims to preserve source attribute order beyond update-in-place), and the `viewBox`/`transform` attribute values specifically decomposed into typed numeric geometry (never compared as raw strings) with a small absolute tolerance for cross-implementation float-formatting noise between quick-xml's writer and this subset's own. Self-closing vs explicit empty open/close tags are equivalent by construction (both parse to zero children) and never distinguished by either side.",
+      "tolerance": 1e-9,
+      "ignoreKeys": []
+    }
+  ]
+}

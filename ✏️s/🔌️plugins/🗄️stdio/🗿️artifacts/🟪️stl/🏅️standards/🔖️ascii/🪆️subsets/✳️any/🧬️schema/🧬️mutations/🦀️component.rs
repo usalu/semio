@@ -60,6 +60,13 @@ pub enum StlMutation {
 }
 //#endregion 🔖️Mutations
 
+//#region 🔖️Kinds
+/// 🧾️ Kebab-case spelling of every `StlMutation` variant, in declaration order — the vocabulary
+/// `../🧪️oracle/🔣️component.json`'s `stl-ascii-any` catalog is measured against. Kept honest by
+/// `kinds_match_enum_and_catalog` below (the framework never parses Rust to learn this list).
+pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-solid-name", "insert-triangle", "remove-triangle", "set-triangle-normal", "set-triangle-vertices"];
+//#endregion 🔖️Kinds
+
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`, returning a typed error outcome without changing the
 /// snapshot when an index target is missing or out of range.
@@ -664,6 +671,46 @@ mod tests {
         }
     }
     //#endregion 🔖️F6RoundtripLaws
+
+    //#region 🔖️KindsConformanceLaw
+    /// 🧭️ `kind_of` is an EXHAUSTIVE match (no wildcard arm) — the compiler refuses this file if a
+    /// variant is added to `StlMutation` without a matching kebab-case spelling here, which is what
+    /// keeps `KINDS` honest against the enum. The second half reads the sibling oracle manifest's
+    /// `kinds` array as text (the framework never parses Rust, so this is the only side that can
+    /// prove the manifest matches) and asserts the same list, in the same order.
+    #[semio_framework_async_macros::async_test]
+    async fn kinds_match_enum_and_catalog() {
+        fn kind_of(mutation: &StlMutation) -> &'static str {
+            match mutation {
+                StlMutation::NoMutation => "no-mutation",
+                StlMutation::SetSnapshot { .. } => "set-snapshot",
+                StlMutation::SetSolidName { .. } => "set-solid-name",
+                StlMutation::InsertTriangle { .. } => "insert-triangle",
+                StlMutation::RemoveTriangle { .. } => "remove-triangle",
+                StlMutation::SetTriangleNormal { .. } => "set-triangle-normal",
+                StlMutation::SetTriangleVertices { .. } => "set-triangle-vertices",
+            }
+        }
+        let samples = [
+            StlMutation::NoMutation,
+            StlMutation::SetSnapshot { snapshot: StlSnapshot::default() },
+            StlMutation::SetSolidName { name: String::new() },
+            StlMutation::InsertTriangle { index: 0, triangle: StlTriangle::default() },
+            StlMutation::RemoveTriangle { index: 0 },
+            StlMutation::SetTriangleNormal { index: 0, normal: [0.0, 0.0, 0.0] },
+            StlMutation::SetTriangleVertices { index: 0, vertices: [[0.0, 0.0, 0.0]; 3] },
+        ];
+        let from_enum: Vec<&'static str> = samples.iter().map(kind_of).collect();
+        assert_eq!(from_enum, KINDS, "KINDS must list every StlMutation variant, in declaration order");
+
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let needle = "\"kinds\": [";
+        let start = manifest.find(needle).expect("manifest declares a kinds array") + needle.len();
+        let end = start + manifest[start..].find(']').expect("kinds array is closed");
+        let declared: Vec<String> = manifest[start..end].split(',').map(|entry| entry.trim().trim_matches('"').to_string()).filter(|entry| !entry.is_empty()).collect();
+        assert_eq!(declared, KINDS, "the oracle manifest's kinds must match StlMutation exactly");
+    }
+    //#endregion 🔖️KindsConformanceLaw
 }
 //#endregion Tests
 

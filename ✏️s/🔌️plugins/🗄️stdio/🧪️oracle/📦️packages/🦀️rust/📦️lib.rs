@@ -29,3 +29,469 @@ pub mod tabular;
 #[path = "../../🧊️mesh/🦀️component.rs"]
 pub mod mesh;
 //#endregion 🔖️Modules
+
+//#region 🔖️Artifacts
+// 🪆️ Mirrors the plugin's own `artifacts::<format>::standards::<version>::subsets::<subset>` tree, so
+// an oracle sits at the same address as the implementation it is evidence for. A mutation belongs to
+// a subset — two standards of one format declare different vocabularies — and subsets that share an
+// implementation reach it through the shared family modules above rather than duplicating it.
+#[path = "."]
+pub mod artifacts {
+    #[path = "."]
+    pub mod bmp {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v_v3 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod csv {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v_rfc4180 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod deflate {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v_rfc1950 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod dxf {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v_r12 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod gif {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v87a {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod v89a {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod html {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v5 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod jpg {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v_jfif_1_01 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod json {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v_rfc8259 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod las {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v1_0 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod md {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v_commonmark {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod mp4 {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v_isobmff {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod obj {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v3_0 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod pdf {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v1_4 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod v1_7 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod ply {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v1_0 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod png {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v1_2 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod step {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v_ap214 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod stl {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v_ascii {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod svg {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v1_1 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod tiff {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v6_0 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod tsv {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v_iana {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod wav {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v_riff_pcm {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod xlsx {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v_ecma_376 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod xml {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v1_0 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod zip {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v2_0 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+}
+//#endregion 🔖️Artifacts

@@ -127,6 +127,21 @@ pub struct Csr {
 }
 
 impl Csr {
+    /// 🧵️ Adopts arrays prepared by the retained assembly cursor without another scan.
+    pub(crate) fn from_owned_parts(n: usize, indptr: Vec<u32>, indices: Vec<u32>, vals: Vec<f64>) -> Self {
+        Self { n, indptr, indices, vals }
+    }
+
+    pub(crate) fn close_step(&mut self) -> (bool, usize) {
+        if self.vals.pop().is_some() {
+            return (false, std::mem::size_of::<f64>());
+        }
+        if self.indices.pop().is_some() || self.indptr.pop().is_some() {
+            return (false, std::mem::size_of::<u32>());
+        }
+        (true, 0)
+    }
+
     pub fn mul_vec(&self, x: &VecD) -> VecD {
         let mut out = VecD::zeros(self.n);
         for row in 0..self.n {
@@ -494,6 +509,7 @@ struct PcgCheckpoint {
 pub struct PcgJob {
     operation: Operation,
     state: PcgCheckpoint,
+    close_lane: u8,
 }
 
 impl PcgJob {
@@ -502,6 +518,7 @@ impl PcgJob {
         assert_eq!(a.n, x.len(), "pcg initial guess dimension mismatch");
         assert!(batch_units > 0, "pcg batch must contain work");
         let n = a.n;
+        let b_norm = b.norm2().max(1e-300);
         Self {
             operation,
             state: PcgCheckpoint {
@@ -517,7 +534,7 @@ impl PcgJob {
                 z: VecD::zeros(n),
                 p: VecD::zeros(n),
                 ap: VecD::zeros(n),
-                b_norm: 1e-300,
+                b_norm,
                 residual_norm: 0.0,
                 residual_sq: 0.0,
                 rz_old: 0.0,
@@ -535,11 +552,12 @@ impl PcgJob {
                 preview_due: false,
                 checkpoint_due: false,
             },
+            close_lane: 0,
         }
     }
 
     pub fn from_checkpoint(operation: Operation, bytes: &[u8]) -> Result<Self, serde_json::Error> {
-        Ok(Self { operation, state: serde_json::from_slice(bytes)? })
+        Ok(Self { operation, state: serde_json::from_slice(bytes)?, close_lane: 0 })
     }
 
     pub fn checkpoint_bytes(&self) -> Vec<u8> {
@@ -571,9 +589,91 @@ impl PcgJob {
         (&self.state.x, PcgStats { iterations: self.state.iteration, residual_norm: self.state.residual_norm, converged: self.state.converged })
     }
 
+    /// 🧹️ Retires one matrix/vector scalar owner per governed close opportunity.
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        if maximum_bytes < std::mem::size_of::<f64>().max(std::mem::size_of::<u32>()) {
+            return (false, 0, 0);
+        }
+        loop {
+            let released_bytes = match self.close_lane {
+                0 => match self.state.a.vals.pop() {
+                    Some(_) => std::mem::size_of::<f64>(),
+                    None => {
+                        self.close_lane += 1;
+                        continue;
+                    }
+                },
+                1 => match self.state.a.indices.pop() {
+                    Some(_) => std::mem::size_of::<u32>(),
+                    None => {
+                        self.close_lane += 1;
+                        continue;
+                    }
+                },
+                2 => match self.state.a.indptr.pop() {
+                    Some(_) => std::mem::size_of::<u32>(),
+                    None => {
+                        self.close_lane += 1;
+                        continue;
+                    }
+                },
+                3 => match self.state.b.0.pop() {
+                    Some(_) => std::mem::size_of::<f64>(),
+                    None => {
+                        self.close_lane += 1;
+                        continue;
+                    }
+                },
+                4 => match self.state.x.0.pop() {
+                    Some(_) => std::mem::size_of::<f64>(),
+                    None => {
+                        self.close_lane += 1;
+                        continue;
+                    }
+                },
+                5 => match self.state.diag.0.pop() {
+                    Some(_) => std::mem::size_of::<f64>(),
+                    None => {
+                        self.close_lane += 1;
+                        continue;
+                    }
+                },
+                6 => match self.state.r.0.pop() {
+                    Some(_) => std::mem::size_of::<f64>(),
+                    None => {
+                        self.close_lane += 1;
+                        continue;
+                    }
+                },
+                7 => match self.state.z.0.pop() {
+                    Some(_) => std::mem::size_of::<f64>(),
+                    None => {
+                        self.close_lane += 1;
+                        continue;
+                    }
+                },
+                8 => match self.state.p.0.pop() {
+                    Some(_) => std::mem::size_of::<f64>(),
+                    None => {
+                        self.close_lane += 1;
+                        continue;
+                    }
+                },
+                9 => match self.state.ap.0.pop() {
+                    Some(_) => std::mem::size_of::<f64>(),
+                    None => {
+                        self.close_lane += 1;
+                        continue;
+                    }
+                },
+                _ => return (true, 0, 0),
+            };
+            return (false, 1, released_bytes);
+        }
+    }
+
     fn reset_spmv(&mut self, stage: PcgStage) {
         self.state.stage = stage;
-        self.state.ap = VecD::zeros(self.state.a.n);
         self.state.row_cursor = 0;
         self.state.entry_cursor = self.state.a.indptr.first().copied().unwrap_or(0) as usize;
         self.state.row_sum = 0.0;
@@ -603,7 +703,6 @@ impl PcgJob {
             context.consume_fuel(1);
         }
         if self.state.row_cursor == self.state.a.n {
-            self.state.b_norm = self.state.b.norm2().max(1e-300);
             self.reset_spmv(PcgStage::InitialSpmv);
         }
     }
@@ -736,6 +835,162 @@ impl PcgJob {
             self.state.iteration += 1;
             self.reset_spmv(PcgStage::IterationSpmv);
         }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum PcgConstructionStage {
+    ReserveB,
+    InitializeB,
+    ReserveX,
+    InitializeX,
+    ReserveDiagonal,
+    InitializeDiagonal,
+    ReserveR,
+    InitializeR,
+    ReserveZ,
+    InitializeZ,
+    ReserveP,
+    InitializeP,
+    ReserveAp,
+    InitializeAp,
+    Complete,
+}
+
+/// 🧵️ Retained PCG constructor. Each vector allocation and each initialized scalar owns
+/// a distinct worker opportunity; no full RHS or zero-vector materialization occurs in its caller.
+pub struct PcgJobConstruction {
+    operation: Operation,
+    matrix: Option<Csr>,
+    stage: PcgConstructionStage,
+    cursor: usize,
+    b: VecD,
+    x: VecD,
+    diag: VecD,
+    r: VecD,
+    z: VecD,
+    p: VecD,
+    ap: VecD,
+    complete: Option<PcgJob>,
+}
+
+impl PcgJobConstruction {
+    pub fn new(operation: Operation, matrix: Csr) -> Self {
+        Self {
+            operation,
+            matrix: Some(matrix),
+            stage: PcgConstructionStage::ReserveB,
+            cursor: 0,
+            b: VecD::from_vec(Vec::new()),
+            x: VecD::from_vec(Vec::new()),
+            diag: VecD::from_vec(Vec::new()),
+            r: VecD::from_vec(Vec::new()),
+            z: VecD::from_vec(Vec::new()),
+            p: VecD::from_vec(Vec::new()),
+            ap: VecD::from_vec(Vec::new()),
+            complete: None,
+        }
+    }
+
+    pub fn step_one(&mut self) -> Result<bool, &'static [u8]> {
+        let n = self.matrix.as_ref().ok_or(b"pcg-construction-matrix-missing" as &'static [u8])?.n;
+        macro_rules! reserve {
+            ($owner:expr, $next:expr, $fault:expr) => {{
+                $owner.0.try_reserve_exact(n).map_err(|_| $fault as &'static [u8])?;
+                self.cursor = 0;
+                self.stage = $next;
+            }};
+        }
+        macro_rules! initialize {
+            ($owner:expr, $value:expr, $next:expr) => {{
+                if self.cursor < n {
+                    $owner.0.push($value);
+                    self.cursor += 1;
+                } else {
+                    self.stage = $next;
+                }
+            }};
+        }
+        match self.stage {
+            PcgConstructionStage::ReserveB => reserve!(self.b, PcgConstructionStage::InitializeB, b"pcg-construction-b-allocation"),
+            PcgConstructionStage::InitializeB => initialize!(self.b, 1.0, PcgConstructionStage::ReserveX),
+            PcgConstructionStage::ReserveX => reserve!(self.x, PcgConstructionStage::InitializeX, b"pcg-construction-x-allocation"),
+            PcgConstructionStage::InitializeX => initialize!(self.x, 0.0, PcgConstructionStage::ReserveDiagonal),
+            PcgConstructionStage::ReserveDiagonal => reserve!(self.diag, PcgConstructionStage::InitializeDiagonal, b"pcg-construction-diagonal-allocation"),
+            PcgConstructionStage::InitializeDiagonal => initialize!(self.diag, 0.0, PcgConstructionStage::ReserveR),
+            PcgConstructionStage::ReserveR => reserve!(self.r, PcgConstructionStage::InitializeR, b"pcg-construction-r-allocation"),
+            PcgConstructionStage::InitializeR => initialize!(self.r, 0.0, PcgConstructionStage::ReserveZ),
+            PcgConstructionStage::ReserveZ => reserve!(self.z, PcgConstructionStage::InitializeZ, b"pcg-construction-z-allocation"),
+            PcgConstructionStage::InitializeZ => initialize!(self.z, 0.0, PcgConstructionStage::ReserveP),
+            PcgConstructionStage::ReserveP => reserve!(self.p, PcgConstructionStage::InitializeP, b"pcg-construction-p-allocation"),
+            PcgConstructionStage::InitializeP => initialize!(self.p, 0.0, PcgConstructionStage::ReserveAp),
+            PcgConstructionStage::ReserveAp => reserve!(self.ap, PcgConstructionStage::InitializeAp, b"pcg-construction-ap-allocation"),
+            PcgConstructionStage::InitializeAp => initialize!(self.ap, 0.0, PcgConstructionStage::Complete),
+            PcgConstructionStage::Complete => {
+                if self.complete.is_none() {
+                    self.complete = Some(PcgJob {
+                        operation: self.operation,
+                        state: PcgCheckpoint {
+                            a: self.matrix.take().expect("matrix retained through construction"),
+                            b: std::mem::replace(&mut self.b, VecD::from_vec(Vec::new())),
+                            x: std::mem::replace(&mut self.x, VecD::from_vec(Vec::new())),
+                            tol_rel: 1.0e-8,
+                            max_iter: 512,
+                            batch_units: 1,
+                            stage: PcgStage::InitializeDiagonal,
+                            diag: std::mem::replace(&mut self.diag, VecD::from_vec(Vec::new())),
+                            r: std::mem::replace(&mut self.r, VecD::from_vec(Vec::new())),
+                            z: std::mem::replace(&mut self.z, VecD::from_vec(Vec::new())),
+                            p: std::mem::replace(&mut self.p, VecD::from_vec(Vec::new())),
+                            ap: std::mem::replace(&mut self.ap, VecD::from_vec(Vec::new())),
+                            b_norm: (n as f64).sqrt().max(1e-300),
+                            residual_norm: 0.0,
+                            residual_sq: 0.0,
+                            rz_old: 0.0,
+                            rz_new: 0.0,
+                            dot_accum: 0.0,
+                            alpha: 0.0,
+                            beta: 0.0,
+                            iteration: 0,
+                            cursor: 0,
+                            row_cursor: 0,
+                            entry_cursor: 0,
+                            row_sum: 0.0,
+                            converged: false,
+                            coarse_published: false,
+                            preview_due: false,
+                            checkpoint_due: false,
+                        },
+                        close_lane: 0,
+                    });
+                }
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
+
+    pub fn take_complete(&mut self) -> Option<PcgJob> {
+        (self.stage == PcgConstructionStage::Complete).then(|| self.complete.take()).flatten()
+    }
+
+    pub fn close_step(&mut self) -> (bool, usize) {
+        if let Some(matrix) = self.matrix.as_mut() {
+            if matrix.vals.pop().is_some() {
+                return (false, std::mem::size_of::<f64>());
+            }
+            if matrix.indices.pop().is_some() || matrix.indptr.pop().is_some() {
+                return (false, std::mem::size_of::<u32>());
+            }
+            self.matrix = None;
+            return (false, std::mem::size_of::<Csr>());
+        }
+        for vector in [&mut self.b, &mut self.x, &mut self.diag, &mut self.r, &mut self.z, &mut self.p, &mut self.ap] {
+            if vector.0.pop().is_some() {
+                return (false, std::mem::size_of::<f64>());
+            }
+        }
+        (self.complete.is_none(), 0)
     }
 }
 

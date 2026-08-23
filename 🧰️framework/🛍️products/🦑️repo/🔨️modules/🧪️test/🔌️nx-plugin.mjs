@@ -62,8 +62,11 @@ function inputsFor(workspaceRoot, vocabulary, ownerRel, caseRel, adapters) {
     "sharedGlobals",
   ];
   // 🧭️ A change to the owner's own sources must invalidate the case, or a subject regression would
-  // be served from cache as a pass.
+  // be served from cache as a pass. Fixture directories are excluded here because the two globs
+  // above already cover them: a real-world fixture is megabytes, and Nx hashes file CONTENT, so
+  // counting it twice per target doubles the hashing cost of every case that owns one.
   inputs.push(`{workspaceRoot}/${ownerRel}/**/*`);
+  inputs.push(`!{workspaceRoot}/${ownerRel}/**/${vocabulary.testFixturesDirName}/**/*`);
   return inputs;
 }
 
@@ -73,7 +76,9 @@ function target(domain, command, inputs, cacheable = true) {
     executor: "nx:run-commands",
     options: { cwd: domain, command: `bun ./📜️script.ts ${command}`, forwardAllArgs: false },
     inputs,
-    outputs: [`{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/tests`],
+    // 📤️Only the durable products of a run are cache outputs. The work directory holds each case's
+    // mutable fixture copies, which are large, regenerated on every run and meaningless to restore.
+    outputs: ["results", "reports", "diffs"].map((child) => `{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/tests/${child}`),
     cache: cacheable,
   };
 }

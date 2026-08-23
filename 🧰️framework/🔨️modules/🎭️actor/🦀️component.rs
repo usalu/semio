@@ -54,6 +54,9 @@ pub mod schema_metadata {
         SchemaMetadata { name: "JobCheckpoint", version: 1, typescript: "export type JobCheckpoint = { state: Array<number>, applied_progress: bigint, };" },
         SchemaMetadata { name: "JobCommitCandidate", version: 1, typescript: "export type JobCommitCandidate = { state: Array<number>, output: Array<number>, };" },
         SchemaMetadata { name: "JobOperation", version: 1, typescript: "export type JobOperation = { operation: bigint, base_revision: bigint, generation: bigint, preview_sequence: bigint, seed: bigint, };" },
+        SchemaMetadata { name: "JobProgressIdentity", version: 1, typescript: "export type JobProgressIdentity = { actor: ActorId, job: bigint, operation: bigint, base_revision: bigint, generation: bigint, step_sequence: bigint, preview_sequence: bigint, };" },
+        SchemaMetadata { name: "JobProgressKind", version: 1, typescript: r#"export type JobProgressKind = "yield" | "preview" | "checkpoint" | "commitValidated" | "cancelled" | "fault";"# },
+        SchemaMetadata { name: "JobProgressReceipt", version: 1, typescript: "export type JobProgressReceipt = { identity: JobProgressIdentity, kind: JobProgressKind, applied_progress: bigint, owner_bytes: number, };" },
         SchemaMetadata { name: "JobPublication", version: 1, typescript: "export type JobPublication = { turn: JobTurn, outcome: JobStepOutcome, };" },
         SchemaMetadata { name: "JobReplayLog", version: 1, typescript: "export type JobReplayLog = { entries: Array<JobPublication>, };" },
         SchemaMetadata { name: "JobStepOutcome", version: 1, typescript: r#"export type JobStepOutcome = { "kind": "yield" } | { "kind": "previewReady", preview: Array<number>, } | { "kind": "checkpointReady", checkpoint: JobCheckpoint, } | { "kind": "complete", candidate: JobCommitCandidate, } | { "kind": "cancelled" } | { "kind": "fault", detail: Array<number>, };"# },
@@ -911,6 +914,786 @@ impl JobTurnBridge {
     }
 }
 //#endregion 🪪️JobBridge
+
+//#region 🎨️JobProgressOverlay
+pub const JOB_PROGRESS_ACTIVE_CAPACITY: usize = 64;
+pub const JOB_PROGRESS_RETIREMENT_CAPACITY: usize = 128;
+pub const JOB_PROGRESS_PAGE_MAXIMUM_BYTES: usize = 16 * 1024;
+pub const JOB_PROGRESS_TOTAL_MAXIMUM_BYTES: usize = 4 * 1024 * 1024;
+pub const JOB_PROGRESS_TOTAL_MAXIMUM_ITEMS: usize = 512;
+
+/// 🪪️ Exact identity of one actor-visible job progress publication.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct JobProgressIdentity {
+    pub actor: ActorId,
+    pub job: u64,
+    pub operation: u64,
+    pub base_revision: u64,
+    pub generation: u64,
+    pub step_sequence: u64,
+    pub preview_sequence: u64,
+}
+
+impl JobProgressIdentity {
+    pub fn from_publication(actor: ActorId, publication: &JobPublication) -> Self {
+        Self {
+            actor,
+            job: publication.turn.job,
+            operation: publication.turn.operation.operation,
+            base_revision: publication.turn.operation.base_revision,
+            generation: publication.turn.operation.generation,
+            step_sequence: publication.turn.step_sequence,
+            preview_sequence: publication.turn.operation.preview_sequence,
+        }
+    }
+
+    fn same_job(self, other: Self) -> bool {
+        self.actor == other.actor && self.job == other.job
+    }
+
+    fn same_operation(self, other: Self) -> bool {
+        self.same_job(other) && self.operation == other.operation && self.base_revision == other.base_revision && self.generation == other.generation
+    }
+}
+
+/// 📡️ Scalar, coalescible progress kind retained separately from committed actor scenes.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum JobProgressKind {
+    Yield,
+    Preview,
+    Checkpoint,
+    CommitValidated,
+    Cancelled,
+    Fault,
+}
+
+impl JobProgressKind {
+    fn of(outcome: &JobStepOutcome) -> Self {
+        match outcome {
+            JobStepOutcome::Yield => Self::Yield,
+            JobStepOutcome::PreviewReady { .. } => Self::Preview,
+            JobStepOutcome::CheckpointReady { .. } => Self::Checkpoint,
+            JobStepOutcome::Complete { .. } => Self::CommitValidated,
+            JobStepOutcome::Cancelled => Self::Cancelled,
+            JobStepOutcome::Fault { .. } => Self::Fault,
+        }
+    }
+
+    fn terminal(self) -> bool {
+        matches!(self, Self::CommitValidated | Self::Cancelled | Self::Fault)
+    }
+}
+
+/// 🔐️ Independent revision/generation authority supplied immediately before publication.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct JobProgressLiveAuthority {
+    pub operation: u64,
+    pub base_revision: u64,
+    pub generation: u64,
+}
+
+impl JobProgressLiveAuthority {
+    pub fn new(operation: u64, base_revision: u64, generation: u64) -> Self {
+        Self { operation, base_revision, generation }
+    }
+
+    fn accepts(self, identity: JobProgressIdentity) -> bool {
+        self.operation == identity.operation && self.base_revision == identity.base_revision && self.generation == identity.generation
+    }
+}
+
+/// 🚫️ Fail-closed reason returned without consuming a rejected publication owner.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum JobProgressFault {
+    Cancelled,
+    Budget,
+    Capacity,
+    Oversized,
+    Stale,
+    StepSequence,
+    PreviewSequence,
+    Busy,
+    Token,
+    Missing,
+    CheckedOut,
+    Exhausted,
+}
+
+impl std::fmt::Display for JobProgressFault {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(formatter, "job progress overlay fault: {self:?}")
+    }
+}
+
+impl std::error::Error for JobProgressFault {}
+
+/// 📮️ Exact rejected publication owner; callers must return or close it rather than recreate input.
+#[must_use = "a rejected job publication retains the exact payload owner"]
+#[derive(Debug)]
+pub struct JobProgressRejected {
+    fault: JobProgressFault,
+    publication: Option<JobPublication>,
+}
+
+impl JobProgressRejected {
+    pub fn new(fault: JobProgressFault, publication: JobPublication) -> Self {
+        Self { fault, publication: Some(publication) }
+    }
+
+    pub fn fault(&self) -> JobProgressFault {
+        self.fault
+    }
+
+    pub fn publication(&self) -> &JobPublication {
+        self.publication.as_ref().expect("rejected job publication owner already returned")
+    }
+
+    pub fn into_publication(mut self) -> JobPublication {
+        self.publication.take().expect("rejected job publication owner already returned")
+    }
+}
+
+#[derive(Debug)]
+struct JobPublicationOwner {
+    publication: JobPublication,
+    phase: u8,
+    total_phases: u8,
+    owner_bytes: usize,
+}
+
+impl JobPublicationOwner {
+    fn try_new(publication: JobPublication) -> Result<Self, (JobProgressFault, JobPublication)> {
+        match publication_owner_shape(&publication, false) {
+            Ok((_, owner_bytes, total_phases)) => Ok(Self { publication, phase: 0, total_phases, owner_bytes }),
+            Err(fault) => Err((fault, publication)),
+        }
+    }
+
+    fn close_one(&mut self) -> (bool, usize, usize) {
+        let released_bytes = match (&mut self.publication.outcome, self.phase) {
+            (JobStepOutcome::PreviewReady { preview }, 0) => std::mem::take(preview).capacity(),
+            (JobStepOutcome::CheckpointReady { checkpoint }, 0) => std::mem::take(&mut checkpoint.state).capacity(),
+            (JobStepOutcome::Complete { candidate }, 0) => std::mem::take(&mut candidate.state).capacity(),
+            (JobStepOutcome::Complete { candidate }, 1) => std::mem::take(&mut candidate.output).capacity(),
+            (JobStepOutcome::Fault { detail }, 0) => std::mem::take(detail).capacity(),
+            _ => 0,
+        };
+        self.phase = self.phase.saturating_add(1);
+        self.owner_bytes = self.owner_bytes.saturating_sub(released_bytes);
+        (self.phase >= self.total_phases, 1, released_bytes)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.phase >= self.total_phases
+            && self.owner_bytes == 0
+            && match &self.publication.outcome {
+                JobStepOutcome::PreviewReady { preview } => preview.capacity() == 0,
+                JobStepOutcome::CheckpointReady { checkpoint } => checkpoint.state.capacity() == 0,
+                JobStepOutcome::Complete { candidate } => candidate.state.capacity() == 0 && candidate.output.capacity() == 0,
+                JobStepOutcome::Fault { detail } => detail.capacity() == 0,
+                JobStepOutcome::Yield | JobStepOutcome::Cancelled => true,
+            }
+    }
+}
+
+fn publication_owner_shape(publication: &JobPublication, enforce_page_limit: bool) -> Result<(usize, usize, u8), JobProgressFault> {
+    let capacities = match &publication.outcome {
+        JobStepOutcome::Yield | JobStepOutcome::Cancelled => ([0usize, 0usize], 0usize),
+        JobStepOutcome::PreviewReady { preview } => ([preview.capacity(), 0], 1),
+        JobStepOutcome::CheckpointReady { checkpoint } => ([checkpoint.state.capacity(), 0], 1),
+        JobStepOutcome::Complete { candidate } => ([candidate.state.capacity(), candidate.output.capacity()], 2),
+        JobStepOutcome::Fault { detail } => ([detail.capacity(), 0], 1),
+    };
+    if enforce_page_limit && capacities.0[..capacities.1].iter().any(|capacity| *capacity > JOB_PROGRESS_PAGE_MAXIMUM_BYTES) {
+        return Err(JobProgressFault::Oversized);
+    }
+    let owner_bytes = capacities.0[..capacities.1].iter().try_fold(0usize, |total, capacity| total.checked_add(*capacity)).ok_or(JobProgressFault::Capacity)?;
+    let total_phases = u8::try_from(capacities.1.checked_add(1).ok_or(JobProgressFault::Capacity)?).map_err(|_| JobProgressFault::Capacity)?;
+    Ok((capacities.1 + 1, owner_bytes, total_phases))
+}
+
+#[derive(Debug)]
+struct JobProgressSlot {
+    epoch: u64,
+    occupied: bool,
+    published: bool,
+    awaiting_ack: bool,
+    checked_out: bool,
+    terminal: bool,
+    reservation: Option<u64>,
+    identity: JobProgressIdentity,
+    kind: JobProgressKind,
+    applied_progress: u64,
+    preview: Option<JobPublicationOwner>,
+}
+
+impl JobProgressSlot {
+    fn vacant() -> Self {
+        Self {
+            epoch: 0,
+            occupied: false,
+            published: false,
+            awaiting_ack: false,
+            checked_out: false,
+            terminal: false,
+            reservation: None,
+            identity: JobProgressIdentity { actor: ActorId(0), job: 0, operation: 0, base_revision: 0, generation: 0, step_sequence: 0, preview_sequence: 0 },
+            kind: JobProgressKind::Yield,
+            applied_progress: 0,
+            preview: None,
+        }
+    }
+
+    fn clear(&mut self) {
+        let epoch = self.epoch;
+        *self = Self::vacant();
+        self.epoch = epoch;
+    }
+}
+
+#[derive(Debug)]
+struct JobProgressRetirementSlot {
+    reservation: Option<u64>,
+    owner: Option<JobPublicationOwner>,
+}
+
+#[derive(Clone, Copy, Debug)]
+struct JobProgressPriorState {
+    published: bool,
+    terminal: bool,
+    identity: JobProgressIdentity,
+    kind: JobProgressKind,
+    applied_progress: u64,
+}
+
+impl JobProgressRetirementSlot {
+    fn vacant() -> Self {
+        Self { reservation: None, owner: None }
+    }
+}
+
+/// 🎟️ Linear reservation made before the publication owner crosses into the overlay.
+#[must_use = "job progress admission must be published or cancelled"]
+#[derive(Debug)]
+pub struct JobProgressAdmission {
+    token: u64,
+    active_index: usize,
+    active_epoch: u64,
+    identity: JobProgressIdentity,
+    live: JobProgressLiveAuthority,
+    retirement_indices: [usize; 2],
+    abort_retirement: Option<usize>,
+    owner_items: usize,
+    owner_bytes: usize,
+}
+
+/// ✅️ Linear ACK/abort authority for one adopted publication.
+#[must_use = "an adopted job publication must be acknowledged or aborted"]
+#[derive(Debug)]
+pub struct JobProgressReceipt {
+    identity: JobProgressIdentity,
+    kind: JobProgressKind,
+    applied_progress: u64,
+    owner_bytes: usize,
+    active_index: usize,
+    active_epoch: u64,
+    prior: JobProgressPriorState,
+    displaced_retirement: Option<usize>,
+    abort_retirement: Option<(usize, u64)>,
+}
+
+impl JobProgressReceipt {
+    pub fn identity(&self) -> JobProgressIdentity {
+        self.identity
+    }
+
+    pub fn kind(&self) -> JobProgressKind {
+        self.kind
+    }
+
+    pub fn applied_progress(&self) -> u64 {
+        self.applied_progress
+    }
+
+    pub fn owner_bytes(&self) -> usize {
+        self.owner_bytes
+    }
+}
+
+/// 🧹️ One truthful cleanup opportunity.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum JobProgressCloseStep {
+    Pending { released_items: usize, released_bytes: usize },
+    Blocked,
+    Complete,
+}
+
+/// 🎨️ Fixed actor-owned preview/progress authority; committed scenes are never stored here.
+pub struct JobProgressOverlayStore {
+    active: [JobProgressSlot; JOB_PROGRESS_ACTIVE_CAPACITY],
+    retirements: [JobProgressRetirementSlot; JOB_PROGRESS_RETIREMENT_CAPACITY],
+    closing_actors: [Option<ActorId>; JOB_PROGRESS_ACTIVE_CAPACITY],
+    close_all: bool,
+    next_token: u64,
+    owned_items: usize,
+    owned_bytes: usize,
+    reserved_items: usize,
+    reserved_bytes: usize,
+}
+
+impl Default for JobProgressOverlayStore {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl JobProgressOverlayStore {
+    pub fn new() -> Self {
+        Self {
+            active: std::array::from_fn(|_| JobProgressSlot::vacant()),
+            retirements: std::array::from_fn(|_| JobProgressRetirementSlot::vacant()),
+            closing_actors: [None; JOB_PROGRESS_ACTIVE_CAPACITY],
+            close_all: false,
+            next_token: 1,
+            owned_items: 0,
+            owned_bytes: 0,
+            reserved_items: 0,
+            reserved_bytes: 0,
+        }
+    }
+
+    pub fn live_authority(&self, actor: ActorId, job: u64) -> Option<JobProgressLiveAuthority> {
+        self.active.iter().find(|slot| slot.occupied && slot.identity.actor == actor && slot.identity.job == job).map(|slot| JobProgressLiveAuthority::new(slot.identity.operation, slot.identity.base_revision, slot.identity.generation))
+    }
+
+    pub fn owned_items(&self) -> usize {
+        self.owned_items
+    }
+
+    pub fn owned_bytes(&self) -> usize {
+        self.owned_bytes
+    }
+
+    pub fn begin_operation(&mut self, actor: ActorId, job: u64, live: JobProgressLiveAuthority) -> Result<(), JobProgressFault> {
+        if self.close_all || self.closing_actors.iter().flatten().any(|closing| *closing == actor) {
+            return Err(JobProgressFault::Cancelled);
+        }
+        if self.active.iter().any(|slot| slot.occupied && slot.identity.actor == actor && slot.identity.job == job) {
+            return Err(JobProgressFault::Busy);
+        }
+        let slot = self.active.iter_mut().find(|slot| !slot.occupied && slot.reservation.is_none()).ok_or(JobProgressFault::Capacity)?;
+        slot.epoch = slot.epoch.checked_add(1).ok_or(JobProgressFault::Exhausted)?;
+        slot.occupied = true;
+        slot.published = false;
+        slot.identity = JobProgressIdentity { actor, job, operation: live.operation, base_revision: live.base_revision, generation: live.generation, step_sequence: 0, preview_sequence: 0 };
+        Ok(())
+    }
+
+    pub fn preflight(&mut self, cx: &mut job::StepContext<'_>, actor: ActorId, publication: &JobPublication, live: JobProgressLiveAuthority) -> Result<JobProgressAdmission, JobProgressFault> {
+        let identity = JobProgressIdentity::from_publication(actor, publication);
+        if cx.is_cancelled() || self.close_all || self.closing_actors.iter().flatten().any(|closing| *closing == actor) {
+            return Err(JobProgressFault::Cancelled);
+        }
+        if cx.should_yield() {
+            return Err(JobProgressFault::Budget);
+        }
+        if cx.operation().0 != identity.operation || cx.generation().0 != identity.generation || !live.accepts(identity) {
+            return Err(JobProgressFault::Stale);
+        }
+        let (owner_items, owner_bytes, _) = publication_owner_shape(publication, true)?;
+        let kind = JobProgressKind::of(&publication.outcome);
+        let active_index = self.active.iter().position(|slot| slot.occupied && slot.identity.actor == actor && slot.identity.job == publication.turn.job).ok_or(JobProgressFault::Missing)?;
+        let active_epoch = self.active[active_index].epoch;
+        if self.active[active_index].checked_out {
+            return Err(JobProgressFault::CheckedOut);
+        }
+        if self.active[active_index].awaiting_ack || self.active[active_index].reservation.is_some() {
+            return Err(JobProgressFault::Busy);
+        }
+        if active_epoch == u64::MAX {
+            return Err(JobProgressFault::Exhausted);
+        }
+        if !self.active[active_index].identity.same_operation(identity) {
+            return Err(JobProgressFault::Stale);
+        }
+        let prior_preview_sequence = if self.active[active_index].published {
+            let expected_step = self.active[active_index].identity.step_sequence.checked_add(1).ok_or(JobProgressFault::Exhausted)?;
+            if identity.step_sequence != expected_step {
+                return Err(JobProgressFault::StepSequence);
+            }
+            self.active[active_index].identity.preview_sequence
+        } else {
+            if identity.step_sequence != 0 {
+                return Err(JobProgressFault::StepSequence);
+            }
+            0
+        };
+        let expected_preview = if kind == JobProgressKind::Preview { prior_preview_sequence.checked_add(1).ok_or(JobProgressFault::Exhausted)? } else { prior_preview_sequence };
+        if identity.preview_sequence != expected_preview {
+            return Err(JobProgressFault::PreviewSequence);
+        }
+        let has_preview = self.active[active_index].preview.is_some();
+        let adoption_retirements = match kind {
+            JobProgressKind::Preview => usize::from(has_preview),
+            JobProgressKind::Checkpoint => 1,
+            JobProgressKind::CommitValidated | JobProgressKind::Fault => 1 + usize::from(has_preview),
+            JobProgressKind::Cancelled => usize::from(has_preview),
+            JobProgressKind::Yield => 0,
+        };
+        let staged_preview = kind == JobProgressKind::Preview;
+        let retirement_count = adoption_retirements + usize::from(staged_preview);
+        if retirement_count > 2 {
+            return Err(JobProgressFault::Capacity);
+        }
+        let mut retirement_indices = [usize::MAX; 2];
+        let mut found = 0usize;
+        for (index, retirement) in self.retirements.iter().enumerate() {
+            if retirement.owner.is_none() && retirement.reservation.is_none() {
+                retirement_indices[found] = index;
+                found += 1;
+                if found == retirement_count {
+                    break;
+                }
+            }
+        }
+        if found != retirement_count {
+            return Err(JobProgressFault::Capacity);
+        }
+        let next_items = self.owned_items.checked_add(self.reserved_items).and_then(|total| total.checked_add(owner_items)).ok_or(JobProgressFault::Capacity)?;
+        let next_bytes = self.owned_bytes.checked_add(self.reserved_bytes).and_then(|total| total.checked_add(owner_bytes)).ok_or(JobProgressFault::Capacity)?;
+        if next_items > JOB_PROGRESS_TOTAL_MAXIMUM_ITEMS || next_bytes > JOB_PROGRESS_TOTAL_MAXIMUM_BYTES {
+            return Err(JobProgressFault::Capacity);
+        }
+        let token = self.next_token;
+        self.next_token = self.next_token.checked_add(1).ok_or(JobProgressFault::Exhausted)?;
+        self.active[active_index].reservation = Some(token);
+        for index in retirement_indices.iter().copied().take(retirement_count) {
+            self.retirements[index].reservation = Some(token);
+        }
+        self.reserved_items += owner_items;
+        self.reserved_bytes += owner_bytes;
+        cx.consume_fuel(1);
+        Ok(JobProgressAdmission { token, active_index, active_epoch, identity, live, retirement_indices, abort_retirement: staged_preview.then_some(retirement_indices[adoption_retirements]), owner_items, owner_bytes })
+    }
+
+    pub fn cancel_admission(&mut self, admission: JobProgressAdmission) -> Result<(), JobProgressFault> {
+        let slot = self.active.get(admission.active_index).ok_or(JobProgressFault::Token)?;
+        if slot.epoch != admission.active_epoch || slot.reservation != Some(admission.token) {
+            return Err(JobProgressFault::Token);
+        }
+        for index in admission.retirement_indices.iter().copied().filter(|index| *index != usize::MAX) {
+            let retirement = self.retirements.get(index).ok_or(JobProgressFault::Token)?;
+            if retirement.reservation != Some(admission.token) || retirement.owner.is_some() {
+                return Err(JobProgressFault::Token);
+            }
+        }
+        self.active[admission.active_index].reservation = None;
+        for index in admission.retirement_indices.iter().copied().filter(|index| *index != usize::MAX) {
+            let retirement = &mut self.retirements[index];
+            retirement.reservation = None;
+        }
+        self.reserved_items = self.reserved_items.saturating_sub(admission.owner_items);
+        self.reserved_bytes = self.reserved_bytes.saturating_sub(admission.owner_bytes);
+        Ok(())
+    }
+
+    pub fn publish_reserved(&mut self, cx: &mut job::StepContext<'_>, admission: JobProgressAdmission, publication: JobPublication, live: JobProgressLiveAuthority) -> Result<JobProgressReceipt, JobProgressRejected> {
+        let identity = JobProgressIdentity::from_publication(admission.identity.actor, &publication);
+        let slot_valid = self.active.get(admission.active_index).is_some_and(|slot| slot.epoch == admission.active_epoch && slot.reservation == Some(admission.token));
+        if cx.is_cancelled() || cx.operation().0 != identity.operation || cx.generation().0 != identity.generation {
+            let _ = self.cancel_admission(admission);
+            return Err(JobProgressRejected::new(JobProgressFault::Cancelled, publication));
+        }
+        if !slot_valid || identity != admission.identity || live != admission.live || !live.accepts(identity) {
+            let _ = self.cancel_admission(admission);
+            return Err(JobProgressRejected::new(JobProgressFault::Stale, publication));
+        }
+        let kind = JobProgressKind::of(&publication.outcome);
+        let applied_progress = match &publication.outcome {
+            JobStepOutcome::CheckpointReady { checkpoint } => checkpoint.applied_progress,
+            _ => 0,
+        };
+        let retains_incoming = matches!(kind, JobProgressKind::Preview | JobProgressKind::Checkpoint | JobProgressKind::CommitValidated | JobProgressKind::Fault);
+        let incoming = if retains_incoming {
+            match JobPublicationOwner::try_new(publication) {
+                Ok(owner) => Some(owner),
+                Err((fault, publication)) => {
+                    let _ = self.cancel_admission(admission);
+                    return Err(JobProgressRejected::new(fault, publication));
+                }
+            }
+        } else {
+            drop(publication);
+            None
+        };
+        let prior = JobProgressPriorState {
+            published: self.active[admission.active_index].published,
+            terminal: self.active[admission.active_index].terminal,
+            identity: self.active[admission.active_index].identity,
+            kind: self.active[admission.active_index].kind,
+            applied_progress: self.active[admission.active_index].applied_progress,
+        };
+        let displaced = match kind {
+            JobProgressKind::Preview | JobProgressKind::CommitValidated | JobProgressKind::Cancelled | JobProgressKind::Fault => self.active[admission.active_index].preview.take(),
+            JobProgressKind::Yield | JobProgressKind::Checkpoint => None,
+        };
+        let mut retirement_cursor = 0usize;
+        let mut displaced_retirement = None;
+        if let Some(displaced) = displaced {
+            let index = admission.retirement_indices[retirement_cursor];
+            self.retirements[index].reservation = None;
+            self.retirements[index].owner = Some(displaced);
+            displaced_retirement = Some(index);
+            retirement_cursor += 1;
+        }
+        if kind == JobProgressKind::Preview {
+            self.active[admission.active_index].preview = incoming;
+        } else if let Some(incoming) = incoming {
+            let index = admission.retirement_indices[retirement_cursor];
+            self.retirements[index].reservation = None;
+            self.retirements[index].owner = Some(incoming);
+        }
+        let next_epoch = admission.active_epoch + 1;
+        let slot = &mut self.active[admission.active_index];
+        slot.epoch = next_epoch;
+        slot.occupied = true;
+        slot.published = true;
+        slot.awaiting_ack = true;
+        slot.checked_out = false;
+        slot.terminal = kind.terminal();
+        slot.reservation = None;
+        slot.identity = identity;
+        slot.kind = kind;
+        slot.applied_progress = applied_progress;
+        self.reserved_items = self.reserved_items.saturating_sub(admission.owner_items);
+        self.reserved_bytes = self.reserved_bytes.saturating_sub(admission.owner_bytes);
+        if retains_incoming {
+            self.owned_items += admission.owner_items;
+            self.owned_bytes += admission.owner_bytes;
+        }
+        let abort_retirement = admission.abort_retirement.map(|index| (index, admission.token));
+        Ok(JobProgressReceipt { identity, kind, applied_progress, owner_bytes: admission.owner_bytes, active_index: admission.active_index, active_epoch: next_epoch, prior, displaced_retirement, abort_retirement })
+    }
+
+    pub fn acknowledge(&mut self, receipt: JobProgressReceipt) -> Result<(), (JobProgressFault, JobProgressReceipt)> {
+        let Some(slot) = self.active.get_mut(receipt.active_index) else {
+            return Err((JobProgressFault::Token, receipt));
+        };
+        if slot.epoch != receipt.active_epoch || !slot.occupied || !slot.awaiting_ack || slot.identity != receipt.identity {
+            return Err((JobProgressFault::Token, receipt));
+        }
+        if let Some((index, token)) = receipt.abort_retirement {
+            let Some(retirement) = self.retirements.get_mut(index) else {
+                return Err((JobProgressFault::Token, receipt));
+            };
+            if retirement.reservation != Some(token) || retirement.owner.is_some() {
+                return Err((JobProgressFault::Token, receipt));
+            }
+            retirement.reservation = None;
+        }
+        slot.awaiting_ack = false;
+        if slot.terminal {
+            if slot.preview.is_some() {
+                slot.awaiting_ack = true;
+                return Err((JobProgressFault::Token, receipt));
+            }
+            slot.clear();
+        }
+        Ok(())
+    }
+
+    pub fn abort(&mut self, receipt: JobProgressReceipt) -> Result<(), (JobProgressFault, JobProgressReceipt)> {
+        let Some(slot) = self.active.get_mut(receipt.active_index) else {
+            return Err((JobProgressFault::Token, receipt));
+        };
+        if slot.epoch != receipt.active_epoch || !slot.occupied || !slot.awaiting_ack || slot.identity != receipt.identity {
+            return Err((JobProgressFault::Token, receipt));
+        }
+        if receipt.kind == JobProgressKind::Preview {
+            let Some(owner) = slot.preview.take() else {
+                return Err((JobProgressFault::Token, receipt));
+            };
+            let Some((index, token)) = receipt.abort_retirement else {
+                slot.preview = Some(owner);
+                return Err((JobProgressFault::Token, receipt));
+            };
+            let Some(retirement) = self.retirements.get_mut(index) else {
+                slot.preview = Some(owner);
+                return Err((JobProgressFault::Token, receipt));
+            };
+            if retirement.reservation != Some(token) || retirement.owner.is_some() {
+                slot.preview = Some(owner);
+                return Err((JobProgressFault::Token, receipt));
+            }
+            retirement.reservation = None;
+            retirement.owner = Some(owner);
+        }
+        let restored_preview = if let Some(index) = receipt.displaced_retirement {
+            let Some(retirement) = self.retirements.get_mut(index) else {
+                return Err((JobProgressFault::Token, receipt));
+            };
+            let Some(owner) = retirement.owner.take() else {
+                return Err((JobProgressFault::Token, receipt));
+            };
+            Some(owner)
+        } else {
+            None
+        };
+        slot.published = receipt.prior.published;
+        slot.awaiting_ack = false;
+        slot.checked_out = false;
+        slot.terminal = receipt.prior.terminal;
+        slot.reservation = None;
+        slot.identity = receipt.prior.identity;
+        slot.kind = receipt.prior.kind;
+        slot.applied_progress = receipt.prior.applied_progress;
+        slot.preview = restored_preview.or_else(|| slot.preview.take());
+        Ok(())
+    }
+
+    pub fn retain_rejected(&mut self, rejected: JobProgressRejected) -> Result<(), JobProgressRejected> {
+        let Some(index) = self.retirements.iter().position(|slot| slot.owner.is_none() && slot.reservation.is_none()) else {
+            return Err(rejected);
+        };
+        let Ok((items, bytes, _)) = publication_owner_shape(rejected.publication(), false) else {
+            return Err(rejected);
+        };
+        if self.owned_items.checked_add(self.reserved_items).and_then(|total| total.checked_add(items)).is_none_or(|total| total > JOB_PROGRESS_TOTAL_MAXIMUM_ITEMS)
+            || self.owned_bytes.checked_add(self.reserved_bytes).and_then(|total| total.checked_add(bytes)).is_none_or(|total| total > JOB_PROGRESS_TOTAL_MAXIMUM_BYTES)
+        {
+            return Err(rejected);
+        }
+        let publication = rejected.into_publication();
+        let owner = match JobPublicationOwner::try_new(publication) {
+            Ok(owner) => owner,
+            Err((fault, publication)) => return Err(JobProgressRejected::new(fault, publication)),
+        };
+        self.owned_items = self.owned_items.saturating_add(items);
+        self.owned_bytes = self.owned_bytes.saturating_add(bytes);
+        self.retirements[index].owner = Some(owner);
+        Ok(())
+    }
+
+    pub fn take(&mut self, actor: ActorId, job: u64) -> Result<JobProgressCheckout<'_>, JobProgressFault> {
+        let slot = self.active.iter_mut().find(|slot| slot.occupied && slot.identity.actor == actor && slot.identity.job == job).ok_or(JobProgressFault::Missing)?;
+        if slot.awaiting_ack || slot.checked_out {
+            return Err(JobProgressFault::Busy);
+        }
+        let owner = slot.preview.take().ok_or(JobProgressFault::Missing)?;
+        slot.checked_out = true;
+        let epoch = slot.epoch;
+        Ok(JobProgressCheckout { slot, owner: Some(owner), epoch })
+    }
+
+    pub fn begin_close_actor(&mut self, actor: ActorId) -> Result<(), JobProgressFault> {
+        if self.closing_actors.iter().flatten().any(|current| *current == actor) {
+            return Ok(());
+        }
+        let slot = self.closing_actors.iter_mut().find(|slot| slot.is_none()).ok_or(JobProgressFault::Capacity)?;
+        *slot = Some(actor);
+        Ok(())
+    }
+
+    pub fn begin_close_all(&mut self) {
+        self.close_all = true;
+    }
+
+    pub fn has_close_work(&self) -> bool {
+        self.retirements.iter().any(|slot| slot.owner.is_some()) || self.closing_actors.iter().any(Option::is_some) || self.close_all
+    }
+
+    pub fn close_step(&mut self, cx: &mut job::StepContext<'_>) -> JobProgressCloseStep {
+        if cx.should_yield() {
+            return JobProgressCloseStep::Blocked;
+        }
+        if let Some(index) = self.retirements.iter().position(|slot| slot.owner.is_some()) {
+            cx.consume_fuel(1);
+            let (terminal, released_items, released_bytes) = self.retirements[index].owner.as_mut().expect("job progress retirement owner").close_one();
+            self.owned_items = self.owned_items.saturating_sub(released_items);
+            self.owned_bytes = self.owned_bytes.saturating_sub(released_bytes);
+            if terminal {
+                let owner = self.retirements[index].owner.take().expect("terminal job progress retirement owner");
+                assert!(owner.terminal_is_empty(), "terminal job progress retirement witness changed before removal");
+            }
+            return JobProgressCloseStep::Pending { released_items, released_bytes };
+        }
+        let closing_actor = self.closing_actors.iter().flatten().next().copied();
+        if let Some(index) = self.active.iter().position(|slot| slot.occupied && (self.close_all || closing_actor == Some(slot.identity.actor))) {
+            if self.active[index].checked_out {
+                return JobProgressCloseStep::Blocked;
+            }
+            cx.consume_fuel(1);
+            if let Some(owner) = self.active[index].preview.take() {
+                let Some(retirement) = self.retirements.iter_mut().find(|slot| slot.owner.is_none() && slot.reservation.is_none()) else {
+                    self.active[index].preview = Some(owner);
+                    return JobProgressCloseStep::Blocked;
+                };
+                retirement.owner = Some(owner);
+                return JobProgressCloseStep::Pending { released_items: 0, released_bytes: 0 };
+            }
+            self.active[index].clear();
+            return JobProgressCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if let Some(index) = self.closing_actors.iter().position(Option::is_some) {
+            cx.consume_fuel(1);
+            self.closing_actors[index] = None;
+            return JobProgressCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        if self.close_all {
+            cx.consume_fuel(1);
+            self.close_all = false;
+            return JobProgressCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        }
+        JobProgressCloseStep::Complete
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.active.iter().all(|slot| !slot.occupied && slot.reservation.is_none())
+            && self.retirements.iter().all(|slot| slot.owner.is_none() && slot.reservation.is_none())
+            && self.closing_actors.iter().all(Option::is_none)
+            && !self.close_all
+            && self.owned_items == 0
+            && self.owned_bytes == 0
+            && self.reserved_items == 0
+            && self.reserved_bytes == 0
+    }
+
+    pub fn actor_terminal_is_empty(&self, actor: ActorId) -> bool {
+        self.active.iter().all(|slot| !slot.occupied || slot.identity.actor != actor) && self.closing_actors.iter().flatten().all(|closing| *closing != actor) && self.retirements.iter().all(|slot| slot.owner.is_none())
+    }
+}
+
+/// 🔄️ Borrowed preview owner whose Drop returns the exact owner to its original fixed slot.
+pub struct JobProgressCheckout<'a> {
+    slot: &'a mut JobProgressSlot,
+    owner: Option<JobPublicationOwner>,
+    epoch: u64,
+}
+
+impl JobProgressCheckout<'_> {
+    pub fn identity(&self) -> JobProgressIdentity {
+        self.slot.identity
+    }
+
+    pub fn preview(&self) -> &[u8] {
+        match &self.owner.as_ref().expect("checked-out preview owner").publication.outcome {
+            JobStepOutcome::PreviewReady { preview } => preview,
+            _ => &[],
+        }
+    }
+
+    pub fn resume(self) {}
+}
+
+impl Drop for JobProgressCheckout<'_> {
+    fn drop(&mut self) {
+        assert_eq!(self.slot.epoch, self.epoch, "checked-out job preview ABA");
+        assert!(self.slot.checked_out && self.slot.preview.is_none(), "checked-out job preview slot changed before handback");
+        self.slot.preview = self.owner.take();
+        self.slot.checked_out = false;
+    }
+}
+//#endregion 🎨️JobProgressOverlay
 
 //#region ✉️Envelope
 /// 🪟 Local, opaque window identifier ([`Origin::Ui`]'s target) — the concrete `WindowHandle`
@@ -4311,6 +5094,255 @@ mod tests {
             assert_eq!(clamp_web_shard_count(9).await, 4);
         }
         //#endregion 🔖️ShardTable
+
+        //#region 🔖️JobProgressOverlay
+        fn progress_now_ms() -> u64 {
+            0
+        }
+
+        fn with_progress_context<T>(operation: u64, generation: u64, cancel: job::CancelToken, run: impl FnOnce(&mut job::StepContext<'_>) -> T) -> T {
+            let mut preview_sequence = 0;
+            let mut context = job::StepContext::new(job::OperationId(operation), job::Generation(generation), job::StepBudget::new(8, 10), cancel, progress_now_ms, &mut preview_sequence);
+            run(&mut context)
+        }
+
+        fn progress_publication(job: u64, operation: u64, base_revision: u64, generation: u64, step_sequence: u64, preview_sequence: u64, outcome: JobStepOutcome) -> JobPublication {
+            JobPublication { turn: JobTurn { job, operation: JobOperation { operation, base_revision, generation, preview_sequence, seed: 13 }, step_sequence }, outcome }
+        }
+
+        fn admit_progress(store: &mut JobProgressOverlayStore, actor: ActorId, publication: JobPublication) -> JobProgressReceipt {
+            let live = store.live_authority(actor, publication.turn.job).expect("job operation was admitted before its publication");
+            with_progress_context(publication.turn.operation.operation, publication.turn.operation.generation, job::root_cancel_token(), |context| {
+                let admission = store.preflight(context, actor, &publication, live).expect("publication preflight");
+                store.publish_reserved(context, admission, publication, live).expect("reserved publication")
+            })
+        }
+
+        fn drive_progress_close(store: &mut JobProgressOverlayStore) {
+            for _ in 0..(JOB_PROGRESS_TOTAL_MAXIMUM_ITEMS + JOB_PROGRESS_ACTIVE_CAPACITY * 3 + 8) {
+                if store.terminal_is_empty() {
+                    return;
+                }
+                let step = with_progress_context(0, 0, job::root_cancel_token(), |context| store.close_step(context));
+                assert!(matches!(step, JobProgressCloseStep::Pending { released_items: 0 | 1, .. } | JobProgressCloseStep::Complete));
+            }
+            panic!("job progress overlay did not reach its terminal witness");
+        }
+
+        #[test]
+        fn job_progress_preview_is_distinct_owned_and_checked_out_drop_hands_back_exactly() {
+            let actor = ActorId(7);
+            let live = JobProgressLiveAuthority::new(11, 17, 23);
+            let mut store = JobProgressOverlayStore::new();
+            store.begin_operation(actor, 29, live).unwrap();
+            let preview = Vec::from([1, 2, 3, 4]);
+            let pointer = preview.as_ptr();
+            let receipt = admit_progress(&mut store, actor, progress_publication(29, 11, 17, 23, 0, 1, JobStepOutcome::PreviewReady { preview }));
+            assert_eq!(receipt.kind(), JobProgressKind::Preview);
+            store.acknowledge(receipt).unwrap();
+            {
+                let checkout = store.take(actor, 29).unwrap();
+                assert_eq!(checkout.preview().as_ptr(), pointer);
+                assert_eq!(checkout.preview(), &[1, 2, 3, 4]);
+            }
+            assert_eq!(store.take(actor, 29).unwrap().preview().as_ptr(), pointer, "Drop must return the exact preview owner to its fixed slot");
+            let replacement = admit_progress(&mut store, actor, progress_publication(29, 11, 17, 23, 1, 2, JobStepOutcome::PreviewReady { preview: vec![8, 9] }));
+            store.abort(replacement).unwrap();
+            assert_eq!(store.take(actor, 29).unwrap().preview().as_ptr(), pointer, "abort must restore the last valid preview owner rather than exposing the staged replacement");
+            let checkpoint = admit_progress(&mut store, actor, progress_publication(29, 11, 17, 23, 1, 1, JobStepOutcome::CheckpointReady { checkpoint: JobCheckpoint { state: vec![10], applied_progress: 1 } }));
+            store.abort(checkpoint).unwrap();
+            assert_eq!(store.take(actor, 29).unwrap().preview().as_ptr(), pointer, "aborting scalar progress must retain the prior preview without an unnecessary owner move");
+            store.begin_close_actor(actor).unwrap();
+            drive_progress_close(&mut store);
+        }
+
+        #[test]
+        fn job_progress_fixed_capacity_and_aba_admission_fail_closed() {
+            let mut store = JobProgressOverlayStore::new();
+            for ordinal in 0..JOB_PROGRESS_ACTIVE_CAPACITY {
+                store.begin_operation(ActorId(ordinal as u64 + 1), 5, JobProgressLiveAuthority::new(ordinal as u64 + 10, 0, 1)).unwrap();
+            }
+            assert_eq!(store.begin_operation(ActorId(1000), 5, JobProgressLiveAuthority::new(1000, 0, 1)), Err(JobProgressFault::Capacity));
+            assert_eq!(store.begin_operation(ActorId(1), 5, JobProgressLiveAuthority::new(10, 0, 1)), Err(JobProgressFault::Busy));
+            store.begin_close_all();
+            drive_progress_close(&mut store);
+            store.begin_operation(ActorId(1), 5, JobProgressLiveAuthority::new(99, 0, 2)).unwrap();
+            assert_eq!(store.live_authority(ActorId(1), 5), Some(JobProgressLiveAuthority::new(99, 0, 2)));
+            store.begin_close_all();
+            drive_progress_close(&mut store);
+        }
+
+        #[test]
+        fn job_progress_mounted_aggregate_item_and_byte_caps_reject_plus_one_exactly() {
+            let mut item_store = JobProgressOverlayStore::new();
+            for ordinal in 0..JOB_PROGRESS_ACTIVE_CAPACITY {
+                let actor = ActorId(ordinal as u64 + 1);
+                let live = JobProgressLiveAuthority::new(ordinal as u64 + 10, 0, 1);
+                item_store.begin_operation(actor, 5, live).unwrap();
+                let receipt = admit_progress(&mut item_store, actor, progress_publication(5, live.operation, 0, 1, 0, 1, JobStepOutcome::PreviewReady { preview: Vec::new() }));
+                item_store.acknowledge(receipt).unwrap();
+            }
+            for ordinal in 0..JOB_PROGRESS_RETIREMENT_CAPACITY {
+                item_store
+                    .retain_rejected(JobProgressRejected::new(
+                        JobProgressFault::Stale,
+                        progress_publication(1_000 + ordinal as u64, 2_000 + ordinal as u64, 0, 1, 0, 0, JobStepOutcome::Complete { candidate: JobCommitCandidate { state: Vec::new(), output: Vec::new() } }),
+                    ))
+                    .unwrap();
+            }
+            assert_eq!(item_store.owned_items, JOB_PROGRESS_TOTAL_MAXIMUM_ITEMS);
+            let rejected = JobProgressRejected::new(JobProgressFault::Stale, progress_publication(9_999, 8_888, 0, 1, 0, 0, JobStepOutcome::Yield));
+            let returned = item_store.retain_rejected(rejected).unwrap_err();
+            assert_eq!(returned.publication().turn.job, 9_999);
+            item_store.begin_close_all();
+            drive_progress_close(&mut item_store);
+
+            let mut byte_store = JobProgressOverlayStore::new();
+            for ordinal in 0..JOB_PROGRESS_ACTIVE_CAPACITY {
+                let actor = ActorId(ordinal as u64 + 101);
+                let live = JobProgressLiveAuthority::new(ordinal as u64 + 301, 0, 1);
+                byte_store.begin_operation(actor, 7, live).unwrap();
+                let receipt = admit_progress(&mut byte_store, actor, progress_publication(7, live.operation, 0, 1, 0, 1, JobStepOutcome::PreviewReady { preview: vec![3; JOB_PROGRESS_PAGE_MAXIMUM_BYTES] }));
+                byte_store.acknowledge(receipt).unwrap();
+            }
+            for ordinal in 0..96 {
+                byte_store
+                    .retain_rejected(JobProgressRejected::new(
+                        JobProgressFault::Stale,
+                        progress_publication(
+                            3_000 + ordinal,
+                            4_000 + ordinal,
+                            0,
+                            1,
+                            0,
+                            0,
+                            JobStepOutcome::Complete { candidate: JobCommitCandidate { state: vec![4; JOB_PROGRESS_PAGE_MAXIMUM_BYTES], output: vec![5; JOB_PROGRESS_PAGE_MAXIMUM_BYTES] } },
+                        ),
+                    ))
+                    .unwrap();
+            }
+            assert_eq!(byte_store.owned_bytes, JOB_PROGRESS_TOTAL_MAXIMUM_BYTES);
+            let plus_one = vec![9];
+            let pointer = plus_one.as_ptr();
+            let returned = byte_store.retain_rejected(JobProgressRejected::new(JobProgressFault::Stale, progress_publication(7_777, 8_888, 0, 1, 0, 1, JobStepOutcome::PreviewReady { preview: plus_one }))).unwrap_err();
+            assert!(matches!(&returned.publication().outcome, JobStepOutcome::PreviewReady { preview } if preview.as_ptr() == pointer));
+            byte_store.begin_close_all();
+            drive_progress_close(&mut byte_store);
+        }
+
+        #[test]
+        fn job_progress_page_boundary_plus_one_stale_order_and_cancel_preserve_owner() {
+            let actor = ActorId(31);
+            let live = JobProgressLiveAuthority::new(37, 41, 43);
+            let mut store = JobProgressOverlayStore::new();
+            store.begin_operation(actor, 47, live).unwrap();
+            let exact = vec![5; JOB_PROGRESS_PAGE_MAXIMUM_BYTES];
+            let exact_pointer = exact.as_ptr();
+            let exact_publication = progress_publication(47, 37, 41, 43, 0, 1, JobStepOutcome::PreviewReady { preview: exact });
+            let admission = with_progress_context(37, 43, job::root_cancel_token(), |context| store.preflight(context, actor, &exact_publication, live)).unwrap();
+            assert_eq!(
+                match &exact_publication.outcome {
+                    JobStepOutcome::PreviewReady { preview } => preview.as_ptr(),
+                    _ => unreachable!(),
+                },
+                exact_pointer
+            );
+            store.cancel_admission(admission).unwrap();
+
+            let oversized = vec![7; JOB_PROGRESS_PAGE_MAXIMUM_BYTES + 1];
+            let oversized_pointer = oversized.as_ptr();
+            let oversized_publication = progress_publication(47, 37, 41, 43, 0, 1, JobStepOutcome::PreviewReady { preview: oversized });
+            let oversized_fault = with_progress_context(37, 43, job::root_cancel_token(), |context| store.preflight(context, actor, &oversized_publication, live)).unwrap_err();
+            assert_eq!(oversized_fault, JobProgressFault::Oversized);
+            assert_eq!(
+                match &oversized_publication.outcome {
+                    JobStepOutcome::PreviewReady { preview } => preview.as_ptr(),
+                    _ => unreachable!(),
+                },
+                oversized_pointer
+            );
+
+            let stale = progress_publication(47, 37, 42, 43, 0, 1, JobStepOutcome::PreviewReady { preview: vec![1] });
+            assert_eq!(with_progress_context(37, 43, job::root_cancel_token(), |context| store.preflight(context, actor, &stale, live)).unwrap_err(), JobProgressFault::Stale);
+            let out_of_order = progress_publication(47, 37, 41, 43, 1, 1, JobStepOutcome::Yield);
+            assert_eq!(with_progress_context(37, 43, job::root_cancel_token(), |context| store.preflight(context, actor, &out_of_order, live)).unwrap_err(), JobProgressFault::StepSequence);
+
+            let cancelled = progress_publication(47, 37, 41, 43, 0, 1, JobStepOutcome::PreviewReady { preview: vec![9] });
+            let cancelled_pointer = match &cancelled.outcome {
+                JobStepOutcome::PreviewReady { preview } => preview.as_ptr(),
+                _ => unreachable!(),
+            };
+            let cancel = job::root_cancel_token();
+            cancel.cancel_now();
+            assert_eq!(with_progress_context(37, 43, cancel, |context| store.preflight(context, actor, &cancelled, live)).unwrap_err(), JobProgressFault::Cancelled);
+            assert_eq!(
+                match &cancelled.outcome {
+                    JobStepOutcome::PreviewReady { preview } => preview.as_ptr(),
+                    _ => unreachable!(),
+                },
+                cancelled_pointer
+            );
+            store.begin_close_actor(actor).unwrap();
+            drive_progress_close(&mut store);
+        }
+
+        #[test]
+        fn job_progress_commit_validates_live_authority_and_rejected_close_is_incremental() {
+            let actor = ActorId(53);
+            let live = JobProgressLiveAuthority::new(59, 61, 67);
+            let mut store = JobProgressOverlayStore::new();
+            store.begin_operation(actor, 71, live).unwrap();
+            let stale = progress_publication(71, 59, 61, 68, 0, 0, JobStepOutcome::Complete { candidate: JobCommitCandidate { state: vec![1], output: vec![2] } });
+            assert_eq!(with_progress_context(59, 68, job::root_cancel_token(), |context| store.preflight(context, actor, &stale, JobProgressLiveAuthority::new(59, 61, 68))).unwrap_err(), JobProgressFault::Stale);
+
+            let complete = progress_publication(71, 59, 61, 67, 0, 0, JobStepOutcome::Complete { candidate: JobCommitCandidate { state: vec![3], output: vec![4] } });
+            let receipt = admit_progress(&mut store, actor, complete);
+            assert_eq!(receipt.kind(), JobProgressKind::CommitValidated);
+            store.acknowledge(receipt).unwrap();
+            assert!(store.has_close_work(), "committed candidates retire outside the preview overlay");
+            drive_progress_close(&mut store);
+
+            let mut rejected_store = JobProgressOverlayStore::new();
+            let detail = Vec::from([8, 9, 10]);
+            let pointer = detail.as_ptr();
+            let rejected = JobProgressRejected::new(JobProgressFault::Stale, progress_publication(73, 79, 83, 89, 0, 0, JobStepOutcome::Fault { detail }));
+            assert_eq!(
+                match &rejected.publication().outcome {
+                    JobStepOutcome::Fault { detail } => detail.as_ptr(),
+                    _ => unreachable!(),
+                },
+                pointer
+            );
+            rejected_store.retain_rejected(rejected).unwrap();
+            let first = with_progress_context(0, 0, job::root_cancel_token(), |context| rejected_store.close_step(context));
+            assert!(matches!(first, JobProgressCloseStep::Pending { released_items: 1, released_bytes } if released_bytes >= 3));
+            assert!(!rejected_store.terminal_is_empty(), "publication shell retires on a distinct grant");
+            drive_progress_close(&mut rejected_store);
+        }
+
+        #[test]
+        fn job_progress_replay_is_deterministic_for_identical_publications() {
+            let actor = ActorId(97);
+            let live = JobProgressLiveAuthority::new(101, 103, 107);
+            let mut left = JobProgressOverlayStore::new();
+            let mut right = JobProgressOverlayStore::new();
+            left.begin_operation(actor, 109, live).unwrap();
+            right.begin_operation(actor, 109, live).unwrap();
+            for (step, preview_sequence, byte) in [(0, 1, 11), (1, 2, 13)] {
+                let left_receipt = admit_progress(&mut left, actor, progress_publication(109, 101, 103, 107, step, preview_sequence, JobStepOutcome::PreviewReady { preview: vec![byte] }));
+                let right_receipt = admit_progress(&mut right, actor, progress_publication(109, 101, 103, 107, step, preview_sequence, JobStepOutcome::PreviewReady { preview: vec![byte] }));
+                assert_eq!(left_receipt.identity(), right_receipt.identity());
+                assert_eq!(left_receipt.kind(), right_receipt.kind());
+                left.acknowledge(left_receipt).unwrap();
+                right.acknowledge(right_receipt).unwrap();
+            }
+            assert_eq!(left.take(actor, 109).unwrap().preview(), right.take(actor, 109).unwrap().preview());
+            left.begin_close_actor(actor).unwrap();
+            right.begin_close_actor(actor).unwrap();
+            drive_progress_close(&mut left);
+            drive_progress_close(&mut right);
+        }
+        //#endregion 🔖️JobProgressOverlay
     }
 
     //#region 🔖️Typegen

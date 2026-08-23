@@ -1,0 +1,15 @@
+[workspace]
+
+[package]
+name = "scratch-tiff-check"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[features]
+oracles = ["dep:image", "dep:png"]
+
+[dependencies]
+semio-repo-test-host = { path = "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust" }
+image = { version = "0.25", optional = true, default-features = false, features = ["bmp", "tiff", "jpeg"] }
+png = { version = "0.18", optional = true }

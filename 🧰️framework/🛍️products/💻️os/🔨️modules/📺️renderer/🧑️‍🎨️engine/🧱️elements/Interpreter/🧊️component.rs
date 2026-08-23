@@ -7,7 +7,7 @@
 //! with zero other changes.
 //! 🧩️ Maps framework UiNode trees to ui_wgpu widget nodes.
 
-use crate::scenes::{decode_canvas_image_dimensions, queue_canvas_image_upload, render_component_scene, AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface};
+use crate::scenes::{queue_canvas_image_upload_sized, queue_canvas_image_upload_with, render_component_scene, AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface};
 use infinite_world::world::{WorldAssetFault, WorldAssetMetadataId, WorldAssetRequestKind};
 use serde_json::Value;
 use std::sync::{Mutex, MutexGuard, OnceLock};
@@ -1484,35 +1484,39 @@ static UI_IMAGE_FETCH_MISS: WorkerCell<std::collections::HashMap<String, String>
 static UI_IMAGE_LAST_URL: WorkerCell<std::collections::HashMap<String, String>> = WorkerCell::new();
 static UI_IMAGE_URL_CACHE: WorkerCell<std::collections::HashMap<String, String>> = WorkerCell::new();
 static UI_IMAGE_SIZES: WorkerCell<std::collections::HashMap<String, (u32, u32)>> = WorkerCell::new();
-static UI_IMAGE_SVG_CACHE: WorkerCell<std::collections::HashMap<String, (u64, String, u32, u32)>> = WorkerCell::new();
 static UI_IMAGE_ASSET_FAULT: WorkerCell<Option<WorldAssetFault>> = WorkerCell::new();
+#[cfg(test)]
+thread_local! {
+    static INLINE_SVG_PARSE_CALLS: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
 
 pub fn take_ui_image_asset_fault() -> Option<WorldAssetFault> {
     UI_IMAGE_ASSET_FAULT.with(|cell| cell.borrow_mut().take())
 }
 
-/** 📥️ Applies fetched bytes from the retained renderer asset authority — SVG content (sniffed from the
- * `.svg` extension or a `<svg`/`<?xml` prefix) is rasterized via `rasterize_svg_to_rgba`, everything
- * else decoded as a raster image via the `image` crate — then re-encoded as a `data:image/png;
- * base64,` URL and pushed through the same `queue_canvas_image_upload` path plain base64 images
- * already use, so it benefits from that function's "skip decode when unchanged" digest cache too. */
+/** 📥️ Applies fetched bytes after the Canvas producer reserves its fixed generation and credits. */
 pub fn apply_ui_image_bytes(id: &str, url: &str, bytes: &[u8]) {
-    let decoded = if ui_image_looks_like_svg(url, bytes) { std::str::from_utf8(bytes).ok().and_then(rasterize_svg_to_rgba) } else { decode_raster_bytes(bytes) };
-    let Some((pixels, width, height)) = decoded else {
+    let svg = ui_image_looks_like_svg(url, bytes);
+    let mut size = None;
+    let dimensions = || {
+        let measured = if svg { std::str::from_utf8(bytes).ok().and_then(svg_dimensions) } else { raster_dimensions(bytes) };
+        size = measured;
+        measured.map(|(width, height)| (width, height, Vec::new())).ok_or_else(Vec::new)
+    };
+    let decode = |_| {
+        let decoded = if svg { std::str::from_utf8(bytes).ok().and_then(rasterize_svg_to_rgba).map(|(pixels, _, _)| pixels) } else { decode_raster_bytes(bytes).map(|(pixels, _, _)| pixels) };
+        decoded
+    };
+    let key = queue_canvas_image_upload_with("ui-image", id, bytes, dimensions, decode);
+    let Some(key) = key else {
         UI_IMAGE_FETCH_MISS.with(|cell| {
             cell.borrow_mut().insert(id.to_string(), url.to_string());
         });
         return;
     };
-    let Some(data_url) = encode_rgba_png_data_url(&pixels, width, height) else {
-        UI_IMAGE_FETCH_MISS.with(|cell| {
-            cell.borrow_mut().insert(id.to_string(), url.to_string());
-        });
-        return;
-    };
-    queue_canvas_image_upload("ui-image", id, &data_url);
+    let Some((width, height)) = size else { return };
     UI_IMAGE_URL_CACHE.with(|cell| {
-        cell.borrow_mut().insert(id.to_string(), data_url);
+        cell.borrow_mut().insert(id.to_string(), key);
     });
     UI_IMAGE_SIZES.with(|cell| {
         cell.borrow_mut().insert(id.to_string(), (width, height));
@@ -1555,6 +1559,10 @@ fn decode_raster_bytes(bytes: &[u8]) -> Option<(Vec<u8>, u32, u32)> {
     Some((rgba.into_raw(), width, height))
 }
 
+fn raster_dimensions(bytes: &[u8]) -> Option<(u32, u32)> {
+    image::ImageReader::new(std::io::Cursor::new(bytes)).with_guessed_format().ok()?.into_dimensions().ok()
+}
+
 const UI_IMAGE_SVG_MAX_DIMENSION: f32 = 2048.0;
 
 /** 🖼️ Rasterizes SVG text to straight-alpha-ish RGBA at (up to `UI_IMAGE_SVG_MAX_DIMENSION`-clamped)
@@ -1577,26 +1585,18 @@ fn rasterize_svg_to_rgba(svg_text: &str) -> Option<(Vec<u8>, u32, u32)> {
     Some((pixmap.take(), width, height))
 }
 
-fn encode_rgba_png_data_url(pixels: &[u8], width: u32, height: u32) -> Option<String> {
-    use base64::Engine;
-    let buffer = image::RgbaImage::from_raw(width, height, pixels.to_vec())?;
-    let mut bytes: Vec<u8> = Vec::new();
-    image::DynamicImage::ImageRgba8(buffer).write_to(&mut std::io::Cursor::new(&mut bytes), image::ImageFormat::Png).ok()?;
-    Some(format!("data:image/png;base64,{}", base64::engine::general_purpose::STANDARD.encode(bytes)))
+fn svg_dimensions(svg_text: &str) -> Option<(u32, u32)> {
+    let mut options = usvg::Options::default();
+    options.fontdb_mut().load_system_fonts();
+    let tree = usvg::Tree::from_str(svg_text, &options).ok()?;
+    let size = tree.size();
+    let natural_w = size.width().max(1.0);
+    let natural_h = size.height().max(1.0);
+    let scale = (UI_IMAGE_SVG_MAX_DIMENSION / natural_w.max(natural_h)).min(1.0);
+    Some(((natural_w * scale).round().max(1.0) as u32, (natural_h * scale).round().max(1.0) as u32))
 }
 
-/// 🔢️ FNV-1a — a cheap dependency-free content digest for the inline-SVG rasterization cache below;
-/// kept local rather than reusing `scenes::digest_pixels` (private to that module).
-fn ui_image_digest(bytes: &[u8]) -> u64 {
-    let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
-    for &byte in bytes {
-        hash ^= byte as u64;
-        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
-    }
-    hash
-}
-
-fn percent_decode_basic(input: &str) -> String {
+fn percent_decode_basic(input: &str) -> Vec<u8> {
     let bytes = input.as_bytes();
     let mut out = Vec::with_capacity(bytes.len());
     let mut i = 0;
@@ -1611,53 +1611,54 @@ fn percent_decode_basic(input: &str) -> String {
         out.push(if bytes[i] == b'+' { b' ' } else { bytes[i] });
         i += 1;
     }
-    String::from_utf8(out).unwrap_or_else(|_| input.to_string())
+    out
 }
 
 /** 🖊️ Decodes a `data:image/svg+xml[;base64],...` URL's SVG text (base64 or percent-encoded/plain
  * UTF-8 body) — `decode_canvas_image` only handles `image/png`/`image/jpeg`, so inline SVG data URLs
  * previously fell straight through to the `alt`-text fallback. */
-fn parse_svg_data_url(src: &str) -> Option<String> {
+fn parse_svg_data_url_bytes(src: &str) -> Option<Vec<u8>> {
     use base64::Engine;
+    #[cfg(test)]
+    INLINE_SVG_PARSE_CALLS.with(|calls| calls.set(calls.get() + 1));
     let rest = src.strip_prefix("data:image/svg+xml")?;
     let comma = rest.find(',')?;
     let params = &rest[..comma];
     let payload = &rest[comma + 1..];
     if params.contains("base64") {
-        let bytes = base64::engine::general_purpose::STANDARD.decode(payload).ok()?;
-        String::from_utf8(bytes).ok()
+        base64::engine::general_purpose::STANDARD.decode(payload).ok()
     } else {
         Some(percent_decode_basic(payload))
     }
 }
 
-fn resolve_ui_image_svg(id: &str, svg_text: &str, src_digest: u64) -> (Option<String>, Option<(u32, u32)>) {
-    let cached = UI_IMAGE_SVG_CACHE.with(|cell| cell.borrow().get(id).cloned());
-    if let Some((digest, data_url, width, height)) = &cached {
-        if *digest == src_digest {
-            return (queue_canvas_image_upload("ui-image", id, data_url), Some((*width, *height)));
-        }
-    }
-    let Some((pixels, width, height)) = rasterize_svg_to_rgba(svg_text) else {
-        return (None, None);
-    };
-    let Some(data_url) = encode_rgba_png_data_url(&pixels, width, height) else {
-        return (None, None);
-    };
-    UI_IMAGE_SVG_CACHE.with(|cell| {
-        cell.borrow_mut().insert(id.to_string(), (src_digest, data_url.clone(), width, height));
-    });
-    (queue_canvas_image_upload("ui-image", id, &data_url), Some((width, height)))
+fn resolve_ui_image_svg(id: &str, src: &str) -> (Option<String>, Option<(u32, u32)>) {
+    let size = std::cell::Cell::new(None);
+    let key = queue_canvas_image_upload_with(
+        "ui-image",
+        id,
+        src.as_bytes(),
+        || {
+            let bytes = parse_svg_data_url_bytes(src).ok_or_else(Vec::new)?;
+            let measured = match std::str::from_utf8(&bytes).ok().and_then(svg_dimensions) {
+                Some(measured) => measured,
+                None => return Err(bytes),
+            };
+            size.set(Some(measured));
+            Ok((measured.0, measured.1, bytes))
+        },
+        |bytes| std::str::from_utf8(bytes).ok().and_then(rasterize_svg_to_rgba).map(|(pixels, _, _)| pixels),
+    );
+    (key, size.get())
 }
 
 fn resolve_ui_image_url(id: &str, url: &str) -> (Option<String>, Option<(u32, u32)>) {
     queue_ui_image_url_fetch(id, url);
-    let Some(data_url) = UI_IMAGE_URL_CACHE.with(|cell| cell.borrow().get(id).cloned()) else {
+    let Some(key) = UI_IMAGE_URL_CACHE.with(|cell| cell.borrow().get(id).cloned()) else {
         return (None, None);
     };
-    let key = queue_canvas_image_upload("ui-image", id, &data_url);
     let size = UI_IMAGE_SIZES.with(|cell| cell.borrow().get(id).copied());
-    (key, size)
+    (Some(key), size)
 }
 
 /** 🧭️ Resolves a plain `Image` UiNode's `src` to an uploaded raster key + natural pixel size:
@@ -1670,14 +1671,10 @@ pub(crate) fn resolve_ui_image(id: &str, src: &str) -> (Option<String>, Option<(
         return (None, None);
     }
     if src.starts_with("data:image/svg+xml") {
-        let Some(svg_text) = parse_svg_data_url(src) else {
-            return (None, None);
-        };
-        return resolve_ui_image_svg(id, &svg_text, ui_image_digest(src.as_bytes()));
+        return resolve_ui_image_svg(id, src);
     }
     if src.starts_with("data:") {
-        let size = decode_canvas_image_dimensions(src);
-        return (queue_canvas_image_upload("ui-image", id, src), size);
+        return queue_canvas_image_upload_sized("ui-image", id, src);
     }
     resolve_ui_image_url(id, src)
 }
@@ -1824,6 +1821,24 @@ mod render_plan_validator_tests {
         let (key, size) = resolve_ui_image("svg-image-test-plain", &src);
         assert!(key.is_some(), "a non-base64 (plain utf-8) svg data url should also decode");
         assert_eq!(size, Some((40, 20)));
+    }
+
+    #[test]
+    fn inline_svg_saturation_rejects_before_parse_or_source_copy() {
+        let mut reservations = Vec::with_capacity(256);
+        for index in 0..256 {
+            reservations.push(ui_wgpu::wgpu::PreparedRasterReservation::try_reserve(format!("svg-held-{index}")).expect("fixed process raster slot"));
+        }
+        INLINE_SVG_PARSE_CALLS.with(|calls| calls.set(0));
+        let src = format!("data:image/svg+xml,{TEST_SVG}");
+        assert_eq!(resolve_ui_image("svg-saturated", &src), (None, None));
+        INLINE_SVG_PARSE_CALLS.with(|calls| assert_eq!(calls.get(), 0, "source parse/copy must follow fixed reservation"));
+        for reservation in reservations {
+            let mut rejected = reservation.reject("test slot release", Vec::new());
+            while !rejected.close_step() {}
+        }
+        let mut cursor = crate::scenes::PendingRasterUploadCursor::default();
+        while !matches!(cursor.step(), crate::scenes::PendingRasterUploadStep::Fault(_)) {}
     }
 
     #[test]

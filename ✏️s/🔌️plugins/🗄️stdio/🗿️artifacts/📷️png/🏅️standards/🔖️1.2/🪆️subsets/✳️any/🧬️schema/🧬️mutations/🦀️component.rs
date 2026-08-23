@@ -94,6 +94,30 @@ pub enum PngMutation {
         index: usize,
     },
 }
+
+/// 📇️ Kebab-case spelling of every `PngMutation` variant, in declaration order — the exhaustive
+/// mutation catalog `../🧪️oracle/🔣️component.json`'s `kinds` array is required to match verbatim
+/// (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest; the
+/// framework never parses Rust to check it itself).
+pub const KINDS: &[&str] = &[
+    "no-mutation",
+    "set-snapshot",
+    "set-header",
+    "set-palette",
+    "set-transparency",
+    "set-gamma",
+    "set-chromaticities",
+    "set-srgb-intent",
+    "set-physical-dims",
+    "set-timestamp",
+    "set-background",
+    "insert-text-chunk",
+    "remove-text-chunk",
+    "set-text-chunk",
+    "set-pixels",
+    "insert-unknown-chunk",
+    "remove-unknown-chunk",
+];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -874,6 +898,42 @@ mod tests {
         }
     }
     //#endregion 🔖️op_text_binary_roundtrip_law
+
+    //#region 🔖️kinds_law
+    /// 🧪️ Keeps `KINDS` honest against the enum it claims to spell: every variant's `print_op`
+    /// keyword, in the SAME declaration order the enum itself and `KINDS` use, must equal `KINDS`
+    /// entry-for-entry — the framework never parses Rust to check this itself (see `KINDS`'s own
+    /// doc comment), so this test is the one thing that does.
+    #[test]
+    fn kinds_const_matches_enum_variants_in_declaration_order() {
+        let base = base_snapshot();
+        let one_per_variant = vec![
+            PngMutation::NoMutation,
+            PngMutation::SetSnapshot { snapshot: base.clone() },
+            PngMutation::SetHeader { width: 1, height: 1, bit_depth: 8, color_type: PngColorType::Rgba, interlace: false },
+            PngMutation::SetPalette { plte: Some(vec![PngRgb { r: 0, g: 0, b: 0 }]) },
+            PngMutation::SetTransparency { trns: None },
+            PngMutation::SetGamma { gama: None },
+            PngMutation::SetChromaticities { chrm: None },
+            PngMutation::SetSrgbIntent { srgb: None },
+            PngMutation::SetPhysicalDims { phys: None },
+            PngMutation::SetTimestamp { time: None },
+            PngMutation::SetBackground { bkgd: None },
+            PngMutation::InsertTextChunk { index: 0, chunk: text_chunk("K", "V") },
+            PngMutation::RemoveTextChunk { index: 0 },
+            PngMutation::SetTextChunk { index: 0, chunk: text_chunk("K", "V") },
+            PngMutation::SetPixels { pixels: base.pixels.clone() },
+            PngMutation::InsertUnknownChunk { index: 0, chunk: PngChunk { kind: *b"waVe", data: vec![] } },
+            PngMutation::RemoveUnknownChunk { index: 0 },
+        ];
+        assert_eq!(one_per_variant.len(), KINDS.len(), "one_per_variant must cover every KINDS entry exactly once");
+        for (mutation, kind) in one_per_variant.iter().zip(KINDS.iter()) {
+            let printed = mutation.print_op();
+            let keyword = printed.split(' ').next().unwrap_or(&printed);
+            assert_eq!(keyword, *kind, "KINDS order must match the enum's own OpText keyword order for {mutation:?}");
+        }
+    }
+    //#endregion 🔖️kinds_law
 }
 //#endregion Tests
 

@@ -677,11 +677,46 @@ struct JackRunWithFixture {
 //#endregion 🔖️TrinityBridge
 
 //#region 🔖️WasmBridge
+#[cfg(any(target_arch = "wasm32", test))]
 const TRINITY_REWRITE_ENVELOPE_MAXIMUM_PAGES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_PAGES;
+#[cfg(any(target_arch = "wasm32", test))]
 const TRINITY_REWRITE_ENVELOPE_MAXIMUM_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
 
+#[cfg(any(target_arch = "wasm32", test))]
 fn trinity_rewrite_envelope_credits_are_valid(maximum_pages: usize, maximum_bytes: usize) -> bool {
     maximum_pages != 0 && maximum_pages <= TRINITY_REWRITE_ENVELOPE_MAXIMUM_PAGES && maximum_bytes != 0 && maximum_bytes <= TRINITY_REWRITE_ENVELOPE_MAXIMUM_BYTES
+}
+
+#[cfg(any(target_arch = "wasm32", test))]
+struct TrinityRewriteCallerPageOwner<Page> {
+    page: Option<Page>,
+}
+
+#[cfg(any(target_arch = "wasm32", test))]
+impl<Page> TrinityRewriteCallerPageOwner<Page> {
+    fn new(page: Page) -> Self {
+        Self { page: Some(page) }
+    }
+
+    fn has_page(&self) -> bool {
+        self.page.is_some()
+    }
+
+    fn take_page(&mut self) -> Option<Page> {
+        self.page.take()
+    }
+
+    fn close_step(&mut self) -> bool {
+        if self.page.take().is_some() {
+            return false;
+        }
+        true
+    }
+}
+
+#[cfg(any(target_arch = "wasm32", test))]
+fn trinity_rewrite_page_handle_matches(operation: u64, generation: u64, expected_operation: u64, expected_generation: u64) -> bool {
+    operation == expected_operation && generation == expected_generation
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -727,8 +762,114 @@ mod wasm_bridge {
     }
 
     #[wasm_bindgen]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum TrinityRewriteEnvelopePageFault {
+        None,
+        PageTooLarge,
+        StaleGeneration,
+        UnknownHandle,
+        Closing,
+        Capacity,
+        MissingOwner,
+    }
+
+    fn page_fault(code: &str) -> TrinityRewriteEnvelopePageFault {
+        match code {
+            "artifact-envelope.ingress-stale" => TrinityRewriteEnvelopePageFault::StaleGeneration,
+            "artifact-envelope.ingress-handle" | "artifact-envelope.ingress-owner" => TrinityRewriteEnvelopePageFault::UnknownHandle,
+            "artifact-envelope.ingress-closing" => TrinityRewriteEnvelopePageFault::Closing,
+            _ => TrinityRewriteEnvelopePageFault::Capacity,
+        }
+    }
+
+    #[wasm_bindgen]
+    pub struct TrinityRewriteEnvelopePageAdmission {
+        accepted: bool,
+        fault: TrinityRewriteEnvelopePageFault,
+        operation: u64,
+        generation: u64,
+        owner: TrinityRewriteCallerPageOwner<js_sys::Uint8Array>,
+    }
+
+    impl TrinityRewriteEnvelopePageAdmission {
+        fn successful(handle: &TrinityRewriteEnvelopeLoadHandle) -> Self {
+            Self { accepted: true, fault: TrinityRewriteEnvelopePageFault::None, operation: handle.operation, generation: handle.generation, owner: TrinityRewriteCallerPageOwner { page: None } }
+        }
+
+        fn rejected(handle: &TrinityRewriteEnvelopeLoadHandle, fault: TrinityRewriteEnvelopePageFault, owner: js_sys::Uint8Array) -> Self {
+            Self { accepted: false, fault, operation: handle.operation, generation: handle.generation, owner: TrinityRewriteCallerPageOwner::new(owner) }
+        }
+    }
+
+    #[wasm_bindgen]
+    impl TrinityRewriteEnvelopePageAdmission {
+        #[wasm_bindgen(getter)]
+        pub fn accepted(&self) -> bool {
+            self.accepted
+        }
+
+        #[wasm_bindgen(getter)]
+        pub fn fault(&self) -> TrinityRewriteEnvelopePageFault {
+            self.fault
+        }
+
+        #[wasm_bindgen(getter)]
+        pub fn operation(&self) -> u64 {
+            self.operation
+        }
+
+        #[wasm_bindgen(getter)]
+        pub fn generation(&self) -> u64 {
+            self.generation
+        }
+
+        #[wasm_bindgen(js_name = hasPage)]
+        pub fn has_page(&self) -> bool {
+            self.owner.has_page()
+        }
+
+        #[wasm_bindgen(js_name = isSamePage)]
+        pub fn is_same_page(&self, source: &js_sys::Uint8Array) -> bool {
+            self.owner.page.as_ref().is_some_and(|page| js_sys::Object::is(page.as_ref(), source.as_ref()))
+        }
+
+        #[wasm_bindgen(js_name = takePage)]
+        pub fn take_page(&mut self) -> Option<js_sys::Uint8Array> {
+            self.owner.take_page()
+        }
+
+        #[wasm_bindgen(js_name = closeStep)]
+        pub fn close_step(&mut self) -> bool {
+            self.owner.close_step()
+        }
+
+        #[wasm_bindgen(js_name = terminalIsEmpty)]
+        pub fn terminal_is_empty(&self) -> bool {
+            !self.owner.has_page()
+        }
+    }
+
+    #[wasm_bindgen]
     pub struct TrinityRewriteArtifactVcs {
         app: RefCell<TrinityRewriteApp>,
+    }
+
+    impl TrinityRewriteArtifactVcs {
+        fn admit_owned_envelope_page(&self, handle: &TrinityRewriteEnvelopeLoadHandle, source: js_sys::Uint8Array) -> TrinityRewriteEnvelopePageAdmission {
+            let len = source.length() as usize;
+            if len > store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES {
+                return TrinityRewriteEnvelopePageAdmission::rejected(handle, TrinityRewriteEnvelopePageFault::PageTooLarge, source);
+            }
+            let admitted = self.app.borrow_mut().construct_and_admit_artifact_envelope_ingress_page(handle.runtime_handle(), len, || {
+                let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
+                source.copy_to(&mut bytes[..len]);
+                store::ArtifactEnvelopeDecodePage::from_preflighted_array(bytes, len)
+            });
+            match admitted {
+                Ok(()) => TrinityRewriteEnvelopePageAdmission::successful(handle),
+                Err(fault) => TrinityRewriteEnvelopePageAdmission::rejected(handle, page_fault(&fault.code.0), source),
+            }
+        }
     }
 
     #[wasm_bindgen]
@@ -749,15 +890,23 @@ mod wasm_bridge {
         }
 
         #[wasm_bindgen(js_name = admitEnvelopePage)]
-        pub fn admit_envelope_page(&self, handle: &TrinityRewriteEnvelopeLoadHandle, source: &js_sys::Uint8Array) -> Result<(), JsValue> {
-            let len = usize::try_from(source.length()).map_err(js_fault)?;
-            if len > store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES {
-                return Err(js_fault("trinity-rewrite-envelope.page-too-large"));
-            }
-            let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
-            source.copy_to(&mut bytes[..len]);
-            let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, len).map_err(|_| js_fault("trinity-rewrite-envelope.page-too-large"))?;
-            self.app.borrow_mut().admit_artifact_envelope_ingress_page(handle.runtime_handle(), page).map_err(|(fault, _page)| js_fault(fault))
+        pub fn admit_envelope_page(&self, handle: &TrinityRewriteEnvelopeLoadHandle, source: &js_sys::Uint8Array) -> TrinityRewriteEnvelopePageAdmission {
+            self.admit_owned_envelope_page(handle, source.clone())
+        }
+
+        #[wasm_bindgen(js_name = retryEnvelopePage)]
+        pub fn retry_envelope_page(&self, admission: &mut TrinityRewriteEnvelopePageAdmission) -> TrinityRewriteEnvelopePageAdmission {
+            let handle = TrinityRewriteEnvelopeLoadHandle { operation: admission.operation, generation: admission.generation };
+            let Some(owner) = admission.owner.take_page() else {
+                return TrinityRewriteEnvelopePageAdmission {
+                    accepted: false,
+                    fault: TrinityRewriteEnvelopePageFault::MissingOwner,
+                    operation: admission.operation,
+                    generation: admission.generation,
+                    owner: TrinityRewriteCallerPageOwner { page: None },
+                };
+            };
+            self.admit_owned_envelope_page(&handle, owner)
         }
 
         #[wasm_bindgen(js_name = sealEnvelopeLoad)]
@@ -1051,6 +1200,62 @@ mod tests {
         assert!(!trinity_rewrite_envelope_credits_are_valid(TRINITY_REWRITE_ENVELOPE_MAXIMUM_PAGES, 0));
         assert!(!trinity_rewrite_envelope_credits_are_valid(TRINITY_REWRITE_ENVELOPE_MAXIMUM_PAGES + 1, TRINITY_REWRITE_ENVELOPE_MAXIMUM_BYTES));
         assert!(!trinity_rewrite_envelope_credits_are_valid(TRINITY_REWRITE_ENVELOPE_MAXIMUM_PAGES, TRINITY_REWRITE_ENVELOPE_MAXIMUM_BYTES + 1));
+    }
+
+    #[test]
+    fn trinity_rewrite_rejected_page_preserves_pointer_content_and_retry_owner() {
+        let caller = std::rc::Rc::new(vec![1_u8, 2, 3, 4]);
+        let pointer = caller.as_ptr();
+        let mut rejected = TrinityRewriteCallerPageOwner::new(std::rc::Rc::clone(&caller));
+        let retry = rejected.take_page().expect("exact rejected caller page");
+        assert_eq!(retry.as_ptr(), pointer);
+        assert_eq!(retry.as_slice(), &[1, 2, 3, 4]);
+        assert!(!rejected.has_page());
+        let retried = TrinityRewriteCallerPageOwner::new(retry);
+        assert_eq!(retried.page.as_ref().expect("same retry owner").as_ptr(), pointer);
+    }
+
+    #[test]
+    fn trinity_rewrite_page_cap_plus_one_rejects_before_owner_construction() {
+        let mut pages = store::OwnedSchemaDecodePages::try_with_credits(store::OwnedSchemaDecodeCredits { maximum_pages: 1, maximum_bytes: store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES }).expect("one exact page reservation");
+        let bytes_plus_one = vec![8_u8; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES + 1].into_boxed_slice();
+        let bytes_plus_one_pointer = bytes_plus_one.as_ptr();
+        assert_eq!(pages.preflight_page_bytes(bytes_plus_one.len()), Err(store::OwnedSchemaDecodeAdmissionFault::ByteCapacity));
+        assert_eq!(bytes_plus_one.as_ptr(), bytes_plus_one_pointer);
+        assert_eq!(bytes_plus_one[0], 8);
+        let bytes = [7; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
+        store::ArtifactEnvelopeDecodePage::from_preflighted_array(bytes, bytes.len()).admit_preflighted_into(&mut pages);
+        let caller = Box::new([9; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES]);
+        let pointer = caller.as_ptr();
+        assert_eq!(pages.preflight_page_bytes(caller.len()), Err(store::OwnedSchemaDecodeAdmissionFault::PageCapacity));
+        assert_eq!(caller.as_ptr(), pointer);
+        assert_eq!(caller[0], 9);
+    }
+
+    #[test]
+    fn trinity_rewrite_stale_generation_and_slot_aba_never_match() {
+        assert!(trinity_rewrite_page_handle_matches(17, 23, 17, 23));
+        assert!(!trinity_rewrite_page_handle_matches(17, 23, 17, 24));
+        assert!(!trinity_rewrite_page_handle_matches(17, 23, 18, 23));
+    }
+
+    #[test]
+    fn trinity_rewrite_checked_out_drop_preserves_raw_caller_authority() {
+        let caller = std::rc::Rc::new(vec![5_u8; 64]);
+        let pointer = caller.as_ptr();
+        let checked_out = TrinityRewriteCallerPageOwner::new(std::rc::Rc::clone(&caller));
+        drop(checked_out);
+        assert_eq!(caller.as_ptr(), pointer);
+        assert_eq!(caller.as_slice(), &[5_u8; 64]);
+        assert_eq!(std::rc::Rc::strong_count(&caller), 1);
+    }
+
+    #[test]
+    fn trinity_rewrite_rejected_page_close_retires_one_owner_per_grant() {
+        let mut rejected = TrinityRewriteCallerPageOwner::new(Box::new([3_u8; 32]));
+        assert!(!rejected.close_step());
+        assert!(rejected.close_step());
+        assert!(!rejected.has_page());
     }
 
     async fn nakagin_graph() -> Graph {

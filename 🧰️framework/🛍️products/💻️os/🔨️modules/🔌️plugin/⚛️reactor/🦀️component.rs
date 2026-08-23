@@ -47,7 +47,7 @@ use semio_framework_ui_contract as ui_contract;
 /// `pub mod patches;` at this file's top.
 use semio_framework_ui_runtime::PresenceHub;
 #[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
-use semio_framework_ui_runtime::{DEFAULT_REVISION_TOLERANCE, is_stale_intent};
+use semio_framework_ui_runtime::{is_stale_intent, DEFAULT_REVISION_TOLERANCE};
 use std::cell::{Cell, RefCell};
 // 🧵️ Turn-local command/intent grouping and the pre-admitted task-resume ring use these
 // collections; all identity and close authority is held by fixed direct registries below.
@@ -91,6 +91,7 @@ thread_local! {
     /// `task_restarts` (`restore_now`), so a restart is just an ordinary `Command` resume queued
     /// one call earlier than usual.
     static TASK_RESUMES: RefCell<FixedResumeQueue> = RefCell::new(FixedResumeQueue::new());
+    static JOB_RENDER_BINDINGS: RefCell<JobRenderBindingRegistry> = RefCell::new(JobRenderBindingRegistry::new());
     /// 🎛️ Per-instance `QuotaSchema`, real values decoded off `Event::InstanceOpen.quotas`
     /// (previously always defaulted — see `wit_event_to_kernel`'s `InstanceOpen` arm) and dropped
     /// again on `Event::InstanceClose`. `spawn_task`'s quota gate is the first real reader.
@@ -116,6 +117,102 @@ const REACTOR_FIXED_WORDS: usize = REACTOR_TASK_SLOTS / u64::BITS as usize;
 const REACTOR_TASK_KEY_BYTES: usize = 256;
 const REACTOR_TASK_LABEL_BYTES: usize = 256;
 const REACTOR_TASK_RESTART_BYTES: usize = 64 * 1_024;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct JobRenderBinding {
+    job: u64,
+    instance: u32,
+    generation: u64,
+}
+
+struct JobRenderBindingRegistry {
+    by_job: [Option<JobRenderBinding>; REACTOR_TASK_SLOTS],
+    current_by_instance: [Option<JobRenderBinding>; REACTOR_TASK_SLOTS],
+    next_generation: u64,
+}
+
+impl JobRenderBindingRegistry {
+    const fn new() -> Self {
+        Self { by_job: [None; REACTOR_TASK_SLOTS], current_by_instance: [None; REACTOR_TASK_SLOTS], next_generation: 0 }
+    }
+
+    fn bind(&mut self, instance: u32, job: u64) -> Result<JobRenderBinding, ()> {
+        let instance_slot = instance as usize % REACTOR_TASK_SLOTS;
+        if self.current_by_instance[instance_slot].is_some_and(|binding| binding.instance != instance) {
+            return Err(());
+        }
+        let job_slot = job as usize % REACTOR_TASK_SLOTS;
+        if self.by_job[job_slot].is_some() {
+            return Err(());
+        }
+        let generation = self.next_generation.checked_add(1).ok_or(())?;
+        self.next_generation = generation;
+        let binding = JobRenderBinding { job, instance, generation };
+        if let Some(previous) = self.current_by_instance[instance_slot] {
+            let previous_slot = previous.job as usize % REACTOR_TASK_SLOTS;
+            if self.by_job[previous_slot] == Some(previous) {
+                self.by_job[previous_slot] = None;
+            }
+        }
+        self.by_job[job_slot] = Some(binding);
+        self.current_by_instance[instance_slot] = Some(binding);
+        Ok(binding)
+    }
+
+    fn accepted(&self, job: u64) -> Option<JobRenderBinding> {
+        let binding = self.by_job[job as usize % REACTOR_TASK_SLOTS].filter(|binding| binding.job == job)?;
+        self.current_by_instance[binding.instance as usize % REACTOR_TASK_SLOTS].filter(|current| *current == binding)
+    }
+
+    fn complete(&mut self, job: u64) -> Option<JobRenderBinding> {
+        let job_slot = job as usize % REACTOR_TASK_SLOTS;
+        let binding = self.by_job[job_slot].filter(|binding| binding.job == job)?;
+        self.by_job[job_slot] = None;
+        let instance_slot = binding.instance as usize % REACTOR_TASK_SLOTS;
+        (self.current_by_instance[instance_slot] == Some(binding)).then(|| {
+            self.current_by_instance[instance_slot] = None;
+            binding
+        })
+    }
+
+    fn close_instance(&mut self, instance: u32) {
+        let instance_slot = instance as usize % REACTOR_TASK_SLOTS;
+        let Some(binding) = self.current_by_instance[instance_slot].filter(|binding| binding.instance == instance) else { return };
+        self.current_by_instance[instance_slot] = None;
+        let job_slot = binding.job as usize % REACTOR_TASK_SLOTS;
+        if self.by_job[job_slot] == Some(binding) {
+            self.by_job[job_slot] = None;
+        }
+    }
+}
+
+#[cfg(test)]
+mod job_render_binding_tests {
+    use super::*;
+
+    #[test]
+    fn progress_accepts_only_the_current_instance_generation() {
+        let mut registry = JobRenderBindingRegistry::new();
+        let first = registry.bind(7, 41).expect("first binding");
+        assert_eq!(registry.accepted(41), Some(first));
+        let second = registry.bind(7, 42).expect("superseding binding");
+        assert_ne!(first.generation, second.generation);
+        assert_eq!(registry.accepted(41), None);
+        assert_eq!(registry.accepted(42), Some(second));
+        assert_eq!(registry.complete(41), None);
+        assert_eq!(registry.complete(42), Some(second));
+    }
+
+    #[test]
+    fn direct_slots_reject_collisions_and_close_exactly_one_instance() {
+        let mut registry = JobRenderBindingRegistry::new();
+        let binding = registry.bind(3, 9).expect("binding");
+        assert!(registry.bind(3 + REACTOR_TASK_SLOTS as u32, 10).is_err());
+        assert!(registry.bind(4, 9 + REACTOR_TASK_SLOTS as u64).is_err());
+        registry.close_instance(3);
+        assert_eq!(registry.accepted(binding.job), None);
+    }
+}
 
 struct ReactorFixedSlots<T> {
     values: Box<[std::mem::MaybeUninit<T>]>,
@@ -231,7 +328,11 @@ impl TaskRecordRegistry {
 
     fn remove(&mut self, id: executor::TaskId) -> Option<TaskRecord> {
         let index = Self::index(id);
-        if self.slots.get(index).is_none_or(|(candidate, _)| *candidate != id) { None } else { self.slots.take(index).map(|(_, record)| record) }
+        if self.slots.get(index).is_none_or(|(candidate, _)| *candidate != id) {
+            None
+        } else {
+            self.slots.take(index).map(|(_, record)| record)
+        }
     }
 
     fn find_key(&self, instance: u32, key: &str) -> Option<executor::TaskId> {
@@ -432,7 +533,11 @@ impl InstanceMetadataRegistry {
 
     fn remove(&mut self, instance: u32) -> Option<InstanceMetadata> {
         let index = Self::index(instance);
-        if self.slots.get(index).is_some_and(|entry| entry.instance == instance) { self.slots.take(index) } else { None }
+        if self.slots.get(index).is_some_and(|entry| entry.instance == instance) {
+            self.slots.take(index)
+        } else {
+            None
+        }
     }
 
     fn checkpoint_rows(&self) -> Vec<(u32, String)> {
@@ -923,15 +1028,25 @@ mod wit_bridge {
         let mut dirty_intents: HashMap<u32, Vec<ui_contract::UiIntent>> = HashMap::new();
 
         for numeric_instance in close_instances {
+            JOB_RENDER_BINDINGS.with(|bindings| bindings.borrow_mut().close_instance(*numeric_instance));
             begin_reactor_close(*numeric_instance)?;
+            PATCHES.with(|patches| patches.begin_close_instance(*numeric_instance));
             if let Err(error) = semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_destroy_app(runtime, *numeric_instance)) {
                 abort_reactor_close(*numeric_instance);
                 return Err(error);
             }
         }
         let _ = step_reactor_close()?;
+        PATCHES.with(|patches| {
+            patches.close_step();
+        });
         let _ = crate::plugin_runtime::plugin_step_close_cleanup(runtime)?;
         let _ = crate::plugin_runtime::plugin_step_live_cleanup(runtime)?;
+        if let Some(surface) = PATCHES.with(patches::PatchTracker::take_deferred_ready) {
+            if let Some(instance) = parse_surface_instance(&surface) {
+                dirty_render.push((instance, surface));
+            }
+        }
 
         for event in events {
             match event {
@@ -1003,7 +1118,11 @@ mod wit_bridge {
                         registry.append_chunk(req, bytes, done, cap);
                     });
                 }
-                Event::JobProgress { .. } => {}
+                Event::JobProgress { job, .. } => {
+                    if let Some(binding) = JOB_RENDER_BINDINGS.with(|bindings| bindings.borrow().accepted(job)) {
+                        dirty_render.push((binding.instance, format!("{}:window", binding.instance)));
+                    }
+                }
                 Event::JobCompleted { job, result } => {
                     // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (J1, design-abi.md §4): a job spawned
                     // through `host::jobs::spawn` (`🌐host/🦀️component.rs`) allocates its `job` id from
@@ -1013,6 +1132,9 @@ mod wit_bridge {
                     // an `Event::Completed{req, result}` would, closing the "no `req`-per-job
                     // correlation table yet" gap `📓️terra-M5-report.md` §4 named (no separate table
                     // needed: the request id already IS the job id).
+                    if let Some(binding) = JOB_RENDER_BINDINGS.with(|bindings| bindings.borrow_mut().complete(job)) {
+                        dirty_render.push((binding.instance, format!("{}:window", binding.instance)));
+                    }
                     REGISTRY.with(|registry| registry.resolve(semio_framework::kernel::RequestId(job), crate::host::outcome_to_result(result)));
                 }
                 Event::Message { .. } => {}
@@ -1349,17 +1471,15 @@ mod wit_bridge {
         let now_ms = u64::try_from(semio_framework::io::resolve_ready(crate::host::now_ms())).unwrap_or(0);
 
         for (instance, surface) in dirty_render {
-            // 🚫️async: E5 executor bridge — `plugin_render` stays genuinely `async fn`; see `poll`'s
-            // `plugin_exchange` call above for the same safety argument. `PatchTracker::diff` (`sdk-flip`,
-            // 26/08/20) is plain sync — R9: a keyed tree diff is a pure computation with nothing of its
-            // own to await, matching every other `SurfaceReconciler` method it wraps.
-            if let Ok(tree) = semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_render(runtime, instance, "window", "{}")) {
-                if let Some(patch) = PATCHES.with(|patches| patches.diff(&surface, &tree)) {
-                    // Collected into `ui_patches` below via a second pass so `effects` above stays the
-                    // single accumulation point for the non-UI half of the turn.
-                    PENDING_PATCHES.with(|pending| pending.borrow_mut().push(patch));
+            PATCHES.with(|patches| match patches.reserve_mounted(surface) {
+                Ok(grant) => match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_render(runtime, instance, "window", "{}")) {
+                    Ok(tree) => grant.commit(tree),
+                    Err(_) => grant.cancel(),
+                },
+                Err(surface) => {
+                    patches.defer(surface);
                 }
-            }
+            });
             // 👥️ M2: drains this instance's render-plane presence outbox (`VcsArtifactApp::
             // pending_presence`, filled by `stamp_and_cache_interaction_ui` during the render just above)
             // into `PRESENCE` right after its render — the SAME turn that presented the tree also records
@@ -1375,6 +1495,13 @@ mod wit_bridge {
                 });
             }
         }
+        let reconcile_work = PATCHES.with(|patches| {
+            let more = patches.drive_one();
+            if let Some(patch) = patches.take_ready_patch() {
+                PENDING_PATCHES.with(|pending| pending.borrow_mut().push(patch));
+            }
+            more || patches.has_work()
+        });
 
         // 🚫️async: E5 executor bridge (× 2) — `LocalExecutor::{run_until_idle,has_ready}` stay
         // genuinely `async fn` (its own doc: "run_until_idle handles Pending without ever yielding
@@ -1391,7 +1518,7 @@ mod wit_bridge {
         // executor may have fresh ready work by the time this returns — folded into `more_work` below
         // rather than requiring a second `run_until_idle` pass this turn (the next `poll` picks it up).
         let resumes_remain = drain_task_resumes(runtime, &mut effects, 64);
-        let more_work = more_work || resumes_remain || REACTOR_EXECUTOR.with(|executor| executor.has_pending()) || COMMAND_INGRESS.with(|ingress| ingress.borrow().is_some());
+        let more_work = more_work || reconcile_work || resumes_remain || REACTOR_EXECUTOR.with(|executor| executor.has_pending()) || COMMAND_INGRESS.with(|ingress| ingress.borrow().is_some());
 
         let ui_patches: Vec<UiPatch> = PENDING_PATCHES.with(|pending| std::mem::take(&mut *pending.borrow_mut()));
         // 👥️ M2: once per poll — expire ages-out peer marks, then flush drains every key touched since
@@ -1539,6 +1666,13 @@ mod wit_bridge {
         if let Effect::SetTimer { id, .. } = &effect {
             if ARMED_TIMERS.with(|timers| timers.borrow_mut().insert(instance, *id)).is_err() {
                 let fault = semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.timer-capacity"), "fixed timer authority is saturated or collided");
+                effects.push(Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload: dsl::encode_fault_bytes(&fault) });
+                return;
+            }
+        }
+        if let Effect::SpawnJob { job, .. } = &effect {
+            if JOB_RENDER_BINDINGS.with(|bindings| bindings.borrow_mut().bind(instance, *job)).is_err() {
+                let fault = semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.job-render-binding-capacity"), "fixed job-to-surface render authority is saturated or collided");
                 effects.push(Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload: dsl::encode_fault_bytes(&fault) });
                 return;
             }
@@ -2033,10 +2167,24 @@ pub(crate) mod test_support {
         PATCHES.with(|patches| patches.revision(surface))
     }
 
-    /// 🩹️ The exact `PATCHES.diff` call `poll`'s dirty-render loop makes, exposed directly — lets a
-    /// native test drive the SAME reconciler `PRESENCE` sits beside, to prove the two never cross.
+    /// 🩹️ Test-only completion driver over the same retained mounted authority.
     pub(crate) async fn patches_diff(surface: &str, tree: &semio_framework_ui_runtime::ComponentTree) -> Option<ui_contract::UiPatch> {
-        PATCHES.with(|patches| patches.diff(surface, tree))
+        PATCHES.with(|patches| {
+            if !patches.can_begin(surface) {
+                return None;
+            }
+            if let Err((surface, tree)) = patches.begin(surface.to_string(), tree.clone()) {
+                let _ = patches.retain_unadmitted(surface, tree);
+                return None;
+            }
+            for _ in 0..512 {
+                patches.drive_one();
+                if let Some(patch) = patches.take_ready_patch() {
+                    return Some(patch);
+                }
+            }
+            None
+        })
     }
 
     /// 👥️ M2 (ticket 26/08/17 `design-unified.md`): the exact `PRESENCE.record_own` call `poll`'s

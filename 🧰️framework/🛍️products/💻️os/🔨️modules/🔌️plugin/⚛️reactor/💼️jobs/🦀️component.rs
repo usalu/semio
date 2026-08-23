@@ -116,12 +116,25 @@ pub enum JobStep {
 /// mirrors `PluginCommandHandler`'s own non-capturing-preferred shape one level up.
 pub type JobFn = fn(JobCtx, Vec<u8>, Option<Vec<u8>>) -> Pin<Box<dyn Future<Output = Result<Vec<u8>, semio_framework::Fault>>>>;
 
+/// 🧩️ Production-safe retained job protocol. A registered owner advances one explicit bounded
+/// state-machine opportunity per `step-job`; it never enters the cold opaque-future executor.
+pub trait BoundedJob {
+    fn step(&mut self, budget: JobBudget) -> JobStep;
+    fn cancel(&mut self);
+    fn checkpoint(&self) -> Option<Vec<u8>>;
+    fn terminal_drop_is_shallow(&self) -> bool;
+}
+
+/// 🏭️ Non-capturing constructor for one registered retained state machine.
+pub type BoundedJobFactory = fn(u64, &[u8]) -> Result<Box<dyn BoundedJob>, Vec<u8>>;
+
 //#endregion
 
 //#region 🔖️Registry
 
 thread_local! {
     static KIND_REGISTRY: RefCell<HashMap<&'static str, JobFn>> = RefCell::new(builtin_registry());
+    static BOUNDED_KIND_REGISTRY: RefCell<HashMap<&'static str, BoundedJobFactory>> = RefCell::new(HashMap::new());
 }
 
 /// 🧬️ `semio.io-run`/`semio.io-sniff` are registered unconditionally for every plugin, the same
@@ -148,6 +161,13 @@ fn builtin_registry() -> HashMap<&'static str, JobFn> {
 pub fn register_job_kind(kind: &'static str, run: JobFn) {
     KIND_REGISTRY.with(|registry| {
         registry.borrow_mut().insert(kind, run);
+    });
+}
+
+/// 🧩️ Registers a production retained job without enabling the opaque future executor.
+pub fn register_bounded_job_kind(kind: &'static str, factory: BoundedJobFactory) {
+    BOUNDED_KIND_REGISTRY.with(|registry| {
+        registry.borrow_mut().insert(kind, factory);
     });
 }
 
@@ -272,7 +292,8 @@ enum JobBody {
         task: super::executor::TaskId,
         state: Rc<RefCell<JobState>>,
     },
-    AdmissionFailed,
+    Bounded(Box<dyn BoundedJob>),
+    AdmissionFailed(Vec<u8>),
     ExplicitStateMachineRequired,
     /// 🧬️ `start_job` never rejects an unrecognised `kind` (matches the old hard-coded `match`'s own
     /// behaviour, and the existing `JobsGuest::start_job` lease contract: it always returns `Ok(())`
@@ -327,6 +348,20 @@ pub async fn restore_job(job: u64, kind: &str, input: &[u8], checkpoint: Option<
 }
 
 async fn spawn_job(job: u64, kind: &str, input: &[u8], restored: Option<Vec<u8>>) {
+    if JOBS.with(|jobs| jobs.borrow().contains_key(&job)) {
+        return;
+    }
+    if let Some(factory) = BOUNDED_KIND_REGISTRY.with(|registry| registry.borrow().get(kind).copied()) {
+        let body = match factory(job, input) {
+            Ok(owner) => JobBody::Bounded(owner),
+            Err(detail) => {
+                JOBS.with(|jobs| jobs.borrow_mut().insert(job, JobSlot { kind: kind.to_string(), input: input.to_vec(), body: JobBody::AdmissionFailed(detail) }));
+                return;
+            }
+        };
+        JOBS.with(|jobs| jobs.borrow_mut().insert(job, JobSlot { kind: kind.to_string(), input: input.to_vec(), body }));
+        return;
+    }
     let Some(run) = KIND_REGISTRY.with(|registry| registry.borrow().get(kind).copied()) else {
         JOBS.with(|jobs| jobs.borrow_mut().insert(job, JobSlot { kind: kind.to_string(), input: input.to_vec(), body: JobBody::UnknownKind }));
         return;
@@ -357,7 +392,7 @@ async fn spawn_job(job: u64, kind: &str, input: &[u8], restored: Option<Vec<u8>>
                 outcome_state.borrow_mut().outcome = Some(result);
             })
         });
-        let body = task.map_or(JobBody::AdmissionFailed, |task| JobBody::Running { task, state });
+        let body = task.map_or_else(|| JobBody::AdmissionFailed(fault_bytes("job.admission-failed", format!("job {job} could not enter the test executor"))), |task| JobBody::Running { task, state });
         JOBS.with(|jobs| jobs.borrow_mut().insert(job, JobSlot { kind: kind.to_string(), input: input.to_vec(), body }));
     }
 }
@@ -369,7 +404,12 @@ async fn spawn_job(job: u64, kind: &str, input: &[u8], restored: Option<Vec<u8>>
 /// gaps`); the parked future itself never resumes since nothing ever wakes or re-steps it again.
 pub async fn cancel_job(job: u64) {
     JOBS.with(|jobs| {
-        jobs.borrow_mut().remove(&job);
+        let mut jobs = jobs.borrow_mut();
+        if let Some(JobSlot { body: JobBody::Bounded(owner), .. }) = jobs.get_mut(&job) {
+            owner.cancel();
+            assert!(owner.terminal_drop_is_shallow(), "bounded job cancellation must leave a shallow wrapper and retain deep cleanup authority externally");
+        }
+        jobs.remove(&job);
     });
 }
 
@@ -384,10 +424,30 @@ pub async fn cancel_job(job: u64) {
 /// with new progress OR a changed budget resets it to zero. Reaching `STALL_LIMIT` fails the job as
 /// `job.stalled` instead of returning `Running` forever.
 pub async fn step_job(job: u64, budget: JobBudget) -> JobStep {
+    if let Some(outcome) = JOBS.with(|jobs| {
+        let mut jobs = jobs.borrow_mut();
+        let slot = jobs.get_mut(&job)?;
+        let JobBody::Bounded(owner) = &mut slot.body else { return None };
+        Some(owner.step(budget))
+    }) {
+        if matches!(outcome, JobStep::Done(_) | JobStep::Failed(_)) {
+            let terminal = JOBS.with(|jobs| {
+                jobs.borrow().get(&job).is_some_and(|slot| match &slot.body {
+                    JobBody::Bounded(owner) => owner.terminal_drop_is_shallow(),
+                    _ => false,
+                })
+            });
+            if !terminal {
+                return JobStep::Failed(fault_bytes("job.bounded-false-terminal", format!("bounded job {job} returned a terminal outcome while retaining a deep wrapper owner")));
+            }
+            JOBS.with(|jobs| drop(jobs.borrow_mut().remove(&job)));
+        }
+        return outcome;
+    }
     let Some((kind, running)) = JOBS.with(|jobs| {
         jobs.borrow().get(&job).map(|slot| {
             let running = match &slot.body {
-                JobBody::UnknownKind | JobBody::AdmissionFailed | JobBody::ExplicitStateMachineRequired => None,
+                JobBody::UnknownKind | JobBody::AdmissionFailed(_) | JobBody::ExplicitStateMachineRequired | JobBody::Bounded(_) => None,
                 JobBody::Running { task, state } => Some((*task, state.clone())),
             };
             (slot.kind.clone(), running)
@@ -400,12 +460,20 @@ pub async fn step_job(job: u64, budget: JobBudget) -> JobStep {
             .with(|jobs| {
                 jobs.borrow().get(&job).map(|slot| match &slot.body {
                     JobBody::ExplicitStateMachineRequired => "job.explicit-state-machine-required",
-                    JobBody::AdmissionFailed => "job.admission-failed",
-                    JobBody::UnknownKind | JobBody::Running { .. } => "job.unknown-kind",
+                    JobBody::AdmissionFailed(_) => "job.admission-failed",
+                    JobBody::UnknownKind | JobBody::Running { .. } | JobBody::Bounded(_) => "job.unknown-kind",
                 })
             })
             .unwrap_or("job.unknown");
-        JOBS.with(|jobs| drop(jobs.borrow_mut().remove(&job)));
+        if let Some(detail) = JOBS.with(|jobs| {
+            let mut jobs = jobs.borrow_mut();
+            match jobs.remove(&job).map(|slot| slot.body) {
+                Some(JobBody::AdmissionFailed(detail)) => Some(detail),
+                _ => None,
+            }
+        }) {
+            return JobStep::Failed(detail);
+        }
         return JobStep::Failed(fault_bytes(code, format!("job kind {kind:?} has no admitted explicit bounded state machine")));
     };
 
@@ -485,7 +553,8 @@ pub async fn checkpoint_jobs() -> Vec<JobCheckpointEntry> {
             .map(|(job, slot)| {
                 let checkpoint = match &slot.body {
                     JobBody::Running { state, .. } => state.borrow().checkpoint.clone(),
-                    JobBody::UnknownKind | JobBody::AdmissionFailed | JobBody::ExplicitStateMachineRequired => None,
+                    JobBody::Bounded(owner) => owner.checkpoint(),
+                    JobBody::UnknownKind | JobBody::AdmissionFailed(_) | JobBody::ExplicitStateMachineRequired => None,
                 };
                 JobCheckpointEntry { job: *job, kind: slot.kind.clone(), input: slot.input.clone(), checkpoint }
             })
@@ -813,6 +882,54 @@ mod tests {
             }
             _ => panic!("the stall guard must fire once STALL_LIMIT consecutive no-progress static-budget calls have elapsed"),
         }
+    }
+
+    struct FixedBoundedFixture {
+        step: u8,
+        cancelled: bool,
+    }
+
+    impl BoundedJob for FixedBoundedFixture {
+        fn step(&mut self, _budget: JobBudget) -> JobStep {
+            self.step += 1;
+            if self.cancelled {
+                JobStep::Failed(b"cancelled".to_vec())
+            } else if self.step == 1 {
+                JobStep::Running(Some(vec![1]))
+            } else {
+                JobStep::Done(vec![2])
+            }
+        }
+
+        fn cancel(&mut self) {
+            self.cancelled = true;
+        }
+
+        fn checkpoint(&self) -> Option<Vec<u8>> {
+            Some(vec![self.step])
+        }
+
+        fn terminal_drop_is_shallow(&self) -> bool {
+            true
+        }
+    }
+
+    fn fixed_bounded_fixture(_job: u64, input: &[u8]) -> Result<Box<dyn BoundedJob>, Vec<u8>> {
+        if input != b"fixed" {
+            return Err(b"fixed-admission".to_vec());
+        }
+        Ok(Box::new(FixedBoundedFixture { step: 0, cancelled: false }))
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn production_bounded_job_path_advances_one_explicit_state_action_and_retains_admission_fault() {
+        register_bounded_job_kind("test.fixed-bounded", fixed_bounded_fixture);
+        start_job(9_001, "test.fixed-bounded", b"fixed").await;
+        assert!(matches!(step_job(9_001, JobBudget { fuel: 1, deadline_ms: 1 }).await, JobStep::Running(Some(bytes)) if bytes == [1]));
+        assert!(matches!(step_job(9_001, JobBudget { fuel: 1, deadline_ms: 1 }).await, JobStep::Done(bytes) if bytes == [2]));
+
+        start_job(9_002, "test.fixed-bounded", b"rejected").await;
+        assert!(matches!(step_job(9_002, JobBudget { fuel: 1, deadline_ms: 1 }).await, JobStep::Failed(bytes) if bytes == b"fixed-admission"));
     }
 
     //#endregion

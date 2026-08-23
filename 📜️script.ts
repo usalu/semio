@@ -1554,6 +1554,8 @@ function toolJobJackEnvelopeCallerRetainedExact(store: string, jack: string, edi
     store.includes("self.scalar_entry") &&
     store.includes("artifact-spr.mutation-array-cancelled") &&
     store.includes("SPR edit decode reached Drop before exact publication or bounded retirement") &&
+    store.includes("pub fn preflight_page_bytes(&self, page_bytes: usize)") &&
+    store.includes("pub fn admit_preflighted_page(&mut self, page: OwnedSchemaDecodePage)") &&
     jack.includes("pub struct JackEnvelopeOwnedFieldCatalog") &&
     jack.includes("artifact_owned_spr_edit_history_decoder") &&
     jack.includes("struct JackMutationDecodeAuthority") &&
@@ -1639,9 +1641,25 @@ function toolJobTrinityRewriteEnvelopeCallerRetainedExact(store: string, jack: s
     rewrite.includes("pub fn begin_envelope_load(") &&
     rewrite.includes("begin_artifact_envelope_ingress(maximum_pages, maximum_bytes)") &&
     rewrite.includes("source: &js_sys::Uint8Array") &&
+    rewrite.includes("pub enum TrinityRewriteEnvelopePageFault") &&
+    rewrite.includes("pub struct TrinityRewriteEnvelopePageAdmission") &&
+    rewrite.includes("TrinityRewriteCallerPageOwner::new(owner)") &&
+    rewrite.includes("source.clone()") &&
+    rewrite.includes("source.copy_to(&mut bytes[..len])") &&
     rewrite.includes("let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES]") &&
-    rewrite.includes("ArtifactEnvelopeDecodePage::try_from_array(bytes, len)") &&
-    rewrite.includes("admit_artifact_envelope_ingress_page(handle.runtime_handle(), page).map_err(|(fault, _page)| js_fault(fault))") &&
+    rewrite.includes("ArtifactEnvelopeDecodePage::from_preflighted_array(bytes, len)") &&
+    rewrite.includes("construct_and_admit_artifact_envelope_ingress_page(handle.runtime_handle(), len") &&
+    rewrite.includes("pub fn retry_envelope_page(") &&
+    rewrite.includes("pub fn is_same_page(") &&
+    rewrite.includes("pub fn take_page(&mut self) -> Option<js_sys::Uint8Array>") &&
+    rewrite.includes("pub fn close_step(&mut self) -> bool") &&
+    rewrite.includes("pub fn terminal_is_empty(&self) -> bool") &&
+    rewrite.includes("trinity_rewrite_rejected_page_preserves_pointer_content_and_retry_owner") &&
+    rewrite.includes("trinity_rewrite_page_cap_plus_one_rejects_before_owner_construction") &&
+    rewrite.includes("trinity_rewrite_stale_generation_and_slot_aba_never_match") &&
+    rewrite.includes("trinity_rewrite_checked_out_drop_preserves_raw_caller_authority") &&
+    rewrite.includes("trinity_rewrite_rejected_page_close_retires_one_owner_per_grant") &&
+    rewrite.indexOf("construct_and_admit_artifact_envelope_ingress_page(handle.runtime_handle(), len") < rewrite.indexOf("source.copy_to(&mut bytes[..len])") &&
     rewrite.includes("seal_artifact_envelope_ingress(handle.runtime_handle())") &&
     rewrite.includes("app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
     rewrite.includes("advance_artifact_envelope_load(handle.runtime_handle())") &&
@@ -1649,15 +1667,19 @@ function toolJobTrinityRewriteEnvelopeCallerRetainedExact(store: string, jack: s
     rewrite.includes("cancel_artifact_envelope_load(handle.runtime_handle())") &&
     rewrite.includes("close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
     plugin.includes("envelope_ingress: ArtifactFixedRegistry<ActiveArtifactEnvelopeIngress>") &&
+    plugin.includes("pub fn preflight_artifact_envelope_ingress_page(") &&
+    plugin.includes("pub fn construct_and_admit_artifact_envelope_ingress_page<Build>(") &&
     plugin.includes("self.retain_initializer_for_close(job)") &&
     plugin.includes("artifact_envelope_ingress_saturation_returns_exact_plus_one_owner_and_closes_fifo_slots") &&
     plugin.includes("artifact_envelope_ingress_cancel_and_interrupted_close_release_one_real_page_per_grant") &&
     !rewrite.includes("envelope_json: Option<String>") &&
     !rewrite.includes("RefCell<TrinityGraphStore>") &&
     !rewrite.includes("reject_whole_buffer_artifact_envelope_ingress") &&
-    !rewrite.includes("TrinityGraphStore::new") &&
     !rewrite.includes("dispatch_text(command_text)") &&
     !rewrite.includes("dispatch_binary(command_bytes)") &&
+    !rewrite.includes("map_err(|(fault, _page)|") &&
+    !rewrite.includes("source.to_vec()") &&
+    !rewrite.includes("Uint8Array::new(source)") &&
     !rewrite.includes("while let") &&
     !rewrite.includes("loop {")
   );
@@ -1737,6 +1759,109 @@ function toolJobGisMapEnvelopeCallerRetainedExact(store: string, gisMap: string,
     !wasm.includes("envelope_json: &str") &&
     !wasm.includes("reject_whole_buffer_artifact_envelope_ingress") &&
     !wasm.includes("ArtifactStore::new") &&
+    !wasm.includes("while let") &&
+    !wasm.includes("loop {")
+  );
+}
+
+function toolJobRasterEnvelopeCallerRetainedExact(store: string, raster: string, editor: string, wasm: string, plugin: string): boolean {
+  const variants = [
+    "CreateLayer(payload)",
+    "DeleteLayer(payload)",
+    "ReorderLayers(payload)",
+    "RenameLayer(payload)",
+    "ChangeLayerVisible(payload)",
+    "ChangeLayerOpacity(payload)",
+    "ChangeLayerBlendMode(payload)",
+    "MoveLayer(payload)",
+    "ResizeLayer(payload)",
+    "ChangeLayerAdjustmentKind(payload)",
+    "AddLayerAsset(payload)",
+    "RemoveLayerAsset(payload)",
+  ];
+  const preflight = wasm.indexOf("preflight_artifact_envelope_ingress_page(handle.runtime_handle(), len)");
+  const construct = wasm.indexOf("construct_and_admit_artifact_envelope_ingress_page(handle.runtime_handle(), len");
+  const copy = wasm.indexOf("source.copy_to(&mut bytes[..len])");
+  return (
+    store.includes("pub fn artifact_owned_spr_edit_history_decoder") &&
+    store.includes("struct ArtifactOwnedSprMutationArrayAuthority") &&
+    raster.includes("pub struct RasterEnvelopeOwnedFieldCatalog") &&
+    raster.includes("artifact_owned_spr_edit_history_decoder") &&
+    raster.includes("RasterSnapshotDecodeAuthority") &&
+    raster.includes("RasterMutationDecodeAuthority") &&
+    raster.includes("OwnedSchemaHexAuthority<RASTER_OWNED_FIELD_BYTES>") &&
+    raster.includes("struct RasterSnapshotBoundsAuthority") &&
+    raster.includes("struct RasterSnapshotCloneAuthority") &&
+    raster.includes("struct RasterMutationDigestAuthority") &&
+    raster.includes("struct RasterMutationCandidateAuthority") &&
+    raster.includes("RASTER_RETIREMENT_STACK_CAPACITY") &&
+    raster.includes("frames: std::mem::ManuallyDrop<[Option<RasterRetirementFrame>; RASTER_RETIREMENT_STACK_CAPACITY]>") &&
+    raster.includes("struct RasterStoreInitializationAuthority") &&
+    raster.includes("impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot, RasterMutation> for RasterStoreInitializationAuthority") &&
+    raster.includes("RasterStoreInitializationPhase::ValidateEditPair") &&
+    raster.includes("RasterStoreInitializationPhase::SeedHistory") &&
+    raster.includes("RasterStoreInitializationPhase::BuildCandidate") &&
+    (raster.match(/if cx\.should_yield\(\)/g) ?? []).length === 3 &&
+    raster.includes("fn raster_reserve_unit(cx: &mut semio_framework_job::StepContext<'_>, units: usize) -> bool") &&
+    raster.includes("self.cancel_requested || cx.is_cancelled()") &&
+    raster.includes("ArtifactStoreInitializationRuntime::new") &&
+    raster.includes("ArtifactStore::from_initialized_runtime_with_owners") &&
+    raster.includes("self.generation.0.checked_add(1)") &&
+    raster.includes("value.layers.pop()") &&
+    raster.includes("value.assets.pop_last()") &&
+    raster.includes("dsl::DslValue::Array(values)") &&
+    raster.includes("dsl::DslValue::Object(values)") &&
+    variants.every((variant) => raster.includes(variant)) &&
+    raster.includes("Raster store initialization authority reached Drop before exact candidate handoff or retained rejection close") &&
+    raster.includes("raster_store_initializer_publishes_next_generation_and_candidate_closes_incrementally") &&
+    raster.includes("raster_store_initializer_cancel_and_stale_generation_return_every_owner_terminal_empty") &&
+    raster.includes("raster_store_initializer_zero_budget_advances_no_owner_or_phase") &&
+    raster.includes("raster_nested_snapshot_and_child_handles_retire_one_owner_per_grant") &&
+    raster.includes("raster_owner_caps_and_all_mutation_variants_retire_one_owner_per_grant") &&
+    raster.includes("raster_envelope_caps_and_plus_one_page_return_the_exact_fixed_owner") &&
+    raster.includes("raster_snapshot_bounds_and_clone_advance_one_pre_admitted_unit_with_low_nonzero_fuel") &&
+    raster.includes("raster_expired_deadline_advances_no_bounds_clone_or_mutation_owner") &&
+    raster.includes("raster_small_mutation_against_deep_snapshot_is_cursorized_and_atomic") &&
+    raster.includes("raster_cancel_after_complete_retires_the_unclaimed_candidate_before_terminal") &&
+    raster.includes("raster_retirement_uses_allocation_capacity_and_fixed_iterative_depth") &&
+    raster.includes("raster_nested_owner_item_and_byte_capacity_plus_one_reject_before_clone") &&
+    raster.includes("raster_empty_asset_map_retirement_has_no_hidden_allocation_release") &&
+    raster.includes("candidate_disposer") &&
+    raster.includes("let released_bytes = value.capacity();") &&
+    raster.includes("let bytes = value.capacity();") &&
+    !raster.includes("serde_json::to_vec(source)") &&
+    !raster.includes("source.clone()") &&
+    !raster.includes("operation.diff(current)") &&
+    !raster.includes("diff.apply(current)") &&
+    !raster.includes("active: Box<RasterOwnedRetirement>") &&
+    !raster.includes("artifact_bounded_history_entry_decoder") &&
+    editor.includes("fn build_envelope_decode_owner_bundle()") &&
+    editor.includes("raster_envelope_decode_owner_bundle()") &&
+    editor.includes("fn build_document_store_initialization_job(") &&
+    editor.includes("raster_document_store_initialization_job(envelope, operation, generation)") &&
+    wasm.includes("pub struct RasterEnvelopeLoadHandle") &&
+    wasm.includes("fn runtime_handle(&self) -> ArtifactEnvelopeDecodeOperationHandle") &&
+    wasm.includes("begin_artifact_envelope_ingress(maximum_pages, maximum_bytes)") &&
+    wasm.includes("source: &js_sys::Uint8Array") &&
+    wasm.includes("let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES]") &&
+    preflight >= 0 &&
+    construct > preflight &&
+    copy > construct &&
+    wasm.includes("seal_artifact_envelope_ingress(handle.runtime_handle())") &&
+    wasm.includes("app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
+    wasm.includes("advance_artifact_envelope_load(handle.runtime_handle())") &&
+    wasm.includes("acknowledge_artifact_store_replacement(handle.runtime_handle())") &&
+    wasm.includes("cancel_artifact_envelope_load(handle.runtime_handle())") &&
+    wasm.includes("close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
+    plugin.includes("envelope_ingress: ArtifactFixedRegistry<ActiveArtifactEnvelopeIngress>") &&
+    plugin.includes("self.retain_initializer_for_close(job)") &&
+    plugin.includes("artifact store initialization job reached Drop before exact candidate handoff or terminal retained close") &&
+    plugin.includes("artifact_envelope_ingress_saturation_returns_exact_plus_one_owner_and_closes_fifo_slots") &&
+    plugin.includes("artifact_envelope_ingress_cancel_and_interrupted_close_release_one_real_page_per_grant") &&
+    !wasm.includes("envelope_json: &str") &&
+    !wasm.includes("reject_whole_buffer_artifact_envelope_ingress") &&
+    !wasm.includes("ArtifactStore::new") &&
+    !wasm.includes("source.to_vec()") &&
     !wasm.includes("while let") &&
     !wasm.includes("loop {")
   );
@@ -2908,6 +3033,160 @@ function toolJobOpaqueFutureProductionFailClosed(jobs: string): boolean {
   );
 }
 
+function toolJobActorProgressOverlayExact(actor: string, shard: string, wgpu: string): boolean {
+  const regionStart = actor.indexOf("//#region 🎨️JobProgressOverlay");
+  const regionEnd = actor.indexOf("//#endregion 🎨️JobProgressOverlay", regionStart);
+  const overlay = regionStart < 0 || regionEnd < 0 ? "" : actor.slice(regionStart, regionEnd);
+  const outcomeStart = wgpu.indexOf("for outcome in outcomes");
+  const outcomeOpen = outcomeStart < 0 ? -1 : wgpu.indexOf("{", outcomeStart);
+  const outcomes = outcomeOpen < 0 ? undefined : toolJobRustBlock(wgpu, outcomeOpen);
+  const destroyStart = wgpu.indexOf("async fn destroy_app_step(&mut self");
+  const destroyOpen = destroyStart < 0 ? -1 : wgpu.indexOf("{", destroyStart);
+  const destroy = destroyOpen < 0 ? undefined : toolJobRustBlock(wgpu, destroyOpen);
+  const publishStart = wgpu.indexOf("fn publish_job_progress(&mut self");
+  const publishOpen = publishStart < 0 ? -1 : wgpu.indexOf("{", publishStart);
+  const publish = publishOpen < 0 ? undefined : toolJobRustBlock(wgpu, publishOpen);
+  return (
+    overlay.includes("pub const JOB_PROGRESS_ACTIVE_CAPACITY: usize = 64") &&
+    overlay.includes("pub const JOB_PROGRESS_RETIREMENT_CAPACITY: usize = 128") &&
+    overlay.includes("pub const JOB_PROGRESS_PAGE_MAXIMUM_BYTES: usize = 16 * 1024") &&
+    overlay.includes("pub const JOB_PROGRESS_TOTAL_MAXIMUM_BYTES: usize = 4 * 1024 * 1024") &&
+    overlay.includes("pub const JOB_PROGRESS_TOTAL_MAXIMUM_ITEMS: usize = 512") &&
+    overlay.includes("active: [JobProgressSlot; JOB_PROGRESS_ACTIVE_CAPACITY]") &&
+    overlay.includes("retirements: [JobProgressRetirementSlot; JOB_PROGRESS_RETIREMENT_CAPACITY]") &&
+    overlay.includes("pub fn begin_operation(") &&
+    overlay.includes("pub fn preflight(") &&
+    overlay.includes("cx.operation().0 != identity.operation") &&
+    overlay.includes("cx.generation().0 != identity.generation") &&
+    overlay.includes("!live.accepts(identity)") &&
+    overlay.includes("pub fn publish_reserved(") &&
+    overlay.includes("pub fn acknowledge(") &&
+    overlay.includes("pub fn abort(") &&
+    overlay.includes("pub fn retain_rejected(") &&
+    overlay.includes("pub fn take(") &&
+    overlay.includes("impl Drop for JobProgressCheckout") &&
+    overlay.includes("pub fn begin_close_actor(") &&
+    overlay.includes("pub fn close_step(") &&
+    overlay.includes("pub fn terminal_is_empty(") &&
+    !overlay.includes("HashMap<") &&
+    !overlay.includes("VecDeque<") &&
+    shard.includes("authority: JobTurn,") &&
+    shard.includes("job_authorities: HashMap<(u64, u64), JobTurn>") &&
+    shard.includes("self.job_authorities.insert((actor_id, *job), authority)") &&
+    shard.indexOf("self.job_authorities.insert((actor_id, *job), authority)") < shard.indexOf("self.runtime.start_job(instance, *job, kind, input.clone()).await") &&
+    shard.includes("ShardOutcome::Job { actor: actor_id, authority, publication: JobPublication") &&
+    !!publish &&
+    publish.body.includes("stable_identity_matches") &&
+    publish.body.includes("self.job_progress.begin_operation(actor, authority.job, live)") &&
+    !publish.body.includes("self.job_progress.acknowledge(receipt)") &&
+    !!outcomes &&
+    outcomes.body.includes("ShardOutcome::Job { actor: reported, authority, publication } => self.publish_job_progress(ActorId(reported), authority, publication)") &&
+    !!destroy &&
+    destroy.body.includes("self.pending_job_progress_presentations") &&
+    destroy.body.includes("self.job_progress.actor_terminal_is_empty") &&
+    wgpu.includes("job_progress: JobProgressOverlayStore") &&
+    wgpu.includes("rejected_job_progress: [Option<JobProgressRejected>; 64]") &&
+    wgpu.includes("pending_job_progress_presentations: [Option<PendingJobProgressPresentation>; JOB_PROGRESS_PRESENTATION_CAPACITY]") &&
+    wgpu.includes("slots: [JobProgressPresentationSlot; JOB_PROGRESS_PRESENTATION_CAPACITY]") &&
+    wgpu.includes("admission_sequence: u64") &&
+    wgpu.includes("next_admission_sequence: u64") &&
+    wgpu.includes("let index = self.oldest_ready_index()?") &&
+    wgpu.includes("self.job_progress.preflight(&mut context, actor, &publication, live)") &&
+    wgpu.includes("self.job_progress.publish_reserved(&mut context, admission, publication, live)") &&
+    wgpu.includes("self.job_progress.acknowledge(receipt)") &&
+    wgpu.includes("self.job_progress.abort(receipt)") &&
+    wgpu.includes("AppPresentPhase::ProgressAcknowledge") &&
+    wgpu.includes("KernelRequest::AcknowledgeJobProgress { token }") &&
+    wgpu.includes("progress.acknowledge_presented()") &&
+    wgpu.includes("fn close_realm_progress_step(&mut self) -> bool") &&
+    wgpu.includes("self.job_progress.begin_close_all()") &&
+    wgpu.includes("self.pending_job_progress_presentations.iter().position(Option::is_some)") &&
+    wgpu.includes('job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").terminal_is_empty()') &&
+    wgpu.includes("fn begin_fault_close(&mut self, actor: ActorId)") &&
+    wgpu.includes("mounted_job_progress_presentation_bridge_is_fixed_fifo_and_generation_checked") &&
+    wgpu.includes("cancelled_head_does_not_strand_later_ready_presentations") &&
+    actor.includes("job_progress_preview_is_distinct_owned_and_checked_out_drop_hands_back_exactly") &&
+    actor.includes("abort must restore the last valid preview owner rather than exposing the staged replacement") &&
+    actor.includes("job_progress_fixed_capacity_and_aba_admission_fail_closed") &&
+    actor.includes("job_progress_mounted_aggregate_item_and_byte_caps_reject_plus_one_exactly") &&
+    actor.includes("job_progress_page_boundary_plus_one_stale_order_and_cancel_preserve_owner") &&
+    actor.includes("job_progress_commit_validates_live_authority_and_rejected_close_is_incremental") &&
+    actor.includes("job_progress_replay_is_deterministic_for_identical_publications")
+  );
+}
+
+/** 🏗️ Phase-6 mounted FEM2D job ownership and live-route contract. */
+function toolJobFem2dMountedSessionExact(session: string, editor: string, pluginRoot: string, glue: string, jobs: string, analyses: string): boolean {
+  const reconcileStart = session.indexOf("pub fn reconcile(");
+  const reconcileOpen = reconcileStart < 0 ? -1 : session.indexOf("{", reconcileStart);
+  const reconcile = reconcileOpen < 0 ? undefined : toolJobRustBlock(session, reconcileOpen);
+  const stepStart = session.indexOf("fn step(&mut self, budget: JobBudget)");
+  const stepOpen = stepStart < 0 ? -1 : session.indexOf("{", stepStart);
+  const step = stepOpen < 0 ? undefined : toolJobRustBlock(session, stepOpen);
+  const pluginStart = pluginRoot.indexOf("pub fn plugin()");
+  const pluginOpen = pluginStart < 0 ? -1 : pluginRoot.indexOf("{", pluginStart);
+  const plugin = pluginOpen < 0 ? undefined : toolJobRustBlock(pluginRoot, pluginOpen);
+  return (
+    session.includes('pub const FEM2D_MOUNTED_JOB_KIND: &str = "semio.fem2d.mounted-analysis"') &&
+    session.includes("const SESSION_ACTIVE_CAPACITY: usize = 32") &&
+    session.includes("const SESSION_SHELL_CAPACITY: usize = 64") &&
+    session.includes("const SESSION_MAXIMUM_ITEMS: usize = 4_096") &&
+    session.includes("const SESSION_MAXIMUM_BYTES: usize = 4 * 1_024 * 1_024") &&
+    session.includes("const FEM2D_JOB_TAG: u64 = 0xf2d0_0000_0000_0000") &&
+    session.includes("job & !FEM2D_JOB_COUNTER_MAXIMUM != FEM2D_JOB_TAG") &&
+    session.includes("shells: [Rc<RefCell<Option<MountedState>>>; SESSION_SHELL_CAPACITY]") &&
+    session.includes("current: [Option<CurrentSession>; SESSION_ACTIVE_CAPACITY]") &&
+    session.includes("retiring: [Option<u16>; SESSION_SHELL_CAPACITY]") &&
+    session.includes("free: [u16; SESSION_SHELL_CAPACITY]") &&
+    session.includes("canonical_base_revision: [u8; 32]") &&
+    session.includes("preflight_inner_cursor: usize") &&
+    session.includes("preflight_deep_cursor: usize") &&
+    session.includes("preflight_owner_opened: bool") &&
+    !session.includes("region.holes.iter().map") &&
+    !session.includes("case.loads.iter().map") &&
+    !session.includes("combination.terms.iter().map") &&
+    session.includes("register_bounded_job_kind(FEM2D_MOUNTED_JOB_KIND") &&
+    session.includes("fn close_step(&mut self, maximum_items: usize) -> PluginCloseStep") &&
+    session.includes("fn terminal_is_empty(&self) -> bool") &&
+    session.includes("pub fn maintenance_step(") &&
+    session.includes("pub fn close_step(") &&
+    session.includes("pub fn terminal_is_empty(") &&
+    !!step &&
+    (step.body.match(/\.step\(&mut cx\)/g) ?? []).length === 4 &&
+    !step.body.includes("while ") &&
+    step.body.includes("current_identity(self.identity.app_instance_id)") &&
+    step.body.includes("validate_commit(") &&
+    step.body.includes("self.cancel.is_cancelled_now()") &&
+    step.body.indexOf("validate_commit(") < step.body.indexOf("JobStep::Done(output)") &&
+    !!reconcile &&
+    reconcile.body.includes("doc.take_snapshot_read()") &&
+    reconcile.body.includes("Effect::CancelJob") &&
+    reconcile.body.includes("Effect::SpawnJob") &&
+    reconcile.body.indexOf("Effect::CancelJob") < reconcile.body.indexOf("Effect::SpawnJob") &&
+    reconcile.body.includes("JobPlacement::Isolated") &&
+    !reconcile.body.includes("run_to_completion") &&
+    !reconcile.body.includes("block_on") &&
+    editor.includes("async fn pending_effects(") &&
+    editor.includes("crate::editor::fem2d::session::reconcile(doc)") &&
+    editor.includes("session::with_live_visual(doc.render_operation()") &&
+    editor.includes("model_window::render_with_progress(doc.snapshot, camera, visual)") &&
+    editor.includes("fn mounted_job_maintenance_step(") &&
+    editor.includes("fn mounted_job_close_step(") &&
+    editor.includes("fn mounted_jobs_terminal_is_empty(") &&
+    !!plugin &&
+    plugin.body.indexOf("crate::editor::fem2d::session::initialize()") < plugin.body.indexOf('Plugin::<FemApps>::builder("fem")') &&
+    glue.includes("✏️editor/🧵️session/🦀️component.rs") &&
+    jobs.includes("pub trait BoundedJob") &&
+    jobs.includes("JobBody::Bounded(owner)") &&
+    jobs.includes("#[cfg(not(test))]") &&
+    jobs.includes("JobBody::ExplicitStateMachineRequired") &&
+    analyses.includes("pub fn new_owned(model: Arc<AnalysisModel>") &&
+    analyses.includes("pub fn into_full_matrix(self) -> Option<Csr>") &&
+    session.includes("mounted_revision_restart_keeps_cancel_before_spawn") &&
+    session.includes("mounted_close_and_capacity_are_fixed_and_terminal_witnessed")
+  );
+}
+
 /** 🧪️ Proves the verifier rejects the historical and audited false-positive classes. */
 function toolJobCoverageSelfTests(): number {
   const evaluate = (sources: Record<string, string>) => {
@@ -2936,6 +3215,118 @@ function toolJobCoverageSelfTests(): number {
     ["default-migrated-builder", { "manifest.rs": 'fn bounded_catalog() { definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated; }', "plugin.rs": 'app_commands! { "solve" => solve::Payload }' }],
   ];
   for (const [name, sources] of fixtures) if (evaluate(sources).length === 0) throw new Error(`[verify interactivity tool-jobs] self-test ${name} was falsely accepted.`);
+  const actorProgress = [
+    "//#region 🎨️JobProgressOverlay",
+    "pub const JOB_PROGRESS_ACTIVE_CAPACITY: usize = 64",
+    "pub const JOB_PROGRESS_RETIREMENT_CAPACITY: usize = 128",
+    "pub const JOB_PROGRESS_PAGE_MAXIMUM_BYTES: usize = 16 * 1024",
+    "pub const JOB_PROGRESS_TOTAL_MAXIMUM_BYTES: usize = 4 * 1024 * 1024",
+    "pub const JOB_PROGRESS_TOTAL_MAXIMUM_ITEMS: usize = 512",
+    "active: [JobProgressSlot; JOB_PROGRESS_ACTIVE_CAPACITY]",
+    "retirements: [JobProgressRetirementSlot; JOB_PROGRESS_RETIREMENT_CAPACITY]",
+    "pub fn begin_operation(",
+    "pub fn preflight( cx.operation().0 != identity.operation cx.generation().0 != identity.generation !live.accepts(identity)",
+    "pub fn publish_reserved(",
+    "pub fn acknowledge(",
+    "pub fn abort(",
+    "pub fn retain_rejected(",
+    "pub fn take(",
+    "impl Drop for JobProgressCheckout",
+    "pub fn begin_close_actor(",
+    "pub fn close_step(",
+    "pub fn terminal_is_empty(",
+    "job_progress_preview_is_distinct_owned_and_checked_out_drop_hands_back_exactly",
+    "abort must restore the last valid preview owner rather than exposing the staged replacement",
+    "job_progress_fixed_capacity_and_aba_admission_fail_closed",
+    "job_progress_mounted_aggregate_item_and_byte_caps_reject_plus_one_exactly",
+    "job_progress_page_boundary_plus_one_stale_order_and_cancel_preserve_owner",
+    "job_progress_commit_validates_live_authority_and_rejected_close_is_incremental",
+    "job_progress_replay_is_deterministic_for_identical_publications",
+    "//#endregion 🎨️JobProgressOverlay",
+  ].join("\n");
+  const shardProgress = [
+    "authority: JobTurn,",
+    "job_authorities: HashMap<(u64, u64), JobTurn>",
+    "self.job_authorities.insert((actor_id, *job), authority)",
+    "self.runtime.start_job(instance, *job, kind, input.clone()).await",
+    "ShardOutcome::Job { actor: actor_id, authority, publication: JobPublication",
+  ].join("\n");
+  const wgpuProgress = [
+    "job_progress: JobProgressOverlayStore",
+    "rejected_job_progress: [Option<JobProgressRejected>; 64]",
+    "self.job_progress.preflight(&mut context, actor, &publication, live)",
+    "self.job_progress.publish_reserved(&mut context, admission, publication, live)",
+    "self.job_progress.acknowledge(receipt)",
+    "pending_job_progress_presentations: [Option<PendingJobProgressPresentation>; JOB_PROGRESS_PRESENTATION_CAPACITY]",
+    "slots: [JobProgressPresentationSlot; JOB_PROGRESS_PRESENTATION_CAPACITY]",
+    "admission_sequence: u64",
+    "next_admission_sequence: u64",
+    "let index = self.oldest_ready_index()?",
+    "AppPresentPhase::ProgressAcknowledge",
+    "KernelRequest::AcknowledgeJobProgress { token }",
+    "progress.acknowledge_presented()",
+    "fn close_realm_progress_step(&mut self) -> bool",
+    "self.job_progress.begin_close_all()",
+    "self.pending_job_progress_presentations.iter().position(Option::is_some)",
+    'job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").terminal_is_empty()',
+    "fn begin_fault_close(&mut self, actor: ActorId)",
+    "mounted_job_progress_presentation_bridge_is_fixed_fifo_and_generation_checked",
+    "cancelled_head_does_not_strand_later_ready_presentations",
+    "self.job_progress.abort(receipt)",
+    "fn publish_job_progress(&mut self, actor: ActorId, authority: JobTurn, publication: JobPublication) { stable_identity_matches; self.job_progress.begin_operation(actor, authority.job, live); self.job_progress.preflight(&mut context, actor, &publication, live); self.job_progress.publish_reserved(&mut context, admission, publication, live); }",
+    "async fn destroy_app_step(&mut self, instance: u32) { self.pending_job_progress_presentations; self.job_progress.actor_terminal_is_empty(actor); }",
+    "for outcome in outcomes { match outcome { ShardOutcome::Job { actor: reported, authority, publication } => self.publish_job_progress(ActorId(reported), authority, publication), _ => {} } }",
+  ].join("\n");
+  if (!toolJobActorProgressOverlayExact(actorProgress, shardProgress, wgpuProgress)) throw new Error("[verify interactivity tool-jobs] self-test actor-progress-overlay-valid was falsely rejected.");
+  if (toolJobActorProgressOverlayExact(actorProgress.replace("active: [JobProgressSlot; JOB_PROGRESS_ACTIVE_CAPACITY]", "active: HashMap<(ActorId, u64), JobProgressSlot>"), shardProgress, wgpuProgress)) throw new Error("[verify interactivity tool-jobs] self-test actor-progress-overlay-resizable-active-registry was falsely accepted.");
+  if (toolJobActorProgressOverlayExact(actorProgress.replace("cx.generation().0 != identity.generation", "false"), shardProgress, wgpuProgress)) throw new Error("[verify interactivity tool-jobs] self-test actor-progress-overlay-missing-generation-validation was falsely accepted.");
+  if (toolJobActorProgressOverlayExact(actorProgress.replace("job_progress_mounted_aggregate_item_and_byte_caps_reject_plus_one_exactly", "job_progress_aggregate_caps_unmounted"), shardProgress, wgpuProgress)) throw new Error("[verify interactivity tool-jobs] self-test actor-progress-overlay-unmounted-aggregate-caps was falsely accepted.");
+  if (toolJobActorProgressOverlayExact(actorProgress, shardProgress.replace("self.job_authorities.insert((actor_id, *job), authority)", ""), wgpuProgress)) throw new Error("[verify interactivity tool-jobs] self-test autonomous-shard-job-without-independent-authority was falsely accepted.");
+  if (toolJobActorProgressOverlayExact(actorProgress, shardProgress, wgpuProgress.replace("AppPresentPhase::ProgressAcknowledge", "AppPresentPhase::Fullscreen"))) throw new Error("[verify interactivity tool-jobs] self-test progress-ACK-before-presenter-adoption was falsely accepted.");
+  if (toolJobActorProgressOverlayExact(actorProgress, shardProgress, wgpuProgress.replace("self.job_progress.begin_close_all()", ""))) throw new Error("[verify interactivity tool-jobs] self-test realm-close-without-progress-retirement was falsely accepted.");
+  if (toolJobActorProgressOverlayExact(actorProgress, shardProgress, wgpuProgress.replace('job_progress_presentation_bridge().lock().expect("job progress presentation bridge lock").terminal_is_empty()', "true"))) throw new Error("[verify interactivity tool-jobs] self-test realm-close-without-presentation-terminal-witness was falsely accepted.");
+  if (toolJobActorProgressOverlayExact(actorProgress, shardProgress, wgpuProgress.replace("let index = self.oldest_ready_index()?", "let index = self.take_cursor"))) throw new Error("[verify interactivity tool-jobs] self-test cancelled-presentation-head-strands-ready-owner was falsely accepted.");
+  const femMountedSession = [
+    'pub const FEM2D_MOUNTED_JOB_KIND: &str = "semio.fem2d.mounted-analysis";',
+    "const SESSION_ACTIVE_CAPACITY: usize = 32;",
+    "const SESSION_SHELL_CAPACITY: usize = 64;",
+    "const SESSION_MAXIMUM_ITEMS: usize = 4_096;",
+    "const SESSION_MAXIMUM_BYTES: usize = 4 * 1_024 * 1_024;",
+    "const FEM2D_JOB_TAG: u64 = 0xf2d0_0000_0000_0000;",
+    "job & !FEM2D_JOB_COUNTER_MAXIMUM != FEM2D_JOB_TAG;",
+    "shells: [Rc<RefCell<Option<MountedState>>>; SESSION_SHELL_CAPACITY],",
+    "current: [Option<CurrentSession>; SESSION_ACTIVE_CAPACITY],",
+    "retiring: [Option<u16>; SESSION_SHELL_CAPACITY],",
+    "free: [u16; SESSION_SHELL_CAPACITY],",
+    "canonical_base_revision: [u8; 32],",
+    "preflight_inner_cursor: usize;",
+    "preflight_deep_cursor: usize;",
+    "preflight_owner_opened: bool;",
+    "register_bounded_job_kind(FEM2D_MOUNTED_JOB_KIND, factory);",
+    "fn close_step(&mut self, maximum_items: usize) -> PluginCloseStep {}",
+    "fn terminal_is_empty(&self) -> bool {}",
+    "pub fn maintenance_step() {}",
+    "pub fn close_step() {}",
+    "pub fn terminal_is_empty() {}",
+    "fn step(&mut self, budget: JobBudget) { graph.step(&mut cx); mesh.step(&mut cx); assembly.step(&mut cx); pcg.step(&mut cx); current_identity(self.identity.app_instance_id); validate_commit(); self.cancel.is_cancelled_now(); JobStep::Done(output); }",
+    "pub fn reconcile(doc: &ArtifactView) { doc.take_snapshot_read(); Effect::CancelJob; Effect::SpawnJob; JobPlacement::Isolated; }",
+    "mounted_revision_restart_keeps_cancel_before_spawn",
+    "mounted_close_and_capacity_are_fixed_and_terminal_witnessed",
+  ].join("\n");
+  const femMountedEditor = "async fn pending_effects() { crate::editor::fem2d::session::reconcile(doc); } fn mounted_job_maintenance_step() {} fn mounted_job_close_step() {} fn mounted_jobs_terminal_is_empty() {} session::with_live_visual(doc.render_operation(), |visual| model_window::render_with_progress(doc.snapshot, camera, visual));";
+  const femMountedRoot = 'pub fn plugin() { crate::editor::fem2d::session::initialize(); Plugin::<FemApps>::builder("fem"); }';
+  const femMountedGlue = "✏️editor/🧵️session/🦀️component.rs";
+  const femMountedJobs = "pub trait BoundedJob {} JobBody::Bounded(owner); #[cfg(not(test))]; JobBody::ExplicitStateMachineRequired;";
+  const femMountedAnalyses = "pub fn new_owned(model: Arc<AnalysisModel>) {} pub fn into_full_matrix(self) -> Option<Csr> {}";
+  if (!toolJobFem2dMountedSessionExact(femMountedSession, femMountedEditor, femMountedRoot, femMountedGlue, femMountedJobs, femMountedAnalyses)) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-valid was falsely rejected.");
+  if (toolJobFem2dMountedSessionExact(femMountedSession.replace("current: [Option<CurrentSession>; SESSION_ACTIVE_CAPACITY]", "current: HashMap<u32, CurrentSession>"), femMountedEditor, femMountedRoot, femMountedGlue, femMountedJobs, femMountedAnalyses)) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-resizable-session-registry was falsely accepted.");
+  if (toolJobFem2dMountedSessionExact(femMountedSession.replace("canonical_base_revision: [u8; 32],", ""), femMountedEditor, femMountedRoot, femMountedGlue, femMountedJobs, femMountedAnalyses)) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-truncated-base-authority was falsely accepted.");
+  if (toolJobFem2dMountedSessionExact(femMountedSession.replace("job & !FEM2D_JOB_COUNTER_MAXIMUM != FEM2D_JOB_TAG;", ""), femMountedEditor, femMountedRoot, femMountedGlue, femMountedJobs, femMountedAnalyses)) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-job-id-aba-substitution was falsely accepted.");
+  if (toolJobFem2dMountedSessionExact(femMountedSession.replace("preflight_inner_cursor: usize;", "case.loads.iter().map(work);"), femMountedEditor, femMountedRoot, femMountedGlue, femMountedJobs, femMountedAnalyses)) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-whole-nested-input-preflight was falsely accepted.");
+  if (toolJobFem2dMountedSessionExact(femMountedSession.replace("validate_commit();", ""), femMountedEditor, femMountedRoot, femMountedGlue, femMountedJobs, femMountedAnalyses)) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-unvalidated-commit was falsely accepted.");
+  if (toolJobFem2dMountedSessionExact(femMountedSession.replace("Effect::CancelJob;", ""), femMountedEditor, femMountedRoot, femMountedGlue, femMountedJobs, femMountedAnalyses)) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-revision-restart-without-cancel was falsely accepted.");
+  if (toolJobFem2dMountedSessionExact(femMountedSession, femMountedEditor.replace("session::with_live_visual(doc.render_operation(), |visual| model_window::render_with_progress(doc.snapshot, camera, visual));", "model_window::render_with_progress(doc.snapshot, camera, None);"), femMountedRoot, femMountedGlue, femMountedJobs, femMountedAnalyses)) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-live-visual-not-consumed was falsely accepted.");
+  if (toolJobFem2dMountedSessionExact(femMountedSession.replace("pcg.step(&mut cx);", "while pcg.running() { pcg.step(&mut cx); }"), femMountedEditor, femMountedRoot, femMountedGlue, femMountedJobs, femMountedAnalyses)) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-run-to-completion-child was falsely accepted.");
   const exactProof = (owner: string, controller: string, id: string, raw = 64) => {
     const ownerType = `Owner${owner.replaceAll(/[^A-Za-z0-9]/g, "")}`;
     return `impl ArtifactEditor for ${ownerType} { const DOCUMENT_SCHEMA: &'static str = "fixture.document"; }\nbounded_first_step_tool_proofs! { owner: semio_framework_plugin::EditorApp<${ownerType}>, owner_file: "${owner}", controller: "${controller}", document_schema: "fixture.document", factory: "BoundedFirstStepCommandJobFactory", tools: { "${id}" => semio_framework::ToolExecutionContract::bounded_first_step(${raw}, 1, 1, 64, 100), } }`;
@@ -3188,11 +3579,14 @@ function toolJobCoverageSelfTests(): number {
   const retainedWriterPlugin = [
     "envelope_ingress: ArtifactFixedRegistry<ActiveArtifactEnvelopeIngress>",
     "pub fn begin_artifact_envelope_ingress(",
+    "pub fn preflight_artifact_envelope_ingress_page(",
+    "pub fn construct_and_admit_artifact_envelope_ingress_page<Build>(",
     "pub fn seal_artifact_envelope_ingress(",
     "pub fn advance_artifact_envelope_load(",
     "fn drive_envelope_ingress(",
     "saturated decoder keeps the sealed ingress owner in its original fixed slot for retry",
     "self.retain_initializer_for_close(job)",
+    "artifact store initialization job reached Drop before exact candidate handoff or terminal retained close",
     "artifact envelope ingress reached Drop before every admitted page was transferred or bounded-closed",
     "artifact_envelope_ingress_saturation_returns_exact_plus_one_owner_and_closes_fifo_slots",
     "artifact_envelope_ingress_cancel_and_interrupted_close_release_one_real_page_per_grant",
@@ -3209,6 +3603,8 @@ function toolJobCoverageSelfTests(): number {
     "id_digest: [u8; 32]",
     'Self::push_revision_record(&mut self.revision.applied, self.revision.identity_digest, b"applied", &id, edit_digest)',
     "SPR edit decode reached Drop before exact publication or bounded retirement",
+    "pub fn preflight_page_bytes(&self, page_bytes: usize)",
+    "pub fn admit_preflighted_page(&mut self, page: OwnedSchemaDecodePage)",
   ].join("\n");
   const retainedJackCodec = [
     "pub struct JackEnvelopeOwnedFieldCatalog",
@@ -3249,9 +3645,24 @@ function toolJobCoverageSelfTests(): number {
     "pub fn begin_envelope_load(",
     "begin_artifact_envelope_ingress(maximum_pages, maximum_bytes)",
     "source: &js_sys::Uint8Array",
+    "pub enum TrinityRewriteEnvelopePageFault",
+    "pub struct TrinityRewriteEnvelopePageAdmission",
+    "TrinityRewriteCallerPageOwner::new(owner)",
+    "source.clone()",
+    "construct_and_admit_artifact_envelope_ingress_page(handle.runtime_handle(), len",
     "let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES]",
-    "ArtifactEnvelopeDecodePage::try_from_array(bytes, len)",
-    "admit_artifact_envelope_ingress_page(handle.runtime_handle(), page).map_err(|(fault, _page)| js_fault(fault))",
+    "source.copy_to(&mut bytes[..len])",
+    "ArtifactEnvelopeDecodePage::from_preflighted_array(bytes, len)",
+    "pub fn retry_envelope_page(",
+    "pub fn is_same_page(",
+    "pub fn take_page(&mut self) -> Option<js_sys::Uint8Array>",
+    "pub fn close_step(&mut self) -> bool",
+    "pub fn terminal_is_empty(&self) -> bool",
+    "trinity_rewrite_rejected_page_preserves_pointer_content_and_retry_owner",
+    "trinity_rewrite_page_cap_plus_one_rejects_before_owner_construction",
+    "trinity_rewrite_stale_generation_and_slot_aba_never_match",
+    "trinity_rewrite_checked_out_drop_preserves_raw_caller_authority",
+    "trinity_rewrite_rejected_page_close_retires_one_owner_per_grant",
     "seal_artifact_envelope_ingress(handle.runtime_handle())",
     "app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)",
     "advance_artifact_envelope_load(handle.runtime_handle())",
@@ -3264,7 +3675,25 @@ function toolJobCoverageSelfTests(): number {
   if (toolJobTrinityRewriteEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedTrinityRewrite.replace("source: &js_sys::Uint8Array", "source: &[u8]"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Trinity-Rewrite-post-lift-dynamic-page was falsely accepted.");
   if (toolJobTrinityRewriteEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedTrinityRewrite.replace("fn runtime_handle(&self) -> ArtifactEnvelopeDecodeOperationHandle", "fn operation_only(&self) -> u64"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Trinity-Rewrite-generation-handle-erasure was falsely accepted.");
   if (toolJobTrinityRewriteEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedTrinityRewrite.replace("let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES]", "let mut bytes = Vec::new()"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Trinity-Rewrite-fixed-page-owner-removal was falsely accepted.");
-  if (toolJobTrinityRewriteEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedTrinityRewrite.replace(".map_err(|(fault, _page)| js_fault(fault))", ".map_err(js_fault)"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Trinity-Rewrite-rejected-page-handback-removal was falsely accepted.");
+  if (toolJobTrinityRewriteEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedTrinityRewrite.replace("pub struct TrinityRewriteEnvelopePageAdmission", "pub struct ErasedEnvelopePageAdmission"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Trinity-Rewrite-typed-rejected-page-result-erasure was falsely accepted.");
+  if (toolJobTrinityRewriteEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedTrinityRewrite.replace("TrinityRewriteCallerPageOwner::new(owner)", "drop(owner)"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Trinity-Rewrite-rejected-page-ordinary-drop was falsely accepted.");
+  if (toolJobTrinityRewriteEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedTrinityRewrite.replace("source.clone()", "Uint8Array::new(source)"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Trinity-Rewrite-rejected-page-byte-clone was falsely accepted.");
+  if (
+    toolJobTrinityRewriteEnvelopeCallerRetainedExact(
+      retainedJackStore,
+      retainedJackCodec,
+      retainedJackEditor,
+      retainedTrinityRewrite.replace(
+        "construct_and_admit_artifact_envelope_ingress_page(handle.runtime_handle(), len\nlet mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES]\nsource.copy_to(&mut bytes[..len])",
+        "let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES]\nsource.copy_to(&mut bytes[..len])\nconstruct_and_admit_artifact_envelope_ingress_page(handle.runtime_handle(), len",
+      ),
+      retainedWriterPlugin,
+    )
+  )
+    throw new Error("[verify interactivity tool-jobs] self-test Trinity-Rewrite-page-copy-before-preflight was falsely accepted.");
+  if (toolJobTrinityRewriteEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedTrinityRewrite.replace("pub fn take_page(&mut self) -> Option<js_sys::Uint8Array>", "fn discard_page(&mut self)"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Trinity-Rewrite-rejected-page-retrieval-removal was falsely accepted.");
+  if (toolJobTrinityRewriteEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedTrinityRewrite.replace("pub fn retry_envelope_page(", "fn drop_retry_owner("), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Trinity-Rewrite-rejected-page-retry-removal was falsely accepted.");
+  if (toolJobTrinityRewriteEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedTrinityRewrite.replace("pub fn close_step(&mut self) -> bool", "fn drop_rejected_page(&mut self)"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Trinity-Rewrite-rejected-page-close-removal was falsely accepted.");
   if (toolJobTrinityRewriteEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedTrinityRewrite.replace("seal_artifact_envelope_ingress(handle.runtime_handle())", "submit_unsealed(handle.runtime_handle())"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Trinity-Rewrite-unsealed-ingress was falsely accepted.");
   if (toolJobTrinityRewriteEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedTrinityRewrite.replace("app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)", "app.run_to_completion()"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Trinity-Rewrite-unbounded-poll-turn was falsely accepted.");
   if (toolJobTrinityRewriteEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedTrinityRewrite.replace("acknowledge_artifact_store_replacement(handle.runtime_handle())", "return Ready"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Trinity-Rewrite-terminal-without-exact-ack was falsely accepted.");
@@ -3327,6 +3756,117 @@ function toolJobCoverageSelfTests(): number {
   if (toolJobGisMapEnvelopeCallerRetainedExact(retainedJackStore, retainedGisMapCodec.replace("ReplaceRegionData(payload)", "drop(payload)"), retainedGisMapEditor, retainedGisMapWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test GIS-Map-mutation-catalog-hole was falsely accepted.");
   if (toolJobGisMapEnvelopeCallerRetainedExact(retainedJackStore, retainedGisMapCodec.replace("gis_map_all_twelve_mutation_variants_preserve_catalog_order_and_zero_grant_ownership", "gis_map_partial_mutation_catalog"), retainedGisMapEditor, retainedGisMapWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test GIS-Map-zero-grant-catalog-fixture-missing was falsely accepted.");
   if (toolJobGisMapEnvelopeCallerRetainedExact(retainedJackStore, retainedGisMapCodec, retainedGisMapEditor, `${retainedGisMapWasm}\nenvelope_json: &str`, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test GIS-Map-whole-buffer-ingress-bypass was falsely accepted.");
+  const retainedRasterCodec = [
+    "pub struct RasterEnvelopeOwnedFieldCatalog",
+    "artifact_owned_spr_edit_history_decoder",
+    "RasterSnapshotDecodeAuthority",
+    "RasterMutationDecodeAuthority",
+    "OwnedSchemaHexAuthority<RASTER_OWNED_FIELD_BYTES>",
+    "struct RasterSnapshotBoundsAuthority",
+    "struct RasterSnapshotCloneAuthority",
+    "struct RasterMutationDigestAuthority",
+    "struct RasterMutationCandidateAuthority",
+    "RASTER_RETIREMENT_STACK_CAPACITY",
+    "frames: std::mem::ManuallyDrop<[Option<RasterRetirementFrame>; RASTER_RETIREMENT_STACK_CAPACITY]>",
+    "struct RasterStoreInitializationAuthority",
+    "impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot, RasterMutation> for RasterStoreInitializationAuthority",
+    "RasterStoreInitializationPhase::ValidateEditPair",
+    "RasterStoreInitializationPhase::SeedHistory",
+    "RasterStoreInitializationPhase::BuildCandidate",
+    "if cx.should_yield()",
+    "if cx.should_yield()",
+    "if cx.should_yield()",
+    "fn raster_reserve_unit(cx: &mut semio_framework_job::StepContext<'_>, units: usize) -> bool",
+    "self.cancel_requested || cx.is_cancelled()",
+    "ArtifactStoreInitializationRuntime::new",
+    "ArtifactStore::from_initialized_runtime_with_owners",
+    "self.generation.0.checked_add(1)",
+    "value.layers.pop()",
+    "value.assets.pop_last()",
+    "dsl::DslValue::Array(values)",
+    "dsl::DslValue::Object(values)",
+    "CreateLayer(payload)",
+    "DeleteLayer(payload)",
+    "ReorderLayers(payload)",
+    "RenameLayer(payload)",
+    "ChangeLayerVisible(payload)",
+    "ChangeLayerOpacity(payload)",
+    "ChangeLayerBlendMode(payload)",
+    "MoveLayer(payload)",
+    "ResizeLayer(payload)",
+    "ChangeLayerAdjustmentKind(payload)",
+    "AddLayerAsset(payload)",
+    "RemoveLayerAsset(payload)",
+    "Raster store initialization authority reached Drop before exact candidate handoff or retained rejection close",
+    "raster_store_initializer_publishes_next_generation_and_candidate_closes_incrementally",
+    "raster_store_initializer_cancel_and_stale_generation_return_every_owner_terminal_empty",
+    "raster_store_initializer_zero_budget_advances_no_owner_or_phase",
+    "raster_nested_snapshot_and_child_handles_retire_one_owner_per_grant",
+    "raster_owner_caps_and_all_mutation_variants_retire_one_owner_per_grant",
+    "raster_envelope_caps_and_plus_one_page_return_the_exact_fixed_owner",
+    "raster_snapshot_bounds_and_clone_advance_one_pre_admitted_unit_with_low_nonzero_fuel",
+    "raster_expired_deadline_advances_no_bounds_clone_or_mutation_owner",
+    "raster_small_mutation_against_deep_snapshot_is_cursorized_and_atomic",
+    "raster_cancel_after_complete_retires_the_unclaimed_candidate_before_terminal",
+    "raster_retirement_uses_allocation_capacity_and_fixed_iterative_depth",
+    "raster_nested_owner_item_and_byte_capacity_plus_one_reject_before_clone",
+    "raster_empty_asset_map_retirement_has_no_hidden_allocation_release",
+    "candidate_disposer",
+    "let released_bytes = value.capacity();",
+    "let bytes = value.capacity();",
+  ].join("\n");
+  const retainedRasterEditor = "fn build_envelope_decode_owner_bundle() raster_envelope_decode_owner_bundle() fn build_document_store_initialization_job( raster_document_store_initialization_job(envelope, operation, generation)";
+  const retainedRasterWasm = [
+    "pub struct RasterEnvelopeLoadHandle",
+    "fn runtime_handle(&self) -> ArtifactEnvelopeDecodeOperationHandle",
+    "begin_artifact_envelope_ingress(maximum_pages, maximum_bytes)",
+    "source: &js_sys::Uint8Array",
+    "preflight_artifact_envelope_ingress_page(handle.runtime_handle(), len)",
+    "construct_and_admit_artifact_envelope_ingress_page(handle.runtime_handle(), len",
+    "let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES]",
+    "source.copy_to(&mut bytes[..len])",
+    "seal_artifact_envelope_ingress(handle.runtime_handle())",
+    "app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)",
+    "advance_artifact_envelope_load(handle.runtime_handle())",
+    "acknowledge_artifact_store_replacement(handle.runtime_handle())",
+    "cancel_artifact_envelope_load(handle.runtime_handle())",
+    "close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)",
+  ].join("\n");
+  if (!toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec, retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test retained-Raster-envelope-route was falsely rejected.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec, retainedRasterEditor, retainedRasterWasm.replace("preflight_artifact_envelope_ingress_page(handle.runtime_handle(), len)\n", ""), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-copy-without-preflight was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec, retainedRasterEditor, retainedRasterWasm.replace("preflight_artifact_envelope_ingress_page(handle.runtime_handle(), len)\nconstruct_and_admit_artifact_envelope_ingress_page(handle.runtime_handle(), len\nlet mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES]\nsource.copy_to(&mut bytes[..len])", "let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES]\nsource.copy_to(&mut bytes[..len])\npreflight_artifact_envelope_ingress_page(handle.runtime_handle(), len)\nconstruct_and_admit_artifact_envelope_ingress_page(handle.runtime_handle(), len"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-copy-before-preflight was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec, retainedRasterEditor, retainedRasterWasm.replace("let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES]", "let mut bytes = Vec::new()"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-fixed-page-owner-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec, retainedRasterEditor, retainedRasterWasm.replace("fn runtime_handle(&self) -> ArtifactEnvelopeDecodeOperationHandle", "fn operation_only(&self) -> u64"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-generation-handle-erasure was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("self.generation.0.checked_add(1)", "self.generation.0 + 1"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-unchecked-generation-publication was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replaceAll("if cx.should_yield()", "if false"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-deadline-fuel-guard-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("self.cancel_requested || cx.is_cancelled()", "self.cancel_requested"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-worker-cancel-guard-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("raster_store_initializer_zero_budget_advances_no_owner_or_phase", "raster_zero_budget_advances_work"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-zero-budget-fixture-missing was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("RemoveLayerAsset(payload)", "drop(payload)"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-mutation-catalog-hole was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("dsl::DslValue::Object(values)", "drop(value)"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-nested-value-deep-drop was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("raster_nested_snapshot_and_child_handles_retire_one_owner_per_grant", "raster_shallow_snapshot_fixture"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-nested-close-fixture-missing was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("raster_owner_caps_and_all_mutation_variants_retire_one_owner_per_grant", "raster_partial_owner_fixture"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-cap-terminal-fixture-missing was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("raster_envelope_caps_and_plus_one_page_return_the_exact_fixed_owner", "raster_unbounded_page_fixture"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-page-plus-one-fixture-missing was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec, retainedRasterEditor, retainedRasterWasm.replace("source: &js_sys::Uint8Array", "source: &[u8]"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-dynamic-page-route was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec, retainedRasterEditor, `${retainedRasterWasm}\nenvelope_json: &str`, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-whole-buffer-bypass was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec, retainedRasterEditor, retainedRasterWasm.replace("acknowledge_artifact_store_replacement(handle.runtime_handle())", "return Ready"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-terminal-without-exact-ack was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec, retainedRasterEditor, retainedRasterWasm.replace("cancel_artifact_envelope_load(handle.runtime_handle())", "drop(handle)"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-cancel-owner-drop was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec, retainedRasterEditor, retainedRasterWasm.replace("close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)", "close_all()"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-bulk-close was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec, retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin.replace("artifact_envelope_ingress_saturation_returns_exact_plus_one_owner_and_closes_fifo_slots", "artifact_envelope_ingress_drops_plus_one"))) throw new Error("[verify interactivity tool-jobs] self-test Raster-fixed-registry-exact-handback-fixture-missing was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec, retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin.replace("artifact_envelope_ingress_cancel_and_interrupted_close_release_one_real_page_per_grant", "artifact_envelope_ingress_bulk_close"))) throw new Error("[verify interactivity tool-jobs] self-test Raster-one-page-close-fixture-missing was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("struct RasterSnapshotBoundsAuthority", "struct RasterPostCloneBoundsAuthority"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-recursive-preflight-authority-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("fn raster_reserve_unit(cx: &mut semio_framework_job::StepContext<'_>, units: usize) -> bool", "fn raster_post_work_fuel(cx: &mut semio_framework_job::StepContext<'_>, units: usize) -> bool"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-pre-work-fuel-authority-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, `${retainedRasterCodec}\nserde_json::to_vec(source)`, retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-whole-recursive-encode-reintroduction was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, `${retainedRasterCodec}\nsource.clone()`, retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-whole-recursive-clone-reintroduction was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, `${retainedRasterCodec}\noperation.diff(current)\ndiff.apply(current)`, retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-monolithic-history-apply-reintroduction was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("candidate_disposer", "discarded_candidate"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-complete-candidate-retirement-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("let released_bytes = value.capacity();", "let released_bytes = value.len();"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-string-capacity-retirement-erasure was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("let bytes = value.capacity();", "let bytes = value.len();"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-byte-capacity-retirement-erasure was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("frames: std::mem::ManuallyDrop<[Option<RasterRetirementFrame>; RASTER_RETIREMENT_STACK_CAPACITY]>", "active: Box<RasterOwnedRetirement>"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-fixed-iterative-retirement-erasure was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("raster_small_mutation_against_deep_snapshot_is_cursorized_and_atomic", "raster_small_mutation_clones_deep_snapshot"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-low-fuel-deep-mutation-fixture-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("raster_cancel_after_complete_retires_the_unclaimed_candidate_before_terminal", "raster_cancel_drops_completed_candidate"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-cancel-after-complete-fixture-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("raster_nested_owner_item_and_byte_capacity_plus_one_reject_before_clone", "raster_nested_owner_capacity_without_plus_one"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-nested-owner-capacity-plus-one-fixture-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("raster_empty_asset_map_retirement_has_no_hidden_allocation_release", "raster_empty_asset_map_bulk_drop"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-empty-map-allocation-release-fixture-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec, retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin.replace("artifact store initialization job reached Drop before exact candidate handoff or terminal retained close", "artifact initializer job silently drops retained candidate"))) throw new Error("[verify interactivity tool-jobs] self-test Raster-public-initializer-drop-refusal-removal was falsely accepted.");
   const retainedDrawCodec = [
     "pub struct DrawEnvelopeOwnedFieldCatalog",
     "artifact_owned_spr_edit_history_decoder",
@@ -3757,7 +4297,7 @@ function toolJobCoverageSelfTests(): number {
   if (toolJobPagedIngressExact(unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy)) throw new Error("[verify interactivity tool-jobs] self-test WGPU-close-registry-without-pollable-exact-owner-handle was falsely accepted.");
   const shutdownDropsClose = "pub(crate) struct KernelCloseHandle; pub(crate) fn begin_destroy_app(&self, instance: u32) -> KernelCloseHandle; KernelRequest::DestroyApp { owner: self.clone() }; owner.finish(KernelCloseStatus::Complete); fn shutdown_step() { drop(owner); }";
   if (toolJobPagedIngressExact(shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose)) throw new Error("[verify interactivity tool-jobs] self-test WGPU-queue-shutdown-dropped-close-completion-owner was falsely accepted.");
-  return fixtures.length + 294;
+  return fixtures.length + 313;
 }
 
 /** 🎯️ Phase-8 source/runtime contract census used by `verify interactivity tool-jobs`. */
@@ -3809,11 +4349,13 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const vcs = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️component.rs");
   const causal = policyReadFileSafe(root, "🧰️framework/🔨️modules/📡️replication/🔗️causal/🦀️component.rs");
   const channel = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️component.rs");
+  const actor = policyReadFileSafe(root, "🧰️framework/🔨️modules/🎭️actor/🦀️component.rs");
   const kernel = policyReadFileSafe(root, "🧰️framework/🔨️modules/🎠️kernel/🦀️component.rs");
   const pluginHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️component.rs");
   const mcpWorkspace = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️component.rs");
   const runHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️component.rs");
   const wgpuHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs");
+  const shardHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️component.rs");
   const jobRuntime = policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🦀️component.rs");
   const puzzle5d = policyReadFileSafe(root, "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
   const semio = policyReadFileSafe(root, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️component.rs");
@@ -3823,6 +4365,11 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const reactorRequests = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📮️requests/🦀️component.rs");
   const reactorExecutor = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🧵️executor/🦀️component.rs");
   const reactorJobs = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🦀️component.rs");
+  const fem2dSession = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️component.rs");
+  const fem2dEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
+  const femPluginRoot = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🦀️component.rs");
+  const femGlue = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/📦️glue.rs");
+  const femAnalyses = policyReadFileSafe(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️component.rs");
   const presentEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️component.rs");
   const presentWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
   const writerEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️component.rs");
@@ -3835,6 +4382,9 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const gisMapEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs");
   const gisMapEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
   const gisMapWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
+  const rasterEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs");
+  const rasterEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
+  const rasterWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
   const drawEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧰️owned/🦀️component.rs");
   const drawEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
   const allRustFiles = new Map(policyAllRustFiles(root).map((file) => [file, policyReadFileSafe(root, file)]));
@@ -3892,10 +4442,13 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   if (!toolJobJackEnvelopeCallerRetainedExact(store, jackEnvelopeCodec, jackEditor, jackWasm, plugin)) failures.push("Jack `.spr`/`.ops` envelope caller lacks the shared retained edit decoder, exact child retirement, fixed-page ingress, initializer recovery, cancellation, or exact completion acknowledgement");
   if (!toolJobTrinityRewriteEnvelopeCallerRetainedExact(store, jackEnvelopeCodec, jackEditor, trinityRewrite, plugin)) failures.push("Trinity Rewrite envelope caller lacks the Jack-owned fixed-page operation store, generation handle, bounded progress/cancel/close, exact rejected-page handback, or completion acknowledgement");
   if (!toolJobGisMapEnvelopeCallerRetainedExact(store, gisMapEnvelopeCodec, gisMapEditor, gisMapWasm, plugin)) failures.push("GIS Map `.spr`/`.ops` envelope caller lacks the shared retained edit decoder, exact drawing/image/value child retirement, fixed-page ingress, initializer recovery, cancellation, or exact completion acknowledgement");
+  if (!toolJobRasterEnvelopeCallerRetainedExact(store, rasterEnvelopeCodec, rasterEditor, rasterWasm, plugin)) failures.push("Raster `.spr`/`.ops` envelope caller lacks the shared retained edit decoder, recursive domain retirement, preflight-before-copy fixed-page ingress, initializer recovery, cancellation, or exact completion acknowledgement");
   if (!toolJobDrawEnvelopeCallerRetainedExact(store, drawEnvelopeCodec, drawEditor, plugin)) failures.push("Draw `.spr`/`.ops` envelope caller lacks recursive layer/style/asset preflight, one-item clone/retirement, fixed-page ingress, initializer recovery, cancellation, or exact completion acknowledgement");
   if (!toolJobChildRetirementInventoryExact(root, allRustFiles)) failures.push("child snapshot retirement domain cohorts or callsites do not match the exact machine-readable owner inventory");
   if (!toolJobPeerInteractionRootsExact(plugin, store, channel)) failures.push("peer ingress, app-typed presence, or interaction roots lack reserve-before-decode retained per-entry publication, atomic validated commit, or O(1) immutable capture");
   if (!toolJobPagedIngressExact(kernel, reactor, plugin, pluginHost, channel, componentWit, mcpWorkspace, runHost, wgpuHost)) failures.push("paged command ingress lacks fixed-page ownership, retained streaming decode/fault closure, generic multi-page ACK ordering, or terminal-close registries across MCP/run/WGPU callers");
+  if (!toolJobActorProgressOverlayExact(actor, shardHost, wgpuHost)) failures.push("actor Job publications lack a fixed preview/progress overlay, independent autonomous-shard authority, presenter-adopted ACK, exact rejected-owner handback, or app/fault/realm retirement");
+  if (!toolJobFem2dMountedSessionExact(fem2dSession, fem2dEditor, femPluginRoot, femGlue, reactorJobs, femAnalyses)) failures.push("live FEM2D revisions lack a fixed generation-tagged retained worker session, cancel/restart, matching commit validation, progress overlay job route, mounted close authority, or live visual consumer");
   if (!puzzleReservedExact) failures.push("Puzzle5d clipboard/import routes lack exact owner-qualified route-specific resumable factories and state machines");
   if (!toolJobMediaExportBounded(`${plugin}\n${jobRuntime}`)) failures.push("owned media export lacks nonblocking per-instance polling, exact sealed structural output credit, or pending/drop/isolation regressions");
   if (!toolJobExternalCancellationOwned(plugin)) failures.push("typed jobs lack externally reachable operation/document/app/generation cancellation through close and supersession");
@@ -4540,10 +5093,19 @@ const INTERACTIVITY_AUDIT_DB_CLI_FILE = "🧰️framework/🛍️products/💻�
 const INTERACTIVITY_AUDIT_DB_TESTKIT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🧪️testkit/🦀️component.rs";
 const INTERACTIVITY_AUDIT_HUB_BIN_FILE = "🌎️hub/📦️packages/🦀️rust/📦️bin.rs";
 const INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️prepared.rs";
+const INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🦀️component.rs";
+const INTERACTIVITY_AUDIT_PUZZLE_FILL_STATE_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🪣️fill/🦀️component.rs";
+const INTERACTIVITY_AUDIT_PUZZLE_FILL_GEOMETRY_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/📐️geometry/🦀️component.rs";
+const INTERACTIVITY_AUDIT_PUZZLE_FILL_ACTION_FILE = "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪣️fill-build-tick/🦀️component.rs";
+const INTERACTIVITY_AUDIT_UI_RECONCILE_FILE = "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/🦀️reconcile.rs";
+const INTERACTIVITY_AUDIT_REACTOR_PATCHES_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🩹️patches/🦀️component.rs";
+const INTERACTIVITY_AUDIT_REACTOR_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️component.rs";
 const INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs";
 const INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️gpu.rs";
 const INTERACTIVITY_AUDIT_CANVAS_RASTER_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Scenes/🧊️component.rs";
+const INTERACTIVITY_AUDIT_INTERPRETER_RASTER_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🧊️component.rs";
 const INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs";
+const INTERACTIVITY_AUDIT_RENDERER_HOST_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️os_host.rs";
 
 /**
  * ⏱️ The "single sanctioned runtime module" the thread/pool-construction rule (category
@@ -4799,6 +5361,10 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   for (const failure of interactivityDbIoFailures(dbStorage, dbSqlite, dbEngine, dbTestkit, hubBin)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_STORAGE_FILE, line: 0, text: failure });
   interactivityArtifactSubmitSelfTests();
   for (const failure of interactivityArtifactSubmitFailures(dbEngine, dbArtifact)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_ENGINE_FILE, line: 0, text: failure });
+  interactivityDatabaseCapabilityOpenSelfTests();
+  for (const failure of interactivityDatabaseCapabilityOpenFailures(dbEngine)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_ENGINE_FILE, line: 0, text: failure });
+  interactivityDatabaseCatalogReadSelfTests();
+  for (const failure of interactivityDatabaseCatalogReadFailures(dbEngine)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_ENGINE_FILE, line: 0, text: failure });
   interactivityArtifactHistorySelfTests();
   for (const failure of interactivityArtifactHistoryFailures(dbEngine, dbArtifact, dbWal)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_ENGINE_FILE, line: 0, text: failure });
   interactivityVcsBridgeSelfTests();
@@ -4808,8 +5374,21 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   const preparedRasterDraw = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE);
   const preparedRasterGpu = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE);
   const canvasRaster = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_CANVAS_RASTER_FILE);
+  const interpreterRaster = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_INTERPRETER_RASTER_FILE);
   const rendererGlue = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE);
-  for (const failure of interactivityPreparedRasterProducerFailures(preparedRaster, preparedRasterDraw, preparedRasterGpu, canvasRaster, rendererGlue)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE, line: 0, text: failure });
+  const rendererHost = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_RENDERER_HOST_FILE);
+  for (const failure of interactivityPreparedRasterProducerFailures(preparedRaster, preparedRasterDraw, preparedRasterGpu, canvasRaster, interpreterRaster, rendererGlue, rendererHost)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE, line: 0, text: failure });
+  interactivityPuzzleFillEnvelopeSelfTests(repoRoot);
+  const puzzleFillEnvelope = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE);
+  const puzzleFillState = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_STATE_FILE);
+  const puzzleFillGeometry = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_GEOMETRY_FILE);
+  const puzzleFillAction = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_ACTION_FILE);
+  for (const failure of interactivityPuzzleFillEnvelopeFailures(puzzleFillEnvelope, puzzleFillState, puzzleFillGeometry, puzzleFillAction)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE, line: 0, text: failure });
+  interactivityLiveReconcileSelfTests(repoRoot);
+  const uiReconcile = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_UI_RECONCILE_FILE);
+  const reactorPatches = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_REACTOR_PATCHES_FILE);
+  const reactor = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_REACTOR_FILE);
+  for (const failure of interactivityLiveReconcileFailures(uiReconcile, reactorPatches, reactor)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_UI_RECONCILE_FILE, line: 0, text: failure });
   const byCategory: Record<string, number> = {};
   for (const f of findings) byCategory[f.category] = (byCategory[f.category] ?? 0) + 1;
 
@@ -4824,60 +5403,270 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   return { findings, byCategory, blockingBridgeUnlisted, staleAllowlistEntries, expectedNeverToMatchEntries, preDeclaredOutOfScope };
 }
 
-function interactivityPreparedRasterProducerFailures(preparedSource: string, drawSource: string, gpuSource: string, canvasSource: string, glueSource: string): string[] {
+function interactivityPuzzleFillEnvelopeFailures(precomputeSource: string, fillSource: string, geometrySource: string, actionSource: string): string[] {
+  const precompute = interactivityProductionSource(precomputeSource);
+  const fill = interactivityProductionSource(fillSource);
+  const geometry = interactivityProductionSource(geometrySource);
+  const action = interactivityProductionSource(actionSource);
+  const sessionStart = precompute.indexOf("    //#region 💼️FillJobBridge");
+  const sessionEnd = precompute.indexOf("    //#endregion 💼️FillJobBridge", sessionStart);
+  const sessionBridge = precompute.slice(sessionStart, sessionEnd);
+  const driveStart = precompute.indexOf("fn drive_fill_envelope(");
+  const driveEnd = precompute.indexOf("#[derive(Clone, Copy, Debug, PartialEq, Eq)]\npub enum FillEnvelopeCloseStep", driveStart);
+  const drive = precompute.slice(driveStart, driveEnd);
+  const censusStart = fill.indexOf("pub(crate) struct FillBuilderOwnerCensusCursor");
+  const censusEnd = fill.indexOf("pub(crate) struct FillBuilderRetirementCursor", censusStart);
+  const census = fill.slice(censusStart, censusEnd);
+  const failures: string[] = [];
+  for (const cap of [
+    "FILL_ENVELOPE_PAGE_BYTES: usize = 16 * 1024",
+    "FILL_ENVELOPE_MAX_PAGES: usize = 256",
+    "FILL_ENVELOPE_MAX_ITEMS: usize = 65_536",
+    "FILL_ENVELOPE_MAX_OPERATIONS: usize = 4",
+    "FILL_ENVELOPE_PROCESS_BYTES: usize = FILL_ENVELOPE_MAX_BYTES * FILL_ENVELOPE_MAX_OPERATIONS",
+  ]) if (!precompute.includes(cap)) failures.push(`Puzzle fill envelope fixed admission changed or disappeared: ${cap}`);
+  if (!precompute.includes("slots: [Option<FillEnvelopeAuthority>; FILL_ENVELOPE_MAX_OPERATIONS]") || !precompute.includes("generations: [u64; FILL_ENVELOPE_MAX_OPERATIONS]") || !precompute.includes("requested_items.checked_add(FILL_ENVELOPE_AUTHORITY_ITEMS)") || !precompute.includes("requested_bytes.checked_add(FILL_ENVELOPE_AUTHORITY_BYTES)") || !precompute.includes("self.aggregate_bytes.checked_add(bytes)") || !precompute.includes("self.slots[slot] = Some(FillEnvelopeAuthority")) failures.push("Puzzle fill envelope is not admitted into fixed generation slots before handoff");
+  if (!sessionBridge.includes("let fill = self.engine.fill.take()?") || !sessionBridge.includes("registry.begin_measurement(job, operation, fill") || !sessionBridge.includes("Err(fill) =>") || !sessionBridge.includes("self.engine.fill = Some(fill)") || !sessionBridge.includes("registry.finish_measurement(&admission.request, credit.items, credit.bytes)")) failures.push("Puzzle fill UI admission does not move the exact source owner into a registered measurement authority before census and exact credit");
+  if (censusStart < 0 || censusEnd < 0 || !fill.includes("FILL_BUILDER_NESTED_ITEMS: usize = 32") || !fill.includes("struct FillBuilderCollectionBackings") || !fill.includes("pages: [Option<Box<[u8; FILL_BUILDER_OWNER_PAGE_BYTES]>>; FILL_BUILDER_STD_COLLECTIONS]") || !fill.includes("Self { pages: std::array::from_fn(|_| Some(Box::new([0; FILL_BUILDER_OWNER_PAGE_BYTES]))) }") || !census.includes("path: [usize; 16]") || !census.includes("phase: [u8; 17]") || !census.includes("child: [usize; 17]") || !census.includes("self.credit.items.checked_add") || !census.includes("self.credit.bytes.checked_add") || !census.includes("(occupied <= FILL_BUILDER_NESTED_ITEMS).then_some(FillBuilderOwnerCredit::default())") || !census.includes("fill.collection_backings.pages.get(self.index).is_some_and(Option::is_some)") || !census.includes("match fill.candidate_seen.iter().nth(self.index)") || census.includes("fn measure_") || census.includes(".iter().all(") || !geometry.includes("struct CollisionIndexCollectionBackings") || !geometry.includes("pages: [Option<Box<[u8; 16 * 1024]>>; 3]") || !geometry.includes("collision_index_fixed_backing_credit(self.entries.len(), self.collection_backings.pages[0].is_some())") || !geometry.includes("pub(crate) fn census_one_owner") || !sessionBridge.includes("admission.census.step(&fill, FILL_ENVELOPE_MAX_ITEMS, FILL_ENVELOPE_MAX_BYTES)")) failures.push("Puzzle fill admission does not advance one fixed nested allocation/entry or exact backing page before reservation");
+  if (sessionBridge.includes("serde_json::") || sessionBridge.includes("checkpoint_bytes()") || precompute.includes("FillWorkerState") || precompute.includes("restore_fill_worker_state")) failures.push("Puzzle fill UI/worker route contains whole-state serialization or compatibility restoration");
+  if (!precompute.includes("struct FillEnvelopeTokenCursor") || !precompute.includes("match self.field") || !precompute.includes("self.field += 1") || !precompute.includes("Self { terminal_guard: FillEnvelopeWorkerFaultGuard::new(job), token: FillEnvelopeTokenCursor::new(input) }") || !precompute.includes("let mut admitted_cursor = FillEnvelopeJobEntryCursor::new(context.id().await, input)") || !precompute.includes("context.tick().await;\n            match admitted_cursor.step()")) failures.push("Puzzle fill token decode/checkpoint cursor does not install exact fault ownership before fallible one-field decode");
+  if ((drive.match(/drive_step\(/g) ?? []).length !== 1 || !drive.includes("is_cancelled_now()") || !drive.includes("base_revision.0 != request.base_revision") || !drive.includes("FillEnvelopeDrive::Blocked") || drive.includes("while ") || drive.includes("for ")) failures.push("Puzzle fill worker grant does not advance exactly one fresh cancellable retained opportunity");
+  if (!precompute.includes("pub fn take_terminal_fill_job") || !precompute.includes("pub fn resume(mut self)") || !precompute.includes("pub fn close_step(&mut self)") || !precompute.includes("impl Drop for FillEnvelopeTerminalHandle") || !precompute.includes("self.checked_out.store(false, Ordering::Release)") || !precompute.includes("authority.token_page.take()")) failures.push("Puzzle fill rejected/terminal owners lack public take-resume-close and Drop handback");
+  if (!sessionBridge.includes("if self.pump_fill_terminal_step()") || !sessionBridge.includes("fn pump_fill_terminal_step(&mut self)") || !sessionBridge.includes("self.take_terminal_fill_job()") || !sessionBridge.includes("FillEnvelopeTerminalHandle::close_step") || !precompute.includes("registry.take_closed()")) failures.push("Puzzle fill production callers do not mount terminal take/close and orphan recovery");
+  if (!precompute.includes("struct FillEnvelopeTerminalIntent") || !precompute.includes("intent.reason.fetch_max(reason.code(), Ordering::AcqRel)") || !precompute.includes("request_fill_envelope_terminal(request, reason)") || !precompute.includes("if !matches!(authority.phase, FillEnvelopePhase::Closing)") || !precompute.includes("apply_fill_envelope_terminal_intent(authority)") || !precompute.includes("terminalize_fill_envelope(request, FillEnvelopeTerminalReason::Closed)")) failures.push("Puzzle fill terminal intent can be lost under registry contention or ignore already-terminal session Drop");
+  if (!fill.includes("struct FillBuilderRetirementCursor") || !fill.includes("enum FillRetiredOwner") || !fill.includes("fn release_vec_backing<T>") || !fill.includes("self.current = Some(FillRetiredOwner::PreviewState(value));") || !fill.includes("FillRetiredOwner::PreviewState(value) => retire_preview_state(value)") || !fill.includes("19 => fill.collection_backings.retire_one()") || !fill.includes("fill.collection_backings.terminal_owners_empty()") || !fill.includes("if !fill.terminal_owners_empty()") || !geometry.includes("retiring_key: Option<String>") || !geometry.includes("retiring_ids: Option<Vec<String>>") || !geometry.includes("self.retiring_ids = Some(ids);") || !geometry.includes("self.retiring_key = Some(key);") || !geometry.includes("if self.collection_backings.retire_one()") || !geometry.includes("self.collection_backings.terminal_owners_empty()") || !geometry.includes("pub(crate) fn terminal_owners_empty(&self)") || !precompute.includes("authority.fill_retirement = Some(FillBuilderRetirementCursor::new(fill))") || !precompute.includes("FillBuilderRetirementCursor::retire_one")) failures.push("Puzzle fill terminal close can recursively or bulk-drop nested builders, fixed backing pages, seed vectors, or spatial buckets");
+  if (!precomputeSource.includes("fill_worker_token_reopens_the_exact_retained_owner_and_drives_one_turn") || !precomputeSource.includes("fill_worker_fixed_cap_rejects_plus_one_and_reused_slot_rejects_aba") || !precomputeSource.includes("fill_worker_item_and_byte_plus_one_reject_before_owner_transfer") || !precomputeSource.includes("fill_worker_actual_owner_census_rejects_cap_plus_one_with_exact_handback") || !precomputeSource.includes("fill_worker_session_drop_during_measurement_mounts_the_same_terminal_once") || !precomputeSource.includes("fill_worker_completed_before_session_drop_is_reclassified_and_mounted_once") || !precomputeSource.includes("fill_worker_terminal_resume_contention_returns_then_rearms_the_exact_owner") || !precomputeSource.includes("fill_worker_production_entry_guard_precedes_malformed_token_decode") || !fillSource.includes("retained_owner_census_advances_one_fixed_unit_and_rejects_collection_cap_plus_one") || !fillSource.includes("retained_owner_census_uses_fixed_backing_pages_not_pair_size_heuristics") || !geometrySource.includes("spatial_index_close_retains_bucket_values_and_retires_one_credited_owner_per_grant") || !precomputeSource.includes("fill_worker_mounted_terminal_pump_closes_completed_slot_and_rearms_capacity") || !precomputeSource.includes("fill_worker_early_fault_guard_terminalizes_and_deep_retirement_is_incremental") || !precomputeSource.includes("fill_worker_token_decode_advances_exactly_one_field_per_grant") || !precomputeSource.includes("fill_job_checkpoint_is_a_fixed_generation_token_not_a_whole_state_buffer")) failures.push("Puzzle fill semantic identity/cap/ABA/accounting/terminal/retirement fixtures are missing");
+  if ((action.match(/\.enqueue_fill_job\(\)/g) ?? []).length !== 2) failures.push("Puzzle fill retained envelope reachability is not exactly the two audited UI callers");
+  if (!fill.includes("StepOutcome::PreviewReady(Vec::new())") || !fill.includes("StepOutcome::Complete(CommitCandidate { state: Vec::new(), output: Vec::new() })")) failures.push("Puzzle FillBuilder still materializes a whole preview/result envelope inside one worker grant");
+  return failures;
+}
+
+function interactivityPuzzleFillEnvelopeSelfTests(repoRoot: string): void {
+  const precompute = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_ENVELOPE_FILE);
+  const fill = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_STATE_FILE);
+  const geometry = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_GEOMETRY_FILE);
+  const action = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PUZZLE_FILL_ACTION_FILE);
+  const mutations: [string, string, string, string, string][] = [
+    ["page-cap", precompute.replace("FILL_ENVELOPE_PAGE_BYTES: usize = 16 * 1024", "FILL_ENVELOPE_PAGE_BYTES: usize = 32 * 1024"), fill, geometry, action],
+    ["dynamic-slots", precompute.replace("slots: [Option<FillEnvelopeAuthority>; FILL_ENVELOPE_MAX_OPERATIONS]", "slots: Vec<Option<FillEnvelopeAuthority>>"), fill, geometry, action],
+    ["missing-byte-preflight", precompute.replace("requested_bytes.checked_add(FILL_ENVELOPE_AUTHORITY_BYTES)", "Some(requested_bytes)"), fill, geometry, action],
+    ["clone-before-admission", precompute.replace("let fill = self.engine.fill.take()?", "let fill = self.engine.fill.as_ref()?.clone()"), fill, geometry, action],
+    ["whole-serde", precompute.replace("let job = semio_framework_job::allocate_operation_id().0;", "let _whole = serde_json::to_vec(&self.fill_progress());\n        let job = semio_framework_job::allocate_operation_id().0;"), fill, geometry, action],
+    ["whole-token-decode", precompute.replace("self.field += 1", "self.field = 6"), fill, geometry, action],
+    ["guard-after-decode", precompute.replace("Self { terminal_guard: FillEnvelopeWorkerFaultGuard::new(job), token: FillEnvelopeTokenCursor::new(input) }", "Self { token: FillEnvelopeTokenCursor::new(input), terminal_guard: FillEnvelopeWorkerFaultGuard::new(job) }"), fill, geometry, action],
+    ["missing-base-freshness", precompute.replace(" || fill.operation.base_revision.0 != request.base_revision", ""), fill, geometry, action],
+    ["two-drive-opportunities", precompute.replace("let outcome = drive_step(", "let _extra = drive_step(\n        &mut *fill, \"extra\", operation.operation, operation.generation, InteractiveStage::BackgroundStep, StepBudget::new(1, 1), cancel.clone(), default_now_ms, &mut authority.preview_sequence);\n    let outcome = drive_step("), fill, geometry, action],
+    ["missing-terminal-take", precompute.replace("pub fn take_terminal_fill_job", "fn hidden_terminal_fill_job"), fill, geometry, action],
+    ["missing-drop-handback", precompute.replace("impl Drop for FillEnvelopeTerminalHandle", "impl FillEnvelopeTerminalHandle"), fill, geometry, action],
+    ["missing-identity-fixture", precompute.replace("fill_worker_token_reopens_the_exact_retained_owner_and_drives_one_turn", "fill_worker_token_smoke"), fill, geometry, action],
+    ["whole-preview", precompute, fill.replace("StepOutcome::PreviewReady(Vec::new())", "StepOutcome::PreviewReady(serde_json::to_vec(&self.preview).unwrap())"), geometry, action],
+    ["lost-ui-caller", precompute, fill, geometry, action.replace("let spawn = precompute.enqueue_fill_job();", "let spawn = None;")],
+    ["literal-max-credit", precompute.replace("registry.finish_measurement(&admission.request, credit.items, credit.bytes)", "registry.finish_measurement(&admission.request, FILL_ENVELOPE_MAX_ITEMS, FILL_ENVELOPE_MAX_BYTES)"), fill, geometry, action],
+    ["nested-cap", precompute, fill.replace("FILL_BUILDER_NESTED_ITEMS: usize = 32", "FILL_BUILDER_NESTED_ITEMS: usize = 33"), geometry, action],
+    ["pair-size-backing-heuristic", precompute, fill.replace("(occupied <= FILL_BUILDER_NESTED_ITEMS).then_some(FillBuilderOwnerCredit::default())", "(occupied <= FILL_BUILDER_NESTED_ITEMS).then_some(FillBuilderOwnerCredit { items: occupied, bytes: occupied * std::mem::size_of::<(String, usize)>() })"), geometry, action],
+    ["missing-fixed-backing-census", precompute, fill.replace("fill.collection_backings.pages.get(self.index).is_some_and(Option::is_some)", "false"), geometry, action],
+    ["whole-field-census", precompute, fill.replace("match fill.candidate_seen.iter().nth(self.index) {", "let _whole = fill.candidate_seen.iter().all(|value| !value.is_empty());\n            match fill.candidate_seen.iter().nth(self.index) {"), geometry, action],
+    ["unmounted-terminal-pump", precompute.replace("if self.pump_fill_terminal_step()", "if false"), fill, geometry, action],
+    ["lossy-terminal-lock", precompute.replace("request_fill_envelope_terminal(request, reason);", "let Ok(_registry) = fill_envelope_registry().try_lock() else { return; };"), fill, geometry, action],
+    ["complete-not-closeable", precompute.replace("if !matches!(authority.phase, FillEnvelopePhase::Closing)", "if matches!(authority.phase, FillEnvelopePhase::Admitted)"), fill, geometry, action],
+    ["bulk-preview-drop", precompute, fill.replace("self.current = Some(FillRetiredOwner::PreviewState(value));", "self.current = Some(FillRetiredOwner::String(value.target_vortex_full_id));"), geometry, action],
+    ["missing-terminal-empty-witness", precompute, fill.replace("if !fill.terminal_owners_empty()", "if false"), geometry, action],
+    ["bulk-spatial-bucket-drop", precompute, fill, geometry.replace("self.retiring_ids = Some(ids);", "drop(ids);"), action],
+    ["bulk-fill-backing-drop", precompute, fill.replace("19 => fill.collection_backings.retire_one(),", "19 => { fill.collection_backings = FillBuilderCollectionBackings::new(); true },"), geometry, action],
+    ["bulk-spatial-backing-drop", precompute, fill, geometry.replace("if self.collection_backings.retire_one()", "if false"), action],
+    ["bulk-builder-drop", precompute.replace("authority.fill_retirement = Some(FillBuilderRetirementCursor::new(fill))", "drop(fill)"), fill, geometry, action],
+    ["missing-admission-drop-fixture", precompute.replace("fill_worker_session_drop_during_measurement_mounts_the_same_terminal_once", "fill_worker_admission_smoke"), fill, geometry, action],
+    ["missing-complete-drop-fixture", precompute.replace("fill_worker_completed_before_session_drop_is_reclassified_and_mounted_once", "fill_worker_complete_smoke"), fill, geometry, action],
+    ["missing-malformed-guard-fixture", precompute.replace("fill_worker_production_entry_guard_precedes_malformed_token_decode", "fill_worker_decode_smoke"), fill, geometry, action],
+    ["missing-deep-retirement-fixture", precompute.replace("fill_worker_early_fault_guard_terminalizes_and_deep_retirement_is_incremental", "fill_worker_fault_smoke"), fill, geometry, action],
+  ];
+  for (const [name, mutatedPrecompute, mutatedFill, mutatedGeometry, mutatedAction] of mutations) if (interactivityPuzzleFillEnvelopeFailures(mutatedPrecompute, mutatedFill, mutatedGeometry, mutatedAction).length === 0) throw new Error(`[verify interactivity] Puzzle fill envelope self-test ${name} was falsely accepted.`);
+  const failures = interactivityPuzzleFillEnvelopeFailures(precompute, fill, geometry, action);
+  if (failures.length !== 0) throw new Error(`[verify interactivity] Puzzle fill envelope baseline was falsely rejected: ${failures.join("; ")}`);
+}
+
+function interactivityLiveReconcileFailures(reconcileSource: string, patchesSource: string, reactorSource: string): string[] {
+  const reconcile = interactivityProductionSource(reconcileSource);
+  const patches = interactivityProductionSource(patchesSource);
+  const reactor = interactivityProductionSource(reactorSource);
+  const driveStart = reconcile.indexOf("    pub fn drive_one(&mut self, cx:");
+  const driveEnd = reconcile.indexOf("    pub fn fault(&self)", driveStart);
+  const drive = reconcile.slice(driveStart, driveEnd);
+  const failures: string[] = [];
+  for (const cap of [
+    "SURFACE_RECONCILE_ADMISSION_SLOTS: usize = 64",
+    "SURFACE_RECONCILE_PAGE_BYTES: usize = 16 * 1_024",
+    "max_nodes: 4_096",
+    "max_items: 32_769",
+    "max_bytes: 2 * 1_024 * 1_024",
+    "max_identifier_bytes: 256",
+    "SURFACE_RECONCILE_AGGREGATE_BYTES: usize = 8 * 1_024 * 1_024",
+    "SURFACE_RECONCILE_AGGREGATE_ITEMS: usize = 131_076",
+  ]) if (!reconcile.includes(cap)) failures.push(`live reconcile fixed credit changed or disappeared: ${cap}`);
+  const reserveAt = reconcile.indexOf("let credit = if surface_bytes <= limits.max_identifier_bytes { reserve_surface_reconcile(limits) }");
+  const cursorAt = reconcile.indexOf("let cursor = SurfaceReconcileCursor::new_with_limits(tree, &current, limits)");
+  if (reserveAt < 0 || cursorAt < 0 || reserveAt > cursorAt || !reconcile.includes("slots: [SurfaceReconcileAdmissionSlot; SURFACE_RECONCILE_ADMISSION_SLOTS]") || !reconcile.includes("next_items > SURFACE_RECONCILE_AGGREGATE_ITEMS") || !reconcile.includes("next_bytes > SURFACE_RECONCILE_AGGREGATE_BYTES")) failures.push("live reconcile does not reserve fixed item/byte/generation credit before by-value tree cursor construction");
+  if (reconcile.includes("pub fn reconcile(&mut self") || patches.includes(".reconcile(") || patches.includes("snapshot().revision") || patches.includes("tree.clone()") || reactor.includes("patches.diff(")) failures.push("mounted reactor reconcile reintroduced a synchronous, snapshot-clone, or cloned-tree compatibility path");
+  if (driveStart < 0 || (drive.match(/cursor\.step\(current\)/g) ?? []).length !== 1 || drive.includes("while ") || drive.includes("for ") || !drive.includes("cx.generation().0 != state.generation") || !drive.includes("cx.is_cancelled()") || drive.indexOf("cx.generation().0 != state.generation") > drive.indexOf("cursor.step(current)")) failures.push("live reconcile grant does not advance exactly one fresh cancellable cursor opportunity");
+  if (!reconcile.includes("RetireCursor") || !reconcile.includes("RetirePrevious") || !reconcile.includes("state.phase = SurfaceReconcileJobPhase::Ready") || !reconcile.includes("release_surface_reconcile(credit)") || !reconcile.includes("state.candidate.take()")) failures.push("live reconcile publishes or releases credit before exact cursor/previous-owner retirement");
+  const semanticAt = reconcile.indexOf("let semantic = tree_node_semantic_usage(&node)");
+  const cloneAt = reconcile.indexOf("self.seen.insert((parent, node.key.clone()))", semanticAt);
+  if (semanticAt < 0 || cloneAt < 0 || semanticAt > cloneAt || !reconcile.includes("let retained_items = semantic.items.saturating_mul(3)") || !reconcile.includes("let retained_bytes = semantic.bytes.saturating_mul(3)") || !reconcile.includes("include_component(&mut usage, &node.component)") || !reconcile.includes("include_bindings(&mut usage, &node.bindings)") || !reconcile.includes("include_ui_value(&mut usage, args)") || !reconcile.includes("Component::Text") && !reconcile.includes("Text(props)") || !reconcileSource.includes("dynamic_semantic_page_plus_one_faults_before_key_or_record_clone")) failures.push("live reconcile dynamic semantic owners are not credited before the first key/record clone with a cap+1 identity witness");
+  if (!reconcile.includes("pub struct SurfaceReconcileRejected") || !reconcile.includes("pub struct SurfaceReconcileTerminal") || !reconcile.includes("pub fn take_sources(&mut self)") || !reconcile.includes("pub fn resume(mut self") || !reconcile.includes("pub fn close_step(&mut self)") || !reconcile.includes("impl Drop for SurfaceReconcileJob") || !reconcile.includes("impl Drop for SurfaceReconcileRejected") || !reconcile.includes("impl Drop for SurfaceReconcileTerminal") || !reconcile.includes("pub fn take_surface_reconcile_terminal")) failures.push("live reconcile exact rejected/terminal owners lack public take-resume-close and Drop handback");
+  if (!patches.includes("slots: [Option<SurfaceSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS]") || !patches.includes("rejected: [Option<RejectedSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS]") || !patches.includes("terminals: [Option<TerminalSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS]") || !patches.includes("unadmitted: [Option<UnadmittedSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS + 1]") || patches.includes("HashMap") || !patches.includes("pub fn begin(&self, surface: String, tree: ComponentTree)") || !patches.includes("fn begin_generation") || !patches.includes("pub fn reserve_mounted") || !patches.includes("pub fn drive_one(&self)") || !patches.includes("pub fn begin_close_instance") || !patches.includes("pub fn close_step(&self)") || !patches.includes("pub fn take_terminal") || !patches.includes("pub fn take_rejected")) failures.push("mounted PatchTracker is not the fixed admitted public lifecycle authority");
+  if (!patches.includes("ready: VecDeque<(u64, ui_contract::UiPatch)>") || !patches.includes("pending < ready_generation") || !patches.includes("closing_instances: [Option<ClosingInstance>; SURFACE_RECONCILE_ADMISSION_SLOTS]") || !patches.includes("surface_instance(&slot.surface) == Some(closing.instance)") || !patches.includes("slot.instance == Some(closing.instance)") || !patches.includes("state.ready.is_empty()") || !patches.includes("state.deferred.iter().all(Option::is_none)") || !patches.includes("state.unadmitted.iter().all(Option::is_none)")) failures.push("mounted reconcile publication/close order or terminal emptiness omits a retained owner class");
+  if (!patches.includes("Result<u64, (String, ComponentTree)>") || !patches.includes("return Err((surface, tree))") || !patches.includes("slot.tree.is_some()") || !patches.includes("self.begin_generation(surface, tree, generation)") || !patches.includes("MountedReconcileGrant") || !patches.includes("slot.tree = Some(tree)")) failures.push("mounted unadmitted saturation/retry does not retain the exact tree and original generation after pre-materialization reservation");
+  if (!patches.includes("let Some(target_index) = state.terminals.iter().position(Option::is_none) else { return }") || !patches.includes("else {\n                    slot.job = Some(job)") || !patchesSource.includes("terminal_saturation_keeps_fault_job_in_its_surface_until_one_slot_is_freed")) failures.push("mounted local terminal saturation can hand exact work to an unmounted registry");
+  if ((reactor.match(/patches\.drive_one\(\)/g) ?? []).length !== 1 || !reactor.includes("patches.reserve_mounted(surface)") || !reactor.includes("Ok(tree) => grant.commit(tree)") || !reactor.includes("Err(_) => grant.cancel()") || !reactor.includes("patches.defer(surface)") || !reactor.includes("patches.begin_close_instance(*numeric_instance)") || !reactor.includes("patches.close_step()") || !reactor.includes("reconcile_work")) failures.push("production reactor does not mount one pre-reserved reconcile opportunity with deferred-storm and instance-close rearm");
+  for (const fixture of [
+    "mounted_path_advances_one_reconcile_opportunity_per_grant",
+    "cap_plus_one_returns_the_exact_tree_owner",
+    "stale_generation_fault_is_publicly_retrievable",
+    "resize_storm_coalesces_to_one_deferred_surface_owner",
+    "effects_publish_in_admission_order_even_when_later_tree_finishes_first",
+    "actor_close_retires_each_surface_and_old_generation_cannot_resume_reopened_slot",
+    "mounted_reservation_precedes_tree_and_cap_plus_one_returns_exact_owner",
+    "close_retires_ready_deferred_unadmitted_active_and_terminal_owners_without_stale_publish",
+    "terminal_saturation_keeps_fault_job_in_its_surface_until_one_slot_is_freed",
+  ]) if (!patchesSource.includes(`fn ${fixture}`)) failures.push(`live reconcile fixture missing ${fixture}`);
+  for (const fixture of ["identifier_cap_plus_one_returns_the_exact_tree_owner_before_cursor_mutation", "stale_cancel_and_drop_handoff_preserve_public_terminal_ownership"]) if (!reconcileSource.includes(`fn ${fixture}`)) failures.push(`live reconcile fixture missing ${fixture}`);
+  return failures;
+}
+
+function interactivityLiveReconcileSelfTests(repoRoot: string): void {
+  const reconcile = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_UI_RECONCILE_FILE);
+  const patches = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_REACTOR_PATCHES_FILE);
+  const reactor = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_REACTOR_FILE);
+  const mutations: [string, string, string, string][] = [
+    ["slot-cap", reconcile.replace("SURFACE_RECONCILE_ADMISSION_SLOTS: usize = 64", "SURFACE_RECONCILE_ADMISSION_SLOTS: usize = 65"), patches, reactor],
+    ["page-cap", reconcile.replace("SURFACE_RECONCILE_PAGE_BYTES: usize = 16 * 1_024", "SURFACE_RECONCILE_PAGE_BYTES: usize = 32 * 1_024"), patches, reactor],
+    ["missing-byte-preflight", reconcile.replace("next_bytes > SURFACE_RECONCILE_AGGREGATE_BYTES", "false"), patches, reactor],
+    ["cursor-before-reserve", reconcile.replace("let credit = if surface_bytes <= limits.max_identifier_bytes { reserve_surface_reconcile(limits) } else { None };", "let cursor = SurfaceReconcileCursor::new_with_limits(tree, &current, limits);\n        let credit = if surface_bytes <= limits.max_identifier_bytes { reserve_surface_reconcile(limits) } else { None };").replace("        let cursor = SurfaceReconcileCursor::new_with_limits(tree, &current, limits);\n        Ok(Self", "        Ok(Self"), patches, reactor],
+    ["missing-generation", reconcile.replace("cx.generation().0 != state.generation", "false"), patches, reactor],
+    ["missing-cancel", reconcile.replace("if cx.is_cancelled()", "if false"), patches, reactor],
+    ["double-step", reconcile.replace("match cursor.step(current) {", "let _extra = cursor.step(current);\n                match cursor.step(current) {"), patches, reactor],
+    ["missing-terminal-drop", reconcile.replace("impl Drop for SurfaceReconcileTerminal", "impl SurfaceReconcileTerminal"), patches, reactor],
+    ["dynamic-tracker", reconcile, patches.replace("slots: [Option<SurfaceSlot>; SURFACE_RECONCILE_ADMISSION_SLOTS]", "slots: Vec<Option<SurfaceSlot>>"), reactor],
+    ["effect-reorder", reconcile, patches.replace("pending < ready_generation", "false"), reactor],
+    ["instance-close-erasure", reconcile, patches.replaceAll("surface_instance(&slot.surface) == Some(closing.instance)", "false"), reactor],
+    ["tree-clone", reconcile, patches, reactor.replace("Ok(tree) => grant.commit(tree)", "Ok(tree) => grant.commit(tree.clone())")],
+    ["missing-drive", reconcile, patches, reactor.replace("let more = patches.drive_one();", "let more = false;")],
+    ["missing-close", reconcile, patches, reactor.replace("patches.begin_close_instance(*numeric_instance)", "patches.defer(numeric_instance.to_string())")],
+    ["old-diff", reconcile, patches.replace("pub fn begin(&self, surface: String, tree: ComponentTree)", "pub fn diff(&self, surface: String, tree: ComponentTree)"), reactor],
+    ["missing-cap-fixture", reconcile, patches.replace("cap_plus_one_returns_the_exact_tree_owner", "cap_smoke"), reactor],
+    ["semantic-after-clone", reconcile.replace("let semantic = tree_node_semantic_usage(&node);", "let semantic = SurfaceSemanticUsage::default();"), patches, reactor],
+    ["unadmitted-owner-drop", reconcile, patches.replace("return Err((surface, tree))", "return Err((surface, tree.clone()))"), reactor],
+    ["retry-new-generation", reconcile, patches.replaceAll("self.begin_generation(surface, tree, generation)", "self.begin(surface, tree).map(|_| ())"), reactor],
+    ["unmounted-render", reconcile, patches, reactor.replace("patches.reserve_mounted(surface)", "patches.begin(surface, tree)")],
+    ["terminal-overflow-drop", reconcile, patches.replaceAll("slot.job = Some(job)", "drop(job)"), reactor],
+    ["close-ready-omission", reconcile, patches.replaceAll("state.ready.is_empty()", "true"), reactor],
+  ];
+  for (const [name, mutatedReconcile, mutatedPatches, mutatedReactor] of mutations) if (interactivityLiveReconcileFailures(mutatedReconcile, mutatedPatches, mutatedReactor).length === 0) throw new Error(`[verify interactivity] live reconcile self-test ${name} was falsely accepted.`);
+  const failures = interactivityLiveReconcileFailures(reconcile, patches, reactor);
+  if (failures.length !== 0) throw new Error(`[verify interactivity] live reconcile baseline was falsely rejected: ${failures.join("; ")}`);
+}
+
+function interactivityPreparedRasterProducerFailures(preparedSource: string, drawSource: string, gpuSource: string, canvasSource: string, interpreterSource: string, glueSource: string, hostSource: string): string[] {
   const prepared = interactivityProductionSource(preparedSource);
   const canvas = interactivityProductionSource(canvasSource);
-  const canvasQueue = canvas.slice(canvas.indexOf("pub(crate) fn queue_canvas_image_upload"));
+  const canvasQueue = canvas.slice(canvas.indexOf("pub(crate) fn queue_canvas_image_upload_with"), canvas.indexOf("/** Clamps checkerboard"));
+  const interpreter = interactivityProductionSource(interpreterSource);
+  const interpreterSvg = interpreter.slice(interpreter.indexOf("fn resolve_ui_image_svg"), interpreter.indexOf("fn resolve_ui_image_url"));
+  const interpreterResolve = interpreter.slice(interpreter.indexOf("pub(crate) fn resolve_ui_image"), interpreter.indexOf("fn object_contain_rect"));
   const glue = interactivityProductionSource(glueSource);
+  const host = interactivityProductionSource(hostSource);
   const failures: string[] = [];
-  if (!prepared.includes("PREPARED_RASTER_PAGE_BYTES: usize = 16 * 1024") || !prepared.includes("PREPARED_RASTER_PRODUCER_CAPACITY: usize = 256") || !prepared.includes("PREPARED_RASTER_PRODUCER_BYTES: usize = 32 * 1024 * 1024")) failures.push("prepared raster producer lacks fixed page/item/byte credits");
-  if (!prepared.includes("slots: Vec<PreparedRasterPage>") || !prepared.includes("slots: Vec::with_capacity(page_capacity)") || !prepared.includes("source.split_off(start).into_boxed_slice()") || prepared.includes("source.clone()")) failures.push("prepared raster pages grow or clone outside exact pre-admission");
-  if (!prepared.includes("page_capacity.checked_add(5)") || !prepared.includes("key.capacity().checked_mul(2)") || !prepared.includes("source.capacity().checked_add(byte_len)") || !prepared.includes("page_capacity.checked_mul(size_of::<PreparedRasterPage>())")) failures.push("prepared raster source and derived key/page owners are not jointly credited");
-  if (!prepared.includes("self.slots = Vec::new()") || !prepared.includes("*key = String::new()") || !prepared.includes("self.key = String::new()") || !prepared.includes("self.slots.capacity() == 0") || !prepared.includes("self.key_released && self.credit.is_none()")) failures.push("prepared raster page/key backing can drop before retained retirement and credit release");
-  if (!prepared.includes("if self.frame_generation != Some(expected_generation)") || prepared.indexOf("if self.frame_generation != Some(expected_generation)") > prepared.indexOf("self.source.split_off(start)")) failures.push("stale prepared raster generation can consume source bytes");
+  for (const cap of [
+    "PREPARED_RASTER_PAGE_BYTES: usize = 16 * 1024",
+    "PREPARED_RASTER_ITEM_BYTES: usize = 16 * 1024 * 1024",
+    "PREPARED_RASTER_PRODUCER_CAPACITY: usize = 256",
+    "PREPARED_RASTER_PRODUCER_ITEMS: usize = 4_096",
+    "PREPARED_RASTER_PRODUCER_BYTES: usize = 32 * 1024 * 1024",
+  ]) if (!prepared.includes(cap)) failures.push(`prepared raster fixed credit changed or disappeared: ${cap}`);
+  if (!prepared.includes("slots: Vec<PreparedRasterPage>") || !prepared.includes("slots: Vec::with_capacity(claim.page_capacity)") || !prepared.includes("backing: Vec<u8>") || !prepared.includes("retained_source: Vec<u8>") || !prepared.includes("pages.backing = std::mem::take(&mut self.source)") || prepared.includes("source.split_off(") || prepared.includes("pixels.to_vec()") || prepared.includes("source.clone()")) failures.push("prepared raster page publication does not retain one exact codec backing and its encoded source owner");
+  if (!prepared.includes("pub fn try_reserve_source") || !prepared.includes("pub fn claim_with_retained") || !prepared.includes("source_bytes.checked_mul(2)") || !prepared.includes("source_peak_bytes.checked_add(key_bytes)") || !prepared.includes("page_capacity.checked_add(8)") || !prepared.includes("key.capacity().checked_mul(2)") || !prepared.includes("page_capacity.checked_mul(size_of::<PreparedRasterPage>())") || !prepared.includes("self.source_peak_bytes.checked_add(byte_len)") || !prepared.includes("retained_source.capacity() > self.source_bytes") || !prepared.includes("ledger.resize(credit, items, bytes)")) failures.push("prepared raster simultaneous source, decoded backing, key, page-slot, item, and byte owners are not jointly credited before materialization");
+  if (!prepared.includes("retire_backing_step") || !prepared.includes("self.backing = Vec::new()") || !prepared.includes("self.source = Vec::new()") || !prepared.includes("self.retained_source = Vec::new()") || !prepared.includes("self.key = String::new()") || !prepared.includes("self.slots.capacity() == 0") || !prepared.includes("self.backing.capacity() == 0") || !prepared.includes("self.retained_source.capacity() == 0") || !prepared.includes("self.key_released && self.credit.is_none()")) failures.push("prepared raster backing/source/key/page owners can release after ledger credit or outside retained retirement");
+  if (!prepared.includes("if self.frame_generation != Some(expected_generation)") || prepared.indexOf("if self.frame_generation != Some(expected_generation)") > prepared.indexOf("pages.backing = std::mem::take(&mut self.source)")) failures.push("stale prepared raster generation can consume source bytes");
   if (!prepared.includes("raster_producers.front_mut()") || !prepared.includes("return StepOutcome::Yield") || !prepared.includes("producer.begin_close()") || !prepared.includes("producer.close_step()")) failures.push("prepared raster job does not advance or retire one retained producer opportunity");
-  if (!canvas.includes("slots: Box<[Option<PreparedRasterProducer>; RASTER_UPLOADS_PER_SURFACE_CAPACITY]>") || !canvas.includes("fn pop_front(&mut self)") || !canvasQueue.includes("surface.queue.is_full()") || canvasQueue.indexOf("surface.queue.is_full()") > canvasQueue.indexOf("decode_canvas_image(data_url)")) failures.push("Canvas raster admission is not a fixed FIFO preflight before decode");
-  if (canvas.includes("pixels[..expected].to_vec()") || canvas.includes("pending_raster_uploads: Vec") || canvas.includes("PendingRasterUpload {")) failures.push("Canvas raster path reintroduced a contiguous prepared-pixel clone or growable queue");
-  if (!canvas.includes("PreparedRasterProducer::try_admit(key, pixels, width, height)") || !glue.includes("producer.bind_frame_generation(input.preview_generation)") || !glue.includes("input.raster_producers.push_back(producer)")) failures.push("Canvas producer is not moved by value with its frame generation witness");
+  const producerStep = prepared.slice(prepared.indexOf("impl InteractiveJob for PreparedRenderJob"));
+  if (!producerStep.includes("if cx.should_yield()") || !producerStep.includes("cx.consume_fuel(1)") || !producerStep.includes("producer.step(cx.generation().0)") || producerStep.indexOf("if cx.should_yield()") > producerStep.indexOf("producer.step(cx.generation().0)") || producerStep.indexOf("cx.consume_fuel(1)") > producerStep.indexOf("producer.step(cx.generation().0)")) failures.push("prepared raster page advancement bypasses StepContext fuel or deadline");
+  if (!canvas.includes("slots: Box<[Option<PreparedRasterProducer>; RASTER_UPLOADS_PER_SURFACE_CAPACITY]>") || !canvas.includes("fn checkout_front(&mut self)") || !canvas.includes("struct PendingRasterCheckedOut") || !canvas.includes("surface.queue.hand_back(self.queue)")) failures.push("Canvas raster FIFO checkout lacks exact retained handback");
+  const reserveAt = canvasQueue.indexOf("PreparedRasterReservation::try_reserve_source");
+  const dimensionAt = canvasQueue.indexOf("dimensions()");
+  const claimAt = canvasQueue.indexOf("reservation.claim_with_retained(width, height, retained_source)");
+  const decodeAt = canvasQueue.indexOf("decode(&retained_source)");
+  if (reserveAt < 0 || dimensionAt < 0 || claimAt < 0 || decodeAt < 0 || !(reserveAt < dimensionAt && dimensionAt < claimAt && claimAt < decodeAt) || canvasQueue.includes("digest_pixels(")) failures.push("Canvas raster reservation/claim is not before dimension, hash, and RGBA materialization");
+  if (canvasQueue.includes("pixels[..expected].to_vec()") || canvas.includes("pending_raster_uploads: Vec") || canvas.includes("PendingRasterUpload {") || canvasQueue.includes("pixels.to_vec()")) failures.push("Canvas raster path reintroduced a contiguous prepared-pixel clone or growable queue");
+  if (!canvasQueue.includes("reservation.finalize(pixels, retained_source, width, height)") || !canvasQueue.includes("reject_with_retained") || canvasQueue.includes("PreparedRasterReservation::published_key") || canvasQueue.includes("let src_key") || !glue.includes("producer.bind_frame_generation(input.preview_generation)") || !glue.includes("input.raster_producers.push_back(producer)") || !glue.includes("checked_out.take()")) failures.push("Canvas producer does not move exact source/key owners once with checkout and frame generation witnesses");
+  const svgQueueAt = interpreterSvg.indexOf("queue_canvas_image_upload_with");
+  const svgParseAt = interpreterSvg.indexOf("parse_svg_data_url_bytes(src)");
+  if (interpreter.includes("encode_rgba_png_data_url") || interpreter.includes("pixels.to_vec()") || interpreter.includes("ui_image_digest") || interpreter.includes("UI_IMAGE_SVG_CACHE") || !interpreter.includes("queue_canvas_image_upload_with") || !interpreter.includes("queue_canvas_image_upload_sized") || !interpreter.includes("UI_IMAGE_URL_CACHE.with(|cell| cell.borrow().get(id).cloned())") || svgQueueAt < 0 || svgParseAt < 0 || svgQueueAt > svgParseAt || !interpreterSvg.includes("Ok((measured.0, measured.1, bytes))") || !interpreterSvg.includes("|bytes|") || interpreterResolve.includes("parse_svg_data_url_bytes(src)")) failures.push("Interpreter raster routes parse, digest, clone, or drop source ownership before the stable prepared-key reservation");
+  if (!canvas.includes("pub struct PendingRasterAuthorityClose") || !canvas.includes("PENDING_RASTER_CLOSE_OWNER") || !canvas.includes("pub fn begin_pending_raster_authority_close") || !host.includes("raster_uploads: Option<crate::scenes::PendingRasterAuthorityClose>") || !host.includes("begin_pending_raster_authority_close()") || !host.includes("raster_uploads.terminal_is_empty()")) failures.push("pending raster authority is not registered in exact realm close ordering");
   if (!gpuSource.includes("PreparedRenderUpload::RasterPages") || !gpuSource.includes("pixels.frame_generation() != packet.preview_generation()") || !drawSource.includes("Self::Pages(pixels) => pixels.page_for_row(row)")) failures.push("paged producer handoff is not consumed directly by the accepted raster upload cursor");
   const fixtures = [
     "paged_raster_producer_advances_one_page_and_moves_page_identity",
     "stale_generation_does_not_consume_a_prepared_raster_page",
-    "raster_cap_plus_one_rejects_the_exact_source_before_page_allocation",
-    "raster_process_bytes_plus_one_returns_the_exact_reserved_backing",
+    "raster_item_bytes_exact_and_plus_one_are_claimed_before_materialization",
+    "raster_ledger_exact_item_and_generation_slot_caps_reject_plus_one",
     "raster_credit_epoch_rejects_aba_and_cancel_retires_one_owner_per_grant",
+    "zero_fuel_and_expired_deadline_advance_no_raster_page_or_allocation",
     "pending_raster_ring_is_fixed_fifo_and_returns_cap_plus_one_owner",
+    "checked_out_drop_hands_back_exact_fifo_owner_and_rejects_aba",
+    "admission_saturation_runs_no_hash_dimension_or_pixel_materialization",
+    "realm_close_retires_pending_rasters_before_terminal_and_allows_clean_reopen_fixture",
+    "raster_simultaneous_source_decode_peak_exact_and_plus_one",
+    "retained_codec_source_moves_once_and_retires_one_page_per_governed_step",
+    "inline_svg_saturation_rejects_before_parse_or_source_copy",
   ];
-  for (const fixture of fixtures) if (!preparedSource.includes(fixture) && !canvasSource.includes(fixture)) failures.push(`prepared raster fixture missing ${fixture}`);
+  for (const fixture of fixtures) if (!preparedSource.includes(fixture) && !canvasSource.includes(fixture) && !interpreterSource.includes(fixture)) failures.push(`prepared raster fixture missing ${fixture}`);
   return failures;
 }
 
 function interactivityPreparedRasterProducerSelfTests(): void {
-  const fixtures = `paged_raster_producer_advances_one_page_and_moves_page_identity stale_generation_does_not_consume_a_prepared_raster_page raster_cap_plus_one_rejects_the_exact_source_before_page_allocation raster_process_bytes_plus_one_returns_the_exact_reserved_backing raster_credit_epoch_rejects_aba_and_cancel_retires_one_owner_per_grant`;
-  const prepared = `const PREPARED_RASTER_PAGE_BYTES: usize = 16 * 1024; const PREPARED_RASTER_PRODUCER_CAPACITY: usize = 256; const PREPARED_RASTER_PRODUCER_BYTES: usize = 32 * 1024 * 1024; slots: Vec<PreparedRasterPage> slots: Vec::with_capacity(page_capacity) page_capacity.checked_add(5) page_capacity.checked_mul(size_of::<PreparedRasterPage>()) key.capacity().checked_mul(2) source.capacity().checked_add(byte_len) self.slots = Vec::new() *key = String::new() self.key = String::new() self.slots.capacity() == 0 self.key_released && self.credit.is_none() if self.frame_generation != Some(expected_generation) { return Fault } self.source.split_off(start).into_boxed_slice() raster_producers.front_mut() producer.begin_close() producer.close_step() return StepOutcome::Yield ${fixtures}`;
-  const canvasFixture = "pending_raster_ring_is_fixed_fifo_and_returns_cap_plus_one_owner";
-  const canvas = `slots: Box<[Option<PreparedRasterProducer>; RASTER_UPLOADS_PER_SURFACE_CAPACITY]> fn pop_front(&mut self) pub(crate) fn queue_canvas_image_upload surface.queue.is_full() decode_canvas_image(data_url) PreparedRasterProducer::try_admit(key, pixels, width, height) ${canvasFixture}`;
-  const glue = "producer.bind_frame_generation(input.preview_generation) input.raster_producers.push_back(producer)";
+  const preparedFixtures = `paged_raster_producer_advances_one_page_and_moves_page_identity stale_generation_does_not_consume_a_prepared_raster_page raster_item_bytes_exact_and_plus_one_are_claimed_before_materialization raster_ledger_exact_item_and_generation_slot_caps_reject_plus_one raster_credit_epoch_rejects_aba_and_cancel_retires_one_owner_per_grant zero_fuel_and_expired_deadline_advance_no_raster_page_or_allocation raster_simultaneous_source_decode_peak_exact_and_plus_one retained_codec_source_moves_once_and_retires_one_page_per_governed_step`;
+  const canvasFixtures = `pending_raster_ring_is_fixed_fifo_and_returns_cap_plus_one_owner checked_out_drop_hands_back_exact_fifo_owner_and_rejects_aba admission_saturation_runs_no_hash_dimension_or_pixel_materialization realm_close_retires_pending_rasters_before_terminal_and_allows_clean_reopen_fixture inline_svg_saturation_rejects_before_parse_or_source_copy`;
+  const prepared = `const PREPARED_RASTER_PAGE_BYTES: usize = 16 * 1024; const PREPARED_RASTER_ITEM_BYTES: usize = 16 * 1024 * 1024; const PREPARED_RASTER_PRODUCER_CAPACITY: usize = 256; const PREPARED_RASTER_PRODUCER_ITEMS: usize = 4_096; const PREPARED_RASTER_PRODUCER_BYTES: usize = 32 * 1024 * 1024; slots: Vec<PreparedRasterPage> slots: Vec::with_capacity(claim.page_capacity) backing: Vec<u8> retained_source: Vec<u8> pub fn try_reserve_source pub fn claim_with_retained source_bytes.checked_mul(2) source_peak_bytes.checked_add(key_bytes) page_capacity.checked_add(8) key.capacity().checked_mul(2) page_capacity.checked_mul(size_of::<PreparedRasterPage>()) self.source_peak_bytes.checked_add(byte_len) retained_source.capacity() > self.source_bytes ledger.resize(credit, items, bytes) retire_backing_step self.backing = Vec::new() self.source = Vec::new() self.retained_source = Vec::new() self.key = String::new() self.slots.capacity() == 0 self.backing.capacity() == 0 self.retained_source.capacity() == 0 self.key_released && self.credit.is_none() if self.frame_generation != Some(expected_generation) { return Fault } pages.backing = std::mem::take(&mut self.source) raster_producers.front_mut() producer.begin_close() producer.close_step() return StepOutcome::Yield impl InteractiveJob for PreparedRenderJob { if cx.should_yield() { return StepOutcome::Yield } cx.consume_fuel(1); producer.step(cx.generation().0) } ${preparedFixtures}`;
+  const canvas = `slots: Box<[Option<PreparedRasterProducer>; RASTER_UPLOADS_PER_SURFACE_CAPACITY]> fn checkout_front(&mut self) struct PendingRasterCheckedOut surface.queue.hand_back(self.queue) pub(crate) fn queue_canvas_image_upload_with PreparedRasterReservation::try_reserve_source dimensions() reservation.claim_with_retained(width, height, retained_source) decode(&retained_source) reject_with_retained reservation.finalize(pixels, retained_source, width, height) pub struct PendingRasterAuthorityClose PENDING_RASTER_CLOSE_OWNER pub fn begin_pending_raster_authority_close ${canvasFixtures}`;
+  const interpreter = "queue_canvas_image_upload_with queue_canvas_image_upload_sized UI_IMAGE_URL_CACHE.with(|cell| cell.borrow().get(id).cloned()) fn resolve_ui_image_svg { queue_canvas_image_upload_with parse_svg_data_url_bytes(src) Ok((measured.0, measured.1, bytes)) |bytes| } fn resolve_ui_image_url pub(crate) fn resolve_ui_image { return resolve_ui_image_svg(id, src); } fn object_contain_rect";
+  const glue = "checked_out.take() producer.bind_frame_generation(input.preview_generation) input.raster_producers.push_back(producer)";
+  const host = "raster_uploads: Option<crate::scenes::PendingRasterAuthorityClose> begin_pending_raster_authority_close() raster_uploads.terminal_is_empty()";
   const gpu = "PreparedRenderUpload::RasterPages pixels.frame_generation() != packet.preview_generation()";
   const draw = "Self::Pages(pixels) => pixels.page_for_row(row)";
   const mutations = [
-    ["page-cap", prepared.replace("16 * 1024", "64 * 1024"), canvas, glue],
-    ["unreserved-derived-key", prepared.replace("key.capacity().checked_mul(2)", "key.capacity()"), canvas, glue],
-    ["unreserved-page-slots", prepared.replace("page_capacity.checked_mul(size_of::<PreparedRasterPage>())", "0"), canvas, glue],
-    ["dynamic-pages", prepared.replace("Vec::with_capacity(page_capacity)", "Vec::new()"), canvas, glue],
-    ["whole-clone", `${prepared} source.clone()`, canvas, glue],
-    ["stale-after-consume", prepared.replace("if self.frame_generation != Some(expected_generation) { return Fault } self.source.split_off(start)", "self.source.split_off(start) if self.frame_generation != Some(expected_generation) { return Fault }"), canvas, glue],
-    ["growable-canvas-queue", prepared, canvas.replace("slots: Box<[Option<PreparedRasterProducer>; RASTER_UPLOADS_PER_SURFACE_CAPACITY]>", "pending_raster_uploads: Vec<PendingRasterUpload>"), glue],
-    ["decode-before-cap", prepared, canvas.replace("surface.queue.is_full() decode_canvas_image(data_url)", "decode_canvas_image(data_url) surface.queue.is_full()"), glue],
-    ["generation-erasure", prepared, canvas, glue.replace("producer.bind_frame_generation(input.preview_generation)", "drop(input.preview_generation)")],
-    ["contiguous-clone", prepared, `${canvas} pixels[..expected].to_vec()`, glue],
-    ["missing-fixture", prepared.replace("raster_credit_epoch_rejects_aba_and_cancel_retires_one_owner_per_grant", ""), canvas, glue],
-    ["missing-bytes-fixture", prepared.replace("raster_process_bytes_plus_one_returns_the_exact_reserved_backing", ""), canvas, glue],
-    ["ordinary-page-slot-drop", prepared.replace("self.slots = Vec::new()", "self.slots.clear()"), canvas, glue],
-    ["ordinary-key-backing-drop", prepared.replace("*key = String::new()", "key.clear()"), canvas, glue],
+    ["page-cap", prepared.replace("PREPARED_RASTER_PAGE_BYTES: usize = 16 * 1024", "PREPARED_RASTER_PAGE_BYTES: usize = 64 * 1024"), canvas, interpreter, glue, host],
+    ["item-byte-cap", prepared.replace("PREPARED_RASTER_ITEM_BYTES: usize = 16 * 1024 * 1024", "PREPARED_RASTER_ITEM_BYTES: usize = 32 * 1024 * 1024"), canvas, interpreter, glue, host],
+    ["generation-slot-cap", prepared.replace("PREPARED_RASTER_PRODUCER_CAPACITY: usize = 256", "PREPARED_RASTER_PRODUCER_CAPACITY: usize = 512"), canvas, interpreter, glue, host],
+    ["aggregate-item-cap", prepared.replace("PREPARED_RASTER_PRODUCER_ITEMS: usize = 4_096", "PREPARED_RASTER_PRODUCER_ITEMS: usize = 8_192"), canvas, interpreter, glue, host],
+    ["aggregate-byte-cap", prepared.replace("PREPARED_RASTER_PRODUCER_BYTES: usize = 32 * 1024 * 1024", "PREPARED_RASTER_PRODUCER_BYTES: usize = 64 * 1024 * 1024"), canvas, interpreter, glue, host],
+    ["unreserved-source", prepared.replace("source_bytes.checked_mul(2)", "Some(source_bytes)"), canvas, interpreter, glue, host],
+    ["source-credit-erased-on-resize", prepared.replace("self.source_peak_bytes.checked_add(byte_len)", "Some(byte_len)"), canvas, interpreter, glue, host],
+    ["unreserved-page-slots", prepared.replace("page_capacity.checked_mul(size_of::<PreparedRasterPage>())", "Some(0)"), canvas, interpreter, glue, host],
+    ["dynamic-pages", prepared.replace("Vec::with_capacity(claim.page_capacity)", "Vec::new()"), canvas, interpreter, glue, host],
+    ["whole-clone", `${prepared} source.clone()`, canvas, interpreter, glue, host],
+    ["stale-after-consume", prepared.replace("if self.frame_generation != Some(expected_generation) { return Fault }", "pages.backing = std::mem::take(&mut self.source); if self.frame_generation != Some(expected_generation) { return Fault }"), canvas, interpreter, glue, host],
+    ["zero-fuel-after-step", prepared.replace("if cx.should_yield() { return StepOutcome::Yield } cx.consume_fuel(1); producer.step(cx.generation().0)", "producer.step(cx.generation().0); if cx.should_yield() { return StepOutcome::Yield } cx.consume_fuel(1)"), canvas, interpreter, glue, host],
+    ["growable-canvas-queue", prepared, canvas.replace("slots: Box<[Option<PreparedRasterProducer>; RASTER_UPLOADS_PER_SURFACE_CAPACITY]>", "pending_raster_uploads: Vec<PendingRasterUpload>"), interpreter, glue, host],
+    ["decode-before-reserve", prepared, canvas.replace("PreparedRasterReservation::try_reserve_source dimensions() reservation.claim_with_retained(width, height, retained_source) decode(&retained_source)", "dimensions() decode(&retained_source) PreparedRasterReservation::try_reserve_source reservation.claim_with_retained(width, height, retained_source)"), interpreter, glue, host],
+    ["hash-scan", prepared, canvas.replace("decode(&retained_source)", "digest_pixels(source_identity) decode(&retained_source)"), interpreter, glue, host],
+    ["inline-svg-pre-reservation-parse", prepared, canvas, interpreter.replace("queue_canvas_image_upload_with parse_svg_data_url_bytes(src)", "parse_svg_data_url_bytes(src) queue_canvas_image_upload_with"), glue, host],
+    ["inline-svg-whole-digest", prepared, canvas, `${interpreter} ui_image_digest(src.as_bytes())`, glue, host],
+    ["checkout-erasure", prepared, canvas.replace("surface.queue.hand_back(self.queue)", "drop(self.queue)"), interpreter, glue, host],
+    ["generation-erasure", prepared, canvas, interpreter, glue.replace("producer.bind_frame_generation(input.preview_generation)", "drop(input.preview_generation)"), host],
+    ["contiguous-clone", prepared, canvas.replace("decode(&retained_source)", "pixels[..expected].to_vec() decode(&retained_source)"), interpreter, glue, host],
+    ["interpreter-roundtrip", prepared, canvas, `${interpreter} encode_rgba_png_data_url pixels.to_vec()`, glue, host],
+    ["missing-item-cap-fixture", prepared.replace("raster_item_bytes_exact_and_plus_one_are_claimed_before_materialization", ""), canvas, interpreter, glue, host],
+    ["missing-ledger-cap-fixture", prepared.replace("raster_ledger_exact_item_and_generation_slot_caps_reject_plus_one", ""), canvas, interpreter, glue, host],
+    ["missing-zero-budget-fixture", prepared.replace("zero_fuel_and_expired_deadline_advance_no_raster_page_or_allocation", ""), canvas, interpreter, glue, host],
+    ["ordinary-backing-drop", prepared.replace("self.backing = Vec::new()", "self.backing.clear()"), canvas, interpreter, glue, host],
+    ["ordinary-retained-source-drop", prepared.replace("self.retained_source = Vec::new()", "self.retained_source.clear()"), canvas, interpreter, glue, host],
+    ["rejected-source-owner-erasure", prepared, canvas.replace("reject_with_retained", "reject"), interpreter, glue, host],
+    ["redundant-publication-key-clone", prepared, canvas.replace("reservation.finalize", "PreparedRasterReservation::published_key reservation.finalize"), interpreter, glue, host],
+    ["realm-close-erasure", prepared, canvas.replace("pub fn begin_pending_raster_authority_close", "fn begin_pending_raster_authority_close"), interpreter, glue, host],
+    ["host-close-erasure", prepared, canvas, interpreter, glue, host.replace("raster_uploads.terminal_is_empty()", "true")],
   ] as const;
-  for (const [name, mutatedPrepared, mutatedCanvas, mutatedGlue] of mutations) if (interactivityPreparedRasterProducerFailures(mutatedPrepared, draw, gpu, mutatedCanvas, mutatedGlue).length === 0) throw new Error(`[verify interactivity] prepared raster producer self-test ${name} was falsely accepted.`);
-  if (interactivityPreparedRasterProducerFailures(prepared, draw, gpu, canvas, glue).length !== 0) throw new Error("[verify interactivity] prepared raster producer self-test bounded pages were falsely rejected.");
+  for (const [name, mutatedPrepared, mutatedCanvas, mutatedInterpreter, mutatedGlue, mutatedHost] of mutations) if (interactivityPreparedRasterProducerFailures(mutatedPrepared, draw, gpu, mutatedCanvas, mutatedInterpreter, mutatedGlue, mutatedHost).length === 0) throw new Error(`[verify interactivity] prepared raster producer self-test ${name} was falsely accepted.`);
+  const baselineFailures = interactivityPreparedRasterProducerFailures(prepared, draw, gpu, canvas, interpreter, glue, host);
+  if (baselineFailures.length !== 0) throw new Error(`[verify interactivity] prepared raster producer self-test bounded pages were falsely rejected: ${baselineFailures.join("; ")}`);
 }
 
 function interactivityShardExecutorFailures(executorSource: string, shardSource: string): string[] {
@@ -5129,6 +5918,259 @@ function interactivityArtifactSubmitSelfTests(): void {
   if (interactivityArtifactSubmitFailures(goodEngine, goodArtifact).length !== 0) throw new Error("[verify interactivity] ArtifactHandle submit self-test retained authority was falsely rejected.");
 }
 
+function interactivityDatabaseCapabilityOpenFailures(engineSource: string): string[] {
+  const engine = interactivityProductionSource(engineSource);
+  const capability = engine.slice(engine.indexOf("//#region 🔖️CapabilityOpen"), engine.indexOf("//#endregion 🔖️CapabilityOpen"));
+  const openWith = engine.slice(engine.indexOf("async fn open_with"), engine.indexOf("pub async fn create_document", engine.indexOf("async fn open_with")));
+  const waits = engine.match(/\bdb_actor::block_on\s*\(/g)?.length ?? 0;
+  const failures: string[] = [];
+  if (waits !== 4 || engine.includes("db_actor::block_on(storage.capabilities())")) failures.push("DB retained open packets did not reduce production engine waits to exactly four");
+  if (!openWith.includes("Self::open_retained(pool.clone(), storage)") || !openWith.includes("capability_probe.await?.into_parts()") || !openWith.includes("Err(rejected) => return Err(rejected.close_and_take_error())") || openWith.includes("rejected.into_parts().0") || openWith.includes("storage.capabilities().await")) failures.push("Database open does not consume the retained probe or explicitly close the exact rejected storage owner");
+  for (const required of [
+    "const DATABASE_CAPABILITY_OPEN_SLOTS: usize = 64",
+    "const DATABASE_CAPABILITY_OPEN_ITEMS: u64 = 8",
+    "const DATABASE_CAPABILITY_OPEN_BYTES: u64 = 16 * 1024",
+    "DATABASE_CAPABILITY_OPEN_TOTAL_ITEMS",
+    "DATABASE_CAPABILITY_OPEN_TOTAL_BYTES",
+    "DatabaseCapabilityOpenAdmission::try_claim(DATABASE_CAPABILITY_OPEN_ITEMS, DATABASE_CAPABILITY_OPEN_BYTES)",
+    "database_capability_open_registry",
+  ]) if (!capability.includes(required)) failures.push(`database capability-open fixed admission missing ${required}`);
+  for (const phase of ["Handoff", "Poll", "RetainWork", "DrainWork", "ReleaseWork", "RetainResult", "Publish", "Terminal"])
+    if (!capability.includes(phase)) failures.push(`database capability-open retained phase missing ${phase}`);
+  const poll = capability.slice(capability.indexOf("fn poll_backend_once"), capability.indexOf("fn stage_terminal"));
+  if (!poll.includes("work.poll(&mut context)") || !poll.includes("std::panic::catch_unwind") || poll.includes("loop {") || poll.includes("while ")) failures.push("database capability-open backend work is not one panic-safe poll per I/O-lane grant");
+  const pendingPoll = poll.slice(poll.indexOf("Ok(std::task::Poll::Pending)"), poll.indexOf("Ok(std::task::Poll::Ready"));
+  const readyPoll = poll.slice(poll.indexOf("Ok(std::task::Poll::Ready"), poll.indexOf("Err(_)"));
+  const faultPoll = poll.slice(poll.indexOf("Err(_)"));
+  const pollTransition = capability.slice(capability.indexOf("fn publish_poll_terminal"), capability.indexOf("fn poll_backend_once"));
+  if (
+    !pollTransition.includes("self.cancelled.store(true")
+    || !pollTransition.includes("self.terminal_error.lock()")
+    || !pollTransition.includes("self.set_phase(DatabaseCapabilityOpenPhase::RetainWork)")
+    || !pollTransition.includes("fn release_terminal_poll")
+    || pollTransition.indexOf("self.polling.store(false") > pollTransition.indexOf("self.schedule_cleanup()")
+    || pendingPoll.indexOf("Some(work)") < 0
+    || pendingPoll.indexOf("Some(work)") > pendingPoll.indexOf("self.poll_terminal_if_cancelled_or_stale()")
+    || pendingPoll.indexOf("Some(work)") > pendingPoll.indexOf("self.polling.store(false")
+    || readyPoll.indexOf("Some(work)") < 0
+    || readyPoll.indexOf("Some(output)") < 0
+    || readyPoll.indexOf("Some(work)") > readyPoll.indexOf("self.set_phase(DatabaseCapabilityOpenPhase::RetainWork)")
+    || readyPoll.indexOf("Some(output)") > readyPoll.indexOf("self.set_phase(DatabaseCapabilityOpenPhase::RetainWork)")
+    || readyPoll.indexOf("self.set_phase(DatabaseCapabilityOpenPhase::RetainWork)") > readyPoll.indexOf("self.polling.store(false")
+    || faultPoll.indexOf("Some(work)") < 0
+    || faultPoll.indexOf("Some(work)") > faultPoll.indexOf("self.publish_poll_terminal(")
+    || faultPoll.indexOf("self.publish_poll_terminal(") > faultPoll.indexOf("self.release_terminal_poll()")
+    || faultPoll.includes("self.polling.store(false")
+  ) failures.push("database capability-open poll transition re-enables wake before exact work/result/fault/phase publication");
+  const drive = capability.slice(capability.indexOf("fn drive_one"), capability.indexOf("fn poll_backend_once"));
+  if (!drive.includes("match self.phase()") || !drive.includes("DatabaseCapabilityOpenPhase::Handoff") || !drive.includes("DatabaseCapabilityOpenPhase::Poll") || !drive.includes("DatabaseCapabilityOpenPhase::Publish")) failures.push("database capability-open callback does not persistently separate handoff, poll, retention, and publication");
+  const handoff = drive.slice(drive.indexOf("DatabaseCapabilityOpenPhase::Handoff"), drive.indexOf("DatabaseCapabilityOpenPhase::Poll"));
+  if (handoff.includes(".poll(")) failures.push("database capability-open handoff grant also polls backend work");
+  const publish = capability.slice(capability.indexOf("fn publish_staged"), capability.indexOf("fn roots_are_empty"));
+  if (!publish.includes("self.cancelled.load") || !publish.includes("!self.is_current()") || publish.indexOf("self.cancelled.load") > publish.indexOf("self.complete(") || publish.indexOf("!self.is_current()") > publish.indexOf("self.complete(")) failures.push("database capability-open publication does not revalidate cancellation and admission generation immediately before result exposure");
+  const retryStart = capability.indexOf("fn arm_retry");
+  const retryEnd = capability.indexOf("fn drive_one", retryStart);
+  const retry = capability.slice(retryStart, retryEnd < 0 ? capability.length : retryEnd);
+  if (!capability.includes("self.pool.try_submit(Lane::Io, job)") || !capability.includes("error.into_job()") || !retry.includes("self.pool.callback_at") || !retry.includes("advance_retry_generation_observed_once") || !retry.includes("compare_exchange(current, generation") || !retry.includes("observed == state.retry_generation.load") || retry.includes("loop {") || !capability.includes("generation != self.generation")) failures.push("database capability-open quiet saturation/retry lacks exact retained job, generation, or one bounded compare-exchange opportunity");
+  for (const required of [
+    "pub struct DatabaseCapabilityOpenRejected",
+    "pub fn take_storage(&mut self) -> Option<Arc<db_storage::DbBackend>>",
+    "pub fn retry(mut self, pool: Arc<WorkerPool>)",
+    "pub fn close_step(&mut self) -> DatabaseCapabilityOpenCloseStep",
+    "pub fn close_and_take_error(mut self) -> DbError",
+    "pub struct DatabaseCapabilityOpenTerminalHandle",
+    "pub struct DatabaseCapabilityOpenTerminalResult",
+    "pub fn take_database_capability_open_terminal",
+    "pub fn take_next_database_capability_open_terminal",
+    "pub fn take_result(&self) -> Option<DatabaseCapabilityOpenTerminalResult>",
+    "terminal_result_checked_out",
+    "pub fn resume(self) -> Result<DatabaseCapabilityOpenFuture, Self>",
+    "pub fn close_step(&self) -> DatabaseCapabilityOpenCloseStep",
+    "pub fn terminal_is_empty(&self) -> bool",
+  ]) if (!capability.includes(required)) failures.push(`database capability-open exact rejection/terminal authority missing ${required}`);
+  if (!capability.includes("DatabaseCapabilityOpenResult { storage, capabilities }") || !capability.includes("terminal_work") || !capability.includes("terminal_result") || !capability.includes("terminal_completion") || !capability.includes("roots_are_empty")) failures.push("database capability-open does not retain exact backend/output roots through public terminal cleanup");
+  for (const forbidden of ["db_actor::block_on", "semio_framework_async::block_on", "WorkerPool::new(", "thread::spawn", "open_inline"])
+    if (capability.includes(forbidden)) failures.push(`database capability-open retained route contains ${forbidden}`);
+  for (const fixture of [
+    "database_capability_open_fixed_admission_cap_plus_one_and_generation_aba",
+    "database_capability_open_success_returns_exact_storage_owner_and_scalar",
+    "database_capability_open_cancel_and_stale_generation_retain_exact_owner_for_public_close",
+    "database_capability_open_saturation_and_shutdown_keep_retry_job_and_public_terminal",
+    "database_capability_open_poll_publication_precedes_wake_rearm_at_every_boundary",
+    "database_capability_open_post_ready_cancel_and_stale_retain_public_exact_result",
+    "database_capability_open_rejection_take_retry_and_close_preserve_exact_storage",
+    "database_capability_open_terminal_result_take_resume_and_checked_out_drop_handback",
+    "database_capability_open_retry_contention_is_one_compare_exchange_per_callback",
+  ]) if (!engineSource.includes(fixture)) failures.push(`database capability-open fixture missing ${fixture}`);
+  const wakeFixtureStart = engineSource.lastIndexOf("async fn database_capability_open_poll_publication_precedes_wake_rearm_at_every_boundary");
+  const wakeFixtureEnd = engineSource.indexOf("#[semio_framework_async_macros::async_test]", wakeFixtureStart + 1);
+  const wakeFixture = wakeFixtureStart < 0 ? "" : engineSource.slice(wakeFixtureStart, wakeFixtureEnd < 0 ? engineSource.length : wakeFixtureEnd);
+  if (
+    !engineSource.includes("slots: [Option<semio_framework_async::Job>; 8]")
+    || !wakeFixture.includes("controlled_submit_hook")
+    || !wakeFixture.includes("state.schedule();")
+    || wakeFixture.includes("state.scheduled.store(true")
+    || !wakeFixture.includes("let initial =")
+    || !wakeFixture.includes("initial();")
+    || !wakeFixture.includes("let successor =")
+    || !wakeFixture.includes("successor();")
+    || !wakeFixture.includes("wake-after-release cannot admit a duplicate successor")
+    || !wakeFixture.includes("Pending is repolled only by its next governed successor")
+    || !wakeFixture.includes("terminal Ready/panic successor advances cleanup without repolling")
+    || !wakeFixture.includes("terminal_work")
+    || !wakeFixture.includes("staged_result")
+  ) failures.push("database capability-open controlled wake fixture masks scheduling or does not execute and inspect the exact coalesced successor");
+  return failures;
+}
+
+function interactivityDatabaseCapabilityOpenSelfTests(): void {
+  const fixtures = `database_capability_open_fixed_admission_cap_plus_one_and_generation_aba database_capability_open_success_returns_exact_storage_owner_and_scalar database_capability_open_cancel_and_stale_generation_retain_exact_owner_for_public_close database_capability_open_saturation_and_shutdown_keep_retry_job_and_public_terminal database_capability_open_post_ready_cancel_and_stale_retain_public_exact_result database_capability_open_rejection_take_retry_and_close_preserve_exact_storage database_capability_open_terminal_result_take_resume_and_checked_out_drop_handback database_capability_open_retry_contention_is_one_compare_exchange_per_callback`;
+  const wakeFixture = `struct ControlledCapabilitySubmitQueue { slots: [Option<semio_framework_async::Job>; 8] } async fn database_capability_open_poll_publication_precedes_wake_rearm_at_every_boundary { controlled_submit_hook state.schedule(); let initial = queue.pop(); initial(); wake-after-release cannot admit a duplicate successor let successor = queue.pop(); successor(); Pending is repolled only by its next governed successor terminal Ready/panic successor advances cleanup without repolling terminal_work staged_result }`;
+  const waits = "db_actor::block_on(entry)\n".repeat(4);
+  const capability = `//#region 🔖️CapabilityOpen const DATABASE_CAPABILITY_OPEN_SLOTS: usize = 64 const DATABASE_CAPABILITY_OPEN_ITEMS: u64 = 8 const DATABASE_CAPABILITY_OPEN_BYTES: u64 = 16 * 1024 DATABASE_CAPABILITY_OPEN_TOTAL_ITEMS DATABASE_CAPABILITY_OPEN_TOTAL_BYTES DatabaseCapabilityOpenAdmission::try_claim(DATABASE_CAPABILITY_OPEN_ITEMS, DATABASE_CAPABILITY_OPEN_BYTES) database_capability_open_registry enum DatabaseCapabilityOpenPhase { Handoff, Poll, RetainWork, DrainWork, ReleaseWork, RetainResult, Publish, Terminal } fn drive_one(self: Arc<Self>, generation: u64) { if generation != self.generation { return; } match self.phase() { DatabaseCapabilityOpenPhase::Handoff => {} DatabaseCapabilityOpenPhase::Poll => {} DatabaseCapabilityOpenPhase::Publish => {} } } fn publish_poll_terminal { self.cancelled.store(true); self.terminal_error.lock(); self.set_phase(DatabaseCapabilityOpenPhase::RetainWork); } fn poll_terminal_if_cancelled_or_stale {} fn release_terminal_poll { self.polling.store(false); self.wake_requested.store(false); self.schedule_cleanup(); } fn poll_backend_once { std::panic::catch_unwind(|| work.poll(&mut context)); match polled { Ok(std::task::Poll::Pending) => { slot = Some(work); self.poll_terminal_if_cancelled_or_stale(); self.polling.store(false); } Ok(std::task::Poll::Ready(output)) => { slot = Some(work); staged = Some(output); self.set_phase(DatabaseCapabilityOpenPhase::RetainWork); self.poll_terminal_if_cancelled_or_stale(); self.polling.store(false); } Err(_) => { slot = Some(work); self.publish_poll_terminal(fault); self.release_terminal_poll(); } } } fn arm_retry { advance_retry_generation_once(); } fn advance_retry_generation_once { advance_retry_generation_observed_once(current); } fn advance_retry_generation_observed_once { compare_exchange(current, generation); observed == state.retry_generation.load; self.pool.callback_at } fn publish_staged { self.cancelled.load(); !self.is_current(); self.complete(); } fn roots_are_empty self.pool.try_submit(Lane::Io, job) error.into_job() retry_generation pub struct DatabaseCapabilityOpenRejected pub fn take_storage(&mut self) -> Option<Arc<db_storage::DbBackend>> pub fn retry(mut self, pool: Arc<WorkerPool>) pub fn close_step(&mut self) -> DatabaseCapabilityOpenCloseStep pub fn close_and_take_error(mut self) -> DbError pub struct DatabaseCapabilityOpenTerminalHandle pub struct DatabaseCapabilityOpenTerminalResult terminal_result_checked_out pub fn take_database_capability_open_terminal pub fn take_next_database_capability_open_terminal pub fn take_result(&self) -> Option<DatabaseCapabilityOpenTerminalResult> pub fn resume(self) -> Result<DatabaseCapabilityOpenFuture, Self> pub fn close_step(&self) -> DatabaseCapabilityOpenCloseStep pub fn terminal_is_empty(&self) -> bool DatabaseCapabilityOpenResult { storage, capabilities } terminal_work terminal_result terminal_completion roots_are_empty //#endregion 🔖️CapabilityOpen`;
+  const open = `async fn open_with { Self::open_retained(pool.clone(), storage); Err(rejected) => return Err(rejected.close_and_take_error()); capability_probe.await?.into_parts() } pub async fn create_document`;
+  const good = `${waits}${capability}${open}${fixtures}${wakeFixture}`;
+  const mutations = [
+    ["reintroduced-capability-block", good.replace("Self::open_retained(pool.clone(), storage)", "db_actor::block_on(storage.capabilities())")],
+    ["sixth-engine-wait", `${good} db_actor::block_on(extra)`],
+    ["missing-byte-cap", good.replace("const DATABASE_CAPABILITY_OPEN_BYTES: u64 = 16 * 1024", "const DATABASE_CAPABILITY_OPEN_BYTES: u64 = u64::MAX")],
+    ["missing-aggregate-item-credit", good.replace("DATABASE_CAPABILITY_OPEN_TOTAL_ITEMS", "UNBOUNDED_ITEMS")],
+    ["combined-handoff-poll", good.replace("DatabaseCapabilityOpenPhase::Handoff => {}", "DatabaseCapabilityOpenPhase::Handoff => { work.poll(&mut context); }")],
+    ["poll-loop", good.replace("work.poll(&mut context)", "loop { work.poll(&mut context) }")],
+    ["missing-retain-work-phase", good.replaceAll("RetainWork", "SkipWork")],
+    ["missing-release-work-phase", good.replaceAll("ReleaseWork", "DropWork")],
+    ["quiet-saturation-drop", good.replace("error.into_job()", "drop(error)")],
+    ["missing-generation-check", good.replace("if generation != self.generation { return; }", "")],
+    ["missing-publication-cancel-check", good.replace("fn publish_staged { self.cancelled.load(); !self.is_current(); self.complete(); }", "fn publish_staged { !self.is_current(); self.complete(); }")],
+    ["missing-publication-stale-check", good.replace("fn publish_staged { self.cancelled.load(); !self.is_current(); self.complete(); }", "fn publish_staged { self.cancelled.load(); self.complete(); }")],
+    ["missing-exact-rejection", good.replace("pub fn take_storage(&mut self) -> Option<Arc<db_storage::DbBackend>>", "fn inspect_storage(&self)")],
+    ["missing-public-terminal", good.replace("pub fn take_database_capability_open_terminal", "fn inspect_database_capability_open_terminal")],
+    ["missing-cap-plus-one-fixture", good.replace("database_capability_open_fixed_admission_cap_plus_one_and_generation_aba", "")],
+    ["wake-before-owner-publication", good.replaceAll("slot = Some(work);", "self.polling.store(false); slot = Some(work);")],
+    [
+      "ready-phase-after-wake-release",
+      good.replace(
+        "staged = Some(output); self.set_phase(DatabaseCapabilityOpenPhase::RetainWork); self.poll_terminal_if_cancelled_or_stale(); self.polling.store(false);",
+        "staged = Some(output); self.polling.store(false); self.set_phase(DatabaseCapabilityOpenPhase::RetainWork); self.poll_terminal_if_cancelled_or_stale();",
+      ),
+    ],
+    ["panic-fault-after-wake-release", good.replace("self.publish_poll_terminal(fault); self.release_terminal_poll();", "self.release_terminal_poll(); self.publish_poll_terminal(fault);")],
+    ["missing-post-ready-cancel-stale-fixture", good.replace("database_capability_open_post_ready_cancel_and_stale_retain_public_exact_result", "")],
+    ["live-rejection-owner-drop", good.replace("Err(rejected) => return Err(rejected.close_and_take_error())", "Err(rejected) => return Err(rejected.into_parts().0)")],
+    ["missing-terminal-result-handback", good.replace("pub fn take_result(&self) -> Option<DatabaseCapabilityOpenTerminalResult>", "fn inspect_terminal_result(&self)")],
+    ["retry-generation-spin", good.replace("advance_retry_generation_observed_once(current);", "loop { compare_exchange(current, generation); }")],
+    ["controlled-wake-scheduled-mask", good.replace("state.schedule();", "state.scheduled.store(true); state.poll_backend_once(state.generation);")],
+    ["controlled-wake-successor-bypass", good.replace("successor();", "drop(successor);")],
+  ] as const;
+  for (const [name, source] of mutations) if (interactivityDatabaseCapabilityOpenFailures(source).length === 0) throw new Error(`[verify interactivity] database capability-open self-test ${name} was falsely accepted.`);
+  const failures = interactivityDatabaseCapabilityOpenFailures(good);
+  if (failures.length !== 0) throw new Error(`[verify interactivity] database capability-open self-test retained route was falsely rejected: ${failures.join("; ")}`);
+}
+
+function interactivityDatabaseCatalogReadFailures(engineSource: string): string[] {
+  const engine = interactivityProductionSource(engineSource);
+  const catalog = engine.slice(engine.indexOf("//#region 🔖️CatalogRootRead"), engine.indexOf("//#endregion 🔖️CatalogRootRead"));
+  const openWith = engine.slice(engine.indexOf("async fn open_with"), engine.indexOf("pub async fn create_document", engine.indexOf("async fn open_with")));
+  const waits = engine.match(/\bdb_actor::block_on\s*\(/g)?.length ?? 0;
+  const failures: string[] = [];
+  if (waits !== 4 || engine.includes("db_actor::block_on(async { storage.catalog().await.read_root().await })")) failures.push("DB catalog-root retained read did not remove exactly one production wait");
+  if (!openWith.includes("Self::open_catalog_read_retained(pool.clone(), storage)") || !openWith.includes("catalog_probe.await?.into_parts()") || !openWith.includes("Err(rejected) => return Err(rejected.close_and_take_error(pool.clone()))")) failures.push("Database open does not consume the retained catalog-root authority and mount the exact rejection on the process pool");
+  for (const required of [
+    "const DATABASE_CATALOG_READ_SLOTS: usize = 64",
+    "const DATABASE_CATALOG_READ_ITEMS: u64 = 8",
+    "const DATABASE_CATALOG_READ_BYTES: u64 = 64 * 1024",
+    "DATABASE_CATALOG_READ_TOTAL_ITEMS",
+    "DATABASE_CATALOG_READ_TOTAL_BYTES",
+    "DatabaseCatalogReadAdmission::try_claim()",
+    "database_catalog_read_registry",
+    "DatabaseCatalogRootKey",
+  ]) if (!catalog.includes(required)) failures.push(`database catalog-read admission missing ${required}`);
+  for (const phase of ["Handoff", "Poll", "RetainWork", "DrainWork", "ReleaseWork", "RetainResult", "Publish", "Terminal"])
+    if (!catalog.includes(phase)) failures.push(`database catalog-read phase missing ${phase}`);
+  const drive = catalog.slice(catalog.indexOf("fn drive_one"), catalog.indexOf("fn poll_backend_once"));
+  const handoff = drive.slice(drive.indexOf("DatabaseCatalogReadPhase::Handoff"), drive.indexOf("DatabaseCatalogReadPhase::Poll"));
+  if (!drive.includes("match self.phase()") || handoff.includes(".poll(")) failures.push("catalog handoff combines a backend poll with owner transfer");
+  const work = catalog.slice(catalog.indexOf("impl DatabaseCatalogReadWork"), catalog.indexOf("enum DatabaseCatalogReadPhase"));
+  if (!work.includes("storage.catalog().await.read_root().await") || !work.includes("DatabaseCatalogReadResult { storage, key, root }") || work.includes("block_on")) failures.push("catalog backend future does not return exact storage/key/root owners");
+  const poll = catalog.slice(catalog.indexOf("fn poll_backend_once"), catalog.indexOf("fn publish_terminal"));
+  if (!poll.includes("std::panic::catch_unwind") || !poll.includes("work.poll(&mut context)") || poll.includes("loop {") || poll.includes("while ")) failures.push("catalog backend is not one panic-safe poll per I/O opportunity");
+  for (const branch of ["Poll::Pending", "Poll::Ready", "Err(_)"]) if (!poll.includes(branch)) failures.push(`catalog backend poll branch missing ${branch}`);
+  if (!poll.includes("Some(work)") || !poll.includes("Some(result)") || !poll.includes("DATABASE_CATALOG_READ_BYTES as usize") || !poll.includes("self.release_terminal_poll()")) failures.push("catalog poll does not retain work/result and byte-cap fault before wake release");
+  if (!catalog.includes("impl std::task::Wake for DatabaseCatalogReadWake") || !catalog.includes("wake_requested") || !catalog.includes("self.scheduled.compare_exchange(false, true") || !catalog.includes("self.pool.try_submit(Lane::Io, job)") || !catalog.includes("error.into_job()") || !catalog.includes("self.pool.callback_at")) failures.push("catalog wake/saturation does not coalesce and retain the exact job");
+  if (!catalog.includes("if generation != self.generation") || !catalog.includes("self.cancelled.load") || !catalog.includes("!self.is_current()") || catalog.indexOf("!self.is_current()", catalog.indexOf("fn publish_staged")) > catalog.indexOf("let result =", catalog.indexOf("fn publish_staged"))) failures.push("catalog cancellation/generation freshness does not precede publication");
+  const publicPoll = catalog.slice(catalog.indexOf("impl Future for DatabaseCatalogReadFuture"), catalog.indexOf("impl Drop for DatabaseCatalogReadFuture"));
+  const publicWaker = publicPoll.indexOf("*self.state.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(context.waker().clone())");
+  const publicRecheck = publicPoll.indexOf("let result = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take()", publicWaker + 1);
+  if (publicWaker < 0 || publicRecheck < publicWaker || !catalog.includes("controlled_publication_before_waker_hook") || !catalog.includes("fn publish_public_completion")) failures.push("catalog public future can lose completion between its first check and consumer waker registration");
+  if (/derive\([^\)]*(?:Clone|Copy|Default)[^\)]*\)\]\s*pub struct DatabaseCatalogRootKey/.test(catalog)) failures.push("catalog root key is cloneable/copyable/defaultable");
+  for (const required of [
+    "pub struct DatabaseCatalogReadRejected",
+    "pub fn retry(mut self, pool: Arc<WorkerPool>)",
+    "pub fn close_step(&mut self) -> DatabaseCatalogReadCloseStep",
+    "pub fn close_and_take_error(self, pool: Arc<WorkerPool>) -> DbError",
+    "pub struct DatabaseCatalogReadFuture",
+    "pub struct DatabaseCatalogReadTerminalHandle",
+    "pub struct DatabaseCatalogReadTerminalResult",
+    "pub fn take_database_catalog_read_terminal",
+    "pub fn take_result(&self) -> Option<DatabaseCatalogReadTerminalResult>",
+    "pub fn resume(self) -> Result<DatabaseCatalogReadFuture, Self>",
+    "terminal_result_checked_out",
+    "roots_are_empty",
+  ]) if (!catalog.includes(required)) failures.push(`catalog exact public terminal ownership missing ${required}`);
+  const rejected = catalog.slice(catalog.indexOf("impl DatabaseCatalogReadRejected"), catalog.indexOf("type DatabaseCatalogReadBackendFuture"));
+  const rejectedClose = rejected.slice(rejected.indexOf("pub fn close_step"), rejected.indexOf("pub fn terminal_is_empty"));
+  const storageBranch = rejectedClose.slice(rejectedClose.indexOf("if let Some(storage)"), rejectedClose.indexOf("else if let Some(key)"));
+  if (storageBranch.includes("key.take()") || !rejectedClose.includes("else if let Some(key) = self.key.take()") || !rejected.includes("DatabaseCatalogReadRejectedClose::mount(pool, self, schedule)") || !rejected.includes("self.pool.try_submit(Lane::Io, job)") || !rejected.includes("error.into_job()") || !rejected.includes("owner.close_step()")) failures.push("catalog rejected storage/key owners are not mounted and retired on distinct process-pool grants");
+  for (const forbidden of ["db_actor::block_on", "semio_framework_async::block_on", "WorkerPool::new(", "thread::spawn", "open_inline"])
+    if (catalog.includes(forbidden)) failures.push(`catalog retained region contains ${forbidden}`);
+  for (const fixture of [
+    "database_catalog_read_fixed_cap_plus_one_and_generation_aba",
+    "database_catalog_read_success_returns_exact_storage_key_and_root",
+    "database_catalog_read_controlled_wakes_coalesce_and_terminal_never_repolls",
+    "database_catalog_read_publication_between_check_and_waker_registration_is_observed",
+    "database_catalog_read_rejected_mount_retires_storage_and_key_on_distinct_grants",
+    "database_catalog_read_cancel_stale_and_rejection_preserve_exact_storage_key",
+    "database_catalog_read_terminal_result_drop_hands_back_exact_result",
+  ]) if (!engineSource.includes(fixture)) failures.push(`catalog retained fixture missing ${fixture}`);
+  const controlledAt = engineSource.indexOf("async fn database_catalog_read_controlled_wakes_coalesce_and_terminal_never_repolls");
+  const controlled = controlledAt < 0 ? "" : engineSource.slice(controlledAt, engineSource.indexOf("#[semio_framework_async_macros::async_test]", controlledAt + 1));
+  if (!controlled.includes("state.schedule();") || controlled.includes("state.scheduled.store(true") || !controlled.includes("initial();") || !controlled.includes("successor();") || !controlled.includes("one coalesced catalog-read successor") || !controlled.includes("late wake cannot overtake")) failures.push("catalog controlled wake fixture masks or bypasses the production successor path");
+  return failures;
+}
+
+function interactivityDatabaseCatalogReadSelfTests(): void {
+  const waits = "db_actor::block_on(entry)\n".repeat(4);
+  const catalog = `//#region 🔖️CatalogRootRead const DATABASE_CATALOG_READ_SLOTS: usize = 64 const DATABASE_CATALOG_READ_ITEMS: u64 = 8 const DATABASE_CATALOG_READ_BYTES: u64 = 64 * 1024 DATABASE_CATALOG_READ_TOTAL_ITEMS DATABASE_CATALOG_READ_TOTAL_BYTES DatabaseCatalogReadAdmission::try_claim() database_catalog_read_registry pub struct DatabaseCatalogRootKey impl DatabaseCatalogReadWork { storage.catalog().await.read_root().await DatabaseCatalogReadResult { storage, key, root } } enum DatabaseCatalogReadPhase { Handoff Poll RetainWork DrainWork ReleaseWork RetainResult Publish Terminal } fn drive_one(self: Arc<Self>, generation: u64) { if generation != self.generation { return; } match self.phase() { DatabaseCatalogReadPhase::Handoff => {} DatabaseCatalogReadPhase::Poll => {} } } fn poll_backend_once { std::panic::catch_unwind work.poll(&mut context) Poll::Pending Some(work) Poll::Ready Some(result) Err(_) DATABASE_CATALOG_READ_BYTES as usize self.release_terminal_poll() } fn publish_staged { self.cancelled.load !self.is_current() let result = } fn publish_public_completion {} controlled_publication_before_waker_hook pub struct DatabaseCatalogReadFuture impl Future for DatabaseCatalogReadFuture { let result = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take(); *self.state.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(context.waker().clone()); let result = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take(); } impl Drop for DatabaseCatalogReadFuture {} impl std::task::Wake for DatabaseCatalogReadWake wake_requested self.scheduled.compare_exchange(false, true self.pool.try_submit(Lane::Io, job) error.into_job() self.pool.callback_at pub struct DatabaseCatalogReadRejected impl DatabaseCatalogReadRejected { pub fn retry(mut self, pool: Arc<WorkerPool>) pub fn close_step(&mut self) -> DatabaseCatalogReadCloseStep { if let Some(storage) = self.storage.take() { drop(storage); } else if let Some(key) = self.key.take() { drop(key); } } pub fn terminal_is_empty pub fn close_and_take_error(self, pool: Arc<WorkerPool>) -> DbError DatabaseCatalogReadRejectedClose::mount(pool, self, schedule) struct DatabaseCatalogReadRejectedClose impl DatabaseCatalogReadRejectedClose { self.pool.try_submit(Lane::Io, job) error.into_job() owner.close_step() } type DatabaseCatalogReadBackendFuture pub struct DatabaseCatalogReadTerminalHandle pub struct DatabaseCatalogReadTerminalResult pub fn take_database_catalog_read_terminal pub fn take_result(&self) -> Option<DatabaseCatalogReadTerminalResult> pub fn resume(self) -> Result<DatabaseCatalogReadFuture, Self> terminal_result_checked_out roots_are_empty //#endregion 🔖️CatalogRootRead`;
+  const open = `async fn open_with { Self::open_catalog_read_retained(pool.clone(), storage) Err(rejected) => return Err(rejected.close_and_take_error(pool.clone())) catalog_probe.await?.into_parts() } pub async fn create_document`;
+  const fixtures = `database_catalog_read_fixed_cap_plus_one_and_generation_aba database_catalog_read_success_returns_exact_storage_key_and_root database_catalog_read_cancel_stale_and_rejection_preserve_exact_storage_key database_catalog_read_terminal_result_drop_hands_back_exact_result database_catalog_read_publication_between_check_and_waker_registration_is_observed database_catalog_read_rejected_mount_retires_storage_and_key_on_distinct_grants async fn database_catalog_read_controlled_wakes_coalesce_and_terminal_never_repolls { state.schedule(); initial(); one coalesced catalog-read successor late wake cannot overtake successor(); } #[semio_framework_async_macros::async_test]`;
+  const good = `${waits}${catalog}${open}${fixtures}`;
+  const mutations = [
+    ["catalog-read-blocking", good.replace("Self::open_catalog_read_retained(pool.clone(), storage)", "db_actor::block_on(async { storage.catalog().await.read_root().await })")],
+    ["catalog-fifth-wait", `${good} db_actor::block_on(extra)`],
+    ["catalog-unbounded-bytes", good.replace("const DATABASE_CATALOG_READ_BYTES: u64 = 64 * 1024", "const DATABASE_CATALOG_READ_BYTES: u64 = u64::MAX")],
+    ["catalog-missing-total-credit", good.replace("DATABASE_CATALOG_READ_TOTAL_BYTES", "UNBOUNDED_CATALOG_BYTES")],
+    ["catalog-combined-handoff-poll", good.replace("DatabaseCatalogReadPhase::Handoff => {}", "DatabaseCatalogReadPhase::Handoff => { work.poll(&mut context); }")],
+    ["catalog-poll-loop", good.replace("work.poll(&mut context)", "loop { work.poll(&mut context) }")],
+    ["catalog-drop-saturated-job", good.replaceAll("error.into_job()", "drop(error)")],
+    ["catalog-missing-generation", good.replace("if generation != self.generation { return; }", "")],
+    ["catalog-missing-cancel", good.replace("self.cancelled.load", "cancel_optional")],
+    ["catalog-missing-output-cap", good.replace("DATABASE_CATALOG_READ_BYTES as usize", "usize::MAX")],
+    ["catalog-cloneable-key", good.replace("pub struct DatabaseCatalogRootKey", "#[derive(Clone)] pub struct DatabaseCatalogRootKey")],
+    ["catalog-missing-rejection", good.replace("pub struct DatabaseCatalogReadRejected", "struct HiddenCatalogReject")],
+    ["catalog-missing-terminal", good.replace("pub fn take_database_catalog_read_terminal", "fn inspect_catalog_terminal")],
+    ["catalog-missing-cap-fixture", good.replace("database_catalog_read_fixed_cap_plus_one_and_generation_aba", "")],
+    ["catalog-missing-success-fixture", good.replace("database_catalog_read_success_returns_exact_storage_key_and_root", "")],
+    ["catalog-wake-mask", good.replace("state.schedule();", "state.scheduled.store(true); state.poll_backend_once(state.generation);")],
+    ["catalog-successor-bypass", good.replace("successor();", "drop(successor);")],
+    ["catalog-public-lost-wake", good.replace("*self.state.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(context.waker().clone()); let result = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();", "let result = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take(); *self.state.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(context.waker().clone());")],
+    ["catalog-rejected-bulk-close", good.replace("if let Some(storage) = self.storage.take() { drop(storage); } else if let Some(key) = self.key.take() { drop(key); }", "if let Some(storage) = self.storage.take() { drop(storage); self.key.take(); }")],
+    ["catalog-rejected-unmounted", good.replace("DatabaseCatalogReadRejectedClose::mount(pool, self, schedule)", "drop(self)")],
+  ] as const;
+  for (const [name, source] of mutations) if (interactivityDatabaseCatalogReadFailures(source).length === 0) throw new Error(`[verify interactivity] catalog-read self-test ${name} was falsely accepted.`);
+  const failures = interactivityDatabaseCatalogReadFailures(good);
+  if (failures.length !== 0) throw new Error(`[verify interactivity] catalog-read self-test retained route was falsely rejected: ${failures.join("; ")}`);
+}
+
 function interactivityArtifactHistoryFailures(engineSource: string, artifactSource: string, walSource: string): string[] {
   const engine = interactivityProductionSource(engineSource);
   const artifact = interactivityProductionSource(artifactSource);
@@ -5143,7 +6185,7 @@ function interactivityArtifactHistoryFailures(engineSource: string, artifactSour
   const terminalClose = terminalHandle.slice(terminalCloseStart, terminalHandle.indexOf("pub fn terminal_is_empty(&self)", terminalCloseStart));
   const productionWaits = engine.match(/\bdb_actor::block_on\s*\(/g)?.length ?? 0;
   const failures: string[] = [];
-  if (productionWaits !== 6 || engine.includes("async fn replay_history") || engine.includes("db_wal::replay_document(&storage.wal")) failures.push("DB engine replay_history removal did not reduce the seven residual waits to exactly six");
+  if (productionWaits !== 4 || engine.includes("async fn replay_history") || engine.includes("db_wal::replay_document(&storage.wal")) failures.push("DB engine retained history route does not preserve the four post-catalog-read residual waits");
   for (const forbidden of ["block_on(", "ask_blocking", "submit_blocking", "thread::spawn", "WorkerPool::new(", "loop {", "while "])
     if (history.includes(forbidden) || replay.includes(forbidden)) failures.push(`retained history route contains ${forbidden}`);
   if (!history.includes("const ARTIFACT_HISTORY_OPERATION_SLOTS: usize = 8") || !history.includes("const ARTIFACT_HISTORY_PAGE_BYTES: u64 = 16 * 1024") || !history.includes("const ARTIFACT_HISTORY_OPERATION_PAGES: u64 = 2_048") || !history.includes("const ARTIFACT_HISTORY_OPERATION_ITEMS: usize = 20_481") || !history.includes("ArtifactHistoryAdmission::try_claim()")) failures.push("history operation lacks fixed item/page/operation/process admission");
@@ -5254,8 +6296,8 @@ function interactivityArtifactHistoryFailures(engineSource: string, artifactSour
 
 function interactivityArtifactHistorySelfTests(): void {
   const fixtures = `artifact_history_empty_one_cap_plus_one_admission_returns_exact_request artifact_history_empty_and_two_batch_replay_are_deterministic artifact_history_nested_derived_item_and_byte_caps_precede_materialization artifact_history_segment_cap_plus_one_reads_only_one_admitted_page artifact_history_crc_and_frame_tokenizer_advance_one_page_per_grant artifact_history_cancel_retires_one_page_or_nested_owner_per_actor_grant artifact_history_quiet_late_wake_and_retry_are_generation_coalesced artifact_history_cancel_before_during_after_retains_actor_and_result_owners artifact_history_stale_generation_and_slot_aba_precede_mailbox_mutation artifact_history_replay_ordering_is_segment_frame_then_result_fifo artifact_history_terminal_job_work_result_take_resume_and_close_one_owner artifact_history_one_grant_advances_one_retained_phase_without_blocking artifact_history_drop_after_complete_moves_result_to_public_terminal_registry artifact_history_backend_token_crc_fault_retire_1024_pages_one_grant_each artifact_history_scratch_result_boundary_plus_one_preserves_exact_owner artifact_history_runner_close_mid_turn_retains_replay_until_terminal_empty artifact_history_future_handle_drop_and_terminal_take_resume_are_exact artifact_history_cancel_before_handoff_retires_full_reservation_before_credit_release artifact_history_public_terminal_close_releases_admission_only_after_roots_are_empty artifact_history_construction_fault_is_public_and_admission_release_is_a_final_grant artifact_history_reservation_construction_fault_cap_plus_one_and_each_page_retire_one_owner artifact_history_panic_at_each_phase_transition_retains_then_fault_retires artifact_history_fixed_owner_accounting_has_no_capacity_scan`;
-  const sixWaits = "db_actor::block_on(entry)\n".repeat(6);
-  const goodEngine = `${sixWaits} const ARTIFACT_HISTORY_OPERATION_SLOTS: usize = 8 const ARTIFACT_HISTORY_PAGE_BYTES: u64 = 16 * 1024 const ARTIFACT_HISTORY_OPERATION_PAGES: u64 = 2_048 const ARTIFACT_HISTORY_OPERATION_ITEMS: usize = 20_481 ArtifactHistoryAdmission::try_claim() reservation: Option<db_artifact::HistoryReplayReservation> assert!(self.reservation.is_none() HistoryView::new(view, Some(admission) terminal_reservation: std::sync::Mutex<Option<db_artifact::HistoryReplayReservationCloseCursor>> pub struct ArtifactHistoryTerminalReservation begin_unhanded_reservation_close terminalize_unhanded_request pub fn take_terminal_reservation terminal_construction: std::sync::Mutex<Option<db_artifact::HistoryReplayReservationConstructionFaultCursor>> construction_checked_out pub struct ArtifactHistoryTerminalConstructionFault pub fn take_terminal_construction_fault impl ArtifactHistoryTerminalConstructionFault { pub fn resume(mut self) -> Result<(), Self> fn terminal_roots_are_empty(&self) -> bool fn terminal_is_empty(&self) -> bool { self.finished.load(std::sync::atomic::Ordering::Acquire) self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() } impl std::task::Wake for ArtifactHistoryWake self.generation == state.generation self.scheduled.compare_exchange(false, true self.pool.callback_at retry_generation error.into_job() ArtifactHistoryWorkOwner::Request ArtifactHistoryWorkOwner::Actor pub fn take_terminal_job pub fn take_terminal_work pub fn take_terminal_result pub fn take_actor_terminal_job impl ArtifactHistoryTerminalHandle { pub fn close_step(&self) -> bool { if self.state.close_one() { return true; } if self.state.authority.close_step() { return true; } self.state.finish_if_terminal_empty() } pub fn terminal_is_empty(&self) -> bool impl ArtifactHistoryTerminalJob impl ArtifactHistoryTerminalWork fn drive_one(self: Arc<Self>, generation: u64) { if generation != self.generation { return; } if self.authority.generation() != self.authority_generation {} self.authority.history_retained std::pin::Pin::new(future).poll(&mut context) self.complete(Ok(HistoryView::new } pub struct ArtifactHandle ${fixtures}`;
+  const fourWaits = "db_actor::block_on(entry)\n".repeat(4);
+  const goodEngine = `${fourWaits} const ARTIFACT_HISTORY_OPERATION_SLOTS: usize = 8 const ARTIFACT_HISTORY_PAGE_BYTES: u64 = 16 * 1024 const ARTIFACT_HISTORY_OPERATION_PAGES: u64 = 2_048 const ARTIFACT_HISTORY_OPERATION_ITEMS: usize = 20_481 ArtifactHistoryAdmission::try_claim() reservation: Option<db_artifact::HistoryReplayReservation> assert!(self.reservation.is_none() HistoryView::new(view, Some(admission) terminal_reservation: std::sync::Mutex<Option<db_artifact::HistoryReplayReservationCloseCursor>> pub struct ArtifactHistoryTerminalReservation begin_unhanded_reservation_close terminalize_unhanded_request pub fn take_terminal_reservation terminal_construction: std::sync::Mutex<Option<db_artifact::HistoryReplayReservationConstructionFaultCursor>> construction_checked_out pub struct ArtifactHistoryTerminalConstructionFault pub fn take_terminal_construction_fault impl ArtifactHistoryTerminalConstructionFault { pub fn resume(mut self) -> Result<(), Self> fn terminal_roots_are_empty(&self) -> bool fn terminal_is_empty(&self) -> bool { self.finished.load(std::sync::atomic::Ordering::Acquire) self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() } impl std::task::Wake for ArtifactHistoryWake self.generation == state.generation self.scheduled.compare_exchange(false, true self.pool.callback_at retry_generation error.into_job() ArtifactHistoryWorkOwner::Request ArtifactHistoryWorkOwner::Actor pub fn take_terminal_job pub fn take_terminal_work pub fn take_terminal_result pub fn take_actor_terminal_job impl ArtifactHistoryTerminalHandle { pub fn close_step(&self) -> bool { if self.state.close_one() { return true; } if self.state.authority.close_step() { return true; } self.state.finish_if_terminal_empty() } pub fn terminal_is_empty(&self) -> bool impl ArtifactHistoryTerminalJob impl ArtifactHistoryTerminalWork fn drive_one(self: Arc<Self>, generation: u64) { if generation != self.generation { return; } if self.authority.generation() != self.authority_generation {} self.authority.history_retained std::pin::Pin::new(future).poll(&mut context) self.complete(Ok(HistoryView::new } pub struct ArtifactHandle ${fixtures}`;
   const goodArtifact = `//#region 🔖️HistoryReplay HISTORY_REPLAY_SEGMENT_PAGES: u64 = 1_024 HISTORY_REPLAY_RESULT_BYTES pub struct HistoryReplayReservation impl HistoryReplayReservation { source_page_count retained_operation_bytes retained_result_bytes source_pages.try_reserve_exact(HISTORY_REPLAY_SEGMENT_PAGES result_pages.try_reserve_exact(HISTORY_REPLAY_RESULT_PAGES) operation_ids.try_reserve_exact(HISTORY_REPLAY_MAX_OPERATION_IDS) entries.try_reserve_exact(HISTORY_REPLAY_MAX_ENTRIES) HistoryReplayReservationConstructionFault::new try_new_with_result_page_failure result_len.checked_add(len) retained_bytes } pub struct HistoryReplayReservationCloseCursor pub struct HistoryReplayReservationConstructionFaultCursor self.source_page_count -= 1 self.operation_ids.as_mut().is_some_and self.entries.as_mut().is_some_and self.result_pages.as_mut().and_then(Vec::pop) HistoryEnvelopeField::Dependency HistoryEnvelopeField::DiffPayload HistoryEnvelopeField::InversePayload self.dependencies -= 1 self.pos != self.end enum HistoryFrameToken { Command { offset: u64, len: u64 } } enum HistoryReplayPhase { PageRead, Retire } enum HistoryReplayTransition { InProgress FaultRetire Complete } phase: Option<HistoryReplayPhase> self.transition = HistoryReplayTransition::FaultRetire if this.phase.take().is_some() let requested = remaining.min(HISTORY_REPLAY_PAGE_BYTES); pack::ByteRange { offset, len: requested } page.capacity() as u64 > HISTORY_REPLAY_PAGE_BYTES protocol::codec::Crc32cCursor let maximum = self.payload_remaining.min(HISTORY_REPLAY_PAGE_BYTES); self.crc.update_page(page) HistoryReplayPhase::Retire HistoryReplayTransition::FaultRetire self.page_count -= 1 fn next() { retained_step } impl Future for HistoryReplayFuture assert!(self.terminal_is_empty() //#endregion 🔖️HistoryReplay //#region 🔖️Actor ArtifactMessage::History ArtifactTurn::History engine.history_replay(operation_generation, cancelled, reservation) Pin::new(&mut *replay).poll(&mut context) replay.request_close !replay.terminal_is_empty() replay.request_close history replay cursor panicked self.schedule() pub fn history_retained future.as_mut().poll(&mut context) //#endregion 🔖️Actor`;
   const registeredEngine = `${goodEngine.replace("terminal_construction: std::sync::Mutex<Option<db_artifact::HistoryReplayReservationConstructionFaultCursor>>", "terminal_construction: std::sync::Mutex<Option<db_artifact::HistoryReplayReservationConstructionFault>>")} artifact_history_unchecked_construction_error_and_checked_out_drop_hand_back_exact_pages artifact_history_construction_unwind_hands_partial_owner_to_registry_without_bulk_drop artifact_history_construction_registry_saturation_rejects_before_partial_owner_and_reuses_with_fresh_generation artifact_history_construction_handback_rejects_stale_duplicate_and_aba_without_owner_overwrite`;
   const constructionRegistry = `const HISTORY_REPLAY_CONSTRUCTION_SLOTS: usize = 64 struct HistoryReplayReservationConstructionToken { slot: usize, generation: u64 } pub(crate) struct HistoryReplayReservationConstructionHandbackRejection struct HistoryReplayReservationConstructionSlot fn claim_history_replay_reservation_construction { cursor: Some(HistoryReplayReservationCloseCursor } fn handback_history_replay_reservation_construction(token: &HistoryReplayReservationConstructionToken) -> Result<(), HistoryReplayReservationConstructionHandbackRejection> { registry.slots.get_mut(token.slot) !slot.occupied !slot.checked_out slot.generation != token.generation slot.cursor.is_none() HistoryReplayReservationConstructionHandbackRejection slot.checked_out = false } fn release_history_replay_reservation_construction struct HistoryReplayReservationConstructionBuilder impl Drop for HistoryReplayReservationConstructionBuilder { handback_history_replay_reservation_construction(&token) } pub(crate) struct HistoryReplayReservationConstructionFault impl HistoryReplayReservationConstructionFault { release_history_replay_reservation_construction(token) } impl Drop for HistoryReplayReservationConstructionFault { handback_history_replay_reservation_construction(&token) } take_history_replay_reservation_construction_fault impl Drop for HistoryReplayReservationCloseCursor`;
@@ -5263,7 +6305,7 @@ function interactivityArtifactHistorySelfTests(): void {
   const goodWal = ``;
   const mutations = [
     ["reintroduced-replay-block-on", goodEngine.replace("pub struct ArtifactHandle", "block_on(replay); pub struct ArtifactHandle"), goodArtifact, goodWal],
-    ["seventh-engine-wait", `${goodEngine} db_actor::block_on(extra)`, goodArtifact, goodWal],
+    ["sixth-engine-wait", `${goodEngine} db_actor::block_on(extra)`, goodArtifact, goodWal],
     ["unbounded-replay-loop", goodEngine, goodArtifact.replace("self.dependencies -= 1", "loop { self.dependencies -= 1 }"), goodWal],
     ["missing-derived-byte-credit", goodEngine, goodArtifact.replace("result_len.checked_add(len)", "result_len.saturating_add(len)"), goodWal],
     ["missing-derived-item-cap", goodEngine, goodArtifact.replace("operation_ids.try_reserve_exact(HISTORY_REPLAY_MAX_OPERATION_IDS)", "operation_ids = Vec::new()"), goodWal],

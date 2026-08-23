@@ -69,6 +69,14 @@ pub enum TiffMutation {
 }
 //#endregion 🔖️Mutations
 
+//#region 🔖️Kinds
+/// 📇️ Kebab-case spelling of every `TiffMutation` variant, in declaration order — what the mutation
+/// completeness gate holds `../🧪️oracle/🔣️component.json`'s `mutationCatalogs[].kinds` against
+/// (`kinds_manifest_law` below), and what a `mutate-<kind>`/`inverse-<kind>` scenario id's `<kind>`
+/// segment must equal.
+pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-byte-order", "insert-ifd", "remove-ifd", "set-tag", "remove-tag", "set-pixels"];
+//#endregion 🔖️Kinds
+
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` — the diff is the single semantics source (csv/png precedent).
@@ -678,6 +686,69 @@ mod tests {
     //#endregion 🔖️op_text_binary_roundtrip_law
 }
 //#endregion Tests
+
+//#region 🧪️KindsManifestLaw
+/// 🧪️ Keeps `KINDS` honest against both sides it must match: the enum itself (a compile-time
+/// exhaustiveness match — a new/renamed/reordered variant that isn't reflected in `KINDS` fails to
+/// compile here, since the framework never parses Rust and can't catch that itself) and
+/// `../🧪️oracle/🔣️component.json`'s declared `kinds` (the completeness gate's own source, read as
+/// real JSON so a manifest edit that drifts from the enum fails a real test, not a convention).
+#[cfg(test)]
+mod kinds_manifest_law {
+    use super::*;
+
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    fn kebab_of(mutation: &TiffMutation) -> &'static str {
+        // ⚠️ Deliberately NO wildcard arm: a variant added to `TiffMutation` without a matching
+        // update here fails to COMPILE — the actual enforcement `KINDS` alone can't provide.
+        match mutation {
+            TiffMutation::NoMutation => "no-mutation",
+            TiffMutation::SetSnapshot { .. } => "set-snapshot",
+            TiffMutation::SetByteOrder { .. } => "set-byte-order",
+            TiffMutation::InsertIfd { .. } => "insert-ifd",
+            TiffMutation::RemoveIfd { .. } => "remove-ifd",
+            TiffMutation::SetTag { .. } => "set-tag",
+            TiffMutation::RemoveTag { .. } => "remove-tag",
+            TiffMutation::SetPixels { .. } => "set-pixels",
+        }
+    }
+
+    /// 📇️ One concrete instance per variant — independent of `demo_mutation_cases()` (which omits
+    /// `SetSnapshot`), so this law's coverage doesn't silently shrink if that list changes.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    fn one_of_each() -> Vec<TiffMutation> {
+        vec![
+            TiffMutation::NoMutation,
+            TiffMutation::SetSnapshot { snapshot: TiffSnapshot::default() },
+            TiffMutation::SetByteOrder { byte_order: TiffByteOrder::LittleEndian },
+            TiffMutation::InsertIfd { index: 0, ifd: TiffIfd::default() },
+            TiffMutation::RemoveIfd { index: 0 },
+            TiffMutation::SetTag { ifd_index: 0, tag: 0, kind: TiffFieldType::Byte, values: TiffValues::Byte(vec![]) },
+            TiffMutation::RemoveTag { ifd_index: 0, tag: 0 },
+            TiffMutation::SetPixels { pixels: vec![] },
+        ]
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn kinds_matches_every_enum_variant() {
+        let cases = one_of_each();
+        assert_eq!(cases.len(), KINDS.len(), "one_of_each() and KINDS must both carry exactly the declared variant count");
+        for (case, expected) in cases.iter().zip(KINDS.iter()) {
+            assert_eq!(kebab_of(case), *expected, "KINDS order/spelling drifted from TiffMutation's own declaration order");
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn kinds_matches_the_oracle_manifest() {
+        const MANIFEST: &str = include_str!("../../🧪️oracle/🔣️component.json");
+        let manifest: serde_json::Value = serde_json::from_str(MANIFEST).expect("../🧪️oracle/🔣️component.json must be valid JSON");
+        let catalog = manifest["mutationCatalogs"].as_array().and_then(|c| c.first()).expect("manifest must declare a mutationCatalogs[0] entry");
+        let declared: Vec<&str> = catalog["kinds"].as_array().expect("mutationCatalogs[0].kinds must be an array").iter().map(|v| v.as_str().expect("kind must be a string")).collect();
+        assert_eq!(declared, KINDS, "manifest mutationCatalogs[0].kinds drifted from KINDS");
+        assert_eq!(catalog["capability"].as_str(), Some("tiff-6-0-mutate"));
+    }
+}
+//#endregion 🧪️KindsManifestLaw
 
 //#region 🧪️FixtureCases
 /// 🧪️ Handcrafted `📄set-snapshot` fixture cases, wired from this tree's own mutations root so

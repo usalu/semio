@@ -1,0 +1,47 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🔮️ This subset's own contribution to the repository test platform: the `image` 0.25 reference codec registered specifically for JFIF 1.01 mutation coverage (distinct from the shared `image-jpeg` entry's `jpg-raster` capability), the exhaustive JpgMutation vocabulary it is measured against, and the coarse-tolerance comparison profile a lossy round trip through two independently written codecs needs.",
+  "oracles": [
+    {
+      "id": "image-jpeg-jfif-1-01-mutate",
+      "ecosystem": "rust",
+      "package": "image",
+      "version": "0.25",
+      "capabilities": [
+        "jpg-jfif-1-01-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-jpg-mutate-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/image-rs/image",
+      "rationale": "The reference JPEG encoder/decoder of the Rust ecosystem, registered here under its own mutate-scoped capability (the shared `image-jpeg` entry is scoped to raw `jpg-raster` creation and does not cover this subset's typed JpgMutation vocabulary). This subset's own codec (../🚪️io/🦀️component.rs) is a from-scratch baseline JPEG implementation, not an `image` wrapper, and deliberately regenerates fresh Annex K DQT/DHT tables at `re_encode_quality` on every encode rather than preserving whatever tables a mutation set on the decoded snapshot, and never emits DRI/restart markers at all — so SetQuantTable/RemoveQuantTable/SetHuffmanTable/RemoveHuffmanTable mutate only the in-memory snapshot model (provably absent from the re-serialized bytes) and SetRestartInterval is unobservable in any re-encode. The oracle therefore proves what the format actually guarantees survives a real mutate-and-reencode round trip through an independent implementation: geometry and gross raster content for the mutations that touch pixels, and simple decodability for the mutations that only touch metadata/tables/segments a conformant decoder does not need to reproduce.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "productionDebt": {
+        "reachableFrom": [
+          "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️component.rs",
+          "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️component.rs"
+        ],
+        "owner": "🧰️framework/🔨️modules/🗺️surface",
+        "plan": "Same underlying `image` crate reachability already recorded against the shared `image-jpeg` entry (✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️component.json) — repeated here because the dependency gate keys recorded debt by (path, oracle id) pair, not by package, so a second oracle id sharing the same package needs its own record. Phase 7 target: both call sites want raster decode/encode that ✏️s/🔌️plugins/🗄️stdio already implements, so routing them through decode_bmp / decode_tiff / decode_jpg retires the dependency and every entry recording it, this one included."
+      }
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "jpg-jfif-1-01-any",
+      "capability": "jpg-jfif-1-01-mutate",
+      "kinds": ["no-mutation", "set-snapshot", "set-jfif-header", "set-quant-table", "remove-quant-table", "set-huffman-table", "remove-huffman-table", "set-restart-interval", "insert-other-segment", "remove-other-segment", "set-pixels", "set-re-encode-quality"]
+    }
+  ],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-jpg-mutate-v1",
+      "description": "JFIF 1.01 JPEG mutation round trips compared by geometry plus an 8-bucket luma histogram (never raw samples: JPEG is lossy and this platform's comparison tolerance is per-number and absolute, with no aggregate mode). The reference `image` codec and this subset's own from-scratch codec are two independently written implementations, so a real photographic fixture re-encoded through each lands luma mass in the same coarse buckets but not identical per-bucket pixel counts; the tolerance below is sized against the ~5.8 megapixel real-world fixture this case reads (asset shared://🖼️abbau-aufbau-masterarbeit-grundriss.jpg) so genuine corruption (wrong geometry, blank/inverted/solid output, wildly shifted tonal balance) still fails while double-JPEG rounding noise between the two codecs does not.",
+      "tolerance": 400000,
+      "ignoreKeys": []
+    }
+  ]
+}

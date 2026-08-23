@@ -16,7 +16,7 @@ path = "📦️lib.rs"
 [features]
 # 🔮️ Links the registered third-party reference implementations. Enabled only by a generated test
 # host, never by any production target — `bun ./📜️script.ts dependency` enforces that.
-oracles = ["dep:pdf-writer", "dep:lopdf", "dep:png", "dep:gif", "dep:zip", "dep:flate2", "dep:hound", "dep:csv", "dep:image", "dep:tobj", "dep:stl_io"]
+oracles = ["dep:pdf-writer", "dep:lopdf", "dep:png", "dep:gif", "dep:zip", "dep:flate2", "dep:hound", "dep:csv", "dep:image", "dep:tobj", "dep:stl_io", "dep:quick-xml", "dep:serde_json", "dep:html5ever", "dep:markup5ever_rcdom", "dep:comrak", "dep:dxf", "dep:las", "dep:mp4", "dep:ruststep", "dep:calamine", "dep:rust_xlsxwriter", "dep:ply-rs"]
 
 [dependencies]
 semio-repo-test-host = { path = "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust" }
@@ -31,3 +31,20 @@ csv = { version = "1", optional = true }
 image = { version = "0.25", optional = true, default-features = false, features = ["bmp", "tiff", "jpeg"] }
 tobj = { version = "4", optional = true }
 stl_io = { version = "0.8", optional = true }
+# 🔮️ Structured-text and CAD/BIM references. Each reads AND writes its format — a reader-only crate
+# cannot serve as a differential oracle, because a mutation oracle has to re-serialize what it changed.
+quick-xml = { version = "0.42", optional = true }
+serde_json = { version = "1", optional = true }
+html5ever = { version = "0.39", optional = true }
+markup5ever_rcdom = { version = "0.39", optional = true }
+comrak = { version = "0.54", optional = true }
+dxf = { version = "0.6", optional = true }
+las = { version = "0.11", optional = true }
+mp4 = { version = "0.14", optional = true }
+ruststep = { version = "0.4", optional = true }
+ply-rs = { version = "0.1", optional = true }
+# 📕️ XLSX needs two crates: `calamine` reads a workbook, `rust_xlsxwriter` writes one. Neither does
+# both, which is why the XLSX case is typed as an independent-reader round trip rather than a
+# differential — see 📓️w8-plan.md.
+calamine = { version = "0.36", optional = true }
+rust_xlsxwriter = { version = "0.96", optional = true }

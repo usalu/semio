@@ -1,0 +1,14 @@
+[workspace]
+
+[package]
+name = "bmp-fixture-gen"
+version = "0.0.0"
+edition = "2021"
+
+[[bin]]
+name = "bmp-fixture-gen"
+path = "src/main.rs"
+
+[dependencies]
+png = "0.18"
+image = { version = "0.25", default-features = false, features = ["bmp"] }

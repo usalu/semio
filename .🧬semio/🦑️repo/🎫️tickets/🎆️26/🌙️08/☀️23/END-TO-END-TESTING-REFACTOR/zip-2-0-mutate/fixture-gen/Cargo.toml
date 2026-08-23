@@ -1,0 +1,12 @@
+# 🧭️ One-off scratch generator (ticket 26/08/23/END-TO-END-TESTING-REFACTOR, wave 7, zip 2.0 any).
+# Not part of the repository build graph: own workspace root, lives entirely under the ticket folder.
+[workspace]
+
+[package]
+name = "zip-2-0-mutate-fixture-gen"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+zip = { version = "6", default-features = false, features = ["deflate"] }

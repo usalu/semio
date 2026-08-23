@@ -17,10 +17,9 @@
 //! nested/non-bare child slot the derive can't see): the type/mutation/persistence layer is fully
 //! real, only the derive-generated SCHEMA INTROSPECTION table is incomplete for this one field.
 
-use crate::artifacts::raster::{RasterAssetChild, RasterLayerMask, RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
+use crate::artifacts::raster::{RasterAssetChild, RasterLayerMask, RasterLayerNode, RasterOwnedMap, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted raster document snapshot (persistent fields of the artifact).
@@ -38,8 +37,8 @@ pub struct RasterSnapshot {
     #[state(artifact)]
     pub layers: Vec<RasterLayerNode>,
     #[state(artifact)]
-    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    pub assets: BTreeMap<String, RasterAssetChild>,
+    #[serde(default, skip_serializing_if = "RasterOwnedMap::is_empty")]
+    pub assets: RasterOwnedMap<RasterAssetChild>,
 }
 //#endregion 🔖️Snapshot
 
@@ -106,15 +105,15 @@ pub(crate) async fn dec_child(s: &str) -> Result<RasterAssetChild, String> {
     Ok(store::ArtifactChild::new(dec_str(child_id)?, dec_ref(target)?))
 }
 
-pub(crate) async fn enc_asset_map(map: &BTreeMap<String, RasterAssetChild>) -> String {
+pub(crate) async fn enc_asset_map(map: &RasterOwnedMap<RasterAssetChild>) -> String {
     format!("[{}]", map.iter().map(|(k, v)| format!("[{},{}]", enc_str(k), enc_child(v))).collect::<Vec<_>>().join(","))
 }
-pub(crate) async fn dec_asset_map(s: &str) -> Result<BTreeMap<String, RasterAssetChild>, String> {
-    let mut out = BTreeMap::new();
+pub(crate) async fn dec_asset_map(s: &str) -> Result<RasterOwnedMap<RasterAssetChild>, String> {
+    let mut out = RasterOwnedMap::new();
     for entry in split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()) {
         let parts = split_top_level(strip_brackets(entry)?, ',');
         let [key, child] = parts.as_slice() else { return Err(format!("asset map entry: expected 2 fields, got {}", parts.len())) };
-        out.insert(dec_str(key)?, dec_child(child)?);
+        out.insert(dec_str(key)?, dec_child(child)?).map_err(|rejected| rejected.reason.to_string())?;
     }
     Ok(out)
 }
@@ -148,17 +147,17 @@ pub(crate) async fn dec_mask_opt(s: &str) -> Result<Option<RasterLayerMask>, Str
 /// 🧬️ `params: BTreeMap<String, dsl::DslValue>` — structured/untyped values, encoded JSON-then-hex per
 /// entry (matches `📐️cad`'s established `JsonFieldPrimitives` convention for the same shape, per this
 /// ticket's migration recipe §2).
-pub(crate) async fn enc_params(params: &BTreeMap<String, dsl::DslValue>) -> String {
+pub(crate) async fn enc_params(params: &RasterOwnedMap<dsl::DslValue>) -> String {
     format!("[{}]", params.iter().map(|(k, v)| format!("[{},{}]", enc_str(k), hex_encode(&serde_json::to_vec(v).unwrap_or_default()))).collect::<Vec<_>>().join(","))
 }
-pub(crate) async fn dec_params(s: &str) -> Result<BTreeMap<String, dsl::DslValue>, String> {
-    let mut out = BTreeMap::new();
+pub(crate) async fn dec_params(s: &str) -> Result<RasterOwnedMap<dsl::DslValue>, String> {
+    let mut out = RasterOwnedMap::new();
     for entry in split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()) {
         let parts = split_top_level(strip_brackets(entry)?, ',');
         let [key, value] = parts.as_slice() else { return Err(format!("params entry: expected 2 fields, got {}", parts.len())) };
         let bytes = hex_decode(value)?;
         let dsl_value: dsl::DslValue = serde_json::from_slice(&bytes).map_err(|e| e.to_string())?;
-        out.insert(dec_str(key)?, dsl_value);
+        out.insert(dec_str(key)?, dsl_value).map_err(|rejected| rejected.reason.to_string())?;
     }
     Ok(out)
 }

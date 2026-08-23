@@ -1,0 +1,9 @@
+[workspace]
+
+[package]
+name = "lopdf-check"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+lopdf = "=0.44.0"

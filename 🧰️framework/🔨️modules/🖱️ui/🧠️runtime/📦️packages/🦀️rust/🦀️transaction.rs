@@ -573,6 +573,7 @@ impl FrameTransaction {
                 self.reconciled.push_back(ReconciledSurface { surface: active.surface, reconciler, patch });
                 self.charge(1, 0, 0);
             }
+            crate::reconcile::SurfaceReconcileStep::Fault(_) => self.credit_fault(),
         }
         true
     }

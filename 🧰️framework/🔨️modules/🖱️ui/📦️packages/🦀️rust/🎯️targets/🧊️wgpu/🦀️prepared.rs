@@ -131,18 +131,37 @@ impl PreparedRasterLedger {
         self.bytes -= credit.bytes;
         true
     }
+
+    fn resize(&mut self, credit: &mut PreparedRasterCredit, items: usize, bytes: usize) -> bool {
+        let Some(slot) = self.slots.get_mut(usize::from(credit.slot)) else { return false };
+        if !slot.occupied || slot.epoch != credit.epoch || slot.items != credit.items || slot.bytes != credit.bytes {
+            return false;
+        }
+        let Some(next_items) = self.items.checked_sub(credit.items).and_then(|value| value.checked_add(items)) else { return false };
+        let Some(next_bytes) = self.bytes.checked_sub(credit.bytes).and_then(|value| value.checked_add(bytes)) else { return false };
+        if next_items > PREPARED_RASTER_PRODUCER_ITEMS || next_bytes > PREPARED_RASTER_PRODUCER_BYTES {
+            return false;
+        }
+        slot.items = items;
+        slot.bytes = bytes;
+        self.items = next_items;
+        self.bytes = next_bytes;
+        credit.items = items;
+        credit.bytes = bytes;
+        true
+    }
 }
 
 #[derive(Debug, PartialEq, Eq)]
 struct PreparedRasterPage {
     start_row: u32,
     rows: u32,
-    bytes: Box<[u8]>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct PreparedRasterPages {
     slots: Vec<PreparedRasterPage>,
+    backing: Vec<u8>,
     page_capacity: usize,
     rows_per_page: u32,
     width: u32,
@@ -151,6 +170,7 @@ pub struct PreparedRasterPages {
     source_generation: PreparedRasterGeneration,
     frame_generation: u64,
     credit: Option<PreparedRasterCredit>,
+    backing_released: bool,
     key_released: bool,
     close_phase: u8,
 }
@@ -183,11 +203,28 @@ impl PreparedRasterPages {
         let logical = usize::try_from(row / self.rows_per_page).ok()?;
         let physical = self.page_capacity.checked_sub(logical.checked_add(1)?)?;
         let page = self.slots.get(physical)?;
-        (page.start_row == row).then_some((page.bytes.as_ref(), page.rows))
+        let row_bytes = usize::try_from(self.width).ok()?.checked_mul(4)?;
+        let start = usize::try_from(page.start_row).ok()?.checked_mul(row_bytes)?;
+        let len = usize::try_from(page.rows).ok()?.checked_mul(row_bytes)?;
+        let bytes = self.backing.get(start..start.checked_add(len)?)?;
+        (page.start_row == row).then_some((bytes, page.rows))
     }
 
     fn retire_page_step(&mut self) -> bool {
         self.slots.pop().is_some()
+    }
+
+    fn retire_backing_step(&mut self) -> bool {
+        if !self.backing.is_empty() {
+            self.backing.truncate(self.backing.len().saturating_sub(PREPARED_RASTER_PAGE_BYTES));
+            return false;
+        }
+        if !self.backing_released {
+            self.backing = Vec::new();
+            self.backing_released = true;
+            return false;
+        }
+        true
     }
 
     fn retire_metadata_step(&mut self) -> bool {
@@ -200,9 +237,10 @@ impl PreparedRasterPages {
             5 => self.byte_len = 0,
             6 => self.source_generation = PreparedRasterGeneration::default(),
             7 => self.frame_generation = 0,
-            8 => {
+            8 => self.backing_released = true,
+            9 => {
                 let Some(credit) = self.credit.as_ref() else {
-                    self.close_phase = 9;
+                    self.close_phase = 10;
                     return true;
                 };
                 let Ok(mut ledger) = PREPARED_RASTER_LEDGER.lock() else { return false };
@@ -221,6 +259,9 @@ impl PreparedRasterPages {
         if self.retire_page_step() {
             return false;
         }
+        if !self.retire_backing_step() {
+            return false;
+        }
         if key.pop().is_some() {
             return false;
         }
@@ -233,13 +274,12 @@ impl PreparedRasterPages {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.close_phase >= 9 && self.slots.is_empty() && self.slots.capacity() == 0 && self.key_released && self.credit.is_none()
+        self.close_phase >= 10 && self.slots.is_empty() && self.slots.capacity() == 0 && self.backing.is_empty() && self.backing.capacity() == 0 && self.backing_released && self.key_released && self.credit.is_none()
     }
 
     #[cfg(test)]
     fn page_pointer(&self, logical: usize) -> Option<*const u8> {
-        let physical = self.page_capacity.checked_sub(logical.checked_add(1)?)?;
-        self.slots.get(physical).map(|page| page.bytes.as_ptr())
+        self.page_for_row(u32::try_from(logical).ok()?.checked_mul(self.rows_per_page)?).map(|(bytes, _)| bytes.as_ptr())
     }
 }
 
@@ -248,7 +288,10 @@ pub struct PreparedRasterRejected {
     fault: &'static str,
     key: String,
     source: Vec<u8>,
+    retained_source: Vec<u8>,
+    credit: Option<PreparedRasterCredit>,
     source_released: bool,
+    retained_source_released: bool,
     key_released: bool,
 }
 
@@ -267,6 +310,15 @@ impl PreparedRasterRejected {
             self.source_released = true;
             return false;
         }
+        if !self.retained_source.is_empty() {
+            self.retained_source.truncate(self.retained_source.len().saturating_sub(PREPARED_RASTER_PAGE_BYTES));
+            return false;
+        }
+        if !self.retained_source_released {
+            self.retained_source = Vec::new();
+            self.retained_source_released = true;
+            return false;
+        }
         if self.key.pop().is_some() {
             return false;
         }
@@ -275,7 +327,134 @@ impl PreparedRasterRejected {
             self.key_released = true;
             return false;
         }
+        if let Some(credit) = self.credit.as_ref() {
+            let Ok(mut ledger) = PREPARED_RASTER_LEDGER.lock() else { return false };
+            if !ledger.release(credit) {
+                return false;
+            }
+            self.credit = None;
+            return false;
+        }
         true
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.source.is_empty()
+            && self.source.capacity() == 0
+            && self.source_released
+            && self.retained_source.is_empty()
+            && self.retained_source.capacity() == 0
+            && self.retained_source_released
+            && self.key.is_empty()
+            && self.key.capacity() == 0
+            && self.key_released
+            && self.credit.is_none()
+    }
+}
+
+#[derive(Debug)]
+pub struct PreparedRasterReservation {
+    key: String,
+    credit: Option<PreparedRasterCredit>,
+    claim: Option<PreparedRasterClaim>,
+    source_bytes: usize,
+    source_peak_bytes: usize,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct PreparedRasterClaim {
+    width: u32,
+    height: u32,
+    byte_len: usize,
+    rows_per_page: usize,
+    page_capacity: usize,
+}
+
+impl PreparedRasterReservation {
+    pub fn try_reserve(key: String) -> Result<Self, PreparedRasterRejected> {
+        Self::try_reserve_source(key, 0)
+    }
+
+    pub fn try_reserve_source(key: String, source_bytes: usize) -> Result<Self, PreparedRasterRejected> {
+        let reject = |fault, key| PreparedRasterRejected { fault, key, source: Vec::new(), retained_source: Vec::new(), credit: None, source_released: false, retained_source_released: false, key_released: false };
+        if key.len() > PREPARED_RASTER_KEY_BYTES {
+            return Err(reject("raster producer exceeded fixed key credits", key));
+        }
+        let Some(key_bytes) = key.capacity().checked_mul(2) else { return Err(reject("raster producer key credits overflowed", key)) };
+        let Some(source_peak_bytes) = source_bytes.checked_mul(2) else { return Err(reject("raster producer source credits overflowed", key)) };
+        let Some(bytes) = source_peak_bytes.checked_add(key_bytes) else { return Err(reject("raster producer source credits overflowed", key)) };
+        if source_bytes > PREPARED_RASTER_ITEM_BYTES {
+            return Err(reject("raster producer source exceeded fixed credits", key));
+        }
+        let credit = PREPARED_RASTER_LEDGER.lock().ok().and_then(|mut ledger| ledger.reserve(1, bytes));
+        let Some(credit) = credit else { return Err(reject("raster producer process credits exhausted", key)) };
+        Ok(Self { key, credit: Some(credit), claim: None, source_bytes, source_peak_bytes })
+    }
+
+    pub fn reject(mut self, fault: &'static str, source: Vec<u8>) -> PreparedRasterRejected {
+        self.reject_with_retained(fault, source, Vec::new())
+    }
+
+    pub fn reject_with_retained(mut self, fault: &'static str, source: Vec<u8>, retained_source: Vec<u8>) -> PreparedRasterRejected {
+        PreparedRasterRejected { fault, key: std::mem::take(&mut self.key), source, retained_source, credit: self.credit.take(), source_released: false, retained_source_released: false, key_released: false }
+    }
+
+    pub fn claim(mut self, width: u32, height: u32) -> Result<Self, PreparedRasterRejected> {
+        self.claim_with_retained(width, height, Vec::new()).map(|(reservation, _)| reservation)
+    }
+
+    pub fn claim_with_retained(mut self, width: u32, height: u32, retained_source: Vec<u8>) -> Result<(Self, Vec<u8>), PreparedRasterRejected> {
+        let reject = |reservation: Self, fault, retained_source| reservation.reject_with_retained(fault, Vec::new(), retained_source);
+        if retained_source.capacity() > self.source_bytes {
+            return Err(reject(self, "raster retained source exceeded its pre-admitted workspace", retained_source));
+        }
+        let Some(row_bytes) = usize::try_from(width).ok().and_then(|value| value.checked_mul(4)) else { return Err(reject(self, "raster row byte credits overflowed", retained_source)) };
+        let Some(byte_len) = row_bytes.checked_mul(usize::try_from(height).unwrap_or(usize::MAX)) else { return Err(reject(self, "raster byte credits overflowed", retained_source)) };
+        if width == 0 || height == 0 || row_bytes > PREPARED_RASTER_PAGE_BYTES || byte_len > PREPARED_RASTER_ITEM_BYTES {
+            return Err(reject(self, "raster producer exceeded fixed item or byte credits", retained_source));
+        }
+        let rows_per_page = (PREPARED_RASTER_PAGE_BYTES / row_bytes).max(1);
+        let page_capacity = usize::try_from(height).unwrap_or(usize::MAX).div_ceil(rows_per_page);
+        let Some(items) = page_capacity.checked_add(8) else { return Err(reject(self, "raster producer item credits overflowed", retained_source)) };
+        let Some(key_bytes) = self.key.capacity().checked_mul(2) else { return Err(reject(self, "raster producer key credits overflowed", retained_source)) };
+        let Some(page_slot_bytes) = page_capacity.checked_mul(size_of::<PreparedRasterPage>()) else { return Err(reject(self, "raster producer page slot credits overflowed", retained_source)) };
+        let Some(bytes) = self.source_peak_bytes.checked_add(byte_len).and_then(|value| value.checked_add(key_bytes)).and_then(|value| value.checked_add(page_slot_bytes)) else {
+            return Err(reject(self, "raster producer aggregate bytes overflowed", retained_source));
+        };
+        let resized = self.credit.as_mut().is_some_and(|credit| PREPARED_RASTER_LEDGER.lock().is_ok_and(|mut ledger| ledger.resize(credit, items, bytes)));
+        if !resized {
+            return Err(reject(self, "raster producer exact credit resize failed", retained_source));
+        }
+        self.claim = Some(PreparedRasterClaim { width, height, byte_len, rows_per_page, page_capacity });
+        Ok((self, retained_source))
+    }
+
+    pub fn finalize(mut self, source: Vec<u8>, retained_source: Vec<u8>, width: u32, height: u32) -> Result<(PreparedRasterProducer, String), PreparedRasterRejected> {
+        let reject = |reservation: Self, fault, source, retained_source| reservation.reject_with_retained(fault, source, retained_source);
+        let Some(claim) = self.claim else { return Err(reject(self, "raster producer was not claimed before materialization", source, retained_source)) };
+        if claim.width != width || claim.height != height || source.len() != claim.byte_len || source.capacity() > claim.byte_len || retained_source.capacity() > self.source_bytes {
+            return Err(reject(self, "raster materialization did not match its exact claim", source, retained_source));
+        }
+        let credit = self.credit.take().expect("reserved raster credit");
+        let source_generation = PreparedRasterGeneration { slot: credit.slot, epoch: credit.epoch };
+        let pages = PreparedRasterPages {
+            slots: Vec::with_capacity(claim.page_capacity),
+            backing: Vec::new(),
+            page_capacity: claim.page_capacity,
+            rows_per_page: claim.rows_per_page as u32,
+            width,
+            height,
+            byte_len: claim.byte_len,
+            source_generation,
+            frame_generation: 0,
+            credit: Some(credit),
+            backing_released: false,
+            key_released: false,
+            close_phase: 0,
+        };
+        let published_key = self.key.clone();
+        let retained_source_released = retained_source.is_empty();
+        Ok((PreparedRasterProducer { key: self.key, source, retained_source, pages: Some(pages), frame_generation: None, source_released: false, retained_source_released, closing: false }, published_key))
     }
 }
 
@@ -283,9 +462,11 @@ impl PreparedRasterRejected {
 pub struct PreparedRasterProducer {
     key: String,
     source: Vec<u8>,
+    retained_source: Vec<u8>,
     pages: Option<PreparedRasterPages>,
     frame_generation: Option<u64>,
     source_released: bool,
+    retained_source_released: bool,
     closing: bool,
 }
 
@@ -301,38 +482,19 @@ impl PreparedRasterProducer {
     }
 
     pub fn try_admit(key: String, source: Vec<u8>, width: u32, height: u32) -> Result<(Self, String), PreparedRasterRejected> {
-        let reject = |fault, key, source| PreparedRasterRejected { fault, key, source, source_released: false, key_released: false };
-        let Some(row_bytes) = usize::try_from(width).ok().and_then(|value| value.checked_mul(4)) else { return Err(reject("raster row byte credits overflowed", key, source)) };
-        let Some(byte_len) = row_bytes.checked_mul(usize::try_from(height).unwrap_or(usize::MAX)) else { return Err(reject("raster byte credits overflowed", key, source)) };
-        if width == 0 || height == 0 || row_bytes > PREPARED_RASTER_PAGE_BYTES || byte_len > PREPARED_RASTER_ITEM_BYTES || source.len() != byte_len || key.len() > PREPARED_RASTER_KEY_BYTES {
-            return Err(reject("raster producer exceeded fixed item or byte credits", key, source));
+        match PreparedRasterReservation::try_reserve(key) {
+            Ok(reservation) => match reservation.claim(width, height) {
+                Ok(reservation) => reservation.finalize(source, Vec::new(), width, height),
+                Err(mut rejected) => {
+                    rejected.source = source;
+                    Err(rejected)
+                }
+            },
+            Err(mut rejected) => {
+                rejected.source = source;
+                Err(rejected)
+            }
         }
-        let rows_per_page = (PREPARED_RASTER_PAGE_BYTES / row_bytes).max(1);
-        let page_capacity = usize::try_from(height).unwrap_or(usize::MAX).div_ceil(rows_per_page);
-        let Some(items) = page_capacity.checked_add(5) else { return Err(reject("raster producer item credits overflowed", key, source)) };
-        let Some(key_bytes) = key.capacity().checked_mul(2) else { return Err(reject("raster producer key credits overflowed", key, source)) };
-        let Some(page_slot_bytes) = page_capacity.checked_mul(size_of::<PreparedRasterPage>()) else { return Err(reject("raster producer page slot credits overflowed", key, source)) };
-        let Some(bytes) = source.capacity().checked_add(byte_len).and_then(|value| value.checked_add(key_bytes)).and_then(|value| value.checked_add(page_slot_bytes)) else {
-            return Err(reject("raster producer aggregate bytes overflowed", key, source));
-        };
-        let credit = PREPARED_RASTER_LEDGER.lock().ok().and_then(|mut ledger| ledger.reserve(items, bytes));
-        let Some(credit) = credit else { return Err(reject("raster producer process credits exhausted", key, source)) };
-        let source_generation = PreparedRasterGeneration { slot: credit.slot, epoch: credit.epoch };
-        let pages = PreparedRasterPages {
-            slots: Vec::with_capacity(page_capacity),
-            page_capacity,
-            rows_per_page: rows_per_page as u32,
-            width,
-            height,
-            byte_len,
-            source_generation,
-            frame_generation: 0,
-            credit: Some(credit),
-            key_released: false,
-            close_phase: 0,
-        };
-        let published_key = key.clone();
-        Ok((Self { key, source, pages: Some(pages), frame_generation: None, source_released: false, closing: false }, published_key))
     }
 
     pub fn bind_frame_generation(&mut self, generation: u64) -> bool {
@@ -362,17 +524,33 @@ impl PreparedRasterProducer {
                 self.source_released = true;
                 return PreparedRasterProducerStep::Pending;
             }
+            if !self.retained_source.is_empty() {
+                self.retained_source.truncate(self.retained_source.len().saturating_sub(PREPARED_RASTER_PAGE_BYTES));
+                return PreparedRasterProducerStep::Pending;
+            }
+            if !self.retained_source_released {
+                self.retained_source = Vec::new();
+                self.retained_source_released = true;
+                return PreparedRasterProducerStep::Pending;
+            }
             let pages = self.pages.take().expect("completed raster pages");
             let key = std::mem::take(&mut self.key);
             return PreparedRasterProducerStep::Complete(PreparedRenderUpload::RasterPages { key, pixels: pages });
         }
         let pages = self.pages.as_mut().expect("admitted raster pages");
-        let page_bytes = usize::try_from(pages.rows_per_page).unwrap_or(usize::MAX) * usize::try_from(pages.width).unwrap_or(usize::MAX) * 4;
-        let start = self.source.len().saturating_sub(1) / page_bytes * page_bytes;
-        let bytes = self.source.split_off(start).into_boxed_slice();
-        let start_row = u32::try_from(start / (usize::try_from(pages.width).unwrap_or(usize::MAX) * 4)).unwrap_or(u32::MAX);
-        let rows = u32::try_from(bytes.len() / (usize::try_from(pages.width).unwrap_or(usize::MAX) * 4)).unwrap_or(u32::MAX);
-        pages.slots.push(PreparedRasterPage { start_row, rows, bytes });
+        if pages.slots.len() == pages.page_capacity {
+            pages.backing = std::mem::take(&mut self.source);
+            self.source_released = true;
+            return PreparedRasterProducerStep::Pending;
+        }
+        let row_bytes = usize::try_from(pages.width).unwrap_or(usize::MAX) * 4;
+        let page_bytes = usize::try_from(pages.rows_per_page).unwrap_or(usize::MAX) * row_bytes;
+        let logical = pages.page_capacity.saturating_sub(pages.slots.len().saturating_add(1));
+        let start = logical.saturating_mul(page_bytes);
+        let end = start.saturating_add(page_bytes).min(self.source.len());
+        let start_row = u32::try_from(start / row_bytes).unwrap_or(u32::MAX);
+        let rows = u32::try_from((end - start) / row_bytes).unwrap_or(u32::MAX);
+        pages.slots.push(PreparedRasterPage { start_row, rows });
         PreparedRasterProducerStep::Pending
     }
 
@@ -385,6 +563,9 @@ impl PreparedRasterProducer {
         if pages.retire_page_step() {
             return false;
         }
+        if !pages.retire_backing_step() {
+            return false;
+        }
         if !self.source.is_empty() {
             self.source.truncate(self.source.len().saturating_sub(PREPARED_RASTER_PAGE_BYTES));
             return false;
@@ -392,6 +573,15 @@ impl PreparedRasterProducer {
         if !self.source_released {
             self.source = Vec::new();
             self.source_released = true;
+            return false;
+        }
+        if !self.retained_source.is_empty() {
+            self.retained_source.truncate(self.retained_source.len().saturating_sub(PREPARED_RASTER_PAGE_BYTES));
+            return false;
+        }
+        if !self.retained_source_released {
+            self.retained_source = Vec::new();
+            self.retained_source_released = true;
             return false;
         }
         if self.key.pop().is_some() {
@@ -406,7 +596,15 @@ impl PreparedRasterProducer {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.key.is_empty() && self.source.is_empty() && self.source_released && self.pages.as_ref().is_none_or(PreparedRasterPages::terminal_is_empty)
+        self.key.is_empty()
+            && self.key.capacity() == 0
+            && self.source.is_empty()
+            && self.source.capacity() == 0
+            && self.source_released
+            && self.retained_source.is_empty()
+            && self.retained_source.capacity() == 0
+            && self.retained_source_released
+            && self.pages.as_ref().is_none_or(PreparedRasterPages::terminal_is_empty)
     }
 }
 //#endregion 🧩️PagedRasterProducer
@@ -1022,16 +1220,25 @@ impl InteractiveJob for PreparedRenderJob {
             return StepOutcome::Fault(JobFault { detail: b"prepared render generation is stale".to_vec() });
         }
         if let Some(producer) = self.input.as_mut().expect("prepared render input").raster_producers.front_mut() {
-            match producer.step(cx.generation().0) {
-                PreparedRasterProducerStep::Pending => return StepOutcome::Yield,
+            if cx.should_yield() {
+                return StepOutcome::Yield;
+            }
+            cx.consume_fuel(1);
+            let step = producer.step(cx.generation().0);
+            let outcome = match step {
+                PreparedRasterProducerStep::Pending => StepOutcome::Yield,
                 PreparedRasterProducerStep::Complete(upload) => {
                     let input = self.input.as_mut().expect("prepared render input");
                     input.raster_producers.pop_front();
                     input.uploads.push(upload);
-                    return StepOutcome::Yield;
+                    StepOutcome::Yield
                 }
-                PreparedRasterProducerStep::Fault(fault) => return StepOutcome::Fault(JobFault { detail: fault.as_bytes().to_vec() }),
+                PreparedRasterProducerStep::Fault(fault) => StepOutcome::Fault(JobFault { detail: fault.as_bytes().to_vec() }),
+            };
+            if cx.is_cancelled() {
+                return StepOutcome::Cancelled;
             }
+            return outcome;
         }
         let mut processed = 0usize;
         while processed < self.items_per_step && !cx.should_yield() {
@@ -1276,6 +1483,7 @@ mod tests {
     #[test]
     fn paged_raster_producer_advances_one_page_and_moves_page_identity() {
         let source = vec![7; PREPARED_RASTER_PAGE_BYTES * 2];
+        let source_pointer = source.as_ptr();
         let (mut producer, published_key) = PreparedRasterProducer::try_admit("two-pages".into(), source, 4_096, 2).expect("exact two-page admission");
         assert_eq!(published_key, "two-pages");
         assert!(producer.bind_frame_generation(9));
@@ -1289,6 +1497,7 @@ mod tests {
             PreparedRasterProducerStep::Complete(upload) => upload,
             _ => panic!("completed page handoff"),
         };
+        assert_eq!(first, source_pointer, "page view borrows the exact decoder backing");
         assert!(matches!(&upload, PreparedRenderUpload::RasterPages { pixels, .. } if pixels.page_pointer(0) == Some(first) && pixels.frame_generation() == 9));
         retire_raster_upload(upload);
     }
@@ -1318,16 +1527,86 @@ mod tests {
     }
 
     #[test]
-    fn raster_process_bytes_plus_one_returns_the_exact_reserved_backing() {
-        let mut source = Vec::with_capacity(PREPARED_RASTER_PRODUCER_BYTES);
-        source.extend_from_slice(&[1, 2, 3, 4]);
-        let pointer = source.as_ptr();
-        let capacity = source.capacity();
-        let mut rejected = PreparedRasterProducer::try_admit("bytes-plus-one".into(), source, 1, 1).expect_err("source backing plus derived page exceeds process bytes");
-        assert_eq!(rejected.source.as_ptr(), pointer);
-        assert_eq!(rejected.source.capacity(), capacity);
-        assert_eq!(rejected.fault(), "raster producer process credits exhausted");
+    fn raster_item_bytes_exact_and_plus_one_are_claimed_before_materialization() {
+        let reservation = PreparedRasterReservation::try_reserve("item-exact".into()).expect("initial exact reservation");
+        let reservation = reservation.claim(4_096, 1_024).expect("sixteen MiB operation claim");
+        let mut rejected = reservation.reject("test retirement", Vec::new());
         while !rejected.close_step() {}
+        assert!(rejected.terminal_is_empty());
+
+        let reservation = PreparedRasterReservation::try_reserve("item-plus-one".into()).expect("initial plus-one reservation");
+        let mut rejected = reservation.claim(4_096, 1_025).expect_err("sixteen MiB plus one row");
+        assert_eq!(rejected.fault(), "raster producer exceeded fixed item or byte credits");
+        while !rejected.close_step() {}
+        assert!(rejected.terminal_is_empty());
+    }
+
+    #[test]
+    fn raster_simultaneous_source_decode_peak_exact_and_plus_one() {
+        let height = 1_023usize;
+        let decoded_bytes = PREPARED_RASTER_PAGE_BYTES * height;
+        let page_slot_bytes = size_of::<PreparedRasterPage>() * height;
+        let source_peak_bytes = PREPARED_RASTER_PRODUCER_BYTES - decoded_bytes - page_slot_bytes;
+        assert_eq!(source_peak_bytes % 2, 0, "exact source workspace boundary");
+        let source_bytes = source_peak_bytes / 2;
+
+        let reservation = PreparedRasterReservation::try_reserve_source(String::new(), source_bytes).expect("exact simultaneous source reservation");
+        let reservation = reservation.claim(4_096, height as u32).expect("source plus retained parse plus decoded backing and page slots exactly fit");
+        assert_eq!(reservation.credit.as_ref().unwrap().bytes, PREPARED_RASTER_PRODUCER_BYTES);
+        let mut rejected = reservation.reject("exact peak retirement", Vec::new());
+        while !rejected.close_step() {}
+
+        let reservation = PreparedRasterReservation::try_reserve_source(String::new(), source_bytes + 1).expect("plus one source is initially retained");
+        let mut rejected = reservation.claim(4_096, height as u32).expect_err("simultaneous source and decoded peak plus one must fail before decode");
+        assert_eq!(rejected.fault(), "raster producer exact credit resize failed");
+        while !rejected.close_step() {}
+    }
+
+    #[test]
+    fn retained_codec_source_moves_once_and_retires_one_page_per_governed_step() {
+        let decoded = vec![7; PREPARED_RASTER_PAGE_BYTES];
+        let retained_source = vec![9; PREPARED_RASTER_PAGE_BYTES * 2];
+        let retained_pointer = retained_source.as_ptr();
+        let reservation = PreparedRasterReservation::try_reserve_source("retained-source".into(), retained_source.capacity()).expect("source workspace admitted before decode");
+        let reservation = reservation.claim(4_096, 1).expect("decoded owner credited in addition to retained source");
+        let (producer, _) = reservation.finalize(decoded, retained_source, 4_096, 1).expect("exact retained source owner");
+        assert_eq!(producer.retained_source.as_ptr(), retained_pointer);
+
+        let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
+        input.raster_producers.push_back(producer);
+        let mut job = PreparedRenderJob::new(input, 1);
+        let mut preview = 0;
+        let now_ms = || 0.0;
+        for expected in [PREPARED_RASTER_PAGE_BYTES * 2, PREPARED_RASTER_PAGE_BYTES * 2, PREPARED_RASTER_PAGE_BYTES, 0] {
+            let outcome = drive_step(&mut job, "ui-wgpu.prepare", OperationId(11), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(1, 10), root_cancel_token(), now_ms, &mut preview);
+            assert!(matches!(outcome, StepOutcome::Yield));
+            assert_eq!(job.input.as_ref().unwrap().raster_producers.front().unwrap().retained_source.len(), expected);
+        }
+        assert_eq!(job.input.as_ref().unwrap().raster_producers.front().unwrap().retained_source.as_ptr(), retained_pointer);
+        while !job.close_step() {}
+        assert!(job.terminal_is_empty());
+    }
+
+    #[test]
+    fn raster_ledger_exact_item_and_generation_slot_caps_reject_plus_one() {
+        let mut ledger = PreparedRasterLedger::default();
+        let item = ledger.reserve(PREPARED_RASTER_PRODUCER_ITEMS, 1).expect("exact aggregate items");
+        assert!(ledger.reserve(1, 0).is_none(), "aggregate item cap plus one");
+        assert!(ledger.release(&item));
+
+        let bytes = ledger.reserve(1, PREPARED_RASTER_PRODUCER_BYTES).expect("exact aggregate bytes");
+        assert!(ledger.reserve(0, 1).is_none(), "aggregate byte cap plus one");
+        assert!(ledger.release(&bytes));
+
+        let mut credits = Vec::with_capacity(PREPARED_RASTER_PRODUCER_CAPACITY);
+        for _ in 0..PREPARED_RASTER_PRODUCER_CAPACITY {
+            credits.push(ledger.reserve(1, 1).expect("exact fixed generation slot"));
+        }
+        assert!(ledger.reserve(1, 1).is_none(), "generation slot cap plus one");
+        for credit in credits {
+            assert!(ledger.release(&credit));
+        }
+        assert_eq!((ledger.items, ledger.bytes), (0, 0));
     }
 
     #[test]
@@ -1347,6 +1626,32 @@ mod tests {
         assert!(second_epoch.epoch() > first_epoch.epoch(), "reused fixed slot advances its generation");
         second.begin_close();
         while !second.close_step() {}
+    }
+
+    #[test]
+    fn zero_fuel_and_expired_deadline_advance_no_raster_page_or_allocation() {
+        let (mut producer, _) = PreparedRasterProducer::try_admit("governed".into(), vec![4; PREPARED_RASTER_PAGE_BYTES], 4_096, 1).expect("one-page producer");
+        assert!(producer.bind_frame_generation(3));
+        let source_pointer = producer.source.as_ptr();
+        let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
+        input.raster_producers.push_back(producer);
+        let mut job = PreparedRenderJob::new(input, 1);
+        let mut preview = 0;
+
+        let zero = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(0, 10), root_cancel_token(), now_ms, &mut preview);
+        assert!(matches!(zero, StepOutcome::Yield));
+        let retained = job.input.as_ref().unwrap().raster_producers.front().unwrap();
+        assert_eq!(retained.source.as_ptr(), source_pointer);
+        assert!(retained.pages.as_ref().unwrap().slots.is_empty());
+
+        let expired = drive_step(&mut job, "ui-wgpu.prepare", OperationId(1), Generation(3), InteractiveStage::BackgroundStep, StepBudget::new(1, 1), root_cancel_token(), now_ms, &mut preview);
+        assert!(matches!(expired, StepOutcome::Yield));
+        let retained = job.input.as_ref().unwrap().raster_producers.front().unwrap();
+        assert_eq!(retained.source.as_ptr(), source_pointer);
+        assert!(retained.pages.as_ref().unwrap().slots.is_empty());
+
+        while !job.close_step() {}
+        assert!(job.terminal_is_empty());
     }
 
     #[test]

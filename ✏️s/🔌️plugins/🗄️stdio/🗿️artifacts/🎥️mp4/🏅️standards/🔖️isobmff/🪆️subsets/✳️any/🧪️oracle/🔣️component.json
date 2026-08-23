@@ -1,0 +1,36 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🔮️ This subset's own contribution to the repository test platform: the `mp4` 0.14 reference reader/writer registered specifically for ISO-BMFF `any`-subset mutation coverage, the exhaustive Mp4Mutation vocabulary it is measured against (10 kinds), and the lossless structural comparison profile a real H.264 mux/demux round trip through two independently written muxers needs. No shared entry in ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️component.json references the `mp4` package at all, so this id/capability pair is wholly this subset's own.",
+  "oracles": [
+    {
+      "id": "mp4-isobmff-mutate",
+      "ecosystem": "rust",
+      "package": "mp4",
+      "version": "0.14",
+      "capabilities": ["mp4-isobmff-mutate"],
+      "comparisonProfiles": ["semantic-mp4-mutate-v1"],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/alfg/mp4-rust",
+      "rationale": "The reference ISO-BMFF reader/writer of the Rust ecosystem. Unlike several of this wave's other reference crates it genuinely both reads AND writes: `Mp4Reader::read_header`/`read_sample` parse a real `moov`/`mdat` into typed tracks and samples, and `Mp4Writer::write_start`/`add_track`/`write_sample`/`write_end` re-mux a fresh, real, spec-valid file from them (confirmed against the real derived fixture before this manifest was written — a round trip through `mp4` alone reproduces every sample's payload bytes exactly). Every declared mutation kind is therefore performed for real through `mp4`'s own writer, not synthesized, and scenarios are typed `@mode-differential` per the fleet brief. `mp4`'s public surface only covers a single AVC (h264) `avc1` sample entry per track with a single SPS/single PPS and a hardcoded 4-byte NAL length size — the exact shape of the real fixture's own H.264 stream, so this is not a narrowing the oracle imposes, it is the format the real input already is.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "mp4-isobmff-any",
+      "capability": "mp4-isobmff-mutate",
+      "kinds": ["no-mutation", "set-snapshot", "set-ftyp", "insert-track", "remove-track", "set-track-dimensions", "set-track-codec", "insert-sample", "remove-sample", "set-sample-sync"]
+    }
+  ],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-mp4-mutate-v1",
+      "description": "ISO-BMFF mutation round trips compared structurally: `ftyp` (major brand, minor version, ordered compatible-brand list), per-track geometry/timescale, a digest of the track's SPS/PPS, and every sample's duration/composition-time-offset/sync-flag/payload digest, arrays order-significant. H.264 sample payloads are container-typed and payload-opaque (never re-encoded pixels), so unlike this wave's lossy raster oracles this comparison is exact, not bucketed — a real per-sample content digest instead of raw bytes only because a single real sample can run tens of kilobytes and the platform's JSON projections are not meant to carry megabytes of payload. Track identifiers are deliberately excluded: `mp4`'s own writer renumbers every track sequentially from 1 on write regardless of what was read, a writer convention this profile treats as producer freedom rather than content, exactly as chunk-to-sample grouping (`stsc`) is excluded for the same reason.",
+      "arrays": "ordered",
+      "ignoreKeys": []
+    }
+  ]
+}

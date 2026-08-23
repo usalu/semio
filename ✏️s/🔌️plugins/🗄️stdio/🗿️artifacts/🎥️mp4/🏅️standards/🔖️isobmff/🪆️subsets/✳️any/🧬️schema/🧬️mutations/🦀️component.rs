@@ -59,6 +59,12 @@ pub enum Mp4Mutation {
     },
 }
 
+/// 📇️ Kebab-case spelling of every `Mp4Mutation` variant, in declaration order — the ground truth
+/// `../../🧪️oracle/🔣️component.json`'s own `kinds` list is checked against (the framework never
+/// parses Rust, so `kinds_const_matches_enum_variants_in_declaration_order` below is what keeps the
+/// declaration honest). Wave 7 fleet brief, ticket 26/08/23/END-TO-END-TESTING-REFACTOR.
+pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-ftyp", "insert-track", "remove-track", "set-track-dimensions", "set-track-codec", "insert-sample", "remove-sample", "set-sample-sync"];
+
 fn track_diff_for(track_index: usize, inner: Mp4TrackDiff) -> Mp4Diff {
     Mp4Diff { ftyp: None, movie: None, tracks: Some(IndexedDiff { removed: vec![], modified: vec![IndexedModified { index: track_index, diff: inner }], added: vec![] }) }
 }
@@ -279,6 +285,32 @@ mod tests {
             let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
             let decoded = Mp4Mutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, m);
+        }
+    }
+
+    /// 🧪️ kinds_law — `KINDS` must cover every variant, in the exact order `OpText::print_op`'s own
+    /// keyword derives them, so the oracle catalog's declaration is provably honest (fleet brief
+    /// §1: "the framework never parses Rust to check it itself").
+    #[semio_framework_async_macros::async_test]
+    async fn kinds_const_matches_enum_variants_in_declaration_order() {
+        let base = base_snapshot();
+        let one_per_variant = vec![
+            Mp4Mutation::NoMutation,
+            Mp4Mutation::SetSnapshot { snapshot: base.clone() },
+            Mp4Mutation::SetFtyp { ftyp: base.ftyp.clone() },
+            Mp4Mutation::InsertTrack { index: 1, track: base.tracks[0].clone() },
+            Mp4Mutation::RemoveTrack { index: 0 },
+            Mp4Mutation::SetTrackDimensions { track_index: 0, width: 128, height: 128 },
+            Mp4Mutation::SetTrackCodec { track_index: 0, codec: base.tracks[0].codec.clone() },
+            Mp4Mutation::InsertSample { track_index: 0, index: 0, sample: base.tracks[0].samples[0].clone() },
+            Mp4Mutation::RemoveSample { track_index: 0, index: 0 },
+            Mp4Mutation::SetSampleSync { track_index: 0, index: 0, sync: false },
+        ];
+        assert_eq!(one_per_variant.len(), KINDS.len(), "one_per_variant must cover every KINDS entry exactly once");
+        for (mutation, kind) in one_per_variant.iter().zip(KINDS.iter()) {
+            let printed = mutation.print_op();
+            let keyword = printed.split(' ').next().unwrap_or(&printed);
+            assert_eq!(keyword, *kind, "KINDS order must match the enum's own OpText keyword order for {mutation:?}");
         }
     }
 

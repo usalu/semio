@@ -1,0 +1,48 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's contribution to the repository test platform — the BMP v3 ✳️any mutation catalog and its dedicated mutate oracle. Discovered by convention (`testContributionDirName` in 🔣️taxonomy.json); the shared stdio manifest (`✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️component.json`) already registers `image-bmp` under capability `bmp-raster` for plain create/round-trip coverage — mutation coverage needs its own capability so the two are never conflated, per the wave-7 fleet brief.",
+  "oracles": [
+    {
+      "id": "image-bmp-3-mutate",
+      "ecosystem": "rust",
+      "package": "image",
+      "version": "0.25",
+      "capabilities": [
+        "bmp-3-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-raster-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/image-rs/image",
+      "rationale": "The same reference BMP encoder/decoder already registered as `image-bmp` (shared stdio manifest), given its own capability for the 7 typed BmpMutation kinds this subset declares. The independent decoder reads both this subset's own encode_bmp output and the oracle's own re-encode, so a mutation's effect is judged the same way regardless of which side produced the bytes.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "productionDebt": {
+        "reachableFrom": [
+          "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️component.rs",
+          "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️component.rs"
+        ],
+        "owner": "🧰️framework/🔨️modules/🗺️surface",
+        "plan": "The `image` crate is production-reachable TODAY from two places: the 🎞️animate plugin's video engine and 🧰️framework/🔨️modules/🗺️surface's tiled-map. Discovered by the oracle-purity gate the moment `image` was registered — the gate did its job. Phase 7 target: both call sites want raster decode/encode that ✏️s/🔌️plugins/🗄️stdio already implements, so routing them through decode_bmp / decode_tiff / decode_jpg retires the dependency and this record with it."
+      }
+    }
+  ],
+  "noOracleDecisions": [],
+  "mutationCatalogs": [
+    {
+      "id": "bmp-3-any",
+      "capability": "bmp-3-mutate",
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "set-header-fields",
+        "insert-palette-entry",
+        "remove-palette-entry",
+        "set-palette-entry",
+        "set-pixel-data"
+      ]
+    }
+  ]
+}

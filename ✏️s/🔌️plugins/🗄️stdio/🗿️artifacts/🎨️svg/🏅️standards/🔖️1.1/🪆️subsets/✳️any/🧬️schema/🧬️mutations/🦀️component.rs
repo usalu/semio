@@ -81,6 +81,13 @@ pub enum SvgMutation {
         transform: Option<Vec<TransformOp>>,
     },
 }
+
+/// 📇️ Kebab-case spelling of every `SvgMutation` variant, in declaration order --
+/// `kinds_const_matches_enum_variants_in_declaration_order` (below, in `mod tests`) is what keeps
+/// this honest against the enum it claims to spell, since the framework never parses Rust to check
+/// it itself. Mirrored verbatim (not imported) into `../../../../🧪️tests/mutate-svg-1-1/🦀️component.rs`
+/// and `../../🧪️oracle/🔣️component.json`'s own `mutationCatalogs[0].kinds`.
+pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-declaration", "set-doctype", "insert-element", "remove-element", "set-element-name", "set-attribute", "set-text", "set-view-box", "set-transform"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -1235,6 +1242,36 @@ mod tests {
         assert_eq!(applied.export_utf8().expect("set snapshot export"), original);
     }
     //#endregion 🔖️LosslessLogicalState
+
+    //#region 🔖️KindsLaw
+    /// 🧪️ Keeps `KINDS` honest against the enum it claims to spell: every variant's
+    /// `print_svg_mutation` keyword, in the SAME declaration order `OpBinary`'s own tag match uses,
+    /// must equal `KINDS` entry-for-entry -- the framework never parses Rust to check this itself
+    /// (see `KINDS`'s own doc comment), so this test is the one thing that does.
+    #[test]
+    fn kinds_const_matches_enum_variants_in_declaration_order() {
+        let base = fixture();
+        let one_per_variant = vec![
+            SvgMutation::NoMutation,
+            SvgMutation::SetSnapshot { snapshot: base.clone() },
+            SvgMutation::SetDeclaration { declaration: None },
+            SvgMutation::SetDoctype { doctype: None },
+            SvgMutation::InsertElement { parent: vec![], index: 0, node: XmlNode::Text { text: "x".into() } },
+            SvgMutation::RemoveElement { parent: vec![], index: 0 },
+            SvgMutation::SetElementName { path: vec![0], name: "g".into() },
+            SvgMutation::SetAttribute { path: vec![0], name: "k".into(), value: None },
+            SvgMutation::SetText { path: vec![0], text: "x".into() },
+            SvgMutation::SetViewBox { path: vec![], view_box: None },
+            SvgMutation::SetTransform { path: vec![], transform: None },
+        ];
+        assert_eq!(one_per_variant.len(), KINDS.len(), "one_per_variant/KINDS length drifted");
+        for (mutation, expected_kind) in one_per_variant.iter().zip(KINDS.iter()) {
+            let printed = print_svg_mutation(mutation);
+            let keyword = printed.split(' ').next().unwrap_or(&printed);
+            assert_eq!(keyword, *expected_kind, "KINDS entry {expected_kind:?} does not match print_svg_mutation's own keyword for {mutation:?} (printed {printed:?})");
+        }
+    }
+    //#endregion 🔖️KindsLaw
 }
 //#endregion 🧪️Tests
 

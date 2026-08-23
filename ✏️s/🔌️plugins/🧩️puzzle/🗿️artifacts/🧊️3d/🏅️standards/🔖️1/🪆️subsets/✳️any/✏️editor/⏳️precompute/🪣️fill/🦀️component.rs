@@ -14,7 +14,9 @@ use crate::editor::puzzle3d::precompute::brush::{
     brush_candidate_suggestion_weight, brush_fill_candidate_at, brush_object_id, brush_preview_from_candidate, brush_stack_mate_pair, fill_candidate_diversity_score, fill_rng, fill_vortex_target_weight, resolve_object_kind_mesh_url,
     vortex_world_from_object, AttractionVortexContext, BrushFillVortexTarget, TargetVortexWorld,
 };
-use crate::editor::puzzle3d::precompute::geometry::{pose_isometry, world_bounds, world_volumes_contain_aabb, CollisionAabb, CollisionBody, CollisionOverlapState, CollisionSpatialIndex, CollisionStepResult, Pose3d};
+use crate::editor::puzzle3d::precompute::geometry::{
+    pose_isometry, world_bounds, world_volumes_contain_aabb, CollisionAabb, CollisionBody, CollisionIndexOwnerCensusCursor, CollisionIndexOwnerCensusStep, CollisionOverlapState, CollisionSpatialIndex, CollisionStepResult, Pose3d,
+};
 use crate::editor::puzzle3d::precompute::FILL_COUNT_MAX;
 use semio_framework_job::{CommitCandidate, InteractiveJob, JobFault, Operation, StepContext, StepOutcome};
 use serde::{Deserialize, Serialize};
@@ -263,11 +265,1841 @@ pub(crate) struct FillBuilder {
     pending_object: Option<FixtureObject>,
     pending_attraction: Option<AttractionProps>,
     last_rejection: Option<String>,
+    collection_backings: FillBuilderCollectionBackings,
     transition_count: u64,
     rejected_count: u64,
 }
 
+pub(crate) const FILL_BUILDER_OWNER_PAGE_BYTES: usize = 16 * 1024;
+const FILL_BUILDER_NESTED_ITEMS: usize = 32;
+const FILL_BUILDER_STD_COLLECTION_BACKING_BYTES: usize = FILL_BUILDER_OWNER_PAGE_BYTES;
+const FILL_BUILDER_STD_COLLECTIONS: usize = 10;
+
+struct FillBuilderCollectionBackings {
+    pages: [Option<Box<[u8; FILL_BUILDER_OWNER_PAGE_BYTES]>>; FILL_BUILDER_STD_COLLECTIONS],
+}
+
+impl FillBuilderCollectionBackings {
+    fn new() -> Self {
+        Self { pages: std::array::from_fn(|_| Some(Box::new([0; FILL_BUILDER_OWNER_PAGE_BYTES]))) }
+    }
+
+    fn retire_one(&mut self) -> bool {
+        let Some(page) = self.pages.iter_mut().find(|page| page.is_some()) else { return false };
+        page.take();
+        true
+    }
+
+    fn terminal_owners_empty(&self) -> bool {
+        self.pages.iter().all(Option::is_none)
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub(crate) struct FillBuilderOwnerCredit {
+    pub(crate) items: usize,
+    pub(crate) bytes: usize,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum FillBuilderOwnerCensusStep {
+    Pending,
+    Complete(FillBuilderOwnerCredit),
+    Rejected,
+}
+
+pub(crate) struct FillBuilderOwnerCensusCursor {
+    field: u8,
+    section: u8,
+    phase: u8,
+    index: usize,
+    inner: usize,
+    leaf: usize,
+    dsl: Option<FillDslOwnerCensusCursor>,
+    spatial: CollisionIndexOwnerCensusCursor,
+    credit: FillBuilderOwnerCredit,
+}
+
+impl Default for FillBuilderOwnerCensusCursor {
+    fn default() -> Self {
+        Self { field: 0, section: 0, phase: 0, index: 0, inner: 0, leaf: 0, dsl: None, spatial: CollisionIndexOwnerCensusCursor::default(), credit: FillBuilderOwnerCredit::default() }
+    }
+}
+
+enum FillOwnerCensusUnit {
+    Credit(FillBuilderOwnerCredit),
+    Advance,
+    Rejected,
+}
+
+#[derive(Clone, Copy)]
+enum FillDslOwnerRoot {
+    FixtureObject { fixture: u8, index: usize },
+    FixtureVolume { fixture: u8, index: usize },
+    SequencePayload(usize),
+    AppendedObject(usize),
+    CatalogObject(usize),
+    TargetVolume(usize),
+    CurrentPreview,
+    PendingPayload,
+    PendingObject,
+    PreviewGhost,
+    PreviewAccepted(usize),
+}
+
+struct FillDslOwnerCensusCursor {
+    root: FillDslOwnerRoot,
+    depth: usize,
+    path: [usize; 16],
+    phase: [u8; 17],
+    child: [usize; 17],
+}
+
+impl FillDslOwnerCensusCursor {
+    fn new(root: FillDslOwnerRoot) -> Self {
+        Self { root, depth: 0, path: [0; 16], phase: [0; 17], child: [0; 17] }
+    }
+
+    fn root<'a>(&self, fill: &'a FillBuilder) -> Option<&'a dsl::DslValue> {
+        match self.root {
+            FillDslOwnerRoot::FixtureObject { fixture, index } => {
+                let value = if fixture == 0 { fill.base.objects.get(index) } else { fill.fixture.objects.get(index) }?;
+                value.scale.as_ref()
+            }
+            FillDslOwnerRoot::FixtureVolume { fixture, index } => {
+                let value = if fixture == 0 { fill.base.target_volumes.get(index) } else { fill.fixture.target_volumes.get(index) }?;
+                value.scale.as_ref()
+            }
+            FillDslOwnerRoot::SequencePayload(index) => fill.sequence.get(index)?.scale.as_ref(),
+            FillDslOwnerRoot::AppendedObject(index) => fill.appended_objects.get(index)?.scale.as_ref(),
+            FillDslOwnerRoot::CatalogObject(index) => fill.catalogs.objects.get(index)?.scale.as_ref(),
+            FillDslOwnerRoot::TargetVolume(index) => fill.target_volumes.get(index)?.scale.as_ref(),
+            FillDslOwnerRoot::CurrentPreview => fill.current_preview.as_ref()?.scale.as_ref(),
+            FillDslOwnerRoot::PendingPayload => fill.pending_payload.as_ref()?.scale.as_ref(),
+            FillDslOwnerRoot::PendingObject => fill.pending_object.as_ref()?.scale.as_ref(),
+            FillDslOwnerRoot::PreviewGhost => fill.preview.candidate_ghost.as_ref()?.scale.as_ref(),
+            FillDslOwnerRoot::PreviewAccepted(index) => fill.preview.accepted_prefix.get(index)?.scale.as_ref(),
+        }
+    }
+
+    fn value<'a>(&self, fill: &'a FillBuilder) -> Option<&'a dsl::DslValue> {
+        let mut value = self.root(fill)?;
+        for depth in 0..self.depth {
+            value = match value {
+                dsl::DslValue::Array(values) => values.get(self.path[depth])?,
+                dsl::DslValue::Object(values) => &values.get(self.path[depth])?.1,
+                _ => return None,
+            };
+        }
+        Some(value)
+    }
+
+    fn step(&mut self, fill: &FillBuilder) -> Result<Option<FillBuilderOwnerCredit>, ()> {
+        let Some(value) = self.value(fill) else { return Err(()) };
+        if self.phase[self.depth] == 0 {
+            self.phase[self.depth] = 1;
+            let bytes = match value {
+                dsl::DslValue::String(value) => value.capacity(),
+                dsl::DslValue::Array(values) => values.capacity().checked_mul(std::mem::size_of::<dsl::DslValue>()).ok_or(())?,
+                dsl::DslValue::Object(values) => values.capacity().checked_mul(std::mem::size_of::<(String, dsl::DslValue)>()).ok_or(())?,
+                _ => 0,
+            };
+            if bytes > FILL_BUILDER_OWNER_PAGE_BYTES {
+                return Err(());
+            }
+            return Ok(Some(FillBuilderOwnerCredit { items: usize::from(bytes != 0), bytes }));
+        }
+        match value {
+            dsl::DslValue::Array(values) if self.child[self.depth] < values.len() => {
+                if self.depth == 16 {
+                    return Err(());
+                }
+                self.path[self.depth] = self.child[self.depth];
+                self.depth += 1;
+                return Ok(None);
+            }
+            dsl::DslValue::Object(values) if self.child[self.depth] < values.len() => {
+                if self.phase[self.depth] == 1 {
+                    self.phase[self.depth] = 2;
+                    let bytes = values[self.child[self.depth]].0.capacity();
+                    if bytes > FILL_BUILDER_OWNER_PAGE_BYTES {
+                        return Err(());
+                    }
+                    return Ok(Some(FillBuilderOwnerCredit { items: usize::from(bytes != 0), bytes }));
+                }
+                if self.depth == 16 {
+                    return Err(());
+                }
+                self.path[self.depth] = self.child[self.depth];
+                self.depth += 1;
+                return Ok(None);
+            }
+            _ => {}
+        }
+        if self.depth == 0 {
+            return Ok(None);
+        }
+        self.phase[self.depth] = 0;
+        self.child[self.depth] = 0;
+        self.depth -= 1;
+        self.child[self.depth] += 1;
+        if matches!(self.value(fill), Some(dsl::DslValue::Object(_))) {
+            self.phase[self.depth] = 1;
+        }
+        Ok(None)
+    }
+
+    fn complete(&self, fill: &FillBuilder) -> bool {
+        let Some(value) = self.value(fill) else { return true };
+        self.depth == 0
+            && self.phase[0] != 0
+            && match value {
+                dsl::DslValue::Array(values) => self.child[0] >= values.len(),
+                dsl::DslValue::Object(values) => self.child[0] >= values.len(),
+                _ => true,
+            }
+    }
+}
+
+fn fill_owner_strings<const N: usize>(values: [Option<&String>; N]) -> Option<FillBuilderOwnerCredit> {
+    let mut credit = FillBuilderOwnerCredit::default();
+    for value in values.into_iter().flatten() {
+        if value.capacity() > FILL_BUILDER_OWNER_PAGE_BYTES {
+            return None;
+        }
+        credit.items = credit.items.checked_add(usize::from(value.capacity() != 0))?;
+        credit.bytes = credit.bytes.checked_add(value.capacity())?;
+        if credit.bytes > FILL_BUILDER_OWNER_PAGE_BYTES {
+            return None;
+        }
+    }
+    Some(credit)
+}
+
+fn fill_owner_vec<T>(capacity: usize) -> Option<FillBuilderOwnerCredit> {
+    let bytes = capacity.checked_mul(std::mem::size_of::<T>())?;
+    (capacity <= FILL_BUILDER_NESTED_ITEMS && bytes <= FILL_BUILDER_OWNER_PAGE_BYTES).then_some(FillBuilderOwnerCredit { items: usize::from(bytes != 0), bytes })
+}
+
+fn fill_owner_collection(occupied: usize) -> Option<FillBuilderOwnerCredit> {
+    (occupied <= FILL_BUILDER_NESTED_ITEMS).then_some(FillBuilderOwnerCredit::default())
+}
+
+impl FillBuilderOwnerCensusCursor {
+    fn finish_field(&mut self) -> FillOwnerCensusUnit {
+        self.field += 1;
+        self.section = 0;
+        self.phase = 0;
+        self.index = 0;
+        self.inner = 0;
+        self.leaf = 0;
+        FillOwnerCensusUnit::Advance
+    }
+
+    pub(crate) fn step(&mut self, fill: &FillBuilder, max_items: usize, max_bytes: usize) -> FillBuilderOwnerCensusStep {
+        if self.field > 13 {
+            return FillBuilderOwnerCensusStep::Complete(self.credit);
+        }
+        if let Some(dsl) = self.dsl.as_mut() {
+            if dsl.complete(fill) {
+                self.dsl = None;
+                return FillBuilderOwnerCensusStep::Pending;
+            }
+            let unit = match dsl.step(fill) {
+                Ok(Some(credit)) => FillOwnerCensusUnit::Credit(credit),
+                Ok(None) => FillOwnerCensusUnit::Advance,
+                Err(()) => FillOwnerCensusUnit::Rejected,
+            };
+            return self.apply_unit(unit, max_items, max_bytes);
+        }
+        let unit = self.next_unit(fill);
+        self.apply_unit(unit, max_items, max_bytes)
+    }
+
+    fn apply_unit(&mut self, unit: FillOwnerCensusUnit, max_items: usize, max_bytes: usize) -> FillBuilderOwnerCensusStep {
+        let FillOwnerCensusUnit::Credit(credit) = unit else {
+            return if matches!(unit, FillOwnerCensusUnit::Rejected) { FillBuilderOwnerCensusStep::Rejected } else { FillBuilderOwnerCensusStep::Pending };
+        };
+        let Some(items) = self.credit.items.checked_add(credit.items) else { return FillBuilderOwnerCensusStep::Rejected };
+        let Some(bytes) = self.credit.bytes.checked_add(credit.bytes) else { return FillBuilderOwnerCensusStep::Rejected };
+        if items > max_items || bytes > max_bytes {
+            return FillBuilderOwnerCensusStep::Rejected;
+        }
+        self.credit = FillBuilderOwnerCredit { items, bytes };
+        FillBuilderOwnerCensusStep::Pending
+    }
+
+    fn next_unit(&mut self, fill: &FillBuilder) -> FillOwnerCensusUnit {
+        match self.field {
+            0 => {
+                if self.section == 0 {
+                    self.section = 1;
+                    return FillOwnerCensusUnit::Credit(FillBuilderOwnerCredit { items: 1, bytes: std::mem::size_of::<FillBuilder>() });
+                }
+                if fill.collection_backings.pages.get(self.index).is_some_and(Option::is_some) {
+                    self.index += 1;
+                    return FillOwnerCensusUnit::Credit(FillBuilderOwnerCredit { items: 1, bytes: FILL_BUILDER_OWNER_PAGE_BYTES });
+                }
+                self.finish_field()
+            }
+            1 | 2 => self.fixture_unit(fill, self.field - 1),
+            3 => self.sequence_unit(fill),
+            4 => self.lookup_unit(fill),
+            5 => self.catalog_unit(fill),
+            6 => self.weight_mesh_unit(fill),
+            7 => self.target_unit(fill),
+            8 => self.target_weight_unit(fill),
+            9 => self.candidate_unit(fill),
+            10 => self.candidate_order_unit(fill),
+            11 => self.pending_unit(fill),
+            12 => self.preview_unit(fill),
+            13 => self.final_unit(fill),
+            _ => FillOwnerCensusUnit::Advance,
+        }
+    }
+
+    fn credit(value: Option<FillBuilderOwnerCredit>) -> FillOwnerCensusUnit {
+        value.map_or(FillOwnerCensusUnit::Rejected, FillOwnerCensusUnit::Credit)
+    }
+
+    fn start_dsl(&mut self, root: FillDslOwnerRoot) -> FillOwnerCensusUnit {
+        self.dsl = Some(FillDslOwnerCensusCursor::new(root));
+        self.phase += 1;
+        FillOwnerCensusUnit::Advance
+    }
+
+    fn fixture_object_unit(&mut self, value: &FixtureObject, root: FillDslOwnerRoot) -> Option<FillOwnerCensusUnit> {
+        let unit = match self.phase {
+            0 => {
+                self.phase = 1;
+                Self::credit(fill_owner_strings([Some(&value.id), value.object_kind.as_ref(), value.mesh_url.as_ref()]))
+            }
+            1 if value.scale.is_some() => self.start_dsl(root),
+            1 => {
+                self.phase = 2;
+                FillOwnerCensusUnit::Advance
+            }
+            2 => {
+                self.phase = 3;
+                Self::credit(fill_owner_vec::<VortexProps>(value.vortices.capacity()))
+            }
+            _ => match value.vortices.get(self.inner) {
+                Some(vortex) => {
+                    self.inner += 1;
+                    Self::credit(fill_owner_strings([Some(&vortex.id), vortex.vortex_kind.as_ref()]))
+                }
+                None => {
+                    self.phase = 0;
+                    self.inner = 0;
+                    return None;
+                }
+            },
+        };
+        Some(unit)
+    }
+
+    fn world_volume_unit(&mut self, value: &crate::artifacts::puzzle3d::schema::WorldVolumeProps, root: FillDslOwnerRoot) -> Option<FillOwnerCensusUnit> {
+        match self.phase {
+            0 => {
+                self.phase = 1;
+                Some(Self::credit(fill_owner_strings([Some(&value.id)])))
+            }
+            1 if value.scale.is_some() => Some(self.start_dsl(root)),
+            _ => {
+                self.phase = 0;
+                None
+            }
+        }
+    }
+
+    fn payload_unit(&mut self, value: &BrushPlacePayload, root: FillDslOwnerRoot) -> Option<FillOwnerCensusUnit> {
+        match self.phase {
+            0 => {
+                self.phase = 1;
+                Some(Self::credit(fill_owner_strings([Some(&value.target_vortex_full_id), Some(&value.object_kind_id)])))
+            }
+            1 if value.scale.is_some() => Some(self.start_dsl(root)),
+            _ => {
+                self.phase = 0;
+                None
+            }
+        }
+    }
+
+    fn fixture_unit(&mut self, fill: &FillBuilder, fixture_id: u8) -> FillOwnerCensusUnit {
+        let fixture = if fixture_id == 0 { &fill.base } else { &fill.fixture };
+        match self.section {
+            0 => {
+                self.section = 1;
+                Self::credit(fill_owner_vec::<FixtureObject>(fixture.objects.capacity()))
+            }
+            1 => match fixture.objects.get(self.index) {
+                Some(value) => match self.fixture_object_unit(value, FillDslOwnerRoot::FixtureObject { fixture: fixture_id, index: self.index }) {
+                    Some(unit) => unit,
+                    None => {
+                        self.index += 1;
+                        FillOwnerCensusUnit::Advance
+                    }
+                },
+                None => {
+                    self.section = 2;
+                    self.index = 0;
+                    FillOwnerCensusUnit::Advance
+                }
+            },
+            2 => {
+                self.section = 3;
+                Self::credit(fill_owner_vec::<AttractionProps>(fixture.attractions.capacity()))
+            }
+            3 => match fixture.attractions.get(self.index) {
+                Some(value) => {
+                    self.index += 1;
+                    Self::credit(fill_owner_strings([Some(&value.id), Some(&value.attracting), Some(&value.attracted)]))
+                }
+                None => {
+                    self.section = 4;
+                    self.index = 0;
+                    FillOwnerCensusUnit::Advance
+                }
+            },
+            4 => {
+                self.section = 5;
+                Self::credit(fill_owner_vec::<crate::artifacts::puzzle3d::schema::WorldVolumeProps>(fixture.target_volumes.capacity()))
+            }
+            5 => match fixture.target_volumes.get(self.index) {
+                Some(value) => match self.world_volume_unit(value, FillDslOwnerRoot::FixtureVolume { fixture: fixture_id, index: self.index }) {
+                    Some(unit) => unit,
+                    None => {
+                        self.index += 1;
+                        FillOwnerCensusUnit::Advance
+                    }
+                },
+                None => self.finish_field(),
+            },
+            _ => self.finish_field(),
+        }
+    }
+
+    fn sequence_unit(&mut self, fill: &FillBuilder) -> FillOwnerCensusUnit {
+        match self.section {
+            0 => {
+                self.section = 1;
+                Self::credit(fill_owner_vec::<BrushPlacePayload>(fill.sequence.capacity()))
+            }
+            1 => match fill.sequence.get(self.index) {
+                Some(value) => match self.payload_unit(value, FillDslOwnerRoot::SequencePayload(self.index)) {
+                    Some(unit) => unit,
+                    None => {
+                        self.index += 1;
+                        FillOwnerCensusUnit::Advance
+                    }
+                },
+                None => {
+                    self.section = 2;
+                    self.index = 0;
+                    FillOwnerCensusUnit::Advance
+                }
+            },
+            2 => {
+                self.section = 3;
+                Self::credit(fill_owner_vec::<FixtureObject>(fill.appended_objects.capacity()))
+            }
+            3 => match fill.appended_objects.get(self.index) {
+                Some(value) => match self.fixture_object_unit(value, FillDslOwnerRoot::AppendedObject(self.index)) {
+                    Some(unit) => unit,
+                    None => {
+                        self.index += 1;
+                        FillOwnerCensusUnit::Advance
+                    }
+                },
+                None => {
+                    self.section = 4;
+                    self.index = 0;
+                    FillOwnerCensusUnit::Advance
+                }
+            },
+            4 => {
+                self.section = 5;
+                Self::credit(fill_owner_vec::<AttractionProps>(fill.appended_attractions.capacity()))
+            }
+            5 => match fill.appended_attractions.get(self.index) {
+                Some(value) => {
+                    self.index += 1;
+                    Self::credit(fill_owner_strings([Some(&value.id), Some(&value.attracting), Some(&value.attracted)]))
+                }
+                None => {
+                    self.section = 6;
+                    self.index = 0;
+                    FillOwnerCensusUnit::Advance
+                }
+            },
+            6 => {
+                self.section = 7;
+                Self::credit(fill_owner_vec::<PlacedCollisionEntry>(fill.placed.capacity()))
+            }
+            7 => match fill.placed.get(self.index) {
+                Some(value) => {
+                    self.index += 1;
+                    Self::credit(fill_owner_strings([Some(&value.object_id), Some(&value.mesh_url)]))
+                }
+                None => self.finish_field(),
+            },
+            _ => self.finish_field(),
+        }
+    }
+
+    fn lookup_unit(&mut self, fill: &FillBuilder) -> FillOwnerCensusUnit {
+        match self.section {
+            0 => {
+                self.section = 1;
+                Self::credit(fill_owner_collection(fill.placed_lookup.len()))
+            }
+            1 => match fill.placed_lookup.keys().nth(self.index) {
+                Some(key) => {
+                    self.index += 1;
+                    let Some(mut credit) = fill_owner_strings([Some(key)]) else { return FillOwnerCensusUnit::Rejected };
+                    credit.items += 1;
+                    Self::credit(Some(credit))
+                }
+                None => {
+                    self.section = 2;
+                    self.index = 0;
+                    FillOwnerCensusUnit::Advance
+                }
+            },
+            2 => {
+                self.section = 3;
+                Self::credit(fill_owner_collection(fill.candidate_cache.len()))
+            }
+            3 => match fill.candidate_cache.iter().nth(self.index) {
+                Some((key, values)) if self.phase == 0 => {
+                    self.phase = 1;
+                    let Some(mut credit) = fill_owner_strings([Some(key)]) else { return FillOwnerCensusUnit::Rejected };
+                    let Some(backing) = fill_owner_vec::<BrushCompatibleCandidate>(values.capacity()) else { return FillOwnerCensusUnit::Rejected };
+                    credit.items = credit.items.saturating_add(backing.items).saturating_add(1);
+                    credit.bytes = credit.bytes.saturating_add(backing.bytes);
+                    FillOwnerCensusUnit::Credit(credit)
+                }
+                Some((_, values)) => match values.get(self.inner) {
+                    Some(value) => {
+                        self.inner += 1;
+                        Self::credit(fill_owner_strings([Some(&value.object_kind_id)]))
+                    }
+                    None => {
+                        self.index += 1;
+                        self.inner = 0;
+                        self.phase = 0;
+                        FillOwnerCensusUnit::Advance
+                    }
+                },
+                None => {
+                    self.section = 4;
+                    self.index = 0;
+                    self.phase = 0;
+                    FillOwnerCensusUnit::Advance
+                }
+            },
+            4 => {
+                self.section = 5;
+                Self::credit(fill_owner_collection(fill.seed_object_ids.len()))
+            }
+            5 => match fill.seed_object_ids.iter().nth(self.index) {
+                Some(value) => {
+                    self.index += 1;
+                    let Some(mut credit) = fill_owner_strings([Some(value)]) else { return FillOwnerCensusUnit::Rejected };
+                    credit.items += 1;
+                    Self::credit(Some(credit))
+                }
+                None => self.finish_field(),
+            },
+            _ => self.finish_field(),
+        }
+    }
+
+    fn catalog_unit(&mut self, fill: &FillBuilder) -> FillOwnerCensusUnit {
+        match self.section {
+            0 => {
+                self.section = 1;
+                Self::credit(fill_owner_vec::<crate::artifacts::puzzle3d::schema::ObjectKind>(fill.catalogs.objects.capacity()))
+            }
+            1 => match fill.catalogs.objects.get(self.index) {
+                Some(value) => match self.phase {
+                    0 => {
+                        self.phase = 1;
+                        Self::credit(fill_owner_strings([Some(&value.id)]))
+                    }
+                    1 if value.scale.is_some() => self.start_dsl(FillDslOwnerRoot::CatalogObject(self.index)),
+                    1 => {
+                        self.phase = 2;
+                        FillOwnerCensusUnit::Advance
+                    }
+                    2 => {
+                        self.phase = 3;
+                        Self::credit(fill_owner_vec::<crate::artifacts::puzzle3d::schema::ObjectKindRepresentation>(value.representations.capacity()))
+                    }
+                    3 => match value.representations.get(self.inner) {
+                        Some(representation) if self.leaf == 0 => {
+                            self.leaf = 1;
+                            Self::credit(fill_owner_strings([Some(&representation.id), Some(&representation.name), Some(&representation.url), Some(&representation.mime), representation.lod.as_ref(), Some(&representation.description)]))
+                        }
+                        Some(representation) if self.leaf == 1 => {
+                            self.leaf = 2;
+                            Self::credit(fill_owner_vec::<String>(representation.tags.capacity()))
+                        }
+                        Some(representation) => match representation.tags.get(self.leaf - 2) {
+                            Some(tag) => {
+                                self.leaf += 1;
+                                Self::credit(fill_owner_strings([Some(tag)]))
+                            }
+                            None => {
+                                self.inner += 1;
+                                self.leaf = 0;
+                                FillOwnerCensusUnit::Advance
+                            }
+                        },
+                        None => {
+                            self.phase = 4;
+                            self.inner = 0;
+                            self.leaf = 0;
+                            FillOwnerCensusUnit::Advance
+                        }
+                    },
+                    4 => {
+                        self.phase = 5;
+                        Self::credit(fill_owner_vec::<crate::artifacts::puzzle3d::schema::ObjectKindVortexTemplate>(value.vortices.capacity()))
+                    }
+                    _ => match value.vortices.get(self.inner) {
+                        Some(vortex) => {
+                            self.inner += 1;
+                            Self::credit(fill_owner_strings([Some(&vortex.id), Some(&vortex.name), Some(&vortex.label), Some(&vortex.description), Some(&vortex.icon), vortex.vortex_kind.as_ref()]))
+                        }
+                        None => {
+                            self.index += 1;
+                            self.inner = 0;
+                            self.phase = 0;
+                            FillOwnerCensusUnit::Advance
+                        }
+                    },
+                },
+                None => {
+                    self.section = 2;
+                    self.index = 0;
+                    self.phase = 0;
+                    FillOwnerCensusUnit::Advance
+                }
+            },
+            2 => {
+                self.section = 3;
+                Self::credit(fill_owner_vec::<crate::artifacts::puzzle3d::schema::VortexKindCatalog>(fill.catalogs.vortices.capacity()))
+            }
+            3 => match fill.catalogs.vortices.get(self.index) {
+                Some(value) if self.phase == 0 => {
+                    self.phase = 1;
+                    Self::credit(fill_owner_strings([Some(&value.id), value.code.as_ref(), value.label.as_ref(), Some(&value.description), Some(&value.icon), Some(&value.color), value.default_cable_kind.as_ref()]))
+                }
+                Some(value) if self.phase == 1 => {
+                    self.phase = 2;
+                    Self::credit(fill_owner_vec::<String>(value.compatible_with.capacity()))
+                }
+                Some(value) => match value.compatible_with.get(self.inner) {
+                    Some(entry) => {
+                        self.inner += 1;
+                        Self::credit(fill_owner_strings([Some(entry)]))
+                    }
+                    None => {
+                        self.index += 1;
+                        self.inner = 0;
+                        self.phase = 0;
+                        FillOwnerCensusUnit::Advance
+                    }
+                },
+                None => {
+                    self.section = 4;
+                    self.index = 0;
+                    self.phase = 0;
+                    FillOwnerCensusUnit::Advance
+                }
+            },
+            4 => {
+                self.section = 5;
+                Self::credit(fill_owner_vec::<crate::artifacts::puzzle3d::schema::CableKindCatalog>(fill.catalogs.cables.capacity()))
+            }
+            5 => match fill.catalogs.cables.get(self.index) {
+                Some(value) => {
+                    self.index += 1;
+                    Self::credit(fill_owner_strings([Some(&value.id), value.default_attraction_kind.as_ref()]))
+                }
+                None => {
+                    self.section = 6;
+                    self.index = 0;
+                    FillOwnerCensusUnit::Advance
+                }
+            },
+            6 => {
+                self.section = 7;
+                Self::credit(fill_owner_vec::<KindCompatEntry>(fill.kind_compatibility.capacity()))
+            }
+            7 => match fill.kind_compatibility.get(self.index) {
+                Some(value) => {
+                    self.index += 1;
+                    Self::credit(fill_owner_strings([Some(&value.source), Some(&value.target), value.specificity.as_ref()]))
+                }
+                None => self.finish_field(),
+            },
+            _ => self.finish_field(),
+        }
+    }
+
+    fn weight_mesh_unit(&mut self, fill: &FillBuilder) -> FillOwnerCensusUnit {
+        match self.section {
+            0 => {
+                self.section = 1;
+                Self::credit(fill_owner_collection(fill.weights.object_weights.len()))
+            }
+            1 => match fill.weights.object_weights.keys().nth(self.index) {
+                Some(key) => {
+                    self.index += 1;
+                    let Some(mut credit) = fill_owner_strings([Some(key)]) else { return FillOwnerCensusUnit::Rejected };
+                    credit.items += 1;
+                    FillOwnerCensusUnit::Credit(credit)
+                }
+                None => {
+                    self.section = 2;
+                    self.index = 0;
+                    FillOwnerCensusUnit::Advance
+                }
+            },
+            2 => {
+                self.section = 3;
+                Self::credit(fill_owner_collection(fill.weights.vortex_weights.len()))
+            }
+            3 => match fill.weights.vortex_weights.keys().nth(self.index) {
+                Some(key) => {
+                    self.index += 1;
+                    let Some(mut credit) = fill_owner_strings([Some(key)]) else { return FillOwnerCensusUnit::Rejected };
+                    credit.items += 1;
+                    FillOwnerCensusUnit::Credit(credit)
+                }
+                None => {
+                    self.section = 4;
+                    self.index = 0;
+                    FillOwnerCensusUnit::Advance
+                }
+            },
+            4 => {
+                self.section = 5;
+                Self::credit(fill_owner_vec::<crate::artifacts::puzzle3d::schema::WorldVolumeProps>(fill.target_volumes.capacity()))
+            }
+            5 => match fill.target_volumes.get(self.index) {
+                Some(value) => match self.world_volume_unit(value, FillDslOwnerRoot::TargetVolume(self.index)) {
+                    Some(unit) => unit,
+                    None => {
+                        self.index += 1;
+                        FillOwnerCensusUnit::Advance
+                    }
+                },
+                None => {
+                    self.section = 6;
+                    self.index = 0;
+                    FillOwnerCensusUnit::Advance
+                }
+            },
+            6 => {
+                self.section = 7;
+                Self::credit(fill_owner_collection(fill.meshes.len()))
+            }
+            7 => match fill.meshes.iter().nth(self.index) {
+                Some((key, body)) if self.phase == 0 => {
+                    self.phase = 1;
+                    let Some(mut credit) = fill_owner_strings([Some(key)]) else { return FillOwnerCensusUnit::Rejected };
+                    let Some((items, bytes)) = body.retained_parts_backing_credit() else { return FillOwnerCensusUnit::Rejected };
+                    credit.items = credit.items.saturating_add(items).saturating_add(1);
+                    credit.bytes = credit.bytes.saturating_add(bytes);
+                    FillOwnerCensusUnit::Credit(credit)
+                }
+                Some((_, body)) => match body.retained_part_credit(self.inner) {
+                    Some((items, bytes)) => {
+                        self.inner += 1;
+                        FillOwnerCensusUnit::Credit(FillBuilderOwnerCredit { items, bytes })
+                    }
+                    None if self.inner < body.parts.len() => FillOwnerCensusUnit::Rejected,
+                    None => {
+                        self.index += 1;
+                        self.inner = 0;
+                        self.phase = 0;
+                        FillOwnerCensusUnit::Advance
+                    }
+                },
+                None => self.finish_field(),
+            },
+            _ => self.finish_field(),
+        }
+    }
+
+    fn target_credit(value: &BrushFillVortexTarget) -> Option<FillBuilderOwnerCredit> {
+        fill_owner_strings([Some(&value.full_id), Some(&value.object_id), value.object_kind.as_ref(), value.vortex_kind.as_ref()])
+    }
+
+    fn target_unit(&mut self, fill: &FillBuilder) -> FillOwnerCensusUnit {
+        match self.section {
+            0 => {
+                self.section = 1;
+                Self::credit(fill_owner_vec::<BrushFillVortexTarget>(fill.targets.capacity()))
+            }
+            1 => match fill.targets.get(self.index) {
+                Some(value) => {
+                    self.index += 1;
+                    Self::credit(Self::target_credit(value))
+                }
+                None => {
+                    self.section = 2;
+                    self.index = 0;
+                    FillOwnerCensusUnit::Advance
+                }
+            },
+            2 => {
+                self.section = 3;
+                Self::credit(fill_owner_collection(fill.blocked_vortex_ids.len()))
+            }
+            3 => match fill.blocked_vortex_ids.iter().nth(self.index) {
+                Some(value) => {
+                    self.index += 1;
+                    let Some(mut credit) = fill_owner_strings([Some(value)]) else { return FillOwnerCensusUnit::Rejected };
+                    credit.items += 1;
+                    FillOwnerCensusUnit::Credit(credit)
+                }
+                None => {
+                    self.section = 4;
+                    self.index = 0;
+                    FillOwnerCensusUnit::Advance
+                }
+            },
+            4 => {
+                self.section = 5;
+                Self::credit(fill_owner_vec::<BrushFillVortexTarget>(fill.seed_targets.capacity()))
+            }
+            5 => match fill.seed_targets.get(self.index) {
+                Some(value) => {
+                    self.index += 1;
+                    Self::credit(Self::target_credit(value))
+                }
+                None => {
+                    self.section = 6;
+                    self.index = 0;
+                    FillOwnerCensusUnit::Advance
+                }
+            },
+            6 => {
+                self.section = 7;
+                Self::credit(fill_owner_vec::<BrushFillVortexTarget>(fill.frontier_targets.capacity()))
+            }
+            7 => match fill.frontier_targets.get(self.index) {
+                Some(value) => {
+                    self.index += 1;
+                    Self::credit(Self::target_credit(value))
+                }
+                None => self.finish_field(),
+            },
+            _ => self.finish_field(),
+        }
+    }
+
+    fn target_weight_unit(&mut self, fill: &FillBuilder) -> FillOwnerCensusUnit {
+        let credit = match self.section {
+            0 => fill_owner_vec::<f64>(fill.seed_target_weights.capacity()),
+            1 => fill_owner_vec::<f64>(fill.frontier_target_weights.capacity()),
+            2 => fill_owner_vec::<f64>(fill.seed_target_tree.capacity()),
+            3 => fill_owner_vec::<f64>(fill.frontier_target_tree.capacity()),
+            _ => return self.finish_field(),
+        };
+        self.section += 1;
+        Self::credit(credit)
+    }
+
+    fn candidate_unit(&mut self, fill: &FillBuilder) -> FillOwnerCensusUnit {
+        match self.section {
+            0 => {
+                self.section = 1;
+                Self::credit(fill_owner_vec::<BrushCompatibleCandidate>(fill.candidates.capacity()))
+            }
+            1 => match fill.candidates.get(self.index) {
+                Some(value) => {
+                    self.index += 1;
+                    Self::credit(fill_owner_strings([Some(&value.object_kind_id)]))
+                }
+                None => {
+                    self.section = 2;
+                    self.index = 0;
+                    FillOwnerCensusUnit::Advance
+                }
+            },
+            2 => {
+                self.section = 3;
+                Self::credit(fill_owner_collection(fill.candidate_seen.len()))
+            }
+            3 => match fill.candidate_seen.iter().nth(self.index) {
+                Some(value) => {
+                    self.index += 1;
+                    let Some(mut credit) = fill_owner_strings([Some(value)]) else { return FillOwnerCensusUnit::Rejected };
+                    credit.items += 1;
+                    FillOwnerCensusUnit::Credit(credit)
+                }
+                None => {
+                    self.section = 4;
+                    self.index = 0;
+                    FillOwnerCensusUnit::Advance
+                }
+            },
+            4 => {
+                self.section = 5;
+                Self::credit(fill_owner_vec::<BrushCompatibleCandidate>(fill.candidate_raw.capacity()))
+            }
+            5 => match fill.candidate_raw.get(self.index) {
+                Some(value) => {
+                    self.index += 1;
+                    Self::credit(fill_owner_strings([Some(&value.object_kind_id)]))
+                }
+                None => {
+                    self.section = 6;
+                    self.index = 0;
+                    FillOwnerCensusUnit::Advance
+                }
+            },
+            6 => {
+                self.section = 7;
+                Self::credit(fill_owner_collection(fill.candidate_cross.len()))
+            }
+            7 => match fill.candidate_cross.iter().nth(self.index) {
+                Some((key, value)) => {
+                    self.index += 1;
+                    let Some(mut credit) = fill_owner_strings([Some(key), Some(&value.object_kind_id)]) else { return FillOwnerCensusUnit::Rejected };
+                    credit.items += 1;
+                    FillOwnerCensusUnit::Credit(credit)
+                }
+                None => self.finish_field(),
+            },
+            _ => self.finish_field(),
+        }
+    }
+
+    fn candidate_order_unit(&mut self, fill: &FillBuilder) -> FillOwnerCensusUnit {
+        match self.section {
+            0 => {
+                self.section = 1;
+                Self::credit(fill_owner_collection(fill.candidate_same.len()))
+            }
+            1 => match fill.candidate_same.iter().nth(self.index) {
+                Some((key, value)) => {
+                    self.index += 1;
+                    let Some(mut credit) = fill_owner_strings([Some(key), Some(&value.object_kind_id)]) else { return FillOwnerCensusUnit::Rejected };
+                    credit.items += 1;
+                    FillOwnerCensusUnit::Credit(credit)
+                }
+                None => {
+                    self.section = 2;
+                    self.index = 0;
+                    FillOwnerCensusUnit::Advance
+                }
+            },
+            2 => {
+                self.section = 3;
+                Self::credit(fill_owner_vec::<BrushCompatibleCandidate>(fill.candidate_same_sorted.capacity()))
+            }
+            3 => match fill.candidate_same_sorted.get(self.index) {
+                Some(value) => {
+                    self.index += 1;
+                    Self::credit(fill_owner_strings([Some(&value.object_kind_id)]))
+                }
+                None => {
+                    self.section = 4;
+                    self.index = 0;
+                    FillOwnerCensusUnit::Advance
+                }
+            },
+            4 => {
+                self.section = 5;
+                Self::credit(fill_owner_vec::<f64>(fill.candidate_same_weights.capacity()))
+            }
+            5 => {
+                self.section = 6;
+                Self::credit(fill_owner_vec::<f64>(fill.candidate_same_tree.capacity()))
+            }
+            _ => self.finish_field(),
+        }
+    }
+
+    fn preview_state_unit(&mut self, value: &BrushPreviewState, root: FillDslOwnerRoot) -> Option<FillOwnerCensusUnit> {
+        match self.phase {
+            0 => {
+                self.phase = 1;
+                Some(Self::credit(fill_owner_strings([Some(&value.target_vortex_full_id), Some(&value.object_kind_id), Some(&value.mesh_url)])))
+            }
+            1 if value.scale.is_some() => Some(self.start_dsl(root)),
+            _ => {
+                self.phase = 0;
+                None
+            }
+        }
+    }
+
+    fn pending_unit(&mut self, fill: &FillBuilder) -> FillOwnerCensusUnit {
+        match self.section {
+            0 => {
+                self.section = 1;
+                Self::credit(fill_owner_vec::<String>(fill.broad_phase_ids.capacity()))
+            }
+            1 => match fill.broad_phase_ids.get(self.index) {
+                Some(value) => {
+                    self.index += 1;
+                    Self::credit(fill_owner_strings([Some(value)]))
+                }
+                None => {
+                    self.section = 2;
+                    self.index = 0;
+                    FillOwnerCensusUnit::Advance
+                }
+            },
+            2 => {
+                self.section = 3;
+                fill.current_target.as_ref().map_or(FillOwnerCensusUnit::Advance, |value| Self::credit(Self::target_credit(value)))
+            }
+            3 => match fill.current_preview.as_ref() {
+                Some(value) => match self.preview_state_unit(value, FillDslOwnerRoot::CurrentPreview) {
+                    Some(unit) => unit,
+                    None => {
+                        self.section = 4;
+                        FillOwnerCensusUnit::Advance
+                    }
+                },
+                None => {
+                    self.section = 4;
+                    FillOwnerCensusUnit::Advance
+                }
+            },
+            4 => match fill.pending_payload.as_ref() {
+                Some(value) => match self.payload_unit(value, FillDslOwnerRoot::PendingPayload) {
+                    Some(unit) => unit,
+                    None => {
+                        self.section = 5;
+                        FillOwnerCensusUnit::Advance
+                    }
+                },
+                None => {
+                    self.section = 5;
+                    FillOwnerCensusUnit::Advance
+                }
+            },
+            5 => match fill.pending_object.as_ref() {
+                Some(value) => match self.fixture_object_unit(value, FillDslOwnerRoot::PendingObject) {
+                    Some(unit) => unit,
+                    None => {
+                        self.section = 6;
+                        FillOwnerCensusUnit::Advance
+                    }
+                },
+                None => {
+                    self.section = 6;
+                    FillOwnerCensusUnit::Advance
+                }
+            },
+            6 => {
+                self.section = 7;
+                fill.pending_attraction.as_ref().map_or(FillOwnerCensusUnit::Advance, |value| Self::credit(fill_owner_strings([Some(&value.id), Some(&value.attracting), Some(&value.attracted)])))
+            }
+            _ => self.finish_field(),
+        }
+    }
+
+    fn preview_unit(&mut self, fill: &FillBuilder) -> FillOwnerCensusUnit {
+        let preview = &fill.preview;
+        match self.section {
+            0 => {
+                self.section = 1;
+                Self::credit(fill_owner_strings([Some(&preview.stage), preview.target_vortex_full_id.as_ref(), preview.candidate_object_kind_id.as_ref(), preview.current_pair_object_id.as_ref(), preview.rejection_reason.as_ref()]))
+            }
+            1 => match preview.candidate_ghost.as_ref() {
+                Some(value) => match self.preview_state_unit(value, FillDslOwnerRoot::PreviewGhost) {
+                    Some(unit) => unit,
+                    None => {
+                        self.section = 2;
+                        FillOwnerCensusUnit::Advance
+                    }
+                },
+                None => {
+                    self.section = 2;
+                    FillOwnerCensusUnit::Advance
+                }
+            },
+            2 => {
+                self.section = 3;
+                Self::credit(fill_owner_vec::<String>(preview.broad_phase_object_ids.capacity()))
+            }
+            3 => match preview.broad_phase_object_ids.get(self.index) {
+                Some(value) => {
+                    self.index += 1;
+                    Self::credit(fill_owner_strings([Some(value)]))
+                }
+                None => {
+                    self.section = 4;
+                    self.index = 0;
+                    FillOwnerCensusUnit::Advance
+                }
+            },
+            4 => {
+                self.section = 5;
+                Self::credit(fill_owner_vec::<String>(preview.colliding_object_ids.capacity()))
+            }
+            5 => match preview.colliding_object_ids.get(self.index) {
+                Some(value) => {
+                    self.index += 1;
+                    Self::credit(fill_owner_strings([Some(value)]))
+                }
+                None => {
+                    self.section = 6;
+                    self.index = 0;
+                    FillOwnerCensusUnit::Advance
+                }
+            },
+            6 => {
+                self.section = 7;
+                Self::credit(fill_owner_vec::<[f32; 3]>(preview.collision_samples.capacity()))
+            }
+            7 => {
+                self.section = 8;
+                Self::credit(fill_owner_vec::<BrushPlacePayload>(preview.accepted_prefix.capacity()))
+            }
+            8 => match preview.accepted_prefix.get(self.index) {
+                Some(value) => match self.payload_unit(value, FillDslOwnerRoot::PreviewAccepted(self.index)) {
+                    Some(unit) => unit,
+                    None => {
+                        self.index += 1;
+                        FillOwnerCensusUnit::Advance
+                    }
+                },
+                None => self.finish_field(),
+            },
+            _ => self.finish_field(),
+        }
+    }
+
+    fn final_unit(&mut self, fill: &FillBuilder) -> FillOwnerCensusUnit {
+        if self.section == 0 {
+            self.section = 1;
+            return Self::credit(fill_owner_strings([fill.last_rejection.as_ref()]));
+        }
+        match fill.spatial_index.census_one_owner(&mut self.spatial) {
+            CollisionIndexOwnerCensusStep::Pending { items, bytes } => FillOwnerCensusUnit::Credit(FillBuilderOwnerCredit { items, bytes }),
+            CollisionIndexOwnerCensusStep::Complete => self.finish_field(),
+            CollisionIndexOwnerCensusStep::Rejected => FillOwnerCensusUnit::Rejected,
+        }
+    }
+}
+
+pub(crate) struct FillBuilderRetirementCursor {
+    fill: Option<FillBuilder>,
+    field: u8,
+    current: Option<FillRetiredOwner>,
+}
+
+enum FillRetiredOwner {
+    String(String),
+    FixtureObject(FixtureObject),
+    Attraction(AttractionProps),
+    WorldVolume(crate::artifacts::puzzle3d::schema::WorldVolumeProps),
+    Payload(BrushPlacePayload),
+    Placed(PlacedCollisionEntry),
+    Candidate(BrushCompatibleCandidate),
+    Target(BrushFillVortexTarget),
+    PreviewState(BrushPreviewState),
+    ObjectKind(crate::artifacts::puzzle3d::schema::ObjectKind),
+    VortexKind(crate::artifacts::puzzle3d::schema::VortexKindCatalog),
+    CableKind(crate::artifacts::puzzle3d::schema::CableKindCatalog),
+    Compat(KindCompatEntry),
+    CandidateCache(String, Vec<BrushCompatibleCandidate>),
+    CandidateMap(String, BrushCompatibleCandidate),
+    Mesh(String, CollisionBody),
+}
+
+fn retire_string(value: &mut String) -> bool {
+    if value.capacity() == 0 {
+        return true;
+    }
+    drop(std::mem::take(value));
+    false
+}
+
+fn retire_option_string(value: &mut Option<String>) -> bool {
+    let Some(string) = value.as_mut() else { return true };
+    if !retire_string(string) {
+        return false;
+    }
+    value.take();
+    false
+}
+
+fn retire_dsl_one(value: &mut dsl::DslValue, depth: usize) -> bool {
+    if depth > 16 {
+        return false;
+    }
+    match value {
+        dsl::DslValue::String(string) => {
+            if !retire_string(string) {
+                return false;
+            }
+            *value = dsl::DslValue::Null;
+            false
+        }
+        dsl::DslValue::Array(values) => {
+            if let Some(child) = values.last_mut() {
+                if !retire_dsl_one(child, depth + 1) {
+                    return false;
+                }
+                values.pop();
+                return false;
+            }
+            if values.capacity() != 0 {
+                drop(std::mem::take(values));
+                return false;
+            }
+            *value = dsl::DslValue::Null;
+            false
+        }
+        dsl::DslValue::Object(values) => {
+            if let Some((key, child)) = values.last_mut() {
+                if !retire_string(key) || !retire_dsl_one(child, depth + 1) {
+                    return false;
+                }
+                values.pop();
+                return false;
+            }
+            if values.capacity() != 0 {
+                drop(std::mem::take(values));
+                return false;
+            }
+            *value = dsl::DslValue::Null;
+            false
+        }
+        dsl::DslValue::Null | dsl::DslValue::Bool(_) | dsl::DslValue::Number(_) => true,
+    }
+}
+
+fn retire_option_dsl(value: &mut Option<dsl::DslValue>) -> bool {
+    let Some(dsl) = value.as_mut() else { return true };
+    if !retire_dsl_one(dsl, 0) {
+        return false;
+    }
+    value.take();
+    false
+}
+
+fn retire_fixture_object(value: &mut FixtureObject) -> bool {
+    if !retire_string(&mut value.id) || !retire_option_string(&mut value.object_kind) || !retire_option_string(&mut value.mesh_url) || !retire_option_dsl(&mut value.scale) {
+        return false;
+    }
+    if let Some(vortex) = value.vortices.last_mut() {
+        if !retire_string(&mut vortex.id) || !retire_option_string(&mut vortex.vortex_kind) {
+            return false;
+        }
+        value.vortices.pop();
+        return false;
+    }
+    if value.vortices.capacity() != 0 {
+        drop(std::mem::take(&mut value.vortices));
+        return false;
+    }
+    true
+}
+
+fn retire_attraction(value: &mut AttractionProps) -> bool {
+    retire_string(&mut value.id) && retire_string(&mut value.attracting) && retire_string(&mut value.attracted)
+}
+
+fn retire_world_volume(value: &mut crate::artifacts::puzzle3d::schema::WorldVolumeProps) -> bool {
+    retire_string(&mut value.id) && retire_option_dsl(&mut value.scale)
+}
+
+fn retire_payload(value: &mut BrushPlacePayload) -> bool {
+    retire_string(&mut value.target_vortex_full_id) && retire_string(&mut value.object_kind_id) && retire_option_dsl(&mut value.scale)
+}
+
+fn retire_candidate(value: &mut BrushCompatibleCandidate) -> bool {
+    retire_string(&mut value.object_kind_id)
+}
+
+fn retire_target(value: &mut BrushFillVortexTarget) -> bool {
+    retire_string(&mut value.full_id) && retire_string(&mut value.object_id) && retire_option_string(&mut value.object_kind) && retire_option_string(&mut value.vortex_kind)
+}
+
+fn retire_preview_state(value: &mut BrushPreviewState) -> bool {
+    retire_string(&mut value.target_vortex_full_id) && retire_string(&mut value.object_kind_id) && retire_string(&mut value.mesh_url) && retire_option_dsl(&mut value.scale)
+}
+
+fn retire_fill_preview(value: &mut FillBuildPreview) -> bool {
+    if !retire_string(&mut value.stage) || !retire_option_string(&mut value.target_vortex_full_id) || !retire_option_string(&mut value.candidate_object_kind_id) || value.candidate_ghost.as_mut().is_some_and(|preview| !retire_preview_state(preview)) {
+        return false;
+    }
+    if value.candidate_ghost.is_some() {
+        value.candidate_ghost.take();
+        return false;
+    }
+    for values in [&mut value.broad_phase_object_ids, &mut value.colliding_object_ids] {
+        if let Some(string) = values.last_mut() {
+            if !retire_string(string) {
+                return false;
+            }
+            values.pop();
+            return false;
+        }
+        if values.capacity() != 0 {
+            drop(std::mem::take(values));
+            return false;
+        }
+    }
+    if !retire_option_string(&mut value.current_pair_object_id) || !retire_option_string(&mut value.rejection_reason) {
+        return false;
+    }
+    if let Some(payload) = value.accepted_prefix.last_mut() {
+        if !retire_payload(payload) {
+            return false;
+        }
+        value.accepted_prefix.pop();
+        return false;
+    }
+    if value.accepted_prefix.capacity() != 0 {
+        drop(std::mem::take(&mut value.accepted_prefix));
+        return false;
+    }
+    if value.collision_samples.capacity() != 0 {
+        drop(std::mem::take(&mut value.collision_samples));
+        return false;
+    }
+    true
+}
+
+fn retire_object_kind(value: &mut crate::artifacts::puzzle3d::schema::ObjectKind) -> bool {
+    if !retire_string(&mut value.id) || !retire_option_dsl(&mut value.scale) {
+        return false;
+    }
+    if let Some(representation) = value.representations.last_mut() {
+        if !retire_string(&mut representation.id)
+            || !retire_string(&mut representation.name)
+            || !retire_string(&mut representation.url)
+            || !retire_string(&mut representation.mime)
+            || !retire_option_string(&mut representation.lod)
+            || !retire_string(&mut representation.description)
+        {
+            return false;
+        }
+        if let Some(tag) = representation.tags.last_mut() {
+            if !retire_string(tag) {
+                return false;
+            }
+            representation.tags.pop();
+            return false;
+        }
+        if representation.tags.capacity() != 0 {
+            drop(std::mem::take(&mut representation.tags));
+            return false;
+        }
+        value.representations.pop();
+        return false;
+    }
+    if value.representations.capacity() != 0 {
+        drop(std::mem::take(&mut value.representations));
+        return false;
+    }
+    if let Some(vortex) = value.vortices.last_mut() {
+        if !retire_string(&mut vortex.id) || !retire_string(&mut vortex.name) || !retire_string(&mut vortex.label) || !retire_string(&mut vortex.description) || !retire_string(&mut vortex.icon) || !retire_option_string(&mut vortex.vortex_kind) {
+            return false;
+        }
+        value.vortices.pop();
+        return false;
+    }
+    if value.vortices.capacity() != 0 {
+        drop(std::mem::take(&mut value.vortices));
+        return false;
+    }
+    true
+}
+
+fn retire_retained_owner(owner: &mut FillRetiredOwner) -> bool {
+    match owner {
+        FillRetiredOwner::String(value) => retire_string(value),
+        FillRetiredOwner::FixtureObject(value) => retire_fixture_object(value),
+        FillRetiredOwner::Attraction(value) => retire_attraction(value),
+        FillRetiredOwner::WorldVolume(value) => retire_world_volume(value),
+        FillRetiredOwner::Payload(value) => retire_payload(value),
+        FillRetiredOwner::Placed(value) => retire_string(&mut value.object_id) && retire_string(&mut value.mesh_url),
+        FillRetiredOwner::Candidate(value) => retire_candidate(value),
+        FillRetiredOwner::Target(value) => retire_target(value),
+        FillRetiredOwner::PreviewState(value) => retire_preview_state(value),
+        FillRetiredOwner::ObjectKind(value) => retire_object_kind(value),
+        FillRetiredOwner::VortexKind(value) => {
+            if !retire_string(&mut value.id)
+                || !retire_option_string(&mut value.code)
+                || !retire_option_string(&mut value.label)
+                || !retire_string(&mut value.description)
+                || !retire_string(&mut value.icon)
+                || !retire_string(&mut value.color)
+                || !retire_option_string(&mut value.default_cable_kind)
+            {
+                return false;
+            }
+            if let Some(entry) = value.compatible_with.last_mut() {
+                if !retire_string(entry) {
+                    return false;
+                }
+                value.compatible_with.pop();
+                return false;
+            }
+            if value.compatible_with.capacity() != 0 {
+                drop(std::mem::take(&mut value.compatible_with));
+                return false;
+            }
+            true
+        }
+        FillRetiredOwner::CableKind(value) => retire_string(&mut value.id) && retire_option_string(&mut value.default_attraction_kind),
+        FillRetiredOwner::Compat(value) => retire_string(&mut value.source) && retire_string(&mut value.target) && retire_option_string(&mut value.specificity),
+        FillRetiredOwner::CandidateCache(key, values) => {
+            if !retire_string(key) {
+                return false;
+            }
+            if let Some(value) = values.last_mut() {
+                if !retire_candidate(value) {
+                    return false;
+                }
+                values.pop();
+                return false;
+            }
+            if values.capacity() != 0 {
+                drop(std::mem::take(values));
+                return false;
+            }
+            true
+        }
+        FillRetiredOwner::CandidateMap(key, value) => retire_string(key) && retire_candidate(value),
+        FillRetiredOwner::Mesh(key, body) => {
+            if !retire_string(key) {
+                return false;
+            }
+            if body.parts.pop().is_some() {
+                return false;
+            }
+            if body.parts.capacity() != 0 {
+                drop(std::mem::take(&mut body.parts));
+                return false;
+            }
+            true
+        }
+    }
+}
+
+fn release_vec_backing<T>(values: &mut Vec<T>) -> bool {
+    if values.capacity() == 0 {
+        return false;
+    }
+    debug_assert!(values.is_empty());
+    drop(std::mem::take(values));
+    true
+}
+
+fn take_string_vec_owner(values: &mut Vec<String>, current: &mut Option<FillRetiredOwner>) -> bool {
+    if let Some(value) = values.pop() {
+        *current = Some(FillRetiredOwner::String(value));
+        return true;
+    }
+    release_vec_backing(values)
+}
+
+fn take_fixture_owner(value: &mut Fixture, current: &mut Option<FillRetiredOwner>) -> bool {
+    if let Some(value) = value.objects.pop() {
+        *current = Some(FillRetiredOwner::FixtureObject(value));
+        return true;
+    }
+    if release_vec_backing(&mut value.objects) {
+        return true;
+    }
+    if let Some(value) = value.attractions.pop() {
+        *current = Some(FillRetiredOwner::Attraction(value));
+        return true;
+    }
+    if release_vec_backing(&mut value.attractions) {
+        return true;
+    }
+    if let Some(value) = value.target_volumes.pop() {
+        *current = Some(FillRetiredOwner::WorldVolume(value));
+        return true;
+    }
+    release_vec_backing(&mut value.target_volumes)
+}
+
+fn take_sequence_owner(fill: &mut FillBuilder, current: &mut Option<FillRetiredOwner>) -> bool {
+    if let Some(value) = fill.sequence.pop() {
+        *current = Some(FillRetiredOwner::Payload(value));
+        return true;
+    }
+    if release_vec_backing(&mut fill.sequence) {
+        return true;
+    }
+    if let Some(value) = fill.appended_objects.pop() {
+        *current = Some(FillRetiredOwner::FixtureObject(value));
+        return true;
+    }
+    if release_vec_backing(&mut fill.appended_objects) {
+        return true;
+    }
+    if let Some(value) = fill.appended_attractions.pop() {
+        *current = Some(FillRetiredOwner::Attraction(value));
+        return true;
+    }
+    if release_vec_backing(&mut fill.appended_attractions) {
+        return true;
+    }
+    if let Some(value) = fill.placed.pop() {
+        *current = Some(FillRetiredOwner::Placed(value));
+        return true;
+    }
+    release_vec_backing(&mut fill.placed)
+}
+
+fn take_lookup_owner(fill: &mut FillBuilder, current: &mut Option<FillRetiredOwner>) -> bool {
+    if let Some((key, _)) = fill.placed_lookup.pop_first() {
+        *current = Some(FillRetiredOwner::String(key));
+        return true;
+    }
+    if let Some((key, values)) = fill.candidate_cache.pop_first() {
+        *current = Some(FillRetiredOwner::CandidateCache(key, values));
+        return true;
+    }
+    if let Some(value) = fill.seed_object_ids.extract_if(|_| true).next() {
+        *current = Some(FillRetiredOwner::String(value));
+        return true;
+    }
+    if fill.seed_object_ids.capacity() != 0 {
+        drop(std::mem::take(&mut fill.seed_object_ids));
+        return true;
+    }
+    false
+}
+
+fn take_catalog_owner(fill: &mut FillBuilder, current: &mut Option<FillRetiredOwner>) -> bool {
+    if let Some(value) = fill.catalogs.objects.pop() {
+        *current = Some(FillRetiredOwner::ObjectKind(value));
+        return true;
+    }
+    if release_vec_backing(&mut fill.catalogs.objects) {
+        return true;
+    }
+    if let Some(value) = fill.catalogs.vortices.pop() {
+        *current = Some(FillRetiredOwner::VortexKind(value));
+        return true;
+    }
+    if release_vec_backing(&mut fill.catalogs.vortices) {
+        return true;
+    }
+    if let Some(value) = fill.catalogs.cables.pop() {
+        *current = Some(FillRetiredOwner::CableKind(value));
+        return true;
+    }
+    if release_vec_backing(&mut fill.catalogs.cables) {
+        return true;
+    }
+    if let Some(value) = fill.kind_compatibility.pop() {
+        *current = Some(FillRetiredOwner::Compat(value));
+        return true;
+    }
+    release_vec_backing(&mut fill.kind_compatibility)
+}
+
+fn take_weight_map_owner(values: &mut BTreeMap<String, f64>, current: &mut Option<FillRetiredOwner>) -> bool {
+    if let Some((key, _)) = values.pop_first() {
+        *current = Some(FillRetiredOwner::String(key));
+        return true;
+    }
+    false
+}
+
+fn take_weight_mesh_owner(fill: &mut FillBuilder, current: &mut Option<FillRetiredOwner>) -> bool {
+    if take_weight_map_owner(&mut fill.weights.object_weights, current) || take_weight_map_owner(&mut fill.weights.vortex_weights, current) {
+        return true;
+    }
+    if let Some(value) = fill.target_volumes.pop() {
+        *current = Some(FillRetiredOwner::WorldVolume(value));
+        return true;
+    }
+    if release_vec_backing(&mut fill.target_volumes) {
+        return true;
+    }
+    if let Some((key, body)) = fill.meshes.extract_if(|_, _| true).next() {
+        *current = Some(FillRetiredOwner::Mesh(key, body));
+        return true;
+    }
+    if fill.meshes.capacity() != 0 {
+        drop(std::mem::take(&mut fill.meshes));
+        return true;
+    }
+    false
+}
+
+fn take_target_owner(fill: &mut FillBuilder, current: &mut Option<FillRetiredOwner>) -> bool {
+    if let Some(value) = fill.targets.pop() {
+        *current = Some(FillRetiredOwner::Target(value));
+        return true;
+    }
+    if release_vec_backing(&mut fill.targets) {
+        return true;
+    }
+    if let Some(value) = fill.blocked_vortex_ids.pop_first() {
+        *current = Some(FillRetiredOwner::String(value));
+        return true;
+    }
+    if let Some(value) = fill.seed_targets.pop() {
+        *current = Some(FillRetiredOwner::Target(value));
+        return true;
+    }
+    if release_vec_backing(&mut fill.seed_targets) {
+        return true;
+    }
+    if let Some(value) = fill.frontier_targets.pop() {
+        *current = Some(FillRetiredOwner::Target(value));
+        return true;
+    }
+    release_vec_backing(&mut fill.frontier_targets)
+}
+
+fn take_candidate_owner(fill: &mut FillBuilder, current: &mut Option<FillRetiredOwner>) -> bool {
+    if let Some(value) = fill.candidates.pop() {
+        *current = Some(FillRetiredOwner::Candidate(value));
+        return true;
+    }
+    if release_vec_backing(&mut fill.candidates) {
+        return true;
+    }
+    if let Some(value) = fill.candidate_seen.pop_first() {
+        *current = Some(FillRetiredOwner::String(value));
+        return true;
+    }
+    if let Some(value) = fill.candidate_raw.pop() {
+        *current = Some(FillRetiredOwner::Candidate(value));
+        return true;
+    }
+    if release_vec_backing(&mut fill.candidate_raw) {
+        return true;
+    }
+    if let Some((key, value)) = fill.candidate_cross.pop_first() {
+        *current = Some(FillRetiredOwner::CandidateMap(key, value));
+        return true;
+    }
+    false
+}
+
+fn take_candidate_order_owner(fill: &mut FillBuilder, current: &mut Option<FillRetiredOwner>) -> bool {
+    if let Some((key, value)) = fill.candidate_same.pop_first() {
+        *current = Some(FillRetiredOwner::CandidateMap(key, value));
+        return true;
+    }
+    if let Some(value) = fill.candidate_same_sorted.pop() {
+        *current = Some(FillRetiredOwner::Candidate(value));
+        return true;
+    }
+    if release_vec_backing(&mut fill.candidate_same_sorted) {
+        return true;
+    }
+    for values in [&mut fill.candidate_same_weights, &mut fill.candidate_same_tree] {
+        if values.pop().is_some() || release_vec_backing(values) {
+            return true;
+        }
+    }
+    false
+}
+
+fn take_target_weight_owner(fill: &mut FillBuilder) -> bool {
+    for values in [&mut fill.seed_target_weights, &mut fill.frontier_target_weights, &mut fill.seed_target_tree, &mut fill.frontier_target_tree] {
+        if values.pop().is_some() || release_vec_backing(values) {
+            return true;
+        }
+    }
+    false
+}
+
+fn fixture_terminal_owners_empty(value: &Fixture) -> bool {
+    value.objects.is_empty() && value.objects.capacity() == 0 && value.attractions.is_empty() && value.attractions.capacity() == 0 && value.target_volumes.is_empty() && value.target_volumes.capacity() == 0
+}
+
+fn preview_terminal_owners_empty(value: &FillBuildPreview) -> bool {
+    value.stage.capacity() == 0
+        && value.target_vortex_full_id.is_none()
+        && value.candidate_object_kind_id.is_none()
+        && value.candidate_ghost.is_none()
+        && value.broad_phase_object_ids.is_empty()
+        && value.broad_phase_object_ids.capacity() == 0
+        && value.current_pair_object_id.is_none()
+        && value.colliding_object_ids.is_empty()
+        && value.colliding_object_ids.capacity() == 0
+        && value.collision_samples.is_empty()
+        && value.collision_samples.capacity() == 0
+        && value.rejection_reason.is_none()
+        && value.accepted_prefix.is_empty()
+        && value.accepted_prefix.capacity() == 0
+}
+
+impl FillBuilderRetirementCursor {
+    pub(crate) fn new(fill: FillBuilder) -> Self {
+        Self { fill: Some(fill), field: 0, current: None }
+    }
+
+    pub(crate) fn retire_one(&mut self) -> bool {
+        if let Some(current) = self.current.as_mut() {
+            if retire_retained_owner(current) {
+                self.current = None;
+            }
+            return false;
+        }
+        let Some(fill) = self.fill.as_mut() else {
+            return true;
+        };
+        let retired = match self.field {
+            0 => take_fixture_owner(&mut fill.base, &mut self.current),
+            1 => take_fixture_owner(&mut fill.fixture, &mut self.current),
+            2 => take_sequence_owner(fill, &mut self.current),
+            3 => take_lookup_owner(fill, &mut self.current),
+            4 => take_catalog_owner(fill, &mut self.current),
+            5 => take_weight_mesh_owner(fill, &mut self.current),
+            6 => take_target_owner(fill, &mut self.current),
+            7 => take_target_weight_owner(fill),
+            8 => take_candidate_owner(fill, &mut self.current),
+            9 => take_candidate_order_owner(fill, &mut self.current),
+            10 => take_string_vec_owner(&mut fill.broad_phase_ids, &mut self.current),
+            11 => fill.pending_payload.take().is_some_and(|value| {
+                self.current = Some(FillRetiredOwner::Payload(value));
+                true
+            }),
+            12 => fill.pending_object.take().is_some_and(|value| {
+                self.current = Some(FillRetiredOwner::FixtureObject(value));
+                true
+            }),
+            13 => fill.pending_attraction.take().is_some_and(|value| {
+                self.current = Some(FillRetiredOwner::Attraction(value));
+                true
+            }),
+            14 => fill.current_target.take().is_some_and(|value| {
+                self.current = Some(FillRetiredOwner::Target(value));
+                true
+            }),
+            15 => fill.current_preview.take().is_some_and(|value| {
+                self.current = Some(FillRetiredOwner::PreviewState(value));
+                true
+            }),
+            16 => fill.last_rejection.take().is_some_and(|value| {
+                self.current = Some(FillRetiredOwner::String(value));
+                true
+            }),
+            17 => fill.collision.take().is_some(),
+            18 => !retire_fill_preview(&mut fill.preview),
+            19 => fill.collection_backings.retire_one(),
+            20 => {
+                if !fill.spatial_index.retire_one_owner() {
+                    true
+                } else {
+                    false
+                }
+            }
+            21 => false,
+            _ => {
+                if !fill.terminal_owners_empty() {
+                    return false;
+                }
+                let shell = self.fill.take().expect("terminal-empty builder shell");
+                drop(shell);
+                return self.fill.is_none() && self.current.is_none();
+            }
+        };
+        if !retired {
+            self.field += 1;
+        }
+        false
+    }
+}
+
 impl FillBuilder {
+    #[cfg(test)]
+    pub(crate) fn inject_nested_owner_page_plus_one_for_test(&mut self) {
+        let mut owner = String::with_capacity(FILL_BUILDER_OWNER_PAGE_BYTES + 1);
+        owner.push_str("nested-owner");
+        self.catalogs.objects[0].representations[0].tags.push(owner);
+    }
+
+    fn terminal_owners_empty(&self) -> bool {
+        fixture_terminal_owners_empty(&self.base)
+            && fixture_terminal_owners_empty(&self.fixture)
+            && self.sequence.is_empty()
+            && self.sequence.capacity() == 0
+            && self.appended_objects.is_empty()
+            && self.appended_objects.capacity() == 0
+            && self.appended_attractions.is_empty()
+            && self.appended_attractions.capacity() == 0
+            && self.placed.is_empty()
+            && self.placed.capacity() == 0
+            && self.placed_lookup.is_empty()
+            && self.candidate_cache.is_empty()
+            && self.seed_object_ids.is_empty()
+            && self.seed_object_ids.capacity() == 0
+            && self.catalogs.objects.is_empty()
+            && self.catalogs.objects.capacity() == 0
+            && self.catalogs.vortices.is_empty()
+            && self.catalogs.vortices.capacity() == 0
+            && self.catalogs.cables.is_empty()
+            && self.catalogs.cables.capacity() == 0
+            && self.weights.object_weights.is_empty()
+            && self.weights.vortex_weights.is_empty()
+            && self.kind_compatibility.is_empty()
+            && self.kind_compatibility.capacity() == 0
+            && self.target_volumes.is_empty()
+            && self.target_volumes.capacity() == 0
+            && self.meshes.is_empty()
+            && self.meshes.capacity() == 0
+            && self.spatial_index.terminal_owners_empty()
+            && self.targets.is_empty()
+            && self.targets.capacity() == 0
+            && self.blocked_vortex_ids.is_empty()
+            && self.seed_targets.is_empty()
+            && self.seed_targets.capacity() == 0
+            && self.frontier_targets.is_empty()
+            && self.frontier_targets.capacity() == 0
+            && self.seed_target_weights.is_empty()
+            && self.seed_target_weights.capacity() == 0
+            && self.frontier_target_weights.is_empty()
+            && self.frontier_target_weights.capacity() == 0
+            && self.seed_target_tree.is_empty()
+            && self.seed_target_tree.capacity() == 0
+            && self.frontier_target_tree.is_empty()
+            && self.frontier_target_tree.capacity() == 0
+            && self.current_target.is_none()
+            && self.candidates.is_empty()
+            && self.candidates.capacity() == 0
+            && self.candidate_seen.is_empty()
+            && self.candidate_raw.is_empty()
+            && self.candidate_raw.capacity() == 0
+            && self.candidate_cross.is_empty()
+            && self.candidate_same.is_empty()
+            && self.candidate_same_sorted.is_empty()
+            && self.candidate_same_sorted.capacity() == 0
+            && self.candidate_same_weights.is_empty()
+            && self.candidate_same_weights.capacity() == 0
+            && self.candidate_same_tree.is_empty()
+            && self.candidate_same_tree.capacity() == 0
+            && self.current_preview.is_none()
+            && self.broad_phase_ids.is_empty()
+            && self.broad_phase_ids.capacity() == 0
+            && self.collision.is_none()
+            && self.pending_payload.is_none()
+            && self.pending_object.is_none()
+            && self.pending_attraction.is_none()
+            && self.last_rejection.is_none()
+            && self.collection_backings.terminal_owners_empty()
+            && preview_terminal_owners_empty(&self.preview)
+    }
+
     pub(crate) fn new(base: Fixture, seed: u32, meshes: &HashMap<String, CollisionBody>, catalogs: &KindCatalogBundle) -> Self {
         let base_fingerprint = fixture_fingerprint(&base);
         let seed_object_ids: std::collections::HashSet<String> = base.objects.iter().map(|o| o.id.clone()).collect();
@@ -380,6 +2212,7 @@ impl FillBuilder {
             pending_object: None,
             pending_attraction: None,
             last_rejection: None,
+            collection_backings: FillBuilderCollectionBackings::new(),
             transition_count: 0,
             rejected_count: 0,
         }
@@ -1086,7 +2919,7 @@ impl FillBuilder {
                 if self.stage == FillJobStage::Complete {
                     return self.complete();
                 }
-                StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: self.checkpoint_bytes(), applied_progress: self.applied_count as u64 })
+                StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: Vec::new(), applied_progress: self.applied_count as u64 })
             }
         }
     }
@@ -1196,11 +3029,11 @@ impl FillBuilder {
         self.preview.accepted_prefix = self.sequence.clone();
         self.preview.search_count = self.transition_count;
         self.preview.rejected_count = self.rejected_count;
-        StepOutcome::PreviewReady(serde_json::to_vec(&self.preview).expect("fill preview is serializable"))
+        StepOutcome::PreviewReady(Vec::new())
     }
 
     fn complete(&self) -> StepOutcome {
-        StepOutcome::Complete(CommitCandidate { state: self.checkpoint_bytes(), output: serde_json::to_vec(&self.progress()).expect("fill progress is serializable") })
+        StepOutcome::Complete(CommitCandidate { state: Vec::new(), output: Vec::new() })
     }
 
     fn stage_label(&self) -> &'static str {
@@ -1296,6 +3129,59 @@ mod tests {
     }
 
     #[test]
+    fn retained_owner_census_advances_one_fixed_unit_and_rejects_collection_cap_plus_one() {
+        let mut builder = empty_builder();
+        let mut tags = Vec::with_capacity(FILL_BUILDER_NESTED_ITEMS);
+        tags.extend((0..FILL_BUILDER_NESTED_ITEMS).map(|index| format!("tag-{index}")));
+        builder.catalogs.objects.push(ObjectKind {
+            id: "bounded-kind".into(),
+            representations: vec![ObjectKindRepresentation { id: "r".into(), name: "n".into(), url: "u".into(), mime: "m".into(), tags, lod: Some("l".into()), description: "d".into() }],
+            scale: Some(dsl::DslValue::Array(vec![dsl::DslValue::String("nested".into())])),
+            vortices: Vec::new(),
+        });
+        let mut cursor = FillBuilderOwnerCensusCursor::default();
+        let mut grants = 0;
+        loop {
+            let before = cursor.credit;
+            match cursor.step(&builder, usize::MAX, usize::MAX) {
+                FillBuilderOwnerCensusStep::Pending => {
+                    assert!(cursor.credit.items.saturating_sub(before.items) <= 7, "one grant visits one entry or fixed schema unit");
+                    assert!(cursor.credit.bytes.saturating_sub(before.bytes) <= FILL_BUILDER_OWNER_PAGE_BYTES, "one grant accounts at most one exact page");
+                    grants += 1;
+                }
+                FillBuilderOwnerCensusStep::Complete(_) => break,
+                FillBuilderOwnerCensusStep::Rejected => panic!("fixed boundary must admit"),
+            }
+        }
+        assert!(grants > FILL_BUILDER_NESTED_ITEMS, "max-cardinality tags and nested DSL cannot be scanned in one admission grant");
+
+        let mut rejected = empty_builder();
+        let mut tags = Vec::with_capacity(FILL_BUILDER_NESTED_ITEMS + 1);
+        tags.extend((0..=FILL_BUILDER_NESTED_ITEMS).map(|index| format!("tag-{index}")));
+        rejected.catalogs.objects.push(ObjectKind {
+            id: "rejected-kind".into(),
+            representations: vec![ObjectKindRepresentation { id: String::new(), name: String::new(), url: String::new(), mime: String::new(), tags, lod: None, description: String::new() }],
+            scale: None,
+            vortices: Vec::new(),
+        });
+        let mut cursor = FillBuilderOwnerCensusCursor::default();
+        assert!((0..256).any(|_| matches!(cursor.step(&rejected, usize::MAX, usize::MAX), FillBuilderOwnerCensusStep::Rejected)), "collection cap + 1 rejects before admission credit publication");
+    }
+
+    #[test]
+    fn retained_owner_census_uses_fixed_backing_pages_not_pair_size_heuristics() {
+        let builder = empty_builder();
+        let mut cursor = FillBuilderOwnerCensusCursor::default();
+        assert_eq!(cursor.step(&builder, usize::MAX, usize::MAX), FillBuilderOwnerCensusStep::Pending);
+        for page in 0..FILL_BUILDER_STD_COLLECTIONS {
+            let before = cursor.credit;
+            assert_eq!(cursor.step(&builder, usize::MAX, usize::MAX), FillBuilderOwnerCensusStep::Pending);
+            assert_eq!(cursor.credit.items - before.items, 1, "fixed backing page {page} has one exact owner");
+            assert_eq!(cursor.credit.bytes - before.bytes, FILL_BUILDER_OWNER_PAGE_BYTES, "fixed backing page {page} owns one exact admitted page");
+        }
+    }
+
+    #[test]
     fn checkpoint_restore_is_byte_identical() {
         let mut builder = empty_builder();
         builder.stage = FillJobStage::SelectCandidate;
@@ -1340,13 +3226,13 @@ mod tests {
         let mut sequence = 0;
         let mut context = test_context(&builder, root_cancel_token(), &mut sequence);
         let StepOutcome::PreviewReady(bytes) = builder.publish_preview(&mut context) else { panic!("preview") };
-        let decoded: FillBuildPreview = serde_json::from_slice(&bytes).expect("typed preview");
-        assert_eq!(decoded, builder.preview);
-        assert_eq!((decoded.operation, decoded.base_revision, decoded.generation), (41, 7, 3));
-        assert_eq!(decoded.candidate_ghost.as_ref().map(|ghost| ghost.mesh_url.as_str()), Some("/candidate.glb"));
-        assert_eq!(decoded.colliding_object_ids, ["a"]);
-        assert_eq!((decoded.search_count, decoded.rejected_count), (23, 4));
+        assert!(bytes.is_empty(), "the retained envelope observes the shared preview without serializing it");
+        assert_eq!((builder.preview.operation, builder.preview.base_revision, builder.preview.generation), (41, 7, 3));
+        assert_eq!(builder.preview.candidate_ghost.as_ref().map(|ghost| ghost.mesh_url.as_str()), Some("/candidate.glb"));
+        assert_eq!(builder.preview.colliding_object_ids, ["a"]);
+        assert_eq!((builder.preview.search_count, builder.preview.rejected_count), (23, 4));
         let checkpoint = builder.checkpoint_bytes();
+        let decoded = builder.preview.clone();
         builder.preview = empty_builder().preview;
         builder.restore_checkpoint(&checkpoint).expect("checkpoint");
         assert_eq!(builder.preview, decoded);

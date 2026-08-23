@@ -182,6 +182,7 @@ pub enum ShardOutcome {
     },
     Job {
         actor: u64,
+        authority: JobTurn,
         publication: JobPublication,
     },
     Fault {
@@ -215,9 +216,10 @@ impl ShardOutcome {
                 semio_framework_actor::pack::write_u64(out, *actor).await;
                 result.pack_encode(out).await;
             }
-            Self::Job { actor, publication } => {
+            Self::Job { actor, authority, publication } => {
                 semio_framework_actor::pack::write_u8(out, 1).await;
                 semio_framework_actor::pack::write_u64(out, *actor).await;
+                authority.pack_encode(out).await;
                 publication.pack_encode(out).await;
             }
             Self::Fault { actor, message } => {
@@ -248,7 +250,7 @@ impl ShardOutcome {
         let actor = semio_framework_actor::pack::read_u64(bytes, pos, "ShardOutcome::actor").await?;
         match tag {
             0 => Ok(Self::Turn { actor, result: semio_framework_actor::TurnResult::pack_decode(bytes, pos).await? }),
-            1 => Ok(Self::Job { actor, publication: JobPublication::pack_decode(bytes, pos).await? }),
+            1 => Ok(Self::Job { actor, authority: JobTurn::pack_decode(bytes, pos).await?, publication: JobPublication::pack_decode(bytes, pos).await? }),
             2 => Ok(Self::Fault { actor, message: semio_framework_actor::pack::read_str(bytes, pos, "ShardOutcome::Fault::message").await? }),
             3 => Ok(Self::Checkpoint { actor, operation: JobOperation::pack_decode(bytes, pos).await?, checkpoint: JobCheckpoint::pack_decode(bytes, pos).await? }),
             4 => Ok(Self::Resumed { actor, operation: JobOperation::pack_decode(bytes, pos).await? }),
@@ -276,6 +278,9 @@ pub struct ShardLoop {
     running_jobs: BTreeSet<(u64, u64)>,
     /// 🪪️ Active replay identity and sequence cursor for every running job.
     job_turns: HashMap<(u64, u64), JobTurn>,
+    /// 📰️ Independently minted operation identity retained from spawn until terminal outcome.
+    job_authorities: HashMap<(u64, u64), JobTurn>,
+    next_job_operation: u64,
     /// 🚦 `JobPlacement` (inline/isolated/exclusive) captured per `running_jobs` entry at
     /// `Effect::SpawnJob` admission — MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME K1: `placement` used
     /// to be matched and immediately discarded (`_` in the `Effect::SpawnJob` arm). `Exclusive`
@@ -496,6 +501,8 @@ impl ShardLoop {
             instances: HashMap::new(),
             running_jobs: BTreeSet::new(),
             job_turns: HashMap::new(),
+            job_authorities: HashMap::new(),
+            next_job_operation: 1,
             job_placement: HashMap::new(),
             terminal_authorities: FixedOwnerRing::new(SHARD_DEFERRED_BYTES.saturating_mul(SHARD_DEFERRED_ITEMS)),
             granted_budgets: HashMap::new(),
@@ -568,6 +575,7 @@ impl ShardLoop {
         }
         self.running_jobs.retain(|&(job_actor, _)| job_actor != actor.0);
         self.job_turns.retain(|&(job_actor, _), _| job_actor != actor.0);
+        self.job_authorities.retain(|&(job_actor, _), _| job_actor != actor.0);
         self.job_placement.retain(|&(job_actor, _), _| job_actor != actor.0);
         self.actor_lanes.remove(&actor.0);
     }
@@ -720,6 +728,13 @@ impl ShardLoop {
         let selected_step = selected_step.or_else(|| self.running_jobs.iter().find_map(|pair| self.job_turns.get(pair).copied().map(|turn| (pair.0, turn))));
         if let Some((actor_id, turn)) = selected_step {
             let job = turn.job;
+            let Some(authority) = self.job_authorities.get(&(actor_id, job)).copied() else {
+                self.running_jobs.remove(&(actor_id, job));
+                self.job_turns.remove(&(actor_id, job));
+                self.job_placement.remove(&(actor_id, job));
+                self.send_outcome(&ShardOutcome::Fault { actor: actor_id, message: format!("ShardLoop::pump: job {job} has no independently admitted operation authority") }).await?;
+                return Ok(1);
+            };
             // 🔀️ Same E0502 reason as the turn-execution loop above — computed before `get_mut`.
             let job_budget = job_budget_from_grant(self.granted_budget(actor_id).await);
             let actor_lane = self.actor_lane(actor_id).await;
@@ -742,6 +757,7 @@ impl ShardLoop {
                             let state = self.runtime.checkpoint(instance).await.unwrap_or_default();
                             self.running_jobs.remove(&(actor_id, job));
                             self.job_turns.remove(&(actor_id, job));
+                            self.job_authorities.remove(&(actor_id, job));
                             self.job_placement.remove(&(actor_id, job));
                             defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, actor_lane, actor_id, Event::JobCompleted { job, result: RequestOutcome::Ok(output.clone()) })?;
                             JobStepOutcome::Complete { candidate: JobCommitCandidate { state, output } }
@@ -749,6 +765,7 @@ impl ShardLoop {
                         JobStep::Failed { error } => {
                             self.running_jobs.remove(&(actor_id, job));
                             self.job_turns.remove(&(actor_id, job));
+                            self.job_authorities.remove(&(actor_id, job));
                             self.job_placement.remove(&(actor_id, job));
                             defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, actor_lane, actor_id, Event::JobCompleted { job, result: RequestOutcome::Err(error.clone()) })?;
                             JobStepOutcome::Fault { detail: error }
@@ -761,11 +778,12 @@ impl ShardLoop {
                     if !matches!(step_outcome, JobStepOutcome::Complete { .. } | JobStepOutcome::Cancelled | JobStepOutcome::Fault { .. }) {
                         self.job_turns.insert((actor_id, job), JobTurn { step_sequence: turn.step_sequence.saturating_add(1), ..published_turn });
                     }
-                    ShardOutcome::Job { actor: actor_id, publication: JobPublication { turn: published_turn, outcome: step_outcome } }
+                    ShardOutcome::Job { actor: actor_id, authority, publication: JobPublication { turn: published_turn, outcome: step_outcome } }
                 }
                 Err(fault) => {
                     self.running_jobs.remove(&(actor_id, job));
                     self.job_turns.remove(&(actor_id, job));
+                    self.job_authorities.remove(&(actor_id, job));
                     self.job_placement.remove(&(actor_id, job));
                     defer_completion(&mut self.pending_interactive, &mut self.pending_background, &mut self.terminal_authorities, actor_lane, actor_id, Event::JobCompleted { job, result: RequestOutcome::Err(start_job_fault_bytes(&fault).await) })?;
                     ShardOutcome::Fault { actor: actor_id, message: turn_fault_message(&fault).await }
@@ -824,28 +842,43 @@ impl ShardLoop {
                 // not a silently faked one, see the K1 report's lease-request).
                 for effect in &result.effects {
                     match effect {
-                        Effect::SpawnJob { job, kind, input, placement } => match self.runtime.start_job(instance, *job, kind, input.clone()).await {
-                            Ok(()) => {
-                                self.running_jobs.insert((actor_id, *job));
-                                self.job_placement.insert((actor_id, *job), *placement);
+                        Effect::SpawnJob { job, kind, input, placement } => {
+                            let operation = self.next_job_operation;
+                            self.next_job_operation = self.next_job_operation.wrapping_add(1).max(1);
+                            let base_revision = result.ui_patches.iter().map(|patch| patch.revision.0).max().unwrap_or_default();
+                            let authority = JobTurn {
+                                job: *job,
+                                operation: JobOperation { operation, base_revision, generation: u64::from(ActorId(actor_id).generation()), preview_sequence: 0, seed: operation.rotate_left(17) ^ actor_id ^ *job },
+                                step_sequence: 0,
+                            };
+                            self.job_authorities.insert((actor_id, *job), authority);
+                            self.job_turns.insert((actor_id, *job), authority);
+                            match self.runtime.start_job(instance, *job, kind, input.clone()).await {
+                                Ok(()) => {
+                                    self.running_jobs.insert((actor_id, *job));
+                                    self.job_placement.insert((actor_id, *job), *placement);
+                                }
+                                Err(fault) => {
+                                    self.job_authorities.remove(&(actor_id, *job));
+                                    self.job_turns.remove(&(actor_id, *job));
+                                    defer_completion(
+                                        &mut self.pending_interactive,
+                                        &mut self.pending_background,
+                                        &mut self.terminal_authorities,
+                                        actor_lane,
+                                        actor_id,
+                                        Event::JobCompleted { job: *job, result: RequestOutcome::Err(start_job_fault_bytes(&fault).await) },
+                                    )?;
+                                }
                             }
-                            Err(fault) => {
-                                defer_completion(
-                                    &mut self.pending_interactive,
-                                    &mut self.pending_background,
-                                    &mut self.terminal_authorities,
-                                    actor_lane,
-                                    actor_id,
-                                    Event::JobCompleted { job: *job, result: RequestOutcome::Err(start_job_fault_bytes(&fault).await) },
-                                )?;
-                            }
-                        },
+                        }
                         Effect::CancelJob { job } => {
                             if self.running_jobs.contains(&(actor_id, *job)) {
                                 match self.runtime.cancel_job(instance, *job).await {
                                     Ok(()) => {
                                         self.running_jobs.remove(&(actor_id, *job));
                                         self.job_turns.remove(&(actor_id, *job));
+                                        self.job_authorities.remove(&(actor_id, *job));
                                         self.job_placement.remove(&(actor_id, *job));
                                     }
                                     Err(fault) => {
@@ -1108,6 +1141,7 @@ impl ShardLoop {
             }
             self.running_jobs.remove(&(actor_id, job));
             self.job_turns.remove(&(actor_id, job));
+            self.job_authorities.remove(&(actor_id, job));
             self.job_placement.remove(&(actor_id, job));
             let authority = DeferredAuthority::Cancel(CancelCursor { actor: actor_id, after_job: Some(job), owner_bytes: cursor.owner_bytes });
             let result = if Self::is_high_priority_lane(lane) { self.pending_interactive.try_push(authority, cursor.owner_bytes) } else { self.pending_background.try_push(authority, cursor.owner_bytes) };
@@ -1559,6 +1593,23 @@ mod tests {
                 _ => None,
             })
             .collect();
+        let authorities: Vec<(JobTurn, JobTurn)> = outcomes
+            .iter()
+            .filter_map(|outcome| match outcome {
+                ShardOutcome::Job { authority, publication, .. } if publication.turn.job == job_id => Some((*authority, publication.turn)),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(authorities.len(), 3);
+        assert!(authorities.iter().all(|(authority, publication)| {
+            authority.job == job_id
+                && authority.step_sequence == 0
+                && authority.operation.preview_sequence == 0
+                && authority.operation.operation == authorities[0].0.operation.operation
+                && authority.operation.operation == publication.operation.operation
+                && authority.operation.base_revision == publication.operation.base_revision
+                && authority.operation.generation == publication.operation.generation
+        }));
         assert_eq!(job_outcomes.len(), 3, "exactly three step_job calls were made — the resumability proof");
         assert!(matches!(job_outcomes[0], JobStepOutcome::Yield));
         assert!(matches!(job_outcomes[1], JobStepOutcome::PreviewReady { preview } if preview == b"halfway"));
@@ -1910,7 +1961,7 @@ mod tests {
                     usage: semio_framework_actor::Usage { fuel: 4, wall_us: 5, memory_bytes: 6 },
                 },
             },
-            ShardOutcome::Job { actor: 11, publication: JobPublication { turn, outcome: JobStepOutcome::PreviewReady { preview: vec![7] } } },
+            ShardOutcome::Job { actor: 11, authority: turn, publication: JobPublication { turn, outcome: JobStepOutcome::PreviewReady { preview: vec![7] } } },
             ShardOutcome::Fault { actor: 11, message: "fault".to_string() },
             ShardOutcome::Checkpoint { actor: 11, operation, checkpoint: JobCheckpoint { state: vec![8], applied_progress: 9 } },
             ShardOutcome::Resumed { actor: 11, operation },
