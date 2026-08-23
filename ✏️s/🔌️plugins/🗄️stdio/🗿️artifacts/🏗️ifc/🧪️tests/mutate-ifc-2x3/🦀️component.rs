@@ -1,0 +1,336 @@
+//! 🦀️ IFC2X3/✳️any mutation case — Rust adapter. Exhaustive: every declared `Ifc2x3Mutation` kind
+//! (`ifc-2x3-any`, 5 kinds) gets a `mutate-<kind>` and an `inverse-<kind>` scenario, plus one
+//! identity round trip. `ruststep` 0.4 can only READ Part-21 text (confirmed empirically — see the
+//! feature file's own description, the same finding the sibling `step/🔖️ap214/✳️any` subset already
+//! made), so the oracle dispatcher (`../../🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`)
+//! performs every kind with its own from-scratch Part-21 writer against a `ruststep`-parsed
+//! document, independent of this subset's own `Ifc2x3Snapshot`/`step::engine::part21` codec; the
+//! subject fully parses into `Ifc2x3Snapshot` and re-serializes from it alone (no byte pass-
+//! through). Both results are read back by the INDEPENDENT `ruststep` reader
+//! (`project_ifc_2x3_any`) before the `semantic-ifc-v1` profile compares them — real third-party
+//! evidence about structure, never a byte-level differential claim (fleet brief §6: ruststep is not
+//! a second PRODUCER, so nothing here is typed `@mode-differential`).
+
+use semio_repo_test_host::{Adapter, Context, Json, Outcome};
+use semio_s_plugin_stdio_test_oracle::artifacts::ifc::standards::v2x3::subsets::any::{oracle_apply_mutation, project_ifc_2x3_any};
+
+//#region 🔖️Kinds
+/// 🏷️ Mirrors this subset's own `Ifc2x3Mutation::KINDS` (`../../🏅️standards/🔖️2x3/🪆️subsets/✳️any/
+/// 🧬️schema/🧬️mutations/🦀️component.rs`). Kept as a plain literal here rather than imported since
+/// this adapter's oracle-only build never links the subject crate — the contract gate (mutation
+/// coverage against the `ifc-2x3-any` catalog) is what keeps the two lists honest against each other.
+const KINDS: &[&str] = &["no-mutation", "set-snapshot", "upsert-instance", "remove-instance", "set-header"];
+//#endregion 🔖️Kinds
+
+//#region 🔖️Input
+const INPUT: &str = "shared://🏗️wellness-center-sama-street-level.ifc";
+
+/// 🧫️ Copies the immutable committed fixture into the work directory and returns the mutable
+/// copy's bytes; the committed fixture itself is never written to.
+fn mutable_input(ctx: &Context) -> Result<Vec<u8>, String> {
+    let copy = ctx.copy_fixture(INPUT, Some("input.ifc"))?;
+    std::fs::read(&copy).map_err(|error| error.to_string())
+}
+//#endregion 🔖️Input
+
+//#region 🔖️JsonBuild
+fn json_obj(entries: Vec<(&str, Json)>) -> Json {
+    Json::Object(entries.into_iter().map(|(key, value)| (key.to_string(), value)).collect())
+}
+fn json_num(value: f64) -> Json {
+    Json::Number(value)
+}
+fn json_str(value: &str) -> Json {
+    Json::String(value.to_string())
+}
+fn json_str_array(values: &[&str]) -> Json {
+    Json::Array(values.iter().map(|value| json_str(value)).collect())
+}
+fn json_value(t: &str, v: Json) -> Json {
+    json_obj(vec![("t", json_str(t)), ("v", v)])
+}
+fn json_unset() -> Json {
+    json_obj(vec![("t", json_str("unset"))])
+}
+fn json_spec(kind: &str, params: Json) -> Json {
+    json_obj(vec![("kind", json_str(kind)), ("params", params)])
+}
+//#endregion 🔖️JsonBuild
+
+//#region 🔖️RealEntities
+/// 🏗️ The real column/wall/header data this case's forward mutations edit, kept in one place so
+/// the forward `Examples` params (feature file), this adapter's `inverse_spec`, and the subject's
+/// own re-derivation of the same literals never drift from the real fixture's own real values.
+fn column_args(name: &str) -> Json {
+    Json::Array(vec![
+        json_value("string", json_str("0PfeWE7Aj7GBHCsLa67379")),
+        json_value("reference", json_num(41.0)),
+        json_value("string", json_str(name)),
+        json_unset(),
+        json_value("string", json_str("UC-Universal Columns-Column:UC305x305x97")),
+        json_value("reference", json_num(619886.0)),
+        json_value("reference", json_num(619879.0)),
+        json_value("string", json_str("552739")),
+    ])
+}
+fn column_instance(name: &str) -> Json {
+    json_obj(vec![("id", json_num(619887.0)), ("entities", Json::Array(vec![json_obj(vec![("name", json_str("IFCCOLUMN")), ("args", column_args(name))])]))])
+}
+
+fn wall_args() -> Json {
+    Json::Array(vec![
+        json_value("string", json_str("29w45MKkv9yu3UjOOOyCma")),
+        json_value("reference", json_num(41.0)),
+        json_value("string", json_str("Basic Wall:Generic - 300mm:471837")),
+        json_unset(),
+        json_value("string", json_str("Basic Wall:Generic - 300mm")),
+        json_value("reference", json_num(270529.0)),
+        json_value("reference", json_num(270547.0)),
+        json_value("string", json_str("471837")),
+    ])
+}
+fn wall_instance() -> Json {
+    json_obj(vec![("id", json_num(270549.0)), ("entities", Json::Array(vec![json_obj(vec![("name", json_str("IFCWALLSTANDARDCASE")), ("args", wall_args())])]))])
+}
+
+fn wellness_header(name0: &str) -> Json {
+    json_obj(vec![
+        ("fileDescription", Json::Array(vec![json_value("aggregate", Json::Array(vec![json_value("string", json_str("ViewDefinition [CoordinationView_V2.0]"))])), json_value("string", json_str("2;1"))])),
+        (
+            "fileName",
+            Json::Array(vec![
+                json_value("string", json_str(name0)),
+                json_value("string", json_str("2021-11-21T06:45:25")),
+                json_value("aggregate", Json::Array(vec![json_value("string", json_str(""))])),
+                json_value("aggregate", Json::Array(vec![json_value("string", json_str(""))])),
+                json_value("string", json_str("The EXPRESS Data Manager Version 5.02.0100.07 : 28 Aug 2013")),
+                json_value("string", json_str("21.0.0.383 - Exporter 21.0.0.383 - Alternate UI 21.0.0.383")),
+                json_value("string", json_str("")),
+            ]),
+        ),
+        ("fileSchema", Json::Array(vec![json_value("aggregate", Json::Array(vec![json_value("string", json_str("IFC2X3"))]))])),
+    ])
+}
+//#endregion 🔖️RealEntities
+
+//#region 🔖️Inverse
+/// ↩️ The semantically correct inverse spec for one forward `(kind, params)` pair against the
+/// pristine fixture's own known real header/entity values — id-aware, computed independently here
+/// since neither the oracle nor this adapter can reach `Ifc2x3Mutation::inverse()` (production's
+/// own law degrades every non-`NoMutation` kind to a whole-snapshot `SetSnapshot` restore, which is
+/// honest about what the SUBJECT can prove today but would be a vacuous oracle-side inverse).
+/// `remove-instance`'s inverse is deliberately cross-kind (`upsert-instance`), the same pattern
+/// `step/🔖️ap214/✳️any`'s own `insert-entity`/`remove-entity` pair uses.
+fn inverse_spec(kind: &str) -> Json {
+    match kind {
+        "set-snapshot" => json_spec("set-snapshot", json_obj(vec![("fileSchema", json_str_array(&["IFC2X3"]))])),
+        "upsert-instance" => json_spec("upsert-instance", json_obj(vec![("instance", column_instance("UC-Universal Columns-Column:UC305x305x97:552739"))])),
+        "remove-instance" => json_spec("upsert-instance", json_obj(vec![("instance", wall_instance())])),
+        "set-header" => json_spec("set-header", json_obj(vec![("header", wellness_header("0001"))])),
+        other => json_spec(other, json_obj(vec![])),
+    }
+}
+//#endregion 🔖️Inverse
+
+//#region 🔖️Oracle
+fn mutate_oracle(ctx: &Context) -> Result<Outcome, String> {
+    let input = mutable_input(ctx)?;
+    let spec = ctx.doc_json()?;
+    let bytes = oracle_apply_mutation(&input, &spec)?;
+    let projection = project_ifc_2x3_any(&bytes)?;
+    Ok(Outcome::with_raw(bytes, projection))
+}
+
+fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
+    let input = mutable_input(ctx)?;
+    let spec = ctx.doc_json()?;
+    let kind = spec.str("kind");
+    let restored = if kind == "no-mutation" {
+        input.clone()
+    } else {
+        let mutated = oracle_apply_mutation(&input, &spec)?;
+        oracle_apply_mutation(&mutated, &inverse_spec(&kind))?
+    };
+    let projection = project_ifc_2x3_any(&restored)?;
+    Ok(Outcome::with_raw(restored, projection))
+}
+
+fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
+    let input = mutable_input(ctx)?;
+    let bytes = oracle_apply_mutation(&input, &json_spec("no-mutation", json_obj(vec![])))?;
+    let projection = project_ifc_2x3_any(&bytes)?;
+    Ok(Outcome::with_raw(bytes, projection))
+}
+//#endregion 🔖️Oracle
+
+//#region 🔖️Subject
+#[cfg(feature = "sut")]
+mod subject {
+    use super::{inverse_spec, json_obj, json_spec, mutable_input};
+    use semio_repo_test_host::{Context, Json, Outcome};
+    use semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::any::io::{decode_ifc2x3, encode_ifc2x3};
+    use semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::any::schema::mutations::{apply_ifc2x3_mutation, Ifc2x3Mutation};
+    use semio_s_plugin_stdio::artifacts::ifc::standards::v2x3::subsets::any::schema::snapshot::Ifc2x3Snapshot;
+    use semio_s_plugin_stdio::artifacts::step::standards::v_ap214::engine::part21::{Part21Header, Part21Instance, Part21Value};
+    use semio_s_plugin_stdio_test_oracle::artifacts::ifc::standards::v2x3::subsets::any::project_ifc_2x3_any;
+
+    //#region 🔖️SpecReading
+    fn num_field(value: &Json, key: &str) -> Result<f64, String> {
+        match value.get(key) {
+            Some(Json::Number(number)) => Ok(*number),
+            _ => Err(format!("expected numeric field {key:?}")),
+        }
+    }
+    fn str_field(value: &Json, key: &str) -> Result<String, String> {
+        match value.get(key) {
+            Some(Json::String(text)) => Ok(text.clone()),
+            _ => Err(format!("expected string field {key:?}")),
+        }
+    }
+    fn str_array(value: &Json, key: &str) -> Vec<String> {
+        value.array(key).iter().filter_map(|entry| match entry { Json::String(text) => Some(text.clone()), _ => None }).collect()
+    }
+    fn u64_field(value: &Json, key: &str) -> Result<u64, String> {
+        num_field(value, key).map(|number| number as u64)
+    }
+    //#endregion 🔖️SpecReading
+
+    //#region 🔖️ValueGrammar
+    /// 🔤️ The same `{"t":..., "v":...}` wire grammar the oracle dispatcher speaks
+    /// (`../../🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs`'s own `value_from_json`),
+    /// independently re-implemented here against `Part21Value` rather than `ruststep::ast::
+    /// Parameter`. `Part21Value::Typed` carries a `Vec` (general value list) where `Parameter::
+    /// Typed` carries a single boxed value; this grammar's `typed` case only ever needs one
+    /// argument, so it wraps into a one-element `Vec` -- a faithful, not lossy, narrowing.
+    fn value_from_json(value: &Json) -> Result<Part21Value, String> {
+        match str_field(value, "t")?.as_str() {
+            "unset" => Ok(Part21Value::Unset),
+            "derived" => Ok(Part21Value::Derived),
+            "integer" => Ok(Part21Value::Int(num_field(value, "v")? as i64)),
+            "real" => Ok(Part21Value::Real(num_field(value, "v")?.into())),
+            "string" => Ok(Part21Value::Str(str_field(value, "v")?)),
+            "enum" => Ok(Part21Value::Enum(str_field(value, "v")?)),
+            "reference" => Ok(Part21Value::Ref(u64_field(value, "v")?)),
+            "aggregate" => Ok(Part21Value::List(value.array("v").iter().map(value_from_json).collect::<Result<Vec<_>, String>>()?)),
+            "typed" => Ok(Part21Value::Typed(str_field(value, "name")?, vec![value_from_json(value.get("v").ok_or("typed value requires a v field")?)?])),
+            other => Err(format!("unknown value type {other:?}")),
+        }
+    }
+    //#endregion 🔖️ValueGrammar
+
+    //#region 🔖️MutationFromSpec
+    /// 🦠️ The same `(kind, params)` wire shape the oracle dispatcher reads, translated into a real
+    /// `Ifc2x3Mutation` for this subset's own `apply_ifc2x3_mutation`. `set-snapshot` is pragmatic
+    /// (only overrides `FILE_SCHEMA` on `base`, the already-decoded document) — the same precedent
+    /// `mutate-pdf-1-7`'s and `mutate-step-ap214`'s own oracles use, needed here since a full
+    /// 3464-entity snapshot literal has no place in a readable Gherkin cell.
+    fn mutation_from_spec(spec: &Json, base: &Ifc2x3Snapshot) -> Result<Ifc2x3Mutation, String> {
+        let kind = spec.str("kind");
+        let empty = Json::Object(Vec::new());
+        let params = spec.get("params").unwrap_or(&empty);
+        Ok(match kind.as_str() {
+            "no-mutation" => Ifc2x3Mutation::NoMutation,
+            "set-snapshot" => {
+                let schemas = str_array(params, "fileSchema");
+                if schemas.is_empty() {
+                    return Err("set-snapshot requires a non-empty fileSchema field".to_string());
+                }
+                let mut snapshot = base.clone();
+                snapshot.document.header.file_schema = vec![Part21Value::List(schemas.into_iter().map(Part21Value::Str).collect())];
+                Ifc2x3Mutation::SetSnapshot { snapshot }
+            }
+            "set-header" => {
+                let field = params.get("header").ok_or("set-header requires a header field")?;
+                let value_list = |key: &str| -> Result<Vec<Part21Value>, String> { field.array(key).iter().map(value_from_json).collect() };
+                Ifc2x3Mutation::SetHeader { header: Part21Header { file_description: value_list("fileDescription")?, file_name: value_list("fileName")?, file_schema: value_list("fileSchema")? } }
+            }
+            "upsert-instance" => {
+                let instance_json = params.get("instance").ok_or("upsert-instance requires an instance field")?;
+                let id = u64_field(instance_json, "id")?;
+                let entities = instance_json
+                    .array("entities")
+                    .iter()
+                    .map(|entry| -> Result<(String, Vec<Part21Value>), String> { Ok((str_field(entry, "name")?, entry.array("args").iter().map(value_from_json).collect::<Result<Vec<_>, String>>()?)) })
+                    .collect::<Result<Vec<_>, String>>()?;
+                if entities.is_empty() {
+                    return Err("upsert-instance requires a non-empty entities array".to_string());
+                }
+                Ifc2x3Mutation::UpsertInstance { instance: Part21Instance { id, entities } }
+            }
+            "remove-instance" => Ifc2x3Mutation::RemoveInstance { id: u64_field(params, "id")? },
+            other => return Err(format!("unrecognised mutation kind {other:?}")),
+        })
+    }
+    //#endregion 🔖️MutationFromSpec
+
+    //#region 🔖️Codec
+    /// 📐️ Full parse → typed mutation → re-serialize from the model alone — the no-byte-pass-
+    /// through rule this wave exists to enforce. `decode_ifc2x3`/`encode_ifc2x3` are this subset's
+    /// own real codec (`../../🏅️standards/🔖️2x3/🪆️subsets/✳️any/🚪️io/🦀️component.rs`): standard-
+    /// specific `FILE_SCHEMA` validation plus the shared `step::engine::part21` tokenizer/writer.
+    fn apply_and_encode(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
+        let snapshot = decode_ifc2x3(input)?;
+        let base = snapshot.clone();
+        let mutation = mutation_from_spec(spec, &base)?;
+        let mut next = snapshot;
+        apply_ifc2x3_mutation(&mut next, &mutation);
+        let bytes = encode_ifc2x3(&next)?;
+        if bytes == input {
+            return Err("byte pass-through: output is bit-identical to the input".to_string());
+        }
+        Ok(bytes)
+    }
+    //#endregion 🔖️Codec
+
+    //#region 🔖️Handlers
+    pub fn mutate(ctx: &Context) -> Result<Outcome, String> {
+        let input = mutable_input(ctx)?;
+        let spec = ctx.doc_json()?;
+        let bytes = apply_and_encode(&input, &spec)?;
+        let projection = project_ifc_2x3_any(&bytes)?;
+        Ok(Outcome::with_raw(bytes, projection))
+    }
+
+    pub fn inverse(ctx: &Context) -> Result<Outcome, String> {
+        let input = mutable_input(ctx)?;
+        let spec = ctx.doc_json()?;
+        let kind = spec.str("kind");
+        let restored = if kind == "no-mutation" {
+            input.clone()
+        } else {
+            let mutated = apply_and_encode(&input, &spec)?;
+            apply_and_encode(&mutated, &inverse_spec(&kind))?
+        };
+        let projection = project_ifc_2x3_any(&restored)?;
+        Ok(Outcome::with_raw(restored, projection))
+    }
+
+    pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
+        let input = mutable_input(ctx)?;
+        let bytes = apply_and_encode(&input, &json_spec("no-mutation", json_obj(vec![])))?;
+        let projection = project_ifc_2x3_any(&bytes)?;
+        Ok(Outcome::with_raw(bytes, projection))
+    }
+    //#endregion 🔖️Handlers
+}
+//#endregion 🔖️Subject
+
+//#region 🔖️Registration
+/// 🧭️ Registration entry point the generated host calls.
+pub fn adapter() -> Adapter {
+    let mut built = Adapter::new("rust");
+    for kind in KINDS {
+        built = built.oracle(&format!("mutate-{kind}"), mutate_oracle).oracle(&format!("inverse-{kind}"), inverse_oracle);
+        #[cfg(feature = "sut")]
+        {
+            built = built.subject(&format!("mutate-{kind}"), subject::mutate).subject(&format!("inverse-{kind}"), subject::inverse);
+        }
+    }
+    built = built.oracle("identity-round-trip", round_trip_oracle);
+    #[cfg(feature = "sut")]
+    {
+        built = built.subject("identity-round-trip", subject::round_trip);
+    }
+    built
+}
+//#endregion 🔖️Registration

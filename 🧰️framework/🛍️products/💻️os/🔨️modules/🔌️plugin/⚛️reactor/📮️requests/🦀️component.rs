@@ -11,8 +11,8 @@
 //! `grep -n "^pub enum Effect" 🧰️framework/🔨️modules/🎠️kernel/🦀️component.rs` before this file was
 //! written) — not a stand-in.
 
-use semio_framework::Fault;
 use semio_framework::kernel::{Effect, RequestId};
+use semio_framework::Fault;
 use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::future::Future;

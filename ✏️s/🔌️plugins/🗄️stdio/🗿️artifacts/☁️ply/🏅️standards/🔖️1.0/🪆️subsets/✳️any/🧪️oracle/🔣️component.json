@@ -1,0 +1,35 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution to the repository test platform: PLY 1.0 `any`'s 10-kind PlyMutation vocabulary, and ply-rs registered under its own id/capability rather than any shared stdio entry (none exists for ply yet). `ply-rs` 0.1.3's source (`src/writer/mod.rs`, `src/parser/mod.rs`) was read directly out of the local cargo registry cache before this file was written: it genuinely reads AND writes both ascii and binary (little/big endian) PLY, with a real round-trip test suite of its own (`tests/write.rs::read_write_ply` asserts header+payload equality after a write/read cycle) -- a normal differential oracle, per fleet brief §6's first branch. One real, reproduced-standalone defect in its BINARY writer was found and is worked around rather than hidden -- see the oracle module's own doc comment and `WORKED_AROUND_DEFECT` below.",
+  "oracles": [
+    {
+      "id": "ply-rs-ply-1-0-mutate",
+      "ecosystem": "rust",
+      "package": "ply-rs",
+      "version": "0.1.3",
+      "capabilities": ["ply-1-0-mutate"],
+      "comparisonProfiles": ["semantic-ply-v1"],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/Fluci/ply-rs",
+      "rationale": "The only maintained-enough PLY reader/writer in the Rust ecosystem (the alternative `ply` crate dates from 2017 and has no writer at all). Read directly from the local registry cache before registration: `src/writer/mod.rs` writes ascii AND both binary endiannesses from the exact same `Ply<DefaultElement>` model its own `src/parser/mod.rs` reads back, and `tests/write.rs` proves a real write/read round trip. This oracle module performs every declared `PlyMutation` kind by direct manipulation of that same independent `Ply<DefaultElement>` structure (parsed and re-serialized by code that never touches this subset's own `PlySnapshot`/`decode_ply`/`encode_ply`/`PlyMutation`), so it is a genuine second producer, not a self-comparison. WORKED_AROUND_DEFECT: `Writer::__write_binary_element`'s `PropertyType::List` arm writes `element_def.count` (the ELEMENT's total row count) as the per-row list-length prefix instead of that row's own list length -- confirmed by reading the source and reproduced standalone (writing this subset's real 16,128-face fixture to `binary_little_endian` and reading it back with the SAME crate fails with 'Couldn't find a list element at index 114'; 16128 truncates to 0 as the declared `uchar` index type, corrupting every subsequent read). The oracle module writes binary payloads itself instead of calling the buggy function -- reusing `Writer::write_header` (unaffected) and the crate's own `PropertyAccess` getters, encoding each value with `to_le_bytes`/`to_be_bytes` from the standard library alone -- while still routing every ASCII write and every read (ascii or binary) through the crate unmodified, since only that one binary code path is wrong.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    }
+  ],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-ply-v1",
+      "description": "PLY documents compared by wire format, in-order comments and name-keyed elements (each its own ordered property declarations and ordered rows of typed cell values). Unlike a pure mesh format, comments and element/property declarations are themselves normative here -- InsertComment/RemoveComment/AddElement/RemoveElement/SetFormat mutate exactly this surface -- so nothing here is producer freedom the way generator strings are for OBJ/STL.",
+      "tolerance": 1e-5
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "ply-1-0-any",
+      "capability": "ply-1-0-mutate",
+      "kinds": ["no-mutation", "set-snapshot", "set-format", "insert-comment", "remove-comment", "add-element", "remove-element", "insert-row", "remove-row", "set-row-property"]
+    }
+  ]
+}

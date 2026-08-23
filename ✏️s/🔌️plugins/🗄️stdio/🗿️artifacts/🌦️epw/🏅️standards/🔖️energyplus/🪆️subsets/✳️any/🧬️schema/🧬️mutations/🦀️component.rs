@@ -72,6 +72,25 @@ pub enum EpwMutation {
         value: String,
     },
 }
+
+/// 🧾️ Kebab-case spelling of every `EpwMutation` variant, in declaration order — the exhaustive
+/// mutation catalog `epw-energyplus-any` (`../../🧪️oracle/🔣️component.json`) is measured against
+/// this exact list. `kinds_match_enum_and_catalog` proves it never drifts from either side.
+pub const KINDS: &[&str] = &[
+    "no-mutation",
+    "set-snapshot",
+    "set-location",
+    "set-design-conditions",
+    "set-typical-extreme-periods",
+    "set-ground-temperatures",
+    "set-holidays-dst",
+    "set-comments-1",
+    "set-comments-2",
+    "set-data-periods",
+    "insert-record",
+    "remove-record",
+    "set-record-field",
+];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -545,6 +564,58 @@ mod tests {
         }
     }
     //#endregion 🔖️OpTextBinaryRoundtripLaw
+
+    //#region 🔖️KindsConformanceLaw
+    /// 🧭️ `kind_of` is an EXHAUSTIVE match (no wildcard arm) — the compiler refuses this file if a
+    /// variant is added to `EpwMutation` without a matching kebab-case spelling here, which is what
+    /// keeps `KINDS` honest against the enum. The second half reads the sibling oracle manifest's
+    /// `kinds` array as text (the framework never parses Rust, so this is the only side that can
+    /// prove the manifest matches) and asserts the same list, in the same order.
+    #[semio_framework_async_macros::async_test]
+    async fn kinds_match_enum_and_catalog() {
+        fn kind_of(mutation: &EpwMutation) -> &'static str {
+            match mutation {
+                EpwMutation::NoMutation => "no-mutation",
+                EpwMutation::SetSnapshot { .. } => "set-snapshot",
+                EpwMutation::SetLocation { .. } => "set-location",
+                EpwMutation::SetDesignConditions { .. } => "set-design-conditions",
+                EpwMutation::SetTypicalExtremePeriods { .. } => "set-typical-extreme-periods",
+                EpwMutation::SetGroundTemperatures { .. } => "set-ground-temperatures",
+                EpwMutation::SetHolidaysDst { .. } => "set-holidays-dst",
+                EpwMutation::SetComments1 { .. } => "set-comments-1",
+                EpwMutation::SetComments2 { .. } => "set-comments-2",
+                EpwMutation::SetDataPeriods { .. } => "set-data-periods",
+                EpwMutation::InsertRecord { .. } => "insert-record",
+                EpwMutation::RemoveRecord { .. } => "remove-record",
+                EpwMutation::SetRecordField { .. } => "set-record-field",
+            }
+        }
+        let samples = [
+            EpwMutation::NoMutation,
+            EpwMutation::SetSnapshot { snapshot: EpwSnapshot::default() },
+            EpwMutation::SetLocation { location: EpwLocation::default() },
+            EpwMutation::SetDesignConditions { value: String::new() },
+            EpwMutation::SetTypicalExtremePeriods { value: String::new() },
+            EpwMutation::SetGroundTemperatures { value: String::new() },
+            EpwMutation::SetHolidaysDst { value: String::new() },
+            EpwMutation::SetComments1 { value: String::new() },
+            EpwMutation::SetComments2 { value: String::new() },
+            EpwMutation::SetDataPeriods { data_periods: EpwDataPeriods::default() },
+            EpwMutation::InsertRecord { index: 0, record: EpwRecord::default() },
+            EpwMutation::RemoveRecord { index: 0 },
+            EpwMutation::SetRecordField { record_index: 0, field_index: 0, value: String::new() },
+        ];
+        let from_enum: Vec<&'static str> = samples.iter().map(kind_of).collect();
+        assert_eq!(from_enum, KINDS, "KINDS must list every EpwMutation variant, in declaration order");
+
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let needle = "\"kinds\": [";
+        let start = manifest.find(needle).expect("manifest declares a kinds array") + needle.len();
+        let end = start + manifest[start..].find(']').expect("kinds array is closed");
+        let declared: Vec<String> = manifest[start..end].split(',').map(|entry| entry.trim().trim_matches('"').to_string()).filter(|entry| !entry.is_empty()).collect();
+        assert_eq!(declared, KINDS, "the oracle manifest's kinds must match EpwMutation exactly");
+    }
+    //#endregion 🔖️KindsConformanceLaw
 }
 //#endregion 🧪️Tests
 

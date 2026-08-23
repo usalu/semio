@@ -10,6 +10,27 @@ use semio_framework_job::{CommitCandidate, InteractiveJob, JobFault, Operation, 
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
+const MOUNTED_OWNER_PAGE_BYTES: usize = 4_096;
+
+fn reserve_exact_owner_page<T>(owner: &mut Vec<T>, additional: usize) -> bool {
+    owner.try_reserve_exact(additional).is_ok() && owner.capacity().checked_mul(std::mem::size_of::<T>()).is_some_and(|bytes| bytes <= MOUNTED_OWNER_PAGE_BYTES)
+}
+
+fn close_vec_owner_step<T>(owner: &mut Vec<T>, maximum_bytes: usize) -> Result<Option<(usize, usize)>, ()> {
+    if owner.pop().is_some() {
+        return Ok(Some((1, 0)));
+    }
+    let bytes = owner.capacity().checked_mul(std::mem::size_of::<T>()).ok_or(())?;
+    if bytes == 0 {
+        return Ok(None);
+    }
+    if bytes > maximum_bytes {
+        return Err(());
+    }
+    *owner = Vec::new();
+    Ok(Some((1, bytes)))
+}
+
 // #region 🔖️Model
 /// 📦️ A named load case: nodal loads, member UDLs, and an optional self-weight contribution.
 pub struct LoadCase {
@@ -31,6 +52,109 @@ pub struct AnalysisModel {
     pub nodes: Vec<Node>,
     pub elements: Vec<Elements>,
     pub supports: Vec<Support>,
+}
+
+#[derive(Default)]
+struct AnalysisModelCloseCursor {
+    lane: u8,
+}
+
+fn close_analysis_model_step(owner: &mut Arc<AnalysisModel>, cursor: &mut AnalysisModelCloseCursor, maximum_bytes: usize) -> (bool, usize, usize) {
+    let Some(model) = Arc::get_mut(owner) else {
+        return (false, 0, 0);
+    };
+    loop {
+        match cursor.lane {
+            0 => {
+                let Some(node) = model.nodes.last_mut() else {
+                    cursor.lane += 1;
+                    continue;
+                };
+                if node.id.capacity() != 0 {
+                    let bytes = node.id.capacity();
+                    if bytes > maximum_bytes {
+                        return (false, 0, 0);
+                    }
+                    node.id = String::new();
+                    return (false, 1, bytes);
+                }
+                model.nodes.pop();
+                return (false, 1, 0);
+            }
+            1 => {
+                let bytes = model.nodes.capacity() * std::mem::size_of::<Node>();
+                if bytes > maximum_bytes {
+                    return (false, 0, 0);
+                }
+                model.nodes = Vec::new();
+                cursor.lane += 1;
+                return (false, 1, bytes);
+            }
+            2 => {
+                let Some(element) = model.elements.last_mut() else {
+                    cursor.lane += 1;
+                    continue;
+                };
+                if let Some(bytes) = element.mounted_next_string_bytes() {
+                    if bytes > maximum_bytes {
+                        return (false, 0, 0);
+                    }
+                    return (false, 1, element.close_mounted_string_step().expect("mounted model close witness changed without mutation"));
+                }
+                if !element.mounted_strings_terminal_is_empty() {
+                    return (false, 0, 0);
+                }
+                model.elements.pop();
+                return (false, 1, 0);
+            }
+            3 => {
+                let bytes = model.elements.capacity() * std::mem::size_of::<Elements>();
+                if bytes > maximum_bytes {
+                    return (false, 0, 0);
+                }
+                model.elements = Vec::new();
+                cursor.lane += 1;
+                return (false, 1, bytes);
+            }
+            4 => {
+                let Some(support) = model.supports.last_mut() else {
+                    cursor.lane += 1;
+                    continue;
+                };
+                if support.node_id.capacity() != 0 {
+                    let bytes = support.node_id.capacity();
+                    if bytes > maximum_bytes {
+                        return (false, 0, 0);
+                    }
+                    support.node_id = String::new();
+                    return (false, 1, bytes);
+                }
+                if support.fixed.pop().is_some() {
+                    return (false, 1, 0);
+                }
+                let bytes = support.fixed.capacity() * std::mem::size_of::<Dof>();
+                if bytes != 0 {
+                    if bytes > maximum_bytes {
+                        return (false, 0, 0);
+                    }
+                    support.fixed = Vec::new();
+                    return (false, 1, bytes);
+                }
+                model.supports.pop();
+                return (false, 1, 0);
+            }
+            5 => {
+                let bytes = model.supports.capacity() * std::mem::size_of::<Support>();
+                if bytes > maximum_bytes {
+                    return (false, 0, 0);
+                }
+                model.supports = Vec::new();
+                cursor.lane += 1;
+                return (false, 1, bytes);
+            }
+            _ => return (true, 0, 0),
+        }
+    }
 }
 
 /// 📐️ The lowest modes of a `modal` analysis — `shapes[i]` is node-major matching `model.nodes`
@@ -138,7 +262,15 @@ impl FemJobGraph {
             return (false, 0, 0);
         }
         if self.state.plans.pop().is_some() {
-            return (false, 1, bytes);
+            return (false, 1, 0);
+        }
+        let backing_bytes = self.state.plans.capacity() * bytes;
+        if backing_bytes != 0 {
+            if backing_bytes > maximum_bytes {
+                return (false, 0, 0);
+            }
+            self.state.plans = Vec::new();
+            return (false, 1, backing_bytes);
         }
         (true, 0, 0)
     }
@@ -197,13 +329,12 @@ impl InteractiveJob for FemJobGraph {
 /// a small, self-contained reimplementation of `lib.rs`'s private `build_dof_map`/`DofMap` (not
 /// `pub`, so not importable here), kept byte-for-byte equivalent in ordering behavior.
 struct DofMap {
-    index: HashMap<(String, Dof), usize>,
     order: Vec<(String, Dof)>,
 }
 
 impl DofMap {
     fn get(&self, node_id: &str, dof: Dof) -> Option<usize> {
-        self.index.get(&(node_id.to_string(), dof)).copied()
+        self.order.iter().position(|(current, current_dof)| current == node_id && *current_dof == dof)
     }
 
     fn len(&self) -> usize {
@@ -213,7 +344,6 @@ impl DofMap {
 
 fn build_dof_map(nodes: &[Node], elements: &[Elements]) -> DofMap {
     let mut order = Vec::new();
-    let mut index = HashMap::new();
     for node in nodes {
         let mut active: Vec<Dof> = Vec::new();
         for element in elements {
@@ -227,11 +357,10 @@ fn build_dof_map(nodes: &[Node], elements: &[Elements]) -> DofMap {
         }
         active.sort_by_key(|d| d.index());
         for dof in active {
-            index.insert((node.id.clone(), dof), order.len());
             order.push((node.id.clone(), dof));
         }
     }
-    DofMap { index, order }
+    DofMap { order }
 }
 
 fn positions_of(nodes: &[Node], node_ids: &[String]) -> Vec<[f64; 3]> {
@@ -398,8 +527,40 @@ struct PendingElementAssembly {
     element_index: usize,
     side: usize,
     cell_cursor: usize,
+    reclaim_lane: u8,
+    complete: bool,
     indices_new: Vec<usize>,
+    positions: Vec<[f64; 3]>,
     stiffness: Vec<f64>,
+}
+
+#[derive(Clone, Copy, serde::Serialize, serde::Deserialize)]
+enum PendingElementBuildStage {
+    ReserveIndices,
+    Indices,
+    ReservePositions,
+    Positions,
+    ReserveStiffnessCredit,
+    AllocateStiffness,
+    ObserveStiffnessBacking,
+    AdmitStiffnessBacking,
+    Complete,
+}
+
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
+struct PendingElementBuild {
+    element_index: usize,
+    node_count: usize,
+    dof_count: usize,
+    scalar_cursor: usize,
+    stage: PendingElementBuildStage,
+    indices_new: Vec<usize>,
+    positions: Vec<[f64; 3]>,
+    stiffness: Vec<f64>,
+    stiffness_dimensions: [usize; 2],
+    stiffness_observed_bytes: usize,
+    stiffness_credit_reserved: bool,
+    stiffness_admitted: bool,
 }
 
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
@@ -407,6 +568,7 @@ struct AssemblyCheckpoint {
     stage: AssemblyJobStage,
     total_elements: usize,
     element_cursor: usize,
+    pending_build: Option<PendingElementBuild>,
     pending: Option<PendingElementAssembly>,
     partitions: Vec<AssemblyPartitionBuffer>,
     full_merge_cursors: Vec<usize>,
@@ -504,6 +666,7 @@ enum AssemblyConstructionStage {
     DiscoverDofs,
     RetireDofReferences,
     EmitDofs,
+    CommitDofOwner,
     ReservePermutation,
     BuildPermutation,
     ReserveConstraints,
@@ -516,7 +679,8 @@ enum AssemblyConstructionStage {
     BuildCompact,
     ReservePartitions,
     BuildPartitions,
-    ReserveMergeCursors,
+    ReserveFullMergeCursors,
+    ReserveFreeMergeCursors,
     BuildMergeCursors,
     Complete,
 }
@@ -525,6 +689,7 @@ enum AssemblyConstructionStage {
 /// comparison, DOF insertion, scalar initialization or fixed-capacity allocation opportunity.
 pub struct AssemblyJobConstruction {
     model: Option<Arc<AnalysisModel>>,
+    model_close: AnalysisModelCloseCursor,
     operation: Operation,
     partition_count: usize,
     stage: AssemblyConstructionStage,
@@ -533,34 +698,34 @@ pub struct AssemblyJobConstruction {
     element_cursor: usize,
     reference_cursor: usize,
     reference_node_cursor: usize,
-    pending_node_ids: Vec<String>,
     support_cursor: usize,
     support_node_cursor: usize,
     dof_node_cursor: usize,
     dof_element_cursor: usize,
     dof_reference_cursor: usize,
     dof_emit_cursor: usize,
+    pending_dof_owner: Option<(String, Dof)>,
     active_dofs: [bool; 6],
     constraint_support_cursor: usize,
     constraint_dof_cursor: usize,
     constraint_order_cursor: usize,
     scalar_cursor: usize,
+    maximum_triplets: usize,
+    partition_reserve_cursor: usize,
+    partition_reserve_lane: u8,
     plan: AssemblyPlan,
     constrained_old: Vec<bool>,
     partitions: Vec<AssemblyPartitionBuffer>,
     full_merge_cursors: Vec<usize>,
     free_merge_cursors: Vec<usize>,
     job: Option<AssemblyJob<'static>>,
-    close_lane: u8,
 }
 
 impl AssemblyJobConstruction {
-    pub fn new_owned(model: Arc<AnalysisModel>, operation: Operation, partition_count: usize) -> Result<Self, Arc<AnalysisModel>> {
-        if partition_count == 0 || model.nodes.is_empty() {
-            return Err(model);
-        }
-        Ok(Self {
+    pub fn new_owned(model: Arc<AnalysisModel>, operation: Operation, partition_count: usize) -> Self {
+        Self {
             model: Some(model),
+            model_close: AnalysisModelCloseCursor::default(),
             operation,
             partition_count,
             stage: AssemblyConstructionStage::ReserveDofs,
@@ -569,38 +734,40 @@ impl AssemblyJobConstruction {
             element_cursor: 0,
             reference_cursor: 0,
             reference_node_cursor: 0,
-            pending_node_ids: Vec::new(),
             support_cursor: 0,
             support_node_cursor: 0,
             dof_node_cursor: 0,
             dof_element_cursor: 0,
             dof_reference_cursor: 0,
             dof_emit_cursor: 0,
+            pending_dof_owner: None,
             active_dofs: [false; 6],
             constraint_support_cursor: 0,
             constraint_dof_cursor: 0,
             constraint_order_cursor: 0,
             scalar_cursor: 0,
-            plan: AssemblyPlan { dof_map: DofMap { index: HashMap::new(), order: Vec::new() }, inv_perm: Vec::new(), ndof: 0, free_new: Vec::new(), compact_of_new: Vec::new() },
+            maximum_triplets: 0,
+            partition_reserve_cursor: 0,
+            partition_reserve_lane: 0,
+            plan: AssemblyPlan { dof_map: DofMap { order: Vec::new() }, inv_perm: Vec::new(), ndof: 0, free_new: Vec::new(), compact_of_new: Vec::new() },
             constrained_old: Vec::new(),
             partitions: Vec::new(),
             full_merge_cursors: Vec::new(),
             free_merge_cursors: Vec::new(),
             job: None,
-            close_lane: 0,
-        })
-    }
-
-    fn model(&self) -> Result<&AnalysisModel, FemError> {
-        self.model.as_deref().ok_or(FemError::EmptyModel)
+        }
     }
 
     pub fn step_one(&mut self) -> Result<bool, FemError> {
         match self.stage {
             AssemblyConstructionStage::ReserveDofs => {
-                let maximum_dofs = self.model()?.nodes.len().checked_mul(6).ok_or(FemError::Singular)?;
-                self.plan.dof_map.order.try_reserve_exact(maximum_dofs).map_err(|_| FemError::Singular)?;
-                self.plan.dof_map.index.try_reserve(maximum_dofs).map_err(|_| FemError::Singular)?;
+                if self.partition_count == 0 || self.model.as_ref().is_none_or(|model| model.nodes.is_empty()) {
+                    return Err(FemError::EmptyModel);
+                }
+                let maximum_dofs = self.model.as_ref().ok_or(FemError::EmptyModel)?.nodes.len().checked_mul(6).ok_or(FemError::Singular)?;
+                if !reserve_exact_owner_page(&mut self.plan.dof_map.order, maximum_dofs) {
+                    return Err(FemError::Singular);
+                }
                 self.stage = AssemblyConstructionStage::ValidateNodePairs;
             }
             AssemblyConstructionStage::ValidateNodePairs => {
@@ -621,13 +788,15 @@ impl AssemblyJobConstruction {
                 let model = Arc::clone(self.model.as_ref().ok_or(FemError::EmptyModel)?);
                 if self.element_cursor >= model.elements.len() {
                     self.stage = AssemblyConstructionStage::ValidateSupportReferences;
-                } else if self.pending_node_ids.is_empty() {
-                    self.pending_node_ids = model.elements[self.element_cursor].node_ids();
-                } else if self.reference_cursor >= self.pending_node_ids.len() {
-                    self.stage = AssemblyConstructionStage::RetireElementReferences;
+                } else if self.reference_cursor >= model.elements[self.element_cursor].mounted_node_id_count().ok_or(FemError::Singular)? {
+                    let side = model.elements[self.element_cursor].mounted_node_id_count().and_then(|nodes| nodes.checked_mul(model.elements[self.element_cursor].dofs_per_node().len())).ok_or(FemError::Singular)?;
+                    self.maximum_triplets = self.maximum_triplets.checked_add(side.checked_mul(side).ok_or(FemError::Singular)?).ok_or(FemError::Singular)?;
+                    self.element_cursor += 1;
+                    self.reference_cursor = 0;
+                    self.reference_node_cursor = 0;
                 } else if self.reference_node_cursor >= model.nodes.len() {
-                    return Err(FemError::DanglingNodeRef(self.pending_node_ids[self.reference_cursor].clone()));
-                } else if model.nodes[self.reference_node_cursor].id == self.pending_node_ids[self.reference_cursor] {
+                    return Err(FemError::DanglingNodeRef(model.elements[self.element_cursor].mounted_node_id(self.reference_cursor).ok_or(FemError::Singular)?.to_owned()));
+                } else if model.nodes[self.reference_node_cursor].id == model.elements[self.element_cursor].mounted_node_id(self.reference_cursor).ok_or(FemError::Singular)? {
                     self.reference_cursor += 1;
                     self.reference_node_cursor = 0;
                 } else {
@@ -635,12 +804,7 @@ impl AssemblyJobConstruction {
                 }
             }
             AssemblyConstructionStage::RetireElementReferences => {
-                if self.pending_node_ids.pop().is_none() {
-                    self.element_cursor += 1;
-                    self.reference_cursor = 0;
-                    self.reference_node_cursor = 0;
-                    self.stage = AssemblyConstructionStage::ValidateElementReferences;
-                }
+                self.stage = AssemblyConstructionStage::ValidateElementReferences;
             }
             AssemblyConstructionStage::ValidateSupportReferences => {
                 let model = Arc::clone(self.model.as_ref().ok_or(FemError::EmptyModel)?);
@@ -663,13 +827,11 @@ impl AssemblyJobConstruction {
                 } else if self.dof_element_cursor >= model.elements.len() {
                     self.dof_emit_cursor = 0;
                     self.stage = AssemblyConstructionStage::EmitDofs;
-                } else if self.pending_node_ids.is_empty() {
-                    self.pending_node_ids = model.elements[self.dof_element_cursor].node_ids();
+                } else if self.dof_reference_cursor >= model.elements[self.dof_element_cursor].mounted_node_id_count().ok_or(FemError::Singular)? {
+                    self.dof_element_cursor += 1;
                     self.dof_reference_cursor = 0;
-                } else if self.dof_reference_cursor >= self.pending_node_ids.len() {
-                    self.stage = AssemblyConstructionStage::RetireDofReferences;
                 } else {
-                    if self.pending_node_ids[self.dof_reference_cursor] == model.nodes[self.dof_node_cursor].id {
+                    if model.elements[self.dof_element_cursor].mounted_node_id(self.dof_reference_cursor).ok_or(FemError::Singular)? == model.nodes[self.dof_node_cursor].id {
                         for dof in model.elements[self.dof_element_cursor].dofs_per_node() {
                             self.active_dofs[dof.index()] = true;
                         }
@@ -678,11 +840,7 @@ impl AssemblyJobConstruction {
                 }
             }
             AssemblyConstructionStage::RetireDofReferences => {
-                if self.pending_node_ids.pop().is_none() {
-                    self.dof_element_cursor += 1;
-                    self.dof_reference_cursor = 0;
-                    self.stage = AssemblyConstructionStage::DiscoverDofs;
-                }
+                self.stage = AssemblyConstructionStage::DiscoverDofs;
             }
             AssemblyConstructionStage::EmitDofs => {
                 if self.dof_emit_cursor >= self.active_dofs.len() {
@@ -694,16 +852,27 @@ impl AssemblyJobConstruction {
                     if self.active_dofs[self.dof_emit_cursor] {
                         let dof = [Dof::Tx, Dof::Ty, Dof::Tz, Dof::Rx, Dof::Ry, Dof::Rz][self.dof_emit_cursor];
                         let node_id = self.model()?.nodes[self.dof_node_cursor].id.clone();
-                        let index = self.plan.dof_map.order.len();
-                        self.plan.dof_map.index.insert((node_id.clone(), dof), index);
-                        self.plan.dof_map.order.push((node_id, dof));
+                        self.pending_dof_owner = Some((node_id, dof));
+                        self.stage = AssemblyConstructionStage::CommitDofOwner;
+                        return Ok(false);
                     }
                     self.dof_emit_cursor += 1;
                 }
             }
+            AssemblyConstructionStage::CommitDofOwner => {
+                let owner = self.pending_dof_owner.as_ref().ok_or(FemError::Singular)?;
+                if owner.0.capacity() > MOUNTED_OWNER_PAGE_BYTES {
+                    return Err(FemError::Singular);
+                }
+                self.plan.dof_map.order.push(self.pending_dof_owner.take().ok_or(FemError::Singular)?);
+                self.dof_emit_cursor += 1;
+                self.stage = AssemblyConstructionStage::EmitDofs;
+            }
             AssemblyConstructionStage::ReservePermutation => {
                 self.plan.ndof = self.plan.dof_map.len();
-                self.plan.inv_perm.try_reserve_exact(self.plan.ndof).map_err(|_| FemError::Singular)?;
+                if !reserve_exact_owner_page(&mut self.plan.inv_perm, self.plan.ndof) {
+                    return Err(FemError::Singular);
+                }
                 self.stage = AssemblyConstructionStage::BuildPermutation;
             }
             AssemblyConstructionStage::BuildPermutation => {
@@ -714,7 +883,9 @@ impl AssemblyJobConstruction {
                 }
             }
             AssemblyConstructionStage::ReserveConstraints => {
-                self.constrained_old.try_reserve_exact(self.plan.ndof).map_err(|_| FemError::Singular)?;
+                if !reserve_exact_owner_page(&mut self.constrained_old, self.plan.ndof) {
+                    return Err(FemError::Singular);
+                }
                 self.stage = AssemblyConstructionStage::InitializeConstraints;
             }
             AssemblyConstructionStage::InitializeConstraints => {
@@ -738,7 +909,8 @@ impl AssemblyJobConstruction {
                     self.constraint_order_cursor = 0;
                 } else {
                     let support = &model.supports[self.constraint_support_cursor];
-                    if self.plan.dof_map.order[self.constraint_order_cursor] == (support.node_id.clone(), support.fixed[self.constraint_dof_cursor]) {
+                    let (node_id, dof) = &self.plan.dof_map.order[self.constraint_order_cursor];
+                    if node_id == &support.node_id && *dof == support.fixed[self.constraint_dof_cursor] {
                         self.constrained_old[self.constraint_order_cursor] = true;
                         self.constraint_dof_cursor += 1;
                         self.constraint_order_cursor = 0;
@@ -748,7 +920,9 @@ impl AssemblyJobConstruction {
                 }
             }
             AssemblyConstructionStage::ReserveFree => {
-                self.plan.free_new.try_reserve_exact(self.plan.ndof).map_err(|_| FemError::Singular)?;
+                if !reserve_exact_owner_page(&mut self.plan.free_new, self.plan.ndof) {
+                    return Err(FemError::Singular);
+                }
                 self.scalar_cursor = 0;
                 self.stage = AssemblyConstructionStage::BuildFree;
             }
@@ -763,7 +937,9 @@ impl AssemblyJobConstruction {
                 }
             }
             AssemblyConstructionStage::ReserveCompact => {
-                self.plan.compact_of_new.try_reserve_exact(self.plan.ndof).map_err(|_| FemError::Singular)?;
+                if !reserve_exact_owner_page(&mut self.plan.compact_of_new, self.plan.ndof) {
+                    return Err(FemError::Singular);
+                }
                 self.stage = AssemblyConstructionStage::InitializeCompact;
             }
             AssemblyConstructionStage::InitializeCompact => {
@@ -783,19 +959,42 @@ impl AssemblyJobConstruction {
                 }
             }
             AssemblyConstructionStage::ReservePartitions => {
-                self.partitions.try_reserve_exact(self.partition_count).map_err(|_| FemError::Singular)?;
+                if !reserve_exact_owner_page(&mut self.partitions, self.partition_count) {
+                    return Err(FemError::Singular);
+                }
                 self.stage = AssemblyConstructionStage::BuildPartitions;
             }
             AssemblyConstructionStage::BuildPartitions => {
                 if self.partitions.len() < self.partition_count {
                     self.partitions.push(AssemblyPartitionBuffer::default());
+                } else if self.partition_reserve_cursor < self.partitions.len() {
+                    let partition = &mut self.partitions[self.partition_reserve_cursor];
+                    let per_partition = self.maximum_triplets.checked_add(self.partition_count - 1).ok_or(FemError::Singular)? / self.partition_count;
+                    if self.partition_reserve_lane == 0 {
+                        if !reserve_exact_owner_page(&mut partition.full, per_partition) {
+                            return Err(FemError::Singular);
+                        }
+                        self.partition_reserve_lane = 1;
+                    } else if !reserve_exact_owner_page(&mut partition.free, per_partition) {
+                        return Err(FemError::Singular);
+                    } else {
+                        self.partition_reserve_lane = 0;
+                        self.partition_reserve_cursor += 1;
+                    }
                 } else {
-                    self.stage = AssemblyConstructionStage::ReserveMergeCursors;
+                    self.stage = AssemblyConstructionStage::ReserveFullMergeCursors;
                 }
             }
-            AssemblyConstructionStage::ReserveMergeCursors => {
-                self.full_merge_cursors.try_reserve_exact(self.partition_count).map_err(|_| FemError::Singular)?;
-                self.free_merge_cursors.try_reserve_exact(self.partition_count).map_err(|_| FemError::Singular)?;
+            AssemblyConstructionStage::ReserveFullMergeCursors => {
+                if !reserve_exact_owner_page(&mut self.full_merge_cursors, self.partition_count) {
+                    return Err(FemError::Singular);
+                }
+                self.stage = AssemblyConstructionStage::ReserveFreeMergeCursors;
+            }
+            AssemblyConstructionStage::ReserveFreeMergeCursors => {
+                if !reserve_exact_owner_page(&mut self.free_merge_cursors, self.partition_count) {
+                    return Err(FemError::Singular);
+                }
                 self.stage = AssemblyConstructionStage::BuildMergeCursors;
             }
             AssemblyConstructionStage::BuildMergeCursors => {
@@ -806,7 +1005,7 @@ impl AssemblyJobConstruction {
                 } else {
                     let model = self.model.take().ok_or(FemError::EmptyModel)?;
                     let model_signature = self.operation.operation.0 ^ self.operation.base_revision.0.rotate_left(17) ^ self.operation.generation.0.rotate_left(33);
-                    let plan = std::mem::replace(&mut self.plan, AssemblyPlan { dof_map: DofMap { index: HashMap::new(), order: Vec::new() }, inv_perm: Vec::new(), ndof: 0, free_new: Vec::new(), compact_of_new: Vec::new() });
+                    let plan = std::mem::replace(&mut self.plan, AssemblyPlan { dof_map: DofMap { order: Vec::new() }, inv_perm: Vec::new(), ndof: 0, free_new: Vec::new(), compact_of_new: Vec::new() });
                     self.job = Some(AssemblyJob {
                         state: AssemblyCheckpoint {
                             stage: AssemblyJobStage::ElementTriplets,
@@ -827,6 +1026,7 @@ impl AssemblyJobConstruction {
                         model_signature,
                         plan,
                         close_lane: 0,
+                        model_close: AnalysisModelCloseCursor::default(),
                     });
                     self.stage = AssemblyConstructionStage::Complete;
                 }
@@ -841,8 +1041,17 @@ impl AssemblyJobConstruction {
     }
 
     pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
-        if maximum_bytes < 128 {
-            return (false, 0, 0);
+        if let Some(owner) = self.pending_dof_owner.as_mut() {
+            if owner.0.capacity() != 0 {
+                let bytes = owner.0.capacity();
+                if bytes > maximum_bytes {
+                    return (false, 0, 0);
+                }
+                owner.0 = String::new();
+                return (false, 1, bytes);
+            }
+            self.pending_dof_owner = None;
+            return (false, 1, 0);
         }
         if let Some(job) = self.job.as_mut() {
             let (terminal, items, bytes) = job.close_step(maximum_bytes);
@@ -850,22 +1059,75 @@ impl AssemblyJobConstruction {
                 return (false, items, bytes);
             }
             self.job = None;
-            return (false, 1, std::mem::size_of::<AssemblyJob<'static>>());
+            return (false, 1, 0);
         }
-        if self.pending_node_ids.pop().is_some() || self.plan.dof_map.order.pop().is_some() || self.plan.inv_perm.pop().is_some() || self.plan.free_new.pop().is_some() || self.plan.compact_of_new.pop().is_some() {
-            return (false, 1, std::mem::size_of::<usize>());
+        if let Some(key) = self.plan.dof_map.order.last_mut() {
+            if key.0.capacity() != 0 {
+                let bytes = key.0.capacity();
+                if bytes > maximum_bytes {
+                    return (false, 0, 0);
+                }
+                key.0 = String::new();
+                return (false, 1, bytes);
+            }
+            self.plan.dof_map.order.pop();
+            return (false, 1, 0);
         }
-        if self.plan.dof_map.index.extract_if(|_, _| true).next().is_some() {
-            return (false, 1, std::mem::size_of::<((String, Dof), usize)>());
+        match close_vec_owner_step(&mut self.plan.dof_map.order, maximum_bytes) {
+            Ok(Some((items, bytes))) => return (false, items, bytes),
+            Err(()) => return (false, 0, 0),
+            Ok(None) => {}
         }
-        if self.constrained_old.pop().is_some() || self.full_merge_cursors.pop().is_some() || self.free_merge_cursors.pop().is_some() {
-            return (false, 1, std::mem::size_of::<usize>());
+        for owner in [&mut self.plan.inv_perm, &mut self.plan.free_new] {
+            match close_vec_owner_step(owner, maximum_bytes) {
+                Ok(Some((items, bytes))) => return (false, items, bytes),
+                Err(()) => return (false, 0, 0),
+                Ok(None) => {}
+            }
         }
-        if self.partitions.pop().is_some() {
-            return (false, 1, std::mem::size_of::<AssemblyPartitionBuffer>());
+        match close_vec_owner_step(&mut self.plan.compact_of_new, maximum_bytes) {
+            Ok(Some((items, bytes))) => return (false, items, bytes),
+            Err(()) => return (false, 0, 0),
+            Ok(None) => {}
         }
-        if self.model.take().is_some() {
-            return (false, 1, std::mem::size_of::<Arc<AnalysisModel>>());
+        match close_vec_owner_step(&mut self.constrained_old, maximum_bytes) {
+            Ok(Some((items, bytes))) => return (false, items, bytes),
+            Err(()) => return (false, 0, 0),
+            Ok(None) => {}
+        }
+        for owner in [&mut self.full_merge_cursors, &mut self.free_merge_cursors] {
+            match close_vec_owner_step(owner, maximum_bytes) {
+                Ok(Some((items, bytes))) => return (false, items, bytes),
+                Err(()) => return (false, 0, 0),
+                Ok(None) => {}
+            }
+        }
+        if let Some(partition) = self.partitions.last_mut() {
+            match close_vec_owner_step(&mut partition.full, maximum_bytes) {
+                Ok(Some((items, bytes))) => return (false, items, bytes),
+                Err(()) => return (false, 0, 0),
+                Ok(None) => {}
+            }
+            match close_vec_owner_step(&mut partition.free, maximum_bytes) {
+                Ok(Some((items, bytes))) => return (false, items, bytes),
+                Err(()) => return (false, 0, 0),
+                Ok(None) => {}
+            }
+            self.partitions.pop();
+            return (false, 1, 0);
+        }
+        match close_vec_owner_step(&mut self.partitions, maximum_bytes) {
+            Ok(Some((items, bytes))) => return (false, items, bytes),
+            Err(()) => return (false, 0, 0),
+            Ok(None) => {}
+        }
+        if let Some(model) = self.model.as_mut() {
+            let (terminal, items, bytes) = close_analysis_model_step(model, &mut self.model_close, maximum_bytes);
+            if !terminal {
+                return (false, items, bytes);
+            }
+            self.model = None;
+            return (false, 1, 0);
         }
         (true, 0, 0)
     }
@@ -901,6 +1163,7 @@ pub struct AssemblyJob<'model> {
     plan: AssemblyPlan,
     state: AssemblyCheckpoint,
     close_lane: u8,
+    model_close: AnalysisModelCloseCursor,
 }
 
 impl<'model> AssemblyJob<'model> {
@@ -921,6 +1184,7 @@ impl<'model> AssemblyJob<'model> {
                 stage: AssemblyJobStage::ElementTriplets,
                 total_elements: model.elements.len(),
                 element_cursor: 0,
+                pending_build: None,
                 pending: None,
                 partitions: vec![AssemblyPartitionBuffer::default(); partition_count],
                 full_merge_cursors: vec![0; partition_count],
@@ -932,6 +1196,7 @@ impl<'model> AssemblyJob<'model> {
                 resume_target: 0,
             },
             close_lane: 0,
+            model_close: AnalysisModelCloseCursor::default(),
         })
     }
 
@@ -971,21 +1236,46 @@ impl<'model> AssemblyJob<'model> {
     /// retained until the caller observes `true`; mounted sessions keep a separate exact model root
     /// while dropping the resulting shallow assembly shell.
     pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
-        if maximum_bytes < 128 {
-            return (false, 0, 0);
-        }
         loop {
-            let released_bytes = match self.close_lane {
+            let released = match self.close_lane {
                 0 => {
-                    if let Some(pending) = self.state.pending.as_mut() {
-                        if let Some(_) = pending.stiffness.pop() {
-                            std::mem::size_of::<f64>()
-                        } else if let Some(_) = pending.indices_new.pop() {
-                            std::mem::size_of::<usize>()
-                        } else {
-                            self.state.pending = None;
-                            std::mem::size_of::<PendingElementAssembly>()
+                    if let Some(pending) = self.state.pending_build.as_mut() {
+                        match close_vec_owner_step(&mut pending.stiffness, maximum_bytes) {
+                            Ok(Some(step)) => return (false, step.0, step.1),
+                            Err(()) => return (false, 0, 0),
+                            Ok(None) => {}
                         }
+                        match close_vec_owner_step(&mut pending.positions, maximum_bytes) {
+                            Ok(Some(step)) => return (false, step.0, step.1),
+                            Err(()) => return (false, 0, 0),
+                            Ok(None) => {}
+                        }
+                        match close_vec_owner_step(&mut pending.indices_new, maximum_bytes) {
+                            Ok(Some(step)) => return (false, step.0, step.1),
+                            Err(()) => return (false, 0, 0),
+                            Ok(None) => {}
+                        }
+                        self.state.pending_build = None;
+                        return (false, 1, 0);
+                    }
+                    if let Some(pending) = self.state.pending.as_mut() {
+                        match close_vec_owner_step(&mut pending.stiffness, maximum_bytes) {
+                            Ok(Some(step)) => return (false, step.0, step.1),
+                            Err(()) => return (false, 0, 0),
+                            Ok(None) => {}
+                        }
+                        match close_vec_owner_step(&mut pending.indices_new, maximum_bytes) {
+                            Ok(Some(step)) => return (false, step.0, step.1),
+                            Err(()) => return (false, 0, 0),
+                            Ok(None) => {}
+                        }
+                        match close_vec_owner_step(&mut pending.positions, maximum_bytes) {
+                            Ok(Some(step)) => return (false, step.0, step.1),
+                            Err(()) => return (false, 0, 0),
+                            Ok(None) => {}
+                        }
+                        self.state.pending = None;
+                        (1, 0)
                     } else {
                         self.close_lane += 1;
                         continue;
@@ -993,107 +1283,264 @@ impl<'model> AssemblyJob<'model> {
                 }
                 1 => {
                     if let Some(partition) = self.state.partitions.last_mut() {
-                        if partition.full.pop().is_some() || partition.free.pop().is_some() {
-                            std::mem::size_of::<AssemblyTriplet>()
-                        } else {
-                            self.state.partitions.pop();
-                            std::mem::size_of::<AssemblyPartitionBuffer>()
+                        match close_vec_owner_step(&mut partition.full, maximum_bytes) {
+                            Ok(Some(step)) => return (false, step.0, step.1),
+                            Err(()) => return (false, 0, 0),
+                            Ok(None) => {}
                         }
+                        match close_vec_owner_step(&mut partition.free, maximum_bytes) {
+                            Ok(Some(step)) => return (false, step.0, step.1),
+                            Err(()) => return (false, 0, 0),
+                            Ok(None) => {}
+                        }
+                        self.state.partitions.pop();
+                        (1, 0)
                     } else {
+                        let bytes = self.state.partitions.capacity() * std::mem::size_of::<AssemblyPartitionBuffer>();
+                        if bytes != 0 {
+                            if bytes > maximum_bytes {
+                                return (false, 0, 0);
+                            }
+                            self.state.partitions = Vec::new();
+                            return (false, 1, bytes);
+                        }
                         self.close_lane += 1;
                         continue;
                     }
                 }
-                2 => match self.state.full_merge_cursors.pop() {
-                    Some(_) => std::mem::size_of::<usize>(),
-                    None => {
+                2 => match close_vec_owner_step(&mut self.state.full_merge_cursors, maximum_bytes) {
+                    Ok(Some(step)) => step,
+                    Err(()) => return (false, 0, 0),
+                    Ok(None) => {
                         self.close_lane += 1;
                         continue;
                     }
                 },
-                3 => match self.state.free_merge_cursors.pop() {
-                    Some(_) => std::mem::size_of::<usize>(),
-                    None => {
+                3 => match close_vec_owner_step(&mut self.state.free_merge_cursors, maximum_bytes) {
+                    Ok(Some(step)) => step,
+                    Err(()) => return (false, 0, 0),
+                    Ok(None) => {
                         self.close_lane += 1;
                         continue;
                     }
                 },
-                4 => match self.state.merged_full.pop() {
-                    Some(_) => std::mem::size_of::<AssemblyTriplet>(),
-                    None => {
+                4 => match close_vec_owner_step(&mut self.state.merged_full, maximum_bytes) {
+                    Ok(Some(step)) => step,
+                    Err(()) => return (false, 0, 0),
+                    Ok(None) => {
                         self.close_lane += 1;
                         continue;
                     }
                 },
-                5 => match self.state.merged_free.pop() {
-                    Some(_) => std::mem::size_of::<AssemblyTriplet>(),
-                    None => {
+                5 => match close_vec_owner_step(&mut self.state.merged_free, maximum_bytes) {
+                    Ok(Some(step)) => step,
+                    Err(()) => return (false, 0, 0),
+                    Ok(None) => {
                         self.close_lane += 1;
                         continue;
                     }
                 },
-                6 => match self.plan.dof_map.index.extract_if(|_, _| true).next() {
-                    Some((_, _)) => std::mem::size_of::<((String, Dof), usize)>(),
-                    None => {
+                6 => {
+                    self.close_lane += 1;
+                    continue;
+                }
+                7 => match self.plan.dof_map.order.last_mut() {
+                    Some((id, _)) if id.capacity() != 0 => {
+                        let bytes = id.capacity();
+                        if bytes > maximum_bytes {
+                            return (false, 0, 0);
+                        }
+                        *id = String::new();
+                        (1, bytes)
+                    }
+                    Some(_) => {
+                        self.plan.dof_map.order.pop();
+                        (1, 0)
+                    }
+                    None => match close_vec_owner_step(&mut self.plan.dof_map.order, maximum_bytes) {
+                        Ok(Some(step)) => step,
+                        Err(()) => return (false, 0, 0),
+                        Ok(None) => {
+                            self.close_lane += 1;
+                            continue;
+                        }
+                    },
+                },
+                8 => match close_vec_owner_step(&mut self.plan.inv_perm, maximum_bytes) {
+                    Ok(Some(step)) => step,
+                    Err(()) => return (false, 0, 0),
+                    Ok(None) => {
                         self.close_lane += 1;
                         continue;
                     }
                 },
-                7 => match self.plan.dof_map.order.pop() {
-                    Some(_) => std::mem::size_of::<(String, Dof)>(),
-                    None => {
+                9 => match close_vec_owner_step(&mut self.plan.free_new, maximum_bytes) {
+                    Ok(Some(step)) => step,
+                    Err(()) => return (false, 0, 0),
+                    Ok(None) => {
                         self.close_lane += 1;
                         continue;
                     }
                 },
-                8 => match self.plan.inv_perm.pop() {
-                    Some(_) => std::mem::size_of::<usize>(),
-                    None => {
+                10 => match close_vec_owner_step(&mut self.plan.compact_of_new, maximum_bytes) {
+                    Ok(Some(step)) => step,
+                    Err(()) => return (false, 0, 0),
+                    Ok(None) => {
                         self.close_lane += 1;
                         continue;
                     }
                 },
-                9 => match self.plan.free_new.pop() {
-                    Some(_) => std::mem::size_of::<usize>(),
-                    None => {
+                11 => match &mut self.model {
+                    AnalysisModelOwner::Borrowed(_) => {
                         self.close_lane += 1;
                         continue;
                     }
-                },
-                10 => match self.plan.compact_of_new.pop() {
-                    Some(_) => std::mem::size_of::<Option<usize>>(),
-                    None => {
-                        self.close_lane += 1;
-                        continue;
+                    AnalysisModelOwner::Owned(model) => {
+                        let (terminal, items, bytes) = close_analysis_model_step(model, &mut self.model_close, maximum_bytes);
+                        if terminal {
+                            self.close_lane += 1;
+                            continue;
+                        }
+                        return (false, items, bytes);
                     }
                 },
                 _ => return (true, 0, 0),
             };
-            return (false, 1, released_bytes);
+            return (false, released.0, released.1);
         }
     }
 
-    fn begin_element(&mut self) {
+    fn advance_element_build(&mut self) -> Result<bool, FemError> {
+        if self.state.pending_build.is_none() {
+            let element_index = self.state.element_cursor;
+            let element = &self.model.elements[element_index];
+            let node_count = element.mounted_node_id_count().ok_or(FemError::Singular)?;
+            let dof_count = element.dofs_per_node().len();
+            let side = node_count.checked_mul(dof_count).ok_or(FemError::Singular)?;
+            self.state.pending_build = Some(PendingElementBuild {
+                element_index,
+                node_count,
+                dof_count,
+                scalar_cursor: 0,
+                stage: PendingElementBuildStage::ReserveIndices,
+                indices_new: Vec::new(),
+                positions: Vec::new(),
+                stiffness: Vec::new(),
+                stiffness_dimensions: [0; 2],
+                stiffness_observed_bytes: 0,
+                stiffness_credit_reserved: false,
+                stiffness_admitted: false,
+            });
+            return Ok(false);
+        }
+        let build = self.state.pending_build.as_mut().ok_or(FemError::Singular)?;
+        let element = &self.model.elements[build.element_index];
+        match build.stage {
+            PendingElementBuildStage::ReserveIndices => {
+                let side = build.node_count.checked_mul(build.dof_count).ok_or(FemError::Singular)?;
+                if !reserve_exact_owner_page(&mut build.indices_new, side) {
+                    return Err(FemError::Singular);
+                }
+                build.stage = PendingElementBuildStage::Indices;
+            }
+            PendingElementBuildStage::Indices => {
+                let side = build.node_count.checked_mul(build.dof_count).ok_or(FemError::Singular)?;
+                if build.scalar_cursor < side {
+                    let node_index = build.scalar_cursor / build.dof_count;
+                    let dof_index = build.scalar_cursor % build.dof_count;
+                    let node_id = element.mounted_node_id(node_index).ok_or(FemError::Singular)?;
+                    let old = self.plan.dof_map.get(node_id, element.dofs_per_node()[dof_index]).ok_or(FemError::Singular)?;
+                    build.indices_new.push(self.plan.inv_perm[old]);
+                    build.scalar_cursor += 1;
+                } else {
+                    build.scalar_cursor = 0;
+                    build.stage = PendingElementBuildStage::ReservePositions;
+                }
+            }
+            PendingElementBuildStage::ReservePositions => {
+                if !reserve_exact_owner_page(&mut build.positions, build.node_count) {
+                    return Err(FemError::Singular);
+                }
+                build.stage = PendingElementBuildStage::Positions;
+            }
+            PendingElementBuildStage::Positions => {
+                if build.scalar_cursor < build.node_count {
+                    let node_id = element.mounted_node_id(build.scalar_cursor).ok_or(FemError::Singular)?;
+                    let position = self.model.nodes.iter().find(|node| node.id == node_id).map(|node| node.pos).ok_or(FemError::Singular)?;
+                    build.positions.push(position);
+                    build.scalar_cursor += 1;
+                } else {
+                    build.stage = PendingElementBuildStage::ReserveStiffnessCredit;
+                }
+            }
+            PendingElementBuildStage::ReserveStiffnessCredit => {
+                let side = build.indices_new.len();
+                let requested_bytes = side.checked_mul(side).and_then(|cells| cells.checked_mul(std::mem::size_of::<f64>())).ok_or(FemError::Singular)?;
+                if requested_bytes > MOUNTED_OWNER_PAGE_BYTES {
+                    return Err(FemError::Singular);
+                }
+                build.stiffness_credit_reserved = true;
+                build.stage = PendingElementBuildStage::AllocateStiffness;
+            }
+            PendingElementBuildStage::AllocateStiffness => {
+                let context = ElementContext { positions: std::mem::take(&mut build.positions) };
+                let stiffness = element.stiffness_global(&context);
+                build.positions = context.positions;
+                build.stiffness = stiffness.data;
+                build.stiffness_dimensions = [stiffness.rows, stiffness.cols];
+                build.stage = PendingElementBuildStage::ObserveStiffnessBacking;
+            }
+            PendingElementBuildStage::ObserveStiffnessBacking => {
+                let side = build.indices_new.len();
+                let Some(observed_bytes) = build.stiffness.capacity().checked_mul(std::mem::size_of::<f64>()) else { return Err(FemError::Singular) };
+                build.stiffness_observed_bytes = observed_bytes;
+                if !build.stiffness_credit_reserved || build.stiffness_dimensions != [side, side] || observed_bytes > MOUNTED_OWNER_PAGE_BYTES {
+                    return Err(FemError::Singular);
+                }
+                build.stage = PendingElementBuildStage::AdmitStiffnessBacking;
+            }
+            PendingElementBuildStage::AdmitStiffnessBacking => {
+                if build.stiffness_observed_bytes == 0 && !build.stiffness.is_empty() {
+                    return Err(FemError::Singular);
+                }
+                build.stiffness_admitted = true;
+                build.stage = PendingElementBuildStage::Complete;
+            }
+            PendingElementBuildStage::Complete => {
+                let build = self.state.pending_build.take().ok_or(FemError::Singular)?;
+                if !build.stiffness_admitted {
+                    self.state.pending_build = Some(build);
+                    return Err(FemError::Singular);
+                }
+                let side = build.indices_new.len();
+                self.state.pending = Some(PendingElementAssembly { element_index: build.element_index, side, cell_cursor: 0, reclaim_lane: 0, complete: false, indices_new: build.indices_new, positions: build.positions, stiffness: build.stiffness });
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
+
+    fn begin_borrowed_element(&mut self) -> Result<(), FemError> {
         let element_index = self.state.element_cursor;
         let element = &self.model.elements[element_index];
         let node_ids = element.node_ids();
         let dofs = element.dofs_per_node();
-        let indices_old = element_global_indices(&self.plan.dof_map, &node_ids, dofs).expect("validated element DOFs resolve");
+        let indices_old = element_global_indices(&self.plan.dof_map, &node_ids, dofs).ok_or(FemError::Singular)?;
         let indices_new = indices_old.iter().map(|&old| self.plan.inv_perm[old]).collect::<Vec<_>>();
         let context = ElementContext { positions: positions_of(&self.model.nodes, &node_ids) };
         let stiffness = element.stiffness_global(&context);
         let side = indices_new.len();
-        let mut values = Vec::with_capacity(side * side);
-        for row in 0..side {
-            for col in 0..side {
-                values.push(stiffness.get(row, col));
-            }
-        }
-        self.state.pending = Some(PendingElementAssembly { element_index, side, cell_cursor: 0, indices_new, stiffness: values });
+        self.state.pending = Some(PendingElementAssembly { element_index, side, cell_cursor: 0, reclaim_lane: 0, complete: false, indices_new, positions: context.positions, stiffness: stiffness.data });
+        Ok(())
     }
 
     fn assemble_cell(&mut self) {
         let pending = self.state.pending.as_mut().expect("pending element exists");
+        if pending.side == 0 {
+            pending.complete = true;
+            self.state.element_cursor += 1;
+            return;
+        }
         let local_row = pending.cell_cursor / pending.side;
         let local_col = pending.cell_cursor % pending.side;
         let value = pending.stiffness[pending.cell_cursor];
@@ -1110,14 +1557,36 @@ impl<'model> AssemblyJob<'model> {
         pending.cell_cursor += 1;
         if pending.cell_cursor == pending.side * pending.side {
             self.state.element_cursor += 1;
-            self.state.pending = None;
-            if self.state.resume_target > self.state.element_cursor {
-                return;
-            }
-            self.state.resume_target = 0;
-            self.state.preview_due = true;
-            self.state.checkpoint_due = self.state.element_cursor % 16 == 0 || self.state.element_cursor == self.state.total_elements;
+            pending.complete = true;
         }
+    }
+
+    fn reclaim_element_owner(&mut self) -> bool {
+        let Some(pending) = self.state.pending.as_mut().filter(|pending| pending.complete) else { return false };
+        match pending.reclaim_lane {
+            0 => {
+                pending.stiffness = Vec::new();
+                pending.reclaim_lane = 1;
+            }
+            1 => {
+                pending.indices_new = Vec::new();
+                pending.reclaim_lane = 2;
+            }
+            2 => {
+                pending.positions = Vec::new();
+                pending.reclaim_lane = 3;
+            }
+            _ => {
+                self.state.pending = None;
+                if self.state.resume_target > self.state.element_cursor {
+                    return true;
+                }
+                self.state.resume_target = 0;
+                self.state.preview_due = true;
+                self.state.checkpoint_due = self.state.element_cursor % 16 == 0 || self.state.element_cursor == self.state.total_elements;
+            }
+        }
+        true
     }
 
     fn next_partition_triplet(&self, full: bool) -> Option<(usize, AssemblyTriplet)> {
@@ -1232,7 +1701,9 @@ impl AssemblyCsrBuild {
         let n = self.assembly.as_ref().ok_or(b"fem.assembly-csr-owner-missing" as &'static [u8])?.plan.ndof;
         match self.stage {
             AssemblyCsrBuildStage::ReserveRows => {
-                self.row_counts.try_reserve_exact(n).map_err(|_| b"fem.assembly-csr-row-allocation" as &'static [u8])?;
+                if !reserve_exact_owner_page(&mut self.row_counts, n) {
+                    return Err(b"fem.assembly-csr-row-allocation");
+                }
                 self.stage = AssemblyCsrBuildStage::InitializeRows;
             }
             AssemblyCsrBuildStage::InitializeRows => {
@@ -1263,11 +1734,15 @@ impl AssemblyCsrBuild {
                 }
             }
             AssemblyCsrBuildStage::ReserveIndices => {
-                self.indices.try_reserve_exact(self.entries.len()).map_err(|_| b"fem.assembly-csr-index-allocation" as &'static [u8])?;
+                if !reserve_exact_owner_page(&mut self.indices, self.entries.len()) {
+                    return Err(b"fem.assembly-csr-index-allocation");
+                }
                 self.stage = AssemblyCsrBuildStage::ReserveValues;
             }
             AssemblyCsrBuildStage::ReserveValues => {
-                self.values.try_reserve_exact(self.entries.len()).map_err(|_| b"fem.assembly-csr-value-allocation" as &'static [u8])?;
+                if !reserve_exact_owner_page(&mut self.values, self.entries.len()) {
+                    return Err(b"fem.assembly-csr-value-allocation");
+                }
                 self.stage = AssemblyCsrBuildStage::Merge;
             }
             AssemblyCsrBuildStage::Merge => {
@@ -1287,7 +1762,9 @@ impl AssemblyCsrBuild {
                 }
             }
             AssemblyCsrBuildStage::ReserveIndptr => {
-                self.indptr.try_reserve_exact(n + 1).map_err(|_| b"fem.assembly-csr-indptr-allocation" as &'static [u8])?;
+                if !reserve_exact_owner_page(&mut self.indptr, n + 1) {
+                    return Err(b"fem.assembly-csr-indptr-allocation");
+                }
                 self.indptr.push(0);
                 self.stage = AssemblyCsrBuildStage::Indptr;
             }
@@ -1319,19 +1796,27 @@ impl AssemblyCsrBuild {
             self.assembly = None;
             return (false, 1, std::mem::size_of::<AssemblyJob<'static>>());
         }
-        if self.entries.pop().is_some() {
-            return (false, 1, std::mem::size_of::<AssemblyTriplet>());
+        match close_vec_owner_step(&mut self.entries, maximum_bytes) {
+            Ok(Some((items, bytes))) => return (false, items, bytes),
+            Err(()) => return (false, 0, 0),
+            Ok(None) => {}
         }
-        if self.row_counts.pop().is_some() || self.indptr.pop().is_some() || self.indices.pop().is_some() {
-            return (false, 1, std::mem::size_of::<u32>());
+        for owner in [&mut self.row_counts, &mut self.indptr, &mut self.indices] {
+            match close_vec_owner_step(owner, maximum_bytes) {
+                Ok(Some((items, bytes))) => return (false, items, bytes),
+                Err(()) => return (false, 0, 0),
+                Ok(None) => {}
+            }
         }
-        if self.values.pop().is_some() {
-            return (false, 1, std::mem::size_of::<f64>());
+        match close_vec_owner_step(&mut self.values, maximum_bytes) {
+            Ok(Some((items, bytes))) => return (false, items, bytes),
+            Err(()) => return (false, 0, 0),
+            Ok(None) => {}
         }
         if let Some(matrix) = self.matrix.as_mut() {
-            let (terminal, bytes) = matrix.close_step();
+            let (terminal, items, bytes) = matrix.close_step(maximum_bytes);
             if !terminal {
-                return (false, 1, bytes);
+                return (false, items, bytes);
             }
             self.matrix = None;
             return (false, 1, std::mem::size_of::<Csr>());
@@ -1351,37 +1836,37 @@ impl InteractiveJob for AssemblyJob<'_> {
         context.set_stage(self.state.stage.label());
         if self.state.checkpoint_due {
             self.state.checkpoint_due = false;
+            if matches!(&self.model, AnalysisModelOwner::Owned(_)) {
+                return StepOutcome::Yield;
+            }
             return StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: self.checkpoint_bytes(), applied_progress: self.state.element_cursor as u64 });
         }
         if self.state.preview_due {
             self.state.preview_due = false;
+            if matches!(&self.model, AnalysisModelOwner::Owned(_)) {
+                return StepOutcome::Yield;
+            }
             return StepOutcome::PreviewReady(serde_json::to_vec(&self.preview()).expect("assembly preview is serializable"));
         }
         while !context.should_yield() {
             match self.state.stage {
                 AssemblyJobStage::ElementTriplets => {
+                    if self.reclaim_element_owner() {
+                        context.consume_fuel(1);
+                        break;
+                    }
                     if self.state.pending.is_none() {
                         if self.state.element_cursor == self.state.total_elements {
                             self.state.stage = AssemblyJobStage::MergeFull;
                             context.set_stage(self.state.stage.label());
                             continue;
                         }
-                        self.begin_element();
+                        let result = if matches!(&self.model, AnalysisModelOwner::Owned(_)) { self.advance_element_build().map(|_| ()) } else { self.begin_borrowed_element() };
+                        if let Err(error) = result {
+                            return StepOutcome::Fault(JobFault { detail: error.to_string().into_bytes() });
+                        }
                         context.consume_fuel(1);
-                        if context.should_yield() {
-                            break;
-                        }
-                    }
-                    if self.state.pending.as_ref().is_some_and(|pending| pending.side == 0) {
-                        self.state.element_cursor += 1;
-                        self.state.pending = None;
-                        if self.state.resume_target <= self.state.element_cursor {
-                            self.state.resume_target = 0;
-                            self.state.preview_due = true;
-                            self.state.checkpoint_due = self.state.element_cursor % 16 == 0 || self.state.element_cursor == self.state.total_elements;
-                            break;
-                        }
-                        continue;
+                        break;
                     }
                     self.assemble_cell();
                     context.consume_fuel(1);
@@ -1406,6 +1891,9 @@ impl InteractiveJob for AssemblyJob<'_> {
                     context.consume_fuel(1);
                 }
                 AssemblyJobStage::Complete => {
+                    if matches!(&self.model, AnalysisModelOwner::Owned(_)) {
+                        return StepOutcome::Complete(CommitCandidate { state: Vec::new(), output: Vec::new() });
+                    }
                     return StepOutcome::Complete(CommitCandidate { state: self.checkpoint_bytes(), output: serde_json::to_vec(&self.preview()).expect("assembly result is serializable") });
                 }
             }
@@ -1948,6 +2436,85 @@ mod tests {
 
     fn assembly_operation(id: u64) -> Operation {
         Operation::new(semio_framework_job::OperationId(id), semio_framework_job::RevisionId(7), semio_framework_job::Generation(3), 11)
+    }
+
+    #[test]
+    fn mounted_assembly_construction_is_retained_and_preserves_the_exact_model_owner() {
+        let operation = assembly_operation(83);
+        let model = Arc::new(cantilever_analysis_model(210e9, 0.02, 8e-6, 3.0, 7_850.0).0);
+        let pointer = Arc::as_ptr(&model);
+        let mut construction = AssemblyJobConstruction::new_owned(model, operation, 1);
+        assert!(!construction.step_one().expect("first reservation opportunity"));
+        let mut opportunities = 1;
+        while !construction.step_one().expect("retained assembly construction") {
+            opportunities += 1;
+            assert!(opportunities < 4_096, "fixed construction reaches a finite terminal witness");
+        }
+        assert!(opportunities > 16, "validation, references, DOFs and partition outputs cannot collapse into one constructor turn");
+        let job = construction.take_complete().expect("terminal construction returns one exact job");
+        match &job.model {
+            AnalysisModelOwner::Owned(owner) => assert_eq!(Arc::as_ptr(owner), pointer),
+            AnalysisModelOwner::Borrowed(_) => panic!("mounted construction must preserve the owned model authority"),
+        }
+        assert!(construction.take_complete().is_none(), "completion transfers exactly once");
+    }
+
+    #[test]
+    fn mounted_element_build_reserves_and_reclaims_one_exact_owner_per_turn() {
+        let operation = assembly_operation(89);
+        let model = Arc::new(cantilever_analysis_model(210e9, 0.02, 8e-6, 3.0, 7_850.0).0);
+        let mut construction = AssemblyJobConstruction::new_owned(model, operation, 1);
+        while !construction.step_one().expect("mounted construction") {}
+        let mut job = construction.take_complete().expect("mounted assembly job");
+        let mut sequence = 0;
+        fn step_once(job: &mut AssemblyJob<'static>, operation: Operation, sequence: &mut u64) -> StepOutcome {
+            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), semio_framework_job::root_cancel_token(), || 0, sequence);
+            job.step(&mut context)
+        }
+        assert!(matches!(step_once(&mut job, operation, &mut sequence), StepOutcome::Yield));
+        let build = job.state.pending_build.as_ref().expect("first turn retains only the build shell");
+        assert_eq!((build.indices_new.capacity(), build.positions.capacity(), build.stiffness.capacity()), (0, 0, 0));
+        assert!(matches!(step_once(&mut job, operation, &mut sequence), StepOutcome::Yield));
+        let build = job.state.pending_build.as_ref().expect("second turn retains the fixed index page");
+        assert!(build.indices_new.capacity() != 0);
+        assert_eq!((build.positions.capacity(), build.stiffness.capacity()), (0, 0));
+        let mut saw_positions = false;
+        let mut saw_stiffness = false;
+        let mut saw_reclaim = [false; 3];
+        for _ in 0..128 {
+            assert!(matches!(step_once(&mut job, operation, &mut sequence), StepOutcome::Yield | StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_)));
+            if let Some(build) = job.state.pending_build.as_ref() {
+                saw_positions |= build.positions.capacity() != 0;
+                saw_stiffness |= build.stiffness.capacity() != 0;
+            }
+            if let Some(pending) = job.state.pending.as_ref() {
+                saw_reclaim[0] |= pending.complete && pending.reclaim_lane >= 1 && pending.stiffness.capacity() == 0;
+                saw_reclaim[1] |= pending.complete && pending.reclaim_lane >= 2 && pending.indices_new.capacity() == 0;
+                saw_reclaim[2] |= pending.complete && pending.reclaim_lane >= 3 && pending.positions.capacity() == 0;
+            }
+            if saw_reclaim.into_iter().all(|seen| seen) {
+                break;
+            }
+        }
+        assert!(saw_positions && saw_stiffness, "positions and stiffness are retained in distinct admitted stages");
+        assert!(saw_reclaim.into_iter().all(|seen| seen), "each element backing is returned in its own later worker opportunity");
+    }
+
+    #[test]
+    fn mounted_element_stiffness_observes_before_admit_and_retires_rejected_backing() {
+        let source = include_str!("component.rs");
+        let reserve = source.find("PendingElementBuildStage::ReserveStiffnessCredit =>").expect("reserve stiffness credit");
+        let allocate = source.find("PendingElementBuildStage::AllocateStiffness =>").expect("allocate stiffness quarantine");
+        let observe = source.find("PendingElementBuildStage::ObserveStiffnessBacking =>").expect("observe actual stiffness backing");
+        let admit = source.find("PendingElementBuildStage::AdmitStiffnessBacking =>").expect("admit observed stiffness backing");
+        assert!(reserve < allocate && allocate < observe && observe < admit);
+
+        let mut rejected = Vec::<f64>::new();
+        rejected.try_reserve_exact(MOUNTED_OWNER_PAGE_BYTES / std::mem::size_of::<f64>() + 1).expect("hostile rejected backing");
+        let observed = rejected.capacity() * std::mem::size_of::<f64>();
+        assert!(observed > MOUNTED_OWNER_PAGE_BYTES);
+        assert_eq!(close_vec_owner_step(&mut rejected, observed), Ok(Some((1, observed))), "the exact rejected allocation retires through the retained close helper");
+        assert_eq!(rejected.capacity(), 0);
     }
 
     fn finish_assembly_job<'model>(mut job: AssemblyJob<'model>, operation: Operation, fuel: u64) -> (UnfactoredSystem, Vec<AssemblyPreview>, u128) {

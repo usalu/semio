@@ -68,6 +68,12 @@ pub enum HtmlMutation {
         text: String,
     },
 }
+
+/// 📇️ Kebab-case spelling of every `HtmlMutation` variant, in declaration order -- the exhaustive
+/// mutation catalog `../🧪️oracle/🔣️component.json`'s `kinds` array is required to match verbatim
+/// (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest; the
+/// framework never parses Rust to check it itself).
+pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-doctype", "insert-node", "remove-node", "set-element-name", "set-attribute", "set-text", "set-comment", "set-raw-text"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -678,6 +684,35 @@ mod tests {
             assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
         }
     }
+
+    //#region kinds_law
+    /// 🎯️ kinds_const_matches_enum_variants_in_declaration_order: `KINDS` is the ONLY thing the
+    /// wave 7 catalog contract (`../🧪️oracle/🔣️component.json`'s `kinds` array) is checked against,
+    /// so it must genuinely enumerate every variant, in order, with the exact `OpText` keyword the
+    /// case's adapter registers `mutate-<kind>`/`inverse-<kind>` scenario ids under.
+    #[semio_framework_async_macros::async_test]
+    async fn kinds_const_matches_enum_variants_in_declaration_order() {
+        let base = fixture();
+        let one_per_variant = vec![
+            HtmlMutation::NoMutation,
+            HtmlMutation::SetSnapshot { snapshot: base.clone() },
+            HtmlMutation::SetDoctype { doctype: Some("DOCTYPE html".into()) },
+            HtmlMutation::InsertNode { parent: vec![0], index: 0, node: el("span", vec![], vec![]) },
+            HtmlMutation::RemoveNode { parent: vec![0], index: 0 },
+            HtmlMutation::SetElementName { path: vec![0], name: "div".into() },
+            HtmlMutation::SetAttribute { path: vec![0], name: "id".into(), value: Some(Some("x".into())) },
+            HtmlMutation::SetText { path: vec![0, 0], text: "x".into() },
+            HtmlMutation::SetComment { path: vec![0, 0], text: "x".into() },
+            HtmlMutation::SetRawText { path: vec![0, 0], text: "x".into() },
+        ];
+        assert_eq!(one_per_variant.len(), KINDS.len(), "one_per_variant must cover every KINDS entry exactly once");
+        for (mutation, kind) in one_per_variant.iter().zip(KINDS.iter()) {
+            let printed = mutation.print_op();
+            let keyword = printed.split(' ').next().unwrap_or(&printed);
+            assert_eq!(keyword, *kind, "KINDS order must match the enum's own OpText keyword order for {mutation:?}");
+        }
+    }
+    //#endregion kinds_law
 }
 //#endregion 🧪️Tests
 

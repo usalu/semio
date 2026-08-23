@@ -222,11 +222,7 @@ mod oracles {
             "cdata" => QNode::CData(value.str("text")),
             "comment" => QNode::Comment(value.str("text")),
             "pi" => QNode::Pi { target: value.str("target"), data: value.str("data") },
-            _ => QNode::Element {
-                name: value.str("name"),
-                attrs: value.array("attrs").iter().map(|a| (a.str("name"), a.str("value"))).collect(),
-                children: value.array("children").iter().map(json_to_qnode).collect(),
-            },
+            _ => QNode::Element { name: value.str("name"), attrs: value.array("attrs").iter().map(|a| (a.str("name"), a.str("value"))).collect(), children: value.array("children").iter().map(json_to_qnode).collect() },
         }
     }
 
@@ -252,7 +248,13 @@ mod oracles {
             "matrix" => Ok(QTransformOp::Matrix { a: num("a"), b: num("b"), c: num("c"), d: num("d"), e: num("e"), f: num("f") }),
             "translate" => Ok(QTransformOp::Translate { x: num("x"), y: opt_num("y") }),
             "scale" => Ok(QTransformOp::Scale { x: num("x"), y: opt_num("y") }),
-            "rotate" => Ok(QTransformOp::Rotate { angle: num("angle"), center: match (opt_num("cx"), opt_num("cy")) { (Some(cx), Some(cy)) => Some((cx, cy)), _ => None } }),
+            "rotate" => Ok(QTransformOp::Rotate {
+                angle: num("angle"),
+                center: match (opt_num("cx"), opt_num("cy")) {
+                    (Some(cx), Some(cy)) => Some((cx, cy)),
+                    _ => None,
+                },
+            }),
             "skewX" => Ok(QTransformOp::SkewX { angle: num("angle") }),
             "skewY" => Ok(QTransformOp::SkewY { angle: num("angle") }),
             other => Err(format!("transform op: unrecognised kind {other:?}")),
@@ -447,7 +449,14 @@ mod oracles {
                 Ok(())
             }
             "set-declaration" => {
-                doc.declaration = non_empty_str(params, "version").map(|version| QDecl { version, encoding: non_empty_str(params, "encoding"), standalone: params.get("standalone").and_then(|v| match v { Json::Bool(b) => Some(*b), _ => None }) });
+                doc.declaration = non_empty_str(params, "version").map(|version| QDecl {
+                    version,
+                    encoding: non_empty_str(params, "encoding"),
+                    standalone: params.get("standalone").and_then(|v| match v {
+                        Json::Bool(b) => Some(*b),
+                        _ => None,
+                    }),
+                });
                 Ok(())
             }
             "set-doctype" => {
@@ -551,7 +560,10 @@ mod oracles {
                 spec("set-snapshot", obj(vec![("rootId", root_id), ("viewBoxWidth", width)]))
             }
             "set-declaration" => match &doc.declaration {
-                Some(decl) => spec("set-declaration", obj(vec![("version", Json::String(decl.version.clone())), ("encoding", decl.encoding.clone().map(Json::String).unwrap_or(Json::Null)), ("standalone", decl.standalone.map(Json::Bool).unwrap_or(Json::Null))])),
+                Some(decl) => spec(
+                    "set-declaration",
+                    obj(vec![("version", Json::String(decl.version.clone())), ("encoding", decl.encoding.clone().map(Json::String).unwrap_or(Json::Null)), ("standalone", decl.standalone.map(Json::Bool).unwrap_or(Json::Null))]),
+                ),
                 None => spec("set-declaration", obj(vec![])),
             },
             "set-doctype" => spec("set-doctype", obj(vec![("doctype", doc.doctype.clone().map(Json::String).unwrap_or(Json::Null))])),
@@ -638,7 +650,12 @@ mod oracles {
             (
                 "declaration",
                 match &doc.declaration {
-                    Some(decl) => obj(vec![("present", Json::Bool(true)), ("version", Json::String(decl.version.clone())), ("encoding", decl.encoding.clone().map(Json::String).unwrap_or(Json::Null)), ("standalone", decl.standalone.map(Json::Bool).unwrap_or(Json::Null))]),
+                    Some(decl) => obj(vec![
+                        ("present", Json::Bool(true)),
+                        ("version", Json::String(decl.version.clone())),
+                        ("encoding", decl.encoding.clone().map(Json::String).unwrap_or(Json::Null)),
+                        ("standalone", decl.standalone.map(Json::Bool).unwrap_or(Json::Null)),
+                    ]),
                     None => obj(vec![("present", Json::Bool(false))]),
                 },
             ),

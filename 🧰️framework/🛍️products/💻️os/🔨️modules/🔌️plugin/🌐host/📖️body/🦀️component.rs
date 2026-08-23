@@ -59,7 +59,11 @@ impl BodyReader {
             #[cfg(all(feature = "component-guest-async", target_arch = "wasm32", target_env = "p2"))]
             BodyReader::Direct(stream) => {
                 let (status, buf) = stream.read(Vec::with_capacity(DIRECT_READ_CHUNK)).await;
-                if buf.is_empty() && matches!(status, wit_bindgen::StreamResult::Dropped) { None } else { Some(buf) }
+                if buf.is_empty() && matches!(status, wit_bindgen::StreamResult::Dropped) {
+                    None
+                } else {
+                    Some(buf)
+                }
             }
         }
     }

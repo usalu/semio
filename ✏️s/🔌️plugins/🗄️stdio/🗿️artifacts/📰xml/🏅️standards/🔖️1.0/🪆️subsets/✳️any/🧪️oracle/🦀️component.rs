@@ -102,7 +102,13 @@ mod oracles {
     }
 
     fn usize_path(items: Vec<Json>) -> Vec<usize> {
-        items.iter().map(|item| match item { Json::Number(n) => n.max(0.0) as usize, _ => 0 }).collect()
+        items
+            .iter()
+            .map(|item| match item {
+                Json::Number(n) => n.max(0.0) as usize,
+                _ => 0,
+            })
+            .collect()
     }
 
     fn non_empty(value: &Json, key: &str) -> Option<String> {
@@ -150,7 +156,14 @@ mod oracles {
     /// 📄️ `{"version":...,"encoding":...,"standalone":...}` when present, absent (no `version` key)
     /// meaning "no declaration" — the same convention `set-doctype`'s `name` key uses below.
     fn json_to_declaration(params: &Json) -> Option<XDecl> {
-        non_empty(params, "version").map(|version| XDecl { version, encoding: non_empty(params, "encoding"), standalone: match params.get("standalone") { Some(Json::Bool(value)) => Some(*value), _ => None } })
+        non_empty(params, "version").map(|version| XDecl {
+            version,
+            encoding: non_empty(params, "encoding"),
+            standalone: match params.get("standalone") {
+                Some(Json::Bool(value)) => Some(*value),
+                _ => None,
+            },
+        })
     }
 
     fn declaration_to_json(declaration: &Option<XDecl>) -> Json {
@@ -158,8 +171,20 @@ mod oracles {
             None => Json::Object(vec![]),
             Some(decl) => Json::Object(vec![
                 ("version".to_string(), Json::String(decl.version.clone())),
-                ("encoding".to_string(), match &decl.encoding { Some(value) => Json::String(value.clone()), None => Json::Null }),
-                ("standalone".to_string(), match decl.standalone { Some(value) => Json::Bool(value), None => Json::Null }),
+                (
+                    "encoding".to_string(),
+                    match &decl.encoding {
+                        Some(value) => Json::String(value.clone()),
+                        None => Json::Null,
+                    },
+                ),
+                (
+                    "standalone".to_string(),
+                    match decl.standalone {
+                        Some(value) => Json::Bool(value),
+                        None => Json::Null,
+                    },
+                ),
             ]),
         }
     }
@@ -188,10 +213,20 @@ mod oracles {
                     match &dt.external_id {
                         None => Json::Null,
                         Some(XExternalId::System { system_id }) => Json::Object(vec![("kind".to_string(), Json::String("system".to_string())), ("systemId".to_string(), Json::String(system_id.clone()))]),
-                        Some(XExternalId::Public { public_id, system_id }) => Json::Object(vec![("kind".to_string(), Json::String("public".to_string())), ("publicId".to_string(), Json::String(public_id.clone())), ("systemId".to_string(), Json::String(system_id.clone()))]),
+                        Some(XExternalId::Public { public_id, system_id }) => {
+                            Json::Object(vec![("kind".to_string(), Json::String("public".to_string())), ("publicId".to_string(), Json::String(public_id.clone())), ("systemId".to_string(), Json::String(system_id.clone()))])
+                        }
                     },
                 ),
-                ("entities".to_string(), Json::Array(dt.entities.iter().map(|entity| Json::Object(vec![("parameter".to_string(), Json::Bool(entity.parameter)), ("name".to_string(), Json::String(entity.name.clone())), ("value".to_string(), Json::String(entity.value.clone()))])).collect())),
+                (
+                    "entities".to_string(),
+                    Json::Array(
+                        dt.entities
+                            .iter()
+                            .map(|entity| Json::Object(vec![("parameter".to_string(), Json::Bool(entity.parameter)), ("name".to_string(), Json::String(entity.name.clone())), ("value".to_string(), Json::String(entity.value.clone()))]))
+                            .collect(),
+                    ),
+                ),
             ]),
         }
     }
@@ -556,7 +591,10 @@ mod oracles {
             "set-attribute" => {
                 let path = usize_path(params.array("path"));
                 let name = params.str("name");
-                let value = match params.get("value") { Some(Json::String(text)) => Some(text.clone()), _ => None };
+                let value = match params.get("value") {
+                    Some(Json::String(text)) => Some(text.clone()),
+                    _ => None,
+                };
                 let XNode::Element { attrs, .. } = resolve_mut(doc.root.as_mut(), &path).ok_or("set-attribute: path does not resolve to an element")? else {
                     return Err("set-attribute: path does not address an element".to_string());
                 };
@@ -620,7 +658,20 @@ mod oracles {
                     Some(XNode::Element { attrs, .. }) => attrs.iter().find(|(key, _)| key == &name).map(|(_, value)| value.clone()),
                     _ => None,
                 };
-                spec("set-attribute", obj(vec![("path", Json::Array(path_json)), ("name", Json::String(name)), ("value", match prior { Some(value) => Json::String(value), None => Json::Null })]))
+                spec(
+                    "set-attribute",
+                    obj(vec![
+                        ("path", Json::Array(path_json)),
+                        ("name", Json::String(name)),
+                        (
+                            "value",
+                            match prior {
+                                Some(value) => Json::String(value),
+                                None => Json::Null,
+                            },
+                        ),
+                    ]),
+                )
             }
             "set-text" => {
                 let path_json = params.array("path");
@@ -658,8 +709,20 @@ mod oracles {
             None => Json::Null,
             Some(decl) => Json::Object(vec![
                 ("version".to_string(), Json::String(decl.version.clone())),
-                ("encoding".to_string(), match &decl.encoding { Some(value) => Json::String(value.clone()), None => Json::Null }),
-                ("standalone".to_string(), match decl.standalone { Some(value) => Json::Bool(value), None => Json::Null }),
+                (
+                    "encoding".to_string(),
+                    match &decl.encoding {
+                        Some(value) => Json::String(value.clone()),
+                        None => Json::Null,
+                    },
+                ),
+                (
+                    "standalone".to_string(),
+                    match decl.standalone {
+                        Some(value) => Json::Bool(value),
+                        None => Json::Null,
+                    },
+                ),
             ]),
         }
     }
@@ -699,7 +762,13 @@ mod oracles {
             ("declaration".to_string(), declaration_projection(&doc.declaration)),
             ("doctype".to_string(), doctype_projection(&doc.doctype)),
             ("prolog".to_string(), Json::Array(doc.prolog.iter().map(node_projection).collect())),
-            ("root".to_string(), match &doc.root { Some(root) => node_projection(root), None => Json::Null }),
+            (
+                "root".to_string(),
+                match &doc.root {
+                    Some(root) => node_projection(root),
+                    None => Json::Null,
+                },
+            ),
         ]))
     }
     //#endregion 🔖️Projection

@@ -1,12 +1,12 @@
 //! 🏗️ Typestate `PluginBuilder` — missing label/version is a compile error.
 
 use crate::app::{
-    App, ArtifactApp, ArtifactContribution, ArtifactDeclaration, ArtifactDefinitionRegistry, ArtifactInferenceServiceMetadata, FlowExtensionDeclaration, HostMediaHandlerDeclaration, Plugin, PluginApp, PluginAssemblyError, PluginCommandHandler,
-    resolve_ready,
+    resolve_ready, App, ArtifactApp, ArtifactContribution, ArtifactDeclaration, ArtifactDefinitionRegistry, ArtifactInferenceServiceMetadata, FlowExtensionDeclaration, HostMediaHandlerDeclaration, Plugin, PluginApp, PluginAssemblyError,
+    PluginCommandHandler,
 };
 use semio_framework::{
-    AssetDeclaration, CommandDefinition, ExecutionMode, ExtensionPointDeclaration,
     kernel::{ActivationEvent, CapabilityRequest, CapabilityRequirement, QuotaSchema},
+    AssetDeclaration, CommandDefinition, ExecutionMode, ExtensionPointDeclaration,
 };
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::marker::PhantomData;

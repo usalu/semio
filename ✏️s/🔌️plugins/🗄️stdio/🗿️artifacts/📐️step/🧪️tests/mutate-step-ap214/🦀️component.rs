@@ -80,13 +80,12 @@ fn inverse_spec(kind: &str) -> Json {
         ),
         "set-file-schema" => json_spec("set-file-schema", json_obj(vec![("fileSchema", json_obj(vec![("schemas", json_str_array(&["AUTOMOTIVE_DESIGN"]))]))])),
         "insert-entity" => json_spec("remove-entity", json_obj(vec![("id", json_num(9001.0))])),
-        "remove-entity" => json_spec(
-            "insert-entity",
-            json_obj(vec![
-                ("index", json_num(1395.0)),
-                ("entity", json_obj(vec![("id", json_num(1405.0)), ("name", json_str("CARTESIAN_POINT")), ("args", Json::Array(vec![json_value("string", json_str("")), json_value("aggregate", Json::Array(vec![json_value("real", json_num(0.0)), json_value("real", json_num(0.0)), json_value("real", json_num(0.0))]))]))]),
-            ),
-        ),
+        "remove-entity" => {
+            let coordinates = Json::Array(vec![json_value("real", json_num(0.0)), json_value("real", json_num(0.0)), json_value("real", json_num(0.0))]);
+            let args = Json::Array(vec![json_value("string", json_str("")), json_value("aggregate", coordinates)]);
+            let entity = json_obj(vec![("id", json_num(1405.0)), ("name", json_str("CARTESIAN_POINT")), ("args", args)]);
+            json_spec("insert-entity", json_obj(vec![("index", json_num(1395.0)), ("entity", entity)]))
+        }
         "set-entity-name" => json_spec("set-entity-name", json_obj(vec![("id", json_num(1394.0)), ("name", json_str("CARTESIAN_POINT"))])),
         "set-entity-arg" => json_spec("set-entity-arg", json_obj(vec![("id", json_num(1394.0)), ("argIndex", json_num(0.0)), ("value", json_value("string", json_str("")))])),
         "insert-entity-arg" => json_spec("remove-entity-arg", json_obj(vec![("id", json_num(1394.0)), ("argIndex", json_num(2.0))])),

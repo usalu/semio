@@ -114,6 +114,28 @@ pub enum BcfMutation {
         snapshot: Option<Vec<u8>>,
     },
 }
+
+/// 📇️ Kebab-case spelling of every `BcfMutation` variant, in declaration order -- the exhaustive
+/// mutation catalog `../../🧪️oracle/🔣️component.json`'s `kinds` array is required to match verbatim
+/// (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest; the
+/// framework never parses Rust to check it itself). Mirrors `print_bcf_mutation`'s own keyword match
+/// entry-for-entry, so `KINDS[i]` is exactly what `print_op()` emits for the enum's `i`-th variant.
+pub const KINDS: &[&str] = &[
+    "no-mutation",
+    "set-snapshot",
+    "set-version",
+    "insert-topic",
+    "remove-topic",
+    "set-topic-markup",
+    "insert-comment",
+    "remove-comment",
+    "set-comment",
+    "insert-viewpoint",
+    "remove-viewpoint",
+    "set-viewpoint-camera",
+    "set-viewpoint-components",
+    "set-viewpoint-snapshot",
+];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -612,6 +634,44 @@ pub(crate) fn demo_mutation_cases() -> Vec<BcfMutation> {
     ]
 }
 //#endregion 🔖️DemoCases
+
+//#region 🧪️KindsLaw
+/// 🧪️ Keeps `KINDS` honest against the enum it claims to spell: every variant's
+/// `print_bcf_mutation` keyword, in the SAME declaration order `OpBinary`'s own tag match uses,
+/// must equal `KINDS` entry-for-entry -- the framework never parses Rust to check this itself (see
+/// `KINDS`'s own doc comment), so this test is the one thing that does. `KINDS` is also kept
+/// textually identical, by hand, to `../../🧪️oracle/🔣️component.json`'s own `kinds` array.
+#[cfg(test)]
+mod kinds_tests {
+    use super::*;
+
+    #[test]
+    fn kinds_const_matches_enum_variants_in_declaration_order() {
+        let one_per_variant = vec![
+            BcfMutation::NoMutation,
+            BcfMutation::SetSnapshot { snapshot: BcfSnapshot::default() },
+            BcfMutation::SetVersion { version: "2.2".into() },
+            BcfMutation::InsertTopic { topic: BcfTopic::default() },
+            BcfMutation::RemoveTopic { guid: "t".into() },
+            BcfMutation::SetTopicMarkup { guid: "t".into(), title: None, description: None, status: None, priority: None, labels: None, creation_date: None, creation_author: None },
+            BcfMutation::InsertComment { topic_guid: "t".into(), comment: BcfComment::default() },
+            BcfMutation::RemoveComment { topic_guid: "t".into(), guid: "c".into() },
+            BcfMutation::SetComment { topic_guid: "t".into(), guid: "c".into(), date: None, author: None, text: None, viewpoint_ref: None },
+            BcfMutation::InsertViewpoint { topic_guid: "t".into(), viewpoint: BcfViewpoint::default() },
+            BcfMutation::RemoveViewpoint { topic_guid: "t".into(), guid: "v".into() },
+            BcfMutation::SetViewpointCamera { topic_guid: "t".into(), guid: "v".into(), camera: None },
+            BcfMutation::SetViewpointComponents { topic_guid: "t".into(), guid: "v".into(), components: None },
+            BcfMutation::SetViewpointSnapshot { topic_guid: "t".into(), guid: "v".into(), snapshot: None },
+        ];
+        assert_eq!(one_per_variant.len(), KINDS.len(), "one_per_variant must cover every KINDS entry exactly once");
+        for (mutation, kind) in one_per_variant.iter().zip(KINDS.iter()) {
+            let printed = print_bcf_mutation(mutation);
+            let keyword = printed.split(' ').next().unwrap_or(&printed);
+            assert_eq!(keyword, *kind, "KINDS order must match the enum's own OpText keyword order for {mutation:?}");
+        }
+    }
+}
+//#endregion 🧪️KindsLaw
 
 //#region 🧪️FixtureTests
 // 🧪️ Handcrafted mutation fixtures (contract D1, ticket 26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION),

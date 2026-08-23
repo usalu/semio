@@ -120,6 +120,17 @@ pub enum SemioMeshMutation {
 }
 //#endregion 🔖️Mutations
 
+//#region 🔖️Apply
+/// ▶️ Applies a mutation to `snapshot` in place, returning the diff — kept from the pre-wave facet
+/// (consumed by `../🦀️component.rs`'s `SemioMeshBuilderConstruction::mutate`).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_semio_mesh_mutation(snapshot: &mut SemioMeshSnapshot, mutation: &SemioMeshMutation) -> protocol::MutationOutcome<SemioMeshDiff> {
+    use protocol::Mutation;
+    let outcome = <SemioMeshMutation as Mutation<SemioMeshSnapshot>>::diff(mutation, snapshot);
+    outcome.apply_to(snapshot)
+}
+//#endregion 🔖️Apply
+
 //#region 🔖️OpText
 /// ⚡️ Real hand-rolled `OpText`, grammar `keyword arg=value ...` — reusing the sibling `🔺️diff`
 /// facet's `pub(crate)` hex/value primitives (one source of truth for entity encoding, same

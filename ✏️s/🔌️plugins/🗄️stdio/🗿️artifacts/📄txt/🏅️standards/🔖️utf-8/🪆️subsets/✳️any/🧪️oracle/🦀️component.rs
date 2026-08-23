@@ -1,0 +1,399 @@
+//! 🔮️ Mutation oracle for this subset — every mutation kind the subset declares, performed
+//! independently of this repository's own codec so the subject has something real to be compared
+//! against instead of being checked against its own reading.
+//!
+//! Reference: none — recorded no-oracle decision `txt-utf-8-line-structure`. Line splitting,
+//! line-ending policy and trailing-newline handling are exactly what THIS subset defines; no
+//! third-party crate is authoritative over them the way `lopdf` is authoritative over PDF. What
+//! stands in for a reference implementation instead:
+//! 1. [`independent_split`]/[`independent_render`] — a hand-written re-derivation of the
+//!    subset's own documented Lf/CrLf-only spec, compiled into THIS crate
+//!    (`semio_s_plugin_stdio_test_oracle`), which never depends on the subject crate
+//!    (`semio_s_plugin_stdio`) and therefore never calls `TxtSnapshot::from_body`/`to_body`.
+//! 2. [`csv_independent_line_count`] — the `csv` crate's own record reader (already linked for
+//!    the tabular subsets) as a genuinely independent, third-party cross-check of WHERE the line
+//!    boundaries fall, on the real fixture and on every spec vector. It cannot referee the
+//!    LF-vs-CRLF/trailing-newline questions themselves (its terminator collapses CR, LF and CRLF
+//!    into one undifferentiated boundary and never reports which one it saw), so it discharges
+//!    only part of the line-splitting half — see the rationale on the manifest's
+//!    `noOracleDecisions` entry for the full accounting.
+//! 3. Specification vectors and the inverse law as a metamorphic property, both exercised in
+//!    `../../../../../🧪️tests/mutate-txt-utf-8/`.
+//!
+//! The vocabulary is per SUBSET, not per artifact: two standards of the same format declare
+//! different mutations, and a subset that shares an implementation with another reaches it through
+//! the shared family modules rather than by copying it.
+//!
+//! @see ../🧪️oracle/🔣️component.json — the mutation catalog and no-oracle decision this module is
+//! measured against.
+//! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself (`TxtMutation`,
+//! `KINDS`).
+
+use semio_repo_test_host::Json;
+
+//#region 🔖️IndependentReader
+/// 🧩️ Splits a raw UTF-8 body into `(lines, trailing_newline, is_crlf)`, hand-derived directly
+/// from the subset's own documented rule ("a text file is a sequence of lines"; the format
+/// declares exactly `Lf`/`CrLf`, never a mixed per-line style; the whole document is CrLf iff it
+/// contains at least one literal `\r\n`) — never by calling `TxtSnapshot::from_body`, which this
+/// crate cannot even see (it does not depend on the subject crate). An empty body is zero lines,
+/// not one empty line.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn independent_split(body: &str) -> (Vec<String>, bool, bool) {
+    if body.is_empty() {
+        return (Vec::new(), false, false);
+    }
+    let is_crlf = body.as_bytes().windows(2).any(|pair| pair == b"\r\n");
+    let sep = if is_crlf { "\r\n" } else { "\n" };
+    let trailing_newline = body.ends_with(sep);
+    let core = if trailing_newline { &body[..body.len() - sep.len()] } else { body };
+    let lines: Vec<String> = core.split(sep).map(str::to_string).collect();
+    (lines, trailing_newline, is_crlf)
+}
+
+/// 🧩️ Inverse of [`independent_split`]: joins `lines` by the chosen separator, appending a
+/// trailing terminator iff `trailing_newline`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn independent_render(lines: &[String], trailing_newline: bool, is_crlf: bool) -> String {
+    let sep = if is_crlf { "\r\n" } else { "\n" };
+    let mut out = lines.join(sep);
+    if trailing_newline {
+        out.push_str(sep);
+    }
+    out
+}
+//#endregion 🔖️IndependentReader
+
+//#region 🔖️Projection
+/// 🔎️ The `exact-bytes-v1` projection: the whole re-serialized document AS TEXT, so the profile's
+/// opaque-byte-string comparison catches any difference at all — a carrier format has nothing a
+/// looser profile is entitled to ignore.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn project_txt(bytes: &[u8]) -> Result<Json, String> {
+    String::from_utf8(bytes.to_vec()).map(Json::String).map_err(|error| format!("output is not UTF-8: {error}"))
+}
+//#endregion 🔖️Projection
+
+//#region 🔖️SpecHelpers
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn json_usize(params: &Json, key: &str) -> Result<usize, String> {
+    match params.get(key) {
+        Some(Json::Number(value)) => Ok(*value as usize),
+        _ => Err(format!("mutation spec is missing numeric `{key}`")),
+    }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn json_bool(params: &Json, key: &str) -> bool {
+    matches!(params.get(key), Some(Json::Bool(true)))
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn json_strings(params: &Json, key: &str) -> Vec<String> {
+    params
+        .array(key)
+        .iter()
+        .map(|entry| match entry {
+            Json::String(text) => text.clone(),
+            _ => String::new(),
+        })
+        .collect()
+}
+//#endregion 🔖️SpecHelpers
+
+//#region 🔖️Dispatch
+/// 🦠️ Applies one declared mutation kind to a real artifact and returns the re-serialized bytes.
+/// An unrecognised kind is an error, never a silent no-op: a mutation that is quietly skipped
+/// reports as a passing test. Every arm is hand-rolled against [`independent_split`]/
+/// [`independent_render`] alone, mirroring the clamping/no-op rules the subset's own
+/// `TxtMutation::diff`/`TxtLinesDiff::apply` document (`InsertLine` clamps to `min(index, len)`;
+/// an out-of-range `RemoveLine`/`SetLine` is a no-op) — those are the FORMAT's rules, not this
+/// crate's implementation detail, so a genuinely independent reader has to agree with them too.
+#[cfg(feature = "oracles")]
+pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, String> {
+    let body = std::str::from_utf8(input).map_err(|error| format!("input is not UTF-8: {error}"))?;
+    let (mut lines, mut trailing_newline, mut is_crlf) = independent_split(body);
+    let params = spec.get("params").cloned().unwrap_or(Json::Null);
+    match spec.str("kind").as_str() {
+        "" => return Err("mutation spec carries no `kind`".to_string()),
+        "no-mutation" => {}
+        "set-snapshot" => {
+            lines = json_strings(&params, "lines");
+            trailing_newline = json_bool(&params, "trailingNewline");
+            is_crlf = params.str("lineEnding") == "crLf";
+        }
+        "set-trailing-newline" => trailing_newline = json_bool(&params, "value"),
+        "set-line-ending" => is_crlf = params.str("value") == "crLf",
+        "insert-line" => {
+            let index = json_usize(&params, "index")?;
+            let at = index.min(lines.len());
+            lines.insert(at, params.str("text"));
+        }
+        "remove-line" => {
+            let index = json_usize(&params, "index")?;
+            if index < lines.len() {
+                lines.remove(index);
+            }
+        }
+        "set-line" => {
+            let index = json_usize(&params, "index")?;
+            if let Some(slot) = lines.get_mut(index) {
+                *slot = params.str("text");
+            }
+        }
+        other => return Err(format!("mutation kind {other:?} has no oracle implementation")),
+    }
+    Ok(independent_render(&lines, trailing_newline, is_crlf).into_bytes())
+}
+
+/// 🚫️ Without the `oracles` feature the reference implementations are not linked at all.
+#[cfg(not(feature = "oracles"))]
+pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, String> {
+    Err("the `oracles` feature is disabled — this host was not built with the registered reference implementations".to_string())
+}
+//#endregion 🔖️Dispatch
+
+//#region 🔖️CsvCrossCheck
+/// 🧮️ Independent LINE-BOUNDARY cross-check via the `csv` crate's own record reader (`csv-core`
+/// 0.1's `ReaderBuilder`, default `Terminator::CRLF`, which "parses `\r`, `\n` or `\r\n` as a
+/// single record terminator" per its own doc comment): quoting disabled, `flexible` records, and
+/// a delimiter byte (`0x1F`, unit separator) that never occurs in real text, so every "record" IS
+/// one physical line, verbatim. This can confirm `independent_split`'s LINE COUNT and per-line
+/// CONTENT independently of this subset's own splitting rule, but it genuinely cannot referee
+/// which terminator style was used (CR/LF/CRLF collapse to one undifferentiated boundary) or
+/// whether the input ends with one — see the manifest's `noOracleDecisions` rationale for why
+/// this is a partial, not a full, substitute.
+#[cfg(feature = "oracles")]
+pub fn csv_independent_line_count(body: &str) -> Result<usize, String> {
+    let mut reader = csv::ReaderBuilder::new().has_headers(false).quoting(false).flexible(true).delimiter(0x1F).terminator(csv::Terminator::CRLF).from_reader(body.as_bytes());
+    let mut count = 0usize;
+    for record in reader.records() {
+        record.map_err(|error| format!("csv cross-check reader error: {error}"))?;
+        count += 1;
+    }
+    Ok(count)
+}
+//#endregion 🔖️CsvCrossCheck
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[cfg(feature = "oracles")]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn split_render_round_trip_lf() {
+        let body = "a\nb\nc\n";
+        let (lines, trailing, crlf) = independent_split(body);
+        assert_eq!(lines, vec!["a", "b", "c"]);
+        assert!(trailing);
+        assert!(!crlf);
+        assert_eq!(independent_render(&lines, trailing, crlf), body);
+    }
+
+    #[test]
+    fn split_render_round_trip_crlf() {
+        let body = "a\r\nb\r\nc\r\n";
+        let (lines, trailing, crlf) = independent_split(body);
+        assert_eq!(lines, vec!["a", "b", "c"]);
+        assert!(trailing);
+        assert!(crlf);
+        assert_eq!(independent_render(&lines, trailing, crlf), body);
+    }
+
+    #[test]
+    fn no_trailing_newline_is_preserved() {
+        let body = "a\nb\nc";
+        let (lines, trailing, crlf) = independent_split(body);
+        assert_eq!(lines, vec!["a", "b", "c"]);
+        assert!(!trailing);
+        assert_eq!(independent_render(&lines, trailing, crlf), body);
+    }
+
+    #[test]
+    fn empty_body_is_zero_lines_not_one_empty_line() {
+        let (lines, trailing, crlf) = independent_split("");
+        assert!(lines.is_empty());
+        assert!(!trailing);
+        assert_eq!(independent_render(&lines, trailing, crlf), "");
+    }
+
+    #[test]
+    fn bom_survives_as_ordinary_first_line_content() {
+        // 🈁️ This subset does NOT special-case a byte-order mark: it is neither stripped nor
+        // interpreted, only carried as the first three bytes of line 0's content.
+        let body = "\u{feff}hello\nworld\n";
+        let (lines, trailing, crlf) = independent_split(body);
+        assert_eq!(lines[0].chars().next(), Some('\u{feff}'));
+        assert_eq!(independent_render(&lines, trailing, crlf), body);
+    }
+
+    #[test]
+    fn astral_plane_and_combining_marks_survive_unnormalized() {
+        // 🎉️ An astral-plane emoji (outside the BMP, a 4-byte UTF-8 sequence) plus a variation
+        // selector, and a combining acute accent kept distinct from its precomposed form — this
+        // subset performs no Unicode normalization at all.
+        let body = "🎉\n📜️\ne\u{301}\n\u{e9}\n";
+        let (lines, trailing, crlf) = independent_split(body);
+        assert_eq!(lines, vec!["🎉", "📜️", "e\u{301}", "\u{e9}"]);
+        assert_ne!(lines[2], lines[3], "combining and precomposed forms must stay distinct");
+        assert_eq!(independent_render(&lines, trailing, crlf), body);
+    }
+
+    #[test]
+    fn nel_ls_ps_are_not_treated_as_line_separators() {
+        // 🈁️ NEL (U+0085), LINE SEPARATOR (U+2028) and PARAGRAPH SEPARATOR (U+2029) are exactly
+        // the characters some Unicode-aware line-breaking algorithms (Python's universal
+        // newlines, ICU) DO split on — this subset declares only Lf/CrLf, so all three must stay
+        // ordinary content of a single line.
+        let body = "before\u{85}middle\u{2028}more\u{2029}end\n";
+        let (lines, trailing, crlf) = independent_split(body);
+        assert_eq!(lines.len(), 1, "NEL/LS/PS must not create extra lines");
+        assert_eq!(independent_render(&lines, trailing, crlf), body);
+    }
+
+    #[test]
+    fn mixed_crlf_lf_is_still_a_lossless_round_trip() {
+        // 🧭️ FINDING, not the assumption this test started from: splitting a string on a FIXED
+        // separator and rejoining with that SAME separator is a mathematical identity regardless
+        // of what characters live between the split points — so mixed CRLF/LF input does NOT
+        // break byte-exact round-tripping the way it would for a format with real per-record
+        // structure (RFC 4180 CSV, say). Detecting "is_crlf" from the presence of any `\r\n`
+        // only changes WHERE the split points fall (see the next test for how few that can be on
+        // real mixed content); it never loses information. This is `TxtSnapshot`'s carrier law
+        // (see `📸️snapshot/🦀️component.rs`'s own doc comment and its `carrier_native_is_raw`
+        // test) confirmed independently here, not assumed.
+        for mixed in ["a\r\nb\nc\r\nd\n", "a\nb\r\nc\n", "\r\nonly one crlf at the start\nthen bare lf\n", "no separators at all"] {
+            let (lines, trailing, crlf) = independent_split(mixed);
+            let rendered = independent_render(&lines, trailing, crlf);
+            assert_eq!(rendered, mixed, "split-then-join by the same separator must be lossless for {mixed:?}");
+        }
+    }
+
+    #[test]
+    fn whole_document_crlf_detection_can_collapse_real_mostly_lf_content_into_few_lines() {
+        // 📓️ The real captured fixture's own shape: 27,471 bytes, 158 bare LF, only 2 genuine
+        // embedded CRLF sequences (see `../../../../../🧫️fixtures/📓️hub-boot-log.txt` and its
+        // provenance note in the case feature file). Because the subset's detection rule is
+        // "the whole document is CrLf iff it contains AT LEAST ONE literal `\r\n`", this real
+        // file splits into exactly 3 giant "lines" (the two `\r\n` occurrences are the only split
+        // points), each one carrying dozens of bare `\n` characters as ordinary content — a
+        // genuine, sometimes surprising consequence of a deliberately simple per-document (never
+        // per-line) policy, not a bug. Documented here rather than silently worked around: it is
+        // exactly why the exhaustive mutate-<kind>/inverse-<kind> scenarios use a real fixture
+        // with a SINGLE consistent line-ending style instead, where indexing into "line 5" means
+        // what it looks like it means.
+        let bytes = include_bytes!("../../../../../🧫️fixtures/📓️hub-boot-log.txt");
+        let body = std::str::from_utf8(bytes).expect("fixture is valid UTF-8");
+        let (lines, trailing, crlf) = independent_split(body);
+        assert!(crlf, "one real \\r\\n anywhere makes the whole document CrLf under this subset's rule");
+        assert_eq!(lines.len(), 3, "only the two real \\r\\n occurrences are split points");
+        assert_eq!(independent_render(&lines, trailing, crlf), body, "still exactly lossless, per the carrier law");
+    }
+
+    #[test]
+    fn insert_line_clamps_to_current_length() {
+        let out = oracle_apply_mutation(b"a\nb\n", &spec("insert-line", &[("index", Json::Number(99.0)), ("text", Json::String("z".into()))])).unwrap();
+        assert_eq!(String::from_utf8(out).unwrap(), "a\nb\nz\n");
+    }
+
+    #[test]
+    fn remove_line_out_of_bounds_is_a_no_op() {
+        let out = oracle_apply_mutation(b"a\nb\n", &spec("remove-line", &[("index", Json::Number(50.0))])).unwrap();
+        assert_eq!(String::from_utf8(out).unwrap(), "a\nb\n");
+    }
+
+    #[test]
+    fn set_line_out_of_bounds_is_a_no_op() {
+        let out = oracle_apply_mutation(b"a\nb\n", &spec("set-line", &[("index", Json::Number(50.0)), ("text", Json::String("z".into()))])).unwrap();
+        assert_eq!(String::from_utf8(out).unwrap(), "a\nb\n");
+    }
+
+    #[test]
+    fn set_trailing_newline_toggles_the_terminator() {
+        let out = oracle_apply_mutation(b"a\nb\n", &spec("set-trailing-newline", &[("value", Json::Bool(false))])).unwrap();
+        assert_eq!(String::from_utf8(out).unwrap(), "a\nb");
+    }
+
+    #[test]
+    fn set_line_ending_rewrites_every_separator() {
+        let out = oracle_apply_mutation(b"a\nb\nc\n", &spec("set-line-ending", &[("value", Json::String("crLf".into()))])).unwrap();
+        assert_eq!(String::from_utf8(out).unwrap(), "a\r\nb\r\nc\r\n");
+    }
+
+    #[test]
+    fn set_snapshot_replaces_the_whole_document() {
+        let out = oracle_apply_mutation(b"a\nb\n", &spec("set-snapshot", &[("lines", Json::Array(vec![Json::String("x".into()), Json::String("y".into())])), ("trailingNewline", Json::Bool(false)), ("lineEnding", Json::String("crLf".into()))]))
+            .unwrap();
+        assert_eq!(String::from_utf8(out).unwrap(), "x\r\ny");
+    }
+
+    #[test]
+    fn no_mutation_is_a_true_identity() {
+        let out = oracle_apply_mutation(b"a\r\nb\n", &spec("no-mutation", &[])).unwrap();
+        assert_eq!(out, b"a\r\nb\n");
+    }
+
+    #[test]
+    fn unknown_kind_is_an_error_never_a_silent_no_op() {
+        assert!(oracle_apply_mutation(b"a\n", &spec("set-page-rotation", &[])).is_err());
+    }
+
+    #[test]
+    fn missing_kind_is_an_error() {
+        assert!(oracle_apply_mutation(b"a\n", &Json::Object(vec![])).is_err());
+    }
+
+    #[test]
+    fn csv_cross_check_agrees_with_independent_split_on_the_real_single_style_fixture_non_blank_lines() {
+        // 📄️ The real German interview transcript this subset's case exhaustively mutates — see
+        // `../../../../../🧫️fixtures/📄️interview-transkript.tex` and its provenance note in the
+        // case feature file: 170 real LF-terminated lines (81 of them blank — real LaTeX source
+        // paragraph spacing), genuine umlauts, no CR anywhere.
+        //
+        // 🧭️ FINDING: `csv-core`'s NFA silently treats a zero-byte record as "not a record" and
+        // never emits it — confirmed with a standalone probe (`a\n\nb\n\n\nc\n` yields exactly
+        // three records, `["a","b","c"]`, under BOTH `Terminator::CRLF` and `Terminator::Any(b'\n')`
+        // — the blank-line skip is unconditional, not a terminator-mode artifact). So the crate
+        // can cross-check only the NON-BLANK line count, never the true line count, on any real
+        // prose that has blank lines at all — a narrower substitute than first assumed, recorded
+        // here rather than silently worked around.
+        let bytes = include_bytes!("../../../../../🧫️fixtures/📄️interview-transkript.tex");
+        let body = std::str::from_utf8(bytes).expect("fixture is valid UTF-8");
+        let (lines, _, _) = independent_split(body);
+        let non_blank = lines.iter().filter(|line| !line.is_empty()).count();
+        let csv_count = csv_independent_line_count(body).expect("csv cross-check must read the real fixture");
+        assert_eq!(csv_count, non_blank, "independent hand-rolled splitter and the csv crate's record reader must agree on NON-BLANK line count for single-style real content");
+        assert_ne!(csv_count, lines.len(), "documented limitation: csv silently drops the 81 real blank lines, so it does NOT agree on the true line count");
+    }
+
+    #[test]
+    fn csv_cross_check_agrees_on_single_style_spec_vectors() {
+        for body in ["a\nb\nc\n", "a\r\nb\r\nc\r\n", "a\nb\nc", "single line, no terminator", ""] {
+            let (lines, _, _) = independent_split(body);
+            let csv_count = csv_independent_line_count(body).unwrap();
+            assert_eq!(csv_count, lines.len(), "mismatch for {body:?}");
+        }
+    }
+
+    #[test]
+    fn csv_cross_check_genuinely_disagrees_on_mixed_content_and_that_is_documented_not_hidden() {
+        // 🧭️ The csv crate's terminator collapses CR/LF/CRLF into one undifferentiated boundary,
+        // so on mixed content it reports MORE, finer-grained boundaries than this subset's
+        // whole-document rule does — real, honest evidence of exactly the limitation the
+        // manifest's `noOracleDecisions` rationale names: `csv` can confirm line boundaries on
+        // single-style content, but cannot referee this subset's LF-vs-CRLF policy question.
+        let mixed = "a\r\nb\nc\r\nd\n";
+        let (lines, _, _) = independent_split(mixed);
+        let csv_count = csv_independent_line_count(mixed).unwrap();
+        assert_eq!(lines.len(), 3, "this subset's own whole-document CrLf rule splits only on the two real \\r\\n occurrences");
+        assert_eq!(csv_count, 4, "the csv crate's finer per-terminator boundary detection sees the bare \\n too");
+        assert_ne!(csv_count, lines.len(), "genuinely different answers — a real partial substitute, not a disguised full one");
+    }
+
+    // 🚫️async: E1 pure test-fixture builder, no I/O — see R9
+    fn spec(kind: &str, params: &[(&str, Json)]) -> Json {
+        Json::Object(vec![("kind".to_string(), Json::String(kind.to_string())), ("params".to_string(), Json::Object(params.iter().map(|(k, v)| (k.to_string(), v.clone())).collect()))])
+    }
+}
+//#endregion 🧪️Tests

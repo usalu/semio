@@ -182,6 +182,12 @@ pub async fn patch_layer_in_tree(layers: &mut [RasterLayerNode], target_id: &str
 impl RasterDiff {
     /// 🧬️ Applies every sparse entry (all state classes) onto a full artifact.
     pub async fn apply_to_artifact(&self, artifact: &RasterArtifact) -> protocol::MutationApplyResult<RasterArtifact> {
+        if !artifact.assets.is_empty() {
+            return Err(protocol::MutationApplyError::new("mutation.apply.retained-owner-required", "populated Raster maps require the retained initialization authority"));
+        }
+        if self.assets.as_ref().is_some_and(|assets| assets.entries.values().any(Option::is_none)) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.retained-owner-required", "asset removal requires the retained Raster initialization authority"));
+        }
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
@@ -206,9 +212,7 @@ impl RasterDiff {
                         Some(asset) => {
                             next.assets.insert(key.clone(), crate::artifacts::raster::mint_and_stash_asset(key, asset));
                         }
-                        None => {
-                            next.assets.remove(key);
-                        }
+                        None => unreachable!("Raster asset removal was rejected before snapshot ownership was cloned"),
                     }
                 }
             }
@@ -320,7 +324,7 @@ async fn apply_layer_patch_entry(layers: &mut [RasterLayerNode], entry: &RasterL
     patch_layer_in_tree(layers, &entry.id, &entry.patch).map(|_| ()).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-target", "patched layer does not exist"))
 }
 
-async fn validate_assets_delta<T>(assets: &std::collections::BTreeMap<String, T>, delta: &RasterAssetsDelta) -> protocol::MutationApplyResult<()> {
+async fn validate_assets_delta<T>(assets: &crate::artifacts::raster::RasterOwnedMap<T>, delta: &RasterAssetsDelta) -> protocol::MutationApplyResult<()> {
     for (key, value) in &delta.entries {
         if value.is_none() && !assets.contains_key(key) {
             return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed asset does not exist").at([key.as_str()]));
@@ -331,6 +335,12 @@ async fn validate_assets_delta<T>(assets: &std::collections::BTreeMap<String, T>
 
 impl MutationDiff<RasterSnapshot> for RasterDiff {
     async fn apply(&self, snapshot: &RasterSnapshot) -> protocol::MutationApplyResult<RasterSnapshot> {
+        if !snapshot.assets.is_empty() {
+            return Err(protocol::MutationApplyError::new("mutation.apply.retained-owner-required", "populated Raster maps require the retained initialization authority"));
+        }
+        if self.assets.as_ref().is_some_and(|assets| assets.entries.values().any(Option::is_none)) {
+            return Err(protocol::MutationApplyError::new("mutation.apply.retained-owner-required", "asset removal requires the retained Raster initialization authority"));
+        }
         Ok({
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
@@ -355,9 +365,7 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
                         Some(asset) => {
                             next.assets.insert(key.clone(), crate::artifacts::raster::mint_and_stash_asset(key, asset));
                         }
-                        None => {
-                            next.assets.remove(key);
-                        }
+                        None => unreachable!("Raster asset removal was rejected before snapshot ownership was cloned"),
                     }
                 }
             }

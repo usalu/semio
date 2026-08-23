@@ -72,7 +72,7 @@ async fn semio_transform_from_raster(transform: &RasterTransform) -> SemioTransf
 /// 🖼️ Builds one real `DrawNode` per visible pixel layer (its embedded asset bytes, positioned/
 /// scaled/rotated by the layer's own `RasterTransform`), recursing into group layers; adjustment
 /// layers carry no geometry of their own and are honestly skipped.
-async fn draw_node_for_raster_layer(layer: &RasterLayerNode, assets: &std::collections::BTreeMap<String, crate::artifacts::raster::RasterAssetChild>) -> Option<DrawNode> {
+async fn draw_node_for_raster_layer(layer: &RasterLayerNode, assets: &crate::artifacts::raster::RasterOwnedMap<crate::artifacts::raster::RasterAssetChild>) -> Option<DrawNode> {
     match layer {
         RasterLayerNode::Pixel { visible, transform, width, height, image_key, .. } => {
             if !*visible {
@@ -271,8 +271,8 @@ pub async fn raster_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value
     }
     let asset = RasterImageAsset { mime: "image/png".into(), data };
     let handle = crate::artifacts::raster::mint_and_stash_asset(&asset_key, &asset);
-    let mut assets = std::collections::BTreeMap::new();
-    assets.insert(asset_key, handle);
+    let mut assets = crate::artifacts::raster::RasterOwnedMap::new();
+    assets.insert(asset_key, handle).map_err(|rejected| rejected.reason.to_string())?;
     let document = RasterSnapshot { schema: RASTER_DOCUMENT_SCHEMA.into(), id: crate::artifacts::raster::schema::create_raster_id("dwg-import"), title: Some("DWG Import".into()), layers: vec![layer], assets };
     serde_json::to_value(&document).map_err(|error| error.to_string())
 }

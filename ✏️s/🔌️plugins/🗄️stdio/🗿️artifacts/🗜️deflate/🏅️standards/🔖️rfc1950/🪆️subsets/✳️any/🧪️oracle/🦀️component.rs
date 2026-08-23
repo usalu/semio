@@ -171,14 +171,20 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
         }
         "set-snapshot" => {
             let params = params_of(spec);
-            let header = Header { method: json_number(&params, "method", 8.0) as u8, window_bits: json_number(&params, "windowBits", 7.0) as u8, level_hint_bits: level_hint_bits(&params.str("levelHint"))?, dict_id: json_optional_u32(&params, "dictId") };
+            let header =
+                Header { method: json_number(&params, "method", 8.0) as u8, window_bits: json_number(&params, "windowBits", 7.0) as u8, level_hint_bits: level_hint_bits(&params.str("levelHint"))?, dict_id: json_optional_u32(&params, "dictId") };
             encode(&header, params.str("payload").as_bytes())
         }
         "set-compression-params" => {
             let (original, _) = Header::parse(input)?;
             let payload = independent_inflate(input)?;
             let params = params_of(spec);
-            let header = Header { method: json_number(&params, "method", original.method as f64) as u8, window_bits: json_number(&params, "windowBits", original.window_bits as f64) as u8, level_hint_bits: level_hint_bits(&params.str("levelHint"))?, dict_id: original.dict_id };
+            let header = Header {
+                method: json_number(&params, "method", original.method as f64) as u8,
+                window_bits: json_number(&params, "windowBits", original.window_bits as f64) as u8,
+                level_hint_bits: level_hint_bits(&params.str("levelHint"))?,
+                dict_id: original.dict_id,
+            };
             encode(&header, &payload)
         }
         "set-preset-dictionary" => {
@@ -241,7 +247,9 @@ pub fn inverse_mutation_spec(kind: &str, method: u8, window_bits: u8, level_hint
             ("dictId".to_string(), dict_id_json),
             ("payload".to_string(), Json::String(payload_text)),
         ]),
-        "set-compression-params" => Json::Object(vec![("method".to_string(), Json::Number(method as f64)), ("windowBits".to_string(), Json::Number(window_bits as f64)), ("levelHint".to_string(), Json::String(level_hint_name(level_hint_bits).to_string()))]),
+        "set-compression-params" => {
+            Json::Object(vec![("method".to_string(), Json::Number(method as f64)), ("windowBits".to_string(), Json::Number(window_bits as f64)), ("levelHint".to_string(), Json::String(level_hint_name(level_hint_bits).to_string()))])
+        }
         "set-preset-dictionary" => Json::Object(vec![("dictId".to_string(), dict_id_json)]),
         "set-payload" => Json::Object(vec![("payload".to_string(), Json::String(payload_text))]),
         other => return Err(format!("mutation kind {other:?} has no inverse spec")),

@@ -67,6 +67,12 @@ pub enum PlyMutation {
         value: PlyValue,
     },
 }
+
+/// 🏷️ Kebab-case spelling of every `PlyMutation` variant, in declaration order — the vocabulary the
+/// `ply-1-0-any` mutation catalog (`../../🧪️oracle/🔣️component.json`) declares and the exhaustive
+/// mutate/inverse test case measures itself against. `kinds_cover_every_variant` below is what keeps
+/// this list honest against the enum it names, since the framework never parses Rust.
+pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-format", "insert-comment", "remove-comment", "add-element", "remove-element", "insert-row", "remove-row", "set-row-property"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -413,6 +419,38 @@ mod codec_tests {
             assert_eq!(decoded, mutation, "encode_op/decode_op round-trip mismatch for {mutation:?}");
         }
     }
+
+    //#region 🔖️KindsCoverageLaw
+    /// 🏷️ `KINDS` must name exactly the enum's variants (kebab-case), one entry each — an
+    /// exhaustive `match` so the compiler itself fails the moment a variant is added, renamed or
+    /// removed without this list being updated alongside it. The manifest side of the same claim
+    /// (`../../🧪️oracle/🔣️component.json`'s `ply-1-0-any` catalog `kinds`) is checked by the
+    /// mutate/inverse test case's own contract gate, which fails if the two lists ever diverge.
+    #[semio_framework_async_macros::async_test]
+    async fn kinds_cover_every_variant() {
+        fn kind_of(mutation: &PlyMutation) -> &'static str {
+            match mutation {
+                PlyMutation::NoMutation => "no-mutation",
+                PlyMutation::SetSnapshot { .. } => "set-snapshot",
+                PlyMutation::SetFormat { .. } => "set-format",
+                PlyMutation::InsertComment { .. } => "insert-comment",
+                PlyMutation::RemoveComment { .. } => "remove-comment",
+                PlyMutation::AddElement { .. } => "add-element",
+                PlyMutation::RemoveElement { .. } => "remove-element",
+                PlyMutation::InsertRow { .. } => "insert-row",
+                PlyMutation::RemoveRow { .. } => "remove-row",
+                PlyMutation::SetRowProperty { .. } => "set-row-property",
+            }
+        }
+        let mut exercised: Vec<&str> = demo_mutation_cases().iter().map(kind_of).collect();
+        exercised.sort_unstable();
+        exercised.dedup();
+        let mut declared: Vec<&str> = KINDS.to_vec();
+        declared.sort_unstable();
+        assert_eq!(exercised, declared, "KINDS must name exactly the variants demo_mutation_cases() exercises");
+        assert_eq!(KINDS.len(), 10, "ply-1-0-any declares 10 PlyMutation variants");
+    }
+    //#endregion 🔖️KindsCoverageLaw
 }
 //#endregion 🧪️Tests
 

@@ -106,7 +106,7 @@ pub fn semio_kit_artifact_schema_descriptor() -> schema::ArtifactSchemaDescripto
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::semio::standards::v1::subsets::kit::schema::diff::SemioKitDiff;
-    use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
+    use crate::artifacts::semio::standards::v1::subsets::kit::schema::mutations::{apply_semio_kit_mutation, SemioKitMutation};
     use crate::artifacts::semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
     use semio_framework_plugin::ArtifactBuilder;
 
@@ -148,8 +148,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<SemioKitSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = <Self::Mutation as protocol::Mutation<SemioKitSnapshot>>::diff(&mutation, &self.snapshot);
-            let diff = diff.apply_to(&mut self.snapshot);
+            let diff = apply_semio_kit_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {

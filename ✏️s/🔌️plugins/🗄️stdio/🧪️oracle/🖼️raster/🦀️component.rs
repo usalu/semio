@@ -152,7 +152,6 @@ pub fn project_gif(input: &[u8]) -> Result<Json, String> {
 }
 //#endregion 🔖️Gif
 
-
 //#region 🔖️ImageCrateFormats
 /// 🔮️ Creates a BMP, TIFF or JPEG with the registered `image` reference implementation. One crate is
 /// the reference decoder/encoder for all three, so one oracle covers all three formats.

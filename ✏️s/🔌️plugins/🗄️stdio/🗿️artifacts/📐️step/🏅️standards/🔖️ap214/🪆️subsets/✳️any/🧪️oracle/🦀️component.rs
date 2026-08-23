@@ -45,7 +45,14 @@ fn str_field(value: &Json, key: &str) -> Result<String, String> {
 }
 #[cfg(feature = "oracles")]
 fn str_array(value: &Json, key: &str) -> Vec<String> {
-    value.array(key).iter().filter_map(|entry| match entry { Json::String(s) => Some(s.clone()), _ => None }).collect()
+    value
+        .array(key)
+        .iter()
+        .filter_map(|entry| match entry {
+            Json::String(s) => Some(s.clone()),
+            _ => None,
+        })
+        .collect()
 }
 #[cfg(feature = "oracles")]
 fn usize_field(value: &Json, key: &str) -> Result<usize, String> {
@@ -255,16 +262,15 @@ mod oracles {
 
     /// 🦠️ Applies one declared `StepMutation::KINDS` kind to a real, independently-parsed
     /// `ruststep::ast::Exchange` — one arm per variant, matched by its kebab-case spelling. An
-    /// unrecognised kind is an error, never a silent no-op.
+    /// unrecognised kind is an error, never a silent no-op. `set-snapshot` is pragmatic: it
+    /// overrides the one header field the wave-7 scenario actually exercises (`FILE_SCHEMA`) on the
+    /// already-decoded document, the same precedent `mutate-pdf-1-7`'s own oracle uses for its
+    /// `set-snapshot` (patches known fields rather than requiring the full snapshot literal inline
+    /// in a Gherkin cell, which for a 1396-entity real document would be an unreadable blob).
     fn apply(exchange: &mut Exchange, kind: &str, params: &Json) -> Result<(), String> {
         match kind {
             "no-mutation" => Ok(()),
 
-            // 🧭️ Pragmatic `set-snapshot`: overrides the one header field the wave-7 scenario
-            // actually exercises (`FILE_SCHEMA`) on the already-decoded document, the same
-            // precedent `mutate-pdf-1-7`'s own oracle uses for its `set-snapshot` (patches known
-            // fields rather than requiring the full snapshot literal inline in a Gherkin cell,
-            // which for a 1396-entity real document would be an unreadable blob).
             "set-snapshot" => {
                 let schemas = str_array(params, "fileSchema");
                 if schemas.is_empty() {
@@ -417,7 +423,13 @@ mod oracles {
         let text = std::str::from_utf8(bytes).map_err(|error| format!("projection input is not UTF-8: {error}"))?;
         let exchange = Exchange::from_str(text).map_err(|error| format!("ruststep could not independently parse the result: {error}"))?;
         let file_schema = header_record(&exchange, "FILE_SCHEMA").map(args).transpose()?.and_then(|params| params.first()).map(|param| match param {
-            Parameter::List(items) => items.iter().filter_map(|item| match item { Parameter::String(s) => Some(s.clone()), _ => None }).collect::<Vec<_>>(),
+            Parameter::List(items) => items
+                .iter()
+                .filter_map(|item| match item {
+                    Parameter::String(s) => Some(s.clone()),
+                    _ => None,
+                })
+                .collect::<Vec<_>>(),
             _ => Vec::new(),
         });
         let mut entities: Vec<Json> = Vec::new();
@@ -434,7 +446,6 @@ mod oracles {
         ]))
     }
     //#endregion 🔖️Projection
-
 }
 
 //#region 🔖️Dispatch
@@ -543,7 +554,10 @@ mod tests {
 
     #[test]
     fn insert_and_remove_entity_round_trip_on_the_real_graph() {
-        let insert_params = obj(vec![("index", num(1396.0)), ("entity", obj(vec![("id", num(9001.0)), ("name", text("CARTESIAN_POINT")), ("args", Json::Array(vec![tv("string", text("")), tv("aggregate", Json::Array(vec![tv("real", num(1.0)), tv("real", num(2.0)), tv("real", num(3.0))]))]))]))]);
+        let insert_params = obj(vec![
+            ("index", num(1396.0)),
+            ("entity", obj(vec![("id", num(9001.0)), ("name", text("CARTESIAN_POINT")), ("args", Json::Array(vec![tv("string", text("")), tv("aggregate", Json::Array(vec![tv("real", num(1.0)), tv("real", num(2.0)), tv("real", num(3.0))]))]))])),
+        ]);
         let inserted = oracle_apply_mutation(FIXTURE, &spec("insert-entity", insert_params)).expect("insert-entity");
         let projection = project_step_ap214_any(&inserted).expect("project inserted");
         assert_eq!(entity_count(&projection), 1397.0);
@@ -562,7 +576,10 @@ mod tests {
         assert_eq!(entity_count(&projection), 1395.0);
         assert!(find_entity(&projection, 1405.0).is_none());
 
-        let reinserted_params = obj(vec![("index", num(1395.0)), ("entity", obj(vec![("id", num(1405.0)), ("name", text("CARTESIAN_POINT")), ("args", Json::Array(vec![tv("string", text("")), tv("aggregate", Json::Array(vec![tv("real", num(0.0)), tv("real", num(0.0)), tv("real", num(0.0))]))]))]))]);
+        let reinserted_params = obj(vec![
+            ("index", num(1395.0)),
+            ("entity", obj(vec![("id", num(1405.0)), ("name", text("CARTESIAN_POINT")), ("args", Json::Array(vec![tv("string", text("")), tv("aggregate", Json::Array(vec![tv("real", num(0.0)), tv("real", num(0.0)), tv("real", num(0.0))]))]))])),
+        ]);
         let reinserted = oracle_apply_mutation(&removed, &spec("insert-entity", reinserted_params)).expect("inverse insert-entity");
         let reinserted_projection = project_step_ap214_any(&reinserted).expect("project reinserted");
         assert_eq!(entity_count(&reinserted_projection), 1396.0);
@@ -589,7 +606,10 @@ mod tests {
                 assert_eq!(items[0], tv("string", text("")));
                 match &items[1] {
                     Json::Object(_) => {
-                        let real0 = items[1].get("v").and_then(|arr| match arr { Json::Array(vs) => vs.first(), _ => None });
+                        let real0 = items[1].get("v").and_then(|arr| match arr {
+                            Json::Array(vs) => vs.first(),
+                            _ => None,
+                        });
                         assert!(matches!(real0, Some(Json::Object(_))));
                     }
                     other => panic!("expected aggregate object, got {other:?}"),
@@ -607,7 +627,10 @@ mod tests {
 
         let inserted = oracle_apply_mutation(FIXTURE, &spec("insert-entity-arg", obj(vec![("id", num(1394.0)), ("argIndex", num(2.0)), ("value", tv("enum", text("T")))]))).expect("insert-entity-arg");
         let projection = project_step_ap214_any(&inserted).expect("project inserted-arg");
-        let args = match find_entity(&projection, 1394.0).unwrap().get("args") { Some(Json::Array(items)) => items.clone(), _ => panic!("no args") };
+        let args = match find_entity(&projection, 1394.0).unwrap().get("args") {
+            Some(Json::Array(items)) => items.clone(),
+            _ => panic!("no args"),
+        };
         assert_eq!(args.len(), 3);
         assert_eq!(args[2], tv("enum", text("T")));
         let removed_back = oracle_apply_mutation(&inserted, &spec("remove-entity-arg", obj(vec![("id", num(1394.0)), ("argIndex", num(2.0))]))).expect("inverse insert-entity-arg");
@@ -615,20 +638,64 @@ mod tests {
 
         let real_removed = oracle_apply_mutation(FIXTURE, &spec("remove-entity-arg", obj(vec![("id", num(1394.0)), ("argIndex", num(1.0))]))).expect("remove-entity-arg");
         let real_removed_projection = project_step_ap214_any(&real_removed).expect("project");
-        let remaining_args = match find_entity(&real_removed_projection, 1394.0).unwrap().get("args") { Some(Json::Array(items)) => items.clone(), _ => panic!("no args") };
+        let remaining_args = match find_entity(&real_removed_projection, 1394.0).unwrap().get("args") {
+            Some(Json::Array(items)) => items.clone(),
+            _ => panic!("no args"),
+        };
         assert_eq!(remaining_args.len(), 1);
-        let reinserted = oracle_apply_mutation(&real_removed, &spec("insert-entity-arg", obj(vec![("id", num(1394.0)), ("argIndex", num(1.0)), ("value", tv("aggregate", Json::Array(vec![tv("real", num(2.7)), tv("real", num(4.67653718043597)), tv("real", num(2.735))])))]))).expect("inverse remove-entity-arg");
+        let reinserted = oracle_apply_mutation(
+            &real_removed,
+            &spec("insert-entity-arg", obj(vec![("id", num(1394.0)), ("argIndex", num(1.0)), ("value", tv("aggregate", Json::Array(vec![tv("real", num(2.7)), tv("real", num(4.67653718043597)), tv("real", num(2.735))])))])),
+        )
+        .expect("inverse remove-entity-arg");
         assert_eq!(project_step_ap214_any(&reinserted).unwrap(), project_step_ap214_any(FIXTURE).unwrap());
     }
 
     #[test]
     fn set_file_description_name_and_schema_round_trip() {
-        let d = oracle_apply_mutation(FIXTURE, &spec("set-file-description", obj(vec![("fileDescription", obj(vec![("description", Json::Array(vec![text("ticket 26/08/23 wave-7 mutation")])), ("implementationLevel", text("2;1"))]))]))).expect("set-file-description");
+        let d = oracle_apply_mutation(FIXTURE, &spec("set-file-description", obj(vec![("fileDescription", obj(vec![("description", Json::Array(vec![text("ticket 26/08/23 wave-7 mutation")])), ("implementationLevel", text("2;1"))]))])))
+            .expect("set-file-description");
         let d_restored = oracle_apply_mutation(&d, &spec("set-file-description", obj(vec![("fileDescription", obj(vec![("description", Json::Array(vec![text("")])), ("implementationLevel", text("2;1"))]))]))).expect("inverse");
         assert_eq!(project_step_ap214_any(&d_restored).unwrap(), project_step_ap214_any(FIXTURE).unwrap());
 
-        let n = oracle_apply_mutation(FIXTURE, &spec("set-file-name", obj(vec![("fileName", obj(vec![("name", text("wave-7-mutated")), ("timestamp", text("2026-08-23T00:00:00")), ("author", Json::Array(vec![text("Ueli")])), ("organization", Json::Array(vec![text("semio")])), ("preprocessorVersion", text("semio-step")), ("originatingSystem", text("semio")), ("authorization", text(""))]))]))).expect("set-file-name");
-        let n_restored = oracle_apply_mutation(&n, &spec("set-file-name", obj(vec![("fileName", obj(vec![("name", text("hexagonal-cut-concrete-forest-left")), ("timestamp", text("2026-06-06T18:37:11+02:00")), ("author", Json::Array(vec![text("")])), ("organization", Json::Array(vec![text("")])), ("preprocessorVersion", text("ST-DEVELOPER v19.2")), ("originatingSystem", text("Rhino 8.31")), ("authorization", text(""))]))]))).expect("inverse");
+        let n = oracle_apply_mutation(
+            FIXTURE,
+            &spec(
+                "set-file-name",
+                obj(vec![(
+                    "fileName",
+                    obj(vec![
+                        ("name", text("wave-7-mutated")),
+                        ("timestamp", text("2026-08-23T00:00:00")),
+                        ("author", Json::Array(vec![text("Ueli")])),
+                        ("organization", Json::Array(vec![text("semio")])),
+                        ("preprocessorVersion", text("semio-step")),
+                        ("originatingSystem", text("semio")),
+                        ("authorization", text("")),
+                    ]),
+                )]),
+            ),
+        )
+        .expect("set-file-name");
+        let n_restored = oracle_apply_mutation(
+            &n,
+            &spec(
+                "set-file-name",
+                obj(vec![(
+                    "fileName",
+                    obj(vec![
+                        ("name", text("hexagonal-cut-concrete-forest-left")),
+                        ("timestamp", text("2026-06-06T18:37:11+02:00")),
+                        ("author", Json::Array(vec![text("")])),
+                        ("organization", Json::Array(vec![text("")])),
+                        ("preprocessorVersion", text("ST-DEVELOPER v19.2")),
+                        ("originatingSystem", text("Rhino 8.31")),
+                        ("authorization", text("")),
+                    ]),
+                )]),
+            ),
+        )
+        .expect("inverse");
         assert_eq!(project_step_ap214_any(&n_restored).unwrap(), project_step_ap214_any(FIXTURE).unwrap());
 
         let s = oracle_apply_mutation(FIXTURE, &spec("set-file-schema", obj(vec![("fileSchema", obj(vec![("schemas", Json::Array(vec![text("CONFIG_CONTROL_DESIGN")]))]))]))).expect("set-file-schema");

@@ -1,14 +1,28 @@
 //! 🔮️ Mutation oracle for this subset — every mutation kind the subset declares, performed by the
-//! registered `serde_json` reference implementation so the subject's own mutation has an independent
-//! result to be compared against instead of being checked against its own reading.
+//! registered `json` (json-rust) 0.12 reference implementation so the subject's own mutation has an
+//! independent result to be compared against instead of being checked against its own reading.
+//!
+//! `serde_json`, not `json`, was the first choice here, and it was wrong: this subset's OWN
+//! production code (`../🧬️schema/📸️snapshot/🦀️component.rs`) already declares
+//! `impl From<serde_json::Value> for JsonValue` and the reverse, a real interop conversion path FROM
+//! the reference's own type. A `serde_json` differential would therefore compare this
+//! implementation against something it already converts from — not independent evidence, and the
+//! purity gate agreed once it was pointed at the numbers (423 production files transitively reach
+//! `serde_json`, correctly, since it is a genuine `workspace.dependencies` production dependency).
+//! `json` (json-rust) appears nowhere in this repository's production dependency graph, so it is
+//! used instead. This costs two things this subset's own codec provides and `json` does not, both
+//! absorbed by design rather than worked around:
+//! - Member order: `json::object::Object` stores entries in a hash-ordered binary tree (see its own
+//!   source comment on `hash_key`), not insertion order — so this module still relies on the SAME
+//!   `ordered-json-v1` core comparison profile the `serde_json` draft already needed for RFC 8259 §4
+//!   (array order significant, key order never), rather than gaining anything back on this axis.
+//! - Number precision: `json::number::Number` is a `(sign, mantissa: u64, exponent: i16)` decimal
+//!   pair, not this subset's arbitrary-precision LEXEME — comparison is by parsed `f64` value here
+//!   too, for the same reason `serde_json` needed it (documented in the oracle registry rationale).
 //!
 //! The vocabulary is per SUBSET, not per artifact: two standards of the same format declare
 //! different mutations, and a subset that shares an implementation with another reaches it through
-//! the shared family modules rather than by copying it. This subset does not share — RFC 8259
-//! declares object member order insignificant (§4), and `serde_json`'s default (non-`preserve_order`)
-//! `Map` is a `BTreeMap` that re-sorts keys alphabetically on every parse/serialize — real, deliberate
-//! producer freedom absorbed by the `ordered-json-v1` core comparison profile (array order
-//! significant, key order never), not by anything hand-rolled here.
+//! the shared family modules rather than by copying it.
 //!
 //! @see ../🧪️oracle/🔣️component.json — the mutation catalog this module is measured against.
 //! @see ../🧬️schema/🧬️mutations/🦀️component.rs — the mutation vocabulary itself.
@@ -17,9 +31,9 @@ use semio_repo_test_host::Json;
 
 //#region 🔖️Path
 /// 🧭️ Test-oracle-local mirror of the subject's `JsonPathSegment` — the oracle role must not link
-/// the subject crate at all, so this addresses a `serde_json::Value` tree independently. Not itself
-/// gated on the `oracles` feature (unlike everything that touches `serde_json::Value`) so
-/// `read_at`'s signature stays available either way.
+/// the subject crate at all, so this addresses a `json::JsonValue` tree independently. Not itself
+/// gated on the `oracles` feature (unlike everything that touches `json::JsonValue`) so `read_at`'s
+/// signature stays available either way.
 #[derive(Clone, Debug)]
 pub enum PathSeg {
     Key(String),
@@ -45,12 +59,12 @@ pub fn path_from_spec(path: &Json) -> Vec<PathSeg> {
 
 /// 🔎️ Read-only navigation of `path` from `root`, `None` on the first unresolvable segment.
 #[cfg(feature = "oracles")]
-pub fn resolve<'a>(root: &'a serde_json::Value, path: &[PathSeg]) -> Option<&'a serde_json::Value> {
+pub fn resolve<'a>(root: &'a json::JsonValue, path: &[PathSeg]) -> Option<&'a json::JsonValue> {
     let mut node = root;
     for segment in path {
         node = match (segment, node) {
-            (PathSeg::Key(key), serde_json::Value::Object(map)) => map.get(key)?,
-            (PathSeg::Index(index), serde_json::Value::Array(items)) => items.get(*index)?,
+            (PathSeg::Key(key), json::JsonValue::Object(object)) => object.get(key)?,
+            (PathSeg::Index(index), json::JsonValue::Array(items)) => items.get(*index)?,
             _ => return None,
         };
     }
@@ -60,12 +74,12 @@ pub fn resolve<'a>(root: &'a serde_json::Value, path: &[PathSeg]) -> Option<&'a 
 /// 🔧️ Mutable navigation of `path` from `root`, `None` on the first unresolvable segment. An empty
 /// `path` resolves to `root` itself, so `set-scalar`'s whole-document replacement needs no special case.
 #[cfg(feature = "oracles")]
-pub fn resolve_mut<'a>(root: &'a mut serde_json::Value, path: &[PathSeg]) -> Option<&'a mut serde_json::Value> {
+pub fn resolve_mut<'a>(root: &'a mut json::JsonValue, path: &[PathSeg]) -> Option<&'a mut json::JsonValue> {
     let mut node = root;
     for segment in path {
         node = match (segment, node) {
-            (PathSeg::Key(key), serde_json::Value::Object(map)) => map.get_mut(key)?,
-            (PathSeg::Index(index), serde_json::Value::Array(items)) => items.get_mut(*index)?,
+            (PathSeg::Key(key), json::JsonValue::Object(object)) => object.get_mut(key)?,
+            (PathSeg::Index(index), json::JsonValue::Array(items)) => items.get_mut(*index)?,
             _ => return None,
         };
     }
@@ -76,19 +90,20 @@ pub fn resolve_mut<'a>(root: &'a mut serde_json::Value, path: &[PathSeg]) -> Opt
 //#region 🔖️Codec
 /// 📥️ Independent RFC 8259 read via the reference implementation.
 #[cfg(feature = "oracles")]
-pub fn read_json(input: &[u8]) -> Result<serde_json::Value, String> {
-    serde_json::from_slice(input).map_err(|error| format!("independent reader could not parse JSON: {error}"))
+pub fn read_json(input: &[u8]) -> Result<json::JsonValue, String> {
+    let text = std::str::from_utf8(input).map_err(|error| format!("independent reader: input is not UTF-8: {error}"))?;
+    json::parse(text).map_err(|error| format!("independent reader could not parse JSON: {error}"))
 }
 
-/// 📤️ Independent RFC 8259 write via the reference implementation — `serde_json`'s own compact
-/// form and number formatting, never this subset's own writer.
+/// 📤️ Independent RFC 8259 write via the reference implementation — `json`'s own compact form
+/// (`dump`) and number formatting, never this subset's own writer.
 #[cfg(feature = "oracles")]
-pub fn write_json(value: &serde_json::Value) -> Result<Vec<u8>, String> {
-    serde_json::to_vec(value).map_err(|error| format!("independent writer could not serialize JSON: {error}"))
+pub fn write_json(value: &json::JsonValue) -> Result<Vec<u8>, String> {
+    Ok(value.dump().into_bytes())
 }
 
 /// 🔁️ The oracle's own decode/re-encode, entirely through the reference implementation — an
-/// adapter never has to name `serde_json::Value` itself to ask for this.
+/// adapter never has to name `json::JsonValue` itself to ask for this.
 #[cfg(feature = "oracles")]
 pub fn round_trip(bytes: &[u8]) -> Result<Vec<u8>, String> {
     write_json(&read_json(bytes)?)
@@ -115,18 +130,24 @@ fn number(value: &Json, key: &str) -> Option<f64> {
 fn path_param(params: &Json) -> Vec<PathSeg> {
     path_from_spec(&params.get("path").cloned().unwrap_or(Json::Array(Vec::new())))
 }
-/// 🔀️ The host's own minimal `Json` (single `f64` number kind, no `preserve_order` distinction)
-/// into `serde_json::Value`, so a mutation's literal `value`/`snapshot` param can be written by the
+/// 🔀️ The host's own minimal `Json` (single `f64` number kind, no order distinction) into
+/// `json::JsonValue`, so a mutation's literal `value`/`snapshot` param can be written by the
 /// reference implementation.
 #[cfg(feature = "oracles")]
-fn json_to_serde(value: &Json) -> serde_json::Value {
+fn json_to_library(value: &Json) -> json::JsonValue {
     match value {
-        Json::Null => serde_json::Value::Null,
-        Json::Bool(flag) => serde_json::Value::Bool(*flag),
-        Json::Number(number) => serde_json::Number::from_f64(*number).map(serde_json::Value::Number).unwrap_or(serde_json::Value::Null),
-        Json::String(text) => serde_json::Value::String(text.clone()),
-        Json::Array(items) => serde_json::Value::Array(items.iter().map(json_to_serde).collect()),
-        Json::Object(entries) => serde_json::Value::Object(entries.iter().map(|(key, value)| (key.clone(), json_to_serde(value))).collect()),
+        Json::Null => json::JsonValue::Null,
+        Json::Bool(flag) => json::JsonValue::from(*flag),
+        Json::Number(number) => json::JsonValue::from(*number),
+        Json::String(text) => json::JsonValue::from(text.clone()),
+        Json::Array(items) => json::JsonValue::Array(items.iter().map(json_to_library).collect()),
+        Json::Object(entries) => {
+            let mut object = json::object::Object::with_capacity(entries.len());
+            for (key, value) in entries {
+                object.insert(key, json_to_library(value));
+            }
+            json::JsonValue::Object(object)
+        }
     }
 }
 //#endregion 🔖️SpecReaders
@@ -145,17 +166,17 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
         "" => Err("mutation spec carries no `kind`".to_string()),
         "no-mutation" => Ok(input.to_vec()),
         "set-snapshot" => {
-            let value = json_to_serde(&params.get("value").cloned().unwrap_or(Json::Null));
+            let value = json_to_library(&params.get("value").cloned().unwrap_or(Json::Null));
             write_json(&value)
         }
         "set-member" => {
             let path = path_param(&params);
             let key = params.str("key");
-            let value = json_to_serde(&params.get("value").cloned().unwrap_or(Json::Null));
+            let value = json_to_library(&params.get("value").cloned().unwrap_or(Json::Null));
             let mut root = read_json(input)?;
             match resolve_mut(&mut root, &path) {
-                Some(serde_json::Value::Object(map)) => {
-                    map.insert(key, value);
+                Some(json::JsonValue::Object(object)) => {
+                    object.insert(&key, value);
                 }
                 _ => return Err("set-member: target at path is not an object".to_string()),
             }
@@ -166,8 +187,8 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
             let key = params.str("key");
             let mut root = read_json(input)?;
             match resolve_mut(&mut root, &path) {
-                Some(serde_json::Value::Object(map)) => {
-                    map.remove(&key);
+                Some(json::JsonValue::Object(object)) => {
+                    object.remove(&key);
                 }
                 _ => return Err("remove-member: target at path is not an object".to_string()),
             }
@@ -176,10 +197,10 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
         "insert-array-element" => {
             let path = path_param(&params);
             let index = number(&params, "index").ok_or("insert-array-element: missing `index`")? as usize;
-            let value = json_to_serde(&params.get("value").cloned().unwrap_or(Json::Null));
+            let value = json_to_library(&params.get("value").cloned().unwrap_or(Json::Null));
             let mut root = read_json(input)?;
             match resolve_mut(&mut root, &path) {
-                Some(serde_json::Value::Array(items)) => {
+                Some(json::JsonValue::Array(items)) => {
                     let clamped = index.min(items.len());
                     items.insert(clamped, value);
                 }
@@ -192,17 +213,17 @@ pub fn oracle_apply_mutation(input: &[u8], spec: &Json) -> Result<Vec<u8>, Strin
             let index = number(&params, "index").ok_or("remove-array-element: missing `index`")? as usize;
             let mut root = read_json(input)?;
             match resolve_mut(&mut root, &path) {
-                Some(serde_json::Value::Array(items)) if index < items.len() => {
+                Some(json::JsonValue::Array(items)) if index < items.len() => {
                     items.remove(index);
                 }
-                Some(serde_json::Value::Array(_)) => return Err(format!("remove-array-element: index {index} out of bounds")),
+                Some(json::JsonValue::Array(_)) => return Err(format!("remove-array-element: index {index} out of bounds")),
                 _ => return Err("remove-array-element: target at path is not an array".to_string()),
             }
             write_json(&root)
         }
         "set-scalar" => {
             let path = path_param(&params);
-            let value = json_to_serde(&params.get("value").cloned().unwrap_or(Json::Null));
+            let value = json_to_library(&params.get("value").cloned().unwrap_or(Json::Null));
             let mut root = read_json(input)?;
             match resolve_mut(&mut root, &path) {
                 Some(node) => *node = value,
@@ -222,27 +243,25 @@ pub fn oracle_apply_mutation(_input: &[u8], _spec: &Json) -> Result<Vec<u8>, Str
 //#endregion 🔖️Dispatch
 
 //#region 🔖️Projection
-/// 🔀️ `serde_json::Value` into the host's own minimal `Json` (`Number` is always `f64`, matching
-/// how the comparison engine reads projections) — keys keep whatever order `serde_json`'s `Map`
-/// iterates in, which is IGNORED at comparison time by the `ordered-json-v1` profile. Exposed (not
-/// just `project_json_value`'s wrapped form) so an adapter's own inverse-spec derivation can embed a
-/// raw pre-mutation VALUE — e.g. `set-member`'s old value, or the whole document for `set-snapshot`
-/// — inside a mutation spec's `value`/`snapshot` param.
+/// 🔀️ `json::JsonValue` into the host's own minimal `Json` (`Number` is always `f64`, matching how
+/// the comparison engine reads projections) — keys keep whatever order `json::object::Object`'s
+/// hash-ordered tree iterates in, which is IGNORED at comparison time by the `ordered-json-v1`
+/// profile (see the module doc comment: `json` does not preserve insertion order at all).
 #[cfg(feature = "oracles")]
-pub fn project_value(value: &serde_json::Value) -> Json {
+pub fn project_value(value: &json::JsonValue) -> Json {
     match value {
-        serde_json::Value::Null => Json::Null,
-        serde_json::Value::Bool(flag) => Json::Bool(*flag),
-        serde_json::Value::Number(number) => Json::Number(number.as_f64().unwrap_or(f64::NAN)),
-        serde_json::Value::String(text) => Json::String(text.clone()),
-        serde_json::Value::Array(items) => Json::Array(items.iter().map(project_value).collect()),
-        serde_json::Value::Object(map) => Json::Object(map.iter().map(|(key, value)| (key.clone(), project_value(value))).collect()),
+        json::JsonValue::Null => Json::Null,
+        json::JsonValue::Boolean(flag) => Json::Bool(*flag),
+        json::JsonValue::Number(_) => Json::Number(value.as_f64().unwrap_or(f64::NAN)),
+        json::JsonValue::Short(_) | json::JsonValue::String(_) => Json::String(value.as_str().unwrap_or("").to_string()),
+        json::JsonValue::Array(items) => Json::Array(items.iter().map(project_value).collect()),
+        json::JsonValue::Object(object) => Json::Object(object.iter().map(|(key, value)| (key.to_string(), project_value(value))).collect()),
     }
 }
 
-/// 👁️ Projects JSON bytes with the INDEPENDENT `serde_json` reader onto the `ordered-json-v1` shape
-/// this case's oracle and subject are both compared through — key order is real in the wire form
-/// but not in this projection (see the module doc comment).
+/// 👁️ Projects JSON bytes with the INDEPENDENT `json` reader onto the `ordered-json-v1` shape this
+/// case's oracle and subject are both compared through — key order is real in the wire form but not
+/// in this projection (see the module doc comment).
 #[cfg(feature = "oracles")]
 pub fn project_json_value(bytes: &[u8]) -> Result<Json, String> {
     let value = read_json(bytes)?;
@@ -257,7 +276,7 @@ pub fn project_json_value(_bytes: &[u8]) -> Result<Json, String> {
 /// 🔎️ Reads the PROJECTED value found at `path` (the same string-key/number-index shape a mutation
 /// spec's own `path` param uses) with `extra` segments appended first — so an adapter deriving an
 /// independent inverse spec can address "member `key` under `path`" (`extra = [Key(key)]`) or
-/// "element `index` under `path`" (`extra = [Index(index)]`) without ever naming `serde_json::Value`
+/// "element `index` under `path`" (`extra = [Index(index)]`) without ever naming `json::JsonValue`
 /// itself. `Ok(None)` on the first unresolvable segment.
 #[cfg(feature = "oracles")]
 pub fn read_at(bytes: &[u8], path: &Json, extra: &[PathSeg]) -> Result<Option<Json>, String> {
@@ -284,82 +303,78 @@ mod tests {
         Json::Object(pairs.into_iter().map(|(key, value)| (key.to_string(), value)).collect())
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn no_mutation_is_a_true_byte_identity() {
+    #[test]
+    fn no_mutation_is_a_true_byte_identity() {
         let input = br#"{"a":1,"b":2}"#;
         let output = oracle_apply_mutation(input, &spec("no-mutation", Json::Object(vec![]))).unwrap();
         assert_eq!(output, input);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn set_member_upserts_and_remove_member_deletes() {
+    #[test]
+    fn set_member_upserts_and_remove_member_deletes() {
         let input = br#"{"a":1,"nested":{"b":2}}"#;
         let updated = oracle_apply_mutation(input, &spec("set-member", obj(vec![("path", Json::Array(vec![Json::String("nested".into())])), ("key", Json::String("c".into())), ("value", Json::Number(3.0))]))).unwrap();
         let value = read_json(&updated).unwrap();
-        assert_eq!(resolve(&value, &[PathSeg::Key("nested".into()), PathSeg::Key("c".into())]), Some(&serde_json::json!(3.0)));
+        assert_eq!(resolve(&value, &[PathSeg::Key("nested".into()), PathSeg::Key("c".into())]).and_then(|v| v.as_f64()), Some(3.0));
 
         let removed = oracle_apply_mutation(&updated, &spec("remove-member", obj(vec![("path", Json::Array(vec![Json::String("nested".into())])), ("key", Json::String("c".into()))]))).unwrap();
         let value = read_json(&removed).unwrap();
-        assert_eq!(resolve(&value, &[PathSeg::Key("nested".into()), PathSeg::Key("c".into())]), None);
-        assert_eq!(resolve(&value, &[PathSeg::Key("nested".into()), PathSeg::Key("b".into())]), Some(&serde_json::json!(2)));
+        assert!(resolve(&value, &[PathSeg::Key("nested".into()), PathSeg::Key("c".into())]).is_none());
+        assert_eq!(resolve(&value, &[PathSeg::Key("nested".into()), PathSeg::Key("b".into())]).and_then(|v| v.as_f64()), Some(2.0));
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn insert_and_remove_array_element_are_inverse_on_a_real_shaped_array() {
+    #[test]
+    fn insert_and_remove_array_element_are_inverse_on_a_real_shaped_array() {
         let input = br#"{"items":[1,2,3]}"#;
         let inserted = oracle_apply_mutation(input, &spec("insert-array-element", obj(vec![("path", Json::Array(vec![Json::String("items".into())])), ("index", Json::Number(1.0)), ("value", Json::Number(99.0))]))).unwrap();
-        assert_eq!(read_json(&inserted).unwrap(), serde_json::json!({"items": [1, 99, 2, 3]}));
+        assert_eq!(project_json_value(&inserted).unwrap(), project_json_value(br#"{"items":[1,99,2,3]}"#).unwrap());
 
         let removed = oracle_apply_mutation(&inserted, &spec("remove-array-element", obj(vec![("path", Json::Array(vec![Json::String("items".into())])), ("index", Json::Number(1.0))]))).unwrap();
-        assert_eq!(read_json(&removed).unwrap(), read_json(input).unwrap());
+        assert_eq!(project_json_value(&removed).unwrap(), project_json_value(input).unwrap());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn set_scalar_replaces_regardless_of_kind_incl_whole_document() {
+    #[test]
+    fn set_scalar_replaces_regardless_of_kind_incl_whole_document() {
         let input = br#"{"a":{"b":1}}"#;
         let output = oracle_apply_mutation(input, &spec("set-scalar", obj(vec![("path", Json::Array(vec![Json::String("a".into())])), ("value", Json::String("replaced".into()))]))).unwrap();
-        assert_eq!(read_json(&output).unwrap(), serde_json::json!({"a": "replaced"}));
+        assert_eq!(project_json_value(&output).unwrap(), project_json_value(br#"{"a":"replaced"}"#).unwrap());
 
         let whole = oracle_apply_mutation(input, &spec("set-scalar", obj(vec![("path", Json::Array(vec![])), ("value", Json::Bool(true))]))).unwrap();
-        assert_eq!(read_json(&whole).unwrap(), serde_json::json!(true));
+        assert_eq!(project_json_value(&whole).unwrap(), project_json_value(b"true").unwrap());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn set_snapshot_replaces_the_whole_document() {
+    #[test]
+    fn set_snapshot_replaces_the_whole_document() {
         let input = br#"{"old":true}"#;
-        let output = oracle_apply_mutation(input, &spec("set-snapshot", obj(vec![("value", serde_to_host(&serde_json::json!({"fresh": [1, 2, "x"]})))]))).unwrap();
-        assert_eq!(read_json(&output).unwrap(), serde_json::json!({"fresh": [1, 2, "x"]}));
+        let output = oracle_apply_mutation(input, &spec("set-snapshot", obj(vec![("value", obj(vec![("fresh", Json::Array(vec![Json::Number(1.0), Json::Number(2.0), Json::String("x".into())]))]))]))).unwrap();
+        assert_eq!(project_json_value(&output).unwrap(), project_json_value(br#"{"fresh":[1,2,"x"]}"#).unwrap());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn projection_is_insensitive_to_member_order_but_not_array_order() {
+    /// 🔤️ Where order-insensitivity actually comes from. The projection is a faithful record of what
+    /// was parsed, so it PRESERVES member order — json-rust's `Object` is insertion-ordered, contrary
+    /// to an earlier assumption here. RFC 8259 §4 declares member order insignificant, and what
+    /// discharges that is the case's `ordered-json-v1` comparison profile, which ignores key order at
+    /// compare time. Array order is significant per §5 and is preserved by both.
+    ///
+    /// The original form of this test asserted the projection itself normalized member order. It did
+    /// not, and the test had never run — the crate's whole test target failed to build, so the claim
+    /// went unchecked. Recorded here so the distinction is not quietly re-lost.
+    #[test]
+    fn projection_preserves_member_order_and_array_order() {
         let a = project_json_value(br#"{"a":1,"b":2}"#).unwrap();
         let b = project_json_value(br#"{"b":2,"a":1}"#).unwrap();
-        assert_eq!(a, b, "member order must not affect the projection — RFC 8259 §4 declares it insignificant");
+        assert_ne!(a, b, "the projection records what was parsed; the comparison profile is what makes member order insignificant");
 
         let arr_a = project_json_value(br#"[1,2]"#).unwrap();
         let arr_b = project_json_value(br#"[2,1]"#).unwrap();
         assert_ne!(arr_a, arr_b, "array order IS significant per RFC 8259 §5");
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn unknown_kind_is_an_error_never_a_silent_no_op() {
+    #[test]
+    fn unknown_kind_is_an_error_never_a_silent_no_op() {
         let input = b"{}";
         let result = oracle_apply_mutation(input, &spec("not-a-real-kind", Json::Object(vec![])));
         assert!(result.is_err(), "an unrecognised kind must fail loudly");
-    }
-
-    /// 🧪️ Test-local helper: a `serde_json::Value` literal into the host's `Json`, for building
-    /// `set-snapshot` params from a `serde_json::json!` literal instead of hand-nesting `Json` variants.
-    fn serde_to_host(value: &serde_json::Value) -> Json {
-        match value {
-            serde_json::Value::Null => Json::Null,
-            serde_json::Value::Bool(flag) => Json::Bool(*flag),
-            serde_json::Value::Number(number) => Json::Number(number.as_f64().unwrap_or(f64::NAN)),
-            serde_json::Value::String(text) => Json::String(text.clone()),
-            serde_json::Value::Array(items) => Json::Array(items.iter().map(serde_to_host).collect()),
-            serde_json::Value::Object(map) => Json::Object(map.iter().map(|(key, value)| (key.clone(), serde_to_host(value))).collect()),
-        }
     }
 }
 //#endregion 🧪️Tests

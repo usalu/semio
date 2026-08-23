@@ -9,6 +9,21 @@ use crate::algebra::{MatD, VecD};
 use semio_framework_job::{CommitCandidate, InteractiveJob, JobFault, Operation, StepBudget, StepContext, StepOutcome};
 use std::collections::{BTreeMap, VecDeque};
 
+fn close_vec_owner_step<T>(owner: &mut Vec<T>, maximum_bytes: usize) -> Result<Option<(usize, usize)>, ()> {
+    if owner.pop().is_some() {
+        return Ok(Some((1, 0)));
+    }
+    let bytes = owner.capacity().checked_mul(std::mem::size_of::<T>()).ok_or(())?;
+    if bytes == 0 {
+        return Ok(None);
+    }
+    if bytes > maximum_bytes {
+        return Err(());
+    }
+    *owner = Vec::new();
+    Ok(Some((1, bytes)))
+}
+
 // #region 🔖️Coo
 /// 🧱️ Triplet (row, col, value) accumulator for FEM-style assembly — duplicate `(row, col)`
 /// entries are summed lazily by whichever `to_*` conversion reads them.
@@ -132,14 +147,20 @@ impl Csr {
         Self { n, indptr, indices, vals }
     }
 
-    pub(crate) fn close_step(&mut self) -> (bool, usize) {
-        if self.vals.pop().is_some() {
-            return (false, std::mem::size_of::<f64>());
+    pub(crate) fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        match close_vec_owner_step(&mut self.vals, maximum_bytes) {
+            Ok(Some((items, bytes))) => return (false, items, bytes),
+            Err(()) => return (false, 0, 0),
+            Ok(None) => {}
         }
-        if self.indices.pop().is_some() || self.indptr.pop().is_some() {
-            return (false, std::mem::size_of::<u32>());
+        for owner in [&mut self.indices, &mut self.indptr] {
+            match close_vec_owner_step(owner, maximum_bytes) {
+                Ok(Some((items, bytes))) => return (false, items, bytes),
+                Err(()) => return (false, 0, 0),
+                Ok(None) => {}
+            }
         }
-        (true, 0)
+        (true, 0, 0)
     }
 
     pub fn mul_vec(&self, x: &VecD) -> VecD {
@@ -591,84 +612,25 @@ impl PcgJob {
 
     /// 🧹️ Retires one matrix/vector scalar owner per governed close opportunity.
     pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
-        if maximum_bytes < std::mem::size_of::<f64>().max(std::mem::size_of::<u32>()) {
-            return (false, 0, 0);
-        }
         loop {
-            let released_bytes = match self.close_lane {
-                0 => match self.state.a.vals.pop() {
-                    Some(_) => std::mem::size_of::<f64>(),
-                    None => {
-                        self.close_lane += 1;
-                        continue;
-                    }
-                },
-                1 => match self.state.a.indices.pop() {
-                    Some(_) => std::mem::size_of::<u32>(),
-                    None => {
-                        self.close_lane += 1;
-                        continue;
-                    }
-                },
-                2 => match self.state.a.indptr.pop() {
-                    Some(_) => std::mem::size_of::<u32>(),
-                    None => {
-                        self.close_lane += 1;
-                        continue;
-                    }
-                },
-                3 => match self.state.b.0.pop() {
-                    Some(_) => std::mem::size_of::<f64>(),
-                    None => {
-                        self.close_lane += 1;
-                        continue;
-                    }
-                },
-                4 => match self.state.x.0.pop() {
-                    Some(_) => std::mem::size_of::<f64>(),
-                    None => {
-                        self.close_lane += 1;
-                        continue;
-                    }
-                },
-                5 => match self.state.diag.0.pop() {
-                    Some(_) => std::mem::size_of::<f64>(),
-                    None => {
-                        self.close_lane += 1;
-                        continue;
-                    }
-                },
-                6 => match self.state.r.0.pop() {
-                    Some(_) => std::mem::size_of::<f64>(),
-                    None => {
-                        self.close_lane += 1;
-                        continue;
-                    }
-                },
-                7 => match self.state.z.0.pop() {
-                    Some(_) => std::mem::size_of::<f64>(),
-                    None => {
-                        self.close_lane += 1;
-                        continue;
-                    }
-                },
-                8 => match self.state.p.0.pop() {
-                    Some(_) => std::mem::size_of::<f64>(),
-                    None => {
-                        self.close_lane += 1;
-                        continue;
-                    }
-                },
-                9 => match self.state.ap.0.pop() {
-                    Some(_) => std::mem::size_of::<f64>(),
-                    None => {
-                        self.close_lane += 1;
-                        continue;
-                    }
-                },
+            let step = match self.close_lane {
+                0 => close_vec_owner_step(&mut self.state.a.vals, maximum_bytes),
+                1 => close_vec_owner_step(&mut self.state.a.indices, maximum_bytes),
+                2 => close_vec_owner_step(&mut self.state.a.indptr, maximum_bytes),
+                3 => close_vec_owner_step(&mut self.state.b.0, maximum_bytes),
+                4 => close_vec_owner_step(&mut self.state.x.0, maximum_bytes),
+                5 => close_vec_owner_step(&mut self.state.diag.0, maximum_bytes),
+                6 => close_vec_owner_step(&mut self.state.r.0, maximum_bytes),
+                7 => close_vec_owner_step(&mut self.state.z.0, maximum_bytes),
+                8 => close_vec_owner_step(&mut self.state.p.0, maximum_bytes),
+                9 => close_vec_owner_step(&mut self.state.ap.0, maximum_bytes),
                 _ => return (true, 0, 0),
             };
-            return (false, 1, released_bytes);
+            match step {
+                Ok(Some((items, bytes))) => return (false, items, bytes),
+                Ok(None) => self.close_lane += 1,
+                Err(()) => return (false, 0, 0),
+            }
         }
     }
 
@@ -897,6 +859,9 @@ impl PcgJobConstruction {
         macro_rules! reserve {
             ($owner:expr, $next:expr, $fault:expr) => {{
                 $owner.0.try_reserve_exact(n).map_err(|_| $fault as &'static [u8])?;
+                if $owner.0.capacity().checked_mul(std::mem::size_of::<f64>()).is_none_or(|bytes| bytes > 4_096) {
+                    return Err(b"pcg-construction-owner-page-capacity");
+                }
                 self.cursor = 0;
                 self.stage = $next;
             }};
@@ -974,23 +939,31 @@ impl PcgJobConstruction {
         (self.stage == PcgConstructionStage::Complete).then(|| self.complete.take()).flatten()
     }
 
-    pub fn close_step(&mut self) -> (bool, usize) {
-        if let Some(matrix) = self.matrix.as_mut() {
-            if matrix.vals.pop().is_some() {
-                return (false, std::mem::size_of::<f64>());
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        if let Some(complete) = self.complete.as_mut() {
+            let (terminal, items, bytes) = complete.close_step(maximum_bytes);
+            if !terminal {
+                return (false, items, bytes);
             }
-            if matrix.indices.pop().is_some() || matrix.indptr.pop().is_some() {
-                return (false, std::mem::size_of::<u32>());
+            self.complete = None;
+            return (false, 1, 0);
+        }
+        if let Some(matrix) = self.matrix.as_mut() {
+            let (terminal, items, bytes) = matrix.close_step(maximum_bytes);
+            if !terminal {
+                return (false, items, bytes);
             }
             self.matrix = None;
-            return (false, std::mem::size_of::<Csr>());
+            return (false, 1, 0);
         }
         for vector in [&mut self.b, &mut self.x, &mut self.diag, &mut self.r, &mut self.z, &mut self.p, &mut self.ap] {
-            if vector.0.pop().is_some() {
-                return (false, std::mem::size_of::<f64>());
+            match close_vec_owner_step(&mut vector.0, maximum_bytes) {
+                Ok(Some((items, bytes))) => return (false, items, bytes),
+                Err(()) => return (false, 0, 0),
+                Ok(None) => {}
             }
         }
-        (self.complete.is_none(), 0)
+        (true, 0, 0)
     }
 }
 
@@ -1962,6 +1935,29 @@ mod tests {
         let started = std::time::Instant::now();
         let _ = pcg.step(&mut context);
         assert!(started.elapsed() < std::time::Duration::from_millis(8));
+    }
+
+    #[test]
+    fn pcg_construction_initializes_one_scalar_per_opportunity_and_closes_interruptibly() {
+        let matrix = Csr::from_owned_parts(3, vec![0, 1, 2, 3], vec![0, 1, 2], vec![2.0, 3.0, 4.0]);
+        let mut construction = PcgJobConstruction::new(test_operation(107), matrix);
+        let mut opportunities = 0;
+        while !construction.step_one().expect("fixed PCG construction") {
+            opportunities += 1;
+            assert!(opportunities < 128);
+        }
+        assert!(opportunities > 18, "six retained vectors cannot be initialized in one constructor turn");
+        let job = construction.take_complete().expect("terminal construction transfers once");
+        assert_eq!(job.a.n, 3);
+        assert!(construction.take_complete().is_none());
+
+        let matrix = Csr::from_owned_parts(3, vec![0, 1, 2, 3], vec![0, 1, 2], vec![2.0, 3.0, 4.0]);
+        let mut interrupted = PcgJobConstruction::new(test_operation(108), matrix);
+        assert!(!interrupted.step_one().expect("one reservation"));
+        let before = interrupted.matrix.as_ref().expect("matrix retained").vals.len();
+        let (terminal, _, _) = interrupted.close_step(4_096);
+        assert!(!terminal);
+        assert_eq!(interrupted.matrix.as_ref().expect("matrix shell retained").vals.len() + 1, before);
     }
 }
 // #endregion 🔖️Tests

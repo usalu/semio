@@ -1318,6 +1318,9 @@
       "productionReachable": false,
       "oracleIds": [
         "cva"
+      ],
+      "capabilities": [
+        "style-variant-compilation"
       ]
     },
     {
@@ -1333,6 +1336,9 @@
       "productionReachable": false,
       "oracleIds": [
         "clsx"
+      ],
+      "capabilities": [
+        "class-name-flattening"
       ]
     },
     {
@@ -1614,6 +1620,9 @@
       "productionReachable": false,
       "oracleIds": [
         "semver"
+      ],
+      "capabilities": [
+        "version-requirement-satisfaction"
       ]
     },
     {
@@ -2133,6 +2142,42 @@
     },
     {
       "ecosystem": "rust",
+      "name": "calamine",
+      "version": "0.36",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "xlsx-ecma-376-mutate"
+      ],
+      "capabilities": [
+        "xlsx-ecma-376-mutate"
+      ]
+    },
+    {
+      "ecosystem": "rust",
+      "name": "comrak",
+      "version": "0.54",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "comrak-md-commonmark-mutate"
+      ],
+      "capabilities": [
+        "md-commonmark-mutate"
+      ]
+    },
+    {
+      "ecosystem": "rust",
       "name": "csv",
       "version": "1",
       "kinds": [
@@ -2143,7 +2188,28 @@
       ],
       "productionReachable": false,
       "oracleIds": [
-        "csv"
+        "tsv-iana-mutate"
+      ],
+      "capabilities": [
+        "tsv-iana-mutate"
+      ]
+    },
+    {
+      "ecosystem": "rust",
+      "name": "dxf",
+      "version": "0.6",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "dxf-crate-r12-mutate"
+      ],
+      "capabilities": [
+        "dxf-r12-mutate"
       ]
     },
     {
@@ -2158,7 +2224,10 @@
       ],
       "productionReachable": false,
       "oracleIds": [
-        "flate2"
+        "flate2-deflate-rfc1950-mutate"
+      ],
+      "capabilities": [
+        "deflate-rfc1950-mutate"
       ]
     },
     {
@@ -2202,7 +2271,10 @@
       ],
       "productionReachable": false,
       "oracleIds": [
-        "gif"
+        "gif-89a-any-mutate"
+      ],
+      "capabilities": [
+        "gif-89a-mutate"
       ]
     },
     {
@@ -2230,7 +2302,28 @@
       ],
       "productionReachable": false,
       "oracleIds": [
-        "hound"
+        "hound-wav-riff-pcm-mutate"
+      ],
+      "capabilities": [
+        "wav-riff-pcm-mutate"
+      ]
+    },
+    {
+      "ecosystem": "rust",
+      "name": "html5ever",
+      "version": "0.39",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "html5ever-html-5-mutate"
+      ],
+      "capabilities": [
+        "html-5-mutate"
       ]
     },
     {
@@ -2250,9 +2343,10 @@
       ],
       "productionReachable": false,
       "oracleIds": [
-        "image-bmp",
-        "image-tiff",
-        "image-jpeg"
+        "image-tiff-6-0-mutate"
+      ],
+      "capabilities": [
+        "tiff-6-0-mutate"
       ]
     },
     {
@@ -2283,6 +2377,24 @@
     },
     {
       "ecosystem": "rust",
+      "name": "json",
+      "version": "0.12",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "json-rust-rfc8259-mutate"
+      ],
+      "capabilities": [
+        "json-rfc8259-mutate"
+      ]
+    },
+    {
+      "ecosystem": "rust",
       "name": "kurbo",
       "version": "0.13.1",
       "kinds": [
@@ -2293,6 +2405,24 @@
         "🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
+    },
+    {
+      "ecosystem": "rust",
+      "name": "las",
+      "version": "0.11",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "las-1-0-any-mutate"
+      ],
+      "capabilities": [
+        "las-1-0-any-mutate"
+      ]
     },
     {
       "ecosystem": "rust",
@@ -2318,7 +2448,10 @@
       ],
       "productionReachable": false,
       "oracleIds": [
-        "lopdf"
+        "lopdf-pdf-1-7-mutate"
+      ],
+      "capabilities": [
+        "pdf-1-7-mutate"
       ]
     },
     {
@@ -2333,6 +2466,24 @@
         "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
+    },
+    {
+      "ecosystem": "rust",
+      "name": "mp4",
+      "version": "0.14",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "mp4-isobmff-mutate"
+      ],
+      "capabilities": [
+        "mp4-isobmff-mutate"
+      ]
     },
     {
       "ecosystem": "rust",
@@ -2458,6 +2609,27 @@
       "productionReachable": false,
       "oracleIds": [
         "pdf-writer"
+      ],
+      "capabilities": [
+        "pdf-create"
+      ]
+    },
+    {
+      "ecosystem": "rust",
+      "name": "ply-rs",
+      "version": "0.1.3",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "ply-rs-ply-1-0-mutate"
+      ],
+      "capabilities": [
+        "ply-1-0-mutate"
       ]
     },
     {
@@ -2475,7 +2647,10 @@
       ],
       "productionReachable": false,
       "oracleIds": [
-        "png"
+        "png-png-1-2-mutate"
+      ],
+      "capabilities": [
+        "png-1-2-mutate"
       ]
     },
     {
@@ -2494,6 +2669,24 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
+    },
+    {
+      "ecosystem": "rust",
+      "name": "quick-xml",
+      "version": "0.42",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "quick-xml-1-0-mutate"
+      ],
+      "capabilities": [
+        "xml-1-0-mutate"
+      ]
     },
     {
       "ecosystem": "rust",
@@ -2554,6 +2747,24 @@
     },
     {
       "ecosystem": "rust",
+      "name": "riff",
+      "version": "2.0",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "riff-avi-1-0-mutate"
+      ],
+      "capabilities": [
+        "avi-1-0-mutate"
+      ]
+    },
+    {
+      "ecosystem": "rust",
       "name": "rusqlite",
       "version": "0.38.0",
       "kinds": [
@@ -2564,6 +2775,24 @@
         "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
+    },
+    {
+      "ecosystem": "rust",
+      "name": "ruststep",
+      "version": "0.4",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "ruststep-step-ap214-any-mutate"
+      ],
+      "capabilities": [
+        "step-ap214-any-mutate"
+      ]
     },
     {
       "ecosystem": "rust",
@@ -2857,7 +3086,10 @@
       ],
       "productionReachable": false,
       "oracleIds": [
-        "stl-io"
+        "stl-io-ascii-mutate"
+      ],
+      "capabilities": [
+        "stl-ascii-mutate"
       ]
     },
     {
@@ -2929,7 +3161,10 @@
       ],
       "productionReachable": false,
       "oracleIds": [
-        "tobj"
+        "tobj-obj-3-0-mutate"
+      ],
+      "capabilities": [
+        "obj-3-0-mutate"
       ]
     },
     {
@@ -3279,7 +3514,10 @@
       ],
       "productionReachable": false,
       "oracleIds": [
-        "zip"
+        "zip-quick-xml-docx-ecma-376-mutate"
+      ],
+      "capabilities": [
+        "docx-ecma-376-mutate"
       ]
     }
   ]

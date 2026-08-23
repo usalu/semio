@@ -75,10 +75,9 @@ pub type RasterStore = store::ArtifactStore<RasterSnapshot, RasterMutation>;
 mod tests {
     use super::*;
     use crate::artifacts::raster::schema::{empty_raster_snapshot, layer_name, layer_visible};
-    use crate::artifacts::raster::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
+    use crate::artifacts::raster::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterOwnedMap, RasterTransform, RASTER_DOCUMENT_SCHEMA};
     use protocol::Mutation;
     use protocol::SemanticMutation;
-    use std::collections::BTreeMap;
     use store::{create_document_envelope, ArtifactCommand};
 
     async fn pixel_layer(id: &str, name: &str) -> RasterLayerNode {
@@ -149,7 +148,7 @@ mod tests {
             blend_mode: "normal".into(),
             transform: RasterTransform::default(),
             adjustment_kind: "brightnessContrast".into(),
-            params: BTreeMap::new(),
+            params: RasterOwnedMap::new(),
         });
         let seed_asset = RasterImageAsset { mime: "image/png".into(), data: SEED_ASSET_PNG.to_vec() };
         base.assets.insert("asset-1".into(), crate::artifacts::raster::mint_and_stash_asset("asset-1", &seed_asset));
@@ -208,9 +207,9 @@ mod tests {
 
     //#region 🔖️OpText
     async fn representative_raster_document() -> RasterSnapshot {
-        let mut assets = BTreeMap::new();
+        let mut assets = RasterOwnedMap::new();
         assets.insert("asset-1".into(), crate::artifacts::raster::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() }));
-        let mut params = BTreeMap::new();
+        let mut params = RasterOwnedMap::new();
         params.insert("brightness".into(), dsl::to_dsl_value(&serde_json::json!(0.06)).expect("dsl value"));
         params.insert("label".into(), dsl::to_dsl_value(&serde_json::json!("Warm \"Curve\"")).expect("dsl value"));
         params.insert("enabled".into(), dsl::to_dsl_value(&serde_json::json!(true)).expect("dsl value"));

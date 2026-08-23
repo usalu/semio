@@ -41,6 +41,17 @@ pub enum SemioObjectMutation {
 }
 //#endregion 🔖️Mutations
 
+//#region 🔖️Apply
+/// ▶️ Applies a mutation to `snapshot` in place, returning the diff — kept from the pre-wave facet
+/// (consumed by `../🦀️component.rs`'s `SemioObjectBuilderConstruction::mutate`).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_semio_object_mutation(snapshot: &mut SemioObjectSnapshot, mutation: &SemioObjectMutation) -> protocol::MutationOutcome<SemioObjectDiff> {
+    use protocol::Mutation;
+    let outcome = <SemioObjectMutation as Mutation<SemioObjectSnapshot>>::diff(mutation, snapshot);
+    outcome.apply_to(snapshot)
+}
+//#endregion 🔖️Apply
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {

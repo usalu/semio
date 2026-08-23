@@ -34,6 +34,12 @@ pub enum Ifc2x3Mutation {
         header: Part21Header,
     },
 }
+
+/// 📇️ Kebab-case spelling of every `Ifc2x3Mutation` variant, in declaration order -- the
+/// exhaustive mutation catalog `../../🧪️oracle/🔣️component.json`'s `kinds` array is required to
+/// match verbatim (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps
+/// that honest; the framework never parses Rust to check it itself).
+pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "upsert-instance", "remove-instance", "set-header"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -509,6 +515,29 @@ mod tests {
         assert!(Ifc2x3Mutation::decode_op(&op).await.is_err(), "trailing op bytes accepted");
     }
     //#endregion 🔖️LosslessLogicalModel
+
+    //#region 🔖️KindsGate
+    /// 🧪️ Wave gate: `KINDS` must match the enum's own variants, in declaration order, and its
+    /// spellings must match `print_op`'s own keyword for each -- the mutation catalog
+    /// (`../../🧪️oracle/🔣️component.json`) and the feature file are checked against never drift
+    /// apart from the enum itself.
+    #[semio_framework_async_macros::async_test]
+    async fn kinds_const_matches_enum_variants_in_declaration_order() {
+        let one_per_variant = vec![
+            Ifc2x3Mutation::NoMutation,
+            Ifc2x3Mutation::SetSnapshot { snapshot: Ifc2x3Snapshot::default() },
+            Ifc2x3Mutation::UpsertInstance { instance: inst(1, "IFCWALL").await },
+            Ifc2x3Mutation::RemoveInstance { id: 1 },
+            Ifc2x3Mutation::SetHeader { header: Part21Header::default() },
+        ];
+        assert_eq!(one_per_variant.len(), KINDS.len(), "one_per_variant must cover every KINDS entry exactly once");
+        for (mutation, kind) in one_per_variant.iter().zip(KINDS.iter()) {
+            let printed = mutation.print_op();
+            let keyword = printed.split(' ').next().unwrap_or(&printed);
+            assert_eq!(keyword, *kind, "KINDS order must match the enum's own OpText keyword order for {mutation:?}");
+        }
+    }
+    //#endregion 🔖️KindsGate
 }
 //#endregion 🧪️Tests
 

@@ -1,0 +1,13 @@
+[workspace]
+
+[package]
+name = "dxf-r12-derive"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+oracles = []
+
+[dependencies]
+dxf = "0.6"
+semio-repo-test-host = { path = "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust" }

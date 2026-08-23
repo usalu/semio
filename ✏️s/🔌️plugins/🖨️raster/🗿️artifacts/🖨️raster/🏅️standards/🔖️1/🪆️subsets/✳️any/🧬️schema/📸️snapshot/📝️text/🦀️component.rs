@@ -25,15 +25,15 @@ pub async fn print_dsl(document: &RasterSnapshot) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::raster::RasterOwnedMap;
     use crate::artifacts::raster::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
-    use std::collections::BTreeMap;
 
     /// 📄️ Handcrafted document exercising every layer kind/field, shared with the `pack`/`op`
     /// taxonomy nodes' own copies (each node keeps its own private copy, per §7 test isolation).
     async fn representative_raster_document() -> RasterSnapshot {
-        let mut assets = BTreeMap::new();
+        let mut assets = RasterOwnedMap::new();
         assets.insert("asset-1".into(), crate::artifacts::raster::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() }));
-        let mut params = BTreeMap::new();
+        let mut params = RasterOwnedMap::new();
         params.insert("brightness".into(), dsl::to_dsl_value(&serde_json::json!(0.06)).expect("dsl value"));
         params.insert("label".into(), dsl::to_dsl_value(&serde_json::json!("Warm \"Curve\"")).expect("dsl value"));
         params.insert("enabled".into(), dsl::to_dsl_value(&serde_json::json!(true)).expect("dsl value"));

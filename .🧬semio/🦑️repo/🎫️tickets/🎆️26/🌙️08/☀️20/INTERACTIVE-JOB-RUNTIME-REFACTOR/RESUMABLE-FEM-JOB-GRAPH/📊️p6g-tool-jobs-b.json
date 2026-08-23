@@ -75,19 +75,19 @@
     },
     {
       "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs",
-      "line": 13593,
+      "line": 13598,
       "factory": "$factory<A>",
       "status": "explicit"
     },
     {
       "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs",
-      "line": 13694,
+      "line": 13699,
       "factory": "FrameworkConfigurationBinaryJobFactory<A>",
       "status": "explicit"
     },
     {
       "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs",
-      "line": 14699,
+      "line": 14704,
       "factory": "BoundedFirstStepCommandJobFactory<A>",
       "status": "explicit"
     }
@@ -371,7 +371,7 @@
     },
     {
       "file": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️component.rs",
-      "line": 563,
+      "line": 2001,
       "text": "thread_local! {"
     },
     {
@@ -516,12 +516,12 @@
     },
     {
       "file": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️component.rs",
-      "line": 232,
+      "line": 588,
       "text": "thread_local! {"
     },
     {
       "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/🦀️component.rs",
-      "line": 179,
+      "line": 292,
       "text": "OnceLock<Mutex<"
     }
   ],
@@ -5832,7 +5832,7 @@
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     }
   ],
-  "selfTests": 318,
+  "selfTests": 328,
   "failures": [
     "framework-owned reserved routes lack exact route-specific resumable factories, direct-branch closure, binary fail-closure, or commit-held cancellation",
     "shared import submission serializes or clones the whole media envelope before resumable job construction",

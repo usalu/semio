@@ -52,6 +52,17 @@ pub enum SemioTableMutation {
 }
 //#endregion 🔖️Mutations
 
+//#region 🔖️Apply
+/// ▶️ Applies a mutation to `snapshot` in place, returning the diff — kept from the pre-wave facet
+/// (consumed by `../🦀️component.rs`'s `SemioTableBuilderConstruction::mutate`).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_semio_table_mutation(snapshot: &mut SemioTableSnapshot, mutation: &SemioTableMutation) -> protocol::MutationOutcome<SemioTableDiff> {
+    use protocol::Mutation;
+    let outcome = <SemioTableMutation as Mutation<SemioTableSnapshot>>::diff(mutation, snapshot);
+    outcome.apply_to(snapshot)
+}
+//#endregion 🔖️Apply
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {

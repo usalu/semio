@@ -53,9 +53,11 @@ pub use derived_composition::*;
 // `schema::snapshot`) and supports 1/4/8-bit indexed (BGR[A] palette), 16/32-bit
 // `BI_BITFIELDS`, 24-bit `BI_RGB`, and 32-bit `BI_RGB` (default full-byte channel masks) —
 // pixel data is always canonicalized into an 8-bit RGBA `pixels` buffer (`width * height * 4`
-// bytes, row 0 = image top, regardless of the file's on-disk row order). Encode always emits a
-// 24-bit `BI_RGB`, 40-byte-header, uncompressed bitmap (row order honors `row_order`; all other
-// metadata fields — resolution, colors used/important, image size — round-trip from the
+// bytes, row 0 = image top, regardless of the file's on-disk row order). Encode mirrors that
+// split: a 1/4/8-bit indexed BITMAPINFOHEADER (real palette, real per-pixel indices) when the
+// snapshot declares one (`bits_per_pixel` in {1,4,8} and `palette` non-empty), a 24-bit `BI_RGB`
+// bitmap otherwise — both are 40-byte-header, uncompressed, row order honors `row_order`, and
+// the remaining metadata fields (resolution, colors used/important) round-trip from the
 // snapshot) — see 🚫️EncodeScopeNote below. `BmpEngine` (zero construction sites) deleted
 // outright. `register`/`register_artifact_schema`/`register_artifact_inferences`/
 // `register_pilot_languages`/`register_schema_specs` kept together here (not dead: `register()`
@@ -64,6 +66,7 @@ pub use derived_composition::*;
 // `demo_bmp_snapshot` moved to `../🧬️schema`.
 use crate::artifacts::bmp::schema::snapshot::{BmpPaletteEntry, BmpRowOrder};
 use crate::artifacts::bmp::{BmpMutation, BmpSnapshot, STDIO_BMP_DOCUMENT_SCHEMA};
+use std::collections::HashMap;
 
 //#region ByteIo
 const BMP_MAGIC: [u8; 2] = *b"BM";
@@ -136,6 +139,31 @@ fn unpack_index(row: &[u8], x: usize, bpp: u16) -> usize {
             let byte = row[x / 8];
             let bit = 7 - (x % 8);
             ((byte >> bit) & 1) as usize
+        }
+        _ => unreachable!("caller only passes 1|4|8"),
+    }
+}
+
+/// ✍️ The write-side mirror of `unpack_index` — packs a `0..2^bpp` palette index into its
+/// sub-byte position within an already zero-initialized row buffer.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn pack_index(row: &mut [u8], x: usize, bpp: u16, index: u8) {
+    match bpp {
+        8 => row[x] = index,
+        4 => {
+            let byte = &mut row[x / 2];
+            if x % 2 == 0 {
+                *byte = (*byte & 0x0F) | (index << 4);
+            } else {
+                *byte = (*byte & 0xF0) | (index & 0x0F);
+            }
+        }
+        1 => {
+            if index & 1 != 0 {
+                let byte = &mut row[x / 8];
+                let bit = 7 - (x % 8);
+                *byte |= 1 << bit;
+            }
         }
         _ => unreachable!("caller only passes 1|4|8"),
     }
@@ -328,18 +356,26 @@ pub fn decode_bmp(bytes: &[u8]) -> Result<BmpSnapshot, String> {
     })
 }
 
-/// 🚫 EncodeScopeNote: always emits 24-bit `BI_RGB`, a standard 40-byte BITMAPINFOHEADER,
-/// uncompressed (`header_size`/`planes`/`bits_per_pixel`/`compression` are therefore FIXED on
-/// output, not read from the snapshot — decode supports the wider palette/bitfields/extended-
-/// header input diversity documented above, encode does not attempt to reproduce it). `row_order`
-/// IS honored (drives the sign of the on-disk `height` field and the row-write direction); the
-/// remaining metadata fields (`x_pixels_per_meter`, `y_pixels_per_meter`, `colors_used`,
-/// `colors_important`) round-trip verbatim from the snapshot. `pixels` is treated as canonical
-/// 8-bit RGBA (row 0 = image top); encode drops the alpha channel (`BI_RGB` has none) and does
-/// not emit a palette section (24-bit has none, even if `snap.palette` is non-empty — that
-/// metadata simply doesn't apply to this encode target). A real implementation could reasonably
-/// restrict *encode* to 24/32-bit only while *decode* covers every depth, which is exactly the
-/// scope cut made here.
+/// 🚫 EncodeScopeNote: mirrors `decode_bmp`'s own indexed/direct split rather than the old
+/// always-24-bit behaviour. When the snapshot DECLARES a palette (`bits_per_pixel` is 1, 4 or 8
+/// AND `palette` is non-empty) encode emits a real 1/4/8-bit indexed BITMAPINFOHEADER: the exact
+/// `snap.palette` entries, in order, as the on-disk BGR-reserved color table, and per-pixel
+/// indices recovered by matching each canonical RGBA pixel's RGB triple against that table
+/// (`encode_bmp_indexed`, below). Every other snapshot — `bits_per_pixel` outside 1/4/8, or an
+/// empty palette — falls back to the original 24-bit `BI_RGB` direct-color path
+/// (`encode_bmp_direct`); 16/32-bit `BI_BITFIELDS` and >8-bit palettes remain decode-only, same
+/// scope cut as before. Both paths are 40-byte-header, uncompressed, honor `row_order` (drives
+/// the sign of the on-disk `height` field and the row-write direction), and round-trip
+/// `x_pixels_per_meter`/`y_pixels_per_meter`/`colors_used`/`colors_important` verbatim from the
+/// snapshot. `pixels` is always canonical 8-bit RGBA (row 0 = image top); both paths drop the
+/// alpha channel (neither `BI_RGB` variant carries one).
+///
+/// The indexed path can genuinely fail: `pixels` and `palette` are independent fields (a
+/// `SetPaletteEntry`/`RemovePaletteEntry` mutation only ever touches `palette`, never remaps
+/// `pixels`), so a snapshot can legitimately describe a canonical color no longer present in its
+/// own declared palette. That is reported as an `Err` — never silently narrowed to the nearest
+/// palette entry, and never silently downgraded to 24-bit behind the caller's back — because
+/// either of those would hide the very loss of fidelity the mutation just introduced.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_bmp(snap: &BmpSnapshot) -> Result<Vec<u8>, String> {
     let (w, h) = (snap.width, snap.height);
@@ -347,6 +383,85 @@ pub fn encode_bmp(snap: &BmpSnapshot) -> Result<Vec<u8>, String> {
     if snap.pixels.len() != expected {
         return Err("bmp: pixels length mismatch (expected width*height*4 RGBA)".into());
     }
+    if matches!(snap.bits_per_pixel, 1 | 4 | 8) && !snap.palette.is_empty() {
+        encode_bmp_indexed(snap, w, h)
+    } else {
+        encode_bmp_direct(snap, w, h)
+    }
+}
+
+/// 🎨 Indexed encode path — see `encode_bmp`'s own `EncodeScopeNote` for the full contract.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_bmp_indexed(snap: &BmpSnapshot, w: u32, h: u32) -> Result<Vec<u8>, String> {
+    let bpp = snap.bits_per_pixel;
+    let capacity = 1usize << bpp;
+    if snap.palette.len() > capacity {
+        return Err(format!("bmp: palette has {} entries, which exceeds the {}-bit capacity of {} — cannot encode without narrowing", snap.palette.len(), bpp, capacity));
+    }
+    // 🔎 First-match-wins RGB -> index lookup (mirrors `decode_bmp`'s own first-write-wins
+    // palette semantics: the earliest entry at a given color is the one every matching pixel
+    // resolves to).
+    let mut index_of: HashMap<(u8, u8, u8), usize> = HashMap::with_capacity(snap.palette.len());
+    for (index, entry) in snap.palette.iter().enumerate() {
+        index_of.entry((entry.r, entry.g, entry.b)).or_insert(index);
+    }
+
+    let rb = row_bytes(w, bpp);
+    let pixel_bytes = rb * h as usize;
+    let palette_bytes = snap.palette.len() * 4;
+    let data_offset = 14 + 40 + palette_bytes;
+    let file_size = data_offset + pixel_bytes;
+    let mut out = Vec::with_capacity(file_size);
+    out.extend_from_slice(&BMP_MAGIC);
+    out.extend_from_slice(&(file_size as u32).to_le_bytes());
+    out.extend_from_slice(&0u16.to_le_bytes());
+    out.extend_from_slice(&0u16.to_le_bytes());
+    out.extend_from_slice(&(data_offset as u32).to_le_bytes());
+    out.extend_from_slice(&40u32.to_le_bytes());
+    out.extend_from_slice(&(w as i32).to_le_bytes());
+    let height_field: i32 = match snap.row_order {
+        BmpRowOrder::BottomUp => h as i32,
+        BmpRowOrder::TopDown => -(h as i32),
+    };
+    out.extend_from_slice(&height_field.to_le_bytes());
+    out.extend_from_slice(&1u16.to_le_bytes());
+    out.extend_from_slice(&bpp.to_le_bytes());
+    out.extend_from_slice(&0u32.to_le_bytes()); // BI_RGB
+    out.extend_from_slice(&(pixel_bytes as u32).to_le_bytes());
+    out.extend_from_slice(&snap.x_pixels_per_meter.to_le_bytes());
+    out.extend_from_slice(&snap.y_pixels_per_meter.to_le_bytes());
+    out.extend_from_slice(&snap.colors_used.to_le_bytes());
+    out.extend_from_slice(&snap.colors_important.to_le_bytes());
+    for entry in &snap.palette {
+        out.push(entry.b);
+        out.push(entry.g);
+        out.push(entry.r);
+        out.push(entry.reserved);
+    }
+    for file_row in 0..h as usize {
+        let src_y = match snap.row_order {
+            BmpRowOrder::BottomUp => h as usize - 1 - file_row,
+            BmpRowOrder::TopDown => file_row,
+        };
+        let mut row_buf = vec![0u8; rb];
+        for x in 0..w as usize {
+            let i = (src_y * w as usize + x) * 4;
+            let (r, g, b) = (snap.pixels[i], snap.pixels[i + 1], snap.pixels[i + 2]);
+            let index = *index_of
+                .get(&(r, g, b))
+                .ok_or_else(|| format!("bmp: pixel ({x},{src_y}) is rgb({r},{g},{b}), which has no matching entry in the declared {}-entry palette — cannot encode as {bpp}-bit indexed without narrowing", snap.palette.len()))?;
+            pack_index(&mut row_buf, x, bpp, index as u8);
+        }
+        out.extend_from_slice(&row_buf);
+    }
+    Ok(out)
+}
+
+/// 🎨 Direct-color (24-bit `BI_RGB`) encode path — the original, unconditional encode body, now
+/// only reached when the snapshot declares no usable palette. See `encode_bmp`'s own
+/// `EncodeScopeNote` for the full contract.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn encode_bmp_direct(snap: &BmpSnapshot, w: u32, h: u32) -> Result<Vec<u8>, String> {
     let rb = row_bytes(w, 24);
     let pixel_bytes = rb * h as usize;
     let file_size = 14 + 40 + pixel_bytes;
@@ -734,8 +849,11 @@ mod tests {
     /// 🔬 `codec_retention_law`: decode(encode(snap)) is byte-preserving for every field encode
     /// actually controls — `row_order` (both directions), metadata (`x/y_pixels_per_meter`,
     /// `colors_used`, `colors_important`, `image_size`), and pixels — while the DOCUMENTED
-    /// EncodeScopeNote normalization (`header_size`→40, `planes`→1, `bits_per_pixel`→24,
-    /// `compression`→0) is asserted explicitly rather than silently ignored.
+    /// EncodeScopeNote normalization for the DIRECT (no-palette) path (`header_size`→40,
+    /// `planes`→1, `bits_per_pixel`→24, `compression`→0) is asserted explicitly rather than
+    /// silently ignored. `BmpSnapshot::default()` declares no palette, so this exercises
+    /// `encode_bmp_direct`; `indexed_palette_round_trip`/`palette_mutations_are_observable_in_encoded_bytes`
+    /// below cover the indexed path's own contract.
     #[semio_framework_async_macros::async_test]
     async fn codec_retention_law() {
         let (w, h) = (6u32, 4u32);
@@ -768,6 +886,132 @@ mod tests {
         assert_eq!(decoded_td.pixels, pixels, "canonical pixels (row 0 = top) must match regardless of row_order");
     }
     //#endregion 🔖️CodecRetentionLaw
+
+    //#region 🔖️IndexedRoundTrip
+    /// 🎨 A small hand-built 8-bit indexed snapshot (a real `BmpSnapshot`, not hand-encoded
+    /// bytes): 4 colors actually painted onto a 4x3 canvas (index 0..3, each used 3 times) plus
+    /// a genuinely UNUSED 5th palette entry (index 4) — the unused entry is what lets
+    /// `palette_mutations_are_observable_in_encoded_bytes` (below) edit the palette table itself
+    /// without ever making any real pixel unrepresentable.
+    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+    fn small_indexed_snapshot() -> BmpSnapshot {
+        let palette = vec![
+            BmpPaletteEntry { b: 0, g: 0, r: 255, reserved: 0 },   // 0: red, used
+            BmpPaletteEntry { b: 0, g: 255, r: 0, reserved: 0 },   // 1: green, used
+            BmpPaletteEntry { b: 255, g: 0, r: 0, reserved: 0 },   // 2: blue, used
+            BmpPaletteEntry { b: 10, g: 20, r: 30, reserved: 0 },  // 3: arbitrary, used
+            BmpPaletteEntry { b: 200, g: 200, r: 200, reserved: 0 }, // 4: unused by any pixel
+        ];
+        const USED_COLORS: usize = 4;
+        let mut pixels = Vec::with_capacity(4 * 3 * 4);
+        for i in 0..(4 * 3) {
+            let e = &palette[i % USED_COLORS];
+            pixels.extend_from_slice(&[e.r, e.g, e.b, 255]);
+        }
+        BmpSnapshot { width: 4, height: 3, row_order: BmpRowOrder::BottomUp, bits_per_pixel: 8, colors_used: palette.len() as u32, colors_important: 0, palette, pixels, ..BmpSnapshot::default() }
+    }
+
+    /// 🔬 `indexed_palette_round_trip`: the core bug fix — `encode_bmp` on a snapshot that
+    /// declares an 8-bit palette must emit a REAL indexed BITMAPINFOHEADER (not a 24-bit
+    /// fallback), and `decode_bmp` on that output must recover the exact same `bits_per_pixel`,
+    /// palette, and canonical pixels.
+    #[semio_framework_async_macros::async_test]
+    async fn indexed_palette_round_trip() {
+        let snap = small_indexed_snapshot();
+        let encoded = encode_bmp(&snap).expect("encode indexed");
+        assert_eq!(u16::from_le_bytes([encoded[28], encoded[29]]), 8, "on-disk biBitCount must be 8, not the old hardcoded 24");
+        let data_offset = u32::from_le_bytes([encoded[10], encoded[11], encoded[12], encoded[13]]) as usize;
+        assert_eq!(data_offset, 14 + 40 + snap.palette.len() * 4, "pixel data must start after a real palette table, not immediately after a bare 40-byte header");
+        let decoded = decode_bmp(&encoded).expect("decode indexed");
+        assert_eq!(decoded.bits_per_pixel, 8);
+        assert_eq!(decoded.palette, snap.palette, "palette must round-trip exactly, not be discarded");
+        assert_eq!(decoded.pixels, snap.pixels, "canonical pixels must round-trip exactly through the indexed path");
+    }
+
+    /// 🔬 `encode_bmp` falls back to 24-bit `BI_RGB` for a `bits_per_pixel` outside {1,4,8} even
+    /// when a palette is (nonsensically) present, and for an empty palette regardless of
+    /// `bits_per_pixel` — `BmpSnapshot::default()`/`demo_bmp_snapshot()` are exactly this case,
+    /// which is what keeps `fixture_honesty_law` (below) byte-stable across this fix.
+    #[semio_framework_async_macros::async_test]
+    async fn no_palette_still_falls_back_to_direct_24bit() {
+        let snap = BmpSnapshot { width: 2, height: 2, pixels: vec![1, 2, 3, 255, 4, 5, 6, 255, 7, 8, 9, 255, 10, 11, 12, 255], ..BmpSnapshot::default() };
+        assert!(snap.palette.is_empty());
+        let encoded = encode_bmp(&snap).expect("encode direct");
+        assert_eq!(u16::from_le_bytes([encoded[28], encoded[29]]), 24);
+        let data_offset = u32::from_le_bytes([encoded[10], encoded[11], encoded[12], encoded[13]]) as usize;
+        assert_eq!(data_offset, 54, "no palette table when the snapshot declares none");
+    }
+    //#endregion 🔖️IndexedRoundTrip
+
+    //#region 🔖️PaletteMutationObservability
+    /// 🔬 `palette_mutations_are_observable_in_encoded_bytes`: before this fix, `InsertPaletteEntry`/
+    /// `RemovePaletteEntry`/`SetPaletteEntry` changed the snapshot and then vanished on encode
+    /// (always 24-bit, palette dropped outright) — the exact bug this ticket exists to fix. Each
+    /// mutation here targets `small_indexed_snapshot`'s own deliberately-unused index-4 entry,
+    /// so every real pixel stays representable (isolating "does the palette table itself change
+    /// on the wire" from the separate, genuinely-lossy case
+    /// `unrepresentable_palette_edit_is_reported_not_narrowed` covers below) while still proving
+    /// each mutation reaches the encoded bytes and survives a real decode.
+    #[semio_framework_async_macros::async_test]
+    async fn palette_mutations_are_observable_in_encoded_bytes() {
+        let base = small_indexed_snapshot();
+        let base_encoded = encode_bmp(&base).expect("encode base");
+
+        // ➕ InsertPaletteEntry: the color table grows by one real entry — observable as both a
+        // bigger `data_offset` and a genuinely different byte sequence.
+        let mut inserted = base.clone();
+        inserted.palette.insert(0, BmpPaletteEntry { b: 99, g: 88, r: 77, reserved: 0 });
+        let inserted_encoded = encode_bmp(&inserted).expect("encode after insert");
+        assert_ne!(inserted_encoded, base_encoded, "insert-palette-entry must change the re-encoded bytes");
+        let inserted_offset = u32::from_le_bytes([inserted_encoded[10], inserted_encoded[11], inserted_encoded[12], inserted_encoded[13]]) as usize;
+        assert_eq!(inserted_offset, 14 + 40 + inserted.palette.len() * 4);
+        let decoded_inserted = decode_bmp(&inserted_encoded).expect("decode after insert");
+        assert_eq!(decoded_inserted.palette, inserted.palette, "the inserted entry must survive to the decoded palette");
+        assert_eq!(decoded_inserted.pixels, base.pixels, "insert alone must not change any decoded pixel color (every original color is still reachable)");
+
+        // ➖ RemovePaletteEntry: drop the unused index-4 entry — the table genuinely shrinks
+        // (smaller `data_offset`, different bytes) while every real pixel stays representable.
+        let mut removed = base.clone();
+        let popped = removed.palette.pop().expect("fixture has a palette");
+        assert_eq!(popped, BmpPaletteEntry { b: 200, g: 200, r: 200, reserved: 0 }, "must be removing the fixture's own deliberately-unused entry");
+        let removed_encoded = encode_bmp(&removed).expect("encode after remove");
+        assert_ne!(removed_encoded, base_encoded, "remove-palette-entry must change the re-encoded bytes");
+        let removed_offset = u32::from_le_bytes([removed_encoded[10], removed_encoded[11], removed_encoded[12], removed_encoded[13]]) as usize;
+        assert_eq!(removed_offset, 14 + 40 + removed.palette.len() * 4);
+        let decoded_removed = decode_bmp(&removed_encoded).expect("decode after remove");
+        assert_eq!(decoded_removed.palette, removed.palette);
+        assert_eq!(decoded_removed.pixels, base.pixels, "removing an unused entry must not change any decoded pixel color");
+
+        // ✏️ SetPaletteEntry: recolor the same unused index-4 entry — the table entry's bytes
+        // change in place (same length, different content) while every real pixel is untouched.
+        let mut recolored = base.clone();
+        recolored.palette[4] = BmpPaletteEntry { b: 1, g: 2, r: 3, reserved: 9 };
+        let recolored_encoded = encode_bmp(&recolored).expect("encode after recolor");
+        assert_ne!(recolored_encoded, base_encoded, "set-palette-entry must change the re-encoded bytes");
+        assert_eq!(recolored_encoded.len(), base_encoded.len(), "recoloring in place must not change the file's overall length");
+        let decoded_recolored = decode_bmp(&recolored_encoded).expect("decode after recolor");
+        assert_eq!(decoded_recolored.palette, recolored.palette);
+        assert_eq!(decoded_recolored.pixels, base.pixels, "recoloring an unused entry must not change any decoded pixel color");
+    }
+
+    /// 🚫 `unrepresentable_palette_edit_is_reported_not_narrowed`: `SetPaletteEntry`/
+    /// `RemovePaletteEntry` only ever touch `palette`, never remap `pixels` — so recoloring or
+    /// removing the ONLY entry that still matches some pixel's canonical color makes that pixel
+    /// genuinely unrepresentable as an index into the new table. `encode_bmp` must report that
+    /// with an `Err`, not silently pick the nearest color or fall back to 24-bit behind the
+    /// caller's back.
+    #[semio_framework_async_macros::async_test]
+    async fn unrepresentable_palette_edit_is_reported_not_narrowed() {
+        let mut snap = small_indexed_snapshot();
+        // Recolor every entry to the SAME single color: none of the four distinct pixel colors
+        // this fixture actually uses can possibly survive that.
+        for entry in &mut snap.palette {
+            *entry = BmpPaletteEntry { b: 1, g: 2, r: 3, reserved: 0 };
+        }
+        let error = encode_bmp(&snap).expect_err("must report, not silently narrow, an unrepresentable pixel color");
+        assert!(error.contains("no matching entry"), "error must name the real cause, got: {error}");
+    }
+    //#endregion 🔖️PaletteMutationObservability
 
     //#region 🔖️ConformanceLaws
     /// 🧪️ P2-FG2: per-artifact conformance laws (this ticket's own recipe §4 checklist item) —

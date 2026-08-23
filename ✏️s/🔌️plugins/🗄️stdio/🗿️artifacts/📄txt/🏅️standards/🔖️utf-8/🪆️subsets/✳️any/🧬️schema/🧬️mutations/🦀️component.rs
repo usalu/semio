@@ -46,6 +46,14 @@ pub enum TxtMutation {
 }
 //#endregion 🔖️Mutations
 
+//#region 🔖️Kinds
+/// 🗂️ Kebab-case spelling of every `TxtMutation` variant, declaration order, mirrored by this
+/// subset's `🧪️oracle/🔣️component.json` mutation catalog (`txt-utf-8-any`). The completeness gate
+/// reads that JSON catalog, never this enum, so `kinds_match_enum_variants_and_catalog` below is
+/// what keeps the two lists honest.
+pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "set-trailing-newline", "set-line-ending", "insert-line", "remove-line", "set-line"];
+//#endregion 🔖️Kinds
+
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`. Diff is the single semantics source: computed once,
 /// applied once, returned once.
@@ -269,6 +277,35 @@ mod tests {
         }
     }
     //#endregion 🔖️OpsGrammarConformanceLaw
+
+    /// 🧪️ `kinds_match_enum_variants_and_catalog`: `KINDS` lists every `TxtMutation` variant
+    /// exactly once (the `match` below has no wildcard arm, so a new variant fails to compile
+    /// here first) AND matches the mutation catalog this subset's `🧪️oracle/🔣️component.json`
+    /// declares, in the same order — the framework's completeness gate reads that JSON, never this
+    /// enum, so this test is the only thing tying the two declarations together.
+    #[semio_framework_async_macros::async_test]
+    async fn kinds_match_enum_variants_and_catalog() {
+        // 🚫️async: E1 pure inherent helper, no I/O — see R9
+        fn kebab_of(mutation: &TxtMutation) -> &'static str {
+            match mutation {
+                TxtMutation::NoMutation => "no-mutation",
+                TxtMutation::SetSnapshot { .. } => "set-snapshot",
+                TxtMutation::SetTrailingNewline { .. } => "set-trailing-newline",
+                TxtMutation::SetLineEnding { .. } => "set-line-ending",
+                TxtMutation::InsertLine { .. } => "insert-line",
+                TxtMutation::RemoveLine { .. } => "remove-line",
+                TxtMutation::SetLine { .. } => "set-line",
+            }
+        }
+        let b = base();
+        let variant_kinds: std::collections::BTreeSet<&str> = all_variants(&b).iter().map(kebab_of).collect();
+        let declared_kinds: std::collections::BTreeSet<&str> = KINDS.iter().copied().collect();
+        assert_eq!(variant_kinds, declared_kinds, "KINDS must list every TxtMutation variant exactly once");
+
+        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../🧪️oracle/🔣️component.json")).expect("valid catalog JSON");
+        let catalog_kinds: Vec<&str> = manifest["mutationCatalogs"][0]["kinds"].as_array().expect("mutationCatalogs[0].kinds array").iter().map(|value| value.as_str().expect("kind is a string")).collect();
+        assert_eq!(catalog_kinds, KINDS.to_vec(), "the manifest's mutationCatalogs[0].kinds must match KINDS exactly, declaration order included");
+    }
 }
 //#endregion 🧪️Tests
 

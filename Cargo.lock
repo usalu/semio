@@ -6214,6 +6214,7 @@ dependencies = [
  "semio-framework-async",
  "semio-framework-async-macros",
  "semio-framework-hash",
+ "semio-framework-job",
  "semio-framework-os-kernel-dsl-derive",
  "semio-framework-os-services",
  "semio-framework-pack",
@@ -7721,6 +7722,7 @@ dependencies = [
 name = "semio-s-plugin-writer"
 version = "0.1.0"
 dependencies = [
+ "js-sys",
  "semio-framework",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",

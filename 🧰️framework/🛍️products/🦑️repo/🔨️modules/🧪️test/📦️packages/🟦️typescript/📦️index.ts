@@ -519,7 +519,17 @@ export function discoverTestCases(repoRoot: string): DiscoveredCase[] {
 
 //#region 📇️Registry
 /** 📇️ One approved third-party reference implementation, test-only by construction. */
-export type OracleEntry = Readonly<{ id: string; ecosystem: string; package: string; version?: string; capabilities: readonly string[]; comparisonProfiles: readonly ComparisonProfile[]; license: string; testOnly: true; homepage?: string; rationale?: string; hostPath?: string; productionDebt?: { reachableFrom: readonly string[]; owner: string; plan: string } }>;
+export type OracleEntry = Readonly<{ id: string; ecosystem: string; package: string; packages?: readonly string[]; version?: string; capabilities: readonly string[]; comparisonProfiles: readonly ComparisonProfile[]; license: string; testOnly: true; homepage?: string; rationale?: string; hostPath?: string; productionDebt?: { reachableFrom: readonly string[]; owner: string; plan: string } }>;
+
+/**
+ * 🧩️ Every third-party package one registered oracle actually links. Most name a single package; a
+ * composed reference names several, because some formats have no single credible crate — an OOXML
+ * container needs an archive reader AND an XML reader. Declaring only one of them would leave the
+ * other unclassified, which is precisely what the dependency ratchet exists to prevent.
+ */
+export function oraclePackages(entry: OracleEntry): string[] {
+  return [...new Set([entry.package, ...(entry.packages ?? [])])].filter((name) => name.length > 0);
+}
 
 /** 📇️ A recorded decision that a capability legitimately has no credible reference implementation. */
 export type NoOracleDecision = Readonly<{ id: string; capabilities: readonly string[]; rationale: string; substitutes: readonly string[] }>;
@@ -1198,7 +1208,7 @@ export function oracleImportsInProduction(repoRoot: string): { path: string; ora
   const contributionRoots = registry.contributions.map((entry) => entry.manifestPath.slice(0, entry.manifestPath.lastIndexOf("/")));
   const hostRoots = [...contributionRoots, ...registry.oracles.map((entry) => entry.hostPath).filter((value): value is string => value !== undefined)];
   const caseDirs = new Set(discoverTestCases(repoRoot).map((entry) => entry.caseDir));
-  const names = registry.oracles.map((entry) => [entry.id, entry.package.replace(/-/g, "_"), entry.package] as const);
+  const names = registry.oracles.flatMap((entry) => oraclePackages(entry).map((name) => [entry.id, name.replace(/-/g, "_"), name] as const));
   // 🧩️A contribution directory is test-owned because of WHAT IT IS, which the taxonomy names, not
   // because its manifest happens to parse. Deriving ownership from the discovered manifests alone
   // made a directory production source the moment its JSON was absent or malformed — so an owner
@@ -1526,7 +1536,7 @@ export function ratchetDependencies(baseline: readonly ClassifiedDependency[], c
   const key = (entry: ClassifiedDependency): string => `${entry.ecosystem}:${entry.name}`;
   const baselineKeys = new Set(baseline.map(key));
   const candidateKeys = new Set(candidate.map(key));
-  const registered = new Set(registry.oracles.map((entry) => entry.package));
+  const registered = new Set(registry.oracles.flatMap((entry) => oraclePackages(entry)));
   const newProduction = candidate.filter((entry) => !baselineKeys.has(key(entry)) && entry.kinds.some(isProductionClass)).map(key);
   const unregisteredTestDeps = candidate.filter((entry) => !baselineKeys.has(key(entry)) && entry.kinds.includes("test-oracle") && !registered.has(entry.name)).map(key);
   const removed = [...baselineKeys].filter((entry) => !candidateKeys.has(entry));

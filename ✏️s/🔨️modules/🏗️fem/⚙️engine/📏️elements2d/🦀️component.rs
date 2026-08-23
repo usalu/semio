@@ -37,8 +37,35 @@ impl Element for Bar2 {
         vec![self.start.clone(), self.end.clone()]
     }
 
+    fn mounted_node_id(&self, index: usize) -> Option<&str> {
+        [self.start.as_str(), self.end.as_str()].get(index).copied()
+    }
+
+    fn mounted_node_id_count(&self) -> Option<usize> {
+        Some(2)
+    }
+
     fn dofs_per_node(&self) -> &[Dof] {
         &[Dof::Tx, Dof::Ty]
+    }
+
+    fn close_mounted_string_step(&mut self) -> Option<usize> {
+        for owner in [&mut self.id, &mut self.start, &mut self.end] {
+            if !owner.is_empty() || owner.capacity() != 0 {
+                let bytes = owner.capacity();
+                *owner = String::new();
+                return Some(bytes);
+            }
+        }
+        None
+    }
+
+    fn mounted_next_string_bytes(&self) -> Option<usize> {
+        [&self.id, &self.start, &self.end].into_iter().find(|owner| !owner.is_empty() || owner.capacity() != 0).map(|owner| owner.capacity())
+    }
+
+    fn mounted_strings_terminal_is_empty(&self) -> bool {
+        self.id.capacity() == 0 && self.start.capacity() == 0 && self.end.capacity() == 0
     }
 
     fn stiffness_global(&self, ctx: &ElementContext) -> MatD {
@@ -229,8 +256,35 @@ impl Element for BeamEb2 {
         vec![self.start.clone(), self.end.clone()]
     }
 
+    fn mounted_node_id(&self, index: usize) -> Option<&str> {
+        [self.start.as_str(), self.end.as_str()].get(index).copied()
+    }
+
+    fn mounted_node_id_count(&self) -> Option<usize> {
+        Some(2)
+    }
+
     fn dofs_per_node(&self) -> &[Dof] {
         &[Dof::Tx, Dof::Ty, Dof::Rz]
+    }
+
+    fn close_mounted_string_step(&mut self) -> Option<usize> {
+        for owner in [&mut self.id, &mut self.start, &mut self.end] {
+            if !owner.is_empty() || owner.capacity() != 0 {
+                let bytes = owner.capacity();
+                *owner = String::new();
+                return Some(bytes);
+            }
+        }
+        None
+    }
+
+    fn mounted_next_string_bytes(&self) -> Option<usize> {
+        [&self.id, &self.start, &self.end].into_iter().find(|owner| !owner.is_empty() || owner.capacity() != 0).map(|owner| owner.capacity())
+    }
+
+    fn mounted_strings_terminal_is_empty(&self) -> bool {
+        self.id.capacity() == 0 && self.start.capacity() == 0 && self.end.capacity() == 0
     }
 
     fn stiffness_global(&self, ctx: &ElementContext) -> MatD {
@@ -436,12 +490,44 @@ impl Tri3Cst {
 }
 
 impl Element for Tri3Cst {
+    fn close_mounted_string_step(&mut self) -> Option<usize> {
+        if !self.id.is_empty() || self.id.capacity() != 0 {
+            let bytes = self.id.capacity();
+            self.id = String::new();
+            return Some(bytes);
+        }
+        for owner in &mut self.nodes {
+            if !owner.is_empty() || owner.capacity() != 0 {
+                let bytes = owner.capacity();
+                *owner = String::new();
+                return Some(bytes);
+            }
+        }
+        None
+    }
+
+    fn mounted_next_string_bytes(&self) -> Option<usize> {
+        std::iter::once(&self.id).chain(self.nodes.iter()).find(|owner| !owner.is_empty() || owner.capacity() != 0).map(|owner| owner.capacity())
+    }
+
+    fn mounted_strings_terminal_is_empty(&self) -> bool {
+        self.id.capacity() == 0 && self.nodes.iter().all(|owner| owner.capacity() == 0)
+    }
+
     fn id(&self) -> &str {
         &self.id
     }
 
     fn node_ids(&self) -> Vec<String> {
         self.nodes.to_vec()
+    }
+
+    fn mounted_node_id(&self, index: usize) -> Option<&str> {
+        self.nodes.get(index).map(String::as_str)
+    }
+
+    fn mounted_node_id_count(&self) -> Option<usize> {
+        Some(3)
     }
 
     fn dofs_per_node(&self) -> &[Dof] {

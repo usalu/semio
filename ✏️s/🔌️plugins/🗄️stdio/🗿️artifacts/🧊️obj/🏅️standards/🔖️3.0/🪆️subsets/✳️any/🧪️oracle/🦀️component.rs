@@ -99,11 +99,7 @@ fn parse_face_vertex_token(token: &str, vertex_count: usize, texcoord_count: usi
     let raw_v: i64 = pieces.next().ok_or("empty face vertex token")?.parse().map_err(|error| format!("{error}"))?;
     let raw_vt = pieces.next().filter(|piece| !piece.is_empty()).map(str::parse::<i64>).transpose().map_err(|error| format!("{error}"))?;
     let raw_vn = pieces.next().filter(|piece| !piece.is_empty()).map(str::parse::<i64>).transpose().map_err(|error| format!("{error}"))?;
-    Ok(FaceVertex {
-        vertex: resolve_index(vertex_count, raw_v)?,
-        texcoord: raw_vt.map(|raw| resolve_index(texcoord_count, raw)).transpose()?,
-        normal: raw_vn.map(|raw| resolve_index(normal_count, raw)).transpose()?,
-    })
+    Ok(FaceVertex { vertex: resolve_index(vertex_count, raw_v)?, texcoord: raw_vt.map(|raw| resolve_index(texcoord_count, raw)).transpose()?, normal: raw_vn.map(|raw| resolve_index(normal_count, raw)).transpose()? })
 }
 
 /// 📥️ Independent parse of the same grammar `decode_obj` documents: sticky `o`/`g`/`usemtl`/`s`
@@ -387,7 +383,14 @@ fn usize_field(value: &Json, key: &str) -> Result<usize, String> {
 
 #[cfg(feature = "oracles")]
 fn usize_array(value: &Json, key: &str) -> Result<Vec<usize>, String> {
-    value.array(key).iter().map(|entry| match entry { Json::Number(number) => Ok(*number as usize), other => Err(format!("expected a numeric array for {key:?}, found {other:?}")) }).collect()
+    value
+        .array(key)
+        .iter()
+        .map(|entry| match entry {
+            Json::Number(number) => Ok(*number as usize),
+            other => Err(format!("expected a numeric array for {key:?}, found {other:?}")),
+        })
+        .collect()
 }
 //#endregion 🔖️JsonHelpers
 

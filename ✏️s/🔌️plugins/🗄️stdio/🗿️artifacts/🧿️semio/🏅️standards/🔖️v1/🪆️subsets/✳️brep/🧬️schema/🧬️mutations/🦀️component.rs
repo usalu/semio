@@ -80,6 +80,17 @@ pub enum SemioBrepMutation {
 }
 //#endregion 🔖️Mutations
 
+//#region 🔖️Apply
+/// ▶️ Applies a mutation to `snapshot` in place, returning the diff — kept from the pre-wave facet
+/// (consumed by `../🦀️component.rs`'s `SemioBrepBuilderConstruction::mutate`).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn apply_semio_brep_mutation(snapshot: &mut SemioBrepSnapshot, mutation: &SemioBrepMutation) -> protocol::MutationOutcome<SemioBrepDiff> {
+    use protocol::Mutation;
+    let outcome = <SemioBrepMutation as Mutation<SemioBrepSnapshot>>::diff(mutation, snapshot);
+    outcome.apply_to(snapshot)
+}
+//#endregion 🔖️Apply
+
 //#region 🔖️OpText
 /// ⚡️ Real hand-rolled `OpText`, grammar `keyword id=hex ...` — reusing the sibling `🔺️diff`
 /// facet's now-`pub(crate)` hex/value primitives (one source of truth for entity encoding, same

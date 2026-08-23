@@ -102,6 +102,29 @@ pub enum DocxMutation {
         path: String,
     },
 }
+
+/// 📇️ Kebab-case spelling of every `DocxMutation` variant, in declaration order -- the exhaustive
+/// mutation catalog `../🧪️oracle/🔣️component.json`'s `kinds` array is required to match verbatim
+/// (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest; the
+/// framework never parses Rust to check it itself). Mirrors `print_docx_mutation`'s own keyword
+/// match entry-for-entry, so `KINDS[i]` is exactly what `print_op()` emits for the enum's `i`-th
+/// variant (via `demo_mutation_cases()`, which already carries one instance per variant in this
+/// same order).
+pub const KINDS: &[&str] = &[
+    "no-mutation",
+    "set-snapshot",
+    "insert-block",
+    "remove-block",
+    "set-block-content",
+    "set-run-text",
+    "set-run-formatting",
+    "insert-style",
+    "remove-style",
+    "set-style-name",
+    "set-style-based-on",
+    "set-part",
+    "remove-part",
+];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -1231,6 +1254,25 @@ mod tests {
         }
     }
     //#endregion 🔖️OpTextBinaryRoundtripLaw
+
+    //#region kinds_law
+    /// 🧪️ Keeps `KINDS` honest against the enum it claims to spell: every variant's
+    /// `print_docx_mutation` keyword, in the SAME declaration order `demo_mutation_cases()` already
+    /// carries (one instance per variant), must equal `KINDS` entry-for-entry -- the framework never
+    /// parses Rust to check this itself (see `KINDS`'s own doc comment), so this test is the one
+    /// thing that does. `KINDS` is also kept textually identical, by hand, to
+    /// `../🧪️oracle/🔣️component.json`'s own `kinds` array.
+    #[test]
+    fn kinds_const_matches_enum_variants_in_declaration_order() {
+        let cases = demo_mutation_cases();
+        assert_eq!(cases.len(), KINDS.len(), "demo_mutation_cases() must cover every KINDS entry exactly once");
+        for (mutation, kind) in cases.iter().zip(KINDS.iter()) {
+            let printed = mutation.print_op();
+            let keyword = printed.split(' ').next().unwrap_or(&printed);
+            assert_eq!(keyword, *kind, "KINDS order must match the enum's own OpText keyword order for {mutation:?}");
+        }
+    }
+    //#endregion kinds_law
 }
 //#endregion 🧪️Tests
 

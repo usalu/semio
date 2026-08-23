@@ -1,0 +1,93 @@
+@capability-las-1-0-any-mutate
+@oracle-las-1-0-any-mutate
+@comparison-semantic-las-v1
+@mutations-las-1-0-any
+Feature: Apply every typed LAS 1.0 mutation to a real-world point cloud
+  The input is shared://🧊️pattern-sphere.las, a real 8,448-point LAS 1.0 point cloud derived ONCE
+  from the real committed 🧊️pattern-sphere.glb (679 KB, real modelled geometry) by hand-parsing its
+  GLB container (12-byte header, JSON chunk, BIN chunk — no gltf crate is linked) to read the real
+  POSITION accessor, scaling that unit sphere ×10 and translating it onto a plausible Hannover-area
+  UTM-ish easting/northing/elevation, then writing it with the real `las` 0.11 reference crate (the
+  derivation scripts are committed alongside this feature). Every point's `intensity` and
+  `classification` are genuinely derived from that real geometry's height, not constants — the
+  committed fixture's classification histogram is {2: 1157, 3: 1600, 4: 2934, 5: 1600, 6: 1157} —
+  and it carries two real VLRs (`LASF_Projection`/34735 GeoKeyDirectoryTag, `semio`/1 fixture
+  provenance). Every scenario copies it into the case work directory before touching it; the
+  committed file is never written to.
+
+  The oracle works against `las::raw::{Header, Vlr, Point}` — the crate's byte-exact typed mirror of
+  the LAS public header block / VLR / point record — rather than its friendlier `Reader`/`Writer`/
+  `Builder` façade, which auto-recomputes bounds and the points-by-return histogram from whatever is
+  actually written and offers no way to override either; this subset's own `LasHeader` retains both
+  directly instead, so `set-bounds`/`set-points-by-return` need that independent control to be
+  checked mutations rather than no-ops. `set-version` stays within the LAS 1.0-1.2 family: the
+  crate's header writer appends 1.3+ extension fields once the declared version supports them,
+  growing the header past the fixed 227 bytes this subset's own `encode_las` always emits (its own
+  `EncodeScopeNote`: "no LAS 1.3/1.4 extensions") — exercising 1.3/1.4 would be testing a real
+  subject capability gap under a version-label mutation, not the mutation itself.
+
+  @id-mutate
+  @level-exhaustive
+  @mode-differential
+  Scenario Outline: Apply <id> to the real point cloud
+    Given the real input point cloud shared://🧊️pattern-sphere.las
+    When the <id> mutation is applied with its parameters
+      """
+      {"kind": "<id>", "params": <params>}
+      """
+    Then the oracle and the subject agree on the semantic projection
+    Examples:
+      | id                    | params |
+      | no-mutation            | {} |
+      | set-snapshot           | {"header": {"versionMajor": 1, "versionMinor": 0, "systemIdentifier": "SEMIO-SNAP", "generatingSoftware": "semio-test", "dayOfYear": 1, "year": 2026, "scale": [0.01, 0.01, 0.01], "offset": [0.0, 0.0, 0.0], "max": [10.0, 10.0, 10.0], "min": [0.0, 0.0, 0.0], "counts": [3, 0, 0, 0, 0]}, "vlrs": [{"userId": "semio", "recordId": 1, "description": "snap-vlr", "data": "snap-data"}], "points": [{"x": 0.0, "y": 0.0, "z": 0.0, "intensity": 10, "returnNumber": 1, "numberOfReturns": 1, "scanDirectionFlag": false, "edgeOfFlightLine": false, "classification": 2, "scanAngleRank": 0, "userData": 0, "pointSourceId": 1, "gpsTime": null, "rgb": null}, {"x": 1.0, "y": 1.0, "z": 1.0, "intensity": 20, "returnNumber": 1, "numberOfReturns": 1, "scanDirectionFlag": false, "edgeOfFlightLine": false, "classification": 4, "scanAngleRank": 5, "userData": 0, "pointSourceId": 1, "gpsTime": null, "rgb": null}, {"x": 2.0, "y": 2.0, "z": 2.5, "intensity": 30, "returnNumber": 1, "numberOfReturns": 1, "scanDirectionFlag": true, "edgeOfFlightLine": false, "classification": 6, "scanAngleRank": -5, "userData": 0, "pointSourceId": 1, "gpsTime": null, "rgb": null}]} |
+      | set-version            | {"major": 1, "minor": 1} |
+      | set-system-identifier  | {"systemIdentifier": "RENAMED-SYSTEM"} |
+      | set-software-info      | {"generatingSoftware": "renamed-software"} |
+      | set-creation-date      | {"dayOfYear": 42, "year": 2027} |
+      | set-scale-and-offset   | {"scale": [0.0005, 0.0005, 0.0005], "offset": [583000.0, 5804000.0, 0.0]} |
+      | set-bounds             | {"max": [583020.0, 5804020.0, 20.0], "min": [582980.0, 5803980.0, -20.0]} |
+      | set-points-by-return   | {"counts": [8000, 300, 100, 40, 8]} |
+      | insert-vlr             | {"index": 1, "vlr": {"userId": "semio-test", "recordId": 9, "description": "inserted vlr", "data": "hello-vlr"}} |
+      | remove-vlr             | {"index": 0} |
+      | set-vlr-data           | {"index": 1, "data": "patched-provenance"} |
+      | insert-point           | {"index": 4000, "point": {"x": 583005.0, "y": 5804005.0, "z": 5.0, "intensity": 4242, "returnNumber": 1, "numberOfReturns": 1, "scanDirectionFlag": true, "edgeOfFlightLine": false, "classification": 6, "scanAngleRank": 12, "userData": 1, "pointSourceId": 1, "gpsTime": null, "rgb": null}} |
+      | remove-point           | {"index": 4000} |
+      | set-point              | {"index": 4000, "point": {"x": 583006.0, "y": 5804006.0, "z": -8.0, "intensity": 999, "returnNumber": 1, "numberOfReturns": 1, "scanDirectionFlag": false, "edgeOfFlightLine": true, "classification": 9, "scanAngleRank": -30, "userData": 2, "pointSourceId": 1, "gpsTime": null, "rgb": null}} |
+
+  @id-inverse
+  @level-exhaustive
+  @mode-property
+  Scenario Outline: Undoing <id> restores the real point cloud
+    Given the real input point cloud shared://🧊️pattern-sphere.las
+    When the <id> mutation is applied with its parameters
+      """
+      {"kind": "<id>", "params": <params>}
+      """
+    And the inverse mutation is applied to that result
+    Then the oracle and the subject agree on the semantic projection of the original point cloud
+    Examples:
+      | id                    | params |
+      | no-mutation            | {} |
+      | set-snapshot           | {"header": {"versionMajor": 1, "versionMinor": 0, "systemIdentifier": "SEMIO-SNAP", "generatingSoftware": "semio-test", "dayOfYear": 1, "year": 2026, "scale": [0.01, 0.01, 0.01], "offset": [0.0, 0.0, 0.0], "max": [10.0, 10.0, 10.0], "min": [0.0, 0.0, 0.0], "counts": [3, 0, 0, 0, 0]}, "vlrs": [{"userId": "semio", "recordId": 1, "description": "snap-vlr", "data": "snap-data"}], "points": [{"x": 0.0, "y": 0.0, "z": 0.0, "intensity": 10, "returnNumber": 1, "numberOfReturns": 1, "scanDirectionFlag": false, "edgeOfFlightLine": false, "classification": 2, "scanAngleRank": 0, "userData": 0, "pointSourceId": 1, "gpsTime": null, "rgb": null}, {"x": 1.0, "y": 1.0, "z": 1.0, "intensity": 20, "returnNumber": 1, "numberOfReturns": 1, "scanDirectionFlag": false, "edgeOfFlightLine": false, "classification": 4, "scanAngleRank": 5, "userData": 0, "pointSourceId": 1, "gpsTime": null, "rgb": null}, {"x": 2.0, "y": 2.0, "z": 2.5, "intensity": 30, "returnNumber": 1, "numberOfReturns": 1, "scanDirectionFlag": true, "edgeOfFlightLine": false, "classification": 6, "scanAngleRank": -5, "userData": 0, "pointSourceId": 1, "gpsTime": null, "rgb": null}]} |
+      | set-version            | {"major": 1, "minor": 1} |
+      | set-system-identifier  | {"systemIdentifier": "RENAMED-SYSTEM"} |
+      | set-software-info      | {"generatingSoftware": "renamed-software"} |
+      | set-creation-date      | {"dayOfYear": 42, "year": 2027} |
+      | set-scale-and-offset   | {"scale": [0.0005, 0.0005, 0.0005], "offset": [583000.0, 5804000.0, 0.0]} |
+      | set-bounds             | {"max": [583020.0, 5804020.0, 20.0], "min": [582980.0, 5803980.0, -20.0]} |
+      | set-points-by-return   | {"counts": [8000, 300, 100, 40, 8]} |
+      | insert-vlr             | {"index": 1, "vlr": {"userId": "semio-test", "recordId": 9, "description": "inserted vlr", "data": "hello-vlr"}} |
+      | remove-vlr             | {"index": 0} |
+      | set-vlr-data           | {"index": 1, "data": "patched-provenance"} |
+      | insert-point           | {"index": 4000, "point": {"x": 583005.0, "y": 5804005.0, "z": 5.0, "intensity": 4242, "returnNumber": 1, "numberOfReturns": 1, "scanDirectionFlag": true, "edgeOfFlightLine": false, "classification": 6, "scanAngleRank": 12, "userData": 1, "pointSourceId": 1, "gpsTime": null, "rgb": null}} |
+      | remove-point           | {"index": 4000} |
+      | set-point              | {"index": 4000, "point": {"x": 583006.0, "y": 5804006.0, "z": -8.0, "intensity": 999, "returnNumber": 1, "numberOfReturns": 1, "scanDirectionFlag": false, "edgeOfFlightLine": true, "classification": 9, "scanAngleRank": -30, "userData": 2, "pointSourceId": 1, "gpsTime": null, "rgb": null}} |
+
+  @id-identity-round-trip
+  @level-long
+  @mode-round-trip
+  Scenario: Decode and re-encode the real point cloud without passing bytes through
+    Given the real input point cloud shared://🧊️pattern-sphere.las
+    When the point cloud is decoded to the typed snapshot and re-encoded from it alone
+    Then the oracle and the subject agree on the semantic projection
+    And the re-encoded bytes are not bit-identical to the input

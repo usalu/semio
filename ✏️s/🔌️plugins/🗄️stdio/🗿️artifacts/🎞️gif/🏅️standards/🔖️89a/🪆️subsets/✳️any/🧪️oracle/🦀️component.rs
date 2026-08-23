@@ -104,7 +104,15 @@ mod imp {
     }
     fn indices_from_json(value: &Json, key: &str) -> Option<Vec<u8>> {
         match value.get(key) {
-            Some(Json::Array(items)) => Some(items.iter().map(|item| match item { Json::Number(n) => *n as u8, _ => 0 }).collect()),
+            Some(Json::Array(items)) => Some(
+                items
+                    .iter()
+                    .map(|item| match item {
+                        Json::Number(n) => *n as u8,
+                        _ => 0,
+                    })
+                    .collect(),
+            ),
             _ => None,
         }
     }
@@ -200,7 +208,14 @@ mod imp {
             aspect_ratio: num_or(value, "aspectRatio", 0.0) as u8,
             loop_count: opt_num(value, "loopCount").map(|n| n as u16),
             frames: value.array("frames").iter().map(frame_from_json).collect(),
-            comments: value.array("comments").iter().map(|item| match item { Json::String(s) => s.clone(), _ => String::new() }).collect(),
+            comments: value
+                .array("comments")
+                .iter()
+                .map(|item| match item {
+                    Json::String(s) => s.clone(),
+                    _ => String::new(),
+                })
+                .collect(),
             app_extensions: value.array("appExtensions").iter().map(app_ext_from_json).collect(),
         }
     }
@@ -458,12 +473,7 @@ mod imp {
     //#region 🔖️Interlace
     /// 🧵️ GIF89a §24.e's 4-pass row order for a frame `height` rows tall.
     fn interlace_row_order(height: usize) -> Vec<usize> {
-        (0..height)
-            .step_by(8)
-            .chain((4..height).step_by(8))
-            .chain((2..height).step_by(4))
-            .chain((1..height).step_by(2))
-            .collect()
+        (0..height).step_by(8).chain((4..height).step_by(8)).chain((2..height).step_by(4)).chain((1..height).step_by(2)).collect()
     }
 
     /// 🔀️ Reorders palette indices between NATURAL row order (what `indices` always holds while

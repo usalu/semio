@@ -87,6 +87,29 @@ pub enum LasMutation {
 }
 //#endregion 🔖️Mutations
 
+//#region 🔖️Kinds
+/// 🧾️ Kebab-case spelling of every `LasMutation` variant, in declaration order — the vocabulary
+/// `../../🧪️oracle/🔣️component.json`'s `las-1-0-any` catalog is measured against. Kept honest by
+/// `kinds_match_enum_and_catalog` below (the framework never parses Rust to learn this list).
+pub const KINDS: &[&str] = &[
+    "no-mutation",
+    "set-snapshot",
+    "set-version",
+    "set-system-identifier",
+    "set-software-info",
+    "set-creation-date",
+    "set-scale-and-offset",
+    "set-bounds",
+    "set-points-by-return",
+    "insert-vlr",
+    "remove-vlr",
+    "set-vlr-data",
+    "insert-point",
+    "remove-point",
+    "set-point",
+];
+//#endregion 🔖️Kinds
+
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`, returning a typed error outcome without changing the
 /// snapshot when an index target is missing or out of range. `InsertVlr`/`RemoveVlr`/
@@ -1018,6 +1041,64 @@ mod tests {
         }
     }
     //#endregion 🔖️op_text_binary_roundtrip_law
+
+    //#region 🔖️KindsConformanceLaw
+    /// 🧾️ `KINDS` must list every `LasMutation` variant, in declaration order, AND the sibling
+    /// oracle manifest's `mutationCatalogs[].kinds` must declare the exact same list — the first
+    /// half is a real `match` with no wildcard arm, so this fails to compile the moment a new
+    /// variant is added to `LasMutation` without a matching kebab-case spelling here, which is what
+    /// keeps `KINDS` honest against the enum. The second half reads the sibling oracle manifest's
+    /// `kinds` array as text (the framework never parses Rust, so this is the only side that can
+    /// prove the manifest matches) and asserts the same list, in the same order.
+    #[test]
+    fn kinds_match_enum_and_catalog() {
+        fn kind_of(mutation: &LasMutation) -> &'static str {
+            match mutation {
+                LasMutation::NoMutation => "no-mutation",
+                LasMutation::SetSnapshot { .. } => "set-snapshot",
+                LasMutation::SetVersion { .. } => "set-version",
+                LasMutation::SetSystemIdentifier { .. } => "set-system-identifier",
+                LasMutation::SetSoftwareInfo { .. } => "set-software-info",
+                LasMutation::SetCreationDate { .. } => "set-creation-date",
+                LasMutation::SetScaleAndOffset { .. } => "set-scale-and-offset",
+                LasMutation::SetBounds { .. } => "set-bounds",
+                LasMutation::SetPointsByReturn { .. } => "set-points-by-return",
+                LasMutation::InsertVlr { .. } => "insert-vlr",
+                LasMutation::RemoveVlr { .. } => "remove-vlr",
+                LasMutation::SetVlrData { .. } => "set-vlr-data",
+                LasMutation::InsertPoint { .. } => "insert-point",
+                LasMutation::RemovePoint { .. } => "remove-point",
+                LasMutation::SetPoint { .. } => "set-point",
+            }
+        }
+        let samples = [
+            LasMutation::NoMutation,
+            LasMutation::SetSnapshot { snapshot: base_snapshot() },
+            LasMutation::SetVersion { major: 1, minor: 0 },
+            LasMutation::SetSystemIdentifier { system_identifier: String::new() },
+            LasMutation::SetSoftwareInfo { generating_software: String::new() },
+            LasMutation::SetCreationDate { day_of_year: 0, year: 0 },
+            LasMutation::SetScaleAndOffset { scale: (0.0, 0.0, 0.0), offset: (0.0, 0.0, 0.0) },
+            LasMutation::SetBounds { max: (0.0, 0.0, 0.0), min: (0.0, 0.0, 0.0) },
+            LasMutation::SetPointsByReturn { counts: [0; 5] },
+            LasMutation::InsertVlr { index: 0, vlr: LasVlr::default() },
+            LasMutation::RemoveVlr { index: 0 },
+            LasMutation::SetVlrData { index: 0, data: Vec::new() },
+            LasMutation::InsertPoint { index: 0, point: LasPoint::default() },
+            LasMutation::RemovePoint { index: 0 },
+            LasMutation::SetPoint { index: 0, point: LasPoint::default() },
+        ];
+        let from_enum: Vec<&'static str> = samples.iter().map(kind_of).collect();
+        assert_eq!(from_enum, KINDS, "KINDS must list every LasMutation variant, in declaration order");
+
+        let manifest = include_str!("../../🧪️oracle/🔣️component.json");
+        let needle = "\"kinds\": [";
+        let start = manifest.find(needle).expect("manifest declares a kinds array") + needle.len();
+        let end = start + manifest[start..].find(']').expect("kinds array is closed");
+        let declared: Vec<String> = manifest[start..end].split(',').map(|entry| entry.trim().trim_matches('"').to_string()).filter(|entry| !entry.is_empty()).collect();
+        assert_eq!(declared, KINDS, "the oracle manifest's kinds must match LasMutation exactly");
+    }
+    //#endregion 🔖️KindsConformanceLaw
 }
 //#endregion Tests
 

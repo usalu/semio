@@ -39,7 +39,15 @@ fn number(value: &Json, key: &str, fallback: f64) -> f64 {
 #[cfg(feature = "oracles")]
 fn fill_of(params: &Json) -> [u8; 4] {
     let values = params.array("fill");
-    let component = |index: usize, fallback: u8| values.get(index).and_then(|v| match v { Json::Number(n) => Some(*n as u8), _ => None }).unwrap_or(fallback);
+    let component = |index: usize, fallback: u8| {
+        values
+            .get(index)
+            .and_then(|v| match v {
+                Json::Number(n) => Some(*n as u8),
+                _ => None,
+            })
+            .unwrap_or(fallback)
+    };
     [component(0, 128), component(1, 128), component(2, 128), component(3, 255)]
 }
 //#endregion 🔖️Json

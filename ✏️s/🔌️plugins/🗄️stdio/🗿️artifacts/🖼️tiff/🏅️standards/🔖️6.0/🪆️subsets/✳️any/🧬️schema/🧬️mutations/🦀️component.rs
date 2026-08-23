@@ -571,8 +571,12 @@ mod tests {
         let decoded = crate::artifacts::tiff::engine::decode_tiff(&bytes).expect("decode fixture");
         let reencoded = crate::artifacts::tiff::engine::encode_tiff(&decoded).expect("re-encode fixture");
         let redecoded = crate::artifacts::tiff::engine::decode_tiff(&reencoded).expect("re-decode fixture");
-        // Engine's EncodeScopeNote: encode always canonicalizes to a single IFD/single strip —
-        // pixel CONTENT + carried non-core tags are the retained invariant.
+        // `base_snapshot()` is single-IFD, so this only exercises IFD 0's own canonicalization
+        // invariant (see `../../🚪️io/🦀️component.rs`'s `MultiIfdEncodeScopeNote`: IFD 0's
+        // strip/geometry tags are always recomputed fresh from `pixels`) — pixel CONTENT + carried
+        // non-core tags are the retained invariant. Real multi-IFD chain preservation is exercised
+        // by `../../🚪️io/🦀️component.rs`'s own `multi_ifd_round_trip_preserves_every_ifd` and
+        // `insert_ifd_and_remove_ifd_are_observable_through_the_codec` tests.
         assert_eq!(decoded.width(), redecoded.width());
         assert_eq!(decoded.height(), redecoded.height());
         assert_eq!(decoded.pixels, redecoded.pixels);

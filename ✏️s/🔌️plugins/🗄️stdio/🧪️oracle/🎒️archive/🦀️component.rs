@@ -25,13 +25,7 @@ pub struct ArchiveSpec {
 impl ArchiveSpec {
     /// 🎒️ Reads a spec out of a scenario's owned JSON payload.
     pub fn from_json(value: &Json) -> ArchiveSpec {
-        ArchiveSpec {
-            entries: value
-                .array("entries")
-                .iter()
-                .map(|entry| ArchiveEntry { name: entry.str("name"), bytes: entry.str("content").into_bytes() })
-                .collect(),
-        }
+        ArchiveSpec { entries: value.array("entries").iter().map(|entry| ArchiveEntry { name: entry.str("name"), bytes: entry.str("content").into_bytes() }).collect() }
     }
 
     /// 🔁️ The projection every archive producer is compared through.

@@ -229,8 +229,8 @@ impl ArtifactEditor for Fem2dPlayApp {
         crate::editor::fem2d::session::terminal_is_empty(instance_id)
     }
 
-    fn mounted_job_needs_snapshot_read(operation: semio_framework_plugin::AppRenderOperationContext) -> bool {
-        crate::editor::fem2d::session::needs_snapshot_read(operation)
+    fn mounted_job_prepare_snapshot_read(operation: semio_framework_plugin::AppRenderOperationContext, snapshot: &Self::Snapshot) -> bool {
+        crate::editor::fem2d::session::prepare_snapshot_read(operation, snapshot)
     }
 
     /// 🎞️ `"document:out"` reproduces the trait's default whole-document pack (overriding `export_media`

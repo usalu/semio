@@ -192,13 +192,7 @@ mod reference {
 
     fn owned_sample(value: &Json, key: &str) -> ::mp4::Mp4Sample {
         let entry = value.get(key).cloned().unwrap_or(Json::Object(Vec::new()));
-        ::mp4::Mp4Sample {
-            start_time: 0,
-            duration: number(&entry, "duration", 0.0) as u32,
-            rendering_offset: number(&entry, "ctsOffset", 0.0) as i32,
-            is_sync: boolean(&entry, "sync", true),
-            bytes: ::mp4::Bytes::from(bytes(&entry, "data")),
-        }
+        ::mp4::Mp4Sample { start_time: 0, duration: number(&entry, "duration", 0.0) as u32, rendering_offset: number(&entry, "ctsOffset", 0.0) as i32, is_sync: boolean(&entry, "sync", true), bytes: ::mp4::Bytes::from(bytes(&entry, "data")) }
     }
     //#endregion 🔖️Model
 

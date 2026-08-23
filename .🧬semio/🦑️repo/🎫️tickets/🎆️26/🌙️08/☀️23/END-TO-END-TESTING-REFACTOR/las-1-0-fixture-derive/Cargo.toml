@@ -1,0 +1,22 @@
+[workspace]
+
+[package]
+name = "las-1-0-fixture-derive"
+version = "0.0.0"
+edition = "2021"
+
+[[bin]]
+name = "las-1-0-fixture-derive"
+path = "src/main.rs"
+
+[dependencies]
+las = "0.11"
+chrono = "0.4"
+
+[[bin]]
+name = "verify"
+path = "src/verify.rs"
+
+[[bin]]
+name = "roundtrip-check"
+path = "src/roundtrip_check.rs"

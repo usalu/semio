@@ -29,10 +29,7 @@ impl TableSpec {
                 .collect(),
             _ => Vec::new(),
         };
-        TableSpec {
-            header: value.get("header").map(strings).unwrap_or_default(),
-            rows: value.array("rows").iter().map(strings).collect(),
-        }
+        TableSpec { header: value.get("header").map(strings).unwrap_or_default(), rows: value.array("rows").iter().map(strings).collect() }
     }
 
     /// 🔁️ The projection every tabular producer is compared through.

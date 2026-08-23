@@ -1,5 +1,5 @@
 @capability-json-rfc8259-mutate
-@oracle-json-rfc8259-mutate
+@oracle-json-rust-rfc8259-mutate
 @comparison-ordered-json-v1
 @mutations-json-rfc8259-any
 Feature: Apply every typed RFC 8259 JSON mutation to a real-world document
@@ -9,21 +9,34 @@ Feature: Apply every typed RFC 8259 JSON mutation to a real-world document
   🔣️hexagonal-cut-concrete-forest-left.model.json — 8,979 nodes, 71 vertices, 126 edges, 57 wires,
   57 faces, deeply nested objects and arrays, and 146 real exponent-notation floats (machine-epsilon
   boundary geometry like `4.44089209850063e-16`) that exercise this subset's own arbitrary-precision
-  number lexeme against `serde_json`'s IEEE-754 `f64` parse. Every scenario copies the fixture into
-  the case work directory before touching it; the committed file is never written to.
+  number lexeme against the reference codec's own number parse. Every scenario copies the fixture
+  into the case work directory before touching it; the committed file is never written to.
+
+  The reference here is `json` (json-rust) 0.12, deliberately NOT `serde_json` even though
+  `serde_json` was already linked test-only in this crate: this subset's OWN production code
+  (`../../🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs`) declares
+  `impl From<serde_json::Value> for JsonValue` and the reverse — a real interop conversion path FROM
+  the reference's own type INTO this subset's model, for callers elsewhere in the app that want a
+  `serde_json::Value` view of a decoded document. A `serde_json` differential would therefore compare
+  this implementation against something it already converts from, not independent evidence — and
+  `serde_json` is, separately and correctly, a genuine production runtime dependency of this
+  repository at large (workspace `serde_json = "1.0.149"`, reachable from several hundred production
+  files for reasons unrelated to this case). `json` (json-rust) has neither relationship: no
+  production file in this repository reaches it, and this subset's codec has no conversion path to or
+  from its `JsonValue`/`Object`/`Number` types.
 
   Two RFC 8259 conformance points this case's comparison deliberately narrows rather than silently
   normalizes, both real and both documented in `../../🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/
-  🧪️oracle/🔣️component.json`'s oracle rationale: object member order is unordered per §4 — this
-  subset's own codec preserves insertion order, `serde_json`'s default (non-`preserve_order`) `Map`
-  re-sorts every object alphabetically on parse/serialize, so the `ordered-json-v1` core profile
-  (array order significant, key order never) is used rather than a bespoke one; and number
-  comparison is by PARSED VALUE, not lexeme — `serde_json` without `arbitrary_precision` keeps
-  integers exact within `u64`/`i64` and rounds anything else through `f64`, while this subset's own
-  codec preserves the source lexeme verbatim (§6 permits arbitrary precision). The real fixture never
-  exceeds 3 integer digits before any decimal point, so that precision boundary costs nothing here —
-  a genuine information-loss risk for a future fixture with 19+ digit integers, recorded rather than
-  exercised.
+  🧪️oracle/🔣️component.json`'s oracle rationale and in that oracle module's own doc comment: object
+  member order is unordered per §4 — this subset's own codec preserves insertion order, while
+  `json::object::Object` stores entries in a hash-ordered binary tree keyed by an FNV-1a hash of each
+  key (not insertion order, and not alphabetical either — it does not preserve order at all), so the
+  `ordered-json-v1` core profile (array order significant, key order never) is used rather than a
+  bespoke one; and number comparison is by PARSED VALUE, not lexeme — `json::number::Number` is a
+  `(sign, mantissa: u64, exponent: i16)` decimal pair, not this subset's own arbitrary-precision
+  LEXEME (§6 permits arbitrary precision). The real fixture never exceeds 3 integer digits before any
+  decimal point, so that precision boundary costs nothing here — a genuine information-loss risk for
+  a future fixture with 19+ digit integers, recorded rather than exercised.
 
   @id-mutate
   @level-exhaustive

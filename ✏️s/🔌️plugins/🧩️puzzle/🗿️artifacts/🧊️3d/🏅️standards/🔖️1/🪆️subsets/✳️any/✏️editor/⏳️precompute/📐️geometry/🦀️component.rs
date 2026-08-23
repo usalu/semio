@@ -6,7 +6,231 @@
 //! is interactive brush/fill tool behaviour, so it lives with the app, not the artifact.
 
 use crate::artifacts::puzzle3d::schema::{Quat, Vec3, WorldVolumeProps};
-use std::collections::{BTreeMap, BTreeSet};
+use std::borrow::Borrow;
+
+pub(crate) const FIXED_OWNER_SLOTS: usize = 32;
+pub(crate) const FIXED_OWNER_PAGE_BYTES: usize = 16 * 1024;
+
+#[derive(Debug)]
+pub(crate) struct FixedOwnerMap<K, V, const N: usize = FIXED_OWNER_SLOTS> {
+    page: Option<Box<[Option<(K, V)>; N]>>,
+    len: usize,
+}
+
+#[derive(Debug)]
+pub(crate) enum FixedOwnerMapInsert<K, V> {
+    Inserted,
+    Occupied { input_key: K, input_value: V },
+}
+
+impl<K, V, const N: usize> FixedOwnerMap<K, V, N> {
+    pub(crate) fn new() -> Self {
+        assert!(Self::page_bytes() <= FIXED_OWNER_PAGE_BYTES);
+        Self { page: Some(Box::new(std::array::from_fn(|_| None))), len: 0 }
+    }
+
+    pub(crate) const fn page_bytes() -> usize {
+        std::mem::size_of::<[Option<(K, V)>; N]>()
+    }
+
+    pub(crate) fn backing_credit(&self) -> Option<(usize, usize)> {
+        self.page.as_ref().map(|_| (1, Self::page_bytes()))
+    }
+
+    pub(crate) fn backing_ptr(&self) -> Option<*const Option<(K, V)>> {
+        self.page.as_ref().map(|page| page.as_ptr())
+    }
+
+    pub(crate) fn len(&self) -> usize {
+        self.len
+    }
+
+    pub(crate) fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    pub(crate) fn iter(&self) -> impl Iterator<Item = &(K, V)> {
+        self.page.as_ref().into_iter().flat_map(move |page| page[..self.len].iter()).filter_map(Option::as_ref)
+    }
+
+    pub(crate) fn keys(&self) -> impl Iterator<Item = &K> {
+        self.iter().map(|(key, _)| key)
+    }
+
+    pub(crate) fn values(&self) -> impl Iterator<Item = &V> {
+        self.iter().map(|(_, value)| value)
+    }
+
+    fn index_of<Q>(&self, key: &Q) -> Option<usize>
+    where
+        K: Borrow<Q>,
+        Q: Ord + ?Sized,
+    {
+        self.iter().position(|(candidate, _)| <K as Borrow<Q>>::borrow(candidate) == key)
+    }
+
+    pub(crate) fn get<Q>(&self, key: &Q) -> Option<&V>
+    where
+        K: Borrow<Q>,
+        Q: Ord + ?Sized,
+    {
+        self.index_of(key).and_then(|index| self.page.as_ref()?.get(index)?.as_ref().map(|(_, value)| value))
+    }
+
+    pub(crate) fn get_mut<Q>(&mut self, key: &Q) -> Option<&mut V>
+    where
+        K: Borrow<Q>,
+        Q: Ord + ?Sized,
+    {
+        let index = self.index_of(key)?;
+        self.page.as_mut()?.get_mut(index)?.as_mut().map(|(_, value)| value)
+    }
+
+    pub(crate) fn contains_key<Q>(&self, key: &Q) -> bool
+    where
+        K: Borrow<Q>,
+        Q: Ord + ?Sized,
+    {
+        self.index_of(key).is_some()
+    }
+
+    pub(crate) fn try_insert(&mut self, key: K, value: V) -> Result<FixedOwnerMapInsert<K, V>, (K, V)>
+    where
+        K: Ord,
+    {
+        if self.index_of(&key).is_some() {
+            return Ok(FixedOwnerMapInsert::Occupied { input_key: key, input_value: value });
+        }
+        if self.len == N {
+            return Err((key, value));
+        }
+        let insert_at = self.iter().position(|(candidate, _)| candidate > &key).unwrap_or(self.len);
+        let page = self.page.as_mut().expect("live fixed owner page");
+        for index in (insert_at..self.len).rev() {
+            page[index + 1] = page[index].take();
+        }
+        page[insert_at] = Some((key, value));
+        self.len += 1;
+        Ok(FixedOwnerMapInsert::Inserted)
+    }
+
+    pub(crate) fn remove_entry<Q>(&mut self, key: &Q) -> Option<(K, V)>
+    where
+        K: Borrow<Q>,
+        Q: Ord + ?Sized,
+    {
+        let index = self.index_of(key)?;
+        let page = self.page.as_mut()?;
+        let entry = page[index].take()?;
+        for cursor in index + 1..self.len {
+            page[cursor - 1] = page[cursor].take();
+        }
+        self.len -= 1;
+        Some(entry)
+    }
+
+    pub(crate) fn pop_first(&mut self) -> Option<(K, V)> {
+        if self.len == 0 {
+            return None;
+        }
+        let page = self.page.as_mut()?;
+        let entry = page[0].take();
+        for cursor in 1..self.len {
+            page[cursor - 1] = page[cursor].take();
+        }
+        self.len -= 1;
+        entry
+    }
+
+    pub(crate) fn retire_backing(&mut self) -> bool {
+        if self.len != 0 {
+            return false;
+        }
+        self.page.take().is_some()
+    }
+
+    pub(crate) fn terminal_owners_empty(&self) -> bool {
+        self.len == 0 && self.page.is_none()
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct FixedOwnerSet<K, const N: usize = FIXED_OWNER_SLOTS> {
+    values: FixedOwnerMap<K, (), N>,
+}
+
+#[derive(Debug)]
+pub(crate) enum FixedOwnerSetInsert<K> {
+    Inserted,
+    Present { input: K },
+}
+
+impl<K, const N: usize> FixedOwnerSet<K, N> {
+    pub(crate) fn new() -> Self {
+        Self { values: FixedOwnerMap::new() }
+    }
+
+    pub(crate) fn backing_credit(&self) -> Option<(usize, usize)> {
+        self.values.backing_credit()
+    }
+
+    pub(crate) fn backing_ptr(&self) -> Option<*const Option<(K, ())>> {
+        self.values.backing_ptr()
+    }
+
+    pub(crate) fn len(&self) -> usize {
+        self.values.len()
+    }
+
+    pub(crate) fn is_empty(&self) -> bool {
+        self.values.is_empty()
+    }
+
+    pub(crate) fn iter(&self) -> impl Iterator<Item = &K> {
+        self.values.keys()
+    }
+
+    pub(crate) fn contains<Q>(&self, value: &Q) -> bool
+    where
+        K: Borrow<Q>,
+        Q: Ord + ?Sized,
+    {
+        self.values.contains_key(value)
+    }
+
+    pub(crate) fn try_insert(&mut self, value: K) -> Result<FixedOwnerSetInsert<K>, K>
+    where
+        K: Ord,
+    {
+        self.values
+            .try_insert(value, ())
+            .map(|outcome| match outcome {
+                FixedOwnerMapInsert::Inserted => FixedOwnerSetInsert::Inserted,
+                FixedOwnerMapInsert::Occupied { input_key, input_value: () } => FixedOwnerSetInsert::Present { input: input_key },
+            })
+            .map_err(|(value, ())| value)
+    }
+
+    pub(crate) fn remove_entry<Q>(&mut self, value: &Q) -> Option<K>
+    where
+        K: Borrow<Q>,
+        Q: Ord + ?Sized,
+    {
+        self.values.remove_entry(value).map(|(value, ())| value)
+    }
+
+    pub(crate) fn pop_first(&mut self) -> Option<K> {
+        self.values.pop_first().map(|(value, ())| value)
+    }
+
+    pub(crate) fn retire_backing(&mut self) -> bool {
+        self.values.retire_backing()
+    }
+
+    pub(crate) fn terminal_owners_empty(&self) -> bool {
+        self.values.terminal_owners_empty()
+    }
+}
 
 //#region 🔒️GeometryAdapter
 /// 🔒️ Thin wrappers over `nalgebra`/`parry3d` — the one interface boundary this artifact depends on.
@@ -447,35 +671,159 @@ impl CollisionAabb {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub(crate) struct CollisionSpatialIndex {
     cell_size: f32,
-    entries: BTreeMap<String, CollisionAabb>,
-    cells: BTreeMap<(i32, i32, i32), Vec<String>>,
-    oversized: BTreeSet<String>,
+    entries: FixedOwnerMap<String, CollisionAabb>,
+    cells: FixedOwnerMap<(i32, i32, i32), FixedOwnerSet<String>>,
+    oversized: FixedOwnerSet<String>,
     retiring_key: Option<String>,
-    retiring_ids: Option<Vec<String>>,
-    collection_backings: CollisionIndexCollectionBackings,
+    retiring_bucket: Option<FixedOwnerSet<String>>,
 }
 
 #[derive(Clone, Debug)]
-struct CollisionIndexCollectionBackings {
-    pages: [Option<Box<[u8; 16 * 1024]>>; 3],
+pub(crate) enum CollisionIndexRejectedOwner {
+    Capacity(String, CollisionAabb),
 }
 
-impl CollisionIndexCollectionBackings {
-    fn new() -> Self {
-        Self { pages: std::array::from_fn(|_| Some(Box::new([0; 16 * 1024]))) }
+impl CollisionIndexRejectedOwner {
+    pub(crate) fn retire_one(&mut self) -> bool {
+        match self {
+            Self::Capacity(id, _) if id.capacity() != 0 => {
+                drop(std::mem::take(id));
+                false
+            }
+            Self::Capacity(_, _) => true,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct CollisionIndexOwner {
+    pub(crate) operation: u64,
+    pub(crate) generation: u64,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct CollisionCellSpan {
+    min: [i32; 3],
+    max: [i32; 3],
+    count: u64,
+}
+
+impl CollisionCellSpan {
+    fn new(cell_size: f32, bounds: CollisionAabb) -> Option<Self> {
+        let cell = |value: f32| (value / cell_size).floor().clamp(i32::MIN as f32, i32::MAX as f32) as i32;
+        let min = [cell(bounds.min[0]), cell(bounds.min[1]), cell(bounds.min[2])];
+        let max = [cell(bounds.max[0]), cell(bounds.max[1]), cell(bounds.max[2])];
+        let spans = [0, 1, 2].map(|axis| u64::try_from(i64::from(max[axis]) - i64::from(min[axis]) + 1).ok());
+        let count = spans.into_iter().flatten().try_fold(1_u64, u64::checked_mul)?;
+        (count <= CollisionSpatialIndex::MAX_CELLS_PER_ENTRY).then_some(Self { min, max, count })
     }
 
-    fn retire_one(&mut self) -> bool {
-        let Some(page) = self.pages.iter_mut().find(|page| page.is_some()) else { return false };
-        page.take();
-        true
+    fn cell(self, cursor: u64) -> Option<(i32, i32, i32)> {
+        if cursor >= self.count {
+            return None;
+        }
+        let z_span = u64::try_from(i64::from(self.max[2]) - i64::from(self.min[2]) + 1).ok()?;
+        let y_span = u64::try_from(i64::from(self.max[1]) - i64::from(self.min[1]) + 1).ok()?;
+        let yz = y_span.checked_mul(z_span)?;
+        let x = cursor / yz;
+        let rest = cursor % yz;
+        let y = rest / z_span;
+        let z = rest % z_span;
+        Some((
+            i32::try_from(i64::from(self.min[0]) + i64::try_from(x).ok()?).ok()?,
+            i32::try_from(i64::from(self.min[1]) + i64::try_from(y).ok()?).ok()?,
+            i32::try_from(i64::from(self.min[2]) + i64::try_from(z).ok()?).ok()?,
+        ))
     }
 
-    fn terminal_owners_empty(&self) -> bool {
-        self.pages.iter().all(Option::is_none)
+    fn contains(self, cell: (i32, i32, i32)) -> bool {
+        cell.0 >= self.min[0] && cell.0 <= self.max[0] && cell.1 >= self.min[1] && cell.1 <= self.max[1] && cell.2 >= self.min[2] && cell.2 <= self.max[2]
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum CollisionMutationStage {
+    PreflightNew,
+    PreflightOld,
+    Remove,
+    Insert,
+    Commit,
+    Complete,
+    Rejected,
+}
+
+pub(crate) struct CollisionIndexMutation {
+    owner: CollisionIndexOwner,
+    id: String,
+    bounds: CollisionAabb,
+    old_bounds: Option<CollisionAabb>,
+    old_span: Option<CollisionCellSpan>,
+    new_span: Option<CollisionCellSpan>,
+    stage: CollisionMutationStage,
+    cursor: u64,
+    missing_cells: usize,
+    reclaimed_cells: usize,
+}
+
+#[derive(Debug)]
+pub(crate) enum CollisionMutationStep {
+    Pending,
+    Complete,
+    Rejected(CollisionIndexRejectedOwner),
+    Stale,
+}
+
+pub(crate) struct CollisionIndexRemoval {
+    owner: CollisionIndexOwner,
+    id: String,
+    bounds: CollisionAabb,
+    span: Option<CollisionCellSpan>,
+    cursor: u64,
+    complete: bool,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum CollisionQueryStage {
+    Cells,
+    Oversized,
+    Entries,
+    Complete,
+}
+
+pub(crate) struct CollisionQueryCursor {
+    owner: CollisionIndexOwner,
+    bounds: CollisionAabb,
+    span: Option<CollisionCellSpan>,
+    stage: CollisionQueryStage,
+    cell_cursor: u64,
+    member_cursor: usize,
+    candidates: FixedOwnerSet<String>,
+    truncated: bool,
+    examined_cells: usize,
+    examined_members: usize,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum CollisionQueryStep {
+    Pending,
+    Complete,
+    Stale,
+}
+
+impl CollisionQueryCursor {
+    pub(crate) fn candidate(&self, index: usize) -> Option<&String> {
+        self.candidates.iter().nth(index)
+    }
+
+    pub(crate) fn len(&self) -> usize {
+        self.candidates.len()
+    }
+
+    pub(crate) fn truncated(&self) -> bool {
+        self.truncated
     }
 }
 
@@ -497,73 +845,258 @@ fn collision_index_string_credit(value: &String) -> Option<(usize, usize)> {
     (value.capacity() <= 16 * 1024).then_some((usize::from(value.capacity() != 0), value.capacity()))
 }
 
-fn collision_index_fixed_backing_credit(occupied: usize, retained: bool) -> Option<(usize, usize)> {
-    (occupied <= 32 && retained).then_some((1, 16 * 1024))
-}
-
 impl CollisionSpatialIndex {
     const MAX_CELLS_PER_ENTRY: u64 = 4_096;
 
     pub(crate) fn new(cell_size: f32) -> Self {
         assert!(cell_size.is_finite() && cell_size > 0.0);
-        Self { cell_size, entries: BTreeMap::new(), cells: BTreeMap::new(), oversized: BTreeSet::new(), retiring_key: None, retiring_ids: None, collection_backings: CollisionIndexCollectionBackings::new() }
+        Self { cell_size, entries: FixedOwnerMap::new(), cells: FixedOwnerMap::new(), oversized: FixedOwnerSet::new(), retiring_key: None, retiring_bucket: None }
     }
 
-    pub(crate) fn upsert(&mut self, id: String, bounds: CollisionAabb) {
-        self.remove(&id);
-        if let Some(cells) = self.covered_cells(bounds) {
-            for cell in cells {
-                let ids = self.cells.entry(cell).or_default();
-                match ids.binary_search(&id) {
-                    Ok(_) => {}
-                    Err(index) => ids.insert(index, id.clone()),
-                }
-            }
-        } else {
-            self.oversized.insert(id.clone());
+    pub(crate) fn begin_replacement(&self, owner: CollisionIndexOwner, id: String, bounds: CollisionAabb) -> CollisionIndexMutation {
+        let old_bounds = self.entries.get(id.as_str()).copied();
+        CollisionIndexMutation {
+            owner,
+            id,
+            bounds,
+            old_bounds,
+            old_span: old_bounds.and_then(|value| CollisionCellSpan::new(self.cell_size, value)),
+            new_span: CollisionCellSpan::new(self.cell_size, bounds),
+            stage: CollisionMutationStage::PreflightNew,
+            cursor: 0,
+            missing_cells: 0,
+            reclaimed_cells: 0,
         }
-        self.entries.insert(id, bounds);
     }
 
-    pub(crate) fn remove(&mut self, id: &str) -> bool {
-        let Some(bounds) = self.entries.remove(id) else { return false };
-        if let Some(cells) = self.covered_cells(bounds) {
-            for cell in cells {
-                let remove_cell = if let Some(ids) = self.cells.get_mut(&cell) {
-                    if let Ok(index) = ids.binary_search_by(|candidate| candidate.as_str().cmp(id)) {
-                        ids.remove(index);
+    pub(crate) fn step_replacement(&mut self, mutation: &mut CollisionIndexMutation, current: CollisionIndexOwner) -> CollisionMutationStep {
+        if mutation.owner != current {
+            return CollisionMutationStep::Stale;
+        }
+        match mutation.stage {
+            CollisionMutationStage::PreflightNew => {
+                if self.entries.get(mutation.id.as_str()).is_none() && self.entries.len() == FIXED_OWNER_SLOTS {
+                    return Self::reject_mutation(mutation);
+                }
+                if let Some(span) = mutation.new_span {
+                    if let Some(cell) = span.cell(mutation.cursor) {
+                        mutation.cursor += 1;
+                        match self.cells.get(&cell) {
+                            Some(bucket) if !bucket.contains(mutation.id.as_str()) && bucket.len() == FIXED_OWNER_SLOTS => return Self::reject_mutation(mutation),
+                            Some(_) => {}
+                            None => mutation.missing_cells += 1,
+                        }
+                        return CollisionMutationStep::Pending;
                     }
-                    ids.is_empty()
+                } else if !self.oversized.contains(mutation.id.as_str()) && self.oversized.len() == FIXED_OWNER_SLOTS {
+                    return Self::reject_mutation(mutation);
+                }
+                mutation.stage = CollisionMutationStage::PreflightOld;
+                mutation.cursor = 0;
+                CollisionMutationStep::Pending
+            }
+            CollisionMutationStage::PreflightOld => {
+                if let Some(span) = mutation.old_span {
+                    if let Some(cell) = span.cell(mutation.cursor) {
+                        mutation.cursor += 1;
+                        if mutation.new_span.is_none_or(|next| !next.contains(cell))
+                            && self.cells.get(&cell).is_some_and(|bucket| bucket.len() == 1 && bucket.contains(mutation.id.as_str()))
+                        {
+                            mutation.reclaimed_cells += 1;
+                        }
+                        return CollisionMutationStep::Pending;
+                    }
+                }
+                if self.cells.len().checked_add(mutation.missing_cells).and_then(|total| total.checked_sub(mutation.reclaimed_cells)).is_none_or(|total| total > FIXED_OWNER_SLOTS) {
+                    return Self::reject_mutation(mutation);
+                }
+                mutation.stage = CollisionMutationStage::Remove;
+                mutation.cursor = 0;
+                CollisionMutationStep::Pending
+            }
+            CollisionMutationStage::Remove => {
+                if let Some(span) = mutation.old_span {
+                    if let Some(cell) = span.cell(mutation.cursor) {
+                        mutation.cursor += 1;
+                        let empty = self.cells.get_mut(&cell).is_some_and(|bucket| {
+                            drop(bucket.remove_entry(mutation.id.as_str()));
+                            bucket.is_empty()
+                        });
+                        if empty {
+                            drop(self.cells.remove_entry(&cell));
+                        }
+                        return CollisionMutationStep::Pending;
+                    }
+                } else if mutation.old_bounds.is_some() {
+                    drop(self.oversized.remove_entry(mutation.id.as_str()));
+                }
+                mutation.stage = CollisionMutationStage::Insert;
+                mutation.cursor = 0;
+                CollisionMutationStep::Pending
+            }
+            CollisionMutationStage::Insert => {
+                if let Some(span) = mutation.new_span {
+                    if let Some(cell) = span.cell(mutation.cursor) {
+                        mutation.cursor += 1;
+                        if self.cells.get(&cell).is_none() {
+                            let bucket = FixedOwnerSet::new();
+                            debug_assert!(matches!(self.cells.try_insert(cell, bucket), Ok(FixedOwnerMapInsert::Inserted)));
+                        }
+                        let bucket = self.cells.get_mut(&cell).expect("preflighted fixed collision bucket");
+                        match bucket.try_insert(mutation.id.clone()) {
+                            Ok(FixedOwnerSetInsert::Inserted) => {}
+                            Ok(FixedOwnerSetInsert::Present { input }) => drop(input),
+                            Err(input) => {
+                                drop(input);
+                                unreachable!("preflighted fixed collision member");
+                            }
+                        }
+                        return CollisionMutationStep::Pending;
+                    }
                 } else {
-                    false
+                    match self.oversized.try_insert(mutation.id.clone()) {
+                        Ok(FixedOwnerSetInsert::Inserted) => {}
+                        Ok(FixedOwnerSetInsert::Present { input }) => drop(input),
+                        Err(input) => {
+                            drop(input);
+                            unreachable!("preflighted oversized collision member");
+                        }
+                    }
+                }
+                mutation.stage = CollisionMutationStage::Commit;
+                CollisionMutationStep::Pending
+            }
+            CollisionMutationStage::Commit => {
+                drop(self.entries.remove_entry(mutation.id.as_str()));
+                let id = std::mem::take(&mut mutation.id);
+                debug_assert!(matches!(self.entries.try_insert(id, mutation.bounds), Ok(FixedOwnerMapInsert::Inserted)));
+                mutation.stage = CollisionMutationStage::Complete;
+                CollisionMutationStep::Complete
+            }
+            CollisionMutationStage::Complete => CollisionMutationStep::Complete,
+            CollisionMutationStage::Rejected => CollisionMutationStep::Rejected(CollisionIndexRejectedOwner::Capacity(String::new(), mutation.bounds)),
+        }
+    }
+
+    fn reject_mutation(mutation: &mut CollisionIndexMutation) -> CollisionMutationStep {
+        mutation.stage = CollisionMutationStage::Rejected;
+        CollisionMutationStep::Rejected(CollisionIndexRejectedOwner::Capacity(std::mem::take(&mut mutation.id), mutation.bounds))
+    }
+
+    pub(crate) fn begin_removal(&self, owner: CollisionIndexOwner, id: String) -> Option<CollisionIndexRemoval> {
+        let bounds = *self.entries.get(id.as_str())?;
+        Some(CollisionIndexRemoval { owner, id, bounds, span: CollisionCellSpan::new(self.cell_size, bounds), cursor: 0, complete: false })
+    }
+
+    pub(crate) fn step_removal(&mut self, removal: &mut CollisionIndexRemoval, current: CollisionIndexOwner) -> CollisionMutationStep {
+        if removal.owner != current {
+            return CollisionMutationStep::Stale;
+        }
+        if removal.complete {
+            return CollisionMutationStep::Complete;
+        }
+        if let Some(span) = removal.span {
+            if let Some(cell) = span.cell(removal.cursor) {
+                removal.cursor += 1;
+                let empty = self.cells.get_mut(&cell).is_some_and(|bucket| {
+                    drop(bucket.remove_entry(removal.id.as_str()));
+                    bucket.is_empty()
+                });
+                if empty {
+                    drop(self.cells.remove_entry(&cell));
+                }
+                return CollisionMutationStep::Pending;
+            }
+        } else {
+            drop(self.oversized.remove_entry(removal.id.as_str()));
+        }
+        drop(self.entries.remove_entry(removal.id.as_str()));
+        removal.complete = true;
+        CollisionMutationStep::Complete
+    }
+
+    pub(crate) fn begin_query(&self, owner: CollisionIndexOwner, bounds: CollisionAabb) -> CollisionQueryCursor {
+        let span = CollisionCellSpan::new(self.cell_size, bounds);
+        CollisionQueryCursor {
+            owner,
+            bounds,
+            span,
+            stage: if span.is_some() { CollisionQueryStage::Cells } else { CollisionQueryStage::Entries },
+            cell_cursor: 0,
+            member_cursor: 0,
+            candidates: FixedOwnerSet::new(),
+            truncated: false,
+            examined_cells: 0,
+            examined_members: 0,
+        }
+    }
+
+    pub(crate) fn step_query(&self, query: &mut CollisionQueryCursor, current: CollisionIndexOwner) -> CollisionQueryStep {
+        if query.owner != current {
+            return CollisionQueryStep::Stale;
+        }
+        let candidate = match query.stage {
+            CollisionQueryStage::Cells => {
+                let span = query.span.expect("cell query span");
+                let Some(cell) = span.cell(query.cell_cursor) else {
+                    query.stage = CollisionQueryStage::Oversized;
+                    query.member_cursor = 0;
+                    return CollisionQueryStep::Pending;
                 };
-                if remove_cell {
-                    self.cells.remove(&cell);
+                let Some(bucket) = self.cells.get(&cell) else {
+                    query.cell_cursor += 1;
+                    query.examined_cells += 1;
+                    return CollisionQueryStep::Pending;
+                };
+                match bucket.iter().nth(query.member_cursor) {
+                    Some(id) => {
+                        query.member_cursor += 1;
+                        Some(id)
+                    }
+                    None => {
+                        query.cell_cursor += 1;
+                        query.member_cursor = 0;
+                        query.examined_cells += 1;
+                        return CollisionQueryStep::Pending;
+                    }
                 }
             }
-        } else {
-            self.oversized.remove(id);
-        }
-        true
-    }
-
-    pub(crate) fn query(&self, bounds: CollisionAabb) -> Vec<String> {
-        let mut candidates = BTreeSet::new();
-        if let Some(cells) = self.covered_cells(bounds) {
-            for cell in cells {
-                if let Some(ids) = self.cells.get(&cell) {
-                    candidates.extend(ids.iter().cloned());
+            CollisionQueryStage::Oversized => match self.oversized.iter().nth(query.member_cursor) {
+                Some(id) => {
+                    query.member_cursor += 1;
+                    Some(id)
+                }
+                None => {
+                    query.stage = CollisionQueryStage::Complete;
+                    return CollisionQueryStep::Complete;
+                }
+            },
+            CollisionQueryStage::Entries => match self.entries.keys().nth(query.member_cursor) {
+                Some(id) => {
+                    query.member_cursor += 1;
+                    Some(id)
+                }
+                None => {
+                    query.stage = CollisionQueryStage::Complete;
+                    return CollisionQueryStep::Complete;
+                }
+            },
+            CollisionQueryStage::Complete => return CollisionQueryStep::Complete,
+        };
+        if let Some(id) = candidate {
+            query.examined_members += 1;
+            if self.entries.get(id.as_str()).is_some_and(|entry| entry.intersects(&query.bounds)) && !query.candidates.contains(id.as_str()) {
+                match query.candidates.try_insert(id.clone()) {
+                    Ok(FixedOwnerSetInsert::Inserted) => {}
+                    Ok(FixedOwnerSetInsert::Present { input }) => drop(input),
+                    Err(input) => {
+                        drop(input);
+                        query.truncated = true;
+                    }
                 }
             }
-            candidates.extend(self.oversized.iter().cloned());
-        } else {
-            candidates.extend(self.entries.keys().cloned());
         }
-        candidates.into_iter().filter(|id| self.entries.get(id).is_some_and(|candidate| candidate.intersects(&bounds))).collect()
-    }
-
-    pub(crate) fn entry_intersects(&self, id: &str, bounds: CollisionAabb) -> bool {
-        self.entries.get(id).is_some_and(|candidate| candidate.intersects(&bounds))
+        CollisionQueryStep::Pending
     }
 
     pub(crate) fn retire_one_owner(&mut self) -> bool {
@@ -575,43 +1108,57 @@ impl CollisionSpatialIndex {
             self.retiring_key.take();
             return false;
         }
-        if let Some(ids) = self.retiring_ids.as_mut() {
-            if let Some(id) = ids.pop() {
+        if let Some(bucket) = self.retiring_bucket.as_mut() {
+            if let Some(id) = bucket.pop_first() {
                 self.retiring_key = Some(id);
                 return false;
             }
-            if ids.capacity() != 0 {
-                drop(std::mem::take(ids));
+            if bucket.retire_backing() {
                 return false;
             }
-            self.retiring_ids.take();
+            self.retiring_bucket.take();
             return false;
         }
         if let Some((key, _)) = self.entries.pop_first() {
             self.retiring_key = Some(key);
             return false;
         }
-        if let Some((_, ids)) = self.cells.pop_first() {
-            self.retiring_ids = Some(ids);
+        if let Some((_, bucket)) = self.cells.pop_first() {
+            self.retiring_bucket = Some(bucket);
             return false;
         }
         if let Some(key) = self.oversized.pop_first() {
             self.retiring_key = Some(key);
             return false;
         }
-        if self.collection_backings.retire_one() {
+        if self.entries.retire_backing() {
+            return false;
+        }
+        if self.cells.retire_backing() {
+            return false;
+        }
+        if self.oversized.retire_backing() {
             return false;
         }
         true
     }
 
     pub(crate) fn terminal_owners_empty(&self) -> bool {
-        self.entries.is_empty() && self.cells.is_empty() && self.oversized.is_empty() && self.retiring_key.is_none() && self.retiring_ids.is_none() && self.collection_backings.terminal_owners_empty()
+        self.entries.terminal_owners_empty() && self.cells.terminal_owners_empty() && self.oversized.terminal_owners_empty() && self.retiring_key.is_none() && self.retiring_bucket.is_none()
+    }
+
+    #[cfg(test)]
+    pub(crate) fn fixed_backing_witness_for_test(&self) -> [(usize, usize, usize); 3] {
+        [
+            (self.entries.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, CollisionAabb>::page_bytes(), self.entries.len()),
+            (self.cells.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<(i32, i32, i32), FixedOwnerSet<String>>::page_bytes(), self.cells.len()),
+            (self.oversized.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, ()>::page_bytes(), self.oversized.len()),
+        ]
     }
 
     pub(crate) fn census_one_owner(&self, cursor: &mut CollisionIndexOwnerCensusCursor) -> CollisionIndexOwnerCensusStep {
         let credit = match cursor.section {
-            0 => collision_index_fixed_backing_credit(self.entries.len(), self.collection_backings.pages[0].is_some()),
+            0 => self.entries.backing_credit(),
             1 => match self.entries.keys().nth(cursor.index) {
                 Some(id) => collision_index_string_credit(id).and_then(|(items, bytes)| items.checked_add(1).map(|items| (items, bytes))),
                 None => {
@@ -620,16 +1167,13 @@ impl CollisionSpatialIndex {
                     return CollisionIndexOwnerCensusStep::Pending { items: 0, bytes: 0 };
                 }
             },
-            2 => collision_index_fixed_backing_credit(self.cells.len(), self.collection_backings.pages[1].is_some()),
+            2 => self.cells.backing_credit(),
             3 => match self.cells.values().nth(cursor.index) {
-                Some(ids) if cursor.inner == 0 => {
-                    let Some(bytes) = ids.capacity().checked_mul(std::mem::size_of::<String>()).filter(|bytes| ids.capacity() <= 32 && *bytes <= 16 * 1024) else {
-                        return CollisionIndexOwnerCensusStep::Rejected;
-                    };
+                Some(bucket) if cursor.inner == 0 => {
                     cursor.inner = 1;
-                    return CollisionIndexOwnerCensusStep::Pending { items: usize::from(bytes != 0) + 1, bytes };
+                    bucket.backing_credit().and_then(|(items, bytes)| items.checked_add(1).map(|items| (items, bytes)))
                 }
-                Some(ids) => match ids.get(cursor.inner - 1) {
+                Some(bucket) => match bucket.iter().nth(cursor.inner - 1) {
                     Some(id) => collision_index_string_credit(id),
                     None => {
                         cursor.index += 1;
@@ -644,7 +1188,7 @@ impl CollisionSpatialIndex {
                     return CollisionIndexOwnerCensusStep::Pending { items: 0, bytes: 0 };
                 }
             },
-            4 => collision_index_fixed_backing_credit(self.oversized.len(), self.collection_backings.pages[2].is_some()),
+            4 => self.oversized.backing_credit(),
             5 => match self.oversized.iter().nth(cursor.index) {
                 Some(id) => collision_index_string_credit(id).and_then(|(items, bytes)| items.checked_add(1).map(|items| (items, bytes))),
                 None => {
@@ -655,22 +1199,19 @@ impl CollisionSpatialIndex {
             },
             6 => self.retiring_key.as_ref().map_or(Some((0, 0)), collision_index_string_credit),
             7 => {
-                let Some(ids) = &self.retiring_ids else {
+                let Some(bucket) = &self.retiring_bucket else {
                     cursor.section += 1;
                     return CollisionIndexOwnerCensusStep::Pending { items: 0, bytes: 0 };
                 };
                 if cursor.inner == 0 {
-                    let Some(bytes) = ids.capacity().checked_mul(std::mem::size_of::<String>()).filter(|bytes| ids.capacity() <= 32 && *bytes <= 16 * 1024) else {
-                        return CollisionIndexOwnerCensusStep::Rejected;
-                    };
                     cursor.inner = 1;
-                    return CollisionIndexOwnerCensusStep::Pending { items: usize::from(bytes != 0), bytes };
+                    bucket.backing_credit()
                 } else {
-                    match ids.get(cursor.inner - 1) {
+                    match bucket.iter().nth(cursor.inner - 1) {
                         Some(id) => collision_index_string_credit(id),
                         None => {
                             cursor.section += 1;
-                            return CollisionIndexOwnerCensusStep::Pending { items: 0, bytes: 0 };
+                            Some((0, 0))
                         }
                     }
                 }
@@ -688,25 +1229,6 @@ impl CollisionSpatialIndex {
         CollisionIndexOwnerCensusStep::Pending { items, bytes }
     }
 
-    fn covered_cells(&self, bounds: CollisionAabb) -> Option<Vec<(i32, i32, i32)>> {
-        let cell = |value: f32| (value / self.cell_size).floor().clamp(i32::MIN as f32, i32::MAX as f32) as i32;
-        let min = [cell(bounds.min[0]), cell(bounds.min[1]), cell(bounds.min[2])];
-        let max = [cell(bounds.max[0]), cell(bounds.max[1]), cell(bounds.max[2])];
-        let spans = [0, 1, 2].map(|axis| u64::try_from(i64::from(max[axis]) - i64::from(min[axis]) + 1).unwrap_or(0));
-        let count = spans.into_iter().try_fold(1_u64, u64::checked_mul).unwrap_or(u64::MAX);
-        if count > Self::MAX_CELLS_PER_ENTRY {
-            return None;
-        }
-        let mut cells = Vec::new();
-        for x in min[0]..=max[0] {
-            for y in min[1]..=max[1] {
-                for z in min[2]..=max[2] {
-                    cells.push((x, y, z));
-                }
-            }
-        }
-        Some(cells)
-    }
 }
 //#endregion 🗺️BroadPhase
 
@@ -735,8 +1257,12 @@ impl CollisionStepContext for semio_framework_job::StepContext<'_> {
 pub(crate) enum CollisionOverlapStage {
     BroadPhaseInit,
     PartPairs,
+    ContainmentA,
+    ContainmentB,
     SampleInit,
     Sampling,
+    SamplingPointA,
+    SamplingPointB,
     Complete,
 }
 
@@ -755,6 +1281,8 @@ pub(crate) struct CollisionOverlapState {
     pub(crate) sample_cursor: usize,
     pub(crate) inside_both: usize,
     pub(crate) last_sample: Option<[f32; 3]>,
+    containment_hit: bool,
+    current_sample: Option<[f32; 3]>,
     intersection_min: [f32; 3],
     intersection_max: [f32; 3],
     fallback_center: [f32; 3],
@@ -777,6 +1305,8 @@ impl CollisionOverlapState {
             sample_cursor: 0,
             inside_both: 0,
             last_sample: None,
+            containment_hit: false,
+            current_sample: None,
             intersection_min: [0.0; 3],
             intersection_max: [0.0; 3],
             fallback_center: [0.0; 3],
@@ -809,13 +1339,15 @@ impl CollisionOverlapState {
         let result = match stage {
             CollisionOverlapStage::BroadPhaseInit => self.init_broad_phase(a, world_a, b, world_b),
             CollisionOverlapStage::PartPairs => self.step_part_pair(a, world_a, b, world_b),
+            CollisionOverlapStage::ContainmentA => self.step_containment(a, world_a, true),
+            CollisionOverlapStage::ContainmentB => self.step_containment(b, world_b, false),
             CollisionOverlapStage::SampleInit => self.init_samples(),
-            CollisionOverlapStage::Sampling => self.step_samples(context, a, world_a, b, world_b),
+            CollisionOverlapStage::Sampling => self.begin_sample(context),
+            CollisionOverlapStage::SamplingPointA => self.step_sample_part(a, world_a, true),
+            CollisionOverlapStage::SamplingPointB => self.step_sample_part(b, world_b, false),
             CollisionOverlapStage::Complete => self.complete_result(),
         };
-        if stage != CollisionOverlapStage::Sampling {
-            context.consume_fuel(1);
-        }
+        context.consume_fuel(1);
         if context.is_cancelled() {
             CollisionStepResult::Cancelled
         } else {
@@ -848,13 +1380,12 @@ impl CollisionOverlapState {
             }
             return CollisionStepResult::Pending;
         }
-        let center = Point3d::new(self.fallback_center[0], self.fallback_center[1], self.fallback_center[2]);
-        if point_inside_body(a, world_a, center) && point_inside_body(b, world_b, center) {
-            self.stage = CollisionOverlapStage::SampleInit;
-            CollisionStepResult::Pending
-        } else {
-            self.finish(0.0, false)
-        }
+        self.current_sample = Some(self.fallback_center);
+        self.part_a_cursor = 0;
+        self.part_b_cursor = 0;
+        self.containment_hit = false;
+        self.stage = CollisionOverlapStage::ContainmentA;
+        CollisionStepResult::Pending
     }
 
     fn advance_part_pair(&mut self, b_part_count: usize) {
@@ -878,32 +1409,77 @@ impl CollisionOverlapState {
         CollisionStepResult::Pending
     }
 
-    fn step_samples<C: CollisionStepContext>(&mut self, context: &mut C, a: &CollisionBody, world_a: &Pose3d, b: &CollisionBody, world_b: &Pose3d) -> CollisionStepResult {
-        let batch_end = self.sample_cursor.saturating_add(self.sample_batch_size).min(self.sample_count);
-        while self.sample_cursor < batch_end {
-            if context.is_cancelled() {
-                return CollisionStepResult::Cancelled;
-            }
-            if context.should_yield() {
-                return CollisionStepResult::Pending;
-            }
-            let sample = [self.next_sample_axis(0), self.next_sample_axis(1), self.next_sample_axis(2)];
-            self.last_sample = Some(sample);
-            self.sample_cursor += 1;
-            context.consume_fuel(1);
-            let point = Point3d::new(sample[0], sample[1], sample[2]);
-            if point_inside_body(a, world_a, point) && point_inside_body(b, world_b, point) {
-                self.inside_both += 1;
-                if self.estimated_overlap() > self.overlap_budget {
-                    return self.finish(self.overlap_budget + 1.0, true);
-                }
-            }
+    fn step_containment(&mut self, body: &CollisionBody, world: &Pose3d, first: bool) -> CollisionStepResult {
+        let cursor = if first { &mut self.part_a_cursor } else { &mut self.part_b_cursor };
+        let sample = self.current_sample.expect("containment point");
+        if let Some(part) = body.parts.get(*cursor) {
+            *cursor += 1;
+            let local = world.inverse().transform_point(&Point3d::new(sample[0], sample[1], sample[2]));
+            let part_local = part.local_pose.inverse().transform_point(&local);
+            self.containment_hit |= part.shape.contains_point(&part.local_pose, &part_local);
+            return CollisionStepResult::Pending;
+        }
+        if !self.containment_hit {
+            return self.finish(0.0, false);
+        }
+        self.containment_hit = false;
+        if first {
+            self.stage = CollisionOverlapStage::ContainmentB;
+        } else {
+            self.stage = CollisionOverlapStage::SampleInit;
+            self.current_sample = None;
+        }
+        CollisionStepResult::Pending
+    }
+
+    fn begin_sample<C: CollisionStepContext>(&mut self, context: &mut C) -> CollisionStepResult {
+        if context.is_cancelled() {
+            return CollisionStepResult::Cancelled;
         }
         if self.sample_cursor == self.sample_count {
-            self.finish(self.estimated_overlap(), false)
-        } else {
-            CollisionStepResult::Pending
+            return self.finish(self.estimated_overlap(), false);
         }
+        let sample = [self.next_sample_axis(0), self.next_sample_axis(1), self.next_sample_axis(2)];
+        self.last_sample = Some(sample);
+        self.current_sample = Some(sample);
+        self.sample_cursor += 1;
+        self.part_a_cursor = 0;
+        self.part_b_cursor = 0;
+        self.containment_hit = false;
+        self.stage = CollisionOverlapStage::SamplingPointA;
+        CollisionStepResult::Pending
+    }
+
+    fn step_sample_part(&mut self, body: &CollisionBody, world: &Pose3d, first: bool) -> CollisionStepResult {
+        let cursor = if first { &mut self.part_a_cursor } else { &mut self.part_b_cursor };
+        let sample = self.current_sample.expect("sampling point");
+        if let Some(part) = body.parts.get(*cursor) {
+            *cursor += 1;
+            let local = world.inverse().transform_point(&Point3d::new(sample[0], sample[1], sample[2]));
+            let part_local = part.local_pose.inverse().transform_point(&local);
+            self.containment_hit |= part.shape.contains_point(&part.local_pose, &part_local);
+            return CollisionStepResult::Pending;
+        }
+        if first {
+            if self.containment_hit {
+                self.containment_hit = false;
+                self.stage = CollisionOverlapStage::SamplingPointB;
+            } else {
+                self.stage = CollisionOverlapStage::Sampling;
+                self.current_sample = None;
+            }
+            return CollisionStepResult::Pending;
+        }
+        if self.containment_hit {
+            self.inside_both += 1;
+            if self.estimated_overlap() > self.overlap_budget {
+                return self.finish(self.overlap_budget + 1.0, true);
+            }
+        }
+        self.containment_hit = false;
+        self.current_sample = None;
+        self.stage = CollisionOverlapStage::Sampling;
+        CollisionStepResult::Pending
     }
 
     fn next_sample_axis(&mut self, axis: usize) -> f32 {
@@ -1237,11 +1813,11 @@ mod tests {
         let mut index = CollisionSpatialIndex::new(2.0);
         let near = CollisionAabb { min: [-1.0; 3], max: [1.0; 3] };
         let far = CollisionAabb { min: [10.0; 3], max: [12.0; 3] };
-        index.upsert("zeta".into(), near);
-        index.upsert("alpha".into(), near);
-        index.upsert("far".into(), far);
+        assert!(index.upsert("zeta".into(), near).is_ok());
+        assert!(index.upsert("alpha".into(), near).is_ok());
+        assert!(index.upsert("far".into(), far).is_ok());
         assert_eq!(index.query(near), vec!["alpha".to_string(), "zeta".to_string()]);
-        index.upsert("zeta".into(), far);
+        assert!(index.upsert("zeta".into(), far).is_ok());
         assert_eq!(index.query(near), vec!["alpha".to_string()]);
         assert!(index.remove("alpha"));
         assert!(!index.remove("missing"));
@@ -1253,8 +1829,8 @@ mod tests {
         let mut index = CollisionSpatialIndex::new(1.0);
         let world = CollisionAabb { min: [-1.0e9; 3], max: [1.0e9; 3] };
         let near = CollisionAabb { min: [-1.0; 3], max: [1.0; 3] };
-        index.upsert("world".into(), world);
-        index.upsert("near".into(), near);
+        assert!(index.upsert("world".into(), world).is_ok());
+        assert!(index.upsert("near".into(), near).is_ok());
         assert_eq!(index.query(near), vec!["near".to_string(), "world".to_string()]);
         assert_eq!(index.query(world), vec!["near".to_string(), "world".to_string()]);
         assert!(index.remove("world"));
@@ -1278,8 +1854,8 @@ mod tests {
         }
 
         let mut index = CollisionSpatialIndex::new(2.0);
-        index.upsert("alpha-owned".into(), CollisionAabb { min: [-1.0; 3], max: [1.0; 3] });
-        index.upsert("oversized-owned".into(), CollisionAabb { min: [-1.0e9; 3], max: [1.0e9; 3] });
+        assert!(index.upsert("alpha-owned".into(), CollisionAabb { min: [-1.0; 3], max: [1.0; 3] }).is_ok());
+        assert!(index.upsert("oversized-owned".into(), CollisionAabb { min: [-1.0e9; 3], max: [1.0e9; 3] }).is_ok());
         let mut grants = 0;
         while !index.terminal_owners_empty() {
             let before = retained_credit(&index);
@@ -1291,6 +1867,53 @@ mod tests {
         }
         assert!(grants > 4, "entry, bucket vector, nested ids, and oversized key retire independently");
         assert!(index.retire_one_owner());
+    }
+
+    #[test]
+    fn spatial_fixed_collections_use_the_credited_pages_and_return_identical_plus_one_owners() {
+        let mut entries = FixedOwnerMap::<String, CollisionAabb>::new();
+        let entry_page = entries.backing_ptr().expect("entry page");
+        for index in 0..FIXED_OWNER_SLOTS {
+            assert!(matches!(entries.try_insert(format!("entry-{index:02}"), CollisionAabb { min: [index as f32; 3], max: [index as f32 + 1.0; 3] }), Ok(FixedOwnerMapInsert::Inserted)));
+        }
+        let rejected_entry = String::from("entry-plus-one");
+        let rejected_entry_ptr = rejected_entry.as_ptr();
+        let Err((rejected_entry, _)) = entries.try_insert(rejected_entry, CollisionAabb { min: [0.0; 3], max: [1.0; 3] }) else { panic!("entry cap + 1") };
+        assert_eq!(rejected_entry.as_ptr(), rejected_entry_ptr);
+        assert_eq!(entries.backing_ptr(), Some(entry_page));
+
+        let mut cells = FixedOwnerMap::<(i32, i32, i32), Vec<String>>::new();
+        let cell_page = cells.backing_ptr().expect("cell page");
+        for index in 0..FIXED_OWNER_SLOTS {
+            assert!(matches!(cells.try_insert((index as i32, 0, 0), Vec::new()), Ok(FixedOwnerMapInsert::Inserted)));
+        }
+        let rejected_ids = vec![String::from("cell-plus-one")];
+        let rejected_ids_ptr = rejected_ids.as_ptr();
+        let Err((_, rejected_ids)) = cells.try_insert((FIXED_OWNER_SLOTS as i32, 0, 0), rejected_ids) else { panic!("cell cap + 1") };
+        assert_eq!(rejected_ids.as_ptr(), rejected_ids_ptr);
+        assert_eq!(cells.backing_ptr(), Some(cell_page));
+
+        let mut oversized = FixedOwnerSet::<String>::new();
+        let oversized_page = oversized.backing_ptr().expect("oversized page");
+        for index in 0..FIXED_OWNER_SLOTS {
+            assert!(matches!(oversized.try_insert(format!("oversized-{index:02}")), Ok(FixedOwnerSetInsert::Inserted)));
+        }
+        let rejected_oversized = String::from("oversized-plus-one");
+        let rejected_oversized_ptr = rejected_oversized.as_ptr();
+        let Err(rejected_oversized) = oversized.try_insert(rejected_oversized) else { panic!("oversized cap + 1") };
+        assert_eq!(rejected_oversized.as_ptr(), rejected_oversized_ptr);
+        assert_eq!(oversized.backing_ptr(), Some(oversized_page));
+
+        for _ in 0..FIXED_OWNER_SLOTS {
+            drop(entries.pop_first().expect("one entry"));
+            drop(cells.pop_first().expect("one cell"));
+            drop(oversized.pop_first().expect("one oversized id"));
+        }
+        assert!(entries.retire_backing());
+        assert!(!cells.terminal_owners_empty(), "only one actual collection page retires per close grant");
+        assert!(cells.retire_backing());
+        assert!(oversized.retire_backing());
+        assert!(entries.terminal_owners_empty() && cells.terminal_owners_empty() && oversized.terminal_owners_empty());
     }
 
     #[test]

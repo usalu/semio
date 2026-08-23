@@ -462,6 +462,18 @@ function runPhases(repoRoot: string, segments: readonly string[], phases: readon
     }
   }
 
+  // 🚫️A selected case that produced no result at all is not a pass — it is an absence of evidence,
+  // and the two must never look the same. The commonest cause is legitimate (asking for the oracle
+  // phase of a recorded no-oracle case, which by definition has no oracle to run), so this reports
+  // rather than fails; what it must not do is stay silent while the run prints a green summary.
+  const exercised = new Set(allResults.map((result) => `${result.owner}::${result.case}`));
+  const unexercised = cases.filter((discovered) => !exercised.has(`${discovered.owner}::${discovered.case}`));
+  for (const discovered of unexercised) {
+    const decision = oracleDecision(repoRoot, discovered, level);
+    const why = decision.implementation === null && decision.noOracleDecision !== null ? `recorded no-oracle decision ${decision.noOracleDecision} — its evidence is discharged by the subject phase` : `no implementation served the requested phase(s) ${phases.join(", ")}`;
+    console.error(`[test] not-exercised ${discovered.caseDir} (${why})`);
+  }
+
   const summary = summarizeRun(level, cases.length, scenarioCount, allResults, parity, problems);
   const dir = reportsDir(repoRoot);
   mkdirSync(dir, { recursive: true });
@@ -472,7 +484,7 @@ function runPhases(repoRoot: string, segments: readonly string[], phases: readon
   writeFileSync(join(dir, "📈️metrics.json"), `${JSON.stringify(metrics, null, 2)}\n`);
   markRunComplete(dir);
 
-  console.log(`[test] level=${level} cases=${summary.cases} executed=${summary.executed} passed=${summary.passed} failed=${summary.failed} errored=${summary.errored} parity=${parity.filter((row) => row.equal).length}/${parity.length}`);
+  console.log(`[test] level=${level} cases=${summary.cases} executed=${summary.executed} passed=${summary.passed} failed=${summary.failed} errored=${summary.errored} parity=${parity.filter((row) => row.equal).length}/${parity.length}${unexercised.length > 0 ? ` not-exercised=${unexercised.length}` : ""}`);
   if (segments.includes("--metrics")) console.log(formatMetrics(metrics, readImplementationCoverage(repoRoot)));
   for (const problem of problems) console.error(`[test] ${problem}`);
   return summary.failed + summary.errored + problems.length === 0 ? 0 : 1;

@@ -5,8 +5,28 @@ performs it first with the registered third-party reference implementation, and 
 through an independent reader. Each kind is exercised twice — applied, and inverted — plus a
 full decode/re-encode identity scenario that forbids byte pass-through.
 
-Verified with `bun ./📜️script.ts oracle exhaustive --owner 🗄️stdio --case <case>` from
-`🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test`.
+## Verified totals
+
+Every stdio artifact is covered: **38 mutation subsets**, one per standard-and-subset that declares a
+vocabulary. Full sweep, run after the last agent landed:
+
+```
+$ bun ./📜️script.ts oracle exhaustive --owner 🗄️stdio          # exit 0
+[test] not-exercised …/💾️binary/🧪️tests/mutate-binary-raw (recorded no-oracle decision …)
+[test] not-exercised …/📄txt/🧪️tests/mutate-txt-utf-8 (recorded no-oracle decision …)
+[test] level=exhaustive cases=47 executed=764 passed=764 failed=0 errored=0 parity=0/0 not-exercised=2
+
+$ bun ./📜️script.ts contract                                    # exit 0
+0 high-priority breach(es) across 0 rule(s)
+
+$ cargo test --features oracles --lib                           # oracle crate
+test result: ok. 131 passed; 0 failed; 1 ignored
+```
+
+`parity=0/0` is not a pass — it is the honest record that no subject ran. See "Honest limits".
+
+Individual cases were verified with
+`bun ./📜️script.ts oracle exhaustive --owner 🗄️stdio --case <case>`.
 
 ## Green
 
@@ -26,6 +46,81 @@ Verified with `bun ./📜️script.ts oracle exhaustive --owner 🗄️stdio --c
 | deflate rfc1950 any | `mutate-deflate-rfc1950` | 11/11 | flate2 1 | the repository's own README at compression levels 1 and 9 |
 | wav riff-pcm any | `mutate-wav-riff-pcm` | 11/11 | hound 3 | real camera-captured luma data, 12 s PCM |
 | pdf 1.4 any | `mutate-pdf-1-4` | 5/5 | lopdf 0.44 | the real 6.3 MB, 65-page bachelor thesis |
+
+## Wave 8 — structured text, office and CAD/BIM (in progress)
+
+| Subset | Case | Scenarios | Reference | Real input |
+|---|---|---|---|---|
+| svg 1.1 any | `mutate-svg-1-1` | 23/23 | quick-xml 0.42 | the real QR-code logo: 664 groups, 329 rects, 5 namespaces, a 74 KB base64 `xlink:href` |
+| mp4 isobmff any | `mutate-mp4-isobmff` | 21/21 | mp4 0.14 | 2.7 MB stream-copied excerpt of the real 16 MB video (real encoded samples) |
+| ifc 4 any | `mutate-ifc-4` | 23/23 | ruststep 0.4 (reader only) | the real 2.5 MB IfcOpenShell Nakagin Capsule Tower export, 24,792 entities |
+| step ap214 any | `mutate-step-ap214` | 23/23 | ruststep 0.4 (reader only) | a real 78 KB BIM export, relabelled to AP214 — see caveat below |
+| xml 1.0 any | `mutate-xml-1-0` | 17/17 | quick-xml 0.42 | `word/document.xml` extracted from the real committed ECMA-376 DOCX |
+| dxf r12 any | `mutate-dxf-r12` | 39/39 | dxf 0.6 | real R12 tables from a real AC1015 export; geometry is representative — see caveat |
+| html 5 any | `mutate-html-5` | 21/21 | html5ever 0.39 | the real 149 KB TYPO3 presentation page |
+| xlsx ecma-376 any | `mutate-xlsx-ecma-376` | 21/21 | calamine 0.36 + rust_xlsxwriter 0.96 | real 2-sheet workbook, 229-entry shared-string table, from the real marketplace survey |
+| ply 1.0 any | `mutate-ply-1-0` | 21/21 | ply-rs 0.1.3 | 874 KB real mesh from the committed `🧊️pattern-sphere.glb`: 8,449 vertices, 16,128 faces, 50 edges |
+| tsv iana any | `mutate-tsv-iana` | 15/15 | csv 1 (tab delimiter) | the real reuse-marketplace survey, 51 × 12 |
+| md commonmark any | `mutate-md-commonmark` | 13/13 | comrak 0.54 | the repository's own 47 KB README |
+| json rfc8259 any | `mutate-json-rfc8259` | reworking | json-rust 0.12 | the real 424 KB CAD model |
+
+### Evidence typed per mutation kind, not per case
+
+The XLSX case is the sharpest example of the read-only discipline being applied at the right
+granularity. `calamine`'s shared-string table is private API and `rust_xlsxwriter` can only create
+SST entries as a byproduct of writing a cell, so neither crate can address the pool by raw index.
+Rather than claim uniform differential coverage, 7 of the 10 kinds are typed `@mode-differential`
+(a genuine read → mutate → rebuild second producer) and the 3 shared-string kinds `@mode-round-trip`,
+with the oracle returning bytes unchanged and the comparison carried by tracked count arithmetic.
+
+A `@mode-differential` tag in this repository now means a second producer genuinely existed for that
+specific mutation — not for the format in general.
+
+### Caveat on the DXF fixture — the tables are real, the geometry is not
+
+`temp/simple_bus_shelter-gray_3D.dxf` is a genuine 445 KB AC1015 (R2000) export, but its whole
+`ENTITIES` section is a single `3DSOLID` carrying AutoCAD's proprietary text-obfuscated ACIS body.
+The `dxf` 0.6 reference crate exposes that only as opaque `custom_data: Vec<String>`, nothing in this
+repository can decode it, and `3DSOLID` does not exist in the R12 specification at all — so there is
+no real R12-representable geometry in the file to down-convert.
+
+The committed fixture therefore carries forward what genuinely IS real from that export — the
+`LAYER`, `STYLE`, `LTYPE` and block-record tables — and substitutes representative 2D geometry for
+the entities. Both the derived fixture and the real AC1015 source are committed, so the substitution
+is auditable.
+
+This is the weakest real-world claim in the whole effort and should be read as such: the DXF case
+exercises 19 mutation kinds against real table structures and stand-in geometry, not against a real
+drawing. A genuine R12 export would fix it.
+
+### Caveat on the STEP fixture — it is relabelled, not native
+
+No git-tracked real-world **AP214** file exists in this repository. Every real STEP file present,
+including the one this ticket nominated, declares
+`FILE_SCHEMA AP242_MANAGED_MODEL_BASED_3D_ENGINEERING_MIM_LF` — AP242. The committed fixture is a
+real 78 KB BIM export whose `FILE_SCHEMA` line was changed to `AUTOMOTIVE_DESIGN`; its 1,396-entity
+graph is untouched real data and contains no AP242-only PMI or GD&T entities, which is what makes
+the relabelling defensible.
+
+It is still a relabelled file, not a native AP214 export, and should not be read as one. Sourcing a
+genuine AP214 export would strengthen this case.
+
+### The JSON oracle had to be replaced
+
+`serde_json` was registered first and the purity gate fired. It was made green with a
+`productionDebt` record enumerating **423** reachable-from paths, growing that manifest to 86 KB.
+That is silencing a gate rather than recording debt, and the gate was correct: the JSON snapshot
+declares `impl From<serde_json::Value> for JsonValue` in production code at
+`.../🧬️schema/📸️snapshot/🦀️component.rs:46`, so the differential would compare our implementation
+against something it already converts from.
+
+The reference is now **json-rust 0.12**, which appears nowhere in production and is genuinely
+independent. The debt record is deleted, not relocated.
+
+The general rule this establishes: **an oracle that is already production-reachable yields a test
+that can only pass.** Three registrations tripped the check this session — `image` and `png` were
+pre-existing debt correctly recorded against a small, named set of files, `serde_json` was an
+invalid choice and was replaced.
 
 ## The page operations the brief asked for
 
@@ -49,14 +144,29 @@ any inverse — the decode/re-encode round trip itself was not projection-stable
 scenarios passed only because both sides went through the same re-encode and the instability
 cancelled; the inverse and identity scenarios compare against the ORIGINAL, where it did not.
 
-Two real defects in the `gif` 0.13 reference library came out of it, each reproduced standalone
+Four real defects in reference libraries came out of this effort — two in `gif` 0.13, one in
+`ply-rs` 0.1.3, one in `ruststep` 0.4, each reproduced standalone
 before being worked around, and each documented in the oracle module rather than hidden by loosening
 the projection:
 
 1. `gif::Encoder::new` unconditionally sets the global-colour-table flag and writes a minimum
    two-entry padding table even when the palette is empty, with no way to omit it through the public
    API. The phantom table is stripped from the output when the snapshot declares no GCT.
-2. `gif::Decoder` always de-interlaces on read and resets `interlaced` to `false`, while
+2. **`ply-rs` 0.1.3 writes the wrong list-length prefix in binary mode.**
+   `Writer::__write_binary_element`'s `PropertyType::List` arm emits `element_def.count` — the
+   element's total row count — instead of the current row's own list length. Writing the real
+   16,128-face fixture as `binary_little_endian` and reading it back with the SAME crate fails
+   (`"Couldn't find a list element at index 114"`; 16128 truncates to 0 as a `uchar`). Found by
+   reading the crate's source and reproducing it in a standalone probe, then worked around with a
+   hand-written binary payload encoder that reuses the crate's correct header writer — every ASCII
+   write and every read still goes through `ply-rs` unmodified.
+3. **`ruststep` 0.4 never implements the STEP doubled-apostrophe escape.** ISO 10303-21 encodes a
+   literal `'` inside a string as `''`, and real IfcOpenShell output uses it — entity #17012 of the
+   real Nakagin export carries an embedded-JSON property value that depends on it. The obvious
+   text-level fix was tried and *proven wrong* before being discarded: it corrupts legitimately empty
+   header fields such as `FILE_NAME`'s `('')` entries. The working fix is a string-delimiter-aware
+   single-pass scanner, verified against the real 24,792-entity fixture in a standalone probe.
+4. `gif::Decoder` always de-interlaces on read and resets `interlaced` to `false`, while
    `gif::Encoder` writes the buffer verbatim and only flips the flag bit. A mutation that flips
    `interlaced` must therefore reorder the buffer into GIF's four-pass storage order itself, or the
    flag and the data disagree.
@@ -75,6 +185,15 @@ their job.
 - **`encode_tiff` is single-IFD only.** Its own `EncodeScopeNote` documents that it silently drops
   every IFD beyond the first. The real fixture is deliberately two-IFD, so `mutate-insert-ifd` and
   `mutate-remove-ifd` will legitimately fail against the subject. Pre-existing, not introduced here.
+- **The shared XML codec's `xml_escape_attr` does not re-escape tab, newline or carriage return**
+  when re-emitting an attribute value it decoded from a `&#10;`-style character reference, while
+  `quick-xml`'s writer does. Found by the SVG case against a real 7,301-character `xlink:href`.
+- **`decode_avi` rejects real ffmpeg output.** It requires a 64-byte `strh`, but ffmpeg writes the
+  classic 56-byte `AVISTREAMHEADER` with `rcFrame` omitted — so production cannot read the real
+  fixture at all. A synthetic 64-byte fixture would never have shown this.
+- **`AviSnapshot` has no slot for nested `vprp`/`JUNK` chunks** inside `hdrl`/`strl`; both codecs
+  silently drop about 4.4 KB of the real file's data on decode. A schema-completeness gap rather
+  than a coding bug, and again only visible against a real recording.
 - **`encode_bmp` always emits 24-bit BI_RGB and discards the palette** regardless of what the
   snapshot holds. Palette mutations therefore re-encode pixel-identical content on both sides — a
   faithful agreement about a lossy encoder, documented in the oracle module, not a fabricated pass.
@@ -125,6 +244,61 @@ It is recorded as `productionDebt` on the JSON oracle entry with the full reacha
 remediation plan, not silenced. Fixing it is a repository-wide change well outside this ticket, and
 it is the user's call whether to open one. The mechanical part — the public-API leak in that single
 snapshot file — is small and separable from the 1,503-file usage question.
+
+## A case that executed nothing reported success
+
+Found by the 💾️binary agent. `oracleDecision` returns no implementation for a feature carrying a
+recorded `@no-oracle-` decision — correctly, since there is no oracle to run — so the oracle phase
+executed zero scenarios for that case. The run then printed
+`executed=0 passed=0 failed=0` and exited 0, which is indistinguishable from a case that passed.
+
+That is the same failure this platform exists to prevent, one level up: absence of evidence reading
+as evidence. The contract phase already refuses a feature with no scenarios; nothing refused a RUN
+that exercised none.
+
+Fixed in the runner: any selected case that produced no result is now reported explicitly, with the
+reason, and the summary line carries a `not-exercised=N` count.
+
+```
+[test] not-exercised …/💾️binary/🧪️tests/mutate-binary-raw (recorded no-oracle decision
+       raw-buffer-no-format — its evidence is discharged by the subject phase)
+[test] level=exhaustive cases=1 executed=0 passed=0 failed=0 errored=0 parity=0/0 not-exercised=1
+```
+
+It reports rather than fails, because an empty oracle phase for a no-oracle case is legitimate. What
+is not legitimate is staying silent about it.
+
+**Consequence for this effort's totals:** the no-oracle cases (💾️binary, 📄txt) contribute **zero
+executed scenarios today**. Their evidence is written and waiting on the subject phase, which the
+os-kernel refactor still blocks. They must not be counted as green.
+
+## The in-crate unit tests were never compiling
+
+Agents added `#[cfg(test)]` unit tests beside their oracle dispatchers, and several reported them
+passing — but those runs were in standalone scratch crates. In the real oracle crate the whole test
+target failed to build, so **none of them had ever run**.
+
+The cause: seven agents copied `#[semio_framework_async_macros::async_test]` from surrounding
+production code into a standalone crate that does not depend on that macro, and the oracle code is
+synchronous anyway. Replacing it with plain `#[test]` (and dropping the `async`/`.await` that came
+with it) makes the target build.
+
+With the tests actually running: **83 pass, 11 fail.** The failures are real and were invisible until
+now. The first triaged one is instructive — the JSON oracle asserts its projection is insensitive to
+object member order, but the projection preserves order; what actually delivers order-insensitivity
+is the `ordered-json-v1` comparison profile at compare time. The scenario run passes legitimately
+because of the profile; the unit test's stronger claim about the projection is simply false.
+
+Two lessons worth keeping:
+- A test that cannot compile is indistinguishable from a test that passes, unless something forces
+  the target to build. The oracle crate's test target now needs to stay green.
+- "Verified in a scratch crate" is not verification of the committed code.
+
+The `KINDS`-versus-enum conformance tests live in the artifact's own production crate, which is
+blocked by the os-kernel refactor, so they still cannot run. In their place the catalogs were audited
+directly from this ticket folder: **all 30 catalogs match their `KINDS` const exactly and are
+complete against their enum's variant count.** That audit is coordinator tooling and deliberately
+not part of the framework, which must never parse implementation source.
 
 ## Honest limits
 

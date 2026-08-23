@@ -25,8 +25,8 @@ mod tests {
     use super::*;
     use crate::artifacts::raster::mutations::create_layer;
     use crate::artifacts::raster::op::RasterMutation;
+    use crate::artifacts::raster::RasterOwnedMap;
     use crate::artifacts::raster::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
-    use std::collections::BTreeMap;
 
     #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_and_agrees_with_dsl() {
@@ -38,9 +38,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn pack_round_trips_representative_document() {
-        let mut assets = BTreeMap::new();
+        let mut assets = RasterOwnedMap::new();
         assets.insert("asset-1".into(), crate::artifacts::raster::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() }));
-        let mut params = BTreeMap::new();
+        let mut params = RasterOwnedMap::new();
         params.insert("brightness".into(), dsl::to_dsl_value(&serde_json::json!(0.06)).expect("dsl value"));
         params.insert("label".into(), dsl::to_dsl_value(&serde_json::json!("Warm \"Curve\"")).expect("dsl value"));
         params.insert("enabled".into(), dsl::to_dsl_value(&serde_json::json!(true)).expect("dsl value"));

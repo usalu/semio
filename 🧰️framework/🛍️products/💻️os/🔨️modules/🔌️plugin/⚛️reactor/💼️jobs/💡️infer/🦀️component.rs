@@ -5,7 +5,7 @@
 //! diagnostics use a bounded ring. Inferences without an ActionBus route retain the synchronous
 //! two-phase registry path.
 
-use super::{JobCtx, run_two_phase};
+use super::{run_two_phase, JobCtx};
 use semio_framework_job::{CommitCandidate, Generation, Operation, OperationId, RevisionId, StepOutcome};
 use std::collections::VecDeque;
 use std::future::Future;

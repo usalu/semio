@@ -7,7 +7,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️comp
 //#endregion 📡️SemioProtocol
 
 use crate::artifacts::raster::op::RasterMutation;
-use crate::artifacts::raster::{RasterAssetChild, RasterImageAsset, RasterLayerNode, RasterSnapshot};
+use crate::artifacts::raster::{RasterAssetChild, RasterImageAsset, RasterLayerNode, RasterOwnedMap, RasterOwnedMapInsert, RasterOwnedMapPageBacking, RasterSnapshot};
 use protocol::{Mutation, OpBinary};
 
 /// 📦️ Encodes a `RasterMutation` to its binary command form.
@@ -23,9 +23,107 @@ pub async fn decode_op(bytes: &[u8]) -> Result<RasterMutation, protocol::Protoco
 //#region 🔖️OwnedEnvelopeCatalog
 const RASTER_OWNED_FIELD_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 const RASTER_MAXIMUM_NESTED_DEPTH: usize = 128;
-const RASTER_RETIREMENT_STACK_CAPACITY: usize = RASTER_MAXIMUM_NESTED_DEPTH * 2 + 8;
+const RASTER_RETIREMENT_LAYER_FRAMES: usize = RASTER_MAXIMUM_NESTED_DEPTH;
+const RASTER_RETIREMENT_VALUE_FRAMES: usize = RASTER_MAXIMUM_NESTED_DEPTH * 2;
+const RASTER_RETIREMENT_WRAPPER_FRAMES: usize = 16;
+const RASTER_RETIREMENT_ADMITTED_FRAME_CAPACITY: usize = RASTER_RETIREMENT_LAYER_FRAMES + RASTER_RETIREMENT_VALUE_FRAMES + RASTER_RETIREMENT_WRAPPER_FRAMES;
+const RASTER_RETIREMENT_REJECTED_OWNER_MARGIN: usize = 3;
+const RASTER_RETIREMENT_STACK_CAPACITY: usize = RASTER_RETIREMENT_ADMITTED_FRAME_CAPACITY + RASTER_RETIREMENT_REJECTED_OWNER_MARGIN;
+const RASTER_RETIREMENT_STACK_PAGE_CAPACITY: usize = 8;
+const RASTER_RETIREMENT_STACK_PAGE_COUNT: usize = (RASTER_RETIREMENT_STACK_CAPACITY - 1 + RASTER_RETIREMENT_STACK_PAGE_CAPACITY - 1) / RASTER_RETIREMENT_STACK_PAGE_CAPACITY;
 const RASTER_MAXIMUM_NESTED_ITEMS: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
 const RASTER_MAXIMUM_NESTED_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
+const RASTER_CONTROL_BACKING_BYTES: usize = RASTER_OWNED_FIELD_BYTES;
+const RASTER_NON_STACK_CONTROL_BACKINGS: usize = 13;
+const RASTER_MAXIMUM_CONTROL_BACKINGS: usize = RASTER_RETIREMENT_STACK_PAGE_COUNT + RASTER_NON_STACK_CONTROL_BACKINGS;
+const RASTER_MAXIMUM_CONTROL_BYTES: usize = RASTER_MAXIMUM_CONTROL_BACKINGS * RASTER_CONTROL_BACKING_BYTES;
+const RASTER_RETIREMENT_PROCESS_OPERATION_CAPACITY: usize = store::ARTIFACT_ENVELOPE_FIELD_DECODER_CAPACITY;
+const RASTER_RETIREMENT_PROCESS_PAGE_CAPACITY: usize = RASTER_RETIREMENT_STACK_PAGE_COUNT * RASTER_RETIREMENT_PROCESS_OPERATION_CAPACITY;
+static RASTER_RETIREMENT_PROCESS_PAGES: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+const RASTER_INITIALIZATION_PROCESS_CONTROL_CAPACITY: usize = RASTER_NON_STACK_CONTROL_BACKINGS * RASTER_RETIREMENT_PROCESS_OPERATION_CAPACITY;
+static RASTER_INITIALIZATION_PROCESS_CONTROLS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+const RASTER_STANDALONE_PROCESS_CONTROL_CAPACITY: usize = RASTER_NON_STACK_CONTROL_BACKINGS * RASTER_RETIREMENT_PROCESS_OPERATION_CAPACITY;
+static RASTER_STANDALONE_PROCESS_CONTROLS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
+struct RasterStandaloneControlCredit {
+    held_items: usize,
+    held_bytes: usize,
+}
+
+impl RasterStandaloneControlCredit {
+    fn try_claim() -> Result<Self, &'static str> {
+        let current = RASTER_STANDALONE_PROCESS_CONTROLS.load(std::sync::atomic::Ordering::Acquire);
+        let next = current.checked_add(1).ok_or("raster-store.standalone-control-overflow")?;
+        if next > RASTER_STANDALONE_PROCESS_CONTROL_CAPACITY {
+            return Err("raster-store.standalone-control-capacity");
+        }
+        if RASTER_STANDALONE_PROCESS_CONTROLS.compare_exchange(current, next, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+            return Err("raster-store.standalone-control-capacity");
+        }
+        Ok(Self { held_items: 1, held_bytes: RASTER_CONTROL_BACKING_BYTES })
+    }
+
+    fn release(&mut self) -> Result<bool, &'static str> {
+        if self.held_items != 1 || self.held_bytes != RASTER_CONTROL_BACKING_BYTES {
+            return Err("raster-store.standalone-control-duplicate-release");
+        }
+        let current = RASTER_STANDALONE_PROCESS_CONTROLS.load(std::sync::atomic::Ordering::Acquire);
+        let next = current.checked_sub(1).ok_or("raster-store.standalone-control-underflow")?;
+        if RASTER_STANDALONE_PROCESS_CONTROLS.compare_exchange(current, next, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+            return Ok(false);
+        }
+        self.held_items = 0;
+        self.held_bytes = 0;
+        Ok(true)
+    }
+}
+
+impl Drop for RasterStandaloneControlCredit {
+    fn drop(&mut self) {
+        assert!(self.held_items == 0 && self.held_bytes == 0, "Raster standalone control credit reached Drop before exact return");
+    }
+}
+
+struct RasterInitializationControlReservation {
+    remaining: usize,
+    remaining_bytes: usize,
+}
+
+impl RasterInitializationControlReservation {
+    fn try_claim() -> Result<Option<Self>, &'static str> {
+        let current = RASTER_INITIALIZATION_PROCESS_CONTROLS.load(std::sync::atomic::Ordering::Acquire);
+        let next = current.checked_add(RASTER_NON_STACK_CONTROL_BACKINGS).ok_or("raster-store.control-process-overflow")?;
+        if next > RASTER_INITIALIZATION_PROCESS_CONTROL_CAPACITY {
+            return Ok(None);
+        }
+        if RASTER_INITIALIZATION_PROCESS_CONTROLS.compare_exchange(current, next, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+            return Ok(None);
+        }
+        Ok(Some(Self { remaining: RASTER_NON_STACK_CONTROL_BACKINGS, remaining_bytes: RASTER_NON_STACK_CONTROL_BACKINGS * RASTER_CONTROL_BACKING_BYTES }))
+    }
+
+    fn return_one(&mut self) -> Result<bool, &'static str> {
+        if self.remaining == 0 && self.remaining_bytes == 0 {
+            return Ok(true);
+        }
+        if self.remaining == 0 || self.remaining_bytes < RASTER_CONTROL_BACKING_BYTES {
+            return Err("raster-store.control-process-accounting");
+        }
+        let previous = RASTER_INITIALIZATION_PROCESS_CONTROLS.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+        if previous == 0 {
+            return Err("raster-store.control-process-underflow");
+        }
+        self.remaining -= 1;
+        self.remaining_bytes -= RASTER_CONTROL_BACKING_BYTES;
+        Ok(self.remaining == 0)
+    }
+}
+
+impl Drop for RasterInitializationControlReservation {
+    fn drop(&mut self) {
+        assert!(self.remaining == 0 && self.remaining_bytes == 0, "Raster initialization control reservation reached Drop before every exact backing credit was returned");
+    }
+}
 
 enum RasterRetirementOwner {
     Snapshot(RasterSnapshot),
@@ -35,8 +133,11 @@ enum RasterRetirementOwner {
     MutationFields(RasterMutationFields),
     AssetEntry { key: String, child: Option<RasterAssetChild> },
     Asset(RasterImageAsset),
+    AssetMapPage(RasterOwnedMapPageBacking<RasterAssetChild>),
     Value(dsl::DslValue),
     ValueEntry { key: String, value: Option<dsl::DslValue> },
+    ValueMapPage(RasterOwnedMapPageBacking<dsl::DslValue>),
+    BoxedLayer(Option<Box<RasterLayerNode>>),
     String(String),
     Bytes(Vec<u8>),
 }
@@ -44,7 +145,7 @@ enum RasterRetirementOwner {
 struct RasterLayerFields {
     strings: [Option<String>; 4],
     children: Option<Vec<RasterLayerNode>>,
-    values: Option<std::collections::BTreeMap<String, dsl::DslValue>>,
+    values: Option<RasterOwnedMap<dsl::DslValue>>,
     string_cursor: usize,
 }
 
@@ -60,6 +161,22 @@ struct RasterRetirementFrame {
     phase: u8,
 }
 
+struct RasterRetirementFramePage {
+    frames: [Option<RasterRetirementFrame>; RASTER_RETIREMENT_STACK_PAGE_CAPACITY],
+}
+
+impl RasterRetirementFramePage {
+    fn new() -> Self {
+        Self { frames: std::array::from_fn(|_| None) }
+    }
+}
+
+impl Drop for RasterRetirementFramePage {
+    fn drop(&mut self) {
+        assert!(self.frames.iter().all(Option::is_none), "Raster retirement frame page reached Drop before every admitted owner was returned");
+    }
+}
+
 impl RasterRetirementFrame {
     fn new(owner: RasterRetirementOwner) -> Self {
         Self { owner: std::mem::ManuallyDrop::new(Some(owner)), phase: 0 }
@@ -73,15 +190,93 @@ enum RasterRetirementAction {
 }
 
 struct RasterOwnedRetirement {
-    frames: std::mem::ManuallyDrop<[Option<RasterRetirementFrame>; RASTER_RETIREMENT_STACK_CAPACITY]>,
+    root: std::mem::ManuallyDrop<Option<RasterRetirementFrame>>,
+    pages: std::mem::ManuallyDrop<[Option<Box<RasterRetirementFramePage>>; RASTER_RETIREMENT_STACK_PAGE_COUNT]>,
+    pending_push: std::mem::ManuallyDrop<Option<RasterRetirementOwner>>,
+    pending_empty_page: Option<usize>,
+    pending_page_credit: Option<usize>,
+    page_credits: [bool; RASTER_RETIREMENT_STACK_PAGE_COUNT],
+    control: std::mem::ManuallyDrop<Option<RasterStandaloneControlCredit>>,
     depth: usize,
 }
 
 impl RasterOwnedRetirement {
     fn new(owner: RasterRetirementOwner) -> Self {
-        let mut frames = std::array::from_fn(|_| None);
-        frames[0] = Some(RasterRetirementFrame::new(owner));
-        Self { frames: std::mem::ManuallyDrop::new(frames), depth: 1 }
+        let control = RasterStandaloneControlCredit::try_claim().ok();
+        Self {
+            root: std::mem::ManuallyDrop::new(Some(RasterRetirementFrame::new(owner))),
+            pages: std::mem::ManuallyDrop::new(std::array::from_fn(|_| None)),
+            pending_push: std::mem::ManuallyDrop::new(None),
+            pending_empty_page: None,
+            pending_page_credit: None,
+            page_credits: [false; RASTER_RETIREMENT_STACK_PAGE_COUNT],
+            control: std::mem::ManuallyDrop::new(control),
+            depth: 1,
+        }
+    }
+
+    fn claim_control_if_available(&mut self) -> Result<bool, String> {
+        if self.control.is_some() {
+            return Ok(true);
+        }
+        match RasterStandaloneControlCredit::try_claim() {
+            Ok(control) => {
+                *self.control = Some(control);
+                Ok(true)
+            }
+            Err("raster-store.standalone-control-capacity") => Ok(false),
+            Err(code) => Err(code.into()),
+        }
+    }
+
+    fn reserve_page_credit(&mut self, page_index: usize) -> Result<bool, String> {
+        if page_index >= RASTER_RETIREMENT_STACK_PAGE_COUNT || self.page_credits[page_index] {
+            return Err("Raster retirement page credit state was not empty".into());
+        }
+        let current = RASTER_RETIREMENT_PROCESS_PAGES.load(std::sync::atomic::Ordering::Acquire);
+        let Some(next) = current.checked_add(1) else { return Err("Raster retirement process page credit overflow".into()) };
+        if next > RASTER_RETIREMENT_PROCESS_PAGE_CAPACITY {
+            return Ok(false);
+        }
+        if RASTER_RETIREMENT_PROCESS_PAGES.compare_exchange(current, next, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+            return Ok(false);
+        }
+        self.page_credits[page_index] = true;
+        self.pending_page_credit = Some(page_index);
+        Ok(true)
+    }
+
+    fn return_page_credit(&mut self, page_index: usize) -> Result<(), String> {
+        if page_index >= RASTER_RETIREMENT_STACK_PAGE_COUNT || !self.page_credits[page_index] || self.pending_page_credit == Some(page_index) {
+            return Err("Raster retirement page credit was not allocated".into());
+        }
+        self.page_credits[page_index] = false;
+        let previous = RASTER_RETIREMENT_PROCESS_PAGES.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+        if previous == 0 {
+            return Err("Raster retirement process page credit underflow".into());
+        }
+        Ok(())
+    }
+
+    fn page_and_slot(index: usize) -> (usize, usize) {
+        let offset = index - 1;
+        (offset / RASTER_RETIREMENT_STACK_PAGE_CAPACITY, offset % RASTER_RETIREMENT_STACK_PAGE_CAPACITY)
+    }
+
+    fn frame_mut(&mut self, index: usize) -> Option<&mut RasterRetirementFrame> {
+        if index == 0 {
+            return self.root.as_mut();
+        }
+        let (page, slot) = Self::page_and_slot(index);
+        self.pages.get_mut(page)?.as_mut()?.frames.get_mut(slot)?.as_mut()
+    }
+
+    fn take_frame(&mut self, index: usize) -> Option<RasterRetirementFrame> {
+        if index == 0 {
+            return self.root.take();
+        }
+        let (page, slot) = Self::page_and_slot(index);
+        self.pages.get_mut(page)?.as_mut()?.frames.get_mut(slot)?.take()
     }
 
     fn release_string(value: &mut String, phase: &mut u8, next: u8, maximum_items: usize, maximum_bytes: usize) -> RasterRetirementAction {
@@ -166,8 +361,11 @@ impl RasterOwnedRetirement {
                     Ok(RasterRetirementAction::Pending { released_items: 1, released_bytes: bytes })
                 }
                 1 => {
-                    if let Some((key, child)) = value.assets.pop_last() {
+                    if let Some((key, child)) = value.assets.take_last_entry() {
                         return Ok(RasterRetirementAction::Push(RasterRetirementOwner::AssetEntry { key, child: Some(child) }));
+                    }
+                    if let Some(page) = value.assets.take_empty_page_backing() {
+                        return Ok(RasterRetirementAction::Push(RasterRetirementOwner::AssetMapPage(page)));
                     }
                     drop(std::mem::take(&mut value.assets));
                     frame.phase = 2;
@@ -216,10 +414,13 @@ impl RasterOwnedRetirement {
                     drop(children);
                     return Ok(RasterRetirementAction::Pending { released_items: 1, released_bytes: bytes });
                 }
-                if let Some((key, value)) = fields.values.as_mut().and_then(std::collections::BTreeMap::pop_last) {
+                if let Some((key, value)) = fields.values.as_mut().and_then(RasterOwnedMap::take_last_entry) {
                     return Ok(RasterRetirementAction::Push(RasterRetirementOwner::ValueEntry { key, value: Some(value) }));
                 }
-                if fields.values.as_ref().is_some_and(std::collections::BTreeMap::is_empty) {
+                if let Some(page) = fields.values.as_mut().and_then(RasterOwnedMap::take_empty_page_backing) {
+                    return Ok(RasterRetirementAction::Push(RasterRetirementOwner::ValueMapPage(page)));
+                }
+                if fields.values.as_ref().is_some_and(RasterOwnedMap::is_empty) {
                     drop(fields.values.take());
                     return Ok(RasterRetirementAction::Pending { released_items: 1, released_bytes: 0 });
                 }
@@ -264,12 +465,9 @@ impl RasterOwnedRetirement {
                         Ok(RasterRetirementAction::Pending { released_items: 0, released_bytes: 0 })
                     }
                     1 if layer.is_some() => {
-                        if std::mem::size_of::<RasterLayerNode>() > maximum_bytes {
-                            return Ok(RasterRetirementAction::Pending { released_items: 0, released_bytes: 0 });
-                        }
                         let layer = layer.take().expect("Raster create layer remains retained");
                         frame.phase = 2;
-                        Ok(RasterRetirementAction::Push(RasterRetirementOwner::Layer(*layer)))
+                        Ok(RasterRetirementAction::Push(RasterRetirementOwner::BoxedLayer(Some(layer))))
                     }
                     _ => {
                         drop(frame.owner.take());
@@ -321,6 +519,18 @@ impl RasterOwnedRetirement {
                     Ok(RasterRetirementAction::Pop)
                 }
             },
+            RasterRetirementOwner::AssetMapPage(page) => {
+                let bytes = page.conservative_credit_bytes();
+                if bytes > maximum_bytes {
+                    return Ok(RasterRetirementAction::Pending { released_items: 0, released_bytes: 0 });
+                }
+                let page = match frame.owner.take() {
+                    Some(RasterRetirementOwner::AssetMapPage(page)) => page,
+                    _ => unreachable!("Raster asset map page keeps its exact owner"),
+                };
+                page.release();
+                Ok(RasterRetirementAction::Pending { released_items: 1, released_bytes: bytes })
+            }
             RasterRetirementOwner::Value(value) => match value {
                 dsl::DslValue::String(value) => {
                     if frame.phase == 0 {
@@ -369,6 +579,27 @@ impl RasterOwnedRetirement {
                     Ok(RasterRetirementAction::Pop)
                 }
             },
+            RasterRetirementOwner::ValueMapPage(page) => {
+                let bytes = page.conservative_credit_bytes();
+                if bytes > maximum_bytes {
+                    return Ok(RasterRetirementAction::Pending { released_items: 0, released_bytes: 0 });
+                }
+                let page = match frame.owner.take() {
+                    Some(RasterRetirementOwner::ValueMapPage(page)) => page,
+                    _ => unreachable!("Raster value map page keeps its exact owner"),
+                };
+                page.release();
+                Ok(RasterRetirementAction::Pending { released_items: 1, released_bytes: bytes })
+            }
+            RasterRetirementOwner::BoxedLayer(layer) => {
+                if RASTER_CONTROL_BACKING_BYTES > maximum_bytes {
+                    return Ok(RasterRetirementAction::Pending { released_items: 0, released_bytes: 0 });
+                }
+                let layer = layer.take().ok_or_else(|| "Raster boxed layer owner missing".to_string())?;
+                let layer = *layer;
+                *frame.owner = Some(RasterRetirementOwner::Layer(layer));
+                Ok(RasterRetirementAction::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES })
+            }
             RasterRetirementOwner::String(value) => {
                 if frame.phase == 0 {
                     return Ok(Self::release_string(value, &mut frame.phase, 1, maximum_items, maximum_bytes));
@@ -391,31 +622,97 @@ impl RasterOwnedRetirement {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
+        if self.depth > 0 && self.control.is_none() {
+            let _ = self.claim_control_if_available()?;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(page_index) = self.pending_empty_page {
+            if maximum_bytes < RASTER_CONTROL_BACKING_BYTES {
+                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            let page = self.pages.get_mut(page_index).and_then(Option::take).ok_or_else(|| "Raster empty retirement page owner missing".to_string())?;
+            drop(page);
+            self.return_page_credit(page_index)?;
+            self.pending_empty_page = None;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES });
+        }
+        if self.pending_push.is_some() {
+            if self.depth >= RASTER_RETIREMENT_STACK_CAPACITY {
+                return Err("Raster retirement exceeded its admitted fixed depth".into());
+            }
+            let (page_index, slot) = Self::page_and_slot(self.depth);
+            if self.pages[page_index].is_none() {
+                if std::mem::size_of::<RasterRetirementFramePage>() > RASTER_CONTROL_BACKING_BYTES {
+                    return Err("Raster retirement frame page exceeded its conservative control credit".into());
+                }
+                if self.pending_page_credit.is_none() {
+                    if !self.reserve_page_credit(page_index)? {
+                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
+                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                if self.pending_page_credit != Some(page_index) || !self.page_credits[page_index] {
+                    return Err("Raster retirement frame page allocation lost its exact admitted credit".into());
+                }
+                if maximum_bytes < RASTER_CONTROL_BACKING_BYTES {
+                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                self.pages[page_index] = Some(Box::new(RasterRetirementFramePage::new()));
+                self.pending_page_credit = None;
+                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            let occupied = self.pages[page_index].as_ref().and_then(|page| page.frames.get(slot)).ok_or_else(|| "Raster retirement frame page slot missing".to_string())?.is_some();
+            if occupied {
+                return Err("Raster retirement frame page slot remained occupied".into());
+            }
+            let owner = self.pending_push.take().ok_or_else(|| "Raster pending retirement owner missing".to_string())?;
+            let target = self.pages[page_index].as_mut().and_then(|page| page.frames.get_mut(slot)).ok_or_else(|| "Raster retirement frame page slot missing".to_string())?;
+            *target = Some(RasterRetirementFrame::new(owner));
+            self.depth += 1;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
         if self.depth == 0 {
+            if let Some(control) = self.control.as_mut() {
+                if maximum_bytes < RASTER_CONTROL_BACKING_BYTES {
+                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                if !control.release()? {
+                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                drop(self.control.take());
+                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES });
+            }
             return Ok(store::SnapshotRetirementStep::Complete);
         }
         let action = {
-            let frames = &mut *self.frames;
-            let frame = frames[self.depth - 1].as_mut().ok_or_else(|| "Raster retirement top frame missing".to_string())?;
+            let index = self.depth - 1;
+            let frame = self.frame_mut(index).ok_or_else(|| "Raster retirement top frame missing".to_string())?;
             Self::frame_action(frame, maximum_items, maximum_bytes)?
         };
         match action {
             RasterRetirementAction::Pending { released_items, released_bytes } => Ok(store::SnapshotRetirementStep::Pending { released_items, released_bytes }),
             RasterRetirementAction::Push(owner) => {
                 if self.depth >= RASTER_RETIREMENT_STACK_CAPACITY {
+                    *self.pending_push = Some(owner);
                     return Err("Raster retirement exceeded its admitted fixed depth".into());
                 }
-                self.frames[self.depth] = Some(RasterRetirementFrame::new(owner));
-                self.depth += 1;
+                *self.pending_push = Some(owner);
                 Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
             }
             RasterRetirementAction::Pop => {
-                let frame = self.frames[self.depth - 1].take().expect("Raster retirement completed frame remains retained");
+                let index = self.depth - 1;
+                let frame = self.take_frame(index).expect("Raster retirement completed frame remains retained");
                 if frame.owner.is_some() {
                     return Err("Raster retirement attempted to release a nonempty frame".into());
                 }
                 drop(frame);
                 self.depth -= 1;
+                if index > 0 {
+                    let (page, slot) = Self::page_and_slot(index);
+                    if slot == 0 {
+                        self.pending_empty_page = Some(page);
+                    }
+                }
                 Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
             }
         }
@@ -429,6 +726,13 @@ impl store::ErasedSnapshotRetirement for RasterOwnedRetirement {
 
     fn terminal_is_empty(&self) -> bool {
         self.depth == 0
+            && self.pending_push.is_none()
+            && self.pending_empty_page.is_none()
+            && self.pending_page_credit.is_none()
+            && self.page_credits.iter().all(|credit| !credit)
+            && self.control.is_none()
+            && self.root.is_none()
+            && self.pages.iter().all(Option::is_none)
     }
 }
 
@@ -448,7 +752,10 @@ impl store::ArtifactOwnedValueRetirementFactory<RasterSnapshot> for RasterSnapsh
 
 struct RasterSnapshotRootRetirement {
     owner: std::mem::ManuallyDrop<Option<std::sync::Arc<RasterSnapshot>>>,
+    value: std::mem::ManuallyDrop<Option<RasterSnapshot>>,
     retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+    control: std::mem::ManuallyDrop<Option<RasterStandaloneControlCredit>>,
+    control_returned: bool,
 }
 
 impl store::ErasedSnapshotRetirement for RasterSnapshotRootRetirement {
@@ -456,21 +763,57 @@ impl store::ErasedSnapshotRetirement for RasterSnapshotRootRetirement {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
+        if self.control.is_none() && !self.control_returned {
+            match RasterStandaloneControlCredit::try_claim() {
+                Ok(control) => {
+                    *self.control = Some(control);
+                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                Err("raster-store.standalone-control-capacity") => return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }),
+                Err(code) => return Err(code.into()),
+            }
+        }
         if let Some(retirement) = self.retirement.as_mut() {
             return match retirement.close_step(1, maximum_bytes)? {
                 store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
+                    if maximum_bytes < RASTER_CONTROL_BACKING_BYTES {
+                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
                     drop(self.retirement.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
+                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES })
                 }
                 store::SnapshotRetirementStep::Complete => Err("Raster snapshot root retirement reported false terminal".into()),
                 step => Ok(step),
             };
         }
-        let Some(owner) = self.owner.take() else { return Ok(store::SnapshotRetirementStep::Complete) };
+        if self.value.is_some() && maximum_bytes < RASTER_CONTROL_BACKING_BYTES {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(value) = self.value.take() {
+            *self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&RasterSnapshotRetirementFactory, value));
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if self.owner.is_some() && maximum_bytes < RASTER_CONTROL_BACKING_BYTES {
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        let Some(owner) = self.owner.take() else {
+            if let Some(control) = self.control.as_mut() {
+                if maximum_bytes < RASTER_CONTROL_BACKING_BYTES {
+                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                if !control.release()? {
+                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                drop(self.control.take());
+                self.control_returned = true;
+                return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES });
+            }
+            return Ok(store::SnapshotRetirementStep::Complete);
+        };
         match std::sync::Arc::try_unwrap(owner) {
             Ok(value) => {
-                *self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&RasterSnapshotRetirementFactory, value));
-                Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                *self.value = Some(value);
+                Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES })
             }
             Err(owner) => {
                 *self.owner = Some(owner);
@@ -480,19 +823,26 @@ impl store::ErasedSnapshotRetirement for RasterSnapshotRootRetirement {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.owner.is_none() && self.retirement.is_none()
+        self.owner.is_none() && self.value.is_none() && self.retirement.is_none() && self.control.is_none() && self.control_returned
     }
 }
 
 impl Drop for RasterSnapshotRootRetirement {
     fn drop(&mut self) {
-        assert!(self.owner.is_none() && self.retirement.is_none(), "Raster snapshot root reached Drop before exact Arc handback");
+        assert!(self.owner.is_none() && self.value.is_none() && self.retirement.is_none() && self.control.is_none() && self.control_returned, "Raster snapshot root reached Drop before exact Arc handback");
     }
 }
 
 impl store::SnapshotRetirementFactory<RasterSnapshot> for RasterSnapshotRetirementFactory {
     fn retire(&self, snapshot: std::sync::Arc<RasterSnapshot>) -> Box<dyn store::ErasedSnapshotRetirement> {
-        Box::new(RasterSnapshotRootRetirement { owner: std::mem::ManuallyDrop::new(Some(snapshot)), retirement: std::mem::ManuallyDrop::new(None) })
+        let control = RasterStandaloneControlCredit::try_claim().ok();
+        Box::new(RasterSnapshotRootRetirement {
+            owner: std::mem::ManuallyDrop::new(Some(snapshot)),
+            value: std::mem::ManuallyDrop::new(None),
+            retirement: std::mem::ManuallyDrop::new(None),
+            control: std::mem::ManuallyDrop::new(control),
+            control_returned: false,
+        })
     }
 }
 
@@ -530,11 +880,12 @@ macro_rules! raster_owned_field_authority {
             state: $state,
             value: std::mem::ManuallyDrop<Option<$value>>,
             retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+            retirement_terminal: bool,
         }
 
         impl $authority {
             fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Self {
-                Self { operation, generation, path, state: $state::AwaitToken, value: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None) }
+                Self { operation, generation, path, state: $state::AwaitToken, value: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None), retirement_terminal: false }
             }
 
             fn diagnostic(&self, code: &'static str, offset: u64) -> store::OwnedSchemaDecodeDiagnostic {
@@ -606,6 +957,15 @@ macro_rules! raster_owned_field_authority {
                 if maximum_items == 0 {
                     return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
                 }
+                if self.retirement_terminal {
+                    if maximum_bytes < RASTER_CONTROL_BACKING_BYTES {
+                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
+                    drop(self.retirement.take());
+                    self.retirement_terminal = false;
+                    self.state = $state::Complete;
+                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES });
+                }
                 if let $state::Decode(authority) = &mut self.state {
                     authority.cancel();
                     self.state = $state::Closing;
@@ -624,9 +984,8 @@ macro_rules! raster_owned_field_authority {
                 let retirement = self.retirement.as_mut().expect("Raster packed field retirement remains retained");
                 match retirement.close_step(maximum_items.min(1), maximum_bytes).map_err(|_| store::OwnedSchemaDecodeDiagnostic { code: concat!("raster-envelope.", $kind, "-retirement-fault"), offset: 0, line: 0, column: 0, path })? {
                     store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
-                        drop(self.retirement.take());
-                        self.state = $state::Complete;
-                        Ok(store::SnapshotRetirementStep::Complete)
+                        self.retirement_terminal = true;
+                        Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
                     }
                     store::SnapshotRetirementStep::Complete => Err(self.diagnostic(concat!("raster-envelope.", $kind, "-retirement-false-terminal"), 0)),
                     step => Ok(step),
@@ -634,13 +993,16 @@ macro_rules! raster_owned_field_authority {
             }
 
             fn terminal_is_empty(&self) -> bool {
-                matches!(self.state, $state::Published | $state::Complete) && self.value.is_none() && self.retirement.is_none()
+                matches!(self.state, $state::Published | $state::Complete) && self.value.is_none() && self.retirement.is_none() && !self.retirement_terminal
             }
         }
 
         impl Drop for $authority {
             fn drop(&mut self) {
-                assert!(matches!(self.state, $state::Published | $state::Complete) && self.value.is_none() && self.retirement.is_none(), concat!("Raster ", $kind, " decode reached Drop before publication or bounded retirement"));
+                assert!(
+                    matches!(self.state, $state::Published | $state::Complete) && self.value.is_none() && self.retirement.is_none() && !self.retirement_terminal,
+                    concat!("Raster ", $kind, " decode reached Drop before publication or bounded retirement"),
+                );
             }
         }
     };
@@ -738,13 +1100,21 @@ impl RasterTraversalFrame {
     const EMPTY: Self = Self { phase: 0, child: 0 };
 }
 
-fn raster_reserve_unit(cx: &mut semio_framework_job::StepContext<'_>, units: usize) -> bool {
-    let units = units.max(1) as u64;
-    if cx.should_yield() || cx.fuel_remaining() < units {
+fn raster_reserve_unit(cx: &mut semio_framework_job::StepContext<'_>) -> bool {
+    if cx.should_yield() || cx.fuel_remaining() == 0 {
         return false;
     }
-    cx.consume_fuel(units);
+    cx.consume_fuel(1);
     true
+}
+
+fn raster_retirement_frame_requirement(layer_depth: usize, value_depth: usize) -> Result<usize, &'static str> {
+    let required =
+        layer_depth.checked_add(value_depth.checked_mul(2).ok_or("raster-store.preflight-combined-depth-overflow")?).and_then(|value| value.checked_add(RASTER_RETIREMENT_WRAPPER_FRAMES)).ok_or("raster-store.preflight-combined-depth-overflow")?;
+    if required > RASTER_RETIREMENT_ADMITTED_FRAME_CAPACITY {
+        return Err("raster-store.preflight-combined-depth");
+    }
+    Ok(required)
 }
 
 struct RasterOwnerTotals {
@@ -752,11 +1122,15 @@ struct RasterOwnerTotals {
     source_bytes: usize,
     candidate_items: usize,
     candidate_bytes: usize,
+    source_control_items: usize,
+    source_control_bytes: usize,
+    candidate_control_items: usize,
+    candidate_control_bytes: usize,
 }
 
 impl RasterOwnerTotals {
     fn new() -> Self {
-        Self { source_items: 0, source_bytes: 0, candidate_items: 0, candidate_bytes: 0 }
+        Self { source_items: 0, source_bytes: 0, candidate_items: 0, candidate_bytes: 0, source_control_items: 0, source_control_bytes: 0, candidate_control_items: 0, candidate_control_bytes: 0 }
     }
 
     fn add(&mut self, items: usize, bytes: usize, candidate_items: usize, candidate_bytes: usize) -> Result<(), &'static str> {
@@ -777,7 +1151,7 @@ impl RasterOwnerTotals {
         if value.capacity() > RASTER_OWNED_FIELD_BYTES {
             return Err("raster-store.preflight-string-allocation-capacity");
         }
-        self.add(1, value.capacity(), 1, value.capacity())
+        self.add(1, value.capacity(), 1, value.len())
     }
 
     fn vector<T>(&mut self, value: &Vec<T>) -> Result<(), &'static str> {
@@ -797,40 +1171,78 @@ impl RasterOwnerTotals {
         }
         self.add(1, source_bytes, 1, candidate_bytes)
     }
+
+    fn map<V>(&mut self, value: &RasterOwnedMap<V>, candidate_extra_entries: usize) -> Result<(), &'static str> {
+        let source_pages = value.allocated_page_count();
+        let candidate_entries = value.len().checked_add(candidate_extra_entries).ok_or("raster-store.preflight-map-entry-overflow")?;
+        if candidate_entries > crate::artifacts::raster::RASTER_OWNED_MAP_CAPACITY {
+            return Err("raster-store.preflight-map-item-capacity");
+        }
+        let candidate_pages = candidate_entries.div_ceil(crate::artifacts::raster::RASTER_OWNED_MAP_PAGE_CAPACITY);
+        let page_bytes = RasterOwnedMap::<V>::conservative_page_credit_bytes();
+        self.add(source_pages, source_pages.checked_mul(page_bytes).ok_or("raster-store.preflight-map-source-byte-overflow")?, candidate_pages, candidate_pages.checked_mul(page_bytes).ok_or("raster-store.preflight-map-candidate-byte-overflow")?)
+    }
+
+    fn observe_candidate_capacity(&mut self, requested: usize, observed: usize, element_bytes: usize) -> Result<(), &'static str> {
+        if observed < requested {
+            return Err("raster-store.candidate-capacity-underflow");
+        }
+        let extra = observed.checked_sub(requested).and_then(|value| value.checked_mul(element_bytes)).ok_or("raster-store.candidate-capacity-overflow")?;
+        self.candidate_bytes = self.candidate_bytes.checked_add(extra).ok_or("raster-store.candidate-byte-overflow")?;
+        if self.candidate_bytes > RASTER_MAXIMUM_NESTED_BYTES || extra > RASTER_OWNED_FIELD_BYTES {
+            return Err("raster-store.candidate-observed-capacity");
+        }
+        Ok(())
+    }
+
+    fn fixed_control_backings(&mut self) -> Result<(), &'static str> {
+        Self::validate_control_backing_count(RASTER_MAXIMUM_CONTROL_BACKINGS)?;
+        if self.source_control_items != 0 || self.source_control_bytes != 0 || self.candidate_control_items != 0 || self.candidate_control_bytes != 0 {
+            return Err("raster-store.control-backing-double-reservation");
+        }
+        self.source_control_items = RASTER_MAXIMUM_CONTROL_BACKINGS;
+        self.source_control_bytes = RASTER_MAXIMUM_CONTROL_BYTES;
+        self.candidate_control_items = RASTER_MAXIMUM_CONTROL_BACKINGS;
+        self.candidate_control_bytes = RASTER_MAXIMUM_CONTROL_BYTES;
+        if self.source_control_items > RASTER_MAXIMUM_CONTROL_BACKINGS
+            || self.candidate_control_items > RASTER_MAXIMUM_CONTROL_BACKINGS
+            || self.source_control_bytes > RASTER_MAXIMUM_CONTROL_BYTES
+            || self.candidate_control_bytes > RASTER_MAXIMUM_CONTROL_BYTES
+        {
+            return Err("raster-store.control-backing-capacity");
+        }
+        Ok(())
+    }
+
+    fn validate_control_backing_count(count: usize) -> Result<(), &'static str> {
+        if count > RASTER_MAXIMUM_CONTROL_BACKINGS {
+            return Err("raster-store.control-backing-capacity");
+        }
+        Ok(())
+    }
 }
 
 struct RasterMapKeyCursor {
-    key: [u8; RASTER_OWNED_FIELD_BYTES],
-    length: usize,
-    started: bool,
+    index: usize,
 }
 
 impl RasterMapKeyCursor {
     fn new() -> Self {
-        Self { key: [0; RASTER_OWNED_FIELD_BYTES], length: 0, started: false }
+        Self { index: 0 }
     }
 
-    fn next<'a, T>(&self, values: &'a std::collections::BTreeMap<String, T>) -> Result<Option<(&'a String, &'a T)>, &'static str> {
-        if !self.started {
-            return Ok(values.first_key_value());
-        }
-        let key = std::str::from_utf8(&self.key[..self.length]).map_err(|_| "raster-store.map-key-utf8")?;
-        use std::ops::Bound::{Excluded, Unbounded};
-        Ok(values.range::<str, _>((Excluded(key), Unbounded)).next())
+    fn next<'a, T>(&self, values: &'a RasterOwnedMap<T>) -> Result<Option<(&'a String, &'a T)>, &'static str> {
+        Ok(values.entry_at(self.index))
     }
 
-    fn advance(&mut self, key: &str) -> Result<(), &'static str> {
-        if key.len() > self.key.len() {
-            return Err("raster-store.map-key-capacity");
-        }
-        self.key[..key.len()].copy_from_slice(key.as_bytes());
-        self.length = key.len();
-        self.started = true;
+    fn advance(&mut self, _key: &str) -> Result<(), &'static str> {
+        self.index = self.index.checked_add(1).ok_or("raster-store.map-index-overflow")?;
         Ok(())
     }
 }
 
 struct RasterDslValueBoundsAuthority {
+    layer_depth: usize,
     depth: usize,
     path: [usize; RASTER_MAXIMUM_NESTED_DEPTH],
     frames: [RasterTraversalFrame; RASTER_MAXIMUM_NESTED_DEPTH],
@@ -838,8 +1250,8 @@ struct RasterDslValueBoundsAuthority {
 }
 
 impl RasterDslValueBoundsAuthority {
-    fn new() -> Self {
-        Self { depth: 0, path: [0; RASTER_MAXIMUM_NESTED_DEPTH], frames: [RasterTraversalFrame::EMPTY; RASTER_MAXIMUM_NESTED_DEPTH], terminal: false }
+    fn new(layer_depth: usize) -> Self {
+        Self { layer_depth, depth: 0, path: [0; RASTER_MAXIMUM_NESTED_DEPTH], frames: [RasterTraversalFrame::EMPTY; RASTER_MAXIMUM_NESTED_DEPTH], terminal: false }
     }
 
     fn value_at<'a>(root: &'a dsl::DslValue, path: &[usize]) -> Option<&'a dsl::DslValue> {
@@ -858,10 +1270,11 @@ impl RasterDslValueBoundsAuthority {
         if self.terminal {
             return Ok(true);
         }
+        let _required_frames = raster_retirement_frame_requirement(self.layer_depth, self.depth + 1)?;
         let value = Self::value_at(root, &self.path[..self.depth]).ok_or("raster-store.preflight-value-path")?;
         let frame = self.frames[self.depth];
         if frame.phase == 0 {
-            if !raster_reserve_unit(cx, 1) {
+            if !raster_reserve_unit(cx) {
                 return Ok(false);
             }
             totals.add(1, std::mem::size_of::<dsl::DslValue>(), 1, std::mem::size_of::<dsl::DslValue>())?;
@@ -877,7 +1290,7 @@ impl RasterDslValueBoundsAuthority {
         let child = frame.child;
         match value {
             dsl::DslValue::Object(values) if frame.phase == 1 && child < values.len() => {
-                if !raster_reserve_unit(cx, values[child].0.capacity()) {
+                if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
                 totals.string(&values[child].0)?;
@@ -890,7 +1303,7 @@ impl RasterDslValueBoundsAuthority {
                 _ => false,
             } =>
             {
-                if self.depth + 1 >= RASTER_MAXIMUM_NESTED_DEPTH || !raster_reserve_unit(cx, 1) {
+                if self.depth + 1 >= RASTER_MAXIMUM_NESTED_DEPTH || !raster_reserve_unit(cx) {
                     if self.depth + 1 >= RASTER_MAXIMUM_NESTED_DEPTH {
                         return Err("raster-store.preflight-value-depth");
                     }
@@ -905,7 +1318,7 @@ impl RasterDslValueBoundsAuthority {
             }
             _ => {}
         }
-        if !raster_reserve_unit(cx, 1) {
+        if !raster_reserve_unit(cx) {
             return Ok(false);
         }
         if self.depth == 0 {
@@ -954,7 +1367,7 @@ impl RasterLayerBoundsAuthority {
         let frame = self.frames[self.depth];
         match frame.phase {
             0 => {
-                if !raster_reserve_unit(cx, 1) {
+                if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
                 totals.add(1, std::mem::size_of::<RasterLayerNode>(), 1, std::mem::size_of::<RasterLayerNode>())?;
@@ -962,7 +1375,7 @@ impl RasterLayerBoundsAuthority {
             }
             1..=3 => {
                 let value = Self::strings(layer)[(frame.phase - 1) as usize];
-                if !raster_reserve_unit(cx, value.capacity()) {
+                if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
                 totals.string(value)?;
@@ -975,22 +1388,22 @@ impl RasterLayerBoundsAuthority {
                     RasterLayerNode::Group { .. } => None,
                 };
                 if let Some(value) = value {
-                    if !raster_reserve_unit(cx, value.capacity()) {
+                    if !raster_reserve_unit(cx) {
                         return Ok(false);
                     }
                     totals.string(value)?;
-                } else if !raster_reserve_unit(cx, 1) {
+                } else if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
                 self.frames[self.depth].phase = 5;
             }
             5 => {
-                if !raster_reserve_unit(cx, 1) {
+                if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
                 match layer {
                     RasterLayerNode::Group { children, .. } => totals.layer_vector(children)?,
-                    RasterLayerNode::Adjustment { params, .. } => totals.add(1, std::mem::size_of_val(params), 1, std::mem::size_of_val(params))?,
+                    RasterLayerNode::Adjustment { params, .. } => totals.map(params, 0)?,
                     RasterLayerNode::Pixel { .. } => {}
                 }
                 self.frames[self.depth].phase = 6;
@@ -1001,7 +1414,7 @@ impl RasterLayerBoundsAuthority {
                         let (_, source) = self.parameter_key.next(params)?.ok_or("raster-store.preflight-parameter-source")?;
                         if value.step(source, totals, cx)? {
                             let (key, _) = self.parameter_key.next(params)?.ok_or("raster-store.preflight-parameter-key")?;
-                            if !raster_reserve_unit(cx, key.len()) {
+                            if !raster_reserve_unit(cx) {
                                 return Ok(false);
                             }
                             self.parameter_value = None;
@@ -1010,11 +1423,11 @@ impl RasterLayerBoundsAuthority {
                         return Ok(false);
                     }
                     if let Some((key, _)) = self.parameter_key.next(params)? {
-                        if !raster_reserve_unit(cx, key.capacity()) {
+                        if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
                         totals.string(key)?;
-                        self.parameter_value = Some(RasterDslValueBoundsAuthority::new());
+                        self.parameter_value = Some(RasterDslValueBoundsAuthority::new(self.depth + 1));
                         return Ok(false);
                     }
                     self.parameter_key = RasterMapKeyCursor::new();
@@ -1024,7 +1437,7 @@ impl RasterLayerBoundsAuthority {
             7 => {
                 if let RasterLayerNode::Group { children, .. } = layer {
                     if frame.child < children.len() {
-                        if self.depth + 1 >= RASTER_MAXIMUM_NESTED_DEPTH || !raster_reserve_unit(cx, 1) {
+                        if self.depth + 1 >= RASTER_MAXIMUM_NESTED_DEPTH || !raster_reserve_unit(cx) {
                             if self.depth + 1 >= RASTER_MAXIMUM_NESTED_DEPTH {
                                 return Err("raster-store.preflight-layer-depth");
                             }
@@ -1040,7 +1453,7 @@ impl RasterLayerBoundsAuthority {
                 self.frames[self.depth].phase = 8;
             }
             _ => {
-                if !raster_reserve_unit(cx, 1) {
+                if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
                 if self.depth == 0 {
@@ -1064,14 +1477,40 @@ struct RasterSnapshotBoundsAuthority {
     terminal: bool,
 }
 
+fn raster_exact_string_from_parts(parts: &[&[u8]]) -> Result<String, &'static str> {
+    let length = parts.iter().try_fold(0usize, |length, part| length.checked_add(part.len())).ok_or("raster-store.clone-string-length-overflow")?;
+    if length > RASTER_OWNED_FIELD_BYTES {
+        return Err("raster-store.clone-string-capacity");
+    }
+    let mut bytes = Box::<[u8]>::new_uninit_slice(length);
+    let mut offset = 0;
+    for part in parts {
+        for byte in *part {
+            bytes[offset].write(*byte);
+            offset += 1;
+        }
+    }
+    let bytes = unsafe { bytes.assume_init() };
+    String::from_utf8(Vec::from(bytes)).map_err(|_| "raster-store.clone-string-utf8")
+}
+
 fn raster_clone_owned_string(source: &String) -> Result<String, &'static str> {
     if source.capacity() > RASTER_OWNED_FIELD_BYTES {
         return Err("raster-store.clone-string-capacity");
     }
-    let mut value = String::new();
-    value.try_reserve_exact(source.capacity()).map_err(|_| "raster-store.clone-string-admission")?;
-    value.push_str(source);
-    Ok(value)
+    raster_exact_string_from_parts(&[source.as_bytes()])
+}
+
+fn raster_asset_child_id(hash: u64) -> Result<String, &'static str> {
+    const PREFIX: &[u8] = b"raster-asset-";
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut value = [0u8; 29];
+    value[..PREFIX.len()].copy_from_slice(PREFIX);
+    for index in 0..16 {
+        let shift = (15 - index) * 4;
+        value[PREFIX.len() + index] = HEX[((hash >> shift) & 0xf) as usize];
+    }
+    raster_exact_string_from_parts(&[&value])
 }
 
 struct RasterDslValueCloneAuthority {
@@ -1081,6 +1520,7 @@ struct RasterDslValueCloneAuthority {
     path: [usize; RASTER_MAXIMUM_NESTED_DEPTH],
     frames: [RasterTraversalFrame; RASTER_MAXIMUM_NESTED_DEPTH],
     pending_key: std::mem::ManuallyDrop<Option<String>>,
+    root_capacity_observed: bool,
     terminal: bool,
 }
 
@@ -1104,6 +1544,7 @@ impl RasterDslValueCloneAuthority {
             path: [0; RASTER_MAXIMUM_NESTED_DEPTH],
             frames: [RasterTraversalFrame::EMPTY; RASTER_MAXIMUM_NESTED_DEPTH],
             pending_key: std::mem::ManuallyDrop::new(None),
+            root_capacity_observed: false,
             terminal: false,
         }
     }
@@ -1117,9 +1558,25 @@ impl RasterDslValueCloneAuthority {
         }
     }
 
-    fn step(&mut self, source_root: &dsl::DslValue, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+    fn observe_container_capacity(source: &dsl::DslValue, target: &dsl::DslValue, totals: &mut RasterOwnerTotals) -> Result<(), &'static str> {
+        match (source, target) {
+            (dsl::DslValue::Array(source), dsl::DslValue::Array(target)) => totals.observe_candidate_capacity(source.capacity(), target.capacity(), std::mem::size_of::<dsl::DslValue>()),
+            (dsl::DslValue::Object(source), dsl::DslValue::Object(target)) => totals.observe_candidate_capacity(source.capacity(), target.capacity(), std::mem::size_of::<(String, dsl::DslValue)>()),
+            _ => Ok(()),
+        }
+    }
+
+    fn step(&mut self, source_root: &dsl::DslValue, totals: &mut RasterOwnerTotals, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
         if self.terminal {
             return Ok(true);
+        }
+        if !self.root_capacity_observed {
+            if !raster_reserve_unit(cx) {
+                return Ok(false);
+            }
+            Self::observe_container_capacity(source_root, self.value.as_ref().ok_or("raster-store.clone-value-observed-target")?, totals)?;
+            self.root_capacity_observed = true;
+            return Ok(false);
         }
         let source = RasterDslValueBoundsAuthority::value_at(source_root, &self.path[..self.depth]).ok_or("raster-store.clone-value-source")?;
         let target = Self::target_at_mut(self.value.as_mut().ok_or("raster-store.clone-value-target")?, &self.path[..self.depth]).ok_or("raster-store.clone-value-target-path")?;
@@ -1127,12 +1584,12 @@ impl RasterDslValueCloneAuthority {
         if frame.phase == 0 {
             match (source, target) {
                 (dsl::DslValue::String(source), dsl::DslValue::String(target)) => {
-                    if !raster_reserve_unit(cx, source.capacity()) {
+                    if !raster_reserve_unit(cx) {
                         return Ok(false);
                     }
                     *target = raster_clone_owned_string(source)?;
                 }
-                _ if !raster_reserve_unit(cx, 1) => return Ok(false),
+                _ if !raster_reserve_unit(cx) => return Ok(false),
                 _ => {}
             }
             self.frames[self.depth].phase = 1;
@@ -1143,10 +1600,11 @@ impl RasterDslValueCloneAuthority {
                 if self.depth + 1 >= RASTER_MAXIMUM_NESTED_DEPTH {
                     return Err("raster-store.clone-value-depth");
                 }
-                if !raster_reserve_unit(cx, 1) {
+                if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
                 target.push(Self::skeleton(&source[frame.child]));
+                Self::observe_container_capacity(&source[frame.child], target.last().ok_or("raster-store.clone-value-child-target")?, totals)?;
                 self.path[self.depth] = frame.child;
                 self.frames[self.depth].child += 1;
                 self.depth += 1;
@@ -1155,7 +1613,7 @@ impl RasterDslValueCloneAuthority {
             }
             (dsl::DslValue::Object(source), dsl::DslValue::Object(target)) if frame.child < source.len() => {
                 if frame.phase == 1 {
-                    if !raster_reserve_unit(cx, source[frame.child].0.capacity()) {
+                    if !raster_reserve_unit(cx) {
                         return Ok(false);
                     }
                     *self.pending_key = Some(raster_clone_owned_string(&source[frame.child].0)?);
@@ -1165,10 +1623,11 @@ impl RasterDslValueCloneAuthority {
                 if self.depth + 1 >= RASTER_MAXIMUM_NESTED_DEPTH {
                     return Err("raster-store.clone-value-depth");
                 }
-                if !raster_reserve_unit(cx, 1) {
+                if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
                 target.push((self.pending_key.take().ok_or("raster-store.clone-value-key")?, Self::skeleton(&source[frame.child].1)));
+                Self::observe_container_capacity(&source[frame.child].1, &target.last().ok_or("raster-store.clone-value-object-target")?.1, totals)?;
                 self.path[self.depth] = frame.child;
                 self.frames[self.depth].child += 1;
                 self.frames[self.depth].phase = 1;
@@ -1178,7 +1637,7 @@ impl RasterDslValueCloneAuthority {
             }
             _ => {}
         }
-        if !raster_reserve_unit(cx, 1) {
+        if !raster_reserve_unit(cx) {
             return Ok(false);
         }
         if self.depth == 0 {
@@ -1212,8 +1671,11 @@ impl RasterDslValueCloneAuthority {
         let retirement = self.retirement.as_mut().expect("Raster value clone retirement remains retained");
         match retirement.close_step(1, maximum_bytes)? {
             store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
+                if maximum_bytes < RASTER_CONTROL_BACKING_BYTES {
+                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                }
                 drop(self.retirement.take());
-                Ok(store::SnapshotRetirementStep::Complete)
+                Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES })
             }
             store::SnapshotRetirementStep::Complete => Err("Raster value clone retirement false terminal".into()),
             step => Ok(step),
@@ -1237,6 +1699,7 @@ struct RasterLayerCloneAuthority {
     bounds: RasterLayerBoundsAuthority,
     totals: RasterOwnerTotals,
     admitted: bool,
+    root_capacity_observed: bool,
     depth: usize,
     path: [usize; RASTER_MAXIMUM_NESTED_DEPTH],
     frames: [RasterTraversalFrame; RASTER_MAXIMUM_NESTED_DEPTH],
@@ -1283,7 +1746,7 @@ impl RasterLayerCloneAuthority {
                 blend_mode: String::new(),
                 transform: crate::artifacts::raster::RasterTransform { x: transform.x, y: transform.y, scale_x: transform.scale_x, scale_y: transform.scale_y, rotation: transform.rotation },
                 adjustment_kind: String::new(),
-                params: std::collections::BTreeMap::new(),
+                params: RasterOwnedMap::new(),
             },
         }
     }
@@ -1295,6 +1758,7 @@ impl RasterLayerCloneAuthority {
             bounds: RasterLayerBoundsAuthority::new(),
             totals: RasterOwnerTotals::new(),
             admitted: false,
+            root_capacity_observed: false,
             depth: 0,
             path: [0; RASTER_MAXIMUM_NESTED_DEPTH],
             frames: [RasterTraversalFrame::EMPTY; RASTER_MAXIMUM_NESTED_DEPTH],
@@ -1333,10 +1797,20 @@ impl RasterLayerCloneAuthority {
             return Ok(false);
         }
         if self.value.is_none() {
-            if !raster_reserve_unit(cx, 1) {
+            if !raster_reserve_unit(cx) {
                 return Ok(false);
             }
             *self.value = Some(Self::skeleton(source_root));
+            return Ok(false);
+        }
+        if !self.root_capacity_observed {
+            if !raster_reserve_unit(cx) {
+                return Ok(false);
+            }
+            if let (RasterLayerNode::Group { children: source, .. }, RasterLayerNode::Group { children: target, .. }) = (source_root, self.value.as_ref().ok_or("raster-store.clone-layer-observed-target")?) {
+                self.totals.observe_candidate_capacity(source.capacity().saturating_add(1), target.capacity(), std::mem::size_of::<RasterLayerNode>())?;
+            }
+            self.root_capacity_observed = true;
             return Ok(false);
         }
         let source = RasterLayerBoundsAuthority::layer_at(source_root, &self.path[..self.depth]).ok_or("raster-store.clone-layer-source")?;
@@ -1345,7 +1819,7 @@ impl RasterLayerCloneAuthority {
         match frame.phase {
             0..=2 => {
                 let (source, target) = &mut Self::strings(source, target)[frame.phase as usize];
-                if !raster_reserve_unit(cx, source.capacity()) {
+                if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
                 **target = raster_clone_owned_string(source)?;
@@ -1356,23 +1830,23 @@ impl RasterLayerCloneAuthority {
                 match (source, target) {
                     (RasterLayerNode::Pixel { image_key: source, .. }, RasterLayerNode::Pixel { image_key: target, .. }) => {
                         if let Some(source) = source {
-                            if !raster_reserve_unit(cx, source.capacity()) {
+                            if !raster_reserve_unit(cx) {
                                 return Ok(false);
                             }
                             *target = Some(raster_clone_owned_string(source)?);
                             digest.observe(source.as_bytes());
-                        } else if !raster_reserve_unit(cx, 1) {
+                        } else if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
                     }
                     (RasterLayerNode::Adjustment { adjustment_kind: source, .. }, RasterLayerNode::Adjustment { adjustment_kind: target, .. }) => {
-                        if !raster_reserve_unit(cx, source.capacity()) {
+                        if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
                         *target = raster_clone_owned_string(source)?;
                         digest.observe(source.as_bytes());
                     }
-                    _ if !raster_reserve_unit(cx, 1) => return Ok(false),
+                    _ if !raster_reserve_unit(cx) => return Ok(false),
                     _ => {}
                 }
                 self.frames[self.depth].phase = 4;
@@ -1381,26 +1855,56 @@ impl RasterLayerCloneAuthority {
                 if let (RasterLayerNode::Adjustment { params: source, .. }, RasterLayerNode::Adjustment { params: target, .. }) = (source, target) {
                     if let Some(authority) = self.parameter_value.as_mut() {
                         let (_, source_value) = self.parameter_key.next(source)?.ok_or("raster-store.clone-parameter-source")?;
-                        if authority.step(source_value, cx)? {
+                        if authority.step(source_value, &mut self.totals, cx)? {
                             let (source_key, _) = self.parameter_key.next(source)?.ok_or("raster-store.clone-parameter-advance")?;
-                            if !raster_reserve_unit(cx, source_key.len().saturating_add(1)) {
+                            let pending_key = self.pending_parameter_key.as_ref().ok_or("raster-store.clone-parameter-key")?;
+                            if target.page_required_for_insert(pending_key) {
+                                let page_bytes = RasterOwnedMap::<dsl::DslValue>::conservative_page_credit_bytes();
+                                if !raster_reserve_unit(cx) {
+                                    return Ok(false);
+                                }
+                                target.admit_one_page()?;
+                                return Ok(false);
+                            }
+                            if !raster_reserve_unit(cx) {
+                                return Ok(false);
+                            }
+                            if !raster_reserve_unit(cx) {
                                 return Ok(false);
                             }
                             let key = self.pending_parameter_key.take().ok_or("raster-store.clone-parameter-key")?;
                             let value = authority.take().ok_or("raster-store.clone-parameter-value")?;
                             drop(self.parameter_value.take());
-                            if target.insert(key, value).is_some() {
-                                return Err("raster-store.clone-duplicate-parameter");
+                            match target.insert_pre_admitted(key, value) {
+                                Ok(RasterOwnedMapInsert::Inserted) => {}
+                                Ok(RasterOwnedMapInsert::Replaced(mut previous)) => {
+                                    let (previous_key, previous) = previous.take();
+                                    *self.retirement = Some(Box::new(RasterOwnedRetirement::new(RasterRetirementOwner::ValueEntry { key: previous_key, value: Some(previous) })));
+                                    return Err("raster-store.clone-duplicate-parameter");
+                                }
+                                Err(rejected) => {
+                                    *self.retirement = Some(Box::new(RasterOwnedRetirement::new(RasterRetirementOwner::ValueEntry { key: rejected.key, value: Some(rejected.value) })));
+                                    return Err(rejected.reason);
+                                }
                             }
                             self.parameter_key.advance(source_key)?;
                         }
                         return Ok(false);
                     }
                     if let Some((key, value)) = self.parameter_key.next(source)? {
-                        if !raster_reserve_unit(cx, key.capacity()) {
+                        if self.pending_parameter_key.is_none() {
+                            if !raster_reserve_unit(cx) {
+                                return Ok(false);
+                            }
+                            *self.pending_parameter_key = Some(raster_clone_owned_string(key)?);
                             return Ok(false);
                         }
-                        *self.pending_parameter_key = Some(raster_clone_owned_string(key)?);
+                        if std::mem::size_of::<RasterDslValueCloneAuthority>() > RASTER_CONTROL_BACKING_BYTES {
+                            return Err("raster-store.clone-parameter-control-capacity");
+                        }
+                        if !raster_reserve_unit(cx) {
+                            return Ok(false);
+                        }
                         *self.parameter_value = Some(Box::new(RasterDslValueCloneAuthority::new(value)));
                         return Ok(false);
                     }
@@ -1414,10 +1918,13 @@ impl RasterLayerCloneAuthority {
                         if self.depth + 1 >= RASTER_MAXIMUM_NESTED_DEPTH {
                             return Err("raster-store.clone-layer-depth");
                         }
-                        if !raster_reserve_unit(cx, 1) {
+                        if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
                         target.push(Self::skeleton(&source[frame.child]));
+                        if let (RasterLayerNode::Group { children: source_child, .. }, RasterLayerNode::Group { children: target_child, .. }) = (&source[frame.child], target.last().ok_or("raster-store.clone-layer-child-target")?) {
+                            self.totals.observe_candidate_capacity(source_child.capacity().saturating_add(1), target_child.capacity(), std::mem::size_of::<RasterLayerNode>())?;
+                        }
                         self.path[self.depth] = frame.child;
                         self.frames[self.depth].child += 1;
                         self.depth += 1;
@@ -1428,7 +1935,7 @@ impl RasterLayerCloneAuthority {
                 self.frames[self.depth].phase = 6;
             }
             _ => {
-                if !raster_reserve_unit(cx, 1) {
+                if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
                 if self.depth == 0 {
@@ -1452,8 +1959,11 @@ impl RasterLayerCloneAuthority {
         if let Some(authority) = self.parameter_value.as_mut() {
             return match authority.close_step(1, maximum_bytes)? {
                 store::SnapshotRetirementStep::Complete if authority.terminal_is_empty() => {
+                    if maximum_bytes < RASTER_CONTROL_BACKING_BYTES {
+                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
                     drop(self.parameter_value.take());
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES })
                 }
                 store::SnapshotRetirementStep::Complete => Err("Raster parameter clone false terminal".into()),
                 step => Ok(step),
@@ -1474,8 +1984,11 @@ impl RasterLayerCloneAuthority {
         let retirement = self.retirement.as_mut().expect("Raster layer clone retirement remains retained");
         match retirement.close_step(1, maximum_bytes)? {
             store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
+                if maximum_bytes < RASTER_CONTROL_BACKING_BYTES {
+                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                }
                 drop(self.retirement.take());
-                Ok(store::SnapshotRetirementStep::Complete)
+                Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES })
             }
             store::SnapshotRetirementStep::Complete => Err("Raster layer clone retirement false terminal".into()),
             step => Ok(step),
@@ -1504,21 +2017,22 @@ impl RasterSnapshotBoundsAuthority {
         }
         match self.phase {
             0 => {
-                if !raster_reserve_unit(cx, 1) {
+                if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
                 self.totals.add(1, std::mem::size_of::<RasterSnapshot>(), 1, std::mem::size_of::<RasterSnapshot>())?;
+                self.totals.fixed_control_backings()?;
                 self.phase = 1;
             }
             1 => {
-                if !raster_reserve_unit(cx, source.schema.capacity()) {
+                if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
                 self.totals.string(&source.schema)?;
                 self.phase = 2;
             }
             2 => {
-                if !raster_reserve_unit(cx, source.id.capacity()) {
+                if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
                 self.totals.string(&source.id)?;
@@ -1526,17 +2040,17 @@ impl RasterSnapshotBoundsAuthority {
             }
             3 => {
                 if let Some(title) = &source.title {
-                    if !raster_reserve_unit(cx, title.capacity()) {
+                    if !raster_reserve_unit(cx) {
                         return Ok(false);
                     }
                     self.totals.string(title)?;
-                } else if !raster_reserve_unit(cx, 1) {
+                } else if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
                 self.phase = 4;
             }
             4 => {
-                if !raster_reserve_unit(cx, 1) {
+                if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
                 self.totals.layer_vector(&source.layers)?;
@@ -1551,7 +2065,7 @@ impl RasterSnapshotBoundsAuthority {
                     return Ok(false);
                 }
                 if source.layers.get(self.index).is_some() {
-                    if !raster_reserve_unit(cx, 1) {
+                    if !raster_reserve_unit(cx) {
                         return Ok(false);
                     }
                     self.layer = Some(RasterLayerBoundsAuthority::new());
@@ -1561,10 +2075,10 @@ impl RasterSnapshotBoundsAuthority {
                 self.index = 0;
             }
             6 => {
-                if !raster_reserve_unit(cx, 1) {
+                if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
-                self.totals.add(1, std::mem::size_of_val(&source.assets), 1, std::mem::size_of_val(&source.assets))?;
+                self.totals.map(&source.assets, 1)?;
                 self.phase = 7;
             }
             7 => {
@@ -1580,7 +2094,7 @@ impl RasterSnapshotBoundsAuthority {
                     4 => &child.target.dialect.standard,
                     5 => &child.target.dialect.subset,
                     _ => {
-                        if !raster_reserve_unit(cx, key.len()) {
+                        if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
                         self.asset_key.advance(key)?;
@@ -1588,7 +2102,7 @@ impl RasterSnapshotBoundsAuthority {
                         return Ok(false);
                     }
                 };
-                if !raster_reserve_unit(cx, value.capacity()) {
+                if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
                 self.totals.string(value)?;
@@ -1615,7 +2129,7 @@ struct RasterSnapshotCloneAuthority {
 
 impl RasterSnapshotCloneAuthority {
     fn new() -> Self {
-        let value = RasterSnapshot { schema: String::new(), id: String::new(), title: None, layers: Vec::new(), assets: std::collections::BTreeMap::new() };
+        let value = RasterSnapshot { schema: String::new(), id: String::new(), title: None, layers: Vec::new(), assets: RasterOwnedMap::new() };
         Self {
             value: std::mem::ManuallyDrop::new(Some(value)),
             retirement: std::mem::ManuallyDrop::new(None),
@@ -1640,14 +2154,14 @@ impl RasterSnapshotCloneAuthority {
         let target = self.value.as_mut().ok_or("raster-store.initializer-clone-target")?;
         let observed: &[u8] = match self.phase {
             1 => {
-                if !raster_reserve_unit(cx, source.schema.capacity()) {
+                if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
                 target.schema = raster_clone_owned_string(&source.schema)?;
                 source.schema.as_bytes()
             }
             2 => {
-                if !raster_reserve_unit(cx, source.id.capacity()) {
+                if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
                 target.id = raster_clone_owned_string(&source.id)?;
@@ -1655,13 +2169,13 @@ impl RasterSnapshotCloneAuthority {
             }
             3 => {
                 if let Some(title) = source.title.as_ref() {
-                    if !raster_reserve_unit(cx, title.capacity()) {
+                    if !raster_reserve_unit(cx) {
                         return Ok(false);
                     }
                     target.title = Some(raster_clone_owned_string(title)?);
                     title.as_bytes()
                 } else {
-                    if !raster_reserve_unit(cx, 1) {
+                    if !raster_reserve_unit(cx) {
                         return Ok(false);
                     }
                     &[]
@@ -1669,14 +2183,18 @@ impl RasterSnapshotCloneAuthority {
             }
             4 => {
                 if self.index == 0 && target.layers.capacity() == 0 {
-                    if !raster_reserve_unit(cx, 1) {
+                    if !raster_reserve_unit(cx) {
                         return Ok(false);
                     }
                     target.layers.try_reserve_exact(source.layers.capacity().saturating_add(1)).map_err(|_| "raster-store.initializer-layer-admission")?;
+                    self.bounds.totals.observe_candidate_capacity(source.layers.capacity().saturating_add(1), target.layers.capacity(), std::mem::size_of::<RasterLayerNode>())?;
                     return Ok(false);
                 }
                 if let Some(layer) = self.layer.as_mut() {
                     if layer.step(source.layers.get(self.index).ok_or("raster-store.initializer-layer-source")?, digest, cx)? {
+                        if !raster_reserve_unit(cx) {
+                            return Ok(false);
+                        }
                         target.layers.push(layer.take().ok_or("raster-store.initializer-layer-handoff")?);
                         drop(self.layer.take());
                         self.index += 1;
@@ -1684,7 +2202,10 @@ impl RasterSnapshotCloneAuthority {
                     return Ok(false);
                 }
                 if let Some(layer) = source.layers.get(self.index) {
-                    if !raster_reserve_unit(cx, 1) {
+                    if std::mem::size_of::<RasterLayerCloneAuthority>() > RASTER_CONTROL_BACKING_BYTES {
+                        return Err("raster-store.initializer-layer-control-capacity");
+                    }
+                    if !raster_reserve_unit(cx) {
                         return Ok(false);
                     }
                     *self.layer = Some(Box::new(RasterLayerCloneAuthority::new(layer)));
@@ -1699,7 +2220,7 @@ impl RasterSnapshotCloneAuthority {
                         self.phase = 6;
                         return Ok(false);
                     };
-                    if !raster_reserve_unit(cx, key.capacity()) {
+                    if !raster_reserve_unit(cx) {
                         return Ok(false);
                     }
                     let key = raster_clone_owned_string(key)?;
@@ -1711,14 +2232,31 @@ impl RasterSnapshotCloneAuthority {
                 }
                 if self.asset_field >= 5 {
                     let (key, _) = self.pending_asset.as_ref().expect("Raster pending asset remains retained");
-                    if !raster_reserve_unit(cx, key.len().saturating_add(1)) {
+                    if target.assets.page_required_for_insert(key) {
+                        let page_bytes = RasterOwnedMap::<RasterAssetChild>::conservative_page_credit_bytes();
+                        if !raster_reserve_unit(cx) {
+                            return Ok(false);
+                        }
+                        target.assets.admit_one_page()?;
+                        return Ok(false);
+                    }
+                    if !raster_reserve_unit(cx) {
                         return Ok(false);
                     }
                     let (key, child) = self.pending_asset.take().expect("Raster pending asset handoff remains exact");
-                    self.asset_key.advance(&key)?;
-                    if target.assets.insert(key, child).is_some() {
-                        return Err("raster-store.initializer-duplicate-asset");
+                    match target.assets.insert_pre_admitted(key, child) {
+                        Ok(RasterOwnedMapInsert::Inserted) => {}
+                        Ok(RasterOwnedMapInsert::Replaced(mut previous)) => {
+                            let (previous_key, previous) = previous.take();
+                            *self.retirement = Some(Box::new(RasterOwnedRetirement::new(RasterRetirementOwner::AssetEntry { key: previous_key, child: Some(previous) })));
+                            return Err("raster-store.initializer-duplicate-asset");
+                        }
+                        Err(rejected) => {
+                            *self.retirement = Some(Box::new(RasterOwnedRetirement::new(RasterRetirementOwner::AssetEntry { key: rejected.key, child: Some(rejected.value) })));
+                            return Err(rejected.reason);
+                        }
                     }
+                    self.asset_key.advance("")?;
                     self.asset_field = 0;
                     return Ok(false);
                 }
@@ -1732,7 +2270,7 @@ impl RasterSnapshotCloneAuthority {
                     4 => &source_child.target.dialect.subset,
                     _ => unreachable!("Raster asset field cursor is exact"),
                 };
-                if !raster_reserve_unit(cx, source_value.capacity()) {
+                if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
                 let target_value = match self.asset_field {
@@ -1772,8 +2310,11 @@ impl RasterSnapshotCloneAuthority {
         if let Some(layer) = self.layer.as_mut() {
             return match layer.close_step(1, maximum_bytes)? {
                 store::SnapshotRetirementStep::Complete if layer.terminal_is_empty() => {
+                    if maximum_bytes < RASTER_CONTROL_BACKING_BYTES {
+                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
                     drop(self.layer.take());
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES })
                 }
                 store::SnapshotRetirementStep::Complete => Err("Raster active layer clone reported false terminal".into()),
                 step => Ok(step),
@@ -1794,8 +2335,11 @@ impl RasterSnapshotCloneAuthority {
         let retirement = self.retirement.as_mut().expect("Raster clone retirement remains exact");
         match retirement.close_step(1, maximum_bytes)? {
             store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
+                if maximum_bytes < RASTER_CONTROL_BACKING_BYTES {
+                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                }
                 drop(self.retirement.take());
-                Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES })
             }
             store::SnapshotRetirementStep::Complete => Err("Raster clone retirement reported false terminal".into()),
             step => Ok(step),
@@ -1816,6 +2360,7 @@ impl Drop for RasterSnapshotCloneAuthority {
 struct RasterMutationDigestAuthority {
     layer: std::mem::ManuallyDrop<Option<Box<RasterLayerCloneAuthority>>>,
     retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+    retirement_terminal: bool,
     phase: u8,
     offset: usize,
     terminal: bool,
@@ -1823,7 +2368,7 @@ struct RasterMutationDigestAuthority {
 
 impl RasterMutationDigestAuthority {
     fn new() -> Self {
-        Self { layer: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None), phase: 0, offset: 0, terminal: false }
+        Self { layer: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None), retirement_terminal: false, phase: 0, offset: 0, terminal: false }
     }
 
     fn variant(operation: &RasterMutation) -> u8 {
@@ -1847,7 +2392,7 @@ impl RasterMutationDigestAuthority {
         if value.capacity() > RASTER_OWNED_FIELD_BYTES {
             return Err("raster-store.digest-string-capacity");
         }
-        if !raster_reserve_unit(cx, value.capacity()) {
+        if !raster_reserve_unit(cx) {
             return Ok(false);
         }
         digest.observe(&(value.len() as u64).to_be_bytes());
@@ -1856,7 +2401,7 @@ impl RasterMutationDigestAuthority {
     }
 
     fn observe_scalar(digest: &mut store::ArtifactStoreInitializationDigest, bytes: &[u8], cx: &mut semio_framework_job::StepContext<'_>) -> bool {
-        if !raster_reserve_unit(cx, bytes.len()) {
+        if !raster_reserve_unit(cx) {
             return false;
         }
         digest.observe(bytes);
@@ -1875,11 +2420,19 @@ impl RasterMutationDigestAuthority {
         if self.terminal {
             return Ok(true);
         }
+        if self.retirement_terminal {
+            if !raster_reserve_unit(cx) {
+                return Ok(false);
+            }
+            drop(self.retirement.take());
+            self.retirement_terminal = false;
+            return Ok(false);
+        }
         if let Some(retirement) = self.retirement.as_mut() {
             return match retirement.close_step(1, RASTER_OWNED_FIELD_BYTES).map_err(|_| "raster-store.digest-layer-retirement")? {
                 store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
-                    drop(self.retirement.take());
-                    Ok(self.finish(digest, cx))
+                    self.retirement_terminal = true;
+                    Ok(false)
                 }
                 store::SnapshotRetirementStep::Complete => Err("raster-store.digest-layer-false-terminal"),
                 _ => Ok(false),
@@ -1919,7 +2472,10 @@ impl RasterMutationDigestAuthority {
                 3 => scalar_phase!(&(value.index as u64).to_be_bytes(), 4),
                 4 => {
                     if self.layer.is_none() {
-                        if !raster_reserve_unit(cx, 1) {
+                        if std::mem::size_of::<RasterLayerCloneAuthority>() > RASTER_CONTROL_BACKING_BYTES {
+                            return Err("raster-store.digest-layer-control-capacity");
+                        }
+                        if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
                         *self.layer = Some(Box::new(RasterLayerCloneAuthority::new(&value.layer)));
@@ -1927,6 +2483,9 @@ impl RasterMutationDigestAuthority {
                     }
                     let layer = self.layer.as_mut().expect("Raster mutation digest layer remains retained");
                     if !layer.step(&value.layer, digest, cx)? {
+                        return Ok(false);
+                    }
+                    if !raster_reserve_unit(cx) {
                         return Ok(false);
                     }
                     let layer = layer.take().ok_or("raster-store.digest-layer-handoff")?;
@@ -2017,11 +2576,22 @@ impl RasterMutationDigestAuthority {
         if maximum_items == 0 {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
+        if self.retirement_terminal {
+            if maximum_bytes < RASTER_CONTROL_BACKING_BYTES {
+                return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            drop(self.retirement.take());
+            self.retirement_terminal = false;
+            return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES });
+        }
         if let Some(layer) = self.layer.as_mut() {
             return match layer.close_step(1, maximum_bytes)? {
                 store::SnapshotRetirementStep::Complete if layer.terminal_is_empty() => {
+                    if maximum_bytes < RASTER_CONTROL_BACKING_BYTES {
+                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
                     drop(self.layer.take());
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES })
                 }
                 store::SnapshotRetirementStep::Complete => Err("Raster digest layer false terminal".into()),
                 step => Ok(step),
@@ -2030,8 +2600,11 @@ impl RasterMutationDigestAuthority {
         if let Some(retirement) = self.retirement.as_mut() {
             return match retirement.close_step(1, maximum_bytes)? {
                 store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
+                    if maximum_bytes < RASTER_CONTROL_BACKING_BYTES {
+                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
                     drop(self.retirement.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
+                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES })
                 }
                 store::SnapshotRetirementStep::Complete => Err("Raster digest retirement false terminal".into()),
                 step => Ok(step),
@@ -2042,7 +2615,7 @@ impl RasterMutationDigestAuthority {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.layer.is_none() && self.retirement.is_none()
+        self.layer.is_none() && self.retirement.is_none() && !self.retirement_terminal
     }
 }
 
@@ -2127,7 +2700,7 @@ impl RasterLayerLocator {
         let node = RasterLayerBoundsAuthority::layer_at(root, &self.path[..self.depth]).ok_or("raster-store.locator-path")?;
         let frame = self.frames[self.depth];
         if frame.phase == 0 {
-            if !raster_reserve_unit(cx, Self::node_id(node).capacity().max(target.len())) {
+            if !raster_reserve_unit(cx) {
                 return Ok(false);
             }
             self.frames[self.depth].phase = 1;
@@ -2147,7 +2720,7 @@ impl RasterLayerLocator {
                 if self.depth + 1 >= RASTER_MAXIMUM_NESTED_DEPTH {
                     return Err("raster-store.locator-depth");
                 }
-                if !raster_reserve_unit(cx, 1) {
+                if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
                 self.path[self.depth] = frame.child;
@@ -2157,7 +2730,7 @@ impl RasterLayerLocator {
                 return Ok(false);
             }
         }
-        if !raster_reserve_unit(cx, 1) {
+        if !raster_reserve_unit(cx) {
             return Ok(false);
         }
         if self.depth == 0 {
@@ -2194,6 +2767,7 @@ struct RasterMutationCandidateAuthority {
     pending_layer: std::mem::ManuallyDrop<Option<RasterLayerNode>>,
     pending_asset: std::mem::ManuallyDrop<Option<(String, RasterAssetChild)>>,
     retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+    retirement_terminal: bool,
     asset_hasher: Option<std::collections::hash_map::DefaultHasher>,
     asset_hash: u64,
     asset_field: u8,
@@ -2211,11 +2785,12 @@ impl RasterMutationCandidateAuthority {
     fn new() -> Self {
         Self {
             value: std::mem::ManuallyDrop::new(None),
-            clone: std::mem::ManuallyDrop::new(Some(Box::new(RasterSnapshotCloneAuthority::new()))),
+            clone: std::mem::ManuallyDrop::new(None),
             layer_clone: std::mem::ManuallyDrop::new(None),
             pending_layer: std::mem::ManuallyDrop::new(None),
             pending_asset: std::mem::ManuallyDrop::new(None),
             retirement: std::mem::ManuallyDrop::new(None),
+            retirement_terminal: false,
             asset_hasher: None,
             asset_hash: 0,
             asset_field: 0,
@@ -2285,20 +2860,22 @@ impl RasterMutationCandidateAuthority {
     }
 
     fn exact_string(value: &str) -> Result<String, &'static str> {
-        if value.len() > RASTER_OWNED_FIELD_BYTES {
-            return Err("raster-store.mutation-generated-string-capacity");
-        }
-        let mut result = String::new();
-        result.try_reserve_exact(value.len()).map_err(|_| "raster-store.mutation-generated-string-admission")?;
-        result.push_str(value);
-        Ok(result)
+        raster_exact_string_from_parts(&[value.as_bytes()])
     }
 
-    fn pump_retirement(&mut self) -> Result<bool, &'static str> {
+    fn pump_retirement(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
         let Some(retirement) = self.retirement.as_mut() else { return Ok(false) };
+        if self.retirement_terminal {
+            if !raster_reserve_unit(cx) {
+                return Ok(true);
+            }
+            drop(self.retirement.take());
+            self.retirement_terminal = false;
+            return Ok(true);
+        }
         match retirement.close_step(1, RASTER_OWNED_FIELD_BYTES).map_err(|_| "raster-store.mutation-retirement-fault")? {
             store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
-                drop(self.retirement.take());
+                self.retirement_terminal = true;
                 Ok(true)
             }
             store::SnapshotRetirementStep::Complete => Err("raster-store.mutation-retirement-false-terminal"),
@@ -2310,14 +2887,27 @@ impl RasterMutationCandidateAuthority {
         if self.terminal {
             return Ok(true);
         }
-        if self.pump_retirement()? {
+        if self.pump_retirement(cx)? {
             return Ok(false);
         }
         match self.phase {
             RasterMutationCandidatePhase::Clone => {
+                if self.clone.is_none() {
+                    if std::mem::size_of::<RasterSnapshotCloneAuthority>() > RASTER_CONTROL_BACKING_BYTES {
+                        return Err("raster-store.mutation-clone-control-capacity");
+                    }
+                    if !raster_reserve_unit(cx) {
+                        return Ok(false);
+                    }
+                    *self.clone = Some(Box::new(RasterSnapshotCloneAuthority::new()));
+                    return Ok(false);
+                }
                 let clone = self.clone.as_mut().ok_or("raster-store.mutation-clone")?;
                 let mut digest = store::ArtifactStoreInitializationDigest::new(b"raster.mutation-candidate");
                 if !clone.step(current, &mut digest, cx)? {
+                    return Ok(false);
+                }
+                if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
                 *self.value = clone.take_value();
@@ -2381,7 +2971,10 @@ impl RasterMutationCandidateAuthority {
             RasterMutationCandidatePhase::PrepareLayer => {
                 let RasterMutation::CreateLayer(value) = operation else { return Err("raster-store.mutation-prepare-variant") };
                 if self.layer_clone.is_none() {
-                    if !raster_reserve_unit(cx, 1) {
+                    if std::mem::size_of::<RasterLayerCloneAuthority>() > RASTER_CONTROL_BACKING_BYTES {
+                        return Err("raster-store.mutation-layer-control-capacity");
+                    }
+                    if !raster_reserve_unit(cx) {
                         return Ok(false);
                     }
                     *self.layer_clone = Some(Box::new(RasterLayerCloneAuthority::new(&value.layer)));
@@ -2390,6 +2983,9 @@ impl RasterMutationCandidateAuthority {
                 let clone = self.layer_clone.as_mut().expect("Raster create layer clone remains retained");
                 let mut digest = store::ArtifactStoreInitializationDigest::new(b"raster.create-layer");
                 if !clone.step(&value.layer, &mut digest, cx)? {
+                    return Ok(false);
+                }
+                if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
                 *self.pending_layer = clone.take();
@@ -2409,7 +3005,7 @@ impl RasterMutationCandidateAuthority {
                         return Ok(false);
                     }
                     RasterMutation::RenameLayer(value) => {
-                        if !raster_reserve_unit(cx, value.new_name.capacity()) {
+                        if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
                         let (RasterLayerNode::Pixel { name, .. } | RasterLayerNode::Group { name, .. } | RasterLayerNode::Adjustment { name, .. }) =
@@ -2417,7 +3013,7 @@ impl RasterMutationCandidateAuthority {
                         *self.retirement = Self::replace_string(name, &value.new_name)?;
                     }
                     RasterMutation::ChangeLayerVisible(value) => {
-                        if !raster_reserve_unit(cx, 1) {
+                        if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
                         let (RasterLayerNode::Pixel { visible, .. } | RasterLayerNode::Group { visible, .. } | RasterLayerNode::Adjustment { visible, .. }) =
@@ -2425,7 +3021,7 @@ impl RasterMutationCandidateAuthority {
                         *visible = value.new_visible;
                     }
                     RasterMutation::ChangeLayerOpacity(value) => {
-                        if !value.new_opacity.is_finite() || !raster_reserve_unit(cx, 1) {
+                        if !value.new_opacity.is_finite() || !raster_reserve_unit(cx) {
                             if !value.new_opacity.is_finite() {
                                 return Err("raster-store.mutation-opacity-invalid");
                             }
@@ -2436,7 +3032,7 @@ impl RasterMutationCandidateAuthority {
                         *opacity = value.new_opacity;
                     }
                     RasterMutation::ChangeLayerBlendMode(value) => {
-                        if !raster_reserve_unit(cx, value.new_blend_mode.capacity()) {
+                        if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
                         let (RasterLayerNode::Pixel { blend_mode, .. } | RasterLayerNode::Group { blend_mode, .. } | RasterLayerNode::Adjustment { blend_mode, .. }) =
@@ -2444,7 +3040,7 @@ impl RasterMutationCandidateAuthority {
                         *self.retirement = Self::replace_string(blend_mode, &value.new_blend_mode)?;
                     }
                     RasterMutation::MoveLayer(value) => {
-                        if !value.new_x.is_finite() || !value.new_y.is_finite() || !raster_reserve_unit(cx, 1) {
+                        if !value.new_x.is_finite() || !value.new_y.is_finite() || !raster_reserve_unit(cx) {
                             if !value.new_x.is_finite() || !value.new_y.is_finite() {
                                 return Err("raster-store.mutation-transform-invalid");
                             }
@@ -2459,7 +3055,7 @@ impl RasterMutationCandidateAuthority {
                         }
                     }
                     RasterMutation::ResizeLayer(value) => {
-                        if !raster_reserve_unit(cx, 1) {
+                        if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
                         let RasterLayerNode::Pixel { width, height, .. } = RasterLayerLocator::node_at_mut(snapshot, self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? else {
@@ -2469,7 +3065,7 @@ impl RasterMutationCandidateAuthority {
                         *height = Some(value.new_height);
                     }
                     RasterMutation::ChangeLayerAdjustmentKind(value) => {
-                        if !raster_reserve_unit(cx, value.new_adjustment_kind.capacity()) {
+                        if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
                         let RasterLayerNode::Adjustment { adjustment_kind, .. } = RasterLayerLocator::node_at_mut(snapshot, self.primary.ok_or("raster-store.mutation-address")?).ok_or("raster-store.mutation-target-lost")? else {
@@ -2487,10 +3083,11 @@ impl RasterMutationCandidateAuthority {
                         return Ok(false);
                     }
                     RasterMutation::RemoveLayerAsset(value) => {
-                        if !raster_reserve_unit(cx, value.asset_id.capacity()) {
+                        if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
-                        let (key, child) = snapshot.assets.remove_entry(&value.asset_id).ok_or("raster-store.mutation-asset-missing")?;
+                        let mut removed = snapshot.assets.remove_entry(&value.asset_id).ok_or("raster-store.mutation-asset-missing")?;
+                        let (key, child) = removed.take();
                         *self.retirement = Some(Box::new(RasterOwnedRetirement::new(RasterRetirementOwner::AssetEntry { key, child: Some(child) })));
                     }
                 }
@@ -2503,13 +3100,13 @@ impl RasterMutationCandidateAuthority {
                 let RasterMutation::AddLayerAsset(value) = operation else { return Err("raster-store.mutation-asset-variant") };
                 match self.asset_field {
                     0 => {
-                        if !raster_reserve_unit(cx, value.asset.mime.capacity()) {
+                        if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
                         value.asset.mime.hash(self.asset_hasher.as_mut().ok_or("raster-store.mutation-asset-hasher")?);
                     }
                     1 => {
-                        if !raster_reserve_unit(cx, value.asset.data.capacity()) {
+                        if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
                         value.asset.data.hash(self.asset_hasher.as_mut().ok_or("raster-store.mutation-asset-hasher")?);
@@ -2517,7 +3114,7 @@ impl RasterMutationCandidateAuthority {
                         self.asset_hasher = None;
                     }
                     2 => {
-                        if !raster_reserve_unit(cx, value.asset_id.capacity()) {
+                        if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
                         let key = raster_clone_owned_string(&value.asset_id)?;
@@ -2526,29 +3123,22 @@ impl RasterMutationCandidateAuthority {
                         *self.pending_asset = Some((key, child));
                     }
                     3 => {
-                        use std::fmt::Write;
-
                         let length = "raster-asset-".len() + 16;
-                        if !raster_reserve_unit(cx, length) {
+                        if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
-                        let mut child_id = String::new();
-                        child_id.try_reserve_exact(length).map_err(|_| "raster-store.mutation-asset-child-id-admission")?;
-                        write!(&mut child_id, "raster-asset-{:016x}", self.asset_hash).map_err(|_| "raster-store.mutation-asset-child-id-write")?;
+                        let child_id = raster_asset_child_id(self.asset_hash)?;
                         self.pending_asset.as_mut().ok_or("raster-store.mutation-asset-owner")?.1.child_id = child_id;
                     }
                     4 => {
                         let length = value.asset_id.len().checked_add(6).ok_or("raster-store.mutation-asset-id-overflow")?;
-                        if length > RASTER_OWNED_FIELD_BYTES || !raster_reserve_unit(cx, length) {
+                        if length > RASTER_OWNED_FIELD_BYTES || !raster_reserve_unit(cx) {
                             if length > RASTER_OWNED_FIELD_BYTES {
                                 return Err("raster-store.mutation-asset-id-capacity");
                             }
                             return Ok(false);
                         }
-                        let mut artifact_id = String::new();
-                        artifact_id.try_reserve_exact(length).map_err(|_| "raster-store.mutation-asset-id-admission")?;
-                        artifact_id.push_str(&value.asset_id);
-                        artifact_id.push_str("-image");
+                        let artifact_id = raster_exact_string_from_parts(&[value.asset_id.as_bytes(), b"-image"])?;
                         self.pending_asset.as_mut().ok_or("raster-store.mutation-asset-owner")?.1.target.artifact_id = artifact_id;
                     }
                     5..=7 => {
@@ -2557,7 +3147,7 @@ impl RasterMutationCandidateAuthority {
                             6 => "v1",
                             _ => "image",
                         };
-                        if !raster_reserve_unit(cx, literal.len()) {
+                        if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
                         let child = &mut self.pending_asset.as_mut().ok_or("raster-store.mutation-asset-owner")?.1;
@@ -2569,16 +3159,36 @@ impl RasterMutationCandidateAuthority {
                         *target = Self::exact_string(literal)?;
                     }
                     _ => {
-                        if !raster_reserve_unit(cx, 1) {
+                        let snapshot = self.value.as_mut().ok_or("raster-store.mutation-asset-snapshot")?;
+                        let pending_key = &self.pending_asset.as_ref().ok_or("raster-store.mutation-asset-owner")?.0;
+                        if snapshot.assets.page_required_for_insert(pending_key) {
+                            let page_bytes = RasterOwnedMap::<RasterAssetChild>::conservative_page_credit_bytes();
+                            if !raster_reserve_unit(cx) {
+                                return Ok(false);
+                            }
+                            snapshot.assets.admit_one_page()?;
+                            return Ok(false);
+                        }
+                        if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
                         let (key, child) = self.pending_asset.take().ok_or("raster-store.mutation-asset-owner")?;
-                        let snapshot = self.value.as_mut().ok_or("raster-store.mutation-asset-snapshot")?;
                         if let Some(slot) = snapshot.assets.get_mut(&value.asset_id) {
                             let previous = std::mem::replace(slot, child);
                             *self.retirement = Some(Box::new(RasterOwnedRetirement::new(RasterRetirementOwner::AssetEntry { key, child: Some(previous) })));
                         } else {
-                            snapshot.assets.insert(key, child);
+                            match snapshot.assets.insert_pre_admitted(key, child) {
+                                Ok(RasterOwnedMapInsert::Inserted) => {}
+                                Ok(RasterOwnedMapInsert::Replaced(mut previous)) => {
+                                    let (previous_key, previous) = previous.take();
+                                    *self.retirement = Some(Box::new(RasterOwnedRetirement::new(RasterRetirementOwner::AssetEntry { key: previous_key, child: Some(previous) })));
+                                    return Err("raster-store.mutation-duplicate-asset");
+                                }
+                                Err(rejected) => {
+                                    *self.retirement = Some(Box::new(RasterOwnedRetirement::new(RasterRetirementOwner::AssetEntry { key: rejected.key, child: Some(rejected.value) })));
+                                    return Err(rejected.reason);
+                                }
+                            }
                         }
                         self.phase = RasterMutationCandidatePhase::Drain;
                         return Ok(false);
@@ -2591,14 +3201,14 @@ impl RasterMutationCandidateAuthority {
                 let snapshot = self.value.as_mut().ok_or("raster-store.mutation-shift-snapshot")?;
                 let values = RasterLayerLocator::container_mut(snapshot, self.container).ok_or("raster-store.mutation-shift-parent")?;
                 if self.shift_index + 1 < values.len() {
-                    if !raster_reserve_unit(cx, 1) {
+                    if !raster_reserve_unit(cx) {
                         return Ok(false);
                     }
                     values.swap(self.shift_index, self.shift_index + 1);
                     self.shift_index += 1;
                     return Ok(false);
                 }
-                if !raster_reserve_unit(cx, 1) {
+                if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
                 *self.pending_layer = values.pop();
@@ -2620,7 +3230,7 @@ impl RasterMutationCandidateAuthority {
                 Ok(false)
             }
             RasterMutationCandidatePhase::BeginInsert => {
-                if !raster_reserve_unit(cx, 1) {
+                if !raster_reserve_unit(cx) {
                     return Ok(false);
                 }
                 self.begin_insert()?;
@@ -2630,7 +3240,7 @@ impl RasterMutationCandidateAuthority {
                 let snapshot = self.value.as_mut().ok_or("raster-store.mutation-shift-snapshot")?;
                 let values = RasterLayerLocator::container_mut(snapshot, self.container).ok_or("raster-store.mutation-shift-parent")?;
                 if self.shift_index > self.shift_target {
-                    if !raster_reserve_unit(cx, 1) {
+                    if !raster_reserve_unit(cx) {
                         return Ok(false);
                     }
                     values.swap(self.shift_index, self.shift_index - 1);
@@ -2666,8 +3276,12 @@ impl RasterMutationCandidateAuthority {
         if let Some(retirement) = self.retirement.as_mut() {
             return match retirement.close_step(1, maximum_bytes)? {
                 store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
+                    if maximum_bytes < RASTER_CONTROL_BACKING_BYTES {
+                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
                     drop(self.retirement.take());
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                    self.retirement_terminal = false;
+                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES })
                 }
                 store::SnapshotRetirementStep::Complete => Err("Raster candidate retirement false terminal".into()),
                 step => Ok(step),
@@ -2676,8 +3290,11 @@ impl RasterMutationCandidateAuthority {
         if let Some(clone) = self.layer_clone.as_mut() {
             return match clone.close_step(1, maximum_bytes)? {
                 store::SnapshotRetirementStep::Complete if clone.terminal_is_empty() => {
+                    if maximum_bytes < RASTER_CONTROL_BACKING_BYTES {
+                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
                     drop(self.layer_clone.take());
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES })
                 }
                 store::SnapshotRetirementStep::Complete => Err("Raster candidate layer clone false terminal".into()),
                 step => Ok(step),
@@ -2686,8 +3303,11 @@ impl RasterMutationCandidateAuthority {
         if let Some(clone) = self.clone.as_mut() {
             return match clone.close_step(1, maximum_bytes)? {
                 store::SnapshotRetirementStep::Complete if clone.terminal_is_empty() => {
+                    if maximum_bytes < RASTER_CONTROL_BACKING_BYTES {
+                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
                     drop(self.clone.take());
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES })
                 }
                 store::SnapshotRetirementStep::Complete => Err("Raster candidate snapshot clone false terminal".into()),
                 step => Ok(step),
@@ -2713,7 +3333,7 @@ impl RasterMutationCandidateAuthority {
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.value.is_none() && self.clone.is_none() && self.layer_clone.is_none() && self.pending_layer.is_none() && self.pending_asset.is_none() && self.retirement.is_none() && self.asset_hasher.is_none()
+        self.value.is_none() && self.clone.is_none() && self.layer_clone.is_none() && self.pending_layer.is_none() && self.pending_asset.is_none() && self.retirement.is_none() && !self.retirement_terminal && self.asset_hasher.is_none()
     }
 }
 
@@ -2747,6 +3367,7 @@ enum RasterStoreInitializationPhase {
     HashRedoInverse { position: usize, edit: usize, mutation: usize },
     CommitRedo { position: usize, edit: usize },
     BuildCandidate,
+    ReleaseControlSuccess,
     RetireCancelled,
     RetireFault,
     Complete,
@@ -2761,13 +3382,16 @@ struct RasterStoreInitializationAuthority {
     runtime: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationRuntime<RasterSnapshot>>>,
     candidate: std::mem::ManuallyDrop<Option<store::ArtifactStore<RasterSnapshot, RasterMutation>>>,
     active: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+    active_terminal: bool,
     envelope_retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+    envelope_retirement_terminal: bool,
     clone: std::mem::ManuallyDrop<Option<RasterSnapshotCloneAuthority>>,
     mutation_digest: std::mem::ManuallyDrop<Option<RasterMutationDigestAuthority>>,
     mutation_candidate: std::mem::ManuallyDrop<Option<RasterMutationCandidateAuthority>>,
     candidate_disposer: std::mem::ManuallyDrop<Option<semio_framework_plugin::ArtifactDocumentStoreDisposer<RasterSnapshot, RasterMutation>>>,
     initial_digest: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationDigest>>,
     edit_digest: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationDigest>>,
+    control_reservation: std::mem::ManuallyDrop<Option<RasterInitializationControlReservation>>,
     phase: RasterStoreInitializationPhase,
     cancel_requested: bool,
     fault: Option<Vec<u8>>,
@@ -2783,13 +3407,16 @@ impl RasterStoreInitializationAuthority {
             runtime: std::mem::ManuallyDrop::new(None),
             candidate: std::mem::ManuallyDrop::new(None),
             active: std::mem::ManuallyDrop::new(None),
+            active_terminal: false,
             envelope_retirement: std::mem::ManuallyDrop::new(None),
+            envelope_retirement_terminal: false,
             clone: std::mem::ManuallyDrop::new(Some(RasterSnapshotCloneAuthority::new())),
             mutation_digest: std::mem::ManuallyDrop::new(None),
             mutation_candidate: std::mem::ManuallyDrop::new(None),
             candidate_disposer: std::mem::ManuallyDrop::new(None),
             initial_digest: std::mem::ManuallyDrop::new(Some(store::ArtifactStoreInitializationDigest::new(b"raster.initial"))),
             edit_digest: std::mem::ManuallyDrop::new(None),
+            control_reservation: std::mem::ManuallyDrop::new(None),
             phase: RasterStoreInitializationPhase::ValidateEnvelope,
             cancel_requested: false,
             fault: None,
@@ -2814,22 +3441,33 @@ impl RasterStoreInitializationAuthority {
         self.phase = RasterStoreInitializationPhase::RetireFault;
     }
 
-    fn pump_active(&mut self) -> Result<bool, String> {
+    fn pump_active(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, String> {
+        if self.active_terminal {
+            if !raster_reserve_unit(cx) {
+                return Ok(true);
+            }
+            drop(self.active.take());
+            self.active_terminal = false;
+            return Ok(true);
+        }
         let Some(active) = self.active.as_mut() else { return Ok(false) };
+        if !raster_reserve_unit(cx) {
+            return Ok(true);
+        }
         match active.close_step(1, RASTER_OWNED_FIELD_BYTES)? {
             store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= 1 && released_bytes <= RASTER_OWNED_FIELD_BYTES => Ok(true),
             store::SnapshotRetirementStep::Pending { .. } => Err("Raster store initializer retirement exceeded its exact grant".into()),
             store::SnapshotRetirementStep::Blocked => Ok(true),
             store::SnapshotRetirementStep::Complete if active.terminal_is_empty() => {
-                drop(self.active.take());
+                self.active_terminal = true;
                 Ok(true)
             }
             store::SnapshotRetirementStep::Complete => Err("Raster store initializer retirement reported a false terminal".into()),
         }
     }
 
-    fn pump_terminal_retirement(&mut self) -> Result<bool, String> {
-        if self.pump_active()? {
+    fn pump_terminal_retirement(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, String> {
+        if self.pump_active(cx)? {
             return Ok(false);
         }
         if let Some(candidate) = self.candidate.as_mut() {
@@ -2895,15 +3533,35 @@ impl RasterStoreInitializationAuthority {
                 return Ok(false);
             }
         }
+        if self.envelope_retirement_terminal {
+            if !raster_reserve_unit(cx) {
+                return Ok(false);
+            }
+            drop(self.envelope_retirement.take());
+            self.envelope_retirement_terminal = false;
+            return Ok(true);
+        }
         if let Some(retirement) = self.envelope_retirement.as_mut() {
+            if !raster_reserve_unit(cx) {
+                return Ok(false);
+            }
             return match retirement.close_step(1, RASTER_OWNED_FIELD_BYTES)? {
                 store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
-                    drop(self.envelope_retirement.take());
-                    Ok(true)
+                    self.envelope_retirement_terminal = true;
+                    Ok(false)
                 }
                 store::SnapshotRetirementStep::Complete => Err("Raster initialization envelope retirement reported a false terminal".into()),
                 _ => Ok(false),
             };
+        }
+        if let Some(control) = self.control_reservation.as_mut() {
+            if !raster_reserve_unit(cx) {
+                return Ok(false);
+            }
+            if control.return_one()? {
+                drop(self.control_reservation.take());
+            }
+            return Ok(false);
         }
         Ok(true)
     }
@@ -2914,13 +3572,16 @@ impl RasterStoreInitializationAuthority {
             && self.runtime.is_none()
             && self.candidate.is_none()
             && self.active.is_none()
+            && !self.active_terminal
             && self.envelope_retirement.is_none()
+            && !self.envelope_retirement_terminal
             && self.clone.is_none()
             && self.mutation_digest.is_none()
             && self.mutation_candidate.is_none()
             && self.candidate_disposer.is_none()
             && self.initial_digest.is_none()
             && self.edit_digest.is_none()
+            && self.control_reservation.is_none()
     }
 }
 
@@ -2935,7 +3596,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
         if cx.should_yield() {
             return semio_framework_job::StepOutcome::Yield;
         }
-        match self.pump_active() {
+        match self.pump_active(cx) {
             Ok(true) => return semio_framework_job::StepOutcome::Yield,
             Ok(false) => {}
             Err(error) => {
@@ -2976,6 +3637,20 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
             RasterStoreInitializationPhase::CloneInitial => {
                 let source = &self.envelope.as_ref().expect("Raster envelope remains retained during initial clone").vcs.initial_snapshot;
                 let clone = self.clone.as_mut().expect("Raster initial clone authority remains retained");
+                if clone.bounds.terminal && self.control_reservation.is_none() {
+                    if !raster_reserve_unit(cx) {
+                        return semio_framework_job::StepOutcome::Yield;
+                    }
+                    match RasterInitializationControlReservation::try_claim() {
+                        Ok(Some(control)) => *self.control_reservation = Some(control),
+                        Ok(None) => return semio_framework_job::StepOutcome::Yield,
+                        Err(code) => {
+                            self.fail(code.as_bytes());
+                            return semio_framework_job::StepOutcome::Yield;
+                        }
+                    }
+                    return semio_framework_job::StepOutcome::Yield;
+                }
                 let complete = match clone.step(source, self.initial_digest.as_mut().expect("Raster initial digest remains retained"), cx) {
                     Ok(complete) => complete,
                     Err(code) => {
@@ -3061,7 +3736,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                     return semio_framework_job::StepOutcome::Yield;
                 };
                 if self.mutation_digest.is_none() {
-                    if !raster_reserve_unit(cx, 1) {
+                    if !raster_reserve_unit(cx) {
                         return semio_framework_job::StepOutcome::Yield;
                     }
                     *self.mutation_digest = Some(RasterMutationDigestAuthority::new());
@@ -3079,7 +3754,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                 }
                 drop(self.mutation_digest.take());
                 if self.mutation_candidate.is_none() {
-                    if !raster_reserve_unit(cx, 1) {
+                    if !raster_reserve_unit(cx) {
                         return semio_framework_job::StepOutcome::Yield;
                     }
                     *self.mutation_candidate = Some(RasterMutationCandidateAuthority::new());
@@ -3110,7 +3785,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                     return semio_framework_job::StepOutcome::Yield;
                 };
                 if self.mutation_digest.is_none() {
-                    if raster_reserve_unit(cx, 1) {
+                    if raster_reserve_unit(cx) {
                         *self.mutation_digest = Some(RasterMutationDigestAuthority::new());
                     }
                     return semio_framework_job::StepOutcome::Yield;
@@ -3171,7 +3846,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                     return semio_framework_job::StepOutcome::Yield;
                 };
                 if self.mutation_digest.is_none() {
-                    if raster_reserve_unit(cx, 1) {
+                    if raster_reserve_unit(cx) {
                         *self.mutation_digest = Some(RasterMutationDigestAuthority::new());
                     }
                     return semio_framework_job::StepOutcome::Yield;
@@ -3193,7 +3868,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                     return semio_framework_job::StepOutcome::Yield;
                 };
                 if self.mutation_digest.is_none() {
-                    if raster_reserve_unit(cx, 1) {
+                    if raster_reserve_unit(cx) {
                         *self.mutation_digest = Some(RasterMutationDigestAuthority::new());
                     }
                     return semio_framework_job::StepOutcome::Yield;
@@ -3221,7 +3896,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                 semio_framework_job::StepOutcome::Yield
             }
             RasterStoreInitializationPhase::BuildCandidate => {
-                if !raster_reserve_unit(cx, 1) {
+                if !raster_reserve_unit(cx) {
                     return semio_framework_job::StepOutcome::Yield;
                 }
                 let Some(candidate_generation) = self.generation.0.checked_add(1) else {
@@ -3232,10 +3907,28 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot
                 let runtime = self.runtime.take().expect("Raster runtime remains retained until atomic store construction");
                 let candidate = store::ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, candidate_generation, raster_document_store_owners());
                 *self.candidate = Some(candidate);
-                self.phase = RasterStoreInitializationPhase::Complete;
-                semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: Vec::new(), output: Vec::new() })
+                self.phase = RasterStoreInitializationPhase::ReleaseControlSuccess;
+                semio_framework_job::StepOutcome::Yield
             }
-            RasterStoreInitializationPhase::RetireCancelled | RasterStoreInitializationPhase::RetireFault => match self.pump_terminal_retirement() {
+            RasterStoreInitializationPhase::ReleaseControlSuccess => {
+                if !raster_reserve_unit(cx) {
+                    return semio_framework_job::StepOutcome::Yield;
+                }
+                let control = self.control_reservation.as_mut().expect("Raster completed candidate retains its exact control reservation");
+                match control.return_one() {
+                    Ok(true) => {
+                        drop(self.control_reservation.take());
+                        self.phase = RasterStoreInitializationPhase::Complete;
+                        semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: Vec::new(), output: Vec::new() })
+                    }
+                    Ok(false) => semio_framework_job::StepOutcome::Yield,
+                    Err(code) => {
+                        self.fail(code.as_bytes());
+                        semio_framework_job::StepOutcome::Yield
+                    }
+                }
+            }
+            RasterStoreInitializationPhase::RetireCancelled | RasterStoreInitializationPhase::RetireFault => match self.pump_terminal_retirement(cx) {
                 Ok(false) => semio_framework_job::StepOutcome::Yield,
                 Ok(true) => {
                     drop(self.initial_digest.take());
@@ -3305,6 +3998,9 @@ mod tests {
     use crate::artifacts::raster::schema::empty_raster_document;
     use crate::artifacts::raster::{RasterLayerNode, RasterTransform, RASTER_DOCUMENT_SCHEMA};
 
+    static RASTER_INITIALIZER_TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    static RASTER_STANDALONE_RETIREMENT_TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
     #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
         let document = empty_raster_document();
@@ -3348,7 +4044,7 @@ mod tests {
                         blend_mode: "normal".into(),
                         transform: RasterTransform::default(),
                         adjustment_kind: "levels".into(),
-                        params: std::collections::BTreeMap::new(),
+                        params: RasterOwnedMap::new(),
                     }),
                 })],
                 description: None,
@@ -3364,6 +4060,7 @@ mod tests {
     }
 
     fn drive_raster_initializer(authority: &mut RasterStoreInitializationAuthority, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> semio_framework_job::StepOutcome {
+        let _guard = RASTER_INITIALIZER_TEST_LOCK.lock().expect("Raster initializer test lock");
         let cancel = semio_framework_job::root_cancel_token();
         let mut preview_sequence = 0;
         for _ in 0..100_000 {
@@ -3396,6 +4093,20 @@ mod tests {
             }
         }
         panic!("Raster candidate did not reach terminal-empty close")
+    }
+
+    fn close_raster_retirement(retirement: &mut dyn store::ErasedSnapshotRetirement) {
+        for _ in 0..200_000 {
+            if retirement.terminal_is_empty() {
+                return;
+            }
+            let step = retirement.close_step(1, RASTER_OWNED_FIELD_BYTES).expect("Raster retained owner closes after admitted saturation resumes");
+            if let store::SnapshotRetirementStep::Pending { released_items, released_bytes } = step {
+                assert!(released_items <= 1);
+                assert!(released_bytes <= RASTER_OWNED_FIELD_BYTES);
+            }
+        }
+        panic!("Raster retained owner did not reach terminal-empty");
     }
 
     #[test]
@@ -3484,6 +4195,71 @@ mod tests {
             }
         }
         drop(retirement);
+    }
+
+    #[test]
+    fn raster_empty_bounds_and_mounted_sixty_four_fuel_progress_across_second_map_page() {
+        let _guard = RASTER_INITIALIZER_TEST_LOCK.lock().expect("mounted Raster initializer test lock");
+        assert_eq!(RASTER_INITIALIZATION_PROCESS_CONTROLS.load(std::sync::atomic::Ordering::Acquire), 0);
+        let operation = semio_framework_job::OperationId(7_041);
+        let generation = semio_framework_job::Generation(361);
+        let cancel = semio_framework_job::root_cancel_token();
+        let mut preview_sequence = 0;
+        let empty = empty_raster_document();
+        let mut bounds = RasterSnapshotBoundsAuthority::new();
+        for _ in 0..256 {
+            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(64, u64::MAX), cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+            if bounds.step(&empty, &mut context).expect("empty Raster bounds remain admissible") {
+                break;
+            }
+        }
+        assert!(bounds.terminal);
+        assert!(bounds.totals.source_bytes < RASTER_MAXIMUM_NESTED_BYTES);
+        assert_eq!(bounds.totals.source_control_items, RASTER_MAXIMUM_CONTROL_BACKINGS);
+        assert_eq!(bounds.totals.source_control_bytes, RASTER_MAXIMUM_CONTROL_BYTES);
+
+        let mut source = empty_raster_document();
+        source.layers.push(RasterLayerNode::Pixel {
+            id: "mounted-layer".into(),
+            name: "Mounted".into(),
+            visible: true,
+            opacity: 1.0,
+            blend_mode: "normal".into(),
+            transform: RasterTransform::default(),
+            mask: None,
+            width: Some(1),
+            height: Some(1),
+            image_key: None,
+        });
+        for index in 0..(crate::artifacts::raster::RASTER_OWNED_MAP_PAGE_CAPACITY + 1) {
+            source
+                .assets
+                .insert(
+                    format!("mounted-{index}"),
+                    store::ArtifactChild::new(
+                        format!("child-{index}"),
+                        store::os_io::ArtifactRef { artifact_id: format!("artifact-{index}"), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } },
+                    ),
+                )
+                .expect("mounted-shaped source admits its second fixed map page");
+        }
+        let envelope = store::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-mounted-64-fuel", source, None);
+        let mut authority = RasterStoreInitializationAuthority::new(envelope, operation, generation);
+        let mut terminal = None;
+        for _ in 0..100_000 {
+            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(64, u64::MAX), cancel.clone(), semio_framework_job::default_now_ms, &mut preview_sequence);
+            let outcome = semio_framework_plugin::ArtifactStoreInitializationAuthority::step(&mut authority, &mut context);
+            if outcome.is_terminal() {
+                terminal = Some(outcome);
+                break;
+            }
+        }
+        assert!(matches!(terminal, Some(semio_framework_job::StepOutcome::Complete(_))));
+        assert_eq!(RASTER_INITIALIZATION_PROCESS_CONTROLS.load(std::sync::atomic::Ordering::Acquire), 0, "normal completion returns every non-stack process control credit");
+        let candidate = semio_framework_plugin::ArtifactStoreInitializationAuthority::take_candidate(&mut authority).expect("mounted-shaped candidate");
+        assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&authority));
+        drop(authority);
+        close_raster_candidate(candidate);
     }
 
     #[test]
@@ -3626,12 +4402,66 @@ mod tests {
     }
 
     #[test]
+    fn raster_retirement_page_credit_is_claimed_before_allocation_and_returned_with_backing() {
+        let baseline = RASTER_RETIREMENT_PROCESS_PAGES.load(std::sync::atomic::Ordering::Acquire);
+        let mut retirement = RasterOwnedRetirement::new(RasterRetirementOwner::Value(dsl::DslValue::Array(vec![dsl::DslValue::String("owned".into())])));
+        assert!(matches!(store::ErasedSnapshotRetirement::close_step(&mut retirement, 1, RASTER_CONTROL_BACKING_BYTES).expect("nested owner stages one push"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
+        assert!(matches!(
+            store::ErasedSnapshotRetirement::close_step(&mut retirement, 1, RASTER_CONTROL_BACKING_BYTES).expect("page credit is claimed before allocation"),
+            store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
+        ));
+        assert_eq!(RASTER_RETIREMENT_PROCESS_PAGES.load(std::sync::atomic::Ordering::Acquire), baseline + 1);
+        assert_eq!(retirement.pending_page_credit, Some(0));
+        assert!(retirement.pages[0].is_none());
+        assert!(matches!(
+            store::ErasedSnapshotRetirement::close_step(&mut retirement, 1, RASTER_CONTROL_BACKING_BYTES).expect("credited page allocation is a distinct transition"),
+            store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
+        ));
+        assert!(retirement.pending_page_credit.is_none());
+        assert!(retirement.page_credits[0]);
+        assert!(retirement.pages[0].is_some());
+        while !store::ErasedSnapshotRetirement::terminal_is_empty(&retirement) {
+            let step = store::ErasedSnapshotRetirement::close_step(&mut retirement, 1, RASTER_CONTROL_BACKING_BYTES).expect("credited page retires incrementally");
+            if let store::SnapshotRetirementStep::Pending { released_items, released_bytes } = step {
+                assert!(released_items <= 1);
+                assert!(released_bytes <= RASTER_CONTROL_BACKING_BYTES);
+            }
+        }
+        assert_eq!(RASTER_RETIREMENT_PROCESS_PAGES.load(std::sync::atomic::Ordering::Acquire), baseline);
+        drop(retirement);
+    }
+
+    #[test]
+    fn raster_owned_map_removal_returns_exact_pair_and_populated_drop_refuses() {
+        let mut map = RasterOwnedMap::new();
+        let key = String::from("exact-key");
+        let key_pointer = key.as_ptr();
+        map.insert(key, 7_u8).expect("one exact map entry");
+        let mut removed = map.remove_entry("exact-key").expect("pair-returning removal");
+        let (removed_key, removed_value) = removed.take();
+        assert_eq!(removed_key.as_ptr(), key_pointer);
+        assert_eq!(removed_value, 7);
+        drop(removed_key);
+        while let Some(page) = map.take_empty_page_backing() {
+            page.release();
+        }
+        drop(map);
+
+        let result = std::panic::catch_unwind(|| {
+            let mut populated = RasterOwnedMap::new();
+            populated.insert(String::from("must-retire"), 9_u8).expect("one populated page");
+            drop(populated);
+        });
+        assert!(result.is_err(), "populated Raster map ordinary Drop must fail closed");
+    }
+
+    #[test]
     fn raster_empty_asset_map_retirement_has_no_hidden_allocation_release() {
-        let snapshot = RasterSnapshot { schema: String::new(), id: String::new(), title: None, layers: Vec::new(), assets: std::collections::BTreeMap::new() };
+        let snapshot = RasterSnapshot { schema: String::new(), id: String::new(), title: None, layers: Vec::new(), assets: RasterOwnedMap::new() };
         let mut retirement = RasterOwnedRetirement::new(RasterRetirementOwner::Snapshot(snapshot));
         let layers = store::ErasedSnapshotRetirement::close_step(&mut retirement, 1, RASTER_OWNED_FIELD_BYTES).expect("empty layer vector closes");
         assert!(matches!(layers, store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }));
-        let assets = store::ErasedSnapshotRetirement::close_step(&mut retirement, 1, RASTER_OWNED_FIELD_BYTES).expect("empty BTreeMap shell closes allocation-free");
+        let assets = store::ErasedSnapshotRetirement::close_step(&mut retirement, 1, RASTER_OWNED_FIELD_BYTES).expect("empty fixed-page map shell closes allocation-free");
         assert!(matches!(assets, store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 }));
         while !store::ErasedSnapshotRetirement::terminal_is_empty(&retirement) {
             let _ = store::ErasedSnapshotRetirement::close_step(&mut retirement, 1, RASTER_OWNED_FIELD_BYTES).expect("empty snapshot reaches terminal");
@@ -3640,8 +4470,362 @@ mod tests {
     }
 
     #[test]
+    fn raster_owned_map_cap_plus_one_returns_exact_owner_and_populated_pages_retire_explicitly() {
+        let mut assets = RasterOwnedMap::new();
+        for index in 0..crate::artifacts::raster::RASTER_OWNED_MAP_CAPACITY {
+            assets
+                .insert(
+                    format!("asset-{index:02}"),
+                    store::ArtifactChild::new(
+                        format!("child-{index:02}"),
+                        store::os_io::ArtifactRef { artifact_id: format!("artifact-{index:02}"), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } },
+                    ),
+                )
+                .expect("fixed Raster map admits its exact item capacity");
+        }
+        let rejected_key = String::from("asset-overflow");
+        let rejected_child_id = String::from("child-overflow");
+        let key_pointer = rejected_key.as_ptr();
+        let child_pointer = rejected_child_id.as_ptr();
+        let rejected = assets
+            .insert(
+                rejected_key,
+                store::ArtifactChild::new(
+                    rejected_child_id,
+                    store::os_io::ArtifactRef { artifact_id: "overflow".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } },
+                ),
+            )
+            .expect_err("fixed Raster map rejects capacity plus one");
+        assert_eq!(rejected.key.as_ptr(), key_pointer);
+        assert_eq!(rejected.value.child_id.as_ptr(), child_pointer);
+
+        let (old_key_pointer, old_child_pointer) = {
+            let (key, child) = assets.entry_at(0).expect("first admitted Raster map entry");
+            (key.as_ptr(), child.child_id.as_ptr())
+        };
+        let mut replacement_key = String::with_capacity(64);
+        replacement_key.push_str("asset-00");
+        let replacement_key_pointer = replacement_key.as_ptr();
+        let replacement_child_id = String::from("replacement-child");
+        let replacement_child_pointer = replacement_child_id.as_ptr();
+        let mut replaced = match assets
+            .insert_pre_admitted(
+                replacement_key,
+                store::ArtifactChild::new(
+                    replacement_child_id,
+                    store::os_io::ArtifactRef { artifact_id: "replacement-artifact".into(), dialect: store::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } },
+                ),
+            )
+            .expect("replacement preserves fixed capacity")
+        {
+            RasterOwnedMapInsert::Replaced(previous) => previous,
+            RasterOwnedMapInsert::Inserted => panic!("replacement returns the exact displaced pair"),
+        };
+        let (previous_key, previous_child) = replaced.take();
+        assert_eq!(previous_key.as_ptr(), old_key_pointer);
+        assert_eq!(previous_child.child_id.as_ptr(), old_child_pointer);
+        let (installed_key, installed_child) = assets.entry_at(0).expect("replacement remains in stable order");
+        assert_eq!(installed_key.as_ptr(), replacement_key_pointer);
+        assert_eq!(installed_child.child_id.as_ptr(), replacement_child_pointer);
+        let mut displaced = RasterOwnedRetirement::new(RasterRetirementOwner::AssetEntry { key: previous_key, child: Some(previous_child) });
+        while !store::ErasedSnapshotRetirement::terminal_is_empty(&displaced) {
+            let step = store::ErasedSnapshotRetirement::close_step(&mut displaced, 1, RASTER_OWNED_FIELD_BYTES).expect("displaced replacement owner closes exactly");
+            if let store::SnapshotRetirementStep::Pending { released_items, released_bytes } = step {
+                assert!(released_items <= 1);
+                assert!(released_bytes <= RASTER_OWNED_FIELD_BYTES);
+            }
+        }
+        drop(displaced);
+
+        let snapshot = RasterSnapshot { schema: String::new(), id: String::new(), title: None, layers: Vec::new(), assets };
+        let mut retirement = RasterOwnedRetirement::new(RasterRetirementOwner::Snapshot(snapshot));
+        let mut page_backings = 0;
+        while !store::ErasedSnapshotRetirement::terminal_is_empty(&retirement) {
+            if let store::SnapshotRetirementStep::Pending { released_items, released_bytes } = store::ErasedSnapshotRetirement::close_step(&mut retirement, 1, RASTER_OWNED_FIELD_BYTES).expect("populated owned map retires one exact owner") {
+                assert!(released_items <= 1);
+                assert!(released_bytes <= RASTER_OWNED_FIELD_BYTES);
+                if released_bytes == RasterOwnedMap::<RasterAssetChild>::conservative_page_credit_bytes() {
+                    page_backings += 1;
+                }
+            }
+        }
+        assert_eq!(page_backings, crate::artifacts::raster::RASTER_OWNED_MAP_CAPACITY / crate::artifacts::raster::RASTER_OWNED_MAP_PAGE_CAPACITY);
+        drop(retirement);
+    }
+
+    #[test]
+    fn raster_observed_capacity_and_combined_retirement_depth_are_exact() {
+        let mut source = String::with_capacity(64);
+        source.push_str("observed");
+        let candidate = raster_clone_owned_string(&source).expect("fixed-slice String construction is exact");
+        assert_eq!(candidate.capacity(), candidate.len());
+
+        let mut totals = RasterOwnerTotals::new();
+        totals.add(0, 0, 0, 8).expect("base candidate credit");
+        totals.observe_candidate_capacity(4, 7, 2).expect("allocator over-capacity is observed and admitted");
+        assert_eq!(totals.candidate_bytes, 14);
+        assert_eq!(RasterOwnerTotals::validate_control_backing_count(RASTER_MAXIMUM_CONTROL_BACKINGS), Ok(()));
+        assert_eq!(RasterOwnerTotals::validate_control_backing_count(RASTER_MAXIMUM_CONTROL_BACKINGS + 1), Err("raster-store.control-backing-capacity"));
+        assert_eq!(RASTER_MAXIMUM_CONTROL_BACKINGS, 64);
+        assert_eq!(raster_retirement_frame_requirement(RASTER_MAXIMUM_NESTED_DEPTH, RASTER_MAXIMUM_NESTED_DEPTH), Ok(RASTER_RETIREMENT_ADMITTED_FRAME_CAPACITY));
+        assert_eq!(raster_retirement_frame_requirement(RASTER_MAXIMUM_NESTED_DEPTH, RASTER_MAXIMUM_NESTED_DEPTH + 1), Err("raster-store.preflight-combined-depth"));
+    }
+
+    #[test]
+    fn raster_box_and_arc_control_backings_require_and_report_fixed_credit() {
+        assert!(std::mem::size_of::<RasterOwnedRetirement>() <= RASTER_CONTROL_BACKING_BYTES);
+        assert!(std::mem::size_of::<RasterRetirementFramePage>() <= RASTER_CONTROL_BACKING_BYTES);
+        assert!(std::mem::size_of::<RasterSnapshotCloneAuthority>() <= RASTER_CONTROL_BACKING_BYTES);
+        assert!(std::mem::size_of::<RasterLayerCloneAuthority>() <= RASTER_CONTROL_BACKING_BYTES);
+        assert!(std::mem::size_of::<RasterDslValueCloneAuthority>() <= RASTER_CONTROL_BACKING_BYTES);
+        let layer =
+            Box::new(RasterLayerNode::Pixel { id: String::new(), name: String::new(), visible: true, opacity: 1.0, blend_mode: String::new(), transform: RasterTransform::default(), mask: None, width: Some(1), height: Some(1), image_key: None });
+        let mut boxed = RasterOwnedRetirement::new(RasterRetirementOwner::BoxedLayer(Some(layer)));
+        assert_eq!(boxed.control.as_ref().map(|credit| (credit.held_items, credit.held_bytes)), Some((1, RASTER_CONTROL_BACKING_BYTES)));
+        assert!(matches!(
+            store::ErasedSnapshotRetirement::close_step(&mut boxed, 1, RASTER_CONTROL_BACKING_BYTES - 1).expect("insufficient Box backing credit retains exact owner"),
+            store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
+        ));
+        assert!(matches!(
+            store::ErasedSnapshotRetirement::close_step(&mut boxed, 1, RASTER_CONTROL_BACKING_BYTES).expect("fixed Box backing credit releases exact control owner"),
+            store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES }
+        ));
+        while !store::ErasedSnapshotRetirement::terminal_is_empty(&boxed) {
+            let _ = store::ErasedSnapshotRetirement::close_step(&mut boxed, 1, RASTER_OWNED_FIELD_BYTES).expect("boxed layer payload retires after its control backing");
+        }
+        assert!(boxed.control.is_none(), "standalone Box control credit is returned before terminal-empty");
+        drop(boxed);
+
+        let snapshot = std::sync::Arc::new(RasterSnapshot { schema: String::new(), id: String::new(), title: None, layers: Vec::new(), assets: RasterOwnedMap::new() });
+        let mut root = store::SnapshotRetirementFactory::retire(&RasterSnapshotRetirementFactory, snapshot);
+        assert!(matches!(root.close_step(1, RASTER_CONTROL_BACKING_BYTES - 1).expect("insufficient Arc credit retains root"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
+        assert!(matches!(root.close_step(1, RASTER_CONTROL_BACKING_BYTES).expect("Arc control backing is reported before root payload"), store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES }));
+        while !root.terminal_is_empty() {
+            let _ = root.close_step(1, RASTER_OWNED_FIELD_BYTES).expect("Arc root retires through exact retained owner");
+        }
+        assert!(root.terminal_is_empty(), "standalone Arc and inner Box control credits return before terminal-empty");
+        drop(root);
+    }
+
+    #[test]
+    fn raster_standalone_control_max_plus_one_returns_exact_owner_and_resumes_after_full_saturation() {
+        let _guard = RASTER_STANDALONE_RETIREMENT_TEST_LOCK.lock().expect("Raster standalone retirement test lock");
+        assert_eq!(RASTER_STANDALONE_PROCESS_CONTROLS.load(std::sync::atomic::Ordering::Acquire), 0);
+        let mut saturated = Vec::with_capacity(RASTER_STANDALONE_PROCESS_CONTROL_CAPACITY);
+        for index in 0..RASTER_STANDALONE_PROCESS_CONTROL_CAPACITY {
+            let retirement = RasterOwnedRetirement::new(RasterRetirementOwner::String(format!("held-{index}")));
+            assert_eq!(retirement.control.as_ref().map(|credit| (credit.held_items, credit.held_bytes)), Some((1, RASTER_CONTROL_BACKING_BYTES)));
+            saturated.push(retirement);
+        }
+        assert_eq!(RASTER_STANDALONE_PROCESS_CONTROLS.load(std::sync::atomic::Ordering::Acquire), RASTER_STANDALONE_PROCESS_CONTROL_CAPACITY);
+
+        let plus_one_owner = String::from("exact-plus-one-owner");
+        let plus_one_pointer = plus_one_owner.as_ptr();
+        let construction = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| RasterOwnedRetirement::new(RasterRetirementOwner::String(plus_one_owner))));
+        let mut plus_one = construction.expect("saturated standalone construction retains rather than panics");
+        assert!(plus_one.control.is_none());
+        let retained_pointer = match plus_one.root.as_ref().and_then(|frame| frame.owner.as_ref()) {
+            Some(RasterRetirementOwner::String(value)) => value.as_ptr(),
+            _ => panic!("saturated standalone retirement retains the exact producer owner"),
+        };
+        assert_eq!(retained_pointer, plus_one_pointer);
+        assert!(matches!(
+            store::ErasedSnapshotRetirement::close_step(&mut plus_one, 1, RASTER_OWNED_FIELD_BYTES).expect("full saturation is a retained pending result"),
+            store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
+        ));
+        assert!(plus_one.control.is_none());
+
+        let mut returned = saturated.pop().expect("one saturated control is returned");
+        close_raster_retirement(&mut returned);
+        assert!(store::ErasedSnapshotRetirement::terminal_is_empty(&returned));
+        drop(returned);
+        assert_eq!(RASTER_STANDALONE_PROCESS_CONTROLS.load(std::sync::atomic::Ordering::Acquire), RASTER_STANDALONE_PROCESS_CONTROL_CAPACITY - 1);
+
+        assert!(matches!(store::ErasedSnapshotRetirement::close_step(&mut plus_one, 1, 0).expect("plus-one owner resumes into the returned exact control"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
+        assert_eq!(plus_one.control.as_ref().map(|credit| (credit.held_items, credit.held_bytes)), Some((1, RASTER_CONTROL_BACKING_BYTES)));
+        let resumed_pointer = match plus_one.root.as_ref().and_then(|frame| frame.owner.as_ref()) {
+            Some(RasterRetirementOwner::String(value)) => value.as_ptr(),
+            _ => panic!("resumed standalone retirement still retains the exact producer owner"),
+        };
+        assert_eq!(resumed_pointer, plus_one_pointer);
+        close_raster_retirement(&mut plus_one);
+        assert!(store::ErasedSnapshotRetirement::terminal_is_empty(&plus_one));
+        drop(plus_one);
+        for retirement in &mut saturated {
+            close_raster_retirement(retirement);
+            assert!(store::ErasedSnapshotRetirement::terminal_is_empty(retirement));
+        }
+        drop(saturated);
+        assert_eq!(RASTER_STANDALONE_PROCESS_CONTROLS.load(std::sync::atomic::Ordering::Acquire), 0, "held standalone control credits equal returned credits");
+        assert_eq!(RASTER_RETIREMENT_PROCESS_PAGES.load(std::sync::atomic::Ordering::Acquire), 0, "terminal standalone saturation leaves no page credit");
+    }
+
+    #[test]
+    fn raster_arc_factory_full_saturation_preserves_exact_producer_through_every_control_phase() {
+        let _guard = RASTER_STANDALONE_RETIREMENT_TEST_LOCK.lock().expect("Raster standalone retirement test lock");
+        assert_eq!(RASTER_STANDALONE_PROCESS_CONTROLS.load(std::sync::atomic::Ordering::Acquire), 0);
+        let mut saturated = Vec::with_capacity(RASTER_STANDALONE_PROCESS_CONTROL_CAPACITY);
+        for index in 0..RASTER_STANDALONE_PROCESS_CONTROL_CAPACITY {
+            saturated.push(RasterOwnedRetirement::new(RasterRetirementOwner::String(format!("arc-held-{index}"))));
+        }
+        let producer = std::sync::Arc::new(RasterSnapshot { schema: "arc-owner".into(), id: String::new(), title: None, layers: Vec::new(), assets: RasterOwnedMap::new() });
+        let producer_pointer = std::sync::Arc::as_ptr(&producer);
+        let producer_witness = std::sync::Arc::downgrade(&producer);
+        let construction = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| store::SnapshotRetirementFactory::retire(&RasterSnapshotRetirementFactory, producer)));
+        let mut root = construction.expect("saturated Arc factory retains rather than panics");
+        assert_eq!(std::sync::Arc::as_ptr(&producer_witness.upgrade().expect("saturated Arc owner remains alive")), producer_pointer);
+        assert!(matches!(root.close_step(1, RASTER_OWNED_FIELD_BYTES).expect("full Arc control saturation retains exact owner"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
+
+        let mut first_return = saturated.pop().expect("one root control is returned");
+        close_raster_retirement(&mut first_return);
+        drop(first_return);
+        assert!(matches!(root.close_step(1, 0).expect("Arc root claims the returned control without consuming its producer"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
+        assert_eq!(std::sync::Arc::as_ptr(&producer_witness.upgrade().expect("admitted Arc owner remains exact before unwrap")), producer_pointer);
+        assert!(matches!(root.close_step(1, RASTER_OWNED_FIELD_BYTES).expect("Arc allocation transfers into the retained value phase"), store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: RASTER_CONTROL_BACKING_BYTES }));
+        assert!(matches!(root.close_step(1, RASTER_OWNED_FIELD_BYTES).expect("inner Box retirement construction remains retained at saturation"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
+        assert!(matches!(root.close_step(1, RASTER_OWNED_FIELD_BYTES).expect("saturated inner Box retirement yields without owner loss"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
+
+        let mut second_return = saturated.pop().expect("one inner Box control is returned");
+        close_raster_retirement(&mut second_return);
+        drop(second_return);
+        close_raster_retirement(root.as_mut());
+        assert!(root.terminal_is_empty(), "Arc owner, inner Box, and root control all reach terminal-empty");
+        drop(root);
+        assert!(producer_witness.upgrade().is_none(), "the exact producer allocation is retired once after every control phase");
+        for retirement in &mut saturated {
+            close_raster_retirement(retirement);
+        }
+        drop(saturated);
+        assert_eq!(RASTER_STANDALONE_PROCESS_CONTROLS.load(std::sync::atomic::Ordering::Acquire), 0, "Arc and Box held controls equal returned controls");
+        assert_eq!(RASTER_RETIREMENT_PROCESS_PAGES.load(std::sync::atomic::Ordering::Acquire), 0, "Arc saturation leaves the retirement page process empty");
+    }
+
+    #[test]
+    fn raster_populated_dsl_materialization_max_plus_one_nested_cancel_fault_panic_and_close_are_exact() {
+        let _guard = RASTER_STANDALONE_RETIREMENT_TEST_LOCK.lock().expect("Raster standalone retirement test lock");
+        let mut params = RasterOwnedMap::new();
+        let mut first_key_pointer = std::ptr::null();
+        for index in 0..crate::artifacts::raster::RASTER_OWNED_MAP_CAPACITY {
+            let key = format!("key-{index:02}");
+            if index == 0 {
+                first_key_pointer = key.as_ptr();
+            }
+            let value = dsl::DslValue::Object(vec![("nested".into(), dsl::DslValue::Array(vec![dsl::DslValue::String(format!("value-{index}")), dsl::DslValue::Object(vec![("leaf".into(), dsl::DslValue::Number(index as f64))])]))]);
+            params.insert(key, value).expect("maximum populated DSL map remains exactly page admitted");
+        }
+        assert_eq!(params.len(), crate::artifacts::raster::RASTER_OWNED_MAP_CAPACITY);
+        assert_eq!(params.entry_at(0).expect("first exact map owner remains installed").0.as_ptr(), first_key_pointer);
+
+        let plus_one_key = String::from("key-plus-one");
+        let plus_one_key_pointer = plus_one_key.as_ptr();
+        let plus_one_value = dsl::DslValue::String("plus-one-value".into());
+        let rejected = params.insert(plus_one_key, plus_one_value).expect_err("capacity plus one returns both exact owners");
+        assert_eq!(rejected.key.as_ptr(), plus_one_key_pointer);
+        assert_eq!(rejected.reason, "raster-map.item-capacity");
+        let mut rejected_retirement = RasterOwnedRetirement::new(RasterRetirementOwner::ValueEntry { key: rejected.key, value: Some(rejected.value) });
+
+        let output = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| dsl::DslField::to_value(&params)));
+        assert!(output.is_err(), "populated ordinary DSL output is rejected before any whole-map result exists");
+        assert_eq!(params.len(), crate::artifacts::raster::RASTER_OWNED_MAP_CAPACITY);
+        assert_eq!(params.entry_at(0).expect("panic keeps the first exact key/value/page owner installed").0.as_ptr(), first_key_pointer);
+        assert!(matches!(
+            store::ErasedSnapshotRetirement::close_step(&mut rejected_retirement, 0, 0).expect("cancellation-shaped zero grant preserves the rejected pair"),
+            store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }
+        ));
+        close_raster_retirement(&mut rejected_retirement);
+        drop(rejected_retirement);
+
+        let populated_input = dsl::FieldValue::Map(vec![("forbidden".into(), dsl::FieldValue::Text("owner".into()))]);
+        assert!(<RasterOwnedMap<dsl::DslValue> as dsl::DslField>::from_value(&populated_input).is_err(), "populated DSL input faults before page or semantic owner admission");
+        let layer = RasterLayerNode::Adjustment { id: "dsl-output".into(), name: "DSL Output".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "nested".into(), params };
+        let snapshot = RasterSnapshot { schema: String::new(), id: String::new(), title: None, layers: vec![layer], assets: RasterOwnedMap::new() };
+        let mut retirement = RasterOwnedRetirement::new(RasterRetirementOwner::Snapshot(snapshot));
+        assert!(matches!(store::ErasedSnapshotRetirement::close_step(&mut retirement, 0, 0).expect("cancelled populated output keeps every exact owner"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
+        close_raster_retirement(&mut retirement);
+        assert!(store::ErasedSnapshotRetirement::terminal_is_empty(&retirement));
+        drop(retirement);
+        assert_eq!(RASTER_STANDALONE_PROCESS_CONTROLS.load(std::sync::atomic::Ordering::Acquire), 0, "populated DSL rejection and close return every standalone control");
+        assert_eq!(RASTER_RETIREMENT_PROCESS_PAGES.load(std::sync::atomic::Ordering::Acquire), 0, "populated DSL rejection and close return every stack page credit");
+    }
+
+    #[test]
+    fn raster_populated_serde_output_max_plus_one_nested_cancel_fault_panic_and_close_are_exact() {
+        let _guard = RASTER_STANDALONE_RETIREMENT_TEST_LOCK.lock().expect("Raster standalone retirement test lock");
+        let mut params = RasterOwnedMap::new();
+        let mut first_key_pointer = std::ptr::null();
+        for index in 0..crate::artifacts::raster::RASTER_OWNED_MAP_CAPACITY {
+            let key = format!("serde-key-{index:02}");
+            if index == 0 {
+                first_key_pointer = key.as_ptr();
+            }
+            let value = dsl::DslValue::Object(vec![("nested".into(), dsl::DslValue::Array(vec![dsl::DslValue::String(format!("serde-value-{index}")), dsl::DslValue::Object(vec![("leaf".into(), dsl::DslValue::Number(index as f64))])]))]);
+            params.insert(key, value).expect("maximum populated serde map remains exactly page admitted");
+        }
+        assert_eq!(params.len(), crate::artifacts::raster::RASTER_OWNED_MAP_CAPACITY);
+        assert_eq!(params.entry_at(0).expect("first serde owner remains installed").0.as_ptr(), first_key_pointer);
+
+        let plus_one_key = String::from("serde-key-plus-one");
+        let plus_one_key_pointer = plus_one_key.as_ptr();
+        let rejected = params.insert(plus_one_key, dsl::DslValue::String("serde-plus-one-value".into())).expect_err("serde capacity plus one returns both exact owners");
+        assert_eq!(rejected.key.as_ptr(), plus_one_key_pointer);
+        assert_eq!(rejected.reason, "raster-map.item-capacity");
+        let mut rejected_retirement = RasterOwnedRetirement::new(RasterRetirementOwner::ValueEntry { key: rejected.key, value: Some(rejected.value) });
+        assert!(matches!(store::ErasedSnapshotRetirement::close_step(&mut rejected_retirement, 0, 0).expect("cancelled serde output preserves the rejected pair"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
+        close_raster_retirement(&mut rejected_retirement);
+        drop(rejected_retirement);
+
+        let layer = RasterLayerNode::Adjustment { id: "serde-output".into(), name: "Serde Output".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "nested".into(), params };
+        let output = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| serde_json::to_vec(&layer)));
+        assert!(matches!(output, Ok(Err(_))), "public populated serde output faults before any whole-map result and contains panic");
+        let params = match &layer {
+            RasterLayerNode::Adjustment { params, .. } => params,
+            _ => unreachable!("serde fixture remains an adjustment"),
+        };
+        assert_eq!(params.len(), crate::artifacts::raster::RASTER_OWNED_MAP_CAPACITY);
+        assert_eq!(params.entry_at(0).expect("serde fault keeps the first exact owner installed").0.as_ptr(), first_key_pointer);
+
+        let snapshot = RasterSnapshot { schema: String::new(), id: String::new(), title: None, layers: vec![layer], assets: RasterOwnedMap::new() };
+        let mut retirement = RasterOwnedRetirement::new(RasterRetirementOwner::Snapshot(snapshot));
+        assert!(matches!(store::ErasedSnapshotRetirement::close_step(&mut retirement, 0, 0).expect("zero-grant serde cancellation keeps every exact owner"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }));
+        close_raster_retirement(&mut retirement);
+        assert!(store::ErasedSnapshotRetirement::terminal_is_empty(&retirement));
+        drop(retirement);
+        assert_eq!(RASTER_STANDALONE_PROCESS_CONTROLS.load(std::sync::atomic::Ordering::Acquire), 0, "populated serde fault and close return every standalone control");
+        assert_eq!(RASTER_RETIREMENT_PROCESS_PAGES.load(std::sync::atomic::Ordering::Acquire), 0, "populated serde fault and close return every stack page credit");
+        assert_eq!(RASTER_INITIALIZATION_PROCESS_CONTROLS.load(std::sync::atomic::Ordering::Acquire), 0, "populated serde fault never claims or leaks an initialization process control");
+    }
+
+    #[test]
+    fn raster_maximum_combined_layer_and_value_depth_retires_to_terminal() {
+        let mut value = dsl::DslValue::String("terminal".into());
+        for _ in 1..RASTER_MAXIMUM_NESTED_DEPTH {
+            value = dsl::DslValue::Array(vec![value]);
+        }
+        let mut params = RasterOwnedMap::new();
+        params.insert("deep".into(), value).expect("one fixed parameter page");
+        let mut layer = RasterLayerNode::Adjustment { id: "adjustment".into(), name: "Adjustment".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "levels".into(), params };
+        for index in 1..RASTER_MAXIMUM_NESTED_DEPTH {
+            layer = RasterLayerNode::Group { id: format!("group-{index}"), name: "Group".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, children: vec![layer] };
+        }
+        let snapshot = RasterSnapshot { schema: String::new(), id: String::new(), title: None, layers: vec![layer], assets: RasterOwnedMap::new() };
+        let mut retirement = RasterOwnedRetirement::new(RasterRetirementOwner::Snapshot(snapshot));
+        for _ in 0..200_000 {
+            if store::ErasedSnapshotRetirement::terminal_is_empty(&retirement) {
+                drop(retirement);
+                return;
+            }
+            let step = store::ErasedSnapshotRetirement::close_step(&mut retirement, 1, RASTER_OWNED_FIELD_BYTES).expect("maximum combined fixed retirement stack remains sufficient");
+            if let store::SnapshotRetirementStep::Pending { released_items, released_bytes } = step {
+                assert!(released_items <= 1);
+                assert!(released_bytes <= RASTER_OWNED_FIELD_BYTES);
+            }
+        }
+        panic!("maximum combined Raster owner did not reach terminal-empty");
+    }
+
+    #[test]
     fn raster_nested_snapshot_and_child_handles_retire_one_owner_per_grant() {
-        let mut params = std::collections::BTreeMap::new();
+        let mut params = RasterOwnedMap::new();
         params.insert("nested".repeat(16), dsl::DslValue::Object(vec![("array".repeat(16), dsl::DslValue::Array(vec![dsl::DslValue::String("payload".repeat(64)), dsl::DslValue::String("tail".into())]))]));
         let adjustment = RasterLayerNode::Adjustment { id: "adjustment".into(), name: "Adjustment".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "levels".into(), params };
         let mut snapshot = empty_raster_document();

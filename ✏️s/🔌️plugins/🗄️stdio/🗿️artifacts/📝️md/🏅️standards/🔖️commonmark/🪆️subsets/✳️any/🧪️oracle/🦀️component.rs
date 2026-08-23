@@ -355,7 +355,11 @@ mod live {
                     ("items".to_string(), Json::Array(items)),
                 ])
             }
-            NodeValue::CodeBlock(code) => Json::Object(vec![("kind".to_string(), Json::String("codeBlock".to_string())), ("info".to_string(), if code.info.is_empty() { Json::Null } else { Json::String(code.info.clone()) }), ("literal".to_string(), Json::String(code.literal.clone()))]),
+            NodeValue::CodeBlock(code) => Json::Object(vec![
+                ("kind".to_string(), Json::String("codeBlock".to_string())),
+                ("info".to_string(), if code.info.is_empty() { Json::Null } else { Json::String(code.info.clone()) }),
+                ("literal".to_string(), Json::String(code.literal.clone())),
+            ]),
             NodeValue::BlockQuote => {
                 let blocks: Vec<Json> = node.children().filter_map(project_block).collect();
                 Json::Object(vec![("kind".to_string(), Json::String("blockQuote".to_string())), ("blocks".to_string(), Json::Array(blocks))])

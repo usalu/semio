@@ -41,11 +41,7 @@ mod triangle_soup {
     pub(super) fn read(input: &[u8]) -> Result<Vec<RefTriangle>, String> {
         let mut cursor = std::io::Cursor::new(input.to_vec());
         let mesh = stl_io::read_stl(&mut cursor).map_err(|error| format!("independent reader could not parse the STL: {error}"))?;
-        Ok(mesh
-            .faces
-            .iter()
-            .map(|face| RefTriangle { normal: face.normal.0, vertices: [mesh.vertices[face.vertices[0]].0, mesh.vertices[face.vertices[1]].0, mesh.vertices[face.vertices[2]].0] })
-            .collect())
+        Ok(mesh.faces.iter().map(|face| RefTriangle { normal: face.normal.0, vertices: [mesh.vertices[face.vertices[0]].0, mesh.vertices[face.vertices[1]].0, mesh.vertices[face.vertices[2]].0] }).collect())
     }
 
     /// 📤️ Independent write: always binary (`stl_io` has no ASCII writer — see this file's top doc
@@ -259,7 +255,13 @@ pub fn oracle_inverse_spec(base: &[u8], spec: &Json) -> Result<Json, String> {
             let triangles = triangle_soup::read(base)?;
             let index = number(&params, "index").ok_or("set-triangle-vertices: missing `index`")? as usize;
             match triangles.get(index) {
-                Some(triangle) => spec_of("set-triangle-vertices", Json::Object(vec![("index".to_string(), Json::Number(index as f64)), ("vertices".to_string(), Json::Array(triangle.vertices.iter().map(|vertex| Json::Array(vertex.iter().map(|value| Json::Number(*value as f64)).collect())).collect()))])),
+                Some(triangle) => spec_of(
+                    "set-triangle-vertices",
+                    Json::Object(vec![
+                        ("index".to_string(), Json::Number(index as f64)),
+                        ("vertices".to_string(), Json::Array(triangle.vertices.iter().map(|vertex| Json::Array(vertex.iter().map(|value| Json::Number(*value as f64)).collect())).collect())),
+                    ]),
+                ),
                 None => spec_of("no-mutation", Json::Object(vec![])),
             }
         }
@@ -305,14 +307,14 @@ mod tests {
         spec_of(kind, params)
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn no_mutation_is_a_true_byte_identity() {
+    #[test]
+    fn no_mutation_is_a_true_byte_identity() {
         let output = oracle_apply_mutation(FIXTURE.as_bytes(), &spec("no-mutation", Json::Object(vec![]))).unwrap();
         assert_eq!(output, FIXTURE.as_bytes());
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn set_solid_name_rewrites_only_the_header_and_trailer() {
+    #[test]
+    fn set_solid_name_rewrites_only_the_header_and_trailer() {
         let output = oracle_apply_mutation(FIXTURE.as_bytes(), &spec("set-solid-name", Json::Object(vec![("name".to_string(), Json::String("renamed".to_string()))]))).unwrap();
         let text = String::from_utf8(output).unwrap();
         assert!(text.starts_with("solid renamed\n"));
@@ -320,9 +322,19 @@ mod tests {
         assert_eq!(text.matches("facet normal").count(), 2);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn insert_and_remove_triangle_are_inverse_on_a_real_shaped_mesh() {
-        let triangle = Json::Object(vec![("normal".to_string(), Json::Array(vec![Json::Number(1.0), Json::Number(0.0), Json::Number(0.0)])), ("vertices".to_string(), Json::Array(vec![Json::Array(vec![Json::Number(9.0), Json::Number(0.0), Json::Number(0.0)]), Json::Array(vec![Json::Number(10.0), Json::Number(0.0), Json::Number(0.0)]), Json::Array(vec![Json::Number(9.0), Json::Number(1.0), Json::Number(0.0)])]))]);
+    #[test]
+    fn insert_and_remove_triangle_are_inverse_on_a_real_shaped_mesh() {
+        let triangle = Json::Object(vec![
+            ("normal".to_string(), Json::Array(vec![Json::Number(1.0), Json::Number(0.0), Json::Number(0.0)])),
+            (
+                "vertices".to_string(),
+                Json::Array(vec![
+                    Json::Array(vec![Json::Number(9.0), Json::Number(0.0), Json::Number(0.0)]),
+                    Json::Array(vec![Json::Number(10.0), Json::Number(0.0), Json::Number(0.0)]),
+                    Json::Array(vec![Json::Number(9.0), Json::Number(1.0), Json::Number(0.0)]),
+                ]),
+            ),
+        ]);
         let insert_spec = spec("insert-triangle", Json::Object(vec![("index".to_string(), Json::Number(1.0)), ("triangle".to_string(), triangle)]));
         let inserted = oracle_apply_mutation(FIXTURE.as_bytes(), &insert_spec).unwrap();
         assert_eq!(triangle_soup::read(&inserted).unwrap().len(), 3);
@@ -339,8 +351,8 @@ mod tests {
         }
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn remove_triangle_inverse_reinserts_the_original_triangle() {
+    #[test]
+    fn remove_triangle_inverse_reinserts_the_original_triangle() {
         let remove_spec = spec("remove-triangle", Json::Object(vec![("index".to_string(), Json::Number(0.0))]));
         let removed = oracle_apply_mutation(FIXTURE.as_bytes(), &remove_spec).unwrap();
         assert_eq!(triangle_soup::read(&removed).unwrap().len(), 1);
@@ -351,22 +363,32 @@ mod tests {
         assert_eq!(triangle_soup::read(&restored).unwrap().len(), 2);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn set_snapshot_replaces_the_whole_triangle_list() {
-        let one_triangle = Json::Array(vec![Json::Object(vec![("normal".to_string(), Json::Array(vec![Json::Number(0.0), Json::Number(0.0), Json::Number(1.0)])), ("vertices".to_string(), Json::Array(vec![Json::Array(vec![Json::Number(0.0), Json::Number(0.0), Json::Number(0.0)]), Json::Array(vec![Json::Number(1.0), Json::Number(0.0), Json::Number(0.0)]), Json::Array(vec![Json::Number(0.0), Json::Number(1.0), Json::Number(0.0)])]))])]);
+    #[test]
+    fn set_snapshot_replaces_the_whole_triangle_list() {
+        let one_triangle = Json::Array(vec![Json::Object(vec![
+            ("normal".to_string(), Json::Array(vec![Json::Number(0.0), Json::Number(0.0), Json::Number(1.0)])),
+            (
+                "vertices".to_string(),
+                Json::Array(vec![
+                    Json::Array(vec![Json::Number(0.0), Json::Number(0.0), Json::Number(0.0)]),
+                    Json::Array(vec![Json::Number(1.0), Json::Number(0.0), Json::Number(0.0)]),
+                    Json::Array(vec![Json::Number(0.0), Json::Number(1.0), Json::Number(0.0)]),
+                ]),
+            ),
+        ])]);
         let output = oracle_apply_mutation(FIXTURE.as_bytes(), &spec("set-snapshot", Json::Object(vec![("triangles".to_string(), one_triangle)]))).unwrap();
         assert_eq!(triangle_soup::read(&output).unwrap().len(), 1);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn round_trip_never_passes_bytes_through() {
+    #[test]
+    fn round_trip_never_passes_bytes_through() {
         let output = oracle_round_trip(FIXTURE.as_bytes()).unwrap();
         assert_ne!(output, FIXTURE.as_bytes());
         assert_eq!(triangle_soup::read(&output).unwrap().len(), 2);
     }
 
-    #[semio_framework_async_macros::async_test]
-    async fn unknown_kind_is_an_error_never_a_silent_no_op() {
+    #[test]
+    fn unknown_kind_is_an_error_never_a_silent_no_op() {
         let result = oracle_apply_mutation(FIXTURE.as_bytes(), &spec("not-a-real-kind", Json::Object(vec![])));
         assert!(result.is_err(), "an unrecognised kind must fail loudly");
     }

@@ -1,0 +1,46 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution to the repository test platform — the HTML 5 `any` mutation vocabulary and the reference implementation that exercises it. `html5ever`/`markup5ever_rcdom` are registered here under a distinct id and the `html-5-mutate` capability this subset's exhaustive mutation case (`mutate-html-5`) actually tags, per the wave 7 fleet brief's oracle-registration gotcha (reusing a neighbour's entry fails the contract with `oracle-capability-mismatch`).",
+  "oracles": [
+    {
+      "id": "html5ever-html-5-mutate",
+      "ecosystem": "rust",
+      "package": "html5ever",
+      "version": "0.39",
+      "capabilities": ["html-5-mutate"],
+      "comparisonProfiles": ["semantic-html-v1"],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/servo/html5ever",
+      "rationale": "The WHATWG-conformant HTML5 tokenizer/tree-builder of the Rust ecosystem, paired with the reference-counted DOM `markup5ever_rcdom` 0.39 (MIT OR Apache-2.0, a companion crate from the same project, also test-only, https://github.com/servo/html5ever/tree/main/rcdom) — `html5ever` only tokenizes and builds a tree via a caller-supplied `TreeSink`, so it is not usable as a mutation oracle without it. Registered under `html5ever` because every scenario's comparison runs through `html5ever::parse_document` as the independent reader on BOTH sides (oracle output and subject output alike), matching how this catalog's `@oracle-` tag names a single id per feature; `markup5ever_rcdom` supplies the `RcDom`/`SerializableHandle` every one of those parses and re-serializes builds on, and is exercised by every green scenario even though it is not the package name on this entry. Together the only registered pair that both PARSES real, error-recovering HTML5 and WRITES it back out, so it can independently produce a second result for every one of this subset's 10 `HtmlMutation` kinds rather than merely reading.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    }
+  ],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-html-v1",
+      "description": "HTML5 documents compared by doctype and the full element tree in document order. Attribute order is writer freedom -- each element's attributes project as an unordered name/value map rather than an ordered list, sorted by key before comparison. Sibling and child order IS normative and is never sorted. Two real, documented normalizations this profile inherits from the reference DOM rather than hiding: a boolean attribute (`<p disabled>`) and its empty-string form (`<p disabled=\"\">`) both project as the attribute set to the empty string, since the WHATWG tokenizer itself draws no distinction there; and a DOCTYPE's public/system id does not survive the reference serializer's own `<!DOCTYPE name>`-only output, so only the doctype name is compared.",
+      "ignoreKeys": []
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "html-5-any",
+      "capability": "html-5-mutate",
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "set-doctype",
+        "insert-node",
+        "remove-node",
+        "set-element-name",
+        "set-attribute",
+        "set-text",
+        "set-comment",
+        "set-raw-text"
+      ]
+    }
+  ]
+}

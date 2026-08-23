@@ -20,10 +20,7 @@ pub struct MeshSpec {
 impl MeshSpec {
     /// 🔺️ A deterministic unit tetrahedron — small, closed, and exercises every face.
     pub fn tetrahedron() -> MeshSpec {
-        MeshSpec {
-            vertices: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
-            triangles: vec![[0, 2, 1], [0, 1, 3], [0, 3, 2], [1, 2, 3]],
-        }
+        MeshSpec { vertices: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]], triangles: vec![[0, 2, 1], [0, 1, 3], [0, 3, 2], [1, 2, 3]] }
     }
 
     /// 🔺️ A deterministic axis-aligned quad split into two triangles.
@@ -57,15 +54,7 @@ impl MeshSpec {
         Json::Object(vec![
             ("format".to_string(), Json::String(format.to_string())),
             ("triangleCount".to_string(), Json::Number(self.triangles.len() as f64)),
-            (
-                "triangles".to_string(),
-                Json::Array(
-                    self.triangles
-                        .iter()
-                        .map(|face| Json::Array(face.iter().map(|index| Json::Array(self.vertices[*index].iter().map(|value| Json::Number(*value as f64)).collect())).collect()))
-                        .collect(),
-                ),
-            ),
+            ("triangles".to_string(), Json::Array(self.triangles.iter().map(|face| Json::Array(face.iter().map(|index| Json::Array(self.vertices[*index].iter().map(|value| Json::Number(*value as f64)).collect())).collect())).collect())),
         ])
     }
 }
@@ -93,7 +82,8 @@ pub fn oracle_create_obj(spec: &MeshSpec) -> Result<Vec<u8>, String> {
 pub fn project_obj(input: &[u8]) -> Result<Json, String> {
     let text = String::from_utf8(input.to_vec()).map_err(|error| format!("OBJ is not UTF-8: {}", error))?;
     let mut cursor = std::io::Cursor::new(text.into_bytes());
-    let (models, _) = tobj::load_obj_buf(&mut cursor, &tobj::LoadOptions { triangulate: true, single_index: true, ..Default::default() }, |_| Ok(Default::default())).map_err(|error| format!("independent reader could not parse the OBJ: {}", error))?;
+    let (models, _) =
+        tobj::load_obj_buf(&mut cursor, &tobj::LoadOptions { triangulate: true, single_index: true, ..Default::default() }, |_| Ok(Default::default())).map_err(|error| format!("independent reader could not parse the OBJ: {}", error))?;
     let mut vertices: Vec<[f32; 3]> = Vec::new();
     let mut triangles: Vec<[usize; 3]> = Vec::new();
     for model in &models {
@@ -146,11 +136,7 @@ fn face_normal(corners: &[[f32; 3]; 3]) -> [f32; 3] {
 pub fn project_stl(input: &[u8]) -> Result<Json, String> {
     let mut cursor = std::io::Cursor::new(input.to_vec());
     let mesh = stl_io::read_stl(&mut cursor).map_err(|error| format!("independent reader could not parse the STL: {}", error))?;
-    let triangles: Vec<Json> = mesh
-        .faces
-        .iter()
-        .map(|face| Json::Array(face.vertices.iter().map(|index| Json::Array((0..3).map(|axis| Json::Number(mesh.vertices[*index][axis] as f64)).collect())).collect()))
-        .collect();
+    let triangles: Vec<Json> = mesh.faces.iter().map(|face| Json::Array(face.vertices.iter().map(|index| Json::Array((0..3).map(|axis| Json::Number(mesh.vertices[*index][axis] as f64)).collect())).collect())).collect();
     Ok(Json::Object(vec![("format".to_string(), Json::String("stl".to_string())), ("triangleCount".to_string(), Json::Number(triangles.len() as f64)), ("triangles".to_string(), Json::Array(triangles))]))
 }
 //#endregion 🔖️Stl

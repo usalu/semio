@@ -1,0 +1,59 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ BCF 2.1/✳️any's own contribution to the repository test platform — its mutation oracle registration and its declared mutation vocabulary (wave 7, ticket 26/08/23/END-TO-END-TESTING-REFACTOR). A BCF file IS a ZIP of XML markup/viewpoint/snapshot files, and no standalone BCF crate exists in the Rust ecosystem (BCF support only appears bundled inside much larger MPL-licensed IFC toolkits), so the reference here composes the already-linked, genuinely independent `zip` and `quick-xml` crates over the real BCF-XML 2.1 shapes rather than adopting a weaker/unlicensed substitute. Discovered by convention alongside ✏️s/🔌️plugins/🗄️stdio's own top-level manifest; merged into one registry, no central edit required.",
+  "oracles": [
+    {
+      "id": "zip-quick-xml-bcf-2-1-mutate",
+      "ecosystem": "rust",
+      "package": "zip",
+      "version": "6",
+      "capabilities": [
+        "bcf-2-1-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-bcf-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/zip-rs/zip2 ; https://github.com/tafia/quick-xml",
+      "rationale": "bcfzip is a flat ZIP of per-topic markup.bcf/.bcfv/snapshot.png parts (no OPC apparatus). `zip` 6 is the reference archive reader/writer, `quick-xml` 0.42 the reference XML reader/writer for every part inside it; composed here into one independent BCF-XML 2.1 reader/writer covering the full 14-kind `BcfMutation` vocabulary this subset declares. Distinct id/capability from the top-level `zip`/`xml` entries' own capabilities: this composition is surveyed specifically for BCF's markup.xsd/visinfo.xsd shapes, not for either library's generic archive/XML capability.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "packages": [
+        "zip",
+        "quick-xml"
+      ]
+    }
+  ],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-bcf-v1",
+      "description": "BCF 2.1 documents compared by version, every topic keyed by guid (title/description/status/priority/labels/creationDate/creationAuthor, comments keyed by guid, viewpoints keyed by guid), and every raw retained part keyed by name by size+content digest. A viewpoint's camera/components project as their full typed structure; its PNG snapshot projects as size+digest rather than raw bytes (an opaque binary payload, not a lossy-encoded sample array, so a content digest is the correct treatment per the fleet brief's raster precedent). Topic/comment/viewpoint/part identity keys make document-order irrelevant; label/selection/exception/coloring lists are unordered sets in the BCF domain, so all arrays compare as sets.",
+      "arrays": "set",
+      "ignoreKeys": []
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "bcf-2-1-any",
+      "capability": "bcf-2-1-mutate",
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "set-version",
+        "insert-topic",
+        "remove-topic",
+        "set-topic-markup",
+        "insert-comment",
+        "remove-comment",
+        "set-comment",
+        "insert-viewpoint",
+        "remove-viewpoint",
+        "set-viewpoint-camera",
+        "set-viewpoint-components",
+        "set-viewpoint-snapshot"
+      ]
+    }
+  ]
+}

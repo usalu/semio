@@ -1782,6 +1782,10 @@ function toolJobRasterEnvelopeCallerRetainedExact(store: string, raster: string,
   const preflight = wasm.indexOf("preflight_artifact_envelope_ingress_page(handle.runtime_handle(), len)");
   const construct = wasm.indexOf("construct_and_admit_artifact_envelope_ingress_page(handle.runtime_handle(), len");
   const copy = wasm.indexOf("source.copy_to(&mut bytes[..len])");
+  const rasterOwnedMapSerializeBound = /impl(?:\s*<[^>]*>)?\s*(?:serde::)?Serialize\s+for\s+RasterOwnedMap\b/s.test(raster);
+  const rasterOwnedMapWholeSerializeMap = /serialize_map\s*\(\s*Some\s*\(\s*self\.length\s*\)\s*\)/s.test(raster);
+  const rasterOwnedMapWholeSerializeEntry = /\.serialize_entry\s*\(/s.test(raster);
+  const rasterOwnedMapSerdeGuards = (raster.match(/#\[serde\(serialize_with = "crate::artifacts::raster::serialize_empty_owned_map"\)\]/g) ?? []).length;
   return (
     store.includes("pub fn artifact_owned_spr_edit_history_decoder") &&
     store.includes("struct ArtifactOwnedSprMutationArrayAuthority") &&
@@ -1795,20 +1799,71 @@ function toolJobRasterEnvelopeCallerRetainedExact(store: string, raster: string,
     raster.includes("struct RasterMutationDigestAuthority") &&
     raster.includes("struct RasterMutationCandidateAuthority") &&
     raster.includes("RASTER_RETIREMENT_STACK_CAPACITY") &&
-    raster.includes("frames: std::mem::ManuallyDrop<[Option<RasterRetirementFrame>; RASTER_RETIREMENT_STACK_CAPACITY]>") &&
+    raster.includes("pages: std::mem::ManuallyDrop<[Option<Box<RasterRetirementFramePage>>; RASTER_RETIREMENT_STACK_PAGE_COUNT]>") &&
+    raster.includes("pending_push: std::mem::ManuallyDrop<Option<RasterRetirementOwner>>") &&
     raster.includes("struct RasterStoreInitializationAuthority") &&
     raster.includes("impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot, RasterMutation> for RasterStoreInitializationAuthority") &&
     raster.includes("RasterStoreInitializationPhase::ValidateEditPair") &&
     raster.includes("RasterStoreInitializationPhase::SeedHistory") &&
     raster.includes("RasterStoreInitializationPhase::BuildCandidate") &&
     (raster.match(/if cx\.should_yield\(\)/g) ?? []).length === 3 &&
-    raster.includes("fn raster_reserve_unit(cx: &mut semio_framework_job::StepContext<'_>, units: usize) -> bool") &&
+    raster.includes("fn raster_reserve_unit(cx: &mut semio_framework_job::StepContext<'_>) -> bool") &&
+    raster.includes("cx.consume_fuel(1)") &&
     raster.includes("self.cancel_requested || cx.is_cancelled()") &&
     raster.includes("ArtifactStoreInitializationRuntime::new") &&
     raster.includes("ArtifactStore::from_initialized_runtime_with_owners") &&
     raster.includes("self.generation.0.checked_add(1)") &&
     raster.includes("value.layers.pop()") &&
-    raster.includes("value.assets.pop_last()") &&
+    raster.includes("value.assets.take_last_entry()") &&
+    raster.includes("value.assets.take_empty_page_backing()") &&
+    raster.includes("RasterRetirementOwner::AssetMapPage(page)") &&
+    raster.includes("RasterRetirementOwner::ValueMapPage(page)") &&
+    raster.includes("RasterOwnedMap::<V>::conservative_page_credit_bytes()") &&
+    raster.includes("fn observe_candidate_capacity(") &&
+    raster.includes("fn raster_exact_string_from_parts(") &&
+    raster.includes("const RASTER_CONTROL_BACKING_BYTES: usize = RASTER_OWNED_FIELD_BYTES") &&
+    raster.includes("const RASTER_MAXIMUM_CONTROL_BACKINGS: usize = RASTER_RETIREMENT_STACK_PAGE_COUNT + RASTER_NON_STACK_CONTROL_BACKINGS") &&
+    raster.includes("const RASTER_MAXIMUM_CONTROL_BYTES: usize = RASTER_MAXIMUM_CONTROL_BACKINGS * RASTER_CONTROL_BACKING_BYTES") &&
+    raster.includes("source_control_bytes: usize") &&
+    raster.includes("self.source_control_bytes = RASTER_MAXIMUM_CONTROL_BYTES") &&
+    raster.includes("raster-store.control-backing-double-reservation") &&
+    raster.includes("static RASTER_RETIREMENT_PROCESS_PAGES: std::sync::atomic::AtomicUsize") &&
+    raster.includes("static RASTER_INITIALIZATION_PROCESS_CONTROLS: std::sync::atomic::AtomicUsize") &&
+    raster.includes("static RASTER_STANDALONE_PROCESS_CONTROLS: std::sync::atomic::AtomicUsize") &&
+    raster.includes("held_items: usize") &&
+    raster.includes("held_bytes: usize") &&
+    (raster.match(/control: std::mem::ManuallyDrop<Option<RasterStandaloneControlCredit>>/g) ?? []).length === 2 &&
+    (raster.match(/let control = RasterStandaloneControlCredit::try_claim\(\)\.ok\(\);/g) ?? []).length === 2 &&
+    raster.includes("fn claim_control_if_available(&mut self) -> Result<bool, String>") &&
+    raster.includes("Err(\"raster-store.standalone-control-capacity\") => Ok(false)") &&
+    raster.includes("control_returned: bool") &&
+    raster.includes("remaining: RASTER_NON_STACK_CONTROL_BACKINGS") &&
+    raster.includes("control_reservation: std::mem::ManuallyDrop<Option<RasterInitializationControlReservation>>") &&
+    raster.includes("normal completion returns every non-stack process control credit") &&
+    raster.includes("standalone Box control credit is returned before terminal-empty") &&
+    raster.includes("standalone Arc and inner Box control credits return before terminal-empty") &&
+    raster.includes("fn reserve_page_credit(&mut self, page_index: usize)") &&
+    raster.includes("compare_exchange(current, next") &&
+    raster.includes("self.return_page_credit(page_index)?") &&
+    raster.includes("pages: std::mem::ManuallyDrop<[Option<Box<RasterOwnedMapPage<V>>>; RASTER_OWNED_MAP_PAGE_COUNT]>") &&
+    raster.includes("Raster owned map reached Drop before every entry and page backing was explicitly retired") &&
+    raster.includes("Populated Raster owned maps require the retained page clone authority") &&
+    raster.includes("Raster maps require the retained page decoder") &&
+    raster.includes("fn serialize_empty_owned_map<S: serde::Serializer, V>") &&
+    raster.includes("Populated Raster owned map serialization is forbidden; interactive production routes require the retained page output authority") &&
+    rasterOwnedMapSerdeGuards === 3 &&
+    !rasterOwnedMapSerializeBound &&
+    !rasterOwnedMapWholeSerializeMap &&
+    !rasterOwnedMapWholeSerializeEntry &&
+    raster.includes("Populated Raster owned map DSL materialization is forbidden; interactive production routes require the retained page output authority") &&
+    raster.includes("dsl::FieldValue::Map(Vec::new())") &&
+    raster.includes("pub fn remove_entry(&mut self, key: &str) -> Option<RasterOwnedMapEntry<V>>") &&
+    !raster.includes("pub fn remove(&mut self, key: &str)") &&
+    !raster.includes("result.insert(key.clone(), value.clone())") &&
+    !raster.includes("while let Some((key, value)) = source.next_entry") &&
+    raster.includes("RasterRetirementOwner::BoxedLayer(Some(layer))") &&
+    raster.includes("const RASTER_RETIREMENT_ADMITTED_FRAME_CAPACITY: usize = RASTER_RETIREMENT_LAYER_FRAMES + RASTER_RETIREMENT_VALUE_FRAMES + RASTER_RETIREMENT_WRAPPER_FRAMES") &&
+    raster.includes("const RASTER_RETIREMENT_STACK_CAPACITY: usize = RASTER_RETIREMENT_ADMITTED_FRAME_CAPACITY + RASTER_RETIREMENT_REJECTED_OWNER_MARGIN") &&
     raster.includes("dsl::DslValue::Array(values)") &&
     raster.includes("dsl::DslValue::Object(values)") &&
     variants.every((variant) => raster.includes(variant)) &&
@@ -1820,17 +1875,38 @@ function toolJobRasterEnvelopeCallerRetainedExact(store: string, raster: string,
     raster.includes("raster_owner_caps_and_all_mutation_variants_retire_one_owner_per_grant") &&
     raster.includes("raster_envelope_caps_and_plus_one_page_return_the_exact_fixed_owner") &&
     raster.includes("raster_snapshot_bounds_and_clone_advance_one_pre_admitted_unit_with_low_nonzero_fuel") &&
+    raster.includes("raster_empty_bounds_and_mounted_sixty_four_fuel_progress_across_second_map_page") &&
     raster.includes("raster_expired_deadline_advances_no_bounds_clone_or_mutation_owner") &&
     raster.includes("raster_small_mutation_against_deep_snapshot_is_cursorized_and_atomic") &&
     raster.includes("raster_cancel_after_complete_retires_the_unclaimed_candidate_before_terminal") &&
     raster.includes("raster_retirement_uses_allocation_capacity_and_fixed_iterative_depth") &&
     raster.includes("raster_nested_owner_item_and_byte_capacity_plus_one_reject_before_clone") &&
+    raster.includes("raster_retirement_page_credit_is_claimed_before_allocation_and_returned_with_backing") &&
+    raster.includes("raster_owned_map_removal_returns_exact_pair_and_populated_drop_refuses") &&
     raster.includes("raster_empty_asset_map_retirement_has_no_hidden_allocation_release") &&
+    raster.includes("raster_owned_map_cap_plus_one_returns_exact_owner_and_populated_pages_retire_explicitly") &&
+    raster.includes("raster_observed_capacity_and_combined_retirement_depth_are_exact") &&
+    raster.includes("raster_box_and_arc_control_backings_require_and_report_fixed_credit") &&
+    raster.includes("raster_standalone_control_max_plus_one_returns_exact_owner_and_resumes_after_full_saturation") &&
+    raster.includes("raster_arc_factory_full_saturation_preserves_exact_producer_through_every_control_phase") &&
+    raster.includes("raster_populated_dsl_materialization_max_plus_one_nested_cancel_fault_panic_and_close_are_exact") &&
+    raster.includes("raster_populated_serde_output_max_plus_one_nested_cancel_fault_panic_and_close_are_exact") &&
+    raster.includes("std::mem::size_of::<RasterOwnedRetirement>() <= RASTER_CONTROL_BACKING_BYTES") &&
+    raster.includes("std::mem::size_of::<RasterRetirementFramePage>() <= RASTER_CONTROL_BACKING_BYTES") &&
+    raster.includes("raster_maximum_combined_layer_and_value_depth_retires_to_terminal") &&
+    (raster.match(/RasterOwnedMapInsert::Replaced/g) ?? []).length >= 1 &&
+    raster.includes("replacement returns the exact displaced pair") &&
+    raster.includes("assert_eq!(previous_key.as_ptr(), old_key_pointer)") &&
     raster.includes("candidate_disposer") &&
     raster.includes("let released_bytes = value.capacity();") &&
     raster.includes("let bytes = value.capacity();") &&
     !raster.includes("serde_json::to_vec(source)") &&
     !raster.includes("source.clone()") &&
+    !raster.includes("source.assets.clone()") &&
+    !raster.includes("serde_json::to_value(&source.assets)") &&
+    !raster.includes("source.assets.to_value()") &&
+    !raster.includes("entries.push((key.clone(), value.to_value()))") &&
+    !raster.includes("drop(populated_map)") &&
     !raster.includes("operation.diff(current)") &&
     !raster.includes("diff.apply(current)") &&
     !raster.includes("active: Box<RasterOwnedRetirement>") &&
@@ -3116,7 +3192,7 @@ function toolJobActorProgressOverlayExact(actor: string, shard: string, wgpu: st
 }
 
 /** 🏗️ Phase-6 mounted FEM2D job ownership and live-route contract. */
-function toolJobFem2dMountedSessionExact(session: string, editor: string, pluginRoot: string, glue: string, jobs: string, analyses: string): boolean {
+function toolJobFem2dMountedSessionExact(session: string, editor: string, model: string, mesh: string, pluginRoot: string, glue: string, jobs: string, analyses: string, reactor: string, store: string, frameworkPlugin: string): boolean {
   const reconcileStart = session.indexOf("pub fn reconcile(");
   const reconcileOpen = reconcileStart < 0 ? -1 : session.indexOf("{", reconcileStart);
   const reconcile = reconcileOpen < 0 ? undefined : toolJobRustBlock(session, reconcileOpen);
@@ -3126,12 +3202,27 @@ function toolJobFem2dMountedSessionExact(session: string, editor: string, plugin
   const pluginStart = pluginRoot.indexOf("pub fn plugin()");
   const pluginOpen = pluginStart < 0 ? -1 : pluginRoot.indexOf("{", pluginStart);
   const plugin = pluginOpen < 0 ? undefined : toolJobRustBlock(pluginRoot, pluginOpen);
+  const snapshotAdmission = frameworkPlugin.indexOf("let snapshot_is_admitted = {");
+  const snapshotIssue = frameworkPlugin.indexOf("self.store.snapshot_read().await", snapshotAdmission);
+  const renderStart = model.indexOf("pub fn render_with_progress(");
+  const renderOpen = renderStart < 0 ? -1 : model.indexOf("{", renderStart);
+  const render = renderOpen < 0 ? undefined : toolJobRustBlock(model, renderOpen);
+  const classifyStart = mesh.lastIndexOf("MeshJobStage::Classify =>");
+  const classifyEnd = classifyStart < 0 ? -1 : mesh.indexOf("MeshJobStage::Finalize =>", classifyStart);
+  const classify = classifyEnd < 0 ? "" : mesh.slice(classifyStart, classifyEnd);
   return (
     session.includes('pub const FEM2D_MOUNTED_JOB_KIND: &str = "semio.fem2d.mounted-analysis"') &&
     session.includes("const SESSION_ACTIVE_CAPACITY: usize = 32") &&
     session.includes("const SESSION_SHELL_CAPACITY: usize = 64") &&
-    session.includes("const SESSION_MAXIMUM_ITEMS: usize = 4_096") &&
-    session.includes("const SESSION_MAXIMUM_BYTES: usize = 4 * 1_024 * 1_024") &&
+    session.includes("const SESSION_MAXIMUM_INPUT_ITEMS: usize = 4_096") &&
+    session.includes("const SESSION_MAXIMUM_INPUT_BYTES: usize = 4 * 1_024 * 1_024") &&
+    session.includes("struct MountedProcessOwnerCatalog") &&
+    session.includes("claims: [MountedOwnerClaim; 30]") &&
+    session.includes("MountedOwnerClass::AssemblyDofStrings") &&
+    session.includes("MountedOwnerClass::MeshPreparationIndexVector") &&
+    session.includes("MountedOwnerClass::MeshTriangulationWorkspaceVectors") &&
+    session.includes("MountedOwnerClass::MeshEdgeIndexVectors") &&
+    session.includes("process_owner_inventory_admits_exact_maximum_and_returns_exact_credit") &&
     session.includes("const FEM2D_JOB_TAG: u64 = 0xf2d0_0000_0000_0000") &&
     session.includes("job & !FEM2D_JOB_COUNTER_MAXIMUM != FEM2D_JOB_TAG") &&
     session.includes("shells: [Rc<RefCell<Option<MountedState>>>; SESSION_SHELL_CAPACITY]") &&
@@ -3139,25 +3230,33 @@ function toolJobFem2dMountedSessionExact(session: string, editor: string, plugin
     session.includes("retiring: [Option<u16>; SESSION_SHELL_CAPACITY]") &&
     session.includes("free: [u16; SESSION_SHELL_CAPACITY]") &&
     session.includes("canonical_base_revision: [u8; 32]") &&
-    session.includes("preflight_inner_cursor: usize") &&
-    session.includes("preflight_deep_cursor: usize") &&
-    session.includes("preflight_owner_opened: bool") &&
+    session.includes("preflight: [Option<PendingSnapshotAdmission>; SESSION_ACTIVE_CAPACITY]") &&
+    session.includes("struct SnapshotAdmissionCursor") &&
+    session.includes("fn step_one(&mut self, snapshot: &Fem2dSnapshot)") &&
+    session.includes("credit_items: [usize; SESSION_SHELL_CAPACITY]") &&
+    session.includes("credit_bytes: [usize; SESSION_SHELL_CAPACITY]") &&
     !session.includes("region.holes.iter().map") &&
     !session.includes("case.loads.iter().map") &&
     !session.includes("combination.terms.iter().map") &&
     session.includes("register_bounded_job_kind(FEM2D_MOUNTED_JOB_KIND") &&
-    session.includes("fn close_step(&mut self, maximum_items: usize) -> PluginCloseStep") &&
+    session.includes("fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep") &&
     session.includes("fn terminal_is_empty(&self) -> bool") &&
     session.includes("pub fn maintenance_step(") &&
     session.includes("pub fn close_step(") &&
     session.includes("pub fn terminal_is_empty(") &&
+    session.includes("visual_candidate: Option<Fem2dMountedVisualBuild>") &&
+    session.includes("visual_current: Option<Fem2dMountedVisualLease>") &&
+    session.includes("visual_displaced: Option<Fem2dMountedVisualLease>") &&
+    session.includes("fn publish_visual_candidate(&mut self, candidate: Fem2dMountedVisualLease) -> Result<(), Fem2dMountedVisualLease>") &&
+    session.includes("return_to_registry_witness()") &&
+    session.includes("witness.terminal_is_empty()") &&
     !!step &&
     (step.body.match(/\.step\(&mut cx\)/g) ?? []).length === 4 &&
     !step.body.includes("while ") &&
     step.body.includes("current_identity(self.identity.app_instance_id)") &&
-    step.body.includes("validate_commit(") &&
+    step.body.includes("commit_authority_matches(") &&
     step.body.includes("self.cancel.is_cancelled_now()") &&
-    step.body.indexOf("validate_commit(") < step.body.indexOf("JobStep::Done(output)") &&
+    step.body.indexOf("commit_authority_matches(") < step.body.indexOf("JobStep::Done(output)") &&
     !!reconcile &&
     reconcile.body.includes("doc.take_snapshot_read()") &&
     reconcile.body.includes("Effect::CancelJob") &&
@@ -3173,6 +3272,30 @@ function toolJobFem2dMountedSessionExact(session: string, editor: string, plugin
     editor.includes("fn mounted_job_maintenance_step(") &&
     editor.includes("fn mounted_job_close_step(") &&
     editor.includes("fn mounted_jobs_terminal_is_empty(") &&
+    editor.includes("fn mounted_job_prepare_snapshot_read(") &&
+    !!render &&
+    render.body.includes("Fem2dMountedVisualLease::layers_json") &&
+    !render.body.includes("fem2d_live_visual_layers") &&
+    !render.body.includes("fem2d_structure_layers") &&
+    !render.body.includes("fem2d_region_triangles") &&
+    !render.body.includes("serde_json") &&
+    !render.body.includes("sort") &&
+    !render.body.includes("collect") &&
+    model.includes("pub struct Fem2dMountedVisualBuild") &&
+    model.includes("Fem2dMountedVisualStage::ReserveOutput") &&
+    model.includes("Fem2dMountedVisualStage::ObserveOutput") &&
+    model.includes("Fem2dMountedVisualStage::OrderRegionKey") &&
+    model.includes("Fem2dMountedVisualStage::OrderAssemblyKey") &&
+    model.includes("Fem2dMountedVisualStage::OrderFieldKey =>") &&
+    model.includes("Fem2dMountedVisualStage::RegionPoint") &&
+    model.includes("fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize)") &&
+    model.includes("mounted_visual_output_exact_maximum_plus_one_and_displacement_handback") &&
+    classify.includes("triangulation.triangles.get(self.face_cursor)") &&
+    !classify.includes("collect(") &&
+    !classify.includes("Vec<") &&
+    mesh.includes("MeshJobStage::ReservePreparation") &&
+    mesh.includes("MeshJobStage::ReserveEdgeAuthorities") &&
+    mesh.includes("mesh_mounted_classification_indexes_admit_maximum_reject_plus_one_and_close_exactly") &&
     !!plugin &&
     plugin.body.indexOf("crate::editor::fem2d::session::initialize()") < plugin.body.indexOf('Plugin::<FemApps>::builder("fem")') &&
     glue.includes("✏️editor/🧵️session/🦀️component.rs") &&
@@ -3180,8 +3303,40 @@ function toolJobFem2dMountedSessionExact(session: string, editor: string, plugin
     jobs.includes("JobBody::Bounded(owner)") &&
     jobs.includes("#[cfg(not(test))]") &&
     jobs.includes("JobBody::ExplicitStateMachineRequired") &&
-    analyses.includes("pub fn new_owned(model: Arc<AnalysisModel>") &&
-    analyses.includes("pub fn into_full_matrix(self) -> Option<Csr>") &&
+    analyses.includes("pub struct AssemblyJobConstruction") &&
+    analyses.includes("AssemblyConstructionStage::ValidateNodePairs") &&
+    analyses.includes("AssemblyConstructionStage::DiscoverDofs") &&
+    analyses.includes("AssemblyConstructionStage::CommitDofOwner") &&
+    analyses.includes("struct PendingElementBuild") &&
+    analyses.includes("PendingElementBuildStage::ReserveIndices") &&
+    analyses.includes("PendingElementBuildStage::ReservePositions") &&
+    analyses.includes("PendingElementBuildStage::ReserveStiffnessCredit") &&
+    analyses.includes("PendingElementBuildStage::AllocateStiffness") &&
+    analyses.includes("PendingElementBuildStage::ObserveStiffnessBacking =>") &&
+    analyses.includes("PendingElementBuildStage::AdmitStiffnessBacking") &&
+    analyses.includes("mounted_element_stiffness_observes_before_admit_and_retires_rejected_backing") &&
+    analyses.includes("fn advance_element_build(&mut self)") &&
+    analyses.includes("fn reclaim_element_owner(&mut self)") &&
+    analyses.includes("mounted_element_build_reserves_and_reclaims_one_exact_owner_per_turn") &&
+    !analyses.includes("pending_node_ids: Vec<String>") &&
+    analyses.includes("pub struct AssemblyCsrBuild") &&
+    session.includes("AssemblyJobConstruction::new_owned") &&
+    session.includes("AssemblyCsrBuild::new") &&
+    session.includes("PcgJobConstruction::new") &&
+    session.includes("assembly_build.close_step(maximum_bytes)") &&
+    !step.body.includes("AssemblyJob::new_owned(") &&
+    !step.body.includes("into_full_matrix(") &&
+    !step.body.includes("PcgJob::new(") &&
+    reactor.includes("Event::JobProgress { job, .. }") &&
+    reactor.includes("JOB_RENDER_BINDINGS.with") &&
+    reactor.includes("dirty_render.push((binding.instance") &&
+    store.includes("pub fn commit_authority_matches") &&
+    store.includes("fn publish_authority") &&
+    store.includes("pub struct SnapshotReadReturn") &&
+    store.includes("pub fn return_to_registry_witness") &&
+    snapshotAdmission >= 0 &&
+    snapshotIssue > snapshotAdmission &&
+    frameworkPlugin.slice(snapshotAdmission, snapshotIssue).includes("A::mounted_job_prepare_snapshot_read(render_operation, snapshot.as_ref())") &&
     session.includes("mounted_revision_restart_keeps_cancel_before_spawn") &&
     session.includes("mounted_close_and_capacity_are_fixed_and_terminal_witnessed")
   );
@@ -3290,8 +3445,12 @@ function toolJobCoverageSelfTests(): number {
     'pub const FEM2D_MOUNTED_JOB_KIND: &str = "semio.fem2d.mounted-analysis";',
     "const SESSION_ACTIVE_CAPACITY: usize = 32;",
     "const SESSION_SHELL_CAPACITY: usize = 64;",
-    "const SESSION_MAXIMUM_ITEMS: usize = 4_096;",
-    "const SESSION_MAXIMUM_BYTES: usize = 4 * 1_024 * 1_024;",
+    "const SESSION_MAXIMUM_INPUT_ITEMS: usize = 4_096;",
+    "const SESSION_MAXIMUM_INPUT_BYTES: usize = 4 * 1_024 * 1_024;",
+    "struct MountedProcessOwnerCatalog { claims: [MountedOwnerClaim; 30] }",
+    "MountedOwnerClass::AssemblyDofStrings;",
+    "MountedOwnerClass::MeshPreparationIndexVector; MountedOwnerClass::MeshTriangulationWorkspaceVectors; MountedOwnerClass::MeshEdgeIndexVectors;",
+    "fn process_owner_inventory_admits_exact_maximum_and_returns_exact_credit() {}",
     "const FEM2D_JOB_TAG: u64 = 0xf2d0_0000_0000_0000;",
     "job & !FEM2D_JOB_COUNTER_MAXIMUM != FEM2D_JOB_TAG;",
     "shells: [Rc<RefCell<Option<MountedState>>>; SESSION_SHELL_CAPACITY],",
@@ -3299,34 +3458,71 @@ function toolJobCoverageSelfTests(): number {
     "retiring: [Option<u16>; SESSION_SHELL_CAPACITY],",
     "free: [u16; SESSION_SHELL_CAPACITY],",
     "canonical_base_revision: [u8; 32],",
-    "preflight_inner_cursor: usize;",
-    "preflight_deep_cursor: usize;",
-    "preflight_owner_opened: bool;",
+    "preflight: [Option<PendingSnapshotAdmission>; SESSION_ACTIVE_CAPACITY],",
+    "struct SnapshotAdmissionCursor {}",
+    "fn step_one(&mut self, snapshot: &Fem2dSnapshot) {}",
+    "credit_items: [usize; SESSION_SHELL_CAPACITY],",
+    "credit_bytes: [usize; SESSION_SHELL_CAPACITY],",
+    "visual_candidate: Option<Fem2dMountedVisualBuild>, visual_current: Option<Fem2dMountedVisualLease>, visual_displaced: Option<Fem2dMountedVisualLease>,",
+    "fn publish_visual_candidate(&mut self, candidate: Fem2dMountedVisualLease) -> Result<(), Fem2dMountedVisualLease> {}",
+    "snapshot.return_to_registry_witness(); witness.terminal_is_empty();",
     "register_bounded_job_kind(FEM2D_MOUNTED_JOB_KIND, factory);",
-    "fn close_step(&mut self, maximum_items: usize) -> PluginCloseStep {}",
+    "fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {}",
     "fn terminal_is_empty(&self) -> bool {}",
     "pub fn maintenance_step() {}",
     "pub fn close_step() {}",
     "pub fn terminal_is_empty() {}",
-    "fn step(&mut self, budget: JobBudget) { graph.step(&mut cx); mesh.step(&mut cx); assembly.step(&mut cx); pcg.step(&mut cx); current_identity(self.identity.app_instance_id); validate_commit(); self.cancel.is_cancelled_now(); JobStep::Done(output); }",
+    "fn step(&mut self, budget: JobBudget) { graph.step(&mut cx); mesh.step(&mut cx); assembly.step(&mut cx); pcg.step(&mut cx); current_identity(self.identity.app_instance_id); commit_authority_matches(); self.cancel.is_cancelled_now(); JobStep::Done(output); }",
+    "AssemblyJobConstruction::new_owned(model); AssemblyCsrBuild::new(assembly); PcgJobConstruction::new(operation, matrix);",
+    "assembly_build.close_step(maximum_bytes);",
     "pub fn reconcile(doc: &ArtifactView) { doc.take_snapshot_read(); Effect::CancelJob; Effect::SpawnJob; JobPlacement::Isolated; }",
     "mounted_revision_restart_keeps_cancel_before_spawn",
     "mounted_close_and_capacity_are_fixed_and_terminal_witnessed",
   ].join("\n");
-  const femMountedEditor = "async fn pending_effects() { crate::editor::fem2d::session::reconcile(doc); } fn mounted_job_maintenance_step() {} fn mounted_job_close_step() {} fn mounted_jobs_terminal_is_empty() {} session::with_live_visual(doc.render_operation(), |visual| model_window::render_with_progress(doc.snapshot, camera, visual));";
+  const femMountedEditor = "async fn pending_effects() { crate::editor::fem2d::session::reconcile(doc); } fn mounted_job_maintenance_step() {} fn mounted_job_close_step() {} fn mounted_jobs_terminal_is_empty() {} fn mounted_job_prepare_snapshot_read() {} session::with_live_visual(doc.render_operation(), |visual| model_window::render_with_progress(doc.snapshot, camera, visual));";
+  const femMountedModel = "pub struct Fem2dMountedVisualBuild {} Fem2dMountedVisualStage::ReserveOutput; Fem2dMountedVisualStage::ObserveOutput; Fem2dMountedVisualStage::OrderRegionKey; Fem2dMountedVisualStage::OrderAssemblyKey; Fem2dMountedVisualStage::OrderFieldKey => {} Fem2dMountedVisualStage::RegionPoint; fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {} fn mounted_visual_output_exact_maximum_plus_one_and_displacement_handback() {} pub fn render_with_progress() { Fem2dMountedVisualLease::layers_json; }";
+  const femMountedMesh = "MeshJobStage::ReservePreparation; MeshJobStage::ReserveEdgeAuthorities; MeshJobStage::Classify => { triangulation.triangles.get(self.face_cursor); } MeshJobStage::Finalize => {} fn mesh_mounted_classification_indexes_admit_maximum_reject_plus_one_and_close_exactly() {}";
   const femMountedRoot = 'pub fn plugin() { crate::editor::fem2d::session::initialize(); Plugin::<FemApps>::builder("fem"); }';
   const femMountedGlue = "✏️editor/🧵️session/🦀️component.rs";
   const femMountedJobs = "pub trait BoundedJob {} JobBody::Bounded(owner); #[cfg(not(test))]; JobBody::ExplicitStateMachineRequired;";
-  const femMountedAnalyses = "pub fn new_owned(model: Arc<AnalysisModel>) {} pub fn into_full_matrix(self) -> Option<Csr> {}";
-  if (!toolJobFem2dMountedSessionExact(femMountedSession, femMountedEditor, femMountedRoot, femMountedGlue, femMountedJobs, femMountedAnalyses)) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-valid was falsely rejected.");
-  if (toolJobFem2dMountedSessionExact(femMountedSession.replace("current: [Option<CurrentSession>; SESSION_ACTIVE_CAPACITY]", "current: HashMap<u32, CurrentSession>"), femMountedEditor, femMountedRoot, femMountedGlue, femMountedJobs, femMountedAnalyses)) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-resizable-session-registry was falsely accepted.");
-  if (toolJobFem2dMountedSessionExact(femMountedSession.replace("canonical_base_revision: [u8; 32],", ""), femMountedEditor, femMountedRoot, femMountedGlue, femMountedJobs, femMountedAnalyses)) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-truncated-base-authority was falsely accepted.");
-  if (toolJobFem2dMountedSessionExact(femMountedSession.replace("job & !FEM2D_JOB_COUNTER_MAXIMUM != FEM2D_JOB_TAG;", ""), femMountedEditor, femMountedRoot, femMountedGlue, femMountedJobs, femMountedAnalyses)) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-job-id-aba-substitution was falsely accepted.");
-  if (toolJobFem2dMountedSessionExact(femMountedSession.replace("preflight_inner_cursor: usize;", "case.loads.iter().map(work);"), femMountedEditor, femMountedRoot, femMountedGlue, femMountedJobs, femMountedAnalyses)) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-whole-nested-input-preflight was falsely accepted.");
-  if (toolJobFem2dMountedSessionExact(femMountedSession.replace("validate_commit();", ""), femMountedEditor, femMountedRoot, femMountedGlue, femMountedJobs, femMountedAnalyses)) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-unvalidated-commit was falsely accepted.");
-  if (toolJobFem2dMountedSessionExact(femMountedSession.replace("Effect::CancelJob;", ""), femMountedEditor, femMountedRoot, femMountedGlue, femMountedJobs, femMountedAnalyses)) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-revision-restart-without-cancel was falsely accepted.");
-  if (toolJobFem2dMountedSessionExact(femMountedSession, femMountedEditor.replace("session::with_live_visual(doc.render_operation(), |visual| model_window::render_with_progress(doc.snapshot, camera, visual));", "model_window::render_with_progress(doc.snapshot, camera, None);"), femMountedRoot, femMountedGlue, femMountedJobs, femMountedAnalyses)) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-live-visual-not-consumed was falsely accepted.");
-  if (toolJobFem2dMountedSessionExact(femMountedSession.replace("pcg.step(&mut cx);", "while pcg.running() { pcg.step(&mut cx); }"), femMountedEditor, femMountedRoot, femMountedGlue, femMountedJobs, femMountedAnalyses)) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-run-to-completion-child was falsely accepted.");
+  const femMountedAnalyses = "pub struct AssemblyJobConstruction {} AssemblyConstructionStage::ValidateNodePairs; AssemblyConstructionStage::DiscoverDofs; AssemblyConstructionStage::CommitDofOwner; struct PendingElementBuild {} PendingElementBuildStage::ReserveIndices; PendingElementBuildStage::ReservePositions; PendingElementBuildStage::ReserveStiffnessCredit; PendingElementBuildStage::AllocateStiffness; PendingElementBuildStage::ObserveStiffnessBacking => {} PendingElementBuildStage::AdmitStiffnessBacking; fn advance_element_build(&mut self) {} fn reclaim_element_owner(&mut self) {} fn mounted_element_build_reserves_and_reclaims_one_exact_owner_per_turn() {} fn mounted_element_stiffness_observes_before_admit_and_retires_rejected_backing() {} pub struct AssemblyCsrBuild {}";
+  const femMountedReactor = "Event::JobProgress { job, .. }; JOB_RENDER_BINDINGS.with; dirty_render.push((binding.instance);";
+  const femMountedStore = "pub fn commit_authority_matches() {} fn publish_authority() {} pub struct SnapshotReadReturn {} pub fn return_to_registry_witness() {}";
+  const femMountedFramework = "let snapshot_is_admitted = { A::mounted_job_prepare_snapshot_read(render_operation, snapshot.as_ref()) }; self.store.snapshot_read().await;";
+  const femExact = (session = femMountedSession, editor = femMountedEditor, reactor = femMountedReactor, store = femMountedStore, framework = femMountedFramework, analyses = femMountedAnalyses, model = femMountedModel, mesh = femMountedMesh) =>
+    toolJobFem2dMountedSessionExact(session, editor, model, mesh, femMountedRoot, femMountedGlue, femMountedJobs, analyses, reactor, store, framework);
+  if (!femExact()) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-valid was falsely rejected.");
+  if (femExact(femMountedSession.replace("current: [Option<CurrentSession>; SESSION_ACTIVE_CAPACITY]", "current: HashMap<u32, CurrentSession>"))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-resizable-session-registry was falsely accepted.");
+  if (femExact(femMountedSession.replace("canonical_base_revision: [u8; 32],", ""))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-truncated-base-authority was falsely accepted.");
+  if (femExact(femMountedSession.replace("job & !FEM2D_JOB_COUNTER_MAXIMUM != FEM2D_JOB_TAG;", ""))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-job-id-aba-substitution was falsely accepted.");
+  if (femExact(femMountedSession.replace("fn step_one(&mut self, snapshot: &Fem2dSnapshot) {}", "fn whole_snapshot() {}"))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-whole-nested-input-preflight was falsely accepted.");
+  if (femExact(femMountedSession.replace("commit_authority_matches();", ""))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-unvalidated-commit was falsely accepted.");
+  if (femExact(femMountedSession.replace("Effect::CancelJob;", ""))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-revision-restart-without-cancel was falsely accepted.");
+  if (femExact(femMountedSession, femMountedEditor.replace("session::with_live_visual(doc.render_operation(), |visual| model_window::render_with_progress(doc.snapshot, camera, visual));", "model_window::render_with_progress(doc.snapshot, camera, None);"))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-live-visual-not-consumed was falsely accepted.");
+  if (femExact(femMountedSession.replace("pcg.step(&mut cx);", "while pcg.running() { pcg.step(&mut cx); }"))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-run-to-completion-child was falsely accepted.");
+  if (femExact(femMountedSession, femMountedEditor, femMountedReactor.replace("dirty_render.push((binding.instance);", ""))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-progress-without-render-invalidation was falsely accepted.");
+  if (femExact(femMountedSession, femMountedEditor, femMountedReactor, femMountedStore, femMountedFramework.replace("A::mounted_job_prepare_snapshot_read(render_operation, snapshot.as_ref())", "true"))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-snapshot-issued-before-retained-census was falsely accepted.");
+  if (femExact(femMountedSession.replace("assembly_build.close_step(maximum_bytes);", "self.assembly_build = None;"))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-interrupted-builder-close-was-wholesale was falsely accepted.");
+  if (femExact(femMountedSession.replace("AssemblyJobConstruction::new_owned(model)", "AssemblyJob::new_owned(model)"))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-monolithic-assembly-plan-constructor was falsely accepted.");
+  if (femExact(femMountedSession.replace("credit_bytes: [usize; SESSION_SHELL_CAPACITY],", "credit_bytes: Vec<usize>,"))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-process-byte-credit-was-resizable was falsely accepted.");
+  if (femExact(femMountedSession, femMountedEditor, femMountedReactor, femMountedStore.replace("fn publish_authority() {}", ""))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-store-authority-was-not-atomic was falsely accepted.");
+  if (femExact(femMountedSession.replace("claims: [MountedOwnerClaim; 30]", "blanket_process_items: usize"))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-blanket-process-credit-was falsely accepted.");
+  if (femExact(femMountedSession.replace("MountedOwnerClass::AssemblyDofStrings;", "MountedOwnerClass::Unknown;"))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-missing-assembly-string-owner-credit-was falsely accepted.");
+  if (femExact(femMountedSession, femMountedEditor, femMountedReactor, femMountedStore, femMountedFramework, femMountedAnalyses.replace("struct PendingElementBuild {}", "fn begin_element() { let node_ids = element.node_ids(); }"))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-whole-element-constructor-was falsely accepted.");
+  if (femExact(femMountedSession, femMountedEditor, femMountedReactor, femMountedStore, femMountedFramework, femMountedAnalyses.replace("AssemblyConstructionStage::CommitDofOwner;", "plan.dof_map.order.push((node_id.clone(), dof));"))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-dof-owner-clone-and-commit-collapsed-was falsely accepted.");
+  if (femExact(femMountedSession.replace("fn process_owner_inventory_admits_exact_maximum_and_returns_exact_credit() {}", ""))) throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-process-credit-boundary-handback-fixture-was falsely accepted.");
+  if (femExact(femMountedSession, femMountedEditor, femMountedReactor, femMountedStore, femMountedFramework, femMountedAnalyses, femMountedModel.replace("Fem2dMountedVisualLease::layers_json", "fem2d_live_visual_layers(doc, progress)")))
+    throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-whole-visual-encoder-restored-was falsely accepted.");
+  if (femExact(femMountedSession, femMountedEditor, femMountedReactor, femMountedStore, femMountedFramework, femMountedAnalyses, femMountedModel.replace("Fem2dMountedVisualStage::OrderFieldKey", "fields.sort()")))
+    throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-visual-stable-order-cursor-removed-was falsely accepted.");
+  if (femExact(femMountedSession, femMountedEditor, femMountedReactor, femMountedStore, femMountedFramework, femMountedAnalyses, femMountedModel, femMountedMesh.replace("triangulation.triangles.get(self.face_cursor)", "triangulation.triangles.iter().collect()")))
+    throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-mesh-classification-collect-restored-was falsely accepted.");
+  if (femExact(femMountedSession, femMountedEditor, femMountedReactor, femMountedStore, femMountedFramework, femMountedAnalyses.replace("PendingElementBuildStage::ObserveStiffnessBacking", "PendingElementBuildStage::Complete")))
+    throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-stiffness-observation-removed-was falsely accepted.");
+  if (femExact(femMountedSession, femMountedEditor, femMountedReactor, femMountedStore.replace("pub fn return_to_registry_witness() {}", "")))
+    throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-store-return-witness-removed-was falsely accepted.");
+  if (femExact(femMountedSession.replace("-> Result<(), Fem2dMountedVisualLease>", "-> bool")))
+    throw new Error("[verify interactivity tool-jobs] self-test mounted-fem2d-full-visual-slot-lost-exact-handback-was falsely accepted.");
   const exactProof = (owner: string, controller: string, id: string, raw = 64) => {
     const ownerType = `Owner${owner.replaceAll(/[^A-Za-z0-9]/g, "")}`;
     return `impl ArtifactEditor for ${ownerType} { const DOCUMENT_SCHEMA: &'static str = "fixture.document"; }\nbounded_first_step_tool_proofs! { owner: semio_framework_plugin::EditorApp<${ownerType}>, owner_file: "${owner}", controller: "${controller}", document_schema: "fixture.document", factory: "BoundedFirstStepCommandJobFactory", tools: { "${id}" => semio_framework::ToolExecutionContract::bounded_first_step(${raw}, 1, 1, 64, 100), } }`;
@@ -3767,7 +3963,8 @@ function toolJobCoverageSelfTests(): number {
     "struct RasterMutationDigestAuthority",
     "struct RasterMutationCandidateAuthority",
     "RASTER_RETIREMENT_STACK_CAPACITY",
-    "frames: std::mem::ManuallyDrop<[Option<RasterRetirementFrame>; RASTER_RETIREMENT_STACK_CAPACITY]>",
+    "pages: std::mem::ManuallyDrop<[Option<Box<RasterRetirementFramePage>>; RASTER_RETIREMENT_STACK_PAGE_COUNT]>",
+    "pending_push: std::mem::ManuallyDrop<Option<RasterRetirementOwner>>",
     "struct RasterStoreInitializationAuthority",
     "impl semio_framework_plugin::ArtifactStoreInitializationAuthority<RasterSnapshot, RasterMutation> for RasterStoreInitializationAuthority",
     "RasterStoreInitializationPhase::ValidateEditPair",
@@ -3776,13 +3973,14 @@ function toolJobCoverageSelfTests(): number {
     "if cx.should_yield()",
     "if cx.should_yield()",
     "if cx.should_yield()",
-    "fn raster_reserve_unit(cx: &mut semio_framework_job::StepContext<'_>, units: usize) -> bool",
+    "fn raster_reserve_unit(cx: &mut semio_framework_job::StepContext<'_>) -> bool",
+    "cx.consume_fuel(1)",
     "self.cancel_requested || cx.is_cancelled()",
     "ArtifactStoreInitializationRuntime::new",
     "ArtifactStore::from_initialized_runtime_with_owners",
     "self.generation.0.checked_add(1)",
     "value.layers.pop()",
-    "value.assets.pop_last()",
+    "value.assets.take_last_entry()",
     "dsl::DslValue::Array(values)",
     "dsl::DslValue::Object(values)",
     "CreateLayer(payload)",
@@ -3810,7 +4008,74 @@ function toolJobCoverageSelfTests(): number {
     "raster_cancel_after_complete_retires_the_unclaimed_candidate_before_terminal",
     "raster_retirement_uses_allocation_capacity_and_fixed_iterative_depth",
     "raster_nested_owner_item_and_byte_capacity_plus_one_reject_before_clone",
+    "raster_empty_bounds_and_mounted_sixty_four_fuel_progress_across_second_map_page",
+    "raster_retirement_page_credit_is_claimed_before_allocation_and_returned_with_backing",
+    "raster_owned_map_removal_returns_exact_pair_and_populated_drop_refuses",
+    "const RASTER_MAXIMUM_CONTROL_BYTES: usize = RASTER_MAXIMUM_CONTROL_BACKINGS * RASTER_CONTROL_BACKING_BYTES",
+    "source_control_bytes: usize",
+    "self.source_control_bytes = RASTER_MAXIMUM_CONTROL_BYTES",
+    "raster-store.control-backing-double-reservation",
+    "static RASTER_RETIREMENT_PROCESS_PAGES: std::sync::atomic::AtomicUsize",
+    "static RASTER_INITIALIZATION_PROCESS_CONTROLS: std::sync::atomic::AtomicUsize",
+    "static RASTER_STANDALONE_PROCESS_CONTROLS: std::sync::atomic::AtomicUsize",
+    "held_items: usize",
+    "held_bytes: usize",
+    "control: std::mem::ManuallyDrop<Option<RasterStandaloneControlCredit>>",
+    "control: std::mem::ManuallyDrop<Option<RasterStandaloneControlCredit>>",
+    "let control = RasterStandaloneControlCredit::try_claim().ok();",
+    "let control = RasterStandaloneControlCredit::try_claim().ok();",
+    "fn claim_control_if_available(&mut self) -> Result<bool, String>",
+    "Err(\"raster-store.standalone-control-capacity\") => Ok(false)",
+    "control_returned: bool",
+    "remaining: RASTER_NON_STACK_CONTROL_BACKINGS",
+    "control_reservation: std::mem::ManuallyDrop<Option<RasterInitializationControlReservation>>",
+    "normal completion returns every non-stack process control credit",
+    "standalone Box control credit is returned before terminal-empty",
+    "standalone Arc and inner Box control credits return before terminal-empty",
+    "fn reserve_page_credit(&mut self, page_index: usize)",
+    "compare_exchange(current, next",
+    "self.return_page_credit(page_index)?",
+    "pages: std::mem::ManuallyDrop<[Option<Box<RasterOwnedMapPage<V>>>; RASTER_OWNED_MAP_PAGE_COUNT]>",
+    "Raster owned map reached Drop before every entry and page backing was explicitly retired",
+    "Populated Raster owned maps require the retained page clone authority",
+    "Raster maps require the retained page decoder",
+    "Populated Raster owned map DSL materialization is forbidden; interactive production routes require the retained page output authority",
+    "dsl::FieldValue::Map(Vec::new())",
+    "pub fn remove_entry(&mut self, key: &str) -> Option<RasterOwnedMapEntry<V>>",
+    "RasterOwnedMapInsert::Replaced",
     "raster_empty_asset_map_retirement_has_no_hidden_allocation_release",
+    "value.assets.take_last_entry()",
+    "value.assets.take_empty_page_backing()",
+    "RasterRetirementOwner::AssetMapPage(page)",
+    "RasterRetirementOwner::ValueMapPage(page)",
+    "RasterOwnedMap::<V>::conservative_page_credit_bytes()",
+    "fn observe_candidate_capacity(",
+    "fn raster_exact_string_from_parts(",
+    "const RASTER_CONTROL_BACKING_BYTES: usize = RASTER_OWNED_FIELD_BYTES",
+    "const RASTER_MAXIMUM_CONTROL_BACKINGS: usize = RASTER_RETIREMENT_STACK_PAGE_COUNT + RASTER_NON_STACK_CONTROL_BACKINGS",
+    "RasterRetirementOwner::BoxedLayer(Some(layer))",
+    "const RASTER_RETIREMENT_ADMITTED_FRAME_CAPACITY: usize = RASTER_RETIREMENT_LAYER_FRAMES + RASTER_RETIREMENT_VALUE_FRAMES + RASTER_RETIREMENT_WRAPPER_FRAMES",
+    "const RASTER_RETIREMENT_STACK_CAPACITY: usize = RASTER_RETIREMENT_ADMITTED_FRAME_CAPACITY + RASTER_RETIREMENT_REJECTED_OWNER_MARGIN",
+    "raster_owned_map_cap_plus_one_returns_exact_owner_and_populated_pages_retire_explicitly",
+    "raster_observed_capacity_and_combined_retirement_depth_are_exact",
+    "raster_box_and_arc_control_backings_require_and_report_fixed_credit",
+    "raster_standalone_control_max_plus_one_returns_exact_owner_and_resumes_after_full_saturation",
+    "raster_arc_factory_full_saturation_preserves_exact_producer_through_every_control_phase",
+    "raster_populated_dsl_materialization_max_plus_one_nested_cancel_fault_panic_and_close_are_exact",
+    "fn serialize_empty_owned_map<S: serde::Serializer, V>",
+    "Populated Raster owned map serialization is forbidden; interactive production routes require the retained page output authority",
+    '#[serde(serialize_with = "crate::artifacts::raster::serialize_empty_owned_map")]',
+    '#[serde(serialize_with = "crate::artifacts::raster::serialize_empty_owned_map")]',
+    '#[serde(serialize_with = "crate::artifacts::raster::serialize_empty_owned_map")]',
+    "raster_populated_serde_output_max_plus_one_nested_cancel_fault_panic_and_close_are_exact",
+    "std::mem::size_of::<RasterOwnedRetirement>() <= RASTER_CONTROL_BACKING_BYTES",
+    "std::mem::size_of::<RasterRetirementFramePage>() <= RASTER_CONTROL_BACKING_BYTES",
+    "raster_maximum_combined_layer_and_value_depth_retires_to_terminal",
+    "Ok(Some((previous_key, previous)))",
+    "Ok(Some((previous_key, previous)))",
+    "Ok(Some((previous_key, previous)))",
+    "replacement returns the exact displaced pair",
+    "assert_eq!(previous_key.as_ptr(), old_key_pointer)",
     "candidate_disposer",
     "let released_bytes = value.capacity();",
     "let bytes = value.capacity();",
@@ -3854,18 +4119,66 @@ function toolJobCoverageSelfTests(): number {
   if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec, retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin.replace("artifact_envelope_ingress_saturation_returns_exact_plus_one_owner_and_closes_fifo_slots", "artifact_envelope_ingress_drops_plus_one"))) throw new Error("[verify interactivity tool-jobs] self-test Raster-fixed-registry-exact-handback-fixture-missing was falsely accepted.");
   if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec, retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin.replace("artifact_envelope_ingress_cancel_and_interrupted_close_release_one_real_page_per_grant", "artifact_envelope_ingress_bulk_close"))) throw new Error("[verify interactivity tool-jobs] self-test Raster-one-page-close-fixture-missing was falsely accepted.");
   if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("struct RasterSnapshotBoundsAuthority", "struct RasterPostCloneBoundsAuthority"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-recursive-preflight-authority-removal was falsely accepted.");
-  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("fn raster_reserve_unit(cx: &mut semio_framework_job::StepContext<'_>, units: usize) -> bool", "fn raster_post_work_fuel(cx: &mut semio_framework_job::StepContext<'_>, units: usize) -> bool"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-pre-work-fuel-authority-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("fn raster_reserve_unit(cx: &mut semio_framework_job::StepContext<'_>) -> bool", "fn raster_post_work_fuel(cx: &mut semio_framework_job::StepContext<'_>) -> bool"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-pre-work-fuel-authority-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("cx.consume_fuel(1)", "cx.consume_fuel(RASTER_CONTROL_BACKING_BYTES as u64)"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-mounted-64-fuel-byte-charge was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("self.source_control_bytes = RASTER_MAXIMUM_CONTROL_BYTES", "self.source_bytes = RASTER_MAXIMUM_NESTED_BYTES"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-control-payload-double-counting was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("static RASTER_INITIALIZATION_PROCESS_CONTROLS: std::sync::atomic::AtomicUsize", "static RASTER_UNTRACKED_CONTROLS: std::sync::atomic::AtomicUsize"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-non-stack-process-control-reservation-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("static RASTER_STANDALONE_PROCESS_CONTROLS: std::sync::atomic::AtomicUsize", "static RASTER_UNTRACKED_STANDALONE_CONTROLS: std::sync::atomic::AtomicUsize"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-standalone-Box-Arc-control-reservation-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replaceAll("control: std::mem::ManuallyDrop<Option<RasterStandaloneControlCredit>>", "control: Option<RasterStandaloneControlCredit>"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-standalone-control-terminal-shell-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replaceAll("let control = RasterStandaloneControlCredit::try_claim().ok();", "let control = RasterStandaloneControlCredit::try_claim().expect(\"saturation panic\");"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-saturated-constructor-panic-restoration was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("Err(\"raster-store.standalone-control-capacity\") => Ok(false)", "Err(code) => panic!(\"{code}\")"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-saturated-retirement-resume-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("control_returned: bool", "control_returned_without_witness: ()"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-Arc-control-return-witness-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("normal completion returns every non-stack process control credit", "normal completion leaks process control credit"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-process-control-zero-fixture-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("fn reserve_page_credit(&mut self, page_index: usize)", "fn allocate_page_without_credit(&mut self, page_index: usize)"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-retirement-page-credit-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("pages: std::mem::ManuallyDrop<[Option<Box<RasterOwnedMapPage<V>>>; RASTER_OWNED_MAP_PAGE_COUNT]>", "pages: [Option<Box<RasterOwnedMapPage<V>>>; RASTER_OWNED_MAP_PAGE_COUNT]"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-populated-map-fail-closed-shell-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, `${retainedRasterCodec}\npub fn remove(&mut self, key: &str)`, retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-key-discarding-remove-restoration was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("Populated Raster owned maps require the retained page clone authority", "Raster clone allocates map pages"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-populated-map-whole-clone-restoration was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("Raster maps require the retained page decoder", "Raster serde allocates map pages"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-uncredited-map-serde-restoration was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("Populated Raster owned map DSL materialization is forbidden; interactive production routes require the retained page output authority", "ordinary populated DSL materialization is allowed"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-populated-map-DSL-fail-closure-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("dsl::FieldValue::Map(Vec::new())", "let mut entries = Vec::with_capacity(self.length); for (key, value) in self { entries.push((key.clone(), value.to_value())); } dsl::FieldValue::Map(entries)"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-populated-map-uncredited-DSL-loop-restoration was falsely accepted.");
   if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, `${retainedRasterCodec}\nserde_json::to_vec(source)`, retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-whole-recursive-encode-reintroduction was falsely accepted.");
   if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, `${retainedRasterCodec}\nsource.clone()`, retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-whole-recursive-clone-reintroduction was falsely accepted.");
   if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, `${retainedRasterCodec}\noperation.diff(current)\ndiff.apply(current)`, retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-monolithic-history-apply-reintroduction was falsely accepted.");
   if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("candidate_disposer", "discarded_candidate"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-complete-candidate-retirement-removal was falsely accepted.");
   if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("let released_bytes = value.capacity();", "let released_bytes = value.len();"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-string-capacity-retirement-erasure was falsely accepted.");
   if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("let bytes = value.capacity();", "let bytes = value.len();"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-byte-capacity-retirement-erasure was falsely accepted.");
-  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("frames: std::mem::ManuallyDrop<[Option<RasterRetirementFrame>; RASTER_RETIREMENT_STACK_CAPACITY]>", "active: Box<RasterOwnedRetirement>"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-fixed-iterative-retirement-erasure was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("pages: std::mem::ManuallyDrop<[Option<Box<RasterRetirementFramePage>>; RASTER_RETIREMENT_STACK_PAGE_COUNT]>", "active: Box<RasterOwnedRetirement>"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-fixed-iterative-retirement-erasure was falsely accepted.");
   if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("raster_small_mutation_against_deep_snapshot_is_cursorized_and_atomic", "raster_small_mutation_clones_deep_snapshot"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-low-fuel-deep-mutation-fixture-removal was falsely accepted.");
   if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("raster_cancel_after_complete_retires_the_unclaimed_candidate_before_terminal", "raster_cancel_drops_completed_candidate"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-cancel-after-complete-fixture-removal was falsely accepted.");
   if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("raster_nested_owner_item_and_byte_capacity_plus_one_reject_before_clone", "raster_nested_owner_capacity_without_plus_one"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-nested-owner-capacity-plus-one-fixture-removal was falsely accepted.");
   if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("raster_empty_asset_map_retirement_has_no_hidden_allocation_release", "raster_empty_asset_map_bulk_drop"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-empty-map-allocation-release-fixture-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("value.assets.take_empty_page_backing()", "drop(std::mem::take(&mut value.assets))"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-populated-map-page-retirement-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("fn observe_candidate_capacity(", "fn trust_requested_candidate_capacity("), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-observed-capacity-admission-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("const RASTER_CONTROL_BACKING_BYTES: usize = RASTER_OWNED_FIELD_BYTES", "const RASTER_CONTROL_BACKING_BYTES: usize = 0"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-control-backing-credit-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("const RASTER_MAXIMUM_CONTROL_BACKINGS: usize = RASTER_RETIREMENT_STACK_PAGE_COUNT + RASTER_NON_STACK_CONTROL_BACKINGS", "const RASTER_MAXIMUM_CONTROL_BACKINGS: usize = 16"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-control-backing-count-regression was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("RASTER_RETIREMENT_LAYER_FRAMES + RASTER_RETIREMENT_VALUE_FRAMES + RASTER_RETIREMENT_WRAPPER_FRAMES", "RASTER_MAXIMUM_NESTED_DEPTH * 2 + 8"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-combined-retirement-depth-regression was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("RASTER_RETIREMENT_ADMITTED_FRAME_CAPACITY + RASTER_RETIREMENT_REJECTED_OWNER_MARGIN", "RASTER_RETIREMENT_ADMITTED_FRAME_CAPACITY"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-rejected-owner-retirement-margin-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("raster_owned_map_cap_plus_one_returns_exact_owner_and_populated_pages_retire_explicitly", "raster_empty_map_only"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-populated-map-cap-fixture-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("raster_observed_capacity_and_combined_retirement_depth_are_exact", "raster_requested_capacity_only"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-observed-capacity-fixture-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("raster_box_and_arc_control_backings_require_and_report_fixed_credit", "raster_unreported_control_drop"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-control-owner-fixture-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("raster_standalone_control_max_plus_one_returns_exact_owner_and_resumes_after_full_saturation", "raster_standalone_saturation_panics"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-standalone-max-plus-one-fixture-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("raster_arc_factory_full_saturation_preserves_exact_producer_through_every_control_phase", "raster_arc_saturation_drops_producer"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-Arc-every-control-phase-saturation-fixture-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("raster_populated_dsl_materialization_max_plus_one_nested_cancel_fault_panic_and_close_are_exact", "raster_empty_dsl_map_only"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-populated-DSL-hostile-fixture-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("raster_populated_serde_output_max_plus_one_nested_cancel_fault_panic_and_close_are_exact", "raster_empty_serde_map_only"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-populated-serde-hostile-fixture-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace('#[serde(serialize_with = "crate::artifacts::raster::serialize_empty_owned_map")]\n', ""), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-serde-derived-map-guard-removal was falsely accepted.");
+  const restoredRasterOwnedMapSerializeLoop = `impl<V: serde::Serialize> serde::Serialize for RasterOwnedMap<V> {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::SerializeMap;
+        let mut map = serializer.serialize_map(Some(self.length))?;
+        for (key, value) in self {
+            map.serialize_entry(key, value)?;
+        }
+        map.end()
+    }
+}`;
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, `${retainedRasterCodec}\n${restoredRasterOwnedMapSerializeLoop}`, retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-public-populated-serde-loop-bound-restoration was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("std::mem::size_of::<RasterRetirementFramePage>() <= RASTER_CONTROL_BACKING_BYTES", "true"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-control-page-size-proof-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("raster_maximum_combined_layer_and_value_depth_retires_to_terminal", "raster_separate_depth_only"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-combined-depth-fixture-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replaceAll("RasterOwnedMapInsert::Replaced", "RasterOwnedMapInsert::DiscardedKey"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-replacement-key-owner-handback-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec.replace("replacement returns the exact displaced pair", "replacement drops incoming key"), retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-replacement-pointer-fixture-removal was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, `${retainedRasterCodec}\nsource.assets.clone()`, retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-retained-map-whole-clone-reintroduction was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, `${retainedRasterCodec}\nserde_json::to_value(&source.assets)\nsource.assets.to_value()`, retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-retained-map-serde-dsl-loop-reintroduction was falsely accepted.");
+  if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, `${retainedRasterCodec}\ndrop(populated_map)`, retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Raster-populated-map-ordinary-drop-reintroduction was falsely accepted.");
   if (toolJobRasterEnvelopeCallerRetainedExact(retainedJackStore, retainedRasterCodec, retainedRasterEditor, retainedRasterWasm, retainedWriterPlugin.replace("artifact store initialization job reached Drop before exact candidate handoff or terminal retained close", "artifact initializer job silently drops retained candidate"))) throw new Error("[verify interactivity tool-jobs] self-test Raster-public-initializer-drop-refusal-removal was falsely accepted.");
   const retainedDrawCodec = [
     "pub struct DrawEnvelopeOwnedFieldCatalog",
@@ -4297,7 +4610,7 @@ function toolJobCoverageSelfTests(): number {
   if (toolJobPagedIngressExact(unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy)) throw new Error("[verify interactivity tool-jobs] self-test WGPU-close-registry-without-pollable-exact-owner-handle was falsely accepted.");
   const shutdownDropsClose = "pub(crate) struct KernelCloseHandle; pub(crate) fn begin_destroy_app(&self, instance: u32) -> KernelCloseHandle; KernelRequest::DestroyApp { owner: self.clone() }; owner.finish(KernelCloseStatus::Complete); fn shutdown_step() { drop(owner); }";
   if (toolJobPagedIngressExact(shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose)) throw new Error("[verify interactivity tool-jobs] self-test WGPU-queue-shutdown-dropped-close-completion-owner was falsely accepted.");
-  return fixtures.length + 313;
+  return fixtures.length + 323;
 }
 
 /** 🎯️ Phase-8 source/runtime contract census used by `verify interactivity tool-jobs`. */
@@ -4367,9 +4680,11 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const reactorJobs = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/💼️jobs/🦀️component.rs");
   const fem2dSession = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️session/🦀️component.rs");
   const fem2dEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
+  const fem2dModel = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️component.rs");
   const femPluginRoot = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/🦀️component.rs");
   const femGlue = policyReadFileSafe(root, "✏️s/🔌️plugins/🏗️fem/📦️packages/🦀️rust/📦️glue.rs");
   const femAnalyses = policyReadFileSafe(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🧮️analyses/🦀️component.rs");
+  const femMesh = policyReadFileSafe(root, "✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🦀️component.rs");
   const presentEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️component.rs");
   const presentWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
   const writerEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧬️mutations/💾️binary/🦀️component.rs");
@@ -4382,7 +4697,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const gisMapEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs");
   const gisMapEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
   const gisMapWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
-  const rasterEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs");
+  const rasterEnvelopeCodec = `${policyReadFileSafe(root, "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs")}\n${policyReadFileSafe(root, "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️component.rs")}\n${policyReadFileSafe(root, "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs")}\n${policyReadFileSafe(root, "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs")}`;
   const rasterEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
   const rasterWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
   const drawEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧰️owned/🦀️component.rs");
@@ -4448,7 +4763,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   if (!toolJobPeerInteractionRootsExact(plugin, store, channel)) failures.push("peer ingress, app-typed presence, or interaction roots lack reserve-before-decode retained per-entry publication, atomic validated commit, or O(1) immutable capture");
   if (!toolJobPagedIngressExact(kernel, reactor, plugin, pluginHost, channel, componentWit, mcpWorkspace, runHost, wgpuHost)) failures.push("paged command ingress lacks fixed-page ownership, retained streaming decode/fault closure, generic multi-page ACK ordering, or terminal-close registries across MCP/run/WGPU callers");
   if (!toolJobActorProgressOverlayExact(actor, shardHost, wgpuHost)) failures.push("actor Job publications lack a fixed preview/progress overlay, independent autonomous-shard authority, presenter-adopted ACK, exact rejected-owner handback, or app/fault/realm retirement");
-  if (!toolJobFem2dMountedSessionExact(fem2dSession, fem2dEditor, femPluginRoot, femGlue, reactorJobs, femAnalyses)) failures.push("live FEM2D revisions lack a fixed generation-tagged retained worker session, cancel/restart, matching commit validation, progress overlay job route, mounted close authority, or live visual consumer");
+  if (!toolJobFem2dMountedSessionExact(fem2dSession, fem2dEditor, fem2dModel, femMesh, femPluginRoot, femGlue, reactorJobs, femAnalyses, reactor, store, plugin)) failures.push("live FEM2D revisions lack a fixed generation-tagged retained worker session, mounted visual/mesh/stiffness backing, exact snapshot-return witness, or live visual consumer");
   if (!puzzleReservedExact) failures.push("Puzzle5d clipboard/import routes lack exact owner-qualified route-specific resumable factories and state machines");
   if (!toolJobMediaExportBounded(`${plugin}\n${jobRuntime}`)) failures.push("owned media export lacks nonblocking per-instance polling, exact sealed structural output credit, or pending/drop/isolation regressions");
   if (!toolJobExternalCancellationOwned(plugin)) failures.push("typed jobs lack externally reachable operation/document/app/generation cancellation through close and supersession");
@@ -5411,12 +5726,43 @@ function interactivityPuzzleFillEnvelopeFailures(precomputeSource: string, fillS
   const sessionStart = precompute.indexOf("    //#region 💼️FillJobBridge");
   const sessionEnd = precompute.indexOf("    //#endregion 💼️FillJobBridge", sessionStart);
   const sessionBridge = precompute.slice(sessionStart, sessionEnd);
+  const readStart = precompute.indexOf("    fn read_fill<R>");
+  const readEnd = precompute.indexOf("    pub fn set_scene", readStart);
+  const readBridge = precompute.slice(readStart, readEnd);
+  const restoreStart = precompute.indexOf("    pub fn restore_persisted_fill");
+  const restoreEnd = precompute.indexOf("    //#region 💼️FillJobBridge", restoreStart);
+  const restoreBridge = precompute.slice(restoreStart, restoreEnd);
+  const pumpStart = precompute.indexOf("    fn pump_fill_terminal_step");
+  const pumpEnd = precompute.indexOf("    pub fn take_terminal_fill_job", pumpStart);
+  const terminalPump = precompute.slice(pumpStart, pumpEnd);
+  const takeClosedStart = precompute.indexOf("    fn take_closed(&mut self)");
+  const takeClosedEnd = precompute.indexOf("enum FillEnvelopeDrive", takeClosedStart);
+  const takeClosedBridge = precompute.slice(takeClosedStart, takeClosedEnd);
   const driveStart = precompute.indexOf("fn drive_fill_envelope(");
   const driveEnd = precompute.indexOf("#[derive(Clone, Copy, Debug, PartialEq, Eq)]\npub enum FillEnvelopeCloseStep", driveStart);
   const drive = precompute.slice(driveStart, driveEnd);
+  const ingressBindAt = precompute.indexOf("admitted_cursor.bind(&admitted_request)");
+  const ingressGuardAt = precompute.indexOf("let terminal_guard = FillEnvelopeWorkerFaultGuard::new(&input)");
+  const ingressDriveAt = precompute.indexOf("match drive_fill_envelope(&request)");
   const censusStart = fill.indexOf("pub(crate) struct FillBuilderOwnerCensusCursor");
   const censusEnd = fill.indexOf("pub(crate) struct FillBuilderRetirementCursor", censusStart);
   const census = fill.slice(censusStart, censusEnd);
+  const fixedOwnerStart = geometry.indexOf("pub(crate) struct FixedOwnerMap");
+  const fixedOwnerEnd = geometry.indexOf("//#region 🔒️GeometryAdapter", fixedOwnerStart);
+  const fixedOwners = geometry.slice(fixedOwnerStart, fixedOwnerEnd);
+  const fillFixedFields = [
+    "placed_lookup: FixedOwnerMap<String, usize>",
+    "candidate_cache: FixedOwnerMap<String, Vec<BrushCompatibleCandidate>>",
+    "seed_object_ids: FixedOwnerSet<String>",
+    "object_weights: FixedOwnerMap<String, f64>",
+    "vortex_weights: FixedOwnerMap<String, f64>",
+    "meshes: FixedOwnerMap<String, CollisionBody>",
+    "blocked_vortex_ids: FixedOwnerSet<String>",
+    "candidate_seen: FixedOwnerSet<String>",
+    "candidate_cross: FixedOwnerMap<String, BrushCompatibleCandidate>",
+    "candidate_same: FixedOwnerMap<String, BrushCompatibleCandidate>",
+  ];
+  const fillFixedCredits = ["fill.placed_lookup.backing_credit()", "fill.candidate_cache.backing_credit()", "fill.seed_object_ids.backing_credit()", "fill.weights.object_weights.backing_credit()", "fill.weights.vortex_weights.backing_credit()", "fill.meshes.backing_credit()", "fill.blocked_vortex_ids.backing_credit()", "fill.candidate_seen.backing_credit()", "fill.candidate_cross.backing_credit()", "fill.candidate_same.backing_credit()"];
   const failures: string[] = [];
   for (const cap of [
     "FILL_ENVELOPE_PAGE_BYTES: usize = 16 * 1024",
@@ -5427,15 +5773,19 @@ function interactivityPuzzleFillEnvelopeFailures(precomputeSource: string, fillS
   ]) if (!precompute.includes(cap)) failures.push(`Puzzle fill envelope fixed admission changed or disappeared: ${cap}`);
   if (!precompute.includes("slots: [Option<FillEnvelopeAuthority>; FILL_ENVELOPE_MAX_OPERATIONS]") || !precompute.includes("generations: [u64; FILL_ENVELOPE_MAX_OPERATIONS]") || !precompute.includes("requested_items.checked_add(FILL_ENVELOPE_AUTHORITY_ITEMS)") || !precompute.includes("requested_bytes.checked_add(FILL_ENVELOPE_AUTHORITY_BYTES)") || !precompute.includes("self.aggregate_bytes.checked_add(bytes)") || !precompute.includes("self.slots[slot] = Some(FillEnvelopeAuthority")) failures.push("Puzzle fill envelope is not admitted into fixed generation slots before handoff");
   if (!sessionBridge.includes("let fill = self.engine.fill.take()?") || !sessionBridge.includes("registry.begin_measurement(job, operation, fill") || !sessionBridge.includes("Err(fill) =>") || !sessionBridge.includes("self.engine.fill = Some(fill)") || !sessionBridge.includes("registry.finish_measurement(&admission.request, credit.items, credit.bytes)")) failures.push("Puzzle fill UI admission does not move the exact source owner into a registered measurement authority before census and exact credit");
-  if (censusStart < 0 || censusEnd < 0 || !fill.includes("FILL_BUILDER_NESTED_ITEMS: usize = 32") || !fill.includes("struct FillBuilderCollectionBackings") || !fill.includes("pages: [Option<Box<[u8; FILL_BUILDER_OWNER_PAGE_BYTES]>>; FILL_BUILDER_STD_COLLECTIONS]") || !fill.includes("Self { pages: std::array::from_fn(|_| Some(Box::new([0; FILL_BUILDER_OWNER_PAGE_BYTES]))) }") || !census.includes("path: [usize; 16]") || !census.includes("phase: [u8; 17]") || !census.includes("child: [usize; 17]") || !census.includes("self.credit.items.checked_add") || !census.includes("self.credit.bytes.checked_add") || !census.includes("(occupied <= FILL_BUILDER_NESTED_ITEMS).then_some(FillBuilderOwnerCredit::default())") || !census.includes("fill.collection_backings.pages.get(self.index).is_some_and(Option::is_some)") || !census.includes("match fill.candidate_seen.iter().nth(self.index)") || census.includes("fn measure_") || census.includes(".iter().all(") || !geometry.includes("struct CollisionIndexCollectionBackings") || !geometry.includes("pages: [Option<Box<[u8; 16 * 1024]>>; 3]") || !geometry.includes("collision_index_fixed_backing_credit(self.entries.len(), self.collection_backings.pages[0].is_some())") || !geometry.includes("pub(crate) fn census_one_owner") || !sessionBridge.includes("admission.census.step(&fill, FILL_ENVELOPE_MAX_ITEMS, FILL_ENVELOPE_MAX_BYTES)")) failures.push("Puzzle fill admission does not advance one fixed nested allocation/entry or exact backing page before reservation");
+  if (censusStart < 0 || censusEnd < 0 || fixedOwnerStart < 0 || fixedOwnerEnd < 0 || !fill.includes("FILL_BUILDER_NESTED_ITEMS: usize = 32") || !geometry.includes("FIXED_OWNER_SLOTS: usize = 32") || !geometry.includes("FIXED_OWNER_PAGE_BYTES: usize = 16 * 1024") || !fixedOwners.includes("page: Option<Box<[Option<(K, V)>; N]>>") || !fixedOwners.includes("std::mem::size_of::<[Option<(K, V)>; N]>()") || !fixedOwners.includes("if self.len == N") || !fixedOwners.includes("return Err((key, value));") || !fixedOwners.includes("Occupied { input_key: K, input_value: V }") || !fixedOwners.includes("return Ok(FixedOwnerMapInsert::Occupied { input_key: key, input_value: value });") || (fixedOwners.match(/pub\(crate\) fn remove_entry/g) ?? []).length !== 2 || geometry.includes("#[derive(Clone, Debug)]\npub(crate) struct FixedOwnerMap") || geometry.includes("CollectionBackings") || !fillFixedFields.every((field) => fill.includes(field)) || !fillFixedCredits.every((credit) => census.includes(credit)) || !geometry.includes("entries: FixedOwnerMap<String, CollisionAabb>") || !geometry.includes("cells: FixedOwnerMap<(i32, i32, i32), Vec<String>>") || !geometry.includes("oversized: FixedOwnerSet<String>") || !geometry.includes("0 => self.entries.backing_credit()") || !geometry.includes("2 => self.cells.backing_credit()") || !geometry.includes("4 => self.oversized.backing_credit()") || !census.includes("path: [usize; 16]") || !census.includes("phase: [u8; 17]") || !census.includes("child: [usize; 17]") || !census.includes("self.credit.items.checked_add") || !census.includes("self.credit.bytes.checked_add") || !census.includes("(occupied <= FILL_BUILDER_NESTED_ITEMS).then_some(FillBuilderOwnerCredit::default())") || !census.includes("match fill.candidate_seen.iter().nth(self.index)") || census.includes("fn measure_") || census.includes(".iter().all(") || !geometry.includes("pub(crate) fn census_one_owner") || !sessionBridge.includes("admission.census.step(&fill, FILL_ENVELOPE_MAX_ITEMS, FILL_ENVELOPE_MAX_BYTES)")) failures.push("Puzzle fill admission does not advance one fixed nested allocation/entry backed by the exact credited slot pages before reservation");
   if (sessionBridge.includes("serde_json::") || sessionBridge.includes("checkpoint_bytes()") || precompute.includes("FillWorkerState") || precompute.includes("restore_fill_worker_state")) failures.push("Puzzle fill UI/worker route contains whole-state serialization or compatibility restoration");
-  if (!precompute.includes("struct FillEnvelopeTokenCursor") || !precompute.includes("match self.field") || !precompute.includes("self.field += 1") || !precompute.includes("Self { terminal_guard: FillEnvelopeWorkerFaultGuard::new(job), token: FillEnvelopeTokenCursor::new(input) }") || !precompute.includes("let mut admitted_cursor = FillEnvelopeJobEntryCursor::new(context.id().await, input)") || !precompute.includes("context.tick().await;\n            match admitted_cursor.step()")) failures.push("Puzzle fill token decode/checkpoint cursor does not install exact fault ownership before fallible one-field decode");
+  if (!precompute.includes("struct FillEnvelopeTokenCursor") || !precompute.includes("match self.field") || !precompute.includes("self.field += 1") || ingressGuardAt < 0 || !precompute.includes("Self { context_job, terminal_guard, token: FillEnvelopeTokenCursor::new(input) }") || !precompute.includes("let context_job = context.id().await") || !precompute.includes("let mut admitted_cursor = FillEnvelopeJobEntryCursor::new(context_job, input)") || !precompute.includes("request.job != self.context_job") || !precompute.includes("self.terminal_guard.request.as_ref() != Some(request)") || !precompute.includes("authority.request == *request") || !precompute.includes('return Err("fill worker envelope owner is stale");') || precompute.includes("request_fill_envelope_terminal_by_job") || ingressBindAt < ingressGuardAt || ingressDriveAt < ingressBindAt || !precompute.includes("context.tick().await;\n            match admitted_cursor.step()")) failures.push("Puzzle fill token ingress does not resolve the exact raw owner and bind context job to the decoded live request before transition");
   if ((drive.match(/drive_step\(/g) ?? []).length !== 1 || !drive.includes("is_cancelled_now()") || !drive.includes("base_revision.0 != request.base_revision") || !drive.includes("FillEnvelopeDrive::Blocked") || drive.includes("while ") || drive.includes("for ")) failures.push("Puzzle fill worker grant does not advance exactly one fresh cancellable retained opportunity");
   if (!precompute.includes("pub fn take_terminal_fill_job") || !precompute.includes("pub fn resume(mut self)") || !precompute.includes("pub fn close_step(&mut self)") || !precompute.includes("impl Drop for FillEnvelopeTerminalHandle") || !precompute.includes("self.checked_out.store(false, Ordering::Release)") || !precompute.includes("authority.token_page.take()")) failures.push("Puzzle fill rejected/terminal owners lack public take-resume-close and Drop handback");
   if (!sessionBridge.includes("if self.pump_fill_terminal_step()") || !sessionBridge.includes("fn pump_fill_terminal_step(&mut self)") || !sessionBridge.includes("self.take_terminal_fill_job()") || !sessionBridge.includes("FillEnvelopeTerminalHandle::close_step") || !precompute.includes("registry.take_closed()")) failures.push("Puzzle fill production callers do not mount terminal take/close and orphan recovery");
   if (!precompute.includes("struct FillEnvelopeTerminalIntent") || !precompute.includes("intent.reason.fetch_max(reason.code(), Ordering::AcqRel)") || !precompute.includes("request_fill_envelope_terminal(request, reason)") || !precompute.includes("if !matches!(authority.phase, FillEnvelopePhase::Closing)") || !precompute.includes("apply_fill_envelope_terminal_intent(authority)") || !precompute.includes("terminalize_fill_envelope(request, FillEnvelopeTerminalReason::Closed)")) failures.push("Puzzle fill terminal intent can be lost under registry contention or ignore already-terminal session Drop");
-  if (!fill.includes("struct FillBuilderRetirementCursor") || !fill.includes("enum FillRetiredOwner") || !fill.includes("fn release_vec_backing<T>") || !fill.includes("self.current = Some(FillRetiredOwner::PreviewState(value));") || !fill.includes("FillRetiredOwner::PreviewState(value) => retire_preview_state(value)") || !fill.includes("19 => fill.collection_backings.retire_one()") || !fill.includes("fill.collection_backings.terminal_owners_empty()") || !fill.includes("if !fill.terminal_owners_empty()") || !geometry.includes("retiring_key: Option<String>") || !geometry.includes("retiring_ids: Option<Vec<String>>") || !geometry.includes("self.retiring_ids = Some(ids);") || !geometry.includes("self.retiring_key = Some(key);") || !geometry.includes("if self.collection_backings.retire_one()") || !geometry.includes("self.collection_backings.terminal_owners_empty()") || !geometry.includes("pub(crate) fn terminal_owners_empty(&self)") || !precompute.includes("authority.fill_retirement = Some(FillBuilderRetirementCursor::new(fill))") || !precompute.includes("FillBuilderRetirementCursor::retire_one")) failures.push("Puzzle fill terminal close can recursively or bulk-drop nested builders, fixed backing pages, seed vectors, or spatial buckets");
-  if (!precomputeSource.includes("fill_worker_token_reopens_the_exact_retained_owner_and_drives_one_turn") || !precomputeSource.includes("fill_worker_fixed_cap_rejects_plus_one_and_reused_slot_rejects_aba") || !precomputeSource.includes("fill_worker_item_and_byte_plus_one_reject_before_owner_transfer") || !precomputeSource.includes("fill_worker_actual_owner_census_rejects_cap_plus_one_with_exact_handback") || !precomputeSource.includes("fill_worker_session_drop_during_measurement_mounts_the_same_terminal_once") || !precomputeSource.includes("fill_worker_completed_before_session_drop_is_reclassified_and_mounted_once") || !precomputeSource.includes("fill_worker_terminal_resume_contention_returns_then_rearms_the_exact_owner") || !precomputeSource.includes("fill_worker_production_entry_guard_precedes_malformed_token_decode") || !fillSource.includes("retained_owner_census_advances_one_fixed_unit_and_rejects_collection_cap_plus_one") || !fillSource.includes("retained_owner_census_uses_fixed_backing_pages_not_pair_size_heuristics") || !geometrySource.includes("spatial_index_close_retains_bucket_values_and_retires_one_credited_owner_per_grant") || !precomputeSource.includes("fill_worker_mounted_terminal_pump_closes_completed_slot_and_rearms_capacity") || !precomputeSource.includes("fill_worker_early_fault_guard_terminalizes_and_deep_retirement_is_incremental") || !precomputeSource.includes("fill_worker_token_decode_advances_exactly_one_field_per_grant") || !precomputeSource.includes("fill_job_checkpoint_is_a_fixed_generation_token_not_a_whole_state_buffer")) failures.push("Puzzle fill semantic identity/cap/ABA/accounting/terminal/retirement fixtures are missing");
+  if (readStart < 0 || !readBridge.includes("let authority = registry.slots.get") || !readBridge.includes("let fill = authority.fill.as_ref()?.try_lock().ok()?") || readBridge.includes("authority.fill.clone()") || restoreStart < 0 || !restoreBridge.includes("self.engine.fill = None") || restoreBridge.includes("authority.fill.clone()") || sessionBridge.includes("self.engine.fill = registry") || sessionBridge.includes("authority.fill.clone()") || !precompute.includes("fn supersede_admitted_fill(&mut self)") || !precompute.includes("request_fill_envelope_terminal(request, FillEnvelopeTerminalReason::Closed)") || (precompute.match(/if self\.fill\.is_none\(\) \{\n\s+self\.rebuild_queue\(\);/g) ?? []).length < 2 || terminalPump.includes("self.engine.fill.take()")) failures.push("Puzzle fill admitted builder is not registry-exclusive across immutable reads, restore, replan, mesh refresh, and retained close");
+  if (!restoreBridge.includes("let Some(request) = decode_fill_envelope_request(checkpoint)") || !restoreBridge.includes("*current != request && live(current)") || !restoreBridge.includes("terminal.request != request && live(&terminal.request)") || !restoreBridge.includes("authority.request == request") || !restoreBridge.includes("!authority.checked_out.load(Ordering::Acquire)") || restoreBridge.indexOf("*current != request && live(current)") > restoreBridge.indexOf("self.engine.fill = None")) failures.push("Puzzle fill restore can overwrite a different live mounted/closing exact producer");
+  if (!precompute.includes("fn allocate_fill_identity(&mut self, advance_revision: bool)") || !precompute.includes("self.fill_revision.checked_add(1)?") || !precompute.includes("self.fill_generation.checked_add(1)?") || !precompute.includes("if revision == 0 || generation == 0") || precompute.includes("self.fill_revision.wrapping_add(1)") || precompute.includes("self.fill_generation.wrapping_add(1)") || !precompute.includes("self.request.generation == 0") || !precompute.includes("self.request.base_revision == 0") || !precompute.includes("registry.aggregate_bytes.checked_sub(authority.reserved_bytes)") || precompute.includes("registry.aggregate_bytes.saturating_sub(authority.reserved_bytes)")) failures.push("Puzzle fill semantic generation/revision or exact aggregate credit can wrap/reset instead of refusing exhaustion");
+  if (takeClosedStart < 0 || !takeClosedBridge.includes("FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Closed) | FillEnvelopePhase::Closing") || !sessionBridge.includes("FillEnvelopePhase::Terminal(_) | FillEnvelopePhase::Closing") || !precompute.includes("request_fill_envelope_terminal(&self.request, FillEnvelopeTerminalReason::Closed);\n        self.checked_out.store(false, Ordering::Release)")) failures.push("Puzzle fill interrupted Closing handle is not durably re-armed for the exact generation");
+  if (!fill.includes("struct FillBuilderRetirementCursor") || !fill.includes("enum FillRetiredOwner") || !fill.includes("fn release_vec_backing<T>") || !fill.includes("self.current = Some(FillRetiredOwner::PreviewState(value));") || !fill.includes("FillRetiredOwner::PreviewState(value) => retire_preview_state(value)") || !fill.includes("20 => retire_fixed_collection_backing(fill)") || !fill.includes("fill.placed_lookup.retire_backing()") || !fill.includes("|| fill.candidate_same.retire_backing()") || !fill.includes("self.placed_lookup.terminal_owners_empty()") || !fill.includes("self.candidate_same.terminal_owners_empty()") || !fill.includes("if !fill.terminal_owners_empty()") || !geometry.includes("retiring_key: Option<String>") || !geometry.includes("retiring_ids: Option<Vec<String>>") || !geometry.includes("self.retiring_ids = Some(ids);") || !geometry.includes("self.retiring_key = Some(key);") || !geometry.includes("if self.entries.retire_backing()") || !geometry.includes("if self.cells.retire_backing()") || !geometry.includes("if self.oversized.retire_backing()") || !geometry.includes("self.entries.terminal_owners_empty() && self.cells.terminal_owners_empty() && self.oversized.terminal_owners_empty()") || !geometry.includes("pub(crate) fn terminal_owners_empty(&self)") || !precompute.includes("authority.fill_retirement = Some(FillBuilderRetirementCursor::new(fill))") || !precompute.includes("FillBuilderRetirementCursor::retire_one")) failures.push("Puzzle fill terminal close can recursively or bulk-drop nested builders, actual fixed pages, seed vectors, or spatial buckets");
+  if (!precomputeSource.includes("fill_worker_token_reopens_the_exact_retained_owner_and_drives_one_turn") || !precomputeSource.includes("fill_worker_fixed_cap_rejects_plus_one_and_reused_slot_rejects_aba") || !precomputeSource.includes("fill_worker_item_and_byte_plus_one_reject_before_owner_transfer") || !precomputeSource.includes("fill_worker_actual_owner_census_rejects_cap_plus_one_with_exact_handback") || !precomputeSource.includes("fill_worker_session_drop_during_measurement_mounts_the_same_terminal_once") || !precomputeSource.includes("fill_worker_completed_before_session_drop_is_reclassified_and_mounted_once") || !precomputeSource.includes("fill_worker_admitted_fixed_pages_survive_replan_and_mesh_supersession_until_retained_close") || !precomputeSource.includes("fill_worker_session_drop_during_partial_close_rearms_the_same_cursor_once") || !precomputeSource.includes("fill_worker_terminal_resume_contention_returns_then_rearms_the_exact_owner") || !precomputeSource.includes("fill_worker_cross_generation_restore_rejects_measuring_and_every_live_terminal_phase") || !precomputeSource.includes("fill_worker_cross_generation_restore_preserves_dropped_closing_handle_and_zero_credit") || !precomputeSource.includes("fill_worker_malformed_token_faults_exact_raw_owner_not_wrong_context_owner") || !precomputeSource.includes("fill_worker_wrong_context_identity_faults_decoded_producer_before_drive") || !precomputeSource.includes("fill_worker_stale_envelope_identity_is_rejected_without_faulting_replacement") || !precomputeSource.includes("fill_operation_identity_checked_nonzero_exhaustion_permanently_refuses_aba") || !precomputeSource.includes("fill_worker_zero_semantic_counters_and_exhausted_stale_tokens_never_alias") || !fillSource.includes("retained_owner_census_advances_one_fixed_unit_and_rejects_collection_cap_plus_one") || !fillSource.includes("retained_owner_census_credits_each_actual_fixed_slot_page_not_a_layout_heuristic") || !fillSource.includes("all_fill_fixed_collections_store_max_entries_in_the_credited_page_and_return_plus_one") || !fillSource.includes("occupied_fixed_slot_returns_the_distinct_input_owners_without_replacing_stored_owners") || !geometrySource.includes("spatial_index_close_retains_bucket_values_and_retires_one_credited_owner_per_grant") || !geometrySource.includes("spatial_fixed_collections_use_the_credited_pages_and_return_identical_plus_one_owners") || !precomputeSource.includes("fill_worker_mounted_terminal_pump_closes_completed_slot_and_rearms_capacity") || !precomputeSource.includes("fill_worker_early_fault_guard_terminalizes_and_deep_retirement_is_incremental") || !precomputeSource.includes("fill_worker_token_decode_advances_exactly_one_field_per_grant") || !precomputeSource.includes("fill_job_checkpoint_is_a_fixed_generation_token_not_a_whole_state_buffer")) failures.push("Puzzle fill semantic identity/cap/ABA/accounting/terminal/retirement fixtures are missing");
   if ((action.match(/\.enqueue_fill_job\(\)/g) ?? []).length !== 2) failures.push("Puzzle fill retained envelope reachability is not exactly the two audited UI callers");
   if (!fill.includes("StepOutcome::PreviewReady(Vec::new())") || !fill.includes("StepOutcome::Complete(CommitCandidate { state: Vec::new(), output: Vec::new() })")) failures.push("Puzzle FillBuilder still materializes a whole preview/result envelope inside one worker grant");
   return failures;
@@ -5453,18 +5803,36 @@ function interactivityPuzzleFillEnvelopeSelfTests(repoRoot: string): void {
     ["clone-before-admission", precompute.replace("let fill = self.engine.fill.take()?", "let fill = self.engine.fill.as_ref()?.clone()"), fill, geometry, action],
     ["whole-serde", precompute.replace("let job = semio_framework_job::allocate_operation_id().0;", "let _whole = serde_json::to_vec(&self.fill_progress());\n        let job = semio_framework_job::allocate_operation_id().0;"), fill, geometry, action],
     ["whole-token-decode", precompute.replace("self.field += 1", "self.field = 6"), fill, geometry, action],
-    ["guard-after-decode", precompute.replace("Self { terminal_guard: FillEnvelopeWorkerFaultGuard::new(job), token: FillEnvelopeTokenCursor::new(input) }", "Self { token: FillEnvelopeTokenCursor::new(input), terminal_guard: FillEnvelopeWorkerFaultGuard::new(job) }"), fill, geometry, action],
+    ["guard-after-decode", precompute.replace("if let Err(error) = admitted_cursor.bind(&admitted_request)", "if false"), fill, geometry, action],
+    ["wrong-context-owner", precompute.replace("request.job != self.context_job", "false"), fill, geometry, action],
+    ["stale-envelope-owner", precompute.replace('return Err("fill worker envelope owner is stale");', "return Ok(());"), fill, geometry, action],
     ["missing-base-freshness", precompute.replace(" || fill.operation.base_revision.0 != request.base_revision", ""), fill, geometry, action],
     ["two-drive-opportunities", precompute.replace("let outcome = drive_step(", "let _extra = drive_step(\n        &mut *fill, \"extra\", operation.operation, operation.generation, InteractiveStage::BackgroundStep, StepBudget::new(1, 1), cancel.clone(), default_now_ms, &mut authority.preview_sequence);\n    let outcome = drive_step("), fill, geometry, action],
     ["missing-terminal-take", precompute.replace("pub fn take_terminal_fill_job", "fn hidden_terminal_fill_job"), fill, geometry, action],
     ["missing-drop-handback", precompute.replace("impl Drop for FillEnvelopeTerminalHandle", "impl FillEnvelopeTerminalHandle"), fill, geometry, action],
+    ["restore-mutable-alias", precompute.replace("self.engine.fill = None;", "self.engine.fill = authority.fill.clone();"), fill, geometry, action],
+    ["restore-cross-generation-clobber", precompute.replace("*current != request && live(current)", "false"), fill, geometry, action],
+    ["post-admission-mutable-alias", precompute.replace("self.fill_job = Some(request.clone());", "self.engine.fill = registry.authority_mut(&request).and_then(|authority| authority.fill.clone());\n            self.fill_job = Some(request.clone());"), fill, geometry, action],
+    ["close-drops-replacement", precompute.replace("let outcome = self.fill_terminal.as_mut().map(FillEnvelopeTerminalHandle::close_step);", "self.engine.fill.take();\n        let outcome = self.fill_terminal.as_mut().map(FillEnvelopeTerminalHandle::close_step);"), fill, geometry, action],
+    ["closing-not-reclaimable", precompute.replace("FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Closed) | FillEnvelopePhase::Closing) && authority.checked_out", "FillEnvelopePhase::Terminal(FillEnvelopeTerminalReason::Closed)) && authority.checked_out"), fill, geometry, action],
+    ["closing-drop-lost-wake", precompute.replace("request_fill_envelope_terminal(&self.request, FillEnvelopeTerminalReason::Closed);\n        self.checked_out.store(false, Ordering::Release)", "request_fill_envelope_terminal(&self.request, FillEnvelopeTerminalReason::Closed);"), fill, geometry, action],
+    ["wrapping-operation-generation", precompute.replace("self.fill_generation.checked_add(1)?", "self.fill_generation.wrapping_add(1)"), fill, geometry, action],
+    ["wrapping-operation-revision", precompute.replace("self.fill_revision.checked_add(1)?", "self.fill_revision.wrapping_add(1)"), fill, geometry, action],
+    ["zero-operation-generation", precompute.replace("self.request.generation == 0", "false"), fill, geometry, action],
+    ["inexact-credit-release", precompute.replace("registry.aggregate_bytes.checked_sub(authority.reserved_bytes)", "registry.aggregate_bytes.saturating_sub(authority.reserved_bytes)"), fill, geometry, action],
     ["missing-identity-fixture", precompute.replace("fill_worker_token_reopens_the_exact_retained_owner_and_drives_one_turn", "fill_worker_token_smoke"), fill, geometry, action],
     ["whole-preview", precompute, fill.replace("StepOutcome::PreviewReady(Vec::new())", "StepOutcome::PreviewReady(serde_json::to_vec(&self.preview).unwrap())"), geometry, action],
     ["lost-ui-caller", precompute, fill, geometry, action.replace("let spawn = precompute.enqueue_fill_job();", "let spawn = None;")],
     ["literal-max-credit", precompute.replace("registry.finish_measurement(&admission.request, credit.items, credit.bytes)", "registry.finish_measurement(&admission.request, FILL_ENVELOPE_MAX_ITEMS, FILL_ENVELOPE_MAX_BYTES)"), fill, geometry, action],
     ["nested-cap", precompute, fill.replace("FILL_BUILDER_NESTED_ITEMS: usize = 32", "FILL_BUILDER_NESTED_ITEMS: usize = 33"), geometry, action],
     ["pair-size-backing-heuristic", precompute, fill.replace("(occupied <= FILL_BUILDER_NESTED_ITEMS).then_some(FillBuilderOwnerCredit::default())", "(occupied <= FILL_BUILDER_NESTED_ITEMS).then_some(FillBuilderOwnerCredit { items: occupied, bytes: occupied * std::mem::size_of::<(String, usize)>() })"), geometry, action],
-    ["missing-fixed-backing-census", precompute, fill.replace("fill.collection_backings.pages.get(self.index).is_some_and(Option::is_some)", "false"), geometry, action],
+    ["decorative-fixed-page", precompute, fill, geometry.replace("page: Option<Box<[Option<(K, V)>; N]>>", "page: Option<Box<[u8; FIXED_OWNER_PAGE_BYTES]>>"), action],
+    ["standard-map-backing", precompute, fill.replace("placed_lookup: FixedOwnerMap<String, usize>", "placed_lookup: BTreeMap<String, usize>"), geometry, action],
+    ["fixed-slot-cap-plus-one", precompute, fill, geometry.replace("FIXED_OWNER_SLOTS: usize = 32", "FIXED_OWNER_SLOTS: usize = 33"), action],
+    ["missing-fixed-backing-census", precompute, fill.replace("fill.placed_lookup.backing_credit()", "None"), geometry, action],
+    ["occupied-input-drop", precompute, fill, geometry.replace("return Ok(FixedOwnerMapInsert::Occupied { input_key: key, input_value: value });", "drop((key, value)); return Ok(FixedOwnerMapInsert::Inserted);"), action],
+    ["value-only-remove", precompute, fill, geometry.replace("pub(crate) fn remove_entry", "pub(crate) fn remove"), action],
+    ["fixed-page-clone", precompute, fill, geometry.replace("#[derive(Debug)]\npub(crate) struct FixedOwnerMap", "#[derive(Clone, Debug)]\npub(crate) struct FixedOwnerMap"), action],
     ["whole-field-census", precompute, fill.replace("match fill.candidate_seen.iter().nth(self.index) {", "let _whole = fill.candidate_seen.iter().all(|value| !value.is_empty());\n            match fill.candidate_seen.iter().nth(self.index) {"), geometry, action],
     ["unmounted-terminal-pump", precompute.replace("if self.pump_fill_terminal_step()", "if false"), fill, geometry, action],
     ["lossy-terminal-lock", precompute.replace("request_fill_envelope_terminal(request, reason);", "let Ok(_registry) = fill_envelope_registry().try_lock() else { return; };"), fill, geometry, action],
@@ -5472,12 +5840,22 @@ function interactivityPuzzleFillEnvelopeSelfTests(repoRoot: string): void {
     ["bulk-preview-drop", precompute, fill.replace("self.current = Some(FillRetiredOwner::PreviewState(value));", "self.current = Some(FillRetiredOwner::String(value.target_vortex_full_id));"), geometry, action],
     ["missing-terminal-empty-witness", precompute, fill.replace("if !fill.terminal_owners_empty()", "if false"), geometry, action],
     ["bulk-spatial-bucket-drop", precompute, fill, geometry.replace("self.retiring_ids = Some(ids);", "drop(ids);"), action],
-    ["bulk-fill-backing-drop", precompute, fill.replace("19 => fill.collection_backings.retire_one(),", "19 => { fill.collection_backings = FillBuilderCollectionBackings::new(); true },"), geometry, action],
-    ["bulk-spatial-backing-drop", precompute, fill, geometry.replace("if self.collection_backings.retire_one()", "if false"), action],
+    ["bulk-fill-backing-drop", precompute, fill.replace("20 => retire_fixed_collection_backing(fill)", "20 => { fill.placed_lookup.clear_for_rebuild_residual(); true }"), geometry, action],
+    ["bulk-spatial-backing-drop", precompute, fill, geometry.replace("if self.entries.retire_backing()", "if false"), action],
+    ["missing-fixed-page-fixture", precompute, fill.replace("all_fill_fixed_collections_store_max_entries_in_the_credited_page_and_return_plus_one", "fill_fixed_collection_smoke"), geometry, action],
+    ["missing-occupied-owner-fixture", precompute, fill.replace("occupied_fixed_slot_returns_the_distinct_input_owners_without_replacing_stored_owners", "fill_fixed_occupied_smoke"), geometry, action],
     ["bulk-builder-drop", precompute.replace("authority.fill_retirement = Some(FillBuilderRetirementCursor::new(fill))", "drop(fill)"), fill, geometry, action],
     ["missing-admission-drop-fixture", precompute.replace("fill_worker_session_drop_during_measurement_mounts_the_same_terminal_once", "fill_worker_admission_smoke"), fill, geometry, action],
     ["missing-complete-drop-fixture", precompute.replace("fill_worker_completed_before_session_drop_is_reclassified_and_mounted_once", "fill_worker_complete_smoke"), fill, geometry, action],
-    ["missing-malformed-guard-fixture", precompute.replace("fill_worker_production_entry_guard_precedes_malformed_token_decode", "fill_worker_decode_smoke"), fill, geometry, action],
+    ["missing-exclusive-supersession-fixture", precompute.replace("fill_worker_admitted_fixed_pages_survive_replan_and_mesh_supersession_until_retained_close", "fill_worker_supersession_smoke"), fill, geometry, action],
+    ["missing-closing-rearm-fixture", precompute.replace("fill_worker_session_drop_during_partial_close_rearms_the_same_cursor_once", "fill_worker_partial_close_smoke"), fill, geometry, action],
+    ["missing-cross-generation-phase-fixture", precompute.replace("fill_worker_cross_generation_restore_rejects_measuring_and_every_live_terminal_phase", "fill_worker_cross_generation_smoke"), fill, geometry, action],
+    ["missing-cross-generation-closing-fixture", precompute.replace("fill_worker_cross_generation_restore_preserves_dropped_closing_handle_and_zero_credit", "fill_worker_cross_generation_closing_smoke"), fill, geometry, action],
+    ["missing-malformed-guard-fixture", precompute.replace("fill_worker_malformed_token_faults_exact_raw_owner_not_wrong_context_owner", "fill_worker_decode_smoke"), fill, geometry, action],
+    ["missing-wrong-context-fixture", precompute.replace("fill_worker_wrong_context_identity_faults_decoded_producer_before_drive", "fill_worker_context_smoke"), fill, geometry, action],
+    ["missing-stale-identity-fixture", precompute.replace("fill_worker_stale_envelope_identity_is_rejected_without_faulting_replacement", "fill_worker_stale_smoke"), fill, geometry, action],
+    ["missing-exhaustion-fixture", precompute.replace("fill_operation_identity_checked_nonzero_exhaustion_permanently_refuses_aba", "fill_worker_exhaustion_smoke"), fill, geometry, action],
+    ["missing-zero-identity-fixture", precompute.replace("fill_worker_zero_semantic_counters_and_exhausted_stale_tokens_never_alias", "fill_worker_zero_identity_smoke"), fill, geometry, action],
     ["missing-deep-retirement-fixture", precompute.replace("fill_worker_early_fault_guard_terminalizes_and_deep_retirement_is_incremental", "fill_worker_fault_smoke"), fill, geometry, action],
   ];
   for (const [name, mutatedPrecompute, mutatedFill, mutatedGeometry, mutatedAction] of mutations) if (interactivityPuzzleFillEnvelopeFailures(mutatedPrecompute, mutatedFill, mutatedGeometry, mutatedAction).length === 0) throw new Error(`[verify interactivity] Puzzle fill envelope self-test ${name} was falsely accepted.`);

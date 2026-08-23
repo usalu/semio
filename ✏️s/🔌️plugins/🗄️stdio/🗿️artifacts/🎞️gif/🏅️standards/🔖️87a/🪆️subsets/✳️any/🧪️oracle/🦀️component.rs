@@ -90,7 +90,14 @@ mod live {
             Some(Json::Null) | None => None,
             Some(lct) => Some(palette_from_json(lct)?),
         };
-        let indices = json.array("indices").iter().map(|v| match v { Json::Number(n) => *n as u8, _ => 0 }).collect();
+        let indices = json
+            .array("indices")
+            .iter()
+            .map(|v| match v {
+                Json::Number(n) => *n as u8,
+                _ => 0,
+            })
+            .collect();
         Ok(OracleImage { left: num(json, "left").unwrap_or(0.0) as u16, top: num(json, "top").unwrap_or(0.0) as u16, width, height, interlaced: bool_field(json, "interlace").unwrap_or(false), palette, indices })
     }
 
@@ -101,7 +108,13 @@ mod live {
             ("width".to_string(), Json::Number(image.width as f64)),
             ("height".to_string(), Json::Number(image.height as f64)),
             ("interlace".to_string(), Json::Bool(image.interlaced)),
-            ("lct".to_string(), match &image.palette { Some(p) => palette_to_json(p), None => Json::Null }),
+            (
+                "lct".to_string(),
+                match &image.palette {
+                    Some(p) => palette_to_json(p),
+                    None => Json::Null,
+                },
+            ),
             ("indices".to_string(), Json::Array(image.indices.iter().map(|b| Json::Number(*b as f64)).collect())),
         ])
     }
@@ -112,7 +125,13 @@ mod live {
             Some(gct) => palette_from_json(gct)?,
         };
         let images = json.array("images").iter().map(image_from_json).collect::<Result<Vec<_>, _>>()?;
-        Ok(OracleDoc { width: num(json, "width").ok_or("snapshot missing width")? as u16, height: num(json, "height").ok_or("snapshot missing height")? as u16, gct, background_color_index: num(json, "backgroundColorIndex").unwrap_or(0.0) as u8, images })
+        Ok(OracleDoc {
+            width: num(json, "width").ok_or("snapshot missing width")? as u16,
+            height: num(json, "height").ok_or("snapshot missing height")? as u16,
+            gct,
+            background_color_index: num(json, "backgroundColorIndex").unwrap_or(0.0) as u8,
+            images,
+        })
     }
 
     fn doc_to_json(doc: &OracleDoc) -> Json {
@@ -152,7 +171,19 @@ mod live {
         {
             let mut encoder = gif::Encoder::new(&mut out, doc.width, doc.height, &doc.gct).map_err(|error| format!("independent writer failed on the header: {}", error))?;
             for image in &doc.images {
-                let frame = gif::Frame { delay: 0, dispose: gif::DisposalMethod::Any, transparent: None, needs_user_input: false, top: image.top, left: image.left, width: image.width, height: image.height, interlaced: image.interlaced, palette: image.palette.clone(), buffer: Cow::Borrowed(&image.indices) };
+                let frame = gif::Frame {
+                    delay: 0,
+                    dispose: gif::DisposalMethod::Any,
+                    transparent: None,
+                    needs_user_input: false,
+                    top: image.top,
+                    left: image.left,
+                    width: image.width,
+                    height: image.height,
+                    interlaced: image.interlaced,
+                    palette: image.palette.clone(),
+                    buffer: Cow::Borrowed(&image.indices),
+                };
                 encoder.write_frame(&frame).map_err(|error| format!("independent writer failed on an image: {}", error))?;
             }
         }
@@ -216,7 +247,14 @@ mod live {
             "set-image-pixels" => {
                 let index = num(params, "index").ok_or("set-image-pixels: missing index")? as usize;
                 if let Some(image) = doc.images.get_mut(index) {
-                    image.indices = params.array("indices").iter().map(|v| match v { Json::Number(n) => *n as u8, _ => 0 }).collect();
+                    image.indices = params
+                        .array("indices")
+                        .iter()
+                        .map(|v| match v {
+                            Json::Number(n) => *n as u8,
+                            _ => 0,
+                        })
+                        .collect();
                 }
             }
             "set-image-interlace" => {
@@ -286,7 +324,16 @@ mod live {
             "set-image-geometry" => {
                 let index = num(params, "index").ok_or("set-image-geometry: missing index")? as usize;
                 match original.images.get(index) {
-                    Some(image) => ("set-image-geometry", Json::Object(vec![("index".to_string(), Json::Number(index as f64)), ("left".to_string(), Json::Number(image.left as f64)), ("top".to_string(), Json::Number(image.top as f64)), ("width".to_string(), Json::Number(image.width as f64)), ("height".to_string(), Json::Number(image.height as f64))])),
+                    Some(image) => (
+                        "set-image-geometry",
+                        Json::Object(vec![
+                            ("index".to_string(), Json::Number(index as f64)),
+                            ("left".to_string(), Json::Number(image.left as f64)),
+                            ("top".to_string(), Json::Number(image.top as f64)),
+                            ("width".to_string(), Json::Number(image.width as f64)),
+                            ("height".to_string(), Json::Number(image.height as f64)),
+                        ]),
+                    ),
                     None => ("no-mutation", Json::Object(Vec::new())),
                 }
             }

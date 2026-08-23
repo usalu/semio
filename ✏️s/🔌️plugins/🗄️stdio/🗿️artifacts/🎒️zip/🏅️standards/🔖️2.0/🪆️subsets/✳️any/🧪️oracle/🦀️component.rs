@@ -83,7 +83,13 @@ mod live {
             ("comment".to_string(), Json::String(archive.comment.clone())),
             (
                 "entries".to_string(),
-                Json::Array(archive.entries.iter().map(|entry| Json::Object(vec![("name".to_string(), Json::String(entry.name.clone())), ("size".to_string(), Json::Number(entry.data.len() as f64)), ("contentDigest".to_string(), Json::String(digest(&entry.data)))])).collect()),
+                Json::Array(
+                    archive
+                        .entries
+                        .iter()
+                        .map(|entry| Json::Object(vec![("name".to_string(), Json::String(entry.name.clone())), ("size".to_string(), Json::Number(entry.data.len() as f64)), ("contentDigest".to_string(), Json::String(digest(&entry.data)))]))
+                        .collect(),
+                ),
             ),
         ])
     }

@@ -252,7 +252,11 @@ impl ReactorExecutor {
                 inner.live = inner.live.saturating_sub(1);
                 inner.free.push_back(index);
                 *cursor += 1;
-                if *cursor >= LOCAL_EXECUTOR_TASK_SLOTS { ReactorTaskStep::Complete } else { ReactorTaskStep::Pending { processed_units: 1, processed_bytes: 0 } }
+                if *cursor >= LOCAL_EXECUTOR_TASK_SLOTS {
+                    ReactorTaskStep::Complete
+                } else {
+                    ReactorTaskStep::Pending { processed_units: 1, processed_bytes: 0 }
+                }
             }
             ReactorTaskStep::Complete => {
                 slot.task = Some(task);
@@ -956,7 +960,11 @@ mod tests {
                 if budget.maximum_units == 0 || std::time::Instant::now() >= budget.deadline {
                     return ReactorTaskStep::Pending { processed_units: 0, processed_bytes: 0 };
                 }
-                if self.items.pop().is_some() { ReactorTaskStep::Pending { processed_units: 1, processed_bytes: 0 } } else { ReactorTaskStep::Complete }
+                if self.items.pop().is_some() {
+                    ReactorTaskStep::Pending { processed_units: 1, processed_bytes: 0 }
+                } else {
+                    ReactorTaskStep::Complete
+                }
             }
 
             fn terminal_is_empty(&self) -> bool {

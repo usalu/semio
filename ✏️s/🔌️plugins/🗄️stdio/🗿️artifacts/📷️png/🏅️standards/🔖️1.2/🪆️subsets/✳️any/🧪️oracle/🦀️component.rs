@@ -169,10 +169,16 @@ mod oracles {
                 palette.push(num_at(channels, index).unwrap_or(0.0) as u8);
             }
         }
-        encode_with(width, height, &rgba, move |encoder| {
-            encoder.set_palette(palette);
-            Ok(())
-        }, |_writer| Ok(()))
+        encode_with(
+            width,
+            height,
+            &rgba,
+            move |encoder| {
+                encoder.set_palette(palette);
+                Ok(())
+            },
+            |_writer| Ok(()),
+        )
     }
 
     /// 👁️ `tRNS` is structurally invalid alongside color type 6 (truecolor+alpha, §11.3.3) — this
@@ -187,22 +193,34 @@ mod oracles {
     fn forward_set_gamma(input: &[u8], params: &Json) -> Result<Vec<u8>, String> {
         let (width, height, rgba) = decode_rgba(input)?;
         let gamma = num(params, "gama").map(|value| value as u32);
-        encode_with(width, height, &rgba, move |encoder| {
-            if let Some(value) = gamma {
-                encoder.set_source_gamma(png::ScaledFloat::from_scaled(value));
-            }
-            Ok(())
-        }, |_writer| Ok(()))
+        encode_with(
+            width,
+            height,
+            &rgba,
+            move |encoder| {
+                if let Some(value) = gamma {
+                    encoder.set_source_gamma(png::ScaledFloat::from_scaled(value));
+                }
+                Ok(())
+            },
+            |_writer| Ok(()),
+        )
     }
 
     fn forward_set_chromaticities(input: &[u8], params: &Json) -> Result<Vec<u8>, String> {
         let (width, height, rgba) = decode_rgba(input)?;
         let scaled = |key: &str| png::ScaledFloat::from_scaled(num(params, key).unwrap_or(0.0) as u32);
         let chromaticities = png::SourceChromaticities { white: (scaled("whiteX"), scaled("whiteY")), red: (scaled("redX"), scaled("redY")), green: (scaled("greenX"), scaled("greenY")), blue: (scaled("blueX"), scaled("blueY")) };
-        encode_with(width, height, &rgba, move |encoder| {
-            encoder.set_source_chromaticities(chromaticities);
-            Ok(())
-        }, |_writer| Ok(()))
+        encode_with(
+            width,
+            height,
+            &rgba,
+            move |encoder| {
+                encoder.set_source_chromaticities(chromaticities);
+                Ok(())
+            },
+            |_writer| Ok(()),
+        )
     }
 
     fn forward_set_srgb_intent(input: &[u8], params: &Json) -> Result<Vec<u8>, String> {
@@ -213,19 +231,32 @@ mod oracles {
             Some("absolute-colorimetric") => png::SrgbRenderingIntent::AbsoluteColorimetric,
             _ => png::SrgbRenderingIntent::Perceptual,
         };
-        encode_with(width, height, &rgba, move |encoder| {
-            encoder.set_source_srgb(intent);
-            Ok(())
-        }, |_writer| Ok(()))
+        encode_with(
+            width,
+            height,
+            &rgba,
+            move |encoder| {
+                encoder.set_source_srgb(intent);
+                Ok(())
+            },
+            |_writer| Ok(()),
+        )
     }
 
     fn forward_set_physical_dims(input: &[u8], params: &Json) -> Result<Vec<u8>, String> {
         let (width, height, rgba) = decode_rgba(input)?;
-        let dims = png::PixelDimensions { xppu: num(params, "ppuX").unwrap_or(0.0) as u32, yppu: num(params, "ppuY").unwrap_or(0.0) as u32, unit: if as_bool(params, "unitIsMeter").unwrap_or(false) { png::Unit::Meter } else { png::Unit::Unspecified } };
-        encode_with(width, height, &rgba, move |encoder| {
-            encoder.set_pixel_dims(Some(dims));
-            Ok(())
-        }, |_writer| Ok(()))
+        let dims =
+            png::PixelDimensions { xppu: num(params, "ppuX").unwrap_or(0.0) as u32, yppu: num(params, "ppuY").unwrap_or(0.0) as u32, unit: if as_bool(params, "unitIsMeter").unwrap_or(false) { png::Unit::Meter } else { png::Unit::Unspecified } };
+        encode_with(
+            width,
+            height,
+            &rgba,
+            move |encoder| {
+                encoder.set_pixel_dims(Some(dims));
+                Ok(())
+            },
+            |_writer| Ok(()),
+        )
     }
 
     /// 🕰️ `tIME` has no typed setter on the crate's `Encoder` (and isn't parsed back into `Info`

@@ -57,13 +57,25 @@ pub use derived_composition::*;
 // multi-IFD file's later IFDs — e.g. thumbnails — keep their real tags but don't get a second
 // decoded raster).
 //
-// **Encode** stays honestly narrower (🚫 `EncodeScopeNote`): it always emits a SINGLE IFD (any
-// IFDs beyond the first aren't re-serialized) with the baseline strip/geometry tags freshly
-// computed from `pixels`, plus every OTHER tag `ifds[0]` carries verbatim (so a caller's
-// `SetTag`-set metadata genuinely round-trips) — `Compression`/`PhotometricInterpretation`/
-// `BitsPerSample`/chunky/single-strip layout are always canonicalized, exactly like png's encoder
-// canonicalizes color type/bit depth/interlace. `byte_order` itself DOES round-trip. `TiffEngine`
-// (zero construction sites) and the dead `register`/`register_pilot_languages`/
+// **Encode** (ticket 26/08/23/END-TO-END-TESTING-REFACTOR, wave 8) walks the WHOLE `ifds` vector
+// and writes a REAL `next IFD offset` chain (🚫 `MultiIfdEncodeScopeNote`): every IFD `snap.ifds`
+// carries is re-serialized, in order, each ending with a 4-byte offset to the next directory and
+// the last with `0` — mirroring `decode_tiff`'s own chain walk exactly, so `InsertIfd`/`RemoveIfd`
+// are genuinely observable in the bytes, not just in memory. `ifds[0]` alone gets the baseline
+// strip/geometry tags freshly computed from `pixels` (`Compression`/`PhotometricInterpretation`/
+// `BitsPerSample`/chunky/single-strip layout canonicalized, exactly like png's encoder
+// canonicalizes color type/bit depth/interlace); every OTHER tag `ifds[0]` carries verbatim (so a
+// caller's `SetTag`-set metadata genuinely round-trips). `byte_order` itself DOES round-trip.
+// `ifds[1..]` carry every entry verbatim EXCEPT `StripOffsets`/`StripByteCounts`: `TiffSnapshot`
+// has exactly one `pixels: Vec<u8>` field, scoped to IFD 0 (see that field's own doc comment), so
+// this codec has no real strip payload to back a second IFD's raster with — re-emitting a stale
+// offset from whatever file the snapshot was originally decoded from would point at meaningless
+// (or out-of-range) bytes in the newly written file. Rather than fabricate a pointer to nothing,
+// the two layout-dependent pointer tags are honestly omitted for every IFD beyond the first; every
+// other tag (incl. a full baseline set like `ImageWidth`/`BitsPerSample`/…) still round-trips
+// exactly. A schema that wants byte-faithful secondary-IFD rasters would need a per-IFD raw-strip
+// field this snapshot does not have — flagged, not silently narrowed. `TiffEngine` (zero
+// construction sites) and the dead `register`/`register_pilot_languages`/
 // `register_artifact_inferences` cluster (superseded by `declaration()` in the artifact root,
 // zero real callers) were deleted outright. `empty_tiff_snapshot`/`demo_tiff_snapshot` moved to
 // `../🧬️schema`.
@@ -484,10 +496,12 @@ fn out_of_line_size(entries: &[TiffTag], bo: TiffByteOrder) -> usize {
         .sum()
 }
 
-/// 🚫 EncodeScopeNote (see module doc): single-IFD output, baseline strip/geometry tags
-/// recomputed fresh from `pixels`, every OTHER `ifds[0]` tag carried over verbatim so
-/// `SetTag`-set metadata round-trips. `byte_order` is honored (real round-trip, unlike the
-/// pre-migration engine which always emitted little-endian).
+/// 🚫 MultiIfdEncodeScopeNote (see module doc): writes the REAL whole-`ifds` chain — `ifds[0]`'s
+/// baseline strip/geometry tags recomputed fresh from `pixels`, every OTHER `ifds[0]` tag carried
+/// over verbatim so `SetTag`-set metadata round-trips, and `ifds[1..]` carried verbatim minus
+/// `StripOffsets`/`StripByteCounts` (this codec has no per-IFD raw-strip storage beyond IFD 0 —
+/// see module doc). `byte_order` is honored (real round-trip, unlike the pre-migration engine
+/// which always emitted little-endian).
 fn encode_tiff_with(snap: &TiffSnapshot, packbits: bool) -> Result<Vec<u8>, String> {
     let width = snap.width().ok_or("tiff: encode requires an ImageWidth tag in ifds[0] (e.g. via SetTag)")?;
     let height = snap.height().ok_or("tiff: encode requires an ImageLength tag in ifds[0] (e.g. via SetTag)")?;
@@ -498,23 +512,43 @@ fn encode_tiff_with(snap: &TiffSnapshot, packbits: bool) -> Result<Vec<u8>, Stri
     let strip_bytes = if packbits { packbits_encode(&rgb) } else { rgb };
     let compression: u32 = if packbits { 32773 } else { 1 };
 
+    // IFD 0: baseline strip/geometry tags recomputed fresh from `pixels`, every other tag
+    // carried over verbatim (unchanged from the pre-multi-IFD behavior).
     let carried: Vec<TiffTag> = snap.ifds.first().map(|ifd| ifd.entries.iter().filter(|t| !CORE_STRIP_TAGS.contains(&t.tag)).cloned().collect()).unwrap_or_default();
-    let mut entries = carried;
-    entries.push(TiffTag { tag: TAG_IMAGE_WIDTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![width]) });
-    entries.push(TiffTag { tag: TAG_IMAGE_LENGTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![height]) });
-    entries.push(TiffTag { tag: TAG_BITS_PER_SAMPLE, kind: TiffFieldType::Short, values: TiffValues::Short(vec![8]) });
-    entries.push(TiffTag { tag: TAG_COMPRESSION, kind: TiffFieldType::Short, values: TiffValues::Short(vec![compression as u16]) });
-    entries.push(TiffTag { tag: TAG_PHOTOMETRIC, kind: TiffFieldType::Short, values: TiffValues::Short(vec![2]) });
-    entries.push(TiffTag { tag: TAG_SAMPLES_PER_PIXEL, kind: TiffFieldType::Short, values: TiffValues::Short(vec![3]) });
-    entries.push(TiffTag { tag: TAG_ROWS_PER_STRIP, kind: TiffFieldType::Long, values: TiffValues::Long(vec![height]) });
-    entries.push(TiffTag { tag: TAG_STRIP_BYTE_COUNTS, kind: TiffFieldType::Long, values: TiffValues::Long(vec![strip_bytes.len() as u32]) });
-    entries.push(TiffTag { tag: TAG_STRIP_OFFSETS, kind: TiffFieldType::Long, values: TiffValues::Long(vec![0]) }); // placeholder, patched below
-    entries.sort_by_key(|t| t.tag);
+    let mut ifd0 = carried;
+    ifd0.push(TiffTag { tag: TAG_IMAGE_WIDTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![width]) });
+    ifd0.push(TiffTag { tag: TAG_IMAGE_LENGTH, kind: TiffFieldType::Long, values: TiffValues::Long(vec![height]) });
+    ifd0.push(TiffTag { tag: TAG_BITS_PER_SAMPLE, kind: TiffFieldType::Short, values: TiffValues::Short(vec![8]) });
+    ifd0.push(TiffTag { tag: TAG_COMPRESSION, kind: TiffFieldType::Short, values: TiffValues::Short(vec![compression as u16]) });
+    ifd0.push(TiffTag { tag: TAG_PHOTOMETRIC, kind: TiffFieldType::Short, values: TiffValues::Short(vec![2]) });
+    ifd0.push(TiffTag { tag: TAG_SAMPLES_PER_PIXEL, kind: TiffFieldType::Short, values: TiffValues::Short(vec![3]) });
+    ifd0.push(TiffTag { tag: TAG_ROWS_PER_STRIP, kind: TiffFieldType::Long, values: TiffValues::Long(vec![height]) });
+    ifd0.push(TiffTag { tag: TAG_STRIP_BYTE_COUNTS, kind: TiffFieldType::Long, values: TiffValues::Long(vec![strip_bytes.len() as u32]) });
+    ifd0.push(TiffTag { tag: TAG_STRIP_OFFSETS, kind: TiffFieldType::Long, values: TiffValues::Long(vec![0]) }); // placeholder, patched below
+    ifd0.sort_by_key(|t| t.tag);
 
-    let dir_offset = 8usize;
-    let out_of_line_start = dir_offset + dir_size(entries.len());
-    let pixel_data_offset = out_of_line_start + out_of_line_size(&entries, snap.byte_order);
-    if let Some(t) = entries.iter_mut().find(|t| t.tag == TAG_STRIP_OFFSETS) {
+    // IFD 1..N: carried verbatim — every entry the snapshot holds for that IFD, minus the two
+    // layout-dependent pointer tags this codec cannot faithfully back with real strip bytes for
+    // anything beyond IFD 0 (see module doc's `MultiIfdEncodeScopeNote`).
+    let mut entries_per_ifd: Vec<Vec<TiffTag>> = Vec::with_capacity(snap.ifds.len().max(1));
+    entries_per_ifd.push(ifd0);
+    for ifd in snap.ifds.iter().skip(1) {
+        let mut entries: Vec<TiffTag> = ifd.entries.iter().filter(|t| t.tag != TAG_STRIP_OFFSETS && t.tag != TAG_STRIP_BYTE_COUNTS).cloned().collect();
+        entries.sort_by_key(|t| t.tag); // TIFF6 §2: entries "must be sorted in ascending order by Tag".
+        entries_per_ifd.push(entries);
+    }
+
+    // Layout pass: every IFD's directory + its own out-of-line value block, back to back
+    // (mirroring `decode_tiff`'s own chain — each directory ends with a 4-byte next-IFD offset,
+    // the last with 0), THEN the single real pixel strip (IFD 0's) appended after all of them.
+    let mut cursor = 8usize;
+    let mut dir_offsets = Vec::with_capacity(entries_per_ifd.len());
+    for entries in &entries_per_ifd {
+        dir_offsets.push(cursor);
+        cursor += dir_size(entries.len()) + out_of_line_size(entries, snap.byte_order);
+    }
+    let pixel_data_offset = cursor;
+    if let Some(t) = entries_per_ifd[0].iter_mut().find(|t| t.tag == TAG_STRIP_OFFSETS) {
         t.values = TiffValues::Long(vec![pixel_data_offset as u32]); // Long/count1 stays inline: doesn't move the layout.
     }
 
@@ -524,30 +558,36 @@ fn encode_tiff_with(snap: &TiffSnapshot, packbits: bool) -> Result<Vec<u8>, Stri
         TiffByteOrder::BigEndian => out.extend_from_slice(b"MM"),
     }
     write_u16(&mut out, 42, snap.byte_order);
-    write_u32(&mut out, dir_offset as u32, snap.byte_order);
-    write_u16(&mut out, entries.len() as u16, snap.byte_order);
-    let mut cursor = out_of_line_start;
-    for t in &entries {
-        write_u16(&mut out, t.tag, snap.byte_order);
-        write_u16(&mut out, t.kind.to_u16(), snap.byte_order);
-        write_u32(&mut out, t.values.count(), snap.byte_order);
-        let vb = value_bytes(&t.values, snap.byte_order);
-        if vb.len() <= 4 {
-            let mut field = [0u8; 4];
-            field[..vb.len()].copy_from_slice(&vb);
-            out.extend_from_slice(&field);
-        } else {
-            write_u32(&mut out, cursor as u32, snap.byte_order);
-            cursor += vb.len() + (vb.len() % 2);
+    write_u32(&mut out, 8, snap.byte_order); // first IFD offset
+
+    for (i, entries) in entries_per_ifd.iter().enumerate() {
+        debug_assert_eq!(out.len(), dir_offsets[i], "computed IFD layout must match actual bytes written");
+        write_u16(&mut out, entries.len() as u16, snap.byte_order);
+        let out_of_line_start = dir_offsets[i] + dir_size(entries.len());
+        let mut oo_cursor = out_of_line_start;
+        for t in entries {
+            write_u16(&mut out, t.tag, snap.byte_order);
+            write_u16(&mut out, t.kind.to_u16(), snap.byte_order);
+            write_u32(&mut out, t.values.count(), snap.byte_order);
+            let vb = value_bytes(&t.values, snap.byte_order);
+            if vb.len() <= 4 {
+                let mut field = [0u8; 4];
+                field[..vb.len()].copy_from_slice(&vb);
+                out.extend_from_slice(&field);
+            } else {
+                write_u32(&mut out, oo_cursor as u32, snap.byte_order);
+                oo_cursor += vb.len() + (vb.len() % 2);
+            }
         }
-    }
-    write_u32(&mut out, 0, snap.byte_order); // next IFD offset: none (single-IFD encode).
-    for t in &entries {
-        let vb = value_bytes(&t.values, snap.byte_order);
-        if vb.len() > 4 {
-            out.extend_from_slice(&vb);
-            if vb.len() % 2 == 1 {
-                out.push(0);
+        let next_ifd_offset = if i + 1 < dir_offsets.len() { dir_offsets[i + 1] as u32 } else { 0 };
+        write_u32(&mut out, next_ifd_offset, snap.byte_order);
+        for t in entries {
+            let vb = value_bytes(&t.values, snap.byte_order);
+            if vb.len() > 4 {
+                out.extend_from_slice(&vb);
+                if vb.len() % 2 == 1 {
+                    out.push(0);
+                }
             }
         }
     }
@@ -556,8 +596,8 @@ fn encode_tiff_with(snap: &TiffSnapshot, packbits: bool) -> Result<Vec<u8>, Stri
     Ok(out)
 }
 
-/// 🚫 EncodeScopeNote: see `encode_tiff_with`. Uncompressed (`Compression` 1) variant — the
-/// historical default kept so `print_dsl`/`encode_pack_with` and the io export serializer
+/// 🚫 MultiIfdEncodeScopeNote: see `encode_tiff_with`. Uncompressed (`Compression` 1) variant —
+/// the historical default kept so `print_dsl`/`encode_pack_with` and the io export serializer
 /// (which both call this exact function) are unaffected.
 pub fn encode_tiff(snap: &TiffSnapshot) -> Result<Vec<u8>, String> {
     encode_tiff_with(snap, false)
@@ -689,6 +729,50 @@ mod tests {
         let encoded = encode_tiff(&snap).expect("encode");
         let decoded = decode_tiff(&encoded).expect("decode");
         assert_eq!(decoded.tag(296).expect("ResolutionUnit must survive").values, TiffValues::Short(vec![2]));
+    }
+
+    /// 🔬 Real multi-IFD encode: a genuinely two-IFD snapshot round-trips through
+    /// `encode_tiff`/`decode_tiff` with BOTH directories intact — the `next IFD offset` chain
+    /// `decode_tiff` walks is actually written, not dropped, and IFD 1's own non-strip tags
+    /// survive verbatim even though it carries no backing pixel data.
+    #[semio_framework_async_macros::async_test]
+    async fn multi_ifd_round_trip_preserves_every_ifd() {
+        let (w, h) = (2u32, 2u32);
+        let rgba = vec![7u8; (w * h * 4) as usize];
+        let ifd1 = TiffIfd { entries: vec![TiffTag { tag: 270, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("second page".into()) }] };
+        let snap = TiffSnapshot { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: TiffByteOrder::LittleEndian, ifds: vec![ifd0_snapshot(w, h), ifd1], pixels: rgba.clone() };
+        let encoded = encode_tiff(&snap).expect("encode multi-ifd");
+        let decoded = decode_tiff(&encoded).expect("decode multi-ifd");
+        assert_eq!(decoded.ifds.len(), 2, "both IFDs must survive the real chain");
+        assert_eq!(decoded.pixels, rgba, "IFD 0's raster must be unaffected by a second IFD existing");
+        let second = decoded.ifds[1].entries.iter().find(|t| t.tag == 270).expect("IFD 1's own tag must survive");
+        assert_eq!(second.values, TiffValues::Ascii("second page".into()));
+    }
+
+    /// 🔬 `InsertIfd`/`RemoveIfd` genuinely observable THROUGH THE CODEC, not merely in the
+    /// in-memory `TiffSnapshot`: apply the mutation, encode to real bytes, decode those bytes back
+    /// with the independent `decode_tiff` chain walk, and see the directory actually appear/vanish.
+    #[semio_framework_async_macros::async_test]
+    async fn insert_ifd_and_remove_ifd_are_observable_through_the_codec() {
+        use crate::artifacts::tiff::schema::mutations::apply_tiff_mutation;
+        use crate::artifacts::tiff::TiffMutation;
+
+        let (w, h) = (2u32, 2u32);
+        let rgba = vec![3u8; (w * h * 4) as usize];
+        let base = TiffSnapshot { schema: STDIO_TIFF_DOCUMENT_SCHEMA.into(), byte_order: TiffByteOrder::LittleEndian, ifds: vec![ifd0_snapshot(w, h)], pixels: rgba };
+        let mut snapshot = decode_tiff(&encode_tiff(&base).expect("encode base")).expect("decode base");
+        assert_eq!(snapshot.ifds.len(), 1);
+
+        let inserted = TiffIfd { entries: vec![TiffTag { tag: 270, kind: TiffFieldType::Ascii, values: TiffValues::Ascii("inserted page".into()) }] };
+        apply_tiff_mutation(&mut snapshot, &TiffMutation::InsertIfd { index: 1, ifd: inserted });
+        let after_insert = decode_tiff(&encode_tiff(&snapshot).expect("encode after insert")).expect("decode after insert");
+        assert_eq!(after_insert.ifds.len(), 2, "InsertIfd must add a real, decodable second directory");
+        let tag = after_insert.ifds[1].entries.iter().find(|t| t.tag == 270).expect("inserted IFD's tag must survive the codec");
+        assert_eq!(tag.values, TiffValues::Ascii("inserted page".into()));
+
+        apply_tiff_mutation(&mut snapshot, &TiffMutation::RemoveIfd { index: 1 });
+        let after_remove = decode_tiff(&encode_tiff(&snapshot).expect("encode after remove")).expect("decode after remove");
+        assert_eq!(after_remove.ifds.len(), 1, "RemoveIfd must genuinely drop the directory from the encoded chain");
     }
 
     #[semio_framework_async_macros::async_test]

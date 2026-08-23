@@ -38,6 +38,60 @@ pub mod mesh;
 #[path = "."]
 pub mod artifacts {
     #[path = "."]
+    pub mod avi {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v1_0 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod bcf {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v2_1 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod binary {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v_raw {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
     pub mod bmp {
         #[path = "."]
         pub mod standards {
@@ -92,6 +146,54 @@ pub mod artifacts {
         }
     }
     #[path = "."]
+    pub mod docx {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v_ecma_376 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod dwg {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v_ac1018 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod v_ac1024 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
     pub mod dxf {
         #[path = "."]
         pub mod standards {
@@ -102,6 +204,24 @@ pub mod artifacts {
                     #[path = "."]
                     pub mod any {
                         #[path = "../../../🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod epw {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v_energyplus {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                     }
@@ -150,6 +270,36 @@ pub mod artifacts {
                     #[path = "."]
                     pub mod any {
                         #[path = "../../../🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod ifc {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v2x3 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+            #[path = "."]
+            pub mod v4 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                     }
@@ -222,6 +372,24 @@ pub mod artifacts {
                     #[path = "."]
                     pub mod any {
                         #[path = "../../../🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod mp3 {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v_mpeg1_layer3 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                     }
@@ -332,6 +500,24 @@ pub mod artifacts {
         }
     }
     #[path = "."]
+    pub mod pptx {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v_ecma_376 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
     pub mod step {
         #[path = "."]
         pub mod standards {
@@ -414,6 +600,24 @@ pub mod artifacts {
                     #[path = "."]
                     pub mod any {
                         #[path = "../../../🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
+                        mod component;
+                        pub use component::*;
+                    }
+                }
+            }
+        }
+    }
+    #[path = "."]
+    pub mod txt {
+        #[path = "."]
+        pub mod standards {
+            #[path = "."]
+            pub mod v_utf_8 {
+                #[path = "."]
+                pub mod subsets {
+                    #[path = "."]
+                    pub mod any {
+                        #[path = "../../../🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧪️oracle/🦀️component.rs"]
                         mod component;
                         pub use component::*;
                     }

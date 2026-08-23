@@ -60,6 +60,26 @@ pub enum AviMutation {
     },
 }
 
+/// 📇️ Kebab-case spelling of every `AviMutation` variant, in declaration order -- the exhaustive
+/// mutation catalog `../../🧪️oracle/🔣️component.json`'s `kinds` array is required to match verbatim
+/// (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest; the
+/// framework never parses Rust to check it itself).
+pub const KINDS: &[&str] = &[
+    "no-mutation",
+    "set-snapshot",
+    "set-main-header",
+    "set-idx1-present",
+    "insert-stream",
+    "remove-stream",
+    "set-stream-header",
+    "set-stream-format",
+    "insert-chunk",
+    "remove-chunk",
+    "set-chunk-keyframe",
+    "add-unknown-chunk",
+    "remove-unknown-chunk",
+];
+
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn stream_diff_for(stream_index: usize, inner: AviStreamDiff) -> AviDiff {
     AviDiff { main_header: None, streams: Some(IndexedDiff { removed: vec![], modified: vec![IndexedModified { index: stream_index, diff: inner }], added: vec![] }), idx1_present: None, unknown_chunks: None }
@@ -297,6 +317,52 @@ mod tests {
             let encoded = m.encode_op().unwrap_or_else(|e| panic!("encode_op({m:?}) failed: {e}"));
             let decoded = AviMutation::decode_op(&encoded).unwrap_or_else(|e| panic!("decode_op failed: {e}"));
             assert_eq!(decoded, m);
+        }
+    }
+
+    /// 🧪️ kinds_const_matches_enum_variants_in_declaration_order -- one instance per `AviMutation`
+    /// variant, in the enum's own declaration order, mapped to its `KINDS` spelling by a direct
+    /// match rather than through `OpText::print_op` (which emits camelCase JSON tagged
+    /// `"mutation"`, not this file's own kebab-case `KINDS` convention -- see module doc comment).
+    #[semio_framework_async_macros::async_test]
+    async fn kinds_const_matches_enum_variants_in_declaration_order() {
+        // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free) -- see R9
+        fn kind_of(m: &AviMutation) -> &'static str {
+            match m {
+                AviMutation::NoMutation => "no-mutation",
+                AviMutation::SetSnapshot { .. } => "set-snapshot",
+                AviMutation::SetMainHeader { .. } => "set-main-header",
+                AviMutation::SetIdx1Present { .. } => "set-idx1-present",
+                AviMutation::InsertStream { .. } => "insert-stream",
+                AviMutation::RemoveStream { .. } => "remove-stream",
+                AviMutation::SetStreamHeader { .. } => "set-stream-header",
+                AviMutation::SetStreamFormat { .. } => "set-stream-format",
+                AviMutation::InsertChunk { .. } => "insert-chunk",
+                AviMutation::RemoveChunk { .. } => "remove-chunk",
+                AviMutation::SetChunkKeyframe { .. } => "set-chunk-keyframe",
+                AviMutation::AddUnknownChunk { .. } => "add-unknown-chunk",
+                AviMutation::RemoveUnknownChunk { .. } => "remove-unknown-chunk",
+            }
+        }
+        let base = base_snapshot();
+        let one_per_variant = vec![
+            AviMutation::NoMutation,
+            AviMutation::SetSnapshot { snapshot: base.clone() },
+            AviMutation::SetMainHeader { main_header: base.main_header.clone() },
+            AviMutation::SetIdx1Present { idx1_present: false },
+            AviMutation::InsertStream { index: 1, stream: base.streams[0].clone() },
+            AviMutation::RemoveStream { index: 0 },
+            AviMutation::SetStreamHeader { stream_index: 0, strh: base.streams[0].strh.clone() },
+            AviMutation::SetStreamFormat { stream_index: 0, strf: base.streams[0].strf.clone() },
+            AviMutation::InsertChunk { stream_index: 0, index: 0, chunk: base.streams[0].chunks[0].clone() },
+            AviMutation::RemoveChunk { stream_index: 0, index: 0 },
+            AviMutation::SetChunkKeyframe { stream_index: 0, index: 0, keyframe: false },
+            AviMutation::AddUnknownChunk { index: 0, item: base.unknown_chunks[0].clone() },
+            AviMutation::RemoveUnknownChunk { index: 0 },
+        ];
+        assert_eq!(one_per_variant.len(), KINDS.len(), "one_per_variant must cover every KINDS entry exactly once");
+        for (mutation, kind) in one_per_variant.iter().zip(KINDS.iter()) {
+            assert_eq!(kind_of(mutation), *kind, "KINDS order must match the enum's own declaration order for {mutation:?}");
         }
     }
 }

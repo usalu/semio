@@ -1,0 +1,9 @@
+[workspace]
+[package]
+name = "ply-probe"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+ply-rs = "0.1"

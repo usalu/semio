@@ -1,0 +1,14 @@
+[workspace]
+
+[package]
+name = "xlsx-fixture-derive"
+version = "0.0.0"
+edition = "2021"
+
+[[bin]]
+name = "xlsx-fixture-derive"
+path = "src/main.rs"
+
+[dependencies]
+rust_xlsxwriter = "0.96"
+csv = "1"

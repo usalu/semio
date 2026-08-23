@@ -1,10 +1,9 @@
 //! 🧬️ Raster artifact schema — every field of the artifact with its state class.
 
-use crate::artifacts::raster::{RasterAssetChild, RasterImageAsset, RasterLayerNode, RasterViewportSize, RASTER_DOCUMENT_SCHEMA};
+use crate::artifacts::raster::{RasterAssetChild, RasterImageAsset, RasterLayerNode, RasterOwnedMap, RasterViewportSize, RASTER_DOCUMENT_SCHEMA};
 use base64::Engine as _;
 use schema::ArtifactSchema;
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
 
 //#region 🔖️Artifact
 /// 🧬️ Full raster artifact state across the artifact, presence and config lanes.
@@ -21,7 +20,8 @@ pub struct RasterArtifact {
     #[state(artifact)]
     pub layers: Vec<RasterLayerNode>,
     #[state(artifact)]
-    pub assets: BTreeMap<String, RasterAssetChild>,
+    #[serde(serialize_with = "crate::artifacts::raster::serialize_empty_owned_map")]
+    pub assets: RasterOwnedMap<RasterAssetChild>,
     #[state(presence)]
     pub selected_ids: Vec<String>,
     #[state(presence)]
@@ -53,7 +53,7 @@ impl Default for RasterArtifact {
             id: String::new(),
             title: None,
             layers: Vec::new(),
-            assets: BTreeMap::new(),
+            assets: RasterOwnedMap::new(),
             selected_ids: Vec::new(),
             active_utility_id: "selectMarquee".into(),
             brush_size: 24.0,
@@ -256,7 +256,7 @@ pub async fn create_raster_id(prefix: &str) -> String {
 }
 
 pub async fn empty_raster_snapshot() -> RasterSnapshot {
-    RasterSnapshot { schema: RASTER_DOCUMENT_SCHEMA.into(), id: "raster".into(), title: Some("Untitled".into()), layers: Vec::new(), assets: BTreeMap::new() }
+    RasterSnapshot { schema: RASTER_DOCUMENT_SCHEMA.into(), id: "raster".into(), title: Some("Untitled".into()), layers: Vec::new(), assets: RasterOwnedMap::new() }
 }
 
 //#region 🔖️Tree
@@ -364,7 +364,7 @@ async fn create_adjustment_layer() -> RasterLayerNode {
         blend_mode: "normal".into(),
         transform: RasterTransform::default(),
         adjustment_kind: "brightnessContrast".into(),
-        params: BTreeMap::new(),
+        params: RasterOwnedMap::new(),
     }
 }
 
@@ -384,7 +384,7 @@ pub async fn empty_raster_document() -> RasterSnapshot {
 }
 
 pub async fn semio_fixture_snapshot() -> RasterSnapshot {
-    let mut assets = BTreeMap::new();
+    let mut assets = RasterOwnedMap::new();
     // 🖼️ A real, decodable 2x2 RGBA PNG (not merely the PNG magic-number bytes the pre-migration
     // fixture embedded verbatim with no decode validation) — this migration routes every asset
     // through the real `s.stdio.semio/v1/image` png codec (`mint_and_stash_asset`), so the fixture
@@ -392,7 +392,7 @@ pub async fn semio_fixture_snapshot() -> RasterSnapshot {
     // real embedded pixels survive, not a decode-failure fallback.
     let emblem = RasterImageAsset { mime: "image/png".into(), data: base64::engine::general_purpose::STANDARD.decode("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEklEQVR42mP4z8DwHwyBNBgAAEnICfcD2WTxAAAAAElFTkSuQmCC").unwrap_or_default() };
     assets.insert("semio-emblem".into(), crate::artifacts::raster::mint_and_stash_asset("semio-emblem", &emblem));
-    let mut params = BTreeMap::new();
+    let mut params = RasterOwnedMap::new();
     params.insert("brightness".into(), dsl::to_dsl_value(&serde_json::json!(0.12)).expect("dsl value"));
     params.insert("contrast".into(), dsl::to_dsl_value(&serde_json::json!(0.08)).expect("dsl value"));
     RasterSnapshot {
@@ -421,13 +421,6 @@ pub async fn semio_fixture_snapshot() -> RasterSnapshot {
 /// 📄️ The `semio` example document used by the app manifest and tests.
 pub async fn semio_example_document() -> RasterSnapshot {
     semio_fixture_snapshot()
-}
-
-/// 📄️ JSON re-serialization of {@link semio_example_document}, for the framework-generic call sites that
-/// contractually require JSON text (`App::example`'s manifest `document_json`) — out of scope to change,
-/// since it is defined in `framework/plugin`.
-pub async fn semio_example_json() -> String {
-    serde_json::to_string(&semio_example_document()).expect("serialize semio example document")
 }
 
 /// 📄️ Duplicates a layer subtree with freshly minted ids (a new document node, not an operation inverse).

@@ -1,0 +1,56 @@
+{
+  "$schema": "../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This subset's own contribution to the repository test platform — the LAS 1.0 `any` mutation vocabulary and the reference implementation that exercises it, plus this subset's own comparison profile: no shared 'point cloud' family module exists yet, and LAS is currently the only artifact in that domain, so `semantic-las-v1` is declared here rather than in the shared stdio manifest.",
+  "oracles": [
+    {
+      "id": "las-1-0-any-mutate",
+      "ecosystem": "rust",
+      "package": "las",
+      "version": "0.11",
+      "capabilities": [
+        "las-1-0-any-mutate"
+      ],
+      "comparisonProfiles": [
+        "semantic-las-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/las-rs/las",
+      "rationale": "The reference ASPRS LAS reader/writer of the Rust ecosystem. Every declared `LasMutation` kind is performed against this subset's OWN `las::raw::{Header,Vlr,Point}` types (the crate's byte-exact typed mirror of the LAS 1.0 public header block / VLR / point-data-format-0-3 records), not its friendlier `las::{Reader,Writer,Builder}` façade: the façade auto-recomputes `bounds`/`points_by_return` from whatever points are actually written and offers no way to override them, while this subset's own `LasHeader` (see its doc comment) treats bounds/points-by-return as directly retained, non-structural content — real-world LAS files frequently carry an inaccurate one, and `SetBounds`/`SetPointsByReturn` need to be able to set an arbitrary value independent of the real point distribution to be a checked mutation rather than a no-op. The raw types give exactly that control while still being the crate's own (de)serialization, so the oracle stays a genuine second producer. `SetVersion` scenarios are kept within the LAS 1.0-1.2 family (no LAS 1.3/1.4 minor value): `las::raw::Header::write_to` appends waveform/EVLR/large-file header extensions once `version.supports(..)` reports true for those newer minors, growing the header past the fixed 227 bytes this subset's own `encode_las` always emits (its own `EncodeScopeNote` states plainly: 'no LAS 1.3/1.4 extensions') — exercising 1.3/1.4 would be testing a real capability gap in the SUBJECT under the banner of a version-label mutation, not the mutation itself.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    }
+  ],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-las-v1",
+      "description": "LAS point clouds compared by the non-structural header content (version, identifiers, creation date, scale/offset, bounds, points-by-return) plus the full VLR list and the full point list, each point resolved to real-world x/y/z via that same header's scale/offset. `headerSize`/`offsetToPointData`/`numberOfVlrs`/`pointDataFormatId`/`pointDataRecordLength`/`numberOfPointRecords` are STRUCTURAL — always recomputed from the real vlrs/points content by both this subset's own `encode_las` and the oracle's raw writer — and are never part of the projection; a point-count or VLR-count discrepancy still fails the comparison because it shows up directly as an array-length difference in `vlrs`/`points`. `file_source_id`/`global_encoding`/`guid` are out of this subset's contracted field list (skipped on decode, left zero on encode by `decode_las`/`encode_las` alike) and are likewise never projected.",
+      "tolerance": 0.001,
+      "ignoreKeys": []
+    }
+  ],
+  "mutationCatalogs": [
+    {
+      "id": "las-1-0-any",
+      "capability": "las-1-0-any-mutate",
+      "kinds": [
+        "no-mutation",
+        "set-snapshot",
+        "set-version",
+        "set-system-identifier",
+        "set-software-info",
+        "set-creation-date",
+        "set-scale-and-offset",
+        "set-bounds",
+        "set-points-by-return",
+        "insert-vlr",
+        "remove-vlr",
+        "set-vlr-data",
+        "insert-point",
+        "remove-point",
+        "set-point"
+      ]
+    }
+  ]
+}

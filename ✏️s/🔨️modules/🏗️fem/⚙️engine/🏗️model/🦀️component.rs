@@ -86,6 +86,14 @@ pub struct ElementContext {
 pub trait Element {
     fn id(&self) -> &str;
     fn node_ids(&self) -> Vec<String>;
+    /// 🧵 Borrows one fixed mounted-route node id without allocating a temporary vector.
+    fn mounted_node_id(&self, _index: usize) -> Option<&str> {
+        None
+    }
+    /// 📏 Returns the fixed mounted-route node-id count when this element is admitted there.
+    fn mounted_node_id_count(&self) -> Option<usize> {
+        None
+    }
     fn dofs_per_node(&self) -> &[Dof];
     fn stiffness_global(&self, ctx: &ElementContext) -> MatD;
     /// 🌬️ Fixed-end nodal loads equivalent to a per-unit-length `MemberUdl` in GLOBAL coordinates.
@@ -107,6 +115,19 @@ pub trait Element {
     /// state at displacement `u_element` — used by linear buckling. `None` means unsupported.
     fn geometric_stiffness(&self, _ctx: &ElementContext, _u_element: &VecD) -> Option<MatD> {
         None
+    }
+    /// 🧹 Releases one string backing owned by a mounted-analysis element. Implementors
+    /// admitted to that bounded route override this method and its terminal witness.
+    fn close_mounted_string_step(&mut self) -> Option<usize> {
+        None
+    }
+    /// 📏 Reports the next exact mounted string backing without changing ownership.
+    fn mounted_next_string_bytes(&self) -> Option<usize> {
+        Some(usize::MAX)
+    }
+    /// 🧪 Witnesses that a mounted-analysis element has no remaining string backing.
+    fn mounted_strings_terminal_is_empty(&self) -> bool {
+        false
     }
 }
 

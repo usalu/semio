@@ -1,9 +1,10 @@
 //! 🧵️ Mounted Fem2d revision job: fixed session arena, retained worker step and live visual lease.
 
-use crate::analyses::{AnalysisModel, AssemblyCsrBuild, AssemblyJob, FemJobGraph, FemJobStage, FemStagePlan};
+use crate::analyses::{AnalysisModel, AssemblyCsrBuild, AssemblyJob, AssemblyJobConstruction, FemJobGraph, FemJobStage, FemStagePlan};
 use crate::artifacts::fem2d::{Fem2dSnapshot, FemElement, FemLoad};
-use crate::editor::fem2d::modes::edit::windows::model::{Fem2dLiveVisual, RegionVisualQuality};
+use crate::editor::fem2d::modes::edit::windows::model::{Fem2dLiveVisual, Fem2dMountedVisualBuild, Fem2dMountedVisualLease, RegionVisualQuality};
 use crate::mesh::{MeshJob, MeshOpts, PlanarDomain, TriMesh2};
+use crate::model::Element;
 use crate::sparse::{PcgJob, PcgJobConstruction};
 use semio_framework::kernel::{Effect, JobPlacement};
 use semio_framework_job::{CommitValidation, InteractiveJob, Operation, OperationId, StepBudget, StepContext, StepOutcome};
@@ -16,19 +17,172 @@ use std::rc::Rc;
 pub const FEM2D_MOUNTED_JOB_KIND: &str = "semio.fem2d.mounted-analysis";
 const SESSION_ACTIVE_CAPACITY: usize = 32;
 const SESSION_SHELL_CAPACITY: usize = 64;
-const SESSION_MAXIMUM_ITEMS: usize = 4_096;
-const SESSION_MAXIMUM_BYTES: usize = 4 * 1_024 * 1_024;
-const SESSION_MAXIMUM_NODES: usize = 64;
-const SESSION_MAXIMUM_ELEMENTS: usize = 128;
+const SESSION_MAXIMUM_INPUT_ITEMS: usize = 4_096;
+const SESSION_MAXIMUM_INPUT_BYTES: usize = 4 * 1_024 * 1_024;
+const SESSION_MAXIMUM_NODES: usize = 8;
+const SESSION_MAXIMUM_ELEMENTS: usize = 2;
 const SESSION_MAXIMUM_SUPPORTS: usize = 64;
-const SESSION_MAXIMUM_MESH_POINTS: usize = 64;
-const SESSION_MAXIMUM_MESH_TRIANGLES: usize = 128;
+const SESSION_MAXIMUM_MESH_POINTS: usize = 8;
+const SESSION_MAXIMUM_MESH_TRIANGLES: usize = 2;
 const SESSION_MAXIMUM_REGION_HOLES: usize = 16;
 const SESSION_MAXIMUM_BOUNDARY_POINTS: usize = 64;
 const SESSION_MAXIMUM_OUTPUT_BYTES: usize = 16 * 1_024;
+const SESSION_MAXIMUM_FAULT_BYTES: usize = 4_096;
+const SESSION_OWNER_PAGE_BYTES: usize = 4_096;
+const SESSION_MAXIMUM_STRING_BYTES: usize = SESSION_OWNER_PAGE_BYTES;
 const INPUT_BYTES: usize = 63;
 const FEM2D_JOB_TAG: u64 = 0xf2d0_0000_0000_0000;
 const FEM2D_JOB_COUNTER_MAXIMUM: u64 = 0x000f_ffff_ffff_ffff;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum MountedOwnerClass {
+    GraphPlans,
+    DomainOuter,
+    DomainHoleList,
+    DomainHoleVectors,
+    ModelNodes,
+    ModelElements,
+    ModelSupports,
+    ModelRegionNodeIds,
+    ModelStrings,
+    SupportDofs,
+    MeshPreparationVectors,
+    MeshPreparationIndexVector,
+    MeshPreparedVectors,
+    MeshTriangulationVectors,
+    MeshTriangulationWorkspaceVectors,
+    MeshConstraintVector,
+    MeshEdgeIndexVectors,
+    MeshOutputVectors,
+    AssemblyDofOrderVector,
+    AssemblyDofStrings,
+    AssemblyPlanVectors,
+    AssemblyPartitionVectors,
+    AssemblyMergeVectors,
+    AssemblyPendingVectors,
+    CsrVectors,
+    PcgVectors,
+    VisualVectors,
+    VisualStrings,
+    OutputPages,
+    FaultPages,
+}
+
+#[derive(Clone, Copy)]
+struct MountedOwnerClaim {
+    class: MountedOwnerClass,
+    roots: usize,
+    items: usize,
+}
+
+#[derive(Clone, Copy)]
+struct MountedProcessOwnerCatalog {
+    claims: [MountedOwnerClaim; 30],
+}
+
+impl MountedProcessOwnerCatalog {
+    const fn fixed() -> Self {
+        Self {
+            claims: [
+                MountedOwnerClaim { class: MountedOwnerClass::GraphPlans, roots: 1, items: 8 },
+                MountedOwnerClaim { class: MountedOwnerClass::DomainOuter, roots: 1, items: SESSION_MAXIMUM_BOUNDARY_POINTS },
+                MountedOwnerClaim { class: MountedOwnerClass::DomainHoleList, roots: 1, items: SESSION_MAXIMUM_REGION_HOLES },
+                MountedOwnerClaim { class: MountedOwnerClass::DomainHoleVectors, roots: SESSION_MAXIMUM_REGION_HOLES, items: SESSION_MAXIMUM_REGION_HOLES * SESSION_MAXIMUM_BOUNDARY_POINTS },
+                MountedOwnerClaim { class: MountedOwnerClass::ModelNodes, roots: 1, items: SESSION_MAXIMUM_NODES + SESSION_MAXIMUM_MESH_POINTS },
+                MountedOwnerClaim { class: MountedOwnerClass::ModelElements, roots: 1, items: SESSION_MAXIMUM_ELEMENTS + SESSION_MAXIMUM_MESH_TRIANGLES },
+                MountedOwnerClaim { class: MountedOwnerClass::ModelSupports, roots: 1, items: SESSION_MAXIMUM_SUPPORTS },
+                MountedOwnerClaim { class: MountedOwnerClass::ModelRegionNodeIds, roots: 1, items: SESSION_MAXIMUM_MESH_POINTS },
+                MountedOwnerClaim {
+                    class: MountedOwnerClass::ModelStrings,
+                    roots: 2 * (SESSION_MAXIMUM_NODES + SESSION_MAXIMUM_MESH_POINTS) + 3 * SESSION_MAXIMUM_ELEMENTS + 4 * SESSION_MAXIMUM_MESH_TRIANGLES + SESSION_MAXIMUM_SUPPORTS + 2,
+                    items: 0,
+                },
+                MountedOwnerClaim { class: MountedOwnerClass::SupportDofs, roots: SESSION_MAXIMUM_SUPPORTS, items: 6 * SESSION_MAXIMUM_SUPPORTS },
+                MountedOwnerClaim { class: MountedOwnerClass::MeshPreparationVectors, roots: 2, items: SESSION_MAXIMUM_MESH_POINTS + 3 * SESSION_MAXIMUM_MESH_TRIANGLES },
+                MountedOwnerClaim { class: MountedOwnerClass::MeshPreparationIndexVector, roots: 1, items: SESSION_MAXIMUM_MESH_POINTS },
+                MountedOwnerClaim { class: MountedOwnerClass::MeshPreparedVectors, roots: 2, items: SESSION_MAXIMUM_MESH_POINTS + 3 * SESSION_MAXIMUM_MESH_TRIANGLES },
+                MountedOwnerClaim { class: MountedOwnerClass::MeshTriangulationVectors, roots: 3, items: SESSION_MAXIMUM_MESH_POINTS + 2 * (4 * SESSION_MAXIMUM_MESH_TRIANGLES + 1) },
+                MountedOwnerClaim { class: MountedOwnerClass::MeshTriangulationWorkspaceVectors, roots: 3, items: 3 * (12 * SESSION_MAXIMUM_MESH_TRIANGLES + 3) },
+                MountedOwnerClaim { class: MountedOwnerClass::MeshConstraintVector, roots: 1, items: 3 * SESSION_MAXIMUM_MESH_TRIANGLES },
+                MountedOwnerClaim { class: MountedOwnerClass::MeshEdgeIndexVectors, roots: 2, items: 3 * SESSION_MAXIMUM_MESH_TRIANGLES + 12 * SESSION_MAXIMUM_MESH_TRIANGLES + 3 },
+                MountedOwnerClaim { class: MountedOwnerClass::MeshOutputVectors, roots: 3, items: 2 * SESSION_MAXIMUM_MESH_POINTS + SESSION_MAXIMUM_MESH_TRIANGLES },
+                MountedOwnerClaim { class: MountedOwnerClass::AssemblyDofOrderVector, roots: 1, items: 3 * (SESSION_MAXIMUM_NODES + SESSION_MAXIMUM_MESH_POINTS) },
+                MountedOwnerClaim { class: MountedOwnerClass::AssemblyDofStrings, roots: 3 * (SESSION_MAXIMUM_NODES + SESSION_MAXIMUM_MESH_POINTS), items: 0 },
+                MountedOwnerClaim { class: MountedOwnerClass::AssemblyPlanVectors, roots: 4, items: 12 * (SESSION_MAXIMUM_NODES + SESSION_MAXIMUM_MESH_POINTS) },
+                MountedOwnerClaim { class: MountedOwnerClass::AssemblyPartitionVectors, roots: 3, items: 1 + 2 * 144 },
+                MountedOwnerClaim { class: MountedOwnerClass::AssemblyMergeVectors, roots: 4, items: 2 + 2 * 144 },
+                MountedOwnerClaim { class: MountedOwnerClass::AssemblyPendingVectors, roots: 3, items: 6 + 3 + 36 },
+                MountedOwnerClaim { class: MountedOwnerClass::CsrVectors, roots: 5, items: 512 },
+                MountedOwnerClaim { class: MountedOwnerClass::PcgVectors, roots: 10, items: 512 },
+                MountedOwnerClaim {
+                    class: MountedOwnerClass::VisualVectors,
+                    roots: 5,
+                    items: 2 * (SESSION_MAXIMUM_NODES + SESSION_MAXIMUM_MESH_POINTS + SESSION_MAXIMUM_ELEMENTS + SESSION_MAXIMUM_MESH_TRIANGLES)
+                        + 64
+                        + SESSION_MAXIMUM_ELEMENTS
+                        + SESSION_MAXIMUM_MESH_TRIANGLES
+                        + SESSION_MAXIMUM_NODES
+                        + SESSION_MAXIMUM_MESH_POINTS,
+                },
+                MountedOwnerClaim { class: MountedOwnerClass::VisualStrings, roots: 64 + SESSION_MAXIMUM_NODES + SESSION_MAXIMUM_MESH_POINTS + SESSION_MAXIMUM_ELEMENTS + SESSION_MAXIMUM_MESH_TRIANGLES + 1, items: 0 },
+                MountedOwnerClaim { class: MountedOwnerClass::OutputPages, roots: 3 * (SESSION_MAXIMUM_OUTPUT_BYTES / SESSION_OWNER_PAGE_BYTES), items: 6 },
+                MountedOwnerClaim { class: MountedOwnerClass::FaultPages, roots: 2, items: 0 },
+            ],
+        }
+    }
+
+    const fn roots(self) -> usize {
+        let mut roots = 0;
+        let mut index = 0;
+        while index < self.claims.len() {
+            roots += self.claims[index].roots;
+            index += 1;
+        }
+        roots
+    }
+
+    const fn items(self) -> usize {
+        let mut items = 0;
+        let mut index = 0;
+        while index < self.claims.len() {
+            items += self.claims[index].items;
+            index += 1;
+        }
+        items
+    }
+
+    fn credit(self, input_items: usize, input_bytes: usize) -> Result<(usize, usize), &'static [u8]> {
+        if input_items > SESSION_MAXIMUM_INPUT_ITEMS || input_bytes > SESSION_MAXIMUM_INPUT_BYTES {
+            return Err(b"fem2d.session-process-input-credit-exceeded");
+        }
+        let pages = self.roots();
+        let items = input_items.checked_add(self.items()).and_then(|items| items.checked_add(pages)).ok_or(b"fem2d.session-process-item-overflow" as &'static [u8])?;
+        let bytes = input_bytes.checked_add(pages.checked_mul(SESSION_OWNER_PAGE_BYTES).ok_or(b"fem2d.session-process-page-byte-overflow" as &'static [u8])?).ok_or(b"fem2d.session-process-byte-overflow" as &'static [u8])?;
+        if items > SESSION_MAXIMUM_ITEMS || bytes > SESSION_MAXIMUM_BYTES {
+            return Err(b"fem2d.session-process-admission-exceeded");
+        }
+        Ok((items, bytes))
+    }
+}
+
+const SESSION_MAXIMUM_ITEMS: usize = SESSION_MAXIMUM_INPUT_ITEMS + MountedProcessOwnerCatalog::fixed().items() + MountedProcessOwnerCatalog::fixed().roots();
+const SESSION_MAXIMUM_BYTES: usize = SESSION_MAXIMUM_INPUT_BYTES + MountedProcessOwnerCatalog::fixed().roots() * SESSION_OWNER_PAGE_BYTES;
+
+fn bounded_string_capacities(owners: &[&String]) -> Result<usize, &'static [u8]> {
+    owners.iter().try_fold(0usize, |total, owner| {
+        if owner.capacity() > SESSION_MAXIMUM_STRING_BYTES {
+            return Err(b"fem2d.session-string-owner-capacity" as &'static [u8]);
+        }
+        total.checked_add(owner.capacity()).ok_or(b"fem2d.session-string-owner-overflow" as &'static [u8])
+    })
+}
+
+fn bounded_derived_string(owner: &String) -> Result<(), Vec<u8>> {
+    if owner.capacity() > SESSION_MAXIMUM_STRING_BYTES {
+        return Err(b"fem2d.session-derived-string-capacity".to_vec());
+    }
+    Ok(())
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct MountedIdentity {
@@ -48,17 +202,18 @@ impl MountedIdentity {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum MountedStage {
-    Preflight,
     PrepareGraph,
     Graph,
     PrepareDomain,
     Mesh,
     BuildModel,
+    PrepareAssembly,
     Assembly,
     BuildCsr,
     PreparePcg,
     Pcg,
     CommitReady,
+    PublishFinalVisual,
     Complete,
     Fault,
     Closing,
@@ -72,10 +227,30 @@ enum ModelBuildStage {
     ReserveSupports,
     ReserveRegionNodeIds,
     Nodes,
-    Elements,
+    NodeCommit,
+    ElementStart,
+    ElementEnd,
+    ElementMaterial,
+    ElementSection,
+    ElementIdOwner,
+    ElementStartOwner,
+    ElementEndOwner,
+    ElementCommit,
     Supports,
-    RegionNodes,
-    RegionElements,
+    SupportReserveDofs,
+    SupportDofs,
+    SupportCommit,
+    RegionNodeCoordinate,
+    RegionNodeIdReserve,
+    RegionNodeIdWrite,
+    RegionNodeId,
+    RegionNodeModelOwner,
+    RegionNodeCommit,
+    RegionElementMaterial,
+    RegionElementIdReserve,
+    RegionElementIdOwner,
+    RegionElementNodeOwner,
+    RegionElementCommit,
     Complete,
 }
 
@@ -86,9 +261,23 @@ struct MountedModelBuild {
     support_cursor: usize,
     region_point_cursor: usize,
     region_triangle_cursor: usize,
+    lookup_cursor: usize,
+    resolved_material: usize,
+    resolved_section: usize,
+    pending_region_id: Option<String>,
+    pending_node_id: Option<String>,
+    pending_element_id: Option<String>,
+    pending_element_start: Option<String>,
+    pending_element_end: Option<String>,
+    pending_support: Option<crate::model::Support>,
+    pending_region_element_id: Option<String>,
+    pending_region_element_nodes: [Option<String>; 3],
+    pending_region_element_node_cursor: usize,
+    pending_region_insert: bool,
     mesh: Option<TriMesh2>,
     region_node_ids: Vec<String>,
     model: AnalysisModel,
+    close_lane: u8,
 }
 
 impl MountedModelBuild {
@@ -100,9 +289,23 @@ impl MountedModelBuild {
             support_cursor: 0,
             region_point_cursor: 0,
             region_triangle_cursor: 0,
+            lookup_cursor: 0,
+            resolved_material: 0,
+            resolved_section: 0,
+            pending_region_id: None,
+            pending_node_id: None,
+            pending_element_id: None,
+            pending_element_start: None,
+            pending_element_end: None,
+            pending_support: None,
+            pending_region_element_id: None,
+            pending_region_element_nodes: std::array::from_fn(|_| None),
+            pending_region_element_node_cursor: 0,
+            pending_region_insert: false,
             mesh,
             region_node_ids: Vec::new(),
             model: AnalysisModel { nodes: Vec::new(), elements: Vec::new(), supports: Vec::new() },
+            close_lane: 0,
         }
     }
 
@@ -121,96 +324,355 @@ impl MountedModelBuild {
         match self.stage {
             ModelBuildStage::ReserveNodes => {
                 self.model.nodes.try_reserve_exact(snapshot.nodes.len() + mesh_points).map_err(|_| b"fem2d.model-node-allocation".to_vec())?;
+                if self.model.nodes.capacity() * std::mem::size_of::<crate::model::Node>() > SESSION_OWNER_PAGE_BYTES {
+                    return Err(b"fem2d.model-node-page-capacity".to_vec());
+                }
                 self.stage = ModelBuildStage::ReserveElements;
             }
             ModelBuildStage::ReserveElements => {
                 self.model.elements.try_reserve_exact(snapshot.elements.len() + mesh_triangles).map_err(|_| b"fem2d.model-element-allocation".to_vec())?;
+                if self.model.elements.capacity() * std::mem::size_of::<crate::model::Elements>() > SESSION_OWNER_PAGE_BYTES {
+                    return Err(b"fem2d.model-element-page-capacity".to_vec());
+                }
                 self.stage = ModelBuildStage::ReserveSupports;
             }
             ModelBuildStage::ReserveSupports => {
                 self.model.supports.try_reserve_exact(snapshot.supports.len()).map_err(|_| b"fem2d.model-support-allocation".to_vec())?;
+                if self.model.supports.capacity() * std::mem::size_of::<crate::model::Support>() > SESSION_OWNER_PAGE_BYTES {
+                    return Err(b"fem2d.model-support-page-capacity".to_vec());
+                }
                 self.stage = ModelBuildStage::ReserveRegionNodeIds;
             }
             ModelBuildStage::ReserveRegionNodeIds => {
                 self.region_node_ids.try_reserve_exact(mesh_points).map_err(|_| b"fem2d.model-region-node-allocation".to_vec())?;
+                if self.region_node_ids.capacity() * std::mem::size_of::<String>() > SESSION_OWNER_PAGE_BYTES {
+                    return Err(b"fem2d.model-region-node-page-capacity".to_vec());
+                }
                 self.stage = ModelBuildStage::Nodes;
             }
             ModelBuildStage::Nodes => {
                 if let Some(node) = snapshot.nodes.get(self.node_cursor) {
-                    self.model.nodes.push(crate::model::Node { id: node.id.clone(), pos: [node.x, node.y, 0.0] });
-                    self.node_cursor += 1;
+                    self.pending_node_id = Some(node.id.clone());
+                    self.stage = ModelBuildStage::NodeCommit;
                 } else {
-                    self.stage = ModelBuildStage::Elements;
+                    self.stage = ModelBuildStage::ElementStart;
                 }
             }
-            ModelBuildStage::Elements => {
-                if let Some(element) = snapshot.elements.get(self.element_cursor) {
-                    let (id, start, end, material_id, section_id) = match element {
-                        FemElement::Bar { id, start, end, material_id, section_id, .. } | FemElement::Beam { id, start, end, material_id, section_id, .. } => (id, start, end, material_id, section_id),
-                    };
-                    if !snapshot.nodes.iter().any(|node| node.id == *start) || !snapshot.nodes.iter().any(|node| node.id == *end) {
-                        return Err(b"fem2d.model-unknown-node".to_vec());
-                    }
-                    let material = snapshot.materials.iter().find(|material| material.id == *material_id).ok_or_else(|| b"fem2d.model-unknown-material".to_vec())?;
-                    let section = snapshot.sections.iter().find(|section| section.id == *section_id).ok_or_else(|| b"fem2d.model-unknown-section".to_vec())?;
-                    let resolved = match element {
-                        FemElement::Bar { .. } => crate::elements2d::Bar2 { id: id.clone(), start: start.clone(), end: end.clone(), e: material.e, area: section.area, density: material.rho }.into(),
-                        FemElement::Beam { .. } => crate::elements2d::BeamEb2 { id: id.clone(), start: start.clone(), end: end.clone(), e: material.e, area: section.area, iy: section.iy, density: material.rho }.into(),
-                    };
-                    self.model.elements.push(resolved);
-                    self.element_cursor += 1;
-                } else {
+            ModelBuildStage::NodeCommit => {
+                let node = snapshot.nodes.get(self.node_cursor).ok_or_else(|| b"fem2d.model-node-owner-missing".to_vec())?;
+                bounded_derived_string(self.pending_node_id.as_ref().ok_or_else(|| b"fem2d.model-node-id-owner-missing".to_vec())?)?;
+                let id = self.pending_node_id.take().ok_or_else(|| b"fem2d.model-node-id-owner-missing".to_vec())?;
+                self.model.nodes.push(crate::model::Node { id, pos: [node.x, node.y, 0.0] });
+                self.node_cursor += 1;
+                self.stage = ModelBuildStage::Nodes;
+            }
+            ModelBuildStage::ElementStart => {
+                let Some(element) = snapshot.elements.get(self.element_cursor) else {
                     self.stage = ModelBuildStage::Supports;
+                    return Ok(false);
+                };
+                let start = match element {
+                    FemElement::Bar { start, .. } | FemElement::Beam { start, .. } => start,
+                };
+                if let Some(node) = snapshot.nodes.get(self.lookup_cursor) {
+                    if node.id == *start {
+                        self.lookup_cursor = 0;
+                        self.stage = ModelBuildStage::ElementEnd;
+                    } else {
+                        self.lookup_cursor += 1;
+                    }
+                } else {
+                    return Err(b"fem2d.model-unknown-start-node".to_vec());
                 }
+            }
+            ModelBuildStage::ElementEnd => {
+                let element = &snapshot.elements[self.element_cursor];
+                let end = match element {
+                    FemElement::Bar { end, .. } | FemElement::Beam { end, .. } => end,
+                };
+                if let Some(node) = snapshot.nodes.get(self.lookup_cursor) {
+                    if node.id == *end {
+                        self.lookup_cursor = 0;
+                        self.stage = ModelBuildStage::ElementMaterial;
+                    } else {
+                        self.lookup_cursor += 1;
+                    }
+                } else {
+                    return Err(b"fem2d.model-unknown-end-node".to_vec());
+                }
+            }
+            ModelBuildStage::ElementMaterial => {
+                let material_id = match &snapshot.elements[self.element_cursor] {
+                    FemElement::Bar { material_id, .. } | FemElement::Beam { material_id, .. } => material_id,
+                };
+                if let Some(material) = snapshot.materials.get(self.lookup_cursor) {
+                    if material.id == *material_id {
+                        self.resolved_material = self.lookup_cursor;
+                        self.lookup_cursor = 0;
+                        self.stage = ModelBuildStage::ElementSection;
+                    } else {
+                        self.lookup_cursor += 1;
+                    }
+                } else {
+                    return Err(b"fem2d.model-unknown-material".to_vec());
+                }
+            }
+            ModelBuildStage::ElementSection => {
+                let section_id = match &snapshot.elements[self.element_cursor] {
+                    FemElement::Bar { section_id, .. } | FemElement::Beam { section_id, .. } => section_id,
+                };
+                if let Some(section) = snapshot.sections.get(self.lookup_cursor) {
+                    if section.id == *section_id {
+                        self.resolved_section = self.lookup_cursor;
+                        self.lookup_cursor = 0;
+                        self.stage = ModelBuildStage::ElementIdOwner;
+                    } else {
+                        self.lookup_cursor += 1;
+                    }
+                } else {
+                    return Err(b"fem2d.model-unknown-section".to_vec());
+                }
+            }
+            ModelBuildStage::ElementIdOwner => {
+                let element = &snapshot.elements[self.element_cursor];
+                self.pending_element_id = Some(match element {
+                    FemElement::Bar { id, .. } | FemElement::Beam { id, .. } => id.clone(),
+                });
+                self.stage = ModelBuildStage::ElementStartOwner;
+            }
+            ModelBuildStage::ElementStartOwner => {
+                bounded_derived_string(self.pending_element_id.as_ref().ok_or_else(|| b"fem2d.model-element-id-owner-missing".to_vec())?)?;
+                let element = &snapshot.elements[self.element_cursor];
+                self.pending_element_start = Some(match element {
+                    FemElement::Bar { start, .. } | FemElement::Beam { start, .. } => start.clone(),
+                });
+                self.stage = ModelBuildStage::ElementEndOwner;
+            }
+            ModelBuildStage::ElementEndOwner => {
+                bounded_derived_string(self.pending_element_start.as_ref().ok_or_else(|| b"fem2d.model-element-start-owner-missing".to_vec())?)?;
+                let element = &snapshot.elements[self.element_cursor];
+                self.pending_element_end = Some(match element {
+                    FemElement::Bar { end, .. } | FemElement::Beam { end, .. } => end.clone(),
+                });
+                self.stage = ModelBuildStage::ElementCommit;
+            }
+            ModelBuildStage::ElementCommit => {
+                bounded_derived_string(self.pending_element_end.as_ref().ok_or_else(|| b"fem2d.model-element-end-owner-missing".to_vec())?)?;
+                let element = &snapshot.elements[self.element_cursor];
+                let material = &snapshot.materials[self.resolved_material];
+                let section = &snapshot.sections[self.resolved_section];
+                let resolved = match element {
+                    FemElement::Bar { .. } => crate::elements2d::Bar2 {
+                        id: self.pending_element_id.take().ok_or_else(|| b"fem2d.model-element-id-owner-missing".to_vec())?,
+                        start: self.pending_element_start.take().ok_or_else(|| b"fem2d.model-element-start-owner-missing".to_vec())?,
+                        end: self.pending_element_end.take().ok_or_else(|| b"fem2d.model-element-end-owner-missing".to_vec())?,
+                        e: material.e,
+                        area: section.area,
+                        density: material.rho,
+                    }
+                    .into(),
+                    FemElement::Beam { .. } => crate::elements2d::BeamEb2 {
+                        id: self.pending_element_id.take().ok_or_else(|| b"fem2d.model-element-id-owner-missing".to_vec())?,
+                        start: self.pending_element_start.take().ok_or_else(|| b"fem2d.model-element-start-owner-missing".to_vec())?,
+                        end: self.pending_element_end.take().ok_or_else(|| b"fem2d.model-element-end-owner-missing".to_vec())?,
+                        e: material.e,
+                        area: section.area,
+                        iy: section.iy,
+                        density: material.rho,
+                    }
+                    .into(),
+                };
+                self.model.elements.push(resolved);
+                self.element_cursor += 1;
+                self.stage = ModelBuildStage::ElementStart;
             }
             ModelBuildStage::Supports => {
                 if let Some(support) = snapshot.supports.get(self.support_cursor) {
-                    self.model.supports.push(crate::model::Support { node_id: support.node_id.clone(), fixed: support.fixed.iter().map(|dof| (*dof).into()).collect() });
-                    self.support_cursor += 1;
+                    self.pending_support = Some(crate::model::Support { node_id: support.node_id.clone(), fixed: Vec::new() });
+                    self.stage = ModelBuildStage::SupportReserveDofs;
                 } else {
-                    self.stage = ModelBuildStage::RegionNodes;
+                    self.stage = ModelBuildStage::RegionNodeCoordinate;
                 }
             }
-            ModelBuildStage::RegionNodes => {
+            ModelBuildStage::SupportReserveDofs => {
+                let source = snapshot.supports.get(self.support_cursor).ok_or_else(|| b"fem2d.model-support-owner-missing".to_vec())?;
+                let owner = self.pending_support.as_mut().ok_or_else(|| b"fem2d.model-support-candidate-missing".to_vec())?;
+                bounded_derived_string(&owner.node_id)?;
+                owner.fixed.try_reserve_exact(source.fixed.len()).map_err(|_| b"fem2d.model-support-dof-allocation".to_vec())?;
+                if owner.fixed.capacity() * std::mem::size_of::<crate::model::Dof>() > SESSION_OWNER_PAGE_BYTES {
+                    return Err(b"fem2d.model-support-dof-page-capacity".to_vec());
+                }
+                self.lookup_cursor = 0;
+                self.stage = ModelBuildStage::SupportDofs;
+            }
+            ModelBuildStage::SupportDofs => {
+                let source = snapshot.supports.get(self.support_cursor).ok_or_else(|| b"fem2d.model-support-owner-missing".to_vec())?;
+                if let Some(dof) = source.fixed.get(self.lookup_cursor).copied() {
+                    self.pending_support.as_mut().ok_or_else(|| b"fem2d.model-support-candidate-missing".to_vec())?.fixed.push(dof.into());
+                    self.lookup_cursor += 1;
+                } else {
+                    self.lookup_cursor = 0;
+                    self.stage = ModelBuildStage::SupportCommit;
+                }
+            }
+            ModelBuildStage::SupportCommit => {
+                self.model.supports.push(self.pending_support.take().ok_or_else(|| b"fem2d.model-support-candidate-missing".to_vec())?);
+                self.support_cursor += 1;
+                self.stage = ModelBuildStage::Supports;
+            }
+            ModelBuildStage::RegionNodeCoordinate => {
                 let Some(region) = snapshot.regions.first() else {
                     self.stage = ModelBuildStage::Complete;
                     return Ok(false);
                 };
                 let Some(point) = self.mesh.as_ref().and_then(|mesh| mesh.points.get(self.region_point_cursor)).copied() else {
-                    self.stage = ModelBuildStage::RegionElements;
+                    self.stage = ModelBuildStage::RegionElementMaterial;
                     return Ok(false);
                 };
-                let id = snapshot.nodes.iter().find(|node| (node.x - point[0]).abs() < 1e-9 && (node.y - point[1]).abs() < 1e-9).map(|node| node.id.clone()).unwrap_or_else(|| format!("{}_m{}", region.id, self.region_point_cursor));
-                if !self.model.nodes.iter().any(|node| node.id == id) {
-                    self.model.nodes.push(crate::model::Node { id: id.clone(), pos: [point[0], point[1], 0.0] });
+                if let Some(node) = snapshot.nodes.get(self.lookup_cursor) {
+                    if (node.x - point[0]).abs() < 1e-9 && (node.y - point[1]).abs() < 1e-9 {
+                        self.pending_region_id = Some(node.id.clone());
+                        self.pending_region_insert = false;
+                        self.lookup_cursor = 0;
+                        self.stage = ModelBuildStage::RegionNodeCommit;
+                    } else {
+                        self.lookup_cursor += 1;
+                    }
+                } else {
+                    self.stage = ModelBuildStage::RegionNodeIdReserve;
+                }
+            }
+            ModelBuildStage::RegionNodeIdReserve => {
+                let region = snapshot.regions.first().ok_or_else(|| b"fem2d.model-region-owner-missing".to_vec())?;
+                let required = region.id.len().checked_add(24).ok_or_else(|| b"fem2d.model-generated-node-id-overflow".to_vec())?;
+                if required > SESSION_MAXIMUM_STRING_BYTES {
+                    return Err(b"fem2d.model-generated-node-id-capacity".to_vec());
+                }
+                let mut id = String::new();
+                id.try_reserve_exact(required).map_err(|_| b"fem2d.model-generated-node-id-allocation".to_vec())?;
+                if id.capacity() > SESSION_OWNER_PAGE_BYTES {
+                    return Err(b"fem2d.model-generated-node-id-page-capacity".to_vec());
+                }
+                self.pending_region_id = Some(id);
+                self.stage = ModelBuildStage::RegionNodeIdWrite;
+            }
+            ModelBuildStage::RegionNodeIdWrite => {
+                let region = snapshot.regions.first().ok_or_else(|| b"fem2d.model-region-owner-missing".to_vec())?;
+                let id = self.pending_region_id.as_mut().ok_or_else(|| b"fem2d.model-generated-node-id-owner-missing".to_vec())?;
+                use std::fmt::Write as _;
+                write!(id, "{}_m{}", region.id, self.region_point_cursor).map_err(|_| b"fem2d.model-generated-node-id-format".to_vec())?;
+                self.pending_region_insert = true;
+                self.lookup_cursor = 0;
+                self.stage = ModelBuildStage::RegionNodeId;
+            }
+            ModelBuildStage::RegionNodeId => {
+                let id = self.pending_region_id.as_ref().expect("region node id retained");
+                if let Some(node) = self.model.nodes.get(self.lookup_cursor) {
+                    if node.id == *id {
+                        return Err(b"fem2d.model-generated-node-id-collision".to_vec());
+                    }
+                    self.lookup_cursor += 1;
+                } else {
+                    self.lookup_cursor = 0;
+                    self.stage = ModelBuildStage::RegionNodeCommit;
+                }
+            }
+            ModelBuildStage::RegionNodeModelOwner => {
+                let point = self.mesh.as_ref().and_then(|mesh| mesh.points.get(self.region_point_cursor)).copied().ok_or_else(|| b"fem2d.model-region-point-missing".to_vec())?;
+                let id = self.pending_region_id.as_ref().ok_or_else(|| b"fem2d.model-region-node-owner-missing".to_vec())?.clone();
+                self.model.nodes.push(crate::model::Node { id, pos: [point[0], point[1], 0.0] });
+                self.pending_region_insert = false;
+                self.stage = ModelBuildStage::RegionNodeCommit;
+            }
+            ModelBuildStage::RegionNodeCommit => {
+                bounded_derived_string(self.pending_region_id.as_ref().ok_or_else(|| b"fem2d.model-region-node-owner-missing".to_vec())?)?;
+                let id = self.pending_region_id.take().expect("region node id retained");
+                if self.pending_region_insert {
+                    self.pending_region_id = Some(id);
+                    self.stage = ModelBuildStage::RegionNodeModelOwner;
+                    return Ok(false);
                 }
                 self.region_node_ids.push(id);
+                self.pending_region_insert = false;
                 self.region_point_cursor += 1;
+                self.stage = ModelBuildStage::RegionNodeCoordinate;
             }
-            ModelBuildStage::RegionElements => {
+            ModelBuildStage::RegionElementMaterial => {
                 let Some(region) = snapshot.regions.first() else {
                     self.stage = ModelBuildStage::Complete;
                     return Ok(false);
                 };
-                let material = snapshot.materials.iter().find(|material| material.id == region.material_id).ok_or_else(|| b"fem2d.model-unknown-region-material".to_vec())?;
-                if let Some(triangle) = self.mesh.as_ref().and_then(|mesh| mesh.tris.get(self.region_triangle_cursor)).copied() {
-                    let nodes = [self.region_node_ids[triangle[0] as usize].clone(), self.region_node_ids[triangle[1] as usize].clone(), self.region_node_ids[triangle[2] as usize].clone()];
-                    self.model.elements.push(
-                        crate::elements2d::Tri3Cst {
-                            id: format!("{}_t{}", region.id, self.region_triangle_cursor),
-                            nodes,
-                            e: material.e,
-                            nu: material.nu,
-                            thickness: region.thickness,
-                            kind: crate::elements2d::PlaneKind::Stress,
-                            density: material.rho,
-                        }
-                        .into(),
-                    );
-                    self.region_triangle_cursor += 1;
-                } else {
+                if self.mesh.as_ref().and_then(|mesh| mesh.tris.get(self.region_triangle_cursor)).is_none() {
                     self.stage = ModelBuildStage::Complete;
+                } else if let Some(material) = snapshot.materials.get(self.lookup_cursor) {
+                    if material.id == region.material_id {
+                        self.resolved_material = self.lookup_cursor;
+                        self.lookup_cursor = 0;
+                        self.stage = ModelBuildStage::RegionElementIdReserve;
+                    } else {
+                        self.lookup_cursor += 1;
+                    }
+                } else {
+                    return Err(b"fem2d.model-unknown-region-material".to_vec());
                 }
+            }
+            ModelBuildStage::RegionElementIdReserve => {
+                let region = snapshot.regions.first().ok_or_else(|| b"fem2d.model-region-owner-missing".to_vec())?;
+                let required = region.id.len().checked_add(24).ok_or_else(|| b"fem2d.model-generated-element-id-overflow".to_vec())?;
+                if required > SESSION_MAXIMUM_STRING_BYTES {
+                    return Err(b"fem2d.model-generated-element-id-capacity".to_vec());
+                }
+                let mut id = String::new();
+                id.try_reserve_exact(required).map_err(|_| b"fem2d.model-generated-element-id-allocation".to_vec())?;
+                if id.capacity() > SESSION_OWNER_PAGE_BYTES {
+                    return Err(b"fem2d.model-generated-element-id-page-capacity".to_vec());
+                }
+                self.pending_region_element_id = Some(id);
+                self.stage = ModelBuildStage::RegionElementIdOwner;
+            }
+            ModelBuildStage::RegionElementIdOwner => {
+                let region = snapshot.regions.first().ok_or_else(|| b"fem2d.model-region-owner-missing".to_vec())?;
+                let id = self.pending_region_element_id.as_mut().ok_or_else(|| b"fem2d.model-generated-element-id-owner-missing".to_vec())?;
+                use std::fmt::Write as _;
+                write!(id, "{}_t{}", region.id, self.region_triangle_cursor).map_err(|_| b"fem2d.model-generated-element-id-format".to_vec())?;
+                self.pending_region_element_node_cursor = 0;
+                self.stage = ModelBuildStage::RegionElementNodeOwner;
+            }
+            ModelBuildStage::RegionElementNodeOwner => {
+                bounded_derived_string(self.pending_region_element_id.as_ref().ok_or_else(|| b"fem2d.model-region-element-id-owner-missing".to_vec())?)?;
+                if self.pending_region_element_node_cursor != 0 {
+                    bounded_derived_string(self.pending_region_element_nodes[self.pending_region_element_node_cursor - 1].as_ref().ok_or_else(|| b"fem2d.model-region-element-node-owner-missing".to_vec())?)?;
+                }
+                let triangle = self.mesh.as_ref().and_then(|mesh| mesh.tris.get(self.region_triangle_cursor)).copied().ok_or_else(|| b"fem2d.model-region-triangle-missing".to_vec())?;
+                if self.pending_region_element_node_cursor < 3 {
+                    let source = triangle[self.pending_region_element_node_cursor] as usize;
+                    self.pending_region_element_nodes[self.pending_region_element_node_cursor] = Some(self.region_node_ids.get(source).ok_or_else(|| b"fem2d.model-region-node-index".to_vec())?.clone());
+                    self.pending_region_element_node_cursor += 1;
+                } else {
+                    self.stage = ModelBuildStage::RegionElementCommit;
+                }
+            }
+            ModelBuildStage::RegionElementCommit => {
+                for owner in &self.pending_region_element_nodes {
+                    bounded_derived_string(owner.as_ref().ok_or_else(|| b"fem2d.model-region-element-node-owner-missing".to_vec())?)?;
+                }
+                let region = snapshot.regions.first().expect("region element retains region");
+                let material = &snapshot.materials[self.resolved_material];
+                let nodes = std::array::from_fn(|index| self.pending_region_element_nodes[index].take().expect("region element node owner retained"));
+                self.model.elements.push(
+                    crate::elements2d::Tri3Cst {
+                        id: self.pending_region_element_id.take().ok_or_else(|| b"fem2d.model-region-element-id-owner-missing".to_vec())?,
+                        nodes,
+                        e: material.e,
+                        nu: material.nu,
+                        thickness: region.thickness,
+                        kind: crate::elements2d::PlaneKind::Stress,
+                        density: material.rho,
+                    }
+                    .into(),
+                );
+                self.region_triangle_cursor += 1;
+                self.stage = ModelBuildStage::RegionElementMaterial;
             }
             ModelBuildStage::Complete => return Ok(true),
         }
@@ -221,30 +683,214 @@ impl MountedModelBuild {
         (self.stage == ModelBuildStage::Complete).then(|| std::mem::replace(&mut self.model, AnalysisModel { nodes: Vec::new(), elements: Vec::new(), supports: Vec::new() }))
     }
 
-    fn close_step(&mut self) -> (bool, usize) {
-        if self.model.nodes.pop().is_some() {
-            return (false, std::mem::size_of::<crate::model::Node>());
-        }
-        if self.model.elements.pop().is_some() {
-            return (false, std::mem::size_of::<crate::model::Elements>());
-        }
-        if self.model.supports.pop().is_some() {
-            return (false, std::mem::size_of::<crate::model::Support>());
-        }
-        if self.region_node_ids.pop().is_some() {
-            return (false, std::mem::size_of::<String>());
-        }
-        if let Some(mesh) = self.mesh.as_mut() {
-            if mesh.points.pop().is_some() {
-                return (false, std::mem::size_of::<[f64; 2]>());
+    fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        for owner in [&mut self.pending_node_id, &mut self.pending_element_id, &mut self.pending_element_start, &mut self.pending_element_end, &mut self.pending_region_id, &mut self.pending_region_element_id] {
+            if let Some(value) = owner.as_mut() {
+                let bytes = value.capacity();
+                if bytes > maximum_bytes {
+                    return (false, 0, 0);
+                }
+                *value = String::new();
+                *owner = None;
+                return (false, 1, bytes);
             }
-            if mesh.tris.pop().is_some() {
-                return (false, std::mem::size_of::<[u32; 3]>());
-            }
-            self.mesh = None;
-            return (false, std::mem::size_of::<TriMesh2>());
         }
-        (true, 0)
+        for owner in &mut self.pending_region_element_nodes {
+            if let Some(value) = owner.as_mut() {
+                let bytes = value.capacity();
+                if bytes > maximum_bytes {
+                    return (false, 0, 0);
+                }
+                *value = String::new();
+                *owner = None;
+                return (false, 1, bytes);
+            }
+        }
+        if let Some(support) = self.pending_support.as_mut() {
+            if support.node_id.capacity() != 0 {
+                let bytes = support.node_id.capacity();
+                if bytes > maximum_bytes {
+                    return (false, 0, 0);
+                }
+                support.node_id = String::new();
+                return (false, 1, bytes);
+            }
+            if support.fixed.pop().is_some() {
+                return (false, 1, 0);
+            }
+            let bytes = support.fixed.capacity() * std::mem::size_of::<crate::model::Dof>();
+            if bytes != 0 {
+                if bytes > maximum_bytes {
+                    return (false, 0, 0);
+                }
+                support.fixed = Vec::new();
+                return (false, 1, bytes);
+            }
+            self.pending_support = None;
+            return (false, 1, 0);
+        }
+        loop {
+            let released_bytes = match self.close_lane {
+                0 => {
+                    let Some(node) = self.model.nodes.last_mut() else {
+                        self.close_lane += 1;
+                        continue;
+                    };
+                    if node.id.capacity() != 0 {
+                        let bytes = node.id.capacity();
+                        if bytes > maximum_bytes {
+                            return (false, 0, 0);
+                        }
+                        node.id = String::new();
+                        return (false, 1, bytes);
+                    }
+                    self.model.nodes.pop();
+                    return (false, 1, 0);
+                }
+                1 => {
+                    let bytes = self.model.nodes.capacity() * std::mem::size_of::<crate::model::Node>();
+                    if bytes > maximum_bytes {
+                        return (false, 0, 0);
+                    }
+                    self.model.nodes = Vec::new();
+                    self.close_lane += 1;
+                    bytes
+                }
+                2 => {
+                    let Some(element) = self.model.elements.last_mut() else {
+                        self.close_lane += 1;
+                        continue;
+                    };
+                    if let Some(next_bytes) = element.mounted_next_string_bytes() {
+                        if next_bytes > maximum_bytes {
+                            return (false, 0, 0);
+                        }
+                        let bytes = element.close_mounted_string_step().expect("mounted element next-owner witness changed without mutation");
+                        return (false, 1, bytes);
+                    }
+                    if !element.mounted_strings_terminal_is_empty() {
+                        return (false, 0, 0);
+                    }
+                    self.model.elements.pop();
+                    return (false, 1, 0);
+                }
+                3 => {
+                    let bytes = self.model.elements.capacity() * std::mem::size_of::<crate::model::Elements>();
+                    if bytes > maximum_bytes {
+                        return (false, 0, 0);
+                    }
+                    self.model.elements = Vec::new();
+                    self.close_lane += 1;
+                    bytes
+                }
+                4 => {
+                    let Some(support) = self.model.supports.last_mut() else {
+                        self.close_lane += 1;
+                        continue;
+                    };
+                    if support.node_id.capacity() != 0 {
+                        let bytes = support.node_id.capacity();
+                        if bytes > maximum_bytes {
+                            return (false, 0, 0);
+                        }
+                        support.node_id = String::new();
+                        return (false, 1, bytes);
+                    }
+                    if support.fixed.pop().is_some() {
+                        return (false, 1, 0);
+                    }
+                    let bytes = support.fixed.capacity() * std::mem::size_of::<crate::model::Dof>();
+                    if bytes != 0 {
+                        if bytes > maximum_bytes {
+                            return (false, 0, 0);
+                        }
+                        support.fixed = Vec::new();
+                        return (false, 1, bytes);
+                    }
+                    self.model.supports.pop();
+                    return (false, 1, 0);
+                }
+                5 => {
+                    let bytes = self.model.supports.capacity() * std::mem::size_of::<crate::model::Support>();
+                    if bytes > maximum_bytes {
+                        return (false, 0, 0);
+                    }
+                    self.model.supports = Vec::new();
+                    self.close_lane += 1;
+                    bytes
+                }
+                6 => {
+                    self.close_lane += 1;
+                    continue;
+                }
+                7 => {
+                    let Some(owner) = self.region_node_ids.last_mut() else {
+                        self.close_lane += 1;
+                        continue;
+                    };
+                    if owner.capacity() != 0 {
+                        let bytes = owner.capacity();
+                        if bytes > maximum_bytes {
+                            return (false, 0, 0);
+                        }
+                        *owner = String::new();
+                        return (false, 1, bytes);
+                    }
+                    self.region_node_ids.pop();
+                    return (false, 1, 0);
+                }
+                8 => {
+                    let bytes = self.region_node_ids.capacity() * std::mem::size_of::<String>();
+                    if bytes > maximum_bytes {
+                        return (false, 0, 0);
+                    }
+                    self.region_node_ids = Vec::new();
+                    self.close_lane += 1;
+                    bytes
+                }
+                9 => {
+                    let Some(mesh) = self.mesh.as_mut() else {
+                        self.close_lane += 2;
+                        continue;
+                    };
+                    if mesh.points.pop().is_some() {
+                        return (false, 1, 0);
+                    }
+                    let bytes = mesh.points.capacity() * std::mem::size_of::<[f64; 2]>();
+                    if bytes != 0 {
+                        if bytes > maximum_bytes {
+                            return (false, 0, 0);
+                        }
+                        mesh.points = Vec::new();
+                        return (false, 1, bytes);
+                    }
+                    self.close_lane += 1;
+                    continue;
+                }
+                10 => {
+                    let Some(mesh) = self.mesh.as_mut() else {
+                        self.close_lane += 1;
+                        continue;
+                    };
+                    if mesh.tris.pop().is_some() {
+                        return (false, 1, 0);
+                    }
+                    let bytes = mesh.tris.capacity() * std::mem::size_of::<[u32; 3]>();
+                    if bytes != 0 {
+                        if bytes > maximum_bytes {
+                            return (false, 0, 0);
+                        }
+                        mesh.tris = Vec::new();
+                        return (false, 1, bytes);
+                    }
+                    self.mesh = None;
+                    self.close_lane += 1;
+                    0
+                }
+                _ => return (true, 0, 0),
+            };
+            return (false, 1, released_bytes);
+        }
     }
 }
 //#endregion 🔖️Contract
@@ -253,60 +899,66 @@ impl MountedModelBuild {
 struct MountedState {
     identity: MountedIdentity,
     snapshot: Option<store::SnapshotRead<Fem2dSnapshot>>,
+    snapshot_return: Option<store::SnapshotReadReturn>,
     cancel: semio_framework_job::CancelToken,
     stage: MountedStage,
-    preflight_lane: u8,
-    preflight_cursor: usize,
-    preflight_inner_cursor: usize,
-    preflight_deep_cursor: usize,
-    preflight_owner_opened: bool,
     admitted_items: usize,
     admitted_bytes: usize,
+    graph_plans: Vec<FemStagePlan>,
     graph: Option<FemJobGraph>,
     domain: Option<PlanarDomain>,
     domain_outer_cursor: usize,
     domain_hole_cursor: usize,
     domain_hole_point_cursor: usize,
+    domain_close_lane: u8,
     mesh: Option<MeshJob>,
     model_build: Option<MountedModelBuild>,
-    model: Option<std::sync::Arc<AnalysisModel>>,
+    assembly_build: Option<AssemblyJobConstruction>,
     assembly: Option<AssemblyJob<'static>>,
     csr_build: Option<AssemblyCsrBuild>,
     pcg_build: Option<PcgJobConstruction>,
     pcg: Option<PcgJob>,
     visual: Fem2dLiveVisual,
+    visual_region_owner: Option<(String, RegionVisualQuality)>,
+    visual_candidate: Option<Fem2dMountedVisualBuild>,
+    visual_current: Option<Fem2dMountedVisualLease>,
+    visual_displaced: Option<Fem2dMountedVisualLease>,
+    visual_dirty: bool,
     preview_sequence: u64,
     close_cursor: u8,
     fault: Option<Vec<u8>>,
 }
 
 impl MountedState {
-    fn new(identity: MountedIdentity, snapshot: store::SnapshotRead<Fem2dSnapshot>) -> Self {
+    fn new(identity: MountedIdentity, snapshot: store::SnapshotRead<Fem2dSnapshot>, admitted_items: usize, admitted_bytes: usize) -> Self {
         Self {
             identity,
             snapshot: Some(snapshot),
+            snapshot_return: None,
             cancel: semio_framework_job::root_cancel_token(),
-            stage: MountedStage::Preflight,
-            preflight_lane: 0,
-            preflight_cursor: 0,
-            preflight_inner_cursor: 0,
-            preflight_deep_cursor: 0,
-            preflight_owner_opened: false,
-            admitted_items: 0,
-            admitted_bytes: 0,
+            stage: MountedStage::PrepareGraph,
+            admitted_items,
+            admitted_bytes,
+            graph_plans: Vec::new(),
             graph: None,
             domain: None,
             domain_outer_cursor: 0,
             domain_hole_cursor: 0,
             domain_hole_point_cursor: 0,
+            domain_close_lane: 0,
             mesh: None,
             model_build: None,
-            model: None,
+            assembly_build: None,
             assembly: None,
             csr_build: None,
             pcg_build: None,
             pcg: None,
             visual: Fem2dLiveVisual::default(),
+            visual_region_owner: None,
+            visual_candidate: None,
+            visual_current: None,
+            visual_displaced: None,
+            visual_dirty: true,
             preview_sequence: 0,
             close_cursor: 0,
             fault: None,
@@ -314,166 +966,17 @@ impl MountedState {
     }
 
     fn fail(&mut self, detail: impl Into<Vec<u8>>) -> JobStep {
-        let detail = detail.into();
+        let mut detail = detail.into();
+        if detail.capacity() > SESSION_MAXIMUM_FAULT_BYTES {
+            detail = b"fem2d.session-fault-capacity".to_vec();
+        }
         self.fault = Some(detail.clone());
         self.stage = MountedStage::Fault;
         JobStep::Failed(detail)
     }
 
-    fn progress(&self, label: &'static [u8]) -> JobStep {
-        let mut bytes = Vec::with_capacity(label.len() + 32);
-        bytes.extend_from_slice(label);
-        bytes.extend_from_slice(&self.identity.operation.0.to_le_bytes());
-        bytes.extend_from_slice(&self.identity.base_revision.0.to_le_bytes());
-        bytes.extend_from_slice(&self.identity.generation.0.to_le_bytes());
-        JobStep::Running(Some(bytes))
-    }
-
-    fn charge(&mut self, items: usize, bytes: usize) -> Result<(), &'static [u8]> {
-        let next_items = self.admitted_items.checked_add(items).ok_or(b"fem2d.session-item-overflow" as &'static [u8])?;
-        let next_bytes = self.admitted_bytes.checked_add(bytes).ok_or(b"fem2d.session-byte-overflow" as &'static [u8])?;
-        if next_items > SESSION_MAXIMUM_ITEMS || next_bytes > SESSION_MAXIMUM_BYTES {
-            return Err(b"fem2d.session-admission-exceeded");
-        }
-        self.admitted_items = next_items;
-        self.admitted_bytes = next_bytes;
-        Ok(())
-    }
-
-    fn preflight_one(&mut self) -> Result<bool, &'static [u8]> {
-        let snapshot = self.snapshot.as_ref().ok_or(b"fem2d.session-snapshot-missing" as &'static [u8])?;
-        if self.preflight_lane != 4 && !self.preflight_owner_opened {
-            self.preflight_owner_opened = true;
-            let bytes = match self.preflight_lane {
-                0 => snapshot.nodes.capacity() * std::mem::size_of::<crate::artifacts::fem2d::FemNode>(),
-                1 => snapshot.elements.capacity() * std::mem::size_of::<FemElement>(),
-                2 | 3 => snapshot.regions.capacity() * std::mem::size_of::<crate::artifacts::fem2d::FemRegion>(),
-                5 => snapshot.materials.capacity() * std::mem::size_of::<crate::artifacts::fem2d::FemMaterial>(),
-                6 => snapshot.sections.capacity() * std::mem::size_of::<crate::artifacts::fem2d::FemSection>(),
-                7 => snapshot.supports.capacity() * std::mem::size_of::<crate::artifacts::fem2d::FemSupport>(),
-                8 | 9 => snapshot.load_cases.capacity() * std::mem::size_of::<crate::artifacts::fem2d::FemLoadCase>(),
-                10 | 11 => snapshot.combinations.capacity() * std::mem::size_of::<crate::artifacts::fem2d::FemCombination>(),
-                _ => 0,
-            };
-            self.charge(1, bytes)?;
-            return Ok(false);
-        }
-        let item = match self.preflight_lane {
-            0 => {
-                if snapshot.nodes.len() > SESSION_MAXIMUM_NODES {
-                    return Err(b"fem2d.session-node-capacity");
-                }
-                snapshot.nodes.get(self.preflight_cursor).map(|node| node.id.capacity() + node.name.capacity() + 24)
-            }
-            1 => snapshot.elements.get(self.preflight_cursor).map(|element| match element {
-                FemElement::Bar { id, name, start, end, material_id, section_id } | FemElement::Beam { id, name, start, end, material_id, section_id } => {
-                    id.capacity() + name.capacity() + start.capacity() + end.capacity() + material_id.capacity() + section_id.capacity()
-                }
-            }),
-            2 => {
-                if snapshot.regions.len() > 1 {
-                    return Err(b"fem2d.session-region-capacity");
-                }
-                snapshot.regions.get(self.preflight_cursor).map(|region| {
-                    if region.outline.len() > SESSION_MAXIMUM_BOUNDARY_POINTS || region.holes.len() > SESSION_MAXIMUM_REGION_HOLES || region.holes.iter().any(|hole| hole.len() > SESSION_MAXIMUM_BOUNDARY_POINTS) {
-                        return SESSION_MAXIMUM_BYTES + 1;
-                    }
-                    region.id.capacity() + region.name.capacity() + region.material_id.capacity() + 24
-                })
-            }
-            3 => {
-                if let Some(region) = snapshot.regions.get(self.preflight_cursor) {
-                    if self.preflight_inner_cursor < region.outline.len() {
-                        Some(16)
-                    } else {
-                        self.preflight_cursor += 1;
-                        self.preflight_inner_cursor = 0;
-                        return Ok(false);
-                    }
-                } else {
-                    None
-                }
-            }
-            4 => {
-                if let Some(region) = snapshot.regions.get(self.preflight_cursor) {
-                    if let Some(hole) = region.holes.get(self.preflight_inner_cursor) {
-                        if !self.preflight_owner_opened {
-                            self.preflight_owner_opened = true;
-                            Some(0)
-                        } else if self.preflight_deep_cursor < hole.len() {
-                            self.preflight_deep_cursor += 1;
-                            return self.charge(1, 16).map(|()| false);
-                        } else {
-                            self.preflight_inner_cursor += 1;
-                            self.preflight_deep_cursor = 0;
-                            self.preflight_owner_opened = false;
-                            return Ok(false);
-                        }
-                    } else {
-                        self.preflight_cursor += 1;
-                        self.preflight_inner_cursor = 0;
-                        self.preflight_deep_cursor = 0;
-                        self.preflight_owner_opened = false;
-                        return Ok(false);
-                    }
-                } else {
-                    None
-                }
-            }
-            5 => snapshot.materials.get(self.preflight_cursor).map(|material| material.id.capacity() + material.name.capacity() + 32),
-            6 => snapshot.sections.get(self.preflight_cursor).map(|section| section.id.capacity() + section.name.capacity() + 16),
-            7 => snapshot.supports.get(self.preflight_cursor).map(|support| support.id.capacity() + support.node_id.capacity() + support.fixed.capacity() * std::mem::size_of::<crate::artifacts::fem2d::FemDof>()),
-            8 => snapshot.load_cases.get(self.preflight_cursor).map(|case| case.id.capacity() + case.name.capacity() + 1),
-            9 => {
-                if let Some(case) = snapshot.load_cases.get(self.preflight_cursor) {
-                    if let Some(load) = case.loads.get(self.preflight_inner_cursor) {
-                        self.preflight_inner_cursor += 1;
-                        Some(match load {
-                            FemLoad::Nodal { id, node_id, .. } => id.capacity() + node_id.capacity() + 16,
-                            FemLoad::MemberUdl { id, element_id, .. } => id.capacity() + element_id.capacity() + 24,
-                            FemLoad::Area { id, region_id, .. } => id.capacity() + region_id.capacity() + 16,
-                        })
-                    } else {
-                        self.preflight_cursor += 1;
-                        self.preflight_inner_cursor = 0;
-                        return Ok(false);
-                    }
-                } else {
-                    None
-                }
-            }
-            10 => snapshot.combinations.get(self.preflight_cursor).map(|combination| combination.id.capacity() + combination.name.capacity()),
-            11 => {
-                if let Some(combination) = snapshot.combinations.get(self.preflight_cursor) {
-                    if let Some(term) = combination.terms.get(self.preflight_inner_cursor) {
-                        self.preflight_inner_cursor += 1;
-                        Some(term.case_id.capacity() + 8)
-                    } else {
-                        self.preflight_cursor += 1;
-                        self.preflight_inner_cursor = 0;
-                        return Ok(false);
-                    }
-                } else {
-                    None
-                }
-            }
-            _ => return Ok(true),
-        };
-        if let Some(bytes) = item {
-            self.charge(1, bytes)?;
-            if matches!(self.preflight_lane, 0 | 1 | 2 | 5 | 6 | 7 | 8 | 10) {
-                self.preflight_cursor += 1;
-            } else if self.preflight_lane == 3 {
-                self.preflight_inner_cursor += 1;
-            }
-            return Ok(false);
-        }
-        self.preflight_lane += 1;
-        self.preflight_cursor = 0;
-        self.preflight_inner_cursor = 0;
-        self.preflight_deep_cursor = 0;
-        self.preflight_owner_opened = false;
-        Ok(self.preflight_lane > 11)
+    fn progress(&self, _label: &'static [u8]) -> JobStep {
+        JobStep::Running(None)
     }
 
     fn prepare_domain_one(&mut self) -> Result<bool, &'static [u8]> {
@@ -481,9 +984,12 @@ impl MountedState {
         let Some(region) = snapshot.regions.first() else { return Ok(true) };
         if self.domain.is_none() {
             let mut outer = Vec::new();
-            outer.try_reserve_exact(SESSION_MAXIMUM_BOUNDARY_POINTS).map_err(|_| b"fem2d.session-domain-outer-allocation" as &'static [u8])?;
+            outer.try_reserve_exact(region.outline.len()).map_err(|_| b"fem2d.session-domain-outer-allocation" as &'static [u8])?;
             let mut holes = Vec::new();
-            holes.try_reserve_exact(SESSION_MAXIMUM_REGION_HOLES).map_err(|_| b"fem2d.session-domain-holes-allocation" as &'static [u8])?;
+            holes.try_reserve_exact(region.holes.len()).map_err(|_| b"fem2d.session-domain-holes-allocation" as &'static [u8])?;
+            if outer.capacity() * std::mem::size_of::<[f64; 2]>() > SESSION_OWNER_PAGE_BYTES || holes.capacity() * std::mem::size_of::<Vec<[f64; 2]>>() > SESSION_OWNER_PAGE_BYTES {
+                return Err(b"fem2d.session-domain-page-capacity");
+            }
             self.domain = Some(PlanarDomain { outer, holes });
             return Ok(false);
         }
@@ -496,7 +1002,10 @@ impl MountedState {
         if self.domain_hole_cursor < region.holes.len() {
             if self.domain_hole_cursor == domain.holes.len() {
                 let mut hole = Vec::new();
-                hole.try_reserve_exact(SESSION_MAXIMUM_BOUNDARY_POINTS).map_err(|_| b"fem2d.session-domain-hole-allocation" as &'static [u8])?;
+                hole.try_reserve_exact(region.holes[self.domain_hole_cursor].len()).map_err(|_| b"fem2d.session-domain-hole-allocation" as &'static [u8])?;
+                if hole.capacity() * std::mem::size_of::<[f64; 2]>() > SESSION_OWNER_PAGE_BYTES {
+                    return Err(b"fem2d.session-domain-hole-page-capacity");
+                }
                 domain.holes.push(hole);
                 return Ok(false);
             }
@@ -512,6 +1021,59 @@ impl MountedState {
         Ok(true)
     }
 
+    fn publish_visual_candidate(&mut self, candidate: Fem2dMountedVisualLease) -> Result<(), Fem2dMountedVisualLease> {
+        if self.visual_displaced.is_some() {
+            return Err(candidate);
+        }
+        self.visual_displaced = self.visual_current.take();
+        self.visual_current = Some(candidate);
+        Ok(())
+    }
+
+    fn drive_visual_one(&mut self, cx: &mut StepContext<'_>) -> Option<JobStep> {
+        if let Some(displaced) = self.visual_displaced.as_mut() {
+            let (terminal, _, _) = displaced.close_step(SESSION_OWNER_PAGE_BYTES);
+            if terminal {
+                self.visual_displaced = None;
+            }
+            cx.consume_fuel(1);
+            return Some(self.progress(b"fem2d.visual-displaced-close"));
+        }
+        if self.visual_dirty && self.visual_candidate.is_none() {
+            self.visual_candidate = Some(Fem2dMountedVisualBuild::new(self.identity.app_instance_id, self.identity.base_revision.0, self.identity.generation.0, self.identity.operation.0, self.preview_sequence));
+            self.visual_dirty = false;
+            cx.consume_fuel(1);
+            return Some(self.progress(b"fem2d.visual-candidate-open"));
+        }
+        let candidate = self.visual_candidate.as_mut()?;
+        let snapshot = self.snapshot.as_ref().expect("visual construction retains snapshot");
+        match candidate.step_one(snapshot, &self.visual) {
+            Ok(false) => {
+                cx.consume_fuel(1);
+                Some(self.progress(b"fem2d.visual-candidate"))
+            }
+            Ok(true) => {
+                let lease = candidate.take_complete().expect("complete visual candidate transfers exactly once");
+                let live = current_identity(self.identity.app_instance_id) == Some(self.identity) && snapshot.commit_authority_matches(self.identity.generation.0, self.identity.canonical_base_revision) && !self.cancel.is_cancelled_now();
+                if !live {
+                    self.visual_displaced = Some(lease);
+                    self.visual_candidate = None;
+                    cx.consume_fuel(1);
+                    return Some(self.progress(b"fem2d.visual-stale-close"));
+                }
+                if let Err(exact_candidate) = self.publish_visual_candidate(lease) {
+                    self.visual_displaced = Some(exact_candidate);
+                    cx.consume_fuel(1);
+                    return Some(self.progress(b"fem2d.visual-publication-full"));
+                }
+                self.visual_candidate = None;
+                cx.consume_fuel(1);
+                Some(self.progress(b"fem2d.visual-published"))
+            }
+            Err(detail) => Some(self.fail(detail)),
+        }
+    }
+
     fn step(&mut self, budget: JobBudget) -> JobStep {
         if self.cancel.is_cancelled_now() {
             self.stage = MountedStage::Closing;
@@ -523,17 +1085,15 @@ impl MountedState {
         let now = semio_framework_job::default_now_ms();
         let deadline = now.saturating_add(u64::from(budget.deadline_ms).min(8));
         let mut cx = StepContext::new(self.identity.operation, self.identity.generation, StepBudget::new(budget.fuel.max(1), deadline), self.cancel.clone(), semio_framework_job::default_now_ms, &mut self.preview_sequence);
+        if cx.should_yield() {
+            return JobStep::Running(None);
+        }
+        if let Some(step) = self.drive_visual_one(&mut cx) {
+            return step;
+        }
         match self.stage {
-            MountedStage::Preflight => match self.preflight_one() {
-                Ok(true) => {
-                    self.stage = MountedStage::PrepareGraph;
-                    self.progress(b"fem2d.preflight-complete")
-                }
-                Ok(false) => self.progress(b"fem2d.preflight"),
-                Err(detail) => self.fail(detail.to_vec()),
-            },
             MountedStage::PrepareGraph => {
-                let plans = vec![
+                const PLANS: [FemStagePlan; 8] = [
                     FemStagePlan { stage: FemJobStage::ValidateReferences, units: 1 },
                     FemStagePlan { stage: FemJobStage::BuildDofMap, units: 1 },
                     FemStagePlan { stage: FemJobStage::OrderEquations, units: 1 },
@@ -543,32 +1103,52 @@ impl MountedState {
                     FemStagePlan { stage: FemJobStage::Recover, units: 1 },
                     FemStagePlan { stage: FemJobStage::Finalize, units: 1 },
                 ];
-                self.graph = Some(FemJobGraph::new(self.identity.operation(), plans, 1));
-                self.stage = MountedStage::Graph;
+                if self.graph_plans.capacity() == 0 {
+                    if self.graph_plans.try_reserve_exact(PLANS.len()).is_err() || self.graph_plans.capacity() * std::mem::size_of::<FemStagePlan>() > SESSION_OWNER_PAGE_BYTES {
+                        return self.fail(b"fem2d.graph-plan-allocation".to_vec());
+                    }
+                } else if let Some(plan) = PLANS.get(self.graph_plans.len()).copied() {
+                    self.graph_plans.push(plan);
+                } else {
+                    self.graph = Some(FemJobGraph::new(self.identity.operation(), std::mem::take(&mut self.graph_plans), 1));
+                    self.stage = MountedStage::Graph;
+                }
+                cx.consume_fuel(1);
                 self.progress(b"fem2d.graph-admitted")
             }
             MountedStage::Graph => match self.graph.as_mut().expect("graph stage owns graph").step(&mut cx) {
                 StepOutcome::Complete(candidate) => {
                     self.stage = MountedStage::PrepareDomain;
-                    JobStep::Running(Some(candidate.output))
+                    if candidate.output.capacity() <= SESSION_MAXIMUM_OUTPUT_BYTES {
+                        JobStep::Running(Some(candidate.output))
+                    } else {
+                        self.fail(b"fem2d.graph-output-capacity".to_vec())
+                    }
                 }
-                StepOutcome::PreviewReady(bytes) | StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: bytes, .. }) if bytes.len() <= SESSION_MAXIMUM_OUTPUT_BYTES => JobStep::Running(Some(bytes)),
+                StepOutcome::PreviewReady(bytes) | StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: bytes, .. }) if bytes.capacity() <= SESSION_MAXIMUM_OUTPUT_BYTES => JobStep::Running(Some(bytes)),
                 StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) => self.fail(b"fem2d.graph-output-capacity".to_vec()),
                 StepOutcome::Yield => self.progress(b"fem2d.graph-yield"),
                 StepOutcome::Cancelled => self.fail(b"fem2d.graph-cancelled".to_vec()),
                 StepOutcome::Fault(fault) => self.fail(fault.detail),
             },
             MountedStage::PrepareDomain => match self.prepare_domain_one() {
-                Ok(false) => self.progress(b"fem2d.domain"),
+                Ok(false) => {
+                    cx.consume_fuel(1);
+                    self.progress(b"fem2d.domain")
+                }
                 Ok(true) => {
                     let snapshot = self.snapshot.as_ref().expect("preflight retains snapshot");
                     if let (Some(region), Some(domain)) = (snapshot.regions.first(), self.domain.take()) {
-                        self.visual.region_quality.insert(region.id.clone(), RegionVisualQuality::Unmeshed);
+                        if self.visual.region_quality.insert(region.id.clone(), RegionVisualQuality::Unmeshed).is_err() {
+                            return self.fail(b"fem2d.visual-region-capacity".to_vec());
+                        }
+                        self.visual_dirty = true;
                         self.mesh = Some(MeshJob::new_bounded(domain, MeshOpts { max_edge: region.mesh_size, min_angle_deg: 20.0 }, self.identity.operation(), SESSION_MAXIMUM_MESH_POINTS, SESSION_MAXIMUM_MESH_TRIANGLES));
                         self.stage = MountedStage::Mesh;
                     } else {
                         self.stage = MountedStage::BuildModel;
                     }
+                    cx.consume_fuel(1);
                     self.progress(b"fem2d.domain-complete")
                 }
                 Err(detail) => self.fail(detail.to_vec()),
@@ -576,11 +1156,14 @@ impl MountedState {
             MountedStage::Mesh => match self.mesh.as_mut().expect("mesh stage owns mesh").step(&mut cx) {
                 StepOutcome::Complete(candidate) => {
                     if let Some(region) = self.snapshot.as_ref().and_then(|snapshot| snapshot.regions.first()) {
-                        self.visual.region_quality.insert(region.id.clone(), RegionVisualQuality::Final);
+                        if !self.visual.region_quality.update(&region.id, RegionVisualQuality::Final) {
+                            return self.fail(b"fem2d.visual-region-capacity".to_vec());
+                        }
+                        self.visual_dirty = true;
                     }
                     self.model_build = Some(MountedModelBuild::new(self.mesh.as_mut().and_then(MeshJob::take_completed_mesh)));
                     self.stage = MountedStage::BuildModel;
-                    if candidate.output.len() > SESSION_MAXIMUM_OUTPUT_BYTES {
+                    if candidate.output.capacity() > SESSION_MAXIMUM_OUTPUT_BYTES {
                         self.progress(b"fem2d.mesh-complete")
                     } else {
                         JobStep::Running(Some(candidate.output))
@@ -594,15 +1177,18 @@ impl MountedState {
                             Some(2) => RegionVisualQuality::Final,
                             _ => RegionVisualQuality::Unmeshed,
                         };
-                        self.visual.region_quality.insert(region.id.clone(), quality);
+                        if !self.visual.region_quality.update(&region.id, quality) {
+                            return self.fail(b"fem2d.visual-region-capacity".to_vec());
+                        }
+                        self.visual_dirty = true;
                     }
-                    if bytes.len() <= SESSION_MAXIMUM_OUTPUT_BYTES {
+                    if bytes.capacity() <= SESSION_MAXIMUM_OUTPUT_BYTES {
                         JobStep::Running(Some(bytes))
                     } else {
                         self.progress(b"fem2d.mesh-preview")
                     }
                 }
-                StepOutcome::CheckpointReady(checkpoint) if checkpoint.state.len() <= SESSION_MAXIMUM_OUTPUT_BYTES => JobStep::Running(Some(checkpoint.state)),
+                StepOutcome::CheckpointReady(checkpoint) if checkpoint.state.capacity() <= SESSION_MAXIMUM_OUTPUT_BYTES => JobStep::Running(Some(checkpoint.state)),
                 StepOutcome::CheckpointReady(_) | StepOutcome::Yield => self.progress(b"fem2d.mesh-yield"),
                 StepOutcome::Cancelled => self.fail(b"fem2d.mesh-cancelled".to_vec()),
                 StepOutcome::Fault(fault) => self.fail(fault.detail),
@@ -611,59 +1197,89 @@ impl MountedState {
                 let snapshot = self.snapshot.as_ref().expect("preflight retains snapshot");
                 if self.model_build.is_none() {
                     self.model_build = Some(MountedModelBuild::new(None));
+                    cx.consume_fuel(1);
                     return self.progress(b"fem2d.model-admitted");
                 }
                 match self.model_build.as_mut().expect("model builder admitted above").step_one(snapshot) {
-                    Ok(false) => self.progress(b"fem2d.model-building"),
+                    Ok(false) => {
+                        cx.consume_fuel(1);
+                        self.progress(b"fem2d.model-building")
+                    }
                     Ok(true) => {
                         let model = std::sync::Arc::new(self.model_build.as_mut().and_then(MountedModelBuild::take_complete).expect("complete model transfers exactly once"));
-                        match AssemblyJob::new_owned(std::sync::Arc::clone(&model), self.identity.operation(), 1) {
-                            Ok(assembly) => {
-                                self.model = Some(model);
-                                self.assembly = Some(assembly);
-                                self.stage = MountedStage::Assembly;
-                                self.progress(b"fem2d.model-built")
-                            }
-                            Err(error) => self.fail(error.to_string().into_bytes()),
-                        }
+                        self.assembly_build = Some(AssemblyJobConstruction::new_owned(model, self.identity.operation(), 1));
+                        self.stage = MountedStage::PrepareAssembly;
+                        cx.consume_fuel(1);
+                        self.progress(b"fem2d.model-built")
                     }
                     Err(error) => self.fail(error),
                 }
             }
+            MountedStage::PrepareAssembly => match self.assembly_build.as_mut().expect("assembly construction retained").step_one() {
+                Ok(false) => {
+                    cx.consume_fuel(1);
+                    self.progress(b"fem2d.assembly-preparing")
+                }
+                Ok(true) => {
+                    self.assembly = self.assembly_build.as_mut().and_then(AssemblyJobConstruction::take_complete);
+                    if self.assembly.is_none() {
+                        return self.fail(b"fem2d.assembly-construction-false-terminal".to_vec());
+                    }
+                    self.stage = MountedStage::Assembly;
+                    cx.consume_fuel(1);
+                    self.progress(b"fem2d.assembly-admitted")
+                }
+                Err(error) => self.fail(error.to_string().into_bytes()),
+            },
             MountedStage::Assembly => match self.assembly.as_mut().expect("assembly stage owns assembly").step(&mut cx) {
                 StepOutcome::Complete(candidate) => {
                     let assembly = self.assembly.take().expect("assembly owner retained");
-                    self.csr_build = Some(AssemblyCsrBuild::new(assembly).expect("completed assembly begins retained CSR conversion"));
+                    let csr_build = match AssemblyCsrBuild::new(assembly) {
+                        Ok(builder) => builder,
+                        Err(assembly) => {
+                            self.assembly = Some(assembly);
+                            return self.fail(b"fem2d.assembly-false-terminal".to_vec());
+                        }
+                    };
+                    self.csr_build = Some(csr_build);
                     self.stage = MountedStage::BuildCsr;
-                    if candidate.output.len() <= SESSION_MAXIMUM_OUTPUT_BYTES {
+                    if candidate.output.capacity() <= SESSION_MAXIMUM_OUTPUT_BYTES {
                         JobStep::Running(Some(candidate.output))
                     } else {
                         self.progress(b"fem2d.assembly-complete")
                     }
                 }
-                StepOutcome::PreviewReady(bytes) | StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: bytes, .. }) if bytes.len() <= SESSION_MAXIMUM_OUTPUT_BYTES => JobStep::Running(Some(bytes)),
+                StepOutcome::PreviewReady(bytes) | StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: bytes, .. }) if bytes.capacity() <= SESSION_MAXIMUM_OUTPUT_BYTES => JobStep::Running(Some(bytes)),
                 StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) | StepOutcome::Yield => self.progress(b"fem2d.assembly-yield"),
                 StepOutcome::Cancelled => self.fail(b"fem2d.assembly-cancelled".to_vec()),
                 StepOutcome::Fault(fault) => self.fail(fault.detail),
             },
             MountedStage::BuildCsr => match self.csr_build.as_mut().expect("CSR builder retained").step_one() {
-                Ok(false) => self.progress(b"fem2d.csr-building"),
+                Ok(false) => {
+                    cx.consume_fuel(1);
+                    self.progress(b"fem2d.csr-building")
+                }
                 Ok(true) => {
                     let matrix = self.csr_build.as_mut().and_then(AssemblyCsrBuild::take_complete).expect("complete CSR transfers exactly once");
                     self.pcg_build = Some(PcgJobConstruction::new(self.identity.operation(), matrix));
                     self.stage = MountedStage::PreparePcg;
+                    cx.consume_fuel(1);
                     self.progress(b"fem2d.csr-complete")
                 }
                 Err(detail) => self.fail(detail.to_vec()),
             },
             MountedStage::PreparePcg => match self.pcg_build.as_mut().expect("PCG builder retained").step_one() {
-                Ok(false) => self.progress(b"fem2d.pcg-preparing"),
+                Ok(false) => {
+                    cx.consume_fuel(1);
+                    self.progress(b"fem2d.pcg-preparing")
+                }
                 Ok(true) => {
                     self.pcg = self.pcg_build.as_mut().and_then(PcgJobConstruction::take_complete);
                     if self.pcg.is_none() {
                         return self.fail(b"fem2d.pcg-false-terminal".to_vec());
                     }
                     self.stage = MountedStage::Pcg;
+                    cx.consume_fuel(1);
                     self.progress(b"fem2d.pcg-admitted")
                 }
                 Err(detail) => self.fail(detail.to_vec()),
@@ -671,14 +1287,15 @@ impl MountedState {
             MountedStage::Pcg => match self.pcg.as_mut().expect("pcg stage owns pcg").step(&mut cx) {
                 StepOutcome::Complete(candidate) => {
                     self.visual.converged = self.pcg.as_ref().is_some_and(|job| job.solution().1.converged);
+                    self.visual_dirty = true;
                     self.stage = MountedStage::CommitReady;
-                    if candidate.output.len() <= SESSION_MAXIMUM_OUTPUT_BYTES {
+                    if candidate.output.capacity() <= SESSION_MAXIMUM_OUTPUT_BYTES {
                         JobStep::Running(Some(candidate.output))
                     } else {
                         self.progress(b"fem2d.pcg-complete")
                     }
                 }
-                StepOutcome::PreviewReady(bytes) | StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: bytes, .. }) if bytes.len() <= SESSION_MAXIMUM_OUTPUT_BYTES => JobStep::Running(Some(bytes)),
+                StepOutcome::PreviewReady(bytes) | StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: bytes, .. }) if bytes.capacity() <= SESSION_MAXIMUM_OUTPUT_BYTES => JobStep::Running(Some(bytes)),
                 StepOutcome::PreviewReady(_) | StepOutcome::CheckpointReady(_) | StepOutcome::Yield => self.progress(b"fem2d.pcg-yield"),
                 StepOutcome::Cancelled => self.fail(b"fem2d.pcg-cancelled".to_vec()),
                 StepOutcome::Fault(fault) => self.fail(fault.detail),
@@ -690,12 +1307,24 @@ impl MountedState {
                     return self.fail(b"fem2d.session-stale-commit".to_vec());
                 }
                 self.visual.validated_final = self.visual.converged;
+                self.visual_dirty = true;
+                self.stage = MountedStage::PublishFinalVisual;
+                cx.consume_fuel(1);
+                self.progress(b"fem2d.final-visual-requested")
+            }
+            MountedStage::PublishFinalVisual => {
+                let validation = current_identity(self.identity.app_instance_id);
+                let store_is_current = self.snapshot.as_ref().is_some_and(|snapshot| snapshot.commit_authority_matches(self.identity.generation.0, self.identity.canonical_base_revision));
+                if validation != Some(self.identity) || !store_is_current || self.cancel.is_cancelled_now() {
+                    return self.fail(b"fem2d.session-stale-final-visual".to_vec());
+                }
                 self.stage = MountedStage::Complete;
                 let mut output = Vec::with_capacity(32);
                 output.extend_from_slice(&self.identity.operation.0.to_le_bytes());
                 output.extend_from_slice(&self.identity.base_revision.0.to_le_bytes());
                 output.extend_from_slice(&self.identity.generation.0.to_le_bytes());
                 output.extend_from_slice(&(self.admitted_items as u64).to_le_bytes());
+                cx.consume_fuel(1);
                 JobStep::Done(output)
             }
             MountedStage::Complete => JobStep::Done(Vec::new()),
@@ -705,7 +1334,7 @@ impl MountedState {
     }
 
     fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
-        if maximum_items == 0 || maximum_bytes < 128 {
+        if maximum_items == 0 {
             return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
         }
         self.cancel.cancel_now();
@@ -713,6 +1342,17 @@ impl MountedState {
         loop {
             match self.close_cursor {
                 0 => {
+                    if self.graph_plans.pop().is_some() {
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                    }
+                    let plan_bytes = self.graph_plans.capacity() * std::mem::size_of::<FemStagePlan>();
+                    if plan_bytes != 0 {
+                        if plan_bytes > maximum_bytes {
+                            return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                        }
+                        self.graph_plans = Vec::new();
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: plan_bytes };
+                    }
                     if let Some(graph) = self.graph.as_mut() {
                         let (terminal, released_items, released_bytes) = graph.close_step(maximum_bytes);
                         if !terminal {
@@ -736,9 +1376,9 @@ impl MountedState {
                 }
                 2 => {
                     if let Some(model_build) = self.model_build.as_mut() {
-                        let (terminal, released_bytes) = model_build.close_step();
+                        let (terminal, released_items, released_bytes) = model_build.close_step(maximum_bytes);
                         if !terminal {
-                            return PluginCloseStep::Pending { released_items: 1, released_bytes };
+                            return PluginCloseStep::Pending { released_items, released_bytes };
                         }
                         self.model_build = None;
                         return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<MountedModelBuild>() };
@@ -746,6 +1386,17 @@ impl MountedState {
                     self.close_cursor += 1;
                 }
                 3 => {
+                    if let Some(assembly_build) = self.assembly_build.as_mut() {
+                        let (terminal, released_items, released_bytes) = assembly_build.close_step(maximum_bytes);
+                        if !terminal {
+                            return PluginCloseStep::Pending { released_items, released_bytes };
+                        }
+                        self.assembly_build = None;
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<AssemblyJobConstruction>() };
+                    }
+                    self.close_cursor += 1;
+                }
+                4 => {
                     if let Some(assembly) = self.assembly.as_mut() {
                         let (terminal, released_items, released_bytes) = assembly.close_step(maximum_bytes);
                         if !terminal {
@@ -756,7 +1407,7 @@ impl MountedState {
                     }
                     self.close_cursor += 1;
                 }
-                4 => {
+                5 => {
                     if let Some(csr_build) = self.csr_build.as_mut() {
                         let (terminal, released_items, released_bytes) = csr_build.close_step(maximum_bytes);
                         if !terminal {
@@ -767,18 +1418,18 @@ impl MountedState {
                     }
                     self.close_cursor += 1;
                 }
-                5 => {
+                6 => {
                     if let Some(pcg_build) = self.pcg_build.as_mut() {
-                        let (terminal, released_bytes) = pcg_build.close_step();
+                        let (terminal, released_items, released_bytes) = pcg_build.close_step(maximum_bytes);
                         if !terminal {
-                            return PluginCloseStep::Pending { released_items: 1, released_bytes };
+                            return PluginCloseStep::Pending { released_items, released_bytes };
                         }
                         self.pcg_build = None;
                         return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<PcgJobConstruction>() };
                     }
                     self.close_cursor += 1;
                 }
-                6 => {
+                7 => {
                     if let Some(pcg) = self.pcg.as_mut() {
                         let (terminal, released_items, released_bytes) = pcg.close_step(maximum_bytes);
                         if !terminal {
@@ -789,69 +1440,189 @@ impl MountedState {
                     }
                     self.close_cursor += 1;
                 }
-                7 => {
-                    if let Some(model) = self.model.as_mut() {
-                        let Some(model) = std::sync::Arc::get_mut(model) else {
-                            return PluginCloseStep::Blocked { reason: "mounted FEM model root is still held by a child job" };
-                        };
-                        if model.nodes.pop().is_some() {
-                            return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<crate::model::Node>() };
-                        }
-                        if model.elements.pop().is_some() {
-                            return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<crate::model::Elements>() };
-                        }
-                        if model.supports.pop().is_some() {
-                            return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<crate::model::Support>() };
-                        }
-                        self.model = None;
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<std::sync::Arc<AnalysisModel>>() };
-                    }
-                    self.close_cursor += 1;
-                }
                 8 => {
                     if let Some(domain) = self.domain.as_mut() {
-                        if domain.outer.pop().is_some() {
-                            return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<[f64; 2]>() };
-                        }
-                        if let Some(hole) = domain.holes.last_mut() {
-                            if hole.pop().is_some() {
-                                return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<[f64; 2]>() };
+                        match self.domain_close_lane {
+                            0 if domain.outer.pop().is_some() => return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 },
+                            0 => {
+                                let bytes = domain.outer.capacity() * std::mem::size_of::<[f64; 2]>();
+                                if bytes > maximum_bytes {
+                                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                                }
+                                domain.outer = Vec::new();
+                                self.domain_close_lane = 1;
+                                return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
                             }
-                            domain.holes.pop();
-                            return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<Vec<[f64; 2]>>() };
+                            1 => {
+                                if let Some(hole) = domain.holes.last_mut() {
+                                    if hole.pop().is_some() {
+                                        return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                                    }
+                                    let bytes = hole.capacity() * std::mem::size_of::<[f64; 2]>();
+                                    if bytes > maximum_bytes {
+                                        return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                                    }
+                                    *hole = Vec::new();
+                                    domain.holes.pop();
+                                    return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+                                }
+                                self.domain_close_lane = 2;
+                                continue;
+                            }
+                            2 => {
+                                let bytes = domain.holes.capacity() * std::mem::size_of::<Vec<[f64; 2]>>();
+                                if bytes > maximum_bytes {
+                                    return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                                }
+                                domain.holes = Vec::new();
+                                self.domain_close_lane = 3;
+                                return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+                            }
+                            _ => {
+                                self.domain = None;
+                                return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                            }
                         }
-                        self.domain = None;
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<PlanarDomain>() };
                     }
                     self.close_cursor += 1;
                 }
                 9 => {
-                    if self.visual.fields.pop().is_some() {
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of_val(&self.visual.fields) };
+                    if let Some(field) = self.visual.fields.last_mut() {
+                        if field.node_id.capacity() != 0 {
+                            let bytes = field.node_id.capacity();
+                            if bytes > maximum_bytes {
+                                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                            }
+                            field.node_id = String::new();
+                            return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+                        }
+                        self.visual.fields.pop();
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                    }
+                    let bytes = self.visual.fields.capacity() * std::mem::size_of::<crate::model::NodeLiveField>();
+                    if bytes != 0 {
+                        if bytes > maximum_bytes {
+                            return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                        }
+                        self.visual.fields = Vec::new();
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
                     }
                     self.close_cursor += 1;
                 }
                 10 => {
-                    if self.visual.assembling_element_ids.pop().is_some() {
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<String>() };
+                    if let Some(owner) = self.visual.assembling_element_ids.last_mut() {
+                        if owner.capacity() != 0 {
+                            let bytes = owner.capacity();
+                            if bytes > maximum_bytes {
+                                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                            }
+                            *owner = String::new();
+                            return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+                        }
+                        self.visual.assembling_element_ids.pop();
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                    }
+                    let bytes = self.visual.assembling_element_ids.capacity() * std::mem::size_of::<String>();
+                    if bytes != 0 {
+                        if bytes > maximum_bytes {
+                            return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                        }
+                        self.visual.assembling_element_ids = Vec::new();
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
                     }
                     self.close_cursor += 1;
                 }
                 11 => {
-                    if self.visual.region_quality.extract_if(|_, _| true).next().is_some() {
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<(String, RegionVisualQuality)>() };
+                    if self.visual_region_owner.is_none() {
+                        if let Some(owner) = self.visual.region_quality.take_one() {
+                            self.visual_region_owner = Some(owner);
+                            return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                        }
+                    }
+                    if let Some((id, _)) = self.visual_region_owner.as_mut() {
+                        if id.capacity() != 0 {
+                            let bytes = id.capacity();
+                            if bytes > maximum_bytes {
+                                return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                            }
+                            *id = String::new();
+                            return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
+                        }
+                        self.visual_region_owner = None;
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
                     }
                     self.close_cursor += 1;
                 }
                 12 => {
-                    if self.snapshot.take().is_some() {
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<store::SnapshotRead<Fem2dSnapshot>>() };
+                    if let Some(candidate) = self.visual_candidate.as_mut() {
+                        let (terminal, released_items, released_bytes) = candidate.close_step(maximum_bytes);
+                        if !terminal {
+                            return PluginCloseStep::Pending { released_items, released_bytes };
+                        }
+                        if !candidate.terminal_is_empty() {
+                            return PluginCloseStep::Blocked { reason: "mounted FEM visual candidate reported false terminal" };
+                        }
+                        self.visual_candidate = None;
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
                     }
                     self.close_cursor += 1;
                 }
                 13 => {
-                    if self.fault.take().is_some() {
-                        return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<Vec<u8>>() };
+                    if let Some(displaced) = self.visual_displaced.as_mut() {
+                        let (terminal, released_items, released_bytes) = displaced.close_step(maximum_bytes);
+                        if !terminal {
+                            return PluginCloseStep::Pending { released_items, released_bytes };
+                        }
+                        if !displaced.terminal_is_empty() {
+                            return PluginCloseStep::Blocked { reason: "mounted FEM displaced visual reported false terminal" };
+                        }
+                        self.visual_displaced = None;
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                    }
+                    self.close_cursor += 1;
+                }
+                14 => {
+                    if let Some(current) = self.visual_current.as_mut() {
+                        let (terminal, released_items, released_bytes) = current.close_step(maximum_bytes);
+                        if !terminal {
+                            return PluginCloseStep::Pending { released_items, released_bytes };
+                        }
+                        if !current.terminal_is_empty() {
+                            return PluginCloseStep::Blocked { reason: "mounted FEM current visual reported false terminal" };
+                        }
+                        self.visual_current = None;
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                    }
+                    self.close_cursor += 1;
+                }
+                15 => {
+                    if let Some(snapshot) = self.snapshot.take() {
+                        let Some(witness) = snapshot.return_to_registry_witness() else {
+                            return PluginCloseStep::Blocked { reason: "mounted FEM snapshot lease was already returned" };
+                        };
+                        self.snapshot_return = Some(witness);
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<store::SnapshotRead<Fem2dSnapshot>>() };
+                    }
+                    if self.snapshot_return.as_ref().is_some_and(|witness| !witness.terminal_is_empty()) {
+                        return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                    }
+                    if self.snapshot_return.take().is_some() {
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<store::SnapshotReadReturn>() };
+                    }
+                    self.close_cursor += 1;
+                }
+                16 => {
+                    if let Some(fault) = self.fault.as_mut() {
+                        if fault.pop().is_some() {
+                            return PluginCloseStep::Pending { released_items: 1, released_bytes: 0 };
+                        }
+                        let bytes = fault.capacity();
+                        if bytes > maximum_bytes {
+                            return PluginCloseStep::Pending { released_items: 0, released_bytes: 0 };
+                        }
+                        *fault = Vec::new();
+                        self.fault = None;
+                        return PluginCloseStep::Pending { released_items: 1, released_bytes: bytes };
                     }
                     self.close_cursor += 1;
                 }
@@ -866,18 +1637,24 @@ impl MountedState {
     fn terminal_is_empty(&self) -> bool {
         self.stage == MountedStage::Empty
             && self.snapshot.is_none()
+            && self.snapshot_return.is_none()
+            && self.graph_plans.capacity() == 0
             && self.graph.is_none()
             && self.mesh.is_none()
             && self.model_build.is_none()
-            && self.model.is_none()
+            && self.assembly_build.is_none()
             && self.assembly.is_none()
             && self.csr_build.is_none()
             && self.pcg_build.is_none()
             && self.pcg.is_none()
             && self.domain.is_none()
             && self.visual.region_quality.is_empty()
+            && self.visual_region_owner.is_none()
             && self.visual.assembling_element_ids.is_empty()
             && self.visual.fields.is_empty()
+            && self.visual_candidate.is_none()
+            && self.visual_current.is_none()
+            && self.visual_displaced.is_none()
             && self.fault.is_none()
     }
 }
@@ -894,17 +1671,259 @@ struct PendingAdmission {
     app_instance_id: u32,
     shell: u16,
     identity: MountedIdentity,
+    admitted_items: usize,
+    admitted_bytes: usize,
+}
+
+#[derive(Clone, Copy)]
+struct SnapshotAdmissionCursor {
+    lane: u8,
+    outer: usize,
+    inner: usize,
+    deep: usize,
+    owner_opened: bool,
+    items: usize,
+    bytes: usize,
+}
+
+impl SnapshotAdmissionCursor {
+    fn new() -> Self {
+        Self { lane: 0, outer: 0, inner: 0, deep: 0, owner_opened: false, items: 1, bytes: std::mem::size_of::<Fem2dSnapshot>() }
+    }
+
+    fn charge(&mut self, items: usize, bytes: usize) -> Result<(), &'static [u8]> {
+        let items = self.items.checked_add(items).ok_or(b"fem2d.session-item-overflow" as &'static [u8])?;
+        let bytes = self.bytes.checked_add(bytes).ok_or(b"fem2d.session-byte-overflow" as &'static [u8])?;
+        if items > SESSION_MAXIMUM_INPUT_ITEMS || bytes > SESSION_MAXIMUM_INPUT_BYTES {
+            return Err(b"fem2d.session-admission-exceeded");
+        }
+        self.items = items;
+        self.bytes = bytes;
+        Ok(())
+    }
+
+    fn reset_lane(&mut self) {
+        self.lane += 1;
+        self.outer = 0;
+        self.inner = 0;
+        self.deep = 0;
+        self.owner_opened = false;
+    }
+
+    fn step_one(&mut self, snapshot: &Fem2dSnapshot) -> Result<bool, &'static [u8]> {
+        if !self.owner_opened && !matches!(self.lane, 4 | 9 | 11) {
+            let bytes = match self.lane {
+                0 => snapshot.nodes.capacity() * std::mem::size_of::<crate::artifacts::fem2d::FemNode>(),
+                1 => snapshot.elements.capacity() * std::mem::size_of::<FemElement>(),
+                2 => snapshot.regions.capacity() * std::mem::size_of::<crate::artifacts::fem2d::FemRegion>(),
+                3 => 0,
+                5 => snapshot.materials.capacity() * std::mem::size_of::<crate::artifacts::fem2d::FemMaterial>(),
+                6 => snapshot.sections.capacity() * std::mem::size_of::<crate::artifacts::fem2d::FemSection>(),
+                7 => snapshot.supports.capacity() * std::mem::size_of::<crate::artifacts::fem2d::FemSupport>(),
+                8 => snapshot.load_cases.capacity() * std::mem::size_of::<crate::artifacts::fem2d::FemLoadCase>(),
+                10 => snapshot.combinations.capacity() * std::mem::size_of::<crate::artifacts::fem2d::FemCombination>(),
+                _ => 0,
+            };
+            self.owner_opened = true;
+            self.charge(1, bytes)?;
+            return Ok(false);
+        }
+        let item = match self.lane {
+            0 => {
+                if snapshot.nodes.len() > SESSION_MAXIMUM_NODES {
+                    return Err(b"fem2d.session-node-capacity");
+                }
+                match snapshot.nodes.get(self.outer) {
+                    Some(node) => Some(bounded_string_capacities(&[&node.id, &node.name])?),
+                    None => None,
+                }
+            }
+            1 => {
+                if snapshot.elements.len() > SESSION_MAXIMUM_ELEMENTS {
+                    return Err(b"fem2d.session-element-capacity");
+                }
+                match snapshot.elements.get(self.outer) {
+                    Some(FemElement::Bar { id, name, start, end, material_id, section_id }) | Some(FemElement::Beam { id, name, start, end, material_id, section_id }) => {
+                        Some(bounded_string_capacities(&[id, name, start, end, material_id, section_id])?)
+                    }
+                    None => None,
+                }
+            }
+            2 => {
+                if snapshot.regions.len() > 1 {
+                    return Err(b"fem2d.session-region-capacity");
+                }
+                match snapshot.regions.get(self.outer) {
+                    Some(region) => Some(if region.outline.len() > SESSION_MAXIMUM_BOUNDARY_POINTS || region.holes.len() > SESSION_MAXIMUM_REGION_HOLES {
+                        SESSION_MAXIMUM_INPUT_BYTES + 1
+                    } else {
+                        bounded_string_capacities(&[&region.id, &region.name, &region.material_id])? + region.outline.capacity() * 16 + region.holes.capacity() * std::mem::size_of::<Vec<[f64; 2]>>()
+                    }),
+                    None => None,
+                }
+            }
+            3 => {
+                let Some(region) = snapshot.regions.get(self.outer) else {
+                    self.reset_lane();
+                    return Ok(false);
+                };
+                if self.inner < region.outline.len() {
+                    self.inner += 1;
+                    Some(0)
+                } else {
+                    self.outer += 1;
+                    self.inner = 0;
+                    return Ok(false);
+                }
+            }
+            4 => {
+                let Some(region) = snapshot.regions.get(self.outer) else {
+                    self.reset_lane();
+                    return Ok(false);
+                };
+                let Some(hole) = region.holes.get(self.inner) else {
+                    self.outer += 1;
+                    self.inner = 0;
+                    self.deep = 0;
+                    self.owner_opened = false;
+                    return Ok(false);
+                };
+                if hole.len() > SESSION_MAXIMUM_BOUNDARY_POINTS {
+                    return Err(b"fem2d.session-hole-capacity");
+                }
+                if !self.owner_opened {
+                    self.owner_opened = true;
+                    self.charge(1, hole.capacity() * 16)?;
+                    return Ok(false);
+                }
+                if self.deep < hole.len() {
+                    self.deep += 1;
+                    Some(0)
+                } else {
+                    self.inner += 1;
+                    self.deep = 0;
+                    self.owner_opened = false;
+                    return Ok(false);
+                }
+            }
+            5 => match snapshot.materials.get(self.outer) {
+                Some(material) => Some(bounded_string_capacities(&[&material.id, &material.name])?),
+                None => None,
+            },
+            6 => match snapshot.sections.get(self.outer) {
+                Some(section) => Some(bounded_string_capacities(&[&section.id, &section.name])?),
+                None => None,
+            },
+            7 => {
+                if snapshot.supports.len() > SESSION_MAXIMUM_SUPPORTS {
+                    return Err(b"fem2d.session-support-capacity");
+                }
+                match snapshot.supports.get(self.outer) {
+                    Some(support) => Some(bounded_string_capacities(&[&support.id, &support.node_id])? + support.fixed.capacity() * std::mem::size_of::<crate::artifacts::fem2d::FemDof>()),
+                    None => None,
+                }
+            }
+            8 => match snapshot.load_cases.get(self.outer) {
+                Some(case) => Some(bounded_string_capacities(&[&case.id, &case.name])?),
+                None => None,
+            },
+            9 => {
+                let Some(case) = snapshot.load_cases.get(self.outer) else {
+                    self.reset_lane();
+                    return Ok(false);
+                };
+                if !self.owner_opened {
+                    self.owner_opened = true;
+                    self.charge(1, case.loads.capacity() * std::mem::size_of::<FemLoad>())?;
+                    return Ok(false);
+                }
+                if let Some(load) = case.loads.get(self.inner) {
+                    self.inner += 1;
+                    Some(match load {
+                        FemLoad::Nodal { id, node_id, .. } => bounded_string_capacities(&[id, node_id])?,
+                        FemLoad::MemberUdl { id, element_id, .. } => bounded_string_capacities(&[id, element_id])?,
+                        FemLoad::Area { id, region_id, .. } => bounded_string_capacities(&[id, region_id])?,
+                    })
+                } else {
+                    self.outer += 1;
+                    self.inner = 0;
+                    self.owner_opened = false;
+                    return Ok(false);
+                }
+            }
+            10 => match snapshot.combinations.get(self.outer) {
+                Some(combination) => Some(bounded_string_capacities(&[&combination.id, &combination.name])?),
+                None => None,
+            },
+            11 => {
+                let Some(combination) = snapshot.combinations.get(self.outer) else {
+                    self.reset_lane();
+                    return Ok(false);
+                };
+                if !self.owner_opened {
+                    self.owner_opened = true;
+                    self.charge(1, combination.terms.capacity() * std::mem::size_of::<crate::artifacts::fem2d::FemCombinationTerm>())?;
+                    return Ok(false);
+                }
+                if let Some(term) = combination.terms.get(self.inner) {
+                    self.inner += 1;
+                    Some(bounded_string_capacities(&[&term.case_id])?)
+                } else {
+                    self.outer += 1;
+                    self.inner = 0;
+                    self.owner_opened = false;
+                    return Ok(false);
+                }
+            }
+            _ => return Ok(true),
+        };
+        if let Some(bytes) = item {
+            self.charge(1, bytes)?;
+            if matches!(self.lane, 0 | 1 | 2 | 5 | 6 | 7 | 8 | 10) {
+                self.outer += 1;
+            }
+            return Ok(false);
+        }
+        self.reset_lane();
+        Ok(self.lane > 11)
+    }
+
+    fn process_credit(self) -> Result<(usize, usize), &'static [u8]> {
+        let (items, bytes) = MountedProcessOwnerCatalog::fixed().credit(self.items, self.bytes)?;
+        if items > SESSION_MAXIMUM_ITEMS || bytes > SESSION_MAXIMUM_BYTES {
+            return Err(b"fem2d.session-process-admission-exceeded");
+        }
+        Ok((items, bytes))
+    }
+}
+
+#[derive(Clone, Copy)]
+struct PendingSnapshotAdmission {
+    app_instance_id: u32,
+    render: AppRenderOperationContext,
+    cursor: SnapshotAdmissionCursor,
+}
+
+#[derive(Clone, Copy)]
+struct PendingSnapshotFault {
+    app_instance_id: u32,
+    render: AppRenderOperationContext,
+    detail: &'static str,
+    emitted: bool,
 }
 
 struct MountedRegistry {
     shells: [Rc<RefCell<Option<MountedState>>>; SESSION_SHELL_CAPACITY],
     current: [Option<CurrentSession>; SESSION_ACTIVE_CAPACITY],
+    preflight: [Option<PendingSnapshotAdmission>; SESSION_ACTIVE_CAPACITY],
+    preflight_fault: [Option<PendingSnapshotFault>; SESSION_ACTIVE_CAPACITY],
     pending: [Option<PendingAdmission>; SESSION_ACTIVE_CAPACITY],
     retiring: [Option<u16>; SESSION_SHELL_CAPACITY],
     free: [u16; SESSION_SHELL_CAPACITY],
     free_read: usize,
     free_len: usize,
-    credits: [bool; SESSION_SHELL_CAPACITY],
+    credit_items: [usize; SESSION_SHELL_CAPACITY],
+    credit_bytes: [usize; SESSION_SHELL_CAPACITY],
     reserved_items: usize,
     reserved_bytes: usize,
     next_job: u64,
@@ -915,12 +1934,15 @@ impl MountedRegistry {
         Self {
             shells: std::array::from_fn(|_| Rc::new(RefCell::new(None))),
             current: [None; SESSION_ACTIVE_CAPACITY],
+            preflight: [None; SESSION_ACTIVE_CAPACITY],
+            preflight_fault: [None; SESSION_ACTIVE_CAPACITY],
             pending: [None; SESSION_ACTIVE_CAPACITY],
             retiring: [None; SESSION_SHELL_CAPACITY],
             free: std::array::from_fn(|index| index as u16),
             free_read: 0,
             free_len: SESSION_SHELL_CAPACITY,
-            credits: [false; SESSION_SHELL_CAPACITY],
+            credit_items: [0; SESSION_SHELL_CAPACITY],
+            credit_bytes: [0; SESSION_SHELL_CAPACITY],
             reserved_items: 0,
             reserved_bytes: 0,
             next_job: 0,
@@ -938,32 +1960,35 @@ impl MountedRegistry {
     }
 
     fn release(&mut self, shell: u16) {
-        assert!(!self.credits[shell as usize], "mounted FEM shell released before its process credit");
+        assert_eq!(self.credit_items[shell as usize], 0, "mounted FEM shell released before its process item credit");
+        assert_eq!(self.credit_bytes[shell as usize], 0, "mounted FEM shell released before its process byte credit");
         let write = (self.free_read + self.free_len) % SESSION_SHELL_CAPACITY;
         self.free[write] = shell;
         self.free_len += 1;
     }
 
-    fn reserve_credit(&mut self, shell: u16) -> bool {
-        if self.credits[shell as usize] {
+    fn reserve_credit(&mut self, shell: u16, admitted_items: usize, admitted_bytes: usize) -> bool {
+        if self.credit_items[shell as usize] != 0 || self.credit_bytes[shell as usize] != 0 || admitted_items == 0 || admitted_bytes == 0 || admitted_items > SESSION_MAXIMUM_ITEMS || admitted_bytes > SESSION_MAXIMUM_BYTES {
             return false;
         }
-        let Some(items) = self.reserved_items.checked_add(SESSION_MAXIMUM_ITEMS) else { return false };
-        let Some(bytes) = self.reserved_bytes.checked_add(SESSION_MAXIMUM_BYTES) else { return false };
+        let Some(items) = self.reserved_items.checked_add(admitted_items) else { return false };
+        let Some(bytes) = self.reserved_bytes.checked_add(admitted_bytes) else { return false };
         if items > SESSION_SHELL_CAPACITY * SESSION_MAXIMUM_ITEMS || bytes > SESSION_SHELL_CAPACITY * SESSION_MAXIMUM_BYTES {
             return false;
         }
-        self.credits[shell as usize] = true;
+        self.credit_items[shell as usize] = admitted_items;
+        self.credit_bytes[shell as usize] = admitted_bytes;
         self.reserved_items = items;
         self.reserved_bytes = bytes;
         true
     }
 
     fn release_credit(&mut self, shell: u16) {
-        assert!(self.credits[shell as usize], "mounted FEM shell released a missing process credit");
-        self.credits[shell as usize] = false;
-        self.reserved_items -= SESSION_MAXIMUM_ITEMS;
-        self.reserved_bytes -= SESSION_MAXIMUM_BYTES;
+        let items = std::mem::take(&mut self.credit_items[shell as usize]);
+        let bytes = std::mem::take(&mut self.credit_bytes[shell as usize]);
+        assert!(items != 0 && bytes != 0, "mounted FEM shell released a missing process credit");
+        self.reserved_items -= items;
+        self.reserved_bytes -= bytes;
     }
 
     fn retain_retirement(&mut self, shell: u16) -> bool {
@@ -1076,10 +2101,10 @@ fn current_identity(app_instance_id: u32) -> Option<MountedIdentity> {
     })
 }
 
-/// 🔍️ Proves that this operation would admit a distinct mounted owner before the shared
-/// application requests an opaque snapshot lease. Unchanged renders and occupied collisions issue
-/// no lease, so idle frame polling cannot consume the fixed lease registry.
-pub fn needs_snapshot_read(render: AppRenderOperationContext) -> bool {
+/// 🔍️ Advances exactly one schema owner/scalar census before the shared application may
+/// request an opaque snapshot lease. The fixed shell and exact process credit are reserved only
+/// after the census reaches its complete witness.
+pub fn prepare_snapshot_read(render: AppRenderOperationContext, snapshot: &Fem2dSnapshot) -> bool {
     if render.app_instance_id == 0 {
         return false;
     }
@@ -1106,8 +2131,43 @@ pub fn needs_snapshot_read(render: AppRenderOperationContext) -> bool {
         if previous.is_some() && !registry.retiring.iter().any(Option::is_none) {
             return false;
         }
+        let matches_render = |pending: PendingSnapshotAdmission| {
+            pending.app_instance_id == render.app_instance_id && pending.render.base_revision == render.base_revision && pending.render.generation == render.generation && pending.render.canonical_base_revision == render.canonical_base_revision
+        };
+        if let Some(fault) = registry.preflight_fault[current_slot] {
+            if fault.app_instance_id == render.app_instance_id && fault.render.base_revision == render.base_revision && fault.render.generation == render.generation && fault.render.canonical_base_revision == render.canonical_base_revision {
+                return false;
+            }
+            registry.preflight_fault[current_slot] = None;
+        }
+        if !registry.preflight[current_slot].is_some_and(matches_render) {
+            registry.preflight[current_slot] = Some(PendingSnapshotAdmission { app_instance_id: render.app_instance_id, render, cursor: SnapshotAdmissionCursor::new() });
+            return false;
+        }
+        let completed = {
+            let preflight = registry.preflight[current_slot].as_mut().expect("matching FEM preflight retained");
+            match preflight.cursor.step_one(snapshot) {
+                Ok(completed) => completed,
+                Err(detail) => {
+                    registry.preflight[current_slot] = None;
+                    registry.preflight_fault[current_slot] = Some(PendingSnapshotFault { app_instance_id: render.app_instance_id, render, detail: std::str::from_utf8(detail).unwrap_or("fem2d.session-preflight-fault"), emitted: false });
+                    return false;
+                }
+            }
+        };
+        if !completed {
+            return false;
+        }
+        let preflight = registry.preflight[current_slot].take().expect("completed FEM preflight retained");
+        let (process_items, process_bytes) = match preflight.cursor.process_credit() {
+            Ok(credit) => credit,
+            Err(detail) => {
+                registry.preflight_fault[current_slot] = Some(PendingSnapshotFault { app_instance_id: render.app_instance_id, render, detail: std::str::from_utf8(detail).unwrap_or("fem2d.session-process-credit-fault"), emitted: false });
+                return false;
+            }
+        };
         let Some(shell) = registry.allocate() else { return false };
-        if !registry.reserve_credit(shell) {
+        if !registry.reserve_credit(shell, process_items, process_bytes) {
             registry.release(shell);
             return false;
         }
@@ -1119,7 +2179,7 @@ pub fn needs_snapshot_read(render: AppRenderOperationContext) -> bool {
         registry.next_job = counter;
         let job = FEM2D_JOB_TAG | counter;
         let identity = MountedIdentity { app_instance_id: render.app_instance_id, base_revision: render.base_revision, generation: render.generation, canonical_base_revision: render.canonical_base_revision, operation: OperationId(job), job };
-        registry.pending[current_slot] = Some(PendingAdmission { app_instance_id: render.app_instance_id, shell, identity });
+        registry.pending[current_slot] = Some(PendingAdmission { app_instance_id: render.app_instance_id, shell, identity, admitted_items: process_items, admitted_bytes: process_bytes });
         true
     })
 }
@@ -1133,6 +2193,15 @@ pub fn reconcile(doc: &ArtifactView<'_, Fem2dSnapshot>) -> Vec<Effect> {
     MOUNTED.with(|registry| {
         let mut registry = registry.borrow_mut();
         let current_slot = render.app_instance_id as usize % SESSION_ACTIVE_CAPACITY;
+        if let Some(fault) = registry.preflight_fault[current_slot].as_mut().filter(|fault| {
+            fault.app_instance_id == render.app_instance_id && fault.render.base_revision == render.base_revision && fault.render.generation == render.generation && fault.render.canonical_base_revision == render.canonical_base_revision
+        }) {
+            if !fault.emitted {
+                fault.emitted = true;
+                return vec![Effect::Notify { message: fault.detail.to_string() }];
+            }
+            return Vec::new();
+        }
         let previous = if let Some(current) = registry.current[current_slot] {
             if current.app_instance_id != render.app_instance_id {
                 return Vec::new();
@@ -1169,7 +2238,7 @@ pub fn reconcile(doc: &ArtifactView<'_, Fem2dSnapshot>) -> Vec<Effect> {
         }
         let identity = pending.identity;
         let job = identity.job;
-        *registry.shells[shell as usize].borrow_mut() = Some(MountedState::new(identity, snapshot));
+        *registry.shells[shell as usize].borrow_mut() = Some(MountedState::new(identity, snapshot, pending.admitted_items, pending.admitted_bytes));
         registry.current[current_slot] = Some(CurrentSession { app_instance_id: render.app_instance_id, shell, identity });
         let mut effects = Vec::with_capacity(2);
         if let Some(previous) = previous {
@@ -1180,8 +2249,8 @@ pub fn reconcile(doc: &ArtifactView<'_, Fem2dSnapshot>) -> Vec<Effect> {
     })
 }
 
-/// 👁️ Borrows the exact latest visual only while the renderer builds its node.
-pub fn with_live_visual<R>(render: Option<AppRenderOperationContext>, build: impl FnOnce(Option<&Fem2dLiveVisual>) -> R) -> R {
+/// 👁️ Borrows the immutable generation-exact mounted visual lease only while the renderer adopts it.
+pub fn with_live_visual<R>(render: Option<AppRenderOperationContext>, build: impl FnOnce(Option<&Fem2dMountedVisualLease>) -> R) -> R {
     let Some(render) = render else { return build(None) };
     let shell = MOUNTED.with(|registry| {
         let registry = registry.borrow();
@@ -1193,7 +2262,7 @@ pub fn with_live_visual<R>(render: Option<AppRenderOperationContext>, build: imp
     });
     let Some(shell) = shell else { return build(None) };
     let Ok(owner) = shell.try_borrow() else { return build(None) };
-    build(owner.as_ref().map(|state| &state.visual))
+    build(owner.as_ref().and_then(|state| state.visual_current.as_ref()).filter(|lease| lease.matches(render.app_instance_id, render.base_revision.0, render.generation.0)))
 }
 
 fn retire_one(app_instance_id: u32, maximum_items: usize, maximum_bytes: usize) -> PluginCloseStep {
@@ -1235,6 +2304,14 @@ pub fn close_step(app_instance_id: u32, maximum_items: usize, maximum_bytes: usi
     MOUNTED.with(|registry| {
         let mut registry = registry.borrow_mut();
         let slot = app_instance_id as usize % SESSION_ACTIVE_CAPACITY;
+        if registry.preflight_fault[slot].is_some_and(|fault| fault.app_instance_id == app_instance_id) {
+            registry.preflight_fault[slot] = None;
+            return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<PendingSnapshotFault>() };
+        }
+        if registry.preflight[slot].is_some_and(|preflight| preflight.app_instance_id == app_instance_id) {
+            registry.preflight[slot] = None;
+            return PluginCloseStep::Pending { released_items: 1, released_bytes: std::mem::size_of::<PendingSnapshotAdmission>() };
+        }
         if let Some(pending) = registry.pending[slot].filter(|pending| pending.app_instance_id == app_instance_id) {
             registry.pending[slot] = None;
             registry.release_credit(pending.shell);
@@ -1262,7 +2339,9 @@ pub fn terminal_is_empty(app_instance_id: u32) -> bool {
     MOUNTED.with(|registry| {
         let registry = registry.borrow();
         let slot = app_instance_id as usize % SESSION_ACTIVE_CAPACITY;
-        registry.pending[slot].is_none_or(|pending| pending.app_instance_id != app_instance_id)
+        registry.preflight_fault[slot].is_none_or(|fault| fault.app_instance_id != app_instance_id)
+            && registry.preflight[slot].is_none_or(|preflight| preflight.app_instance_id != app_instance_id)
+            && registry.pending[slot].is_none_or(|pending| pending.app_instance_id != app_instance_id)
             && registry.current[slot].is_none_or(|current| current.app_instance_id != app_instance_id)
             && registry.retiring.iter().all(|shell| shell.is_none_or(|shell| registry.shells[shell as usize].try_borrow().is_ok_and(|owner| owner.as_ref().is_none_or(|state| state.identity.app_instance_id != app_instance_id))))
     })
@@ -1304,10 +2383,11 @@ mod tests {
     #[test]
     fn snapshot_lease_is_preceded_by_a_fixed_pending_admission_and_idle_polling_reuses_it() {
         let render = AppRenderOperationContext { app_instance_id: 2_000_000_007, base_revision: semio_framework_job::RevisionId(17), generation: semio_framework_job::Generation(19), canonical_base_revision: [23; 32] };
-        assert!(needs_snapshot_read(render));
+        let snapshot = Fem2dSnapshot::default();
+        assert!((0..64).any(|_| prepare_snapshot_read(render, &snapshot)), "empty schema census completes incrementally");
         let first = MOUNTED.with(|registry| registry.borrow().pending[render.app_instance_id as usize % SESSION_ACTIVE_CAPACITY].expect("pending admission"));
         for _ in 0..1_025 {
-            assert!(needs_snapshot_read(render));
+            assert!(prepare_snapshot_read(render, &snapshot));
         }
         let retained = MOUNTED.with(|registry| registry.borrow().pending[render.app_instance_id as usize % SESSION_ACTIVE_CAPACITY].expect("same pending admission"));
         assert_eq!(first.shell, retained.shell);
@@ -1317,13 +2397,89 @@ mod tests {
     }
 
     #[test]
+    fn snapshot_census_advances_one_owner_and_rejects_exact_plus_one_without_partial_credit() {
+        let render = AppRenderOperationContext { app_instance_id: 2_000_000_006, base_revision: semio_framework_job::RevisionId(29), generation: semio_framework_job::Generation(31), canonical_base_revision: [37; 32] };
+        let snapshot = Fem2dSnapshot::default();
+        assert!(!prepare_snapshot_read(render, &snapshot));
+        MOUNTED.with(|registry| {
+            let registry = registry.borrow();
+            let slot = render.app_instance_id as usize % SESSION_ACTIVE_CAPACITY;
+            let cursor = registry.preflight[slot].expect("one retained census cursor").cursor;
+            assert_eq!((cursor.lane, cursor.outer, cursor.inner, cursor.deep), (0, 0, 0, 0));
+            assert!(cursor.owner_opened);
+            assert!(registry.pending[slot].is_none(), "no lease shell is admitted during the first schema-owner opportunity");
+        });
+
+        let mut exact = SnapshotAdmissionCursor::new();
+        exact.items = SESSION_MAXIMUM_INPUT_ITEMS - 1;
+        exact.bytes = SESSION_MAXIMUM_INPUT_BYTES - 1;
+        assert_eq!(exact.charge(1, 1), Ok(()));
+        let before = (exact.items, exact.bytes);
+        assert_eq!(exact.charge(1, 0), Err(b"fem2d.session-admission-exceeded" as &'static [u8]));
+        assert_eq!((exact.items, exact.bytes), before, "plus one returns the exact unchanged census owner");
+        assert!(matches!(close_step(render.app_instance_id, 1, 4_096), PluginCloseStep::Pending { released_items: 1, .. }));
+        assert!(terminal_is_empty(render.app_instance_id));
+    }
+
+    #[test]
+    fn process_owner_inventory_admits_exact_maximum_and_returns_exact_credit() {
+        let catalog = MountedProcessOwnerCatalog::fixed();
+        let mut seen = [false; 30];
+        for claim in catalog.claims {
+            let index = claim.class as usize;
+            assert!(!seen[index], "every simultaneous owner class is inventoried exactly once");
+            assert!(claim.roots != 0, "every class retains at least one fixed backing root");
+            seen[index] = true;
+        }
+        assert!(seen.into_iter().all(|present| present));
+        let exact = catalog.credit(SESSION_MAXIMUM_INPUT_ITEMS, SESSION_MAXIMUM_INPUT_BYTES).expect("the enumerated working set exactly fits its process authority");
+        assert_eq!(exact, (SESSION_MAXIMUM_ITEMS, SESSION_MAXIMUM_BYTES));
+        assert_eq!(catalog.credit(SESSION_MAXIMUM_INPUT_ITEMS + 1, SESSION_MAXIMUM_INPUT_BYTES), Err(b"fem2d.session-process-input-credit-exceeded" as &'static [u8]));
+        assert_eq!(catalog.credit(SESSION_MAXIMUM_INPUT_ITEMS, SESSION_MAXIMUM_INPUT_BYTES + 1), Err(b"fem2d.session-process-input-credit-exceeded" as &'static [u8]));
+
+        let mut overflow = catalog;
+        overflow.claims[MountedOwnerClass::OutputPages as usize].roots += 1;
+        assert_eq!(overflow.credit(SESSION_MAXIMUM_INPUT_ITEMS, SESSION_MAXIMUM_INPUT_BYTES), Err(b"fem2d.session-process-admission-exceeded" as &'static [u8]));
+
+        let mut registry = MountedRegistry::new();
+        let shell = registry.allocate().expect("fixed process shell");
+        assert!(registry.reserve_credit(shell, exact.0, exact.1));
+        let rejected = registry.allocate().expect("distinct fixed shell retains a failed request");
+        assert!(!registry.reserve_credit(rejected, exact.0 + 1, exact.1), "plus one cannot partially change the registry credit");
+        assert_eq!((registry.credit_items[rejected as usize], registry.credit_bytes[rejected as usize]), (0, 0));
+        registry.release(rejected);
+        registry.release_credit(shell);
+        registry.release(shell);
+        assert_eq!((registry.reserved_items, registry.reserved_bytes), (0, 0));
+        let returned: [u16; SESSION_SHELL_CAPACITY] = std::array::from_fn(|_| registry.allocate().expect("all fixed shells returned"));
+        assert_eq!(&returned[SESSION_SHELL_CAPACITY - 2..], &[rejected, shell], "failed and completed admissions return their exact shells in FIFO order");
+    }
+
+    #[test]
+    fn interrupted_model_close_releases_one_retained_root_per_grant() {
+        let mut build = MountedModelBuild::new(None);
+        build.model.nodes.push(crate::model::Node { id: "deep-node".repeat(128), pos: [0.0; 3] });
+        build.region_node_ids.push("deep-region-node".repeat(128));
+        let first = build.close_step(4_096);
+        assert!(!first.0);
+        assert_eq!(build.model.nodes.len(), 1);
+        assert_eq!(build.model.nodes[0].id.capacity(), 0, "the first grant releases only the nested string backing");
+        assert_eq!(build.region_node_ids.len(), 1, "a distinct retained root survives the interrupted close");
+        while !build.model.nodes.is_empty() {
+            assert!(!build.close_step(4_096).0);
+        }
+        assert_eq!(build.region_node_ids.len(), 1, "later close lanes remain untouched while the model page retires");
+        while !build.close_step(4_096).0 {}
+    }
+
+    #[test]
     fn mounted_revision_restart_keeps_cancel_before_spawn() {
         let source = include_str!("component.rs");
-        let admission = &source[source.find("pub fn needs_snapshot_read(").expect("admission")..source.find("pub fn reconcile(").expect("reconcile")];
+        let admission = &source[source.find("pub fn prepare_snapshot_read(").expect("admission")..source.find("pub fn reconcile(").expect("reconcile")];
         let reconcile = &source[source.find("pub fn reconcile(").expect("reconcile")..source.find("pub fn with_live_visual").expect("visual boundary")];
         assert!(reconcile.find("Effect::CancelJob").expect("cancel effect") < reconcile.find("Effect::SpawnJob").expect("spawn effect"));
         assert!(admission.contains("checked_add(1)"));
-        assert!(admission.contains("reserve_credit(shell)"));
+        assert!(admission.contains("reserve_credit(shell, process_items, process_bytes)"));
         assert!(reconcile.contains("take_snapshot_read()"));
         assert!(reconcile.contains("retiring.iter().any(Option::is_none)"));
     }
@@ -1342,8 +2498,8 @@ mod tests {
         for needle in [
             "FemJobGraph::new",
             "MeshJob::new",
-            "AssemblyJob::new_owned",
-            "PcgJob::new",
+            "AssemblyJobConstruction::new_owned",
+            "PcgJobConstruction::new",
             "commit_authority_matches",
             "Effect::SpawnJob",
             "Effect::CancelJob",
@@ -1352,8 +2508,15 @@ mod tests {
             "take_snapshot_read",
             "SESSION_MAXIMUM_ITEMS",
             "SESSION_MAXIMUM_BYTES",
+            "MountedProcessOwnerCatalog",
+            "MountedOwnerClass::AssemblyDofStrings",
+            "mounted_node_id",
+            "reserve_exact_owner_page",
         ] {
             assert!(source.contains(needle), "missing mounted FEM contract {needle}");
+        }
+        for forbidden in ["crate::fem2d_engine::build_model(", "AssemblyJob::new_owned(", ".into_full_matrix(", "PcgJob::new(", "pending_node_ids", ".fixed.iter().map"] {
+            assert!(!source.contains(forbidden), "mounted FEM route restored bulk constructor {forbidden}");
         }
     }
 }

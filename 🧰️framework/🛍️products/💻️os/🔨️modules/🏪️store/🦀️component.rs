@@ -233,6 +233,19 @@ pub struct SnapshotRead<T: ?Sized> {
     lease: Option<SnapshotReadLease>,
 }
 
+/// 🧾 Exact returned-read ticket retained by a mounted owner until store maintenance reclaims it.
+pub struct SnapshotReadReturn {
+    registry: Arc<SnapshotReadLeaseRegistry>,
+    index: u16,
+    generation: u64,
+}
+
+impl SnapshotReadReturn {
+    pub fn terminal_is_empty(&self) -> bool {
+        !self.registry.contains(self.index, self.generation)
+    }
+}
+
 impl<T: ?Sized> SnapshotRead<T> {
     fn new(owner: Arc<T>, lease: SnapshotReadLease) -> Self {
         Self { owner: Some(owner), lease: Some(lease) }
@@ -248,6 +261,27 @@ impl<T: ?Sized> SnapshotRead<T> {
     /// therefore fails closed.
     pub fn commit_authority_matches(&self, generation: u64, revision: [u8; 32]) -> bool {
         self.lease.as_ref().is_some_and(|lease| lease.registry.authority_matches(generation, revision))
+    }
+
+    /// 🧹 Returns this lease to its exact registry while the registry retains the snapshot
+    /// root for its own one-owner maintenance cursor.
+    pub fn return_to_registry(mut self) -> bool {
+        let returned = self.lease.as_mut().is_some_and(SnapshotReadLease::return_now);
+        self.lease = None;
+        self.owner = None;
+        returned
+    }
+
+    /// 🧹 Returns this lease and hands the caller an exact generation witness for store retirement.
+    pub fn return_to_registry_witness(mut self) -> Option<SnapshotReadReturn> {
+        let lease = self.lease.as_mut()?;
+        let witness = SnapshotReadReturn { registry: lease.registry.clone(), index: lease.index, generation: lease.generation };
+        if !lease.return_now() {
+            return None;
+        }
+        self.lease = None;
+        self.owner = None;
+        Some(witness)
     }
 }
 

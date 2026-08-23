@@ -125,13 +125,18 @@ pub fn project_pdf_1_4(input: &[u8]) -> Result<Json, String> {
 /// comparison never has to paper over the width/height gap `decode_pdf` cannot close).
 #[cfg(feature = "oracles")]
 pub fn build_single_page_pdf(text: &str) -> Result<Vec<u8>, String> {
-    use lopdf::{content::{Content, Operation}, dictionary, Document, Object, Stream};
+    use lopdf::{
+        content::{Content, Operation},
+        dictionary, Document, Object, Stream,
+    };
 
     let mut document = Document::with_version("1.4");
     let pages_id = document.new_object_id();
     let font_id = document.add_object(dictionary! { "Type" => "Font", "Subtype" => "Type1", "BaseFont" => "Helvetica" });
     let resources_id = document.add_object(dictionary! { "Font" => dictionary! { "F1" => font_id } });
-    let content = Content { operations: vec![Operation::new("BT", vec![]), Operation::new("Tf", vec!["F1".into(), 12.into()]), Operation::new("Td", vec![72.into(), 720.into()]), Operation::new("Tj", vec![Object::string_literal(text)]), Operation::new("ET", vec![])] };
+    let content = Content {
+        operations: vec![Operation::new("BT", vec![]), Operation::new("Tf", vec!["F1".into(), 12.into()]), Operation::new("Td", vec![72.into(), 720.into()]), Operation::new("Tj", vec![Object::string_literal(text)]), Operation::new("ET", vec![])],
+    };
     let content_id = document.add_object(Stream::new(dictionary! {}, content.encode().map_err(|error| format!("independent writer could not encode page content: {}", error))?));
     let page_id = document.add_object(dictionary! { "Type" => "Page", "Parent" => pages_id, "Contents" => content_id, "MediaBox" => vec![0.into(), 0.into(), 612.into(), 792.into()], "Resources" => resources_id });
     document.objects.insert(pages_id, Object::Dictionary(dictionary! { "Type" => "Pages", "Kids" => vec![page_id.into()], "Count" => 1 }));

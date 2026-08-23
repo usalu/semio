@@ -18,7 +18,7 @@
 //! return type already matches `JobFn`'s exactly — no fault-code translation needed here, unlike
 //! `💡️infer`'s `ArtifactInferenceExecutionError` boundary.
 
-use super::{JobCtx, run_two_phase};
+use super::{run_two_phase, JobCtx};
 use std::future::Future;
 use std::pin::Pin;
 

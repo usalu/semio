@@ -68,7 +68,10 @@ mod oracles {
                 ("kind".to_string(), Json::String("dict".to_string())),
                 ("entries".to_string(), Json::Array(dict.iter().map(|(key, value)| Json::Object(vec![("key".to_string(), Json::String(String::from_utf8_lossy(key).to_string())), ("value".to_string(), object_to_json(value))])).collect())),
             ]),
-            Object::Stream(stream) => Json::Object(vec![("kind".to_string(), Json::String("dict".to_string())), ("entries".to_string(), Json::Array(stream.dict.iter().map(|(key, value)| Json::Object(vec![("key".to_string(), Json::String(String::from_utf8_lossy(key).to_string())), ("value".to_string(), object_to_json(value))])).collect()))]),
+            Object::Stream(stream) => Json::Object(vec![
+                ("kind".to_string(), Json::String("dict".to_string())),
+                ("entries".to_string(), Json::Array(stream.dict.iter().map(|(key, value)| Json::Object(vec![("key".to_string(), Json::String(String::from_utf8_lossy(key).to_string())), ("value".to_string(), object_to_json(value))])).collect())),
+            ]),
             Object::Reference(id) => Json::Object(vec![("kind".to_string(), Json::String("ref".to_string())), ("num".to_string(), Json::Number(id.0 as f64)), ("gen".to_string(), Json::Number(id.1 as f64))]),
         }
     }
@@ -348,7 +351,13 @@ mod oracles {
                 let index = usize_field(params, "index");
                 match page_id_at(document, index) {
                     Some(page_id) => {
-                        let media_box = document.get_dictionary(page_id).ok().and_then(|dict| dict.get(b"MediaBox").ok()).and_then(|value| value.as_array().ok()).map(|items| items.iter().map(|item| item.as_float().unwrap_or(0.0)).collect::<Vec<f32>>()).unwrap_or_else(|| vec![0.0, 0.0, 612.0, 792.0]);
+                        let media_box = document
+                            .get_dictionary(page_id)
+                            .ok()
+                            .and_then(|dict| dict.get(b"MediaBox").ok())
+                            .and_then(|value| value.as_array().ok())
+                            .map(|items| items.iter().map(|item| item.as_float().unwrap_or(0.0)).collect::<Vec<f32>>())
+                            .unwrap_or_else(|| vec![0.0, 0.0, 612.0, 792.0]);
                         let rotate = document.get_dictionary(page_id).ok().and_then(|dict| dict.get(b"Rotate").ok()).and_then(|value| value.as_i64().ok()).unwrap_or(0);
                         let text = page_text(document, page_id);
                         let page = obj(vec![("mediaBox", Json::Array(media_box.into_iter().map(|value| Json::Number(value as f64)).collect())), ("rotate", Json::Number(rotate as f64)), ("text", Json::String(text))]);
@@ -359,7 +368,12 @@ mod oracles {
             }
             "set-page-media-box" => {
                 let index = usize_field(params, "index");
-                let prior = page_id_at(document, index).and_then(|page_id| document.get_dictionary(page_id).ok()).and_then(|dict| dict.get(b"MediaBox").ok()).and_then(|value| value.as_array().ok()).map(|items| items.iter().map(|item| item.as_float().unwrap_or(0.0)).collect::<Vec<f32>>()).unwrap_or_else(|| vec![0.0, 0.0, 612.0, 792.0]);
+                let prior = page_id_at(document, index)
+                    .and_then(|page_id| document.get_dictionary(page_id).ok())
+                    .and_then(|dict| dict.get(b"MediaBox").ok())
+                    .and_then(|value| value.as_array().ok())
+                    .map(|items| items.iter().map(|item| item.as_float().unwrap_or(0.0)).collect::<Vec<f32>>())
+                    .unwrap_or_else(|| vec![0.0, 0.0, 612.0, 792.0]);
                 spec("set-page-media-box", obj(vec![("index", Json::Number(index as f64)), ("mediaBox", Json::Array(prior.into_iter().map(|value| Json::Number(value as f64)).collect()))]))
             }
             "set-page-crop-box" => {
@@ -397,7 +411,9 @@ mod oracles {
                 let path = params.array("path");
                 let key = params.str("key");
                 match navigate(document, id, &path).and_then(|dict| dict.get(key.as_bytes()).ok()) {
-                    Some(prior) => spec("set-dict-entry", obj(vec![("id", params.get("id").cloned().unwrap_or(Json::Null)), ("path", params.get("path").cloned().unwrap_or(Json::Array(vec![]))), ("key", Json::String(key)), ("value", object_to_json(prior))])),
+                    Some(prior) => {
+                        spec("set-dict-entry", obj(vec![("id", params.get("id").cloned().unwrap_or(Json::Null)), ("path", params.get("path").cloned().unwrap_or(Json::Array(vec![]))), ("key", Json::String(key)), ("value", object_to_json(prior))]))
+                    }
                     None => spec("remove-dict-entry", obj(vec![("id", params.get("id").cloned().unwrap_or(Json::Null)), ("path", params.get("path").cloned().unwrap_or(Json::Array(vec![]))), ("key", Json::String(key))])),
                 }
             }
@@ -406,7 +422,9 @@ mod oracles {
                 let path = params.array("path");
                 let key = params.str("key");
                 match navigate(document, id, &path).and_then(|dict| dict.get(key.as_bytes()).ok()) {
-                    Some(prior) => spec("set-dict-entry", obj(vec![("id", params.get("id").cloned().unwrap_or(Json::Null)), ("path", params.get("path").cloned().unwrap_or(Json::Array(vec![]))), ("key", Json::String(key)), ("value", object_to_json(prior))])),
+                    Some(prior) => {
+                        spec("set-dict-entry", obj(vec![("id", params.get("id").cloned().unwrap_or(Json::Null)), ("path", params.get("path").cloned().unwrap_or(Json::Array(vec![]))), ("key", Json::String(key)), ("value", object_to_json(prior))]))
+                    }
                     None => spec("no-mutation", obj(vec![])),
                 }
             }

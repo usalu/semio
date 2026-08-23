@@ -249,7 +249,7 @@ pub fn empty_tiff_snapshot() -> TiffSnapshot {
 ///
 /// **Deliberately built via a real `encode_tiff`/`decode_tiff` round trip**, not hand-assembled
 /// field values: `encode_tiff` always CANONICALIZES the core strip/geometry tags fresh from
-/// `pixels` (see `encode_tiff_with`'s own `EncodeScopeNote`) — hand-picking `ImageWidth`/
+/// `pixels` (see `encode_tiff_with`'s own `MultiIfdEncodeScopeNote`) — hand-picking `ImageWidth`/
 /// `BitsPerSample`/`Compression`/`PhotometricInterpretation`/`SamplesPerPixel`/`RowsPerStrip`/
 /// `StripByteCounts`/`StripOffsets` values here would silently "self-correct" on the very first
 /// `print_dsl`/`parse_dsl` round trip and break `fixture_honesty_law`'s `parse_dsl(fixture) ==

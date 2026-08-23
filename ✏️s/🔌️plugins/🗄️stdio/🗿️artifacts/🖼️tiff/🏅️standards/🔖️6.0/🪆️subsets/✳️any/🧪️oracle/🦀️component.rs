@@ -347,9 +347,7 @@ fn read_tiff(data: &[u8]) -> Result<OracleDoc, String> {
         }
         let next = read_u32(data, pos, e)? as usize;
 
-        let strip = if let (Some((_, OracleValue::Long(offs))), Some((_, OracleValue::Long(counts)))) =
-            (entries.iter().find(|(t, _)| *t == TAG_STRIP_OFFSETS), entries.iter().find(|(t, _)| *t == TAG_STRIP_BYTE_COUNTS))
-        {
+        let strip = if let (Some((_, OracleValue::Long(offs))), Some((_, OracleValue::Long(counts)))) = (entries.iter().find(|(t, _)| *t == TAG_STRIP_OFFSETS), entries.iter().find(|(t, _)| *t == TAG_STRIP_BYTE_COUNTS)) {
             let mut bytes = Vec::new();
             for (i, &start) in offs.iter().enumerate() {
                 let len = *counts.get(i).ok_or("tiff oracle: StripByteCounts shorter than StripOffsets")? as usize;
@@ -373,10 +371,14 @@ fn dir_size(n: usize) -> usize {
     2 + 12 * n + 4
 }
 
-/// ✍️ Re-serializes the WHOLE IFD chain — every IFD gets a real `next IFD offset` link (unlike the
-/// subject's own encoder, which is documented single-IFD-only; this independent writer is what
-/// makes `InsertIfd`/`RemoveIfd` genuinely testable). Any IFD carrying a `strip` gets fresh
-/// `StripOffsets`/`StripByteCounts` computed from the actual final layout.
+/// ✍️ Re-serializes the WHOLE IFD chain — every IFD gets a real `next IFD offset` link (the
+/// subject's own encoder now also writes a real multi-IFD chain; this independent writer stays a
+/// genuinely separate implementation of the same real vocabulary, never importing the subject's
+/// own `🚪️io::encode_tiff`). Any IFD carrying a `strip` gets fresh `StripOffsets`/`StripByteCounts`
+/// computed from the actual final layout — unlike the subject, this oracle CAN back a non-primary
+/// IFD's raster with real bytes when a caller's `pixels` param supplies them (`OracleIfd.strip`),
+/// since it isn't constrained by `TiffSnapshot`'s single `pixels` field (see subject's own
+/// `MultiIfdEncodeScopeNote`, `../🚪️io/🦀️component.rs`).
 fn write_tiff(doc: &OracleDoc) -> Vec<u8> {
     let little = doc.little_endian;
     let mut out = Vec::new();
@@ -413,7 +415,17 @@ fn write_tiff(doc: &OracleDoc) -> Vec<u8> {
     let mut dir_offsets = Vec::with_capacity(full.len());
     for entries in &full {
         dir_offsets.push(cursor);
-        let out_of_line: usize = entries.iter().map(|t| { let l = t.value.bytes(little).len(); if l <= 4 { 0 } else { l + (l % 2) } }).sum();
+        let out_of_line: usize = entries
+            .iter()
+            .map(|t| {
+                let l = t.value.bytes(little).len();
+                if l <= 4 {
+                    0
+                } else {
+                    l + (l % 2)
+                }
+            })
+            .sum();
         cursor += dir_size(entries.len()) + out_of_line;
     }
     // Strip payloads are appended after ALL directories + out-of-line data, in IFD order.
@@ -541,15 +553,16 @@ fn project_doc(doc: &OracleDoc) -> Json {
         .ifds
         .iter()
         .map(|ifd| {
-            let entries: Vec<Json> = ifd
-                .entries
-                .iter()
-                .map(|t| Json::Object(vec![("tag".to_string(), Json::Number(t.tag as f64)), ("type".to_string(), Json::Number(t.value.type_code() as f64)), ("values".to_string(), t.value.to_json())]))
-                .collect();
+            let entries: Vec<Json> = ifd.entries.iter().map(|t| Json::Object(vec![("tag".to_string(), Json::Number(t.tag as f64)), ("type".to_string(), Json::Number(t.value.type_code() as f64)), ("values".to_string(), t.value.to_json())])).collect();
             Json::Object(vec![("entries".to_string(), Json::Array(entries))])
         })
         .collect();
-    let mut fields = vec![("format".to_string(), Json::String("tiff".to_string())), ("byteOrder".to_string(), Json::String(if doc.little_endian { "little-endian" } else { "big-endian" }.to_string())), ("ifdCount".to_string(), Json::Number(doc.ifds.len() as f64)), ("ifds".to_string(), Json::Array(ifds))];
+    let mut fields = vec![
+        ("format".to_string(), Json::String("tiff".to_string())),
+        ("byteOrder".to_string(), Json::String(if doc.little_endian { "little-endian" } else { "big-endian" }.to_string())),
+        ("ifdCount".to_string(), Json::Number(doc.ifds.len() as f64)),
+        ("ifds".to_string(), Json::Array(ifds)),
+    ];
     if let Some(ifd0) = doc.ifds.first() {
         if let Ok((width, height, rgba)) = decode_raster(ifd0) {
             let mut luma_buckets = [0u32; 8];

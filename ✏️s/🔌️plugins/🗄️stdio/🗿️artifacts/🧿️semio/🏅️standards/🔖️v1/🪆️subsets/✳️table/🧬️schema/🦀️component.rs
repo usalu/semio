@@ -79,7 +79,7 @@ pub fn semio_table_artifact_schema_descriptor() -> schema::ArtifactSchemaDescrip
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
     use crate::artifacts::semio::standards::v1::subsets::table::schema::diff::SemioTableDiff;
-    use crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
+    use crate::artifacts::semio::standards::v1::subsets::table::schema::mutations::{apply_semio_table_mutation, SemioTableMutation};
     use crate::artifacts::semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
@@ -127,8 +127,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<SemioTableSnapshot as store::ArtifactPack>::decode_pack(bytes)?).await)
         }
         async fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = <Self::Mutation as protocol::Mutation<SemioTableSnapshot>>::diff(&mutation, &self.snapshot);
-            let diff = diff.apply_to(&mut self.snapshot);
+            let diff = apply_semio_table_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         async fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {

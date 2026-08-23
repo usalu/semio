@@ -2,6 +2,11 @@
 //! discriminated by `fccType` (`BitmapInfo` for `vids`, `WaveFormat` for `auds`, `Raw` otherwise),
 //! `movi` chunks assigned to their owning stream with `idx1`-derived keyframe flags, everything
 //! else (non-`hdrl`/`movi`/`idx1` top-level RIFF children) typed-raw retained (`unknown_chunks`).
+//! Nested auxiliary children real encoders also write are retained the same typed-raw way, one
+//! level down: `hdrl`'s own non-`avih`/`strl` children (e.g. `JUNK` padding) in `hdrl_extra`, and
+//! each `strl`'s non-`strh`/`strf` children (e.g. `vprp`, `JUNK`) in that stream's `strl_extra` —
+//! both real, both present in ffmpeg's own AVI-1.0 output, neither addressable by a dedicated
+//! mutation kind (see `AviMutation`'s module doc comment for why).
 //! Real binary codec (`ArtifactPack`/`ArtifactDsl` wrap the REAL RIFF bytes `⚙️engine::{decode_avi,
 //! encode_avi}` produce/consume, mirrors mp4's/`stdio.png`'s pattern — NOT JSON-pack passthrough).
 
@@ -35,8 +40,11 @@ pub struct AviMainHeader {
 //#endregion 🔖️MainHeader
 
 //#region 🔖️StreamHeader
-/// 🏷️ `strh` — AVIStreamHeader, all fields typed (64 bytes: `rcFrame` is 4 `LONG`s, not `SHORT`s).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+/// 🏷️ `strh` — AVISTREAMHEADER. The 13 DWORD/WORD fields up to `dwSampleSize` (48 bytes) are fixed;
+/// the trailing `rcFrame` rectangle is NOT: real encoders (ffmpeg's own AVI-1.0 muxer included)
+/// still write the classic pre-Win32 form with `rcFrame` as 4 16-bit `SHORT`s (56 bytes total), not
+/// only the modern 4 `LONG`s form (64 bytes) most docs describe. <https://learn.microsoft.com/windows/win32/directshow/avistreamheader>
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AviStreamHeader {
     pub fcc_type: String,
@@ -52,10 +60,53 @@ pub struct AviStreamHeader {
     pub suggested_buffer_size: u32,
     pub quality: i32,
     pub sample_size: u32,
+    /// 🖼️ `rcFrame`, always widened to `i32` regardless of the wire width it was read at.
     pub rc_frame_left: i32,
     pub rc_frame_top: i32,
     pub rc_frame_right: i32,
     pub rc_frame_bottom: i32,
+    /// 📏 The wire width `encode_avi` re-serializes `rcFrame` as — `0` (omitted; a bare 48-byte
+    /// `strh`), `8` (4 `SHORT`s; the classic 56-byte form), or `16` (4 `LONG`s; the modern 64-byte
+    /// form). `decode_avi` records whichever width the source actually used so a real 56-byte
+    /// `strh` round-trips byte-for-byte instead of being silently promoted to 64 bytes. Hand-built
+    /// headers default to `16`, the complete/preferred form.
+    #[serde(default = "default_rc_frame_width")]
+    pub rc_frame_width: u8,
+    /// 📎 Any bytes beyond the documented 64-byte `AVISTREAMHEADER`, verbatim — rare, retained so
+    /// an unusually padded real `strh` round-trips losslessly rather than being silently truncated.
+    #[serde(default)]
+    pub strh_extra: Vec<u8>,
+}
+
+impl Default for AviStreamHeader {
+    fn default() -> Self {
+        Self {
+            fcc_type: String::new(),
+            fcc_handler: String::new(),
+            flags: 0,
+            priority: 0,
+            language: 0,
+            initial_frames: 0,
+            scale: 0,
+            rate: 0,
+            start: 0,
+            length: 0,
+            suggested_buffer_size: 0,
+            quality: 0,
+            sample_size: 0,
+            rc_frame_left: 0,
+            rc_frame_top: 0,
+            rc_frame_right: 0,
+            rc_frame_bottom: 0,
+            rc_frame_width: 16,
+            strh_extra: Vec::new(),
+        }
+    }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn default_rc_frame_width() -> u8 {
+    16
 }
 //#endregion 🔖️StreamHeader
 
@@ -108,6 +159,11 @@ pub struct AviStream {
     pub strf: AviStreamFormat,
     #[serde(default)]
     pub chunks: Vec<AviChunk>,
+    /// 📦️ Typed-raw retention for this stream's `strl` children besides `strh`/`strf` (e.g. a
+    /// `vprp` video-properties chunk, `JUNK` padding) — verbatim fourcc + payload, replayed after
+    /// `strh`/`strf` on encode. Real ffmpeg AVI-1.0 output carries both of these inside `strl`.
+    #[serde(default)]
+    pub strl_extra: Vec<RiffChunk>,
 }
 //#endregion 🔖️Chunk
 
@@ -142,6 +198,11 @@ pub struct AviSnapshot {
     #[state(artifact)]
     #[serde(default)]
     pub unknown_chunks: Vec<RiffChunk>,
+    /// 📦️ Typed-raw retention for `hdrl` children besides `avih`/`strl` (e.g. `JUNK` padding
+    /// directly inside `hdrl`) — verbatim fourcc + payload, replayed after every `strl` on encode.
+    #[state(artifact)]
+    #[serde(default)]
+    pub hdrl_extra: Vec<RiffChunk>,
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -244,12 +305,16 @@ mod tests {
                     rc_frame_top: 0,
                     rc_frame_right: 16,
                     rc_frame_bottom: 16,
+                    rc_frame_width: 16,
+                    strh_extra: vec![],
                 },
                 strf: AviStreamFormat::BitmapInfo { size: 40, width: 16, height: 16, planes: 1, bit_count: 24, compression: "MJPG".into(), size_image: 140, x_pels_per_meter: 0, y_pels_per_meter: 0, colors_used: 0, colors_important: 0 },
                 chunks: vec![AviChunk { fourcc: "00dc".into(), data: vec![1, 2, 3, 4], keyframe: true }, AviChunk { fourcc: "00dc".into(), data: vec![5, 6, 7, 8], keyframe: true }],
+                strl_extra: vec![],
             }],
             idx1_present: true,
             unknown_chunks: vec![],
+            hdrl_extra: vec![],
         }
     }
 

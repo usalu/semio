@@ -71,6 +71,32 @@ pub enum PptxMutation {
 }
 //#endregion 🔖️Mutations
 
+//#region 🔖️Kinds
+/// 🏷️ The kebab-case spelling of every `PptxMutation` variant, in the same order the enum
+/// declares them — this repository's mutation oracle registrations never parse this enum;
+/// `kinds_matches_enum_variants_and_manifest` below is what keeps the two declarations honest
+/// against each other.
+pub const KINDS: &[&str] = &["no-mutation", "set-snapshot", "insert-slide", "remove-slide", "move-slide", "insert-shape", "remove-shape", "set-shape-text", "set-shape-position"];
+
+/// 🏷️ The `KINDS` spelling of one mutation's own variant. An exhaustive match (no wildcard arm),
+/// so a new variant that forgets its kebab spelling here fails to compile rather than failing
+/// silently.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn kind_of(mutation: &PptxMutation) -> &'static str {
+    match mutation {
+        PptxMutation::NoMutation => "no-mutation",
+        PptxMutation::SetSnapshot { .. } => "set-snapshot",
+        PptxMutation::InsertSlide { .. } => "insert-slide",
+        PptxMutation::RemoveSlide { .. } => "remove-slide",
+        PptxMutation::MoveSlide { .. } => "move-slide",
+        PptxMutation::InsertShape { .. } => "insert-shape",
+        PptxMutation::RemoveShape { .. } => "remove-shape",
+        PptxMutation::SetShapeText { .. } => "set-shape-text",
+        PptxMutation::SetShapePosition { .. } => "set-shape-position",
+    }
+}
+//#endregion 🔖️Kinds
+
 //#region 🔖️Apply
 /// ▶️ Applies `mutation` to `snapshot`: `let d = mutation.diff(&*snapshot); *snapshot =
 /// d.apply(snapshot); d` -- the diff is the single semantics source, never a separate imperative
@@ -842,6 +868,25 @@ mod tests {
         }
     }
     //#endregion 🔖️OpTextBinaryRoundtripLaw
+
+    //#region 🔖️KindsLaw
+    /// 🧪️ Wave 7 (ticket 26/08/23/END-TO-END-TESTING-REFACTOR): `KINDS` must list exactly the
+    /// kebab-case spelling of every `PptxMutation` variant, exactly once, and match the mutation
+    /// oracle manifest's own declared `kinds` — the manifest is the only place the test platform
+    /// reads this vocabulary from, and it never parses this enum.
+    #[semio_framework_async_macros::async_test]
+    async fn kinds_matches_enum_variants_and_manifest() {
+        let observed: std::collections::BTreeSet<&str> = demo_mutation_cases().iter().map(kind_of).collect();
+        let declared: std::collections::BTreeSet<&str> = KINDS.iter().copied().collect();
+        assert_eq!(observed, declared, "KINDS must list exactly the kebab-case spelling of every PptxMutation variant");
+        assert_eq!(KINDS.len(), demo_mutation_cases().len(), "KINDS must cover every variant exactly once, with no duplicates");
+
+        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../🧪️oracle/🔣️component.json")).expect("valid oracle manifest JSON");
+        let catalog_kinds: std::collections::BTreeSet<String> = manifest["mutationCatalogs"][0]["kinds"].as_array().expect("mutationCatalogs[0].kinds array").iter().map(|value| value.as_str().expect("kind is a string").to_string()).collect();
+        let declared_owned: std::collections::BTreeSet<String> = KINDS.iter().map(|kind| kind.to_string()).collect();
+        assert_eq!(catalog_kinds, declared_owned, "the oracle manifest's mutationCatalogs[0].kinds must match KINDS exactly");
+    }
+    //#endregion 🔖️KindsLaw
 }
 //#endregion 🧪️Tests
 

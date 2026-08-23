@@ -11371,7 +11371,7 @@ pub mod app {
         }
         /// 🔍️ Requests an opaque immutable snapshot lease only when the mounted owner has
         /// admitted genuinely new work. The default path issues no lease.
-        fn mounted_job_needs_snapshot_read(_operation: AppRenderOperationContext) -> bool {
+        fn mounted_job_prepare_snapshot_read(_operation: AppRenderOperationContext, _snapshot: &Self::Snapshot) -> bool {
             false
         }
         /// 🧩️ Registers only app-owned exact factories. The empty default contributes no execution
@@ -19940,7 +19940,11 @@ pub mod app {
                 generation: semio_framework_job::Generation(self.store.generation().await),
                 canonical_base_revision,
             };
-            let snapshot_read = if A::mounted_job_needs_snapshot_read(render_operation) {
+            let snapshot_is_admitted = {
+                let (_, snapshot, _, _) = self.cache.as_ref().expect("cache refreshed above");
+                A::mounted_job_prepare_snapshot_read(render_operation, snapshot.as_ref())
+            };
+            let snapshot_read = if snapshot_is_admitted {
                 match self.store.snapshot_read().await {
                     Ok(snapshot_read) => Some(snapshot_read),
                     Err(_) => return Vec::new(),
@@ -20919,7 +20923,7 @@ pub mod app {
             true
         }
 
-        fn mounted_job_needs_snapshot_read(_operation: AppRenderOperationContext) -> bool {
+        fn mounted_job_prepare_snapshot_read(_operation: AppRenderOperationContext, _snapshot: &Self::Snapshot) -> bool {
             false
         }
 
@@ -21318,8 +21322,8 @@ pub mod app {
         fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {
             E::mounted_jobs_terminal_is_empty(instance_id)
         }
-        fn mounted_job_needs_snapshot_read(operation: AppRenderOperationContext) -> bool {
-            E::mounted_job_needs_snapshot_read(operation)
+        fn mounted_job_prepare_snapshot_read(operation: AppRenderOperationContext, snapshot: &Self::Snapshot) -> bool {
+            E::mounted_job_prepare_snapshot_read(operation, snapshot)
         }
         fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, Self>) -> Result<(), Fault> {
             E::register_tool_job_factories(registry)

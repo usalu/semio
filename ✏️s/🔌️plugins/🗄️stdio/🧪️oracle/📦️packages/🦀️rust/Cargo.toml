@@ -16,7 +16,7 @@ path = "📦️lib.rs"
 [features]
 # 🔮️ Links the registered third-party reference implementations. Enabled only by a generated test
 # host, never by any production target — `bun ./📜️script.ts dependency` enforces that.
-oracles = ["dep:pdf-writer", "dep:lopdf", "dep:png", "dep:gif", "dep:zip", "dep:flate2", "dep:hound", "dep:csv", "dep:image", "dep:tobj", "dep:stl_io", "dep:quick-xml", "dep:serde_json", "dep:html5ever", "dep:markup5ever_rcdom", "dep:comrak", "dep:dxf", "dep:las", "dep:mp4", "dep:ruststep", "dep:calamine", "dep:rust_xlsxwriter", "dep:ply-rs"]
+oracles = ["dep:pdf-writer", "dep:lopdf", "dep:png", "dep:gif", "dep:zip", "dep:flate2", "dep:hound", "dep:csv", "dep:image", "dep:tobj", "dep:stl_io", "dep:quick-xml", "dep:json", "dep:html5ever", "dep:markup5ever_rcdom", "dep:comrak", "dep:dxf", "dep:las", "dep:mp4", "dep:ruststep", "dep:calamine", "dep:rust_xlsxwriter", "dep:ply-rs", "dep:riff"]
 
 [dependencies]
 semio-repo-test-host = { path = "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust" }
@@ -34,7 +34,12 @@ stl_io = { version = "0.8", optional = true }
 # 🔮️ Structured-text and CAD/BIM references. Each reads AND writes its format — a reader-only crate
 # cannot serve as a differential oracle, because a mutation oracle has to re-serialize what it changed.
 quick-xml = { version = "0.42", optional = true }
-serde_json = { version = "1", optional = true }
+# 🔮️ json-rust, deliberately NOT serde_json: `serde_json` is already a production runtime
+# dependency of this repository (94 manifests, 1,503 files) and the JSON snapshot itself declares
+# `impl From<serde_json::Value>`, so using it as the oracle would compare our implementation with
+# something it already converts from. json-rust appears nowhere in production and is genuinely
+# independent.
+json = { version = "0.12", optional = true }
 html5ever = { version = "0.39", optional = true }
 markup5ever_rcdom = { version = "0.39", optional = true }
 comrak = { version = "0.54", optional = true }
@@ -48,3 +53,8 @@ ply-rs = { version = "0.1", optional = true }
 # differential — see 📓️w8-plan.md.
 calamine = { version = "0.36", optional = true }
 rust_xlsxwriter = { version = "0.96", optional = true }
+# 🔮️ Generic RIFF chunk reader/writer, composed with a hand-written AVI 1.0 hdrl/strl/movi/idx1
+# codec — the same shape as BCF's zip + quick-xml composition, and for the same reason: no single
+# credible AVI crate exists. The three that do were read and rejected (metadata-only pass-through,
+# a self-described scaffolded muxer, and a four-month-old crate with no independent validation).
+riff = { version = "2.0", optional = true }

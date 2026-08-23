@@ -37,6 +37,7 @@ pub struct RasterSnapshot {
     #[state(artifact)]
     pub layers: Vec<RasterLayerNode>,
     #[state(artifact)]
+    #[serde(serialize_with = "crate::artifacts::raster::serialize_empty_owned_map")]
     #[serde(default, skip_serializing_if = "RasterOwnedMap::is_empty")]
     pub assets: RasterOwnedMap<RasterAssetChild>,
 }
@@ -252,7 +253,7 @@ async fn parse_raster_snapshot_body(body: &str) -> Result<RasterSnapshot, String
     let mut id = None;
     let mut title = None;
     let mut layers = Vec::new();
-    let mut assets = BTreeMap::new();
+    let mut assets = RasterOwnedMap::new();
     for line in body.lines() {
         let line = line.trim();
         if line.is_empty() {
@@ -337,20 +338,20 @@ async fn read_child(reader: &mut store::ByteReader<'_>) -> Result<RasterAssetChi
     Ok(store::ArtifactChild::new(child_id, target))
 }
 
-async fn write_asset_map(out: &mut Vec<u8>, map: &BTreeMap<String, RasterAssetChild>) {
+async fn write_asset_map(out: &mut Vec<u8>, map: &RasterOwnedMap<RasterAssetChild>) {
     store::pack_rt::write_varint_u64(out, map.len() as u64);
     for (k, v) in map {
         write_str_lp(out, k);
         write_child(out, v);
     }
 }
-async fn read_asset_map(reader: &mut store::ByteReader<'_>) -> Result<BTreeMap<String, RasterAssetChild>, String> {
+async fn read_asset_map(reader: &mut store::ByteReader<'_>) -> Result<RasterOwnedMap<RasterAssetChild>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut out = BTreeMap::new();
+    let mut out = RasterOwnedMap::new();
     for _ in 0..count {
         let k = read_str_lp(reader)?;
         let v = read_child(reader)?;
-        out.insert(k, v);
+        out.insert(k, v).map_err(|rejected| rejected.reason.to_string())?;
     }
     Ok(out)
 }
@@ -387,21 +388,21 @@ async fn read_mask_opt(reader: &mut store::ByteReader<'_>) -> Result<Option<Rast
     read_opt(reader, read_mask)
 }
 
-async fn write_params(out: &mut Vec<u8>, params: &BTreeMap<String, dsl::DslValue>) {
+async fn write_params(out: &mut Vec<u8>, params: &RasterOwnedMap<dsl::DslValue>) {
     store::pack_rt::write_varint_u64(out, params.len() as u64);
     for (k, v) in params {
         write_str_lp(out, k);
         write_bytes_lp(out, &serde_json::to_vec(v).unwrap_or_default());
     }
 }
-async fn read_params(reader: &mut store::ByteReader<'_>) -> Result<BTreeMap<String, dsl::DslValue>, String> {
+async fn read_params(reader: &mut store::ByteReader<'_>) -> Result<RasterOwnedMap<dsl::DslValue>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
-    let mut out = BTreeMap::new();
+    let mut out = RasterOwnedMap::new();
     for _ in 0..count {
         let k = read_str_lp(reader)?;
         let bytes = read_bytes_lp(reader)?;
         let v: dsl::DslValue = serde_json::from_slice(&bytes).map_err(|e| e.to_string())?;
-        out.insert(k, v);
+        out.insert(k, v).map_err(|rejected| rejected.reason.to_string())?;
     }
     Ok(out)
 }
@@ -555,7 +556,7 @@ impl store::ArtifactPack for RasterSnapshot {
 //#region 🔖️Defaults
 impl Default for RasterSnapshot {
     fn default() -> Self {
-        Self { schema: RASTER_DOCUMENT_SCHEMA.into(), id: String::new(), title: None, layers: Vec::new(), assets: BTreeMap::new() }
+        Self { schema: RASTER_DOCUMENT_SCHEMA.into(), id: String::new(), title: None, layers: Vec::new(), assets: RasterOwnedMap::new() }
     }
 }
 //#endregion 🔖️Defaults
