@@ -1663,7 +1663,8 @@ type DiagramLayoutOwnershipState = {
 
 function retireDiagramLayoutResult(result: DiagramLayoutPublicationResult): void {
   setTimeout(function closeResultStep() {
-    if (!result.closeStep()) setTimeout(closeResultStep, 0);
+    const closed = result.closeStep();
+    if (!closed) setTimeout(closeResultStep, 0);
   }, 0);
 }
 
@@ -1681,7 +1682,14 @@ export function useDiagramLayout(initialNodes: Node[], initialEdges: Edge[], lay
   reactHostPort.useEffect(() => {
     const generation = nextDiagramLayoutGeneration();
     activeGenerationRef.current = generation;
-    setOwnership((retained) => ({ activeGeneration: generation, committed: retained.committed }));
+    let abandonsAuthority = false;
+    for (const authority of ownedResultsRef.current) {
+      if (authority !== displayed?.authority) {
+        abandonsAuthority = true;
+        break;
+      }
+    }
+    if (abandonsAuthority) setOwnership({ activeGeneration: generation, committed: displayed });
     if (portSnapshot.status !== "ready" || !credits.admitted) return;
     const publication = createDiagramLayoutPublication(initialNodes, initialEdges, layoutOptions ?? {}, generation);
     let live = true;
@@ -1719,7 +1727,7 @@ export function useDiagramLayout(initialNodes: Node[], initialEdges: Edge[], lay
           }
           const next = { authority: result, edges: result.edges, generation, nodes: result.nodes, sourceEdges: initialEdges, sourceNodes: initialNodes };
           ownedResultsRef.current.add(result);
-          setOwnership((retained) => (retained.activeGeneration === generation && activeGenerationRef.current === generation ? { ...retained, candidate: next } : retained));
+          setOwnership((retained) => (activeGenerationRef.current === generation ? { ...retained, candidate: next } : retained));
         },
         closeStep: () => publication.closeStep(),
         terminalIsEmpty: () => publication.terminalIsEmpty(),
@@ -1735,7 +1743,18 @@ export function useDiagramLayout(initialNodes: Node[], initialEdges: Edge[], lay
       lease?.cancel();
       lease = undefined;
     };
-  }, [initialNodes, initialEdges, layoutOptions, portSnapshot, credits.admitted, credits.admitted ? credits.inputBytes : credits.reason]);
+  }, [
+    initialNodes,
+    initialEdges,
+    layoutOptions?.direction,
+    layoutOptions?.nodeHeight,
+    layoutOptions?.nodeSep,
+    layoutOptions?.nodeWidth,
+    layoutOptions?.rankSep,
+    portSnapshot,
+    credits.admitted,
+    credits.admitted ? credits.inputBytes : credits.reason,
+  ]);
   reactHostPort.useLayoutEffect(() => {
     const candidate = ownership.candidate;
     if (!candidate || displayed?.authority !== candidate.authority) return;

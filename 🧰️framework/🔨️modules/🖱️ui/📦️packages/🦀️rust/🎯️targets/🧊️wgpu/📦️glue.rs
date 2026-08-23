@@ -79,6 +79,10 @@ pub mod prepared;
 pub mod input;
 
 #[cfg(feature = "wgpu-engine")]
+#[path = "🦀️action.rs"]
+pub mod action;
+
+#[cfg(feature = "wgpu-engine")]
 #[path = "🦀️layout.rs"]
 pub mod layout;
 
@@ -218,6 +222,8 @@ pub use shell::{Shell, ShellEvent};
 // this is the actual public entry point a host drives per tick, per `report-w0-engine-facade.md`'s
 // own closing wiring request.
 #[cfg(feature = "wgpu-engine")]
+pub use action::{checked_action_string_bytes, BoundedAction, BoundedActionBatchReservation, BoundedActionBuilder, BoundedActionClaim, BoundedActionFault, BoundedActionQueue, BoundedActionReservation, BoundedClaimedActionReservation};
+#[cfg(feature = "wgpu-engine")]
 pub use chrome::{chrome_item_bg, chrome_item_text, item_bg, item_text, measure_action_item, push_chrome_border, push_chrome_group_border, push_control_border, push_icon, push_window_cap_border, ICON_TINY};
 #[cfg(feature = "wgpu-engine")]
 pub use engine::{SurfaceLane, Ui, UiLayoutStep};
@@ -231,13 +237,13 @@ pub use host::{clipboard_read_text, clipboard_write_text, dispatch_window_event,
 pub use host::{dispatch_window_event, modifiers_from_winit, pointer_coords, ClipboardIoJob, WindowInputState};
 #[cfg(feature = "wgpu-engine")]
 pub use input::{DragAxis, DragState, HitKind, HitTarget, InputState, KeyAction, PointerCallbacks, PointerModifiers, TreeDragState, TreeDropPosition};
+#[cfg(target_arch = "wasm32")]
+pub use prepared::OffscreenPresentToken;
 #[cfg(feature = "wgpu-engine")]
 pub use prepared::{
     PreparedRenderEviction, PreparedRenderGate, PreparedRenderInput, PreparedRenderJob, PreparedRenderLimits, PreparedRenderPacket, PreparedRenderReceiver, PreparedRenderRejection, PreparedRenderUpload, PreparedRenderUsage, RenderDirective,
     UiPresentToken,
 };
-#[cfg(target_arch = "wasm32")]
-pub use prepared::OffscreenPresentToken;
 #[cfg(feature = "wgpu-engine")]
 // 🎬️ Relocated out of this crate into `semio-framework-ui-scene`'s `math` module (ticket
 // 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME packet `scene-surface`; previously relocated

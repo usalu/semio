@@ -18,7 +18,6 @@ import {
   Panel,
   PanelDockProvider,
   singleTreeLeaf,
-  TransactionProvider,
   TreeStateProvider,
   UiDriverProvider,
   DEFAULT_UI_DRIVER,
@@ -26,7 +25,6 @@ import {
   useFlow,
   useLevel,
   usePanelGhost,
-  useTransaction,
   useTreeState,
   useUiDriver,
   type PanelDock,
@@ -162,49 +160,6 @@ export const PanelDockStory: Story = {
   ),
 };
 // #endregion 🎛️PanelDockProvider
-
-// #region 🐹️TransactionProvider
-function TransactionProbe() {
-  const transaction = useTransaction();
-  const [log, setLog] = useState<string[]>([]);
-  return (
-    <div className="flex flex-col gap-single text-xs">
-      <div className="flex gap-single">
-        <button
-          className="border px-single"
-          onClick={() => {
-            transaction?.start?.();
-            setLog((prev) => [...prev, "start"]);
-          }}
-        >
-          start()
-        </button>
-        <button
-          className="border px-single"
-          onClick={() => {
-            transaction?.finalize?.();
-            setLog((prev) => [...prev, "finalize"]);
-          }}
-        >
-          finalize()
-        </button>
-      </div>
-      <pre>{log.join(" → ") || "(no calls yet)"}</pre>
-    </div>
-  );
-}
-
-export const Transaction: Story = {
-  name: "TransactionProvider",
-  render: () => (
-    <ProbeShell title="TransactionProvider → useTransaction()">
-      <TransactionProvider transaction={{ start: () => {}, finalize: () => {}, abort: () => {} }}>
-        <TransactionProbe />
-      </TransactionProvider>
-    </ProbeShell>
-  ),
-};
-// #endregion 🐹️TransactionProvider
 
 // #region 📜️TreeStateProvider
 function TreeStateProbe() {

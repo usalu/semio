@@ -1,0 +1,1830 @@
+[verify] dependency-cruiser boundaries…
+
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts → 🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/📦️index.ts
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🧬️typology/🟦️component.ts → 🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/📦️index.ts
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️glue.tsx
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📔️registry/🟦️component.ts → 🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/📦️index.ts
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📄️artifact/🟦️component.ts → 🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/📦️index.ts
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎰️stately/🟦️component.ts → 🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/📦️index.ts
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts → 🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/📦️index.ts
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/🧪️vitest.config.ts → 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts
+  warn plugins-framework-sdk-only: ✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-plugin-to-extension-📐️cad: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/📦️index.ts
+  warn no-plugin-to-extension-📐️cad: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript/📦️index.ts
+  warn no-plugin-to-extension-📐️cad: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript/📦️index.ts
+  warn no-plugin-to-extension-📐️cad: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript/📦️index.ts
+  warn no-impl-segment: 🧰️framework/🔨️modules/🖱️ui/🖼️assets/🟦️icon_resolver.ts → ../../../../🧮️math/🕸️graph/🗣️dsl/🫀️core/⚡️implementations/🟦️typescript/🟦️typescript/📦️index.ts
+  warn no-impl-segment: ✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/⚡️implementations/🟦️typescript/🧪️index.test.ts → ✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/⚡️implementations/🟦️typescript/📦️index.ts
+  warn no-impl-segment: .storybook/scopes.ts → ../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚡️implementations/🟦️typescript/📇️registry/🤖️generated/🟦️playgrounds.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/📦️packages/🟦️typescript/📦️index.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/api/webhooks/github/route.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts → 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️index.test.ts → 📜️script.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts → 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts → 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📜️store.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🟦️component.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/📓️print/🔨️modules/🔤print-font-catalog/🟦️component.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/🟦️component.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/🟦️component.ts → 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📜️script.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🟦️component.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🟦️test.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/📓️print/🎮️commands/🖨️template-pdf-build/🟦️component.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/📓️print/🎮️commands/🔤print-font-provisioning/🟦️component.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/📓️print/🎮️commands/👁️template-pdf-watch/🟦️component.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/📓️print/🎮️commands/🎨latex-token-stylesheet-generation/🟦️component.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🟦️effect-backbone.ts → 🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/📬️mailbox.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🟦️component.ts → 🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: ��️framework/🛍️products/💻️os/🟦️backbone-worker.ts → 🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🟦️backbone-worker.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/��️multi.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/🟦️config-tooling.ts → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️build-tooling.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/🧪️bench-web-harness.ts → 🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/⚙️vite.config.ts → 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🏷️brand/📦️index.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/🏷️brand/📦️index.ts → ♻️mit-bestand/🧺️demonstrator/🟦️brand.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🧊️mesh/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🖼️image/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/📝️text/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/📊️table/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/📄️document/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🎬️media/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🌳️tree/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🌐plugin-web-materialize.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️catalog.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx → 🧰️framework/🔨️modules/��️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/WasmSessionLoader/🟦️component.tsx → 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/pkg/framework_surface.js
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/WasmSessionLoader/🟦️component.tsx → 🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/pkg/framework_editor.js
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/UtilityTree/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/UtilityTree/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/UiDocumentStore/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TiledMapHost/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TiledMapHost/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TextEditor/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TextEditor/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TextEditor/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/🟦️component.tsx → ��️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/🟦️component.tsx → 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: ��️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/🧪️component.test.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️render.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/🧪️component.test.tsx → 🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/🧪️component.test.tsx → 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Table/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Table/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellSync/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellSync/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellSearch/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx → 🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx → ♻️mit-bestand/🧺️demonstrator/🟦️brand.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx → ♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx → 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx → 🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️turn-scheduler.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx → 🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx → 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Paint2dHost/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Paint2dHost/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: ��️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Paint2dHost/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/NodeGraph/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/NodeGraph/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/NodeGraph/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️render.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/InkCanvasHost/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/InkCanvasHost/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/InkCanvasHost/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/IconRenderHost/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/IconRenderHost/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/GraphTimelineHost/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/GraphTimelineHost/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/EventFeedHost/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/EventFeedHost/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/DiffViewHost/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/DiffViewHost/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍��️engine/🧱️elements/Canvas2dHost/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Canvas2dHost/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Canvas2dHost/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Board2dHost/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Board2dHost/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Board2dHost/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/BlockListHost/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/BlockListHost/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentPresence/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentPresence/🧪️component.test.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️render.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentApprovals/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentApprovals/🧪️component.test.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️render.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧪️modern-era.test.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧪️legacy-conformance.test.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/🧪️hygiene.test.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🧪️vitest.config.ts → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️build-tooling.ts
+  warn no-cross-package-relative: 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🧪️vitest.config.ts → 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts → 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts → 🧰️framework/🔨️modules/🔺️mesh/🟦️component.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts → 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🧮️action-argument-resolution/🟦️component.ts → 🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/📦️index.ts → 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core.js
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/📦️index.ts → 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core_bg.wasm
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🧊️3d/��️packages/🟦️typescript/📦️index.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🟦️component.ts → 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🚗️UiDriver/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx → 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx → 🧰️framework/🔨️modules/🕹️interaction/🟦️component.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖼️Panel/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️IconSelector/🟦️component.tsx → 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🟦️component.tsx → 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🧪️story.tsx → 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/📚️I18n/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/📑️PanelTabBar/🟦️component.tsx → 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/📑️PanelTabBar/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/📐️Layout/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/📊️Table/🧪️story.tsx → .storybook/fixture/nakagin.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/📄️Textarea/🧪️story.tsx → .storybook/fixture/nakagin.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/📁️VirtualFileSystem/🟦️component.tsx → 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/💬️UIDialog/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/💬️UIDialog/🧪️story.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🐚️ShellScope/🟦️component.tsx → 🧰️framework/🔨️modules/🕹️interaction/🟦️component.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🐚️ShellScope/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🟦️component.tsx → 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌈️Surface/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🔨️modules/💾️keybinding-persistence/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🔨️modules/⌨️control-keybinding-context/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts → 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖥️platform/🟦️component.ts → 🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🖥️platform/🟦️component.ts → 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🕹️interaction/🟦️component.ts → 🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️ui-axes.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🕹️interaction/🟦️component.ts → 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🔺️mesh/🟦️component.ts → 🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🔺️mesh/🟦️component.ts → 🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️ui-axes.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🔺️mesh/🟦️component.ts → 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🎯️action-bus/🟦️component.ts → 🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🎯️action-bus/🟦️component.ts → 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts → 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts → 🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts → 🧰️framework/🔨️modules/🛂️manifest/🤖️generated/🟦️ui-axes.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts → 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts → 🧰️framework/🔨️modules/🖥️platform/🟦️component.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts → 🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️turn-scheduler.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts → 🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/◻2d/📦️packages/🟦️typescript/📦️index.ts → 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core.js
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/◻2d/📦️packages/🟦️typescript/📦️index.ts → 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core_bg.wasm
+  warn no-cross-package-relative: 🧰️framework/🔨️modules/◻2d/📦️packages/🟦️typescript/📦️index.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🌎️hub/🔨️modules/🛡️admin/🧱️elements/🛡️AdminApp/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🌎️hub/🔨️modules/🛡️admin/🧱️elements/🙋️UsersPage/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🌎️hub/🔨️modules/🛡️admin/🧱️elements/🙋️UsersPage/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🌎️hub/🔨️modules/🛡️admin/🧱️elements/🔴️ConnectionsPage/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🌎️hub/🔨️modules/🛡️admin/🧱️elements/🔴️ConnectionsPage/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🌎️hub/🔨️modules/🛡️admin/🧱️elements/🔑️AdminSession/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🌎️hub/🔨️modules/🛡️admin/🧱️elements/🔑️AdminSession/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🌎️hub/🔨️modules/🛡️admin/🧱️elements/📰️EventsPage/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🌎️hub/🔨️modules/🛡️admin/🧱️elements/📰️EventsPage/🟦️component.tsx → 🧰️framework/��️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🌎️hub/🔨️modules/🛡️admin/🧱️elements/📄️DocumentsPage/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🌎️hub/🔨️modules/🛡️admin/🧱️elements/📄️DocumentsPage/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🌎️hub/🔨️modules/🛡️admin/🧱️elements/🏠️OverviewPage/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🌎️hub/🔨️modules/🛡️admin/🧱️elements/🏛️SpacesPage/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🌎️hub/🔨️modules/🛡️admin/🧱️elements/🏛️SpacesPage/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/🧪️admin.test.tsx → 🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: 🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/📦️index.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: 🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/⚙️vite.config.ts → 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts
+  warn no-cross-package-relative: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts → 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core.js
+  warn no-cross-package-relative: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts → 🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts
+  warn no-cross-package-relative: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts
+  warn no-cross-package-relative: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/🟦️brep-implementation.ts
+  warn no-cross-package-relative: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts → 🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts
+  warn no-cross-package-relative: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts → 🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts
+  warn no-cross-package-relative: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts
+  warn no-cross-package-relative: ♻️mit-bestand/🧺️demonstrator/🟦️brand.ts → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: ♻️mit-bestand/🧺️demonstrator/🟦️brand.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: ♻️mit-bestand/🧺️demonstrator/📦️index.tsx → 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️catalog.ts
+  warn no-cross-package-relative: ♻️mit-bestand/🧺️demonstrator/📦️index.tsx → 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: ♻️mit-bestand/🧺️demonstrator/📦️index.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️runtime.ts
+  warn no-cross-package-relative: ♻️mit-bestand/🧺️demonstrator/📦️index.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: ♻️mit-bestand/🧺️demonstrator/📦️index.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  warn no-cross-package-relative: ♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: ♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts → 🧰️framework/🛍️products/💻️os/🔨️modules/🧑️‍💻️dev/📦️packages/🟦️typescript/📜️script.ts
+  warn no-cross-package-relative: ♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts → 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️plugins.ts
+  warn no-cross-package-relative: ♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts → 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts
+  warn no-cross-package-relative: ♻️mit-bestand/🧺️demonstrator/⚙️vite.config.ts → 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts
+  warn no-cross-package-relative: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/🧪️vitest.config.ts → 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts
+  warn no-cross-package-relative: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📦️index.ts → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  warn no-cross-package-relative: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📦️index.ts → ✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/📦️index.ts
+  warn no-cross-package-relative: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/⚙️vite.config.ts → 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🚗️UiDriver/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx → 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx → 🧰️framework/🔨️modules/🕹️interaction/🟦️component.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖼️Panel/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️IconSelector/🟦️component.tsx → 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🟦️component.tsx → 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🧪️story.tsx → 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/📚️I18n/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/📑️PanelTabBar/🟦️component.tsx → 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/📑️PanelTabBar/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/📐️Layout/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/📁️VirtualFileSystem/🟦️component.tsx → 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/💬️UIDialog/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/💬️UIDialog/🧪️story.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🐚️ShellScope/🟦️component.tsx → 🧰️framework/🔨️modules/🕹️interaction/🟦️component.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🐚️ShellScope/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🟦️component.tsx → 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌈️Surface/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🖼️render/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🔨️modules/💾️keybinding-persistence/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🔨️modules/⌨️control-keybinding-context/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts → 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️playgrounds.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+  error ui-no-framework-packages: 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python/📜️script.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+  error s-modules-no-plugins: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/📦️index.ts
+  error s-modules-no-plugins: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript/📦️index.ts
+  error s-modules-no-plugins: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript/📦️index.ts
+  error s-modules-no-plugins: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts
+  error s-modules-no-plugins: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts
+  error s-modules-no-plugins: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/🟦️brep-implementation.ts
+  error s-modules-no-plugins: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts
+  error s-modules-no-plugins: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts
+  error s-modules-no-plugins: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts → ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/WorldTerrainLayer/🟦️component.tsx → node_modules/three/build/three.module.js
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx → node_modules/three/examples/jsm/loaders/GLTFLoader.js
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx → node_modules/three/build/three.module.js
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx → node_modules/@react-three/fiber/dist/react-three-fiber.cjs.js
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️glue.tsx
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/WasmSessionLoader/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core.js
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/WasmSessionLoader/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/🟦️glue.tsx
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/WasmSessionLoader/🟦️component.tsx → 🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/pkg/framework_surface.js
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/WasmSessionLoader/🟦️component.tsx → 🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/pkg/framework_editor.js
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/��️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TextEditor/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/🟦️glue.tsx
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TextEditor/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/🟦️component.tsx → 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/🧪️component.test.tsx → 🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TaskManager/🧪️component.test.tsx → 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellSync/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/🟦️backbone-worker.ts
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️catalog.ts
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🟦️plugins.ts
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️glue.tsx
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️component.ts
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx → 🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️glue.ts
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx → ♻️mit-bestand/🧺️demonstrator/🟦️brand.ts
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx → ♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️glue.tsx
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/��️packages/🟦️typescript/🟦️glue.ts
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx → 🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx → 🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️turn-scheduler.ts
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx → 🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx → 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/NodeGraph/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/��️packages/🟦️typescript/🟦️glue.tsx
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/NodeGraph/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/InkCanvasHost/🟦️component.tsx → node_modules/katex/dist/katex.min.css
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/InkCanvasHost/🟦️component.tsx → node_modules/katex/dist/katex.js
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️glue.tsx
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Canvas2dHost/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/🟦️glue.tsx
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/🟦️component.ts
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧵️bridge/🟦️component.ts
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentBridge/🧪️component.test.ts → 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧵️bridge/🟦️component.ts
+  error renderer-hosts-only-ui: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/AgentApprovals/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🧵️bridge/🟦️component.ts
+  error not-to-unlisted: compose/dev/algorithm/js/postcss.config.ts → node_modules/postcss-load-config/src/index.js
+  error not-to-unlisted: compose/client/ui/desktop/js/vite.renderer.config.ts → node_modules/vite/dist/node/index.js
+  error not-to-unlisted: compose/client/ui/desktop/js/vite.renderer.config.ts → node_modules/vite-plugin-wasm/exports/import.mjs
+  error not-to-unlisted: compose/client/ui/desktop/js/vite.renderer.config.ts → node_modules/vite-plugin-top-level-await/exports/import.mjs
+  error not-to-unlisted: compose/client/ui/desktop/js/vite.renderer.config.ts → node_modules/@vitejs/plugin-react/dist/index.js
+  error not-to-unlisted: compose/client/ui/desktop/js/vite.renderer.config.ts → node_modules/@tailwindcss/vite/dist/index.mjs
+  error not-to-unlisted: compose/client/ui/desktop/js/vite.preload.config.ts → node_modules/vite/dist/node/index.js
+  error not-to-unlisted: compose/client/ui/desktop/js/vite.main.config.ts → node_modules/vite/dist/node/index.js
+  error not-to-unlisted: compose/client/ui/desktop/js/tailwind.config.ts → node_modules/tailwindcss/dist/lib.js
+  error not-to-unlisted: compose/client/ui/desktop/js/postcss.config.ts → node_modules/postcss-load-config/src/index.js
+  error not-to-unlisted: compose/client/ui/desktop/js/forge.config.ts → node_modules/@electron-forge/shared-types/dist/index.js
+  error not-to-unlisted: compose/client/lib/sketchpad/play/js/vite.config.ts → node_modules/vite/dist/node/index.js
+  error not-to-unlisted: compose/client/lib/sketchpad/play/js/vite.config.ts → node_modules/vite-plugin-wasm/exports/import.mjs
+  error not-to-unlisted: compose/client/lib/sketchpad/play/js/vite.config.ts → node_modules/vite-plugin-top-level-await/exports/import.mjs
+  error not-to-unlisted: compose/client/lib/sketchpad/play/js/vite.config.ts → node_modules/@vitejs/plugin-react/dist/index.js
+  error not-to-unlisted: compose/client/lib/sketchpad/play/js/vite.config.ts → node_modules/@tailwindcss/vite/dist/index.mjs
+  error not-to-unlisted: compose/client/lib/sketchpad/play/js/tailwind.config.ts → node_modules/tailwindcss/dist/lib.js
+  error not-to-unlisted: compose/client/lib/sketchpad/play/js/postcss.config.ts → node_modules/postcss-load-config/src/index.js
+  error not-to-unlisted: compose/client/lib/sketchpad/js/tailwind.config.ts → node_modules/tailwindcss/dist/lib.js
+  error not-to-unlisted: compose/client/lib/sketchpad/js/postcss.config.ts → node_modules/postcss-load-config/src/index.js
+  error not-to-unlisted: compose/client/lib/sketchpad/doc/js/vite.config.ts → node_modules/vite/dist/node/index.js
+  error not-to-unlisted: compose/client/lib/sketchpad/doc/js/vite.config.ts → node_modules/vite-plugin-wasm/exports/import.mjs
+  error not-to-unlisted: compose/client/lib/sketchpad/doc/js/vite.config.ts → node_modules/vite-plugin-top-level-await/exports/import.mjs
+  error not-to-unlisted: compose/client/lib/sketchpad/doc/js/vite.config.ts → node_modules/@vitejs/plugin-react/dist/index.js
+  error not-to-unlisted: compose/client/lib/sketchpad/doc/js/vite.config.ts → node_modules/@tailwindcss/vite/dist/index.mjs
+  error not-to-unlisted: compose/client/lib/sketchpad/doc/js/tailwind.config.ts → node_modules/tailwindcss/dist/lib.js
+  error not-to-unlisted: compose/client/lib/sketchpad/doc/js/postcss.config.ts → node_modules/postcss-load-config/src/index.js
+  error not-to-unlisted: compose/client/bin/engine/js/vite.mcp-app.config.ts → node_modules/vite/dist/node/index.js
+  error not-to-unlisted: compose/client/bin/engine/js/vite.mcp-app.config.ts → node_modules/@tailwindcss/vite/dist/index.mjs
+  error not-to-unlisted: 🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🟦️component.ts → node_modules/sharp/lib/index.js
+  error not-to-unlisted: 🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🟦️component.ts → node_modules/pdfjs-dist/legacy/build/pdf.mjs
+  error not-to-unlisted: 🧰️framework/��️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🟦️component.ts → node_modules/@napi-rs/canvas/index.js
+  error not-to-unlisted: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/WorldTerrainLayer/🟦️component.tsx → node_modules/three/build/three.module.js
+  error not-to-unlisted: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx → node_modules/three/examples/jsm/loaders/GLTFLoader.js
+  error not-to-unlisted: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx → node_modules/three/build/three.module.js
+  error not-to-unlisted: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx → node_modules/@react-three/fiber/dist/react-three-fiber.cjs.js
+  error not-to-unlisted: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/InkCanvasHost/🟦️component.tsx → node_modules/katex/dist/katex.min.css
+  error not-to-unlisted: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/InkCanvasHost/🟦️component.tsx → node_modules/katex/dist/katex.js
+  error not-to-unlisted: 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx → node_modules/three/examples/jsm/controls/OrbitControls.js
+  error not-to-unlisted: 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx → node_modules/three/build/three.module.js
+  error not-to-unlisted: 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️component.tsx → node_modules/three-mesh-bvh/src/index.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx → node_modules/@dnd-kit/utilities/dist/index.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx → node_modules/@dnd-kit/sortable/dist/index.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx → node_modules/@dnd-kit/core/dist/index.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🧪️component.test.tsx → node_modules/@testing-library/react/dist/index.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧾️Form/🧪️component.test.tsx → node_modules/@testing-library/react/dist/index.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🗨️Popover/🧪️component.test.tsx → node_modules/@testing-library/react/dist/index.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️component.tsx → node_modules/three/build/three.module.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️component.tsx → node_modules/@xyflow/react/dist/umd/index.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️component.tsx → node_modules/@react-three/fiber/dist/react-three-fiber.cjs.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔌️Ports/🟦️component.tsx → node_modules/@react-three/drei/index.cjs.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/📻️TableAvatar/🧪️component.test.tsx → node_modules/@testing-library/react/dist/index.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/📑️Tabs/🧪️component.test.tsx → node_modules/@testing-library/react/dist/index.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/📋️MenuItem/🧪️component.test.tsx → node_modules/@testing-library/react/dist/index.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/📊️Table/🟦️component.tsx → node_modules/@dnd-kit/core/dist/index.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/📊️Diagram/🟦️layout.ts → node_modules/@xyflow/react/dist/umd/index.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/📊️Diagram/🟦️component.tsx → node_modules/@xyflow/react/dist/umd/index.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/📊️Diagram/🧪️component.test.tsx → node_modules/@testing-library/react/dist/index.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/💬️Dialog/🧪️component.test.tsx → node_modules/@testing-library/react/dist/index.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🐚️ShellScope/🟦️component.tsx → node_modules/react-i18next/dist/es/index.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🐚️ShellScope/🟦️component.tsx → node_modules/i18next/dist/esm/i18next.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️component.tsx → node_modules/react-i18next/dist/es/index.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️component.tsx → node_modules/i18next/dist/esm/i18next.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx → node_modules/three/build/three.module.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx → node_modules/@react-three/fiber/dist/react-three-fiber.cjs.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/🟦️component.tsx → node_modules/@react-three/drei/index.cjs.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎨️Canvas/🟦️component.tsx → node_modules/react-resizable-panels/dist/react-resizable-panels.cjs
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎛️ToggleGroup/🧪️component.test.tsx → node_modules/@testing-library/react/dist/index.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Toggle/🧪️component.test.tsx → node_modules/@testing-library/react/dist/index.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Slider/🧪️component.test.tsx → node_modules/@testing-library/react/dist/index.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/☑️Select/🧪️component.test.tsx → node_modules/@testing-library/react/dist/index.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/☑️Checkbox/🧪️component.test.tsx → node_modules/@testing-library/react/dist/index.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/⌨️Command/🧪️component.test.tsx → node_modules/@testing-library/react/dist/index.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/↕️Resizable/🟦️component.tsx → node_modules/react-resizable-panels/dist/react-resizable-panels.cjs
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/↕️Collapsible/🧪️component.test.tsx → node_modules/@testing-library/react/dist/index.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️class-name-composition/🧪️slot.test.tsx → node_modules/@testing-library/react/dist/index.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🔨️modules/⌨️control-keybinding-context/🧪️component.test.tsx → node_modules/@testing-library/react/dist/index.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎨️tailwind/🎨️tailwind.config.ts → node_modules/tailwindcss/dist/lib.js
+  error not-to-unlisted: 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎨️tailwind/🎨️tailwind.config.ts → node_modules/@tailwindcss/typography/src/index.js
+  error not-to-unlisted: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎰️stately/🟦️component.ts → node_modules/xstate/dist/xstate.cjs.mjs
+  error not-to-unlisted: ✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react/🟦️component.tsx → node_modules/reveal.js/dist/reveal.js
+  error not-to-unlisted: ✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react/🟦️component.tsx → node_modules/reveal.js/dist/reveal.css
+  error not-to-unlisted: ✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react/🟦️component.tsx → node_modules/pdfjs-dist/build/pdf.mjs
+  error no-state-outside-os: 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts → 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📜️store.ts
+  error no-cross-technology-compose-to-🧰️framework: compose/dev/algorithm/js/index.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+  error no-cross-technology-compose-to-🧰️framework: compose/dev/algorithm/js/index.ts → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  error no-cross-technology-compose-to-🧰️framework: compose/client/ui/3dm/ui/js/index.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  error no-cross-technology-compose-to-🧰️framework: compose/client/lib/sketchpad/js/index.ts → 🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts
+  error no-cross-technology-compose-to-🧰️framework: compose/client/lib/sketchpad/js/index.ts → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  error no-cross-technology-compose-to-🧰️framework: compose/client/lib/sketchpad/js/index.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error no-cross-technology-compose-to-🧰️framework: compose/client/lib/sketchpad/js/boot.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  error no-cross-technology-compose-to-🧰️framework: compose/client/lib/sketchpad/js/boot.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error no-cross-technology-🧰️framework-to-♻️mit-bestand: 🧰️framework/��️products/💻️os/🔨️modules/🧑️‍💻️dev/🏷️brand/📦️index.ts → ♻️mit-bestand/🧺️demonstrator/🟦️brand.ts
+  error no-cross-technology-🧰️framework-to-♻️mit-bestand: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx → ♻️mit-bestand/🧺️demonstrator/🟦️brand.ts
+  error no-cross-technology-🧰️framework-to-♻️mit-bestand: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx → ♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx
+  error no-cross-technology-🌎️hub-to-🧰️framework: 🌎️hub/🔨️modules/🛡️admin/🧱️elements/🛡️AdminApp/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  error no-cross-technology-🌎️hub-to-🧰️framework: 🌎️hub/🔨️modules/🛡️admin/🧱️elements/🙋️UsersPage/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts
+  error no-cross-technology-🌎️hub-to-🧰️framework: 🌎️hub/🔨️modules/🛡️admin/🧱️elements/🙋️UsersPage/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  error no-cross-technology-🌎️hub-to-🧰️framework: 🌎️hub/🔨️modules/🛡️admin/🧱️elements/🔴️ConnectionsPage/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts
+  error no-cross-technology-🌎️hub-to-🧰️framework: 🌎️hub/🔨️modules/🛡️admin/🧱️elements/🔴️ConnectionsPage/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  error no-cross-technology-🌎️hub-to-🧰️framework: 🌎️hub/🔨️modules/🛡️admin/🧱️elements/🔑️AdminSession/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts
+  error no-cross-technology-🌎️hub-to-🧰️framework: 🌎️hub/🔨️modules/🛡️admin/🧱️elements/🔑️AdminSession/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  error no-cross-technology-🌎️hub-to-🧰️framework: 🌎️hub/🔨️modules/🛡️admin/🧱️elements/📰️EventsPage/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts
+  error no-cross-technology-🌎️hub-to-🧰️framework: 🌎️hub/🔨️modules/🛡️admin/🧱️elements/📰️EventsPage/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  error no-cross-technology-🌎️hub-to-🧰️framework: 🌎️hub/🔨️modules/🛡️admin/🧱️elements/📄️DocumentsPage/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts
+  error no-cross-technology-🌎️hub-to-🧰️framework: 🌎️hub/🔨️modules/🛡️admin/🧱️elements/📄️DocumentsPage/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  error no-cross-technology-🌎️hub-to-🧰️framework: 🌎️hub/🔨️modules/🛡️admin/🧱️elements/🏠️OverviewPage/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  error no-cross-technology-🌎️hub-to-🧰️framework: 🌎️hub/🔨️modules/🛡️admin/🧱️elements/🏛️SpacesPage/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts
+  error no-cross-technology-🌎️hub-to-🧰️framework: 🌎️hub/🔨️modules/🛡️admin/🧱️elements/🏛️SpacesPage/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  error no-cross-technology-🌎️hub-to-🧰️framework: 🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/🧪️admin.test.tsx → 🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts
+  error no-cross-technology-🌎️hub-to-🧰️framework: 🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript/📦️index.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  error no-cross-technology-🌎️hub-to-🧰️framework: 🌎️hub/📦️packages/🟦️typescript/🧪️index.test.ts → 🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/🟦️glue.ts
+  error no-cross-technology-🌎️hub-to-🧰️framework: 🌎️hub/📦️packages/🟦️typescript/📦️index.ts → 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts → 🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/pkg/flow_core.js
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts → 🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/📦️index.ts
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts → 🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/📦️index.ts
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts → 🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/📦️index.ts
+  error no-cross-technology-✏️s-to-��️framework: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts → 🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/📦️index.ts
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🧬️typology/🟦️component.ts → 🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/📦️index.ts
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🧬️typology/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🟦️component.tsx → 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/🟦️glue.tsx
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📺️renderer/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📔️registry/🟦️component.ts → 🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/📦️index.ts
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📔️registry/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📄️artifact/🟦️component.ts → 🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/📦️index.ts
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📄️artifact/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/��️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎰️stately/🟦️component.ts → 🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/📦️index.ts
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts → 🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/📦️index.ts
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react/🟦️component.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  error no-cross-technology-✏️s-to-🧰️framework: ✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react/🟦️component.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error no-cross-technology-♻️mit-bestand-to-🧰️framework: ♻️mit-bestand/🧺️demonstrator/🟦️brand.ts → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  error no-cross-technology-♻️mit-bestand-to-🧰️framework: ♻️mit-bestand/🧺️demonstrator/🟦️brand.ts → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error no-cross-technology-♻️mit-bestand-to-🧰️framework: ♻️mit-bestand/🧺️demonstrator/📦️index.tsx → 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🟦️catalog.ts
+  error no-cross-technology-♻️mit-bestand-to-🧰️framework: ♻️mit-bestand/🧺️demonstrator/📦️index.tsx → 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  error no-cross-technology-♻️mit-bestand-to-🧰️framework: ♻️mit-bestand/🧺️demonstrator/📦️index.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️runtime.ts
+  error no-cross-technology-♻️mit-bestand-to-🧰️framework: ♻️mit-bestand/🧺️demonstrator/📦️index.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  error no-cross-technology-♻️mit-bestand-to-🧰️framework: ♻️mit-bestand/🧺️demonstrator/📦️index.tsx → 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error no-cross-technology-♻️mit-bestand-to-🧰️framework: ♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  error no-cross-technology-♻️mit-bestand-to-🧰️framework: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📦️index.ts → 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx
+  error no-cross-technology-♻️mit-bestand-to-✏️s: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📦️index.ts → ✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/📦️index.ts
+  error no-core-path: 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/api/webhooks/github/route.ts → @/lib
+  error no-core-path: 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/api/v1/warning/route.ts → @/lib
+  error no-core-path: 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/api/v1/ticket/route.ts → @/lib
+  error no-core-path: 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/api/v1/ticket/[id]/route.ts → @/lib
+  error no-core-path: 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/api/v1/scope/route.ts → @/lib
+  error no-core-path: 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/api/v1/repo/route.ts → @/lib
+  error no-core-path: 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/api/v1/event/route.ts → @/lib
+  error no-core-path: 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/api/v1/diff/route.ts → @/lib
+  error no-core-path: 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/api/v1/breach/route.ts → @/lib
+  error no-core-path: 🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/app/api/v1/auth/route.ts → @/lib
+  error no-core-path: 🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript/🟦️extension.ts → util
+  error no-core-path: 🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/📜️script.ts → ../../../../🔨️modules/🧮️math/🕸️graph/🗣️dsl/🫀️core/📦️packages/🟦️typescript/🟦️typescript/📦️index.ts
+  error no-core-path: 🧰️framework/🛍️products/🦑️repo/📜️script.ts → ../../🔨️modules/🧮️math/🕸️graph/🗣️dsl/🫀️core/📦️packages/🟦️typescript/🟦️typescript/📦️index.ts
+  error no-core-path: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/🟦️zip.ts → zlib
+  error no-core-path: 🧰️framework/🔨️modules/🖱️ui/🖼️assets/🟦️icon_resolver.ts → ../../../../🧮️math/🕸️graph/🗣️dsl/🫀️core/⚡️implementations/🟦️typescript/🟦️typescript/📦️index.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪞️symmetry/rotational-symmetry-score/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪞️symmetry/reflection-symmetry-score/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧱️area-volume/volume/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧱️area-volume/void-volume/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧱️area-volume/total-area/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧱️area-volume/surface-area/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧱️area-volume/material-volume/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧱️area-volume/exposed-area/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧱️area-volume/enclosed-volume/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧱️area-volume/contact-area/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🕸️topology/holes/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🕸️topology/holes/🧪️contract/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🕸️topology/handles/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🕸️topology/handles/🧪️contract/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🕸️topology/genus/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🕸️topology/genus/🧪️contract/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🕸️topology/euler-characteristic/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🕸️topology/euler-characteristic/🧪️contract/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🕸️topology/boundary-loops/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🕸️topology/boundary-loops/🧪️contract/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️size/projected-area/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️size/overall-size/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️size/oriented-bounds/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️size/footprint-area/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️size/characteristic-length/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️size/bounding-box-dimensions/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️size/axis-aligned-bounds/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📏️proportion/slenderness/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📏️proportion/slenderness/🧪️contract/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📏️proportion/flatness/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📏️proportion/flatness/🧪️contract/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📏️proportion/elongation/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📏️proportion/elongation/🧪️contract/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📏️proportion/aspect-ratios/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/📏️proportion/aspect-ratios/🧪️contract/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚪️compactness/surface-to-volume-ratio/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚪️compactness/sphericity/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚪️compactness/hull-fill-ratio/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚪️compactness/compactness/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚪️compactness/compactness-index/🟦️component.ts → ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/💡️inferences/🔨️geometry-core/🟦️component.ts
+  error no-core-path: ✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react/🟦️component.tsx → @semio-tech/animate-present-core
+  error no-core-path: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/Recherche/Recherche/Gedanke Schweiz/Überblick.ts → @semio-tech/animate-present-core
+  error no-core-path: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/Recherche/Recherche/Gedanke Schweiz/🟦️ZoomIn3.ts → @semio-tech/animate-present-core
+  error no-core-path: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/Recherche/Recherche/Gedanke Schweiz/🟦️ZoomIn2.ts → @semio-tech/animate-present-core
+  error no-core-path: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/Recherche/Recherche/Gedanke Schweiz/🟦️ZoomIn1.ts → @semio-tech/animate-present-core
+  error no-core-path: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/Entwurfswerkzeug/Benutzeroberfläche/Benutzeroberfläche/🟦️Puzzle.ts → @semio-tech/animate-present-core
+  error no-core-path: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/Entwurfswerkzeug/Benutzeroberfläche/Benutzeroberfläche/🟦️Katalog.ts → @semio-tech/animate-present-core
+  error no-core-path: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/Entwurfswerkzeug/Benutzeroberfläche/Benutzeroberfläche/🟦️Filter.ts → @semio-tech/animate-present-core
+  error no-core-path: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/Entwurfswerkzeug/Benutzeroberfläche/Benutzeroberfläche/🟦️Detail.ts → @semio-tech/animate-present-core
+  error no-core-path: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/Entwurfswerkzeug/Benutzeroberfläche/Benutzeroberfläche/🟦️Abschluss.ts → @semio-tech/animate-present-core
+  error no-core-path: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/Einführung/Einleitung/🟦️Einleitung.ts → @semio-tech/animate-present-core
+  error no-core-path: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/Bauteilportal/Systematik/Generatoren/🟦️Modelle.ts → @semio-tech/animate-present-core
+  error no-core-path: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/Bauteilportal/Systematik/Generatoren/🟦️Konnektivität.ts → @semio-tech/animate-present-core
+  error no-core-path: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/Bauteilportal/Systematik/Generatoren/🟦️Bauteillogik.ts → @semio-tech/animate-present-core
+  error no-core-path: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/Bauteilportal/Systematik/Eingabeprozess/🟦️Output.ts → @semio-tech/animate-present-core
+  error no-core-path: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/Bauteilportal/Systematik/Eingabeprozess/🟦️ManuellesPrüfen.ts → @semio-tech/animate-present-core
+  error no-core-path: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/Bauteilportal/Systematik/Eingabeprozess/🟦️ImportVerarbeitung.ts → @semio-tech/animate-present-core
+  error no-core-path: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/Bauteilportal/Systematik/Eingabeprozess/🟦️ImportBesipiel.ts → @semio-tech/animate-present-core
+  error no-core-path: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/Bauteilportal/Systematik/Eingabeprozess/🟦️EingabeoberflächeAnnotiert.ts → @semio-tech/animate-present-core
+  error no-core-path: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/Bauteilportal/Systematik/Eingabeprozess/🟦️Eingabeoberfläche.ts → @semio-tech/animate-present-core
+  error no-core-path: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/Bauteilportal/Systematik/Eingabeprozess/🟦️Eingabearten.ts → @semio-tech/animate-present-core
+  error no-core-path: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/Bauteilportal/Ausgangslage/Typologien/🟦️Typologien.ts → @semio-tech/animate-present-core
+  error no-core-path: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/Bauteilportal/Ausgangslage/Typologien/🟦️Katalog.ts → @semio-tech/animate-present-core
+  error no-core-path: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/Bauteilportal/Ausgangslage/Typologien/🟦️Baum.ts → @semio-tech/animate-present-core
+  error no-core-path: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/Bauteilportal/Ausgangslage/Bauteilbörsen/🟦️Bauteilkatalog.ts → @semio-tech/animate-present-core
+  error no-core-path: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/Bauteilportal/Ausgangslage/Bauteilbörsen/🟦️Bauteilbeschriftungen.ts → @semio-tech/animate-present-core
+  error no-core-path: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/Bauteilportal/Ausgangslage/Bauteilbörsen/🟦️Bauteilarten.ts → @semio-tech/animate-present-core
+  error no-core-path: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/slide/Bauteilportal/Ausgangslage/Bauteilbörsen/🟦️Baukomponenten.ts → @semio-tech/animate-present-core
+  error no-core-path: ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/📦️index.ts → @semio-tech/animate-present-core
+  error no-circular: compose/dev/algorithm/js/index.ts →
+      compose/dev/algorithm/js/index.ts
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🖥️launch.ts
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📜️store.ts →
+
+      🧰️framework/🛍️products/��️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🌐plugin-web-materialize.ts
+      →
+
+      🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts
+      →
+      🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📜️store.ts
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TiledMapHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Canvas2dHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TiledMapHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TiledMapHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/DiffViewHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TiledMapHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TextEditor/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Canvas2dHost/🟦️component.tsx
+      →
+
+      🧰️framework/��️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TextEditor/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TextEditor/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/DiffViewHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TextEditor/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TextEditor/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TextEditor/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TextEditor/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/NodeGraph/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TextEditor/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Table/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Canvas2dHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Table/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Table/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/DiffViewHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Table/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellSync/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/UtilityTree/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/BlockListHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellSync/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellSearch/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/BlockListHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellSearch/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/UtilityTree/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellSync/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellSearch/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/UtilityTree/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/PluginRuntime/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Paint2dHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Paint2dHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/��️renderer/🧑️‍🎨️engine/🧱️elements/Paint2dHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/DiffViewHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Paint2dHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Paint2dHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Canvas2dHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Paint2dHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/NodeGraph/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Canvas2dHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/NodeGraph/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/NodeGraph/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellSearch/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/NodeGraph/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/NodeGraph/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/DiffViewHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/NodeGraph/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TiledMapHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TextEditor/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Table/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Shell/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Paint2dHost/🟦️component.tsx
+      →
+
+      ��️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/NodeGraph/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/InkCanvasHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Canvas2dHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/InkCanvasHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/InkCanvasHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/TextEditor/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/InkCanvasHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/InkCanvasHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/DiffViewHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/InkCanvasHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/InkCanvasHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/InkCanvasHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/GraphTimelineHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Canvas2dHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/GraphTimelineHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/GraphTimelineHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/DiffViewHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/GraphTimelineHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/GraphTimelineHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/GraphTimelineHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/EventFeedHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Canvas2dHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/EventFeedHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/EventFeedHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/DiffViewHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/EventFeedHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/EventFeedHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/EventFeedHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/DiffViewHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Canvas2dHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/DiffViewHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/DiffViewHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/DiffViewHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/DiffViewHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/DiffViewHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHelpers/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/BlockListHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍��️engine/🧱️elements/Shell/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Canvas2dHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Canvas2dHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Canvas2dHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/DiffViewHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Canvas2dHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Canvas2dHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Canvas2dHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Board2dHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Canvas2dHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Board2dHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Board2dHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/DiffViewHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/��️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Board2dHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Board2dHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Board2dHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Board2dHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/InkCanvasHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Board2dHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/BlockListHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/World3dHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Canvas2dHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/BlockListHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/BlockListHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ShellHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/ChromePanels/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/DiffViewHost/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/BlockListHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/BlockListHost/🟦️component.tsx →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Interpreter/🟦️component.tsx
+      →
+
+      🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/BlockListHost/🟦️component.tsx
+  error no-circular: 🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/↩️inverse/🟦️component.ts →
+
+      🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🦠️mutation/🟦️component.ts
+      →
+
+      🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️component.ts
+      →
+
+      🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/↩️inverse/🟦️component.ts
+  error no-circular: 🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️component.ts →
+
+      🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🦠️mutation/🟦️component.ts
+      →
+
+      🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️component.ts
+  error no-circular: 🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/��️sign-in/🟦️component.ts →
+
+      🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🔺️diff/🟦️component.ts
+      →
+
+      🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️component.ts
+  error no-circular: 🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️component.ts →
+
+      🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/↩️inverse/🟦️component.ts
+      →
+
+      🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️component.ts
+  error no-circular: 🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🦠️mutation/🟦️component.ts →
+
+      🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️component.ts
+      →
+
+      🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🦠️mutation/🟦️component.ts
+  error no-circular: 🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🔺️diff/🟦️component.ts →
+
+      🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️component.ts
+      →
+
+      🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🔺️diff/🟦️component.ts
+  error no-circular: 🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🔺️diff/🟦️component.ts →
+
+      🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🦠️mutation/🟦️component.ts
+      →
+
+      🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️component.ts
+      →
+
+      🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🔺️diff/🟦️component.ts
+  error no-circular: 🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/↩️inverse/🟦️component.ts →
+
+      🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🚪️sign-out/🦠️mutation/🟦️component.ts
+      →
+
+      🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️component.ts
+      →
+
+      🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/↩️inverse/🟦️component.ts
+  error no-circular: 🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/↩️inverse/🟦️component.ts →
+
+      🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️component.ts
+      →
+
+      🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/↩️inverse/🟦️component.ts
+  error no-circular: 🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/↩️inverse/🟦️component.ts →
+
+      🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🦠️mutation/🟦️component.ts
+      →
+
+      🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/🟦️component.ts
+      →
+
+      🧰️framework/🛍️products/💻️os/🎚️config/🧬️schema/🧬️mutations/🪪️sign-in/↩️inverse/🟦️component.ts
+  error no-circular: 🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts →
+      🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts →
+
+      🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🟦️component.ts →
+
+      🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+      →
+      🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts →
+      🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪜️Stepper/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪜️Stepper/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪜️Stepper/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪜️Stepper/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪜️Stepper/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/✏️Input/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪜️Stepper/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧱️DragHandle/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧱️DragHandle/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧱️DragHandle/🟦️component.tsx →
+
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/💡️ChromeControlHint/🟦️component.tsx
+      →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧱️DragHandle/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧱️DragHandle/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧱️DragHandle/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/��️elements/🔣️Icons/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔘️Button/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔘️Button/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/📄️Textarea/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/📄️Textarea/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/📄️Textarea/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/📄️Textarea/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/📄️Textarea/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/✏️Input/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/📄️Textarea/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎛️ToggleGroup/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Toggle/🟦️component.tsx →
+
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎛️ToggleGroup/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎛️ButtonGroup/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔘️Button/🟦️component.tsx →
+
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎛️ButtonGroup/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎛️ButtonGroup/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔘️Button/🟦️component.tsx →
+
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎛️ButtonGroup/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Toggle/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Toggle/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Toggle/🟦️component.tsx →
+
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/💡️ChromeControlHint/🟦️component.tsx
+      →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Toggle/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Toggle/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Toggle/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Toggle/🟦️component.tsx →
+
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎛️ToggleGroup/🟦️component.tsx
+      →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Toggle/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Toggle/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/⚡️ActionGroup/🟦️component.tsx
+      →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Toggle/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Slider/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Slider/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Slider/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Slider/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Slider/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/✏️Input/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎚️Slider/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/✏️Input/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/✏️Input/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/✏️Input/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/✏️Input/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/✏️Input/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/✏️Input/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/⚡️ActionGroup/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/⚡️ActionGroup/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/⚡️ActionGroup/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/⚡️ActionGroup/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/☑️Select/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/☑️Select/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖱️ui/🧱️elements/☑️Select/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Tree/🟦️component.tsx →
+      🧰️framework/🔨️modules/🖱️ui/🧱️elements/☑️Select/🟦️component.tsx
+  error no-circular: 🧰️framework/🔨️modules/🖥️platform/🟦️component.ts →
+      🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts →
+
+      🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🟦️component.ts →
+
+      🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+      →
+      🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts →
+      🧰️framework/🔨️modules/🖥️platform/🟦️component.ts
+  error no-circular: 🧰️framework/🔨️modules/🔺️mesh/🟦️component.ts →
+      🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts →
+      🧰️framework/🔨️modules/🔺️mesh/🟦️component.ts
+  error no-circular: 🧰️framework/🔨️modules/🔺️mesh/🟦️component.ts →
+      🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts →
+
+      🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🟦️component.ts →
+
+      🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+      →
+      🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts →
+      🧰️framework/🔨️modules/🔺️mesh/🟦️component.ts
+  error no-circular: 🧰️framework/🔨️modules/🎯️action-bus/🟦️component.ts →
+      🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts →
+
+      🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🟦️component.ts →
+
+      🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+      →
+      🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts →
+      🧰️framework/🔨️modules/🎯️action-bus/🟦️component.ts
+  error no-circular: 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts →
+      🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts →
+      🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts
+  error no-circular: 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts →
+      🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts →
+
+      🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🟦️component.ts →
+
+      🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+      →
+      🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts →
+      🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts
+  error no-circular: 🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts →
+      🧰️framework/🔨️modules/🖥️platform/🟦️component.ts →
+      🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts →
+      🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts
+  error no-circular: 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts →
+      🧰️framework/🔨️modules/🧮️action-argument-resolution/🟦️component.ts →
+      🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts →
+      🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts →
+      🧰️framework/🔨️modules/🖥️platform/🟦️component.ts →
+      🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts →
+
+      🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🟦️component.ts →
+
+      🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+      →
+      🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error no-circular: 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts →
+      🧰️framework/🔨️modules/🕹️interaction/🧬️schema/🟦️component.ts →
+      🧰️framework/🔨️modules/🕹️interaction/🟦️component.ts →
+      🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts →
+
+      🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🟦️component.ts →
+
+      🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+      →
+      🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error no-circular: 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts →
+      🧰️framework/🔨️modules/🔺️mesh/🟦️component.ts →
+      🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts →
+      🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts →
+      🧰️framework/🔨️modules/🖥️platform/🟦️component.ts →
+      🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts →
+
+      🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🟦️component.ts →
+
+      🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+      →
+      🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error no-circular: 🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts →
+      🧰️framework/🔨️modules/🎯️action-bus/🟦️component.ts →
+      🧰️framework/🔨️modules/🛂️manifest/🟦️component.ts →
+      🧰️framework/🔨️modules/🎠️kernel/🟦️component.ts →
+      🧰️framework/🔨️modules/🖥️platform/🟦️component.ts →
+      🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/📦️index.ts →
+
+      🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🟦️component.ts →
+
+      🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📦️index.ts
+      →
+      🧰️framework/📦️packages/🟦️typescript/🟦️glue.ts
+  error no-circular: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/📦️index.ts
+      →
+
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🟦️component.ts
+      →
+      ✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/📦️index.ts →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts
+  error no-circular: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript/📦️index.ts
+      →
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🟦️component.ts →
+      ✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/📦️index.ts →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts
+  error no-circular: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript/📦️index.ts
+      →
+
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🟦️component.ts
+      →
+      ✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/📦️index.ts →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts
+  error no-circular: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts
+      →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts
+  error no-circular: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts
+  error no-circular: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts
+      →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts
+  error no-circular: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts
+  error no-circular: ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts
+  error no-circular: ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️component.ts →
+
+      ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/create-scene/🟦️component.ts
+      →
+
+      ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️component.ts
+  error no-circular: ✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/📦️index.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🟦️component.ts
+      →
+      ✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/📦️index.ts →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts
+      →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts
+      →
+
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/📦️index.ts
+  error no-circular: ✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript/📦️index.ts →
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🟦️component.ts →
+      ✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/📦️index.ts →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts
+      →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts
+      →
+
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript/📦️index.ts
+  error no-circular: ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript/📦️index.ts →
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🟦️component.ts →
+      ✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/📦️index.ts →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts
+      →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts
+      →
+
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript/📦️index.ts
+  error no-circular: ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript/📦️index.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🟦️component.ts
+      →
+      ✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/📦️index.ts →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts
+      →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts
+      →
+
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript/📦️index.ts
+  error no-circular: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🧬️typology/🟦️component.ts →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts
+      →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts
+      →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🧬️typology/🟦️component.ts
+  error no-circular: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🧬️typology/🟦️component.ts →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts
+      →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🧬️typology/🟦️component.ts
+  error no-circular: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📄️artifact/🟦️component.ts →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts
+      →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📄️artifact/🟦️component.ts
+  error no-circular: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📄️artifact/🟦️component.ts →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts
+      →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts
+      →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📄️artifact/🟦️component.ts
+  error no-circular: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📄️artifact/🟦️component.ts →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts
+      →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📄️artifact/🟦️component.ts
+  error no-circular: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📄️artifact/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🧬️typology/🟦️component.ts
+      →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📄️artifact/🟦️component.ts
+  error no-circular: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📄️artifact/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📔️registry/🟦️component.ts
+      →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts
+      →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📄️artifact/🟦️component.ts
+  error no-circular: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📄️artifact/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts
+      →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts
+      →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📄️artifact/🟦️component.ts
+  error no-circular: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts
+  error no-circular: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/��️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript/📦️index.ts
+      →
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🟦️component.ts →
+      ✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/📦️index.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts
+  error no-circular: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript/📦️index.ts
+      →
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🟦️component.ts →
+      ✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/📦️index.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts
+  error no-circular: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript/📦️index.ts
+      →
+
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🟦️component.ts
+      →
+      ✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/📦️index.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts
+  error no-circular: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📔️registry/🟦️component.ts
+      →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts
+  error no-circular: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts
+  error no-circular: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts
+      →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts
+  error no-circular: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts
+  error no-circular: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🧬️typology/🟦️component.ts
+      →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts
+  error no-circular: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📄️artifact/🟦️component.ts
+      →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts
+  error no-circular: ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts
+      →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts
+  error no-circular: ✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/📦️index.ts →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts
+      →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts
+      →
+
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript/📦️index.ts
+      →
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🟦️component.ts →
+      ✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/📦️index.ts
+  error no-circular: ✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/📦️index.ts →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧱️brepjs/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/📦️index.ts
+      →
+
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🟦️component.ts
+      →
+      ✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/📦️index.ts
+  error no-circular: ✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/📦️index.ts →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts
+      →
+
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/📦️index.ts
+      →
+
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🟦️component.ts
+      →
+      ✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/📦️index.ts
+  error no-circular: ✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/📦️index.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📔️registry/🟦️component.ts
+      →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️component.ts
+      →
+      ✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🟦️component.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts
+      →
+
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript/📦️index.ts
+      →
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🟦️component.ts →
+      ✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/📦️index.ts
+  error no-circular: ✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/📦️index.ts →
+
+      ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️component.ts
+      →
+
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/📦️index.ts
+      →
+
+      ✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🟦️component.ts
+      →
+      ✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/📦️index.ts
+
+x 721 dependency violations (475 errors, 246 warnings). 11373 modules, 10085 dependencies cruised.

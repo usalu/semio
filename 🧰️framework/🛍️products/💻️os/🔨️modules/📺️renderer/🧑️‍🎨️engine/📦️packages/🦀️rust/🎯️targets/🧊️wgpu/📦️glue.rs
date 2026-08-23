@@ -101,13 +101,13 @@ use shell::ShellState;
 use std::cell::RefCell;
 use std::future::Future;
 use std::sync::{Arc, Mutex};
+use ui_wgpu::wgpu::ActionDescriptor;
 #[cfg(target_arch = "wasm32")]
 use ui_wgpu::wgpu::apply_canvas_cursor;
-use ui_wgpu::wgpu::ActionDescriptor;
 // 🏚️ `dispatch_window_event`/`WindowInputState`/`schedule_frame` no longer imported here — they were
 // `SemioApp`/`start_frame_loop`-only (both deleted, packet os-host); `winit_app.rs` normalizes input
 // itself via `ui_host::event` instead. See the `OsHostDecomposition — SemioApp deletion` region above.
-use ui_wgpu::wgpu::{apply_window_cursor, fetch_font_bytes, resolve_semio_cursor, CursorDragState, DrawList, FontAtlas, GpuContext, IconAtlas, InputState, KeyAction, PointerModifiers, SemioCursor, Theme};
+use ui_wgpu::wgpu::{CursorDragState, DrawList, FontAtlas, GpuContext, IconAtlas, InputState, KeyAction, PointerModifiers, SemioCursor, Theme, apply_window_cursor, fetch_font_bytes, resolve_semio_cursor};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 #[cfg(target_arch = "wasm32")]
@@ -160,7 +160,7 @@ impl Drop for RendererIoHandle {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn submit_renderer_io(request: semio_framework_os_services::NativeIoRequest) -> RendererIoHandle {
-    use semio_framework_job::{allocate_operation_id, root_cancel_token, BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS};
+    use semio_framework_job::{BatchDriveConfig, BatchJobParams, Generation, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS, InteractiveStage, allocate_operation_id, root_cancel_token};
     let (job, completion) = semio_framework_os_services::NativeIoJob::new(request);
     let cancel = root_cancel_token();
     let params = BatchJobParams {
@@ -196,7 +196,7 @@ async fn run_renderer_io(request: semio_framework_os_services::NativeIoRequest) 
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) mod kernel_runtime {
     use semio_framework::kernel::{BrokerCapabilityGrant, Budget as TurnBudget, Effect, Event, MessageEndpoint, QuotaSchema, TurnResult, UiPatch as KernelUiPatch};
-    use semio_framework_actor::{intersect_capabilities, ActivationEvent, ActorId, ActorKind, Backpressure, CapabilityGrant, Envelope, Lane, Origin, PackageHash, PackageId, Payload};
+    use semio_framework_actor::{ActivationEvent, ActorId, ActorKind, Backpressure, CapabilityGrant, Envelope, Lane, Origin, PackageHash, PackageId, Payload, intersect_capabilities};
     use semio_framework_plugin_host::shard::ShardOutcome;
     use semio_framework_plugin_host::{GuestRuntime, GuestRuntimes, OwnedRuntime, PackageRef};
     use std::collections::HashMap;
@@ -234,6 +234,7 @@ pub(crate) mod kernel_runtime {
             next_wake: result.next_wake,
             status,
             fuel_used: result.usage.fuel,
+            command_ingress: serde_json::from_slice(&result.command_ingress).map_err(|error| format!("kernel: decode command ingress: {error}"))?,
         })
     }
 
@@ -342,22 +343,336 @@ pub(crate) mod kernel_runtime {
     //#endregion 🔖️ExtensionIndex
 
     //#region 🔖️Requests/Outcomes
+    struct CreateAppRequestOwner {
+        wasm_path: Option<PathBuf>,
+        plugin_id: Option<String>,
+        app_id: Option<String>,
+    }
+
+    impl CreateAppRequestOwner {
+        fn new(wasm_path: PathBuf, plugin_id: String, app_id: String) -> Self {
+            Self { wasm_path: Some(wasm_path), plugin_id: Some(plugin_id), app_id: Some(app_id) }
+        }
+
+        fn into_parts(mut self) -> (PathBuf, String, String) {
+            (self.wasm_path.take().expect("create request path is present"), self.plugin_id.take().expect("create request plugin is present"), self.app_id.take().expect("create request app is present"))
+        }
+
+        fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+            if let Some(length) = self.wasm_path.as_ref().map(|path| path.as_os_str().len()) {
+                if length > maximum_bytes {
+                    return (false, 0, 0);
+                }
+                drop(self.wasm_path.take().expect("create request path is present"));
+                return (self.terminal_is_empty(), 1, length);
+            }
+            for field in [&mut self.plugin_id, &mut self.app_id] {
+                if let Some(length) = field.as_ref().map(String::len) {
+                    if length > maximum_bytes {
+                        return (false, 0, 0);
+                    }
+                    drop(field.take().expect("create request string is present"));
+                    return (self.terminal_is_empty(), 1, length);
+                }
+            }
+            (true, 0, 0)
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.wasm_path.is_none() && self.plugin_id.is_none() && self.app_id.is_none()
+        }
+
+        fn remaining_bytes(&self) -> usize {
+            self.wasm_path.as_ref().map_or(0, |path| path.as_os_str().len()) + self.plugin_id.as_ref().map_or(0, String::len) + self.app_id.as_ref().map_or(0, String::len)
+        }
+    }
+
+    struct QueuedKernelEvent {
+        surface_visible: Option<String>,
+    }
+
+    impl QueuedKernelEvent {
+        fn try_from_events(events: Vec<Event>) -> Result<Self, RejectedKernelEvents> {
+            let mut events = std::collections::VecDeque::from(events);
+            if events.len() != 1 {
+                return Err(RejectedKernelEvents { events });
+            }
+            match events.pop_front().expect("one queued event is present") {
+                Event::SurfaceVisible { surface } => Ok(Self { surface_visible: Some(surface) }),
+                rejected => {
+                    events.push_front(rejected);
+                    Err(RejectedKernelEvents { events })
+                }
+            }
+        }
+
+        fn into_event(mut self) -> Event {
+            Event::SurfaceVisible { surface: self.surface_visible.take().expect("queued surface-visible event is present") }
+        }
+
+        fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+            let Some(length) = self.surface_visible.as_ref().map(String::len) else {
+                return (true, 0, 0);
+            };
+            if length > maximum_bytes {
+                return (false, 0, 0);
+            }
+            drop(self.surface_visible.take().expect("queued surface-visible event is present"));
+            (true, 1, length)
+        }
+
+        fn remaining_bytes(&self) -> usize {
+            self.surface_visible.as_ref().map_or(0, String::len)
+        }
+    }
+
+    struct RejectedKernelEvents {
+        events: std::collections::VecDeque<Event>,
+    }
+
+    impl RejectedKernelEvents {
+        fn close_step(&mut self) -> (bool, usize) {
+            let Some(event) = self.events.pop_front() else {
+                return (true, 0);
+            };
+            drop(event);
+            (self.events.is_empty(), 1)
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.events.is_empty()
+        }
+    }
+
     pub(crate) enum KernelRequest {
         CreateApp {
-            wasm_path: PathBuf,
-            plugin_id: String,
-            app_id: String,
+            owner: CreateAppRequestOwner,
         },
         DestroyApp {
-            instance: u32,
+            owner: Arc<KernelCloseSubmission>,
         },
-        /// 📡️ `events` is normally one `Event::AppCommandEvent` (the `exchange` collapse,
-        /// `📓️design-abi.md` §2/§4) but callers that need `surface-visible` (rendering) or other raw
-        /// kernel events pass those directly — a single turn may carry several.
+        /// 📡️ Non-command reactor events. Command bytes use [`KernelRequest::ExchangeCommands`]
+        /// so the retained host batch lowers exactly one admitted page per turn.
         Exchange {
             instance: u32,
-            events: Vec<Event>,
+            event: QueuedKernelEvent,
         },
+        ExchangeCommands {
+            instance: u32,
+            driver: semio_framework::kernel::CommandBatchDriver,
+        },
+        CloseRejectedCommandBuild {
+            key: u64,
+            owner: semio_framework::kernel::RejectedCommandBuild,
+        },
+        CloseRejectedEvents {
+            owner: RejectedKernelEvents,
+        },
+    }
+
+    impl KernelRequest {
+        fn command_credits(&self) -> (usize, usize) {
+            match self {
+                Self::ExchangeCommands { driver, .. } => (driver.remaining_pages(), driver.remaining_bytes()),
+                Self::CloseRejectedCommandBuild { owner, .. } => (owner.remaining_pages(), owner.remaining_bytes()),
+                Self::CreateApp { owner } => (0, owner.remaining_bytes()),
+                Self::Exchange { event, .. } => (0, event.remaining_bytes()),
+                Self::DestroyApp { .. } | Self::CloseRejectedEvents { .. } => (0, 0),
+            }
+        }
+    }
+
+    const KERNEL_CLOSE_SUBMISSION_CAPACITY: usize = 64;
+    const KERNEL_CLOSE_UNADMITTED: u8 = 0;
+    const KERNEL_CLOSE_ADMITTING: u8 = 1;
+    const KERNEL_CLOSE_READY: u8 = 2;
+    const KERNEL_CLOSE_SCHEDULED: u8 = 3;
+    const KERNEL_CLOSE_QUEUEING: u8 = 4;
+    const KERNEL_CLOSE_QUEUED: u8 = 5;
+    const KERNEL_CLOSE_COMPLETE: u8 = 6;
+    const KERNEL_CLOSE_FAULT: u8 = 7;
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub(crate) enum KernelCloseStatus {
+        AdmissionBlocked,
+        Pending,
+        Complete,
+        Fault,
+    }
+
+    struct KernelCloseSubmissionRegistry {
+        slots: Mutex<[Option<(u32, u64, Arc<KernelCloseSubmission>)>; KERNEL_CLOSE_SUBMISSION_CAPACITY]>,
+    }
+
+    impl KernelCloseSubmissionRegistry {
+        fn new() -> Self {
+            Self { slots: Mutex::new(std::array::from_fn(|_| None)) }
+        }
+
+        fn slot(instance: u32) -> usize {
+            instance as usize % KERNEL_CLOSE_SUBMISSION_CAPACITY
+        }
+
+        fn try_insert(&self, instance: u32, generation: u64, owner: Arc<KernelCloseSubmission>) -> Result<(), Arc<KernelCloseSubmission>> {
+            let Ok(mut slots) = self.slots.try_lock() else {
+                return Err(owner);
+            };
+            let slot = &mut slots[Self::slot(instance)];
+            if let Some((_, _, retained)) = slot {
+                if retained.terminal_status().is_some() {
+                    let terminal = slot.take().expect("terminal kernel close submission is retained");
+                    drop(terminal);
+                }
+            }
+            if slot.is_some() {
+                return Err(owner);
+            }
+            *slot = Some((instance, generation, owner));
+            Ok(())
+        }
+
+        fn try_remove(&self, instance: u32, generation: u64) -> bool {
+            let Ok(mut slots) = self.slots.try_lock() else {
+                return false;
+            };
+            let slot = &mut slots[Self::slot(instance)];
+            if !matches!(slot, Some((retained_instance, retained_generation, _)) if *retained_instance == instance && *retained_generation == generation) {
+                return false;
+            }
+            let terminal = slot.take().expect("exact terminal kernel close submission is retained");
+            drop(terminal);
+            true
+        }
+
+        #[cfg(test)]
+        fn contains(&self, instance: u32, generation: u64) -> bool {
+            self.slots.try_lock().is_ok_and(|slots| matches!(&slots[Self::slot(instance)], Some((retained_instance, retained_generation, _)) if *retained_instance == instance && *retained_generation == generation))
+        }
+    }
+
+    struct KernelCloseSubmission {
+        instance: u32,
+        generation: u64,
+        queue: Arc<KernelRequestQueue>,
+        pool: semio_framework_async::WorkerPool,
+        registry: std::sync::Weak<KernelCloseSubmissionRegistry>,
+        phase: std::sync::atomic::AtomicU8,
+    }
+
+    impl KernelCloseSubmission {
+        fn terminal_status(&self) -> Option<KernelCloseStatus> {
+            match self.phase.load(std::sync::atomic::Ordering::Acquire) {
+                KERNEL_CLOSE_COMPLETE => Some(KernelCloseStatus::Complete),
+                KERNEL_CLOSE_FAULT => Some(KernelCloseStatus::Fault),
+                _ => None,
+            }
+        }
+
+        fn try_admit(self: &Arc<Self>) -> bool {
+            if self.phase.compare_exchange(KERNEL_CLOSE_UNADMITTED, KERNEL_CLOSE_ADMITTING, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+                return self.phase.load(std::sync::atomic::Ordering::Acquire) >= KERNEL_CLOSE_READY;
+            }
+            let Some(registry) = self.registry.upgrade() else {
+                self.phase.store(KERNEL_CLOSE_FAULT, std::sync::atomic::Ordering::Release);
+                return false;
+            };
+            match registry.try_insert(self.instance, self.generation, self.clone()) {
+                Ok(()) => {
+                    self.phase.store(KERNEL_CLOSE_READY, std::sync::atomic::Ordering::Release);
+                    true
+                }
+                Err(rejected) => {
+                    drop(rejected);
+                    self.phase.store(KERNEL_CLOSE_UNADMITTED, std::sync::atomic::Ordering::Release);
+                    false
+                }
+            }
+        }
+
+        fn try_schedule(self: &Arc<Self>) -> bool {
+            if self.phase.compare_exchange(KERNEL_CLOSE_READY, KERNEL_CLOSE_SCHEDULED, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+                return false;
+            }
+            let scheduled = self.clone();
+            let job: semio_framework_async::Job = Box::new(move || scheduled.run_queue_admission());
+            match self.pool.try_submit(semio_framework_async::Lane::Maintenance, job) {
+                Ok(()) => true,
+                Err(error) => {
+                    self.phase.compare_exchange(KERNEL_CLOSE_SCHEDULED, KERNEL_CLOSE_READY, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).ok();
+                    drop(error.into_job());
+                    false
+                }
+            }
+        }
+
+        fn run_queue_admission(self: Arc<Self>) {
+            if self.phase.compare_exchange(KERNEL_CLOSE_SCHEDULED, KERNEL_CLOSE_QUEUEING, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+                return;
+            }
+            let wake = Waker::from(self.clone());
+            self.phase.store(KERNEL_CLOSE_QUEUED, std::sync::atomic::Ordering::Release);
+            match self.queue.try_push(KernelRequest::DestroyApp { owner: self.clone() }, Arc::new(ResponseSlot::default()), Some(&wake)) {
+                Ok(()) => {}
+                Err((request, slot)) => {
+                    drop(request);
+                    drop(slot);
+                    if self.phase.compare_exchange(KERNEL_CLOSE_QUEUED, KERNEL_CLOSE_READY, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_ok() {
+                        let _ = self.try_schedule();
+                    }
+                }
+            }
+        }
+
+        fn finish(&self, status: KernelCloseStatus) {
+            let phase = match status {
+                KernelCloseStatus::Complete => KERNEL_CLOSE_COMPLETE,
+                KernelCloseStatus::Fault => KERNEL_CLOSE_FAULT,
+                KernelCloseStatus::AdmissionBlocked | KernelCloseStatus::Pending => return,
+            };
+            self.phase.store(phase, std::sync::atomic::Ordering::Release);
+            if let Some(registry) = self.registry.upgrade() {
+                let _ = registry.try_remove(self.instance, self.generation);
+            }
+        }
+    }
+
+    impl std::task::Wake for KernelCloseSubmission {
+        fn wake(self: Arc<Self>) {
+            let _ = self.try_schedule();
+        }
+
+        fn wake_by_ref(self: &Arc<Self>) {
+            let _ = self.try_schedule();
+        }
+    }
+
+    #[must_use = "kernel close ownership must be polled through terminal completion"]
+    pub(crate) struct KernelCloseHandle {
+        owner: Arc<KernelCloseSubmission>,
+    }
+
+    impl KernelCloseHandle {
+        pub(crate) fn poll(&self) -> KernelCloseStatus {
+            if let Some(status) = self.owner.terminal_status() {
+                if let Some(registry) = self.owner.registry.upgrade() {
+                    let _ = registry.try_remove(self.owner.instance, self.owner.generation);
+                }
+                return status;
+            }
+            if !self.owner.try_admit() {
+                return self.owner.terminal_status().unwrap_or(KernelCloseStatus::AdmissionBlocked);
+            }
+            let _ = self.owner.try_schedule();
+            KernelCloseStatus::Pending
+        }
+
+        pub(crate) fn instance(&self) -> u32 {
+            self.owner.instance
+        }
+
+        pub(crate) fn generation(&self) -> u64 {
+            self.owner.generation
+        }
     }
 
     pub(crate) struct ExchangeOutcome {
@@ -371,6 +686,7 @@ pub(crate) mod kernel_runtime {
         /// replacement for the deleted `AppFrame::Effects` wrapper: effects now travel as real
         /// `kernel::Effect` values on `TurnResult.effects` directly, not re-encoded as an `AppFrame`.
         pub effects: Vec<Effect>,
+        pub command_ingress: semio_framework::kernel::CommandIngressStatus,
     }
 
     pub(crate) enum KernelOutcome {
@@ -409,7 +725,11 @@ pub(crate) mod kernel_runtime {
         fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
             let this = self.get_mut();
             if let Some(request) = this.request.take() {
-                this.queue.push(request, this.slot.clone());
+                if let Err((request, slot)) = this.queue.try_push(request, this.slot.clone(), Some(cx.waker())) {
+                    drop(slot);
+                    this.request = Some(request);
+                    return Poll::Pending;
+                }
             }
             let mut result = this.slot.result.lock().expect("response slot lock");
             if let Some(outcome) = result.take() {
@@ -420,6 +740,10 @@ pub(crate) mod kernel_runtime {
             Poll::Pending
         }
     }
+
+    fn persistent_command_completion_port_ready() -> bool {
+        false
+    }
     //#endregion
 
     //#region 🔖️KernelClient
@@ -427,6 +751,7 @@ pub(crate) mod kernel_runtime {
     pub(crate) struct KernelClient {
         queue: Arc<KernelRequestQueue>,
         _task: Arc<KernelPoolFuture>,
+        close_submissions: Arc<KernelCloseSubmissionRegistry>,
     }
 
     fn global_client() -> &'static OnceLock<KernelClient> {
@@ -441,7 +766,7 @@ pub(crate) mod kernel_runtime {
                 .get_or_init(|| {
                     let queue = Arc::new(KernelRequestQueue::default());
                     let task = KernelPoolFuture::spawn(crate::renderer_worker_pool(), semio_framework_async::Lane::Interactive, run_kernel_pool(queue.clone()));
-                    KernelClient { queue, _task: task }
+                    KernelClient { queue, _task: task, close_submissions: Arc::new(KernelCloseSubmissionRegistry::new()) }
                 })
                 .clone()
         }
@@ -451,28 +776,73 @@ pub(crate) mod kernel_runtime {
         }
 
         pub(crate) async fn create_app(&self, wasm_path: PathBuf, plugin_id: String, app_id: String) -> Result<u32, String> {
-            match self.submit(KernelRequest::CreateApp { wasm_path, plugin_id, app_id }).await {
+            match self.submit(KernelRequest::CreateApp { owner: CreateAppRequestOwner::new(wasm_path, plugin_id, app_id) }).await {
                 KernelOutcome::Created(result) => result,
                 KernelOutcome::Exchanged(_) => Err("kernel: unexpected Exchanged response for create_app".into()),
             }
         }
 
-        /// ✂️ Fire-and-forget, matching the old `WasmPluginRuntime::destroy_app`'s `fn(&self, u32)`
-        /// (no result) shape — the kernel pool task frees the actor's `GuestInstance` asynchronously.
+        pub(crate) fn begin_destroy_app(&self, instance: u32) -> KernelCloseHandle {
+            let owner = Arc::new(KernelCloseSubmission {
+                instance,
+                generation: next_seq(),
+                queue: self.queue.clone(),
+                pool: crate::renderer_worker_pool(),
+                registry: Arc::downgrade(&self.close_submissions),
+                phase: std::sync::atomic::AtomicU8::new(KERNEL_CLOSE_UNADMITTED),
+            });
+            let handle = KernelCloseHandle { owner };
+            let _ = handle.poll();
+            handle
+        }
+
         pub(crate) fn destroy_app(&self, instance: u32) {
-            self.queue.push(KernelRequest::DestroyApp { instance }, Arc::new(ResponseSlot::default()));
+            let handle = self.begin_destroy_app(instance);
+            match handle.poll() {
+                KernelCloseStatus::Pending | KernelCloseStatus::Complete => {}
+                KernelCloseStatus::AdmissionBlocked | KernelCloseStatus::Fault => {
+                    panic!("kernel destroy close authority was not admitted; ProgramBridge must retain and poll begin_destroy_app")
+                }
+            }
         }
 
         pub(crate) async fn exchange_commands(&self, instance: u32, commands: Vec<protocol::AppCommand>) -> Result<ExchangeOutcome, String> {
-            let mut events = Vec::with_capacity(commands.len());
-            for command in commands {
-                events.push(Event::AppCommandEvent { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()), seq: next_seq(), command: protocol::encode_app_command(&command).await });
+            if !persistent_command_completion_port_ready() {
+                return Err("persistent command completion submit/poll/cancel authority is not admitted".to_string());
             }
-            self.exchange_events(instance, events).await
+            let mut envelopes = semio_framework::kernel::CommandEnvelopeSet::try_new().map_err(|fault| fault.to_string())?;
+            for command in commands {
+                let seq = next_seq();
+                let command = protocol::encode_app_command(&command).await.map_err(|fault| fault.to_string())?;
+                if let Err((fault, rejected)) = envelopes.try_push(semio_framework::kernel::CommandEnvelope { instance, seq, command }) {
+                    self.queue.enqueue_retained(KernelRequest::CloseRejectedCommandBuild { key: u64::from(instance), owner: semio_framework::kernel::RejectedCommandBuild::new(envelopes, rejected) }, Arc::new(ResponseSlot::default())).await;
+                    return Err(fault.to_string());
+                }
+            }
+            let generation = next_seq();
+            let batch = match semio_framework::kernel::CommandBatch::try_new(generation, envelopes) {
+                Ok(batch) => batch,
+                Err((fault, owners)) => {
+                    self.queue.enqueue_retained(KernelRequest::CloseRejectedCommandBuild { key: u64::from(instance), owner: semio_framework::kernel::RejectedCommandBuild::from_admitted(owners) }, Arc::new(ResponseSlot::default())).await;
+                    return Err(fault.to_string());
+                }
+            };
+            let driver = semio_framework::kernel::CommandBatchDriver::new(generation, batch);
+            match self.submit(KernelRequest::ExchangeCommands { instance, driver }).await {
+                KernelOutcome::Exchanged(result) => result,
+                KernelOutcome::Created(_) => Err("kernel: unexpected Created response for command exchange".into()),
+            }
         }
 
         pub(crate) async fn exchange_events(&self, instance: u32, events: Vec<Event>) -> Result<ExchangeOutcome, String> {
-            match self.submit(KernelRequest::Exchange { instance, events }).await {
+            let event = match QueuedKernelEvent::try_from_events(events) {
+                Ok(event) => event,
+                Err(owner) => {
+                    self.queue.enqueue_retained(KernelRequest::CloseRejectedEvents { owner }, Arc::new(ResponseSlot::default())).await;
+                    return Err("only one fixed SurfaceVisible event is admitted per kernel request turn".to_string());
+                }
+            };
+            match self.submit(KernelRequest::Exchange { instance, event }).await {
                 KernelOutcome::Exchanged(result) => result,
                 KernelOutcome::Created(_) => Err("kernel: unexpected Created response for exchange".into()),
             }
@@ -867,6 +1237,10 @@ pub(crate) mod kernel_runtime {
         /// 🔁️ Surfaces whose next turn must carry an `Event::PatchRejected`, retaining both
         /// the receiver revision and the contract rejection reason.
         pending_rejections: HashMap<(u32, SurfaceId), (UiRevision, String)>,
+        retained_command_closes: semio_framework::kernel::CommandDriverRegistry<1>,
+        queued_command_closes: semio_framework::kernel::CommandDriverRegistry<1>,
+        rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry<1>,
+        rejected_events: Option<RejectedKernelEvents>,
     }
 
     impl KernelPoolState {
@@ -880,7 +1254,47 @@ pub(crate) mod kernel_runtime {
             // type mints for itself — see `ParallelRuntime::new`'s own doc.
             let pool = Arc::new(crate::renderer_worker_pool());
             let runtime = crate::parallel_runtime::ParallelRuntime::new(pool, guest_runtime.clone(), native_shard_count(), 2, 64).await;
-            Self { guest_runtime, runtime, now_ms: 0, plugin_ordinals: HashMap::new(), instances: HashMap::new(), next_instance_id: 1, retained: HashMap::new(), pending_rejections: HashMap::new() }
+            Self {
+                guest_runtime,
+                runtime,
+                now_ms: 0,
+                plugin_ordinals: HashMap::new(),
+                instances: HashMap::new(),
+                next_instance_id: 1,
+                retained: HashMap::new(),
+                pending_rejections: HashMap::new(),
+                retained_command_closes: semio_framework::kernel::CommandDriverRegistry::new(),
+                queued_command_closes: semio_framework::kernel::CommandDriverRegistry::new(),
+                rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry::new(),
+                rejected_events: None,
+            }
+        }
+
+        fn command_maintenance_step(&mut self) -> bool {
+            if self.retained_command_closes.has_close_work() {
+                let _ = self.retained_command_closes.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
+                return !self.retained_command_closes.has_close_work() && !self.queued_command_closes.has_close_work() && self.rejected_command_builds.terminal_is_empty();
+            }
+            if self.queued_command_closes.has_close_work() {
+                let _ = self.queued_command_closes.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
+                return !self.queued_command_closes.has_close_work() && self.rejected_command_builds.terminal_is_empty();
+            }
+            if !self.rejected_command_builds.terminal_is_empty() {
+                return self.rejected_command_builds.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES).0;
+            }
+            if let Some(owner) = self.rejected_events.as_mut() {
+                let (terminal, _) = owner.close_step();
+                if terminal {
+                    let terminal = self.rejected_events.take().expect("terminal rejected event owner is present");
+                    assert!(terminal.terminal_is_empty(), "rejected event terminal witness changed before removal");
+                }
+                return self.rejected_events.is_none();
+            }
+            true
+        }
+
+        fn command_maintenance_pending(&self) -> bool {
+            self.retained_command_closes.has_close_work() || self.queued_command_closes.has_close_work() || !self.rejected_command_builds.terminal_is_empty() || self.rejected_events.is_some()
         }
 
         fn plugin_ordinal(&mut self, plugin_id: &str) -> u16 {
@@ -1020,6 +1434,8 @@ pub(crate) mod kernel_runtime {
         }
 
         async fn destroy_app(&mut self, instance: u32) {
+            let _ = self.retained_command_closes.begin_close_key(u64::from(instance));
+            let _ = self.queued_command_closes.begin_close_key(u64::from(instance));
             if let Some(actor) = self.instances.remove(&instance) {
                 // 🧩️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-extension-activation): cascade
                 // teardown — `Kernel::deactivate` walks `actor`'s cascade subtree leaves-first and
@@ -1045,10 +1461,64 @@ pub(crate) mod kernel_runtime {
             let rejections: Vec<(u32, SurfaceId)> = self.pending_rejections.keys().filter(|(inst, _)| *inst == instance).cloned().collect();
             for key in rejections {
                 if let Some((revision, reason)) = self.pending_rejections.remove(&key) {
-                    events.insert(0, Event::PatchRejected { surface: key.1 .0, revision: revision.0, reason });
+                    events.insert(0, Event::PatchRejected { surface: key.1.0, revision: revision.0, reason });
                 }
             }
             self.run_turn(actor, instance, events).await
+        }
+
+        async fn exchange_commands(&mut self, instance: u32, driver: semio_framework::kernel::CommandBatchDriver) -> Result<ExchangeOutcome, String> {
+            let key = u64::from(instance);
+            let generation = driver.generation();
+            if !self.retained_command_closes.terminal_is_empty() {
+                if !self.queued_command_closes.can_insert(key) {
+                    return Err("kernel: retained and queued command close registries are saturated; caller owner remains in the queue close lane".to_string());
+                }
+                self.queued_command_closes.insert_admitted(key, generation, driver);
+                self.queued_command_closes.begin_close(key, generation).map_err(|fault| fault.to_string())?;
+                let _ = self.command_maintenance_step();
+                return Err("kernel: previous cancelled command owner is closing; incoming exact batch moved to the queued close lane".to_string());
+            }
+            if !self.retained_command_closes.can_insert(key) {
+                return Err("kernel: retained command close registry is saturated or collided".to_string());
+            }
+            self.retained_command_closes.insert_admitted(key, generation, driver);
+            let Some(&actor) = self.instances.get(&instance) else {
+                self.retained_command_closes.begin_close(key, generation).map_err(|fault| fault.to_string())?;
+                let _ = self.command_maintenance_step();
+                return Err(format!("kernel: instance {instance} is not registered; exact command owner entered bounded close"));
+            };
+            let mut combined = ExchangeOutcome { frames: Vec::new(), surfaces: HashMap::new(), effects: Vec::new(), command_ingress: semio_framework::kernel::CommandIngressStatus::Idle };
+            loop {
+                let events = match self.retained_command_closes.with_driver_mut(key, generation, |driver| driver.next_page()).map_err(|fault| fault.to_string())?.map_err(|fault| fault.to_string())? {
+                    Some((cursor, bytes)) => vec![Event::CommandIngressPage { cursor, bytes }],
+                    None => vec![Event::Wake],
+                };
+                self.retained_command_closes.prepare_suspend(key, generation).map_err(|fault| fault.to_string())?;
+                let outcome = self.run_turn(actor, instance, events).await?;
+                self.retained_command_closes.resume(key, generation).map_err(|fault| fault.to_string())?;
+                let progress = self
+                    .retained_command_closes
+                    .with_driver_mut(key, generation, |driver| driver.observe(&outcome.command_ingress, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES))
+                    .map_err(|fault| fault.to_string())?
+                    .map_err(|fault| fault.to_string())?;
+                combined.frames.extend(outcome.frames);
+                combined.surfaces.extend(outcome.surfaces);
+                combined.effects.extend(outcome.effects);
+                combined.command_ingress = outcome.command_ingress;
+                match progress {
+                    semio_framework::kernel::CommandBatchProgress::Complete => {
+                        self.retained_command_closes.remove_terminal(key, generation).map_err(|fault| fault.to_string())?;
+                        return Ok(combined);
+                    }
+                    semio_framework::kernel::CommandBatchProgress::Faulted => {
+                        self.retained_command_closes.begin_close(key, generation).map_err(|fault| fault.to_string())?;
+                        let (complete, _, _) = self.retained_command_closes.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
+                        return Err(if complete { "kernel: command ingress faulted after terminal exact-owner cleanup".to_string() } else { "kernel: command ingress faulted; retained owner closed one exact page and awaits retry".to_string() });
+                    }
+                    semio_framework::kernel::CommandBatchProgress::PageReady | semio_framework::kernel::CommandBatchProgress::Waiting => {}
+                }
+            }
         }
 
         /// 🎠️ terra-kernel-loop: the real loop the packet brief's item 1 asks for — `Kernel::submit`
@@ -1135,6 +1605,7 @@ pub(crate) mod kernel_runtime {
                             let faulted = semio_framework_actor::TurnResult {
                                 ui_patches: Vec::new(),
                                 effects: Vec::new(),
+                                command_ingress: Vec::new(),
                                 next_wake: None,
                                 status: semio_framework_actor::TurnStatus::Faulted { detail: message.clone().into_bytes() },
                                 usage: semio_framework_actor::Usage::default(),
@@ -1190,7 +1661,7 @@ pub(crate) mod kernel_runtime {
             for patch in &result.ui_patches {
                 self.apply_ui_patch(instance, patch, &mut surfaces);
             }
-            Ok(ExchangeOutcome { frames, surfaces, effects })
+            Ok(ExchangeOutcome { frames, surfaces, effects, command_ingress: result.command_ingress })
         }
 
         fn apply_ui_patch(&mut self, instance: u32, patch: &KernelUiPatch, out: &mut HashMap<String, UiNode>) {
@@ -1212,36 +1683,159 @@ pub(crate) mod kernel_runtime {
         }
     }
 
-    #[derive(Default)]
+    const KERNEL_REQUEST_QUEUE_CAPACITY: usize = 64;
+
     struct KernelRequestQueue {
-        pending: Mutex<std::collections::VecDeque<(KernelRequest, Arc<ResponseSlot>)>>,
-        waker: Mutex<Option<Waker>>,
+        state: Mutex<KernelRequestQueueState>,
+    }
+
+    struct KernelRequestQueueState {
+        slots: [Option<(KernelRequest, Arc<ResponseSlot>)>; KERNEL_REQUEST_QUEUE_CAPACITY],
+        read: usize,
+        write: usize,
+        len: usize,
+        command_pages: usize,
+        command_bytes: usize,
+        closing: bool,
+        consumer_waker: Option<Waker>,
+        producer_waker: Option<Waker>,
+    }
+
+    impl Default for KernelRequestQueue {
+        fn default() -> Self {
+            Self { state: Mutex::new(KernelRequestQueueState { slots: std::array::from_fn(|_| None), read: 0, write: 0, len: 0, command_pages: 0, command_bytes: 0, closing: false, consumer_waker: None, producer_waker: None }) }
+        }
     }
 
     impl KernelRequestQueue {
-        fn push(&self, request: KernelRequest, slot: Arc<ResponseSlot>) {
-            self.pending.lock().expect("kernel request queue lock").push_back((request, slot));
-            if let Some(waker) = self.waker.lock().expect("kernel request queue lock").take() {
+        fn try_push(&self, request: KernelRequest, slot: Arc<ResponseSlot>, producer: Option<&Waker>) -> Result<(), (KernelRequest, Arc<ResponseSlot>)> {
+            let (pages, bytes) = request.command_credits();
+            let Ok(mut state) = self.state.try_lock() else {
+                return Err((request, slot));
+            };
+            let admitted_pages = state.command_pages.checked_add(pages).filter(|total| *total <= semio_framework::kernel::COMMAND_MAXIMUM_PAGES);
+            let admitted_bytes = state.command_bytes.checked_add(bytes).filter(|total| *total <= semio_framework::kernel::COMMAND_MAXIMUM_BYTES);
+            if state.closing || state.len == KERNEL_REQUEST_QUEUE_CAPACITY || admitted_pages.is_none() || admitted_bytes.is_none() {
+                if let Some(producer) = producer {
+                    state.producer_waker = Some(producer.clone());
+                }
+                return Err((request, slot));
+            }
+            let index = state.write;
+            assert!(state.slots[index].is_none(), "fixed kernel request write slot is empty after admission");
+            state.slots[index] = Some((request, slot));
+            state.write = (index + 1) % KERNEL_REQUEST_QUEUE_CAPACITY;
+            state.len += 1;
+            state.command_pages = admitted_pages.expect("command page credit was admitted");
+            state.command_bytes = admitted_bytes.expect("command byte credit was admitted");
+            let consumer = state.consumer_waker.take();
+            drop(state);
+            if let Some(waker) = consumer {
                 waker.wake();
             }
+            Ok(())
         }
 
         fn poll(&self, cx: &mut Context<'_>) -> Poll<(KernelRequest, Arc<ResponseSlot>)> {
-            if let Some(request) = self.pending.lock().expect("kernel request queue lock").pop_front() {
-                return Poll::Ready(request);
+            let Ok(mut state) = self.state.try_lock() else {
+                cx.waker().wake_by_ref();
+                return Poll::Pending;
+            };
+            if state.len == 0 {
+                state.consumer_waker = Some(cx.waker().clone());
+                return Poll::Pending;
             }
-            *self.waker.lock().expect("kernel request queue lock") = Some(cx.waker().clone());
-            match self.pending.lock().expect("kernel request queue lock").pop_front() {
-                Some(request) => {
-                    self.waker.lock().expect("kernel request queue lock").take();
-                    Poll::Ready(request)
-                }
-                None => Poll::Pending,
+            let index = state.read;
+            let request = state.slots[index].take().expect("fixed kernel request read slot is occupied");
+            let (pages, bytes) = request.0.command_credits();
+            state.read = (index + 1) % KERNEL_REQUEST_QUEUE_CAPACITY;
+            state.len -= 1;
+            state.command_pages -= pages;
+            state.command_bytes -= bytes;
+            let producer = state.producer_waker.take();
+            drop(state);
+            if let Some(waker) = producer {
+                waker.wake();
             }
+            Poll::Ready(request)
         }
 
         async fn next(&self) -> (KernelRequest, Arc<ResponseSlot>) {
             std::future::poll_fn(|cx| self.poll(cx)).await
+        }
+
+        async fn enqueue_retained(&self, request: KernelRequest, slot: Arc<ResponseSlot>) {
+            let mut owner = Some((request, slot));
+            std::future::poll_fn(|cx| {
+                let (request, slot) = owner.take().expect("retained queue admission owner is present");
+                match self.try_push(request, slot, Some(cx.waker())) {
+                    Ok(()) => Poll::Ready(()),
+                    Err(rejected) => {
+                        owner = Some(rejected);
+                        Poll::Pending
+                    }
+                }
+            })
+            .await;
+        }
+
+        fn begin_shutdown(&self) -> bool {
+            let Ok(mut state) = self.state.try_lock() else {
+                return false;
+            };
+            state.closing = true;
+            true
+        }
+
+        fn shutdown_step(&self, maximum_bytes: usize) -> (bool, usize, usize) {
+            let Ok(mut state) = self.state.try_lock() else {
+                return (false, 0, 0);
+            };
+            if !state.closing || state.len == 0 {
+                return (state.closing && state.len == 0, 0, 0);
+            }
+            let index = state.read;
+            let (terminal, processed, released, page_released) = match &mut state.slots[index].as_mut().expect("fixed shutdown request slot is occupied").0 {
+                KernelRequest::ExchangeCommands { driver, .. } => {
+                    let before = driver.remaining_pages();
+                    let (terminal, released) = driver.close_step(maximum_bytes);
+                    let page_released = usize::from(driver.remaining_pages() < before);
+                    (terminal, usize::from(terminal || page_released != 0), released, page_released)
+                }
+                KernelRequest::CloseRejectedCommandBuild { owner, .. } => {
+                    let before = owner.remaining_pages();
+                    let (terminal, released) = owner.close_step(maximum_bytes);
+                    let page_released = usize::from(owner.remaining_pages() < before);
+                    (terminal, usize::from(terminal || page_released != 0), released, page_released)
+                }
+                KernelRequest::CreateApp { owner } => {
+                    let (terminal, processed, released) = owner.close_step(maximum_bytes);
+                    (terminal, processed, released, 0)
+                }
+                KernelRequest::DestroyApp { owner } => {
+                    owner.finish(KernelCloseStatus::Fault);
+                    (true, 1, 0, 0)
+                }
+                KernelRequest::Exchange { event, .. } => {
+                    let (terminal, processed, released) = event.close_step(maximum_bytes);
+                    (terminal, processed, released, 0)
+                }
+                KernelRequest::CloseRejectedEvents { owner } => {
+                    let (terminal, processed) = owner.close_step();
+                    (terminal, processed, 0, 0)
+                }
+            };
+            state.command_pages -= page_released;
+            state.command_bytes -= released;
+            if terminal {
+                let terminal = state.slots[index].take().expect("terminal shutdown request was present");
+                state.read = (index + 1) % KERNEL_REQUEST_QUEUE_CAPACITY;
+                state.len -= 1;
+                drop(state);
+                drop(terminal);
+                return (self.state.try_lock().is_ok_and(|state| state.len == 0), processed, released);
+            }
+            (false, processed, released)
         }
     }
 
@@ -1295,17 +1889,51 @@ pub(crate) mod kernel_runtime {
         }
     }
 
+    async fn yield_kernel_maintenance_turn() {
+        let mut yielded = false;
+        std::future::poll_fn(|cx| {
+            if yielded {
+                Poll::Ready(())
+            } else {
+                yielded = true;
+                cx.waker().wake_by_ref();
+                Poll::Pending
+            }
+        })
+        .await
+    }
+
     async fn run_kernel_pool(queue: Arc<KernelRequestQueue>) {
         let mut state = KernelPoolState::new().await;
         loop {
+            if state.command_maintenance_pending() {
+                let _ = state.command_maintenance_step();
+                yield_kernel_maintenance_turn().await;
+                continue;
+            }
             let (request, slot) = queue.next().await;
             let outcome = match request {
-                KernelRequest::CreateApp { wasm_path, plugin_id, app_id } => KernelOutcome::Created(state.create_app(wasm_path, plugin_id, app_id).await),
-                KernelRequest::DestroyApp { instance } => {
-                    state.destroy_app(instance).await;
+                KernelRequest::CreateApp { owner } => {
+                    let (wasm_path, plugin_id, app_id) = owner.into_parts();
+                    KernelOutcome::Created(state.create_app(wasm_path, plugin_id, app_id).await)
+                }
+                KernelRequest::DestroyApp { owner } => {
+                    state.destroy_app(owner.instance).await;
+                    owner.finish(KernelCloseStatus::Complete);
                     continue;
                 }
-                KernelRequest::Exchange { instance, events } => KernelOutcome::Exchanged(state.exchange(instance, events).await),
+                KernelRequest::Exchange { instance, event } => KernelOutcome::Exchanged(state.exchange(instance, vec![event.into_event()]).await),
+                KernelRequest::ExchangeCommands { instance, driver } => KernelOutcome::Exchanged(state.exchange_commands(instance, driver).await),
+                KernelRequest::CloseRejectedCommandBuild { key, owner } => {
+                    assert!(state.rejected_command_builds.can_insert(key), "worker drains the prior rejected command build before dequeuing another request");
+                    state.rejected_command_builds.insert_admitted(key, owner);
+                    continue;
+                }
+                KernelRequest::CloseRejectedEvents { owner } => {
+                    assert!(state.rejected_events.is_none(), "worker drains the prior rejected event owner before dequeuing another request");
+                    state.rejected_events = Some(owner);
+                    continue;
+                }
             };
             slot.deliver(outcome);
         }
@@ -1314,6 +1942,157 @@ pub(crate) mod kernel_runtime {
     #[cfg(test)]
     mod semantic_document_tests {
         use super::*;
+
+        fn destroy_request(instance: u32) -> KernelRequest {
+            KernelRequest::DestroyApp {
+                owner: Arc::new(KernelCloseSubmission {
+                    instance,
+                    generation: u64::from(instance) + 1,
+                    queue: Arc::new(KernelRequestQueue::default()),
+                    pool: crate::renderer_worker_pool(),
+                    registry: std::sync::Weak::new(),
+                    phase: std::sync::atomic::AtomicU8::new(KERNEL_CLOSE_QUEUED),
+                }),
+            }
+        }
+
+        fn close_submission(registry: &Arc<KernelCloseSubmissionRegistry>, instance: u32, generation: u64) -> Arc<KernelCloseSubmission> {
+            Arc::new(KernelCloseSubmission {
+                instance,
+                generation,
+                queue: Arc::new(KernelRequestQueue::default()),
+                pool: crate::renderer_worker_pool(),
+                registry: Arc::downgrade(registry),
+                phase: std::sync::atomic::AtomicU8::new(KERNEL_CLOSE_UNADMITTED),
+            })
+        }
+
+        fn command_request(instance: u32, generation: u64, page_count: usize) -> KernelRequest {
+            let mut pages = semio_framework::kernel::CommandPageSet::try_new().unwrap();
+            for index in 0..page_count {
+                let page = if index + 1 == page_count {
+                    semio_framework::kernel::FixedCommandPage::try_copy_from(b"tail").unwrap()
+                } else {
+                    semio_framework::kernel::FixedCommandPage::try_copy_from(&[3; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES]).unwrap()
+                };
+                pages.try_push(page).unwrap();
+            }
+            let command = semio_framework::kernel::PagedCommand::try_from_pages(pages).unwrap();
+            let mut commands = semio_framework::kernel::CommandEnvelopeSet::try_new().unwrap();
+            commands.try_push(semio_framework::kernel::CommandEnvelope { instance, seq: generation, command }).unwrap();
+            let batch = semio_framework::kernel::CommandBatch::try_new(generation, commands).unwrap();
+            KernelRequest::ExchangeCommands { instance, driver: semio_framework::kernel::CommandBatchDriver::new(generation, batch) }
+        }
+
+        #[test]
+        fn fixed_kernel_request_queue_returns_capacity_plus_one_owner_and_preserves_fifo() {
+            let queue = KernelRequestQueue::default();
+            for instance in 0..KERNEL_REQUEST_QUEUE_CAPACITY as u32 {
+                queue.try_push(destroy_request(instance), Arc::new(ResponseSlot::default()), None).unwrap();
+            }
+            let (rejected, _) = queue.try_push(destroy_request(999), Arc::new(ResponseSlot::default()), None).unwrap_err();
+            assert!(matches!(rejected, KernelRequest::DestroyApp { ref owner } if owner.instance == 999));
+            let waker = Waker::noop();
+            let mut context = Context::from_waker(waker);
+            for expected in 0..KERNEL_REQUEST_QUEUE_CAPACITY as u32 {
+                let Poll::Ready((request, _)) = queue.poll(&mut context) else { panic!("fixed request was ready") };
+                assert!(matches!(request, KernelRequest::DestroyApp { ref owner } if owner.instance == expected));
+            }
+        }
+
+        #[test]
+        fn fixed_kernel_request_queue_rejects_aggregate_page_credit_plus_one_exactly() {
+            let queue = KernelRequestQueue::default();
+            queue.try_push(command_request(1, 7, semio_framework::kernel::COMMAND_MAXIMUM_PAGES), Arc::new(ResponseSlot::default()), None).unwrap();
+            let (rejected, _) = queue.try_push(command_request(2, 8, 1), Arc::new(ResponseSlot::default()), None).unwrap_err();
+            assert!(matches!(rejected, KernelRequest::ExchangeCommands { instance: 2, ref driver } if driver.remaining_pages() == 1));
+        }
+
+        #[test]
+        fn fixed_kernel_request_queue_contention_returns_the_untouched_owner() {
+            let queue = KernelRequestQueue::default();
+            let guard = queue.state.lock().unwrap();
+            let (rejected, _) = queue.try_push(command_request(7, 11, 1), Arc::new(ResponseSlot::default()), None).unwrap_err();
+            assert!(matches!(rejected, KernelRequest::ExchangeCommands { instance: 7, ref driver } if driver.generation() == 11 && driver.remaining_pages() == 1));
+            drop(guard);
+        }
+
+        #[test]
+        fn fixed_kernel_close_registry_returns_the_exact_modulo_collision_and_reuses_only_after_terminal_generation() {
+            let registry = Arc::new(KernelCloseSubmissionRegistry::new());
+            let first = close_submission(&registry, 3, 11);
+            assert!(first.try_admit());
+            assert!(registry.contains(3, 11));
+            let collision = close_submission(&registry, 3 + KERNEL_CLOSE_SUBMISSION_CAPACITY as u32, 12);
+            assert!(!collision.try_admit());
+            assert_eq!(collision.instance, 3 + KERNEL_CLOSE_SUBMISSION_CAPACITY as u32);
+            assert_eq!(collision.generation, 12);
+            assert!(registry.contains(3, 11));
+            first.finish(KernelCloseStatus::Complete);
+            assert!(!registry.contains(3, 11));
+            assert!(collision.try_admit());
+            assert!(registry.contains(3 + KERNEL_CLOSE_SUBMISSION_CAPACITY as u32, 12));
+        }
+
+        #[test]
+        fn fixed_kernel_close_registry_contention_returns_unadmitted_owner_for_exact_retry() {
+            let registry = Arc::new(KernelCloseSubmissionRegistry::new());
+            let owner = close_submission(&registry, 8, 21);
+            let guard = registry.slots.lock().unwrap();
+            assert!(!owner.try_admit());
+            assert_eq!(owner.phase.load(std::sync::atomic::Ordering::Acquire), KERNEL_CLOSE_UNADMITTED);
+            assert_eq!(owner.instance, 8);
+            assert_eq!(owner.generation, 21);
+            drop(guard);
+            assert!(owner.try_admit());
+            assert!(registry.contains(8, 21));
+        }
+
+        #[test]
+        fn fixed_kernel_request_shutdown_faults_the_retained_close_handle_before_terminal_removal() {
+            let queue = KernelRequestQueue::default();
+            let owner = match destroy_request(19) {
+                KernelRequest::DestroyApp { owner } => owner,
+                _ => unreachable!(),
+            };
+            queue.try_push(KernelRequest::DestroyApp { owner: owner.clone() }, Arc::new(ResponseSlot::default()), None).unwrap();
+            assert!(queue.begin_shutdown());
+            assert_eq!(queue.shutdown_step(0), (true, 1, 0));
+            assert_eq!(owner.terminal_status(), Some(KernelCloseStatus::Fault));
+        }
+
+        #[test]
+        fn fixed_kernel_request_queue_shutdown_releases_one_real_page_per_grant() {
+            let queue = KernelRequestQueue::default();
+            queue.try_push(command_request(3, 12, 2), Arc::new(ResponseSlot::default()), None).unwrap();
+            assert!(queue.begin_shutdown());
+            assert_eq!(queue.shutdown_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES - 1), (false, 0, 0));
+            assert_eq!(queue.shutdown_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES), (false, 1, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES));
+            assert_eq!(queue.shutdown_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES), (true, 1, 4));
+        }
+
+        #[test]
+        fn fixed_kernel_request_queue_shutdown_releases_create_fields_one_owner_per_grant() {
+            let queue = KernelRequestQueue::default();
+            queue.try_push(KernelRequest::CreateApp { owner: CreateAppRequestOwner::new(PathBuf::from("path"), "plugin".to_string(), "app".to_string()) }, Arc::new(ResponseSlot::default()), None).unwrap();
+            assert!(queue.begin_shutdown());
+            assert_eq!(queue.shutdown_step(3), (false, 0, 0));
+            assert_eq!(queue.shutdown_step(4), (false, 1, 4));
+            assert_eq!(queue.shutdown_step(6), (false, 1, 6));
+            assert_eq!(queue.shutdown_step(3), (true, 1, 3));
+        }
+
+        #[test]
+        fn fixed_kernel_request_queue_shutdown_releases_surface_and_rejected_events_in_fifo_units() {
+            let queue = KernelRequestQueue::default();
+            queue.try_push(KernelRequest::Exchange { instance: 1, event: QueuedKernelEvent { surface_visible: Some("surface".to_string()) } }, Arc::new(ResponseSlot::default()), None).unwrap();
+            queue.try_push(KernelRequest::CloseRejectedEvents { owner: RejectedKernelEvents { events: std::collections::VecDeque::from([Event::Wake, Event::Wake]) } }, Arc::new(ResponseSlot::default()), None).unwrap();
+            assert!(queue.begin_shutdown());
+            assert_eq!(queue.shutdown_step(6), (false, 0, 0));
+            assert_eq!(queue.shutdown_step(7), (false, 1, 7));
+            assert_eq!(queue.shutdown_step(0), (false, 1, 0));
+            assert_eq!(queue.shutdown_step(0), (true, 1, 0));
+        }
 
         fn record(id: u64, component: Component) -> UiNodeRecord {
             UiNodeRecord {
@@ -1666,6 +2445,7 @@ pub mod scale_bench {
                             let faulted = semio_framework_actor::TurnResult {
                                 ui_patches: Vec::new(),
                                 effects: Vec::new(),
+                                command_ingress: Vec::new(),
                                 next_wake: None,
                                 status: semio_framework_actor::TurnStatus::Faulted { detail: message.clone().into_bytes() },
                                 usage: semio_framework_actor::Usage::default(),
@@ -1721,6 +2501,7 @@ pub mod scale_bench {
                                 let faulted = semio_framework_actor::TurnResult {
                                     ui_patches: Vec::new(),
                                     effects: Vec::new(),
+                                    command_ingress: Vec::new(),
                                     next_wake: None,
                                     status: semio_framework_actor::TurnStatus::Faulted { detail: message.clone().into_bytes() },
                                     usage: semio_framework_actor::Usage::default(),
@@ -1922,7 +2703,25 @@ pub mod scale_bench {
                     // harness ever sends, including the 40 `Wake`s above, stays `Lane::Background`.
                     env.send_payload_lane(
                         interactive_actor,
-                        Payload::Event { bytes: serde_json::to_vec(&Event::AppCommandEvent { instance: PluginInstanceId(interactive_actor.0.to_string()), seq: 0, command: Vec::new() }).unwrap_or_default() },
+                        Payload::Event {
+                            bytes: serde_json::to_vec(&Event::CommandIngressPage {
+                                cursor: semio_framework::kernel::CommandPageCursor {
+                                    owner: 1,
+                                    generation: 1,
+                                    command_index: 0,
+                                    command_count: 1,
+                                    instance: interactive_actor.0 as u32,
+                                    seq: 0,
+                                    kind: 0,
+                                    page_index: 0,
+                                    page_count: 1,
+                                    item_count: 0,
+                                    metadata: 0,
+                                },
+                                bytes: semio_framework::kernel::FixedCommandPage::try_copy_from(&[0]).expect("benchmark command page is fixed-authority"),
+                            })
+                            .unwrap_or_default(),
+                        },
                         Lane::Interactive,
                     )
                     .await;
@@ -2369,6 +3168,23 @@ mod camera_dispatch_deadline_tests {
         assert_eq!(pending.len(), 1, "only the still-pending surface remains");
         assert!(pending.contains_key("still-pending"));
     }
+
+    #[test]
+    fn deadline_admission_accepts_256_and_rejects_257_before_clone() {
+        let mut deadlines = std::collections::HashMap::new();
+        for index in 0..WORLD3D_DEADLINE_CAPACITY {
+            assert!(admit_world3d_deadline(&mut deadlines, &format!("surface-{index}"), 1.0));
+        }
+        assert!(!admit_world3d_deadline(&mut deadlines, "surface-overflow", 2.0));
+        assert_eq!(deadlines.len(), WORLD3D_DEADLINE_CAPACITY);
+    }
+
+    #[test]
+    fn deadline_admission_rejects_long_identifiers_without_mutation() {
+        let mut deadlines = std::collections::HashMap::new();
+        assert!(!admit_world3d_deadline(&mut deadlines, &"x".repeat(WORLD3D_DEADLINE_ID_BYTES + 1), 1.0));
+        assert!(deadlines.is_empty());
+    }
 }
 
 //#region 🔖️AsyncBoundaryTests
@@ -2392,11 +3208,16 @@ mod async_boundary_tests {
         assert!(!LIBRARY_SOURCE.contains("thread_local! {\n        static REAL_WAKER"));
         assert!(!WINT_APP_SOURCE.contains(concat!("poll", "_tasks")));
         assert!(!WINT_APP_SOURCE.contains(concat!("TASK", "_POOL")));
+        assert!(!LIBRARY_SOURCE.contains("type RuntimeApply = Box"));
+        assert!(!LIBRARY_SOURCE.contains(concat!("mem::", "forget")));
+        assert!(!WINT_APP_SOURCE.contains("dispatch_drained_events"));
+        assert!(LIBRARY_SOURCE.contains("struct RuntimeDispatchCursor"));
+        assert!(LIBRARY_SOURCE.contains("ResumeDispatch"));
     }
 
     #[test]
     fn runtime_mailbox_reserves_completion_capacity_and_coalesces_only_matching_keys() {
-        let completion = |key: Option<&'static str>, revision: u64| RuntimeCompletion { key, revision, requires_interaction: false, apply: Box::new(|_, _| {}) };
+        let completion = |key: Option<&'static str>, revision: u64| RuntimeCompletion { key, revision, requires_interaction: false, apply: RuntimeApply::Resize { width: 1.0, height: 1.0, dpr: 1.0 } };
         let mut queue = RuntimeCompletionQueue::new();
         for revision in 0..RUNTIME_COMPLETION_CAPACITY - 1 {
             assert!(queue.enqueue(completion(None, revision as u64)));
@@ -2437,18 +3258,314 @@ mod async_boundary_tests {
         assert!(!MANIFEST_SOURCE.lines().any(|line| line.trim_start().starts_with("rfd =")));
         assert!(!MANIFEST_SOURCE.lines().any(|line| line.trim_start().starts_with("ureq =")));
     }
+
+    #[test]
+    fn runtime_dispatch_cursor_preserves_coalesced_then_discrete_order() {
+        let pointer = ui_host::PointerMoveSample { pointer: ui_render::PointerInfo { id: ui_render::PointerId(1), kind: ui_render::PointerKind::Mouse, pressure: None, tilt: None }, x: 1.0, y: 2.0, generation: ui_host::InputGeneration(1) };
+        let scroll = ui_host::ScrollSample { x: 3.0, y: 4.0, delta_x: 5.0, delta_y: 6.0, generation: ui_host::InputGeneration(2) };
+        let discrete = ui_host::DiscreteEvent { event: ui_render::DispatchEvent::KeyDown { key: "A".to_string(), modifiers: ui_render::EventModifiers::default() }, generation: ui_host::InputGeneration(3) };
+        let mut events = ui_host::DrainedEvents { pointer_move: Some(pointer), scroll: Some(scroll), ..Default::default() };
+        events.discrete[0] = Some(discrete);
+        let mut cursor = RuntimeDispatchCursor::new(events);
+
+        assert!(matches!(cursor.take_next(), Some(ui_render::DispatchEvent::PointerMove { .. })));
+        assert!(matches!(cursor.take_next(), Some(ui_render::DispatchEvent::Scroll { .. })));
+        assert!(matches!(cursor.take_next(), Some(ui_render::DispatchEvent::KeyDown { .. })));
+        assert!(cursor.take_next().is_none());
+        assert!(cursor.terminal_is_empty());
+    }
+
+    #[test]
+    fn runtime_dispatch_cursor_retires_one_owned_event_per_step() {
+        let mut events = ui_host::DrainedEvents::default();
+        for (index, slot) in events.discrete.iter_mut().enumerate() {
+            *slot = Some(ui_host::DiscreteEvent { event: ui_render::DispatchEvent::Paste { text: "x".repeat(4096) }, generation: ui_host::InputGeneration(index as u64) });
+        }
+        let mut cursor = RuntimeDispatchCursor::new(events);
+        for _ in 0..cursor.events.discrete.len() {
+            assert!(!cursor.close_step());
+        }
+        assert!(cursor.close_step());
+        assert!(cursor.terminal_is_empty());
+    }
+
+    #[test]
+    fn frame_deferred_cursor_advances_one_owned_operation_in_order() {
+        let actions = vec![ActionDescriptor { controller_id: "a".to_string(), action: "one".to_string(), args: None }, ActionDescriptor { controller_id: "b".to_string(), action: "two".to_string(), args: None }];
+        let mut cursor = FrameDeferredCursor::new(actions, true, true, true);
+        assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::PumpSync)));
+        assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::Action(action)) if action.action == "one"));
+        assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::Action(action)) if action.action == "two"));
+        assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::FlushTutorial)));
+        assert!(matches!(cursor.take_next(), Some(FrameDeferredWork::PollAssets)));
+        assert!(cursor.take_next().is_none());
+        assert!(cursor.terminal_is_empty());
+    }
+
+    #[test]
+    fn frame_deferred_cancel_retires_one_action_per_step() {
+        let actions = (0..WORLD3D_DEADLINE_CAPACITY).map(|index| ActionDescriptor { controller_id: index.to_string(), action: "cancel".to_string(), args: None }).collect();
+        let mut cursor = FrameDeferredCursor::new(actions, false, true, true);
+        for _ in 0..WORLD3D_DEADLINE_CAPACITY {
+            assert!(!cursor.close_step());
+        }
+        assert!(cursor.close_step());
+        assert!(cursor.terminal_is_empty());
+    }
 }
 //#endregion 🔖️AsyncBoundaryTests
 
 //#region 📮️RuntimeMailbox
 
-#[cfg(not(target_arch = "wasm32"))]
-type RuntimeApply = Box<dyn FnOnce(&mut AppRuntime, &AppHandle) + Send + 'static>;
+struct RuntimeDispatchCursor {
+    events: ui_host::DrainedEvents,
+    phase: u8,
+    discrete_index: usize,
+}
 
-#[cfg(target_arch = "wasm32")]
-type RuntimeApply = Box<dyn FnOnce(&mut AppRuntime, &AppHandle) + 'static>;
+impl RuntimeDispatchCursor {
+    fn new(mut events: ui_host::DrainedEvents) -> Self {
+        events.metrics = None;
+        Self { events, phase: 0, discrete_index: 0 }
+    }
+
+    fn take_next(&mut self) -> Option<ui_render::DispatchEvent> {
+        if self.phase == 0 {
+            self.phase = 1;
+            if let Some(sample) = self.events.pointer_move.take() {
+                return Some(ui_render::DispatchEvent::PointerMove { pointer: sample.pointer, x: sample.x, y: sample.y });
+            }
+        }
+        if self.phase == 1 {
+            self.phase = 2;
+            if let Some(sample) = self.events.scroll.take() {
+                return Some(ui_render::DispatchEvent::Scroll { x: sample.x, y: sample.y, delta_x: sample.delta_x, delta_y: sample.delta_y });
+            }
+        }
+        while self.discrete_index < self.events.discrete.len() {
+            let index = self.discrete_index;
+            self.discrete_index += 1;
+            if let Some(event) = self.events.discrete[index].take() {
+                return Some(event.event);
+            }
+        }
+        None
+    }
+
+    fn close_step(&mut self) -> bool {
+        self.events.pointer_move = None;
+        self.events.scroll = None;
+        self.events.metrics = None;
+        while self.discrete_index < self.events.discrete.len() {
+            let index = self.discrete_index;
+            self.discrete_index += 1;
+            if self.events.discrete[index].take().is_some() {
+                return false;
+            }
+        }
+        true
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.events.pointer_move.is_none() && self.events.scroll.is_none() && self.events.metrics.is_none() && self.events.discrete.iter().all(Option::is_none)
+    }
+}
+
+struct FrameDeferredCursor {
+    actions: std::vec::IntoIter<ActionDescriptor>,
+    pump_sync: bool,
+    flush_tutorial: bool,
+    poll_assets: bool,
+    phase: u8,
+}
+
+enum FrameDeferredWork {
+    PumpSync,
+    Action(ActionDescriptor),
+    FlushTutorial,
+    PollAssets,
+}
+
+impl FrameDeferredCursor {
+    fn new(actions: Vec<ActionDescriptor>, pump_sync: bool, flush_tutorial: bool, poll_assets: bool) -> Self {
+        Self { actions: actions.into_iter(), pump_sync, flush_tutorial, poll_assets, phase: 0 }
+    }
+
+    fn take_next(&mut self) -> Option<FrameDeferredWork> {
+        if self.phase == 0 {
+            self.phase = 1;
+            if self.pump_sync {
+                return Some(FrameDeferredWork::PumpSync);
+            }
+        }
+        if let Some(action) = self.actions.next() {
+            return Some(FrameDeferredWork::Action(action));
+        }
+        if self.phase == 1 {
+            self.phase = 2;
+            if self.flush_tutorial {
+                return Some(FrameDeferredWork::FlushTutorial);
+            }
+        }
+        if self.phase == 2 {
+            self.phase = 3;
+            if self.poll_assets {
+                return Some(FrameDeferredWork::PollAssets);
+            }
+        }
+        None
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.actions.len() == 0 && (self.phase > 0 || !self.pump_sync) && (self.phase > 1 || !self.flush_tutorial) && (self.phase > 2 || !self.poll_assets)
+    }
+
+    fn close_step(&mut self) -> bool {
+        if self.actions.next().is_some() {
+            return false;
+        }
+        self.pump_sync = false;
+        self.flush_tutorial = false;
+        self.poll_assets = false;
+        self.phase = 3;
+        true
+    }
+}
+
+enum RuntimeApply {
+    Resize {
+        width: f32,
+        height: f32,
+        dpr: f32,
+    },
+    DispatchEvents(Option<RuntimeDispatchCursor>),
+    ResumeDispatch {
+        interaction: Option<AppInteractionState>,
+        cursor: Option<RuntimeDispatchCursor>,
+    },
+    ResumeFrameDeferred {
+        interaction: Option<AppInteractionState>,
+        cursor: Option<FrameDeferredCursor>,
+    },
+    RestoreInteraction(Option<AppInteractionState>),
+    #[cfg(not(target_arch = "wasm32"))]
+    PluginReload(Option<Result<Vec<ProgramBridgeEntry>, String>>),
+}
+
+impl RuntimeApply {
+    fn start_dispatch(cursor: &mut Option<RuntimeDispatchCursor>, runtime: &mut AppRuntime, handle: &AppHandle) -> bool {
+        let Some(cursor_value) = cursor.as_mut() else { return true };
+        if cursor_value.terminal_is_empty() {
+            cursor.take();
+            return true;
+        }
+        let Some(mailbox) = handle.upgrade().map(RuntimeMailbox) else {
+            return false;
+        };
+        let Some(mut interaction) = runtime.interaction.take() else {
+            return false;
+        };
+        if !mailbox.reserve_interaction_future() {
+            interaction.frame_fault = Some("runtime dispatch completion credits exhausted".to_string());
+            runtime.interaction = Some(interaction);
+            return false;
+        }
+        let mut cursor_value = cursor.take().expect("dispatch cursor admitted above");
+        let event = cursor_value.take_next().expect("non-empty dispatch cursor");
+        mailbox.spawn_dispatch_reserved(async move {
+            crate::winit_app::dispatch_normalized_event(&mut interaction, event).await;
+            (interaction, cursor_value)
+        });
+        true
+    }
+
+    fn start_frame_deferred(cursor: &mut Option<FrameDeferredCursor>, runtime: &mut AppRuntime, handle: &AppHandle) -> bool {
+        let Some(cursor_value) = cursor.as_mut() else { return true };
+        if cursor_value.terminal_is_empty() {
+            cursor.take();
+            return true;
+        }
+        let Some(mailbox) = handle.upgrade().map(RuntimeMailbox) else { return false };
+        let Some(mut interaction) = runtime.interaction.take() else { return false };
+        if !mailbox.reserve_interaction_future() {
+            interaction.frame_fault = Some("frame deferred completion credits exhausted".to_string());
+            runtime.interaction = Some(interaction);
+            return false;
+        }
+        let mut cursor_value = cursor.take().expect("deferred cursor admitted above");
+        let Some(work) = cursor_value.take_next() else {
+            runtime.interaction = Some(interaction);
+            return true;
+        };
+        mailbox.spawn_frame_deferred_reserved(async move {
+            match work {
+                FrameDeferredWork::PumpSync => {
+                    #[cfg(not(target_arch = "wasm32"))]
+                    interaction.shell.pump_sync_events().await;
+                }
+                FrameDeferredWork::Action(action) => {
+                    if let Err(error) = interaction.shell.dispatch_action(action).await {
+                        interaction.shell.error = Some(error);
+                    }
+                }
+                FrameDeferredWork::FlushTutorial => interaction.shell.tutorial_flush_pending_document_ops().await,
+                FrameDeferredWork::PollAssets => interaction.poll_pending_assets().await,
+            }
+            (interaction, cursor_value)
+        });
+        true
+    }
+
+    fn apply_step(&mut self, runtime: &mut AppRuntime, handle: &AppHandle) -> bool {
+        match self {
+            Self::Resize { width, height, dpr } => runtime.resize(*width, *height, *dpr),
+            Self::DispatchEvents(cursor) => return Self::start_dispatch(cursor, runtime, handle),
+            Self::ResumeDispatch { interaction, cursor } => {
+                if let Some(returned) = interaction.take() {
+                    runtime.interaction = Some(returned);
+                }
+                return Self::start_dispatch(cursor, runtime, handle);
+            }
+            Self::ResumeFrameDeferred { interaction, cursor } => {
+                if let Some(returned) = interaction.take() {
+                    runtime.interaction = Some(returned);
+                }
+                return Self::start_frame_deferred(cursor, runtime, handle);
+            }
+            Self::RestoreInteraction(interaction) => runtime.interaction = interaction.take(),
+            #[cfg(not(target_arch = "wasm32"))]
+            Self::PluginReload(result) => match result.take() {
+                Some(Ok(entries)) => {
+                    let handle = handle.clone();
+                    runtime.submit_interaction(&handle, Some("plugin-boot"), move |mut interaction| async move {
+                        interaction.shell.prepare_hot_reload(entries);
+                        if let Err(error) = interaction.shell.boot().await {
+                            log_debug(&format!("wasm program hot reload failed: {error}"));
+                        } else {
+                            log_debug("wasm program hot reload complete");
+                        }
+                        interaction
+                    });
+                }
+                Some(Err(error)) => log_debug(&format!("wasm program reload failed: {error}")),
+                None => return true,
+            },
+        }
+        true
+    }
+}
 
 const RUNTIME_COMPLETION_CAPACITY: usize = 128;
+const WORLD3D_DEADLINE_CAPACITY: usize = 256;
+const WORLD3D_DEADLINE_ID_BYTES: usize = 256;
+
+fn admit_world3d_deadline(deadlines: &mut std::collections::HashMap<String, f64>, surface_id: &str, deadline: f64) -> bool {
+    if surface_id.len() > WORLD3D_DEADLINE_ID_BYTES || (!deadlines.contains_key(surface_id) && deadlines.len() >= WORLD3D_DEADLINE_CAPACITY) {
+        return false;
+    }
+    deadlines.insert(surface_id.to_string(), deadline);
+    true
+}
 
 #[cfg(not(target_arch = "wasm32"))]
 type RuntimeHostWaker = Arc<dyn Fn() + Send + Sync>;
@@ -2466,6 +3583,7 @@ struct RuntimeMailboxInner {
     next_revision: std::sync::atomic::AtomicU64,
     applied_revisions: Mutex<std::collections::HashMap<&'static str, u64>>,
     frame_inputs: Mutex<crate::frame_job::FrameBuildInputs>,
+    frame_fault: Mutex<Option<String>>,
 }
 
 impl RuntimeMailboxInner {
@@ -2512,6 +3630,7 @@ impl RuntimeMailbox {
             next_revision: std::sync::atomic::AtomicU64::new(1),
             applied_revisions: Mutex::new(std::collections::HashMap::new()),
             frame_inputs: Mutex::new(crate::frame_job::FrameBuildInputs::default()),
+            frame_fault: Mutex::new(None),
         }))
     }
 
@@ -2543,6 +3662,20 @@ impl RuntimeMailbox {
         self.try_lock().ok()?.interaction.as_mut()?.text_fault.take()
     }
 
+    fn take_frame_fault(&self) -> Option<String> {
+        if let Some(fault) = self.0.frame_fault.lock().expect("runtime frame fault lock").take() {
+            return Some(fault);
+        }
+        self.try_lock().ok()?.interaction.as_mut()?.frame_fault.take()
+    }
+
+    pub(crate) fn record_frame_fault(&self, fault: &'static str) {
+        let mut slot = self.0.frame_fault.lock().expect("runtime frame fault lock");
+        if slot.is_none() {
+            *slot = Some(fault.to_string());
+        }
+    }
+
     fn frame_inputs(&self, now_ms: f64) -> crate::frame_job::FrameBuildInputs {
         let mut inputs = self.0.frame_inputs.try_lock().map(|inputs| inputs.clone()).unwrap_or_default();
         inputs.now_ms = now_ms;
@@ -2566,85 +3699,106 @@ impl RuntimeMailbox {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    fn spawn_reserved<T, F, C>(&self, key: Option<&'static str>, requires_interaction: bool, future: F, complete: C)
+    fn spawn_interaction_reserved<F>(&self, _key: Option<&'static str>, future: F)
     where
-        T: Send + 'static,
-        F: Future<Output = T> + Send + 'static,
-        C: FnOnce(&mut AppRuntime, T, &AppHandle) + Send + 'static,
+        F: Future<Output = AppInteractionState> + Send + 'static,
     {
         let mailbox = self.clone();
         let revision = mailbox.0.next_revision.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         spawn_app_task(async move {
-            let result = future.await;
-            mailbox.0.finish(RuntimeCompletion { key, revision, requires_interaction, apply: Box::new(move |runtime, handle| complete(runtime, result, handle)) });
+            let interaction = future.await;
+            mailbox.0.finish(RuntimeCompletion { key: None, revision, requires_interaction: false, apply: RuntimeApply::RestoreInteraction(Some(interaction)) });
         });
     }
 
     #[cfg(target_arch = "wasm32")]
-    fn spawn_reserved<T, F, C>(&self, key: Option<&'static str>, requires_interaction: bool, future: F, complete: C)
+    fn spawn_interaction_reserved<F>(&self, _key: Option<&'static str>, future: F)
     where
-        T: 'static,
-        F: Future<Output = T> + 'static,
-        C: FnOnce(&mut AppRuntime, T, &AppHandle) + 'static,
+        F: Future<Output = AppInteractionState> + 'static,
     {
         let mailbox = self.clone();
         let revision = mailbox.0.next_revision.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         spawn_app_task(async move {
-            let result = future.await;
-            mailbox.0.finish(RuntimeCompletion { key, revision, requires_interaction, apply: Box::new(move |runtime, handle| complete(runtime, result, handle)) });
+            let interaction = future.await;
+            mailbox.0.finish(RuntimeCompletion { key: None, revision, requires_interaction: false, apply: RuntimeApply::RestoreInteraction(Some(interaction)) });
         });
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    fn submit<T, F, C>(&self, key: Option<&'static str>, requires_interaction: bool, future: F, complete: C) -> bool
+    fn spawn_dispatch_reserved<F>(&self, future: F)
     where
-        T: Send + 'static,
-        F: Future<Output = T> + Send + 'static,
-        C: FnOnce(&mut AppRuntime, T, &AppHandle) + Send + 'static,
+        F: Future<Output = (AppInteractionState, RuntimeDispatchCursor)> + Send + 'static,
     {
-        if !self.reserve_future(key) {
-            return false;
-        }
-        self.spawn_reserved(key, requires_interaction, future, complete);
-        true
+        let mailbox = self.clone();
+        let revision = mailbox.0.next_revision.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        spawn_app_task(async move {
+            let (interaction, cursor) = future.await;
+            mailbox.0.finish(RuntimeCompletion { key: None, revision, requires_interaction: false, apply: RuntimeApply::ResumeDispatch { interaction: Some(interaction), cursor: Some(cursor) } });
+        });
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn spawn_frame_deferred_reserved<F>(&self, future: F)
+    where
+        F: Future<Output = (AppInteractionState, FrameDeferredCursor)> + Send + 'static,
+    {
+        let mailbox = self.clone();
+        let revision = mailbox.0.next_revision.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        spawn_app_task(async move {
+            let (interaction, cursor) = future.await;
+            mailbox.0.finish(RuntimeCompletion { key: None, revision, requires_interaction: false, apply: RuntimeApply::ResumeFrameDeferred { interaction: Some(interaction), cursor: Some(cursor) } });
+        });
     }
 
     #[cfg(target_arch = "wasm32")]
-    fn submit<T, F, C>(&self, key: Option<&'static str>, requires_interaction: bool, future: F, complete: C) -> bool
+    fn spawn_frame_deferred_reserved<F>(&self, future: F)
     where
-        T: 'static,
-        F: Future<Output = T> + 'static,
-        C: FnOnce(&mut AppRuntime, T, &AppHandle) + 'static,
+        F: Future<Output = (AppInteractionState, FrameDeferredCursor)> + 'static,
     {
-        if !self.reserve_future(key) {
-            return false;
-        }
-        self.spawn_reserved(key, requires_interaction, future, complete);
-        true
+        let mailbox = self.clone();
+        let revision = mailbox.0.next_revision.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        spawn_app_task(async move {
+            let (interaction, cursor) = future.await;
+            mailbox.0.finish(RuntimeCompletion { key: None, revision, requires_interaction: false, apply: RuntimeApply::ResumeFrameDeferred { interaction: Some(interaction), cursor: Some(cursor) } });
+        });
     }
 
-    fn apply_pending(&self) -> usize {
+    #[cfg(target_arch = "wasm32")]
+    fn spawn_dispatch_reserved<F>(&self, future: F)
+    where
+        F: Future<Output = (AppInteractionState, RuntimeDispatchCursor)> + 'static,
+    {
+        let mailbox = self.clone();
+        let revision = mailbox.0.next_revision.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        spawn_app_task(async move {
+            let (interaction, cursor) = future.await;
+            mailbox.0.finish(RuntimeCompletion { key: None, revision, requires_interaction: false, apply: RuntimeApply::ResumeDispatch { interaction: Some(interaction), cursor: Some(cursor) } });
+        });
+    }
+
+    fn apply_pending_step(&self) -> bool {
         let Ok(mut runtime) = self.try_lock() else {
-            return 0;
+            return false;
         };
-        loop {
-            let mut queue = self.0.completions.lock().expect("runtime completion mailbox lock");
-            if queue.ready.front().is_some_and(|completion| completion.requires_interaction && !runtime.interaction_available()) {
-                return 0;
-            }
-            let Some(completion) = queue.ready.pop_front() else { return 0 };
-            drop(queue);
-            if let Some(key) = completion.key {
-                let mut applied = self.0.applied_revisions.lock().expect("runtime completion revisions lock");
-                if applied.get(key).is_some_and(|revision| *revision >= completion.revision) {
-                    continue;
-                }
-                applied.insert(key, completion.revision);
-            }
-            let handle = self.downgrade();
-            (completion.apply)(&mut runtime, &handle);
-            return 1;
+        let mut queue = self.0.completions.lock().expect("runtime completion mailbox lock");
+        if queue.ready.front().is_some_and(|completion| completion.requires_interaction && !runtime.interaction_available()) {
+            return false;
         }
+        let Some(mut completion) = queue.ready.pop_front() else { return false };
+        drop(queue);
+        if let Some(key) = completion.key {
+            let mut applied = self.0.applied_revisions.lock().expect("runtime completion revisions lock");
+            if applied.get(key).is_some_and(|revision| *revision >= completion.revision) {
+                return true;
+            }
+            applied.insert(key, completion.revision);
+        }
+        let handle = self.downgrade();
+        if completion.apply.apply_step(&mut runtime, &handle) {
+            return true;
+        }
+        self.0.completions.lock().expect("runtime completion mailbox lock").ready.push_front(completion);
+        false
     }
 }
 
@@ -2670,6 +3824,7 @@ struct AppRuntime {
     interaction: Option<AppInteractionState>,
     draw: DrawList,
     overlay: DrawList,
+    pending_frame_deferred: Option<FrameDeferredCursor>,
     #[cfg(not(target_arch = "wasm32"))]
     plugin_modules_root: std::path::PathBuf,
     #[cfg(not(target_arch = "wasm32"))]
@@ -2703,6 +3858,7 @@ pub(crate) struct AppInteractionState {
     asset_poll_pending: bool,
     text_streams: [Option<AppTextStream>; TEXT_STREAM_CAPACITY],
     text_fault: Option<String>,
+    frame_fault: Option<String>,
     text_cancel_pending: bool,
     #[cfg(not(target_arch = "wasm32"))]
     last_sync_pump_ms: f64,
@@ -2727,6 +3883,13 @@ impl AppRuntime {
         self.interaction.is_some()
     }
 
+    fn drive_pending_frame_deferred(&mut self, handle: &AppHandle) {
+        let mut cursor = self.pending_frame_deferred.take();
+        if !RuntimeApply::start_frame_deferred(&mut cursor, self, handle) {
+            self.pending_frame_deferred = cursor;
+        }
+    }
+
     #[cfg(not(target_arch = "wasm32"))]
     fn submit_interaction<F, Fut>(&mut self, handle: &AppHandle, key: Option<&'static str>, work: F) -> bool
     where
@@ -2742,7 +3905,7 @@ impl AppRuntime {
             self.interaction = Some(interaction);
             return false;
         }
-        mailbox.spawn_reserved(key, false, work(interaction), |runtime, interaction, _| runtime.interaction = Some(interaction));
+        mailbox.spawn_interaction_reserved(key, work(interaction));
         true
     }
 
@@ -2761,7 +3924,7 @@ impl AppRuntime {
             self.interaction = Some(interaction);
             return false;
         }
-        mailbox.spawn_reserved(key, false, work(interaction), |runtime, interaction, _| runtime.interaction = Some(interaction));
+        mailbox.spawn_interaction_reserved(key, work(interaction));
         true
     }
 }
@@ -2776,6 +3939,495 @@ pub(crate) struct AppFrameBuild {
     fullscreen: Option<bool>,
 }
 
+struct AppFrameAfterChrome {
+    resource_input: Option<ui_wgpu::wgpu::PreparedRenderInput>,
+    engine_packets: Option<Vec<engine_canvas::EngineCanvasPacket>>,
+    deferred_actions: Vec<ActionDescriptor>,
+    fullscreen: Option<bool>,
+    retirement: Option<AppFramePreparation>,
+}
+
+struct FrameWheelCursor {
+    delta: f32,
+    x: f32,
+    y: f32,
+    ctrl: bool,
+    index: usize,
+}
+
+impl AppFrameAfterChrome {
+    fn close_step(&mut self) -> bool {
+        if self.deferred_actions.pop().is_some() {
+            return false;
+        }
+        if self.retirement.is_none() {
+            let Some(input) = self.resource_input.take() else { return true };
+            let build = AppFrameBuild { input, engine_packets: self.engine_packets.take().unwrap_or_default(), cursor: SemioCursor::Default, theme_dark: false, fullscreen: self.fullscreen.take() };
+            self.retirement = Some(build.into_preparation());
+            return false;
+        }
+        let retirement = self.retirement.as_mut().expect("retirement initialized above");
+        if !retirement.close_step() || !retirement.terminal_is_empty() {
+            return false;
+        }
+        self.retirement = None;
+        true
+    }
+}
+
+pub(crate) struct AppFrameTransaction {
+    directives: Option<crate::frame_job::FrameDirectives>,
+    generation: semio_framework_trace::Generation,
+    dpr: f32,
+    phase: AppFrameTransactionPhase,
+    expired_world3d_cursor: usize,
+    board_authority_cursor: usize,
+    scene_camera_cursor: scenes::SceneCameraDispatchCursor,
+    deferred_actions: Vec<ActionDescriptor>,
+    after_chrome: Option<AppFrameAfterChrome>,
+    wheel: Option<FrameWheelCursor>,
+    generated_actions: Option<std::vec::IntoIter<ActionDescriptor>>,
+    raster_uploads: Option<scenes::PendingRasterUploadCursor>,
+}
+
+pub(crate) enum AppFrameTransactionStep {
+    Pending,
+    Complete(AppFrameBuild),
+    Fault,
+}
+
+enum AppFrameTransactionPhase {
+    ExpiredWorld3d,
+    SceneCamera,
+    Build,
+    InputEvents,
+    BoardAuthority,
+    WheelStart,
+    WheelWorld3d,
+    WheelGraph,
+    WheelMap,
+    WheelBoard,
+    RasterUploads,
+    Finish,
+    Terminal,
+}
+
+impl AppFrameTransaction {
+    pub(crate) fn new(directives: crate::frame_job::FrameDirectives, generation: semio_framework_trace::Generation, dpr: f32) -> Self {
+        Self {
+            directives: Some(directives),
+            generation,
+            dpr,
+            phase: AppFrameTransactionPhase::ExpiredWorld3d,
+            expired_world3d_cursor: 0,
+            board_authority_cursor: 0,
+            scene_camera_cursor: scenes::SceneCameraDispatchCursor::begin(app_now_ms()),
+            deferred_actions: Vec::with_capacity(WORLD3D_DEADLINE_CAPACITY),
+            after_chrome: None,
+            wheel: None,
+            generated_actions: None,
+            raster_uploads: None,
+        }
+    }
+
+    pub(crate) fn step(&mut self, runtime: &RuntimeMailbox, handle: &AppHandle, context: &mut semio_framework_job::StepContext<'_>) -> AppFrameTransactionStep {
+        let Some(directives) = self.directives.as_ref() else { return AppFrameTransactionStep::Pending };
+        let Ok(mut app) = runtime.try_lock() else { return AppFrameTransactionStep::Pending };
+        if !app.interaction_available() {
+            return AppFrameTransactionStep::Pending;
+        }
+        if let Some(actions) = self.generated_actions.as_mut() {
+            if let Some(action) = actions.next() {
+                let partial = self.after_chrome.as_mut().expect("chrome phase owns generated actions");
+                if partial.deferred_actions.len() >= WORLD3D_DEADLINE_CAPACITY {
+                    runtime.record_frame_fault("frame generated action credits exceeded");
+                    self.phase = AppFrameTransactionPhase::Terminal;
+                    return AppFrameTransactionStep::Fault;
+                }
+                partial.deferred_actions.push(action);
+                return AppFrameTransactionStep::Pending;
+            }
+            self.generated_actions = None;
+            return AppFrameTransactionStep::Pending;
+        }
+        match self.phase {
+            AppFrameTransactionPhase::ExpiredWorld3d => {
+                let Some(surface_id) = directives.expired_world3d_surfaces.get(self.expired_world3d_cursor) else {
+                    self.phase = AppFrameTransactionPhase::SceneCamera;
+                    return AppFrameTransactionStep::Pending;
+                };
+                self.expired_world3d_cursor += 1;
+                let Some(interaction) = app.interaction.as_mut() else { return AppFrameTransactionStep::Pending };
+                let expired = interaction.world3d_camera_dispatch_deadlines_ms.get(surface_id.as_str()).is_some_and(|deadline| app_now_ms() >= *deadline);
+                if !expired {
+                    return AppFrameTransactionStep::Pending;
+                }
+                interaction.world3d_camera_dispatch_deadlines_ms.remove(surface_id);
+                if let Some(state) = interaction.shell.world3d_states.get(surface_id) {
+                    if state.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES {
+                        runtime.record_frame_fault("world3d camera action identifier exceeded fixed credits");
+                        self.phase = AppFrameTransactionPhase::Terminal;
+                        return AppFrameTransactionStep::Fault;
+                    }
+                    self.deferred_actions.push(orbit_camera_action(state));
+                }
+                AppFrameTransactionStep::Pending
+            }
+            AppFrameTransactionPhase::SceneCamera => match self.scene_camera_cursor.step() {
+                scenes::SceneCameraDispatchStep::Pending => AppFrameTransactionStep::Pending,
+                scenes::SceneCameraDispatchStep::Action(action) => {
+                    if self.deferred_actions.len() >= WORLD3D_DEADLINE_CAPACITY {
+                        runtime.record_frame_fault("frame deferred action credits exceeded");
+                        self.phase = AppFrameTransactionPhase::Terminal;
+                        return AppFrameTransactionStep::Fault;
+                    }
+                    self.deferred_actions.push(action);
+                    AppFrameTransactionStep::Pending
+                }
+                scenes::SceneCameraDispatchStep::Complete => {
+                    self.phase = AppFrameTransactionPhase::Build;
+                    AppFrameTransactionStep::Pending
+                }
+                scenes::SceneCameraDispatchStep::Fault(fault) => {
+                    runtime.record_frame_fault(fault);
+                    self.phase = AppFrameTransactionPhase::Terminal;
+                    AppFrameTransactionStep::Fault
+                }
+            },
+            AppFrameTransactionPhase::Build => {
+                if app.pending_frame_deferred.is_some() {
+                    app.drive_pending_frame_deferred(handle);
+                    return AppFrameTransactionStep::Pending;
+                }
+                self.after_chrome = Some(app.frame_before_input(handle, directives, self.generation, self.dpr, std::mem::take(&mut self.deferred_actions)));
+                self.phase = AppFrameTransactionPhase::InputEvents;
+                AppFrameTransactionStep::Pending
+            }
+            AppFrameTransactionPhase::InputEvents => {
+                let action = match app.input.take_action_step() {
+                    Ok(action) => action,
+                    Err(_) => {
+                        runtime.record_frame_fault("bounded frame input action authority faulted");
+                        self.phase = AppFrameTransactionPhase::Terminal;
+                        return AppFrameTransactionStep::Fault;
+                    }
+                };
+                if let Some(action) = action {
+                    let partial = self.after_chrome.as_mut().expect("chrome phase precedes input drain");
+                    if partial.deferred_actions.len() >= WORLD3D_DEADLINE_CAPACITY {
+                        runtime.record_frame_fault("frame input action credits exceeded");
+                        self.phase = AppFrameTransactionPhase::Terminal;
+                        return AppFrameTransactionStep::Fault;
+                    }
+                    let Ok(action) = action.into_descriptor() else {
+                        runtime.record_frame_fault("bounded frame input action failed materialization");
+                        self.phase = AppFrameTransactionPhase::Terminal;
+                        return AppFrameTransactionStep::Fault;
+                    };
+                    partial.deferred_actions.push(action);
+                    return AppFrameTransactionStep::Pending;
+                }
+                if crate::interpreter::drive_scene_interaction_step(&mut app.input) {
+                    return AppFrameTransactionStep::Pending;
+                }
+                self.phase = AppFrameTransactionPhase::BoardAuthority;
+                AppFrameTransactionStep::Pending
+            }
+            AppFrameTransactionPhase::BoardAuthority => {
+                let Some(interaction) = app.interaction.as_mut() else { return AppFrameTransactionStep::Pending };
+                let Some(surface_id) = interaction.shell.board2d_states.id_at(self.board_authority_cursor) else {
+                    self.board_authority_cursor = 0;
+                    self.phase = AppFrameTransactionPhase::WheelStart;
+                    return AppFrameTransactionStep::Pending;
+                };
+                if surface_id.len() > WORLD3D_DEADLINE_ID_BYTES {
+                    runtime.record_frame_fault("board authority surface identifier exceeded fixed credits");
+                    self.phase = AppFrameTransactionPhase::Terminal;
+                    return AppFrameTransactionStep::Fault;
+                }
+                let surface_id = surface_id.to_owned();
+                let Some(surface) = interaction.shell.board2d_states.get(&surface_id) else {
+                    runtime.record_frame_fault("board authority surface order lost ownership");
+                    self.phase = AppFrameTransactionPhase::Terminal;
+                    return AppFrameTransactionStep::Fault;
+                };
+                if surface.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES {
+                    runtime.record_frame_fault("board authority controller identifier exceeded fixed credits");
+                    self.phase = AppFrameTransactionPhase::Terminal;
+                    return AppFrameTransactionStep::Fault;
+                }
+                let controller_id = surface.controller_id.clone();
+                match engine_canvas::drive_board_authority_step(&surface_id, context) {
+                    puzzle::editor::puzzle2d::engine::BoardAuthorityStep::Pending => AppFrameTransactionStep::Pending,
+                    puzzle::editor::puzzle2d::engine::BoardAuthorityStep::Cancelled => {
+                        if let Err(fault) = engine_canvas::release_board_pointer_claim(&surface_id, &mut app.input) {
+                            app.input.record_action_fault(fault);
+                            runtime.record_frame_fault("board cancelled claim release faulted");
+                            self.phase = AppFrameTransactionPhase::Terminal;
+                            return AppFrameTransactionStep::Fault;
+                        }
+                        self.board_authority_cursor += 1;
+                        AppFrameTransactionStep::Pending
+                    }
+                    puzzle::editor::puzzle2d::engine::BoardAuthorityStep::Fault => {
+                        let _ = engine_canvas::release_board_pointer_claim(&surface_id, &mut app.input);
+                        runtime.record_frame_fault("board retained authority faulted");
+                        self.phase = AppFrameTransactionPhase::Terminal;
+                        AppFrameTransactionStep::Fault
+                    }
+                    puzzle::editor::puzzle2d::engine::BoardAuthorityStep::Complete => match engine_canvas::publish_board_pointer_step(&surface_id, &mut app.input) {
+                        Ok(true) => {
+                            self.phase = AppFrameTransactionPhase::InputEvents;
+                            AppFrameTransactionStep::Pending
+                        }
+                        Ok(false) => match engine_canvas::publish_board_event_step(&surface_id, &controller_id, &mut app.input) {
+                            Ok(true) => {
+                                self.phase = AppFrameTransactionPhase::InputEvents;
+                                AppFrameTransactionStep::Pending
+                            }
+                            Ok(false) => {
+                                self.board_authority_cursor += 1;
+                                AppFrameTransactionStep::Pending
+                            }
+                            Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits | ui_wgpu::wgpu::BoundedActionFault::ByteCredits) => {
+                                self.phase = AppFrameTransactionPhase::InputEvents;
+                                AppFrameTransactionStep::Pending
+                            }
+                            Err(fault) => {
+                                app.input.record_action_fault(fault);
+                                runtime.record_frame_fault("board event publication faulted");
+                                self.phase = AppFrameTransactionPhase::Terminal;
+                                AppFrameTransactionStep::Fault
+                            }
+                        },
+                        Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits | ui_wgpu::wgpu::BoundedActionFault::ByteCredits) => {
+                            self.phase = AppFrameTransactionPhase::InputEvents;
+                            AppFrameTransactionStep::Pending
+                        }
+                        Err(fault) => {
+                            app.input.record_action_fault(fault);
+                            runtime.record_frame_fault("board retained publication faulted");
+                            self.phase = AppFrameTransactionPhase::Terminal;
+                            AppFrameTransactionStep::Fault
+                        }
+                    },
+                }
+            }
+            AppFrameTransactionPhase::WheelStart => {
+                let delta = app.wheel_delta;
+                app.wheel_delta = 0.0;
+                if delta.abs() == 0.0 {
+                    self.phase = AppFrameTransactionPhase::RasterUploads;
+                    return AppFrameTransactionStep::Pending;
+                }
+                let x = app.last_pointer_x;
+                let y = app.last_pointer_y;
+                let ctrl = app.modifiers.ctrl;
+                let Some(interaction) = app.interaction.as_mut() else { return AppFrameTransactionStep::Pending };
+                interaction.shell.handle_pointer_wheel(x, y, delta, &interaction.input);
+                if !ShellState::wheel_propagates_to_scene_surface(interaction.input.hit_at(x, y)) {
+                    self.phase = AppFrameTransactionPhase::RasterUploads;
+                    return AppFrameTransactionStep::Pending;
+                }
+                let surface_fault =
+                    interaction.shell.world3d_states.take_fault().or_else(|| interaction.shell.node_graph_states.take_fault()).or_else(|| interaction.shell.tiled_map_states.take_fault()).or_else(|| interaction.shell.board2d_states.take_fault());
+                if let Some(fault) = surface_fault {
+                    runtime.record_frame_fault(fault);
+                    self.phase = AppFrameTransactionPhase::Terminal;
+                    return AppFrameTransactionStep::Fault;
+                }
+                self.wheel = Some(FrameWheelCursor { delta, x, y, ctrl, index: 0 });
+                self.phase = AppFrameTransactionPhase::WheelWorld3d;
+                AppFrameTransactionStep::Pending
+            }
+            AppFrameTransactionPhase::WheelWorld3d => {
+                let wheel = self.wheel.as_mut().expect("wheel start precedes traversal");
+                let Some(interaction) = app.interaction.as_mut() else { return AppFrameTransactionStep::Pending };
+                let Some(surface_id) = interaction.shell.world3d_states.id_at(wheel.index).map(str::to_owned) else {
+                    wheel.index = 0;
+                    self.phase = AppFrameTransactionPhase::WheelGraph;
+                    return AppFrameTransactionStep::Pending;
+                };
+                wheel.index += 1;
+                let Some(state) = interaction.shell.world3d_states.get_mut(&surface_id) else {
+                    runtime.record_frame_fault("world3d surface order lost ownership");
+                    self.phase = AppFrameTransactionPhase::Terminal;
+                    return AppFrameTransactionStep::Fault;
+                };
+                if state.bounds.contains(wheel.x, wheel.y) {
+                    if state.surface_id.len() > WORLD3D_DEADLINE_ID_BYTES || state.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES {
+                        runtime.record_frame_fault("world3d wheel identifier exceeded fixed credits");
+                        self.phase = AppFrameTransactionPhase::Terminal;
+                        return AppFrameTransactionStep::Fault;
+                    }
+                    handle_world3d_wheel(state, wheel.delta);
+                    if !admit_world3d_deadline(&mut interaction.world3d_camera_dispatch_deadlines_ms, &state.surface_id, app_now_ms() + 350.0) {
+                        runtime.record_frame_fault("world3d deadline credits exceeded");
+                        self.phase = AppFrameTransactionPhase::Terminal;
+                        return AppFrameTransactionStep::Fault;
+                    }
+                }
+                AppFrameTransactionStep::Pending
+            }
+            AppFrameTransactionPhase::WheelGraph => {
+                let wheel = self.wheel.as_mut().expect("wheel start precedes traversal");
+                let Some(interaction) = app.interaction.as_mut() else { return AppFrameTransactionStep::Pending };
+                let Some(surface_id) = interaction.shell.node_graph_states.id_at(wheel.index).map(str::to_owned) else {
+                    wheel.index = 0;
+                    self.phase = AppFrameTransactionPhase::WheelMap;
+                    return AppFrameTransactionStep::Pending;
+                };
+                wheel.index += 1;
+                let Some(surface) = interaction.shell.node_graph_states.get(&surface_id) else {
+                    runtime.record_frame_fault("node graph surface order lost ownership");
+                    self.phase = AppFrameTransactionPhase::Terminal;
+                    return AppFrameTransactionStep::Fault;
+                };
+                if surface.bounds.contains(wheel.x, wheel.y) {
+                    if surface_id.len() > WORLD3D_DEADLINE_ID_BYTES || surface.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES {
+                        runtime.record_frame_fault("node graph wheel identifier exceeded fixed credits");
+                        self.phase = AppFrameTransactionPhase::Terminal;
+                        return AppFrameTransactionStep::Fault;
+                    }
+                    if let Err(fault) = engine_canvas::node_graph_wheel_into(&surface_id, &surface.controller_id, surface.bounds, wheel.x, wheel.y, wheel.delta, wheel.ctrl, &mut app.input) {
+                        app.input.record_action_fault(fault);
+                        runtime.record_frame_fault("node graph wheel action admission failed");
+                        self.phase = AppFrameTransactionPhase::Terminal;
+                        return AppFrameTransactionStep::Fault;
+                    }
+                    app.wheel_zoom_deadline_ms = app_now_ms() + 120.0;
+                }
+                AppFrameTransactionStep::Pending
+            }
+            AppFrameTransactionPhase::WheelMap => {
+                let wheel = self.wheel.as_mut().expect("wheel start precedes traversal");
+                let Some(interaction) = app.interaction.as_mut() else { return AppFrameTransactionStep::Pending };
+                let Some(surface_id) = interaction.shell.tiled_map_states.id_at(wheel.index).map(str::to_owned) else {
+                    wheel.index = 0;
+                    self.phase = AppFrameTransactionPhase::WheelBoard;
+                    return AppFrameTransactionStep::Pending;
+                };
+                wheel.index += 1;
+                let Some(surface) = interaction.shell.tiled_map_states.get(&surface_id) else {
+                    runtime.record_frame_fault("tiled map surface order lost ownership");
+                    self.phase = AppFrameTransactionPhase::Terminal;
+                    return AppFrameTransactionStep::Fault;
+                };
+                if surface.bounds.contains(wheel.x, wheel.y) {
+                    if surface_id.len() > WORLD3D_DEADLINE_ID_BYTES || surface.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES {
+                        runtime.record_frame_fault("tiled map wheel identifier exceeded fixed credits");
+                        self.phase = AppFrameTransactionPhase::Terminal;
+                        return AppFrameTransactionStep::Fault;
+                    }
+                    if let Err(fault) = engine_canvas::tiled_map_wheel_into(&surface_id, &surface.controller_id, surface.bounds, wheel.x, wheel.y, wheel.delta, wheel.ctrl, &mut app.input) {
+                        app.input.record_action_fault(fault);
+                        runtime.record_frame_fault("tiled map wheel action admission failed");
+                        self.phase = AppFrameTransactionPhase::Terminal;
+                        return AppFrameTransactionStep::Fault;
+                    }
+                }
+                AppFrameTransactionStep::Pending
+            }
+            AppFrameTransactionPhase::WheelBoard => {
+                let wheel = self.wheel.as_mut().expect("wheel start precedes traversal");
+                let Some(interaction) = app.interaction.as_mut() else { return AppFrameTransactionStep::Pending };
+                let Some(surface_id) = interaction.shell.board2d_states.id_at(wheel.index).map(str::to_owned) else {
+                    self.wheel = None;
+                    self.phase = AppFrameTransactionPhase::RasterUploads;
+                    return AppFrameTransactionStep::Pending;
+                };
+                wheel.index += 1;
+                let Some(surface) = interaction.shell.board2d_states.get(&surface_id) else {
+                    runtime.record_frame_fault("board surface order lost ownership");
+                    self.phase = AppFrameTransactionPhase::Terminal;
+                    return AppFrameTransactionStep::Fault;
+                };
+                if surface.bounds.contains(wheel.x, wheel.y) {
+                    if surface_id.len() > WORLD3D_DEADLINE_ID_BYTES || surface.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES {
+                        runtime.record_frame_fault("board wheel identifier exceeded fixed credits");
+                        self.phase = AppFrameTransactionPhase::Terminal;
+                        return AppFrameTransactionStep::Fault;
+                    }
+                    if let Err(fault) = scenes::puzzle_board_wheel_into(&surface_id, &surface.controller_id, surface.bounds, wheel.x, wheel.y, wheel.delta, &mut app.input) {
+                        app.input.record_action_fault(fault);
+                        runtime.record_frame_fault("board wheel action admission failed");
+                        self.phase = AppFrameTransactionPhase::Terminal;
+                        return AppFrameTransactionStep::Fault;
+                    }
+                }
+                AppFrameTransactionStep::Pending
+            }
+            AppFrameTransactionPhase::RasterUploads => {
+                let cursor = self.raster_uploads.get_or_insert_with(Default::default);
+                match cursor.step() {
+                    scenes::PendingRasterUploadStep::Pending => AppFrameTransactionStep::Pending,
+                    scenes::PendingRasterUploadStep::Upload(upload) => {
+                        let partial = self.after_chrome.as_mut().expect("chrome phase precedes raster uploads");
+                        let input = partial.resource_input.as_mut().expect("chrome resource input");
+                        if input.uploads.len() >= WORLD3D_DEADLINE_CAPACITY {
+                            runtime.record_frame_fault("frame raster upload item credits exceeded");
+                            self.phase = AppFrameTransactionPhase::Terminal;
+                            return AppFrameTransactionStep::Fault;
+                        }
+                        input.uploads.push(ui_wgpu::wgpu::PreparedRenderUpload::Raster { key: upload.key, pixels: upload.pixels, width: upload.width, height: upload.height });
+                        AppFrameTransactionStep::Pending
+                    }
+                    scenes::PendingRasterUploadStep::Complete => {
+                        self.raster_uploads = None;
+                        self.phase = AppFrameTransactionPhase::Finish;
+                        AppFrameTransactionStep::Pending
+                    }
+                    scenes::PendingRasterUploadStep::Fault(fault) => {
+                        runtime.record_frame_fault(fault);
+                        self.phase = AppFrameTransactionPhase::Terminal;
+                        AppFrameTransactionStep::Fault
+                    }
+                }
+            }
+            AppFrameTransactionPhase::Finish => {
+                let partial = self.after_chrome.take().expect("chrome phase precedes finish");
+                runtime.update_frame_inputs(&app);
+                let frame = app.frame_after_input(handle, partial);
+                self.phase = AppFrameTransactionPhase::Terminal;
+                self.directives = None;
+                AppFrameTransactionStep::Complete(frame)
+            }
+            AppFrameTransactionPhase::Terminal => AppFrameTransactionStep::Pending,
+        }
+    }
+
+    pub(crate) fn close_step(&mut self) -> bool {
+        if let Some(actions) = self.generated_actions.as_mut() {
+            if actions.next().is_some() {
+                return false;
+            }
+            self.generated_actions = None;
+            return false;
+        }
+        self.wheel = None;
+        if let Some(partial) = self.after_chrome.as_mut() {
+            if !partial.close_step() {
+                return false;
+            }
+            self.after_chrome = None;
+            return false;
+        }
+        if !self.scene_camera_cursor.terminal_is_empty() {
+            self.scene_camera_cursor.close_step();
+            return false;
+        }
+        if self.deferred_actions.pop().is_some() {
+            return false;
+        }
+        let Some(directives) = self.directives.as_mut() else { return true };
+        if !directives.close_step() {
+            return false;
+        }
+        self.directives = None;
+        true
+    }
+}
+
 pub(crate) struct AppFramePresentation {
     packet: Arc<ui_wgpu::wgpu::PreparedRenderPacket>,
     engine_packets: Vec<engine_canvas::EngineCanvasPacket>,
@@ -2785,19 +4437,65 @@ pub(crate) struct AppFramePresentation {
 }
 
 impl AppFrameBuild {
-    pub(crate) fn prepare(self) -> Option<AppFramePresentation> {
-        let generation = self.input.preview_generation;
-        let mut job = ui_wgpu::wgpu::PreparedRenderJob::new(self.input, 256);
-        let params = semio_framework_job::BatchJobParams {
-            operation: semio_framework_job::allocate_operation_id(),
-            generation: semio_framework_job::Generation(generation),
-            cancel: semio_framework_job::root_cancel_token(),
-            config: semio_framework_job::BatchDriveConfig { site: "os_renderer.prepare", stage: semio_framework_job::InteractiveStage::BackgroundStep, fuel_per_step: 256, step_budget_ms: 2 },
-            now_ms: semio_framework_job::default_now_ms,
-        };
-        let outcome = semio_framework_job::run_to_completion(&mut job, &params);
-        let packet = outcome.is_terminal().then(|| job.take_packet()).flatten()?;
-        Some(AppFramePresentation { packet, engine_packets: self.engine_packets, cursor: self.cursor, theme_dark: self.theme_dark, fullscreen: self.fullscreen })
+    pub(crate) fn into_preparation(self) -> AppFramePreparation {
+        AppFramePreparation { job: ui_wgpu::wgpu::PreparedRenderJob::new(self.input, 64), engine_packets: Some(self.engine_packets), cursor: self.cursor, theme_dark: self.theme_dark, fullscreen: self.fullscreen, terminal: false }
+    }
+}
+
+pub(crate) struct AppFramePreparation {
+    job: ui_wgpu::wgpu::PreparedRenderJob,
+    engine_packets: Option<Vec<engine_canvas::EngineCanvasPacket>>,
+    cursor: SemioCursor,
+    theme_dark: bool,
+    fullscreen: Option<bool>,
+    terminal: bool,
+}
+
+impl AppFramePreparation {
+    pub(crate) fn drive_step(&mut self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, cancel: semio_framework_job::CancelToken, preview_sequence: &mut u64) -> semio_framework_job::StepOutcome {
+        let now = semio_framework_job::default_now_ms();
+        let outcome = semio_framework_job::drive_step(
+            &mut self.job,
+            "os_renderer.prepare.worker",
+            operation,
+            generation,
+            semio_framework_job::InteractiveStage::BackgroundStep,
+            semio_framework_job::StepBudget::new(64, now.saturating_add(1)),
+            cancel,
+            semio_framework_job::default_now_ms,
+            preview_sequence,
+        );
+        self.terminal = outcome.is_terminal();
+        outcome
+    }
+
+    pub(crate) fn take_presentation(&mut self) -> Option<AppFramePresentation> {
+        if !self.terminal {
+            return None;
+        }
+        let packet = self.job.take_packet()?;
+        Some(AppFramePresentation { packet, engine_packets: self.engine_packets.take()?, cursor: self.cursor, theme_dark: self.theme_dark, fullscreen: self.fullscreen })
+    }
+
+    pub(crate) fn close_step(&mut self) -> bool {
+        if !self.job.terminal_is_empty() {
+            self.job.close_step();
+            return false;
+        }
+        let Some(packets) = self.engine_packets.as_mut() else { return true };
+        if let Some(packet) = packets.last_mut() {
+            if !packet.close_step() || !packet.terminal_is_empty() {
+                return false;
+            }
+            packets.pop();
+            return false;
+        }
+        self.engine_packets = None;
+        false
+    }
+
+    pub(crate) fn terminal_is_empty(&self) -> bool {
+        self.job.terminal_is_empty() && self.engine_packets.is_none()
     }
 }
 
@@ -2930,21 +4628,14 @@ impl AppRuntime {
         let plugin_filter = self.shell.plugin_filter.clone();
         let modules_root = self.plugin_modules_root.clone();
         let Some(mailbox) = handle.upgrade().map(RuntimeMailbox) else { return };
-        let accepted = mailbox.submit(Some("plugin-reload"), true, async move { load_wasm_plugins(&plugin_filter, &modules_root).await.map(|entries| filter_plugins(entries, &plugin_filter)) }, |app, result, handle| match result {
-            Ok(entries) => {
-                let handle = handle.clone();
-                app.submit_interaction(&handle, Some("plugin-boot"), move |mut interaction| async move {
-                    interaction.shell.prepare_hot_reload(entries);
-                    if let Err(error) = interaction.shell.boot().await {
-                        log_debug(&format!("wasm program hot reload failed: {error}"));
-                    } else {
-                        log_debug("wasm program hot reload complete");
-                    }
-                    interaction
-                });
-            }
-            Err(error) => log_debug(&format!("wasm program reload failed: {error}")),
-        });
+        let accepted = mailbox.reserve_future(Some("plugin-reload"));
+        if accepted {
+            let revision = mailbox.0.next_revision.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            spawn_app_task(async move {
+                let result = load_wasm_plugins(&plugin_filter, &modules_root).await.map(|entries| filter_plugins(entries, &plugin_filter));
+                mailbox.0.finish(RuntimeCompletion { key: None, revision, requires_interaction: true, apply: RuntimeApply::PluginReload(Some(result)) });
+            });
+        }
         if !accepted {
             self.native_reload_pending = true;
         }
@@ -2954,9 +4645,8 @@ impl AppRuntime {
     /// `frame_job::FrameBuildJob`'s (possibly stale, see that module's own doc) output — a candidate
     /// list this method re-validates against LIVE state before acting on, never applies blindly. See
     /// `winit_app.rs`'s `build_and_publish_snapshot` for where it is computed and passed in.
-    fn frame(&mut self, handle: &AppHandle, build_directives: &crate::frame_job::FrameDirectives, generation: semio_framework_trace::Generation, dpr: f32) -> AppFrameBuild {
+    fn frame_before_input(&mut self, handle: &AppHandle, build_directives: &crate::frame_job::FrameDirectives, generation: semio_framework_trace::Generation, dpr: f32, deferred_actions: Vec<ActionDescriptor>) -> AppFrameAfterChrome {
         self.drive_text_operation();
-        let mut deferred_actions = Vec::new();
         let fullscreen = std::mem::take(&mut self.shell.fullscreen_toggle_requested).then(|| {
             self.shell.fullscreen_active = !self.shell.fullscreen_active;
             self.shell.fullscreen_active
@@ -2991,17 +4681,6 @@ impl AppRuntime {
         // `build_directives` outright — is what makes a stale worker result safe: a candidate no
         // longer present, or whose live deadline has since moved, is silently skipped this tick and
         // picked up again once a fresher job result lands, never removed/dispatched on stale grounds.
-        let expired_world3d_surfaces: Vec<String> =
-            build_directives.expired_world3d_surfaces.iter().filter(|surface_id| self.world3d_camera_dispatch_deadlines_ms.get(surface_id.as_str()).is_some_and(|deadline| app_now_ms() >= *deadline)).cloned().collect();
-        for surface_id in &expired_world3d_surfaces {
-            self.world3d_camera_dispatch_deadlines_ms.remove(surface_id);
-        }
-        if !expired_world3d_surfaces.is_empty() {
-            let camera_actions: Vec<ActionDescriptor> = expired_world3d_surfaces.iter().filter_map(|surface_id| self.shell.world3d_states.get(surface_id).map(orbit_camera_action)).collect();
-            deferred_actions.extend(camera_actions);
-        }
-        let scene_camera_actions = scenes::sweep_expired_scene_camera_dispatches(app_now_ms());
-        deferred_actions.extend(scene_camera_actions);
         if app_now_ms() - self.caret_blink_at_ms >= 500.0 {
             self.caret_blink_at_ms = app_now_ms();
             self.caret_blink_visible = !self.caret_blink_visible;
@@ -3034,55 +4713,15 @@ impl AppRuntime {
         if let Some(upload) = icon_upload {
             resource_input.uploads.push(upload);
         }
-        deferred_actions.extend(self.input.drain_events());
+        AppFrameAfterChrome { resource_input: Some(resource_input), engine_packets: Some(engine_packets), deferred_actions, fullscreen, retirement: None }
+    }
+
+    fn frame_after_input(&mut self, handle: &AppHandle, mut partial: AppFrameAfterChrome) -> AppFrameBuild {
+        let deferred_actions = std::mem::take(&mut partial.deferred_actions);
+        let mut resource_input = partial.resource_input.take().expect("chrome resource input");
+        let engine_packets = partial.engine_packets.take().expect("chrome engine packets");
+        let fullscreen = partial.fullscreen.take();
         let flush_tutorial = !self.shell.tutorial_pending_document_ops.is_empty();
-        let wheel_delta = self.wheel_delta;
-        self.wheel_delta = 0.0;
-        if wheel_delta.abs() > 0.0 {
-            let x = self.last_pointer_x;
-            let y = self.last_pointer_y;
-            let ctrl = self.modifiers.ctrl;
-            let interaction = self.interaction.as_mut().expect("checked interaction availability");
-            interaction.shell.handle_pointer_wheel(x, y, wheel_delta, &interaction.input);
-            if ShellState::wheel_propagates_to_scene_surface(interaction.input.hit_at(x, y)) {
-                for state in interaction.shell.world3d_states.values_mut() {
-                    if state.bounds.contains(x, y) {
-                        handle_world3d_wheel(state, wheel_delta);
-                        // 🕒️ Settle-then-dispatch (see `world3d_camera_dispatch_deadlines_ms`): each
-                        // further wheel tick just pushes this surface's deadline back out, so a
-                        // `setCamera` only fires ~350ms after the LAST wheel tick, not every tick.
-                        interaction.world3d_camera_dispatch_deadlines_ms.insert(state.surface_id.clone(), app_now_ms() + 350.0);
-                    }
-                }
-                let mut graph_actions = Vec::new();
-                for (surface_id, surface) in &self.shell.node_graph_states {
-                    if surface.bounds.contains(x, y) {
-                        graph_actions.extend(engine_canvas::node_graph_wheel(surface_id, &surface.controller_id, surface.bounds, x, y, wheel_delta, ctrl));
-                    }
-                }
-                if !graph_actions.is_empty() {
-                    self.wheel_zoom_deadline_ms = app_now_ms() + 120.0;
-                    deferred_actions.extend(graph_actions);
-                }
-                let mut map_actions = Vec::new();
-                for (surface_id, surface) in &self.shell.tiled_map_states {
-                    if surface.bounds.contains(x, y) {
-                        map_actions.extend(engine_canvas::tiled_map_wheel(surface_id, &surface.controller_id, surface.bounds, x, y, wheel_delta, ctrl));
-                    }
-                }
-                deferred_actions.extend(map_actions);
-                let mut board_actions = Vec::new();
-                for (surface_id, surface) in &self.shell.board2d_states {
-                    if surface.bounds.contains(x, y) {
-                        board_actions.extend(scenes::puzzle_board_wheel(surface_id, &surface.controller_id, surface.bounds, x, y, wheel_delta));
-                    }
-                }
-                deferred_actions.extend(board_actions);
-            }
-        }
-        for upload in scenes::drain_pending_raster_uploads() {
-            resource_input.uploads.push(ui_wgpu::wgpu::PreparedRenderUpload::Raster { key: upload.key, pixels: upload.pixels, width: upload.width, height: upload.height });
-        }
         if self.atlas.take_dirty() {
             resource_input.uploads.push(ui_wgpu::wgpu::PreparedRenderUpload::GlyphAtlas { pixels: self.atlas.pixels.clone(), width: self.atlas.width, height: self.atlas.height });
         }
@@ -3116,20 +4755,8 @@ impl AppRuntime {
         #[cfg(target_arch = "wasm32")]
         let pump_sync = false;
         if pump_sync || !deferred_actions.is_empty() || flush_tutorial || poll_assets {
-            self.submit_interaction(handle, None, move |mut interaction| async move {
-                #[cfg(not(target_arch = "wasm32"))]
-                if pump_sync {
-                    interaction.shell.pump_sync_events().await;
-                }
-                interaction.dispatch_actions(deferred_actions).await;
-                if flush_tutorial {
-                    interaction.shell.tutorial_flush_pending_document_ops().await;
-                }
-                if poll_assets {
-                    interaction.poll_pending_assets().await;
-                }
-                interaction
-            });
+            self.pending_frame_deferred = Some(FrameDeferredCursor::new(deferred_actions, pump_sync, flush_tutorial, poll_assets));
+            self.drive_pending_frame_deferred(handle);
         }
         frame
     }
@@ -3317,27 +4944,25 @@ impl AppInteractionState {
         self.pointer_button = button;
         self.modifiers = modifiers.clone();
         if !down {
-            let mut map_actions = Vec::new();
             let map_had_active_drag = self.shell.tiled_map_states.keys().any(|surface_id| scenes::tiled_map_drag_active(surface_id));
             for (surface_id, surface) in &self.shell.tiled_map_states {
                 if !surface.bounds.contains(x, y) && !scenes::tiled_map_drag_active(surface_id) {
                     continue;
                 }
-                map_actions.extend(scenes::tiled_map_pointer_up(surface_id, &surface.controller_id, surface.bounds, x, y));
+                if let Err(fault) = scenes::tiled_map_pointer_up_into(surface_id, &surface.controller_id, surface.bounds, x, y, &mut self.input) {
+                    self.input.record_action_fault(fault);
+                    return;
+                }
             }
-            if !map_actions.is_empty() {
-                self.dispatch_actions(map_actions).await;
-            }
-            let mut board_actions = Vec::new();
             let board_had_active_drag = self.shell.board2d_states.keys().any(|surface_id| scenes::board2d_drag_active(surface_id));
             for (surface_id, surface) in &self.shell.board2d_states {
                 if !surface.bounds.contains(x, y) && !scenes::board2d_drag_active(surface_id) {
                     continue;
                 }
-                board_actions.extend(scenes::puzzle_board_pointer_up(surface_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt));
-            }
-            if !board_actions.is_empty() {
-                self.dispatch_actions(board_actions).await;
+                if let Err(fault) = scenes::puzzle_board_pointer_up_into(surface_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input) {
+                    self.input.record_action_fault(fault);
+                    return;
+                }
             }
             let board_consumed = self.shell.board2d_states.values().any(|surface| surface.bounds.contains(x, y)) || board_had_active_drag;
             let map_consumed = self.shell.tiled_map_states.values().any(|surface| surface.bounds.contains(x, y)) || map_had_active_drag;
@@ -3374,15 +4999,14 @@ impl AppInteractionState {
             if !world_actions.is_empty() {
                 self.dispatch_actions(world_actions).await;
             }
-            let mut graph_actions = Vec::new();
             for (surface_id, surface) in &self.shell.node_graph_states {
                 if !surface.bounds.contains(x, y) {
                     continue;
                 }
-                graph_actions.extend(engine_canvas::node_graph_pointer_up(surface_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt));
-            }
-            if !graph_actions.is_empty() {
-                self.dispatch_actions(graph_actions).await;
+                if let Err(fault) = engine_canvas::node_graph_pointer_up_into(surface_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input) {
+                    self.input.record_action_fault(fault);
+                    return;
+                }
             }
             return;
         }
@@ -3411,21 +5035,22 @@ impl AppInteractionState {
             self.dispatch_actions(world_actions).await;
             return;
         }
-        let mut graph_actions = Vec::new();
         for (surface_id, surface) in &self.shell.node_graph_states {
             if !surface.bounds.contains(x, y) {
                 continue;
             }
             if down {
-                graph_actions.extend(engine_canvas::node_graph_pointer_down(surface_id, &surface.controller_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, self.space_pressed));
+                if let Err(fault) = engine_canvas::node_graph_pointer_down_into(surface_id, &surface.controller_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, self.space_pressed, &mut self.input) {
+                    self.input.record_action_fault(fault);
+                    return;
+                }
             } else {
-                graph_actions.extend(engine_canvas::node_graph_pointer_up(surface_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt));
+                if let Err(fault) = engine_canvas::node_graph_pointer_up_into(surface_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input) {
+                    self.input.record_action_fault(fault);
+                    return;
+                }
             }
         }
-        if !graph_actions.is_empty() {
-            self.dispatch_actions(graph_actions).await;
-        }
-        let mut map_actions = Vec::new();
         let mut map_pointer_on_surface = false;
         for (surface_id, surface) in &self.shell.tiled_map_states {
             if !surface.bounds.contains(x, y) {
@@ -3433,12 +5058,11 @@ impl AppInteractionState {
             }
             map_pointer_on_surface = true;
             if down {
-                map_actions.extend(scenes::tiled_map_pointer_down(surface_id, &surface.controller_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta(), &surface.selection_method));
+                if let Err(fault) = scenes::tiled_map_pointer_down_into(surface_id, &surface.controller_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta(), &surface.selection_method, &mut self.input) {
+                    self.input.record_action_fault(fault);
+                    return;
+                }
             }
-        }
-        if !map_actions.is_empty() {
-            self.dispatch_actions(map_actions).await;
-            return;
         }
         if map_pointer_on_surface && (button == 0 || button == 1) {
             return;
@@ -3494,36 +5118,36 @@ impl AppInteractionState {
                 world_actions.push(action);
             }
         }
-        let mut graph_actions = Vec::new();
         for (surface_id, surface) in &self.shell.node_graph_states {
             if surface.bounds.contains(x, y) {
-                graph_actions.extend(engine_canvas::node_graph_pointer_move(surface_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt));
+                if let Err(fault) = engine_canvas::node_graph_pointer_move_into(surface_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input) {
+                    self.input.record_action_fault(fault);
+                    return;
+                }
             }
         }
-        if !graph_actions.is_empty() {
-            self.dispatch_actions(graph_actions).await;
-        }
-        let mut map_actions = Vec::new();
         for (surface_id, surface) in &self.shell.tiled_map_states {
             if !surface.bounds.contains(x, y) && !scenes::tiled_map_drag_active(surface_id) {
                 continue;
             }
-            map_actions.extend(scenes::tiled_map_pointer_move(surface_id, &surface.controller_id, surface.bounds, x, y, down));
+            if let Err(fault) = scenes::tiled_map_pointer_move_into(surface_id, &surface.controller_id, surface.bounds, x, y, down, &mut self.input) {
+                self.input.record_action_fault(fault);
+                return;
+            }
         }
-        if !map_actions.is_empty() {
-            self.dispatch_actions(map_actions).await;
-        }
-        let mut board_actions = Vec::new();
         for (surface_id, surface) in &self.shell.board2d_states {
             let inside = surface.bounds.contains(x, y);
             if inside {
-                board_actions.extend(scenes::puzzle_board_pointer_move(surface_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt));
+                if let Err(fault) = scenes::puzzle_board_pointer_move_into(surface_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input) {
+                    self.input.record_action_fault(fault);
+                    return;
+                }
             } else {
-                board_actions.extend(scenes::puzzle_board_pointer_leave(surface_id, &surface.controller_id, modifiers.alt));
+                if let Err(fault) = scenes::puzzle_board_pointer_leave_into(surface_id, &surface.controller_id, modifiers.alt, &mut self.input) {
+                    self.input.record_action_fault(fault);
+                    return;
+                }
             }
-        }
-        if !board_actions.is_empty() {
-            self.dispatch_actions(board_actions).await;
         }
         if !world_actions.is_empty() {
             self.dispatch_actions(world_actions).await;
@@ -3630,12 +5254,14 @@ async fn boot_runtime(
             asset_poll_pending: false,
             text_streams: std::array::from_fn(|_| None),
             text_fault: None,
+            frame_fault: None,
             text_cancel_pending: false,
             #[cfg(not(target_arch = "wasm32"))]
             last_sync_pump_ms: 0.0,
         }),
         draw: DrawList::default(),
         overlay: DrawList::default(),
+        pending_frame_deferred: None,
         #[cfg(not(target_arch = "wasm32"))]
         plugin_modules_root: plugin_modules_root.clone(),
         #[cfg(not(target_arch = "wasm32"))]

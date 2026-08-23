@@ -182,6 +182,39 @@ mod renderer {
         pub fn new() -> Self {
             Self(backend::Scene::new())
         }
+        pub fn retirement_step(&mut self) -> bool {
+            let encoding = self.0.encoding_mut();
+            if encoding.resources.glyph_runs.pop().is_some()
+                || encoding.resources.glyphs.pop().is_some()
+                || encoding.resources.normalized_coords.pop().is_some()
+                || encoding.resources.color_stops.pop().is_some()
+                || encoding.resources.patches.pop().is_some()
+                || encoding.path_tags.pop().is_some()
+                || encoding.path_data.pop().is_some()
+                || encoding.draw_tags.pop().is_some()
+                || encoding.draw_data.pop().is_some()
+                || encoding.transforms.pop().is_some()
+                || encoding.styles.pop().is_some()
+            {
+                return false;
+            }
+            true
+        }
+
+        pub fn retirement_is_empty(&self) -> bool {
+            let encoding = self.0.encoding();
+            encoding.resources.glyph_runs.is_empty()
+                && encoding.resources.glyphs.is_empty()
+                && encoding.resources.normalized_coords.is_empty()
+                && encoding.resources.color_stops.is_empty()
+                && encoding.resources.patches.is_empty()
+                && encoding.path_tags.is_empty()
+                && encoding.path_data.is_empty()
+                && encoding.draw_tags.is_empty()
+                && encoding.draw_data.is_empty()
+                && encoding.transforms.is_empty()
+                && encoding.styles.is_empty()
+        }
         pub fn fill<'a>(&mut self, rule: FillRule, transform: Affine, paint: impl Into<Paint>, brush_transform: Option<Affine>, shape: impl Into<ShapeRef<'a>>) {
             let paint = paint.into();
             let brush_transform = brush_transform.map(|a| a.to_kurbo());

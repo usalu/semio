@@ -149,15 +149,12 @@ fn hit_test_node(tree: &DispatchTree, id: FrameNodeId, x: f32, y: f32) -> Option
     if node.flags.contains(DispatchFlags::CLIPS_CHILDREN) && !inside {
         return None;
     }
-    let mut overlays: Vec<FrameNodeId> = Vec::new();
-    let mut normal: Vec<FrameNodeId> = Vec::new();
-    for &child in tree.children(id) {
-        match tree.node(child) {
-            Some(child_node) if child_node.flags.contains(DispatchFlags::OVERLAY) => overlays.push(child),
-            _ => normal.push(child),
+    for &child in tree.children(id).iter().rev().filter(|child| tree.node(**child).is_some_and(|node| node.flags.contains(DispatchFlags::OVERLAY))) {
+        if let Some(hit) = hit_test_node(tree, child, x, y) {
+            return Some(hit);
         }
     }
-    for child in overlays.into_iter().rev().chain(normal.into_iter().rev()) {
+    for &child in tree.children(id).iter().rev().filter(|child| !tree.node(**child).is_some_and(|node| node.flags.contains(DispatchFlags::OVERLAY))) {
         if let Some(hit) = hit_test_node(tree, child, x, y) {
             return Some(hit);
         }
@@ -548,7 +545,9 @@ struct OverlayStack {
 impl OverlayStack {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn open(&mut self, overlay: OpenOverlay) {
-        self.open.push(overlay);
+        if self.open.len() < 16 {
+            self.open.push(overlay);
+        }
     }
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -689,6 +688,9 @@ fn insert_at_caret(edit: &mut EditState, text: &str) {
 /// dispatch never needs to know its product type).
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn collect_focusable(tree: &DispatchTree, id: FrameNodeId, out: &mut Vec<ElementId>) {
+    if out.len() >= 64 {
+        return;
+    }
     if let Some(node) = tree.node(id) {
         if node.flags.contains(DispatchFlags::FOCUSABLE) {
             out.push(node.element);
@@ -816,7 +818,10 @@ pub struct Dispatcher {
 impl Dispatcher {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new() -> Self {
-        Self::default()
+        let mut dispatcher = Self::default();
+        dispatcher.hover_chain = Vec::with_capacity(64);
+        dispatcher.overlays.open = Vec::with_capacity(16);
+        dispatcher
     }
 
     //#region 🔎️Accessors
@@ -863,28 +868,30 @@ impl Dispatcher {
 
     //#region 🧩️Registration
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn set_drag_payload(&mut self, element: ElementId, payload: DragPayload) {
+    pub fn set_drag_payload(&mut self, element: ElementId, payload: DragPayload) -> bool {
+        if payload.len() > 16 || payload.iter().any(|(key, value)| key.len() > 256 || value.len() > 256) || (!self.drag_payloads.contains_key(&element) && self.drag_payloads.len() >= 256) {
+            return false;
+        }
         self.drag_payloads.insert(element, payload);
+        true
     }
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn set_drop_accept(&mut self, element: ElementId, predicate: impl Fn(&DragPayload) -> bool + 'static) {
+    pub fn set_drop_accept(&mut self, element: ElementId, predicate: impl Fn(&DragPayload) -> bool + 'static) -> bool {
+        if !self.drop_accept.contains_key(&element) && self.drop_accept.len() >= 256 {
+            return false;
+        }
         self.drop_accept.insert(element, Box::new(predicate));
+        true
     }
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn register_scroll_thumb(&mut self, thumb: ElementId, scrollable: ElementId, axis: ScrollAxis) {
+    pub fn register_scroll_thumb(&mut self, thumb: ElementId, scrollable: ElementId, axis: ScrollAxis) -> bool {
+        if !self.scroll_thumbs.contains_key(&thumb) && self.scroll_thumbs.len() >= 256 {
+            return false;
+        }
         self.scroll_thumbs.insert(thumb, (scrollable, axis));
-    }
-
-    /// 🧹️ Ported from `events.rs::prune_dead_registrations`: drops registry entries keyed by an
-    /// [`ElementId`] no longer present in `tree` — generation-free `ElementId`s make stale entries
-    /// harmless to *use* (an absent element simply never resolves), this only keeps the maps bounded.
-    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    fn prune_dead_registrations(&mut self, tree: &DispatchTree) {
-        self.drag_payloads.retain(|element, _| tree.element_node(*element).is_some());
-        self.drop_accept.retain(|element, _| tree.element_node(*element).is_some());
-        self.scroll_thumbs.retain(|thumb, (scrollable, _)| tree.element_node(*thumb).is_some() && tree.element_node(*scrollable).is_some());
+        true
     }
     //#endregion 🧩️Registration
 
@@ -904,9 +911,9 @@ impl Dispatcher {
         }
         if let Some(next) = target {
             if !self.edit_states.contains_key(&next) {
-                let value = tree.element_node(next).and_then(|id| tree.node(id)).and_then(|node| node.listeners.value.clone());
+                let value = tree.element_node(next).and_then(|id| tree.node(id)).and_then(|node| node.listeners.value.as_ref());
                 let text = match value {
-                    Some(UiValue::Text(text)) => text,
+                    Some(UiValue::Text(text)) if text.len() <= 16 * 1024 => text.clone(),
                     _ => String::new(),
                 };
                 let caret = text.len();
@@ -927,7 +934,7 @@ impl Dispatcher {
     /// overlay's root, or the tree root — see `Self::dispatch`'s `Tab` handling).
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn focus_next(&mut self, tree: &DispatchTree, scope: FrameNodeId) -> bool {
-        let mut order = Vec::new();
+        let mut order = Vec::with_capacity(64);
         collect_focusable(tree, scope, &mut order);
         if order.is_empty() {
             return self.apply_focus_transition(tree, None);
@@ -941,7 +948,7 @@ impl Dispatcher {
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn focus_prev(&mut self, tree: &DispatchTree, scope: FrameNodeId) -> bool {
-        let mut order = Vec::new();
+        let mut order = Vec::with_capacity(64);
         collect_focusable(tree, scope, &mut order);
         if order.is_empty() {
             return self.apply_focus_transition(tree, None);
@@ -1111,6 +1118,9 @@ impl Dispatcher {
         let Some(hit) = hit_test(tree, root, x, y) else { return false };
         let Some(scrollable) = nearest_scrollable_ancestor(tree, hit) else { return false };
         let Some(element) = tree.node(scrollable).map(|node| node.element) else { return false };
+        if !self.scroll_offsets.contains_key(&element) && self.scroll_offsets.len() >= 256 {
+            return false;
+        }
         let (offset_x, offset_y) = self.scroll_offset(element);
         self.scroll_offsets.insert(element, ((offset_x + delta_x).max(0.0), (offset_y + delta_y).max(0.0)));
         true
@@ -1322,7 +1332,6 @@ impl Dispatcher {
     /// module docstring.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn dispatch(&mut self, tree: &DispatchTree, event: &DispatchEvent) -> DispatchOutcome {
-        self.prune_dead_registrations(tree);
         let Some(root) = tree.root() else { return DispatchOutcome::default() };
         let mut outcome = DispatchOutcome::default();
 
@@ -1350,6 +1359,9 @@ impl Dispatcher {
                 outcome.cursor = self.cursor_for(tree, target);
             }
             DispatchEvent::PointerDown { pointer, x, y, .. } => {
+                if !self.press_origin.contains_key(&pointer.id) && self.press_origin.len() >= 16 {
+                    return outcome;
+                }
                 if self.dismiss_topmost_if_outside_press(tree, *x, *y) {
                     outcome.handled = true;
                     outcome.invalidation.insert(InvalidationReason::PAINT);
@@ -1389,6 +1401,7 @@ impl Dispatcher {
                 outcome.cursor = self.cursor_for(tree, target);
             }
             DispatchEvent::PointerUp { pointer, x, y, .. } => {
+                self.press_origin.remove(&pointer.id);
                 if let Some(entry) = self.capture.remove(&pointer.id) {
                     outcome.handled = true;
                     match entry.kind {
@@ -1515,9 +1528,12 @@ impl Dispatcher {
         if self.hovered == target_element {
             return false;
         }
-        let mut new_chain = Vec::new();
+        let mut new_chain = Vec::with_capacity(64);
         if let Some(leaf) = target {
             bubble(tree, leaf, |id| {
+                if new_chain.len() >= 64 {
+                    return true;
+                }
                 if let Some(node) = tree.node(id) {
                     new_chain.push(node.element);
                 }
@@ -1633,6 +1649,20 @@ mod tests {
 
         dispatcher.dispatch(&tree, &up(1, 150.0, 50.0));
         assert_eq!(dispatcher.capture_of(PointerId(1)), None, "capture releases on PointerUp");
+    }
+
+    #[test]
+    fn distinct_pointer_identity_storm_saturates_at_sixteen_slots() {
+        let mut tree = DispatchTree::new(UiRevision(0));
+        let root = leaf(&mut tree, None, "root", DispatchFlags::NONE, listen(vec![]), (0.0, 0.0, 100.0, 100.0));
+        let mut dispatcher = Dispatcher::new();
+        for pointer in 0..16 {
+            assert!(dispatcher.dispatch(&tree, &down(pointer, 10.0, 10.0)).handled);
+            assert!(dispatcher.capture_of(PointerId(pointer)).is_some());
+        }
+        assert!(!dispatcher.dispatch(&tree, &down(16, 10.0, 10.0)).handled);
+        assert!(dispatcher.capture_of(PointerId(16)).is_none());
+        assert_eq!(tree.root(), Some(root));
     }
 
     #[test]

@@ -100,13 +100,7 @@ impl WindowDelegate for OsHost {
         let (width, height) = metrics.logical_size();
         self.presenter.resize(width, height, metrics.scale_factor);
         let dpr = metrics.scale_factor;
-        let _ = self.runtime.enqueue_apply(
-            Some("window-metrics"),
-            true,
-            Box::new(move |app, _| {
-                app.resize(width, height, dpr);
-            }),
-        );
+        let _ = self.runtime.enqueue_apply(Some("window-metrics"), true, crate::RuntimeApply::Resize { width, height, dpr });
     }
 
     /// 🖼️ P3/P5 mounted split: `build_and_publish_snapshot` drains bounded input and non-blockingly
@@ -163,18 +157,8 @@ impl OsHost {
     fn build_and_publish_snapshot(&mut self) {
         if !self.events.is_empty() && self.runtime.has_lossless_capacity() {
             let generation = self.events.current_generation();
-            let drained = self.events.drain(ui_host::WorkerContext::new(generation));
-            let _ = self.runtime.enqueue_apply(
-                None,
-                true,
-                Box::new(move |app, handle| {
-                    let handle = handle.clone();
-                    app.submit_interaction(&handle, None, move |mut interaction| async move {
-                        dispatch_drained_events(&mut interaction, drained).await;
-                        interaction
-                    });
-                }),
-            );
+            let drained = self.events.drain_page(ui_host::WorkerContext::new(generation));
+            let _ = self.runtime.enqueue_apply(None, true, crate::RuntimeApply::DispatchEvents(Some(crate::RuntimeDispatchCursor::new(drained))));
         }
         // 🧵️ `poll_runtime_and_resubmit` never waits: it accepts a fresh completed frame or leaves the
         // last presentation in place, then schedules at most one worker-owned frame transaction.
@@ -239,33 +223,8 @@ fn semio_cursor_to_request(cursor: ui_wgpu::wgpu::SemioCursor) -> CursorRequest 
 /// `handle_key`). `PointerButton::{Primary,Secondary,Middle}` → `{0,2,1}` matches the DOM
 /// `MouseEvent.button` convention `AppRuntime`'s own `i16` button parameter already assumed
 /// (`dispatch_actions`/world3d/graph/map/board call sites all branch on `0`/`1`/`2` verbatim).
-/// 📤️ P3a: replays one [`ui_host::DrainedEvents`] batch — the coalesced pointer-move/scroll samples
-/// (if any landed since the last drain) followed by every discrete event in arrival order — through
-/// the same [`dispatch_normalized_event`] every individual event used to go through one at a time.
-/// Reconstructing a synthetic [`DispatchEvent`] for the coalesced samples keeps this a thin adapter
-/// with zero duplicated dispatch logic, per CLAUDE.md's "if code is repeated, it MUST be close to
-/// each other" — there is exactly one place that knows how to turn a `DispatchEvent` into `AppRuntime`
-/// calls. A right-click stays on this same lossless route as `PointerDown::Secondary`; the canonical
-/// `AppRuntime::handle_pointer_button` receives DOM button `2`, and `ShellState` opens the context
-/// menu in its pressed-secondary branch.
-// 🚫️async: U1 — sync fn boundary (spawned once per drain by `redraw` above); the `.await`s inside are
-// the same boundary-async exception `AppRuntime`'s own methods already are.
-async fn dispatch_drained_events(app: &mut AppInteractionState, drained: ui_host::DrainedEvents) {
-    if let Some(sample) = drained.pointer_move {
-        dispatch_normalized_event(app, DispatchEvent::PointerMove { pointer: sample.pointer, x: sample.x, y: sample.y }).await;
-    }
-    if let Some(sample) = drained.scroll {
-        dispatch_normalized_event(app, DispatchEvent::Scroll { x: sample.x, y: sample.y, delta_x: sample.delta_x, delta_y: sample.delta_y }).await;
-    }
-    for discrete in drained.discrete {
-        dispatch_normalized_event(app, discrete.event).await;
-    }
-}
-
-// 🚫️async: U1 — the fn itself is sync at its call boundary (spawned by `dispatch_drained_events`
-// above); the `.await`s inside it are the same boundary-async exception `AppRuntime`'s own methods
-// already are.
-async fn dispatch_normalized_event(app: &mut AppInteractionState, event: DispatchEvent) {
+/// 📤️ P3a: the runtime mailbox invokes this for one retained cursor item per worker turn.
+pub(crate) async fn dispatch_normalized_event(app: &mut AppInteractionState, event: DispatchEvent) {
     match event {
         DispatchEvent::PointerMove { x, y, .. } => {
             let (down, button, modifiers) = (app.pointer_down, app.pointer_button, app.modifiers.clone());
@@ -847,7 +806,7 @@ mod callback_latency_tests {
         }
         let (_, _, p99_us) = semio_framework_trace::site_percentiles("os_renderer_metrics").expect("mounted resize callback samples");
         assert!(p99_us < 2_000, "mounted resize callback p99 was {p99_us} µs");
-        let drained = events.drain(ui_host::WorkerContext::new(events.current_generation()));
+        let drained = events.drain_page(ui_host::WorkerContext::new(events.current_generation()));
         let latest = drained.metrics.expect("coalesced resize sample");
         assert_eq!((latest.physical_width, latest.physical_height), (831, 631));
     }

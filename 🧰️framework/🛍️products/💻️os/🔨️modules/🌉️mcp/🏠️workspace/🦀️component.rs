@@ -15,8 +15,7 @@
 
 use crate::actions::{ArtifactChannel, MockArtifactChannel};
 use crate::{
-    AppCommand, AppFrame, CapabilityOwner, Catalog, ContextSummary, Fault, GatewayBackend, GatewayError, GatewayErrorCode, InvocationReport, NullBackend, PreparedActionReport, Resource,
-    ResourceContent, RevisionStamp, SearchFilters, SearchHit,
+    AppCommand, AppFrame, CapabilityOwner, Catalog, ContextSummary, Fault, GatewayBackend, GatewayError, GatewayErrorCode, InvocationReport, NullBackend, PreparedActionReport, Resource, ResourceContent, RevisionStamp, SearchFilters, SearchHit,
 };
 use semio_framework_dispatch_macros::dyn_enum_close;
 use semio_framework_plugin_host::OwnedRuntime;
@@ -281,7 +280,7 @@ impl WorkspaceOrigin {
 //#region 🔖️PluginActivation
 /// 🚧️ **Known, documented gap, same class as `🏃️run`'s own** (this file's module doc): a full
 /// `AppCommand`/`AppFrame` exchange loop over `GuestRuntime::execute_turn`'s effects (encode each
-/// `AppCommand` as `Event::AppCommandEvent`, scan `TurnResult.effects` for `Effect::Respond{req,
+/// `AppCommand` through the retained page ingress, scan `TurnResult.effects` for `Effect::Respond{req,
 /// result}` where `req.0 == seq`, decode `RequestOutcome::Ok(bytes)` as an `AppFrame`) is NOT built
 /// by this packet either — `🏃️run/🦀️component.rs`'s own `WasmtimeNodeHost::exchange` doc comment
 /// names this as real, correctly-typed, still-unwritten "post-turn effect-dispatch loop" work
@@ -348,7 +347,7 @@ pub fn activate_plugin_instance(
 /// 🔌️ Real `crate::actions::ArtifactChannel` implementation — the seam `P6-actions-policy`'s
 /// `ActionAdapter` drives (`🎬️actions/🦀️component.rs`'s own module doc: "is P7's job when it
 /// implements `ArtifactChannel` for real"). `ReadHistory` is driven for REAL over
-/// `GuestRuntime::execute_turn` (`Event::AppCommandEvent` in, scan `TurnResult.effects` for
+/// `GuestRuntime::execute_turn` (one retained command page per turn, scan `TurnResult.effects` for
 /// `Effect::Respond{req, result}` where `req.0 == seq`, decode `RequestOutcome::Ok` as a real
 /// `store::AppFrame::HistorySnapshot` — exactly the "real body" `🏃️run/🦀️component.rs`'s own
 /// `WasmtimeNodeHost::exchange` doc comment describes and does not itself build). The mutation
@@ -371,15 +370,130 @@ pub struct PluginArtifactChannel {
     actor_label: String,
     instances: HashMap<u32, semio_framework_plugin_host::GuestInstance>,
     opening: HashMap<u32, semio_framework_plugin_host::GuestInstance>,
-    pending_exchanges: HashMap<u32, PendingExchange>,
+    pending_exchanges: PendingExchangeRegistry<1>,
+    pending_command_closes: semio_framework::kernel::CommandDriverRegistry<1>,
+    rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry<1>,
     next_seq: u64,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 struct PendingExchange {
-    command: store::AppCommand,
+    instance: u32,
     seq: u64,
-    awaiting_response: bool,
+    response: PendingResponsePage,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum PendingResponseFault {
+    OversizedSuccess,
+    OversizedGuestFault,
+    Duplicate,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+enum PendingResponsePage {
+    Empty,
+    Success { page: semio_framework::kernel::FixedCommandPage, duplicate: bool },
+    GuestFault { page: semio_framework::kernel::FixedCommandPage, duplicate: bool },
+    Fault(PendingResponseFault),
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl PendingResponsePage {
+    fn admit(&mut self, outcome: semio_framework::kernel::RequestOutcome) {
+        if !matches!(self, Self::Empty) {
+            let bytes = match outcome {
+                semio_framework::kernel::RequestOutcome::Ok(bytes) | semio_framework::kernel::RequestOutcome::Err(bytes) => bytes,
+            };
+            drop(bytes);
+            match self {
+                Self::Success { duplicate, .. } | Self::GuestFault { duplicate, .. } => *duplicate = true,
+                Self::Fault(_) => *self = Self::Fault(PendingResponseFault::Duplicate),
+                Self::Empty => unreachable!(),
+            }
+            return;
+        }
+        *self = match outcome {
+            semio_framework::kernel::RequestOutcome::Ok(bytes) => match semio_framework::kernel::FixedCommandPage::try_copy_from(&bytes) {
+                Ok(page) => Self::Success { page, duplicate: false },
+                Err(_) => Self::Fault(PendingResponseFault::OversizedSuccess),
+            },
+            semio_framework::kernel::RequestOutcome::Err(bytes) => match semio_framework::kernel::FixedCommandPage::try_copy_from(&bytes) {
+                Ok(page) => Self::GuestFault { page, duplicate: false },
+                Err(_) => Self::Fault(PendingResponseFault::OversizedGuestFault),
+            },
+        };
+    }
+
+    fn take(&mut self, seq: u64) -> Result<store::AppFrame, Fault> {
+        match std::mem::replace(self, Self::Empty) {
+            Self::Empty => Err(PluginArtifactChannel::not_wired("execute_turn", format!("no Effect::Respond for seq {seq} before terminal acknowledgement"))),
+            Self::Success { duplicate: true, .. } | Self::GuestFault { duplicate: true, .. } => Err(PluginArtifactChannel::not_wired("AppFrame response", "guest emitted more than one response for the exact sequence")),
+            Self::Success { page, duplicate: false } => semio_framework::io::resolve_ready(store::decode_app_frame(page.as_slice())).map_err(|error| PluginArtifactChannel::not_wired("decoding AppFrame", error)),
+            Self::GuestFault { page, duplicate: false } => Err(Fault { code: "mutation.rejected".to_string(), message: format!("guest rejected seq {seq} ({} bytes of fault detail)", page.len()) }),
+            Self::Fault(PendingResponseFault::OversizedSuccess) => Err(PluginArtifactChannel::not_wired("AppFrame response", "guest success response exceeds the fixed 4096-byte MCP response authority")),
+            Self::Fault(PendingResponseFault::OversizedGuestFault) => Err(PluginArtifactChannel::not_wired("AppFrame response", "guest fault response exceeds the fixed 4096-byte MCP response authority")),
+            Self::Fault(PendingResponseFault::Duplicate) => Err(PluginArtifactChannel::not_wired("AppFrame response", "guest emitted more than one response for the exact sequence")),
+        }
+    }
+
+    fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize) {
+        let released = match self {
+            Self::Success { page, .. } | Self::GuestFault { page, .. } if page.len() <= maximum_bytes => page.len(),
+            Self::Success { .. } | Self::GuestFault { .. } => return (false, 0),
+            Self::Empty | Self::Fault(_) => 0,
+        };
+        *self = Self::Empty;
+        (true, released)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        matches!(self, Self::Empty)
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct PendingExchangeRegistry<const CAPACITY: usize> {
+    slots: [Option<PendingExchange>; CAPACITY],
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl<const CAPACITY: usize> PendingExchangeRegistry<CAPACITY> {
+    fn new() -> Self {
+        Self { slots: std::array::from_fn(|_| None) }
+    }
+
+    fn can_insert(&self, instance: u32) -> bool {
+        self.slots[instance as usize % CAPACITY].is_none()
+    }
+
+    fn insert_admitted(&mut self, pending: PendingExchange) {
+        let index = pending.instance as usize % CAPACITY;
+        assert!(self.slots[index].is_none(), "fixed pending-exchange admission changed before insert");
+        self.slots[index] = Some(pending);
+    }
+
+    fn get_mut(&mut self, instance: u32) -> Option<&mut PendingExchange> {
+        self.slots[instance as usize % CAPACITY].as_mut().filter(|pending| pending.instance == instance)
+    }
+
+    fn get(&self, instance: u32) -> Option<&PendingExchange> {
+        self.slots[instance as usize % CAPACITY].as_ref().filter(|pending| pending.instance == instance)
+    }
+
+    fn remove(&mut self, instance: u32) -> Option<PendingExchange> {
+        let index = instance as usize % CAPACITY;
+        if self.slots[index].as_ref().is_some_and(|pending| pending.instance == instance) {
+            self.slots[index].take()
+        } else {
+            None
+        }
+    }
+
+    fn close_response_step(&mut self, instance: u32, maximum_bytes: usize) -> (bool, usize) {
+        self.get_mut(instance).map_or((true, 0), |pending| pending.response.close_step(maximum_bytes))
+    }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -389,6 +503,10 @@ fn owned_interactive_budget() -> semio_framework::kernel::Budget {
 
 #[cfg(not(target_arch = "wasm32"))]
 impl PluginArtifactChannel {
+    fn command_closes_terminal_is_empty(&self) -> bool {
+        self.pending_command_closes.terminal_is_empty()
+    }
+
     pub fn new(repo_root: PathBuf, entry: PluginRegistryEntry, descriptor: semio_framework::PackageDescriptor, app_ref: semio_framework::AppRef, actor_label: String) -> Result<Self, GatewayError> {
         let runtime = Arc::new(OwnedRuntime::new());
         let wasm_path = resolve_plugin_wasm_path(&repo_root, &entry)?;
@@ -396,7 +514,20 @@ impl PluginArtifactChannel {
         let package_hash = framework_hash::hash_bytes(&bytes).into_bytes();
         let package = semio_framework_plugin_host::PackageRef { package: semio_framework_plugin_host::PackageId(entry.plugin_id.clone()), hash: semio_framework_plugin_host::PackageHash(package_hash.try_into().unwrap_or([0u8; 32])) };
         let compiled = runtime.compile_component(&package, &bytes).map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("compiling `{}`: {error}", entry.plugin_id)))?;
-        Ok(Self { runtime, compiled, entry, descriptor, app_ref, actor_label, instances: HashMap::new(), opening: HashMap::new(), pending_exchanges: HashMap::new(), next_seq: 1 })
+        Ok(Self {
+            runtime,
+            compiled,
+            entry,
+            descriptor,
+            app_ref,
+            actor_label,
+            instances: HashMap::new(),
+            opening: HashMap::new(),
+            pending_exchanges: PendingExchangeRegistry::new(),
+            pending_command_closes: semio_framework::kernel::CommandDriverRegistry::new(),
+            rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry::new(),
+            next_seq: 1,
+        })
     }
 
     fn not_wired(what: &str, detail: impl std::fmt::Display) -> Fault {
@@ -416,12 +547,8 @@ impl PluginArtifactChannel {
             let guest = self.runtime.instantiate_actor(&self.compiled, actor).map_err(|error| Self::not_wired("instantiate", error))?;
             self.opening.insert(instance, guest);
         }
-        let caps: Vec<semio_framework::kernel::BrokerCapabilityGrant> = self
-            .descriptor
-            .capability_requests
-            .iter()
-            .map(|request| semio_framework::kernel::BrokerCapabilityGrant { token: semio_framework::CapabilityToken(0), id: request.id.clone(), scope: request.scope.clone(), expires_ms: None })
-            .collect();
+        let caps: Vec<semio_framework::kernel::BrokerCapabilityGrant> =
+            self.descriptor.capability_requests.iter().map(|request| semio_framework::kernel::BrokerCapabilityGrant { token: semio_framework::CapabilityToken(0), id: request.id.clone(), scope: request.scope.clone(), expires_ms: None }).collect();
         let event = semio_framework::kernel::Event::InstanceOpen {
             instance: semio_framework::kernel::PluginInstanceId(format!("{}#{}", self.entry.plugin_id, self.actor_label)),
             app_id: semio_framework::kernel::AppInstanceId(self.app_ref.app_id.clone()),
@@ -444,53 +571,115 @@ impl PluginArtifactChannel {
         }
     }
 
-    /// 🔁️ One `AppCommand` -> real `Event::AppCommandEvent{instance, seq, command: wire(command)}` ->
-    /// `execute_turn` -> the matching `Effect::Respond{req, result}` decoded as a real `AppFrame`.
+    /// 🔁️ One `AppCommand` becomes a retained host batch whose exact current page is passed
+    /// to `execute_turn`; the next page stays untouched until acknowledgement.
     fn exchange_one_real(&mut self, instance: u32, real_command: store::AppCommand) -> Result<store::AppFrame, Fault> {
-        let (seq, awaiting_response) = match self.pending_exchanges.get(&instance) {
-            Some(pending) if pending.command == real_command => (pending.seq, pending.awaiting_response),
-            Some(_) => return Err(Self::not_wired("exchange", format!("instance {instance} already has another resumable command"))),
-            None => {
-                let seq = self.next_seq;
-                self.next_seq += 1;
-                self.pending_exchanges.insert(instance, PendingExchange { command: real_command.clone(), seq, awaiting_response: false });
-                (seq, false)
+        if !self.rejected_command_builds.terminal_is_empty() {
+            let (complete, _, _) = self.rejected_command_builds.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
+            return Err(Self::budget_fault(if complete { "rejected AppCommand build reached terminal empty" } else { "rejected AppCommand build cleanup" }));
+        }
+        if let Some(seq) = self.pending_exchanges.get(instance).map(|pending| pending.seq) {
+            if !self.pending_command_closes.is_active(u64::from(instance), seq) {
+                let (response_complete, _) = self.pending_exchanges.close_response_step(instance, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
+                if !response_complete {
+                    return Err(Self::budget_fault("cancelled AppCommand response cleanup"));
+                }
+                let (complete, _, _) = self.pending_command_closes.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
+                if complete {
+                    let terminal = self.pending_exchanges.remove(instance).expect("closed pending exchange reached terminal empty");
+                    assert!(terminal.response.terminal_is_empty(), "closed pending response reached terminal empty");
+                }
+                return Err(Self::budget_fault(if complete { "cancelled AppCommand reached terminal empty" } else { "cancelled AppCommand cleanup" }));
             }
-        };
-        let command_bytes = semio_framework::io::resolve_ready(store::encode_app_command(&real_command));
+        }
+        if self.pending_exchanges.get(instance).is_none() && !persistent_command_completion_port_ready() {
+            return Err(Self::not_wired("AppCommand", "persistent command completion submit/poll/cancel authority is not admitted"));
+        }
+        if self.pending_exchanges.get(instance).is_none() {
+            if !self.pending_exchanges.can_insert(instance) || !self.pending_command_closes.can_insert(u64::from(instance)) || !self.rejected_command_builds.can_insert(u64::from(instance)) {
+                return Err(Self::budget_fault("fixed pending command authority is saturated or collided"));
+            }
+            let seq = self.next_seq;
+            self.next_seq += 1;
+            let command = semio_framework::io::resolve_ready(store::encode_app_command(&real_command)).map_err(|fault| Self::not_wired("encoding AppCommand", fault))?;
+            let envelope = semio_framework::kernel::CommandEnvelope { instance, seq, command };
+            let mut owners = semio_framework::kernel::CommandEnvelopeSet::try_new().map_err(|fault| Self::not_wired("reserving command batch", fault))?;
+            if let Err((fault, rejected)) = owners.try_push(envelope) {
+                self.rejected_command_builds.insert_admitted(u64::from(instance), semio_framework::kernel::RejectedCommandBuild::new(owners, rejected));
+                return Err(Self::not_wired("admitting command owner", fault));
+            }
+            let batch = match semio_framework::kernel::CommandBatch::try_new(seq, owners) {
+                Ok(batch) => batch,
+                Err((fault, owners)) => {
+                    self.rejected_command_builds.insert_admitted(u64::from(instance), semio_framework::kernel::RejectedCommandBuild::from_admitted(owners));
+                    return Err(Self::not_wired("admitting command batch", fault));
+                }
+            };
+            self.pending_command_closes.insert_admitted(u64::from(instance), seq, semio_framework::kernel::CommandBatchDriver::new(seq, batch));
+            self.pending_exchanges.insert_admitted(PendingExchange { instance, seq, response: PendingResponsePage::Empty });
+        }
+        let seq = self.pending_exchanges.get(instance).expect("pending exchange was admitted").seq;
+        let event = self
+            .pending_command_closes
+            .with_driver_mut(u64::from(instance), seq, |driver| driver.next_page())
+            .map_err(|fault| Self::not_wired("retained command driver", fault))?
+            .map_err(|fault| Self::not_wired("command page", fault))?
+            .map(|(cursor, bytes)| semio_framework::kernel::Event::CommandIngressPage { cursor, bytes })
+            .unwrap_or(semio_framework::kernel::Event::Wake);
         let guest = self.instances.get_mut(&instance).ok_or_else(|| Self::not_wired("exchange", format!("no open instance {instance}")))?;
-        let event = semio_framework::kernel::Event::AppCommandEvent { instance: semio_framework::kernel::PluginInstanceId(format!("{}#{}", self.entry.plugin_id, self.actor_label)), seq, command: command_bytes };
-        let events = if awaiting_response { &[][..] } else { std::slice::from_ref(&event) };
-        let turn = match self.runtime.execute_actor_turn(guest, events, owned_interactive_budget()) {
-            Ok(turn) => turn,
+        self.pending_command_closes.prepare_suspend(u64::from(instance), seq).map_err(|fault| Self::not_wired("suspending command owner", fault))?;
+        let turn = match self.runtime.execute_actor_turn(guest, std::slice::from_ref(&event), owned_interactive_budget()) {
+            Ok(turn) => {
+                self.pending_command_closes.resume(u64::from(instance), seq).map_err(|fault| Self::not_wired("resuming command owner", fault))?;
+                turn
+            }
             Err(semio_framework_plugin_host::TurnFault::DeadlineExceeded | semio_framework_plugin_host::TurnFault::FuelExhausted) => return Err(Self::budget_fault("AppCommand")),
             Err(error) => {
-                self.pending_exchanges.remove(&instance);
                 return Err(Self::not_wired("execute_turn", error));
             }
         };
+        let progress = self
+            .pending_command_closes
+            .with_driver_mut(u64::from(instance), seq, |driver| driver.observe(&turn.command_ingress, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES))
+            .map_err(|fault| Self::not_wired("retained command driver", fault))?
+            .map_err(|fault| Self::not_wired("command acknowledgement", fault))?;
         for effect in turn.effects {
             if let semio_framework::kernel::Effect::Respond { req, result } = effect {
                 if req.0 != seq {
                     continue;
                 }
-                self.pending_exchanges.remove(&instance);
-                return match result {
-                    semio_framework::kernel::RequestOutcome::Ok(bytes) => semio_framework::io::resolve_ready(store::decode_app_frame(&bytes)).map_err(|error| Self::not_wired("decoding AppFrame", error)),
-                    semio_framework::kernel::RequestOutcome::Err(bytes) => Err(Fault { code: "mutation.rejected".to_string(), message: format!("guest rejected seq {seq} ({} bytes of fault detail)", bytes.len()) }),
-                };
+                self.pending_exchanges.get_mut(instance).expect("pending exchange was admitted").response.admit(result);
             }
         }
-        if matches!(turn.status, semio_framework::kernel::TurnStatus::MoreWork) {
-            if let Some(pending) = self.pending_exchanges.get_mut(&instance) {
-                pending.awaiting_response = true;
+        match progress {
+            semio_framework::kernel::CommandBatchProgress::Complete => {
+                self.pending_command_closes.remove_terminal(u64::from(instance), seq).map_err(|fault| Self::not_wired("terminal command owner", fault))?;
+                let mut pending = self.pending_exchanges.remove(instance).expect("terminal pending exchange");
+                pending.response.take(seq)
             }
-            Err(Self::budget_fault("AppCommand response"))
-        } else {
-            self.pending_exchanges.remove(&instance);
-            Err(Self::not_wired("execute_turn", format!("no Effect::Respond for seq {seq} in this turn (status {:?})", turn.status)))
+            semio_framework::kernel::CommandBatchProgress::Faulted => {
+                self.pending_command_closes.begin_close(u64::from(instance), seq).map_err(|fault| Self::not_wired("faulted command owner", fault))?;
+                let (response_complete, _) = self.pending_exchanges.close_response_step(instance, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
+                if !response_complete {
+                    return Err(Self::budget_fault("AppCommand fault response cleanup"));
+                }
+                let (complete, _, _) = self.pending_command_closes.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
+                if complete {
+                    let terminal = self.pending_exchanges.remove(instance).expect("faulted exchange reached an empty terminal owner");
+                    assert!(terminal.response.terminal_is_empty(), "faulted pending response reached terminal empty");
+                    Err(Self::not_wired("command ingress", format!("faulted for seq {seq} after bounded exact-owner cleanup")))
+                } else {
+                    Err(Self::budget_fault("AppCommand fault cleanup"))
+                }
+            }
+            semio_framework::kernel::CommandBatchProgress::PageReady | semio_framework::kernel::CommandBatchProgress::Waiting => Err(Self::budget_fault("AppCommand response")),
         }
     }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn persistent_command_completion_port_ready() -> bool {
+    false
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -507,11 +696,7 @@ impl ArtifactChannel for PluginArtifactChannel {
                     store::AppFrame::HistorySnapshot { history_patch, .. } => {
                         let value = store::pack_rt::decode_wire_value(&history_patch).map_err(|error| Self::not_wired("decoding HistoryPatch", error))?;
                         let patch: semio_framework::kernel::HistoryPatch = store::from_dsl_value(value).map_err(|error| Self::not_wired("decoding HistoryPatch", error))?;
-                        AppFrame::HistorySnapshot(RevisionStamp {
-                            artifact_id: self.entry.plugin_id.clone(),
-                            head_edit_id: patch.upserts.first().map(|entry| entry.action_id.clone()).unwrap_or_default(),
-                            cursor: patch.cursor.to_string(),
-                        })
+                        AppFrame::HistorySnapshot(RevisionStamp { artifact_id: self.entry.plugin_id.clone(), head_edit_id: patch.upserts.first().map(|entry| entry.action_id.clone()).unwrap_or_default(), cursor: patch.cursor.to_string() })
                     }
                     other => return Err(Self::not_wired("ReadHistory", format!("unexpected real AppFrame variant {other:?}"))),
                 },
@@ -651,10 +836,7 @@ impl HeadlessWorkspace {
                         actor: self.actor_label(),
                     })
                     .await;
-                probe_store
-                    .attach_backbone(store::Backbones::Channel(channels.channel_backbone))
-                    .await
-                    .map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("attaching backbone for `{artifact_id}`: {error}")))?;
+                probe_store.attach_backbone(store::Backbones::Channel(channels.channel_backbone)).await.map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("attaching backbone for `{artifact_id}`: {error}")))?;
                 probe_store
             }
         };
@@ -851,7 +1033,12 @@ impl HeadlessWorkspace {
                 Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, "artifact schema resolution needs a live plugin instance's `describe()`/manifest, not yet reachable from this workspace for an arbitrary artifact kind").retryable())
             }
             Some("history") => match self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(artifact_id) {
-                Some(probe_store) => Ok(vec![ResourceContent { uri: uri.to_string(), mime_type: Some("application/json".to_string()), text: Some(serde_json::json!({ "appliedEditIds": semio_framework::io::resolve_ready(probe_store.applied_edit_ids()) }).to_string()), blob: None }]),
+                Some(probe_store) => Ok(vec![ResourceContent {
+                    uri: uri.to_string(),
+                    mime_type: Some("application/json".to_string()),
+                    text: Some(serde_json::json!({ "appliedEditIds": semio_framework::io::resolve_ready(probe_store.applied_edit_ids()) }).to_string()),
+                    blob: None,
+                }]),
                 None => Err(GatewayError::new(GatewayErrorCode::NotFound, format!("`{artifact_id}` has no open history in this workspace"))),
             },
             Some("validation") => Ok(vec![ResourceContent { uri: uri.to_string(), mime_type: Some("application/json".to_string()), text: Some(serde_json::json!({ "valid": true, "messages": [] }).to_string()), blob: None }]),
@@ -883,6 +1070,28 @@ mod quick {
 
     fn empty_catalog() -> Arc<Catalog> {
         Arc::new(crate::compile(&crate::CatalogSource::default(), semio_framework::Locale::En, semio_framework::Terminology::Native).expect("empty catalog source compiles"))
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn pending_response_close_releases_one_exact_fixed_page() {
+        let mut response = PendingResponsePage::Empty;
+        response.admit(semio_framework::kernel::RequestOutcome::Ok(vec![7; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES]));
+        assert_eq!(response.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES - 1), (false, 0));
+        assert_eq!(response.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES), (true, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES));
+        assert!(response.terminal_is_empty());
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn pending_response_faults_oversize_and_duplicate_without_retaining_app_frame() {
+        let mut oversized = PendingResponsePage::Empty;
+        oversized.admit(semio_framework::kernel::RequestOutcome::Ok(vec![1; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES + 1]));
+        assert_eq!(oversized.take(9).unwrap_err().code, "channel.not-wired");
+        let mut duplicate = PendingResponsePage::Empty;
+        duplicate.admit(semio_framework::kernel::RequestOutcome::Err(vec![2]));
+        duplicate.admit(semio_framework::kernel::RequestOutcome::Ok(vec![3]));
+        assert!(duplicate.take(10).unwrap_err().message.contains("more than one response"));
     }
 
     #[test]
@@ -995,11 +1204,11 @@ mod long {
         // never merely slow.
         let shell_channels = shell_host
             .open(store::sync::ArtifactActorConfig {
-            document_id: "shared-doc".to_string(),
-            schema: PROBE_SCHEMA.to_string(),
-            bindings: vec![store::sync::PersistenceBinding::Folder { path: dir.path().to_path_buf() }],
-            watch_external: true,
-            actor: "shell".to_string(),
+                document_id: "shared-doc".to_string(),
+                schema: PROBE_SCHEMA.to_string(),
+                bindings: vec![store::sync::PersistenceBinding::Folder { path: dir.path().to_path_buf() }],
+                watch_external: true,
+                actor: "shell".to_string(),
             })
             .await;
         let mut shell_events = shell_host.subscribe("shared-doc").await;

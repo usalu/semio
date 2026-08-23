@@ -158,6 +158,7 @@ pub struct BrowserRendererWorker {
     text_bytes: usize,
     latest_generation: u64,
     quarantined: Option<String>,
+    close_phase: u8,
 }
 
 #[wasm_bindgen]
@@ -192,6 +193,7 @@ impl BrowserRendererWorker {
     }
 
     pub fn tick(&mut self, _timestamp_ms: f64, _sequence: u64, generation: u64) -> Result<String, JsValue> {
+        self.ensure_live()?;
         if generation != self.latest_generation {
             return Err(js_error("generation-mismatch", "frame tick generation does not match admitted input"));
         }
@@ -201,8 +203,15 @@ impl BrowserRendererWorker {
         let host = self.host.as_mut().ok_or_else(|| js_error("worker-closed", "renderer host is unavailable"))?;
         let outcome = host.redraw_offscreen_worker();
         let text_fault = host.runtime.take_text_fault();
-        let fault_code = if text_fault.is_some() { "text-input-failed" } else { "present-failed" };
-        let present_fault = host.present_fault.take().or(text_fault);
+        let frame_fault = host.runtime.take_frame_fault();
+        let fault_code = if text_fault.is_some() {
+            "text-input-failed"
+        } else if frame_fault.is_some() {
+            "frame-credits"
+        } else {
+            "present-failed"
+        };
+        let present_fault = host.present_fault.take().or(text_fault).or(frame_fault);
         if let Some(detail) = present_fault.clone() {
             self.quarantined = Some(detail);
         }
@@ -221,37 +230,70 @@ impl BrowserRendererWorker {
 impl BrowserRendererWorker {
     #[wasm_bindgen(js_name = closeStep)]
     pub fn close_step(&mut self) -> Result<bool, JsValue> {
-        if let Some(slot) = self.text_streams.iter().position(Option::is_some) {
-            let stream_id = self.text_streams[slot].as_ref().expect("text stream slot").stream_id;
-            self.abort_text_stream(slot, stream_id)?;
+        if self.close_phase == 0 {
+            self.close_phase = 1;
             return Ok(false);
         }
-        let text_closed = {
-            let Some(host) = self.host.as_ref() else {
-                let Some(retired) = self.retired_host.as_mut() else { return Ok(true) };
-                if !retired.close_step() {
-                    return Ok(false);
-                }
-                if !retired.terminal_is_empty() {
-                    return Err(js_error("host-close", "renderer host retirement completed without a terminal-empty witness"));
-                }
-                self.retired_host = None;
-                return Ok(true);
-            };
+        if self.close_phase == 1 {
+            let Some(host) = self.host.as_mut() else { return Err(js_error("host-close", "renderer host disappeared before frame cancellation")) };
+            if !host.frame_build.close_step() || !host.frame_build.terminal_is_empty() {
+                return Ok(false);
+            }
+            self.close_phase = 2;
+            return Ok(false);
+        }
+        if self.close_phase == 2 {
+            if let Some(slot) = self.text_streams.iter().position(Option::is_some) {
+                let stream_id = self.text_streams[slot].as_ref().expect("text stream slot").stream_id;
+                self.abort_text_stream(slot, stream_id)?;
+                return Ok(false);
+            }
+            self.close_phase = 3;
+            return Ok(false);
+        }
+        if self.close_phase == 3 {
+            let Some(host) = self.host.as_mut() else { return Err(js_error("host-close", "renderer host disappeared before event retirement")) };
+            if !host.events.close_step() || !host.events.terminal_is_empty() {
+                return Ok(false);
+            }
+            self.close_phase = 4;
+            return Ok(false);
+        }
+        if self.close_phase == 4 {
+            let Some(host) = self.host.as_ref() else { return Err(js_error("host-close", "renderer host disappeared before input retirement")) };
             let Ok(mut runtime) = host.runtime.try_lock() else { return Ok(false) };
-            match runtime.interaction.as_mut() {
+            let closed = match runtime.interaction.as_mut() {
                 Some(interaction) => interaction.input.close_step().map_err(|fault| js_error("text-close", &format!("{fault:?}")))? && interaction.input.terminal_is_empty(),
                 None => true,
+            };
+            if !closed {
+                return Ok(false);
             }
-        };
-        if !text_closed {
+            self.close_phase = 5;
             return Ok(false);
         }
-        self.retired_host = self.host.take().map(crate::os_host::OsHost::into_retirement);
-        Ok(false)
+        if self.close_phase == 5 {
+            self.retired_host = self.host.take().map(crate::os_host::OsHost::into_retirement);
+            self.close_phase = 6;
+            return Ok(false);
+        }
+        if let Some(retired) = self.retired_host.as_mut() {
+            if !retired.close_step() {
+                return Ok(false);
+            }
+            if !retired.terminal_is_empty() {
+                return Err(js_error("host-close", "renderer host retirement completed without a terminal-empty witness"));
+            }
+            self.retired_host = None;
+            return Ok(false);
+        }
+        Ok(true)
     }
 
     fn ensure_live(&self) -> Result<(), JsValue> {
+        if self.close_phase != 0 || self.host.is_none() {
+            return Err(js_error("worker-closing", "renderer Worker no longer admits work"));
+        }
         if let Some(detail) = self.quarantined.as_ref() {
             return Err(js_error("worker-quarantined", detail));
         }
@@ -511,6 +553,7 @@ impl BrowserRendererBootstrap {
                 asset_poll_pending: false,
                 text_streams: std::array::from_fn(|_| None),
                 text_fault: None,
+                frame_fault: None,
                 text_cancel_pending: false,
             }),
             draw: DrawList::default(),
@@ -535,7 +578,7 @@ impl BrowserRendererBootstrap {
             let _ = kernel_wake.call0(&JsValue::NULL);
         }));
         host.scheduler.invalidate(InvalidationReason::STRUCTURE);
-        Ok(BrowserRendererWorker { host: Some(host), retired_host: None, text_streams: std::array::from_fn(|_| None), text_bytes: 0, latest_generation: 0, quarantined: None })
+        Ok(BrowserRendererWorker { host: Some(host), retired_host: None, text_streams: std::array::from_fn(|_| None), text_bytes: 0, latest_generation: 0, quarantined: None, close_phase: 0 })
     }
 }
 

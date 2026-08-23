@@ -770,28 +770,38 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
 
     /// 📮️ Enqueues one bounded step and returns a non-blocking receiver for lock-bound runtimes.
     pub fn submit_step(&self, pool: &WorkerPool, lane: Lane) -> oneshot::Receiver<StepOutcome> {
+        self.try_submit_step(pool, lane).unwrap_or_else(|kind| panic!("WorkerJobSession: mandatory step submission failed closed: {kind:?}"))
+    }
+
+    /// 📮️ Attempts one bounded step without losing the persistent session when the finite
+    /// worker lane is contended, saturated, poisoned, or shutting down.
+    pub fn try_submit_step(&self, pool: &WorkerPool, lane: Lane) -> Result<oneshot::Receiver<StepOutcome>, semio_framework_async::WorkerSubmitErrorKind> {
         let state = Arc::clone(&self.state);
         let (sender, receiver) = oneshot::channel();
-        pool.submit(
-            lane,
-            Box::new(move || {
-                let outcome = {
-                    let mut state = state.lock().expect("WorkerJobSession mutex poisoned");
-                    let WorkerJobSessionState { job, params, preview_sequence, terminal_delivered } = &mut *state;
-                    if *terminal_delivered {
-                        StepOutcome::Yield
-                    } else {
-                        let config = params.config;
-                        let budget = StepBudget::new(config.fuel_per_step, (params.now_ms)().saturating_add(config.step_budget_ms));
-                        let outcome = drive_step(job, config.site, params.operation, params.generation, config.stage, budget, params.cancel.clone(), params.now_ms, preview_sequence);
-                        *terminal_delivered = outcome.is_terminal();
-                        outcome
-                    }
-                };
-                let _ = sender.send(outcome);
-            }),
-        );
-        receiver
+        let job: semio_framework_async::Job = Box::new(move || {
+            let outcome = {
+                let mut state = state.lock().expect("WorkerJobSession mutex poisoned");
+                let WorkerJobSessionState { job, params, preview_sequence, terminal_delivered } = &mut *state;
+                if *terminal_delivered {
+                    StepOutcome::Yield
+                } else {
+                    let config = params.config;
+                    let budget = StepBudget::new(config.fuel_per_step, (params.now_ms)().saturating_add(config.step_budget_ms));
+                    let outcome = drive_step(job, config.site, params.operation, params.generation, config.stage, budget, params.cancel.clone(), params.now_ms, preview_sequence);
+                    *terminal_delivered = outcome.is_terminal();
+                    outcome
+                }
+            };
+            let _ = sender.send(outcome);
+        });
+        match pool.try_submit(lane, job) {
+            Ok(()) => Ok(receiver),
+            Err(error) => {
+                let kind = error.kind();
+                drop(error.into_job());
+                Err(kind)
+            }
+        }
     }
 
     pub async fn step(&self, pool: &WorkerPool, lane: Lane) -> Result<StepOutcome, oneshot::RecvError> {
@@ -1432,6 +1442,24 @@ mod tests {
         assert_eq!(session.step(&pool, Lane::UserVisible).await.expect("post-terminal worker turn"), StepOutcome::Yield, "a terminal outcome must be delivered exactly once");
         assert_eq!(steps.load(Ordering::SeqCst), 3, "the job must not be entered after its terminal outcome");
         pool.shutdown();
+    }
+
+    #[test]
+    fn rejected_worker_step_admission_retains_the_exact_persistent_session() {
+        let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
+        pool.shutdown();
+        let steps = Arc::new(AtomicU32::new(0));
+        let params = BatchJobParams {
+            operation: allocate_operation_id(),
+            generation: Generation(1),
+            cancel: root_cancel_token(),
+            config: BatchDriveConfig { site: "test.worker-session.rejected-admission", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_ms: INTERACTIVE_LANE_WALL_MS },
+            now_ms: default_now_ms,
+        };
+        let session = WorkerJobSession::new(CountedSessionJob { steps: Arc::clone(&steps) }, params);
+        assert!(matches!(session.try_submit_step(&pool, Lane::Interactive), Err(semio_framework_async::WorkerSubmitErrorKind::Shutdown)));
+        assert_eq!(steps.load(Ordering::SeqCst), 0);
+        assert!(session.try_into_job().is_ok(), "rejected admission must release only its shallow scheduling closure");
     }
     //#endregion 🏭️Batch
 

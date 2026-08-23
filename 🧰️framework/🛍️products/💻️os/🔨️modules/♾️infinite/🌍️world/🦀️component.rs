@@ -3,10 +3,10 @@
 use crate::framework_surface_terrain::TerrainSessionCore;
 use base64::Engine;
 use ui_wgpu::wgpu::{
-    aabb_intersects_frustum, axis_rotate_angle, draw_text, frustum_planes, grid_placement_anchor, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance, lod_progressive_grid_layers,
-    marquee_is_crossing_from_path, mesh_content_version, paint_selection_marquee, pick_closest_mesh_url, quat_from_basis, ray_aabb_slab, ray_pick_instance, ray_pick_mesh_detail, ray_plane_point, ray_segment_distance, rotate_vector,
-    screen_select_components, screen_select_instances, transform_aabb, vec3_from_f64, widgets::gizmo, ActionDescriptor, Camera3d, HitKind, HitTarget, Instance3d, LineDraw3d, LineVertex3d, LocalizedLabel, Mat4, Mesh3d, OrbitController,
-    PointerModifiers, PreparedRenderEviction, PreparedRenderUpload, Rect, Rgba, SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d, UiComponentSceneNode, Vec3, WidgetContext,
+    ActionDescriptor, Camera3d, HitKind, HitTarget, Instance3d, LineDraw3d, LineVertex3d, LocalizedLabel, Mat4, Mesh3d, OrbitController, PointerModifiers, PreparedRenderEviction, PreparedRenderUpload, Rect, Rgba, SceneDraw3d, ScenePass3d,
+    TexturedDraw3d, TexturedInstance3d, UiComponentSceneNode, Vec3, WidgetContext, aabb_intersects_frustum, axis_rotate_angle, draw_text, frustum_planes, grid_placement_anchor, gumball_extent, gumball_eye, gumball_project_ray_onto_axis,
+    interpolate_mesh_uv, lod_from_camera_distance, lod_progressive_grid_layers, marquee_is_crossing_from_path, mesh_content_version, paint_selection_marquee, pick_closest_mesh_url, quat_from_basis, ray_aabb_slab, ray_pick_instance,
+    ray_pick_mesh_detail, ray_plane_point, ray_segment_distance, rotate_vector, screen_select_components, screen_select_instances, transform_aabb, vec3_from_f64, widgets::gizmo,
 };
 
 //#region 📦️PreparedWorldResources
@@ -50,9 +50,9 @@ impl World3dBuildContext {
 // GLB decoding, not reimplemented locally and not yet routed through stdio's gltf/mesh artifact
 // facet (that facet yields a structured document snapshot, not flat render buffers — see
 // 📓️wave-g1b-infinite-report.md for why wiring it is not a bounded edit).
-use semio_framework::{mesh_from_glb, optional_json_to_dsl, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, MergeMode, MeshData, SelectionMethod, SelectionMode, SelectionSpec};
-use serde::de::Error as DeError;
+use semio_framework::{GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, MergeMode, MeshData, SelectionMethod, SelectionMode, SelectionSpec, mesh_from_glb, optional_json_to_dsl};
 use serde::Deserialize;
+use serde::de::Error as DeError;
 use serde_json::json;
 use std::collections::{HashMap, HashSet};
 
@@ -688,11 +688,7 @@ fn scene_lod(state: &World3dState) -> f64 {
     let camera = state.orbit.to_camera();
     let distance = camera.position.sub(camera.target).length() as f64;
     let auto_lod = lod_from_camera_distance(distance, state.lod.distance_reference);
-    if state.lod.automatic || state.lod.depth_variable {
-        auto_lod
-    } else {
-        state.lod.manual
-    }
+    if state.lod.automatic || state.lod.depth_variable { auto_lod } else { state.lod.manual }
 }
 
 fn resolve_physical_mesh_id(state: &World3dState, logical_id: &str, desired_lod: f64) -> String {
@@ -822,11 +818,7 @@ fn environment_light_dir(environment: &WorldEnvironmentRecord) -> [f32; 3] {
     let azimuth = sun.azimuth.unwrap_or(45.0).to_radians();
     let elevation = sun.elevation.unwrap_or(35.0).to_radians();
     let direction = Vec3::new((elevation.cos() * azimuth.cos()) as f32, (elevation.cos() * azimuth.sin()) as f32, elevation.sin() as f32);
-    if direction.length() < 1e-6 {
-        DEFAULT_LIGHT_DIR
-    } else {
-        direction.normalize().to_array()
-    }
+    if direction.length() < 1e-6 { DEFAULT_LIGHT_DIR } else { direction.normalize().to_array() }
 }
 
 /// 🖼️ Resolves the canvas clear color from `environment.background`, falling back to the ambient
@@ -916,11 +908,7 @@ fn build_terrain_band_mesh(mesh: &TerrainTileMeshPayload, band: usize, band_coun
         }
         indices.extend_from_slice(&[base, base + 1, base + 2]);
     }
-    if positions.is_empty() {
-        None
-    } else {
-        Some(Mesh3d::from_buffers(positions, normals, indices))
-    }
+    if positions.is_empty() { None } else { Some(Mesh3d::from_buffers(positions, normals, indices)) }
 }
 
 /// 🔄️ GPU-free half of `apply_terrain_style_if_changed`: applies `state.terrain_style` to the tile
@@ -1398,11 +1386,7 @@ const PICK_EDGE_SCREEN_PX: f32 = 18.0;
 const FACE_OVERLAY_OFFSET: f32 = 0.003;
 
 fn world_pick_rect(state: &World3dState) -> Rect {
-    if state.pick_bounds.w > 0.0 && state.pick_bounds.h > 0.0 {
-        state.pick_bounds
-    } else {
-        state.bounds
-    }
+    if state.pick_bounds.w > 0.0 && state.pick_bounds.h > 0.0 { state.pick_bounds } else { state.bounds }
 }
 
 fn render_pick_viewport(state: &World3dState) -> Rect {
@@ -1690,11 +1674,7 @@ fn selection_centroid(state: &World3dState) -> Option<Vec3> {
             }
         }
     }
-    if count == 0 {
-        None
-    } else {
-        Some(sum.scale(1.0 / count as f32))
-    }
+    if count == 0 { None } else { Some(sum.scale(1.0 / count as f32)) }
 }
 
 fn pick_gumball_handle_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Option<GumballHandle> {
@@ -2790,21 +2770,13 @@ fn world_item_id_for_surface<'a>(state: &World3dState, target_id: &'a str) -> Op
 /// bound (`HierarchyProvider::Flat`-style, single-surface-scoped), else `world_item_target_id`'s
 /// `"surfaceId/id"` `PathDelimited` shape for the shared `world` domain.
 fn resolved_item_id(state: &World3dState, object_id: &str) -> String {
-    if state.bound_domain_id.is_some() {
-        object_id.to_string()
-    } else {
-        world_item_target_id(&state.surface_id, object_id)
-    }
+    if state.bound_domain_id.is_some() { object_id.to_string() } else { world_item_target_id(&state.surface_id, object_id) }
 }
 
 /// 🔤️ Inverse of [`resolved_item_id`], for parsing ids back out of an incoming action's targets during
 /// optimistic local preview.
 fn parse_resolved_item_id<'a>(state: &World3dState, target_id: &'a str) -> Option<&'a str> {
-    if state.bound_domain_id.is_some() {
-        Some(target_id)
-    } else {
-        world_item_id_for_surface(state, target_id)
-    }
+    if state.bound_domain_id.is_some() { Some(target_id) } else { world_item_id_for_surface(state, target_id) }
 }
 
 fn merge_mode_wire_str(merge: MergeMode) -> &'static str {
@@ -3421,11 +3393,7 @@ struct VortexArrowLayout {
 
 fn quat_normalize_f32(quat: [f32; 4]) -> [f32; 4] {
     let len = (quat[0] * quat[0] + quat[1] * quat[1] + quat[2] * quat[2] + quat[3] * quat[3]).sqrt();
-    if len < 1e-9 {
-        [0.0, 0.0, 0.0, 1.0]
-    } else {
-        [quat[0] / len, quat[1] / len, quat[2] / len, quat[3] / len]
-    }
+    if len < 1e-9 { [0.0, 0.0, 0.0, 1.0] } else { [quat[0] / len, quat[1] / len, quat[2] / len, quat[3] / len] }
 }
 
 fn quat_from_unit_vectors(from: Vec3, to: Vec3) -> [f32; 4] {
@@ -3433,11 +3401,7 @@ fn quat_from_unit_vectors(from: Vec3, to: Vec3) -> [f32; 4] {
     let to = to.normalize();
     let r = from.dot(to) + 1.0;
     let quat = if r < 0.000_001 {
-        if from.x.abs() > from.z.abs() {
-            [-from.y, from.x, 0.0, r]
-        } else {
-            [0.0, -from.z, from.y, r]
-        }
+        if from.x.abs() > from.z.abs() { [-from.y, from.x, 0.0, r] } else { [0.0, -from.z, from.y, r] }
     } else {
         let cross = from.cross(to);
         [cross.x, cross.y, cross.z, r]
@@ -3447,11 +3411,7 @@ fn quat_from_unit_vectors(from: Vec3, to: Vec3) -> [f32; 4] {
 
 fn vortex_unit_direction(direction: Option<[f64; 3]>) -> Vec3 {
     let dir = direction.map(|value| Vec3::new(value[0] as f32, value[1] as f32, value[2] as f32)).unwrap_or(Vec3::new(0.0, 0.0, -1.0));
-    if dir.dot(dir) < 1e-12 {
-        Vec3::new(0.0, 0.0, -1.0)
-    } else {
-        dir.normalize()
-    }
+    if dir.dot(dir) < 1e-12 { Vec3::new(0.0, 0.0, -1.0) } else { dir.normalize() }
 }
 
 fn vortex_arrow_layout(position: [f64; 3], direction: Option<[f64; 3]>, radius: f32, display_direction: Option<&str>) -> VortexArrowLayout {
@@ -3663,9 +3623,30 @@ pub struct PendingGlbFetch {
     pub url: String,
 }
 
-pub fn collect_pending_glb_fetches(states: &HashMap<String, World3dState>) -> Vec<PendingGlbFetch> {
+pub trait World3dStateAccess {
+    type Iter<'a>: Iterator<Item = (&'a String, &'a World3dState)>
+    where
+        Self: 'a;
+
+    fn iter_states(&self) -> Self::Iter<'_>;
+    fn get_state_mut(&mut self, id: &str) -> Option<&mut World3dState>;
+}
+
+impl World3dStateAccess for HashMap<String, World3dState> {
+    type Iter<'a> = std::collections::hash_map::Iter<'a, String, World3dState>;
+
+    fn iter_states(&self) -> Self::Iter<'_> {
+        self.iter()
+    }
+
+    fn get_state_mut(&mut self, id: &str) -> Option<&mut World3dState> {
+        self.get_mut(id)
+    }
+}
+
+pub fn collect_pending_glb_fetches(states: &impl World3dStateAccess) -> Vec<PendingGlbFetch> {
     let mut pending = Vec::new();
-    for (surface_id, state) in states {
+    for (surface_id, state) in states.iter_states() {
         for url in &state.pending_glb_urls {
             let mesh_id = mesh_id_from_url(url);
             if state.meshes.contains_key(&mesh_id) {
@@ -3712,13 +3693,13 @@ pub async fn fetch_url_bytes(url: &str) -> Option<Vec<u8>> {
 }
 
 #[cfg(target_arch = "wasm32")]
-pub async fn fetch_pending_glb_meshes(states: &mut HashMap<String, World3dState>) {
+pub async fn fetch_pending_glb_meshes(states: &mut impl World3dStateAccess) {
     let pending = collect_pending_glb_fetches(states);
     for item in pending {
         let Some(bytes) = fetch_url_bytes(&item.url).await else {
             continue;
         };
-        if let Some(state) = states.get_mut(&item.surface_id) {
+        if let Some(state) = states.get_state_mut(&item.surface_id) {
             apply_glb_bytes(state, &item.url, &bytes);
         }
     }
@@ -3739,13 +3720,13 @@ pub async fn fetch_url_bytes(url: &str) -> Option<Vec<u8>> {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn fetch_pending_glb_meshes(states: &mut HashMap<String, World3dState>) {
+pub async fn fetch_pending_glb_meshes(states: &mut impl World3dStateAccess) {
     let pending = collect_pending_glb_fetches(states);
     for item in pending {
         let Some(bytes) = fetch_url_bytes(&item.url).await else {
             continue;
         };
-        if let Some(state) = states.get_mut(&item.surface_id) {
+        if let Some(state) = states.get_state_mut(&item.surface_id) {
             apply_glb_bytes(state, &item.url, &bytes);
         }
     }
@@ -3766,9 +3747,9 @@ pub fn apply_reference_image_bytes(state: &mut World3dState, url: &str, bytes: &
 }
 
 #[cfg(target_arch = "wasm32")]
-pub async fn fetch_pending_reference_images(states: &mut HashMap<String, World3dState>) {
+pub async fn fetch_pending_reference_images(states: &mut impl World3dStateAccess) {
     let mut pending = Vec::new();
-    for (surface_id, state) in states.iter() {
+    for (surface_id, state) in states.iter_states() {
         for url in &state.pending_image_urls {
             pending.push((surface_id.clone(), url.clone()));
         }
@@ -3777,14 +3758,14 @@ pub async fn fetch_pending_reference_images(states: &mut HashMap<String, World3d
         let Some(bytes) = fetch_url_bytes(&url).await else {
             continue;
         };
-        if let Some(state) = states.get_mut(&surface_id) {
+        if let Some(state) = states.get_state_mut(&surface_id) {
             apply_reference_image_bytes(state, &url, &bytes);
         }
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn fetch_pending_reference_images(_states: &mut HashMap<String, World3dState>) {}
+pub async fn fetch_pending_reference_images(_states: &mut impl World3dStateAccess) {}
 
 //#region TerrainFetch
 #[derive(Clone, Debug)]
@@ -3796,9 +3777,9 @@ pub struct PendingTerrainTileFetch {
     pub y: u32,
 }
 
-pub fn collect_pending_terrain_tile_fetches(states: &HashMap<String, World3dState>) -> Vec<PendingTerrainTileFetch> {
+pub fn collect_pending_terrain_tile_fetches(states: &impl World3dStateAccess) -> Vec<PendingTerrainTileFetch> {
     let mut pending = Vec::new();
-    for (surface_id, state) in states {
+    for (surface_id, state) in states.iter_states() {
         for (url, &(z, x, y)) in &state.pending_terrain_tile_urls {
             pending.push(PendingTerrainTileFetch { surface_id: surface_id.clone(), url: url.clone(), z, x, y });
         }
@@ -3809,13 +3790,13 @@ pub fn collect_pending_terrain_tile_fetches(states: &HashMap<String, World3dStat
 /// 🏔️📡️ Byte-fetch companion to `sync_terrain`'s tile-visibility bookkeeping — mirrors
 /// `fetch_pending_glb_meshes`/`fetch_pending_reference_images`. Needs a call from the renderer's
 /// async poll loop (alongside those two) to actually run; see report for the exact wiring request.
-pub async fn fetch_pending_terrain_tiles(states: &mut HashMap<String, World3dState>) {
+pub async fn fetch_pending_terrain_tiles(states: &mut impl World3dStateAccess) {
     let pending = collect_pending_terrain_tile_fetches(states);
     for item in pending {
         let Some(bytes) = fetch_url_bytes(&item.url).await else {
             continue;
         };
-        if let Some(state) = states.get_mut(&item.surface_id) {
+        if let Some(state) = states.get_state_mut(&item.surface_id) {
             state.terrain_session.upload_elevation_tile(item.z, item.x, item.y, &bytes);
             state.pending_terrain_tile_urls.remove(&item.url);
         }

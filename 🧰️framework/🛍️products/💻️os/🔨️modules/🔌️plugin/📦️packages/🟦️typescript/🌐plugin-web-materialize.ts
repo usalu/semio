@@ -59,7 +59,7 @@ export function ensurePreview2ShimVendorAt(preview2VendorDir: string, repoRoot: 
  * 🚧 See `🧵️shard-client.ts`'s header doc for the one open gap this generated worker inherits: `turn`
  * events/results here are the interim JSON `ShardEventEnvelope[]`/plain-object shape, not the real
  * hand-rolled `Envelope`/`TurnResult` pack encoding (no TS mirror of that codec exists yet — tracked
- * against A1's `🤖️generated/🟦️actor.ts`). The WIT-level `poll(events, budget)` call this worker makes
+ * against A1's `🤖️generated/🟦️actor.ts`). The WIT-level `poll(events, commandPage, budget)` call this worker makes
  * against the guest's own jco bindings is unaffected either way (jco marshals those to/from the wasm
  * component boundary itself); only the Kernel↔Shard wire between this worker and `ShardClient` is
  * interim JSON rather than pack bytes.
@@ -264,7 +264,7 @@ self.addEventListener("message", async (event) => {
         if (inFlightTurnActors.has(actorId)) throw new Error(\`shard worker: actor \${actorId} already has a turn in flight\`);
         inFlightTurnActors.add(actorId);
         try {
-          reply(requestId, await actor.api.poll(spliceInstanceOpenAssets(actor, msg.events), msg.budget));
+          reply(requestId, await actor.api.poll(spliceInstanceOpenAssets(actor, msg.events), msg.commandPage, msg.budget));
         } finally {
           inFlightTurnActors.delete(actorId);
         }
@@ -310,7 +310,7 @@ self.addEventListener("message", async (event) => {
         inFlightTurnActors.add(actorId);
         try {
           const events = spliceInstanceOpenAssets(actor, result.envelopes.map((envelope) => envelope.payload));
-          reply(requestId, await actor.api.poll(events, result.budget));
+          reply(requestId, await actor.api.poll(events, undefined, result.budget));
         } finally {
           inFlightTurnActors.delete(actorId);
         }
@@ -372,7 +372,7 @@ const { reactor, jobs, checkpoint, describe } = await import("./${componentBase}
 export async function createActorApi(actorId) {
   hostShim.__bindHostBridge(actorId);
   return {
-    poll: async (events, budget) => reactor.poll(events, budget),
+    poll: async (events, commandPage, budget) => reactor.poll(events, commandPage, budget),
     startJob: async (job, kind, input) => jobs.startJob(job, kind, input),
     stepJob: async (job, budget) => jobs.stepJob(job, budget),
     cancelJob: async (job) => jobs.cancelJob(job),

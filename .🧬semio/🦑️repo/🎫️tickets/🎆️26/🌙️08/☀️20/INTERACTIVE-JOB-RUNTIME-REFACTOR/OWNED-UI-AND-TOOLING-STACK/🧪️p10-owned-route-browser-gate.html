@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Owned route browser gate</title>
+  </head>
+  <body>
+    <!-- #region ActualUiFixture -->
+    <main>
+      <div id="actual-ui"></div>
+      <output id="location"></output>
+      <output id="popstate-count">0</output>
+      <output id="popstate-locations"></output>
+    </main>
+    <!-- #endregion ActualUiFixture -->
+    <!-- #region BrowserEvidence -->
+    <script type="module">
+      import React from "react";
+      import { createRoot } from "react-dom/client";
+      import { NotFound, RouteLink } from "/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx";
+
+      const locationOutput = document.querySelector("#location");
+      const countOutput = document.querySelector("#popstate-count");
+      const locationsOutput = document.querySelector("#popstate-locations");
+      const locations = [];
+      const renderLocation = () => {
+        locationOutput.value = location.pathname + location.search + location.hash;
+      };
+      addEventListener("popstate", () => {
+        locations.push(location.pathname + location.search + location.hash);
+        countOutput.value = String(locations.length);
+        locationsOutput.value = JSON.stringify(locations);
+        renderLocation();
+      });
+      createRoot(document.querySelector("#actual-ui")).render(
+        React.createElement(
+          React.Fragment,
+          null,
+          React.createElement(NotFound, { title: "Missing space", parentPath: "/spaces/a?tab=history#entry", parentLabel: "Back to spaces" }),
+          React.createElement(RouteLink, { href: "/spaces/b?tab=route#link" }, "Open route link"),
+        ),
+      );
+      renderLocation();
+    </script>
+    <!-- #endregion BrowserEvidence -->
+  </body>
+</html>

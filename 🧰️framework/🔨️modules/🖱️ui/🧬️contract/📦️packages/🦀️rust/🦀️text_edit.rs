@@ -92,6 +92,7 @@ impl TextRoot {
                     if index <= page_end {
                         return Ok(storage.is_char_boundary(start + index - offset));
                     }
+                    return Ok(false);
                 }
                 TextNode::Concat { left, right, left_bytes, .. } => {
                     if index <= offset + *left_bytes {
@@ -136,6 +137,7 @@ impl TextRoot {
                         }
                         return Ok(offset + boundary - start);
                     }
+                    return Ok(self.bytes);
                 }
                 TextNode::Concat { left, right, left_bytes, .. } => {
                     if probe < offset + *left_bytes {

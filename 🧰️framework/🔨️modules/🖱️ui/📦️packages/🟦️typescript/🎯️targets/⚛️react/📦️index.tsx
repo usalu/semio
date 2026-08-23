@@ -103,7 +103,6 @@ import {
   ephemeralSet,
 } from "@semio-tech/framework";
 import i18next from "i18next";
-import LanguageDetector from "i18next-browser-languagedetector";
 import * as React from "react";
 import * as ResizablePrimitive from "react-resizable-panels";
 import * as THREE from "three";
@@ -139,7 +138,6 @@ import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import { I18nextProvider, initReactI18next, useTranslation } from "react-i18next";
-import { Link, useNavigate } from "react-router";
 // 🕹️wave-0: imported directly from the module's own source (not via `@semio-tech/framework`) — the
 // `🛂️manifest` module already re-exports a same-named, owned-schema-generated `MergeMode`/`SelectionMode`
 // family through that barrel, so a second barrel export of the hand-written mirror would collide.
@@ -151,7 +149,15 @@ import { type MergeMode } from "../../../../../🕹️interaction/🟦️compone
 // module-top-level circular-import fix, see that file's header comment) — imported below, not redefined.
 import { reactHostPort, setReactHostPort, type ReactHostPort } from "../../../../🧱️elements/🔌️Ports/🟦️component.tsx";
 export { reactHostPort, type ReactHostPort };
-export { interactiveJobPort, type InteractiveJobDescriptor, type InteractiveJobLease, type InteractiveJobPage, type InteractiveJobPort, type InteractiveJobPortSnapshot, type InteractiveJobTerminal } from "../../../../🧱️elements/🔌️Ports/🟦️interactive-job.ts";
+export {
+  interactiveJobPort,
+  type InteractiveJobDescriptor,
+  type InteractiveJobLease,
+  type InteractiveJobPage,
+  type InteractiveJobPort,
+  type InteractiveJobPortSnapshot,
+  type InteractiveJobTerminal,
+} from "../../../../🧱️elements/🔌️Ports/🟦️interactive-job.ts";
 
 /** @emoji 🧊️ Host surface for three.js / R3F (implemented by 🔌️Adapters). */
 export interface ThreeHostPort {
@@ -4017,7 +4023,7 @@ function initializeUiI18n(): UiI18nPort {
     return createUiI18nPort(i18next);
   }
 
-  i18next.use(LanguageDetector).use(initReactI18next);
+  i18next.use(initReactI18next);
 
   void i18next.init({
     resources: uiChromeTranslationBundles,
@@ -4034,11 +4040,6 @@ function initializeUiI18n(): UiI18nPort {
     initImmediate: false,
     interpolation: {
       escapeValue: false,
-    },
-    detection: {
-      order: ["localStorage", "querystring", "navigator", "htmlTag"],
-      lookupLocalStorage: UI_CHROME_LOCALE_STORAGE_KEY,
-      caches: [],
     },
     react: {
       useSuspense: false,
@@ -8212,6 +8213,53 @@ export const Spinner: React.FC<SpinnerProps> = ({ size = "medium", className = "
 
 // #endregion 🎹️Spinner
 
+// #region 🔗️RouteLink
+// Anchor that intercepts same-origin, protocol-less clicks for client-side navigation via history.pushState.
+// Consumers MUST rely on the owned route-target parser; external/absolute hrefs always fall through to a plain anchor.
+
+type OwnedRouteTarget = { kind: "internal"; href: string };
+
+/** @emoji 🧭️ Parses the closed same-document route grammar without normalizing its path, query, or fragment. */
+function parseOwnedRouteTarget(href: unknown): OwnedRouteTarget | null {
+  if (typeof href !== "string" || href.length === 0 || /[\s\u0000-\u001f\u007f\\]/u.test(href)) return null;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(href) || href.startsWith("//")) return null;
+  try {
+    if (new URL(href, "https://owned-route.invalid/current").origin !== "https://owned-route.invalid") return null;
+  } catch {
+    return null;
+  }
+  return { kind: "internal", href };
+}
+
+/** @emoji 🚦️ Performs the one owned browser-history command and publishes one matching navigation signal. */
+function navigateOwnedRoute(target: OwnedRouteTarget): { navigated: boolean } {
+  if (typeof window === "undefined" || typeof window.history?.pushState !== "function" || typeof window.PopStateEvent !== "function") return { navigated: false };
+  let event: PopStateEvent;
+  try {
+    event = new window.PopStateEvent("popstate");
+    window.history.pushState(null, "", target.href);
+  } catch {
+    return { navigated: false };
+  }
+  window.dispatchEvent(event);
+  return { navigated: true };
+}
+
+/** @emoji 🔗️ Anchor that delegates primary internal clicks to the owned navigation command while preserving native behavior for every other target or gesture. */
+export function RouteLink({ href, target, download, onClick, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>): React.ReactElement {
+  const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    onClick?.(event);
+    if (event.defaultPrevented || download !== undefined || (target && target !== "_self")) return;
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const route = parseOwnedRouteTarget(href);
+    if (!route || !navigateOwnedRoute(route).navigated) return;
+    event.preventDefault();
+  };
+  return <a href={href} target={target} download={download} onClick={handleClick} data-slot="route-link" {...props} />;
+}
+
+// #endregion 🔗️RouteLink
+
 // #region 🎍️NotFound
 // 404-style placeholder with icon, title, and back navigation.
 // Consumers MUST provide a title for the error.
@@ -8231,15 +8279,15 @@ export interface NotFoundProps {
  * Not-found placeholder page with navigation link.
  **/
 export const NotFound: React.FC<NotFoundProps> = ({ title, description, parentPath, parentLabel, icon }) => {
-  const navigate = useNavigate();
   const goBackLabel = useLabel("ui.nav.back");
+  const parentTarget = parseOwnedRouteTarget(parentPath);
   return (
     <div className="flex flex-col items-center justify-center h-full gap-medium p-large text-center">
       <div className="flex items-center justify-center size-huge text-muted-foreground">{icon || <AlertCircleIcon className="size-huge" />}</div>
       <h1 className="text-xl font-semibold">{title}</h1>
       {description && <p className="text-muted-foreground max-w-md">{description}</p>}
-      {parentPath && (
-        <button onClick={() => navigate(parentPath)} className="flex items-center gap-single text-sm text-primary hover:underline cursor-pointer mt-small">
+      {parentTarget && (
+        <button type="button" onClick={() => navigateOwnedRoute(parentTarget)} className="flex items-center gap-single text-sm text-primary hover:underline cursor-pointer mt-small">
           <ChevronLeftIcon className="size-small" />
           <span>{parentLabel || goBackLabel}</span>
         </button>
@@ -8858,35 +8906,6 @@ export { Navbar, type NavbarItem, type NavbarProps, SemioLogo, ShellBrandLogo, n
 import { NavbarExampleSelect, type NavbarExampleOption, type NavbarExampleSelectProps } from "../../../../🧱️elements/🧪️NavbarExampleSelect/🟦️component.tsx";
 export { NavbarExampleSelect, type NavbarExampleOption, type NavbarExampleSelectProps };
 // #endregion 🧪️NavbarExampleSelect
-
-// #region 🔗️RouteLink
-// Anchor that intercepts same-origin, protocol-less clicks for client-side navigation via history.pushState.
-// Consumers MUST rely on isInternalRouteHref's same-origin heuristic; external/absolute hrefs always fall through to a plain anchor.
-
-/** @emoji 🔗️ Whether an anchor `href` looks like an in-app route (same-origin, no explicit scheme) rather than an external target. */
-function isInternalRouteHref(href: string | undefined): boolean {
-  if (!href) return false;
-  if (/^[a-z][a-z0-9+.-]*:/i.test(href)) return false;
-  if (href.startsWith("//")) return false;
-  return true;
-}
-
-/** @emoji 🔗️ Anchor that navigates via `history.pushState` + a synthetic `popstate` for internal hrefs, and behaves as a plain anchor for external/absolute ones or modified/non-primary clicks. */
-export function RouteLink({ href, target, download, onClick, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>): React.ReactElement {
-  const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
-    onClick?.(event);
-    if (event.defaultPrevented) return;
-    if (download !== undefined || (target && target !== "_self")) return;
-    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    if (!isInternalRouteHref(href)) return;
-    event.preventDefault();
-    history.pushState(null, "", href);
-    dispatchEvent(new PopStateEvent("popstate"));
-  };
-  return <a href={href} target={target} download={download} onClick={handleClick} data-slot="route-link" {...props} />;
-}
-
-// #endregion 🔗️RouteLink
 
 // #region 🪟️DesktopTitlebar
 // Draggable Electron-style window title bar with minimize/maximize/close controls.
@@ -10787,6 +10806,136 @@ if (import.meta.vitest) {
   const { describe, expect, it, vi } = import.meta.vitest;
   const { render, screen, fireEvent, waitFor, act } = await import("@testing-library/react");
   const { calculateDiagramLayoutForBatchTest } = await import("../../../../🧱️elements/📊️Diagram/🟦️layout.ts");
+
+  describe("owned locale detector retirement", () => {
+    it("normalizes the closed shell locale domain", () => {
+      expect(detectShellLocale("de-AT")).toBe("de");
+      expect(detectShellLocale("DE-de")).toBe("de");
+      expect(detectShellLocale("fr-FR")).toBe("en");
+      expect(detectShellLocale(undefined)).toBe("en");
+    });
+
+    it("initializes an explicit shell locale through the owned resolver", async () => {
+      const previousStoredLocale = localStorage.getItem(UI_CHROME_LOCALE_STORAGE_KEY);
+      const previousDocumentLocale = document.documentElement.lang;
+      const previousI18nLocale = detectShellLocale(uiI18n.resolvedLanguage || uiI18n.language);
+      try {
+        initUiLocaleSync("de");
+        expect(localStorage.getItem(UI_CHROME_LOCALE_STORAGE_KEY)).toBe("de");
+        expect(document.documentElement.lang).toBe("de");
+        await waitFor(() => expect(uiI18n.resolvedLanguage).toBe("de"));
+        expect(resolveTranslationLabel(uiI18n.t("ui.nav.back"))).toBe("Zurück");
+      } finally {
+        if (previousStoredLocale === null) localStorage.removeItem(UI_CHROME_LOCALE_STORAGE_KEY);
+        else localStorage.setItem(UI_CHROME_LOCALE_STORAGE_KEY, previousStoredLocale);
+        document.documentElement.lang = previousDocumentLocale;
+        await uiI18n.changeLanguage(previousI18nLocale);
+      }
+    });
+
+    it("keeps source and public initialization free of the retired detector", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { fileURLToPath } = await import("node:url");
+      const source = readFileSync(fileURLToPath(import.meta.url), "utf8");
+      const retiredPackage = ["i18next", "browser", "languagedetector"].join("-");
+      const retiredBinding = ["Language", "Detector"].join("");
+      expect(source).not.toContain(retiredPackage);
+      expect(source).not.toContain(retiredBinding);
+      expect(source).not.toMatch(/\bdetection\s*:/u);
+    });
+  });
+
+  describe("owned route navigation", () => {
+    it("renders NotFound statically and ordinarily without a router provider", () => {
+      expect(renderToStaticMarkup(<NotFound title="Missing" parentPath="/spaces" parentLabel="Back" />)).toContain("Missing");
+      render(<NotFound title="Missing" parentPath="/spaces" parentLabel="Back" />);
+      expect(screen.getByRole("button", { name: "Back" })).toBeTruthy();
+    });
+
+    it("preserves path, query, and fragment and emits exactly one popstate", () => {
+      history.replaceState(null, "", "/known/start");
+      let events = 0;
+      const onPopState = () => events++;
+      window.addEventListener("popstate", onPopState);
+      expect(navigateOwnedRoute(parseOwnedRouteTarget("/spaces/a?tab=history#entry")!)).toEqual({ navigated: true });
+      window.removeEventListener("popstate", onPopState);
+      expect(location.pathname + location.search + location.hash).toBe("/spaces/a?tab=history#entry");
+      expect(events).toBe(1);
+    });
+
+    it("routes only primary internal RouteLink clicks", () => {
+      const cases: Array<{ props: React.AnchorHTMLAttributes<HTMLAnchorElement>; click?: MouseEventInit }> = [
+        { props: { href: "/modified" }, click: { ctrlKey: true } },
+        { props: { href: "/download", download: "file" } },
+        { props: { href: "/blank", target: "_blank" } },
+        { props: { href: "https://example.com/" } },
+        { props: { href: "//example.com/path" } },
+      ];
+      for (const [index, fixture] of cases.entries()) {
+        const { unmount } = render(<RouteLink {...fixture.props}>Native {index}</RouteLink>);
+        let routePrevented = true;
+        const stopNativeNavigation = (event: MouseEvent) => {
+          routePrevented = event.defaultPrevented;
+          event.preventDefault();
+        };
+        window.addEventListener("click", stopNativeNavigation, { once: true });
+        const event = new MouseEvent("click", { bubbles: true, cancelable: true, button: 0, ...fixture.click });
+        screen.getByText(`Native ${index}`).dispatchEvent(event);
+        expect(routePrevented).toBe(false);
+        unmount();
+      }
+      const { getByText } = render(<RouteLink href="/owned?tab=one#point">Owned</RouteLink>);
+      const event = new MouseEvent("click", { bubbles: true, cancelable: true, button: 0 });
+      getByText("Owned").dispatchEvent(event);
+      expect(event.defaultPrevented).toBe(true);
+      expect(location.pathname + location.search + location.hash).toBe("/owned?tab=one#point");
+    });
+
+    it("omits navigation for invalid NotFound parent paths", () => {
+      const { rerender } = render(<NotFound title="Missing" parentPath="https://example.com/" parentLabel="Back" />);
+      expect(screen.queryByRole("button", { name: "Back" })).toBeNull();
+      rerender(<NotFound title="Missing" parentPath="" parentLabel="Back" />);
+      expect(screen.queryByRole("button", { name: "Back" })).toBeNull();
+      expect(parseOwnedRouteTarget("//example.com/path")).toBeNull();
+      expect(parseOwnedRouteTarget("/\\example.com/path")).toBeNull();
+      expect(parseOwnedRouteTarget("\\example.com/path")).toBeNull();
+      expect(parseOwnedRouteTarget(`/spaces/${String.fromCharCode(0)}child`)).toBeNull();
+      expect(parseOwnedRouteTarget("/spaces/\nchild")).toBeNull();
+      expect(parseOwnedRouteTarget(" malformed ")).toBeNull();
+    });
+
+    it("does not mutate history or publish when pushState rejects", () => {
+      history.replaceState(null, "", "/known/rejection-start?stable=1#before");
+      let events = 0;
+      const onPopState = () => events++;
+      window.addEventListener("popstate", onPopState);
+      const pushState = vi.spyOn(window.history, "pushState").mockImplementationOnce(() => {
+        throw new DOMException("rejected", "SecurityError");
+      });
+      expect(navigateOwnedRoute(parseOwnedRouteTarget("/rejected?change=1#after")!)).toEqual({ navigated: false });
+      pushState.mockRestore();
+      window.removeEventListener("popstate", onPopState);
+      expect(location.pathname + location.search + location.hash).toBe("/known/rejection-start?stable=1#before");
+      expect(events).toBe(0);
+    });
+
+    it("keeps the source and public barrel free of the retired router boundary", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { fileURLToPath } = await import("node:url");
+      const source = readFileSync(fileURLToPath(import.meta.url), "utf8");
+      const retiredPackage = ["react", "router"].join("-");
+      const retiredBindings = [
+        ["Browser", "Router"],
+        ["Memory", "Router"],
+        ["use", "Navigate"],
+        ["use", "Location"],
+        ["use", "Params"],
+        ["use", "Search", "Params"],
+      ].map((parts) => parts.join(""));
+      expect(source).not.toContain(`from "${retiredPackage}"`);
+      expect(retiredBindings.filter((binding) => source.includes(binding))).toEqual([]);
+    });
+  });
 
   describe("owned diagram implementations", () => {
     it("lays out a directed graph through the owned structural boundary", () => {
@@ -18058,10 +18207,6 @@ export { ConnectionMode, MiniMap } from "@xyflow/react";
 // #region 🖋️State Management
 export { assign, createActor, fromCallback, setup, type ActorRefFrom, type AnyActorRef, type SnapshotFrom } from "xstate";
 // #endregion 🖋️State Management
-
-// #region 🌈️Routing
-export { BrowserRouter, Link, MemoryRouter, Outlet, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from "react-router";
-// #endregion 🌈️Routing
 
 // #region 🗿️I18n
 export { useTranslation };

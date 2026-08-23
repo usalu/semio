@@ -9,7 +9,6 @@ pub mod board_host {
 
     use crate::infinite::canvas::{Affine, Circle, Color, CubicBez, FillRule, Point, Rect, Scene, Stroke, Vec2};
     use serde::{Deserialize, Serialize};
-    use serde_json::json;
     use std::collections::{BTreeMap, BTreeSet};
 
     use super::{
@@ -60,6 +59,7 @@ pub mod board_host {
         CatalogMissingKind(&'static str, String),
         FixtureDropPreviewInvalid,
         InvalidHandleColor(String, String),
+        EventCredits,
     }
 
     impl std::fmt::Display for NormalPortError {
@@ -88,6 +88,7 @@ pub mod board_host {
                 Self::CatalogMissingKind(catalog, kind) => write!(formatter, "catalog missing {catalog} kind {kind:?}"),
                 Self::FixtureDropPreviewInvalid => formatter.write_str("setFixtureDropPreviewJson: preview payload missing nodeKind, screen/world point, or size"),
                 Self::InvalidHandleColor(handle, color) => write!(formatter, "invalid color on handle {handle}: {color:?}"),
+                Self::EventCredits => formatter.write_str("board event credits exhausted before descriptor publication"),
             }
         }
     }
@@ -217,10 +218,95 @@ pub mod board_host {
         Icons,
     }
 
-    #[derive(Clone, Debug, PartialEq, Eq)]
-    struct BrushCandidate {
-        node_kind_id: String,
+    #[derive(Clone, Copy, Debug)]
+    struct BrushCandidateEntry {
+        node_kind_id: BoardPointerSpan,
+        target_handle_index: u16,
+        sort_delta: f64,
+    }
+
+    #[derive(Clone, Copy)]
+    struct BrushCandidateRef<'a> {
+        node_kind_id: &'a str,
         target_handle_index: usize,
+    }
+
+    #[derive(Clone)]
+    struct BrushCandidatePage {
+        bytes: Box<[u8; BOARD_POINTER_BYTE_CAPACITY]>,
+        byte_len: u16,
+        entries: Box<[Option<BrushCandidateEntry>; BOARD_POINTER_ITEM_CAPACITY]>,
+        len: u16,
+    }
+
+    impl Default for BrushCandidatePage {
+        fn default() -> Self {
+            Self { bytes: Box::new([0; BOARD_POINTER_BYTE_CAPACITY]), byte_len: 0, entries: Box::new([None; BOARD_POINTER_ITEM_CAPACITY]), len: 0 }
+        }
+    }
+
+    impl BrushCandidatePage {
+        fn push(&mut self, node_kind_id: &str, target_handle_index: usize, sort_delta: f64) -> Result<(), BoardEventFault> {
+            let index = usize::from(self.len);
+            if index == BOARD_POINTER_ITEM_CAPACITY || target_handle_index > u16::MAX as usize {
+                return Err(BoardEventFault::ItemCredits);
+            }
+            let start = usize::from(self.byte_len);
+            let end = start.checked_add(node_kind_id.len()).ok_or(BoardEventFault::ByteCredits)?;
+            if end > BOARD_POINTER_BYTE_CAPACITY {
+                return Err(BoardEventFault::ByteCredits);
+            }
+            self.bytes[start..end].copy_from_slice(node_kind_id.as_bytes());
+            self.byte_len = end as u16;
+            self.entries[index] = Some(BrushCandidateEntry { node_kind_id: BoardPointerSpan { start: start as u16, len: node_kind_id.len() as u16 }, target_handle_index: target_handle_index as u16, sort_delta });
+            self.len += 1;
+            Ok(())
+        }
+
+        fn id_from(bytes: &[u8], span: BoardPointerSpan) -> &str {
+            let start = usize::from(span.start);
+            let end = start + usize::from(span.len);
+            std::str::from_utf8(&bytes[start..end]).expect("brush candidate ids originate from UTF-8 strings")
+        }
+
+        fn sort(&mut self) {
+            let bytes = &self.bytes[..usize::from(self.byte_len)];
+            self.entries[..usize::from(self.len)].sort_by(|left, right| {
+                let left = left.expect("candidate entry");
+                let right = right.expect("candidate entry");
+                left.sort_delta
+                    .partial_cmp(&right.sort_delta)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+                    .then_with(|| Self::id_from(bytes, left.node_kind_id).cmp(Self::id_from(bytes, right.node_kind_id)))
+                    .then_with(|| left.target_handle_index.cmp(&right.target_handle_index))
+            });
+        }
+
+        fn get(&self, index: usize) -> Option<BrushCandidateRef<'_>> {
+            let entry = self.entries.get(index)?.as_ref()?;
+            Some(BrushCandidateRef { node_kind_id: Self::id_from(&self.bytes, entry.node_kind_id), target_handle_index: usize::from(entry.target_handle_index) })
+        }
+
+        fn first(&self) -> Option<BrushCandidateRef<'_>> {
+            self.get(0)
+        }
+
+        fn iter(&self) -> impl Iterator<Item = BrushCandidateRef<'_>> {
+            self.entries[..usize::from(self.len)].iter().flatten().map(|entry| BrushCandidateRef { node_kind_id: Self::id_from(&self.bytes, entry.node_kind_id), target_handle_index: usize::from(entry.target_handle_index) })
+        }
+
+        fn len(&self) -> usize {
+            usize::from(self.len)
+        }
+
+        fn is_empty(&self) -> bool {
+            self.len == 0
+        }
+
+        fn clear(&mut self) {
+            self.byte_len = 0;
+            self.len = 0;
+        }
     }
 
     #[derive(Clone, Debug)]
@@ -423,7 +509,746 @@ pub mod board_host {
         label: Option<String>,
     }
 
-    #[derive(Clone)]
+    pub const BOARD_EVENT_ITEM_CAPACITY: usize = 256;
+    pub const BOARD_EVENT_BYTE_CAPACITY: usize = 256 * 1024;
+    pub const BOARD_EVENT_PAYLOAD_BYTE_CAPACITY: usize = 16 * 1024;
+    pub const BOARD_EVENT_KEY_BYTE_CAPACITY: usize = 256;
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum BoardEventKind {
+        Camera,
+        NodeMove,
+        NodeDragEnd,
+        Select,
+        Preselect,
+        PreselectCancel,
+        Hover,
+        BrushPreview,
+        BrushCandidates,
+        BrushPlace,
+        LinkCompatibleNodes,
+        LinkTargetRing,
+        EdgeCreate,
+        EdgeDelete,
+        NodeDelete,
+        IndirectConnect,
+        ProximityConnect,
+    }
+
+    impl BoardEventKind {
+        pub fn name(self) -> &'static str {
+            match self {
+                Self::Camera => "camera",
+                Self::NodeMove => "nodeMove",
+                Self::NodeDragEnd => "nodeDragEnd",
+                Self::Select => "select",
+                Self::Preselect => "preselect",
+                Self::PreselectCancel => "preselectCancel",
+                Self::Hover => "hover",
+                Self::BrushPreview => "brushPreview",
+                Self::BrushCandidates => "brushCandidates",
+                Self::BrushPlace => "brushPlace",
+                Self::LinkCompatibleNodes => "linkCompatibleNodes",
+                Self::LinkTargetRing => "linkTargetRing",
+                Self::EdgeCreate => "edgeCreate",
+                Self::EdgeDelete => "edgeDelete",
+                Self::NodeDelete => "nodeDelete",
+                Self::IndirectConnect => "indirectConnect",
+                Self::ProximityConnect => "proximityConnect",
+            }
+        }
+    }
+
+    #[derive(Debug, PartialEq, Eq)]
+    pub enum BoardEventFault {
+        ItemCredits,
+        ByteCredits,
+        KeyCredits,
+        Schema,
+    }
+
+    #[derive(Debug)]
+    pub struct BoardOwnedEvent {
+        kind: BoardEventKind,
+        payload: Box<[u8; BOARD_EVENT_PAYLOAD_BYTE_CAPACITY]>,
+        payload_len: u16,
+        key: [u8; BOARD_EVENT_KEY_BYTE_CAPACITY],
+        key_len: u16,
+    }
+
+    struct BoardPayloadBuilder {
+        bytes: Box<[u8; BOARD_EVENT_PAYLOAD_BYTE_CAPACITY]>,
+        len: u16,
+    }
+
+    impl BoardPayloadBuilder {
+        fn new() -> Self {
+            Self { bytes: Box::new([0; BOARD_EVENT_PAYLOAD_BYTE_CAPACITY]), len: 0 }
+        }
+
+        fn raw(&mut self, value: &str) -> Result<(), BoardEventFault> {
+            let start = usize::from(self.len);
+            let end = start.checked_add(value.len()).ok_or(BoardEventFault::ByteCredits)?;
+            if end > BOARD_EVENT_PAYLOAD_BYTE_CAPACITY {
+                return Err(BoardEventFault::ByteCredits);
+            }
+            self.bytes[start..end].copy_from_slice(value.as_bytes());
+            self.len = end as u16;
+            Ok(())
+        }
+
+        fn string(&mut self, value: &str) -> Result<(), BoardEventFault> {
+            self.raw("\"")?;
+            for character in value.chars() {
+                match character {
+                    '"' => self.raw("\\\"")?,
+                    '\\' => self.raw("\\\\")?,
+                    '\n' => self.raw("\\n")?,
+                    '\r' => self.raw("\\r")?,
+                    '\t' => self.raw("\\t")?,
+                    character if character <= '\u{1f}' => {
+                        let escaped = format!("\\u{:04x}", character as u32);
+                        self.raw(&escaped)?;
+                    }
+                    character => {
+                        let mut encoded = [0; 4];
+                        self.raw(character.encode_utf8(&mut encoded))?;
+                    }
+                }
+            }
+            self.raw("\"")
+        }
+
+        fn string_array<'a>(&mut self, values: impl IntoIterator<Item = &'a str>) -> Result<(), BoardEventFault> {
+            self.raw("[")?;
+            let mut first = true;
+            for value in values {
+                if !first {
+                    self.raw(",")?;
+                }
+                first = false;
+                self.string(value)?;
+            }
+            self.raw("]")
+        }
+
+        fn number(&mut self, value: f64) -> Result<(), BoardEventFault> {
+            if !value.is_finite() {
+                return Err(BoardEventFault::Schema);
+            }
+            self.raw(&value.to_string())
+        }
+
+        fn usize(&mut self, value: usize) -> Result<(), BoardEventFault> {
+            self.raw(&value.to_string())
+        }
+
+        fn boolean(&mut self, value: bool) -> Result<(), BoardEventFault> {
+            self.raw(if value { "true" } else { "false" })
+        }
+
+        fn finish(self, kind: BoardEventKind, key: Option<&str>) -> Result<BoardOwnedEvent, BoardEventFault> {
+            let payload = std::str::from_utf8(&self.bytes[..usize::from(self.len)]).map_err(|_| BoardEventFault::Schema)?;
+            BoardOwnedEvent::from_payload(kind, payload, key)
+        }
+
+        fn finish_owned(self, kind: BoardEventKind) -> BoardOwnedEvent {
+            BoardOwnedEvent { kind, payload: self.bytes, payload_len: self.len, key: [0; BOARD_EVENT_KEY_BYTE_CAPACITY], key_len: 0 }
+        }
+    }
+
+    pub struct BoardEventReservation {
+        expected_len: u16,
+        expected_bytes: usize,
+        event: Option<BoardOwnedEvent>,
+    }
+
+    const BOARD_EVENT_BATCH_CAPACITY: usize = 4;
+
+    pub struct BoardEventBatchReservation {
+        expected_len: u16,
+        expected_bytes: usize,
+        events: [Option<BoardOwnedEvent>; BOARD_EVENT_BATCH_CAPACITY],
+        len: u8,
+        cursor: u8,
+    }
+
+    impl BoardEventBatchReservation {
+        fn one(event: BoardOwnedEvent) -> Self {
+            let mut events = std::array::from_fn(|_| None);
+            events[0] = Some(event);
+            Self { expected_len: 0, expected_bytes: 0, events, len: 1, cursor: 0 }
+        }
+
+        fn push(&mut self, event: BoardOwnedEvent) -> Result<(), BoardOwnedEvent> {
+            let index = usize::from(self.len);
+            if index == BOARD_EVENT_BATCH_CAPACITY {
+                return Err(event);
+            }
+            self.events[index] = Some(event);
+            self.len += 1;
+            Ok(())
+        }
+
+        fn owned_bytes(&self) -> Option<usize> {
+            self.events[usize::from(self.cursor)..usize::from(self.len)].iter().try_fold(0usize, |bytes, event| bytes.checked_add(event.as_ref()?.owned_bytes()))
+        }
+
+        fn peek(&self) -> Option<&BoardOwnedEvent> {
+            self.events.get(usize::from(self.cursor))?.as_ref()
+        }
+
+        fn pop(&mut self) -> Option<BoardOwnedEvent> {
+            if self.cursor == self.len {
+                return None;
+            }
+            let event = self.events[usize::from(self.cursor)].take();
+            self.cursor += 1;
+            event
+        }
+
+        fn is_empty(&self) -> bool {
+            self.cursor == self.len
+        }
+    }
+
+    impl BoardOwnedEvent {
+        pub fn from_payload(kind: BoardEventKind, payload: &str, key: Option<&str>) -> Result<Self, BoardEventFault> {
+            if payload.len() > BOARD_EVENT_PAYLOAD_BYTE_CAPACITY {
+                return Err(BoardEventFault::ByteCredits);
+            }
+            let key = key.unwrap_or_default();
+            if key.len() > BOARD_EVENT_KEY_BYTE_CAPACITY {
+                return Err(BoardEventFault::KeyCredits);
+            }
+            let mut owned = Self { kind, payload: Box::new([0; BOARD_EVENT_PAYLOAD_BYTE_CAPACITY]), payload_len: payload.len() as u16, key: [0; BOARD_EVENT_KEY_BYTE_CAPACITY], key_len: key.len() as u16 };
+            owned.payload[..payload.len()].copy_from_slice(payload.as_bytes());
+            owned.key[..key.len()].copy_from_slice(key.as_bytes());
+            Ok(owned)
+        }
+
+        pub fn kind(&self) -> BoardEventKind {
+            self.kind
+        }
+
+        pub fn payload_json(&self) -> &str {
+            std::str::from_utf8(&self.payload[..usize::from(self.payload_len)]).expect("board event payload is UTF-8")
+        }
+
+        pub fn key(&self) -> Option<&str> {
+            (self.key_len > 0).then(|| std::str::from_utf8(&self.key[..usize::from(self.key_len)]).expect("board event key is UTF-8"))
+        }
+
+        pub fn owned_bytes(&self) -> usize {
+            usize::from(self.payload_len) + usize::from(self.key_len)
+        }
+
+        pub fn write_json(&self, output: &mut String) {
+            output.push_str("{\"name\":\"");
+            output.push_str(self.kind.name());
+            output.push_str("\",\"payload\":");
+            output.push_str(self.payload_json());
+            output.push('}');
+        }
+
+        fn selection(kind: BoardEventKind, ids: &[String], anchor_ids: Option<&[String]>, removed_ids: Option<&[String]>, gesture: Option<&str>) -> Result<Self, BoardEventFault> {
+            let mut payload = BoardPayloadBuilder::new();
+            payload.raw("{\"ids\":")?;
+            payload.string_array(ids.iter().map(String::as_str))?;
+            if let Some(anchor_ids) = anchor_ids {
+                payload.raw(",\"anchorIds\":")?;
+                payload.string_array(anchor_ids.iter().map(String::as_str))?;
+            }
+            if let Some(removed_ids) = removed_ids {
+                payload.raw(",\"removedIds\":")?;
+                payload.string_array(removed_ids.iter().map(String::as_str))?;
+            }
+            if kind == BoardEventKind::Select {
+                payload.raw(",\"exitHighlightIds\":[]")?;
+            }
+            if let Some(gesture) = gesture {
+                payload.raw(",\"gestureMergeMode\":")?;
+                payload.string(gesture)?;
+            }
+            payload.raw("}")?;
+            payload.finish(kind, None)
+        }
+
+        fn camera(x: f64, y: f64, zoom: f64) -> Result<Self, BoardEventFault> {
+            let mut payload = BoardPayloadBuilder::new();
+            payload.raw("{\"x\":")?;
+            payload.number(x)?;
+            payload.raw(",\"y\":")?;
+            payload.number(y)?;
+            payload.raw(",\"zoom\":")?;
+            payload.number(zoom)?;
+            payload.raw("}")?;
+            payload.finish(BoardEventKind::Camera, None)
+        }
+
+        fn id(kind: BoardEventKind, id: &str) -> Result<Self, BoardEventFault> {
+            let mut payload = BoardPayloadBuilder::new();
+            payload.raw("{\"id\":")?;
+            payload.string(id)?;
+            payload.raw("}")?;
+            payload.finish(kind, None)
+        }
+
+        fn id_list<'a>(kind: BoardEventKind, field: &str, ids: impl IntoIterator<Item = &'a str>) -> Result<Self, BoardEventFault> {
+            let mut payload = BoardPayloadBuilder::new();
+            payload.raw("{")?;
+            payload.string(field)?;
+            payload.raw(":[")?;
+            let mut count = 0usize;
+            for id in ids {
+                if count == BOARD_POINTER_ITEM_CAPACITY {
+                    return Err(BoardEventFault::ItemCredits);
+                }
+                if count > 0 {
+                    payload.raw(",")?;
+                }
+                payload.string(id)?;
+                count += 1;
+            }
+            payload.raw("]}")?;
+            payload.finish(kind, None)
+        }
+
+        fn select_ids<'a>(ids: impl IntoIterator<Item = &'a str>) -> Result<Self, BoardEventFault> {
+            let mut payload = BoardPayloadBuilder::new();
+            payload.raw("{\"ids\":[")?;
+            let mut count = 0usize;
+            for id in ids {
+                if count == BOARD_POINTER_ITEM_CAPACITY {
+                    return Err(BoardEventFault::ItemCredits);
+                }
+                if count > 0 {
+                    payload.raw(",")?;
+                }
+                payload.string(id)?;
+                count += 1;
+            }
+            payload.raw("],\"exitHighlightIds\":[]}")?;
+            payload.finish(BoardEventKind::Select, None)
+        }
+
+        fn preselect_sets(ids: &BTreeSet<String>, removed_ids: &BTreeSet<String>, gesture: Option<&str>) -> Result<Self, BoardEventFault> {
+            if ids.len() > BOARD_POINTER_ITEM_CAPACITY || removed_ids.len() > BOARD_POINTER_ITEM_CAPACITY {
+                return Err(BoardEventFault::ItemCredits);
+            }
+            let mut payload = BoardPayloadBuilder::new();
+            payload.raw("{\"ids\":")?;
+            payload.string_array(ids.iter().map(String::as_str))?;
+            payload.raw(",\"removedIds\":")?;
+            payload.string_array(removed_ids.iter().map(String::as_str))?;
+            if let Some(gesture) = gesture {
+                payload.raw(",\"gestureMergeMode\":")?;
+                payload.string(gesture)?;
+            }
+            payload.raw("}")?;
+            payload.finish(BoardEventKind::Preselect, None)
+        }
+
+        fn select_set(ids: &BTreeSet<String>, anchor_ids: Option<&BTreeSet<String>>, gesture: Option<&str>) -> Result<Self, BoardEventFault> {
+            if ids.len() > BOARD_POINTER_ITEM_CAPACITY || anchor_ids.is_some_and(|anchor_ids| anchor_ids.len() > BOARD_POINTER_ITEM_CAPACITY) {
+                return Err(BoardEventFault::ItemCredits);
+            }
+            let mut payload = BoardPayloadBuilder::new();
+            payload.raw("{\"ids\":")?;
+            payload.string_array(ids.iter().map(String::as_str))?;
+            if let Some(anchor_ids) = anchor_ids {
+                payload.raw(",\"anchorIds\":")?;
+                payload.string_array(anchor_ids.iter().map(String::as_str))?;
+            }
+            payload.raw(",\"exitHighlightIds\":[]")?;
+            if let Some(gesture) = gesture {
+                payload.raw(",\"gestureMergeMode\":")?;
+                payload.string(gesture)?;
+            }
+            payload.raw("}")?;
+            payload.finish(BoardEventKind::Select, None)
+        }
+
+        fn edge(kind: BoardEventKind, id: &str, source: &str, target: &str) -> Result<Self, BoardEventFault> {
+            let mut payload = BoardPayloadBuilder::new();
+            payload.raw("{\"id\":")?;
+            payload.string(id)?;
+            payload.raw(",\"source\":")?;
+            payload.string(source)?;
+            payload.raw(",\"target\":")?;
+            payload.string(target)?;
+            payload.raw("}")?;
+            payload.finish(kind, None)
+        }
+
+        fn node_move(id: &str, x: f64, y: f64) -> Result<Self, BoardEventFault> {
+            let mut payload = BoardPayloadBuilder::new();
+            payload.raw("{\"id\":")?;
+            payload.string(id)?;
+            payload.raw(",\"x\":")?;
+            payload.number(x)?;
+            payload.raw(",\"y\":")?;
+            payload.number(y)?;
+            payload.raw("}")?;
+            payload.finish(BoardEventKind::NodeMove, Some(id))
+        }
+
+        fn node_drag_end<'a>(moves: impl IntoIterator<Item = (&'a str, f64, f64)>) -> Result<Self, BoardEventFault> {
+            let mut payload = BoardPayloadBuilder::new();
+            payload.raw("{\"moves\":[")?;
+            let mut count = 0usize;
+            for (id, x, y) in moves {
+                if count == BOARD_POINTER_ITEM_CAPACITY {
+                    return Err(BoardEventFault::ItemCredits);
+                }
+                if count > 0 {
+                    payload.raw(",")?;
+                }
+                payload.raw("{\"id\":")?;
+                payload.string(id)?;
+                payload.raw(",\"x\":")?;
+                payload.number(x)?;
+                payload.raw(",\"y\":")?;
+                payload.number(y)?;
+                payload.raw("}")?;
+                count += 1;
+            }
+            if count == 0 {
+                return Err(BoardEventFault::Schema);
+            }
+            payload.raw("]}")?;
+            payload.finish(BoardEventKind::NodeDragEnd, None)
+        }
+
+        fn link_compatible(source: &str, node_ids: &[String]) -> Result<Self, BoardEventFault> {
+            let mut payload = BoardPayloadBuilder::new();
+            payload.raw("{\"source\":")?;
+            payload.string(source)?;
+            payload.raw(",\"nodeIds\":")?;
+            payload.string_array(node_ids.iter().map(String::as_str))?;
+            payload.raw("}")?;
+            payload.finish(BoardEventKind::LinkCompatibleNodes, None)
+        }
+
+        fn link_ring(source: &str, node_id: Option<&str>, handle_ids: &[String]) -> Result<Self, BoardEventFault> {
+            let mut payload = BoardPayloadBuilder::new();
+            payload.raw("{\"source\":")?;
+            payload.string(source)?;
+            payload.raw(",\"nodeId\":")?;
+            if let Some(node_id) = node_id {
+                payload.string(node_id)?;
+            } else {
+                payload.raw("null")?;
+            }
+            payload.raw(",\"handleIds\":")?;
+            payload.string_array(handle_ids.iter().map(String::as_str))?;
+            payload.raw("}")?;
+            payload.finish(BoardEventKind::LinkTargetRing, None)
+        }
+
+        fn hover(id: Option<&str>, kind: Option<(&str, &str)>) -> Result<Self, BoardEventFault> {
+            let mut payload = BoardPayloadBuilder::new();
+            payload.raw("{\"id\":")?;
+            if let Some(id) = id {
+                payload.string(id)?;
+            } else {
+                payload.raw("null")?;
+            }
+            payload.raw(",\"kind\":")?;
+            if let Some((domain, kind_id)) = kind {
+                payload.raw("{\"domain\":")?;
+                payload.string(domain)?;
+                payload.raw(",\"kindId\":")?;
+                payload.string(kind_id)?;
+                payload.raw("}")?;
+            } else {
+                payload.raw("null")?;
+            }
+            payload.raw("}")?;
+            payload.finish(BoardEventKind::Hover, None)
+        }
+
+        fn brush_handles(payload: &mut BoardPayloadBuilder, handles: &[NodeKindHandleTemplate]) -> Result<(), BoardEventFault> {
+            if handles.len() > BOARD_POINTER_ITEM_CAPACITY {
+                return Err(BoardEventFault::ItemCredits);
+            }
+            payload.raw("[")?;
+            for (index, handle) in handles.iter().enumerate() {
+                if index > 0 {
+                    payload.raw(",")?;
+                }
+                payload.raw("{\"angle\":")?;
+                payload.number(handle.angle)?;
+                payload.raw(",\"handleKind\":")?;
+                payload.string(&handle.handle_kind)?;
+                if let Some(radius) = handle.radius {
+                    payload.raw(",\"radius\":")?;
+                    payload.number(radius)?;
+                }
+                payload.raw("}")?;
+            }
+            payload.raw("]")
+        }
+
+        fn brush_preview(preview: Option<&BrushPreviewSnapshot>) -> Result<Self, BoardEventFault> {
+            let mut payload = BoardPayloadBuilder::new();
+            let Some(preview) = preview else {
+                payload.raw("{\"node\":null,\"edge\":null}")?;
+                return payload.finish(BoardEventKind::BrushPreview, None);
+            };
+            payload.raw("{\"node\":{\"nodeKind\":")?;
+            payload.string(&preview.node_kind_id)?;
+            payload.raw(",\"x\":")?;
+            payload.number(preview.x)?;
+            payload.raw(",\"y\":")?;
+            payload.number(preview.y)?;
+            payload.raw(",\"shape\":")?;
+            payload.string(if preview.shape == NodeShape::Rectangle { "rectangle" } else { "circle" })?;
+            if preview.shape == NodeShape::Rectangle {
+                payload.raw(",\"width\":")?;
+                payload.number(preview.width)?;
+                payload.raw(",\"height\":")?;
+                payload.number(preview.height)?;
+            } else {
+                payload.raw(",\"radius\":")?;
+                payload.number(preview.radius)?;
+            }
+            if let Some(icon) = &preview.icon_kind {
+                payload.raw(",\"iconKind\":")?;
+                payload.string(icon)?;
+            }
+            payload.raw(",\"handles\":")?;
+            Self::brush_handles(&mut payload, &preview.handles)?;
+            payload.raw("},\"edge\":{\"sourceHandleId\":")?;
+            payload.string(&preview.source_handle_id)?;
+            payload.raw(",\"targetHandleIndex\":")?;
+            payload.usize(preview.target_handle_index)?;
+            payload.raw("}}")?;
+            payload.finish(BoardEventKind::BrushPreview, None)
+        }
+
+        fn brush_candidates(source: &str, candidates: &BrushCandidatePage, index: usize, suggestions_active: bool) -> Result<Self, BoardEventFault> {
+            if candidates.len() > BOARD_POINTER_ITEM_CAPACITY {
+                return Err(BoardEventFault::ItemCredits);
+            }
+            let mut payload = BoardPayloadBuilder::new();
+            payload.raw("{\"sourceHandleId\":")?;
+            payload.string(source)?;
+            payload.raw(",\"candidates\":[")?;
+            for (candidate_index, candidate) in candidates.iter().enumerate() {
+                if candidate_index > 0 {
+                    payload.raw(",")?;
+                }
+                payload.raw("{\"nodeKind\":")?;
+                payload.string(candidate.node_kind_id)?;
+                payload.raw(",\"targetHandleIndex\":")?;
+                payload.usize(candidate.target_handle_index)?;
+                payload.raw("}")?;
+            }
+            payload.raw("],\"index\":")?;
+            payload.usize(index)?;
+            payload.raw(",\"suggestionsActive\":")?;
+            payload.boolean(suggestions_active)?;
+            payload.raw("}")?;
+            payload.finish(BoardEventKind::BrushCandidates, None)
+        }
+
+        fn brush_place(preview: &BrushPreviewSnapshot, node_id: &str, edge_id: &str) -> Result<Self, BoardEventFault> {
+            let mut payload = BoardPayloadBuilder::new();
+            payload.raw("{\"nodeId\":")?;
+            payload.string(node_id)?;
+            payload.raw(",\"edgeId\":")?;
+            payload.string(edge_id)?;
+            payload.raw(",\"nodeKind\":")?;
+            payload.string(&preview.node_kind_id)?;
+            payload.raw(",\"sourceHandleId\":")?;
+            payload.string(&preview.source_handle_id)?;
+            payload.raw(",\"targetHandleIndex\":")?;
+            payload.usize(preview.target_handle_index)?;
+            payload.raw(",\"x\":")?;
+            payload.number(preview.x)?;
+            payload.raw(",\"y\":")?;
+            payload.number(preview.y)?;
+            payload.raw(",\"shape\":")?;
+            payload.string(if preview.shape == NodeShape::Rectangle { "rectangle" } else { "circle" })?;
+            if preview.shape == NodeShape::Rectangle {
+                payload.raw(",\"width\":")?;
+                payload.number(preview.width)?;
+                payload.raw(",\"height\":")?;
+                payload.number(preview.height)?;
+            } else {
+                payload.raw(",\"radius\":")?;
+                payload.number(preview.radius)?;
+            }
+            if let Some(icon) = &preview.icon_kind {
+                payload.raw(",\"iconKind\":")?;
+                payload.string(icon)?;
+            }
+            payload.raw(",\"handles\":")?;
+            Self::brush_handles(&mut payload, &preview.handles)?;
+            payload.raw("}")?;
+            payload.finish(BoardEventKind::BrushPlace, None)
+        }
+    }
+
+    pub struct BoardEventQueue {
+        slots: Box<[Option<BoardOwnedEvent>; BOARD_EVENT_ITEM_CAPACITY]>,
+        head: u16,
+        len: u16,
+        bytes: usize,
+        claimed_items: u16,
+        claimed_bytes: usize,
+        closing: bool,
+    }
+
+    impl Default for BoardEventQueue {
+        fn default() -> Self {
+            Self { slots: Box::new(std::array::from_fn(|_| None)), head: 0, len: 0, bytes: 0, claimed_items: 0, claimed_bytes: 0, closing: false }
+        }
+    }
+
+    impl BoardEventQueue {
+        pub fn reserve(&self, items: usize, bytes: usize) -> Result<(), BoardEventFault> {
+            if self.closing || usize::from(self.len).checked_add(usize::from(self.claimed_items)).and_then(|value| value.checked_add(items)).is_none_or(|value| value > BOARD_EVENT_ITEM_CAPACITY) {
+                return Err(BoardEventFault::ItemCredits);
+            }
+            if self.bytes.checked_add(self.claimed_bytes).and_then(|value| value.checked_add(bytes)).is_none_or(|value| value > BOARD_EVENT_BYTE_CAPACITY) {
+                return Err(BoardEventFault::ByteCredits);
+            }
+            Ok(())
+        }
+
+        fn claim(&mut self, items: usize, bytes: usize) -> Result<(), BoardEventFault> {
+            self.reserve(items, bytes)?;
+            let items = u16::try_from(items).map_err(|_| BoardEventFault::ItemCredits)?;
+            self.claimed_items += items;
+            self.claimed_bytes += bytes;
+            Ok(())
+        }
+
+        fn push_claimed(&mut self, event: BoardOwnedEvent) -> Result<(), BoardOwnedEvent> {
+            let bytes = event.owned_bytes();
+            if self.closing || self.claimed_items == 0 || self.claimed_bytes < bytes || usize::from(self.len) == BOARD_EVENT_ITEM_CAPACITY {
+                return Err(event);
+            }
+            self.claimed_items -= 1;
+            self.claimed_bytes -= bytes;
+            let index = (usize::from(self.head) + usize::from(self.len)) % BOARD_EVENT_ITEM_CAPACITY;
+            self.bytes += bytes;
+            self.slots[index] = Some(event);
+            self.len += 1;
+            Ok(())
+        }
+
+        fn release_claim(&mut self, items: usize, bytes: usize) -> bool {
+            let Ok(items) = u16::try_from(items) else {
+                return false;
+            };
+            if self.claimed_items < items || self.claimed_bytes < bytes {
+                return false;
+            }
+            self.claimed_items -= items;
+            self.claimed_bytes -= bytes;
+            true
+        }
+
+        pub fn push(&mut self, event: BoardOwnedEvent) -> Result<(), BoardOwnedEvent> {
+            if self.reserve(1, event.owned_bytes()).is_err() {
+                return Err(event);
+            }
+            let index = (usize::from(self.head) + usize::from(self.len)) % BOARD_EVENT_ITEM_CAPACITY;
+            self.bytes += event.owned_bytes();
+            self.slots[index] = Some(event);
+            self.len += 1;
+            Ok(())
+        }
+
+        pub fn reserve_event(&self, event: BoardOwnedEvent) -> Result<BoardEventReservation, BoardOwnedEvent> {
+            if self.reserve(1, event.owned_bytes()).is_err() {
+                return Err(event);
+            }
+            Ok(BoardEventReservation { expected_len: self.len, expected_bytes: self.bytes, event: Some(event) })
+        }
+
+        pub fn publish_reserved(&mut self, mut reservation: BoardEventReservation) -> Result<(), BoardEventReservation> {
+            if self.closing || self.len != reservation.expected_len || self.bytes != reservation.expected_bytes {
+                return Err(reservation);
+            }
+            let event = reservation.event.take().expect("board reservation owns one event");
+            let index = (usize::from(self.head) + usize::from(self.len)) % BOARD_EVENT_ITEM_CAPACITY;
+            self.bytes += event.owned_bytes();
+            self.slots[index] = Some(event);
+            self.len += 1;
+            Ok(())
+        }
+
+        pub fn reserve_batch(&self, mut reservation: BoardEventBatchReservation) -> Result<BoardEventBatchReservation, BoardEventBatchReservation> {
+            let Some(bytes) = reservation.owned_bytes() else {
+                return Err(reservation);
+            };
+            if self.reserve(usize::from(reservation.len), bytes).is_err() {
+                return Err(reservation);
+            }
+            reservation.expected_len = self.len;
+            reservation.expected_bytes = self.bytes;
+            Ok(reservation)
+        }
+
+        pub fn publish_batch(&mut self, mut reservation: BoardEventBatchReservation) -> Result<(), BoardEventBatchReservation> {
+            if self.closing || self.len != reservation.expected_len || self.bytes != reservation.expected_bytes {
+                return Err(reservation);
+            }
+            for index in 0..usize::from(reservation.len) {
+                let event = reservation.events[index].take().expect("board batch slot is occupied");
+                let slot = (usize::from(self.head) + usize::from(self.len)) % BOARD_EVENT_ITEM_CAPACITY;
+                self.bytes += event.owned_bytes();
+                self.slots[slot] = Some(event);
+                self.len += 1;
+            }
+            Ok(())
+        }
+
+        pub fn pop(&mut self) -> Option<BoardOwnedEvent> {
+            if self.len == 0 {
+                return None;
+            }
+            let index = usize::from(self.head);
+            let event = self.slots[index].take()?;
+            self.bytes -= event.owned_bytes();
+            self.head = ((index + 1) % BOARD_EVENT_ITEM_CAPACITY) as u16;
+            self.len -= 1;
+            Some(event)
+        }
+
+        pub fn len(&self) -> usize {
+            usize::from(self.len)
+        }
+
+        pub fn is_empty(&self) -> bool {
+            self.len == 0
+        }
+
+        pub fn iter(&self) -> impl Iterator<Item = &BoardOwnedEvent> {
+            (0..usize::from(self.len)).filter_map(|offset| self.slots[(usize::from(self.head) + offset) % BOARD_EVENT_ITEM_CAPACITY].as_ref())
+        }
+
+        pub fn owned_bytes(&self) -> usize {
+            self.bytes
+        }
+
+        pub fn close_step(&mut self) -> bool {
+            self.closing = true;
+            if self.pop().is_some() {
+                return false;
+            }
+            true
+        }
+
+        pub fn terminal_is_empty(&self) -> bool {
+            self.len == 0 && self.bytes == 0 && self.claimed_items == 0 && self.claimed_bytes == 0
+        }
+    }
+
     pub struct BoardHost {
         pub camera: Camera,
         pub nodes: BTreeMap<String, NodeData>,
@@ -457,7 +1282,10 @@ pub mod board_host {
         pub height: u32,
         pub dpr: f64,
         pub world_raster_tiling: String,
-        pub events: Vec<serde_json::Value>,
+        pub events: BoardEventQueue,
+        event_overflow: Option<BoardOwnedEvent>,
+        event_batch_overflow: Option<BoardEventBatchReservation>,
+        event_schema_fault: bool,
         /// Screen-space preview polygon (CSS pixels) while area-selecting; cleared when idle.
         pub selection_screen_preview: Option<Vec<Point>>,
         /// @emoji ↔ True when area-select drag is crossing (right-to-left); drives dashed preview stroke.
@@ -495,7 +1323,7 @@ pub mod board_host {
         suggestion_offset: f64,
         brush_node_size: f64,
         brush_slot_source_id: Option<String>,
-        brush_candidates: Vec<BrushCandidate>,
+        brush_candidates: BrushCandidatePage,
         brush_candidate_index: usize,
         brush_preview: Option<BrushPreviewSnapshot>,
         fixture_drop_preview: Option<FixtureDropPreviewSnapshot>,
@@ -509,6 +1337,1075 @@ pub mod board_host {
         /// @emoji ✨️ Suggestions menu opened a slot outside brush utility — use suggestion offset and highlight source handle.
         brush_slot_suggestions_active: bool,
         pub port_mode: GraphPortMode,
+        interaction_revision: u64,
+        pending_delete_planning: Option<BoardDeletePlanningOperation>,
+        pending_delete_operation: Option<BoardDeleteOperation>,
+        pending_pointer_commit: Option<BoardPointerCommitOperation>,
+        queued_pointer_commit: Option<BoardPointerPlan>,
+        pointer_publication: Option<BoardPointerPublication>,
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct BoardWheelPlan {
+        revision: u64,
+        expected: Camera,
+        next: Camera,
+    }
+
+    pub const BOARD_POINTER_ITEM_CAPACITY: usize = 256;
+    pub const BOARD_POINTER_BYTE_CAPACITY: usize = 16 * 1024;
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum BoardPointerPhase {
+        Move,
+        Up,
+        Leave,
+    }
+
+    #[derive(Clone, Copy, Debug)]
+    pub struct BoardPointerIntent {
+        pub phase: BoardPointerPhase,
+        pub x: f64,
+        pub y: f64,
+        pub shift: bool,
+        pub ctrl_or_meta: bool,
+        pub alt: bool,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum BoardPointerPlanFault {
+        ItemCredits,
+        ByteCredits,
+        Unsupported,
+    }
+
+    #[derive(Clone, Copy, Debug)]
+    struct BoardPointerSpan {
+        start: u16,
+        len: u16,
+    }
+
+    #[derive(Clone, Copy, Debug)]
+    struct BoardPointerDelta {
+        id: BoardPointerSpan,
+        x: f64,
+        y: f64,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum BoardDeleteKind {
+        Edge,
+        Node,
+        Handle,
+        Wire,
+    }
+
+    #[derive(Clone, Copy, Debug)]
+    struct BoardDeleteEntry {
+        kind: BoardDeleteKind,
+        id: BoardPointerSpan,
+    }
+
+    struct BoardDeletePlan {
+        revision: u64,
+        bytes: Box<[u8; BOARD_POINTER_BYTE_CAPACITY]>,
+        byte_len: u16,
+        entries: Box<[Option<BoardDeleteEntry>; BOARD_POINTER_ITEM_CAPACITY]>,
+        len: u16,
+        property_nodes: u16,
+        property_bytes: u16,
+    }
+
+    struct BoardDeleteOperation {
+        plan: BoardDeletePlan,
+        select_event: Option<BoardOwnedEvent>,
+        mutation_cursor: u16,
+        publication_cursor: u16,
+        remaining_claimed_items: u16,
+        remaining_claimed_bytes: usize,
+        claimed: bool,
+        retiring_entity: Option<BoardEntityRetirement>,
+        cancelling: bool,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum BoardDeletePlanningPhase {
+        SelectedEdges,
+        Nodes,
+        Handles,
+        Wires,
+        Edges,
+        SelectionEvent,
+        Finish,
+    }
+
+    struct BoardDeletePlanningOperation {
+        plan: BoardDeletePlan,
+        phase: BoardDeletePlanningPhase,
+        scan_after: Option<String>,
+        property_audit: Option<BoardPropertyAudit>,
+        select_builder: BoardPayloadBuilder,
+        select_first: bool,
+        fault: Option<BoardEventFault>,
+        cancelling: bool,
+    }
+
+    enum BoardPropertyAuditFrame {
+        Array { values: Vec<graph::manifest::PropertyValue>, index: usize, pending: Option<usize> },
+        Object { values: graph::PropertyBag, after: Option<String>, pending: Option<String> },
+    }
+
+    struct BoardPropertyAudit {
+        kind: BoardDeleteKind,
+        id: String,
+        current: Option<graph::manifest::PropertyValue>,
+        completed: Option<graph::manifest::PropertyValue>,
+        stack: Box<[Option<BoardPropertyAuditFrame>; BOARD_POINTER_ITEM_CAPACITY]>,
+        depth: u16,
+        nodes: usize,
+        bytes: usize,
+        fault: Option<BoardEventFault>,
+    }
+
+    enum BoardRemovedEntity {
+        Node(NodeData),
+        Edge(EdgeData),
+        Handle(HandleData),
+        Wire(WireData),
+    }
+
+    enum BoardPropertyContainer {
+        Array(Vec<graph::manifest::PropertyValue>),
+        Object(graph::PropertyBag),
+    }
+
+    struct BoardPropertyRetirement {
+        current: Option<graph::manifest::PropertyValue>,
+        stack: Box<[Option<BoardPropertyContainer>; BOARD_POINTER_ITEM_CAPACITY]>,
+        depth: u16,
+        faulted: bool,
+    }
+
+    struct BoardEntityRetirement {
+        entity: Option<BoardRemovedEntity>,
+        strings: Box<[Option<String>; 16]>,
+        string_len: u8,
+        properties: Option<BoardPropertyRetirement>,
+    }
+
+    pub struct BoardPointerPublication {
+        bytes: Box<[u8; BOARD_POINTER_BYTE_CAPACITY]>,
+        len: u16,
+    }
+
+    struct BoardPointerCommitOperation {
+        plan: BoardPointerPlan,
+        phase: u8,
+        cursor: u16,
+        changed: bool,
+        cancelling: bool,
+        faulted: bool,
+        scan_after: Option<String>,
+        points: Vec<Point>,
+        screen_points: Vec<Point>,
+        overlay_points: Vec<Point>,
+        brush_candidates: BrushCandidatePage,
+        retiring_ids: BTreeSet<String>,
+        retiring_points: Vec<Point>,
+        retiring_screen_points: Vec<Point>,
+        retiring_overlay_points: Vec<Point>,
+        retiring_signature_a: Vec<String>,
+        retiring_signature_b: Vec<String>,
+        retiring_signature_c: Vec<String>,
+        retiring_gestures: [Option<String>; 2],
+    }
+
+    impl BoardPointerCommitOperation {
+        fn new(plan: BoardPointerPlan) -> Self {
+            Self {
+                plan,
+                phase: 0,
+                cursor: 0,
+                changed: false,
+                cancelling: false,
+                faulted: false,
+                scan_after: None,
+                points: Vec::with_capacity(BOARD_POINTER_ITEM_CAPACITY),
+                screen_points: Vec::with_capacity(BOARD_POINTER_ITEM_CAPACITY),
+                overlay_points: Vec::with_capacity(BOARD_POINTER_ITEM_CAPACITY),
+                brush_candidates: BrushCandidatePage::default(),
+                retiring_ids: BTreeSet::new(),
+                retiring_points: Vec::new(),
+                retiring_screen_points: Vec::new(),
+                retiring_overlay_points: Vec::new(),
+                retiring_signature_a: Vec::new(),
+                retiring_signature_b: Vec::new(),
+                retiring_signature_c: Vec::new(),
+                retiring_gestures: [None, None],
+            }
+        }
+
+        fn retire_one(&mut self) -> bool {
+            if let Some(id) = self.retiring_ids.pop_first() {
+                drop(id);
+                return true;
+            }
+            if self.retiring_points.pop().is_some() || self.retiring_screen_points.pop().is_some() || self.retiring_overlay_points.pop().is_some() {
+                return true;
+            }
+            for values in [&mut self.retiring_signature_a, &mut self.retiring_signature_b, &mut self.retiring_signature_c] {
+                if let Some(value) = values.pop() {
+                    drop(value);
+                    return true;
+                }
+            }
+            for gesture in &mut self.retiring_gestures {
+                if let Some(value) = gesture.take() {
+                    drop(value);
+                    return true;
+                }
+            }
+            false
+        }
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum BoardAuthorityStep {
+        Pending,
+        Complete,
+        Cancelled,
+        Fault,
+    }
+
+    impl BoardDeletePlan {
+        fn new(revision: u64) -> Self {
+            Self { revision, bytes: Box::new([0; BOARD_POINTER_BYTE_CAPACITY]), byte_len: 0, entries: Box::new([None; BOARD_POINTER_ITEM_CAPACITY]), len: 0, property_nodes: 0, property_bytes: 0 }
+        }
+
+        fn id(&self, span: BoardPointerSpan) -> &str {
+            let start = usize::from(span.start);
+            let end = start + usize::from(span.len);
+            std::str::from_utf8(&self.bytes[start..end]).expect("board deletion ids originate from UTF-8 strings")
+        }
+
+        fn contains(&self, kind: BoardDeleteKind, id: &str) -> bool {
+            self.entries[..usize::from(self.len)].iter().flatten().any(|entry| entry.kind == kind && self.id(entry.id) == id)
+        }
+
+        fn removes_selection_id(&self, id: &str) -> bool {
+            self.entries[..usize::from(self.len)].iter().flatten().any(|entry| self.id(entry.id) == id)
+        }
+
+        fn push(&mut self, kind: BoardDeleteKind, id: &str) -> Result<(), BoardEventFault> {
+            if self.contains(kind, id) {
+                return Ok(());
+            }
+            if matches!(kind, BoardDeleteKind::Edge | BoardDeleteKind::Node) && 7usize.checked_add(board_json_string_bytes(id)).is_none_or(|bytes| bytes > BOARD_EVENT_PAYLOAD_BYTE_CAPACITY) {
+                return Err(BoardEventFault::ByteCredits);
+            }
+            let index = usize::from(self.len);
+            if index == BOARD_POINTER_ITEM_CAPACITY {
+                return Err(BoardEventFault::ItemCredits);
+            }
+            if id.len() > u16::MAX as usize {
+                return Err(BoardEventFault::ByteCredits);
+            }
+            let start = usize::from(self.byte_len);
+            let end = start.checked_add(id.len()).ok_or(BoardEventFault::ByteCredits)?;
+            if end > BOARD_POINTER_BYTE_CAPACITY {
+                return Err(BoardEventFault::ByteCredits);
+            }
+            self.bytes[start..end].copy_from_slice(id.as_bytes());
+            self.byte_len = end as u16;
+            self.entries[index] = Some(BoardDeleteEntry { kind, id: BoardPointerSpan { start: start as u16, len: id.len() as u16 } });
+            self.len += 1;
+            Ok(())
+        }
+
+        #[cfg(test)]
+        fn push_entity(&mut self, kind: BoardDeleteKind, id: &str, properties: &graph::PropertyBag) -> Result<(), BoardEventFault> {
+            if self.contains(kind, id) {
+                return Ok(());
+            }
+            let (nodes, bytes) = board_property_retirement_credits(properties)?;
+            let next_nodes = usize::from(self.property_nodes).checked_add(nodes).ok_or(BoardEventFault::ItemCredits)?;
+            let next_bytes = usize::from(self.property_bytes).checked_add(bytes).ok_or(BoardEventFault::ByteCredits)?;
+            if next_nodes > BOARD_POINTER_ITEM_CAPACITY {
+                return Err(BoardEventFault::ItemCredits);
+            }
+            if next_bytes > BOARD_POINTER_BYTE_CAPACITY {
+                return Err(BoardEventFault::ByteCredits);
+            }
+            self.push(kind, id)?;
+            self.property_nodes = next_nodes as u16;
+            self.property_bytes = next_bytes as u16;
+            Ok(())
+        }
+
+        fn push_admitted_entity(&mut self, kind: BoardDeleteKind, id: &str, property_nodes: usize, property_bytes: usize) -> Result<(), BoardEventFault> {
+            if self.contains(kind, id) {
+                return Ok(());
+            }
+            let next_nodes = usize::from(self.property_nodes).checked_add(property_nodes).ok_or(BoardEventFault::ItemCredits)?;
+            let next_bytes = usize::from(self.property_bytes).checked_add(property_bytes).ok_or(BoardEventFault::ByteCredits)?;
+            if next_nodes > BOARD_POINTER_ITEM_CAPACITY {
+                return Err(BoardEventFault::ItemCredits);
+            }
+            if next_bytes > BOARD_POINTER_BYTE_CAPACITY {
+                return Err(BoardEventFault::ByteCredits);
+            }
+            self.push(kind, id)?;
+            self.property_nodes = next_nodes as u16;
+            self.property_bytes = next_bytes as u16;
+            Ok(())
+        }
+
+        fn emitted_event_count(&self) -> usize {
+            self.entries[..usize::from(self.len)].iter().flatten().filter(|entry| matches!(entry.kind, BoardDeleteKind::Edge | BoardDeleteKind::Node)).count()
+        }
+
+        fn emitted_event_bytes(&self) -> Option<usize> {
+            self.entries[..usize::from(self.len)]
+                .iter()
+                .flatten()
+                .filter(|entry| matches!(entry.kind, BoardDeleteKind::Edge | BoardDeleteKind::Node))
+                .try_fold(0usize, |bytes, entry| bytes.checked_add(7)?.checked_add(board_json_string_bytes(self.id(entry.id))))
+        }
+    }
+
+    #[cfg(test)]
+    fn board_property_retirement_credits(properties: &graph::PropertyBag) -> Result<(usize, usize), BoardEventFault> {
+        let mut stack: Box<[Option<(&graph::manifest::PropertyValue, u16)>; BOARD_POINTER_ITEM_CAPACITY]> = Box::new(std::array::from_fn(|_| None));
+        let mut stack_len = 0usize;
+        let mut nodes = 0usize;
+        let mut bytes = 0usize;
+        for (key, value) in properties {
+            bytes = bytes.checked_add(key.len()).ok_or(BoardEventFault::ByteCredits)?;
+            if stack_len == BOARD_POINTER_ITEM_CAPACITY {
+                return Err(BoardEventFault::ItemCredits);
+            }
+            stack[stack_len] = Some((value, 1));
+            stack_len += 1;
+        }
+        while stack_len > 0 {
+            stack_len -= 1;
+            let (value, depth) = stack[stack_len].take().expect("property pre-admission stack owner");
+            nodes += 1;
+            if nodes > BOARD_POINTER_ITEM_CAPACITY || usize::from(depth) > BOARD_POINTER_ITEM_CAPACITY {
+                return Err(BoardEventFault::ItemCredits);
+            }
+            match value {
+                graph::manifest::PropertyValue::String(value) => {
+                    bytes = bytes.checked_add(value.len()).ok_or(BoardEventFault::ByteCredits)?;
+                }
+                graph::manifest::PropertyValue::Array(values) => {
+                    for value in values {
+                        if stack_len == BOARD_POINTER_ITEM_CAPACITY {
+                            return Err(BoardEventFault::ItemCredits);
+                        }
+                        stack[stack_len] = Some((value, depth + 1));
+                        stack_len += 1;
+                    }
+                }
+                graph::manifest::PropertyValue::Object(values) => {
+                    for (key, value) in values {
+                        bytes = bytes.checked_add(key.len()).ok_or(BoardEventFault::ByteCredits)?;
+                        if stack_len == BOARD_POINTER_ITEM_CAPACITY {
+                            return Err(BoardEventFault::ItemCredits);
+                        }
+                        stack[stack_len] = Some((value, depth + 1));
+                        stack_len += 1;
+                    }
+                }
+                graph::manifest::PropertyValue::Null | graph::manifest::PropertyValue::Bool(_) | graph::manifest::PropertyValue::Number(_) => {}
+            }
+            if bytes > BOARD_POINTER_BYTE_CAPACITY {
+                return Err(BoardEventFault::ByteCredits);
+            }
+        }
+        Ok((nodes, bytes))
+    }
+
+    impl BoardPropertyAudit {
+        fn new(kind: BoardDeleteKind, id: String, properties: graph::PropertyBag) -> Self {
+            Self { kind, id, current: Some(graph::manifest::PropertyValue::Object(properties)), completed: None, stack: Box::new(std::array::from_fn(|_| None)), depth: 0, nodes: 0, bytes: 0, fault: None }
+        }
+
+        fn add_bytes(&mut self, bytes: usize) {
+            self.bytes = self.bytes.checked_add(bytes).unwrap_or(usize::MAX);
+            if self.bytes > BOARD_POINTER_BYTE_CAPACITY {
+                self.fault.get_or_insert(BoardEventFault::ByteCredits);
+            }
+        }
+
+        fn push_frame(&mut self, frame: BoardPropertyAuditFrame) -> Result<(), BoardPropertyAuditFrame> {
+            let index = usize::from(self.depth);
+            if index == BOARD_POINTER_ITEM_CAPACITY {
+                return Err(frame);
+            }
+            self.stack[index] = Some(frame);
+            self.depth += 1;
+            Ok(())
+        }
+
+        fn step(&mut self) -> bool {
+            if let Some(value) = self.completed.take() {
+                if self.depth == 0 {
+                    self.completed = Some(value);
+                    return true;
+                }
+                let frame = self.stack[usize::from(self.depth - 1)].as_mut().expect("property audit frame");
+                match frame {
+                    BoardPropertyAuditFrame::Array { values, pending, .. } => {
+                        let index = pending.take().expect("array audit child index");
+                        values[index] = value;
+                    }
+                    BoardPropertyAuditFrame::Object { values, pending, .. } => {
+                        let key = pending.take().expect("object audit child key");
+                        *values.get_mut(&key).expect("object audit key remains reserved") = value;
+                    }
+                }
+                return false;
+            }
+            if let Some(value) = self.current.take() {
+                self.nodes = self.nodes.saturating_add(1);
+                if self.nodes > BOARD_POINTER_ITEM_CAPACITY {
+                    self.fault.get_or_insert(BoardEventFault::ItemCredits);
+                }
+                if self.fault.is_some() {
+                    self.completed = Some(value);
+                    return false;
+                }
+                match value {
+                    graph::manifest::PropertyValue::Array(values) => {
+                        let frame = BoardPropertyAuditFrame::Array { values, index: 0, pending: None };
+                        if let Err(frame) = self.push_frame(frame) {
+                            self.fault = Some(BoardEventFault::ItemCredits);
+                            self.completed = Some(match frame {
+                                BoardPropertyAuditFrame::Array { values, .. } => graph::manifest::PropertyValue::Array(values),
+                                BoardPropertyAuditFrame::Object { .. } => unreachable!(),
+                            });
+                        }
+                    }
+                    graph::manifest::PropertyValue::Object(values) => {
+                        let frame = BoardPropertyAuditFrame::Object { values, after: None, pending: None };
+                        if let Err(frame) = self.push_frame(frame) {
+                            self.fault = Some(BoardEventFault::ItemCredits);
+                            self.completed = Some(match frame {
+                                BoardPropertyAuditFrame::Object { values, .. } => graph::manifest::PropertyValue::Object(values),
+                                BoardPropertyAuditFrame::Array { .. } => unreachable!(),
+                            });
+                        }
+                    }
+                    graph::manifest::PropertyValue::String(value) => {
+                        self.add_bytes(value.len());
+                        self.completed = Some(graph::manifest::PropertyValue::String(value));
+                    }
+                    scalar => self.completed = Some(scalar),
+                }
+                return false;
+            }
+            if self.depth == 0 {
+                return false;
+            }
+            let index = usize::from(self.depth - 1);
+            if self.fault.is_some() {
+                let frame = self.stack[index].take().expect("faulted property audit frame");
+                self.depth -= 1;
+                self.completed = Some(match frame {
+                    BoardPropertyAuditFrame::Array { values, .. } => graph::manifest::PropertyValue::Array(values),
+                    BoardPropertyAuditFrame::Object { values, .. } => graph::manifest::PropertyValue::Object(values),
+                });
+                return false;
+            }
+            let mut frame = self.stack[index].take().expect("property audit frame");
+            match &mut frame {
+                BoardPropertyAuditFrame::Array { values, index: child_index, pending } => {
+                    if *child_index == values.len() {
+                        self.depth -= 1;
+                        self.completed = Some(match frame {
+                            BoardPropertyAuditFrame::Array { values, .. } => graph::manifest::PropertyValue::Array(values),
+                            BoardPropertyAuditFrame::Object { .. } => unreachable!(),
+                        });
+                    } else {
+                        let index = *child_index;
+                        *child_index += 1;
+                        *pending = Some(index);
+                        self.current = Some(std::mem::replace(&mut values[index], graph::manifest::PropertyValue::Null));
+                        self.stack[usize::from(self.depth - 1)] = Some(frame);
+                    }
+                }
+                BoardPropertyAuditFrame::Object { values, after, pending } => {
+                    let next = match after.as_ref() {
+                        Some(after) => values.range((std::ops::Bound::Excluded(after.clone()), std::ops::Bound::Unbounded)).next(),
+                        None => values.first_key_value(),
+                    }
+                    .map(|(key, _)| admitted_board_pointer_id(key));
+                    if let Some(Ok(key)) = next {
+                        self.bytes = self.bytes.checked_add(key.len()).unwrap_or(usize::MAX);
+                        if self.bytes > BOARD_POINTER_BYTE_CAPACITY {
+                            self.fault.get_or_insert(BoardEventFault::ByteCredits);
+                        }
+                        *after = Some(key.clone());
+                        *pending = Some(key.clone());
+                        self.current = Some(std::mem::replace(values.get_mut(&key).expect("property audit key"), graph::manifest::PropertyValue::Null));
+                        self.stack[usize::from(self.depth - 1)] = Some(frame);
+                    } else if let Some(Err(fault)) = next {
+                        self.fault = Some(fault);
+                        self.stack[usize::from(self.depth - 1)] = Some(frame);
+                    } else {
+                        self.depth -= 1;
+                        self.completed = Some(match frame {
+                            BoardPropertyAuditFrame::Object { values, .. } => graph::manifest::PropertyValue::Object(values),
+                            BoardPropertyAuditFrame::Array { .. } => unreachable!(),
+                        });
+                    };
+                }
+            }
+            false
+        }
+
+        fn take_result(&mut self) -> Option<(BoardDeleteKind, String, graph::PropertyBag, usize, usize, Option<BoardEventFault>)> {
+            if self.depth != 0 || self.current.is_some() {
+                return None;
+            }
+            let graph::manifest::PropertyValue::Object(properties) = self.completed.take()? else {
+                self.fault = Some(BoardEventFault::Schema);
+                return None;
+            };
+            Some((self.kind, std::mem::take(&mut self.id), properties, self.nodes, self.bytes, self.fault.take()))
+        }
+    }
+
+    impl BoardPropertyRetirement {
+        fn new(properties: graph::PropertyBag) -> Self {
+            Self { current: Some(graph::manifest::PropertyValue::Object(properties)), stack: Box::new(std::array::from_fn(|_| None)), depth: 0, faulted: false }
+        }
+
+        fn push_container(&mut self, container: BoardPropertyContainer) -> Result<(), BoardPropertyContainer> {
+            let index = usize::from(self.depth);
+            if index == BOARD_POINTER_ITEM_CAPACITY {
+                return Err(container);
+            }
+            self.stack[index] = Some(container);
+            self.depth += 1;
+            Ok(())
+        }
+
+        fn pop_container(&mut self) -> Option<BoardPropertyContainer> {
+            if self.depth == 0 {
+                return None;
+            }
+            self.depth -= 1;
+            self.stack[usize::from(self.depth)].take()
+        }
+
+        fn step(&mut self) -> Result<bool, ()> {
+            if self.faulted {
+                return Err(());
+            }
+            if self.current.is_none() {
+                self.current = self.pop_container().map(|container| match container {
+                    BoardPropertyContainer::Array(values) => graph::manifest::PropertyValue::Array(values),
+                    BoardPropertyContainer::Object(values) => graph::manifest::PropertyValue::Object(values),
+                });
+                return Ok(self.current.is_none());
+            }
+            let current = self.current.take().expect("property retirement current owner");
+            match current {
+                graph::manifest::PropertyValue::Array(mut values) => {
+                    let child = values.pop();
+                    if !values.is_empty() {
+                        if let Err(values) = self.push_container(BoardPropertyContainer::Array(values)) {
+                            self.current = Some(match values {
+                                BoardPropertyContainer::Array(values) => graph::manifest::PropertyValue::Array(values),
+                                BoardPropertyContainer::Object(_) => unreachable!(),
+                            });
+                            self.faulted = true;
+                            return Err(());
+                        }
+                    }
+                    self.current = child;
+                }
+                graph::manifest::PropertyValue::Object(mut values) => {
+                    let child = values.pop_first().map(|(key, value)| {
+                        drop(key);
+                        value
+                    });
+                    if !values.is_empty() {
+                        if let Err(values) = self.push_container(BoardPropertyContainer::Object(values)) {
+                            self.current = Some(match values {
+                                BoardPropertyContainer::Object(values) => graph::manifest::PropertyValue::Object(values),
+                                BoardPropertyContainer::Array(_) => unreachable!(),
+                            });
+                            self.faulted = true;
+                            return Err(());
+                        }
+                    }
+                    self.current = child;
+                }
+                graph::manifest::PropertyValue::String(value) => drop(value),
+                graph::manifest::PropertyValue::Null | graph::manifest::PropertyValue::Bool(_) | graph::manifest::PropertyValue::Number(_) => {}
+            }
+            Ok(false)
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.current.is_none() && self.depth == 0 && !self.faulted
+        }
+    }
+
+    impl BoardEntityRetirement {
+        fn new(entity: BoardRemovedEntity) -> Self {
+            Self { entity: Some(entity), strings: Box::new(std::array::from_fn(|_| None)), string_len: 0, properties: None }
+        }
+
+        fn push_string(&mut self, value: String) {
+            let index = usize::from(self.string_len);
+            self.strings[index] = Some(value);
+            self.string_len += 1;
+        }
+
+        fn push_optional_string(&mut self, value: Option<String>) {
+            if let Some(value) = value {
+                self.push_string(value);
+            }
+        }
+
+        fn split_entity(&mut self, entity: BoardRemovedEntity) {
+            let properties = match entity {
+                BoardRemovedEntity::Node(NodeData { id, style, text, icon_kind, node_kind, properties, .. }) => {
+                    self.push_string(id);
+                    self.push_optional_string(style);
+                    self.push_optional_string(text);
+                    self.push_optional_string(icon_kind);
+                    self.push_string(node_kind);
+                    properties
+                }
+                BoardRemovedEntity::Edge(EdgeData { id, source, target, style, edge_kind, source_tip, target_tip, properties, .. }) => {
+                    self.push_string(id);
+                    self.push_string(source);
+                    self.push_string(target);
+                    self.push_optional_string(style);
+                    self.push_string(edge_kind);
+                    self.push_optional_string(source_tip);
+                    self.push_optional_string(target_tip);
+                    properties
+                }
+                BoardRemovedEntity::Handle(HandleData { id, node_id, style, handle_kind, icon_kind, properties, .. }) => {
+                    self.push_string(id);
+                    self.push_string(node_id);
+                    self.push_optional_string(style);
+                    self.push_string(handle_kind);
+                    self.push_optional_string(icon_kind);
+                    properties
+                }
+                BoardRemovedEntity::Wire(WireData { id, source, target, style, wire_kind, properties, .. }) => {
+                    self.push_string(id);
+                    self.push_string(source);
+                    self.push_optional_string(target);
+                    self.push_optional_string(style);
+                    self.push_string(wire_kind);
+                    properties
+                }
+            };
+            self.properties = Some(BoardPropertyRetirement::new(properties));
+        }
+
+        fn step(&mut self) -> Result<bool, ()> {
+            if let Some(entity) = self.entity.take() {
+                self.split_entity(entity);
+                return Ok(false);
+            }
+            if let Some(properties) = self.properties.as_mut() {
+                if !properties.step()? {
+                    return Ok(false);
+                }
+                debug_assert!(properties.terminal_is_empty());
+                self.properties = None;
+                return Ok(false);
+            }
+            if self.string_len > 0 {
+                self.string_len -= 1;
+                drop(self.strings[usize::from(self.string_len)].take());
+                return Ok(false);
+            }
+            Ok(true)
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.entity.is_none() && self.string_len == 0 && self.properties.is_none()
+        }
+    }
+
+    impl BoardPointerPublication {
+        pub fn events_json(&self) -> &str {
+            std::str::from_utf8(&self.bytes[..usize::from(self.len)]).expect("pointer publication is encoded from UTF-8 schema tokens")
+        }
+
+        pub fn close_step(&mut self) -> bool {
+            self.len = 0;
+            true
+        }
+
+        pub fn terminal_is_empty(&self) -> bool {
+            self.len == 0
+        }
+    }
+
+    #[derive(Clone, Copy, Debug)]
+    enum BoardPointerPlanKind {
+        Idle,
+        Pan {
+            camera: [f64; 3],
+        },
+        DragMove,
+        FinishPan {
+            camera: [f64; 3],
+        },
+        FinishDrag,
+        SelectionPreview {
+            start: Point,
+            start_screen: Point,
+        },
+        SelectionCommit,
+        LinkMove {
+            source: BoardPointerSpan,
+            target: Option<BoardPointerSpan>,
+            hover: Option<BoardPointerSpan>,
+            compat_key: BoardPointerSpan,
+            ring_key: BoardPointerSpan,
+            end_world: Point,
+            activated: bool,
+            start_screen: Point,
+        },
+        LinkFinish {
+            source: BoardPointerSpan,
+            target: Option<BoardPointerSpan>,
+            edge: Option<BoardPointerSpan>,
+            target_node: Option<BoardPointerSpan>,
+            hover: Option<BoardPointerSpan>,
+            compat_key: Option<BoardPointerSpan>,
+            ring_key: Option<BoardPointerSpan>,
+        },
+        LinkRetain {
+            hover: Option<BoardPointerSpan>,
+        },
+        Hover {
+            hover: Option<BoardPointerSpan>,
+        },
+        Brush {
+            source: Option<BoardPointerSpan>,
+            hover: Option<BoardPointerSpan>,
+            alt: bool,
+            commit_old: bool,
+        },
+        LeaveIdle,
+    }
+
+    #[derive(Debug)]
+    pub struct BoardPointerPlan {
+        revision: u64,
+        kind: BoardPointerPlanKind,
+        bytes: Box<[u8; BOARD_POINTER_BYTE_CAPACITY]>,
+        byte_len: u16,
+        deltas: Box<[Option<BoardPointerDelta>; BOARD_POINTER_ITEM_CAPACITY]>,
+        delta_len: u16,
+        points: Box<[Point; BOARD_POINTER_ITEM_CAPACITY]>,
+        screen_points: Box<[Point; BOARD_POINTER_ITEM_CAPACITY]>,
+        point_len: u16,
+        output: Box<[u8; BOARD_POINTER_BYTE_CAPACITY]>,
+        output_len: u16,
+    }
+
+    pub struct BoardPointerPlanRetirement {
+        plan: Option<BoardPointerPlan>,
+        cursor: u16,
+    }
+
+    impl BoardPointerPlanRetirement {
+        pub fn new(plan: BoardPointerPlan) -> Self {
+            Self { plan: Some(plan), cursor: 0 }
+        }
+
+        pub fn close_step(&mut self) -> bool {
+            let Some(plan) = self.plan.as_mut() else {
+                return true;
+            };
+            if self.cursor < plan.delta_len {
+                plan.deltas[usize::from(self.cursor)] = None;
+                self.cursor += 1;
+                return false;
+            }
+            plan.byte_len = 0;
+            plan.output_len = 0;
+            self.plan = None;
+            true
+        }
+
+        pub fn terminal_is_empty(&self) -> bool {
+            self.plan.is_none()
+        }
+    }
+
+    impl BoardPointerPlan {
+        fn empty(revision: u64, kind: BoardPointerPlanKind) -> Self {
+            Self {
+                revision,
+                kind,
+                bytes: Box::new([0; BOARD_POINTER_BYTE_CAPACITY]),
+                byte_len: 0,
+                deltas: Box::new([None; BOARD_POINTER_ITEM_CAPACITY]),
+                delta_len: 0,
+                points: Box::new(std::array::from_fn(|_| Point::new(0.0, 0.0))),
+                screen_points: Box::new(std::array::from_fn(|_| Point::new(0.0, 0.0))),
+                point_len: 0,
+                output: Box::new([0; BOARD_POINTER_BYTE_CAPACITY]),
+                output_len: 0,
+            }
+        }
+
+        fn push_id(&mut self, id: &str) -> Result<BoardPointerSpan, BoardPointerPlanFault> {
+            if id.len() > u16::MAX as usize {
+                return Err(BoardPointerPlanFault::ByteCredits);
+            }
+            let start = usize::from(self.byte_len);
+            let end = start.checked_add(id.len()).ok_or(BoardPointerPlanFault::ByteCredits)?;
+            if end > BOARD_POINTER_BYTE_CAPACITY {
+                return Err(BoardPointerPlanFault::ByteCredits);
+            }
+            self.bytes[start..end].copy_from_slice(id.as_bytes());
+            self.byte_len = end as u16;
+            Ok(BoardPointerSpan { start: start as u16, len: id.len() as u16 })
+        }
+
+        fn push_delta(&mut self, id: &str, x: f64, y: f64) -> Result<(), BoardPointerPlanFault> {
+            let index = usize::from(self.delta_len);
+            if index == BOARD_POINTER_ITEM_CAPACITY {
+                return Err(BoardPointerPlanFault::ItemCredits);
+            }
+            let id = self.push_id(id)?;
+            self.deltas[index] = Some(BoardPointerDelta { id, x, y });
+            self.delta_len += 1;
+            Ok(())
+        }
+
+        fn id(&self, span: BoardPointerSpan) -> &str {
+            let start = usize::from(span.start);
+            let end = start + usize::from(span.len);
+            std::str::from_utf8(&self.bytes[start..end]).expect("board pointer ids originate from UTF-8 strings")
+        }
+
+        fn push_point(&mut self, world: Point, screen: Point) -> Result<(), BoardPointerPlanFault> {
+            let index = usize::from(self.point_len);
+            if index == BOARD_POINTER_ITEM_CAPACITY {
+                return Err(BoardPointerPlanFault::ItemCredits);
+            }
+            self.points[index] = world;
+            self.screen_points[index] = screen;
+            self.point_len += 1;
+            Ok(())
+        }
+
+        fn selection_ids(&self) -> impl Iterator<Item = &str> {
+            self.deltas[..usize::from(self.delta_len)].iter().flatten().map(|delta| self.id(delta.id))
+        }
+
+        pub fn event_count(&self) -> usize {
+            match self.kind {
+                BoardPointerPlanKind::FinishPan { .. } => 1,
+                BoardPointerPlanKind::FinishDrag => usize::from(self.delta_len).min(1),
+                BoardPointerPlanKind::SelectionPreview { .. } | BoardPointerPlanKind::SelectionCommit => 1,
+                BoardPointerPlanKind::LinkMove { .. } => usize::from(self.output_len > 2),
+                BoardPointerPlanKind::LinkFinish { .. } => usize::from(self.output_len > 2),
+                BoardPointerPlanKind::LinkRetain { .. } => usize::from(self.output_len > 2),
+                BoardPointerPlanKind::Hover { .. } => usize::from(self.output_len > 2),
+                BoardPointerPlanKind::Brush { .. } => usize::from(self.output_len > 2),
+                _ => 0,
+            }
+        }
+
+        pub fn requires_retained_commit(&self) -> bool {
+            !matches!(self.kind, BoardPointerPlanKind::Idle)
+        }
+
+        fn seal_events(&mut self) -> Result<(), BoardPointerPlanFault> {
+            let mut output = String::with_capacity(BOARD_POINTER_BYTE_CAPACITY);
+            self.write_events_json(&mut output)?;
+            self.output[..output.len()].copy_from_slice(output.as_bytes());
+            self.output_len = output.len() as u16;
+            Ok(())
+        }
+
+        fn output_raw(&mut self, value: &str) -> Result<(), BoardPointerPlanFault> {
+            let start = usize::from(self.output_len);
+            let end = start.checked_add(value.len()).ok_or(BoardPointerPlanFault::ByteCredits)?;
+            if end > BOARD_POINTER_BYTE_CAPACITY {
+                return Err(BoardPointerPlanFault::ByteCredits);
+            }
+            self.output[start..end].copy_from_slice(value.as_bytes());
+            self.output_len = end as u16;
+            Ok(())
+        }
+
+        fn seal_owned_event(&mut self, event: &BoardOwnedEvent) -> Result<(), BoardPointerPlanFault> {
+            self.output_len = 0;
+            self.output_raw("[{\"name\":\"")?;
+            self.output_raw(event.kind().name())?;
+            self.output_raw("\",\"payload\":")?;
+            self.output_raw(event.payload_json())?;
+            self.output_raw("}]")
+        }
+
+        fn seal_owned_events(&mut self, events: &[BoardOwnedEvent]) -> Result<(), BoardPointerPlanFault> {
+            self.output_len = 0;
+            self.output_raw("[")?;
+            for (index, event) in events.iter().enumerate() {
+                if index > 0 {
+                    self.output_raw(",")?;
+                }
+                self.output_raw("{\"name\":\"")?;
+                self.output_raw(event.kind().name())?;
+                self.output_raw("\",\"payload\":")?;
+                self.output_raw(event.payload_json())?;
+                self.output_raw("}")?;
+            }
+            self.output_raw("]")
+        }
+
+        fn seal_optional_events<const N: usize>(&mut self, events: &[Option<BoardOwnedEvent>; N]) -> Result<(), BoardPointerPlanFault> {
+            self.output_len = 0;
+            self.output_raw("[")?;
+            let mut emitted = 0usize;
+            for event in events.iter().flatten() {
+                if emitted > 0 {
+                    self.output_raw(",")?;
+                }
+                emitted += 1;
+                self.output_raw("{\"name\":\"")?;
+                self.output_raw(event.kind().name())?;
+                self.output_raw("\",\"payload\":")?;
+                self.output_raw(event.payload_json())?;
+                self.output_raw("}")?;
+            }
+            self.output_raw("]")
+        }
+
+        pub fn events_json(&self) -> &str {
+            std::str::from_utf8(&self.output[..usize::from(self.output_len)]).expect("board event page is encoded from UTF-8 schema tokens")
+        }
+
+        pub fn write_events_json(&self, output: &mut String) -> Result<(), BoardPointerPlanFault> {
+            output.clear();
+            match self.kind {
+                BoardPointerPlanKind::FinishPan { camera } => {
+                    output.push_str("[{\"name\":\"camera\",\"payload\":{");
+                    output.push_str("\"x\":");
+                    output.push_str(&camera[0].to_string());
+                    output.push_str(",\"y\":");
+                    output.push_str(&camera[1].to_string());
+                    output.push_str(",\"zoom\":");
+                    output.push_str(&camera[2].to_string());
+                    output.push_str("}}]");
+                }
+                BoardPointerPlanKind::FinishDrag if self.delta_len > 0 => {
+                    let mut admitted_bytes = 64usize;
+                    for index in 0..usize::from(self.delta_len) {
+                        let delta = self.deltas[index].expect("bounded board delta");
+                        admitted_bytes = admitted_bytes.checked_add(board_json_string_bytes(self.id(delta.id))).and_then(|bytes| bytes.checked_add(96)).ok_or(BoardPointerPlanFault::ByteCredits)?;
+                    }
+                    if admitted_bytes > BOARD_POINTER_BYTE_CAPACITY {
+                        return Err(BoardPointerPlanFault::ByteCredits);
+                    }
+                    output.push_str("[{\"name\":\"nodeDragEnd\",\"payload\":{\"moves\":[");
+                    for index in 0..usize::from(self.delta_len) {
+                        let delta = self.deltas[index].expect("bounded board delta");
+                        if index > 0 {
+                            output.push(',');
+                        }
+                        output.push_str("{\"id\":");
+                        write_json_string(output, self.id(delta.id));
+                        output.push_str(",\"x\":");
+                        output.push_str(&delta.x.to_string());
+                        output.push_str(",\"y\":");
+                        output.push_str(&delta.y.to_string());
+                        output.push('}');
+                        if output.len() > BOARD_POINTER_BYTE_CAPACITY {
+                            return Err(BoardPointerPlanFault::ByteCredits);
+                        }
+                    }
+                    output.push_str("]}}]");
+                }
+                _ => output.push_str("[]"),
+            }
+            if output.len() > BOARD_POINTER_BYTE_CAPACITY {
+                return Err(BoardPointerPlanFault::ByteCredits);
+            }
+            Ok(())
+        }
+
+        fn camera(&self) -> [f64; 3] {
+            match self.kind {
+                BoardPointerPlanKind::Pan { camera } | BoardPointerPlanKind::FinishPan { camera } => camera,
+                _ => [0.0, 0.0, 1.0],
+            }
+        }
+    }
+
+    fn write_json_string(output: &mut String, value: &str) {
+        output.push('"');
+        for character in value.chars() {
+            match character {
+                '"' => output.push_str("\\\""),
+                '\\' => output.push_str("\\\\"),
+                '\n' => output.push_str("\\n"),
+                '\r' => output.push_str("\\r"),
+                '\t' => output.push_str("\\t"),
+                character if character <= '\u{1f}' => {
+                    use std::fmt::Write;
+                    let _ = write!(output, "\\u{:04x}", character as u32);
+                }
+                character => output.push(character),
+            }
+        }
+        output.push('"');
+    }
+
+    fn board_json_string_bytes(value: &str) -> usize {
+        value
+            .chars()
+            .map(|character| match character {
+                '"' | '\\' | '\n' | '\r' | '\t' => 2,
+                character if character <= '\u{1f}' => 6,
+                character => character.len_utf8(),
+            })
+            .try_fold(2usize, usize::checked_add)
+            .unwrap_or(usize::MAX)
+    }
+
+    fn admitted_board_pointer_id(value: &str) -> Result<String, BoardEventFault> {
+        if value.len() > BOARD_POINTER_BYTE_CAPACITY {
+            return Err(BoardEventFault::ByteCredits);
+        }
+        Ok(value.to_owned())
+    }
+
+    fn board_node_move_owned_bytes(id: &str, x: f64, y: f64) -> Option<usize> {
+        if id.len() > BOARD_EVENT_KEY_BYTE_CAPACITY || !x.is_finite() || !y.is_finite() {
+            return None;
+        }
+        17usize.checked_add(board_json_string_bytes(id))?.checked_add(x.to_string().len())?.checked_add(y.to_string().len())?.checked_add(id.len())
+    }
+
+    fn board_edge_event_owned_bytes(id: &str, source: &str, target: &str) -> Option<usize> {
+        let bytes = 27usize.checked_add(board_json_string_bytes(id))?.checked_add(board_json_string_bytes(source))?.checked_add(board_json_string_bytes(target))?;
+        (bytes <= BOARD_EVENT_PAYLOAD_BYTE_CAPACITY).then_some(bytes)
+    }
+
+    impl BoardWheelPlan {
+        pub fn camera(&self) -> [f64; 3] {
+            [self.next.x, self.next.y, self.next.zoom]
+        }
     }
 
     impl Default for BoardHost {
@@ -538,7 +2435,10 @@ pub mod board_host {
                 height: 1,
                 dpr: 1.0,
                 world_raster_tiling: "world-clip".into(),
-                events: Vec::new(),
+                events: BoardEventQueue::default(),
+                event_overflow: None,
+                event_batch_overflow: None,
+                event_schema_fault: false,
                 selection_screen_preview: None,
                 selection_preview_crossing: false,
                 link_screen_preview: None,
@@ -561,7 +2461,7 @@ pub mod board_host {
                 suggestion_offset: DEFAULT_SUGGESTION_OFFSET,
                 brush_node_size: DEFAULT_BRUSH_NODE_SIZE,
                 brush_slot_source_id: None,
-                brush_candidates: Vec::new(),
+                brush_candidates: BrushCandidatePage::default(),
                 brush_candidate_index: 0,
                 brush_preview: None,
                 fixture_drop_preview: None,
@@ -573,6 +2473,12 @@ pub mod board_host {
                 brush_alt_pressed: false,
                 brush_slot_suggestions_active: false,
                 port_mode: GraphPortMode::Ported,
+                interaction_revision: 0,
+                pending_delete_planning: None,
+                pending_delete_operation: None,
+                pending_pointer_commit: None,
+                queued_pointer_commit: None,
+                pointer_publication: None,
             }
         }
     }
@@ -776,6 +2682,7 @@ pub mod board_host {
             self.width = width.max(1);
             self.height = height.max(1);
             self.dpr = dpr.max(1.0);
+            self.interaction_revision = self.interaction_revision.wrapping_add(1);
         }
 
         pub fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
@@ -792,11 +2699,20 @@ pub mod board_host {
             if (self.camera.x - x).abs() < 1e-9 && (self.camera.y - y).abs() < 1e-9 && (self.camera.zoom - zoom).abs() < 1e-9 {
                 return;
             }
+            let reservation = if emit_event {
+                let Some(reservation) = self.reserve_owned_event(BoardOwnedEvent::camera(x, y, zoom)) else {
+                    return;
+                };
+                Some(reservation)
+            } else {
+                None
+            };
             self.camera.x = x;
             self.camera.y = y;
             self.camera.zoom = zoom;
-            if emit_event {
-                self.push_event("camera", json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }));
+            self.interaction_revision = self.interaction_revision.wrapping_add(1);
+            if let Some(reservation) = reservation {
+                self.publish_event_reservation(reservation);
             }
         }
 
@@ -847,8 +2763,29 @@ pub mod board_host {
 
         /// @emoji 🧩️ JSON object `{ handleKinds?, wireKinds?, nodeKinds?, edgeKinds? }` replacing prior catalogs (omit arrays to clear that slice).
         pub fn set_board_kind_catalogs_from_json(&mut self, json: &str) -> Result<(), NormalPortError> {
+            if json.len() > BOARD_EVENT_BYTE_CAPACITY {
+                return Err(NormalPortError::EventCredits);
+            }
             let v: serde_json::Value = serde_json::from_str(json)?;
             let o = v.as_object().ok_or(NormalPortError::KindCatalogsRootNotObject)?;
+            for key in ["handleKinds", "wireKinds", "nodeKinds", "edgeTips", "edgeKinds"] {
+                if o.get(key).and_then(serde_json::Value::as_array).is_some_and(|rows| rows.len() > BOARD_POINTER_ITEM_CAPACITY) {
+                    return Err(NormalPortError::EventCredits);
+                }
+            }
+            let template_count = o
+                .get("nodeKinds")
+                .and_then(serde_json::Value::as_array)
+                .into_iter()
+                .flatten()
+                .filter_map(serde_json::Value::as_object)
+                .filter_map(|row| row.get("handles"))
+                .filter_map(serde_json::Value::as_array)
+                .try_fold(0usize, |count, handles| count.checked_add(handles.len()))
+                .ok_or(NormalPortError::EventCredits)?;
+            if template_count > BOARD_POINTER_ITEM_CAPACITY {
+                return Err(NormalPortError::EventCredits);
+            }
             if let Some(arr) = o.get("handleKinds").and_then(|x| x.as_array()) {
                 let mut next = BTreeMap::new();
                 for row in arr {
@@ -1838,10 +3775,10 @@ pub mod board_host {
             best.map(|(_, id)| id)
         }
 
-        fn brush_compatible_candidates(&self, source: &HandleData) -> Vec<BrushCandidate> {
+        fn brush_compatible_candidates(&self, source: &HandleData) -> Option<BrushCandidatePage> {
             let sn = self.nodes.get(&source.node_id).map(|n| n.node_kind.as_str()).unwrap_or("");
             let sh = source.handle_kind.as_str();
-            let mut out: Vec<BrushCandidate> = Vec::new();
+            let mut out = BrushCandidatePage::default();
             for (kind_id, kind) in &self.node_kinds {
                 if kind.handles.is_empty() {
                     continue;
@@ -1849,11 +3786,13 @@ pub mod board_host {
                 let tn = kind_id.as_str();
                 for (i, tmpl) in kind.handles.iter().enumerate() {
                     if self.link_kinds_compatible_for_brush(sn, sh, tn, tmpl.handle_kind.as_str()) {
-                        out.push(BrushCandidate { node_kind_id: kind_id.clone(), target_handle_index: i });
+                        let delta = Self::brush_handle_alignment_delta(source.angle, tmpl.angle);
+                        out.push(kind_id, i, delta).ok()?;
                     }
                 }
             }
-            out
+            out.sort();
+            Some(out)
         }
 
         fn brush_handle_alignment_delta(source_handle_angle: f64, target_template_angle: f64) -> f64 {
@@ -1865,17 +3804,6 @@ pub mod board_host {
             d
         }
 
-        fn brush_sort_candidates_by_handle_proximity(&self, source: &HandleData, candidates: &mut [BrushCandidate]) {
-            let source_angle = source.angle;
-            candidates.sort_by(|left, right| {
-                let angle_left = self.node_kinds.get(left.node_kind_id.as_str()).and_then(|kind| kind.handles.get(left.target_handle_index)).map(|tmpl| tmpl.angle).unwrap_or(0.0);
-                let angle_right = self.node_kinds.get(right.node_kind_id.as_str()).and_then(|kind| kind.handles.get(right.target_handle_index)).map(|tmpl| tmpl.angle).unwrap_or(0.0);
-                let delta_left = Self::brush_handle_alignment_delta(source_angle, angle_left);
-                let delta_right = Self::brush_handle_alignment_delta(source_angle, angle_right);
-                delta_left.partial_cmp(&delta_right).unwrap_or(std::cmp::Ordering::Equal).then_with(|| left.node_kind_id.cmp(&right.node_kind_id)).then_with(|| left.target_handle_index.cmp(&right.target_handle_index))
-            });
-        }
-
         fn brush_template_world_pos(&self, center: Point, shape: NodeShape, radius: f64, width: f64, height: f64, angle: f64) -> Point {
             match shape {
                 NodeShape::Circle => handle_position_on_circle(center, radius, angle),
@@ -1883,13 +3811,17 @@ pub mod board_host {
             }
         }
 
-        fn brush_build_preview(&self, source_handle_id: &str, candidate: &BrushCandidate) -> Option<BrushPreviewSnapshot> {
+        fn brush_build_preview(&self, source_handle_id: &str, candidate: BrushCandidateRef<'_>) -> Option<BrushPreviewSnapshot> {
+            self.brush_build_preview_with_offset(source_handle_id, candidate, self.brush_effective_suggestion_offset())
+        }
+
+        fn brush_build_preview_with_offset(&self, source_handle_id: &str, candidate: BrushCandidateRef<'_>, offset: f64) -> Option<BrushPreviewSnapshot> {
             let source = self.handles.get(source_handle_id)?;
-            let kind = self.node_kinds.get(candidate.node_kind_id.as_str())?;
-            let center = self.brush_slot_center_world(source)?;
+            let kind = self.node_kinds.get(candidate.node_kind_id)?;
+            let center = self.handle_slot_center_world(&source.node_id, self.brush_handle_anchor_world(source)?, offset)?;
             let target_handle_index = candidate.target_handle_index;
             kind.handles.get(target_handle_index)?;
-            let node_kind_id = candidate.node_kind_id.as_str();
+            let node_kind_id = candidate.node_kind_id;
             let radius = self.brush_node_size * 0.5 * kind.scale;
             let (width, height) = if kind.shape == NodeShape::Rectangle { (self.brush_node_size * kind.scale, self.brush_node_size * kind.scale) } else { (radius * 2.0, radius * 2.0) };
             Some(BrushPreviewSnapshot {
@@ -1907,112 +3839,42 @@ pub mod board_host {
             })
         }
 
-        fn brush_preview_json(preview: &BrushPreviewSnapshot) -> serde_json::Value {
-            let mut node = json!({
-                "nodeKind": preview.node_kind_id,
-                "x": preview.x,
-                "y": preview.y,
-                "shape": if preview.shape == NodeShape::Rectangle { "rectangle" } else { "circle" },
-            });
-            if preview.shape == NodeShape::Rectangle {
-                node["width"] = json!(preview.width);
-                node["height"] = json!(preview.height);
-            } else {
-                node["radius"] = json!(preview.radius);
-            }
-            if let Some(ref icon) = preview.icon_kind {
-                node["iconKind"] = json!(icon);
-            }
-            let handles: Vec<_> = preview
-                .handles
-                .iter()
-                .map(|h| {
-                    let mut row = json!({ "angle": h.angle, "handleKind": h.handle_kind });
-                    if let Some(r) = h.radius {
-                        row["radius"] = json!(r);
-                    }
-                    row
-                })
-                .collect();
-            node["handles"] = json!(handles);
-            json!({
-                "node": node,
-                "edge": {
-                    "sourceHandleId": preview.source_handle_id,
-                    "targetHandleIndex": preview.target_handle_index,
-                }
-            })
-        }
-
-        fn brush_place_json(preview: &BrushPreviewSnapshot, node_id: &str, edge_id: &str) -> serde_json::Value {
-            let mut flat = json!({
-                "nodeId": node_id,
-                "edgeId": edge_id,
-                "nodeKind": preview.node_kind_id,
-                "sourceHandleId": preview.source_handle_id,
-                "targetHandleIndex": preview.target_handle_index,
-                "x": preview.x,
-                "y": preview.y,
-                "shape": if preview.shape == NodeShape::Rectangle { "rectangle" } else { "circle" },
-            });
-            if preview.shape == NodeShape::Rectangle {
-                flat["width"] = json!(preview.width);
-                flat["height"] = json!(preview.height);
-            } else {
-                flat["radius"] = json!(preview.radius);
-            }
-            if let Some(ref icon) = preview.icon_kind {
-                flat["iconKind"] = json!(icon);
-            }
-            let handles: Vec<_> = preview
-                .handles
-                .iter()
-                .map(|h| {
-                    let mut row = json!({ "angle": h.angle, "handleKind": h.handle_kind });
-                    if let Some(r) = h.radius {
-                        row["radius"] = json!(r);
-                    }
-                    row
-                })
-                .collect();
-            flat["handles"] = json!(handles);
-            flat
-        }
-
         fn brush_sync_preview_events(&mut self) {
+            if self.brush_candidates.len() > BOARD_POINTER_ITEM_CAPACITY || self.brush_preview.as_ref().is_some_and(|preview| preview.handles.len() > BOARD_POINTER_ITEM_CAPACITY) {
+                self.event_schema_fault = true;
+                return;
+            }
             let key = self.brush_preview.as_ref().map(|p| format!("{}|{}|{}|{}|{}", p.source_handle_id, p.node_kind_id, p.target_handle_index, p.x, p.y)).unwrap_or_default();
-            if self.brush_preview_emit_key.as_deref() != Some(key.as_str()) {
-                self.brush_preview_emit_key = Some(key.clone());
-                if let Some(ref preview) = self.brush_preview {
-                    self.push_event("brushPreview", Self::brush_preview_json(preview));
-                } else {
-                    self.push_event("brushPreview", json!({ "node": null, "edge": null }));
+            let mut candidates_key = format!("{}|", self.brush_slot_source_id.as_deref().unwrap_or(""));
+            for (index, candidate) in self.brush_candidates.iter().enumerate() {
+                if index > 0 {
+                    candidates_key.push(',');
                 }
+                candidates_key.push_str(candidate.node_kind_id);
+                candidates_key.push('#');
+                candidates_key.push_str(&candidate.target_handle_index.to_string());
             }
-            let candidates_key =
-                format!("{}|{}|{}", self.brush_slot_source_id.as_deref().unwrap_or(""), self.brush_candidates.iter().map(|c| format!("{}#{}", c.node_kind_id, c.target_handle_index)).collect::<Vec<_>>().join(","), self.brush_candidate_index);
-            if self.brush_candidates_emit_key.as_deref() != Some(candidates_key.as_str()) {
+            candidates_key.push('|');
+            candidates_key.push_str(&self.brush_candidate_index.to_string());
+            let preview_changed = self.brush_preview_emit_key.as_deref() != Some(key.as_str());
+            let candidates_changed = self.brush_candidates_emit_key.as_deref() != Some(candidates_key.as_str());
+            let preview_event = preview_changed.then(|| BoardOwnedEvent::brush_preview(self.brush_preview.as_ref()));
+            let candidate_event = candidates_changed.then(|| BoardOwnedEvent::brush_candidates(self.brush_slot_source_id.as_deref().unwrap_or(""), &self.brush_candidates, self.brush_candidate_index, self.brush_slot_suggestions_active));
+            let (first, second) = match (preview_event, candidate_event) {
+                (Some(first), second) => (first, second),
+                (None, Some(first)) => (first, None),
+                (None, None) => return,
+            };
+            let Some(reservation) = self.reserve_owned_batch(first, second) else {
+                return;
+            };
+            if preview_changed {
+                self.brush_preview_emit_key = Some(key);
+            }
+            if candidates_changed {
                 self.brush_candidates_emit_key = Some(candidates_key);
-                let candidates: Vec<_> = self
-                    .brush_candidates
-                    .iter()
-                    .map(|c| {
-                        json!({
-                            "nodeKind": c.node_kind_id,
-                            "targetHandleIndex": c.target_handle_index,
-                        })
-                    })
-                    .collect();
-                self.push_event(
-                    "brushCandidates",
-                    json!({
-                        "sourceHandleId": self.brush_slot_source_id.clone().unwrap_or_default(),
-                        "candidates": candidates,
-                        "index": self.brush_candidate_index,
-                        "suggestionsActive": self.brush_slot_suggestions_active,
-                    }),
-                );
             }
+            self.publish_event_batch(reservation);
         }
 
         fn brush_clear_slot(&mut self) {
@@ -2034,18 +3896,19 @@ pub mod board_host {
             }
         }
 
-        fn brush_allocate_placement_ids(&mut self) -> (String, String) {
-            self.brush_placement_serial = self.brush_placement_serial.wrapping_add(1);
-            let serial = self.brush_placement_serial;
-            (format!("puzzle2d.brush.{serial}"), format!("puzzle2d.brush.edge.{serial}"))
-        }
-
         fn brush_commit_preview(&mut self) {
-            let Some(preview) = self.brush_preview.take() else {
+            let Some(preview) = self.brush_preview.as_ref() else {
                 return;
             };
-            let (node_id, edge_id) = self.brush_allocate_placement_ids();
-            self.push_event("brushPlace", Self::brush_place_json(&preview, node_id.as_str(), edge_id.as_str()));
+            let serial = self.brush_placement_serial.wrapping_add(1);
+            let node_id = format!("puzzle2d.brush.{serial}");
+            let edge_id = format!("puzzle2d.brush.edge.{serial}");
+            let Some(reservation) = self.reserve_owned_event(BoardOwnedEvent::brush_place(preview, &node_id, &edge_id)) else {
+                return;
+            };
+            self.brush_placement_serial = serial;
+            let _ = self.brush_preview.take();
+            self.publish_event_reservation(reservation);
             self.bump_content_scene_generation();
             self.brush_preview_emit_key = None;
         }
@@ -2700,25 +4563,30 @@ pub mod board_host {
                 self.bump_content_scene_generation();
                 return Ok(());
             }
+            if json.len() > BOARD_EVENT_BYTE_CAPACITY {
+                return Err(NormalPortError::EventCredits);
+            }
             let v: serde_json::Value = serde_json::from_str(json).map_err(NormalPortError::BrushSessionJson)?;
             let source = v.get("sourceHandleId").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
             self.brush_slot_source_id = source.clone();
-            self.brush_candidates = v
-                .get("candidates")
-                .and_then(|x| x.as_array())
-                .map(|arr| {
-                    arr.iter()
-                        .filter_map(|x| {
-                            if let Some(kind_id) = x.as_str().map(str::trim).filter(|s| !s.is_empty()) {
-                                return Some(BrushCandidate { node_kind_id: kind_id.to_string(), target_handle_index: 0 });
-                            }
-                            let node_kind = x.get("nodeKind").or_else(|| x.get("nodeKindId")).and_then(|n| n.as_str()).map(str::trim).filter(|s| !s.is_empty())?;
-                            let target_handle_index = x.get("targetHandleIndex").and_then(|i| i.as_u64()).unwrap_or(0) as usize;
-                            Some(BrushCandidate { node_kind_id: node_kind.to_string(), target_handle_index })
-                        })
-                        .collect()
-                })
-                .unwrap_or_default();
+            let mut candidates = BrushCandidatePage::default();
+            if let Some(rows) = v.get("candidates").and_then(|x| x.as_array()) {
+                if rows.len() > BOARD_POINTER_ITEM_CAPACITY {
+                    return Err(NormalPortError::EventCredits);
+                }
+                for row in rows {
+                    let (node_kind_id, target_handle_index) = if let Some(node_kind_id) = row.as_str().map(str::trim).filter(|value| !value.is_empty()) {
+                        (node_kind_id, 0)
+                    } else {
+                        let node_kind_id = row.get("nodeKind").or_else(|| row.get("nodeKindId")).and_then(|value| value.as_str()).map(str::trim).filter(|value| !value.is_empty()).ok_or(NormalPortError::EventCredits)?;
+                        let target_handle_index = row.get("targetHandleIndex").and_then(|value| value.as_u64()).unwrap_or(0);
+                        let target_handle_index = usize::try_from(target_handle_index).map_err(|_| NormalPortError::EventCredits)?;
+                        (node_kind_id, target_handle_index)
+                    };
+                    candidates.push(node_kind_id, target_handle_index, 0.0).map_err(|_| NormalPortError::EventCredits)?;
+                }
+            }
+            self.brush_candidates = candidates;
             self.brush_candidate_index = v.get("index").and_then(|x| x.as_u64()).map(|i| i as usize).unwrap_or(0);
             if self.brush_candidates.is_empty() {
                 self.brush_candidate_index = 0;
@@ -2762,8 +4630,10 @@ pub mod board_host {
                 self.brush_rebuild_preview();
                 return;
             };
-            let mut candidates = self.brush_compatible_candidates(&source);
-            self.brush_sort_candidates_by_handle_proximity(&source, &mut candidates);
+            let Some(candidates) = self.brush_compatible_candidates(&source) else {
+                self.event_schema_fault = true;
+                return;
+            };
             self.brush_candidates = candidates;
             self.brush_candidate_index = 0;
             self.brush_rebuild_preview();
@@ -2775,8 +4645,8 @@ pub mod board_host {
                 self.brush_sync_preview_events();
                 return;
             };
-            let candidate = self.brush_candidates.get(self.brush_candidate_index).cloned();
-            self.brush_preview = candidate.as_ref().and_then(|c| self.brush_build_preview(source_id, c));
+            let preview = self.brush_candidates.get(self.brush_candidate_index).and_then(|candidate| self.brush_build_preview(source_id, candidate));
+            self.brush_preview = preview;
             if self.brush_preview.is_some() {
                 self.bump_content_scene_generation();
             }
@@ -3134,29 +5004,686 @@ pub mod board_host {
             self.selection_screen_preview = Some(if self.selection_options.method == "lasso" { screen_points.to_vec() } else { vec![start_screen, Point::new(last.x, start_screen.y), last, Point::new(start_screen.x, last.y)] });
         }
 
-        fn push_event(&mut self, name: &str, payload: serde_json::Value) {
-            self.events.push(json!({ "name": name, "payload": payload }));
+        fn reserve_selection_event(&mut self, kind: BoardEventKind, ids: &[String], anchor_ids: Option<&[String]>, removed_ids: Option<&[String]>, gesture: Option<&str>) -> Option<BoardEventReservation> {
+            self.reserve_owned_event(BoardOwnedEvent::selection(kind, ids, anchor_ids, removed_ids, gesture))
+        }
+
+        fn reserve_owned_event(&mut self, event: Result<BoardOwnedEvent, BoardEventFault>) -> Option<BoardEventReservation> {
+            let event = match event {
+                Ok(event) => event,
+                Err(_) => {
+                    self.event_schema_fault = true;
+                    return None;
+                }
+            };
+            match self.events.reserve_event(event) {
+                Ok(reservation) => Some(reservation),
+                Err(event) => {
+                    if self.event_overflow.is_none() {
+                        self.event_overflow = Some(event);
+                    } else {
+                        self.event_schema_fault = true;
+                    }
+                    None
+                }
+            }
+        }
+
+        fn reserve_owned_batch(&mut self, first: Result<BoardOwnedEvent, BoardEventFault>, second: Option<Result<BoardOwnedEvent, BoardEventFault>>) -> Option<BoardEventBatchReservation> {
+            let first = match first {
+                Ok(event) => event,
+                Err(_) => {
+                    self.event_schema_fault = true;
+                    return None;
+                }
+            };
+            let mut batch = BoardEventBatchReservation::one(first);
+            if let Some(second) = second {
+                let second = match second {
+                    Ok(event) => event,
+                    Err(_) => {
+                        self.event_schema_fault = true;
+                        return None;
+                    }
+                };
+                if batch.push(second).is_err() {
+                    self.event_schema_fault = true;
+                    return None;
+                }
+            }
+            match self.events.reserve_batch(batch) {
+                Ok(batch) => Some(batch),
+                Err(batch) => {
+                    if self.event_batch_overflow.is_none() {
+                        self.event_batch_overflow = Some(batch);
+                    } else {
+                        self.event_schema_fault = true;
+                    }
+                    None
+                }
+            }
+        }
+
+        fn publish_event_reservation(&mut self, reservation: BoardEventReservation) {
+            if self.events.publish_reserved(reservation).is_err() {
+                self.event_schema_fault = true;
+            }
+        }
+
+        fn publish_event_batch(&mut self, reservation: BoardEventBatchReservation) {
+            if self.events.publish_batch(reservation).is_err() {
+                self.event_schema_fault = true;
+            }
         }
 
         /// @emoji 🏁️ Emits final node coordinates after a drag gesture so hosts can commit declarative fixture state once.
         fn push_node_drag_end_events(&mut self, start_positions: &BTreeMap<String, (f64, f64)>) {
-            let mut moves = Vec::with_capacity(start_positions.len());
-            for id in start_positions.keys() {
-                let Some(node) = self.nodes.get(id) else {
-                    continue;
-                };
-                moves.push(json!({ "id": id, "x": node.x, "y": node.y }));
-            }
-            if moves.is_empty() {
+            if !start_positions.keys().any(|id| self.nodes.contains_key(id)) {
                 return;
             }
-            self.push_event("nodeDragEnd", json!({ "moves": moves }));
+            let event = BoardOwnedEvent::node_drag_end(start_positions.keys().filter_map(|id| self.nodes.get(id).map(|node| (id.as_str(), node.x, node.y))));
+            let Some(reservation) = self.reserve_owned_event(event) else {
+                return;
+            };
+            self.publish_event_reservation(reservation);
         }
 
+        #[cfg(test)]
         pub fn drain_events_json(&mut self) -> String {
-            let out = serde_json::to_string(&self.events).unwrap_or_else(|_| "[]".into());
-            self.events.clear();
+            let mut out = String::from("[");
+            let mut first = true;
+            while let Some(event) = self.events.pop() {
+                if !first {
+                    out.push(',');
+                }
+                first = false;
+                event.write_json(&mut out);
+            }
+            if let Some(event) = self.event_overflow.take() {
+                if !first {
+                    out.push(',');
+                }
+                event.write_json(&mut out);
+            }
+            out.push(']');
             out
+        }
+
+        pub fn pop_owned_event(&mut self) -> Option<BoardOwnedEvent> {
+            if let Some(event) = self.events.pop().or_else(|| self.event_overflow.take()) {
+                return Some(event);
+            }
+            let batch = self.event_batch_overflow.as_mut()?;
+            let event = batch.pop();
+            if batch.is_empty() {
+                self.event_batch_overflow = None;
+            }
+            event
+        }
+
+        pub fn peek_owned_event(&self) -> Option<&BoardOwnedEvent> {
+            self.events.iter().next().or(self.event_overflow.as_ref()).or_else(|| self.event_batch_overflow.as_ref().and_then(BoardEventBatchReservation::peek))
+        }
+
+        pub fn event_terminal_faulted(&self) -> bool {
+            self.event_schema_fault
+        }
+
+        pub fn step_event_authority(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> BoardAuthorityStep {
+            if context.should_yield() {
+                return BoardAuthorityStep::Pending;
+            }
+            let faulted_before = self.event_schema_fault;
+            if self.pending_delete_planning.is_some() {
+                if context.is_cancelled() {
+                    if let Some(planning) = self.pending_delete_planning.as_mut() {
+                        planning.cancelling = true;
+                    }
+                }
+                let result = self.step_delete_planning();
+                context.consume_fuel(1);
+                return result;
+            }
+            if self.pending_delete_operation.is_some() {
+                if context.is_cancelled() {
+                    if let Some(operation) = self.pending_delete_operation.as_mut() {
+                        if !operation.claimed {
+                            operation.cancelling = true;
+                        }
+                    }
+                }
+                if self.pending_delete_operation.as_ref().is_some_and(|operation| operation.cancelling && !operation.claimed) {
+                    self.pending_delete_operation = None;
+                    context.consume_fuel(1);
+                    return BoardAuthorityStep::Cancelled;
+                }
+                self.step_pending_delete_operation();
+                context.consume_fuel(1);
+                if self.event_schema_fault && !faulted_before {
+                    return BoardAuthorityStep::Fault;
+                }
+                return if self.pending_delete_operation.is_some() { BoardAuthorityStep::Pending } else { BoardAuthorityStep::Complete };
+            }
+            BoardAuthorityStep::Complete
+        }
+
+        fn set_pointer_selection_flag(&mut self, id: &str, selected: bool) {
+            if let Some(node) = self.nodes.get_mut(id) {
+                node.selected = selected;
+            }
+            if let Some(handle) = self.handles.get_mut(id) {
+                handle.selected = selected;
+            }
+            if let Some(edge) = self.edges.get_mut(id) {
+                edge.selected = selected;
+            }
+            if let Some(wire) = self.wires.get_mut(id) {
+                wire.selected = selected;
+            }
+        }
+
+        fn step_pointer_commit_operation(&mut self, operation: &mut BoardPointerCommitOperation) -> bool {
+            match operation.plan.kind {
+                BoardPointerPlanKind::Idle => true,
+                BoardPointerPlanKind::Pan { camera } => {
+                    self.camera = Camera { x: camera[0], y: camera[1], zoom: infinite::canvas::camera::clamp_zoom(camera[2]) };
+                    true
+                }
+                BoardPointerPlanKind::FinishPan { camera } => match operation.phase {
+                    0 => {
+                        self.camera = Camera { x: camera[0], y: camera[1], zoom: infinite::canvas::camera::clamp_zoom(camera[2]) };
+                        operation.phase = 1;
+                        false
+                    }
+                    _ => {
+                        self.interaction = Interaction::None;
+                        true
+                    }
+                },
+                BoardPointerPlanKind::DragMove | BoardPointerPlanKind::FinishDrag => {
+                    if operation.cursor < operation.plan.delta_len {
+                        let delta = operation.plan.deltas[usize::from(operation.cursor)].expect("pointer commit delta");
+                        if let Some(node) = self.nodes.get_mut(operation.plan.id(delta.id)) {
+                            operation.changed |= (node.x - delta.x).abs() > 1e-9 || (node.y - delta.y).abs() > 1e-9;
+                            node.x = delta.x;
+                            node.y = delta.y;
+                        }
+                        operation.cursor += 1;
+                        return false;
+                    }
+                    if operation.phase == 0 {
+                        if operation.changed {
+                            self.bump_content_scene_generation();
+                        }
+                        operation.phase = 1;
+                        return false;
+                    }
+                    if matches!(operation.plan.kind, BoardPointerPlanKind::FinishDrag) {
+                        self.interaction = Interaction::None;
+                    }
+                    true
+                }
+                BoardPointerPlanKind::SelectionPreview { start, start_screen } => self.step_selection_preview_commit(operation, start, start_screen),
+                BoardPointerPlanKind::SelectionCommit => self.step_selection_commit(operation),
+                BoardPointerPlanKind::LinkMove { source, target, hover, compat_key, ring_key, end_world, activated, start_screen } => match operation.phase {
+                    0 => {
+                        if !matches!(self.interaction, Interaction::LinkAtSourceHandle { .. } | Interaction::LinkDragSnap { .. }) {
+                            operation.faulted = true;
+                            return true;
+                        }
+                        operation.phase = 1;
+                        false
+                    }
+                    1 => {
+                        self.link_compat_nodes_emit_key = Some(operation.plan.id(compat_key).to_owned());
+                        operation.phase = 2;
+                        false
+                    }
+                    2 => {
+                        self.link_target_ring_emit_key = Some(operation.plan.id(ring_key).to_owned());
+                        operation.phase = 3;
+                        false
+                    }
+                    3 => {
+                        self.hovered_id = hover.map(|span| operation.plan.id(span).to_owned());
+                        self.hovered_kind = None;
+                        operation.phase = 4;
+                        false
+                    }
+                    4 => {
+                        let source_id = operation.plan.id(source).to_owned();
+                        let target_id = target.map(|span| operation.plan.id(span).to_owned());
+                        self.interaction = if activated { Interaction::LinkDragSnap { source_id, target_id, end_world } } else { Interaction::LinkAtSourceHandle { source_id, start_screen } };
+                        operation.phase = 5;
+                        false
+                    }
+                    _ => {
+                        self.bump_content_scene_generation();
+                        true
+                    }
+                },
+                BoardPointerPlanKind::LinkFinish { source, target, edge, target_node, hover, compat_key, ring_key } => match operation.phase {
+                    0 => {
+                        if !matches!(self.interaction, Interaction::LinkAtSourceHandle { .. } | Interaction::LinkDragSnap { .. } | Interaction::LinkTargetNode { .. }) {
+                            operation.faulted = true;
+                            return true;
+                        }
+                        operation.phase = 1;
+                        false
+                    }
+                    1 => {
+                        if let (Some(target), Some(edge)) = (target, edge) {
+                            let source_id = operation.plan.id(source).to_owned();
+                            let target_id = operation.plan.id(target).to_owned();
+                            let edge_id = operation.plan.id(edge).to_owned();
+                            let Some(source_row) = self.handles.get(&source_id) else {
+                                operation.faulted = true;
+                                return true;
+                            };
+                            let Some(target_row) = self.handles.get(&target_id) else {
+                                operation.faulted = true;
+                                return true;
+                            };
+                            let edge_kind = self.default_edge_kind_for_created_link(source_row, target_row);
+                            self.edges.insert(
+                                edge_id.clone(),
+                                EdgeData { id: edge_id, source: source_id, target: target_id, selected: false, visible: true, locked: false, style: None, edge_kind, source_tip: None, target_tip: None, properties: graph::PropertyBag::new() },
+                            );
+                        }
+                        operation.phase = 2;
+                        false
+                    }
+                    2 => {
+                        self.link_compat_nodes_emit_key = compat_key.map(|span| operation.plan.id(span).to_owned());
+                        operation.phase = 3;
+                        false
+                    }
+                    3 => {
+                        self.link_target_ring_emit_key = ring_key.map(|span| operation.plan.id(span).to_owned());
+                        operation.phase = 4;
+                        false
+                    }
+                    4 => {
+                        self.interaction =
+                            if let Some(target_node) = target_node { Interaction::LinkTargetNode { source_id: operation.plan.id(source).to_owned(), target_node_id: operation.plan.id(target_node).to_owned() } } else { Interaction::None };
+                        operation.phase = 5;
+                        false
+                    }
+                    5 => {
+                        self.hovered_id = hover.map(|span| operation.plan.id(span).to_owned());
+                        self.hovered_kind = None;
+                        operation.phase = 6;
+                        false
+                    }
+                    _ => {
+                        self.bump_content_scene_generation();
+                        true
+                    }
+                },
+                BoardPointerPlanKind::LinkRetain { hover } | BoardPointerPlanKind::Hover { hover } => {
+                    self.hovered_id = hover.map(|span| operation.plan.id(span).to_owned());
+                    self.hovered_kind = None;
+                    true
+                }
+                BoardPointerPlanKind::Brush { source, hover, alt, commit_old } => self.step_brush_pointer_commit(operation, source, hover, alt, commit_old),
+                BoardPointerPlanKind::LeaveIdle => {
+                    self.hovered_id = None;
+                    self.hovered_kind = None;
+                    true
+                }
+            }
+        }
+
+        fn step_selection_preview_commit(&mut self, operation: &mut BoardPointerCommitOperation, start: Point, start_screen: Point) -> bool {
+            match operation.phase {
+                0 => {
+                    if !matches!(self.interaction, Interaction::SelectionPending { .. } | Interaction::Selection { .. }) {
+                        operation.faulted = true;
+                        return true;
+                    }
+                    operation.phase = 1;
+                    false
+                }
+                1 => {
+                    if let Some(id) = self.preselect.pop_first() {
+                        self.set_pointer_selection_flag(&id, false);
+                        return false;
+                    }
+                    operation.phase = 2;
+                    false
+                }
+                2 => {
+                    if self.preselect_removed.pop_first().is_some() {
+                        return false;
+                    }
+                    operation.phase = 3;
+                    false
+                }
+                3 => {
+                    if operation.cursor < operation.plan.delta_len {
+                        let delta = operation.plan.deltas[usize::from(operation.cursor)].expect("selection preview id");
+                        let id = operation.plan.id(delta.id).to_owned();
+                        self.preselect.insert(id.clone());
+                        self.set_pointer_selection_flag(&id, true);
+                        operation.cursor += 1;
+                        return false;
+                    }
+                    operation.cursor = 0;
+                    operation.phase = 4;
+                    false
+                }
+                4 => {
+                    let next = match &self.interaction {
+                        Interaction::SelectionPending { initial_ids, .. } | Interaction::Selection { initial_ids, .. } => match operation.scan_after.as_ref() {
+                            Some(after) => initial_ids.range((std::ops::Bound::Excluded(after.clone()), std::ops::Bound::Unbounded)).next().cloned(),
+                            None => initial_ids.first().cloned(),
+                        },
+                        _ => None,
+                    };
+                    if let Some(id) = next {
+                        operation.scan_after = Some(id.clone());
+                        if !self.preselect.contains(&id) {
+                            self.preselect_removed.insert(id);
+                        }
+                        return false;
+                    }
+                    operation.scan_after = None;
+                    operation.phase = 5;
+                    false
+                }
+                5 => {
+                    if operation.cursor < operation.plan.point_len {
+                        let index = usize::from(operation.cursor);
+                        operation.points.push(operation.plan.points[index]);
+                        operation.screen_points.push(operation.plan.screen_points[index]);
+                        operation.cursor += 1;
+                        return false;
+                    }
+                    operation.cursor = 0;
+                    operation.phase = 6;
+                    false
+                }
+                6 => {
+                    if operation.screen_points.len() < 2 {
+                        operation.phase = 7;
+                        return false;
+                    }
+                    if self.selection_options.method == "lasso" {
+                        if usize::from(operation.cursor) < operation.screen_points.len() {
+                            operation.overlay_points.push(operation.screen_points[usize::from(operation.cursor)]);
+                            operation.cursor += 1;
+                            return false;
+                        }
+                    } else if operation.cursor < 4 {
+                        let last = *operation.screen_points.last().unwrap_or(&start_screen);
+                        let point = match operation.cursor {
+                            0 => start_screen,
+                            1 => Point::new(last.x, start_screen.y),
+                            2 => last,
+                            _ => Point::new(start_screen.x, last.y),
+                        };
+                        operation.overlay_points.push(point);
+                        operation.cursor += 1;
+                        return false;
+                    }
+                    operation.phase = 7;
+                    false
+                }
+                7 => {
+                    let previous = std::mem::replace(&mut self.interaction, Interaction::None);
+                    let initial_ids = match previous {
+                        Interaction::SelectionPending { initial_ids, .. } => initial_ids,
+                        Interaction::Selection { initial_ids, points, screen_points, .. } => {
+                            operation.retiring_points = points;
+                            operation.retiring_screen_points = screen_points;
+                            initial_ids
+                        }
+                        _ => {
+                            operation.faulted = true;
+                            return true;
+                        }
+                    };
+                    self.selection_preview_crossing = !selection_drag_enclosing(self.selection_options.method.as_str(), start_screen, &operation.screen_points);
+                    operation.retiring_overlay_points = self.selection_screen_preview.take().unwrap_or_default();
+                    self.selection_screen_preview = (!operation.overlay_points.is_empty()).then(|| std::mem::take(&mut operation.overlay_points));
+                    self.interaction = Interaction::Selection { initial_ids, points: std::mem::take(&mut operation.points), screen_points: std::mem::take(&mut operation.screen_points), start, start_screen };
+                    if let Some((ids, removed, gesture)) = self.last_preselect_emit_sig.take() {
+                        operation.retiring_signature_b = ids;
+                        operation.retiring_signature_c = removed;
+                        operation.retiring_gestures[1] = gesture;
+                    }
+                    operation.phase = 8;
+                    false
+                }
+                8 => {
+                    if operation.retire_one() {
+                        return false;
+                    }
+                    true
+                }
+                _ => true,
+            }
+        }
+
+        fn step_selection_commit(&mut self, operation: &mut BoardPointerCommitOperation) -> bool {
+            match operation.phase {
+                0 => {
+                    let previous = std::mem::replace(&mut self.interaction, Interaction::None);
+                    match previous {
+                        Interaction::SelectionPending { initial_ids, .. } => operation.retiring_ids = initial_ids,
+                        Interaction::Selection { initial_ids, points, screen_points, .. } => {
+                            operation.retiring_ids = initial_ids;
+                            operation.retiring_points = points;
+                            operation.retiring_screen_points = screen_points;
+                        }
+                        other => {
+                            self.interaction = other;
+                            operation.faulted = true;
+                            return true;
+                        }
+                    }
+                    operation.phase = 1;
+                    false
+                }
+                1 => {
+                    if let Some(id) = self.selection.pop_first() {
+                        self.set_pointer_selection_flag(&id, false);
+                        return false;
+                    }
+                    operation.phase = 2;
+                    false
+                }
+                2 => {
+                    if let Some(id) = self.preselect.pop_first() {
+                        self.set_pointer_selection_flag(&id, false);
+                        return false;
+                    }
+                    operation.phase = 3;
+                    false
+                }
+                3 => {
+                    if self.preselect_removed.pop_first().is_some() {
+                        return false;
+                    }
+                    operation.phase = 4;
+                    false
+                }
+                4 => {
+                    if self.selection_exit_highlight.pop_first().is_some() {
+                        return false;
+                    }
+                    operation.phase = 5;
+                    false
+                }
+                5 => {
+                    if operation.retire_one() {
+                        return false;
+                    }
+                    operation.phase = 6;
+                    false
+                }
+                6 => {
+                    if operation.cursor < operation.plan.delta_len {
+                        let delta = operation.plan.deltas[usize::from(operation.cursor)].expect("selection commit id");
+                        let id = operation.plan.id(delta.id).to_owned();
+                        self.selection.insert(id.clone());
+                        self.set_pointer_selection_flag(&id, true);
+                        operation.cursor += 1;
+                        return false;
+                    }
+                    operation.phase = 7;
+                    false
+                }
+                7 => {
+                    if let Some((ids, gesture)) = self.last_select_emit_sig.take() {
+                        operation.retiring_signature_a = ids;
+                        operation.retiring_gestures[0] = gesture;
+                    }
+                    if let Some((ids, removed, gesture)) = self.last_preselect_emit_sig.take() {
+                        operation.retiring_signature_b = ids;
+                        operation.retiring_signature_c = removed;
+                        operation.retiring_gestures[1] = gesture;
+                    }
+                    operation.retiring_overlay_points = self.selection_screen_preview.take().unwrap_or_default();
+                    self.selection_preview_crossing = false;
+                    operation.phase = 8;
+                    false
+                }
+                8 => {
+                    if operation.retire_one() {
+                        return false;
+                    }
+                    operation.phase = 9;
+                    false
+                }
+                _ => {
+                    self.bump_content_scene_generation();
+                    true
+                }
+            }
+        }
+
+        fn step_brush_pointer_commit(&mut self, operation: &mut BoardPointerCommitOperation, source: Option<BoardPointerSpan>, hover: Option<BoardPointerSpan>, alt: bool, commit_old: bool) -> bool {
+            match operation.phase {
+                0 => {
+                    if self.active_utility != ActiveUtility::Brush || matches!(self.interaction, Interaction::Pan { .. }) {
+                        operation.faulted = true;
+                        return true;
+                    }
+                    operation.phase = 1;
+                    false
+                }
+                1 => {
+                    if operation.cursor < operation.plan.delta_len {
+                        let candidate = operation.plan.deltas[usize::from(operation.cursor)].expect("brush candidate");
+                        if operation.brush_candidates.push(operation.plan.id(candidate.id), candidate.x as usize, 0.0).is_err() {
+                            operation.faulted = true;
+                            return true;
+                        }
+                        operation.cursor += 1;
+                        return false;
+                    }
+                    operation.phase = 2;
+                    false
+                }
+                2 => {
+                    if commit_old {
+                        self.brush_placement_serial = self.brush_placement_serial.wrapping_add(1);
+                    }
+                    operation.phase = 3;
+                    false
+                }
+                3 => {
+                    self.brush_alt_pressed = alt;
+                    self.brush_slot_suggestions_active = false;
+                    operation.phase = 4;
+                    false
+                }
+                4 => {
+                    self.brush_slot_source_id = source.map(|span| operation.plan.id(span).to_owned());
+                    operation.phase = 5;
+                    false
+                }
+                5 => {
+                    self.brush_candidates = std::mem::take(&mut operation.brush_candidates);
+                    self.brush_candidate_index = 0;
+                    operation.phase = 6;
+                    false
+                }
+                6 => {
+                    let offset = if alt { self.suggestion_offset } else { 0.0 };
+                    self.brush_preview = self.brush_slot_source_id.as_deref().and_then(|source_id| self.brush_candidates.first().and_then(|candidate| self.brush_build_preview_with_offset(source_id, candidate, offset)));
+                    operation.phase = 7;
+                    false
+                }
+                7 => {
+                    self.brush_preview_emit_key = None;
+                    operation.phase = 8;
+                    false
+                }
+                8 => {
+                    self.brush_candidates_emit_key = None;
+                    operation.phase = 9;
+                    false
+                }
+                9 => {
+                    self.hovered_id = hover.map(|span| operation.plan.id(span).to_owned());
+                    self.hovered_kind = None;
+                    operation.phase = 10;
+                    false
+                }
+                10 => {
+                    self.interaction = Interaction::None;
+                    operation.phase = 11;
+                    false
+                }
+                _ => {
+                    self.bump_content_scene_generation();
+                    true
+                }
+            }
+        }
+
+        pub fn close_event_authority_step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> bool {
+            if context.should_yield() {
+                return false;
+            }
+            if let Some(planning) = self.pending_delete_planning.as_mut() {
+                planning.cancelling = true;
+            }
+            if self.pending_delete_planning.is_some() {
+                let _ = self.step_delete_planning();
+                context.consume_fuel(1);
+                return false;
+            }
+            if let Some(operation) = self.pending_delete_operation.as_mut() {
+                if !operation.claimed {
+                    operation.cancelling = true;
+                }
+            }
+            if self.pending_delete_operation.is_some() {
+                let _ = self.step_event_authority(context);
+                return false;
+            }
+            if self.event_overflow.take().is_some() {
+                context.consume_fuel(1);
+                return false;
+            }
+            if let Some(batch) = self.event_batch_overflow.as_mut() {
+                let _ = batch.pop();
+                if batch.is_empty() {
+                    self.event_batch_overflow = None;
+                }
+                context.consume_fuel(1);
+                return false;
+            }
+            let closed = self.events.close_step();
+            context.consume_fuel(1);
+            closed
+        }
+
+        pub fn event_authority_terminal_is_empty(&self) -> bool {
+            self.pending_delete_planning.is_none() && self.pending_delete_operation.is_none() && self.event_overflow.is_none() && self.event_batch_overflow.is_none() && self.events.terminal_is_empty()
         }
 
         fn is_preselecting(&self) -> bool {
@@ -3177,6 +5704,9 @@ pub mod board_host {
             if self.selection.is_empty() {
                 return;
             }
+            let Some(reservation) = self.reserve_selection_event(BoardEventKind::Select, &[], None, None, None) else {
+                return;
+            };
             self.preselect.clear();
             self.preselect_removed.clear();
             self.last_preselect_emit_sig = None;
@@ -3184,7 +5714,7 @@ pub mod board_host {
             self.selection_exit_highlight.clear();
             self.selection.clear();
             self.sync_selection_flags_to_objects();
-            self.push_event("select", json!({ "ids": [], "exitHighlightIds": [] }));
+            self.publish_event_reservation(reservation);
         }
 
         fn sync_selection_flags_to_objects(&mut self) {
@@ -3207,7 +5737,10 @@ pub mod board_host {
             self.last_select_emit_sig = None;
             let mut sorted: Vec<_> = self.selection.iter().cloned().collect();
             sorted.sort();
-            self.push_event("select", json!({ "ids": sorted, "exitHighlightIds": [] }));
+            let Some(reservation) = self.reserve_selection_event(BoardEventKind::Select, &sorted, None, None, None) else {
+                return;
+            };
+            self.publish_event_reservation(reservation);
         }
 
         pub fn set_selection_ids(&mut self, ids: &[String]) {
@@ -3215,13 +5748,19 @@ pub mod board_host {
             if next == self.selection {
                 return;
             }
+            let mut sorted: Vec<_> = next.iter().cloned().collect();
+            sorted.sort();
+            let Some(reservation) = self.reserve_selection_event(BoardEventKind::Select, &sorted, None, None, None) else {
+                return;
+            };
             self.preselect.clear();
             self.preselect_removed.clear();
             self.last_preselect_emit_sig = None;
             self.selection_exit_highlight.clear();
             self.selection = next;
             self.sync_selection_flags_to_objects();
-            self.push_select_event();
+            self.last_select_emit_sig = None;
+            self.publish_event_reservation(reservation);
         }
 
         /// @emoji 🔇️ Updates committed selection without emitting `select` (controlled React sync).
@@ -3259,6 +5798,9 @@ pub mod board_host {
             if next == self.selection && self.last_select_emit_sig.as_ref() == Some(&sig) {
                 return;
             }
+            let Some(reservation) = self.reserve_selection_event(BoardEventKind::Select, &sorted, None, None, gesture) else {
+                return;
+            };
             self.last_select_emit_sig = Some(sig);
             self.preselect.clear();
             self.preselect_removed.clear();
@@ -3268,11 +5810,7 @@ pub mod board_host {
                 self.selection = next;
                 self.sync_selection_flags_to_objects();
             }
-            let mut payload = json!({ "ids": sorted, "exitHighlightIds": [] });
-            if let Some(ref g) = gesture_owned {
-                payload["gestureMergeMode"] = json!(g);
-            }
-            self.push_event("select", payload);
+            self.publish_event_reservation(reservation);
         }
 
         /// @emoji 👁️ Rectangle/lasso drag preview: `preselect` + `preselect_removed` (anchor \\ preselect); emits `preselect` only.
@@ -3285,16 +5823,15 @@ pub mod board_host {
             if self.preselect == next && self.last_preselect_emit_sig.as_ref() == Some(&sig) {
                 return;
             }
+            let Some(reservation) = self.reserve_selection_event(BoardEventKind::Preselect, &sorted, None, Some(&removed), gesture) else {
+                return;
+            };
             self.last_preselect_emit_sig = Some(sig);
             self.preselect = next;
             self.preselect_removed = anchor_ids.difference(&self.preselect).cloned().collect();
             self.set_hovered_id_silent(None);
             self.sync_selection_flags_to_objects();
-            let mut payload = json!({ "ids": sorted, "removedIds": removed });
-            if let Some(ref g) = gesture_owned {
-                payload["gestureMergeMode"] = json!(g);
-            }
-            self.push_event("preselect", payload);
+            self.publish_event_reservation(reservation);
         }
 
         fn sorted_selection_ids(set: &BTreeSet<String>) -> Vec<String> {
@@ -3309,6 +5846,9 @@ pub mod board_host {
             let sorted = Self::sorted_selection_ids(&next);
             let anchor = Self::sorted_selection_ids(initial_ids);
             let gesture_owned = gesture.map(ToOwned::to_owned);
+            let Some(reservation) = self.reserve_selection_event(BoardEventKind::Select, &sorted, Some(&anchor), None, gesture) else {
+                return;
+            };
             self.last_select_emit_sig = None;
             self.last_preselect_emit_sig = None;
             self.preselect.clear();
@@ -3316,11 +5856,8 @@ pub mod board_host {
             self.selection_exit_highlight.clear();
             self.selection = next;
             self.sync_selection_flags_to_objects();
-            let mut payload = json!({ "ids": sorted, "anchorIds": anchor, "exitHighlightIds": [] });
-            if let Some(ref g) = gesture_owned {
-                payload["gestureMergeMode"] = json!(g);
-            }
-            self.push_event("select", payload);
+            let _ = gesture_owned;
+            self.publish_event_reservation(reservation);
         }
 
         /// @emoji 🧿️ True during left‑button rectangle/lasso drag so callers can avoid descriptor round‑trips that fight the live marquee state.
@@ -3740,24 +6277,32 @@ pub mod board_host {
         }
 
         fn sync_link_gesture_events(&mut self) {
-            if let Interaction::ExternalLinkPreview { source_id, compatible_node_ids, ring_node_id, ring_handle_ids, .. } = self.interaction.clone() {
+            if let Interaction::ExternalLinkPreview { source_id, compatible_node_ids, ring_node_id, ring_handle_ids, .. } = &self.interaction {
+                if compatible_node_ids.len().saturating_add(ring_handle_ids.len()) > BOARD_POINTER_ITEM_CAPACITY {
+                    self.event_schema_fault = true;
+                    return;
+                }
                 let compat_key = format!("{}|{}", source_id, compatible_node_ids.join(","));
-                if self.link_compat_nodes_emit_key.as_deref() != Some(compat_key.as_str()) {
-                    self.link_compat_nodes_emit_key = Some(compat_key);
-                    self.push_event("linkCompatibleNodes", json!({ "source": source_id, "nodeIds": compatible_node_ids }));
-                }
                 let ring_key = format!("{}|{}|{}", source_id, ring_node_id.as_deref().unwrap_or(""), ring_handle_ids.join(","));
-                if self.link_target_ring_emit_key.as_deref() != Some(ring_key.as_str()) {
-                    self.link_target_ring_emit_key = Some(ring_key);
-                    self.push_event(
-                        "linkTargetRing",
-                        json!({
-                            "source": source_id,
-                            "nodeId": ring_node_id,
-                            "handleIds": ring_handle_ids,
-                        }),
-                    );
+                let compat_changed = self.link_compat_nodes_emit_key.as_deref() != Some(compat_key.as_str());
+                let ring_changed = self.link_target_ring_emit_key.as_deref() != Some(ring_key.as_str());
+                let compat_event = compat_changed.then(|| BoardOwnedEvent::link_compatible(source_id, compatible_node_ids));
+                let ring_event = ring_changed.then(|| BoardOwnedEvent::link_ring(source_id, ring_node_id.as_deref(), ring_handle_ids));
+                let (first, second) = match (compat_event, ring_event) {
+                    (Some(first), second) => (first, second),
+                    (None, Some(first)) => (first, None),
+                    (None, None) => return,
+                };
+                let Some(reservation) = self.reserve_owned_batch(first, second) else {
+                    return;
+                };
+                if compat_changed {
+                    self.link_compat_nodes_emit_key = Some(compat_key);
                 }
+                if ring_changed {
+                    self.link_target_ring_emit_key = Some(ring_key);
+                }
+                self.publish_event_batch(reservation);
                 return;
             }
             let Some(source) = self.active_link_source_handle_id().map(str::to_string) else {
@@ -3765,33 +6310,59 @@ pub mod board_host {
                 return;
             };
             let node_ids = self.link_drag_compatible_target_node_ids(&source);
+            if node_ids.len() > BOARD_POINTER_ITEM_CAPACITY {
+                self.event_schema_fault = true;
+                return;
+            }
             let compat_key = format!("{}|{}", source, node_ids.join(","));
-            if self.link_compat_nodes_emit_key.as_deref() != Some(compat_key.as_str()) {
-                self.link_compat_nodes_emit_key = Some(compat_key);
-                self.push_event("linkCompatibleNodes", json!({ "source": source, "nodeIds": node_ids }));
-            }
             let (ring_node_id, ring_handle_ids) = self.link_target_ring_snapshot(&source);
-            let ring_key = format!("{}|{}|{}", source, ring_node_id.as_deref().unwrap_or(""), ring_handle_ids.join(","));
-            if self.link_target_ring_emit_key.as_deref() != Some(ring_key.as_str()) {
-                self.link_target_ring_emit_key = Some(ring_key);
-                self.push_event(
-                    "linkTargetRing",
-                    json!({
-                        "source": source,
-                        "nodeId": ring_node_id,
-                        "handleIds": ring_handle_ids,
-                    }),
-                );
+            if node_ids.len().saturating_add(ring_handle_ids.len()) > BOARD_POINTER_ITEM_CAPACITY {
+                self.event_schema_fault = true;
+                return;
             }
+            let ring_key = format!("{}|{}|{}", source, ring_node_id.as_deref().unwrap_or(""), ring_handle_ids.join(","));
+            let compat_changed = self.link_compat_nodes_emit_key.as_deref() != Some(compat_key.as_str());
+            let ring_changed = self.link_target_ring_emit_key.as_deref() != Some(ring_key.as_str());
+            let compat_event = compat_changed.then(|| BoardOwnedEvent::link_compatible(&source, &node_ids));
+            let ring_event = ring_changed.then(|| BoardOwnedEvent::link_ring(&source, ring_node_id.as_deref(), &ring_handle_ids));
+            let (first, second) = match (compat_event, ring_event) {
+                (Some(first), second) => (first, second),
+                (None, Some(first)) => (first, None),
+                (None, None) => return,
+            };
+            let Some(reservation) = self.reserve_owned_batch(first, second) else {
+                return;
+            };
+            if compat_changed {
+                self.link_compat_nodes_emit_key = Some(compat_key);
+            }
+            if ring_changed {
+                self.link_target_ring_emit_key = Some(ring_key);
+            }
+            self.publish_event_batch(reservation);
         }
 
         fn clear_link_gesture_events(&mut self) {
-            if self.link_compat_nodes_emit_key.take().is_some() {
-                self.push_event("linkCompatibleNodes", json!({ "source": "", "nodeIds": [] }));
+            let compat = self.link_compat_nodes_emit_key.is_some();
+            let ring = self.link_target_ring_emit_key.is_some();
+            let empty: &[String] = &[];
+            let compat_event = compat.then(|| BoardOwnedEvent::link_compatible("", empty));
+            let ring_event = ring.then(|| BoardOwnedEvent::link_ring("", None, empty));
+            let (first, second) = match (compat_event, ring_event) {
+                (Some(first), second) => (first, second),
+                (None, Some(first)) => (first, None),
+                (None, None) => return,
+            };
+            let Some(reservation) = self.reserve_owned_batch(first, second) else {
+                return;
+            };
+            if compat {
+                self.link_compat_nodes_emit_key = None;
             }
-            if self.link_target_ring_emit_key.take().is_some() {
-                self.push_event("linkTargetRing", json!({ "source": "", "nodeId": null, "handleIds": [] }));
+            if ring {
+                self.link_target_ring_emit_key = None;
             }
+            self.publish_event_batch(reservation);
         }
 
         fn node_center_world(&self, node_id: &str) -> Option<Point> {
@@ -4179,10 +6750,34 @@ pub mod board_host {
         }
 
         pub fn sync_descriptor(&mut self, desc: &SceneDescriptorJson) -> Result<(), NormalPortError> {
+            let entity_count = desc.nodes.len().checked_add(desc.handles.len()).and_then(|count| count.checked_add(desc.edges.len())).and_then(|count| count.checked_add(desc.wires.len())).ok_or(NormalPortError::EventCredits)?;
+            if entity_count > BOARD_POINTER_ITEM_CAPACITY {
+                return Err(NormalPortError::EventCredits);
+            }
+            let entity_id_bytes = desc
+                .nodes
+                .iter()
+                .map(|node| node.id.len())
+                .chain(desc.handles.iter().map(|handle| handle.id.len()))
+                .chain(desc.edges.iter().map(|edge| edge.id.len()))
+                .chain(desc.wires.iter().map(|wire| wire.id.len()))
+                .try_fold(0usize, usize::checked_add)
+                .ok_or(NormalPortError::EventCredits)?;
+            if entity_id_bytes > BOARD_POINTER_BYTE_CAPACITY {
+                return Err(NormalPortError::EventCredits);
+            }
             if matches!(self.interaction, Interaction::LinkAtSourceHandle { .. } | Interaction::LinkDragSnap { .. } | Interaction::LinkTargetNode { .. } | Interaction::ExternalLinkPreview { .. }) {
                 self.interaction = Interaction::None;
                 self.clear_link_gesture_events();
             }
+            let mut created_edge_count = 0usize;
+            let mut created_edge_bytes = 0usize;
+            for edge in desc.edges.iter().filter(|edge| !self.edges.contains_key(&edge.id)) {
+                created_edge_count = created_edge_count.checked_add(1).ok_or(NormalPortError::EventCredits)?;
+                let bytes = board_edge_event_owned_bytes(&edge.id, &edge.source, &edge.target).ok_or(NormalPortError::EventCredits)?;
+                created_edge_bytes = created_edge_bytes.checked_add(bytes).ok_or(NormalPortError::EventCredits)?;
+            }
+            self.events.reserve(created_edge_count, created_edge_bytes).map_err(|_| NormalPortError::EventCredits)?;
             let want_nodes: BTreeSet<_> = desc.nodes.iter().map(|n| n.id.clone()).collect();
             let want_handles: BTreeSet<_> = desc.handles.iter().map(|h| h.id.clone()).collect();
             let want_edges: BTreeSet<_> = desc.edges.iter().map(|e| e.id.clone()).collect();
@@ -4273,7 +6868,8 @@ pub mod board_host {
                     },
                 );
                 if !existed {
-                    self.push_event("edgeCreate", json!({ "id": e.id, "source": e.source, "target": e.target }));
+                    let event = BoardOwnedEvent::edge(BoardEventKind::EdgeCreate, &e.id, &e.source, &e.target).expect("new descriptor edges were exactly preflighted");
+                    self.events.push(event).expect("new descriptor edge credits were reserved before mutation");
                 }
             }
             for w in &desc.wires {
@@ -5175,15 +7771,12 @@ pub mod board_host {
             if self.hovered_id == id && self.hovered_kind.is_none() {
                 return;
             }
+            let Some(reservation) = self.reserve_owned_event(BoardOwnedEvent::hover(id.as_deref(), event_kind.as_ref().map(|(domain, kind_id)| (domain.as_str(), kind_id.as_str())))) else {
+                return;
+            };
             self.hovered_id = id.clone();
             self.hovered_kind = None;
-            self.push_event(
-                "hover",
-                json!({
-                    "id": id,
-                    "kind": event_kind.as_ref().map(|(domain, kind_id)| json!({ "domain": domain, "kindId": kind_id })),
-                }),
-            );
+            self.publish_event_reservation(reservation);
         }
 
         /// @emoji 🖱️ Sets transitive kind hover from a catalog row (clears direct `hovered_id`).
@@ -5192,15 +7785,12 @@ pub mod board_host {
             if self.hovered_id.is_none() && self.hovered_kind == next_kind {
                 return;
             }
+            let Some(reservation) = self.reserve_owned_event(BoardOwnedEvent::hover(None, next_kind.as_ref().map(|(domain, kind_id)| (domain.as_str(), kind_id.as_str())))) else {
+                return;
+            };
             self.hovered_id = None;
             self.hovered_kind = next_kind.clone();
-            self.push_event(
-                "hover",
-                json!({
-                    "id": null,
-                    "kind": next_kind.as_ref().map(|(domain, kind_id)| json!({ "domain": domain, "kindId": kind_id })),
-                }),
-            );
+            self.publish_event_reservation(reservation);
         }
 
         /// @emoji 🔇️ Updates hover chrome without emitting `hover` (controlled React sync).
@@ -5237,81 +7827,421 @@ pub mod board_host {
         }
 
         pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
-            let viewport = self.viewport();
-            infinite::canvas::camera::wheel_screen(&mut self.camera, &viewport, sx, sy, delta_y);
-            self.set_camera_silent(self.camera.x, self.camera.y, self.camera.zoom);
+            let plan = self.plan_wheel(sx, sy, delta_y);
+            let _ = self.commit_wheel(plan);
+        }
+
+        pub fn plan_wheel(&self, sx: f64, sy: f64, delta_y: f64) -> BoardWheelPlan {
+            let mut next = self.camera.clone();
+            infinite::canvas::camera::wheel_screen(&mut next, &self.viewport(), sx, sy, delta_y);
+            BoardWheelPlan { revision: self.interaction_revision, expected: self.camera.clone(), next }
+        }
+
+        pub fn commit_wheel(&mut self, plan: BoardWheelPlan) -> bool {
+            if self.interaction_revision != plan.revision || [self.camera.x.to_bits(), self.camera.y.to_bits(), self.camera.zoom.to_bits()] != [plan.expected.x.to_bits(), plan.expected.y.to_bits(), plan.expected.zoom.to_bits()] {
+                return false;
+            }
+            self.set_camera_silent(plan.next.x, plan.next.y, plan.next.zoom);
+            self.interaction_revision = plan.revision.wrapping_add(1);
+            true
+        }
+
+        fn begin_delete_property_audit(&mut self, planning: &mut BoardDeletePlanningOperation, kind: BoardDeleteKind, id: &str) {
+            if planning.plan.contains(kind, id) {
+                return;
+            }
+            if id.len() > BOARD_POINTER_BYTE_CAPACITY.saturating_sub(usize::from(planning.plan.byte_len)) {
+                planning.fault = Some(BoardEventFault::ByteCredits);
+                return;
+            }
+            let properties = match kind {
+                BoardDeleteKind::Edge => self.edges.get_mut(id).map(|entity| std::mem::take(&mut entity.properties)),
+                BoardDeleteKind::Node => self.nodes.get_mut(id).map(|entity| std::mem::take(&mut entity.properties)),
+                BoardDeleteKind::Handle => self.handles.get_mut(id).map(|entity| std::mem::take(&mut entity.properties)),
+                BoardDeleteKind::Wire => self.wires.get_mut(id).map(|entity| std::mem::take(&mut entity.properties)),
+            };
+            let Some(properties) = properties else {
+                planning.fault = Some(BoardEventFault::Schema);
+                return;
+            };
+            planning.property_audit = Some(BoardPropertyAudit::new(kind, id.to_owned(), properties));
+        }
+
+        fn restore_delete_properties(&mut self, kind: BoardDeleteKind, id: &str, properties: graph::PropertyBag) -> bool {
+            match kind {
+                BoardDeleteKind::Edge => self.edges.get_mut(id).map(|entity| entity.properties = properties),
+                BoardDeleteKind::Node => self.nodes.get_mut(id).map(|entity| entity.properties = properties),
+                BoardDeleteKind::Handle => self.handles.get_mut(id).map(|entity| entity.properties = properties),
+                BoardDeleteKind::Wire => self.wires.get_mut(id).map(|entity| entity.properties = properties),
+            }
+            .is_some()
+        }
+
+        fn step_delete_planning(&mut self) -> BoardAuthorityStep {
+            let Some(mut planning) = self.pending_delete_planning.take() else {
+                return BoardAuthorityStep::Complete;
+            };
+            if let Some(audit) = planning.property_audit.as_mut() {
+                if !audit.step() {
+                    self.pending_delete_planning = Some(planning);
+                    return BoardAuthorityStep::Pending;
+                }
+                let Some((kind, id, properties, nodes, bytes, fault)) = audit.take_result() else {
+                    planning.fault = Some(BoardEventFault::Schema);
+                    self.pending_delete_planning = Some(planning);
+                    return BoardAuthorityStep::Pending;
+                };
+                planning.property_audit = None;
+                if !self.restore_delete_properties(kind, &id, properties) {
+                    planning.fault = Some(BoardEventFault::Schema);
+                } else if let Some(fault) = fault {
+                    planning.fault = Some(fault);
+                } else if !planning.cancelling {
+                    if let Err(fault) = planning.plan.push_admitted_entity(kind, &id, nodes, bytes) {
+                        planning.fault = Some(fault);
+                    }
+                }
+                self.pending_delete_planning = Some(planning);
+                return BoardAuthorityStep::Pending;
+            }
+            if planning.cancelling {
+                return BoardAuthorityStep::Cancelled;
+            }
+            if planning.fault.is_some() || self.interaction_revision != planning.plan.revision {
+                self.event_schema_fault = true;
+                return BoardAuthorityStep::Fault;
+            }
+            match planning.phase {
+                BoardDeletePlanningPhase::SelectedEdges => {
+                    let next = match planning.scan_after.as_ref() {
+                        Some(after) => self.selection.range((std::ops::Bound::Excluded(after.clone()), std::ops::Bound::Unbounded)).next(),
+                        None => self.selection.first(),
+                    };
+                    let next = next.map(|id| admitted_board_pointer_id(id).map(|owned| (self.edges.contains_key(id), owned)));
+                    if let Some(next) = next {
+                        match next {
+                            Ok((is_edge, id)) => {
+                                planning.scan_after = Some(id.clone());
+                                if is_edge {
+                                    self.begin_delete_property_audit(&mut planning, BoardDeleteKind::Edge, &id);
+                                }
+                            }
+                            Err(fault) => planning.fault = Some(fault),
+                        }
+                    } else {
+                        planning.scan_after = None;
+                        planning.phase = BoardDeletePlanningPhase::Wires;
+                    }
+                }
+                BoardDeletePlanningPhase::Wires => {
+                    let next = match planning.scan_after.as_ref() {
+                        Some(after) => self.wires.range((std::ops::Bound::Excluded(after.clone()), std::ops::Bound::Unbounded)).next(),
+                        None => self.wires.first_key_value(),
+                    }
+                    .map(|(id, wire)| {
+                        let source_removed = self.handles.get(&wire.source).is_some_and(|handle| self.selection.contains(&handle.id) || self.selection.contains(&handle.node_id));
+                        let target_removed = wire.target.as_ref().and_then(|id| self.handles.get(id)).is_some_and(|handle| self.selection.contains(&handle.id) || self.selection.contains(&handle.node_id));
+                        admitted_board_pointer_id(id).map(|owned| (source_removed || target_removed, owned))
+                    });
+                    if let Some(next) = next {
+                        match next {
+                            Ok((remove, id)) => {
+                                planning.scan_after = Some(id.clone());
+                                if remove {
+                                    self.begin_delete_property_audit(&mut planning, BoardDeleteKind::Wire, &id);
+                                }
+                            }
+                            Err(fault) => planning.fault = Some(fault),
+                        }
+                    } else {
+                        planning.scan_after = None;
+                        planning.phase = BoardDeletePlanningPhase::Handles;
+                    }
+                }
+                BoardDeletePlanningPhase::Handles => {
+                    let next = match planning.scan_after.as_ref() {
+                        Some(after) => self.handles.range((std::ops::Bound::Excluded(after.clone()), std::ops::Bound::Unbounded)).next(),
+                        None => self.handles.first_key_value(),
+                    }
+                    .map(|(id, handle)| admitted_board_pointer_id(id).map(|owned| (self.selection.contains(id) || self.selection.contains(&handle.node_id), owned)));
+                    if let Some(next) = next {
+                        match next {
+                            Ok((remove, id)) => {
+                                planning.scan_after = Some(id.clone());
+                                if remove {
+                                    self.begin_delete_property_audit(&mut planning, BoardDeleteKind::Handle, &id);
+                                }
+                            }
+                            Err(fault) => planning.fault = Some(fault),
+                        }
+                    } else {
+                        planning.scan_after = None;
+                        planning.phase = BoardDeletePlanningPhase::Edges;
+                    }
+                }
+                BoardDeletePlanningPhase::Edges => {
+                    let next = match planning.scan_after.as_ref() {
+                        Some(after) => self.edges.range((std::ops::Bound::Excluded(after.clone()), std::ops::Bound::Unbounded)).next(),
+                        None => self.edges.first_key_value(),
+                    }
+                    .map(|(id, edge)| {
+                        let endpoint_removed = if self.has_ports() {
+                            [edge.source.as_str(), edge.target.as_str()].into_iter().any(|id| self.handles.get(id).is_some_and(|handle| self.selection.contains(&handle.id) || self.selection.contains(&handle.node_id)))
+                        } else {
+                            self.selection.contains(&edge.source) || self.selection.contains(&edge.target)
+                        };
+                        admitted_board_pointer_id(id).map(|owned| (self.selection.contains(id) || endpoint_removed, owned))
+                    });
+                    if let Some(next) = next {
+                        match next {
+                            Ok((remove, id)) => {
+                                planning.scan_after = Some(id.clone());
+                                if remove {
+                                    self.begin_delete_property_audit(&mut planning, BoardDeleteKind::Edge, &id);
+                                }
+                            }
+                            Err(fault) => planning.fault = Some(fault),
+                        }
+                    } else {
+                        planning.scan_after = None;
+                        planning.phase = BoardDeletePlanningPhase::Nodes;
+                    }
+                }
+                BoardDeletePlanningPhase::Nodes => {
+                    let next = match planning.scan_after.as_ref() {
+                        Some(after) => self.nodes.range((std::ops::Bound::Excluded(after.clone()), std::ops::Bound::Unbounded)).next(),
+                        None => self.nodes.first_key_value(),
+                    }
+                    .map(|(id, _)| {
+                        let removed_handle_on_node = planning.plan.entries[..usize::from(planning.plan.len)]
+                            .iter()
+                            .flatten()
+                            .filter(|entry| entry.kind == BoardDeleteKind::Handle)
+                            .any(|entry| self.handles.get(planning.plan.id(entry.id)).is_some_and(|handle| handle.node_id == *id));
+                        admitted_board_pointer_id(id).map(|owned| (self.selection.contains(id) || removed_handle_on_node, owned))
+                    });
+                    if let Some(next) = next {
+                        match next {
+                            Ok((remove, id)) => {
+                                planning.scan_after = Some(id.clone());
+                                if remove {
+                                    self.begin_delete_property_audit(&mut planning, BoardDeleteKind::Node, &id);
+                                }
+                            }
+                            Err(fault) => planning.fault = Some(fault),
+                        }
+                    } else {
+                        planning.scan_after = None;
+                        planning.phase = BoardDeletePlanningPhase::SelectionEvent;
+                    }
+                }
+                BoardDeletePlanningPhase::SelectionEvent => {
+                    let next = match planning.scan_after.as_ref() {
+                        Some(after) => self.selection.range((std::ops::Bound::Excluded(after.clone()), std::ops::Bound::Unbounded)).next(),
+                        None => self.selection.first(),
+                    }
+                    .map(|id| admitted_board_pointer_id(id));
+                    match next {
+                        Some(Ok(id)) => {
+                            planning.scan_after = Some(id.clone());
+                            if !planning.plan.removes_selection_id(&id) {
+                                let write = (|| {
+                                    if !planning.select_first {
+                                        planning.select_builder.raw(",")?;
+                                    }
+                                    planning.select_builder.string(&id)?;
+                                    Ok::<(), BoardEventFault>(())
+                                })();
+                                if let Err(fault) = write {
+                                    planning.fault = Some(fault);
+                                }
+                                planning.select_first = false;
+                            }
+                        }
+                        Some(Err(fault)) => planning.fault = Some(fault),
+                        None => planning.phase = BoardDeletePlanningPhase::Finish,
+                    }
+                }
+                BoardDeletePlanningPhase::Finish => {
+                    if let Err(fault) = planning.select_builder.raw("],\"exitHighlightIds\":[]}") {
+                        planning.fault = Some(fault);
+                    }
+                    if planning.fault.is_some() {
+                        self.event_schema_fault = true;
+                        return BoardAuthorityStep::Fault;
+                    }
+                    let select_event = std::mem::replace(&mut planning.select_builder, BoardPayloadBuilder::new()).finish_owned(BoardEventKind::Select);
+                    self.pending_delete_operation = Some(BoardDeleteOperation {
+                        plan: planning.plan,
+                        select_event: Some(select_event),
+                        mutation_cursor: 0,
+                        publication_cursor: 0,
+                        remaining_claimed_items: 0,
+                        remaining_claimed_bytes: 0,
+                        claimed: false,
+                        retiring_entity: None,
+                        cancelling: false,
+                    });
+                    return BoardAuthorityStep::Pending;
+                }
+            }
+            self.pending_delete_planning = Some(planning);
+            BoardAuthorityStep::Pending
+        }
+
+        #[cfg(test)]
+        fn plan_delete_selection(&self) -> Result<BoardDeletePlan, BoardEventFault> {
+            let mut plan = BoardDeletePlan::new(self.interaction_revision);
+            for id in self.selection.iter().filter(|id| self.edges.contains_key(*id)) {
+                let edge = self.edges.get(id).expect("selected edge exists");
+                plan.push_entity(BoardDeleteKind::Edge, id, &edge.properties)?;
+            }
+            if self.has_ports() {
+                for (node_id, node) in self.nodes.iter().filter(|(node_id, _)| self.selection.contains(*node_id) || self.handles.values().any(|handle| handle.node_id == **node_id && self.selection.contains(&handle.id))) {
+                    for (handle_id, handle) in self.handles.iter().filter(|(_, handle)| handle.node_id == *node_id) {
+                        for (wire_id, wire) in self.wires.iter().filter(|(_, wire)| wire.source == *handle_id || wire.target.as_ref() == Some(handle_id)) {
+                            plan.push_entity(BoardDeleteKind::Wire, wire_id, &wire.properties)?;
+                        }
+                        for (edge_id, edge) in self.edges.iter().filter(|(_, edge)| edge.source == *handle_id || edge.target == *handle_id) {
+                            plan.push_entity(BoardDeleteKind::Edge, edge_id, &edge.properties)?;
+                        }
+                        plan.push_entity(BoardDeleteKind::Handle, handle_id, &handle.properties)?;
+                    }
+                    plan.push_entity(BoardDeleteKind::Node, node_id, &node.properties)?;
+                }
+            } else {
+                for (node_id, node) in self.nodes.iter().filter(|(node_id, _)| self.selection.contains(*node_id)) {
+                    for (edge_id, edge) in self.edges.iter().filter(|(_, edge)| edge.source == *node_id || edge.target == *node_id) {
+                        plan.push_entity(BoardDeleteKind::Edge, edge_id, &edge.properties)?;
+                    }
+                    plan.push_entity(BoardDeleteKind::Node, node_id, &node.properties)?;
+                }
+            }
+            Ok(plan)
+        }
+
+        fn step_pending_delete_operation(&mut self) {
+            let Some(mut operation) = self.pending_delete_operation.take() else {
+                return;
+            };
+            if let Some(retiring) = operation.retiring_entity.as_mut() {
+                match retiring.step() {
+                    Ok(true) => {
+                        debug_assert!(retiring.terminal_is_empty());
+                        operation.retiring_entity = None;
+                    }
+                    Ok(false) => {}
+                    Err(()) => self.event_schema_fault = true,
+                }
+                self.pending_delete_operation = Some(operation);
+                return;
+            }
+            if !operation.claimed {
+                if self.interaction_revision != operation.plan.revision {
+                    self.event_schema_fault = true;
+                    return;
+                }
+                let event_count = operation.plan.emitted_event_count() + 1;
+                let Some(event_bytes) = operation.plan.emitted_event_bytes().and_then(|bytes| bytes.checked_add(operation.select_event.as_ref()?.owned_bytes())) else {
+                    self.event_schema_fault = true;
+                    return;
+                };
+                if self.events.claim(event_count, event_bytes).is_err() {
+                    self.pending_delete_operation = Some(operation);
+                    return;
+                }
+                operation.claimed = true;
+                operation.remaining_claimed_items = event_count as u16;
+                operation.remaining_claimed_bytes = event_bytes;
+                self.pending_delete_operation = Some(operation);
+                return;
+            }
+            if operation.mutation_cursor < operation.plan.len {
+                let entry = operation.plan.entries[usize::from(operation.mutation_cursor)].expect("delete plan entry");
+                let id = operation.plan.id(entry.id);
+                let retiring = match entry.kind {
+                    BoardDeleteKind::Edge => {
+                        let removed = self.edges.remove(id).map(BoardRemovedEntity::Edge);
+                        self.selection.remove(id);
+                        removed
+                    }
+                    BoardDeleteKind::Node => {
+                        let removed = self.nodes.remove(id).map(BoardRemovedEntity::Node);
+                        self.selection.remove(id);
+                        removed
+                    }
+                    BoardDeleteKind::Handle => {
+                        let removed = self.handles.remove(id).map(BoardRemovedEntity::Handle);
+                        self.selection.remove(id);
+                        removed
+                    }
+                    BoardDeleteKind::Wire => {
+                        let removed = self.wires.remove(id).map(BoardRemovedEntity::Wire);
+                        self.selection.remove(id);
+                        removed
+                    }
+                };
+                operation.mutation_cursor += 1;
+                operation.retiring_entity = retiring.map(BoardEntityRetirement::new);
+                self.pending_delete_operation = Some(operation);
+                return;
+            }
+            if operation.publication_cursor < operation.plan.len {
+                let entry = operation.plan.entries[usize::from(operation.publication_cursor)].expect("delete plan entry");
+                operation.publication_cursor += 1;
+                let id = operation.plan.id(entry.id);
+                let event = match entry.kind {
+                    BoardDeleteKind::Edge => Some(BoardOwnedEvent::id(BoardEventKind::EdgeDelete, id).expect("delete edge payload was exactly preflighted")),
+                    BoardDeleteKind::Node => Some(BoardOwnedEvent::id(BoardEventKind::NodeDelete, id).expect("delete node payload was exactly preflighted")),
+                    BoardDeleteKind::Handle | BoardDeleteKind::Wire => None,
+                };
+                if let Some(event) = event {
+                    operation.remaining_claimed_items -= 1;
+                    operation.remaining_claimed_bytes -= event.owned_bytes();
+                    self.events.push_claimed(event).expect("delete event owns claimed queue credits");
+                }
+                self.pending_delete_operation = Some(operation);
+                return;
+            }
+            if let Some(event) = operation.select_event.take() {
+                operation.remaining_claimed_items -= 1;
+                operation.remaining_claimed_bytes -= event.owned_bytes();
+                self.events.push_claimed(event).expect("delete selection owns claimed queue credits");
+                self.pending_delete_operation = Some(operation);
+                return;
+            }
+            if let Some(id) = self.selection_exit_highlight.pop_first() {
+                drop(id);
+                self.pending_delete_operation = Some(operation);
+                return;
+            }
+            if operation.remaining_claimed_items != 0 || operation.remaining_claimed_bytes != 0 {
+                let _ = self.events.release_claim(usize::from(operation.remaining_claimed_items), operation.remaining_claimed_bytes);
+                self.event_schema_fault = true;
+            }
+            self.bump_content_scene_generation();
+            self.interaction_revision = operation.plan.revision.wrapping_add(1);
         }
 
         pub fn delete_selection(&mut self) {
-            if !self.has_ports() {
-                let edge_ids: Vec<_> = self.selection.iter().filter(|id| self.edges.contains_key(*id)).cloned().collect();
-                for id in &edge_ids {
-                    self.edges.remove(id);
-                    self.push_event("edgeDelete", json!({ "id": id }));
-                }
-                let node_ids: Vec<_> = self.selection.iter().filter(|id| self.nodes.contains_key(*id)).cloned().collect();
-                for nid in &node_ids {
-                    let eids: Vec<_> = self.edges.iter().filter(|(_, e)| e.source == *nid || e.target == *nid).map(|(k, _)| k.clone()).collect();
-                    for eid in eids {
-                        self.edges.remove(&eid);
-                        self.selection.remove(&eid);
-                        self.push_event("edgeDelete", json!({ "id": eid }));
-                    }
-                    self.nodes.remove(nid);
-                    self.push_event("nodeDelete", json!({ "id": nid }));
-                }
-                for id in edge_ids {
-                    self.selection.remove(&id);
-                }
-                for id in node_ids {
-                    self.selection.remove(&id);
-                }
-                self.selection_exit_highlight.clear();
-                self.sync_selection_flags_to_objects();
-                self.push_select_event();
+            if self.pending_delete_planning.is_some() || self.pending_delete_operation.is_some() {
                 return;
             }
-            let edge_ids: Vec<_> = self.selection.iter().filter(|id| self.edges.contains_key(*id)).cloned().collect();
-            for id in &edge_ids {
-                self.edges.remove(id);
-                self.push_event("edgeDelete", json!({ "id": id }));
+            let mut select_builder = BoardPayloadBuilder::new();
+            if select_builder.raw("{\"ids\":[").is_err() {
+                self.event_schema_fault = true;
+                return;
             }
-            let mut node_ids: BTreeSet<String> = self.selection.iter().filter(|id| self.nodes.contains_key(*id)).cloned().collect();
-            for id in self.selection.iter() {
-                if let Some(handle) = self.handles.get(id) {
-                    node_ids.insert(handle.node_id.clone());
-                }
-            }
-            let node_ids: Vec<_> = node_ids.into_iter().collect();
-            for nid in &node_ids {
-                let handle_ids: Vec<_> = self.handles.iter().filter(|(_, h)| &h.node_id == nid).map(|(k, _)| k.clone()).collect();
-                for hid in handle_ids {
-                    let wids: Vec<_> = self.wires.iter().filter(|(_, w)| w.source == *hid || w.target.as_ref() == Some(&hid)).map(|(k, _)| k.clone()).collect();
-                    for wid in &wids {
-                        self.wires.remove(wid);
-                        self.selection.remove(wid);
-                    }
-                    let eids: Vec<_> = self.edges.iter().filter(|(_, e)| e.source == hid || e.target == hid).map(|(k, _)| k.clone()).collect();
-                    for eid in eids {
-                        self.edges.remove(&eid);
-                        self.selection.remove(&eid);
-                        self.push_event("edgeDelete", json!({ "id": eid }));
-                    }
-                    self.handles.remove(&hid);
-                    self.selection.remove(&hid);
-                }
-                self.nodes.remove(nid);
-                self.push_event("nodeDelete", json!({ "id": nid }));
-            }
-            for id in edge_ids {
-                self.selection.remove(&id);
-            }
-            for id in node_ids {
-                self.selection.remove(&id);
-            }
-            self.selection_exit_highlight.clear();
-            self.sync_selection_flags_to_objects();
-            self.push_select_event();
+            self.pending_delete_planning = Some(BoardDeletePlanningOperation {
+                plan: BoardDeletePlan::new(self.interaction_revision),
+                phase: BoardDeletePlanningPhase::SelectedEdges,
+                scan_after: None,
+                property_audit: None,
+                select_builder,
+                select_first: true,
+                fault: None,
+                cancelling: false,
+            });
         }
 
         fn link_snap_drag_tolerance_screen(&self, h: &HandleData) -> f64 {
@@ -5487,7 +8417,7 @@ pub mod board_host {
             best.map(|(_, id)| id)
         }
 
-        fn try_commit_link_edge(&mut self, source_handle_id: &str, target_handle_id: &str, also_emit: Option<&'static str>) -> bool {
+        fn try_commit_link_edge(&mut self, source_handle_id: &str, target_handle_id: &str, also_emit: Option<BoardEventKind>) -> bool {
             if source_handle_id == target_handle_id {
                 return false;
             }
@@ -5523,6 +8453,10 @@ pub mod board_host {
                 n = n.saturating_add(1);
             };
             let edge_kind = self.default_edge_kind_for_created_link(source_row, target_row);
+            let Some(reservation) = self.reserve_owned_batch(BoardOwnedEvent::edge(BoardEventKind::EdgeCreate, &id, source_handle_id, target_handle_id), also_emit.map(|kind| BoardOwnedEvent::edge(kind, &id, source_handle_id, target_handle_id)))
+            else {
+                return false;
+            };
             self.edges.insert(
                 id.clone(),
                 EdgeData {
@@ -5539,14 +8473,658 @@ pub mod board_host {
                     properties: graph::PropertyBag::new(),
                 },
             );
-            self.push_event("edgeCreate", json!({ "id": id, "source": source_handle_id, "target": target_handle_id }));
-            if let Some(name) = also_emit {
-                self.push_event(name, json!({ "id": id, "source": source_handle_id, "target": target_handle_id }));
+            self.publish_event_batch(reservation);
+            true
+        }
+
+        fn build_selection_pointer_plan(&self, kind: BoardPointerPlanKind, next: &BTreeSet<String>, anchor: &BTreeSet<String>, gesture: Option<&str>, points: &[Point], screen_points: &[Point]) -> Result<BoardPointerPlan, BoardPointerPlanFault> {
+            if next.len() > BOARD_POINTER_ITEM_CAPACITY || anchor.len() > BOARD_POINTER_ITEM_CAPACITY || points.len() != screen_points.len() || points.len() > BOARD_POINTER_ITEM_CAPACITY {
+                return Err(BoardPointerPlanFault::ItemCredits);
+            }
+            if anchor.iter().map(String::len).try_fold(0usize, usize::checked_add).is_none_or(|bytes| bytes > BOARD_POINTER_BYTE_CAPACITY) {
+                return Err(BoardPointerPlanFault::ByteCredits);
+            }
+            let mut plan = BoardPointerPlan::empty(self.interaction_revision, kind);
+            for id in next {
+                plan.push_delta(id, 0.0, 0.0)?;
+            }
+            for (world, screen) in points.iter().copied().zip(screen_points.iter().copied()) {
+                plan.push_point(world, screen)?;
+            }
+            let event = match kind {
+                BoardPointerPlanKind::SelectionPreview { .. } => {
+                    let removed: BTreeSet<String> = anchor.difference(next).cloned().collect();
+                    BoardOwnedEvent::preselect_sets(next, &removed, gesture)
+                }
+                BoardPointerPlanKind::SelectionCommit => BoardOwnedEvent::select_set(next, Some(anchor), gesture),
+                _ => return Err(BoardPointerPlanFault::Unsupported),
+            }
+            .map_err(|fault| match fault {
+                BoardEventFault::ItemCredits => BoardPointerPlanFault::ItemCredits,
+                BoardEventFault::ByteCredits | BoardEventFault::KeyCredits | BoardEventFault::Schema => BoardPointerPlanFault::ByteCredits,
+            })?;
+            plan.seal_owned_event(&event)?;
+            Ok(plan)
+        }
+
+        fn plan_selection_pending_pointer(&self, intent: BoardPointerIntent, initial_ids: &BTreeSet<String>, start: Point, start_screen: Point, screen: Point, world: Point) -> Result<BoardPointerPlan, BoardPointerPlanFault> {
+            match intent.phase {
+                BoardPointerPhase::Move if distance_between(start_screen, screen) < SELECTION_CLICK_MAX_DISTANCE_PX => Ok(BoardPointerPlan::empty(self.interaction_revision, BoardPointerPlanKind::Idle)),
+                BoardPointerPhase::Move => {
+                    let points = [start, world];
+                    let screen_points = [start_screen, screen];
+                    let merge_mode = pick_merge_mode_for_modifiers(intent.ctrl_or_meta, intent.shift, self.selection_options.mode.as_str());
+                    let next = self.resolve_area_selection_with_initial(initial_ids, start, &points, merge_mode.as_str());
+                    let gesture = (intent.ctrl_or_meta || intent.shift).then_some(merge_mode.as_str());
+                    self.build_selection_pointer_plan(BoardPointerPlanKind::SelectionPreview { start, start_screen }, &next, initial_ids, gesture, &points, &screen_points)
+                }
+                BoardPointerPhase::Up => {
+                    let merge_mode = pick_merge_mode_for_modifiers(intent.ctrl_or_meta, intent.shift, self.selection_options.mode.as_str());
+                    let next = if intent.ctrl_or_meta || intent.shift { self.resolve_area_selection_with_initial(initial_ids, start, &[start], merge_mode.as_str()) } else { BTreeSet::new() };
+                    let gesture = (intent.ctrl_or_meta || intent.shift).then_some(merge_mode.as_str());
+                    self.build_selection_pointer_plan(BoardPointerPlanKind::SelectionCommit, &next, initial_ids, gesture, &[], &[])
+                }
+                BoardPointerPhase::Leave => Ok(BoardPointerPlan::empty(self.interaction_revision, BoardPointerPlanKind::Idle)),
+            }
+        }
+
+        fn plan_selection_pointer(
+            &self,
+            intent: BoardPointerIntent,
+            initial_ids: &BTreeSet<String>,
+            points: &[Point],
+            screen_points: &[Point],
+            start: Point,
+            start_screen: Point,
+            screen: Point,
+            world: Point,
+        ) -> Result<BoardPointerPlan, BoardPointerPlanFault> {
+            if intent.phase == BoardPointerPhase::Leave {
+                return Ok(BoardPointerPlan::empty(self.interaction_revision, BoardPointerPlanKind::Idle));
+            }
+            if points.len() != screen_points.len() || points.len() >= BOARD_POINTER_ITEM_CAPACITY {
+                return Err(BoardPointerPlanFault::ItemCredits);
+            }
+            let mut next_points = Box::new(std::array::from_fn(|_| Point::new(0.0, 0.0)));
+            let mut next_screen_points = Box::new(std::array::from_fn(|_| Point::new(0.0, 0.0)));
+            next_points[..points.len()].copy_from_slice(points);
+            next_screen_points[..screen_points.len()].copy_from_slice(screen_points);
+            let mut len = points.len();
+            let last_screen = screen_points.last().copied().unwrap_or(start_screen);
+            let add_point = intent.phase == BoardPointerPhase::Up || self.selection_options.method == "lasso" || distance_between(screen, last_screen) >= SELECTION_LASSO_MIN_POINT_DISTANCE_PX;
+            if add_point {
+                next_points[len] = world;
+                next_screen_points[len] = screen;
+                len += 1;
+            } else if len > 0 {
+                next_points[len - 1] = world;
+                next_screen_points[len - 1] = screen;
+            }
+            let merge_mode = pick_merge_mode_for_modifiers(intent.ctrl_or_meta, intent.shift, self.selection_options.mode.as_str());
+            let end_screen = next_screen_points[len.saturating_sub(1)];
+            let click_only = intent.phase == BoardPointerPhase::Up && distance_between(start_screen, end_screen) < SELECTION_CLICK_MAX_DISTANCE_PX;
+            let next = if click_only { BTreeSet::new() } else { self.resolve_area_selection_with_initial(initial_ids, start, &next_points[..len], merge_mode.as_str()) };
+            let gesture = (intent.ctrl_or_meta || intent.shift).then_some(merge_mode.as_str());
+            let kind = if intent.phase == BoardPointerPhase::Up { BoardPointerPlanKind::SelectionCommit } else { BoardPointerPlanKind::SelectionPreview { start, start_screen } };
+            self.build_selection_pointer_plan(kind, &next, initial_ids, gesture, &next_points[..len], &next_screen_points[..len])
+        }
+
+        fn plan_link_move_pointer(&self, source_id: &str, start_screen: Option<Point>, screen: Point, world: Point) -> Result<BoardPointerPlan, BoardPointerPlanFault> {
+            let activated = start_screen.is_none_or(|start_screen| distance_between(screen, start_screen) >= LINK_DRAG_MIN_DISTANCE_PX);
+            let target_id = activated.then(|| self.nearest_link_snap_handle_world(source_id, world)).flatten();
+            let hover_id = target_id.clone().or_else(|| self.resolve_hover_world(world));
+            let node_ids = self.link_drag_compatible_target_node_ids(source_id);
+            let ring_node_id = activated.then(|| self.link_drag_ring_target_node_id(source_id, world)).flatten().filter(|node_id| self.link_compatible_handle_count_on_node(source_id, node_id) > 1);
+            let ring_handle_ids = ring_node_id.as_deref().map(|node_id| self.link_compatible_handle_ids_on_node(source_id, node_id)).unwrap_or_default();
+            if node_ids.len().saturating_add(ring_handle_ids.len()) > BOARD_POINTER_ITEM_CAPACITY {
+                return Err(BoardPointerPlanFault::ItemCredits);
+            }
+            let compat_key = format!("{}|{}", source_id, node_ids.join(","));
+            let ring_key = format!("{}|{}|{}", source_id, ring_node_id.as_deref().unwrap_or(""), ring_handle_ids.join(","));
+            let hover_kind = hover_id.as_ref().and_then(|hover_id| self.resolve_element_kind_hover(hover_id));
+            let events = [
+                (self.link_compat_nodes_emit_key.as_deref() != Some(compat_key.as_str())).then(|| BoardOwnedEvent::link_compatible(source_id, &node_ids)).transpose().map_err(|_| BoardPointerPlanFault::ByteCredits)?,
+                (self.link_target_ring_emit_key.as_deref() != Some(ring_key.as_str())).then(|| BoardOwnedEvent::link_ring(source_id, ring_node_id.as_deref(), &ring_handle_ids)).transpose().map_err(|_| BoardPointerPlanFault::ByteCredits)?,
+                (self.hovered_id != hover_id || self.hovered_kind.is_some())
+                    .then(|| BoardOwnedEvent::hover(hover_id.as_deref(), hover_kind.as_ref().map(|(domain, kind_id)| (domain.as_str(), kind_id.as_str()))))
+                    .transpose()
+                    .map_err(|_| BoardPointerPlanFault::ByteCredits)?,
+            ];
+            let mut plan = BoardPointerPlan::empty(self.interaction_revision, BoardPointerPlanKind::Idle);
+            let source = plan.push_id(source_id)?;
+            let target = target_id.as_deref().map(|target_id| plan.push_id(target_id)).transpose()?;
+            let hover = hover_id.as_deref().map(|hover_id| plan.push_id(hover_id)).transpose()?;
+            let compat_key = plan.push_id(&compat_key)?;
+            let ring_key = plan.push_id(&ring_key)?;
+            plan.kind = BoardPointerPlanKind::LinkMove { source, target, hover, compat_key, ring_key, end_world: world, activated, start_screen: start_screen.unwrap_or(screen) };
+            plan.seal_optional_events(&events)?;
+            Ok(plan)
+        }
+
+        fn planned_link_edge_id(&self, source_handle_id: &str, target_handle_id: &str) -> Option<String> {
+            if source_handle_id == target_handle_id || !self.handle_selectable(source_handle_id) || !self.handle_selectable(target_handle_id) {
+                return None;
+            }
+            let source = self.handles.get(source_handle_id)?;
+            let target = self.handles.get(target_handle_id)?;
+            if source.node_id == target.node_id || !self.handles_link_compatible_for_drag(source, target) || self.handle_has_incident_edge(source_handle_id) || self.handle_has_incident_edge(target_handle_id) {
+                return None;
+            }
+            if self.edges.values().any(|edge| edge.source == source_handle_id && edge.target == target_handle_id) {
+                return None;
+            }
+            let mut serial = self.edges.len().saturating_add(1);
+            loop {
+                let candidate = format!("edge-link-{serial}");
+                if !self.edges.contains_key(&candidate) {
+                    return Some(candidate);
+                }
+                serial = serial.saturating_add(1);
+            }
+        }
+
+        fn plan_link_finish_pointer(&self, source_id: &str, target_id: Option<&str>, world: Point) -> Result<BoardPointerPlan, BoardPointerPlanFault> {
+            let direct_target = target_id.filter(|target_id| self.link_snap_commit_proximity_ok(target_id, world));
+            let mut target_node_id = None;
+            let mut edge_target = direct_target.map(str::to_string);
+            let mut also_emit = direct_target.map(|_| BoardEventKind::ProximityConnect);
+            if edge_target.is_none() {
+                if let Some(node_id) = self.resolve_node_hit_world(world).filter(|node_id| self.handles.get(source_id).is_some_and(|source| source.node_id.as_str() != node_id.as_str())) {
+                    if let Some(sole_target) = self.node_sole_free_link_compatible_handle(source_id, &node_id) {
+                        edge_target = Some(sole_target);
+                        also_emit = Some(BoardEventKind::IndirectConnect);
+                    } else if self.node_has_any_free_link_compatible_handle(source_id, &node_id) {
+                        target_node_id = Some(node_id);
+                    }
+                }
+            }
+            let edge_id = edge_target.as_deref().and_then(|target| self.planned_link_edge_id(source_id, target));
+            if edge_id.is_none() {
+                edge_target = None;
+                also_emit = None;
+            }
+            let hover_id = target_node_id.clone().or_else(|| self.resolve_hover_world(world));
+            let hover_kind = hover_id.as_ref().and_then(|hover_id| self.resolve_element_kind_hover(hover_id));
+            let mut events: [Option<BoardOwnedEvent>; 5] = std::array::from_fn(|_| None);
+            let mut compat_key_owned = None;
+            let mut ring_key_owned = None;
+            if let (Some(edge_id), Some(edge_target)) = (edge_id.as_deref(), edge_target.as_deref()) {
+                events[0] = Some(BoardOwnedEvent::edge(BoardEventKind::EdgeCreate, edge_id, source_id, edge_target).map_err(|_| BoardPointerPlanFault::ByteCredits)?);
+                if let Some(also_emit) = also_emit {
+                    events[1] = Some(BoardOwnedEvent::edge(also_emit, edge_id, source_id, edge_target).map_err(|_| BoardPointerPlanFault::ByteCredits)?);
+                }
+            }
+            if let Some(target_node_id) = target_node_id.as_deref() {
+                let node_ids = self.link_drag_compatible_target_node_ids(source_id);
+                let ring_handle_ids = self.link_compatible_handle_ids_on_node(source_id, target_node_id);
+                compat_key_owned = Some(format!("{}|{}", source_id, node_ids.join(",")));
+                ring_key_owned = Some(format!("{}|{}|{}", source_id, target_node_id, ring_handle_ids.join(",")));
+                events[2] = Some(BoardOwnedEvent::link_compatible(source_id, &node_ids).map_err(|_| BoardPointerPlanFault::ByteCredits)?);
+                events[3] = Some(BoardOwnedEvent::link_ring(source_id, Some(target_node_id), &ring_handle_ids).map_err(|_| BoardPointerPlanFault::ByteCredits)?);
+            } else {
+                let empty: &[String] = &[];
+                events[2] = self.link_compat_nodes_emit_key.is_some().then(|| BoardOwnedEvent::link_compatible("", empty)).transpose().map_err(|_| BoardPointerPlanFault::ByteCredits)?;
+                events[3] = self.link_target_ring_emit_key.is_some().then(|| BoardOwnedEvent::link_ring("", None, empty)).transpose().map_err(|_| BoardPointerPlanFault::ByteCredits)?;
+            }
+            if self.hovered_id != hover_id || self.hovered_kind.is_some() {
+                events[4] = Some(BoardOwnedEvent::hover(hover_id.as_deref(), hover_kind.as_ref().map(|(domain, kind_id)| (domain.as_str(), kind_id.as_str()))).map_err(|_| BoardPointerPlanFault::ByteCredits)?);
+            }
+            let mut plan = BoardPointerPlan::empty(self.interaction_revision, BoardPointerPlanKind::Idle);
+            let source = plan.push_id(source_id)?;
+            let target = edge_target.as_deref().map(|target| plan.push_id(target)).transpose()?;
+            let edge = edge_id.as_deref().map(|edge| plan.push_id(edge)).transpose()?;
+            let target_node = target_node_id.as_deref().map(|target_node| plan.push_id(target_node)).transpose()?;
+            let hover = hover_id.as_deref().map(|hover| plan.push_id(hover)).transpose()?;
+            let compat_key = compat_key_owned.as_deref().map(|key| plan.push_id(key)).transpose()?;
+            let ring_key = ring_key_owned.as_deref().map(|key| plan.push_id(key)).transpose()?;
+            plan.kind = BoardPointerPlanKind::LinkFinish { source, target, edge, target_node, hover, compat_key, ring_key };
+            plan.seal_optional_events(&events)?;
+            Ok(plan)
+        }
+
+        fn plan_link_retain_pointer(&self, world: Point) -> Result<BoardPointerPlan, BoardPointerPlanFault> {
+            let hover_id = self.resolve_hover_world(world);
+            let hover_kind = hover_id.as_ref().and_then(|hover_id| self.resolve_element_kind_hover(hover_id));
+            let event = (self.hovered_id != hover_id || self.hovered_kind.is_some())
+                .then(|| BoardOwnedEvent::hover(hover_id.as_deref(), hover_kind.as_ref().map(|(domain, kind_id)| (domain.as_str(), kind_id.as_str()))))
+                .transpose()
+                .map_err(|_| BoardPointerPlanFault::ByteCredits)?;
+            let mut plan = BoardPointerPlan::empty(self.interaction_revision, BoardPointerPlanKind::Idle);
+            let hover = hover_id.as_deref().map(|hover| plan.push_id(hover)).transpose()?;
+            plan.kind = BoardPointerPlanKind::LinkRetain { hover };
+            plan.seal_optional_events(&[event])?;
+            Ok(plan)
+        }
+
+        fn plan_link_clear_pointer(&self, source_id: &str, world: Point) -> Result<BoardPointerPlan, BoardPointerPlanFault> {
+            let hover_id = self.resolve_hover_world(world);
+            let hover_kind = hover_id.as_ref().and_then(|hover_id| self.resolve_element_kind_hover(hover_id));
+            let empty: &[String] = &[];
+            let events = [
+                self.link_compat_nodes_emit_key.is_some().then(|| BoardOwnedEvent::link_compatible("", empty)).transpose().map_err(|_| BoardPointerPlanFault::ByteCredits)?,
+                self.link_target_ring_emit_key.is_some().then(|| BoardOwnedEvent::link_ring("", None, empty)).transpose().map_err(|_| BoardPointerPlanFault::ByteCredits)?,
+                (self.hovered_id != hover_id || self.hovered_kind.is_some())
+                    .then(|| BoardOwnedEvent::hover(hover_id.as_deref(), hover_kind.as_ref().map(|(domain, kind_id)| (domain.as_str(), kind_id.as_str()))))
+                    .transpose()
+                    .map_err(|_| BoardPointerPlanFault::ByteCredits)?,
+            ];
+            let mut plan = BoardPointerPlan::empty(self.interaction_revision, BoardPointerPlanKind::Idle);
+            let source = plan.push_id(source_id)?;
+            let hover = hover_id.as_deref().map(|hover| plan.push_id(hover)).transpose()?;
+            plan.kind = BoardPointerPlanKind::LinkFinish { source, target: None, edge: None, target_node: None, hover, compat_key: None, ring_key: None };
+            plan.seal_optional_events(&events)?;
+            Ok(plan)
+        }
+
+        fn plan_hover_pointer(&self, hover_id: Option<String>) -> Result<BoardPointerPlan, BoardPointerPlanFault> {
+            let hover_kind = hover_id.as_ref().and_then(|hover_id| self.resolve_element_kind_hover(hover_id));
+            let event = (self.hovered_id != hover_id || self.hovered_kind.is_some())
+                .then(|| BoardOwnedEvent::hover(hover_id.as_deref(), hover_kind.as_ref().map(|(domain, kind_id)| (domain.as_str(), kind_id.as_str()))))
+                .transpose()
+                .map_err(|_| BoardPointerPlanFault::ByteCredits)?;
+            let mut plan = BoardPointerPlan::empty(self.interaction_revision, BoardPointerPlanKind::Idle);
+            let hover = hover_id.as_deref().map(|hover| plan.push_id(hover)).transpose()?;
+            plan.kind = BoardPointerPlanKind::Hover { hover };
+            plan.seal_optional_events(&[event])?;
+            Ok(plan)
+        }
+
+        fn plan_brush_pointer(&self, intent: BoardPointerIntent, world: Point) -> Result<BoardPointerPlan, BoardPointerPlanFault> {
+            let next_source = if intent.phase == BoardPointerPhase::Move { self.brush_nearest_slot_source(world) } else { None };
+            let offset = if intent.alt || self.brush_slot_suggestions_active { self.suggestion_offset } else { 0.0 };
+            let next_candidates = if let Some(source_id) = next_source.as_deref() {
+                if self.brush_slot_source_id.as_deref() == Some(source_id) {
+                    self.brush_candidates.clone()
+                } else {
+                    let source = self.handles.get(source_id).ok_or(BoardPointerPlanFault::Unsupported)?;
+                    self.brush_compatible_candidates(source).ok_or(BoardPointerPlanFault::ItemCredits)?
+                }
+            } else {
+                BrushCandidatePage::default()
+            };
+            if next_candidates.len() > BOARD_POINTER_ITEM_CAPACITY {
+                return Err(BoardPointerPlanFault::ItemCredits);
+            }
+            let next_index = if self.brush_slot_source_id == next_source { self.brush_candidate_index.min(next_candidates.len().saturating_sub(1)) } else { 0 };
+            let next_preview = next_source.as_deref().and_then(|source_id| next_candidates.get(next_index).and_then(|candidate| self.brush_build_preview_with_offset(source_id, candidate, offset)));
+            let leaving_old = self.brush_slot_source_id.is_some() && self.brush_slot_source_id != next_source;
+            let commit_old = intent.alt && leaving_old && self.brush_preview.is_some();
+            let old_preview = self.brush_slot_source_id.as_deref().and_then(|source_id| self.brush_candidates.get(self.brush_candidate_index).and_then(|candidate| self.brush_build_preview_with_offset(source_id, candidate, offset)));
+            let hover_id = next_source.clone();
+            let hover_kind = hover_id.as_ref().and_then(|hover_id| self.resolve_element_kind_hover(hover_id));
+            let serial = self.brush_placement_serial.wrapping_add(1);
+            let node_id = format!("puzzle2d.brush.{serial}");
+            let edge_id = format!("puzzle2d.brush.edge.{serial}");
+            let events = [
+                commit_old.then(|| old_preview.as_ref().ok_or(BoardEventFault::Schema).and_then(|preview| BoardOwnedEvent::brush_place(preview, &node_id, &edge_id))).transpose().map_err(|_| BoardPointerPlanFault::ByteCredits)?,
+                Some(BoardOwnedEvent::brush_preview(next_preview.as_ref()).map_err(|_| BoardPointerPlanFault::ByteCredits)?),
+                Some(BoardOwnedEvent::brush_candidates(next_source.as_deref().unwrap_or(""), &next_candidates, next_index, false).map_err(|_| BoardPointerPlanFault::ByteCredits)?),
+                (self.hovered_id != hover_id || self.hovered_kind.is_some())
+                    .then(|| BoardOwnedEvent::hover(hover_id.as_deref(), hover_kind.as_ref().map(|(domain, kind_id)| (domain.as_str(), kind_id.as_str()))))
+                    .transpose()
+                    .map_err(|_| BoardPointerPlanFault::ByteCredits)?,
+            ];
+            let mut plan = BoardPointerPlan::empty(self.interaction_revision, BoardPointerPlanKind::Idle);
+            let source = next_source.as_deref().map(|source| plan.push_id(source)).transpose()?;
+            let hover = hover_id.as_deref().map(|hover| plan.push_id(hover)).transpose()?;
+            for candidate in next_candidates.iter() {
+                plan.push_delta(candidate.node_kind_id, candidate.target_handle_index as f64, 0.0)?;
+            }
+            plan.kind = BoardPointerPlanKind::Brush { source, hover, alt: intent.alt, commit_old };
+            plan.seal_optional_events(&events)?;
+            Ok(plan)
+        }
+
+        pub fn plan_pointer(&self, intent: BoardPointerIntent) -> Result<BoardPointerPlan, BoardPointerPlanFault> {
+            if self.interaction_revision == u64::MAX {
+                return Err(BoardPointerPlanFault::Unsupported);
+            }
+            let screen = Point::new(intent.x, intent.y);
+            let world = self.screen_to_world(screen);
+            if self.active_utility == ActiveUtility::Brush && !matches!(self.interaction, Interaction::Pan { .. }) {
+                return self.plan_brush_pointer(intent, world);
+            }
+            match (intent.phase, &self.interaction) {
+                (BoardPointerPhase::Move, Interaction::Pan { origin, start_screen }) => {
+                    let delta = screen - *start_screen;
+                    let camera = [origin.x - delta.x / origin.zoom, origin.y - delta.y / origin.zoom, origin.zoom];
+                    Ok(BoardPointerPlan::empty(self.interaction_revision, BoardPointerPlanKind::Pan { camera }))
+                }
+                (BoardPointerPhase::Move, Interaction::DragNodes { primary_id, offset, start_positions, .. }) => self.plan_drag_pointer(world, primary_id, *offset, start_positions, BoardPointerPlanKind::DragMove),
+                (_, Interaction::SelectionPending { initial_ids, start, start_screen }) => self.plan_selection_pending_pointer(intent, initial_ids, *start, *start_screen, screen, world),
+                (_, Interaction::Selection { initial_ids, points, screen_points, start, start_screen }) => self.plan_selection_pointer(intent, initial_ids, points, screen_points, *start, *start_screen, screen, world),
+                (BoardPointerPhase::Move, Interaction::LinkAtSourceHandle { source_id, start_screen }) => self.plan_link_move_pointer(source_id, Some(*start_screen), screen, world),
+                (BoardPointerPhase::Move, Interaction::LinkDragSnap { source_id, .. }) => self.plan_link_move_pointer(source_id, None, screen, world),
+                (BoardPointerPhase::Up, Interaction::LinkDragSnap { source_id, target_id, .. }) => self.plan_link_finish_pointer(source_id, target_id.as_deref(), world),
+                (BoardPointerPhase::Up, Interaction::LinkAtSourceHandle { source_id, .. }) => self.plan_link_finish_pointer(source_id, None, world),
+                (BoardPointerPhase::Move, Interaction::LinkTargetNode { .. } | Interaction::ExternalLinkPreview { .. }) => self.plan_link_retain_pointer(world),
+                (BoardPointerPhase::Up, Interaction::LinkTargetNode { source_id, .. }) => self.plan_link_clear_pointer(source_id, world),
+                (BoardPointerPhase::Up, Interaction::ExternalLinkPreview { .. }) => self.plan_link_retain_pointer(world),
+                (BoardPointerPhase::Move, Interaction::None) => self.plan_hover_pointer(self.resolve_hover_world(world)),
+                (BoardPointerPhase::Up, Interaction::Pan { origin, start_screen }) => {
+                    let delta = screen - *start_screen;
+                    let camera = [origin.x - delta.x / origin.zoom, origin.y - delta.y / origin.zoom, origin.zoom];
+                    let mut plan = BoardPointerPlan::empty(self.interaction_revision, BoardPointerPlanKind::FinishPan { camera });
+                    plan.seal_events()?;
+                    Ok(plan)
+                }
+                (BoardPointerPhase::Up, Interaction::DragNodes { primary_id, offset, start_positions, .. }) => self.plan_drag_pointer(world, primary_id, *offset, start_positions, BoardPointerPlanKind::FinishDrag),
+                (BoardPointerPhase::Up, Interaction::None) => Ok(BoardPointerPlan::empty(self.interaction_revision, BoardPointerPlanKind::Idle)),
+                (BoardPointerPhase::Leave, Interaction::None) => self.plan_hover_pointer(None),
+                (BoardPointerPhase::Leave, _) => Ok(BoardPointerPlan::empty(self.interaction_revision, BoardPointerPlanKind::Idle)),
+            }
+        }
+
+        fn plan_drag_pointer(&self, world: Point, primary_id: &str, offset: Point, start_positions: &BTreeMap<String, (f64, f64)>, kind: BoardPointerPlanKind) -> Result<BoardPointerPlan, BoardPointerPlanFault> {
+            if start_positions.len() > BOARD_POINTER_ITEM_CAPACITY {
+                return Err(BoardPointerPlanFault::ItemCredits);
+            }
+            let Some((px0, py0)) = start_positions.get(primary_id).copied() else {
+                return Err(BoardPointerPlanFault::Unsupported);
+            };
+            let nx = world.x - offset.x;
+            let ny = world.y - offset.y;
+            let (dx, dy) = if self.grid_snap_enabled {
+                let (snx, sny) = self.snap_world_pair(nx, ny);
+                (snx - px0, sny - py0)
+            } else {
+                (nx - px0, ny - py0)
+            };
+            let mut plan = BoardPointerPlan::empty(self.interaction_revision, kind);
+            for (id, (x, y)) in start_positions {
+                plan.push_delta(id, x + dx, y + dy)?;
+            }
+            if matches!(kind, BoardPointerPlanKind::FinishDrag) {
+                plan.seal_events()?;
+            }
+            Ok(plan)
+        }
+
+        pub fn begin_pointer_commit(&mut self, plan: BoardPointerPlan) -> Result<(), BoardPointerPlan> {
+            if self.pointer_publication.is_some() || self.interaction_revision != plan.revision || !plan.requires_retained_commit() {
+                return Err(plan);
+            }
+            if let Some(active) = self.pending_pointer_commit.as_ref() {
+                if active.plan.revision != plan.revision || !matches!(active.plan.kind, BoardPointerPlanKind::DragMove) || !matches!(plan.kind, BoardPointerPlanKind::DragMove | BoardPointerPlanKind::FinishDrag) {
+                    return Err(plan);
+                }
+                match self.queued_pointer_commit.as_ref().map(|queued| queued.kind) {
+                    None => {
+                        self.queued_pointer_commit = Some(plan);
+                        return Ok(());
+                    }
+                    Some(BoardPointerPlanKind::DragMove) => {
+                        self.queued_pointer_commit = Some(plan);
+                        return Ok(());
+                    }
+                    Some(_) => return Err(plan),
+                }
+            }
+            self.pending_pointer_commit = Some(BoardPointerCommitOperation::new(plan));
+            Ok(())
+        }
+
+        pub fn step_pointer_commit(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> BoardAuthorityStep {
+            let Some(mut operation) = self.pending_pointer_commit.take() else {
+                return BoardAuthorityStep::Complete;
+            };
+            if context.should_yield() {
+                self.pending_pointer_commit = Some(operation);
+                return BoardAuthorityStep::Pending;
+            }
+            if context.is_cancelled() && operation.phase == 0 {
+                operation.cancelling = true;
+            }
+            if self.interaction_revision != operation.plan.revision && operation.phase == 0 {
+                operation.cancelling = true;
+                operation.faulted = true;
+            }
+            if operation.cancelling {
+                if operation.cursor < operation.plan.delta_len {
+                    operation.plan.deltas[usize::from(operation.cursor)] = None;
+                    operation.cursor += 1;
+                    context.consume_fuel(1);
+                    self.pending_pointer_commit = Some(operation);
+                    return BoardAuthorityStep::Pending;
+                }
+                if operation.retire_one() || operation.points.pop().is_some() || operation.screen_points.pop().is_some() || operation.overlay_points.pop().is_some() {
+                    context.consume_fuel(1);
+                    self.pending_pointer_commit = Some(operation);
+                    return BoardAuthorityStep::Pending;
+                }
+                if operation.scan_after.take().is_some() {
+                    context.consume_fuel(1);
+                    self.pending_pointer_commit = Some(operation);
+                    return BoardAuthorityStep::Pending;
+                }
+                return if operation.faulted { BoardAuthorityStep::Fault } else { BoardAuthorityStep::Cancelled };
+            }
+            let complete = self.step_pointer_commit_operation(&mut operation);
+            context.consume_fuel(1);
+            if !complete {
+                self.pending_pointer_commit = Some(operation);
+                return BoardAuthorityStep::Pending;
+            }
+            if operation.faulted {
+                return BoardAuthorityStep::Fault;
+            }
+            let completed_revision = operation.plan.revision;
+            if self.interaction_revision != completed_revision {
+                return BoardAuthorityStep::Fault;
+            }
+            self.interaction_revision = completed_revision.wrapping_add(1);
+            if operation.plan.output_len > 2 {
+                self.pointer_publication = Some(BoardPointerPublication { bytes: operation.plan.output, len: operation.plan.output_len });
+            }
+            if let Some(mut queued) = self.queued_pointer_commit.take() {
+                if queued.revision != completed_revision {
+                    return BoardAuthorityStep::Fault;
+                }
+                queued.revision = self.interaction_revision;
+                self.pending_pointer_commit = Some(BoardPointerCommitOperation::new(queued));
+                return BoardAuthorityStep::Pending;
+            }
+            BoardAuthorityStep::Complete
+        }
+
+        pub fn take_pointer_publication(&mut self) -> Option<BoardPointerPublication> {
+            self.pointer_publication.take()
+        }
+
+        pub fn pointer_publication(&self) -> Option<&BoardPointerPublication> {
+            self.pointer_publication.as_ref()
+        }
+
+        pub fn close_pointer_authority_step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> bool {
+            if let Some(operation) = self.pending_pointer_commit.as_mut() {
+                if operation.cursor == 0 {
+                    operation.cancelling = true;
+                }
+                let _ = self.step_pointer_commit(context);
+                return false;
+            }
+            if self.queued_pointer_commit.take().is_some() {
+                context.consume_fuel(1);
+                return false;
+            }
+            if let Some(publication) = self.pointer_publication.as_mut() {
+                if publication.close_step() {
+                    self.pointer_publication = None;
+                }
+                return false;
             }
             true
         }
 
+        pub fn pointer_authority_terminal_is_empty(&self) -> bool {
+            self.pending_pointer_commit.is_none() && self.queued_pointer_commit.is_none() && self.pointer_publication.is_none()
+        }
+
+        pub fn commit_pointer(&mut self, plan: &BoardPointerPlan) -> bool {
+            if self.interaction_revision != plan.revision {
+                return false;
+            }
+            if !matches!(plan.kind, BoardPointerPlanKind::Idle) {
+                return false;
+            }
+            self.interaction_revision = plan.revision.wrapping_add(1);
+            true
+        }
+
+        #[cfg(test)]
+        fn commit_pointer_legacy_differential(&mut self, plan: &BoardPointerPlan) -> bool {
+            match plan.kind {
+                BoardPointerPlanKind::Idle => {}
+                BoardPointerPlanKind::Pan { camera } => {
+                    self.camera = Camera { x: camera[0], y: camera[1], zoom: infinite::canvas::camera::clamp_zoom(camera[2]) };
+                }
+                BoardPointerPlanKind::DragMove | BoardPointerPlanKind::FinishDrag => unreachable!("drag plans are committed through the retained pointer authority"),
+                BoardPointerPlanKind::FinishPan { camera } => {
+                    self.camera = Camera { x: camera[0], y: camera[1], zoom: infinite::canvas::camera::clamp_zoom(camera[2]) };
+                    self.interaction = Interaction::None;
+                }
+                BoardPointerPlanKind::SelectionPreview { start, start_screen } => {
+                    let grabbed = std::mem::take(&mut self.interaction);
+                    let initial_ids = match grabbed {
+                        Interaction::SelectionPending { initial_ids, .. } | Interaction::Selection { initial_ids, .. } => initial_ids,
+                        other => {
+                            self.interaction = other;
+                            return false;
+                        }
+                    };
+                    let next: BTreeSet<String> = plan.selection_ids().map(str::to_string).collect();
+                    self.preselect_removed = initial_ids.difference(&next).cloned().collect();
+                    self.preselect = next;
+                    self.last_preselect_emit_sig = None;
+                    self.sync_selection_flags_to_objects();
+                    let points = plan.points[..usize::from(plan.point_len)].to_vec();
+                    let screen_points = plan.screen_points[..usize::from(plan.point_len)].to_vec();
+                    self.sync_selection_screen_overlay(start_screen, &screen_points);
+                    self.interaction = Interaction::Selection { initial_ids, points, screen_points, start, start_screen };
+                }
+                BoardPointerPlanKind::SelectionCommit => {
+                    if !matches!(self.interaction, Interaction::SelectionPending { .. } | Interaction::Selection { .. }) {
+                        return false;
+                    }
+                    self.interaction = Interaction::None;
+                    self.selection = plan.selection_ids().map(str::to_string).collect();
+                    self.preselect.clear();
+                    self.preselect_removed.clear();
+                    self.selection_exit_highlight.clear();
+                    self.last_select_emit_sig = None;
+                    self.last_preselect_emit_sig = None;
+                    self.selection_screen_preview = None;
+                    self.selection_preview_crossing = false;
+                    self.sync_selection_flags_to_objects();
+                    self.bump_content_scene_generation();
+                }
+                BoardPointerPlanKind::LinkMove { source, target, hover, end_world, activated, start_screen, .. } => {
+                    if !matches!(self.interaction, Interaction::LinkAtSourceHandle { .. } | Interaction::LinkDragSnap { .. }) {
+                        return false;
+                    }
+                    let source_id = plan.id(source).to_string();
+                    let target_id = target.map(|target| plan.id(target).to_string());
+                    let hover_id = hover.map(|hover| plan.id(hover).to_string());
+                    let node_ids = self.link_drag_compatible_target_node_ids(&source_id);
+                    let ring_node_id = activated.then(|| self.link_drag_ring_target_node_id(&source_id, end_world)).flatten().filter(|node_id| self.link_compatible_handle_count_on_node(&source_id, node_id) > 1);
+                    let ring_handle_ids = ring_node_id.as_deref().map(|node_id| self.link_compatible_handle_ids_on_node(&source_id, node_id)).unwrap_or_default();
+                    self.link_compat_nodes_emit_key = Some(format!("{}|{}", source_id, node_ids.join(",")));
+                    self.link_target_ring_emit_key = Some(format!("{}|{}|{}", source_id, ring_node_id.as_deref().unwrap_or(""), ring_handle_ids.join(",")));
+                    self.hovered_id = hover_id;
+                    self.hovered_kind = None;
+                    self.interaction = if activated { Interaction::LinkDragSnap { source_id, target_id, end_world } } else { Interaction::LinkAtSourceHandle { source_id, start_screen } };
+                    self.bump_content_scene_generation();
+                }
+                BoardPointerPlanKind::LinkFinish { source, target, edge, target_node, hover, .. } => {
+                    if !matches!(self.interaction, Interaction::LinkAtSourceHandle { .. } | Interaction::LinkDragSnap { .. } | Interaction::LinkTargetNode { .. }) {
+                        return false;
+                    }
+                    let source_id = plan.id(source).to_string();
+                    let target_id = target.map(|target| plan.id(target).to_string());
+                    let edge_id = edge.map(|edge| plan.id(edge).to_string());
+                    let target_node_id = target_node.map(|target_node| plan.id(target_node).to_string());
+                    let hover_id = hover.map(|hover| plan.id(hover).to_string());
+                    if let (Some(target_id), Some(edge_id)) = (target_id, edge_id) {
+                        let Some(source_row) = self.handles.get(&source_id) else {
+                            return false;
+                        };
+                        let Some(target_row) = self.handles.get(&target_id) else {
+                            return false;
+                        };
+                        let edge_kind = self.default_edge_kind_for_created_link(source_row, target_row);
+                        self.edges.insert(
+                            edge_id.clone(),
+                            EdgeData { id: edge_id, source: source_id.clone(), target: target_id, selected: false, visible: true, locked: false, style: None, edge_kind, source_tip: None, target_tip: None, properties: graph::PropertyBag::new() },
+                        );
+                    }
+                    if let Some(target_node_id) = target_node_id {
+                        let node_ids = self.link_drag_compatible_target_node_ids(&source_id);
+                        let ring_handle_ids = self.link_compatible_handle_ids_on_node(&source_id, &target_node_id);
+                        self.link_compat_nodes_emit_key = Some(format!("{}|{}", source_id, node_ids.join(",")));
+                        self.link_target_ring_emit_key = Some(format!("{}|{}|{}", source_id, target_node_id, ring_handle_ids.join(",")));
+                        self.interaction = Interaction::LinkTargetNode { source_id, target_node_id };
+                    } else {
+                        self.link_compat_nodes_emit_key = None;
+                        self.link_target_ring_emit_key = None;
+                        self.interaction = Interaction::None;
+                    }
+                    self.hovered_id = hover_id;
+                    self.hovered_kind = None;
+                    self.bump_content_scene_generation();
+                }
+                BoardPointerPlanKind::LinkRetain { hover } => {
+                    if !matches!(self.interaction, Interaction::LinkTargetNode { .. } | Interaction::ExternalLinkPreview { .. }) {
+                        return false;
+                    }
+                    self.hovered_id = hover.map(|hover| plan.id(hover).to_string());
+                    self.hovered_kind = None;
+                }
+                BoardPointerPlanKind::Hover { hover } => {
+                    if !matches!(self.interaction, Interaction::None) {
+                        return false;
+                    }
+                    self.hovered_id = hover.map(|hover| plan.id(hover).to_string());
+                    self.hovered_kind = None;
+                }
+                BoardPointerPlanKind::Brush { source, hover, alt, commit_old } => {
+                    if self.active_utility != ActiveUtility::Brush || matches!(self.interaction, Interaction::Pan { .. }) {
+                        return false;
+                    }
+                    let source_id = source.map(|source| plan.id(source).to_string());
+                    let mut candidates = BrushCandidatePage::default();
+                    for candidate in plan.deltas[..usize::from(plan.delta_len)].iter().flatten() {
+                        if candidates.push(plan.id(candidate.id), candidate.x as usize, 0.0).is_err() {
+                            return false;
+                        }
+                    }
+                    if commit_old {
+                        self.brush_placement_serial = self.brush_placement_serial.wrapping_add(1);
+                    }
+                    self.brush_alt_pressed = alt;
+                    self.brush_slot_suggestions_active = false;
+                    self.brush_slot_source_id = source_id.clone();
+                    self.brush_candidates = candidates;
+                    self.brush_candidate_index = 0;
+                    let offset = if alt { self.suggestion_offset } else { 0.0 };
+                    self.brush_preview = source_id.as_deref().and_then(|source_id| self.brush_candidates.first().and_then(|candidate| self.brush_build_preview_with_offset(source_id, candidate, offset)));
+                    self.brush_preview_emit_key = None;
+                    self.brush_candidates_emit_key = None;
+                    self.hovered_id = hover.map(|hover| plan.id(hover).to_string());
+                    self.hovered_kind = None;
+                    self.interaction = Interaction::None;
+                    self.bump_content_scene_generation();
+                }
+                BoardPointerPlanKind::LeaveIdle => {
+                    self.hovered_id = None;
+                    self.hovered_kind = None;
+                }
+            }
+            self.interaction_revision = plan.revision.wrapping_add(1);
+            true
+        }
+
         pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8, shift: bool, ctrl_or_meta: bool) {
+            self.interaction_revision = self.interaction_revision.wrapping_add(1);
             self.set_selection_screen_preview(None);
             let screen = Point::new(sx, sy);
             let world = self.screen_to_world(screen);
@@ -5563,13 +9141,13 @@ pub mod board_host {
                 if button == 0 {
                     if let Some(th) = self.node_sole_free_link_compatible_handle(&source_id, &target_node_id) {
                         if hit.as_deref() == Some(target_node_id.as_str()) || hit.as_deref() == Some(th.as_str()) {
-                            self.try_commit_link_edge(&source_id, &th, Some("indirectConnect"));
+                            self.try_commit_link_edge(&source_id, &th, Some(BoardEventKind::IndirectConnect));
                             self.update_hover_from_world(world);
                             return;
                         }
                     }
                     if let Some(hid) = hit.as_ref().filter(|id| self.handles.get(*id).is_some_and(|h| h.node_id == target_node_id) && self.handle_eligible_link_target_ring(id.as_str(), source_id.as_str())) {
-                        self.try_commit_link_edge(&source_id, hid, Some("indirectConnect"));
+                        self.try_commit_link_edge(&source_id, hid, Some(BoardEventKind::IndirectConnect));
                         self.update_hover_from_world(world);
                         return;
                     }
@@ -5584,7 +9162,7 @@ pub mod board_host {
                             if hit.as_deref() == Some(target_node_id.as_str()) || hit.as_deref() == Some(th.as_str()) {
                                 self.interaction = Interaction::None;
                                 self.clear_link_gesture_events();
-                                self.try_commit_link_edge(&source_id, &th, Some("indirectConnect"));
+                                self.try_commit_link_edge(&source_id, &th, Some(BoardEventKind::IndirectConnect));
                                 self.update_hover_from_world(world);
                                 return;
                             }
@@ -5593,7 +9171,7 @@ pub mod board_host {
                     if let Some(hid) = hit.as_ref().filter(|id| ring_handle_ids.iter().any(|rh| rh == *id)) {
                         self.interaction = Interaction::None;
                         self.clear_link_gesture_events();
-                        self.try_commit_link_edge(&source_id, hid, Some("indirectConnect"));
+                        self.try_commit_link_edge(&source_id, hid, Some(BoardEventKind::IndirectConnect));
                         self.update_hover_from_world(world);
                         return;
                     }
@@ -5670,6 +9248,7 @@ pub mod board_host {
         }
 
         pub fn pointer_move_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
+            self.interaction_revision = self.interaction_revision.wrapping_add(1);
             let screen = Point::new(sx, sy);
             let world = self.screen_to_world(screen);
             if self.active_utility == ActiveUtility::Brush {
@@ -5690,7 +9269,7 @@ pub mod board_host {
                 return;
             }
             match std::mem::replace(&mut self.interaction, Interaction::None) {
-                Interaction::DragNodes { primary_id, offset, start_positions, .. } => {
+                Interaction::DragNodes { primary_id, offset, start_positions, proximity_pair: retained_proximity_pair } => {
                     let primary_id = primary_id.clone();
                     let start_positions_cloned = start_positions.clone();
                     let (px0, py0) = start_positions.get(&primary_id).copied().unwrap_or((0.0, 0.0));
@@ -5703,6 +9282,28 @@ pub mod board_host {
                         dx = snx - px0;
                         dy = sny - py0;
                     }
+                    let mut event_count = 0usize;
+                    let mut event_bytes = 0usize;
+                    for (id, (ox0, oy0)) in &start_positions {
+                        if self.nodes.contains_key(id) {
+                            event_count += 1;
+                            let Some(bytes) = board_node_move_owned_bytes(id, ox0 + dx, oy0 + dy) else {
+                                self.event_schema_fault = true;
+                                self.interaction = Interaction::DragNodes { primary_id, offset, start_positions: start_positions_cloned, proximity_pair: retained_proximity_pair };
+                                return;
+                            };
+                            let Some(total) = event_bytes.checked_add(bytes) else {
+                                self.event_schema_fault = true;
+                                self.interaction = Interaction::DragNodes { primary_id, offset, start_positions: start_positions_cloned, proximity_pair: retained_proximity_pair };
+                                return;
+                            };
+                            event_bytes = total;
+                        }
+                    }
+                    if self.events.reserve(event_count, event_bytes).is_err() {
+                        self.interaction = Interaction::DragNodes { primary_id, offset, start_positions: start_positions_cloned, proximity_pair: retained_proximity_pair };
+                        return;
+                    }
                     let mut geometry_changed = false;
                     for (id, (ox0, oy0)) in &start_positions {
                         if let Some(n) = self.nodes.get_mut(id) {
@@ -5713,7 +9314,8 @@ pub mod board_host {
                             }
                             n.x = mx;
                             n.y = my;
-                            self.push_event("nodeMove", json!({ "id": id, "x": mx, "y": my }));
+                            let event = BoardOwnedEvent::node_move(id, mx, my).expect("node move event was exactly preflighted");
+                            self.events.push(event).expect("node move event credits were reserved before mutation");
                         }
                     }
                     if geometry_changed {
@@ -5801,6 +9403,7 @@ pub mod board_host {
         }
 
         pub fn pointer_up_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
+            self.interaction_revision = self.interaction_revision.wrapping_add(1);
             let screen = Point::new(sx, sy);
             let world = self.screen_to_world(screen);
             if self.active_utility == ActiveUtility::Brush {
@@ -5816,7 +9419,7 @@ pub mod board_host {
             match grabbed {
                 Interaction::LinkDragSnap { source_id, target_id, .. } => {
                     if let Some(ref target_handle_id) = target_id {
-                        if self.link_snap_commit_proximity_ok(target_handle_id, world) && self.try_commit_link_edge(&source_id, target_handle_id, Some("proximityConnect")) {
+                        if self.link_snap_commit_proximity_ok(target_handle_id, world) && self.try_commit_link_edge(&source_id, target_handle_id, Some(BoardEventKind::ProximityConnect)) {
                             self.interaction = Interaction::None;
                             self.clear_link_gesture_events();
                             self.update_hover_from_world(world);
@@ -5827,7 +9430,7 @@ pub mod board_host {
                         let source_node_id = self.handles.get(&source_id).map(|h| h.node_id.clone());
                         if source_node_id.as_deref() != Some(target_node_id.as_str()) {
                             if let Some(sole_target) = self.node_sole_free_link_compatible_handle(source_id.as_str(), target_node_id.as_str()) {
-                                self.try_commit_link_edge(&source_id, &sole_target, Some("indirectConnect"));
+                                self.try_commit_link_edge(&source_id, &sole_target, Some(BoardEventKind::IndirectConnect));
                                 self.clear_link_gesture_events();
                             } else {
                                 self.interaction = Interaction::LinkTargetNode { source_id, target_node_id: target_node_id.clone() };
@@ -5848,7 +9451,7 @@ pub mod board_host {
                     self.update_hover_from_world(world);
                 }
                 Interaction::DragNodes { start_positions, proximity_pair: Some((src, tgt)), .. } => {
-                    let _ = self.try_commit_link_edge(&src, &tgt, Some("proximityConnect"));
+                    let _ = self.try_commit_link_edge(&src, &tgt, Some(BoardEventKind::ProximityConnect));
                     self.push_node_drag_end_events(&start_positions);
                     self.interaction = Interaction::None;
                     self.update_hover_from_world(world);
@@ -5903,6 +9506,7 @@ pub mod board_host {
         }
 
         pub fn pointer_leave_screen(&mut self, alt: bool) {
+            self.interaction_revision = self.interaction_revision.wrapping_add(1);
             if self.active_utility == ActiveUtility::Brush {
                 self.brush_update_alt(alt);
                 self.brush_finish_slot();
@@ -5916,6 +9520,16 @@ pub mod board_host {
 
         /// @emoji ↩️ Aborts an in‑flight rectangle/lasso drag and restores the selection snapshot from when the gesture began.
         pub fn cancel_area_select(&mut self) -> bool {
+            let reservation = match &self.interaction {
+                Interaction::Selection { initial_ids, .. } => {
+                    let event = BoardOwnedEvent::id_list(BoardEventKind::PreselectCancel, "ids", initial_ids.iter().map(String::as_str));
+                    let Some(reservation) = self.reserve_owned_event(event) else {
+                        return false;
+                    };
+                    Some(reservation)
+                }
+                _ => None,
+            };
             let prev = std::mem::replace(&mut self.interaction, Interaction::None);
             match prev {
                 Interaction::SelectionPending { .. } => {
@@ -5931,8 +9545,7 @@ pub mod board_host {
                     self.sync_selection_flags_to_objects();
                     self.bump_content_scene_generation();
                     self.last_select_emit_sig = None;
-                    let sorted = Self::sorted_selection_ids(&self.selection);
-                    self.push_event("preselectCancel", json!({ "ids": sorted }));
+                    self.publish_event_reservation(reservation.expect("selection cancellation reserved one event"));
                     true
                 }
                 other => {
@@ -6120,6 +9733,377 @@ pub mod board_host {
         fn clear_color(&self) -> Color {
             self.canvas_theme.raster_clear
         }
+    }
+
+    #[cfg(test)]
+    fn with_board_step_context<T>(fuel: u64, cancel: semio_framework_job::CancelToken, step: impl FnOnce(&mut semio_framework_job::StepContext<'_>) -> T) -> T {
+        let mut sequence = 0;
+        let mut context =
+            semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(fuel, u64::MAX), cancel, semio_framework_job::default_now_ms, &mut sequence);
+        step(&mut context)
+    }
+
+    #[cfg(test)]
+    fn drive_pointer_commit(host: &mut BoardHost) {
+        let cancel = semio_framework_job::root_cancel_token();
+        for _ in 0..4096 {
+            match with_board_step_context(1, cancel.clone(), |context| host.step_pointer_commit(context)) {
+                BoardAuthorityStep::Pending => {}
+                BoardAuthorityStep::Complete => return,
+                other => panic!("pointer authority failed: {other:?}"),
+            }
+        }
+        panic!("pointer authority did not reach a terminal step");
+    }
+
+    #[cfg(test)]
+    #[test]
+    fn wheel_plan_matches_direct_and_rejects_stale_interaction() {
+        let mut direct = BoardHost::default();
+        let mut planned = BoardHost::default();
+        direct.set_size(800, 600, 1.0);
+        planned.set_size(800, 600, 1.0);
+        direct.wheel_screen(320.0, 240.0, -12.0);
+        let plan = planned.plan_wheel(320.0, 240.0, -12.0);
+        assert!(planned.commit_wheel(plan));
+        assert_eq!([direct.camera.x, direct.camera.y, direct.camera.zoom], [planned.camera.x, planned.camera.y, planned.camera.zoom]);
+
+        let stale = planned.plan_wheel(320.0, 240.0, -12.0);
+        planned.pointer_down_screen(10.0, 10.0, 1, false, false);
+        let replacement = [planned.camera.x, planned.camera.y, planned.camera.zoom];
+        assert!(!planned.commit_wheel(stale));
+        assert_eq!([planned.camera.x, planned.camera.y, planned.camera.zoom], replacement);
+    }
+
+    #[cfg(test)]
+    #[test]
+    fn pointer_pan_plan_matches_direct_and_rejects_stale_interaction() {
+        let mut direct = BoardHost::default();
+        let mut planned = BoardHost::default();
+        direct.set_size(800, 600, 1.0);
+        planned.set_size(800, 600, 1.0);
+        direct.pointer_down_screen(100.0, 120.0, 1, false, false);
+        planned.pointer_down_screen(100.0, 120.0, 1, false, false);
+        direct.pointer_move_screen(140.0, 150.0, false, false, false);
+        let plan = planned.plan_pointer(BoardPointerIntent { phase: BoardPointerPhase::Move, x: 140.0, y: 150.0, shift: false, ctrl_or_meta: false, alt: false }).expect("pan plan");
+        planned.begin_pointer_commit(plan).expect("retained pan plan");
+        drive_pointer_commit(&mut planned);
+        assert_eq!([direct.camera.x, direct.camera.y, direct.camera.zoom], [planned.camera.x, planned.camera.y, planned.camera.zoom]);
+
+        let stale = planned.plan_pointer(BoardPointerIntent { phase: BoardPointerPhase::Move, x: 160.0, y: 170.0, shift: false, ctrl_or_meta: false, alt: false }).expect("stale pan plan");
+        planned.set_size(801, 600, 1.0);
+        let camera = [planned.camera.x, planned.camera.y, planned.camera.zoom];
+        assert!(planned.begin_pointer_commit(stale).is_err());
+        assert_eq!([planned.camera.x, planned.camera.y, planned.camera.zoom], camera);
+    }
+
+    #[cfg(test)]
+    #[test]
+    fn pointer_plan_rejects_drag_item_overflow_and_retires_one_delta_per_step() {
+        let mut host = BoardHost::default();
+        let start_positions = (0..=BOARD_POINTER_ITEM_CAPACITY).map(|index| (format!("node-{index}"), (index as f64, 0.0))).collect();
+        host.interaction = Interaction::DragNodes { primary_id: "node-0".into(), offset: Point::new(0.0, 0.0), start_positions, proximity_pair: None };
+        assert_eq!(host.plan_pointer(BoardPointerIntent { phase: BoardPointerPhase::Move, x: 1.0, y: 1.0, shift: false, ctrl_or_meta: false, alt: false }).unwrap_err(), BoardPointerPlanFault::ItemCredits);
+
+        let mut plan = BoardPointerPlan::empty(0, BoardPointerPlanKind::DragMove);
+        plan.push_delta("a", 1.0, 2.0).unwrap();
+        plan.push_delta("b", 3.0, 4.0).unwrap();
+        let mut retirement = BoardPointerPlanRetirement::new(plan);
+        assert!(!retirement.close_step());
+        assert!(!retirement.close_step());
+        assert!(retirement.close_step());
+        assert!(retirement.terminal_is_empty());
+
+        let mut escaped = BoardPointerPlan::empty(0, BoardPointerPlanKind::FinishDrag);
+        escaped.push_delta("a\"\\\n", 1.0, 2.0).unwrap();
+        let mut json = String::new();
+        escaped.write_events_json(&mut json).unwrap();
+        let value: serde_json::Value = serde_json::from_str(&json).unwrap();
+        assert_eq!(value[0]["payload"]["moves"][0]["id"], "a\"\\\n");
+
+        let mut oversized = BoardPointerPlan::empty(0, BoardPointerPlanKind::FinishDrag);
+        oversized.push_delta(&"\n".repeat(BOARD_POINTER_BYTE_CAPACITY / 2), 1.0, 2.0).unwrap();
+        assert_eq!(oversized.write_events_json(&mut json), Err(BoardPointerPlanFault::ByteCredits));
+    }
+
+    #[cfg(test)]
+    #[test]
+    fn drag_commit_obeys_zero_budget_one_delta_turn_cancel_and_publication_witness() {
+        let mut host = deletion_fixture("node-a");
+        host.interaction = Interaction::DragNodes { primary_id: "node-a".into(), offset: Point::new(0.0, 0.0), start_positions: [("node-a".to_string(), (0.0, 0.0)), ("node-b".to_string(), (20.0, 0.0))].into_iter().collect(), proximity_pair: None };
+        let plan = host.plan_pointer(BoardPointerIntent { phase: BoardPointerPhase::Up, x: 10.0, y: 5.0, shift: false, ctrl_or_meta: false, alt: false }).expect("finish drag plan");
+        host.begin_pointer_commit(plan).expect("retained drag commit");
+        let before = host.nodes.get("node-a").map(|node| (node.x, node.y));
+        let zero = semio_framework_job::root_cancel_token();
+        assert_eq!(with_board_step_context(0, zero, |context| host.step_pointer_commit(context)), BoardAuthorityStep::Pending);
+        assert_eq!(host.nodes.get("node-a").map(|node| (node.x, node.y)), before);
+
+        let live = semio_framework_job::root_cancel_token();
+        assert_eq!(with_board_step_context(1, live.clone(), |context| host.step_pointer_commit(context)), BoardAuthorityStep::Pending);
+        assert_ne!(host.nodes.get("node-a").map(|node| (node.x, node.y)), before);
+        assert_eq!(with_board_step_context(1, live.clone(), |context| host.step_pointer_commit(context)), BoardAuthorityStep::Pending);
+        assert_eq!(with_board_step_context(1, live, |context| host.step_pointer_commit(context)), BoardAuthorityStep::Complete);
+        let publication = host.take_pointer_publication().expect("complete drag publication");
+        assert!(publication.events_json().contains("nodeDragEnd"));
+        assert!(host.pointer_authority_terminal_is_empty());
+
+        let mut cancelled = deletion_fixture("node-a");
+        cancelled.interaction = Interaction::DragNodes { primary_id: "node-a".into(), offset: Point::new(0.0, 0.0), start_positions: [("node-a".to_string(), (0.0, 0.0))].into_iter().collect(), proximity_pair: None };
+        let plan = cancelled.plan_pointer(BoardPointerIntent { phase: BoardPointerPhase::Move, x: 8.0, y: 3.0, shift: false, ctrl_or_meta: false, alt: false }).expect("cancelled drag plan");
+        cancelled.begin_pointer_commit(plan).expect("cancelled retained commit");
+        let cancel = semio_framework_job::root_cancel_token();
+        cancel.cancel_now();
+        assert_eq!(with_board_step_context(1, cancel.clone(), |context| cancelled.step_pointer_commit(context)), BoardAuthorityStep::Pending);
+        assert_eq!(with_board_step_context(1, cancel, |context| cancelled.step_pointer_commit(context)), BoardAuthorityStep::Cancelled);
+        assert_eq!(cancelled.nodes.get("node-a").map(|node| (node.x, node.y)), Some((0.0, 0.0)));
+        assert!(cancelled.pointer_authority_terminal_is_empty());
+    }
+
+    #[cfg(test)]
+    #[test]
+    fn selection_move_and_up_are_revisioned_fixed_page_plans() {
+        let mut host = BoardHost::default();
+        host.set_size(800, 600, 1.0);
+        host.pointer_down_screen(100.0, 100.0, 0, false, false);
+        assert!(matches!(host.interaction, Interaction::SelectionPending { .. }));
+        let preview = host.plan_pointer(BoardPointerIntent { phase: BoardPointerPhase::Move, x: 180.0, y: 160.0, shift: false, ctrl_or_meta: false, alt: false }).expect("selection preview plan");
+        assert_eq!(preview.event_count(), 1);
+        assert!(preview.events_json().contains("preselect"));
+        host.begin_pointer_commit(preview).expect("retained selection preview");
+        drive_pointer_commit(&mut host);
+        let mut publication = host.take_pointer_publication().expect("preview publication");
+        assert!(publication.close_step());
+        assert!(matches!(host.interaction, Interaction::Selection { .. }));
+
+        let stale = host.plan_pointer(BoardPointerIntent { phase: BoardPointerPhase::Move, x: 200.0, y: 180.0, shift: false, ctrl_or_meta: false, alt: false }).expect("stale selection plan");
+        host.interaction_revision = host.interaction_revision.wrapping_add(1);
+        assert!(host.begin_pointer_commit(stale).is_err());
+
+        let commit = host.plan_pointer(BoardPointerIntent { phase: BoardPointerPhase::Up, x: 200.0, y: 180.0, shift: false, ctrl_or_meta: false, alt: false }).expect("selection commit plan");
+        assert_eq!(commit.event_count(), 1);
+        assert!(commit.events_json().contains("select"));
+        host.begin_pointer_commit(commit).expect("retained selection commit");
+        drive_pointer_commit(&mut host);
+        assert!(matches!(host.interaction, Interaction::None));
+    }
+
+    #[cfg(test)]
+    #[test]
+    fn non_drag_pointer_commit_yields_between_selection_link_and_brush_items() {
+        let live = semio_framework_job::root_cancel_token();
+        let mut selection = deletion_fixture("node-a");
+        selection.interaction = Interaction::SelectionPending { initial_ids: ["node-a".to_owned()].into_iter().collect(), start: Point::new(0.0, 0.0), start_screen: Point::new(0.0, 0.0) };
+        let mut selection_plan = BoardPointerPlan::empty(selection.interaction_revision, BoardPointerPlanKind::SelectionCommit);
+        selection_plan.push_delta("node-a", 0.0, 0.0).unwrap();
+        selection_plan.seal_events().unwrap();
+        selection.begin_pointer_commit(selection_plan).unwrap();
+        assert_eq!(with_board_step_context(0, live.clone(), |context| selection.step_pointer_commit(context)), BoardAuthorityStep::Pending);
+        assert!(matches!(selection.interaction, Interaction::SelectionPending { .. }));
+        assert_eq!(with_board_step_context(1, live.clone(), |context| selection.step_pointer_commit(context)), BoardAuthorityStep::Pending);
+        assert!(matches!(selection.interaction, Interaction::None));
+        drive_pointer_commit(&mut selection);
+        assert!(selection.selection.contains("node-a"));
+
+        let mut link = BoardHost::default();
+        link.interaction = Interaction::LinkAtSourceHandle { source_id: "source".into(), start_screen: Point::new(0.0, 0.0) };
+        let mut link_plan = BoardPointerPlan::empty(link.interaction_revision, BoardPointerPlanKind::Idle);
+        let source = link_plan.push_id("source").unwrap();
+        let compat_key = link_plan.push_id("source|").unwrap();
+        let ring_key = link_plan.push_id("source||").unwrap();
+        link_plan.kind = BoardPointerPlanKind::LinkMove { source, target: None, hover: None, compat_key, ring_key, end_world: Point::new(2.0, 3.0), activated: true, start_screen: Point::new(0.0, 0.0) };
+        link.begin_pointer_commit(link_plan).unwrap();
+        assert_eq!(with_board_step_context(1, live.clone(), |context| link.step_pointer_commit(context)), BoardAuthorityStep::Pending);
+        assert!(link.link_compat_nodes_emit_key.is_none());
+        assert_eq!(with_board_step_context(1, live.clone(), |context| link.step_pointer_commit(context)), BoardAuthorityStep::Pending);
+        assert_eq!(link.link_compat_nodes_emit_key.as_deref(), Some("source|"));
+        drive_pointer_commit(&mut link);
+
+        let mut brush = BoardHost::default();
+        brush.active_utility = ActiveUtility::Brush;
+        let mut brush_plan = BoardPointerPlan::empty(brush.interaction_revision, BoardPointerPlanKind::Idle);
+        brush_plan.push_delta("kind-a", 0.0, 0.0).unwrap();
+        brush_plan.push_delta("kind-b", 1.0, 0.0).unwrap();
+        brush_plan.kind = BoardPointerPlanKind::Brush { source: None, hover: None, alt: false, commit_old: false };
+        brush.begin_pointer_commit(brush_plan).unwrap();
+        assert_eq!(with_board_step_context(1, live.clone(), |context| brush.step_pointer_commit(context)), BoardAuthorityStep::Pending);
+        assert_eq!(brush.brush_candidates.len(), 0);
+        assert_eq!(with_board_step_context(1, live, |context| brush.step_pointer_commit(context)), BoardAuthorityStep::Pending);
+        assert_eq!(brush.brush_candidates.len(), 0);
+        drive_pointer_commit(&mut brush);
+        assert_eq!(brush.brush_candidates.len(), 2);
+    }
+
+    #[cfg(test)]
+    #[test]
+    fn typed_event_queue_preserves_fifo_saturation_and_one_event_close_progress() {
+        let mut queue = BoardEventQueue::default();
+        for index in 0..BOARD_EVENT_ITEM_CAPACITY {
+            let payload = format!(r#"{{"id":"node-{index}"}}"#);
+            queue.push(BoardOwnedEvent::from_payload(BoardEventKind::NodeMove, &payload, Some("node")).unwrap()).unwrap();
+        }
+        let overflow = BoardOwnedEvent::from_payload(BoardEventKind::Select, r#"{"ids":[]}"#, None).unwrap();
+        assert!(queue.push(overflow).is_err());
+        assert_eq!(queue.len(), BOARD_EVENT_ITEM_CAPACITY);
+        for index in 0..BOARD_EVENT_ITEM_CAPACITY {
+            let event = queue.pop().expect("fifo event");
+            assert_eq!(event.kind(), BoardEventKind::NodeMove);
+            assert!(event.payload_json().contains(&format!("node-{index}")));
+        }
+        assert!(queue.terminal_is_empty());
+
+        queue.push(BoardOwnedEvent::from_payload(BoardEventKind::Select, r#"{"ids":["a"]}"#, None).unwrap()).unwrap();
+        queue.push(BoardOwnedEvent::from_payload(BoardEventKind::Hover, r#"{"id":"a"}"#, None).unwrap()).unwrap();
+        assert!(!queue.close_step());
+        assert!(!queue.close_step());
+        assert!(queue.close_step());
+        assert!(queue.terminal_is_empty());
+    }
+
+    #[cfg(test)]
+    #[test]
+    fn selection_event_reservation_is_flat_exact_and_precedes_mutation() {
+        let mut host = BoardHost::default();
+        host.set_selection_ids(&["a\"\\\n".into(), "b".into()]);
+        assert_eq!(host.selection.iter().cloned().collect::<Vec<_>>(), vec!["a\"\\\n".to_string(), "b".to_string()]);
+        let event = host.pop_owned_event().expect("flat select event");
+        assert_eq!(event.kind(), BoardEventKind::Select);
+        let payload: serde_json::Value = serde_json::from_str(event.payload_json()).unwrap();
+        assert_eq!(payload["ids"], serde_json::json!(["a\"\\\n", "b"]));
+
+        let mut saturated = BoardHost::default();
+        for _ in 0..BOARD_EVENT_ITEM_CAPACITY {
+            saturated.events.push(BoardOwnedEvent::from_payload(BoardEventKind::Hover, r#"{"id":null}"#, None).unwrap()).unwrap();
+        }
+        saturated.set_selection_ids(&["retained".into()]);
+        assert!(saturated.selection.is_empty());
+        assert!(saturated.event_overflow.is_some());
+        assert_eq!(saturated.events.len(), BOARD_EVENT_ITEM_CAPACITY);
+    }
+
+    #[cfg(test)]
+    fn deletion_fixture(node_id: &str) -> BoardHost {
+        let mut host = BoardHost::default();
+        let fixture = serde_json::json!({
+            "schema": "reasoning.mindmap.fixture",
+            "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+            "nodes": [
+                { "id": node_id, "x": 0.0, "y": 0.0, "shape": "circle", "radius": 10.0 },
+                { "id": "node-b", "x": 20.0, "y": 0.0, "shape": "circle", "radius": 10.0 }
+            ],
+            "edges": [{ "id": "edge-a-b", "source": node_id, "target": "node-b" }]
+        });
+        assert!(host.parse_fixture_v1(&fixture));
+        while host.pop_owned_event().is_some() {}
+        host.set_selection_ids_silent(&[node_id.to_string()]);
+        host
+    }
+
+    #[cfg(test)]
+    #[test]
+    fn delete_plan_retains_fifo_until_exact_credits_and_rejects_stale_or_oversized() {
+        let mut saturated = deletion_fixture("node-a");
+        for _ in 0..BOARD_EVENT_ITEM_CAPACITY {
+            saturated.events.push(BoardOwnedEvent::hover(None, None).unwrap()).unwrap();
+        }
+        saturated.delete_selection();
+        assert!(saturated.nodes.contains_key("node-a"));
+        assert!(saturated.pending_delete_planning.is_some());
+        let live = semio_framework_job::root_cancel_token();
+        let mut turns = 0usize;
+        while saturated.pending_delete_planning.is_some() || saturated.pending_delete_operation.is_some() {
+            turns += 1;
+            assert!(turns <= 768);
+            let _ = with_board_step_context(1, live.clone(), |context| saturated.step_event_authority(context));
+            if let Some(event) = saturated.pop_owned_event() {
+                assert_eq!(event.kind(), BoardEventKind::Hover);
+            }
+        }
+        assert!(turns > 4);
+        assert!(saturated.pending_delete_operation.is_none());
+        assert!(!saturated.nodes.contains_key("node-a"));
+        while saturated.pop_owned_event().is_some() {}
+
+        let mut stale = deletion_fixture("node-a");
+        for _ in 0..BOARD_EVENT_ITEM_CAPACITY {
+            stale.events.push(BoardOwnedEvent::hover(None, None).unwrap()).unwrap();
+        }
+        stale.delete_selection();
+        stale.interaction_revision = stale.interaction_revision.wrapping_add(1);
+        assert_eq!(with_board_step_context(1, live.clone(), |context| stale.step_event_authority(context)), BoardAuthorityStep::Fault);
+        assert!(stale.pending_delete_operation.is_none());
+        assert!(stale.nodes.contains_key("node-a"));
+        assert!(stale.event_terminal_faulted());
+
+        let oversized_id = "x".repeat(BOARD_POINTER_BYTE_CAPACITY + 1);
+        let mut oversized = deletion_fixture("node-a");
+        let mut oversized_node = oversized.nodes.remove("node-a").unwrap();
+        oversized_node.id.clone_from(&oversized_id);
+        oversized.nodes.insert(oversized_id.clone(), oversized_node);
+        oversized.selection.clear();
+        oversized.selection.insert(oversized_id.clone());
+        oversized.delete_selection();
+        assert_eq!(with_board_step_context(1, live.clone(), |context| oversized.step_event_authority(context)), BoardAuthorityStep::Pending);
+        assert_eq!(with_board_step_context(1, live.clone(), |context| oversized.step_event_authority(context)), BoardAuthorityStep::Fault);
+        assert!(oversized.nodes.contains_key(&oversized_id));
+        assert!(oversized.pending_delete_planning.is_none());
+        assert!(oversized.pending_delete_operation.is_none());
+        assert!(oversized.event_terminal_faulted());
+
+        let mut interrupted = deletion_fixture("node-a");
+        interrupted.delete_selection();
+        assert!(interrupted.pending_delete_planning.is_some());
+        let cancel = semio_framework_job::root_cancel_token();
+        assert_eq!(with_board_step_context(1, cancel.clone(), |context| interrupted.step_event_authority(context)), BoardAuthorityStep::Pending);
+        assert_eq!(with_board_step_context(1, cancel.clone(), |context| interrupted.step_event_authority(context)), BoardAuthorityStep::Pending);
+        assert!(!with_board_step_context(1, cancel.clone(), |context| interrupted.close_event_authority_step(context)));
+        let mut close_turns = 1usize;
+        while !with_board_step_context(1, cancel.clone(), |context| interrupted.close_event_authority_step(context)) {
+            close_turns += 1;
+            assert!(close_turns <= 32);
+        }
+        assert!(close_turns > 4);
+        assert!(interrupted.event_authority_terminal_is_empty());
+    }
+
+    #[cfg(test)]
+    #[test]
+    fn delete_property_pre_admission_rejects_hostile_nodes_without_transfer_or_mutation() {
+        let mut host = deletion_fixture("node-a");
+        host.nodes.get_mut("node-a").unwrap().properties.insert("hostile".into(), graph::manifest::PropertyValue::Array((0..=BOARD_POINTER_ITEM_CAPACITY).map(|_| graph::manifest::PropertyValue::Null).collect()));
+        host.delete_selection();
+        let live = semio_framework_job::root_cancel_token();
+        for _ in 0..1024 {
+            if matches!(with_board_step_context(1, live.clone(), |context| host.step_event_authority(context)), BoardAuthorityStep::Fault) {
+                break;
+            }
+        }
+        assert!(host.pending_delete_planning.is_none());
+        assert!(host.pending_delete_operation.is_none());
+        assert!(host.nodes.contains_key("node-a"));
+        assert!(host.event_terminal_faulted());
+
+        let mut node = host.nodes.remove("node-a").unwrap();
+        let Some(graph::manifest::PropertyValue::Array(mut values)) = node.properties.remove("hostile") else { panic!("hostile property remains retained") };
+        while values.pop().is_some() {}
+        drop(values);
+        drop(node);
+    }
+
+    #[cfg(test)]
+    #[test]
+    fn removed_entity_retirement_witness_survives_interruption_and_releases_one_owner_per_turn() {
+        let mut host = deletion_fixture("node-a");
+        let node = host.nodes.remove("node-a").unwrap();
+        let mut retirement = BoardEntityRetirement::new(BoardRemovedEntity::Node(node));
+        assert!(!retirement.step().unwrap());
+        assert!(!retirement.terminal_is_empty());
+        let mut turns = 1usize;
+        while !retirement.step().unwrap() {
+            turns += 1;
+            assert!(turns <= 32);
+        }
+        assert!(turns > 4);
+        assert!(retirement.terminal_is_empty());
     }
     // #endregion board_host
 }

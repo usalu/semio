@@ -645,18 +645,8 @@ interface events {
     quotas: pack,
   }
 
-  /// 🔀️ The old `exchange(id, cmds)` collapses into this: one `app-command` event per queued
-  /// `protocol_channel::AppCommand`, folded into the same `poll` call as everything else — the
-  /// `exchange(id, [])` drain has no replacement, guests are woken by events/timers/`next-wake`
-  /// instead.
-  record app-command-event {
-    instance: instance-id,
-    seq: u64,
-    command: pack,
-  }
-
   /// 🎬️ A user action against a UI node — pack-encoded `contract-action::UiIntent`. `wit-flip`
-  /// (26/08/20): UI intents get their own event instead of masquerading as `app-command-event`,
+  /// (26/08/20): UI intents use a dedicated event instead of the command ingress owner,
   /// which is what lets the host tell a genuine UI interaction from a channel command without
   /// decoding the payload.
   record ui-intent-event {
@@ -754,7 +744,6 @@ interface events {
     suspend-request(suspend-request-event),
     capability-changed(capability-changed-event),
     quota-changed(quota-changed-event),
-    app-command(app-command-event),
     ui-intent(ui-intent-event),
     surface-visible(surface-visible-event),
     surface-hidden(surface-hidden-event),
@@ -897,7 +886,7 @@ interface pure {
 /// deleted `runner::run`'s `stream<event>`) — it stays one call in, one `turn-result` out, it just
 /// runs on an async-capable Store like every other export in this world.
 interface reactor {
-  use types.{plugin-error, pack};
+  use types.{plugin-error, pack, instance-id};
   use effects.{effect};
   use events.{event};
   use ui.{ui-patch};
@@ -912,6 +901,109 @@ interface reactor {
   record job-checkpoint {
     state: list<u8>,
     applied-progress: u64,
+  }
+  record command-page-cursor {
+    owner: u64,
+    generation: u64,
+    command-index: u32,
+    command-count: u32,
+    instance: instance-id,
+    seq: u64,
+    kind: u8,
+    page-index: u32,
+    page-count: u32,
+    item-count: u32,
+    metadata: u32,
+  }
+  record command-page-block {
+    word-0: u64,
+    word-1: u64,
+    word-2: u64,
+    word-3: u64,
+    word-4: u64,
+    word-5: u64,
+    word-6: u64,
+    word-7: u64,
+  }
+  record command-ingress-page {
+    cursor: command-page-cursor,
+    length: u32,
+    block-00: command-page-block,
+    block-01: command-page-block,
+    block-02: command-page-block,
+    block-03: command-page-block,
+    block-04: command-page-block,
+    block-05: command-page-block,
+    block-06: command-page-block,
+    block-07: command-page-block,
+    block-08: command-page-block,
+    block-09: command-page-block,
+    block-10: command-page-block,
+    block-11: command-page-block,
+    block-12: command-page-block,
+    block-13: command-page-block,
+    block-14: command-page-block,
+    block-15: command-page-block,
+    block-16: command-page-block,
+    block-17: command-page-block,
+    block-18: command-page-block,
+    block-19: command-page-block,
+    block-20: command-page-block,
+    block-21: command-page-block,
+    block-22: command-page-block,
+    block-23: command-page-block,
+    block-24: command-page-block,
+    block-25: command-page-block,
+    block-26: command-page-block,
+    block-27: command-page-block,
+    block-28: command-page-block,
+    block-29: command-page-block,
+    block-30: command-page-block,
+    block-31: command-page-block,
+    block-32: command-page-block,
+    block-33: command-page-block,
+    block-34: command-page-block,
+    block-35: command-page-block,
+    block-36: command-page-block,
+    block-37: command-page-block,
+    block-38: command-page-block,
+    block-39: command-page-block,
+    block-40: command-page-block,
+    block-41: command-page-block,
+    block-42: command-page-block,
+    block-43: command-page-block,
+    block-44: command-page-block,
+    block-45: command-page-block,
+    block-46: command-page-block,
+    block-47: command-page-block,
+    block-48: command-page-block,
+    block-49: command-page-block,
+    block-50: command-page-block,
+    block-51: command-page-block,
+    block-52: command-page-block,
+    block-53: command-page-block,
+    block-54: command-page-block,
+    block-55: command-page-block,
+    block-56: command-page-block,
+    block-57: command-page-block,
+    block-58: command-page-block,
+    block-59: command-page-block,
+    block-60: command-page-block,
+    block-61: command-page-block,
+    block-62: command-page-block,
+    block-63: command-page-block,
+  }
+  record command-ingress-fault {
+    cursor: command-page-cursor,
+    fault: plugin-error,
+  }
+  variant command-ingress-status {
+    idle,
+    page-accepted(command-page-cursor),
+    backpressure(command-page-cursor),
+    command-pending(command-page-cursor),
+    command-complete(command-page-cursor),
+    fault(command-ingress-fault),
   }
   variant turn-status {
     idle,
@@ -943,8 +1035,9 @@ interface reactor {
     next-wake: option<u64>,
     status: turn-status,
     fuel-used: u64,
+    command-ingress: command-ingress-status,
   }
-  poll: async func(events: list<event>, budget: budget) -> result<turn-result, plugin-error>;
+  poll: async func(events: list<event>, command-page: option<command-ingress-page>, budget: budget) -> result<turn-result, plugin-error>;
 }
 
 /// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse). `world actor`'s async import

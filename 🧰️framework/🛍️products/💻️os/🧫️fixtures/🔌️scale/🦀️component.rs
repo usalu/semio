@@ -59,7 +59,7 @@ pub mod guest {
     // calls no `host-async` import at all, which is deliberate — the bench measures the RUNTIME, so
     // the guest must not add work of its own.
     impl ReactorGuest for FixtureGuest {
-        async fn poll(events: Vec<WitEvent>, budget: WitBudget) -> Result<WitTurnResult, PluginError> {
+        async fn poll(events: Vec<WitEvent>, command_page: Option<exports::semio::framework::reactor::CommandIngressPage>, budget: WitBudget) -> Result<WitTurnResult, PluginError> {
             for event in events {
                 match event {
                     WitEvent::InstanceOpen(open) => profile::on_instance_open(&open.config),
@@ -116,6 +116,7 @@ pub mod guest {
                 next_wake: outcome.next_wake_ms,
                 status: if outcome.status_more_work { WitTurnStatus::MoreWork } else { WitTurnStatus::Idle },
                 fuel_used: outcome.fuel_used,
+                command_ingress: command_page.map_or(exports::semio::framework::reactor::CommandIngressStatus::Idle, |page| exports::semio::framework::reactor::CommandIngressStatus::Backpressure(page.cursor)),
             })
         }
     }

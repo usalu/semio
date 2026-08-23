@@ -36,7 +36,7 @@ export default defineConfig({
       "../../../../🔨️modules/🏷️class-name-composition/🧪️slot.test.tsx",
       "../../../../🔨️modules/🏷️style-variants/🧪️component.test.ts",
     ],
-    includeSource: ["📦️index.tsx"],
+    includeSource: ["📦️index.tsx", resolve(root, "../../../../../../../.storybook/🟦️lint-tooling.ts")],
     coverage: { include: ["📦️index.tsx"] },
     passWithNoTests: true,
     setupFiles: [resolve(root, "🟦️vitest.setup.ts")],

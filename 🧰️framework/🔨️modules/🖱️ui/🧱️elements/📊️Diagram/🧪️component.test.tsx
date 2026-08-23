@@ -553,6 +553,7 @@ describe("owned Diagram directed layout", () => {
     const successorPort = createTestInteractivePort("ready");
     setInteractiveJobPort(successorPort);
     await flushPortNotifications(8);
+    await flushPortNotifications(8);
     expect(view.getByText("complete:10")).toBeTruthy();
     expect(committedNodes?.[0]?.position.x).toBe(10);
     expect(abandonedNodes?.[0]).toBeUndefined();
@@ -616,6 +617,7 @@ describe("owned Diagram directed layout", () => {
 
     view.rerender(<React.Suspense fallback={<span>deferred</span>}><Probe values={fallbackNodes} /></React.Suspense>);
     expect(view.getByText("pending:5")).toBeTruthy();
+    await flushPortNotifications(8);
     await flushPortNotifications(8);
     expect(committedNodes?.[0]).toBeUndefined();
     const pendingDescriptor = port.descriptors[1]!;

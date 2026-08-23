@@ -7,7 +7,7 @@
 //! with zero other changes.
 //! 🧩️ Maps framework UiNode trees to ui_wgpu widget nodes.
 
-use crate::scenes::{decode_canvas_image, queue_canvas_image_upload, render_component_scene, Board2dSurface, NodeGraphSurface, TiledMapSurface};
+use crate::scenes::{decode_canvas_image, queue_canvas_image_upload, render_component_scene, AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface};
 use serde_json::Value;
 use std::sync::{Mutex, MutexGuard, OnceLock};
 #[cfg(test)]
@@ -257,6 +257,110 @@ fn render_plan_error_widget(message: &str, bounds: Rect, ctx: &mut FrameworkWidg
  * `.🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w3-interpreter-cutover.md`'s "CRITICAL FINDING"
  * for the original gap and the follow-up ticket work that closed it. */
 static UI_ENGINE: WorkerCell<ui_wgpu::wgpu::Ui> = WorkerCell::new();
+
+const SCENE_INTENT_CAPACITY: usize = 256;
+const SCENE_INTENT_ID_BYTES: usize = 256;
+
+#[derive(Clone, Copy)]
+enum SceneIntentEvent {
+    PointerDown { x: f32, y: f32, button: i16 },
+    PointerUp { x: f32, y: f32, button: i16 },
+    PointerMove { x: f32, y: f32 },
+    Scroll { x: f32, y: f32, delta_y: f32 },
+}
+
+struct SceneInteractionIntent {
+    generation: u64,
+    tree_revision: u64,
+    window_id: String,
+    surface_id: String,
+    node: NodeId,
+    kind: ui_wgpu::wgpu::SurfaceKind,
+    rect: Rect,
+    event: SceneIntentEvent,
+    ink_job: Option<crate::scenes::InkInteractionJob>,
+    retiring: bool,
+}
+
+struct SceneIntentQueue {
+    slots: Box<[Option<SceneInteractionIntent>; SCENE_INTENT_CAPACITY]>,
+    head: usize,
+    len: usize,
+    next_generation: u64,
+    retiring: Option<SceneInteractionIntent>,
+}
+
+impl Default for SceneIntentQueue {
+    fn default() -> Self {
+        Self { slots: Box::new(std::array::from_fn(|_| None)), head: 0, len: 0, next_generation: 1, retiring: None }
+    }
+}
+
+impl SceneIntentQueue {
+    fn push(&mut self, tree_revision: u64, window_id: &str, surface_id: &str, node: NodeId, kind: ui_wgpu::wgpu::SurfaceKind, rect: Rect, event: SceneIntentEvent) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+        if window_id.len() > SCENE_INTENT_ID_BYTES || surface_id.len() > SCENE_INTENT_ID_BYTES {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::StringCredits);
+        }
+        if self.len == SCENE_INTENT_CAPACITY {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+        }
+        let generation = self.next_generation;
+        self.next_generation = self.next_generation.wrapping_add(1).max(1);
+        let index = (self.head + self.len) % SCENE_INTENT_CAPACITY;
+        self.slots[index] = Some(SceneInteractionIntent { generation, tree_revision, window_id: window_id.to_owned(), surface_id: surface_id.to_owned(), node, kind, rect, event, ink_job: None, retiring: false });
+        self.len += 1;
+        Ok(())
+    }
+
+    fn pop_front(&mut self) -> Option<SceneInteractionIntent> {
+        if self.len == 0 {
+            return None;
+        }
+        let intent = self.slots[self.head].take();
+        self.head = (self.head + 1) % SCENE_INTENT_CAPACITY;
+        self.len -= 1;
+        intent
+    }
+
+    fn push_front(&mut self, intent: SceneInteractionIntent) {
+        debug_assert!(self.len < SCENE_INTENT_CAPACITY);
+        self.head = (self.head + SCENE_INTENT_CAPACITY - 1) % SCENE_INTENT_CAPACITY;
+        self.slots[self.head] = Some(intent);
+        self.len += 1;
+    }
+
+    fn close_step(&mut self) -> bool {
+        if let Some(intent) = self.retiring.as_mut() {
+            if !intent.close_step() {
+                return false;
+            }
+            self.retiring = None;
+            return false;
+        }
+        self.retiring = self.pop_front();
+        self.retiring.is_none()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.len == 0 && self.retiring.is_none()
+    }
+}
+
+impl SceneInteractionIntent {
+    fn close_step(&mut self) -> bool {
+        let Some(job) = self.ink_job.as_mut() else {
+            return true;
+        };
+        if job.close_step() {
+            self.ink_job = None;
+            true
+        } else {
+            false
+        }
+    }
+}
+
+static SCENE_INTENTS: WorkerCell<SceneIntentQueue> = WorkerCell::new();
 /// 👆️ Last-seen `(pointer_down, pointer_button)` per `window_id`, so `dispatch_pointer_events` can
 /// detect Down/Up edges from `InputState`'s per-frame aggregate.
 static POINTER_EDGE_STATE: WorkerCell<std::collections::HashMap<String, (bool, i16)>> = WorkerCell::new();
@@ -266,7 +370,7 @@ static POINTER_EDGE_STATE: WorkerCell<std::collections::HashMap<String, (bool, i
  * winit input, e.g. real key events/IME/focus-scoped routing this function's own per-frame
  * pointer-only synthesis below deliberately does not attempt) into the same process-wide retained
  * engine `render_ui_node` itself drives, and forwards any resulting `UiCommand::App` action into the
- * same `input.queue_event`/`app.dispatch_actions` pipeline other actions already use. Returns the raw
+ * same reserved bounded-action/`app.dispatch_actions` pipeline other actions already use. Returns the raw
  * command list too, for `FocusChanged`/`OverlayClosed`/`DropCommitted`/clipboard commands a caller may
  * want to react to itself (e.g. an actual OS clipboard read for `ClipboardPasteRequested` is a `host`
  * concern, not this function's). */
@@ -278,7 +382,7 @@ pub fn dispatch_ui_event(window_id: &str, event: ui_wgpu::wgpu::UiEvent, input: 
 
 /** 🧵️ W3 clipboard/drag-drop wiring (`report-w3-clipboard-dnd.md`): every `ui_wgpu::wgpu::UiCommand`
  * variant now has an explicit arm — no more silently-dropped-by-omission commands.
- *  - `App` → unchanged: queues `action` into the same `input.queue_event` pipeline every other
+ *  - `App` → reserves and copies `action` into the bounded action authority every other
  *    action already flows through.
  *  - `ClipboardCopy`/`ClipboardCut` → `write_os_clipboard` (real OS clipboard via `ui_wgpu::wgpu::host`,
  *    mocked in this module's own tests — see `MOCK_CLIPBOARD_WRITES`).
@@ -302,7 +406,12 @@ pub fn dispatch_ui_event(window_id: &str, event: ui_wgpu::wgpu::UiEvent, input: 
 fn apply_ui_commands(commands: &[ui_wgpu::wgpu::UiCommand], input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
     for command in commands {
         match command {
-            ui_wgpu::wgpu::UiCommand::App { action, .. } => input.queue_event(action.clone()),
+            ui_wgpu::wgpu::UiCommand::App { action, .. } => {
+                if let Err(fault) = publish_retained_action(input, action) {
+                    input.record_action_fault(fault);
+                    return;
+                }
+            }
             ui_wgpu::wgpu::UiCommand::ClipboardCopy { text, .. } | ui_wgpu::wgpu::UiCommand::ClipboardCut { text, .. } => {
                 write_os_clipboard(text);
             }
@@ -310,7 +419,10 @@ fn apply_ui_commands(commands: &[ui_wgpu::wgpu::UiCommand], input: &mut ui_wgpu:
                 apply_clipboard_paste_requested(window_id, input);
             }
             ui_wgpu::wgpu::UiCommand::DropCommitted { window_id, target, payload, .. } => {
-                apply_drop_committed(window_id, *target, payload, input);
+                if let Err(fault) = apply_drop_committed(window_id, *target, payload, input) {
+                    input.record_action_fault(fault);
+                    return;
+                }
             }
             ui_wgpu::wgpu::UiCommand::Scene { window_id, node, kind, rect, event, .. } => {
                 apply_scene_ui_command(window_id, *node, *kind, *rect, event, input);
@@ -318,6 +430,15 @@ fn apply_ui_commands(commands: &[ui_wgpu::wgpu::UiCommand], input: &mut ui_wgpu:
             ui_wgpu::wgpu::UiCommand::DropCancelled { .. } | ui_wgpu::wgpu::UiCommand::OverlayClosed { .. } | ui_wgpu::wgpu::UiCommand::FocusChanged { .. } => {}
         }
     }
+    drive_scene_interaction_step(input);
+}
+
+fn publish_retained_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, action: &ActionDescriptor) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let mut reservation = input.reserve_action(&action.controller_id, &action.action, ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
+    if let Some(args) = action.args.as_ref() {
+        reservation.builder().value(None, args)?;
+    }
+    reservation.publish()
 }
 
 /** 🫳️ Resolves `target`'s own `drop_action` (the only node kind `ui_wgpu`'s own
@@ -330,10 +451,51 @@ fn apply_ui_commands(commands: &[ui_wgpu::wgpu::UiCommand], input: &mut ui_wgpu:
  * (`{...descriptor.args, ...patch}`, patch wins) reproduced by `merge_action_args`. A no-op if the
  * target isn't (or no longer is, by the time this command is applied) a `Stack` with a `drop_action`,
  * or the payload carries no decodable semio-mime entry. */
-fn apply_drop_committed(window_id: &str, target: NodeId, payload: &DragPayload, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
-    let Some(action) = drop_target_action(window_id, target) else { return };
-    let Some(patch) = decode_drop_payload(payload) else { return };
-    input.queue_event(ActionDescriptor { controller_id: action.controller_id, action: action.action, args: merge_action_args(action.args.as_ref(), patch) });
+fn apply_drop_committed(window_id: &str, target: NodeId, payload: &DragPayload, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let Some(action) = drop_target_action(window_id, target) else {
+        return Ok(());
+    };
+    let Some(patch) = decode_drop_payload(payload) else {
+        return Ok(());
+    };
+    let mut reservation = input.reserve_action(&action.controller_id, &action.action, ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
+    let builder = reservation.builder();
+    builder.begin_object(None)?;
+    if let Some(semio_framework::DslValue::Object(entries)) = action.args.as_ref() {
+        for (key, value) in entries {
+            if !patch.contains_key(key) {
+                builder.value(Some(key), value)?;
+            }
+        }
+    }
+    for (key, value) in &patch {
+        write_json_action_value(builder, Some(key), value)?;
+    }
+    builder.end_container()?;
+    reservation.publish()
+}
+
+fn write_json_action_value(builder: &mut ui_wgpu::wgpu::BoundedActionBuilder, key: Option<&str>, value: &Value) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    match value {
+        Value::Null => builder.null(key),
+        Value::Bool(value) => builder.boolean(key, *value),
+        Value::Number(value) => builder.number(key, value.as_f64().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?),
+        Value::String(value) => builder.string(key, value),
+        Value::Array(values) => {
+            builder.begin_array(key)?;
+            for value in values {
+                write_json_action_value(builder, None, value)?;
+            }
+            builder.end_container()
+        }
+        Value::Object(entries) => {
+            builder.begin_object(key)?;
+            for (key, value) in entries {
+                write_json_action_value(builder, Some(key), value)?;
+            }
+            builder.end_container()
+        }
+    }
 }
 
 fn drop_target_action(window_id: &str, target: NodeId) -> Option<ActionDescriptor> {
@@ -515,36 +677,208 @@ fn pointer_button_code(button: ui_wgpu::wgpu::PointerButton) -> i16 {
 /// fix without a breaking `UiEvent` field addition across ~30 downstream plugins (see
 /// `dispatch_event`'s own `#[allow(clippy::needless_pass_by_value...)]` doc comment on that cost).
 fn apply_scene_ui_command(window_id: &str, node: NodeId, kind: ui_wgpu::wgpu::SurfaceKind, rect: Rect, event: &ui_wgpu::wgpu::UiEvent, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
-    if crate::scenes::scene_has_bespoke_pointer_dispatch(kind) {
-        return;
-    }
-    let actions = UI_ENGINE.with(|cell| {
+    let event = match event {
+        ui_wgpu::wgpu::UiEvent::PointerDown { x, y, button } => SceneIntentEvent::PointerDown { x: *x, y: *y, button: pointer_button_code(*button) },
+        ui_wgpu::wgpu::UiEvent::PointerUp { x, y, button } => SceneIntentEvent::PointerUp { x: *x, y: *y, button: pointer_button_code(*button) },
+        ui_wgpu::wgpu::UiEvent::PointerMove { x, y } => SceneIntentEvent::PointerMove { x: *x, y: *y },
+        ui_wgpu::wgpu::UiEvent::Scroll { x, y, delta_y, .. } => SceneIntentEvent::Scroll { x: *x, y: *y, delta_y: *delta_y },
+        _ => return,
+    };
+    let witness = UI_ENGINE.with(|cell| {
         let engine = cell.borrow();
-        let Some(tree) = engine.tree(window_id) else { return Vec::new() };
-        let Some(n) = tree.node(node) else { return Vec::new() };
-        let UiNode::ComponentScene(scene) = &n.spec.0 else { return Vec::new() };
-        match event {
-            ui_wgpu::wgpu::UiEvent::PointerDown { x, y, button } => crate::scenes::handle_scene_pointer_button(scene, rect, *x, *y, true, pointer_button_code(*button), false),
-            ui_wgpu::wgpu::UiEvent::PointerUp { x, y, button } => crate::scenes::handle_scene_pointer_button(scene, rect, *x, *y, false, pointer_button_code(*button), false),
-            ui_wgpu::wgpu::UiEvent::PointerMove { x, y } => {
-                let (was_down, last_x, last_y) = crate::scenes::scene_pointer_edge_state(&scene.surface_id);
-                let actions = crate::scenes::handle_scene_pointer_move(scene, rect, *x, *y, was_down, 0, *x - last_x, *y - last_y);
-                crate::scenes::set_scene_last_pointer_pos(&scene.surface_id, *x, *y);
-                actions
-            }
-            ui_wgpu::wgpu::UiEvent::Scroll { x, y, delta_y, .. } => {
-                if delta_y.abs() < 0.01 {
-                    Vec::new()
-                } else {
-                    crate::scenes::handle_scene_wheel(scene, rect, *x, *y, *delta_y, false)
+        let revision = engine.tree_revision(window_id)?;
+        let tree = engine.tree(window_id)?;
+        let retained = tree.node(node)?;
+        let UiNode::ComponentScene(scene) = &retained.spec.0 else {
+            return None;
+        };
+        if scene.component_kind != kind || scene.surface_id.len() > SCENE_INTENT_ID_BYTES {
+            return None;
+        }
+        Some((revision, scene.surface_id.clone()))
+    });
+    let Some((tree_revision, surface_id)) = witness else {
+        input.record_action_fault(ui_wgpu::wgpu::BoundedActionFault::Structure);
+        return;
+    };
+    if let Err(fault) = SCENE_INTENTS.with(|cell| cell.borrow_mut().push(tree_revision, window_id, &surface_id, node, kind, rect, event)) {
+        input.record_action_fault(fault);
+    }
+}
+
+pub fn drive_scene_interaction_step(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+    let Some(mut intent) = SCENE_INTENTS.with(|cell| cell.borrow_mut().pop_front()) else {
+        return false;
+    };
+    match process_scene_interaction(&mut intent, input) {
+        Ok(SceneIntentProgress::Complete) => {}
+        Ok(SceneIntentProgress::Pending) => SCENE_INTENTS.with(|cell| cell.borrow_mut().push_front(intent)),
+        Err(fault) => {
+            SCENE_INTENTS.with(|cell| cell.borrow_mut().push_front(intent));
+            input.record_action_fault(fault);
+        }
+    }
+    true
+}
+
+pub fn close_scene_interaction_step() -> bool {
+    SCENE_INTENTS.with(|cell| cell.borrow_mut().close_step())
+}
+
+pub fn scene_interaction_terminal_is_empty() -> bool {
+    SCENE_INTENTS.with(|cell| cell.borrow().is_empty())
+}
+
+enum SceneIntentProgress {
+    Pending,
+    Complete,
+}
+
+fn process_scene_interaction(intent: &mut SceneInteractionIntent, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<SceneIntentProgress, ui_wgpu::wgpu::BoundedActionFault> {
+    let operation_generation = intent.generation;
+    if operation_generation == 0 {
+        intent.retiring = true;
+    }
+    let window_id = intent.window_id.as_str();
+    let node = intent.node;
+    let kind = intent.kind;
+    let rect = intent.rect;
+    let live = UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        engine.tree_revision(window_id) == Some(intent.tree_revision)
+            && engine.tree(window_id).and_then(|tree| tree.node(node)).and_then(|retained| match &retained.spec.0 {
+                UiNode::ComponentScene(scene) => Some(scene.component_kind == kind && scene.surface_id == intent.surface_id),
+                _ => None,
+            }) == Some(true)
+    });
+    if !live {
+        intent.retiring = true;
+    }
+    if intent.retiring {
+        return Ok(if intent.close_step() { SceneIntentProgress::Complete } else { SceneIntentProgress::Pending });
+    }
+    if crate::scenes::scene_has_bespoke_pointer_dispatch(kind) {
+        return Ok(SceneIntentProgress::Complete);
+    }
+    if kind == ui_wgpu::wgpu::SurfaceKind::TextEditor {
+        return UI_ENGINE.with(|cell| {
+            let engine = cell.borrow();
+            let Some(tree) = engine.tree(window_id) else {
+                return Ok(SceneIntentProgress::Complete);
+            };
+            let Some(retained) = tree.node(node) else {
+                return Ok(SceneIntentProgress::Complete);
+            };
+            let UiNode::ComponentScene(scene) = &retained.spec.0 else {
+                return Ok(SceneIntentProgress::Complete);
+            };
+            let result = match intent.event {
+                SceneIntentEvent::PointerDown { x, y, button } => crate::engine_canvas::text_editor_pointer_button_into(scene, rect, x, y, button, true, input),
+                SceneIntentEvent::PointerUp { x, y, button } => crate::engine_canvas::text_editor_pointer_button_into(scene, rect, x, y, button, false, input),
+                SceneIntentEvent::PointerMove { x, y } => crate::engine_canvas::text_editor_pointer_move_into(scene, rect, x, y, input),
+                SceneIntentEvent::Scroll { delta_y, .. } => Ok(crate::engine_canvas::text_editor_wheel_into(scene, delta_y)),
+            };
+            result.map(|_| SceneIntentProgress::Complete)
+        });
+    }
+    if kind == ui_wgpu::wgpu::SurfaceKind::Canvas2d {
+        return UI_ENGINE.with(|cell| {
+            let engine = cell.borrow();
+            let Some(tree) = engine.tree(window_id) else {
+                return Ok(SceneIntentProgress::Complete);
+            };
+            let Some(retained) = tree.node(node) else {
+                return Ok(SceneIntentProgress::Complete);
+            };
+            let UiNode::ComponentScene(scene) = &retained.spec.0 else {
+                return Ok(SceneIntentProgress::Complete);
+            };
+            let result = match intent.event {
+                SceneIntentEvent::PointerDown { x, y, button } => crate::scenes::canvas_pointer_button_into(scene, rect, x, y, true, button, false, input),
+                SceneIntentEvent::PointerUp { x, y, button } => crate::scenes::canvas_pointer_button_into(scene, rect, x, y, false, button, false, input),
+                SceneIntentEvent::PointerMove { x, y } => {
+                    let (down, last_x, last_y) = crate::scenes::scene_pointer_edge_state(&scene.surface_id);
+                    let result = crate::scenes::canvas_pointer_move_into(scene, rect, x, y, down, x - last_x, y - last_y, input);
+                    if result.is_ok() {
+                        crate::scenes::set_scene_last_pointer_pos(&scene.surface_id, x, y);
+                    }
+                    result
+                }
+                SceneIntentEvent::Scroll { x, y, delta_y } => Ok(crate::scenes::canvas_wheel_into(scene, rect, x, y, delta_y)),
+            };
+            result.map(|_| SceneIntentProgress::Complete)
+        });
+    }
+    if kind == ui_wgpu::wgpu::SurfaceKind::InkCanvas {
+        return UI_ENGINE.with(|cell| {
+            let engine = cell.borrow();
+            let Some(tree) = engine.tree(window_id) else {
+                return Ok(SceneIntentProgress::Complete);
+            };
+            let Some(retained) = tree.node(node) else {
+                return Ok(SceneIntentProgress::Complete);
+            };
+            let UiNode::ComponentScene(scene) = &retained.spec.0 else {
+                return Ok(SceneIntentProgress::Complete);
+            };
+            match intent.event {
+                SceneIntentEvent::Scroll { x, y, delta_y } if delta_y.abs() >= 0.01 => crate::scenes::ink_wheel_into(scene, rect, x, y, delta_y, input).map(|_| SceneIntentProgress::Complete),
+                SceneIntentEvent::Scroll { .. } => Ok(SceneIntentProgress::Complete),
+                event => {
+                    if intent.ink_job.is_none() {
+                        let event = match event {
+                            SceneIntentEvent::PointerDown { x, y, button } => crate::scenes::InkInteractionEvent::PointerDown { x, y, button, shift: false },
+                            SceneIntentEvent::PointerUp { x, y, .. } => crate::scenes::InkInteractionEvent::PointerUp { x, y },
+                            SceneIntentEvent::PointerMove { x, y } => crate::scenes::InkInteractionEvent::PointerMove { x, y },
+                            SceneIntentEvent::Scroll { .. } => unreachable!(),
+                        };
+                        intent.ink_job = crate::scenes::InkInteractionJob::new(operation_generation, scene, event)?;
+                        if intent.ink_job.is_none() {
+                            return Ok(SceneIntentProgress::Complete);
+                        }
+                        return Ok(SceneIntentProgress::Pending);
+                    }
+                    match intent.ink_job.as_mut().expect("ink job retained").step(operation_generation, scene, rect, input)? {
+                        crate::scenes::InkInteractionStep::Pending => Ok(SceneIntentProgress::Pending),
+                        crate::scenes::InkInteractionStep::Complete => {
+                            intent.retiring = true;
+                            Ok(SceneIntentProgress::Pending)
+                        }
+                    }
                 }
             }
-            _ => Vec::new(),
-        }
-    });
-    for action in actions {
-        input.queue_event(action);
+        });
     }
+    UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        let Some(tree) = engine.tree(window_id) else {
+            return Ok(SceneIntentProgress::Complete);
+        };
+        let Some(n) = tree.node(node) else {
+            return Ok(SceneIntentProgress::Complete);
+        };
+        let UiNode::ComponentScene(scene) = &n.spec.0 else {
+            return Ok(SceneIntentProgress::Complete);
+        };
+        match intent.event {
+            SceneIntentEvent::PointerDown { x, y, button } => {
+                crate::scenes::passive_scene_pointer_button(scene, rect, x, y, true, button);
+            }
+            SceneIntentEvent::PointerUp { x, y, button } => {
+                crate::scenes::passive_scene_pointer_button(scene, rect, x, y, false, button);
+            }
+            SceneIntentEvent::PointerMove { x, y } => {
+                let (_, last_x, last_y) = crate::scenes::scene_pointer_edge_state(&scene.surface_id);
+                crate::scenes::passive_scene_pointer_move(scene, rect, x, y, x - last_x, y - last_y);
+            }
+            SceneIntentEvent::Scroll { x, y, delta_y } => {
+                if delta_y.abs() >= 0.01 {
+                    crate::scenes::passive_scene_wheel(scene, rect, x, y, delta_y);
+                }
+            }
+        }
+        Ok(SceneIntentProgress::Complete)
+    })
 }
 
 /** 🕹️ Synthesizes `PointerMove`/`PointerDown`/`PointerUp`/`Scroll` `UiEvent`s for `window_id` from
@@ -662,11 +996,11 @@ struct FrameworkSceneHost<'ctx> {
     scroll_offsets: &'ctx mut std::collections::HashMap<String, f32>,
     collapsed_sections: &'ctx mut std::collections::HashMap<String, bool>,
     open_selects: &'ctx mut std::collections::HashMap<String, bool>,
-    world3d_states: &'ctx mut std::collections::HashMap<String, infinite_world::world::World3dState>,
-    node_graph_states: &'ctx mut std::collections::HashMap<String, NodeGraphSurface>,
-    tiled_map_states: &'ctx mut std::collections::HashMap<String, TiledMapSurface>,
+    world3d_states: &'ctx mut AdmittedSurfaceMap<infinite_world::world::World3dState>,
+    node_graph_states: &'ctx mut AdmittedSurfaceMap<NodeGraphSurface>,
+    tiled_map_states: &'ctx mut AdmittedSurfaceMap<TiledMapSurface>,
     icon_render_states: &'ctx mut std::collections::HashMap<String, infinite_world::world::World3dState>,
-    board2d_states: &'ctx mut std::collections::HashMap<String, Board2dSurface>,
+    board2d_states: &'ctx mut AdmittedSurfaceMap<Board2dSurface>,
 }
 
 impl ui_wgpu::wgpu::SceneHost for FrameworkSceneHost<'_> {
@@ -708,11 +1042,11 @@ pub fn render_ui_node(
     window_id: &str,
     engine_resources: &mut crate::engine_canvas::EngineCanvasBuildContext,
     world_resources: &mut infinite_world::world::World3dBuildContext,
-    world3d_states: &mut std::collections::HashMap<String, infinite_world::world::World3dState>,
-    node_graph_states: &mut std::collections::HashMap<String, NodeGraphSurface>,
-    tiled_map_states: &mut std::collections::HashMap<String, TiledMapSurface>,
+    world3d_states: &mut AdmittedSurfaceMap<infinite_world::world::World3dState>,
+    node_graph_states: &mut AdmittedSurfaceMap<NodeGraphSurface>,
+    tiled_map_states: &mut AdmittedSurfaceMap<TiledMapSurface>,
     icon_render_states: &mut std::collections::HashMap<String, infinite_world::world::World3dState>,
-    board2d_states: &mut std::collections::HashMap<String, Board2dSurface>,
+    board2d_states: &mut AdmittedSurfaceMap<Board2dSurface>,
 ) {
     if let Err(message) = validate_ui_node(node, &RENDER_PLAN_LIMITS) {
         return render_plan_error_widget(&message, bounds, ctx);
@@ -1024,6 +1358,21 @@ mod ui_command_wiring_tests {
 
         let queued = input.drain_events();
         assert!(queued.iter().any(|action| action.action == "setCamera"), "a real per-event Scroll over an ink-canvas scene should reach handle_scene_wheel, got {queued:?}");
+    }
+
+    #[test]
+    fn stale_scene_revision_retires_without_mutation_or_action_publication() {
+        while !close_scene_interaction_step() {}
+        let window_id = "apply-ui-commands-stale-scene-revision";
+        let node = seed_scene_window(window_id, "original", ui_wgpu::wgpu::SurfaceKind::Canvas2d);
+        let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
+        let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+        apply_scene_ui_command(window_id, node, ui_wgpu::wgpu::SurfaceKind::Canvas2d, rect, &ui_wgpu::wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::wgpu::PointerButton::Primary }, &mut input);
+        UI_ENGINE.with(|cell| cell.borrow_mut().apply_tree(window_id, &stack_with("root", None, vec![component_scene_ui("replacement", ui_wgpu::wgpu::SurfaceKind::Canvas2d)])));
+
+        assert!(drive_scene_interaction_step(&mut input));
+        assert!(input.drain_events().is_empty());
+        assert!(scene_interaction_terminal_is_empty());
     }
 
     #[test]

@@ -24,6 +24,10 @@ import {
   getRepoMetaDir,
   getMapCacheDir,
   getSemioRoot,
+  HUB_DATA_DIR_NAME,
+  MAP_CACHE_DIR_NAME,
+  REPO_META_DIR_NAME,
+  SPACE_DATA_DIR_NAME,
   goCoverageArgs,
   goLevelTestArgs,
   goProfileToLcov,
@@ -63,10 +67,10 @@ import {
   renderSemanticTaxonomyReport,
 } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️component.ts";
 import { createHash } from "node:crypto";
-import { existsSync, linkSync, mkdirSync, chmodSync, chownSync, copyFileSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, linkSync, lstatSync, mkdirSync, chmodSync, chownSync, copyFileSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { builtinModules } from "node:module";
-import { dirname, extname, join, relative, resolve } from "node:path";
+import { dirname, extname, join, relative, resolve, sep } from "node:path";
 import { createServer } from "node:net";
 import { stat } from "node:fs/promises";
 import { resolveActiveScopes, STORY_SCOPES } from "./.storybook/scopes.ts";
@@ -896,6 +900,7 @@ const TOOL_JOB_FRAMEWORK_RESERVED_IDS = ["undo", "redo", "commitCheckpoint", "cr
 const TOOL_JOB_PLUGIN_RESERVED_IDS = ["copy", "cut", "paste", "import-media"] as const;
 const TOOL_JOB_RESERVED_IDS = [...TOOL_JOB_FRAMEWORK_RESERVED_IDS, ...TOOL_JOB_PLUGIN_RESERVED_IDS] as const;
 const TOOL_JOB_IMPORTER_INVENTORY = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/EVERY-TOOL-INTERACTIVE-JOB-MIGRATION/📊️p8yj-importer-cohorts.json";
+const TOOL_JOB_CHILD_RETIREMENT_INVENTORY = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/EVERY-TOOL-INTERACTIVE-JOB-MIGRATION/📊️p8yt-child-snapshot-retirement-cohorts.json";
 
 /** 🧹️ Removes in-file test modules from the production registration census. */
 function toolJobProductionSource(source: string): string {
@@ -1130,6 +1135,337 @@ function toolJobTypedRouteFailsClosedBeforePreparation(source: string): boolean 
   return guard >= 0 && preparation >= 0 && guard < preparation && !!authority && authority.body.includes('FaultCode::new("interactive-job.full-operation-pending")') && !authority.body.includes("Ok(");
 }
 
+function toolJobTypedPersistentFoundation(source: string): boolean {
+  const blockOf = (needle: string) => {
+    const start = source.indexOf(needle);
+    const open = start < 0 ? -1 : source.indexOf("{", start);
+    return open < 0 ? undefined : toolJobRustBlock(source, open);
+  };
+  const dispatch = blockOf("async fn dispatch_typed_command_inner");
+  const active = blockOf("impl<A: ArtifactApp> ActiveToolCommand<A>");
+  const maintenanceStart = source.indexOf("impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send> PluginApp for VcsArtifactApp");
+  const maintenanceName = source.indexOf("fn maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize)", maintenanceStart);
+  const maintenanceOpen = maintenanceName < 0 ? -1 : source.indexOf("{", maintenanceName);
+  const maintenance = maintenanceOpen < 0 ? undefined : toolJobRustBlock(source, maintenanceOpen);
+  if (!dispatch || !active || !maintenance) return false;
+  const guard = dispatch.body.indexOf("require_complete_tool_operation_pipeline(&admission)?");
+  const preparation = dispatch.body.indexOf("refresh_cache().await");
+  const preAdmission = dispatch.body.indexOf("!self.tool_operations.can_insert(operation_id.0)");
+  const session = dispatch.body.indexOf("WorkerJobSession::new");
+  const retained = dispatch.body.indexOf("self.tool_operations.insert_admitted(");
+  return (
+    guard >= 0 &&
+    preparation > guard &&
+    preAdmission >= 0 &&
+    preAdmission < preparation &&
+    session > preparation &&
+    retained > session &&
+    dispatch.body.includes("active.drive_worker_step(&pool)?") &&
+    dispatch.body.includes('DslValue::String(operation_id.0.to_string())') &&
+    !dispatch.body.includes("session.step(&pool") &&
+    !dispatch.body.includes("let outcome = loop") &&
+    source.includes("tool_operations: ArtifactFixedRegistry<ActiveToolCommand<A>>") &&
+    active.body.includes("session.try_submit_step(pool, semio_framework_async::Lane::Interactive)") &&
+    active.body.includes("pending.try_recv()") &&
+    active.body.includes("ActiveToolCommandStage::CommitReady") &&
+    maintenance.body.includes("self.tool_operations.next_id_from(self.maintenance_tool_cursor)") &&
+    maintenance.body.includes(".drive_worker_step(&pool)") &&
+    source.includes('FaultCode::new("interactive-job.close-typed-operation-disposer-missing")') &&
+    source.includes("rejected_worker_step_admission_retains_the_exact_persistent_session")
+  );
+}
+
+function toolJobImmutableOperationRootsExact(store: string): boolean {
+  const blockOf = (needle: string) => {
+    const start = store.indexOf(needle);
+    const open = start < 0 ? -1 : store.indexOf("{", start);
+    return open < 0 ? undefined : toolJobRustBlock(store, open);
+  };
+  const local = blockOf("pub fn local_root(&self) -> Arc<P>");
+  const transient = blockOf("pub fn current_root(&self) -> Arc<P>");
+  const snapshot = blockOf("pub fn snapshot_root(&self) -> Arc<P>");
+  return (
+    !!local &&
+    !!transient &&
+    !!snapshot &&
+    store.includes("local: Arc<P>") &&
+    store.includes("current: Arc<P>") &&
+    local.body.trim() === "self.local.clone()" &&
+    transient.body.trim() === "self.current.clone()" &&
+    snapshot.body.trim() === "self.current.clone()" &&
+    store.includes("self.local = Arc::new(candidate)") &&
+    store.includes("self.current = Arc::new(candidate)") &&
+    store.includes("pub fn content_revision_now(&self) -> [u8; 32]") &&
+    store.includes("artifact_snapshot_root_is_o1_and_generation_stable_until_the_next_event") &&
+    store.includes("presence_local_root_is_o1_and_never_clones_the_payload_at_capture") &&
+    store.includes("transient_root_is_o1_and_retains_the_exact_pre_reset_value") &&
+    !local.body.includes("Arc::new") &&
+    !transient.body.includes("Arc::new") &&
+    !snapshot.body.includes("Arc::new")
+  );
+}
+
+function toolJobChildContentRootExact(store: string, plugin: string): boolean {
+  const start = plugin.indexOf("pub struct ChildContentView");
+  const open = start < 0 ? -1 : plugin.indexOf("{", start);
+  const view = open < 0 ? undefined : toolJobRustBlock(plugin, open);
+  const dispatchStart = plugin.indexOf("async fn dispatch_typed_command_inner");
+  const dispatchOpen = dispatchStart < 0 ? -1 : plugin.indexOf("{", dispatchStart);
+  const dispatch = dispatchOpen < 0 ? undefined : toolJobRustBlock(plugin, dispatchOpen);
+  return (
+    !!view &&
+    !!dispatch &&
+    view.body.includes("root: Option<std::sync::Arc<ChildContentRoot>>") &&
+    !view.body.includes("HashMap") &&
+    plugin.includes("const CHILD_CONTENT_SLOTS: usize = 1_024") &&
+    plugin.includes("const CHILD_CONTENT_PAGE_SLOTS: usize = 32") &&
+    plugin.includes("pages: [Option<std::sync::Arc<ChildContentPage>>; CHILD_CONTENT_PAGES]") &&
+    plugin.includes("entries: [Option<std::sync::Arc<ChildContentEntry>>; CHILD_CONTENT_PAGE_SLOTS]") &&
+    plugin.includes("slot.len() > CHILD_CONTENT_ID_BYTES || child_id.len() > CHILD_CONTENT_ID_BYTES") &&
+    plugin.includes("for offset in 0..CHILD_CONTENT_SLOTS") &&
+    plugin.includes("let mut page = next.pages[page_index].as_deref().cloned().unwrap_or_default()") &&
+    plugin.includes("child_content_root: std::mem::ManuallyDrop<ChildContentView>") &&
+    plugin.includes("child_content_retirements: ArtifactFixedRegistry<ChildContentRetirement>") &&
+    plugin.includes("struct ChildMemberRegistry<M>") &&
+    plugin.includes("slots: Box<[std::mem::MaybeUninit<ChildMemberEntry<M>>]>") &&
+    plugin.includes("reserved: [u64; CHILD_CONTENT_SLOTS / 64]") &&
+    plugin.includes("generations: [u64; CHILD_CONTENT_SLOTS]") &&
+    plugin.includes("fn admit(&mut self, key: &(String, String)) -> Result<ChildMemberAdmission, Fault>") &&
+    plugin.includes("fn cancel_admission(&mut self, admission: &ChildMemberAdmission) -> bool") &&
+    plugin.includes("pub(crate) children: ChildMemberRegistry<M>") &&
+    plugin.includes("close_child_member: std::mem::ManuallyDrop<Option<ChildMemberRetirement<M>>>") &&
+    plugin.includes("self.children.take_at(index)") &&
+    plugin.includes("fixed child-member registry reached Drop before every exact member was transferred to bounded retirement") &&
+    !plugin.includes("pub(crate) children: HashMap<(String, String), (ArtifactDialect, M)>") &&
+    plugin.includes("fn admit_child_content_publication_span(&self, count: usize)") &&
+    plugin.includes("async fn publish_child_content_member") &&
+    plugin.includes("self.publish_child_content_member(publication_generation") &&
+    store.includes("pub trait ErasedSnapshotRetirement: Send") &&
+    store.includes("fn terminal_is_empty(&self) -> bool;") &&
+    store.includes("pub trait SnapshotRetirementFactory<P>: Send + Sync") &&
+    store.includes("const SNAPSHOT_READ_LEASE_CAPACITY: usize = 1_024") &&
+    store.includes("slots: Box<[std::mem::MaybeUninit<SnapshotReadLeaseSlot>; SNAPSHOT_READ_LEASE_CAPACITY]>") &&
+    store.includes("fn try_issue<T: Send + Sync + 'static>(self: &Arc<Self>, owner: Arc<T>) -> Result<SnapshotReadLease, Arc<T>>") &&
+    store.includes("pub struct SnapshotReadRef<'a, T: ?Sized>") &&
+    store.includes("fn take_returned_snapshot_read_retirement(&mut self) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, String>;") &&
+    store.includes("fn snapshot_read_leases_terminal_is_empty(&self) -> bool;") &&
+    store.includes("fn close_owned_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String>;") &&
+    store.includes("fn close_owned_terminal_is_empty(&self) -> bool;") &&
+    !store.includes("#[derive(Clone)]\npub struct SnapshotRead") &&
+    !store.includes("#[derive(Clone)]\npub struct ErasedSnapshotRead") &&
+    /pub trait SpaceMember[\s\S]*?fn retire_snapshot_read_erased\(&mut self, snapshot: ErasedSnapshotRead\) -> Result<Box<dyn ErasedSnapshotRetirement>, SnapshotRetirementRejected>;/.test(store) &&
+    store.includes("return Err(SnapshotRetirementRejected { snapshot,") &&
+    plugin.includes("pending: std::mem::ManuallyDrop<Option<ChildContentEntry>>") &&
+    plugin.includes("active: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>") &&
+    plugin.includes("std::sync::Arc::try_unwrap(root)") &&
+    plugin.includes("std::sync::Arc::try_unwrap(entry)") &&
+    plugin.includes("match member.retire_snapshot_read_erased(snapshot)") &&
+    plugin.includes("snapshot: rejected.snapshot") &&
+    plugin.includes("if !active.terminal_is_empty()") &&
+    plugin.includes("take_returned_snapshot_read_retirement") &&
+    plugin.includes("snapshot_read_leases_terminal_is_empty") &&
+    plugin.includes("self.child_content_retirements.next_id_from(self.maintenance_child_root_cursor)") &&
+    plugin.includes("self.child_content_retirements.next_id_from(self.close_child_root_cursor)") &&
+    plugin.includes("close_child_root_detached") &&
+    !plugin.includes('FaultCode::new("interactive-job.close-child-root-disposer-missing")') &&
+    plugin.includes("child_content_publication_path_copies_fixed_pages_and_command_capture_retains_one_root") &&
+    plugin.includes("child_snapshot_retirement_rejection_preserves_exact_erased_owner") &&
+    plugin.includes("child_root_maintenance_requires_terminal_empty_before_reclaim") &&
+    plugin.includes("fixed_child_member_registry_admits_exact_capacity_rejects_plus_one_and_cursor_detaches_every_owner") &&
+    plugin.includes("fixed_child_member_registry_resolves_hash_collisions_without_replacement") &&
+    plugin.includes("stale_child_member_admission_cannot_cancel_a_reused_slot_generation") &&
+    plugin.includes("incomplete_child_member_registry_drop_faults_in_release_instead_of_destroying_nested_owners") &&
+    !plugin.includes("entry.snapshot.clone()") &&
+    dispatch.body.includes("let children = ChildContentView::clone(&self.child_content_root)") &&
+    !dispatch.body.includes("ChildContentView::new(&self.children)")
+  );
+}
+
+function toolJobChildRetirementInventoryExact(root: string, files: ReadonlyMap<string, string>): boolean {
+  type InventoryVariant = { variant: string; dispatchKey: string; schema: string; snapshot: string; mutation: string };
+  type InventoryCohort = { source: string; enum: string; ownerBindingStatus: string; variants: InventoryVariant[] };
+  let inventory: { schemaVersion?: string; verdict?: string; productionCohorts?: InventoryCohort[]; counts?: Record<string, number> };
+  try {
+    inventory = JSON.parse(readFileSync(join(root, TOOL_JOB_CHILD_RETIREMENT_INVENTORY), "utf8"));
+  } catch {
+    return false;
+  }
+  const actual: InventoryCohort[] = [];
+  for (const [sourcePath, raw] of files) {
+    const source = toolJobProductionSource(raw);
+    const invocation = /^\s*(?:[A-Za-z_][A-Za-z0-9_]*::)*space_members!\s*\{/gm;
+    let match: RegExpExecArray | null;
+    while ((match = invocation.exec(source))) {
+      const block = toolJobRustBlock(source, source.indexOf("{", match.index));
+      if (!block) return false;
+      const enumName = block.body.match(/^\s*pub enum\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/m)?.[1];
+      if (!enumName) return false;
+      const variants: InventoryVariant[] = [];
+      const row = /^\s*([A-Za-z_][A-Za-z0-9_]*)\("([^"]+)",\s*"([^"]+)"\)\s*=>\s*(?:[A-Za-z_][A-Za-z0-9_]*::)?ArtifactStore<([^,>]+(?:<[^>]+>)?),\s*([^>]+)>\s*,?$/gm;
+      let variant: RegExpExecArray | null;
+      while ((variant = row.exec(block.body))) variants.push({ variant: variant[1]!, dispatchKey: variant[2]!, schema: variant[3]!, snapshot: variant[4]!.trim(), mutation: variant[5]!.trim() });
+      actual.push({ source: sourcePath, enum: enumName, ownerBindingStatus: "required", variants });
+      invocation.lastIndex = block.end;
+    }
+  }
+  const cohorts = inventory.productionCohorts ?? [];
+  const canonical = (rows: InventoryCohort[]) =>
+    JSON.stringify(
+      rows
+        .map((cohort) => ({ source: cohort.source, enum: cohort.enum, ownerBindingStatus: cohort.ownerBindingStatus, variants: cohort.variants.map((variant) => ({ ...variant })) }))
+        .sort((left, right) => `${left.source}\0${left.enum}`.localeCompare(`${right.source}\0${right.enum}`)),
+    );
+  const variantCount = actual.reduce((sum, cohort) => sum + cohort.variants.length, 0);
+  return (
+    inventory.schemaVersion === "semio.phase8.child-snapshot-retirement-cohorts.v1" &&
+    inventory.verdict === "fail-closed-pending-domain-bindings" &&
+    canonical(actual) === canonical(cohorts) &&
+    inventory.counts?.productionMacroCallsites === actual.length &&
+    inventory.counts?.productionVariants === variantCount
+  );
+}
+
+function toolJobPeerInteractionRootsExact(plugin: string, store: string, channel: string): boolean {
+  const dispatchStart = plugin.indexOf("async fn dispatch_typed_command_inner");
+  const dispatchOpen = dispatchStart < 0 ? -1 : plugin.indexOf("{", dispatchStart);
+  const dispatch = dispatchOpen < 0 ? undefined : toolJobRustBlock(plugin, dispatchOpen);
+  return (
+    !!dispatch &&
+    plugin.includes("struct PeerPresenceRoot") &&
+    plugin.includes("entries: [Option<std::sync::Arc<PeerPresenceEntry>>; PEER_PRESENCE_SLOTS]") &&
+    plugin.includes("peer_presence: std::mem::ManuallyDrop<std::sync::Arc<PeerPresenceRoot>>") &&
+    plugin.includes("peer_presence_retirements: ArtifactFixedRegistry<PeerPresenceRootRetirement>") &&
+    plugin.includes("PeerPresenceRootRetirement::terminal_is_empty") &&
+    plugin.includes("peer_presence_capture_is_one_arc_and_retirement_waits_for_then_drains_the_exact_root") &&
+    plugin.includes("struct PeerRosterPublication") &&
+    plugin.includes("fn reserve_presence_ingress(&mut self, seq: u64) -> Result<PresenceRosterAdmission, Fault>") &&
+    plugin.includes("fn admit_presence_ingress(&mut self, admission: PresenceRosterAdmission, command: protocol::PresenceCommandCursor") &&
+    plugin.includes("fn reject_presence_ingress(&mut self, admission: PresenceRosterAdmission, command: Vec<u8>, fault: Fault)") &&
+    plugin.includes("PeerRosterPublication::<A>::rejected(admission, command, fault)") &&
+    plugin.includes("peer_roster_reservations: [Option<(u64, u64)>; ARTIFACT_LIVE_OUTPUT_SLOTS]") &&
+    plugin.includes("self.validate_peer_roster_publication(seq, generation, &cancel)") &&
+    plugin.includes("resolve_ready(cancel.is_cancelled())") &&
+    plugin.includes("self.peer_roster_outcomes.insert_admitted(generation, PresenceRosterOutcome { seq, fault })") &&
+    plugin.includes("protocol::presence_command_sequence(&bytes)") &&
+    plugin.includes("protocol::PresenceCommandCursor::admit(bytes)") &&
+    plugin.includes("struct PresenceIngressOwnerReturn") &&
+    plugin.includes("presence_ingress_retry_fifo") &&
+    plugin.includes('AppCommand::Presence { .. } => unreachable!("Presence commands are admitted from their fixed header before whole-command decoding")') &&
+    !plugin.includes("async fn adopt_presence") &&
+    !plugin.includes("PeerPresenceRoot::from_peers") &&
+    !plugin.includes("if let Ok(peer) = decoded") &&
+    plugin.includes("peer_roster_publications: ArtifactFixedRegistry<PeerRosterPublication") &&
+    store.includes("pub struct PresencePeersRoot<P>") &&
+    store.includes("pub fn peers_root(&self) -> Arc<PresencePeersRoot<P>>") &&
+    store.includes("pub struct PresencePeersCommit<P>") &&
+    store.includes("pub(crate) fn publish_peer_commit(&mut self, commit: PresencePeersCommit<P>)") &&
+    !store.includes("pub async fn adopt_peer(") &&
+    !store.includes("pub async fn remove_peer(") &&
+    !store.includes("pub async fn expire_peers(") &&
+    !store.includes("pub async fn peers(&self) -> Vec<(&str, &P)>") &&
+    channel.includes("pub const PRESENCE_ROSTER_MAXIMUM_ITEMS: usize = 64") &&
+    channel.includes("pub const PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES: usize = 4_096") &&
+    channel.includes("pub struct PresenceCommandCursor") &&
+    channel.includes("pub fn take_next(&mut self) -> Result<Option<Box<[u8]>>") &&
+    channel.includes("pub fn close_release(&mut self, maximum_bytes: usize) -> (bool, usize)") &&
+    !channel.includes("raw.truncate(raw.len() - released)") &&
+    channel.includes('28 => return Err(malformed("channel presence command"') &&
+    !channel.includes("async fn read_presence_roster") &&
+    !channel.includes("#[derive(Clone, Debug, PartialEq)]\npub struct PresenceRosterWire") &&
+    dispatch.body.includes("let peer_presence = std::sync::Arc::clone(&self.peer_presence)") &&
+    dispatch.body.includes("let presence_peers = self.presence_store.peers_root()") &&
+    !dispatch.body.includes("self.presence_store.peers().await") &&
+    !plugin.includes("let mut decoded: Vec<protocol::PresencePeer> = Vec::with_capacity(peers.len())")
+  );
+}
+
+function toolJobPagedIngressExact(kernel: string, reactor: string, plugin: string, host: string, channel: string, wit: string, mcp: string, run: string, wgpu: string): boolean {
+  return (
+    kernel.includes("pub struct FixedCommandPage") &&
+    kernel.includes("bytes: [u8; COMMAND_PAGE_MAXIMUM_BYTES]") &&
+    kernel.includes("pages: std::collections::VecDeque<FixedCommandPage>") &&
+    kernel.includes("pub struct CommandEnvelopeSet") &&
+    kernel.includes("commands.try_reserve_exact(COMMAND_BATCH_MAXIMUM_ITEMS)") &&
+    kernel.includes("struct CommandBatchEntry") &&
+    kernel.includes("pages: std::collections::VecDeque<FixedCommandPage>") &&
+    kernel.includes("pub struct CommandDriverRegistry") &&
+    kernel.includes("CommandDriverRetentionState::Suspended") &&
+    kernel.includes("pub fn prepare_suspend") &&
+    kernel.includes("pub struct RejectedCommandBuildRegistry") &&
+    !kernel.includes("commands: std::collections::VecDeque<CommandEnvelope>") &&
+    kernel.includes("pub instance: u32") &&
+    kernel.includes("Result<Option<(CommandPageCursor, FixedCommandPage)>, Fault>") &&
+    kernel.includes("pub struct PagedCommandReader") &&
+    kernel.includes("pub fn read_bounded_bytes(&mut self, maximum: usize)") &&
+    !kernel.includes("VecDeque<Vec<u8>>") &&
+    !kernel.includes("contiguous_if_single_page") &&
+    !kernel.includes("pub instance: PluginInstanceId") &&
+    channel.includes("current: [u8; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES]") &&
+    channel.includes("pub struct PagedAppCommandDecodeCursor") &&
+    channel.includes("pub struct DecodedAppCommandOwner") &&
+    channel.includes("PagedAppCommandDecodeState::RejectedFields") &&
+    !channel.includes("current: Vec<u8>") &&
+    !channel.includes("pub async fn decode_app_command") &&
+    plugin.includes("pub enum PluginCommandIngress") &&
+    plugin.includes("PluginCommandIngressStep::Pending") &&
+    plugin.includes("PluginCommandIngressStep::TerminalFault") &&
+    plugin.includes("command_terminal_fault") &&
+    !plugin.includes("contiguous_if_single_page") &&
+    !plugin.includes("protocol::decode_app_command") &&
+    reactor.includes("CommandIngressOwner::GenericAssembly") &&
+    reactor.includes("CommandIngressOwner::ClosingAssembly") &&
+    reactor.includes("command: crate::plugin_runtime::PluginCommandIngress") &&
+    reactor.includes("command.cancel(semio_framework::Fault::new") &&
+    reactor.includes("output.command_terminal_fault.as_ref()") &&
+    reactor.includes("PendingPresencePage") &&
+    reactor.includes("presence_terminal_fault") &&
+    reactor.includes("FixedCommandPage::try_from_array(bytes, page.length)") &&
+    !reactor.includes("Vec<Vec<u8>>") &&
+    host.includes("kernel_command_page_to_wit(cursor, bytes.as_slice())") &&
+    wit.includes("record command-page-block") &&
+    wit.includes("block-63: command-page-block") &&
+    !wit.includes("bytes: list<u8>") &&
+    [mcp, run, wgpu].every((source) => source.includes("CommandBatchDriver")) &&
+    [mcp, run, wgpu].every((source) => source.includes("close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES)")) &&
+    [mcp, run, wgpu].every((source) => source.includes("terminal_is_empty")) &&
+    [mcp, run, wgpu].every((source) => source.includes("persistent_command_completion_port_ready")) &&
+    mcp.includes("pending_exchanges") &&
+    mcp.includes("PendingResponsePage") &&
+    mcp.includes("RejectedCommandBuildRegistry<1>") &&
+    !mcp.includes("response: Option<Result<store::AppFrame, Fault>>") &&
+    run.includes("retained_command_closes") &&
+    run.includes("RejectedCommandBuildRegistry<1>") &&
+    wgpu.includes("retained_command_closes") &&
+    wgpu.includes("queued_command_closes") &&
+    wgpu.includes("KernelRequest::CloseRejectedCommandBuild") &&
+    wgpu.includes("const KERNEL_REQUEST_QUEUE_CAPACITY: usize = 64") &&
+    wgpu.includes("slots: [Option<(KernelRequest, Arc<ResponseSlot>)>; KERNEL_REQUEST_QUEUE_CAPACITY]") &&
+    wgpu.includes("self.state.try_lock()") &&
+    wgpu.includes("command_pages: usize") &&
+    wgpu.includes("command_bytes: usize") &&
+    wgpu.includes("COMMAND_MAXIMUM_PAGES") &&
+    wgpu.includes("COMMAND_MAXIMUM_BYTES") &&
+    wgpu.includes("fn shutdown_step(&self, maximum_bytes: usize)") &&
+    wgpu.includes("yield_kernel_maintenance_turn") &&
+    wgpu.includes("struct CreateAppRequestOwner") &&
+    wgpu.includes("struct QueuedKernelEvent") &&
+    wgpu.includes("KernelRequest::CloseRejectedEvents") &&
+    wgpu.includes("struct KernelCloseSubmissionRegistry") &&
+    wgpu.includes("slots: Mutex<[Option<(u32, u64, Arc<KernelCloseSubmission>)>; KERNEL_CLOSE_SUBMISSION_CAPACITY]>") &&
+    wgpu.includes("Result<(), Arc<KernelCloseSubmission>>") &&
+    wgpu.includes("pub(crate) struct KernelCloseHandle") &&
+    wgpu.includes("#[must_use = \"kernel close ownership must be polled through terminal completion\"]") &&
+    wgpu.includes("pub(crate) fn begin_destroy_app(&self, instance: u32) -> KernelCloseHandle") &&
+    wgpu.includes("owner: Arc<KernelCloseSubmission>") &&
+    wgpu.includes("KernelRequest::DestroyApp { owner: self.clone() }") &&
+    wgpu.includes("owner.finish(KernelCloseStatus::Complete)") &&
+    wgpu.includes("owner.finish(KernelCloseStatus::Fault)") &&
+    wgpu.includes("ProgramBridge must retain and poll begin_destroy_app") &&
+    !wgpu.includes("let _rejected_close = self.queue.try_push(KernelRequest::DestroyApp") &&
+    !wgpu.includes("pending: Mutex<std::collections::VecDeque<(KernelRequest, Arc<ResponseSlot>)>>")
+  );
+}
+
 function toolJobSegmentedTerminalDrainExact(source: string): boolean {
   const start = source.indexOf("async fn take_segmented_download_chunk(&mut self, operation_id: u64)");
   const open = start < 0 ? -1 : source.indexOf("{", start);
@@ -1309,6 +1645,62 @@ function toolJobDetachedOutputOwnershipExact(source: string): boolean {
   return registryRejectsOccupied && mediaExact && detachedExact && segmentedExact;
 }
 
+function toolJobLiveConstructionCleanupExact(plugin: string, reactor: string): boolean {
+  const blockOf = (needle: string, after = 0) => {
+    const start = plugin.indexOf(needle, after);
+    const open = start < 0 ? -1 : plugin.indexOf("{", start);
+    return open < 0 ? undefined : toolJobRustBlock(plugin, open);
+  };
+  const appImpl = plugin.indexOf("impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send> PluginApp for VcsArtifactApp");
+  const maintenance = blockOf("fn maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize)", appImpl);
+  const job = blockOf("impl<PA: PluginApp> semio_framework_job::InteractiveJob for RuntimeLiveCleanupJob<PA>");
+  const run = blockOf("fn run_runtime_live_cleanup_turn<");
+  const schedule = blockOf("pub fn plugin_step_live_cleanup<");
+  const destroy = blockOf("pub async fn plugin_destroy_app<");
+  if (!maintenance || !job || !run || !schedule || !destroy) return false;
+  const generationAdmission = destroy.body.indexOf("checked_runtime_close_generation(runtime.close_generation.get())?");
+  const ownerDetach = destroy.body.indexOf("instances.take(instance_id)");
+  return (
+    plugin.includes("fn maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>;") &&
+    maintenance.body.includes("self.media_closures.next_id_from(self.maintenance_media_cursor)") &&
+    maintenance.body.includes("self.media_closures.remove(operation_id)") &&
+    maintenance.body.includes("active.terminal_is_empty()?") &&
+    maintenance.body.includes("self.segmented_closures.next_id_from(self.maintenance_segment_cursor)") &&
+    maintenance.body.includes("close_take_chunk()?") &&
+    maintenance.body.includes("self.snapshot_retirements.next_id_from(self.maintenance_snapshot_cursor)") &&
+    maintenance.body.includes("self.media_exports.get(operation_id).is_some() || self.media_closures.get(operation_id).is_some()") &&
+    maintenance.body.includes("ArtifactSnapshotCloseRetention::terminal_is_empty") &&
+    plugin.includes("struct RuntimeLiveCleanupJob<PA: PluginApp>") &&
+    job.body.includes("self.cell.instance.try_lock()") &&
+    job.body.includes("cx.consume_fuel(1)") &&
+    job.body.includes("instance.app.maintenance_step(1, RUNTIME_CLOSE_BYTES_PER_STEP)") &&
+    job.body.includes("released_items <= 1 && released_bytes <= RUNTIME_CLOSE_BYTES_PER_STEP") &&
+    run.body.includes('"plugin_runtime_live_cleanup"') &&
+    run.body.includes("semio_framework_job::StepBudget::new(1") &&
+    run.body.includes("saturating_add(RUNTIME_CLOSE_INNER_GRANT_MS)") &&
+    run.body.includes("started.elapsed().as_micros()") &&
+    run.body.includes("elapsed_us > RUNTIME_CLOSE_CALLBACK_WALL_US") &&
+    schedule.body.includes("runtime.live_cleanup_cursor") &&
+    schedule.body.includes(".entry_at(index)") &&
+    schedule.body.includes("maintenance_generation") &&
+    schedule.body.includes("std::sync::Arc::downgrade(&cell)") &&
+    schedule.body.includes("pool.try_submit(semio_framework_async::Lane::Maintenance, job)") &&
+    schedule.body.includes("RUNTIME_MAINTENANCE_QUEUED, RUNTIME_MAINTENANCE_READY") &&
+    schedule.body.includes("drop(error.into_job())") &&
+    reactor.includes("plugin_step_live_cleanup(runtime)") &&
+    generationAdmission >= 0 &&
+    ownerDetach > generationAdmission &&
+    plugin.includes("media_construction_failure_at_each_fallible_seam_keeps_exact_close_authority") &&
+    plugin.includes("erased_dispatch_clone_release_preserves_unique_bounded_job_disposal_authority") &&
+    plugin.includes("exhausted_close_generation_is_rejected_before_exact_owner_detachment") &&
+    plugin.includes("permanently_blocked_live_cleanup_faults_without_claiming_released_ownership") &&
+    plugin.includes("contended_live_cleanup_does_not_consume_structural_stall_credit") &&
+    !job.body.includes(".lock()") &&
+    !maintenance.body.includes("while ") &&
+    !maintenance.body.includes("for ")
+  );
+}
+
 type ToolJobImporterInventory = {
   count: number;
   importers: { owner: string; file: string; route: string; currentMonolith: boolean }[];
@@ -1463,7 +1855,7 @@ function toolJobHardBoundedCloseExact(plugin: string, reactor: string): boolean 
     reactor.includes("plugin_step_close_cleanup(runtime)") &&
     plugin.includes("app_close_step_drains_at_most_one_segment_and_one_chunk_budget");
   const noImplicitDestruction = plugin.includes("PluginCloseStep::Complete") && plugin.includes("artifact_close_final_destructor_is_constant_after_every_owned_field_is_drained") && plugin.includes("cleanup_queue_saturation_preserves_detached_app_ownership");
-  return fixedAuthority && productionClose && cleanupJob && noImplicitDestruction && toolJobSnapshotRetirementBounded(plugin) && toolJobVcsOwnedDisposalExplicit(plugin) && toolJobErasedCloseTerminalExact(plugin) && toolJobDetachedOutputOwnershipExact(plugin) && toolJobRuntimeCloseCallbackBounded(plugin);
+  return fixedAuthority && productionClose && cleanupJob && noImplicitDestruction && toolJobSnapshotRetirementBounded(plugin) && toolJobVcsOwnedDisposalExplicit(plugin) && toolJobErasedCloseTerminalExact(plugin) && toolJobDetachedOutputOwnershipExact(plugin) && toolJobRuntimeCloseCallbackBounded(plugin) && toolJobLiveConstructionCleanupExact(plugin, reactor);
 }
 
 function toolJobVcsOwnedDisposalExplicit(plugin: string): boolean {
@@ -1758,6 +2150,8 @@ function toolJobCoverageSelfTests(): number {
   if (toolJobFullOperationBounded(staleExposure)) throw new Error("[verify interactivity tool-jobs] self-test full-operation-without-stale-result-validation was falsely accepted.");
   const unguardedIncompleteRoute = "async fn dispatch_typed_command_inner() { refresh_cache().await; let session = WorkerJobSession::new(job); }";
   if (toolJobTypedRouteFailsClosedBeforePreparation(unguardedIncompleteRoute)) throw new Error("[verify interactivity tool-jobs] self-test incomplete-typed-route-without-preparation-guard was falsely accepted.");
+  const terminalLoopTypedFoundation = "struct ActiveToolCommand<A>; struct VcsArtifactApp<A> { tool_operations: ArtifactFixedRegistry<ActiveToolCommand<A>> } impl<A: ArtifactApp> ActiveToolCommand<A> { fn drive_worker_step() { session.try_submit_step(pool, semio_framework_async::Lane::Interactive); pending.try_recv(); ActiveToolCommandStage::CommitReady; } } async fn dispatch_typed_command_inner() { require_complete_tool_operation_pipeline(&admission)?; let operation_id = allocate_operation_id(); if !self.tool_operations.can_insert(operation_id.0) {} refresh_cache().await; let session = WorkerJobSession::new(job); self.tool_operations.insert_admitted(operation_id, active); let outcome = loop { session.step(&pool).await; }; active.drive_worker_step(&pool)?; DslValue::String(operation_id.0.to_string()); }";
+  if (toolJobTypedPersistentFoundation(terminalLoopTypedFoundation)) throw new Error("[verify interactivity tool-jobs] self-test typed-persistent-foundation-with-terminal-loop was falsely accepted.");
   const wholeMapDropCancellation = "impl<A: ArtifactApp> Drop for VcsArtifactApp<A> { fn drop() { resolve_ready(self.tool_cancellations.cancel_all()); operations.drain(); } }";
   if (toolJobDropCancellationBounded(wholeMapDropCancellation)) throw new Error("[verify interactivity tool-jobs] self-test whole-map-drop-cancellation was falsely accepted.");
   const collectionCancellation = "impl ToolCancellationHandle { fn begin() { live.iter().filter().collect::<Vec<_>>(); } fn cancel_document() { live.keys(); } fn cancel_scope_generation() {} }";
@@ -1788,6 +2182,14 @@ function toolJobCoverageSelfTests(): number {
   if (toolJobDetachedOutputOwnershipExact(detachedMediaDrop)) throw new Error("[verify interactivity tool-jobs] self-test detached-media-stack-drop was falsely accepted.");
   const rejectedSegmentedDrop = detachedMediaDrop.replace("async fn dispatch_typed_command_inner() {}", "async fn dispatch_typed_command_inner() { let operation_id = semio_framework_job::allocate_operation_id(); ArtifactOutputChunks::new(maximum); if self.segmented_downloads.insert(operation_id.0, download).is_err() { return Err(fault); } }");
   if (toolJobDetachedOutputOwnershipExact(rejectedSegmentedDrop)) throw new Error("[verify interactivity tool-jobs] self-test rejected-segmented-download-stack-drop was falsely accepted.");
+  const constructionEnvelopeWithoutLivePump = "trait PluginApp { fn maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>; } async fn submit_owned_media_export() { self.media_closures.insert_admitted(operation_id, active); A::build_media_export_job(request)?; } fn close_step() { self.media_closures.remove(operation_id); }";
+  if (toolJobLiveConstructionCleanupExact(constructionEnvelopeWithoutLivePump, "")) throw new Error("[verify interactivity tool-jobs] self-test failed-media-construction-without-live-cleanup-pump was falsely accepted.");
+  const inlineLiveCleanup = "trait PluginApp { fn maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault>; } fn poll_kernel(runtime) { runtime.app.maintenance_step(1, 4096); plugin_step_live_cleanup(runtime); } struct RuntimeLiveCleanupJob<PA: PluginApp>;";
+  if (toolJobLiveConstructionCleanupExact(inlineLiveCleanup, inlineLiveCleanup)) throw new Error("[verify interactivity tool-jobs] self-test inline-live-cleanup-outside-worker-watchdog was falsely accepted.");
+  const detachBeforeCloseGeneration = "async fn plugin_destroy_app() { let cell = instances.take(instance_id); let generation = checked_runtime_close_generation(runtime.close_generation.get())?; } exhausted_close_generation_is_rejected_before_exact_owner_detachment";
+  if (toolJobLiveConstructionCleanupExact(detachBeforeCloseGeneration, detachBeforeCloseGeneration)) throw new Error("[verify interactivity tool-jobs] self-test close-generation-admission-after-owner-detach was falsely accepted.");
+  const blockedCleanupClaimsRelease = "fn maintenance_step() { match active.close_step() { PluginCloseStep::Blocked { .. } => PluginCloseStep::Pending { released_items: 1, released_bytes: 0 } } } permanently_blocked_live_cleanup_faults_without_claiming_released_ownership";
+  if (toolJobLiveConstructionCleanupExact(blockedCleanupClaimsRelease, blockedCleanupClaimsRelease)) throw new Error("[verify interactivity tool-jobs] self-test blocked-live-cleanup-falsely-claimed-release was falsely accepted.");
   const weakSnapshotLease = "pub trait ArtifactSnapshotDisposer<T>: Send {} struct VcsArtifactApp { snapshot_retirements: ArtifactFixedRegistry<ArtifactSnapshotCloseRetention>, close_snapshot_cursor: usize } impl Lease { fn can_release(snapshot: &Arc<T>) { Arc::strong_count(snapshot) > 1; } } snapshot_a_survives_cache_b_and_only_the_bounded_retirement_owner_performs_final_drop";
   if (toolJobSnapshotRetirementBounded(weakSnapshotLease)) throw new Error("[verify interactivity tool-jobs] self-test weak-count-snapshot-retirement was falsely accepted.");
   const activeOwnedSnapshot = "pub trait ArtifactSnapshotDisposer<T>: Send {} struct VcsArtifactApp { snapshot_retirements: ArtifactFixedRegistry<ArtifactSnapshotCloseRetention>, close_snapshot_cursor: usize } struct ActiveMediaExport { snapshot_retention: ArtifactSnapshotCloseRetention } fn close_step() { drop(active); } snapshot_a_survives_cache_b_and_only_the_bounded_retirement_owner_performs_final_drop";
@@ -1836,7 +2238,83 @@ function toolJobCoverageSelfTests(): number {
   if (toolJobMediaExportBounded(copyableChunks)) throw new Error("[verify interactivity tool-jobs] self-test copyable-unbounded-output-chunks was falsely accepted.");
   const foreignOutput = "impl ArtifactOutputChunks { fn push(chunk: Vec<u8>) { checked_add(chunk.len()); if chunk.len() > ARTIFACT_OUTPUT_CHUNK_BYTES {} state.chunks.push_back(chunk); } fn take_chunk() { state.chunks.pop_front(); } fn same_operation() { std::sync::Arc::ptr_eq; } } async fn poll_owned_media_export() { pending_step.try_recv(); active.output_credit.validate_terminal(); validate_media_export_structure(&result, &active.output_chunks); }";
   if (toolJobMediaExportBounded(foreignOutput)) throw new Error("[verify interactivity tool-jobs] self-test foreign-segmented-output-authority was falsely accepted.");
-  return fixtures.length + 71;
+  const clonedOperationRoots = "struct PresenceStore<P> { local: P } struct TransientStore<P> { current: P } impl<P: Clone> PresenceStore<P> { pub fn local_root(&self) -> Arc<P> { Arc::new(self.local.clone()) } } impl<P: Clone> TransientStore<P> { pub fn current_root(&self) -> Arc<P> { Arc::new(self.current.clone()) } } pub fn snapshot_root(&self) -> Arc<P> { Arc::new(self.current.as_ref().clone()) }";
+  if (toolJobImmutableOperationRootsExact(clonedOperationRoots)) throw new Error("[verify interactivity tool-jobs] self-test operation-root-capture-cloned-the-whole-store was falsely accepted.");
+  const hashMapChildRoot = "pub struct ChildContentView { root: Option<std::sync::Arc<HashMap<(String, String), Child>>> } struct VcsArtifactApp { child_content_root: ChildContentView } async fn dispatch_typed_command_inner() { let children = self.child_content_root.clone(); }";
+  if (toolJobChildContentRootExact(hashMapChildRoot, hashMapChildRoot)) throw new Error("[verify interactivity tool-jobs] self-test resizable-string-key-child-root was falsely accepted.");
+  const defaultSnapshotRetirement = "pub trait ErasedSnapshotRetirement: Send { fn terminal_is_empty(&self) -> bool { true } } pub trait SpaceMember { fn retire_snapshot_read_erased(&mut self, snapshot: ErasedSnapshotRead) -> Result<Box<dyn ErasedSnapshotRetirement>, SnapshotRetirementRejected> { Ok(Box::new(DefaultRetirement(snapshot))) } } struct VcsArtifactApp { child_content_retirements: ArtifactFixedRegistry<ChildContentView> }";
+  if (toolJobChildContentRootExact(defaultSnapshotRetirement, defaultSnapshotRetirement)) throw new Error("[verify interactivity tool-jobs] self-test default-erased-snapshot-retirement-without-owned-terminal-witness was falsely accepted.");
+  const cloneableSnapshotCapability = "#[derive(Clone)]\npub struct SnapshotRead<T> { owner: Arc<T> } #[derive(Clone)]\npub struct ErasedSnapshotRead { owner: Arc<dyn Any> } pub trait ErasedSnapshotRetirement: Send { fn terminal_is_empty(&self) -> bool; } pub trait SnapshotRetirementFactory<P>: Send + Sync {} entry.snapshot.clone()";
+  if (toolJobChildContentRootExact(cloneableSnapshotCapability, cloneableSnapshotCapability)) throw new Error("[verify interactivity tool-jobs] self-test cloneable-snapshot-read-last-owner-drop-escape was falsely accepted.");
+  const hashMapChildOwners = "pub struct ChildContentView { root: Option<std::sync::Arc<ChildContentRoot>> } struct VcsArtifactApp<M> { child_content_root: std::mem::ManuallyDrop<ChildContentView>, child_content_retirements: ArtifactFixedRegistry<ChildContentRetirement>, children: HashMap<(String,String),(ArtifactDialect,M)> } async fn dispatch_typed_command_inner() { let children = ChildContentView::clone(&self.child_content_root); }";
+  if (toolJobChildContentRootExact(hashMapChildOwners, hashMapChildOwners)) throw new Error("[verify interactivity tool-jobs] self-test immutable-child-root-with-resizable-deep-member-map was falsely accepted.");
+  const childRegistryWithoutGeneration = "struct ChildMemberRegistry<M> { slots: Box<[MaybeUninit<M>]> } fn admit(&self) -> usize {} fn cancel_admission(&mut self, index: usize) {} impl<M> Drop for ChildMemberRegistry<M> { fn drop(&mut self) {} }";
+  if (toolJobChildContentRootExact(childRegistryWithoutGeneration, childRegistryWithoutGeneration)) throw new Error("[verify interactivity tool-jobs] self-test fixed-child-registry-without-generation-or-terminal-drop was falsely accepted.");
+  const permissiveMemberClose = "pub trait SpaceMember { fn close_owned_step(&mut self) -> SnapshotRetirementStep { SnapshotRetirementStep::Complete } fn close_owned_terminal_is_empty(&self) -> bool { true } }";
+  if (toolJobChildContentRootExact(permissiveMemberClose, permissiveMemberClose)) throw new Error("[verify interactivity tool-jobs] self-test default-blanket-child-member-close-proof was falsely accepted.");
+  const noOpOwnerRegistryDrop = "struct ArtifactFixedRegistry<T>; impl<T> Drop for ArtifactFixedRegistry<T> { fn drop(&mut self) {} } struct ChildMemberRegistry<M>; impl<M> Drop for ChildMemberRegistry<M> { fn drop(&mut self) {} }";
+  if (toolJobChildContentRootExact(noOpOwnerRegistryDrop, noOpOwnerRegistryDrop)) throw new Error("[verify interactivity tool-jobs] self-test no-op-fixed-owner-registry-drop was falsely accepted.");
+  const synchronousPeerRoster = "struct PeerPresenceRoot; struct VcsArtifactApp { peer_presence: Arc<PeerPresenceRoot> } impl PluginApp for VcsArtifactApp { async fn adopt_presence(&mut self, peers: &[PresencePeer]) { self.peer_presence = Arc::new(PeerPresenceRoot::from_peers(peers)); } } async fn dispatch_typed_command_inner() { let presence_peers = self.presence_store.peers().await.into_iter().map(|(actor, presence)| (actor.to_string(), presence.clone())).collect(); } let mut decoded: Vec<protocol::PresencePeer> = Vec::with_capacity(peers.len());";
+  if (toolJobPeerInteractionRootsExact(synchronousPeerRoster, synchronousPeerRoster, synchronousPeerRoster)) throw new Error("[verify interactivity tool-jobs] self-test synchronous-whole-peer-roster-publication was falsely accepted.");
+  const preadmissionRosterDecode = "pub struct PresenceRosterWire; async fn plugin_exchange(commands: &[Vec<u8>]) { let command = decode_app_command(bytes).await; reserve_presence_ingress(seq); }";
+  if (toolJobPeerInteractionRootsExact(preadmissionRosterDecode, preadmissionRosterDecode, preadmissionRosterDecode)) throw new Error("[verify interactivity tool-jobs] self-test preadmission-whole-presence-decode was falsely accepted.");
+  const silentMalformedPeer = "if let Ok(peer) = decoded { publish(peer); }";
+  if (toolJobPeerInteractionRootsExact(silentMalformedPeer, silentMalformedPeer, silentMalformedPeer)) throw new Error("[verify interactivity tool-jobs] self-test silent-malformed-presence-peer was falsely accepted.");
+  const partialTypedCommit = "presence_store.publish_peer_commit(typed); validate_generation(); peer_presence = root;";
+  if (toolJobPeerInteractionRootsExact(partialTypedCommit, partialTypedCommit, partialTypedCommit)) throw new Error("[verify interactivity tool-jobs] self-test presence-typed-partial-commit was falsely accepted.");
+  const cloneableRosterOwner = "#[derive(Clone, Debug, PartialEq)]\npub struct PresenceRosterWire;";
+  if (toolJobPeerInteractionRootsExact(cloneableRosterOwner, cloneableRosterOwner, cloneableRosterOwner)) throw new Error("[verify interactivity tool-jobs] self-test cloneable-whole-roster-owner was falsely accepted.");
+  const stalePresenceCommit = "fn publish() { debug_assert_eq!(generation, live); peer_presence = root; }";
+  if (toolJobPeerInteractionRootsExact(stalePresenceCommit, stalePresenceCommit, stalePresenceCommit)) throw new Error("[verify interactivity tool-jobs] self-test debug-only-presence-generation-check was falsely accepted.");
+  const legacyPresenceMutation = "pub async fn adopt_peer(&mut self) {} pub async fn remove_peer(&mut self) {} pub async fn expire_peers(&mut self) {}";
+  if (toolJobPeerInteractionRootsExact(legacyPresenceMutation, legacyPresenceMutation, legacyPresenceMutation)) throw new Error("[verify interactivity tool-jobs] self-test legacy-whole-presence-mutation-escape was falsely accepted.");
+  const wholeVectorPages = "pub struct FixedCommandPage; pages: std::collections::VecDeque<Vec<u8>>; pub instance: PluginInstanceId;";
+  if (toolJobPagedIngressExact(wholeVectorPages, wholeVectorPages, wholeVectorPages, wholeVectorPages, wholeVectorPages, wholeVectorPages, wholeVectorPages, wholeVectorPages, wholeVectorPages)) throw new Error("[verify interactivity tool-jobs] self-test paged-ingress-whole-vector-owner was falsely accepted.");
+  const onePageOnly = "CommandIngressOwner::GenericAssembly page_count == 1";
+  if (toolJobPagedIngressExact(onePageOnly, onePageOnly, onePageOnly, onePageOnly, onePageOnly, onePageOnly, onePageOnly, onePageOnly, onePageOnly)) throw new Error("[verify interactivity tool-jobs] self-test generic-command-one-page-only was falsely accepted.");
+  const dynamicWitPage = "record command-page-block { word-0: u64 } bytes: list<u8> block-63: command-page-block";
+  if (toolJobPagedIngressExact(dynamicWitPage, dynamicWitPage, dynamicWitPage, dynamicWitPage, dynamicWitPage, dynamicWitPage, dynamicWitPage, dynamicWitPage, dynamicWitPage)) throw new Error("[verify interactivity tool-jobs] self-test dynamic-list-command-page-lift was falsely accepted.");
+  const unretainedCaller = "CommandBatchDriver close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES)";
+  if (toolJobPagedIngressExact(unretainedCaller, unretainedCaller, unretainedCaller, unretainedCaller, unretainedCaller, unretainedCaller, unretainedCaller, unretainedCaller, unretainedCaller)) throw new Error("[verify interactivity tool-jobs] self-test command-driver-without-terminal-close-registry was falsely accepted.");
+  const faultAsSuccess = "presence_terminal CommandComplete";
+  if (toolJobPagedIngressExact(faultAsSuccess, faultAsSuccess, faultAsSuccess, faultAsSuccess, faultAsSuccess, faultAsSuccess, faultAsSuccess, faultAsSuccess, faultAsSuccess)) throw new Error("[verify interactivity tool-jobs] self-test presence-terminal-fault-as-success was falsely accepted.");
+  const aggregateGenericDecode = "pub struct FixedCommandPage; pub struct PagedCommandReader; fn plugin_exchange() { encoded.contiguous_if_single_page(); protocol::decode_app_command(bytes); }";
+  if (toolJobPagedIngressExact(aggregateGenericDecode, aggregateGenericDecode, aggregateGenericDecode, aggregateGenericDecode, aggregateGenericDecode, aggregateGenericDecode, aggregateGenericDecode, aggregateGenericDecode, aggregateGenericDecode)) throw new Error("[verify interactivity tool-jobs] self-test aggregate-generic-command-decode was falsely accepted.");
+  const malformedOwnerDrop = "struct PagedAppCommandDecodeCursor; fn step() { let command = read_bounded_bytes(4096)?; drop(command); }";
+  if (toolJobPagedIngressExact(malformedOwnerDrop, malformedOwnerDrop, malformedOwnerDrop, malformedOwnerDrop, malformedOwnerDrop, malformedOwnerDrop, malformedOwnerDrop, malformedOwnerDrop, malformedOwnerDrop)) throw new Error("[verify interactivity tool-jobs] self-test malformed-generic-owner-drop was falsely accepted.");
+  const closeAsSuccess = "command.cancel(); command_terminal_fault = None; CommandComplete";
+  if (toolJobPagedIngressExact(closeAsSuccess, closeAsSuccess, closeAsSuccess, closeAsSuccess, closeAsSuccess, closeAsSuccess, closeAsSuccess, closeAsSuccess, closeAsSuccess)) throw new Error("[verify interactivity tool-jobs] self-test cancelled-generic-command-as-success was falsely accepted.");
+  const noInterruptedAssemblyClose = "CommandIngressOwner::GenericAssembly; close_instances.contains(instance); retained = None;";
+  if (toolJobPagedIngressExact(noInterruptedAssemblyClose, noInterruptedAssemblyClose, noInterruptedAssemblyClose, noInterruptedAssemblyClose, noInterruptedAssemblyClose, noInterruptedAssemblyClose, noInterruptedAssemblyClose, noInterruptedAssemblyClose, noInterruptedAssemblyClose)) throw new Error("[verify interactivity tool-jobs] self-test interrupted-generic-assembly-drop was falsely accepted.");
+  const nestedBatchOwners = "pub struct CommandEnvelopeSet; struct CommandBatch { commands: std::collections::VecDeque<CommandEnvelope> } pub struct CommandDriverRegistry; pub fn prepare_suspend() {} pub struct RejectedCommandBuildRegistry;";
+  if (toolJobPagedIngressExact(nestedBatchOwners, nestedBatchOwners, nestedBatchOwners, nestedBatchOwners, nestedBatchOwners, nestedBatchOwners, nestedBatchOwners, nestedBatchOwners, nestedBatchOwners)) throw new Error("[verify interactivity tool-jobs] self-test retained-batch-nested-command-owners was falsely accepted.");
+  const unretainedBuildRejection = "pub struct FixedCommandPage; struct CommandBatchEntry; pages: std::collections::VecDeque<FixedCommandPage>; pub struct CommandDriverRegistry; pub fn prepare_suspend() {} map_err(|(fault, _owner)| fault)";
+  if (toolJobPagedIngressExact(unretainedBuildRejection, unretainedBuildRejection, unretainedBuildRejection, unretainedBuildRejection, unretainedBuildRejection, unretainedBuildRejection, unretainedBuildRejection, unretainedBuildRejection, unretainedBuildRejection)) throw new Error("[verify interactivity tool-jobs] self-test rejected-command-build-owner-drop was falsely accepted.");
+  const retainedAppFrame = "PendingResponsePage response: Option<Result<store::AppFrame, Fault>> RejectedCommandBuildRegistry<1>";
+  if (toolJobPagedIngressExact(retainedAppFrame, retainedAppFrame, retainedAppFrame, retainedAppFrame, retainedAppFrame, retainedAppFrame, retainedAppFrame, retainedAppFrame, retainedAppFrame)) throw new Error("[verify interactivity tool-jobs] self-test MCP-retained-deep-AppFrame-response was falsely accepted.");
+  const noSuspensionAuthority = "pub struct CommandDriverRegistry; struct CommandBatchEntry; pages: std::collections::VecDeque<FixedCommandPage>; pub struct RejectedCommandBuildRegistry; run_turn().await";
+  if (toolJobPagedIngressExact(noSuspensionAuthority, noSuspensionAuthority, noSuspensionAuthority, noSuspensionAuthority, noSuspensionAuthority, noSuspensionAuthority, noSuspensionAuthority, noSuspensionAuthority, noSuspensionAuthority)) throw new Error("[verify interactivity tool-jobs] self-test caller-await-without-suspended-owner was falsely accepted.");
+  const noQueuedShutdown = "retained_command_closes RejectedCommandBuildRegistry<1>";
+  if (toolJobPagedIngressExact(noQueuedShutdown, noQueuedShutdown, noQueuedShutdown, noQueuedShutdown, noQueuedShutdown, noQueuedShutdown, noQueuedShutdown, noQueuedShutdown, noQueuedShutdown)) throw new Error("[verify interactivity tool-jobs] self-test WGPU-command-owner-without-queued-maintenance was falsely accepted.");
+  const resizableBlockingCallerQueue = "const KERNEL_REQUEST_QUEUE_CAPACITY: usize = 64; struct KernelRequestQueue { pending: Mutex<std::collections::VecDeque<(KernelRequest, Arc<ResponseSlot>)>> } KernelRequest::CloseRejectedCommandBuild";
+  if (toolJobPagedIngressExact(resizableBlockingCallerQueue, resizableBlockingCallerQueue, resizableBlockingCallerQueue, resizableBlockingCallerQueue, resizableBlockingCallerQueue, resizableBlockingCallerQueue, resizableBlockingCallerQueue, resizableBlockingCallerQueue, resizableBlockingCallerQueue)) throw new Error("[verify interactivity tool-jobs] self-test WGPU-resizable-blocking-command-request-queue was falsely accepted.");
+  const noQueueCommandCredits = "const KERNEL_REQUEST_QUEUE_CAPACITY: usize = 64; slots: [Option<(KernelRequest, Arc<ResponseSlot>)>; KERNEL_REQUEST_QUEUE_CAPACITY]; self.state.try_lock(); fn shutdown_step(&self, maximum_bytes: usize) {} yield_kernel_maintenance_turn";
+  if (toolJobPagedIngressExact(noQueueCommandCredits, noQueueCommandCredits, noQueueCommandCredits, noQueueCommandCredits, noQueueCommandCredits, noQueueCommandCredits, noQueueCommandCredits, noQueueCommandCredits, noQueueCommandCredits)) throw new Error("[verify interactivity tool-jobs] self-test WGPU-fixed-request-queue-without-command-byte-page-credit was falsely accepted.");
+  const noQueueShutdownCursor = "const KERNEL_REQUEST_QUEUE_CAPACITY: usize = 64; slots: [Option<(KernelRequest, Arc<ResponseSlot>)>; KERNEL_REQUEST_QUEUE_CAPACITY]; self.state.try_lock(); command_pages; command_bytes; yield_kernel_maintenance_turn";
+  if (toolJobPagedIngressExact(noQueueShutdownCursor, noQueueShutdownCursor, noQueueShutdownCursor, noQueueShutdownCursor, noQueueShutdownCursor, noQueueShutdownCursor, noQueueShutdownCursor, noQueueShutdownCursor, noQueueShutdownCursor)) throw new Error("[verify interactivity tool-jobs] self-test WGPU-fixed-request-queue-without-bounded-shutdown-cursor was falsely accepted.");
+  const deepCreateRequest = "KernelRequest::CreateApp { wasm_path: PathBuf, plugin_id: String, app_id: String }";
+  if (toolJobPagedIngressExact(deepCreateRequest, deepCreateRequest, deepCreateRequest, deepCreateRequest, deepCreateRequest, deepCreateRequest, deepCreateRequest, deepCreateRequest, deepCreateRequest)) throw new Error("[verify interactivity tool-jobs] self-test WGPU-create-request-without-owned-close-cursor was falsely accepted.");
+  const wholeEventBatch = "KernelRequest::Exchange { instance: u32, events: Vec<Event> }";
+  if (toolJobPagedIngressExact(wholeEventBatch, wholeEventBatch, wholeEventBatch, wholeEventBatch, wholeEventBatch, wholeEventBatch, wholeEventBatch, wholeEventBatch, wholeEventBatch)) throw new Error("[verify interactivity tool-jobs] self-test WGPU-whole-event-batch-request-owner was falsely accepted.");
+  const rejectedEventsDrop = "struct QueuedKernelEvent; try_from_events(events).map_err(|owner| drop(owner))";
+  if (toolJobPagedIngressExact(rejectedEventsDrop, rejectedEventsDrop, rejectedEventsDrop, rejectedEventsDrop, rejectedEventsDrop, rejectedEventsDrop, rejectedEventsDrop, rejectedEventsDrop, rejectedEventsDrop)) throw new Error("[verify interactivity tool-jobs] self-test WGPU-rejected-event-owner-drop was falsely accepted.");
+  const fireAndForgetDestroy = "fn destroy_app(&self, instance: u32) { let _rejected_close = self.queue.try_push(KernelRequest::DestroyApp { instance }, Arc::new(ResponseSlot::default()), None); }";
+  if (toolJobPagedIngressExact(fireAndForgetDestroy, fireAndForgetDestroy, fireAndForgetDestroy, fireAndForgetDestroy, fireAndForgetDestroy, fireAndForgetDestroy, fireAndForgetDestroy, fireAndForgetDestroy, fireAndForgetDestroy)) throw new Error("[verify interactivity tool-jobs] self-test WGPU-fire-and-forget-destroy-owner-loss was falsely accepted.");
+  const unpollableDestroy = "struct KernelCloseSubmissionRegistry; slots: Mutex<[Option<(u32, u64, Arc<KernelCloseSubmission>)>; KERNEL_CLOSE_SUBMISSION_CAPACITY]>; fn destroy_app() { owner.finish(KernelCloseStatus::Complete); }";
+  if (toolJobPagedIngressExact(unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy)) throw new Error("[verify interactivity tool-jobs] self-test WGPU-close-registry-without-pollable-exact-owner-handle was falsely accepted.");
+  const shutdownDropsClose = "pub(crate) struct KernelCloseHandle; pub(crate) fn begin_destroy_app(&self, instance: u32) -> KernelCloseHandle; KernelRequest::DestroyApp { owner: self.clone() }; owner.finish(KernelCloseStatus::Complete); fn shutdown_step() { drop(owner); }";
+  if (toolJobPagedIngressExact(shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose)) throw new Error("[verify interactivity tool-jobs] self-test WGPU-queue-shutdown-dropped-close-completion-owner was falsely accepted.");
+  return fixtures.length + 114;
 }
 
 /** 🎯️ Phase-8 source/runtime contract census used by `verify interactivity tool-jobs`. */
@@ -1884,6 +2362,13 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const platform = policyReadFileSafe(root, "🧰️framework/🔨️modules/🖥️platform/🦀️component.rs");
   const glue = policyReadFileSafe(root, "🧰️framework/📦️packages/🦀️rust/📦️glue.rs");
   const plugin = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️component.rs");
+  const store = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs");
+  const channel = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️component.rs");
+  const kernel = policyReadFileSafe(root, "🧰️framework/🔨️modules/🎠️kernel/🦀️component.rs");
+  const pluginHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️component.rs");
+  const mcpWorkspace = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🦀️component.rs");
+  const runHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️component.rs");
+  const wgpuHost = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs");
   const jobRuntime = policyReadFileSafe(root, "🧰️framework/🔨️modules/🧵️job/🦀️component.rs");
   const puzzle5d = policyReadFileSafe(root, "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
   const manifest = policyReadFileSafe(root, "🧰️framework/🔨️modules/🛂️manifest/🦀️component.rs");
@@ -1936,7 +2421,12 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   if (!frameworkReservedExact) failures.push("framework-owned reserved routes lack exact route-specific resumable factories, direct-branch closure, binary fail-closure, or commit-held cancellation");
   if (!importPreparationBounded) failures.push("shared import submission serializes or clones the whole media envelope before resumable job construction");
   if (!fullToolOperationBounded) failures.push("shared typed-command preparation or commit application remains outside the resumable job protocol");
-  if (!fullToolOperationBounded && !toolJobTypedRouteFailsClosedBeforePreparation(plugin)) failures.push("incomplete typed-command route remains reachable before its preparation boundary");
+  if (!fullToolOperationBounded && (!toolJobTypedRouteFailsClosedBeforePreparation(plugin) || !toolJobTypedPersistentFoundation(plugin))) failures.push("incomplete typed-command route is reachable before preparation or retains no saturation-safe persistent operation foundation");
+  if (!toolJobImmutableOperationRootsExact(store)) failures.push("document, presence, or transient command preparation lacks exact O(1) immutable event-maintained roots");
+  if (!toolJobChildContentRootExact(store, plugin)) failures.push("typed command preparation lacks a fixed-width event-maintained immutable child-content root and no-default terminal-witnessed old-root retirement authority");
+  if (!toolJobChildRetirementInventoryExact(root, allRustFiles)) failures.push("child snapshot retirement domain cohorts or callsites do not match the exact machine-readable owner inventory");
+  if (!toolJobPeerInteractionRootsExact(plugin, store, channel)) failures.push("peer ingress, app-typed presence, or interaction roots lack reserve-before-decode retained per-entry publication, atomic validated commit, or O(1) immutable capture");
+  if (!toolJobPagedIngressExact(kernel, reactor, plugin, pluginHost, channel, componentWit, mcpWorkspace, runHost, wgpuHost)) failures.push("paged command ingress lacks fixed-page ownership, retained streaming decode/fault closure, generic multi-page ACK ordering, or terminal-close registries across MCP/run/WGPU callers");
   if (!puzzleReservedExact) failures.push("Puzzle5d clipboard/import routes lack exact owner-qualified route-specific resumable factories and state machines");
   if (!toolJobMediaExportBounded(`${plugin}\n${jobRuntime}`)) failures.push("owned media export lacks nonblocking per-instance polling, exact sealed structural output credit, or pending/drop/isolation regressions");
   if (!toolJobExternalCancellationOwned(plugin)) failures.push("typed jobs lack externally reachable operation/document/app/generation cancellation through close and supersession");
@@ -4194,6 +4684,48 @@ export class StdioScript extends Script {
 }
 //#endregion 🔖️StdioLedgerScript
 
+//#region 🔖️StorybookDiscoveryGuard
+const UI_STORYBOOK_DISCOVERY_BASELINE = { entries: 231, stories: 170, docs: 61, inputs: 61 } as const;
+const STORYBOOK_MDX_SKIP_DIRS = new Set(["node_modules", "compose", ".🧬semio", ".git", ".nx", "target", "dist", "storybook-static"]);
+
+/** 📖️ Rejects MDX inputs inside the retired-transform non-Compose ownership boundary. */
+function assertNoOwnedStorybookMdx(root: string): void {
+  const mdx: string[] = [];
+  const walk = (dir: string): void => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.isDirectory() && STORYBOOK_MDX_SKIP_DIRS.has(entry.name)) continue;
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.isFile() && entry.name.endsWith(".mdx")) mdx.push(relative(root, full));
+    }
+  };
+  walk(root);
+  if (mdx.length > 0)
+    throw new Error(
+      `[storybook] owned MDX transforms are retired, but ${mdx.length} owned MDX input(s) exist:\n${mdx
+        .sort()
+        .map((file) => `  ${file}`)
+        .join("\n")}`,
+    );
+}
+
+/** 📊️ Freezes the UI Storybook's TS/TSX discovery after its owned MDX-transform retirement. */
+function assertUiStorybookDiscovery(root: string): void {
+  if ((process.env.STORYBOOK_SCOPE ?? "") !== "ui") return;
+  const index = JSON.parse(readFileSync(join(root, "storybook-static", "index.json"), "utf8")) as { entries?: Record<string, { type?: string; importPath?: string }> };
+  const entries = Object.values(index.entries ?? {});
+  const stories = entries.filter((entry) => entry.type === "story").length;
+  const docs = entries.filter((entry) => entry.type === "docs").length;
+  const inputs = new Set(entries.map((entry) => entry.importPath).filter((path): path is string => Boolean(path)));
+  const unsupported = [...inputs].filter((path) => !/\.(?:ts|tsx)$/u.test(path));
+  const actual = { entries: entries.length, stories, docs, inputs: inputs.size };
+  if (unsupported.length > 0 || Object.entries(UI_STORYBOOK_DISCOVERY_BASELINE).some(([key, value]) => actual[key as keyof typeof actual] !== value)) {
+    throw new Error(`[storybook] UI discovery changed: expected ${JSON.stringify(UI_STORYBOOK_DISCOVERY_BASELINE)}, got ${JSON.stringify(actual)}${unsupported.length > 0 ? `; non-TS/TSX inputs: ${unsupported.join(", ")}` : ""}`);
+  }
+  console.log(`[storybook] UI discovery guard passed (${stories} stories, ${docs} docs, ${inputs.size} TS/TSX inputs, 0 MDX).`);
+}
+//#endregion 🔖️StorybookDiscoveryGuard
+
 //#region 🔖️BuildScript
 export class BuildScript extends Script {
   run(segments: string[]): void {
@@ -4217,7 +4749,9 @@ export class BuildScript extends Script {
       return;
     }
     if (slice === "storybook") {
+      assertNoOwnedStorybookMdx(this.root);
       runCmd("bunx", ["storybook", "build", "-c", ".storybook", "--output-dir", "storybook-static"], { cwd: this.root });
+      assertUiStorybookDiscovery(this.root);
       return;
     }
     if (slice === "sites") {
@@ -4450,6 +4984,333 @@ export class PurgeScript extends Script {
   }
 }
 //#endregion 🔖️PurgeScript
+
+//#region 🔖️CleanScript
+const CLEAN_TICKET_FILE_MAX_BYTES = 5 * 1024 * 1024;
+const CLEAN_TICKET_DIR_MAX_BYTES = 10 * 1024 * 1024;
+const CLEAN_BUILD_ARTIFACT_MAX_BYTES = 10 * 1024 * 1024 * 1024;
+const CLEAN_CANONICAL_REPO_DIR = REPO_META_DIR_NAME;
+const CLEAN_CANONICAL_TICKETS_DIR = "🎫️tickets";
+const CLEAN_BUILD_DIR_NAMES = new Set(["target", "dist", "build", "out"]);
+const CLEAN_CACHE_DIR_NAME = "⚡️cache";
+
+type CleanRemovalKind = "misplaced" | "gitignore" | "ticket-file" | "ticket-dir" | "build-artifact";
+
+type CleanRemoval = {
+  kind: CleanRemovalKind;
+  path: string;
+  bytes: number;
+};
+
+/** 🧹Workspace cleaner: misplaced emoji mounts, ticket junk, oversized build artifacts — never map/hub/space/cache. */
+export class CleanScript extends Script {
+  run(segments: string[]): void {
+    const dry = segments.includes("--dry") || segments.includes("dry");
+    const report = runWorkspaceClean(this.root, dry);
+    const totalBytes = report.removals.reduce((n, r) => n + r.bytes, 0);
+    const lines = [
+      `[clean] ${dry ? "dry-run" : "applied"} removals=${report.removals.length} bytes=${totalBytes}`,
+      ...(["misplaced", "gitignore", "ticket-file", "ticket-dir", "build-artifact"] as const).map((kind) => {
+        const rows = report.removals.filter((r) => r.kind === kind);
+        return `[clean] ${kind}: ${rows.length} (bytes=${rows.reduce((n, r) => n + r.bytes, 0)})`;
+      }),
+      ...report.removals.map((r) => `[clean] ${dry ? "would-remove" : "removed"} ${r.kind} ${r.path} (${r.bytes})`),
+      ...report.skippedProtected.map((p) => `[clean] protected ${p}`),
+    ];
+    for (const line of lines) console.log(line);
+  }
+}
+
+function cleanEndsWithAscii(name: string, ascii: string): boolean {
+  return name.endsWith(ascii);
+}
+
+function cleanIsCanonicalRepoDir(name: string): boolean {
+  return name === CLEAN_CANONICAL_REPO_DIR;
+}
+
+function cleanIsCanonicalTicketsDir(name: string): boolean {
+  return name === CLEAN_CANONICAL_TICKETS_DIR;
+}
+
+function cleanIsMisplacedRepoDir(name: string): boolean {
+  return cleanEndsWithAscii(name, "repo") && !cleanIsCanonicalRepoDir(name);
+}
+
+function cleanIsMisplacedTicketsDir(name: string): boolean {
+  return cleanEndsWithAscii(name, "tickets") && !cleanIsCanonicalTicketsDir(name);
+}
+
+function cleanIsBuildArtifactDirName(name: string): boolean {
+  if (CLEAN_BUILD_DIR_NAMES.has(name)) return true;
+  if (name.startsWith("🎯️target")) return true;
+  if (name.startsWith("target-")) return true;
+  return false;
+}
+
+function cleanIsSemioRootName(name: string): boolean {
+  return name === ".🧬semio" || (name.startsWith(".🧬") && name.endsWith("semio"));
+}
+
+function cleanProtectedPrefixes(root: string): string[] {
+  const semio = getSemioRoot(root);
+  return [
+    join(semio, MAP_CACHE_DIR_NAME),
+    join(semio, HUB_DATA_DIR_NAME),
+    join(semio, SPACE_DATA_DIR_NAME),
+    join(getRepoMetaDir(root), CLEAN_CACHE_DIR_NAME),
+  ].map((p) => resolve(p));
+}
+
+function cleanIsProtected(abs: string, protectedPrefixes: readonly string[]): boolean {
+  const resolved = resolve(abs);
+  return protectedPrefixes.some((prefix) => resolved === prefix || resolved.startsWith(prefix + sep));
+}
+
+function cleanPathBytes(abs: string): number {
+  try {
+    const st = lstatSync(abs);
+    if (st.isSymbolicLink() || st.isFile()) return st.size;
+    if (!st.isDirectory()) return 0;
+    let total = 0;
+    for (const name of readdirSync(abs)) total += cleanPathBytes(join(abs, name));
+    return total;
+  } catch {
+    return 0;
+  }
+}
+
+function cleanRemovePath(abs: string, dry: boolean): void {
+  if (dry) return;
+  rmSync(abs, { recursive: true, force: true });
+}
+
+function cleanWalkDirs(root: string, visit: (abs: string, name: string) => "enter" | "skip" | "stop"): void {
+  const stack = [root];
+  while (stack.length > 0) {
+    const dir = stack.pop()!;
+    let entries: string[];
+    try {
+      entries = readdirSync(dir);
+    } catch {
+      continue;
+    }
+    for (const name of entries) {
+      const abs = join(dir, name);
+      let st;
+      try {
+        st = lstatSync(abs);
+      } catch {
+        continue;
+      }
+      if (!st.isDirectory() || st.isSymbolicLink()) continue;
+      const action = visit(abs, name);
+      if (action === "stop") return;
+      if (action === "enter") stack.push(abs);
+    }
+  }
+}
+
+function cleanCollectMisplaced(root: string, protectedPrefixes: readonly string[]): CleanRemoval[] {
+  const out: CleanRemoval[] = [];
+  const seen = new Set<string>();
+  const push = (abs: string): void => {
+    if (cleanIsProtected(abs, protectedPrefixes) || seen.has(abs)) return;
+    seen.add(abs);
+    out.push({ kind: "misplaced", path: relative(root, abs) || ".", bytes: cleanPathBytes(abs) });
+  };
+  const rootMisplaced = join(root, CLEAN_CANONICAL_REPO_DIR);
+  if (existsSync(rootMisplaced)) push(rootMisplaced);
+  cleanWalkDirs(root, (abs, name) => {
+    if (name === "node_modules" || name === ".git" || name === CLEAN_CACHE_DIR_NAME) return "skip";
+    if (name === MAP_CACHE_DIR_NAME || name === HUB_DATA_DIR_NAME || name === SPACE_DATA_DIR_NAME) return "skip";
+    if (cleanIsBuildArtifactDirName(name)) return "skip";
+    if (cleanIsSemioRootName(name)) {
+      let children: string[];
+      try {
+        children = readdirSync(abs);
+      } catch {
+        return "skip";
+      }
+      for (const child of children) {
+        const childAbs = join(abs, child);
+        try {
+          if (!lstatSync(childAbs).isDirectory()) continue;
+        } catch {
+          continue;
+        }
+        if (cleanIsMisplacedRepoDir(child)) push(childAbs);
+        if (cleanIsCanonicalRepoDir(child)) {
+          let ticketsKids: string[];
+          try {
+            ticketsKids = readdirSync(childAbs);
+          } catch {
+            continue;
+          }
+          for (const ticketsName of ticketsKids) {
+            if (!cleanIsMisplacedTicketsDir(ticketsName)) continue;
+            const ticketsAbs = join(childAbs, ticketsName);
+            try {
+              if (!lstatSync(ticketsAbs).isDirectory()) continue;
+            } catch {
+              continue;
+            }
+            push(ticketsAbs);
+          }
+        }
+      }
+      return "skip";
+    }
+    return "enter";
+  });
+  return out;
+}
+
+function cleanDiscoverTicketRoots(root: string): string[] {
+  const roots: string[] = [];
+  cleanWalkDirs(root, (abs, name) => {
+    if (name === "node_modules" || name === ".git" || name === CLEAN_CACHE_DIR_NAME) return "skip";
+    if (name === MAP_CACHE_DIR_NAME || name === HUB_DATA_DIR_NAME || name === SPACE_DATA_DIR_NAME) return "skip";
+    if (cleanIsBuildArtifactDirName(name)) return "skip";
+    if (cleanIsCanonicalTicketsDir(name)) {
+      roots.push(abs);
+      return "skip";
+    }
+    return "enter";
+  });
+  return roots;
+}
+
+/** 📂Individual ticket slug folders (`…/🎆️YY/🌙️MM/☀️DD/TICKETSLUG`) — never year/month/day parents. */
+function cleanDiscoverTicketFolders(ticketsRoot: string): string[] {
+  const folders: string[] = [];
+  cleanWalkDirs(ticketsRoot, (abs, _name) => {
+    const depth = relative(ticketsRoot, abs).split(sep).filter(Boolean).length;
+    if (depth === 4) {
+      folders.push(abs);
+      return "skip";
+    }
+    if (depth > 4) return "skip";
+    return "enter";
+  });
+  return folders;
+}
+
+function cleanGitignoredUnder(root: string, ticketRoot: string): string[] {
+  const rel = relative(root, ticketRoot);
+  const probe = runProbe("git", ["ls-files", "--others", "-i", "--exclude-standard", "--directory", "--", rel], {
+    cwd: root,
+    budgetMs: 120_000,
+  });
+  if ((probe.status ?? 1) !== 0) return [];
+  return probe.stdout
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => join(root, line.replace(/\/$/, "")));
+}
+
+function cleanTicketSizeRemovals(root: string, ticketFolder: string, protectedPrefixes: readonly string[]): CleanRemoval[] {
+  type Node = { abs: string; rel: string; isDir: boolean; size: number; children: Node[] };
+  const build = (abs: string): Node | null => {
+    if (cleanIsProtected(abs, protectedPrefixes)) return null;
+    let st;
+    try {
+      st = lstatSync(abs);
+    } catch {
+      return null;
+    }
+    const rel = relative(root, abs);
+    if (st.isSymbolicLink() || st.isFile()) return { abs, rel, isDir: false, size: st.size, children: [] };
+    if (!st.isDirectory()) return null;
+    const children: Node[] = [];
+    let size = 0;
+    for (const name of readdirSync(abs)) {
+      const child = build(join(abs, name));
+      if (!child) continue;
+      children.push(child);
+      size += child.size;
+    }
+    return { abs, rel, isDir: true, size, children };
+  };
+  const tree = build(ticketFolder);
+  if (!tree) return [];
+  const out: CleanRemoval[] = [];
+  const visit = (node: Node): void => {
+    for (const child of node.children) visit(child);
+    if (!node.isDir && node.size > CLEAN_TICKET_FILE_MAX_BYTES) {
+      out.push({ kind: "ticket-file", path: node.rel, bytes: node.size });
+      return;
+    }
+    if (node.isDir && node.size > CLEAN_TICKET_DIR_MAX_BYTES) {
+      out.push({ kind: "ticket-dir", path: node.rel, bytes: node.size });
+    }
+  };
+  for (const child of tree.children) visit(child);
+  return out;
+}
+
+function cleanBuildArtifactRemovals(root: string, protectedPrefixes: readonly string[]): CleanRemoval[] {
+  const out: CleanRemoval[] = [];
+  cleanWalkDirs(root, (abs, name) => {
+    if (name === "node_modules" || name === ".git" || name === CLEAN_CACHE_DIR_NAME) return "skip";
+    if (name === MAP_CACHE_DIR_NAME || name === HUB_DATA_DIR_NAME || name === SPACE_DATA_DIR_NAME) return "skip";
+    if (cleanIsCanonicalTicketsDir(name)) return "skip";
+    if (cleanIsProtected(abs, protectedPrefixes)) return "skip";
+    if (cleanIsBuildArtifactDirName(name)) {
+      const bytes = cleanPathBytes(abs);
+      if (bytes > CLEAN_BUILD_ARTIFACT_MAX_BYTES) out.push({ kind: "build-artifact", path: relative(root, abs), bytes });
+      return "skip";
+    }
+    return "enter";
+  });
+  return out;
+}
+
+/** Ticket size hits keep the deepest path so `target/` wins over year/month parents. */
+function cleanDedupePreferDeepest(removals: readonly CleanRemoval[]): CleanRemoval[] {
+  const sorted = [...removals].sort((a, b) => b.path.length - a.path.length || a.path.localeCompare(b.path));
+  const kept: CleanRemoval[] = [];
+  for (const row of sorted) {
+    if (kept.some((k) => k.path === row.path || k.path.startsWith(row.path + "/"))) continue;
+    kept.push(row);
+  }
+  return kept;
+}
+
+/** Prefer shallow removals across kinds so a parent delete absorbs nested hits. */
+function cleanDedupePreferShallowest(removals: readonly CleanRemoval[]): CleanRemoval[] {
+  const sorted = [...removals].sort((a, b) => a.path.length - b.path.length || a.path.localeCompare(b.path));
+  const kept: CleanRemoval[] = [];
+  for (const row of sorted) {
+    if (kept.some((k) => row.path === k.path || row.path.startsWith(k.path + "/"))) continue;
+    kept.push(row);
+  }
+  return kept;
+}
+
+function runWorkspaceClean(root: string, dry: boolean): { removals: CleanRemoval[]; skippedProtected: string[] } {
+  const protectedPrefixes = cleanProtectedPrefixes(root);
+  const skippedProtected = protectedPrefixes.filter((p) => existsSync(p)).map((p) => relative(root, p) || p);
+  const pending: CleanRemoval[] = [];
+  pending.push(...cleanCollectMisplaced(root, protectedPrefixes));
+  for (const ticketRoot of cleanDiscoverTicketRoots(root)) {
+    if (cleanIsProtected(ticketRoot, protectedPrefixes)) continue;
+    for (const abs of cleanGitignoredUnder(root, ticketRoot)) {
+      if (!existsSync(abs) || cleanIsProtected(abs, protectedPrefixes)) continue;
+      pending.push({ kind: "gitignore", path: relative(root, abs), bytes: cleanPathBytes(abs) });
+    }
+    for (const ticketFolder of cleanDiscoverTicketFolders(ticketRoot)) {
+      if (cleanIsProtected(ticketFolder, protectedPrefixes)) continue;
+      pending.push(...cleanDedupePreferDeepest(cleanTicketSizeRemovals(root, ticketFolder, protectedPrefixes)));
+    }
+  }
+  pending.push(...cleanBuildArtifactRemovals(root, protectedPrefixes));
+  const removals = cleanDedupePreferShallowest(pending).filter((row) => !cleanIsProtected(join(root, row.path), protectedPrefixes));
+  for (const row of removals) cleanRemovePath(join(root, row.path), dry);
+  return { removals, skippedProtected };
+}
+//#endregion 🔖️CleanScript
 
 //#region 🔖️MicroCommitScript
 /** 🎆️Stages WIP changes and writes deterministic micro-commit templates (GitKraken + CLI). */
@@ -4894,6 +5755,7 @@ const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
   .register("cpp", CppScript)
   .register("publish", PublishScript)
   .register("purge", PurgeScript)
+  .register("clean", CleanScript)
   .register("query", QueryScript)
   .register("micro-commit", MicroCommitScript)
   .register("commit", CommitScript);

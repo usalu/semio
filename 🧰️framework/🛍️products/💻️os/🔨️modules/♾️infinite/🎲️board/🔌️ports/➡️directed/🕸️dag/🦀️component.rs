@@ -2028,6 +2028,124 @@ struct NoteEditState {
 
 // #region 🔖️DagHost
 
+pub const DAG_INTERACTION_NODE_CAPACITY: usize = 256;
+const DAG_INTERACTION_WORD_CAPACITY: usize = DAG_INTERACTION_NODE_CAPACITY / 64;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DagInteractionPlanFault {
+    NodeCredits,
+    StringCredits,
+    Unsupported,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum DagPointerPhase {
+    Down,
+    Move,
+    Up,
+    Leave,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct DagPointerIntent {
+    pub phase: DagPointerPhase,
+    pub x: f64,
+    pub y: f64,
+    pub button: u8,
+    pub shift: bool,
+    pub ctrl_or_meta: bool,
+    pub alt: bool,
+    pub pan: bool,
+}
+
+#[derive(Clone, Copy, Debug)]
+struct DagNodeMove {
+    index: u16,
+    x: f64,
+    y: f64,
+}
+
+#[derive(Clone, Copy, Debug)]
+enum DagProjectionGesture {
+    Idle,
+    Pan { start_x: f64, start_y: f64, camera: [f64; 3] },
+    Drag { start_x: f64, start_y: f64, starts: [Option<DagNodeMove>; DAG_INTERACTION_NODE_CAPACITY], len: u16 },
+    Select { start_x: f64, start_y: f64, initial: [u64; DAG_INTERACTION_WORD_CAPACITY] },
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct DagInteractionProjection {
+    revision: u64,
+    camera: [f64; 3],
+    selected: [u64; DAG_INTERACTION_WORD_CAPACITY],
+    hover: Option<u16>,
+    gesture: DagProjectionGesture,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct DagPointerPlan {
+    expected_revision: u64,
+    previous_active: bool,
+    next: DagInteractionProjection,
+    moves: [Option<DagNodeMove>; DAG_INTERACTION_NODE_CAPACITY],
+    move_len: u16,
+}
+
+fn dag_bit_contains(bits: &[u64; DAG_INTERACTION_WORD_CAPACITY], index: usize) -> bool {
+    bits.get(index / 64).is_some_and(|word| word & (1_u64 << (index % 64)) != 0)
+}
+
+fn dag_bit_set(bits: &mut [u64; DAG_INTERACTION_WORD_CAPACITY], index: usize, selected: bool) {
+    if let Some(word) = bits.get_mut(index / 64) {
+        let mask = 1_u64 << (index % 64);
+        if selected {
+            *word |= mask;
+        } else {
+            *word &= !mask;
+        }
+    }
+}
+
+impl DagInteractionProjection {
+    pub fn revision(&self) -> u64 {
+        self.revision
+    }
+
+    pub fn camera(&self) -> [f64; 3] {
+        self.camera
+    }
+
+    pub fn selected(&self, index: usize) -> bool {
+        dag_bit_contains(&self.selected, index)
+    }
+
+    pub fn hover(&self) -> Option<usize> {
+        self.hover.map(usize::from)
+    }
+}
+
+impl DagPointerPlan {
+    pub fn projection(&self) -> &DagInteractionProjection {
+        &self.next
+    }
+
+    pub fn expected_revision(&self) -> u64 {
+        self.expected_revision
+    }
+
+    pub fn gesture_active(&self) -> bool {
+        !matches!(self.next.gesture, DagProjectionGesture::Idle)
+    }
+
+    pub fn previous_gesture_active(&self) -> bool {
+        self.previous_active
+    }
+
+    pub fn move_len(&self) -> usize {
+        usize::from(self.move_len)
+    }
+}
+
 /// 🌳️ Retained DAG host: typed nodes, edges, engine, camera.
 pub struct DagHost {
     pub fixture: DagFixture,
@@ -2321,8 +2439,12 @@ impl DagHost {
     }
 
     fn widget_id_for_node_id(&self, node_id: NodeId) -> Option<String> {
+        self.widget_id_for_node_id_ref(node_id).map(str::to_owned)
+    }
+
+    fn widget_id_for_node_id_ref(&self, node_id: NodeId) -> Option<&str> {
         let idx = *self.node_id_map.get(&node_id)?;
-        self.fixture.nodes.get(idx).map(|n| n.id.clone())
+        self.fixture.nodes.get(idx).map(|node| node.id.as_str())
     }
 
     fn is_node_hovered(&self, node_id: NodeId) -> bool {
@@ -2398,7 +2520,201 @@ impl DagHost {
 
     /// 🎯️ Selected fixture node ids from the engine selection snapshot.
     pub fn selected_node_ids(&self) -> Vec<String> {
-        self.engine.selection.node_ids.iter().filter_map(|&nid| self.widget_id_for_node_id(nid)).collect()
+        self.selected_node_id_refs().map(str::to_owned).collect()
+    }
+
+    pub fn selected_node_id_refs(&self) -> impl Iterator<Item = &str> {
+        self.engine.selection.node_ids.iter().filter_map(|&node_id| self.widget_id_for_node_id_ref(node_id))
+    }
+
+    pub fn selected_node_count(&self) -> usize {
+        self.engine.selection.node_ids.len()
+    }
+
+    pub fn bounded_interaction_projection(&self, revision: u64) -> Result<DagInteractionProjection, DagInteractionPlanFault> {
+        if self.fixture.nodes.len() > DAG_INTERACTION_NODE_CAPACITY {
+            return Err(DagInteractionPlanFault::NodeCredits);
+        }
+        let mut bytes = 0usize;
+        for node in &self.fixture.nodes {
+            if node.id.len() > 256 {
+                return Err(DagInteractionPlanFault::StringCredits);
+            }
+            bytes = bytes.checked_add(node.id.len()).ok_or(DagInteractionPlanFault::StringCredits)?;
+            if bytes > 16 * 1024 {
+                return Err(DagInteractionPlanFault::StringCredits);
+            }
+        }
+        let mut selected = [0; DAG_INTERACTION_WORD_CAPACITY];
+        for node_id in &self.engine.selection.node_ids {
+            if let Some(index) = self.node_id_map.get(node_id).copied() {
+                dag_bit_set(&mut selected, index, true);
+            }
+        }
+        let hover = self.engine.hover.and_then(|node_id| self.node_id_map.get(&node_id).copied()).and_then(|index| u16::try_from(index).ok());
+        let camera = &self.fixture.camera;
+        Ok(DagInteractionProjection { revision, camera: [camera.x, camera.y, camera.zoom], selected, hover, gesture: DagProjectionGesture::Idle })
+    }
+
+    pub fn derive_pointer_plan(&self, projection: DagInteractionProjection, intent: DagPointerIntent) -> Result<DagPointerPlan, DagInteractionPlanFault> {
+        if projection.revision == u64::MAX || self.fixture.nodes.len() > DAG_INTERACTION_NODE_CAPACITY {
+            return Err(DagInteractionPlanFault::NodeCredits);
+        }
+        let mut next = projection;
+        next.revision = projection.revision + 1;
+        let mut moves = [None; DAG_INTERACTION_NODE_CAPACITY];
+        let mut move_len = 0u16;
+        match intent.phase {
+            DagPointerPhase::Down => self.derive_projection_down(&mut next, intent)?,
+            DagPointerPhase::Move => self.derive_projection_move(&mut next, &mut moves, &mut move_len, intent)?,
+            DagPointerPhase::Up => {
+                self.derive_projection_move(&mut next, &mut moves, &mut move_len, intent)?;
+                next.gesture = DagProjectionGesture::Idle;
+            }
+            DagPointerPhase::Leave => {
+                next.gesture = DagProjectionGesture::Idle;
+                next.hover = None;
+            }
+        }
+        Ok(DagPointerPlan { expected_revision: projection.revision, previous_active: !matches!(projection.gesture, DagProjectionGesture::Idle), next, moves, move_len })
+    }
+
+    fn bounded_node_hit_index(&self, sx: f64, sy: f64) -> Result<Option<usize>, DagInteractionPlanFault> {
+        if self.minimap_widget_pointer_hit(sx, sy).is_some() {
+            return Err(DagInteractionPlanFault::Unsupported);
+        }
+        let world = self.screen_to_world_point(sx, sy);
+        if self.port_insert_hit(world.x, world.y, self.fixture.camera.zoom).is_some() || self.world_hits_handle(world.x, world.y) || self.widget_hit_at(world.x, world.y).is_some() {
+            return Err(DagInteractionPlanFault::Unsupported);
+        }
+        Ok(self.fixture_draggable_node_hit(world.x, world.y).and_then(|node_id| self.node_id_map.get(&node_id).copied()))
+    }
+
+    fn derive_projection_down(&self, next: &mut DagInteractionProjection, intent: DagPointerIntent) -> Result<(), DagInteractionPlanFault> {
+        if intent.pan || intent.button == 1 {
+            next.gesture = DagProjectionGesture::Pan { start_x: intent.x, start_y: intent.y, camera: next.camera };
+            return Ok(());
+        }
+        if intent.button != 0 || intent.alt {
+            return Err(DagInteractionPlanFault::Unsupported);
+        }
+        let Some(index) = self.bounded_node_hit_index(intent.x, intent.y)? else {
+            next.gesture = DagProjectionGesture::Select { start_x: intent.x, start_y: intent.y, initial: next.selected };
+            return Ok(());
+        };
+        if intent.ctrl_or_meta {
+            let selected = !dag_bit_contains(&next.selected, index);
+            dag_bit_set(&mut next.selected, index, selected);
+            if !selected {
+                next.gesture = DagProjectionGesture::Idle;
+                return Ok(());
+            }
+        } else if intent.shift {
+            dag_bit_set(&mut next.selected, index, true);
+        } else if !dag_bit_contains(&next.selected, index) {
+            next.selected = [0; DAG_INTERACTION_WORD_CAPACITY];
+            dag_bit_set(&mut next.selected, index, true);
+        }
+        next.hover = u16::try_from(index).ok();
+        let mut starts = [None; DAG_INTERACTION_NODE_CAPACITY];
+        let mut len = 0usize;
+        for node_index in 0..self.fixture.nodes.len() {
+            if !dag_bit_contains(&next.selected, node_index) {
+                continue;
+            }
+            let node = &self.fixture.nodes[node_index];
+            starts[len] = Some(DagNodeMove { index: node_index as u16, x: node.x, y: node.y });
+            len += 1;
+        }
+        next.gesture = DagProjectionGesture::Drag { start_x: intent.x, start_y: intent.y, starts, len: len as u16 };
+        Ok(())
+    }
+
+    fn derive_projection_move(&self, next: &mut DagInteractionProjection, moves: &mut [Option<DagNodeMove>; DAG_INTERACTION_NODE_CAPACITY], move_len: &mut u16, intent: DagPointerIntent) -> Result<(), DagInteractionPlanFault> {
+        match next.gesture {
+            DagProjectionGesture::Pan { start_x, start_y, camera } => {
+                let zoom = camera[2].max(1e-9);
+                next.camera = [camera[0] - (intent.x - start_x) / zoom, camera[1] - (intent.y - start_y) / zoom, camera[2]];
+            }
+            DagProjectionGesture::Drag { start_x, start_y, starts, len } => {
+                let zoom = next.camera[2].max(1e-9);
+                let dx = (intent.x - start_x) / zoom;
+                let dy = (intent.y - start_y) / zoom;
+                for index in 0..usize::from(len) {
+                    let Some(start) = starts[index] else {
+                        continue;
+                    };
+                    moves[index] = Some(DagNodeMove { index: start.index, x: start.x + dx, y: start.y + dy });
+                }
+                *move_len = len;
+            }
+            DagProjectionGesture::Select { start_x, start_y, initial } => {
+                let min_x = start_x.min(intent.x);
+                let max_x = start_x.max(intent.x);
+                let min_y = start_y.min(intent.y);
+                let max_y = start_y.max(intent.y);
+                let mut selected = if intent.shift || intent.ctrl_or_meta { initial } else { [0; DAG_INTERACTION_WORD_CAPACITY] };
+                for index in 0..self.fixture.nodes.len() {
+                    let node = &self.fixture.nodes[index];
+                    let screen = self.world_to_screen_point(node.x, node.y);
+                    if screen.0 >= min_x && screen.0 <= max_x && screen.1 >= min_y && screen.1 <= max_y {
+                        dag_bit_set(&mut selected, index, true);
+                    }
+                }
+                next.selected = selected;
+            }
+            DagProjectionGesture::Idle => {
+                next.hover = self.bounded_node_hit_index(intent.x, intent.y)?.and_then(|index| u16::try_from(index).ok());
+            }
+        }
+        Ok(())
+    }
+
+    fn world_to_screen_point(&self, x: f64, y: f64) -> (f64, f64) {
+        use canvas::camera::{world_to_screen, Camera, Viewport};
+        let camera = Camera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
+        let viewport = Viewport { width: self.width, height: self.height, dpr: self.dpr };
+        let point = world_to_screen(&camera, &viewport, canvas::Point::new(x, y));
+        (point.x, point.y)
+    }
+
+    pub fn apply_pointer_plan(&mut self, plan: &DagPointerPlan) {
+        self.set_camera(plan.next.camera[0], plan.next.camera[1], plan.next.camera[2]);
+        for index in 0..usize::from(plan.move_len) {
+            let Some(delta) = plan.moves[index] else {
+                continue;
+            };
+            let index = usize::from(delta.index);
+            if let Some(node) = self.fixture.nodes.get_mut(index) {
+                node.x = delta.x;
+                node.y = delta.y;
+            }
+            self.sync_fixture_node_center_to_engine(index);
+        }
+        self.engine.selection = Selection::default();
+        for index in 0..self.fixture.nodes.len() {
+            if dag_bit_contains(&plan.next.selected, index) {
+                if let Some(node_id) = self.engine_node_id_for_index(index) {
+                    self.engine.selection.node_ids.insert(node_id);
+                }
+            }
+        }
+        self.engine.preselect = Selection::default();
+        self.engine.preselect_removed = Selection::default();
+        self.engine.hover = plan.next.hover.and_then(|index| self.engine_node_id_for_index(usize::from(index)));
+    }
+
+    pub fn projection_selected_id_refs<'a>(&'a self, projection: &'a DagInteractionProjection) -> impl Iterator<Item = &'a str> + 'a {
+        self.fixture.nodes.iter().enumerate().filter(move |(index, _)| dag_bit_contains(&projection.selected, *index)).map(|(_, node)| node.id.as_str())
+    }
+
+    pub fn projection_hovered_id_ref<'a>(&'a self, projection: &DagInteractionProjection) -> Option<&'a str> {
+        projection.hover.and_then(|index| self.fixture.nodes.get(usize::from(index))).map(|node| node.id.as_str())
+    }
+
+    pub fn pointer_plan_move(&self, plan: &DagPointerPlan, index: usize) -> Option<(&str, f64, f64)> {
+        let delta = plan.moves.get(index).and_then(|delta| *delta)?;
+        self.fixture.nodes.get(usize::from(delta.index)).map(|node| (node.id.as_str(), delta.x, delta.y))
     }
 
     /// 🔗️ Selected fixture edge ids (synapse ids) from the engine selection snapshot.
@@ -2467,13 +2783,17 @@ impl DagHost {
 
     /// 🖱️ Hovered fixture widget id for node body hover, or parent widget when a channel handle is hovered at detail LOD.
     pub fn hovered_node_id(&self) -> Option<String> {
+        self.hovered_node_id_ref().map(str::to_owned)
+    }
+
+    pub fn hovered_node_id_ref(&self) -> Option<&str> {
         let hover = self.engine.hover?;
         if self.node_id_map.contains_key(&hover) {
-            return self.widget_id_for_node_id(hover);
+            return self.widget_id_for_node_id_ref(hover);
         }
         if self.draw_lod_for_frame().uses_channel_row_pick() {
             if let Some(handle) = self.engine.handles.get(&hover) {
-                return self.widget_id_for_node_id(handle.node_id);
+                return self.widget_id_for_node_id_ref(handle.node_id);
             }
         }
         None
@@ -5491,6 +5811,19 @@ pub use wasm_session::DagSession;
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn bounded_interaction_projection_rejects_node_and_identifier_overflow() {
+        let mut fixture = DagFixture::default();
+        fixture.nodes = (0..=DAG_INTERACTION_NODE_CAPACITY).map(|index| DagNodeSpec { id: format!("node-{index}"), ..Default::default() }).collect();
+        let host = DagHost::from_fixture_without_layout(fixture);
+        assert_eq!(host.bounded_interaction_projection(0).unwrap_err(), DagInteractionPlanFault::NodeCredits);
+
+        let mut fixture = DagFixture::default();
+        fixture.nodes = vec![DagNodeSpec { id: "x".repeat(16 * 1024 + 1), ..Default::default() }];
+        let host = DagHost::from_fixture_without_layout(fixture);
+        assert_eq!(host.bounded_interaction_projection(0).unwrap_err(), DagInteractionPlanFault::StringCredits);
+    }
 
     #[test]
     fn io_node_handle_angles_left_right() {

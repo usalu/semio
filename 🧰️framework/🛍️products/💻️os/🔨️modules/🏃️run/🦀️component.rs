@@ -1332,7 +1332,7 @@ impl<H: AppChannelHost, B: BlobStore + 'static> SpaceRunner<H, B> {
 /// `exchange` at all. Channel v12 (`📡️spr/🧵️channel/🦀️component.rs`) already anticipates this:
 /// "lifecycle now arrives through the reactor ABI's `Event::InstanceOpen`/`InstanceClose`" — `open`
 /// now instantiates a real `GuestInstance` and submits `Event::InstanceOpen`; `exchange` submits the
-/// batch as `Event::AppCommandEvent`s in one `execute_turn` call and reads back `Effect::Respond`
+/// batch through the retained command-page ingress owner and reads back `Effect::Respond`
 /// effects correlated by `req.0 == seq`.
 ///
 /// ✅️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (R1-native-manifest): `load_runtime_recursive` now
@@ -1443,10 +1443,12 @@ pub struct WasmtimeNodeHost<B: BlobStore + 'static = NoBlobStore> {
     /// purity-respecting clock source as `🎯️targets/🧊️wgpu/📦️glue.rs`'s `KernelThreadState::now_ms`
     /// (`Kernel` itself takes no clock, per `🎭️actor`'s own rule), incremented once per `run_turn`.
     now_ms: u64,
-    /// 🔢️ `Envelope.seq` / `Event::AppCommandEvent.seq` source for this host's own turns — distinct
+    /// 🔢️ `Envelope.seq` source for this host's own turns — distinct
     /// from `SpaceRunner::compute_node`'s own per-node `next_seq` closure (that one numbers
     /// `AppCommand`s within a single batched `exchange` call; this one numbers kernel envelopes).
     next_turn_seq: u64,
+    retained_command_closes: semio_framework::kernel::CommandDriverRegistry<1>,
+    rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry<1>,
 }
 
 /// ⛽️ One generous constant turn/instantiate budget, shared by `load_runtime_recursive`'s
@@ -1499,6 +1501,8 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
             guest_instances: HashMap::new(),
             now_ms: 0,
             next_turn_seq: 1,
+            retained_command_closes: semio_framework::kernel::CommandDriverRegistry::new(),
+            rejected_command_builds: semio_framework::kernel::RejectedCommandBuildRegistry::new(),
         }
     }
 
@@ -1508,7 +1512,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
         *self.plugin_ordinals.entry(plugin_id.to_string()).or_insert(next)
     }
 
-    /// 🎬️ `Envelope`/`Event::AppCommandEvent` sequence source — see `next_turn_seq`'s own field doc.
+    /// 🎬️ `Envelope` sequence source — see `next_turn_seq`'s own field doc.
     fn take_turn_seq(&mut self) -> u64 {
         let seq = self.next_turn_seq;
         self.next_turn_seq += 1;
@@ -1523,7 +1527,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     /// reconciliation, which `run` has no use for). `RUN_TURN_OUTCOME_TIMEOUT`/`NODE_TURN_BUDGET` are
     /// this host's own constants, same values `load_runtime_recursive` already used for its own
     /// plugin-service instantiate budget, now shared with the real per-node turn path too.
-    async fn run_turn(&mut self, actor: RuntimeActorId, events: Vec<Event>) -> Result<Vec<Effect>, RunError> {
+    async fn run_turn(&mut self, actor: RuntimeActorId, events: Vec<Event>) -> Result<semio_framework::kernel::TurnResult, RunError> {
         const RUN_TURN_OUTCOME_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(30);
         let node_budget = actor_budget_from_turn_budget(NODE_TURN_BUDGET, Lane::Background).await;
         let mut envelopes = Vec::with_capacity(events.len().max(1));
@@ -1553,11 +1557,34 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
                     semio_framework_plugin_host::shard::ShardOutcome::Turn { actor: reported, result } => {
                         let _ = self.kernel.complete(RuntimeActorId(*reported), result, 0, 0, self.now_ms).await;
                         if *reported == actor.0 {
-                            turn_result = Some(result.clone());
+                            let status = match &result.status {
+                                semio_framework_actor::TurnStatus::Idle => semio_framework::kernel::TurnStatus::Idle,
+                                semio_framework_actor::TurnStatus::MoreWork => semio_framework::kernel::TurnStatus::MoreWork,
+                                semio_framework_actor::TurnStatus::CheckpointReady { checkpoint } => semio_framework::kernel::TurnStatus::CheckpointReady { checkpoint: checkpoint.clone() },
+                                semio_framework_actor::TurnStatus::Faulted { detail } => semio_framework::kernel::TurnStatus::Faulted(detail.clone()),
+                                status => return Err(RunError::Host(format!("unexpected reactor turn status: {status:?}"))),
+                            };
+                            turn_result = Some(semio_framework::kernel::TurnResult {
+                                ui_patches: serde_json::from_slice(&result.ui_patches).map_err(RunError::Serde)?,
+                                effects: serde_json::from_slice(&result.effects).map_err(RunError::Serde)?,
+                                presence: Vec::new(),
+                                next_wake: result.next_wake,
+                                status,
+                                fuel_used: result.usage.fuel,
+                                command_ingress: serde_json::from_slice(&result.command_ingress).map_err(RunError::Serde)?,
+                            });
                         }
                     }
                     semio_framework_plugin_host::shard::ShardOutcome::Fault { actor: reported, message } => {
-                        let faulted = semio_framework::kernel::TurnResult { ui_patches: Vec::new(), effects: Vec::new(), next_wake: None, status: semio_framework::kernel::TurnStatus::Faulted(message.clone().into_bytes()), fuel_used: 0 };
+                        let faulted = semio_framework::kernel::TurnResult {
+                            ui_patches: Vec::new(),
+                            effects: Vec::new(),
+                            presence: Vec::new(),
+                            next_wake: None,
+                            status: semio_framework::kernel::TurnStatus::Faulted(message.clone().into_bytes()),
+                            fuel_used: 0,
+                            command_ingress: semio_framework::kernel::CommandIngressStatus::Idle,
+                        };
                         let _ = self.kernel.complete(RuntimeActorId(*reported), &faulted, 0, 0, self.now_ms).await;
                         if *reported == actor.0 {
                             fault = Some(message.clone());
@@ -1576,7 +1603,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
             return Err(RunError::Host(message));
         }
         match turn_result {
-            Some(result) => Ok(result.effects),
+            Some(result) => Ok(result),
             None => Err(RunError::Host("kernel: shard produced no outcome for this turn".to_string())),
         }
     }
@@ -1952,7 +1979,7 @@ impl<B: BlobStore + 'static> AppChannelHost for WasmtimeNodeHost<B> {
             capabilities: Vec::new(),
             quotas: QuotaSchema::default(),
         };
-        self.run_turn(actor, vec![open_event]).await?;
+        let _ = self.run_turn(actor, vec![open_event]).await?;
         Ok(instance_handle)
     }
 
@@ -1995,25 +2022,80 @@ impl<B: BlobStore + 'static> AppChannelHost for WasmtimeNodeHost<B> {
             }
         }
         if !passthrough.is_empty() {
+            if !self.rejected_command_builds.terminal_is_empty() {
+                let (complete, _, _) = self.rejected_command_builds.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
+                return Err(RunError::Host(if complete { "rejected command-build owner reached terminal empty; retry the exchange".to_string() } else { "rejected command-build owner closed one exact page; retry the exchange".to_string() }));
+            }
+            if !self.retained_command_closes.terminal_is_empty() {
+                let (complete, _, _) = self.retained_command_closes.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
+                return Err(RunError::Host(if complete {
+                    "previous cancelled command owner reached terminal empty; retry the exchange".to_string()
+                } else {
+                    "previous cancelled command owner is closing one exact page; retry the exchange".to_string()
+                }));
+            }
+            if !persistent_command_completion_port_ready() {
+                return Err(RunError::Host("persistent command completion submit/poll/cancel authority is not admitted".to_string()));
+            }
+            let operation = self.take_turn_seq();
+            if !self.retained_command_closes.can_insert(operation) || !self.rejected_command_builds.can_insert(operation) {
+                return Err(RunError::Host("retained command close registry is saturated or collided".to_string()));
+            }
             // ✅️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (packet `run-kernel-wiring`): the real body
             // this comment used to describe as future work — `node` now DOES resolve, since `open`
             // (above) genuinely activates an instance through the kernel. Each passthrough
-            // `AppCommand` becomes one `Event::AppCommandEvent{instance, seq, command}` (`seq` reused
-            // AS the kernel envelope's own seq — see `app_command_seq`'s own doc for why that is
-            // sound here, not merely convenient), submitted as ONE batched `run_turn` call (preserves
-            // this method's "single batched, synchronous duplex round trip" contract — `run_turn`
-            // itself may loop several `Kernel::tick`s, but this call site only sees the final
-            // effects). `TurnResult.effects` is then scanned for `Effect::Respond{req, result}`,
+            // `AppCommand` becomes a retained fixed-page owner. One page is lowered per reactor turn;
+            // the next command remains untouched until the guest acknowledges the current terminal.
+            // `TurnResult.effects` is then scanned for `Effect::Respond{req, result}`,
             // decoding `RequestOutcome::Ok(bytes)` as the guest's own `protocol::AppFrame` reply and
             // `Err(bytes)` as `AppFrame::Error` — exactly the shape this comment always described.
             let actor = *self.instance_actors.get(&node).ok_or_else(|| RunError::Host(format!("unknown node handle {node}")))?;
-            let mut events = Vec::with_capacity(passthrough.len());
+            let mut envelopes = semio_framework::kernel::CommandEnvelopeSet::try_new().map_err(|fault| RunError::Host(fault.to_string()))?;
             for command in &passthrough {
                 let seq = app_command_seq(command);
-                let command_bytes = protocol::encode_app_command(command).await;
-                events.push(Event::AppCommandEvent { instance: PluginInstanceId(node.to_string()), seq, command: command_bytes });
+                let command = protocol::encode_app_command(command).await.map_err(|fault| RunError::Host(fault.to_string()))?;
+                if let Err((fault, rejected)) = envelopes.try_push(semio_framework::kernel::CommandEnvelope { instance: node, seq, command }) {
+                    self.rejected_command_builds.insert_admitted(operation, semio_framework::kernel::RejectedCommandBuild::new(envelopes, rejected));
+                    return Err(RunError::Host(fault.to_string()));
+                }
             }
-            let effects = self.run_turn(actor, events).await?;
+            let generation = self.take_turn_seq();
+            let batch = match semio_framework::kernel::CommandBatch::try_new(generation, envelopes) {
+                Ok(batch) => batch,
+                Err((fault, owners)) => {
+                    self.rejected_command_builds.insert_admitted(operation, semio_framework::kernel::RejectedCommandBuild::from_admitted(owners));
+                    return Err(RunError::Host(fault.to_string()));
+                }
+            };
+            self.retained_command_closes.insert_admitted(operation, generation, semio_framework::kernel::CommandBatchDriver::new(operation, batch));
+            let mut effects = Vec::new();
+            loop {
+                let events = match self.retained_command_closes.with_driver_mut(operation, generation, |driver| driver.next_page()).map_err(|fault| RunError::Host(fault.to_string()))?.map_err(|fault| RunError::Host(fault.to_string()))? {
+                    Some((cursor, bytes)) => vec![Event::CommandIngressPage { cursor, bytes }],
+                    None => vec![Event::Wake],
+                };
+                self.retained_command_closes.prepare_suspend(operation, generation).map_err(|fault| RunError::Host(fault.to_string()))?;
+                let turn = self.run_turn(actor, events).await?;
+                self.retained_command_closes.resume(operation, generation).map_err(|fault| RunError::Host(fault.to_string()))?;
+                let progress = self
+                    .retained_command_closes
+                    .with_driver_mut(operation, generation, |driver| driver.observe(&turn.command_ingress, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES))
+                    .map_err(|fault| RunError::Host(fault.to_string()))?
+                    .map_err(|fault| RunError::Host(fault.to_string()))?;
+                effects.extend(turn.effects);
+                match progress {
+                    semio_framework::kernel::CommandBatchProgress::Complete => {
+                        self.retained_command_closes.remove_terminal(operation, generation).map_err(|fault| RunError::Host(fault.to_string()))?;
+                        break;
+                    }
+                    semio_framework::kernel::CommandBatchProgress::Faulted => {
+                        self.retained_command_closes.begin_close(operation, generation).map_err(|fault| RunError::Host(fault.to_string()))?;
+                        let (complete, _, _) = self.retained_command_closes.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
+                        return Err(RunError::Host(if complete { "command ingress faulted after terminal exact-owner cleanup".to_string() } else { "command ingress faulted; retained owner closed one exact page and awaits retry".to_string() }));
+                    }
+                    semio_framework::kernel::CommandBatchProgress::PageReady | semio_framework::kernel::CommandBatchProgress::Waiting => {}
+                }
+            }
             for effect in effects {
                 if let Effect::Respond { req, result } = effect {
                     match result {
@@ -2030,12 +2112,17 @@ impl<B: BlobStore + 'static> AppChannelHost for WasmtimeNodeHost<B> {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
+fn persistent_command_completion_port_ready() -> bool {
+    false
+}
+
 /// 🔢️ Every `AppCommand` variant's leading `seq: u64` field, used verbatim as the kernel envelope's
-/// own `Event::AppCommandEvent.seq` (see `exchange`'s own passthrough doc for why reusing it — rather
+/// own command-ingress sequence (see `exchange`'s own passthrough doc for why reusing it — rather
 /// than minting a fresh kernel-side sequence and maintaining a translation table back to it — is
 /// sound: one `exchange` batch's commands already carry distinct seqs, minted by `SpaceRunner::
 /// compute_node`'s own local `next_seq` closure, and `Effect::Respond{req}` correlates directly
-/// against whichever seq the `Event::AppCommandEvent` carried). An exhaustive match, deliberately —
+/// against whichever seq the retained command envelope carried). An exhaustive match, deliberately —
 /// a future `AppCommand` variant missing here is a compile error, not a silent seq-of-zero.
 #[cfg(not(target_arch = "wasm32"))]
 fn app_command_seq(command: &AppCommand) -> u64 {

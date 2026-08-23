@@ -211,6 +211,9 @@ pub struct DiscreteEvent {
 /// so `try_push` returning [`EnqueueOutcome::Overflow`] is a genuine backpressure signal, not a routine
 /// occurrence, while still bounding worst-case memory.
 pub const DISCRETE_QUEUE_CAPACITY: usize = 256;
+pub const DISCRETE_EVENT_BYTE_CAPACITY: usize = 4 * 1024;
+pub const DISCRETE_QUEUE_BYTE_CAPACITY: usize = DISCRETE_QUEUE_CAPACITY * DISCRETE_EVENT_BYTE_CAPACITY;
+pub const DISCRETE_DRAIN_PAGE_CAPACITY: usize = 4;
 
 /// 📤️ What [`EventQueue::try_push`] reports — overflow is a real, caller-observable outcome (the
 /// ticket's own "user commands never silently dropped" invariant), never a silent drop.
@@ -233,12 +236,13 @@ pub struct EventQueue {
     discrete: std::collections::VecDeque<DiscreteEvent>,
     generation: InputGeneration,
     overflow_count: u64,
+    discrete_bytes: usize,
 }
 
 impl EventQueue {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     pub fn new() -> Self {
-        Self { coalesced: CoalesceSlot::new(), discrete: std::collections::VecDeque::with_capacity(DISCRETE_QUEUE_CAPACITY), generation: InputGeneration::default(), overflow_count: 0 }
+        Self { coalesced: CoalesceSlot::new(), discrete: std::collections::VecDeque::with_capacity(DISCRETE_QUEUE_CAPACITY), generation: InputGeneration::default(), overflow_count: 0, discrete_bytes: 0 }
     }
 
     /// 🔢️ The generation this queue is currently accumulating into — bumped by every `enqueue*` call
@@ -282,11 +286,13 @@ impl EventQueue {
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn push_discrete(&mut self, event: DispatchEvent, generation: InputGeneration) -> EnqueueOutcome {
-        if self.discrete.len() >= DISCRETE_QUEUE_CAPACITY {
+        let bytes = event_owned_bytes(&event);
+        if bytes > DISCRETE_EVENT_BYTE_CAPACITY || self.discrete.len() >= DISCRETE_QUEUE_CAPACITY || self.discrete_bytes.saturating_add(bytes) > DISCRETE_QUEUE_BYTE_CAPACITY {
             self.overflow_count += 1;
             return EnqueueOutcome::Overflow;
         }
         self.discrete.push_back(DiscreteEvent { event, generation });
+        self.discrete_bytes += bytes;
         EnqueueOutcome::Accepted
     }
 
@@ -295,9 +301,15 @@ impl EventQueue {
     /// discrete event in arrival order. Requires [`WorkerContext`]: draining feeds a frame build, which
     /// is worker-only work per this ticket's capability split.
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
-    pub fn drain(&mut self, _worker: WorkerContext) -> DrainedEvents {
+    pub fn drain_page(&mut self, _worker: WorkerContext) -> DrainedEvents {
         let (pointer_move, scroll, metrics) = self.coalesced.drain();
-        DrainedEvents { pointer_move, scroll, metrics, discrete: self.discrete.drain(..).collect() }
+        let mut discrete = std::array::from_fn(|_| None);
+        for slot in &mut discrete {
+            let Some(event) = self.discrete.pop_front() else { break };
+            self.discrete_bytes = self.discrete_bytes.saturating_sub(event_owned_bytes(&event.event));
+            *slot = Some(event);
+        }
+        DrainedEvents { pointer_move, scroll, metrics, discrete }
     }
 
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
@@ -320,7 +332,8 @@ impl EventQueue {
             self.coalesced.drain();
             return false;
         }
-        if self.discrete.pop_front().is_some() {
+        if let Some(event) = self.discrete.pop_front() {
+            self.discrete_bytes = self.discrete_bytes.saturating_sub(event_owned_bytes(&event.event));
             return false;
         }
         true
@@ -343,7 +356,16 @@ pub struct DrainedEvents {
     pub pointer_move: Option<PointerMoveSample>,
     pub scroll: Option<ScrollSample>,
     pub metrics: Option<MetricsSample>,
-    pub discrete: Vec<DiscreteEvent>,
+    pub discrete: [Option<DiscreteEvent>; DISCRETE_DRAIN_PAGE_CAPACITY],
+}
+
+fn event_owned_bytes(event: &DispatchEvent) -> usize {
+    match event {
+        DispatchEvent::KeyDown { key, .. } | DispatchEvent::KeyUp { key, .. } => key.len(),
+        DispatchEvent::TextInput { text } | DispatchEvent::Paste { text } | DispatchEvent::TextEditChunk { text, .. } => text.len(),
+        DispatchEvent::Ime(ui_render::ImeEvent::Update { text, .. }) | DispatchEvent::Ime(ui_render::ImeEvent::Commit { text }) => text.len(),
+        _ => 0,
+    }
 }
 
 //#endregion 🔖️EventQueue
@@ -365,7 +387,7 @@ mod tests {
             queue.enqueue(ui, DispatchEvent::PointerMove { pointer: pointer(), x: i as f32, y: 0.0 });
         }
         assert_eq!(queue.pending_discrete_len(), 0, "pointer move never touches the discrete queue");
-        let drained = queue.drain(WorkerContext::new(queue.current_generation()));
+        let drained = queue.drain_page(WorkerContext::new(queue.current_generation()));
         assert_eq!(drained.pointer_move.map(|sample| sample.x), Some(999.0), "only the latest position survives");
     }
 
@@ -376,7 +398,7 @@ mod tests {
         for _ in 0..10 {
             queue.enqueue(ui, DispatchEvent::Scroll { x: 0.0, y: 0.0, delta_x: 0.0, delta_y: 1.0 });
         }
-        let drained = queue.drain(WorkerContext::new(queue.current_generation()));
+        let drained = queue.drain_page(WorkerContext::new(queue.current_generation()));
         assert_eq!(drained.scroll.map(|sample| sample.delta_y), Some(10.0), "10 wheel ticks of 1.0 each must sum, not overwrite");
     }
 
@@ -387,7 +409,7 @@ mod tests {
         for width in 100..2000u32 {
             queue.enqueue_metrics(ui, width, 600, 1.0);
         }
-        let drained = queue.drain(WorkerContext::new(queue.current_generation()));
+        let drained = queue.drain_page(WorkerContext::new(queue.current_generation()));
         assert_eq!(drained.metrics.map(|sample| sample.physical_width), Some(1999));
     }
 
@@ -399,8 +421,12 @@ mod tests {
             let outcome = queue.enqueue(ui, DispatchEvent::KeyDown { key: "a".to_string(), modifiers: EventModifiers::default() });
             assert_eq!(outcome, EnqueueOutcome::Accepted);
         }
-        let drained = queue.drain(WorkerContext::new(queue.current_generation()));
-        assert_eq!(drained.discrete.len(), DISCRETE_QUEUE_CAPACITY, "every discrete event up to capacity must survive the drain");
+        let mut drained_count = 0;
+        while !queue.is_empty() {
+            let drained = queue.drain_page(WorkerContext::new(queue.current_generation()));
+            drained_count += drained.discrete.into_iter().flatten().count();
+        }
+        assert_eq!(drained_count, DISCRETE_QUEUE_CAPACITY, "every discrete event up to capacity must survive paged drains");
         assert_eq!(queue.overflow_count(), 0);
     }
 
@@ -417,16 +443,43 @@ mod tests {
     }
 
     #[test]
+    fn discrete_drain_never_transfers_more_than_one_fixed_page() {
+        let mut queue = EventQueue::new();
+        let ui = UiThreadToken::mint();
+        for _ in 0..DISCRETE_QUEUE_CAPACITY {
+            assert_eq!(queue.enqueue(ui, DispatchEvent::KeyDown { key: "x".repeat(DISCRETE_EVENT_BYTE_CAPACITY), modifiers: EventModifiers::default() }), EnqueueOutcome::Accepted);
+        }
+        let mut total = 0;
+        while !queue.is_empty() {
+            let page = queue.drain_page(WorkerContext::new(queue.current_generation()));
+            let count = page.discrete.into_iter().flatten().count();
+            assert!(count <= DISCRETE_DRAIN_PAGE_CAPACITY);
+            total += count;
+        }
+        assert_eq!(total, DISCRETE_QUEUE_CAPACITY);
+    }
+
+    #[test]
+    fn one_variable_payload_over_the_page_credit_is_rejected() {
+        let mut queue = EventQueue::new();
+        let ui = UiThreadToken::mint();
+        let outcome = queue.enqueue(ui, DispatchEvent::Paste { text: "x".repeat(DISCRETE_EVENT_BYTE_CAPACITY + 1) });
+        assert_eq!(outcome, EnqueueOutcome::Overflow);
+        assert!(queue.is_empty());
+    }
+
+    #[test]
     fn pointer_down_up_are_lossless_and_ordered() {
         let mut queue = EventQueue::new();
         let ui = UiThreadToken::mint();
         queue.enqueue(ui, DispatchEvent::PointerDown { pointer: pointer(), x: 1.0, y: 1.0, button: PointerButton::Primary });
         queue.enqueue(ui, DispatchEvent::PointerMove { pointer: pointer(), x: 5.0, y: 5.0 });
         queue.enqueue(ui, DispatchEvent::PointerUp { pointer: pointer(), x: 5.0, y: 5.0, button: PointerButton::Primary });
-        let drained = queue.drain(WorkerContext::new(queue.current_generation()));
-        assert_eq!(drained.discrete.len(), 2, "down and up are discrete; the move between them coalesced separately");
-        assert!(matches!(drained.discrete[0].event, DispatchEvent::PointerDown { .. }));
-        assert!(matches!(drained.discrete[1].event, DispatchEvent::PointerUp { .. }));
+        let drained = queue.drain_page(WorkerContext::new(queue.current_generation()));
+        let mut discrete = drained.discrete.into_iter().flatten();
+        assert!(matches!(discrete.next().map(|event| event.event), Some(DispatchEvent::PointerDown { .. })));
+        assert!(matches!(discrete.next().map(|event| event.event), Some(DispatchEvent::PointerUp { .. })));
+        assert!(discrete.next().is_none());
     }
 
     #[test]
@@ -440,8 +493,8 @@ mod tests {
         queue.enqueue(ui, DispatchEvent::KeyDown { key: "x".to_string(), modifiers: EventModifiers::default() });
         let g2 = queue.current_generation();
         assert!(g2 > g1);
-        let drained = queue.drain(WorkerContext::new(g2));
-        assert_eq!(drained.discrete[0].generation, g2, "the discrete event carries the generation it was enqueued at");
+        let drained = queue.drain_page(WorkerContext::new(g2));
+        assert_eq!(drained.discrete.into_iter().flatten().next().expect("discrete event").generation, g2, "the discrete event carries the generation it was enqueued at");
     }
 
     #[test]
@@ -451,7 +504,9 @@ mod tests {
         queue.enqueue(ui, DispatchEvent::PointerMove { pointer: pointer(), x: 0.0, y: 0.0 });
         queue.enqueue(ui, DispatchEvent::KeyDown { key: "a".to_string(), modifiers: EventModifiers::default() });
         assert!(!queue.is_empty());
-        let _ = queue.drain(WorkerContext::new(queue.current_generation()));
-        assert!(queue.is_empty(), "a drained queue must report empty until the next enqueue");
+        while !queue.is_empty() {
+            let _ = queue.drain_page(WorkerContext::new(queue.current_generation()));
+        }
+        assert!(queue.is_empty(), "paged drains must eventually leave the queue empty");
     }
 }

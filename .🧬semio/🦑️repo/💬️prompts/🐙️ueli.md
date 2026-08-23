@@ -2,7 +2,7 @@
 
 ## Templates
 
-### Research
+### Web
 
 ---
 
@@ -18,7 +18,16 @@ Use the latest ueli wip branch: https://github.com/usalu/semio/tree/%F0%9F%90%99
 
 ---
 
-### Changes
+Extend/Refactor/Change clean mechanisms to properly achieve this.
+Exhaustively plan for work fleets of maximum possible parallel agents.
+Plan for a main Opus 5 High agent for plan coordination, then use multiple Sonnet 5 High agents for task execution, then use multiple Haiku 4.5 agents for read-only exploration.
+Everything end to end (ignore everything inside ./compose folder).
+Use the latest wip ueli branch: github.com/usalu/semio/tree/🐙ueli/⛳wip at this commit: 
+
+
+---
+
+### Local
 
 ---
 
@@ -39,12 +48,6 @@ Use a single Opus 5 agent for creating the plan, a single Cursor Grok 4.5 High a
 Exhaustively plan for work fleets of maximum possible parallel agents.
 Use the main chat with GPT 5.6 Sol Ultra for creating the plan, then use the main chat with GPT 5.6 Sol Extra-High for main plan coordination and use multiple GPT 5.6 Terra Extra-High agents for task execution and use multiple GPT 5.6 Luna Extra-High agents for read-only explorations and audits.
 
----
-
-Extend/Refactor/Change clean mechanisms to properly achieve this.
-Exhaustively plan for work fleets of maximum possible parallel agents.
-Plan for a main Opus 5 High agent for plan coordination, then use multiple Sonnet 5 High agents for task execution, then use multiple Haiku 4.5 agents for read-only exploration.
-Everything end to end (ignore everything inside ./compose folder).
 
 ---
 
@@ -52,13 +55,40 @@ XXX is extremly adhoc. Make sure it has absolutely clean mechanisms, exhaustivel
 Everything end to end.
 
 
-# 🔍️ Research
+# 🔍️ Web
 
 ##
 
 ---
 
+The current test approach in our repository is extremely adhoc.
+We want to develop a proper testing setup and use it to refactor our entire repository.
+Our repository is a polyglot, multi-implementation (the same code will be reimplemented in different languages) that uses a language agnostic domain-driven folder and file taxonomy tree and the tests must follow the same tree style.
+Our long-term goal is to be dependency free at runtime and use dependencies only for testing our own implementations.
+The new way of developing features should be:
+1. Research if an existing library already has support for this feature
+2. If not, find the best library for this feature
+3. Create a test that uses the library to produce the desired output
+4. Implement the same feature in our codebase until it produces the same desired output
 
+e.g. for testing pdf editing use this library:
+https://github.com/J-F-Liu/lopdf
+e.g. for testing pdf creation use this library:
+https://github.com/typst/pdf-writer
+
+```
+<system-under-test>
+  fixtures
+    <fixture> # fixture files that are shared by several tests
+  tests
+    <test> # specific folder with kebab-case name
+      fixtures
+        <fixture> # fixture files that are only needed for the specific test
+      component.feature
+      component.rs
+      component.ts
+      …
+```
 
 ---
 
@@ -407,7 +437,7 @@ Update tree to not have sections but every section should have a tree. A tab sho
 
 - Id system should be slugged to make sure no illegal characters are used.
 
-# 🛠️ Changes
+# 🛠️ Local
 
 TODO: Add roomie to discord for verification
 
@@ -5312,7 +5342,16 @@ Add import, export functionality to toolbar, etc
 
 ###
 
-repo:
+---
+
+Create an agent skill: clean
+clean should clean the codebase e.g. removing all gitignored files and folders inside the tickets, remove all files inside tickets that are above 5MB, remove all folders inside tickets that are larger than 10MB, etc
+Make sure that it doesnt remove caches such as map tiles, etc
+It should also remove misplaced files (often emojis are messed up)
+e.g.
+.🧬semio/🧑‍🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/PHASE-9-RUNTIME-DEPENDENCY-REMOVAL/📓️p9ab-owned-production-host.md
+.🧬semio/🧑️repo/🎫️tickets/🎆️26/🌙️08/☀️20/INTERACTIVE-JOB-RUNTIME-REFACTOR/OWNED-UI-AND-TOOLING-STACK/📓️p10ak-owned-popover-slider.md
+Also remove build artifacts larger than 10GB e.g. target for rust
 
 ---
 

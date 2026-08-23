@@ -8,7 +8,6 @@
 import type { Preview } from "@storybook/react-vite";
 
 import { DEFAULT_UI_DRIVER, COMPACT_UI_DRIVER, resolveUiDriver } from "@semio-tech/ui-react";
-import { scopeActive } from "./scopes.ts";
 
 declare const __STORYBOOK_ACTIVE_SCOPES__: string[];
 
@@ -18,7 +17,7 @@ if (__STORYBOOK_ACTIVE_SCOPES__.length > 0) {
 }
 /** @emoji 🎯️ True when `prefix` is (a prefix of) an active `STORYBOOK_SCOPE` — for stories/decorators that gate behavior by scope. */
 export function storybookScopeActive(prefix: string): boolean {
-  return scopeActive(__STORYBOOK_ACTIVE_SCOPES__, prefix);
+  return __STORYBOOK_ACTIVE_SCOPES__.some((id) => id === prefix || id.startsWith(`${prefix}/`));
 }
 //#endregion 🔖️ScopeStyles
 

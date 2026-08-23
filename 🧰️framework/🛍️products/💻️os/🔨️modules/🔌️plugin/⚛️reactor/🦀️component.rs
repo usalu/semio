@@ -421,7 +421,9 @@ impl InstanceMetadataRegistry {
         if !self.slots.allocation_admitted || self.slots.get(index).is_some() {
             return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.instance-metadata-capacity"), "fixed instance metadata authority is saturated or collided"));
         }
-        self.slots.insert(index, InstanceMetadata { instance, app_id, quota }).map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.instance-metadata-capacity"), "fixed instance metadata authority changed during insert"))
+        self.slots
+            .insert(index, InstanceMetadata { instance, app_id, quota })
+            .map_err(|_| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.instance-metadata-capacity"), "fixed instance metadata authority changed during insert"))
     }
 
     fn get(&self, instance: u32) -> Option<&InstanceMetadata> {
@@ -611,11 +613,7 @@ where
 
     let (label, key, restart, run) = task.into_parts().await;
     if label.len() > REACTOR_TASK_LABEL_BYTES || restart.as_ref().is_some_and(|bytes| bytes.len() > REACTOR_TASK_RESTART_BYTES) {
-        return Err(semio_framework::Fault::new(
-            semio_framework::FaultOrigin::Plugin,
-            semio_framework::FaultCode::new("plugin.task-authority-too-large"),
-            "task label or restart authority exceeds its fixed admitted byte bound",
-        ));
+        return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.task-authority-too-large"), "task label or restart authority exceeds its fixed admitted byte bound"));
     }
     if key.as_ref().is_some_and(|key| key.len() > REACTOR_TASK_KEY_BYTES) {
         return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.task.key-too-large"), format!("task key exceeds {REACTOR_TASK_KEY_BYTES} bytes")));
@@ -630,16 +628,10 @@ where
         }
     }
 
-    let reservation = TEST_FUTURE_EXECUTOR
-        .with(|executor| executor.reserve())
-        .map_err(|message| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.task.executor-capacity"), message))?;
+    let reservation = TEST_FUTURE_EXECUTOR.with(|executor| executor.reserve()).map_err(|message| semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.task.executor-capacity"), message))?;
     let task_id = reservation.id();
     if !TASK_RECORDS.with(|records| records.borrow().can_insert(task_id)) {
-        return Err(semio_framework::Fault::new(
-            semio_framework::FaultOrigin::Framework,
-            semio_framework::FaultCode::new("plugin.task.record-capacity"),
-            "fixed task record authority rejected an executor-reserved direct slot",
-        ));
+        return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.task.record-capacity"), "fixed task record authority rejected an executor-reserved direct slot"));
     }
     TASK_RECORDS.with(|records| records.borrow_mut().insert_admitted(task_id, TaskRecord { instance, key, label, restart }));
 
@@ -691,48 +683,31 @@ async fn encode_mutation_lane<T: ::protocol::OpBinary>(ops: &[T]) -> Vec<u8> {
 pub(crate) fn cancel_instance_tasks_step(instance: u32, cursor: &mut usize) -> bool {
     #[cfg(not(test))]
     {
-        let budget = executor::ReactorTaskBudget {
-            operation: 0,
-            generation: 0,
-            cancellation_generation: 0,
-            maximum_units: 1,
-            maximum_bytes: 4_096,
-            deadline: std::time::Instant::now() + std::time::Duration::from_millis(8),
-        };
+        let budget = executor::ReactorTaskBudget { operation: 0, generation: 0, cancellation_generation: 0, maximum_units: 1, maximum_bytes: 4_096, deadline: std::time::Instant::now() + std::time::Duration::from_millis(8) };
         return matches!(REACTOR_EXECUTOR.with(|executor| executor.close_instance_step(instance, cursor, budget)), executor::ReactorTaskStep::Complete);
     }
     #[cfg(test)]
     {
-    if *cursor >= REACTOR_TASK_SLOTS {
-        return true;
-    }
-    let entry = TASK_RECORDS.with(|records| records.borrow().entry_at(*cursor).and_then(|(id, record)| (record.instance == instance).then_some(id)));
-    if let Some(id) = entry {
-        let poll = TEST_FUTURE_EXECUTOR.with(|executor| executor.poll_one(id));
-        if poll == executor::TaskPoll::Pending {
-            return false;
+        if *cursor >= REACTOR_TASK_SLOTS {
+            return true;
         }
-        TASK_RECORDS.with(|records| drop(records.borrow_mut().remove(id)));
-    }
-    *cursor += 1;
-    *cursor >= REACTOR_TASK_SLOTS
+        let entry = TASK_RECORDS.with(|records| records.borrow().entry_at(*cursor).and_then(|(id, record)| (record.instance == instance).then_some(id)));
+        if let Some(id) = entry {
+            let poll = TEST_FUTURE_EXECUTOR.with(|executor| executor.poll_one(id));
+            if poll == executor::TaskPoll::Pending {
+                return false;
+            }
+            TASK_RECORDS.with(|records| drop(records.borrow_mut().remove(id)));
+        }
+        *cursor += 1;
+        *cursor >= REACTOR_TASK_SLOTS
     }
 }
 
 fn begin_reactor_close(instance: u32) -> Result<(), semio_framework::Fault> {
     let request_cursor = REGISTRY.with(|registry| registry.begin_cancel_instance(instance));
     let resume_remaining = TASK_RESUMES.with(|resumes| resumes.borrow().begin_cancel_instance());
-    let state = ReactorCloseState {
-        instance,
-        task_cursor: 0,
-        timer_cursor: 0,
-        request_cursor,
-        resume_remaining,
-        requests_complete: false,
-        resumes_complete: false,
-        timers_complete: false,
-        metadata_complete: false,
-    };
+    let state = ReactorCloseState { instance, task_cursor: 0, timer_cursor: 0, request_cursor, resume_remaining, requests_complete: false, resumes_complete: false, timers_complete: false, metadata_complete: false };
     REACTOR_CLOSES.with(|closes| {
         closes
             .try_borrow_mut()
@@ -841,7 +816,11 @@ pub async fn restore_now<PA: crate::app::PluginApp>(runtime: &crate::plugin_runt
             return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.timer-restore-live"), "restore cannot replace live fixed timer authority"));
         }
         if !armed_timers.is_empty() {
-            return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.timer-restore-owner-missing"), "checkpoint timer rows lack the exact numeric instance owner required by the fixed close authority"));
+            return Err(semio_framework::Fault::new(
+                semio_framework::FaultOrigin::Framework,
+                semio_framework::FaultCode::new("plugin.timer-restore-owner-missing"),
+                "checkpoint timer rows lack the exact numeric instance owner required by the fixed close authority",
+            ));
         }
         Ok::<(), semio_framework::Fault>(())
     })?;
@@ -872,6 +851,20 @@ pub use wit_bridge::{poll, poll_kernel};
 mod wit_bridge {
     use super::*;
 
+    enum CommandIngressOwner {
+        ReservedPresence { cursor: semio_framework::kernel::CommandPageCursor, admission: crate::app::PresenceRosterAdmission, page: semio_framework::kernel::FixedCommandPage },
+        Presence { cursor: semio_framework::kernel::CommandPageCursor, publication_generation: u64 },
+        PendingPresencePage { cursor: semio_framework::kernel::CommandPageCursor, publication_generation: u64, page: semio_framework::kernel::FixedCommandPage },
+        GenericAssembly { cursor: semio_framework::kernel::CommandPageCursor, pages: semio_framework::kernel::CommandPageSet },
+        ClosingAssembly { cursor: semio_framework::kernel::CommandPageCursor, pages: semio_framework::kernel::CommandPageSet },
+        Generic { cursor: semio_framework::kernel::CommandPageCursor, command: crate::plugin_runtime::PluginCommandIngress },
+        Terminal { cursor: semio_framework::kernel::CommandPageCursor },
+    }
+
+    thread_local! {
+        static COMMAND_INGRESS: RefCell<Option<CommandIngressOwner>> = const { RefCell::new(None) };
+    }
+
     /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: the raw WIT event, aliased for `poll`'s
     /// `Event::InstanceClose` handling below — the KERNEL `Event::InstanceClose` (SSOT, `🎠️kernel`,
     /// not this packet's file) carries no instance id, so the raw payload must be read BEFORE
@@ -896,6 +889,7 @@ mod wit_bridge {
     pub fn poll<PA: crate::app::PluginApp + 'static>(
         runtime: &crate::plugin_runtime::PluginRuntime<PA>,
         events: Vec<crate::component::component::exports::semio::framework::reactor::Event>,
+        command_page: Option<crate::component::component::exports::semio::framework::reactor::CommandIngressPage>,
         budget: crate::component::component::exports::semio::framework::reactor::Budget,
     ) -> Result<crate::component::component::exports::semio::framework::reactor::TurnResult, semio_framework::Fault> {
         let mut close_instances = Vec::new();
@@ -907,7 +901,8 @@ mod wit_bridge {
             kernel_events.push(wit_event_to_kernel(event));
         }
         let kernel_budget = semio_framework::kernel::Budget { fuel: budget.fuel, deadline_ms: budget.deadline_ms, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
-        let result = poll_kernel(runtime, kernel_events, kernel_budget, &close_instances)?;
+        let command_page = command_page.map(wit_command_page_to_kernel).transpose()?;
+        let result = poll_kernel(runtime, kernel_events, command_page, kernel_budget, &close_instances)?;
         kernel_turn_result_to_wit(result, budget)
     }
 
@@ -917,10 +912,10 @@ mod wit_bridge {
     pub fn poll_kernel<PA: crate::app::PluginApp + 'static>(
         runtime: &crate::plugin_runtime::PluginRuntime<PA>,
         events: Vec<Event>,
+        command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
         _budget: semio_framework::kernel::Budget,
         close_instances: &[u32],
     ) -> Result<semio_framework::kernel::TurnResult, semio_framework::Fault> {
-        let mut app_commands: HashMap<u32, Vec<Vec<u8>>> = HashMap::new();
         let mut dirty_render: Vec<(u32, String)> = Vec::new();
         // 🎯️ M1 (ticket 26/08/17 `design-unified.md`): intents that survived the revision guard below,
         // batched per instance exactly like `app_commands` — dispatched in its own pass, after
@@ -936,6 +931,7 @@ mod wit_bridge {
         }
         let _ = step_reactor_close()?;
         let _ = crate::plugin_runtime::plugin_step_close_cleanup(runtime)?;
+        let _ = crate::plugin_runtime::plugin_step_live_cleanup(runtime)?;
 
         for event in events {
             match event {
@@ -959,8 +955,8 @@ mod wit_bridge {
                     }
                 }
                 Event::InstanceClose => {}
-                Event::AppCommandEvent { instance, command, .. } => {
-                    app_commands.entry(instance.0.parse::<u32>().unwrap_or(0)).or_default().push(command);
+                Event::CommandIngressPage { .. } => {
+                    return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.command-page-event-bypass"), "command page must use poll_kernel's dedicated owner argument"));
                 }
                 // 🎯️ M1 (ticket 26/08/17 `design-unified.md`): decodes the pack-encoded
                 // `ui_contract::UiIntent`, drops it if it targets a tree the user can no longer see (the
@@ -1033,34 +1029,278 @@ mod wit_bridge {
             }
         }
 
-        // 🔀️ "app-command → the existing PluginApp dispatch unchanged" (design-abi.md §4): batched
-        // per-instance through the SAME `plugin_exchange` the old `exchange` WIT export called.
         let mut effects: Vec<Effect> = Vec::new();
-        for (instance, commands) in app_commands {
-            // 🚫️async: E5 executor bridge — `plugin_exchange` stays genuinely `async fn`; safe to
-            // resolve synchronously here for the same reason as this file's other WIT-boundary bridges.
-            match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_exchange(runtime, instance, &commands)) {
-                Ok(output) => {
-                    for frame_bytes in output.frames {
-                        route_app_frame(instance, &frame_bytes, &mut effects);
+        let mut command_ingress = semio_framework::kernel::CommandIngressStatus::Idle;
+        let mut retained = COMMAND_INGRESS.with(|ingress| ingress.borrow_mut().take());
+        retained = match retained.take() {
+            Some(CommandIngressOwner::ReservedPresence { cursor, .. }) | Some(CommandIngressOwner::PendingPresencePage { cursor, .. }) if close_instances.contains(&cursor.instance) => {
+                command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-cancelled-by-close".to_vec() };
+                None
+            }
+            Some(CommandIngressOwner::Generic { cursor, command }) if close_instances.contains(&cursor.instance) => {
+                command_ingress = semio_framework::kernel::CommandIngressStatus::CommandPending(cursor.clone());
+                Some(CommandIngressOwner::Generic {
+                    cursor,
+                    command: command.cancel(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.command-cancelled-by-close"), "command ingress was cancelled by instance close")),
+                })
+            }
+            Some(CommandIngressOwner::GenericAssembly { cursor, pages }) if close_instances.contains(&cursor.instance) => {
+                command_ingress = semio_framework::kernel::CommandIngressStatus::CommandPending(cursor.clone());
+                Some(CommandIngressOwner::ClosingAssembly { cursor, pages })
+            }
+            Some(CommandIngressOwner::Terminal { cursor }) if close_instances.contains(&cursor.instance) => {
+                command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-cancelled-by-close".to_vec() };
+                None
+            }
+            owner => owner,
+        };
+        retained = match retained.take() {
+            Some(CommandIngressOwner::ClosingAssembly { cursor, mut pages }) => {
+                let (complete, _) = pages.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
+                if complete {
+                    command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-cancelled-by-close".to_vec() };
+                    None
+                } else {
+                    command_ingress = semio_framework::kernel::CommandIngressStatus::CommandPending(cursor.clone());
+                    Some(CommandIngressOwner::ClosingAssembly { cursor, pages })
+                }
+            }
+            owner => owner,
+        };
+        retained = match retained.take() {
+            Some(CommandIngressOwner::ReservedPresence { cursor, admission, page }) => {
+                let now_ms = semio_framework::io::resolve_ready(crate::host::now_ms());
+                match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_admit_reserved_presence(
+                    runtime,
+                    cursor.instance,
+                    admission,
+                    cursor.seq,
+                    if cursor.metadata & 0x100 != 0 { Some((cursor.metadata & 0xff) as u8) } else { None },
+                    cursor.item_count,
+                    page,
+                    now_ms,
+                )) {
+                    Ok(publication_generation) => {
+                        command_ingress = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor.clone());
+                        Some(CommandIngressOwner::Presence { cursor, publication_generation })
                     }
-                    // 🧬️ Channel v12 (A4) removed `AppFrame::Effects`/`Events` — `plugin_exchange` now
-                    // hands these back directly (design-abi.md §2/§4: effects/events travel straight into
-                    // `TurnResult`, never wrapped as a frame), so they're decoded here instead of through
-                    // `route_app_frame`.
-                    for one in &output.effects {
-                        if let Ok(effect) = decode_wire_effect(one) {
-                            push_admitted_effect(&mut effects, instance, effect);
+                    Err((_fault, admission, page)) => {
+                        command_ingress = semio_framework::kernel::CommandIngressStatus::CommandPending(cursor.clone());
+                        Some(CommandIngressOwner::ReservedPresence { cursor, admission, page })
+                    }
+                }
+            }
+            owner => owner,
+        };
+        retained = match retained.take() {
+            Some(CommandIngressOwner::PendingPresencePage { cursor, publication_generation, page }) => {
+                match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_push_reserved_presence_page(runtime, cursor.instance, publication_generation, cursor.page_index, page)) {
+                    Ok(()) => {
+                        command_ingress = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor.clone());
+                        Some(CommandIngressOwner::Presence { cursor, publication_generation })
+                    }
+                    Err((_fault, page)) => {
+                        command_ingress = semio_framework::kernel::CommandIngressStatus::CommandPending(cursor.clone());
+                        Some(CommandIngressOwner::PendingPresencePage { cursor, publication_generation, page })
+                    }
+                }
+            }
+            owner => owner,
+        };
+        if matches!(command_ingress, semio_framework::kernel::CommandIngressStatus::Idle) {
+            if let Some(CommandIngressOwner::Presence { cursor, .. }) = retained.as_ref() {
+                let cursor = cursor.clone();
+                if close_instances.contains(&cursor.instance) {
+                    retained = None;
+                    command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-cancelled-by-close".to_vec() };
+                } else {
+                    match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_exchange(runtime, cursor.instance, None)) {
+                        Ok(output) => {
+                            let instance = cursor.instance;
+                            if output.presence_terminal == Some(cursor.seq) {
+                                retained = None;
+                                let mut terminal = cursor;
+                                terminal.page_index = terminal.page_index.saturating_add(1);
+                                command_ingress = match output.presence_terminal_fault.as_ref() {
+                                    Some(fault) => semio_framework::kernel::CommandIngressStatus::Fault { cursor: terminal, fault: fault.clone() },
+                                    None => semio_framework::kernel::CommandIngressStatus::CommandComplete(terminal),
+                                };
+                            } else if cursor.page_index + 1 == cursor.page_count {
+                                let mut pending = cursor.clone();
+                                pending.page_index = pending.page_index.saturating_add(1);
+                                command_ingress = semio_framework::kernel::CommandIngressStatus::CommandPending(pending);
+                            }
+                            route_exchange_output(instance, output, &mut effects);
                         }
-                    }
-                    for one in &output.events {
-                        if let Ok(event) = decode_wire_app_event(one) {
-                            effects.push(Effect::PublishEvent { topic: event.kind, payload: store::pack_rt::encode_wire_value(&event.payload) });
+                        Err(fault) => {
+                            command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) };
+                            retained = None;
                         }
                     }
                 }
-                Err(fault) => effects.push(Effect::SendMessage { target: MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) }, payload: dsl::encode_fault_bytes(&fault) }),
             }
+        }
+        if let Some(CommandIngressOwner::Terminal { cursor }) = retained.take() {
+            let mut terminal = cursor;
+            terminal.page_index = terminal.page_index.saturating_add(1);
+            command_ingress = semio_framework::kernel::CommandIngressStatus::CommandComplete(terminal);
+        }
+        if let Some(CommandIngressOwner::Generic { cursor, .. }) = retained.as_ref() {
+            let cursor = cursor.clone();
+            let Some(CommandIngressOwner::Generic { command, .. }) = retained.take() else { unreachable!() };
+            match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_exchange(runtime, cursor.instance, Some((cursor.seq, command)))) {
+                Ok(mut output) => {
+                    let mut terminal = cursor.clone();
+                    terminal.page_index = terminal.page_index.saturating_add(1);
+                    if let Some((_, command)) = output.retry_command.take() {
+                        retained = Some(CommandIngressOwner::Generic { cursor: cursor.clone(), command });
+                        command_ingress = semio_framework::kernel::CommandIngressStatus::CommandPending(terminal);
+                    } else if let Some(fault) = output.command_terminal_fault.as_ref() {
+                        command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor: terminal, fault: fault.clone() };
+                    } else {
+                        command_ingress = semio_framework::kernel::CommandIngressStatus::CommandComplete(terminal);
+                    }
+                    route_exchange_output(cursor.instance, output, &mut effects);
+                }
+                Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
+            }
+        }
+        if let Some((cursor, page)) = command_page {
+            if close_instances.contains(&cursor.instance)
+                || page.len() > semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES
+                || cursor.page_count == 0
+                || cursor.page_count as usize > semio_framework::kernel::COMMAND_MAXIMUM_PAGES
+                || cursor.command_count == 0
+                || cursor.command_count as usize > semio_framework::kernel::COMMAND_BATCH_MAXIMUM_ITEMS
+                || cursor.command_index >= cursor.command_count
+                || cursor.page_index >= cursor.page_count
+                || cursor.item_count as usize > semio_framework::kernel::COMMAND_BATCH_MAXIMUM_ITEMS
+                || (cursor.kind == 28 && cursor.page_count != cursor.item_count.max(1))
+                || (cursor.kind == 28 && ((cursor.item_count == 0) != page.is_empty()))
+                || (cursor.kind != 28
+                    && (page.is_empty()
+                        || cursor.item_count != 0
+                        || cursor.metadata != 0
+                        || (cursor.page_index == 0 && cursor.kind != page.as_slice()[0])
+                        || (cursor.page_index + 1 < cursor.page_count && page.len() != semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES)))
+            {
+                command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-page-invalid".to_vec() };
+            } else if retained.as_ref().is_some_and(|owner| match owner {
+                CommandIngressOwner::ReservedPresence { cursor: active, .. }
+                | CommandIngressOwner::Presence { cursor: active, .. }
+                | CommandIngressOwner::PendingPresencePage { cursor: active, .. }
+                | CommandIngressOwner::GenericAssembly { cursor: active, .. }
+                | CommandIngressOwner::ClosingAssembly { cursor: active, .. }
+                | CommandIngressOwner::Generic { cursor: active, .. }
+                | CommandIngressOwner::Terminal { cursor: active } => !same_command_cursor(active, &cursor),
+            }) {
+                command_ingress = semio_framework::kernel::CommandIngressStatus::Backpressure(cursor);
+            } else if matches!(retained, Some(CommandIngressOwner::ReservedPresence { .. } | CommandIngressOwner::PendingPresencePage { .. })) {
+                command_ingress = semio_framework::kernel::CommandIngressStatus::CommandPending(cursor);
+            } else if cursor.kind == 28 {
+                let own_color = if cursor.metadata & !0x1ff != 0 {
+                    command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-presence-metadata".to_vec() };
+                    None
+                } else if cursor.metadata & 0x100 != 0 {
+                    Some((cursor.metadata & 0xff) as u8)
+                } else {
+                    None
+                };
+                if !matches!(command_ingress, semio_framework::kernel::CommandIngressStatus::Fault { .. }) {
+                    if cursor.page_index == 0 && retained.is_none() {
+                        match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_reserve_presence_ingress(runtime, cursor.instance, cursor.seq)) {
+                            Ok(admission) => {
+                                let now_ms = semio_framework::io::resolve_ready(crate::host::now_ms());
+                                match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_admit_reserved_presence(runtime, cursor.instance, admission, cursor.seq, own_color, cursor.item_count, page, now_ms)) {
+                                    Ok(publication_generation) => {
+                                        retained = Some(CommandIngressOwner::Presence { cursor: cursor.clone(), publication_generation });
+                                        command_ingress = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor);
+                                    }
+                                    Err((_fault, admission, page)) => {
+                                        retained = Some(CommandIngressOwner::ReservedPresence { cursor: cursor.clone(), admission, page });
+                                        command_ingress = semio_framework::kernel::CommandIngressStatus::CommandPending(cursor);
+                                    }
+                                }
+                            }
+                            Err(_) => command_ingress = semio_framework::kernel::CommandIngressStatus::Backpressure(cursor),
+                        }
+                    } else if let Some(publication_generation) = retained.as_ref().and_then(|owner| match owner {
+                        CommandIngressOwner::Presence { publication_generation, .. } => Some(*publication_generation),
+                        _ => None,
+                    }) {
+                        match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_push_reserved_presence_page(runtime, cursor.instance, publication_generation, cursor.page_index, page)) {
+                            Ok(()) => {
+                                if let Some(CommandIngressOwner::Presence { cursor: active, .. }) = retained.as_mut() {
+                                    active.page_index = cursor.page_index;
+                                }
+                                command_ingress = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor);
+                            }
+                            Err((_fault, page)) => {
+                                retained = Some(CommandIngressOwner::PendingPresencePage { cursor: cursor.clone(), publication_generation, page });
+                                command_ingress = semio_framework::kernel::CommandIngressStatus::CommandPending(cursor);
+                            }
+                        }
+                    }
+                }
+            } else if cursor.page_index == 0 && retained.is_none() {
+                match semio_framework::kernel::CommandPageSet::try_new() {
+                    Ok(mut pages) => {
+                        pages.try_push(page).expect("one host-validated command page fits the fixed page set");
+                        if cursor.page_count == 1 {
+                            let command = semio_framework::kernel::PagedCommand::try_from_pages(pages).expect("host-validated generic pages preserve their fixed shape");
+                            match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_exchange(runtime, cursor.instance, Some((cursor.seq, crate::plugin_runtime::PluginCommandIngress::Encoded(command))))) {
+                                Ok(mut output) => {
+                                    if let Some((_, command)) = output.retry_command.take() {
+                                        retained = Some(CommandIngressOwner::Generic { cursor: cursor.clone(), command });
+                                    } else {
+                                        retained = Some(CommandIngressOwner::Terminal { cursor: cursor.clone() });
+                                    }
+                                    command_ingress = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor.clone());
+                                    route_exchange_output(cursor.instance, output, &mut effects);
+                                }
+                                Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
+                            }
+                        } else {
+                            retained = Some(CommandIngressOwner::GenericAssembly { cursor: cursor.clone(), pages });
+                            command_ingress = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor);
+                        }
+                    }
+                    Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
+                }
+            } else if let Some(CommandIngressOwner::GenericAssembly { cursor: active, mut pages }) = retained.take() {
+                if cursor.page_index as usize != pages.len() {
+                    command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: b"plugin.command-page-order".to_vec() };
+                } else {
+                    pages.try_push(page).expect("host-validated generic page count fits its fixed page set");
+                    if cursor.page_index + 1 == cursor.page_count {
+                        let command = semio_framework::kernel::PagedCommand::try_from_pages(pages).expect("host-validated generic pages preserve their fixed shape");
+                        match semio_framework::io::resolve_ready(crate::plugin_runtime::plugin_exchange(runtime, cursor.instance, Some((cursor.seq, crate::plugin_runtime::PluginCommandIngress::Encoded(command))))) {
+                            Ok(mut output) => {
+                                if let Some((_, command)) = output.retry_command.take() {
+                                    retained = Some(CommandIngressOwner::Generic { cursor: cursor.clone(), command });
+                                } else {
+                                    retained = Some(CommandIngressOwner::Terminal { cursor: cursor.clone() });
+                                }
+                                command_ingress = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor.clone());
+                                route_exchange_output(cursor.instance, output, &mut effects);
+                            }
+                            Err(fault) => command_ingress = semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault: dsl::encode_fault_bytes(&fault) },
+                        }
+                    } else {
+                        retained = Some(CommandIngressOwner::GenericAssembly { cursor: active, pages });
+                        if let Some(CommandIngressOwner::GenericAssembly { cursor: active, .. }) = retained.as_mut() {
+                            active.page_index = cursor.page_index;
+                        }
+                        command_ingress = semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor);
+                    }
+                }
+            }
+        }
+        if let Some(retained) = retained {
+            COMMAND_INGRESS.with(|ingress| {
+                let previous = ingress.borrow_mut().replace(retained);
+                assert!(previous.is_none(), "command ingress has one exact owner");
+            });
         }
 
         // 🎯️ M1: surviving intents dispatch through the SAME `route_app_frame`/effects/events plumbing
@@ -1151,7 +1391,7 @@ mod wit_bridge {
         // executor may have fresh ready work by the time this returns — folded into `more_work` below
         // rather than requiring a second `run_until_idle` pass this turn (the next `poll` picks it up).
         let resumes_remain = drain_task_resumes(runtime, &mut effects, 64);
-        let more_work = more_work || resumes_remain || REACTOR_EXECUTOR.with(|executor| executor.has_pending());
+        let more_work = more_work || resumes_remain || REACTOR_EXECUTOR.with(|executor| executor.has_pending()) || COMMAND_INGRESS.with(|ingress| ingress.borrow().is_some());
 
         let ui_patches: Vec<UiPatch> = PENDING_PATCHES.with(|pending| std::mem::take(&mut *pending.borrow_mut()));
         // 👥️ M2: once per poll — expire ages-out peer marks, then flush drains every key touched since
@@ -1164,7 +1404,36 @@ mod wit_bridge {
         });
         let status = if more_work { TurnStatus::MoreWork } else { TurnStatus::Idle };
 
-        Ok(semio_framework::kernel::TurnResult { ui_patches, effects, presence, next_wake: ARMED_TIMERS.with(|timers| timers.borrow().first()), status, fuel_used: 0 })
+        Ok(semio_framework::kernel::TurnResult { ui_patches, effects, presence, next_wake: ARMED_TIMERS.with(|timers| timers.borrow().first()), status, fuel_used: 0, command_ingress })
+    }
+
+    fn route_exchange_output(instance: u32, output: crate::plugin_runtime::PluginExchangeOutput, effects: &mut Vec<Effect>) {
+        for frame_bytes in output.frames {
+            route_app_frame(instance, &frame_bytes, effects);
+        }
+        for one in &output.effects {
+            if let Ok(effect) = decode_wire_effect(one) {
+                push_admitted_effect(effects, instance, effect);
+            }
+        }
+        for one in &output.events {
+            if let Ok(event) = decode_wire_app_event(one) {
+                effects.push(Effect::PublishEvent { topic: event.kind, payload: store::pack_rt::encode_wire_value(&event.payload) });
+            }
+        }
+    }
+
+    fn same_command_cursor(left: &semio_framework::kernel::CommandPageCursor, right: &semio_framework::kernel::CommandPageCursor) -> bool {
+        left.owner == right.owner
+            && left.generation == right.generation
+            && left.command_index == right.command_index
+            && left.command_count == right.command_count
+            && left.instance == right.instance
+            && left.seq == right.seq
+            && left.kind == right.kind
+            && left.page_count == right.page_count
+            && left.item_count == right.item_count
+            && left.metadata == right.metadata
     }
 
     thread_local! {
@@ -1287,6 +1556,121 @@ mod wit_bridge {
     /// back to `default()` (no field set — read as "no limit declared" by every reader, e.g.
     /// `instance_task_quota`'s `unwrap_or(16)`) on a decode failure rather than failing `InstanceOpen`
     /// outright.
+    fn wit_command_page_to_kernel(page: crate::component::component::exports::semio::framework::reactor::CommandIngressPage) -> Result<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage), semio_framework::Fault> {
+        if page.length as usize > semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES {
+            return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.command-page-lift-cap"), "fixed command page declares more than 4096 bytes"));
+        }
+        let mut bytes = [0; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES];
+        let mut offset = 0usize;
+        for block in [
+            &page.block_00,
+            &page.block_01,
+            &page.block_02,
+            &page.block_03,
+            &page.block_04,
+            &page.block_05,
+            &page.block_06,
+            &page.block_07,
+            &page.block_08,
+            &page.block_09,
+            &page.block_10,
+            &page.block_11,
+            &page.block_12,
+            &page.block_13,
+            &page.block_14,
+            &page.block_15,
+            &page.block_16,
+            &page.block_17,
+            &page.block_18,
+            &page.block_19,
+            &page.block_20,
+            &page.block_21,
+            &page.block_22,
+            &page.block_23,
+            &page.block_24,
+            &page.block_25,
+            &page.block_26,
+            &page.block_27,
+            &page.block_28,
+            &page.block_29,
+            &page.block_30,
+            &page.block_31,
+            &page.block_32,
+            &page.block_33,
+            &page.block_34,
+            &page.block_35,
+            &page.block_36,
+            &page.block_37,
+            &page.block_38,
+            &page.block_39,
+            &page.block_40,
+            &page.block_41,
+            &page.block_42,
+            &page.block_43,
+            &page.block_44,
+            &page.block_45,
+            &page.block_46,
+            &page.block_47,
+            &page.block_48,
+            &page.block_49,
+            &page.block_50,
+            &page.block_51,
+            &page.block_52,
+            &page.block_53,
+            &page.block_54,
+            &page.block_55,
+            &page.block_56,
+            &page.block_57,
+            &page.block_58,
+            &page.block_59,
+            &page.block_60,
+            &page.block_61,
+            &page.block_62,
+            &page.block_63,
+        ] {
+            for word in [block.word_0, block.word_1, block.word_2, block.word_3, block.word_4, block.word_5, block.word_6, block.word_7] {
+                let fixed = word.to_le_bytes();
+                bytes[offset..offset + fixed.len()].copy_from_slice(&fixed);
+                offset += fixed.len();
+            }
+        }
+        let cursor = page.cursor;
+        let bytes = semio_framework::kernel::FixedCommandPage::try_from_array(bytes, page.length)?;
+        Ok((
+            semio_framework::kernel::CommandPageCursor {
+                owner: cursor.owner,
+                generation: cursor.generation,
+                command_index: cursor.command_index,
+                command_count: cursor.command_count,
+                instance: cursor.instance,
+                seq: cursor.seq,
+                kind: cursor.kind,
+                page_index: cursor.page_index,
+                page_count: cursor.page_count,
+                item_count: cursor.item_count,
+                metadata: cursor.metadata,
+            },
+            bytes,
+        ))
+    }
+
+    fn kernel_command_cursor_to_wit(cursor: semio_framework::kernel::CommandPageCursor) -> crate::component::component::exports::semio::framework::reactor::CommandPageCursor {
+        use crate::component::component::exports::semio::framework::reactor as wit;
+        wit::CommandPageCursor {
+            owner: cursor.owner,
+            generation: cursor.generation,
+            command_index: cursor.command_index,
+            command_count: cursor.command_count,
+            instance: cursor.instance,
+            seq: cursor.seq,
+            kind: cursor.kind,
+            page_index: cursor.page_index,
+            page_count: cursor.page_count,
+            item_count: cursor.item_count,
+            metadata: cursor.metadata,
+        }
+    }
+
     fn decode_wire_quotas(bytes: &[u8]) -> semio_framework::kernel::QuotaSchema {
         store::pack_rt::decode_wire_value(bytes).ok().and_then(|value| dsl::from_dsl_value(value).ok()).unwrap_or_default()
     }
@@ -1314,7 +1698,6 @@ mod wit_bridge {
             W::SuspendRequest(_) => Event::SuspendRequest,
             W::CapabilityChanged(_) => Event::SuspendRequest,
             W::QuotaChanged(_) => Event::SuspendRequest,
-            W::AppCommand(payload) => Event::AppCommandEvent { instance: semio_framework::kernel::PluginInstanceId(payload.instance.to_string()), seq: payload.seq, command: payload.command },
             // 🎬️ `wit-flip` (26/08/20): UI intents no longer masquerade as `app-command` — see kernel
             // `Event::UiIntent`'s own doc.
             W::UiIntent(payload) => Event::UiIntent { instance: semio_framework::kernel::PluginInstanceId(payload.instance.to_string()), intent: payload.intent },
@@ -1393,6 +1776,14 @@ mod wit_bridge {
                 TurnStatus::Faulted(bytes) => wit::TurnStatus::Faulted(bytes),
             },
             fuel_used: result.fuel_used,
+            command_ingress: match result.command_ingress {
+                semio_framework::kernel::CommandIngressStatus::Idle => wit::CommandIngressStatus::Idle,
+                semio_framework::kernel::CommandIngressStatus::PageAccepted(cursor) => wit::CommandIngressStatus::PageAccepted(kernel_command_cursor_to_wit(cursor)),
+                semio_framework::kernel::CommandIngressStatus::Backpressure(cursor) => wit::CommandIngressStatus::Backpressure(kernel_command_cursor_to_wit(cursor)),
+                semio_framework::kernel::CommandIngressStatus::CommandPending(cursor) => wit::CommandIngressStatus::CommandPending(kernel_command_cursor_to_wit(cursor)),
+                semio_framework::kernel::CommandIngressStatus::CommandComplete(cursor) => wit::CommandIngressStatus::CommandComplete(kernel_command_cursor_to_wit(cursor)),
+                semio_framework::kernel::CommandIngressStatus::Fault { cursor, fault } => wit::CommandIngressStatus::Fault(wit::CommandIngressFault { cursor: kernel_command_cursor_to_wit(cursor), fault: wit_types::PluginError::Fault(fault) }),
+            },
         })
     }
 
@@ -1512,7 +1903,11 @@ mod wit_bridge {
             Effect::CacheRead { req, engine_id, key } => wit::Effect::CacheRead(wit_effects::CacheReadEffect { req: req.0, params: wit_effects::CacheReadParams { engine_id, key: key.into_bytes() } }),
             Effect::SetTimer { id, after_ms, repeat } => {
                 if !ARMED_TIMERS.with(|timers| timers.borrow().contains(id)) {
-                    return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.timer-owner-missing"), "timer effect reached the WIT boundary without exact pre-admitted instance ownership"));
+                    return Err(semio_framework::Fault::new(
+                        semio_framework::FaultOrigin::Framework,
+                        semio_framework::FaultCode::new("plugin.timer-owner-missing"),
+                        "timer effect reached the WIT boundary without exact pre-admitted instance ownership",
+                    ));
                 }
                 wit::Effect::SetTimer(wit_effects::SetTimerEffect { id, after_ms: after_ms as u32, repeat })
             }

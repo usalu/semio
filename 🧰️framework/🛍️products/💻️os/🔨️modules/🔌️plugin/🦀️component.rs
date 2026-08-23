@@ -59,6 +59,7 @@ pub mod owned_abi {
     #[derive(Deserialize, Serialize)]
     pub struct PollInput {
         pub events: Vec<semio_framework::kernel::Event>,
+        pub command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
         pub budget: semio_framework::kernel::Budget,
         pub close_instances: Vec<u32>,
     }
@@ -8543,55 +8544,638 @@ pub mod app {
     /// fleet-wide `ArtifactApp::Members` associated-type rollout — see
     /// `📓️terra-dedyn-fw-os-spacemember-report.md` §ChildContentView for the rejected alternatives.
     /// `Default` (`EMPTY`) so a leaf app's view costs nothing and needs no ceremony.
+    const CHILD_CONTENT_SLOTS: usize = 1_024;
+    const CHILD_CONTENT_PAGE_SLOTS: usize = 32;
+    const CHILD_CONTENT_PAGES: usize = CHILD_CONTENT_SLOTS / CHILD_CONTENT_PAGE_SLOTS;
+    const CHILD_CONTENT_ID_BYTES: usize = 256;
+
+    type ChildMemberEntry<M> = ((String, String), (ArtifactDialect, M));
+
+    struct ChildMemberAdmission {
+        index: usize,
+        generation: u64,
+    }
+
+    pub struct ChildMemberRegistrationError<M> {
+        pub member: Option<M>,
+        pub fault: Fault,
+    }
+
+    impl<M> std::fmt::Debug for ChildMemberRegistrationError<M> {
+        fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            formatter.debug_struct("ChildMemberRegistrationError").field("owner_returned", &self.member.is_some()).field("fault", &self.fault).finish()
+        }
+    }
+
+    struct ChildMemberRegistry<M> {
+        slots: Box<[std::mem::MaybeUninit<ChildMemberEntry<M>>]>,
+        occupied: [u64; CHILD_CONTENT_SLOTS / 64],
+        reserved: [u64; CHILD_CONTENT_SLOTS / 64],
+        generations: [u64; CHILD_CONTENT_SLOTS],
+        next_generation: u64,
+        len: usize,
+        allocation_admitted: bool,
+    }
+
+    impl<M> ChildMemberRegistry<M> {
+        fn new() -> Self {
+            let mut slots = Vec::new();
+            let allocation_admitted = slots.try_reserve_exact(CHILD_CONTENT_SLOTS).is_ok();
+            if allocation_admitted {
+                slots.resize_with(CHILD_CONTENT_SLOTS, std::mem::MaybeUninit::uninit);
+            }
+            Self { slots: slots.into_boxed_slice(), occupied: [0; CHILD_CONTENT_SLOTS / 64], reserved: [0; CHILD_CONTENT_SLOTS / 64], generations: [0; CHILD_CONTENT_SLOTS], next_generation: 0, len: 0, allocation_admitted }
+        }
+
+        fn hash(slot: &str, child_id: &str) -> Result<usize, Fault> {
+            ChildContentView::hash(slot, child_id)
+        }
+
+        fn occupied(&self, index: usize) -> bool {
+            self.occupied[index / 64] & (1 << (index % 64)) != 0
+        }
+
+        fn reserved(&self, index: usize) -> bool {
+            self.reserved[index / 64] & (1 << (index % 64)) != 0
+        }
+
+        fn entry(&self, index: usize) -> Option<&ChildMemberEntry<M>> {
+            self.occupied(index).then(|| unsafe { self.slots[index].assume_init_ref() })
+        }
+
+        fn entry_mut(&mut self, index: usize) -> Option<&mut ChildMemberEntry<M>> {
+            if !self.occupied(index) {
+                return None;
+            }
+            Some(unsafe { self.slots[index].assume_init_mut() })
+        }
+
+        fn locate(&self, key: &(String, String)) -> Result<Result<usize, usize>, Fault> {
+            if !self.allocation_admitted {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-member-allocation"), "fixed child-member registry allocation was not pre-admitted"));
+            }
+            let start = Self::hash(&key.0, &key.1)?;
+            for offset in 0..CHILD_CONTENT_SLOTS {
+                let index = (start + offset) % CHILD_CONTENT_SLOTS;
+                match self.entry(index) {
+                    Some((candidate, _)) if candidate == key => return Ok(Ok(index)),
+                    Some(_) => {}
+                    None if self.reserved(index) => {}
+                    None => return Ok(Err(index)),
+                }
+            }
+            Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-member-capacity"), "fixed child-member registry is saturated"))
+        }
+
+        fn admit(&mut self, key: &(String, String)) -> Result<ChildMemberAdmission, Fault> {
+            if !self.allocation_admitted {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-member-allocation"), "fixed child-member registry allocation was not pre-admitted"));
+            }
+            match self.locate(key)? {
+                Ok(_) => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-member-duplicate"), "fixed child-member identity is already occupied")),
+                Err(index) => {
+                    let generation = self.next_generation.checked_add(1).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-member-generation"), "fixed child-member admission generation exhausted"))?;
+                    self.next_generation = generation;
+                    self.generations[index] = generation;
+                    self.reserved[index / 64] |= 1 << (index % 64);
+                    Ok(ChildMemberAdmission { index, generation })
+                }
+            }
+        }
+
+        fn insert_admitted(&mut self, admission: ChildMemberAdmission, key: (String, String), value: (ArtifactDialect, M)) {
+            assert!(self.reserved(admission.index) && self.generations[admission.index] == admission.generation && !self.occupied(admission.index), "exact child-member admission changed while its exclusive app owner was suspended");
+            self.reserved[admission.index / 64] &= !(1 << (admission.index % 64));
+            self.slots[admission.index].write((key, value));
+            self.occupied[admission.index / 64] |= 1 << (admission.index % 64);
+            self.len += 1;
+        }
+
+        fn get(&self, key: &(String, String)) -> Option<&(ArtifactDialect, M)> {
+            let Ok(Ok(index)) = self.locate(key) else { return None };
+            self.entry(index).map(|(_, value)| value)
+        }
+
+        fn get_mut(&mut self, key: &(String, String)) -> Option<&mut (ArtifactDialect, M)> {
+            let Ok(Ok(index)) = self.locate(key) else { return None };
+            self.entry_mut(index).map(|(_, value)| value)
+        }
+
+        fn keys(&self) -> impl Iterator<Item = &(String, String)> {
+            let occupied = self.occupied;
+            self.slots.iter().enumerate().filter_map(move |(index, slot)| (occupied[index / 64] & (1 << (index % 64)) != 0).then(|| unsafe { &slot.assume_init_ref().0 }))
+        }
+
+        fn iter(&self) -> impl Iterator<Item = (&(String, String), &(ArtifactDialect, M))> {
+            let occupied = self.occupied;
+            self.slots.iter().enumerate().filter_map(move |(index, slot)| {
+                (occupied[index / 64] & (1 << (index % 64)) != 0).then(|| unsafe {
+                    let entry = slot.assume_init_ref();
+                    (&entry.0, &entry.1)
+                })
+            })
+        }
+
+        fn values_mut(&mut self) -> impl Iterator<Item = &mut (ArtifactDialect, M)> {
+            let occupied = self.occupied;
+            self.slots.iter_mut().enumerate().filter_map(move |(index, slot)| (occupied[index / 64] & (1 << (index % 64)) != 0).then(|| unsafe { &mut slot.assume_init_mut().1 }))
+        }
+
+        fn take_at(&mut self, index: usize) -> Option<ChildMemberEntry<M>> {
+            if !self.occupied(index) {
+                return None;
+            }
+            self.occupied[index / 64] &= !(1 << (index % 64));
+            self.len -= 1;
+            Some(unsafe { self.slots[index].assume_init_read() })
+        }
+
+        fn cancel_admission(&mut self, admission: &ChildMemberAdmission) -> bool {
+            if !self.reserved(admission.index) || self.generations[admission.index] != admission.generation {
+                return false;
+            }
+            self.reserved[admission.index / 64] &= !(1 << (admission.index % 64));
+            true
+        }
+
+        fn len(&self) -> usize {
+            self.len
+        }
+
+        fn is_empty(&self) -> bool {
+            self.len == 0
+        }
+    }
+
+    impl<M> Drop for ChildMemberRegistry<M> {
+        fn drop(&mut self) {
+            assert!(self.is_empty(), "fixed child-member registry reached Drop before every exact member was transferred to bounded retirement");
+            assert!(self.reserved.iter().all(|word| *word == 0), "fixed child-member registry reached Drop with a reserved owner slot outside exact admission");
+        }
+    }
+
+    #[cfg(test)]
+    mod child_member_registry_tests {
+        use super::*;
+
+        fn dialect() -> ArtifactDialect {
+            ArtifactDialect { artifact_kind: "test-child".into(), standard: "native".into(), subset: "*".into() }
+        }
+
+        #[test]
+        fn fixed_child_member_registry_admits_exact_capacity_rejects_plus_one_and_cursor_detaches_every_owner() {
+            let mut registry = ChildMemberRegistry::new();
+            for index in 0..CHILD_CONTENT_SLOTS {
+                let key = (format!("slot-{index}"), format!("child-{index}"));
+                let admission = registry.admit(&key).expect("exact fixed child capacity");
+                registry.insert_admitted(admission, key, (dialect(), index));
+            }
+            let rejected_key = ("slot-plus-one".to_string(), "child-plus-one".to_string());
+            assert!(registry.admit(&rejected_key).is_err(), "capacity plus one is rejected before an owner is transferred");
+            for index in 0..CHILD_CONTENT_SLOTS {
+                assert!(registry.take_at(index).is_some(), "one exact child owner detaches per cursor step");
+            }
+            assert!(registry.is_empty());
+        }
+
+        #[test]
+        fn fixed_child_member_registry_resolves_hash_collisions_without_replacement() {
+            let mut first_by_hash: [Option<(String, String)>; CHILD_CONTENT_SLOTS] = std::array::from_fn(|_| None);
+            let mut collision = None;
+            for index in 0..=CHILD_CONTENT_SLOTS {
+                let key = ("slot".to_string(), format!("collision-{index}"));
+                let hash = ChildMemberRegistry::<usize>::hash(&key.0, &key.1).expect("bounded key hash");
+                if let Some(first) = first_by_hash[hash].take() {
+                    collision = Some((first, key));
+                    break;
+                }
+                first_by_hash[hash] = Some(key);
+            }
+            let (first, second) = collision.expect("pigeonhole collision across capacity plus one keys");
+            let mut registry = ChildMemberRegistry::new();
+            let first_admission = registry.admit(&first).expect("first colliding owner");
+            registry.insert_admitted(first_admission, first.clone(), (dialect(), 1));
+            let second_admission = registry.admit(&second).expect("second colliding owner probes to a distinct fixed slot");
+            registry.insert_admitted(second_admission, second.clone(), (dialect(), 2));
+            assert_eq!(registry.get(&first).map(|(_, owner)| *owner), Some(1));
+            assert_eq!(registry.get(&second).map(|(_, owner)| *owner), Some(2));
+            for index in 0..CHILD_CONTENT_SLOTS {
+                drop(registry.take_at(index));
+            }
+        }
+
+        #[test]
+        fn stale_child_member_admission_cannot_cancel_a_reused_slot_generation() {
+            let key = ("slot".to_string(), "child".to_string());
+            let mut registry = ChildMemberRegistry::new();
+            let stale = registry.admit(&key).expect("first admission");
+            assert!(registry.cancel_admission(&stale));
+            let current = registry.admit(&key).expect("same direct slot is reused with a fresh generation");
+            assert_ne!(stale.generation, current.generation);
+            assert!(!registry.cancel_admission(&stale), "stale generation cannot cancel the reused reservation");
+            registry.insert_admitted(current, key, (dialect(), 7));
+            for index in 0..CHILD_CONTENT_SLOTS {
+                drop(registry.take_at(index));
+            }
+        }
+
+        #[test]
+        fn incomplete_child_member_registry_drop_faults_in_release_instead_of_destroying_nested_owners() {
+            let result = std::panic::catch_unwind(|| {
+                let key = ("slot".to_string(), "retained".to_string());
+                let mut registry = ChildMemberRegistry::new();
+                let admission = registry.admit(&key).expect("exact retained admission");
+                registry.insert_admitted(admission, key, (dialect(), vec![0u8; 64 * 1024]));
+            });
+            assert!(result.is_err(), "ordinary incomplete Drop is observably fail-closed and MaybeUninit keeps the nested owner from implicit destruction");
+        }
+    }
+
+    struct ChildContentEntry {
+        slot: String,
+        child_id: String,
+        dialect: ArtifactDialect,
+        revision: [u8; 32],
+        snapshot: store::ErasedSnapshotRead,
+    }
+
+    #[derive(Clone)]
+    struct ChildContentPage {
+        entries: [Option<std::sync::Arc<ChildContentEntry>>; CHILD_CONTENT_PAGE_SLOTS],
+    }
+
+    impl Default for ChildContentPage {
+        fn default() -> Self {
+            Self { entries: std::array::from_fn(|_| None) }
+        }
+    }
+
+    #[derive(Clone)]
+    struct ChildContentRoot {
+        pages: [Option<std::sync::Arc<ChildContentPage>>; CHILD_CONTENT_PAGES],
+        len: usize,
+    }
+
+    impl Default for ChildContentRoot {
+        fn default() -> Self {
+            Self { pages: std::array::from_fn(|_| None), len: 0 }
+        }
+    }
+
     #[derive(Clone, Default)]
     pub struct ChildContentView {
-        children: Option<HashMap<(String, String), (ArtifactDialect, [u8; 32], store::ErasedSnapshotRead)>>,
+        root: Option<std::sync::Arc<ChildContentRoot>>,
     }
 
     impl ChildContentView {
         /// 🈳️ The view a document with no children gets.
-        pub const EMPTY: Self = Self { children: None };
+        pub const EMPTY: Self = Self { root: None };
 
-        /// 🏗️ Captures every live child's O(1) revision and immutable snapshot handle from the
-        /// `M`-typed child-store map built by {@link VcsArtifactApp} before each dispatch. No pack
-        /// encoder, decoder, or snapshot clone runs on this boundary.
-        pub async fn new<M: SpaceMember>(children: &HashMap<(String, String), (ArtifactDialect, M)>) -> Self {
-            let mut snapshot = HashMap::with_capacity(children.len());
-            for (key, (dialect, member)) in children.iter() {
-                snapshot.insert(key.clone(), (dialect.clone(), member.content_revision().await, member.snapshot_read_erased().await));
+        fn hash(slot: &str, child_id: &str) -> Result<usize, Fault> {
+            if slot.len() > CHILD_CONTENT_ID_BYTES || child_id.len() > CHILD_CONTENT_ID_BYTES {
+                return Err(plugin_sdk_fault("child slot or id exceeds the fixed immutable-root identity bound"));
             }
-            Self { children: Some(snapshot) }
+            let mut hash = 0xcbf29ce484222325u64;
+            for byte in slot.bytes().chain(std::iter::once(0xff)).chain(child_id.bytes()) {
+                hash ^= u64::from(byte);
+                hash = hash.wrapping_mul(0x100000001b3);
+            }
+            Ok(hash as usize % CHILD_CONTENT_SLOTS)
+        }
+
+        fn entry_at(root: &ChildContentRoot, index: usize) -> Option<&std::sync::Arc<ChildContentEntry>> {
+            root.pages[index / CHILD_CONTENT_PAGE_SLOTS].as_ref()?.entries[index % CHILD_CONTENT_PAGE_SLOTS].as_ref()
+        }
+
+        fn locate(root: &ChildContentRoot, slot: &str, child_id: &str) -> Result<Result<usize, usize>, Fault> {
+            let start = Self::hash(slot, child_id)?;
+            for offset in 0..CHILD_CONTENT_SLOTS {
+                let index = (start + offset) % CHILD_CONTENT_SLOTS;
+                match Self::entry_at(root, index) {
+                    Some(entry) if entry.slot == slot && entry.child_id == child_id => return Ok(Ok(index)),
+                    Some(_) => {}
+                    None => return Ok(Err(index)),
+                }
+            }
+            Err(plugin_sdk_fault("fixed immutable child-content root is saturated"))
+        }
+
+        fn insert_entry(&self, entry: ChildContentEntry) -> Result<Self, Fault> {
+            let root = self.root.as_deref().cloned().unwrap_or_default();
+            let location = Self::locate(&root, &entry.slot, &entry.child_id)?;
+            let index = match location {
+                Ok(index) | Err(index) => index,
+            };
+            let page_index = index / CHILD_CONTENT_PAGE_SLOTS;
+            let entry_index = index % CHILD_CONTENT_PAGE_SLOTS;
+            let mut next = root;
+            let mut page = next.pages[page_index].as_deref().cloned().unwrap_or_default();
+            let added = page.entries[entry_index].is_none();
+            page.entries[entry_index] = Some(std::sync::Arc::new(entry));
+            next.pages[page_index] = Some(std::sync::Arc::new(page));
+            next.len += usize::from(added);
+            Ok(Self { root: Some(std::sync::Arc::new(next)) })
+        }
+
+        fn find(&self, slot: &str, child_id: &str) -> Result<Option<&ChildContentEntry>, Fault> {
+            let Some(root) = self.root.as_deref() else { return Ok(None) };
+            match Self::locate(root, slot, child_id)? {
+                Ok(index) => Ok(Self::entry_at(root, index).map(std::sync::Arc::as_ref)),
+                Err(_) => Ok(None),
+            }
+        }
+
+        fn contains_entry_owner(&self, entry: &std::sync::Arc<ChildContentEntry>) -> bool {
+            self.find(&entry.slot, &entry.child_id).ok().flatten().is_some_and(|candidate| std::ptr::eq(candidate, entry.as_ref()))
+        }
+
+        fn take_one(&mut self, current: &ChildContentView) -> ChildContentTake {
+            let Some(root) = self.root.take() else { return ChildContentTake::Complete };
+            let mut root = match std::sync::Arc::try_unwrap(root) {
+                Ok(root) => root,
+                Err(shared) => {
+                    self.root = Some(shared);
+                    return ChildContentTake::Blocked;
+                }
+            };
+            for page_index in 0..CHILD_CONTENT_PAGES {
+                let Some(page) = root.pages[page_index].take() else { continue };
+                let mut page = match std::sync::Arc::try_unwrap(page) {
+                    Ok(page) => page,
+                    Err(shared) => {
+                        let retained_by_current = current.root.as_deref().and_then(|current| current.pages[page_index].as_ref()).is_some_and(|candidate| std::sync::Arc::ptr_eq(candidate, &shared));
+                        if !retained_by_current {
+                            root.pages[page_index] = Some(shared);
+                            self.root = Some(std::sync::Arc::new(root));
+                            return ChildContentTake::Blocked;
+                        }
+                        let shared_entries = shared.entries.iter().flatten().count();
+                        drop(shared);
+                        root.len = root.len.saturating_sub(shared_entries);
+                        self.root = (root.len != 0).then(|| std::sync::Arc::new(root));
+                        return ChildContentTake::ReleasedShared;
+                    }
+                };
+                for entry_index in 0..CHILD_CONTENT_PAGE_SLOTS {
+                    let Some(entry) = page.entries[entry_index].take() else { continue };
+                    return match std::sync::Arc::try_unwrap(entry) {
+                        Ok(entry) => {
+                            root.len = root.len.saturating_sub(1);
+                            if page.entries.iter().any(Option::is_some) {
+                                root.pages[page_index] = Some(std::sync::Arc::new(page));
+                            }
+                            self.root = (root.len != 0).then(|| std::sync::Arc::new(root));
+                            ChildContentTake::Snapshot(entry)
+                        }
+                        Err(shared) => {
+                            if current.contains_entry_owner(&shared) {
+                                drop(shared);
+                                root.len = root.len.saturating_sub(1);
+                                if page.entries.iter().any(Option::is_some) {
+                                    root.pages[page_index] = Some(std::sync::Arc::new(page));
+                                }
+                                self.root = (root.len != 0).then(|| std::sync::Arc::new(root));
+                                ChildContentTake::ReleasedShared
+                            } else {
+                                page.entries[entry_index] = Some(shared);
+                                root.pages[page_index] = Some(std::sync::Arc::new(page));
+                                self.root = Some(std::sync::Arc::new(root));
+                                ChildContentTake::Blocked
+                            }
+                        }
+                    };
+                }
+                self.root = (root.len != 0).then(|| std::sync::Arc::new(root));
+                return ChildContentTake::ReleasedShared;
+            }
+            ChildContentTake::Complete
+        }
+
+        async fn with_member<M: SpaceMember>(&self, slot: &str, child_id: &str, dialect: &ArtifactDialect, member: &M) -> Result<Self, Fault> {
+            if let Some(root) = self.root.as_deref() {
+                let _ = Self::locate(root, slot, child_id)?;
+            } else {
+                let _ = Self::hash(slot, child_id)?;
+            }
+            self.insert_entry(ChildContentEntry { slot: slot.to_string(), child_id: child_id.to_string(), dialect: dialect.clone(), revision: member.content_revision().await, snapshot: member.snapshot_read_erased().await.map_err(plugin_sdk_fault)? })
         }
 
         /// 🧬️ Fixed-size, restart-stable identity paired with the captured child snapshot.
         pub async fn revision(&self, slot: &str, child_id: &str) -> Result<[u8; 32], Fault> {
-            self.children.as_ref().and_then(|children| children.get(&(slot.to_string(), child_id.to_string()))).map(|(_, revision, _)| *revision).ok_or_else(|| plugin_sdk_fault(format!("no live child store for slot {slot} child {child_id}")))
+            self.find(slot, child_id)?.map(|entry| entry.revision).ok_or_else(|| plugin_sdk_fault(format!("no live child store for slot {slot} child {child_id}")))
         }
 
         /// 🧵️ Selects an immutable child snapshot capability without exposing concrete ownership.
-        pub async fn typed_read<S: ArtifactPack + Send + Sync + 'static>(&self, slot: &str, child_id: &str) -> Result<store::SnapshotRead<S>, Fault> {
-            let snapshot = self
-                .children
-                .as_ref()
-                .and_then(|children| children.get(&(slot.to_string(), child_id.to_string())))
-                .map(|(_, _, snapshot)| snapshot.clone())
-                .ok_or_else(|| plugin_sdk_fault(format!("no live child store for slot {slot} child {child_id}")))?;
+        pub async fn typed_read<S: ArtifactPack + Send + Sync + 'static>(&self, slot: &str, child_id: &str) -> Result<store::SnapshotReadRef<'_, S>, Fault> {
+            let snapshot = &self.find(slot, child_id)?.ok_or_else(|| plugin_sdk_fault(format!("no live child store for slot {slot} child {child_id}")))?.snapshot;
             snapshot.typed::<S>().ok_or_else(|| plugin_sdk_fault(format!("child snapshot type mismatch for slot {slot} child {child_id}")))
         }
 
         /// 🎯️ The dialect a child materializes as, for a caller that must route by kind.
         pub async fn dialect(&self, slot: &str, child_id: &str) -> Option<ArtifactDialect> {
-            self.children.as_ref().and_then(|children| children.get(&(slot.to_string(), child_id.to_string()))).map(|(dialect, _, _)| dialect.clone())
+            self.find(slot, child_id).ok().flatten().map(|entry| entry.dialect.clone())
         }
 
         /// 📋️ Every `(slot, child_id)` currently live under this document.
         pub async fn slots(&self) -> Vec<(String, String)> {
-            self.children.as_ref().map(|children| children.keys().cloned().collect()).unwrap_or_default()
+            let Some(root) = self.root.as_deref() else { return Vec::new() };
+            let mut slots = Vec::with_capacity(root.len);
+            for index in 0..CHILD_CONTENT_SLOTS {
+                if let Some(entry) = Self::entry_at(root, index) {
+                    slots.push((entry.slot.clone(), entry.child_id.clone()));
+                }
+            }
+            slots
         }
 
         /// 🈳️ Whether this document has any live children at all.
         pub async fn is_empty(&self) -> bool {
-            self.children.as_ref().map(HashMap::is_empty).unwrap_or(true)
+            self.root.as_ref().is_none_or(|root| root.len == 0)
+        }
+    }
+
+    enum ChildContentTake {
+        Blocked,
+        ReleasedShared,
+        Snapshot(ChildContentEntry),
+        Complete,
+    }
+
+    struct ChildContentRetirement {
+        view: std::mem::ManuallyDrop<ChildContentView>,
+        pending: std::mem::ManuallyDrop<Option<ChildContentEntry>>,
+        active: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+        active_member: std::mem::ManuallyDrop<Option<(String, String)>>,
+        require_member_terminal: bool,
+    }
+
+    impl ChildContentRetirement {
+        fn new(view: ChildContentView, require_member_terminal: bool) -> Self {
+            Self { view: std::mem::ManuallyDrop::new(view), pending: std::mem::ManuallyDrop::new(None), active: std::mem::ManuallyDrop::new(None), active_member: std::mem::ManuallyDrop::new(None), require_member_terminal }
+        }
+
+        fn close_step<M: SpaceMember>(&mut self, children: &mut ChildMemberRegistry<M>, current: &ChildContentView, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            if maximum_items == 0 {
+                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            if let Some(active) = self.active.as_mut() {
+                return match active.close_step(maximum_items, maximum_bytes).map_err(plugin_sdk_fault)? {
+                    store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= maximum_items && released_bytes <= maximum_bytes => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
+                    store::SnapshotRetirementStep::Pending { .. } => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-snapshot-retirement-over-budget"), "child snapshot disposer exceeded its exact item or byte grant")),
+                    store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "child snapshot disposer is waiting on external ownership" }),
+                    store::SnapshotRetirementStep::Complete => {
+                        if !active.terminal_is_empty() {
+                            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-snapshot-terminal-not-empty"), "child snapshot disposer reported Complete without its exact terminal-empty witness"));
+                        }
+                        drop(self.active.take());
+                        if !self.require_member_terminal {
+                            drop(self.active_member.take());
+                        }
+                        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                    }
+                };
+            }
+            if let Some((slot, child_id)) = self.active_member.as_ref() {
+                let Some((_, member)) = children.get_mut(&(slot.clone(), child_id.clone())) else {
+                    return Ok(PluginCloseStep::Blocked { reason: "final child snapshot lease verification lost its exact live member owner" });
+                };
+                if let Some(owner) = member.take_returned_snapshot_read_retirement().map_err(plugin_sdk_fault)? {
+                    *self.active = Some(owner);
+                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                }
+                if !member.snapshot_read_leases_terminal_is_empty() {
+                    return Ok(PluginCloseStep::Blocked { reason: "final child snapshot lease remains live outside the bounded return pump" });
+                }
+                drop(self.active_member.take());
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if self.pending.is_none() {
+                match self.view.take_one(current) {
+                    ChildContentTake::Blocked => return Ok(PluginCloseStep::Blocked { reason: "retired child root remains borrowed by an exact operation view" }),
+                    ChildContentTake::ReleasedShared => return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 }),
+                    ChildContentTake::Snapshot(entry) => *self.pending = Some(entry),
+                    ChildContentTake::Complete => {
+                        let empty = std::mem::replace(&mut *self.view, ChildContentView::EMPTY);
+                        drop(empty);
+                        return Ok(PluginCloseStep::Complete);
+                    }
+                }
+            }
+            let entry = self.pending.take().expect("pending child snapshot authority exists");
+            let Some((_, member)) = children.get_mut(&(entry.slot.clone(), entry.child_id.clone())) else {
+                *self.pending = Some(entry);
+                return Ok(PluginCloseStep::Blocked { reason: "retired child snapshot has no exact live member disposer owner" });
+            };
+            let ChildContentEntry { slot, child_id, dialect, revision, snapshot } = entry;
+            match member.retire_snapshot_read_erased(snapshot) {
+                Ok(owner) => {
+                    *self.active_member = Some((slot, child_id));
+                    drop(dialect);
+                    *self.active = Some(owner);
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                Err(rejected) => {
+                    *self.pending = Some(ChildContentEntry { slot, child_id, dialect, revision, snapshot: rejected.snapshot });
+                    Ok(PluginCloseStep::Blocked { reason: "child member has not installed its exact bounded snapshot retirement factory" })
+                }
+            }
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.view.root.as_ref().is_none_or(|root| root.len == 0) && self.pending.is_none() && self.active.is_none() && self.active_member.is_none()
+        }
+    }
+
+    impl Drop for ChildContentRetirement {
+        fn drop(&mut self) {
+            assert!(self.terminal_is_empty(), "incomplete child-content retirement reached Drop without bounded disposal");
+        }
+    }
+
+    struct SnapshotReadReturnPump {
+        active: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+    }
+
+    impl SnapshotReadReturnPump {
+        fn new() -> Self {
+            Self { active: std::mem::ManuallyDrop::new(None) }
+        }
+
+        fn drive(&mut self, next: impl FnOnce() -> Result<Option<Box<dyn store::ErasedSnapshotRetirement>>, Fault>, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            if maximum_items == 0 {
+                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            if let Some(active) = self.active.as_mut() {
+                return match active.close_step(maximum_items, maximum_bytes).map_err(plugin_sdk_fault)? {
+                    store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= maximum_items && released_bytes <= maximum_bytes => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
+                    store::SnapshotRetirementStep::Pending { .. } => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.snapshot-read-return-over-budget"), "returned snapshot-read disposer exceeded its exact item or byte grant")),
+                    store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "returned snapshot-read disposer is waiting on external ownership" }),
+                    store::SnapshotRetirementStep::Complete => {
+                        if !active.terminal_is_empty() {
+                            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.snapshot-read-return-terminal-not-empty"), "returned snapshot-read disposer reported Complete without its exact terminal-empty witness"));
+                        }
+                        drop(self.active.take());
+                        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                    }
+                };
+            }
+            match next()? {
+                Some(owner) => {
+                    *self.active = Some(owner);
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                None => Ok(PluginCloseStep::Complete),
+            }
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.active.is_none()
+        }
+    }
+
+    impl Drop for SnapshotReadReturnPump {
+        fn drop(&mut self) {
+            assert!(self.terminal_is_empty(), "returned snapshot-read pump reached Drop before its exact disposer was terminal-empty");
+        }
+    }
+
+    struct ChildMemberRetirement<M> {
+        entry: std::mem::ManuallyDrop<Option<ChildMemberEntry<M>>>,
+    }
+
+    impl<M: SpaceMember> ChildMemberRetirement<M> {
+        fn new(entry: ChildMemberEntry<M>) -> Self {
+            Self { entry: std::mem::ManuallyDrop::new(Some(entry)) }
+        }
+
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            if maximum_items == 0 {
+                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            let Some((_, (_, member))) = self.entry.as_mut() else { return Ok(PluginCloseStep::Complete) };
+            match member.close_owned_step(maximum_items, maximum_bytes).map_err(plugin_sdk_fault)? {
+                store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= maximum_items && released_bytes <= maximum_bytes => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
+                store::SnapshotRetirementStep::Pending { .. } => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-member-close-over-budget"), "child member disposer exceeded its exact item or byte grant")),
+                store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "child member is waiting for its required domain-owned bounded disposer" }),
+                store::SnapshotRetirementStep::Complete => {
+                    if !member.close_owned_terminal_is_empty() {
+                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-member-close-terminal-not-empty"), "child member disposer reported Complete without its exact terminal-empty witness"));
+                    }
+                    let entry = self.entry.take().expect("terminal child member owner is present");
+                    drop(entry);
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+            }
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.entry.is_none()
+        }
+    }
+
+    impl<M> Drop for ChildMemberRetirement<M> {
+        fn drop(&mut self) {
+            assert!(self.entry.is_none(), "child-member retirement reached Drop before its exact owner was terminal-empty");
         }
     }
 
@@ -8609,11 +9193,30 @@ pub mod app {
 
     /// @emoji 👥️ Read-only view of the PRESENCE lane: this actor's own live shared state plus every
     /// peer's, as last broadcast. Ephemeral and shared — never persisted, never undoable.
+    pub struct PresencePeersView<'a, P> {
+        root: &'a store::PresencePeersRoot<P>,
+    }
+
+    impl<'a, P> PresencePeersView<'a, P> {
+        /// 👥️ Iterates the already-sorted immutable peer root without projecting a roster.
+        pub fn iter(&self) -> impl Iterator<Item = (&'a str, &'a P)> {
+            self.root.peers()
+        }
+
+        pub fn len(&self) -> usize {
+            self.root.len()
+        }
+
+        pub fn is_empty(&self) -> bool {
+            self.root.is_empty()
+        }
+    }
+
     pub struct PresenceView<'a, P> {
         /// 👤️ This actor's own presence — the value that gets broadcast.
         pub local: &'a P,
         /// 👥️ Every other peer's presence, sorted by actor id for a stable render order.
-        pub peers: Vec<(&'a str, &'a P)>,
+        pub peers: PresencePeersView<'a, P>,
     }
 
     /// @emoji 🫧️ Read-only view of the TRANSIENT lane: ephemeral state local to this client that is
@@ -8633,6 +9236,545 @@ pub mod app {
         pub color: Option<u8>,
         pub surface: Option<String>,
         pub interaction: Option<protocol::PresenceInteraction>,
+    }
+
+    const PEER_PRESENCE_SLOTS: usize = 64;
+    const PEER_PRESENCE_ID_BYTES: usize = 256;
+
+    struct PeerPresenceEntry {
+        actor: String,
+        presence: PeerPresence,
+    }
+
+    struct PeerPresenceRoot {
+        entries: [Option<std::sync::Arc<PeerPresenceEntry>>; PEER_PRESENCE_SLOTS],
+        len: usize,
+    }
+
+    impl PeerPresenceRoot {
+        fn empty() -> Self {
+            Self { entries: std::array::from_fn(|_| None), len: 0 }
+        }
+
+        fn empty_shared() -> std::sync::Arc<Self> {
+            static EMPTY: std::sync::OnceLock<std::sync::Arc<PeerPresenceRoot>> = std::sync::OnceLock::new();
+            EMPTY.get_or_init(|| std::sync::Arc::new(Self::empty())).clone()
+        }
+
+        fn insert(&mut self, actor: String, presence: PeerPresence) -> Result<(), Fault> {
+            if actor.is_empty() || actor.len() > PEER_PRESENCE_ID_BYTES {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-presence-actor"), "peer actor identity is empty or exceeds its fixed byte authority"));
+            }
+            let mut index = 0usize;
+            while index < self.len && self.entries[index].as_ref().is_some_and(|entry| entry.actor.as_str() < actor.as_str()) {
+                index += 1;
+            }
+            if self.entries.get(index).and_then(Option::as_ref).is_some_and(|entry| entry.actor == actor) {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-presence-duplicate"), "one presence roster contains a duplicate actor identity"));
+            }
+            if self.len == PEER_PRESENCE_SLOTS {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-presence-capacity"), "presence roster exceeds its fixed peer authority"));
+            }
+            for cursor in (index..self.len).rev() {
+                self.entries[cursor + 1] = self.entries[cursor].take();
+            }
+            self.entries[index] = Some(std::sync::Arc::new(PeerPresenceEntry { actor, presence }));
+            self.len += 1;
+            Ok(())
+        }
+
+        fn iter(&self) -> impl Iterator<Item = (&str, &PeerPresence)> {
+            self.entries[..self.len].iter().filter_map(|entry| entry.as_deref().map(|entry| (entry.actor.as_str(), &entry.presence)))
+        }
+
+        fn get(&self, actor: &str) -> Option<&PeerPresence> {
+            self.iter().find_map(|(candidate, presence)| (candidate == actor).then_some(presence))
+        }
+
+        fn contains_key(&self, actor: &str) -> bool {
+            self.get(actor).is_some()
+        }
+
+        fn len(&self) -> usize {
+            self.len
+        }
+
+        fn is_empty(&self) -> bool {
+            self.len == 0
+        }
+    }
+
+    struct PeerPresenceEntryRetirement {
+        entry: std::mem::ManuallyDrop<Option<PeerPresenceEntry>>,
+        domain: std::mem::ManuallyDrop<Option<protocol::PresenceDomain>>,
+    }
+
+    impl PeerPresenceEntryRetirement {
+        fn new(entry: PeerPresenceEntry) -> Self {
+            Self { entry: std::mem::ManuallyDrop::new(Some(entry)), domain: std::mem::ManuallyDrop::new(None) }
+        }
+
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            if maximum_items == 0 {
+                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            if let Some(domain) = self.domain.as_mut() {
+                if let Some(value) = domain.selected.pop() {
+                    if value.len() > maximum_bytes {
+                        domain.selected.push(value);
+                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
+                    let bytes = value.len();
+                    drop(value);
+                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+                }
+                if let Some(value) = domain.hovered.pop() {
+                    if value.len() > maximum_bytes {
+                        domain.hovered.push(value);
+                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
+                    let bytes = value.len();
+                    drop(value);
+                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+                }
+                let domain = self.domain.take().expect("active peer-presence domain authority");
+                let bytes = domain.domain.len().saturating_add(domain.granularity.len());
+                if bytes > maximum_bytes {
+                    *self.domain = Some(domain);
+                    return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                drop(domain);
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+            }
+            let Some(entry) = self.entry.as_mut() else { return Ok(PluginCloseStep::Complete) };
+            if let Some(interaction) = entry.presence.interaction.as_mut() {
+                if let Some(domain) = interaction.domains.pop() {
+                    *self.domain = Some(domain);
+                    return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                }
+                if interaction.app_id.len() > maximum_bytes {
+                    return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                let interaction = entry.presence.interaction.take().expect("empty peer interaction authority");
+                let bytes = interaction.app_id.len();
+                drop(interaction);
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+            }
+            if let Some(surface) = entry.presence.surface.take() {
+                if surface.len() > maximum_bytes {
+                    entry.presence.surface = Some(surface);
+                    return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                let bytes = surface.len();
+                drop(surface);
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+            }
+            if entry.actor.len() > maximum_bytes {
+                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            let bytes = entry.actor.len();
+            entry.actor.clear();
+            let entry = self.entry.take().expect("peer-presence entry authority");
+            drop(entry);
+            Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes })
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.entry.is_none() && self.domain.is_none()
+        }
+    }
+
+    impl Drop for PeerPresenceEntryRetirement {
+        fn drop(&mut self) {
+            debug_assert!(self.terminal_is_empty(), "incomplete peer-presence entry reached Drop without bounded disposal");
+        }
+    }
+
+    struct PeerPresenceRootRetirement {
+        root: std::mem::ManuallyDrop<Option<std::sync::Arc<PeerPresenceRoot>>>,
+        owned: std::mem::ManuallyDrop<Option<PeerPresenceRoot>>,
+        entry: std::mem::ManuallyDrop<Option<PeerPresenceEntryRetirement>>,
+        cursor: usize,
+    }
+
+    impl PeerPresenceRootRetirement {
+        fn new(root: std::sync::Arc<PeerPresenceRoot>) -> Self {
+            Self { root: std::mem::ManuallyDrop::new(Some(root)), owned: std::mem::ManuallyDrop::new(None), entry: std::mem::ManuallyDrop::new(None), cursor: 0 }
+        }
+
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            if maximum_items == 0 {
+                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            if let Some(entry) = self.entry.as_mut() {
+                let step = entry.close_step(maximum_items, maximum_bytes)?;
+                if step != PluginCloseStep::Complete {
+                    return Ok(step);
+                }
+                if !entry.terminal_is_empty() {
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-presence-entry-terminal-not-empty"), "peer-presence entry reported Complete without an empty terminal witness"));
+                }
+                drop(self.entry.take());
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if self.owned.is_none() {
+                let root = self.root.take().expect("peer-presence root retirement authority");
+                match std::sync::Arc::try_unwrap(root) {
+                    Ok(root) => *self.owned = Some(root),
+                    Err(root) => {
+                        *self.root = Some(root);
+                        return Ok(PluginCloseStep::Blocked { reason: "peer-presence root remains captured by a live operation" });
+                    }
+                }
+            }
+            let root = self.owned.as_mut().expect("unique peer-presence retirement root");
+            while self.cursor < root.len {
+                let index = self.cursor;
+                self.cursor += 1;
+                let Some(entry) = root.entries[index].take() else { continue };
+                let entry = std::sync::Arc::try_unwrap(entry).map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-presence-entry-shared"), "a unique retired peer root retained a foreign entry owner"))?;
+                *self.entry = Some(PeerPresenceEntryRetirement::new(entry));
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            root.len = 0;
+            let root = self.owned.take().expect("empty peer-presence root shell");
+            drop(root);
+            Ok(PluginCloseStep::Complete)
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.root.is_none() && self.owned.is_none() && self.entry.is_none()
+        }
+    }
+
+    impl Drop for PeerPresenceRootRetirement {
+        fn drop(&mut self) {
+            debug_assert!(self.terminal_is_empty(), "incomplete peer-presence root reached Drop without bounded disposal");
+        }
+    }
+
+    const PEER_ROSTER_WIRE_BYTES: usize = 4_096;
+
+    pub struct PresenceRosterAdmission {
+        seq: u64,
+        generation: u64,
+        cancel: semio_framework_job::CancelToken,
+    }
+
+    impl PresenceRosterAdmission {
+        pub fn generation(&self) -> u64 {
+            self.generation
+        }
+    }
+
+    pub struct PresenceRosterOutcome {
+        pub seq: u64,
+        pub fault: Option<Fault>,
+    }
+
+    struct PeerRosterCandidate<P> {
+        seq: u64,
+        generation: u64,
+        cancel: semio_framework_job::CancelToken,
+        own_color: Option<u8>,
+        now_ms: i64,
+        root: std::sync::Arc<PeerPresenceRoot>,
+        typed: store::PresencePeersCommit<P>,
+    }
+
+    struct ValidatedPeerRosterCommit {
+        seq: u64,
+        generation: u64,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum PeerRosterPublicationStage {
+        DecodeMetadata,
+        PruneTyped,
+        DecodeTyped,
+        ReleaseCreated,
+        Ready,
+    }
+
+    struct PeerRosterPublication<A: ArtifactApp> {
+        seq: u64,
+        generation: u64,
+        own_color: Option<u8>,
+        now_ms: i64,
+        cancel: semio_framework_job::CancelToken,
+        raw: protocol::PresenceCommandCursor,
+        candidate: std::mem::ManuallyDrop<Option<PeerPresenceRoot>>,
+        retirement: std::mem::ManuallyDrop<Option<PeerPresenceRootRetirement>>,
+        packs: std::mem::ManuallyDrop<[Option<(String, Vec<u8>)>; PEER_PRESENCE_SLOTS]>,
+        packs_len: usize,
+        packs_shell_released: bool,
+        typed: std::mem::ManuallyDrop<Option<store::PresencePeersPublication<A::Presence>>>,
+        rejected: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+        stage: PeerRosterPublicationStage,
+        faulted: bool,
+        fault: Option<Fault>,
+    }
+
+    impl<A: ArtifactApp> PeerRosterPublication<A> {
+        fn new(admission: PresenceRosterAdmission, now_ms: i64, raw: protocol::PresenceCommandCursor) -> Self {
+            Self {
+                seq: admission.seq,
+                generation: admission.generation,
+                own_color: raw.own_color(),
+                now_ms,
+                cancel: admission.cancel,
+                raw,
+                candidate: std::mem::ManuallyDrop::new(Some(PeerPresenceRoot::empty())),
+                retirement: std::mem::ManuallyDrop::new(None),
+                packs: std::mem::ManuallyDrop::new(std::array::from_fn(|_| None)),
+                packs_len: 0,
+                packs_shell_released: false,
+                typed: std::mem::ManuallyDrop::new(None),
+                rejected: std::mem::ManuallyDrop::new(None),
+                stage: PeerRosterPublicationStage::DecodeMetadata,
+                faulted: false,
+                fault: None,
+            }
+        }
+
+        fn fail(&mut self, fault: Fault) -> PluginCloseStep {
+            self.faulted = true;
+            if self.fault.is_none() {
+                self.fault = Some(fault);
+            }
+            PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }
+        }
+
+        fn rejected(admission: PresenceRosterAdmission, raw: semio_framework::kernel::FixedCommandPage, fault: Fault) -> Self {
+            let seq = admission.seq;
+            let mut publication = Self::new(admission, 0, protocol::PresenceCommandCursor::retain_rejected(raw, seq));
+            publication.fail(fault);
+            publication
+        }
+
+        fn push_page(&mut self, page_index: u32, page: semio_framework::kernel::FixedCommandPage) -> Result<(), (Fault, semio_framework::kernel::FixedCommandPage)> {
+            self.raw.push_page(page_index, page).map_err(|(error, page)| (error.into_fault(), page))
+        }
+
+        fn release_packs_shell(&mut self) {
+            if !self.packs_shell_released {
+                debug_assert_eq!(self.packs_len, 0);
+                // SAFETY: every owned pack was transferred or released in a bounded step and this
+                // exact flag makes the fixed empty shell release once.
+                unsafe { std::mem::ManuallyDrop::drop(&mut self.packs) };
+                self.packs_shell_released = true;
+            }
+        }
+
+        fn step(&mut self, presence_store: &store::PresenceStore<A::Presence, A::PresenceMutation>, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            if maximum_items == 0 {
+                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            if resolve_ready(self.cancel.is_cancelled()) {
+                return Ok(self.fail(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-cancelled"), "peer roster publication was cancelled before commit")));
+            }
+            match self.stage {
+                PeerRosterPublicationStage::DecodeMetadata => {
+                    if self.raw.terminal_is_empty() {
+                        *self.typed = Some(presence_store.begin_peer_publication().map_err(plugin_sdk_fault)?);
+                        self.stage = PeerRosterPublicationStage::PruneTyped;
+                        return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                    }
+                    if self.raw.waiting_for_page() {
+                        return Ok(PluginCloseStep::Blocked { reason: "peer roster publication is waiting for its next exact page owner" });
+                    }
+                    let next_len = match self.raw.next_len() {
+                        Ok(next_len) => next_len,
+                        Err(error) => return Ok(self.fail(plugin_sdk_fault(error.to_string()))),
+                    };
+                    let Some(next_len) = next_len else {
+                        let (complete, released_bytes) = self.raw.close_release(maximum_bytes);
+                        return Ok(PluginCloseStep::Pending { released_items: usize::from(complete), released_bytes });
+                    };
+                    if next_len > maximum_bytes {
+                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
+                    let raw = match self.raw.take_next() {
+                        Ok(Some(raw)) => raw,
+                        Ok(None) => unreachable!("presence cursor advertised one retained entry"),
+                        Err(error) => return Ok(self.fail(plugin_sdk_fault(error.to_string()))),
+                    };
+                    let bytes = raw.len();
+                    let decoded = resolve_ready(protocol::decode_presence_peer(raw.as_slice()));
+                    drop(raw);
+                    match decoded {
+                        Ok(peer) => {
+                            let protocol::PresencePeer { actor, presence_pack, color, surface, interaction, .. } = peer;
+                            let pack_actor = presence_pack.as_ref().map(|_| actor.clone());
+                            if let Err(fault) = self
+                                .candidate
+                                .as_mut()
+                                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-candidate"), "peer roster candidate was already transferred"))?
+                                .insert(actor, PeerPresence { color, surface, interaction })
+                            {
+                                return Ok(self.fail(fault));
+                            }
+                            if let (Some(actor), Some(pack)) = (pack_actor, presence_pack) {
+                                if pack.len() > PEER_ROSTER_WIRE_BYTES || self.packs_len == PEER_PRESENCE_SLOTS {
+                                    return Ok(self.fail(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-presence-pack-cap"), "one app-typed presence pack exceeds its fixed decode authority")));
+                                }
+                                self.packs[self.packs_len] = Some((actor, pack));
+                                self.packs_len += 1;
+                            }
+                        }
+                        Err(error) => return Ok(self.fail(plugin_sdk_fault(error.to_string()))),
+                    }
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes })
+                }
+                PeerRosterPublicationStage::PruneTyped => {
+                    let root = self.candidate.as_ref().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-candidate"), "peer roster metadata candidate was already transferred"))?;
+                    let progressed = self
+                        .typed
+                        .as_mut()
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-typed-candidate"), "app-typed peer candidate was not initialized"))?
+                        .prune_one(|actor| root.contains_key(actor))
+                        .map_err(plugin_sdk_fault)?;
+                    if !progressed {
+                        self.stage = PeerRosterPublicationStage::DecodeTyped;
+                    }
+                    Ok(PluginCloseStep::Pending { released_items: usize::from(progressed), released_bytes: 0 })
+                }
+                PeerRosterPublicationStage::DecodeTyped => {
+                    if self.packs_len == 0 {
+                        self.release_packs_shell();
+                        self.stage = PeerRosterPublicationStage::ReleaseCreated;
+                        return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                    }
+                    let (actor, pack) = self.packs[self.packs_len - 1].as_ref().expect("retained app-typed presence pack");
+                    if pack.len() > maximum_bytes {
+                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
+                    let (actor, pack) = self.packs[self.packs_len - 1].take().expect("retained app-typed presence pack");
+                    self.packs_len -= 1;
+                    let bytes = pack.len();
+                    let presence = match A::Presence::decode_pack(&pack) {
+                        Ok(presence) => presence,
+                        Err(error) => {
+                            return Ok(self.fail(plugin_sdk_fault(error.to_string())));
+                        }
+                    };
+                    drop(pack);
+                    let typed = self.typed.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-typed-candidate"), "app-typed peer candidate was already transferred"))?;
+                    if let Err((reason, presence)) = typed.adopt(actor, presence, self.now_ms) {
+                        *self.rejected = Some(typed.retire_rejected(presence));
+                        return Ok(self.fail(plugin_sdk_fault(reason)));
+                    }
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes })
+                }
+                PeerRosterPublicationStage::ReleaseCreated => {
+                    let released = self.typed.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-typed-candidate"), "app-typed peer candidate was already transferred"))?.release_created_one();
+                    if !released {
+                        self.stage = PeerRosterPublicationStage::Ready;
+                    }
+                    Ok(PluginCloseStep::Pending { released_items: usize::from(released), released_bytes: 0 })
+                }
+                PeerRosterPublicationStage::Ready => Ok(PluginCloseStep::Complete),
+            }
+        }
+
+        fn take_candidate(&mut self) -> Result<PeerRosterCandidate<A::Presence>, Fault> {
+            if self.faulted || self.stage != PeerRosterPublicationStage::Ready || !self.raw.terminal_is_empty() || !self.packs_shell_released {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-not-ready"), "peer roster candidate was requested before every retained stage completed"));
+            }
+            let metadata = self.candidate.take().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-candidate"), "peer roster metadata candidate was already transferred"))?;
+            let typed = match self.typed.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-typed-candidate"), "app-typed peer candidate was already transferred"))?.take_commit() {
+                Ok(typed) => typed,
+                Err(error) => {
+                    *self.candidate = Some(metadata);
+                    return Err(plugin_sdk_fault(error));
+                }
+            };
+            let typed = self.typed.take().expect("terminal app-typed peer candidate");
+            assert!(typed.terminal_is_empty(), "take_commit consumes every app-typed publication owner before its shell is released");
+            drop(typed);
+            let root = std::sync::Arc::new(metadata);
+            Ok(PeerRosterCandidate { seq: self.seq, generation: self.generation, cancel: self.cancel.clone(), own_color: self.own_color, now_ms: self.now_ms, root, typed })
+        }
+
+        fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            if maximum_items == 0 {
+                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            if let Some(retirement) = self.retirement.as_mut() {
+                let step = retirement.close_step(maximum_items, maximum_bytes)?;
+                if step != PluginCloseStep::Complete {
+                    return Ok(step);
+                }
+                if !retirement.terminal_is_empty() {
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-terminal-not-empty"), "peer roster candidate retirement reported Complete without an empty terminal witness"));
+                }
+                drop(self.retirement.take());
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if let Some(rejected) = self.rejected.as_mut() {
+                return match rejected.close_step(maximum_items, maximum_bytes).map_err(plugin_sdk_fault)? {
+                    store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= maximum_items && released_bytes <= maximum_bytes => Ok(PluginCloseStep::Pending { released_items, released_bytes }),
+                    store::SnapshotRetirementStep::Pending { .. } => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-rejected-over-budget"), "rejected app-typed presence disposer exceeded its exact grant")),
+                    store::SnapshotRetirementStep::Blocked => Ok(PluginCloseStep::Blocked { reason: "rejected app-typed presence remains externally owned" }),
+                    store::SnapshotRetirementStep::Complete => {
+                        if !rejected.terminal_is_empty() {
+                            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-rejected-terminal-not-empty"), "rejected app-typed presence disposer reported Complete without an empty terminal witness"));
+                        }
+                        drop(self.rejected.take());
+                        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                    }
+                };
+            }
+            if !self.raw.terminal_is_empty() {
+                let (complete, released_bytes) = self.raw.close_release(maximum_bytes);
+                return Ok(PluginCloseStep::Pending { released_items: usize::from(complete), released_bytes });
+            }
+            if self.packs_len != 0 {
+                let (_, pack) = self.packs[self.packs_len - 1].as_ref().expect("retained app-typed presence close pack");
+                if pack.len() > maximum_bytes {
+                    return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                let (_, pack) = self.packs[self.packs_len - 1].take().expect("retained app-typed presence close pack");
+                self.packs_len -= 1;
+                let bytes = pack.len();
+                drop(pack);
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: bytes });
+            }
+            self.release_packs_shell();
+            if let Some(root) = self.candidate.take() {
+                *self.retirement = Some(PeerPresenceRootRetirement::new(std::sync::Arc::new(root)));
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if let Some(typed) = self.typed.as_mut() {
+                let step = typed.close_step(maximum_items, maximum_bytes).map_err(plugin_sdk_fault)?;
+                if step != store::SnapshotRetirementStep::Complete {
+                    return Ok(match step {
+                        store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= maximum_items && released_bytes <= maximum_bytes => PluginCloseStep::Pending { released_items, released_bytes },
+                        store::SnapshotRetirementStep::Pending { .. } => {
+                            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-typed-over-budget"), "app-typed peer candidate cleanup exceeded its exact grant"));
+                        }
+                        store::SnapshotRetirementStep::Blocked => PluginCloseStep::Blocked { reason: "app-typed peer candidate cleanup remains externally blocked" },
+                        store::SnapshotRetirementStep::Complete => unreachable!(),
+                    });
+                }
+                if !typed.terminal_is_empty() {
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-typed-terminal-not-empty"), "app-typed peer candidate cleanup reported Complete without its exact terminal witness"));
+                }
+                drop(self.typed.take());
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            Ok(PluginCloseStep::Complete)
+        }
+
+        fn terminal_is_empty(&self) -> bool {
+            self.raw.terminal_is_empty() && self.packs_shell_released && self.candidate.is_none() && self.retirement.is_none() && self.typed.is_none() && self.rejected.is_none()
+        }
+    }
+
+    impl<A: ArtifactApp> Drop for PeerRosterPublication<A> {
+        fn drop(&mut self) {
+            debug_assert!(self.terminal_is_empty(), "incomplete peer roster publication reached Drop without bounded disposal");
+        }
     }
 
     /// @emoji 👥️ One peer's mark on a single interaction target — `InteractionView::peers_selecting`/
@@ -8675,7 +9817,7 @@ pub mod app {
         /// @emoji 👥️ Every OTHER peer's last-adopted presence, keyed by actor — see
         /// `VcsArtifactApp::peer_presence`'s own doc comment. Sourced from `BTreeMap` iteration
         /// order, which is already sorted by actor.
-        pub(crate) peers: &'a BTreeMap<String, PeerPresence>,
+        pub(crate) peers: &'a PeerPresenceRoot,
     }
 
     impl<'a> InteractionView<'a> {
@@ -8723,7 +9865,7 @@ pub mod app {
                 .filter_map(|(actor, presence)| {
                     let interaction = presence.interaction.as_ref()?;
                     let matched = interaction.domains.iter().find(|candidate| candidate.domain == domain)?;
-                    matched.selected.iter().any(|selected_id| selected_id == id).then_some(PeerMark { actor: actor.as_str(), color: presence.color })
+                    matched.selected.iter().any(|selected_id| selected_id == id).then_some(PeerMark { actor, color: presence.color })
                 })
                 .collect()
         }
@@ -8737,7 +9879,7 @@ pub mod app {
                 .filter_map(|(actor, presence)| {
                     let interaction = presence.interaction.as_ref()?;
                     let matched = interaction.domains.iter().find(|candidate| candidate.domain == domain)?;
-                    matched.hovered.iter().any(|hovered_id| hovered_id == id).then_some(PeerMark { actor: actor.as_str(), color: presence.color })
+                    matched.hovered.iter().any(|hovered_id| hovered_id == id).then_some(PeerMark { actor, color: presence.color })
                 })
                 .collect()
         }
@@ -10181,6 +11323,10 @@ pub mod app {
             None
         }
 
+        fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+            None
+        }
+
         fn build_transient_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
             None
         }
@@ -10690,15 +11836,16 @@ pub mod app {
         /// assembles the zero-app-code declared-broadcast interaction slice — see
         /// {@link EphemeralSnapshot}'s own doc comment.
         async fn ephemeral_snapshot(&self) -> EphemeralSnapshot;
-        /// 👥️ Adopts the document-wide presence roster pushed by `AppCommand::Presence` (contract-freeze
-        /// §C7.6) — the ONLY plugin ingress for peers. `own_color` is this actor's own hub-assigned
-        /// palette index; `peers` is the whole roster (the wire wrapper has already dropped this
-        /// actor's own entry). An app-typed `presence_pack` on a peer feeds the existing
-        /// `presence_store` roster (`PresenceStore::adopt_peer`); every peer's `color`/`surface`/
-        /// `interaction` upserts the generic `peer_presence` map `InteractionView::peers_selecting`/
-        /// `peers_hovering` and the UI-tree stamping pass read from. An actor absent from `peers` is
-        /// dropped from both maps — this call is the roster's single source of truth, not a diff.
-        async fn adopt_presence(&mut self, own_color: Option<u8>, peers: &[protocol::PresencePeer], now_ms: i64) -> Result<(), Fault>;
+        /// 👥️ Reserves the exact persistent roster and outcome slots before any Presence payload decode.
+        fn reserve_presence_ingress(&mut self, seq: u64) -> Result<PresenceRosterAdmission, Fault>;
+        /// 👥️ Transfers the exact encoded command owner into its retained decode/publication job.
+        fn admit_presence_ingress(&mut self, admission: PresenceRosterAdmission, command: protocol::PresenceCommandCursor, now_ms: i64);
+        /// 👥️ Transfers one subsequent exact peer page into the reserved publication.
+        fn push_presence_ingress(&mut self, generation: u64, page_index: u32, page: semio_framework::kernel::FixedCommandPage) -> Result<(), (Fault, semio_framework::kernel::FixedCommandPage)>;
+        /// 👥️ Transfers malformed encoded pages into the same bounded FIFO cleanup/outcome lane.
+        fn reject_presence_ingress(&mut self, admission: PresenceRosterAdmission, command: semio_framework::kernel::FixedCommandPage, fault: Fault);
+        /// 👥️ Drains one ordered asynchronous roster outcome.
+        fn take_presence_outcome(&mut self) -> Option<PresenceRosterOutcome>;
         /// 🧾️ Returns a complete ordered history projection for initial connection or cursor resync.
         async fn history_snapshot(&mut self) -> Result<HistoryPatch, Fault> {
             Ok(HistoryPatch::default())
@@ -11266,14 +12413,7 @@ pub mod app {
     }
 
     impl ArtifactBoundedFirstStepProof {
-        pub fn new<A: ArtifactApp>(
-            owner_file: &'static str,
-            controller_id: &'static str,
-            factory: &'static str,
-            tool_id: &'static str,
-            document_schema: &'static str,
-            contract: semio_framework::ToolExecutionContract,
-        ) -> Self {
+        pub fn new<A: ArtifactApp>(owner_file: &'static str, controller_id: &'static str, factory: &'static str, tool_id: &'static str, document_schema: &'static str, contract: semio_framework::ToolExecutionContract) -> Self {
             Self { owner_file, owner: ToolOwnerWitness::of::<A>(), controller_id, factory, tool_id, document_schema, contract }
         }
     }
@@ -11609,7 +12749,7 @@ pub mod app {
         }
 
         pub fn complete_download(&self, download: Result<ArtifactDownloadOutput, Fault>, ephemeral: EphemeralEmit<A>) -> Result<(), Fault> {
-            let mut value = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let mut value = self.inner.try_lock().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.tool-completion-busy"), "tool completion authority is busy or poisoned"))?;
             if value.is_some() {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.duplicate-output"), "app-owned tool job attempted to complete more than once"));
             }
@@ -11617,12 +12757,12 @@ pub mod app {
             Ok(())
         }
 
-        fn take(&self) -> Option<ArtifactToolCompletionValue<A>> {
-            self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take()
+        fn take(&self) -> Result<Option<ArtifactToolCompletionValue<A>>, Fault> {
+            self.inner.try_lock().map(|mut value| value.take()).map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.tool-completion-busy"), "tool completion authority is busy or poisoned"))
         }
 
         fn take_emit(&self) -> Result<Option<(Result<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, Fault>, EphemeralEmit<A>)>, Fault> {
-            match self.take() {
+            match self.take()? {
                 Some(ArtifactToolCompletionValue::Emit(emit, ephemeral)) => Ok(Some((emit, ephemeral))),
                 Some(ArtifactToolCompletionValue::Download(_, _)) => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.unexpected-download-output"), "reserved clipboard/import route completed with a segmented download")),
                 None => Ok(None),
@@ -11684,30 +12824,16 @@ pub mod app {
         fn terminal_is_empty(&self, owner: &T) -> bool;
     }
 
-    fn drive_artifact_owned_disposer<T>(
-        lane: &'static str,
-        owner: &mut T,
-        disposer: &mut std::mem::ManuallyDrop<Option<Box<dyn ArtifactOwnedDisposer<T>>>>,
-        maximum_items: usize,
-        maximum_bytes: usize,
-    ) -> Result<PluginCloseStep, Fault> {
+    fn drive_artifact_owned_disposer<T>(lane: &'static str, owner: &mut T, disposer: &mut std::mem::ManuallyDrop<Option<Box<dyn ArtifactOwnedDisposer<T>>>>, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
         let Some(disposer_ref) = disposer.as_mut() else {
-            return Err(Fault::new(
-                FaultOrigin::Framework,
-                FaultCode::new("interactive-job.close-owned-disposer-missing"),
-                format!("app owner did not provide the required bounded disposer for {lane}"),
-            ));
+            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-owned-disposer-missing"), format!("app owner did not provide the required bounded disposer for {lane}")));
         };
         let step = disposer_ref.close_step(owner, maximum_items, maximum_bytes)?;
         if step != PluginCloseStep::Complete {
             return Ok(step);
         }
         if !disposer_ref.terminal_is_empty(owner) {
-            return Err(Fault::new(
-                FaultOrigin::Framework,
-                FaultCode::new("interactive-job.close-owned-terminal-not-empty"),
-                format!("bounded disposer for {lane} reported Complete before its exact owner shell was empty"),
-            ));
+            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-owned-terminal-not-empty"), format!("bounded disposer for {lane} reported Complete before its exact owner shell was empty")));
         }
         drop(disposer.take());
         Ok(PluginCloseStep::Complete)
@@ -11745,10 +12871,7 @@ pub mod app {
             T: Send + Sync + 'static,
         {
             let runtime_retained = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(true));
-            let retention = ArtifactSnapshotCloseRetention {
-                inner: std::mem::ManuallyDrop::new(Some(Box::new(TypedArtifactSnapshotDisposer { snapshot: Some(external_owner.clone()), disposer }))),
-                runtime_retained: runtime_retained.clone(),
-            };
+            let retention = ArtifactSnapshotCloseRetention { inner: std::mem::ManuallyDrop::new(Some(Box::new(TypedArtifactSnapshotDisposer { snapshot: Some(external_owner.clone()), disposer }))), runtime_retained: runtime_retained.clone() };
             (Self { identity: std::sync::Arc::downgrade(external_owner), runtime_retained }, retention)
         }
 
@@ -11817,10 +12940,7 @@ pub mod app {
         }
 
         fn take(&self) -> Result<Option<Result<ArtifactMediaExportResult, MediaError>>, Fault> {
-            self.inner
-                .try_lock()
-                .map(|mut value| value.take())
-                .map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.media-completion-busy"), "media completion authority is busy or poisoned"))
+            self.inner.try_lock().map(|mut value| value.take()).map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.media-completion-busy"), "media completion authority is busy or poisoned"))
         }
 
         pub fn close_take(&self) -> Result<bool, Fault> {
@@ -11845,7 +12965,8 @@ pub mod app {
                     if maximum_bytes < ARTIFACT_OUTPUT_CHUNK_BYTES {
                         return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
                     }
-                    let chunk = result.chunks.close_take_chunk()?.ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.media-completion-chunk-authority"), "media completion chunk count changed during one fixed disposal step"))?;
+                    let chunk =
+                        result.chunks.close_take_chunk()?.ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.media-completion-chunk-authority"), "media completion chunk count changed during one fixed disposal step"))?;
                     drop(authority);
                     return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: chunk.len() });
                 }
@@ -11857,10 +12978,7 @@ pub mod app {
         }
 
         fn terminal_is_empty(&self) -> Result<bool, Fault> {
-            self.inner
-                .try_lock()
-                .map(|value| value.is_none())
-                .map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.media-completion-busy"), "media completion terminal authority is busy or poisoned"))
+            self.inner.try_lock().map(|value| value.is_none()).map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.media-completion-busy"), "media completion terminal authority is busy or poisoned"))
         }
     }
 
@@ -11883,11 +13001,7 @@ pub mod app {
         }
 
         pub fn credit(&self, bytes: usize) -> Result<usize, Fault> {
-            let result = self
-                .state
-                .bytes
-                .fetch_update(std::sync::atomic::Ordering::SeqCst, std::sync::atomic::Ordering::SeqCst, |current| current.checked_add(bytes).filter(|next| *next <= self.maximum))
-                .map(|previous| previous + bytes);
+            let result = self.state.bytes.fetch_update(std::sync::atomic::Ordering::SeqCst, std::sync::atomic::Ordering::SeqCst, |current| current.checked_add(bytes).filter(|next| *next <= self.maximum)).map(|previous| previous + bytes);
             match result {
                 Ok(total) => Ok(total),
                 Err(_) => {
@@ -11915,11 +13029,7 @@ pub mod app {
     }
 
     fn validate_media_export_structure(result: &ArtifactMediaExportResult, operation_chunks: &ArtifactOutputChunks, credited_bytes: usize, maximum: usize) -> Result<(), Fault> {
-        let actual_bytes = result
-            .schema
-            .len()
-            .checked_add(result.chunks.bytes())
-            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.media-output-overflow"), "media export structural payload byte count overflowed"))?;
+        let actual_bytes = result.schema.len().checked_add(result.chunks.bytes()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.media-output-overflow"), "media export structural payload byte count overflowed"))?;
         if !result.chunks.same_operation(operation_chunks) || !result.chunks.is_sealed() || actual_bytes != credited_bytes || actual_bytes > maximum {
             return Err(Fault::new(
                 FaultOrigin::Framework,
@@ -12190,15 +13300,7 @@ pub mod app {
 
             impl $job {
                 fn new(raw: Vec<u8>, total_items: usize) -> Self {
-                    Self {
-                        raw,
-                        envelope_cursor: 0,
-                        item_cursor: 0,
-                        total_items,
-                        stage: FrameworkReservedStage::Admitted,
-                        contract: semio_framework::ToolExecutionContract::resumable($raw, $items, $work, $output, 7_500, 1, 1),
-                        operation: None,
-                    }
+                    Self { raw, envelope_cursor: 0, item_cursor: 0, total_items, stage: FrameworkReservedStage::Admitted, contract: semio_framework::ToolExecutionContract::resumable($raw, $items, $work, $output, 7_500, 1, 1), operation: None }
                 }
 
                 fn checkpoint(&self) -> semio_framework_job::Checkpoint {
@@ -12637,11 +13739,7 @@ pub mod app {
             let detached = {
                 let mut state = self.try_state()?;
                 let index = Self::slot(key.document);
-                let detached = if state.get(index).is_some_and(|scope| scope.document == key.document && scope.operation == *key) {
-                    state.take(index)
-                } else {
-                    None
-                };
+                let detached = if state.get(index).is_some_and(|scope| scope.document == key.document && scope.operation == *key) { state.take(index) } else { None };
                 drop(state);
                 detached
             };
@@ -12852,16 +13950,14 @@ pub mod app {
                         }
                     }
                 }
-                ActiveMediaExportCloseStage::DrainCompletion => {
-                    match self.completion.close_step(maximum_items, maximum_bytes)? {
-                        PluginCloseStep::Complete => {
-                            self.checkpoint = None;
-                            self.close_stage = ActiveMediaExportCloseStage::Complete;
-                            Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
-                        }
-                        step => Ok(step),
+                ActiveMediaExportCloseStage::DrainCompletion => match self.completion.close_step(maximum_items, maximum_bytes)? {
+                    PluginCloseStep::Complete => {
+                        self.checkpoint = None;
+                        self.close_stage = ActiveMediaExportCloseStage::Complete;
+                        Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
                     }
-                }
+                    step => Ok(step),
+                },
                 ActiveMediaExportCloseStage::Complete => Ok(PluginCloseStep::Complete),
             }
         }
@@ -12928,7 +14024,7 @@ pub mod app {
 
         fn insert_admitted(&mut self, id: u64, value: T) {
             let index = id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS;
-            debug_assert!(self.can_insert(id));
+            assert!(self.can_insert(id), "fixed artifact registry admission changed before exact owner insertion");
             self.slots[index].write((id, value));
             self.occupied |= 1u64 << index;
         }
@@ -12959,6 +14055,15 @@ pub mod app {
             self.entry(index).map(|(id, _)| *id)
         }
 
+        fn next_id_from(&self, cursor: usize) -> Option<(usize, u64)> {
+            if self.occupied == 0 {
+                return None;
+            }
+            let offset = self.occupied.rotate_right(cursor as u32).trailing_zeros() as usize;
+            let index = (cursor + offset) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+            self.id_at(index).map(|id| (index, id))
+        }
+
         fn is_empty(&self) -> bool {
             self.occupied == 0
         }
@@ -12970,7 +14075,9 @@ pub mod app {
     }
 
     impl<T> Drop for ArtifactFixedRegistry<T> {
-        fn drop(&mut self) {}
+        fn drop(&mut self) {
+            assert!(self.is_empty(), "fixed artifact owner registry reached Drop before every exact owner was transferred to bounded retirement");
+        }
     }
 
     #[cfg(test)]
@@ -13024,6 +14131,79 @@ pub mod app {
             let download_drops = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
             reject_duplicate(SegmentedDownloadSentinel(download_drops.clone()), SegmentedDownloadSentinel(download_drops.clone()), &download_drops);
         }
+
+        #[test]
+        fn media_construction_failure_at_each_fallible_seam_keeps_exact_close_authority() {
+            struct ConstructionOwner {
+                remaining_steps: u8,
+                drops: std::sync::Arc<std::sync::atomic::AtomicUsize>,
+            }
+            impl Drop for ConstructionOwner {
+                fn drop(&mut self) {
+                    self.drops.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                }
+            }
+            let drops = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+            let mut closures = ArtifactFixedRegistry::new();
+            for (operation_id, _) in ["builder", "dispatch", "session", "worker-submit"].into_iter().enumerate() {
+                closures.insert_admitted(operation_id as u64, ConstructionOwner { remaining_steps: operation_id as u8 + 1, drops: drops.clone() });
+            }
+            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0);
+            for index in 0..ARTIFACT_LIVE_OUTPUT_SLOTS {
+                let Some(operation_id) = closures.id_at(index) else { continue };
+                while closures.get(operation_id).is_some_and(|owner| owner.remaining_steps != 0) {
+                    closures.get_mut(operation_id).expect("exact construction owner").remaining_steps -= 1;
+                }
+                drop(closures.remove(operation_id));
+            }
+            assert!(closures.is_empty());
+            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 4);
+        }
+    }
+
+    #[cfg(test)]
+    mod artifact_reserved_tool_job_tests {
+        use super::*;
+
+        struct TerminalJob {
+            terminal: bool,
+            drops: std::sync::Arc<std::sync::atomic::AtomicUsize>,
+        }
+
+        impl Drop for TerminalJob {
+            fn drop(&mut self) {
+                self.drops.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+            }
+        }
+
+        impl semio_framework_job::InteractiveJob for TerminalJob {
+            fn step(&mut self, _cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+                semio_framework_job::StepOutcome::Yield
+            }
+        }
+
+        impl ArtifactReservedJob for TerminalJob {
+            fn close_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+                self.terminal = true;
+                Ok(PluginCloseStep::Complete)
+            }
+
+            fn terminal_is_empty(&self) -> bool {
+                self.terminal
+            }
+        }
+
+        #[test]
+        fn erased_dispatch_clone_release_preserves_unique_bounded_job_disposal_authority() {
+            let drops = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+            let mut retained = ArtifactReservedToolJob::new(TerminalJob { terminal: false, drops: drops.clone() });
+            let erased_dispatch_clone = retained.clone();
+            drop(erased_dispatch_clone);
+            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0);
+            assert!(matches!(retained.close_step(1, ARTIFACT_OUTPUT_CHUNK_BYTES), Ok(PluginCloseStep::Complete)));
+            assert!(retained.terminal_is_empty());
+            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 1);
+        }
     }
 
     impl FrameworkReservedCommitPermit {
@@ -13044,6 +14224,61 @@ pub mod app {
         verb: String,
         proof: QualifiedToolProof,
         decoded_items: usize,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum ActiveToolCommandStage {
+        AwaitWorker,
+        CommitReady,
+    }
+
+    struct ActiveToolCommand<A: ArtifactApp> {
+        verb: String,
+        meta: ActionMeta,
+        operation: semio_framework_job::Operation,
+        contract: semio_framework::ToolExecutionContract,
+        session: Option<semio_framework_job::WorkerJobSession<semio_framework::ErasedToolJob>>,
+        pending_step: Option<semio_framework_async::oneshot::Receiver<semio_framework_job::StepOutcome>>,
+        completion: ArtifactToolCompletion<A>,
+        output_chunks: ArtifactOutputChunks,
+        cancellation_lease: ToolCancellationLease,
+        terminal_outcome: Option<semio_framework_job::StepOutcome>,
+        stage: ActiveToolCommandStage,
+    }
+
+    impl<A: ArtifactApp> ActiveToolCommand<A> {
+        fn drive_worker_step(&mut self, pool: &semio_framework_async::WorkerPool) -> Result<PluginCloseStep, Fault> {
+            if self.stage == ActiveToolCommandStage::CommitReady {
+                return Ok(PluginCloseStep::Blocked { reason: "typed command awaits its bounded revision-validated publication turn" });
+            }
+            let Some(pending) = self.pending_step.as_mut() else {
+                let session = self.session.as_ref().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-session"), "typed operation lost its persistent worker session before publication"))?;
+                match session.try_submit_step(pool, semio_framework_async::Lane::Interactive) {
+                    Ok(pending) => {
+                        self.pending_step = Some(pending);
+                        return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                    }
+                    Err(_) => return Ok(PluginCloseStep::Blocked { reason: "typed operation worker lane is saturated or contended" }),
+                }
+            };
+            match pending.try_recv() {
+                Err(semio_framework_async::oneshot::TryRecvError::Empty) => Ok(PluginCloseStep::Blocked { reason: "typed operation worker step has not published its bounded outcome" }),
+                Err(semio_framework_async::oneshot::TryRecvError::Closed) => {
+                    self.pending_step = None;
+                    self.terminal_outcome = Some(semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: b"typed operation worker result channel closed".to_vec() }));
+                    self.stage = ActiveToolCommandStage::CommitReady;
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                Ok(outcome) => {
+                    self.pending_step = None;
+                    if outcome.is_terminal() {
+                        self.terminal_outcome = Some(outcome);
+                        self.stage = ActiveToolCommandStage::CommitReady;
+                    }
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+            }
+        }
     }
 
     fn bounded_json_items(value: Option<&Value>, maximum: usize) -> Result<usize, Fault> {
@@ -13128,9 +14363,9 @@ pub mod app {
         draft: Box<A::Draft>,
         interaction_state: protocol::InteractionState,
         interaction_hover: InteractionHoverState,
-        peer_presence: BTreeMap<String, PeerPresence>,
+        peer_presence: std::sync::Arc<PeerPresenceRoot>,
         presence_local: Box<A::Presence>,
-        presence_peers: Vec<(String, A::Presence)>,
+        presence_peers: std::sync::Arc<store::PresencePeersRoot<A::Presence>>,
         transient: Box<A::Transient>,
         contract: semio_framework::ToolExecutionContract,
         decoded_items: usize,
@@ -13157,10 +14392,9 @@ pub mod app {
             let doc = resolve_ready(ArtifactView::with_dispatch_context(self.snapshot.as_ref(), self.history.as_ref(), self.children.clone(), context));
             let cfg = ConfigView { snapshot: self.config.as_ref() };
             let draft = DraftView { snapshot: self.draft.as_ref() };
-            let presence_peers: Vec<(&str, &A::Presence)> = self.presence_peers.iter().map(|(actor, presence)| (actor.as_str(), presence)).collect();
-            let presence = PresenceView { local: self.presence_local.as_ref(), peers: presence_peers };
+            let presence = PresenceView { local: self.presence_local.as_ref(), peers: PresencePeersView { root: self.presence_peers.as_ref() } };
             let transient = TransientView { snapshot: self.transient.as_ref() };
-            let interaction = InteractionView { state: &self.interaction_state, hover: &self.interaction_hover, peers: &self.peer_presence };
+            let interaction = InteractionView { state: &self.interaction_state, hover: &self.interaction_hover, peers: self.peer_presence.as_ref() };
             let started = std::time::Instant::now();
             let ephemeral = resolve_ready(A::ephemeral(command.as_ref(), &doc, &cfg, &presence, &transient));
             let mut emit = resolve_ready(A::handle(command.as_ref(), &doc, &cfg, &interaction, &draft, &EngineHandles::empty()));
@@ -13255,7 +14489,17 @@ pub mod app {
         /// the ARTIFACT+APP-scope roster `InteractionView::peers_selecting`/`peers_hovering` and the
         /// UI-tree stamping pass read from; upserted/pruned atomically with `presence_store`'s own
         /// peer map by `adopt_presence`.
-        pub(crate) peer_presence: BTreeMap<String, PeerPresence>,
+        peer_presence: std::mem::ManuallyDrop<std::sync::Arc<PeerPresenceRoot>>,
+        peer_presence_generation: u64,
+        peer_roster_admission_generation: u64,
+        peer_roster_processed_generation: u64,
+        peer_roster_outcome_generation: u64,
+        peer_roster_reservations: [Option<(u64, u64)>; ARTIFACT_LIVE_OUTPUT_SLOTS],
+        peer_roster_scope: semio_framework_job::CancelToken,
+        peer_roster_publications: ArtifactFixedRegistry<PeerRosterPublication<A>>,
+        peer_roster_outcomes: ArtifactFixedRegistry<PresenceRosterOutcome>,
+        peer_presence_retirements: ArtifactFixedRegistry<PeerPresenceRootRetirement>,
+        presence_peer_retirements: ArtifactFixedRegistry<store::PresencePeersRetirement<A::Presence>>,
         /// @emoji 🫧️ Ephemeral LOCAL-ONLY lane — typed UI state that never leaves this client and
         /// never becomes document content. The typed home for what used to live in plugin
         /// `thread_local!`s.
@@ -13275,6 +14519,7 @@ pub mod app {
         app_tool_registrations: BTreeMap<String, ArtifactToolRegistration>,
         tool_cancellations: ToolCancellationHandle,
         live_runtime_instance_id: Option<u32>,
+        tool_operations: ArtifactFixedRegistry<ActiveToolCommand<A>>,
         media_exports: ArtifactFixedRegistry<ActiveMediaExport>,
         media_closures: ArtifactFixedRegistry<ActiveMediaExport>,
         snapshot_retirements: ArtifactFixedRegistry<ArtifactSnapshotCloseRetention>,
@@ -13288,10 +14533,25 @@ pub mod app {
         close_segment_cursor: usize,
         close_segment_cleanup_cursor: usize,
         close_snapshot_cursor: usize,
+        close_child_root_cursor: usize,
+        close_child_root_detached: bool,
+        close_child_member_cursor: usize,
+        close_child_member: std::mem::ManuallyDrop<Option<ChildMemberRetirement<M>>>,
+        close_peer_presence_cursor: usize,
+        close_peer_presence_detached: bool,
+        close_presence_peer_cursor: usize,
+        close_peer_roster_cursor: usize,
         maintenance_stage: u8,
+        maintenance_tool_cursor: usize,
         maintenance_media_cursor: usize,
         maintenance_segment_cursor: usize,
         maintenance_snapshot_cursor: usize,
+        maintenance_child_root_cursor: usize,
+        maintenance_peer_presence_cursor: usize,
+        maintenance_presence_peer_cursor: usize,
+        maintenance_peer_roster_cursor: usize,
+        document_snapshot_read_returns: SnapshotReadReturnPump,
+        close_snapshot_reads_drained: bool,
         close_owned_stage: u8,
         close_document_disposer: std::mem::ManuallyDrop<Option<Box<dyn ArtifactOwnedDisposer<ArtifactStore<A::Snapshot, A::Mutation>>>>>,
         close_config_disposer: std::mem::ManuallyDrop<Option<Box<dyn ArtifactOwnedDisposer<ConfigStore<A::Config, A::ConfigMutation>>>>>,
@@ -13316,7 +14576,10 @@ pub mod app {
         /// entry also carries the dialect captured at open/genesis time (`SpaceMember` itself has no
         /// object-safe dialect getter — see `dispatch_emit_group`'s own doc comment), so a
         /// `store::ChildDispatch`/`store::ArtifactRef` can be rebuilt for it without re-deriving one.
-        pub(crate) children: HashMap<(String, String), (ArtifactDialect, M)>,
+        pub(crate) children: ChildMemberRegistry<M>,
+        child_content_root: std::mem::ManuallyDrop<ChildContentView>,
+        child_content_generation: u64,
+        child_content_retirements: ArtifactFixedRegistry<ChildContentRetirement>,
         /// 📌️ Checkout pins for children that were NOT open when a checkpoint cascade ran. Draining
         /// this on `open_child` is what keeps a lazily-adopted child from silently sitting at head
         /// while the rest of the composition sits at a pinned checkpoint — the alternative (dropping
@@ -13605,21 +14868,34 @@ pub mod app {
                 store.dispatch(ArtifactCommand::Apply { mutations: genesis_mutations, description: Some("genesis".to_string()) }).await.expect("ArtifactApp::genesis mutations must apply cleanly onto a freshly constructed store");
             }
             let dispatch_report = protocol::DispatchReport { policy: store.merge_policy().await, worst: None, messages: Vec::new() };
-            let (tool_job_controller_id, _tool_job_registrations) = registry
-                .tool_job_registration::<A>(&app_id, A::DOCUMENT_SCHEMA, <A::Command as ::protocol::OpBinary>::TOOL_JOB_IDS)
-                .expect("bounded reducer proof catalog must exactly match migrated generated declarations");
+            let (tool_job_controller_id, _tool_job_registrations) =
+                registry.tool_job_registration::<A>(&app_id, A::DOCUMENT_SCHEMA, <A::Command as ::protocol::OpBinary>::TOOL_JOB_IDS).expect("bounded reducer proof catalog must exactly match migrated generated declarations");
             let bounded_tool_contracts = Vec::new();
             let mut app_tool_registry = ArtifactToolFactoryRegistry::<A>::new(&tool_jobs, &app_id);
             A::register_tool_job_factories(&mut app_tool_registry).expect("app-owned tool factories must preserve exact owner/controller/schema/tool authority");
             let app_tool_registrations = app_tool_registry.finish();
+            let mut presence_store = store::PresenceStore::new(A::Presence::default());
+            if let Some(factory) = A::build_presence_peer_retirement_factory() {
+                presence_store.install_peer_retirement_factory(factory).expect("presence peer retirement factory installs exactly once during app construction");
+            }
             Self {
                 app,
                 store,
                 config_store,
                 draft_store,
-                presence_store: store::PresenceStore::new(A::Presence::default()),
+                presence_store,
                 own_color: None,
-                peer_presence: BTreeMap::new(),
+                peer_presence: std::mem::ManuallyDrop::new(PeerPresenceRoot::empty_shared()),
+                peer_presence_generation: 0,
+                peer_roster_admission_generation: 0,
+                peer_roster_processed_generation: 0,
+                peer_roster_outcome_generation: 0,
+                peer_roster_reservations: std::array::from_fn(|_| None),
+                peer_roster_scope: semio_framework_job::CancelToken::root_now(),
+                peer_roster_publications: ArtifactFixedRegistry::new(),
+                peer_roster_outcomes: ArtifactFixedRegistry::new(),
+                peer_presence_retirements: ArtifactFixedRegistry::new(),
+                presence_peer_retirements: ArtifactFixedRegistry::new(),
                 transient_store: store::TransientStore::new(A::Transient::default()),
                 last_emit_wire: None,
                 dispatch_report,
@@ -13631,6 +14907,7 @@ pub mod app {
                 app_tool_registrations,
                 tool_cancellations: ToolCancellationHandle::default(),
                 live_runtime_instance_id: None,
+                tool_operations: ArtifactFixedRegistry::new(),
                 media_exports: ArtifactFixedRegistry::new(),
                 media_closures: ArtifactFixedRegistry::new(),
                 snapshot_retirements: ArtifactFixedRegistry::new(),
@@ -13644,10 +14921,25 @@ pub mod app {
                 close_segment_cursor: 0,
                 close_segment_cleanup_cursor: 0,
                 close_snapshot_cursor: 0,
+                close_child_root_cursor: 0,
+                close_child_root_detached: false,
+                close_child_member_cursor: 0,
+                close_child_member: std::mem::ManuallyDrop::new(None),
+                close_peer_presence_cursor: 0,
+                close_peer_presence_detached: false,
+                close_presence_peer_cursor: 0,
+                close_peer_roster_cursor: 0,
                 maintenance_stage: 0,
+                maintenance_tool_cursor: 0,
                 maintenance_media_cursor: 0,
                 maintenance_segment_cursor: 0,
                 maintenance_snapshot_cursor: 0,
+                maintenance_child_root_cursor: 0,
+                maintenance_peer_presence_cursor: 0,
+                maintenance_presence_peer_cursor: 0,
+                maintenance_peer_roster_cursor: 0,
+                document_snapshot_read_returns: SnapshotReadReturnPump::new(),
+                close_snapshot_reads_drained: false,
                 close_owned_stage: 0,
                 close_document_disposer: std::mem::ManuallyDrop::new(A::build_document_store_disposer()),
                 close_config_disposer: std::mem::ManuallyDrop::new(A::build_config_store_disposer()),
@@ -13660,7 +14952,10 @@ pub mod app {
                 log_generation: 0,
                 history_dirty_sequences: HashSet::new(),
                 history_filter: HistoryCommandFilter::default(),
-                children: HashMap::new(),
+                children: ChildMemberRegistry::new(),
+                child_content_root: std::mem::ManuallyDrop::new(ChildContentView::EMPTY),
+                child_content_generation: 0,
+                child_content_retirements: ArtifactFixedRegistry::new(),
                 pending_child_pins: Vec::new(),
                 composition: CompositionCoordinator::new().await,
                 interaction_store,
@@ -13669,6 +14964,81 @@ pub mod app {
                 pending_transaction: None,
                 pending_transaction_proposal: None,
                 pending_presence: Vec::new(),
+            }
+        }
+
+        fn admit_child_content_publication(&self) -> Result<u64, Fault> {
+            let generation = self.child_content_generation.checked_add(1).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-root-generation"), "immutable child-content generation exhausted"))?;
+            if !self.child_content_retirements.can_insert(generation) {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-root-retirement-saturated"), "immutable child-content publication is saturated pending an exact child snapshot disposer"));
+            }
+            Ok(generation)
+        }
+
+        fn admit_child_content_publication_span(&self, count: usize) -> Result<(), Fault> {
+            if count > ARTIFACT_LIVE_OUTPUT_SLOTS {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-root-retirement-span"), "one child root publication span exceeds the fixed retirement authority"));
+            }
+            for offset in 1..=count {
+                let generation = self.child_content_generation.checked_add(offset as u64).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-root-generation"), "immutable child-content generation exhausted"))?;
+                if !self.child_content_retirements.can_insert(generation) {
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-root-retirement-saturated"), "immutable child-content publication span is saturated pending an exact child snapshot disposer"));
+                }
+            }
+            Ok(())
+        }
+
+        async fn publish_child_content_member(&mut self, generation: u64, slot: &str, child_id: &str) -> Result<(), Fault> {
+            if generation != self.child_content_generation.saturating_add(1) || !self.child_content_retirements.can_insert(generation) {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-root-publication-authority"), "immutable child-content publication lost its exact admitted generation"));
+            }
+            let (dialect, member) =
+                self.children.get(&(slot.to_string(), child_id.to_string())).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.child-root-member"), "immutable child-content publication lost its exact live member"))?;
+            let next = self.child_content_root.with_member(slot, child_id, dialect, member).await?;
+            let previous = std::mem::replace(&mut *self.child_content_root, next);
+            if previous.root.as_ref().is_some_and(|root| root.len != 0) {
+                self.child_content_retirements.insert_admitted(generation, ChildContentRetirement::new(previous, false));
+            }
+            self.child_content_generation = generation;
+            Ok(())
+        }
+
+        fn peer_roster_slot(generation: u64) -> usize {
+            generation as usize % ARTIFACT_LIVE_OUTPUT_SLOTS
+        }
+
+        fn validate_peer_roster_publication(&self, seq: u64, generation: u64, cancel: &semio_framework_job::CancelToken) -> Result<ValidatedPeerRosterCommit, Fault> {
+            let slot = Self::peer_roster_slot(generation);
+            if self.peer_roster_reservations[slot] != Some((generation, seq))
+                || generation != self.peer_roster_processed_generation.checked_add(1).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-generation"), "peer roster publication generation exhausted"))?
+                || !self.peer_presence_retirements.can_insert(generation)
+                || !self.presence_peer_retirements.can_insert(generation)
+                || !self.peer_roster_outcomes.can_insert(generation)
+                || !self.presence_store.peer_retirement_available()
+            {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-publication-authority"), "peer roster lost its exact generation, outcome, or retirement admission before publication"));
+            }
+            if resolve_ready(cancel.is_cancelled()) {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-cancelled"), "peer roster publication was cancelled before atomic commit"));
+            }
+            Ok(ValidatedPeerRosterCommit { seq, generation })
+        }
+
+        fn publish_peer_roster_candidate_admitted(&mut self, admission: ValidatedPeerRosterCommit, candidate: PeerRosterCandidate<A::Presence>) {
+            let PeerRosterCandidate { seq: _, generation: _, cancel: _, own_color, now_ms, root, typed } = candidate;
+            let ValidatedPeerRosterCommit { seq: _, generation } = admission;
+            let _ = now_ms;
+            let typed_retirement = self.presence_store.publish_peer_commit(typed);
+            let previous = std::mem::replace(&mut *self.peer_presence, root);
+            if previous.is_empty() {
+                drop(previous);
+            } else {
+                self.peer_presence_retirements.insert_admitted(generation, PeerPresenceRootRetirement::new(previous));
+            }
+            self.own_color = own_color;
+            self.peer_presence_generation = generation;
+            if let Some(retirement) = typed_retirement {
+                self.presence_peer_retirements.insert_admitted(generation, retirement);
             }
         }
 
@@ -13684,18 +15054,31 @@ pub mod app {
         /// `GroupReceipt`, see `dispatch_emit_group`) is rejected as an `OwnershipViolation`, not
         /// silently accepted.
         pub async fn open_child(&mut self, slot: impl Into<String>, child_id: impl Into<String>, dialect: ArtifactDialect, envelope_pack: &[u8]) -> Result<(), Fault> {
+            let publication_generation = self.admit_child_content_publication()?;
             let slot = slot.into();
             let child_id = child_id.into();
-            let mut member = M::open(&dialect.artifact_kind, envelope_pack).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
-            let parent_id = self.store.envelope().await.id.clone();
-            self.composition.graph_mut().await.insert_owns(&parent_id, &slot, &child_id).await.map_err(plugin_sdk_fault)?;
+            ChildContentView::hash(&slot, &child_id)?;
+            let key = (slot.clone(), child_id.clone());
+            let admission = self.children.admit(&key)?;
+            let mut member = match M::open(&dialect.artifact_kind, envelope_pack).await {
+                Ok(member) => member,
+                Err(error) => {
+                    assert!(self.children.cancel_admission(&admission), "failed child open retains its exact admission until cancellation");
+                    return Err(plugin_sdk_fault(error.to_string()));
+                }
+            };
             // 📌️ Drain any checkout pin this child missed by not being open at cascade time.
             if let Some(index) = self.pending_child_pins.iter().position(|pin| pin.child_ref.artifact_id == child_id) {
                 let pin = self.pending_child_pins.remove(index);
                 let alternative_id = member.current_alternative_id().await.unwrap_or_default();
                 let _ = member.checkout(&pin.checkpoint_id, &alternative_id).await;
             }
-            self.children.insert((slot, child_id), (dialect, member));
+            let publication_slot = slot.clone();
+            let publication_child_id = child_id.clone();
+            self.children.insert_admitted(admission, (slot, child_id), (dialect, member));
+            let parent_id = self.store.envelope().await.id.clone();
+            self.composition.graph_mut().await.insert_owns(&parent_id, &publication_slot, &publication_child_id).await.map_err(plugin_sdk_fault)?;
+            self.publish_child_content_member(publication_generation, &publication_slot, &publication_child_id).await?;
             Ok(())
         }
 
@@ -13716,12 +15099,33 @@ pub mod app {
         /// `self.children` but absent from the graph is rejected as an `OwnershipViolation` the first
         /// time anything dispatches against it. Registering in one place and validating from the other
         /// is precisely the inconsistency this seeds away.
-        pub async fn register_child(&mut self, slot: impl Into<String>, child_id: impl Into<String>, dialect: ArtifactDialect, member: M) -> Result<(), Fault> {
+        pub async fn register_child(&mut self, slot: impl Into<String>, child_id: impl Into<String>, dialect: ArtifactDialect, member: M) -> Result<(), ChildMemberRegistrationError<M>> {
             let slot = slot.into();
             let child_id = child_id.into();
+            if let Err(fault) = ChildContentView::hash(&slot, &child_id) {
+                return Err(ChildMemberRegistrationError { member: Some(member), fault });
+            }
+            let key = (slot.clone(), child_id.clone());
+            let admission = match self.children.admit(&key) {
+                Ok(admission) => admission,
+                Err(fault) => return Err(ChildMemberRegistrationError { member: Some(member), fault }),
+            };
+            let publication_generation = match self.admit_child_content_publication() {
+                Ok(generation) => generation,
+                Err(fault) => {
+                    assert!(self.children.cancel_admission(&admission), "rejected child publication returns its exact reserved slot");
+                    return Err(ChildMemberRegistrationError { member: Some(member), fault });
+                }
+            };
             let parent_id = self.store.envelope().await.id.clone();
-            self.composition.graph_mut().await.insert_owns(&parent_id, &slot, &child_id).await.map_err(plugin_sdk_fault)?;
-            self.children.insert((slot, child_id), (dialect, member));
+            if let Err(error) = self.composition.graph_mut().await.insert_owns(&parent_id, &slot, &child_id).await {
+                assert!(self.children.cancel_admission(&admission), "rejected child graph edge returns its exact reserved slot");
+                return Err(ChildMemberRegistrationError { member: Some(member), fault: plugin_sdk_fault(error) });
+            }
+            let publication_slot = slot.clone();
+            let publication_child_id = child_id.clone();
+            self.children.insert_admitted(admission, (slot, child_id), (dialect, member));
+            self.publish_child_content_member(publication_generation, &publication_slot, &publication_child_id).await.map_err(|fault| ChildMemberRegistrationError { member: None, fault })?;
             Ok(())
         }
 
@@ -13737,15 +15141,23 @@ pub mod app {
         async fn commit_children_for_checkpoint(&mut self, message: Option<String>, authors: Vec<vcs::Author>, permit: &FrameworkReservedCommitPermit) -> Result<Vec<vcs::CompositionPin>, Fault> {
             let message = message.unwrap_or_else(|| "checkpoint".to_string());
             let mut pins = Vec::new();
-            for ((_, child_id), (dialect, member)) in self.children.iter_mut() {
+            let keys: Vec<(String, String)> = self.children.keys().cloned().collect();
+            self.admit_child_content_publication_span(keys.len())?;
+            for (slot, child_id) in keys {
                 if permit.is_cancelled().await {
                     return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), "checkpoint cascade was cancelled between child steps"));
                 }
-                if member.is_dirty().await {
-                    member.commit_checkpoint(message.clone(), authors.clone()).await.map_err(|error| error.into_fault())?;
-                }
-                if let Some(checkpoint_id) = member.current_checkpoint_id().await {
-                    pins.push(vcs::CompositionPin { child_ref: ArtifactRef { artifact_id: child_id.clone(), dialect: dialect.clone() }, checkpoint_id });
+                let publication_generation = self.admit_child_content_publication()?;
+                let (dialect, checkpoint_id) = {
+                    let (dialect, member) = self.children.get_mut(&(slot.clone(), child_id.clone())).ok_or_else(|| plugin_sdk_fault("checkpoint child authority changed during bounded publication"))?;
+                    if member.is_dirty().await {
+                        member.commit_checkpoint(message.clone(), authors.clone()).await.map_err(|error| error.into_fault())?;
+                    }
+                    (dialect.clone(), member.current_checkpoint_id().await)
+                };
+                self.publish_child_content_member(publication_generation, &slot, &child_id).await?;
+                if let Some(checkpoint_id) = checkpoint_id {
+                    pins.push(vcs::CompositionPin { child_ref: ArtifactRef { artifact_id: child_id, dialect }, checkpoint_id });
                 }
                 semio_framework_async::yield_once().await;
             }
@@ -13775,14 +15187,18 @@ pub mod app {
             let Some(checkpoint_id) = self.store.current_checkpoint_id().await.map(str::to_string) else { return Ok(()) };
             let Some(pins) = self.store.envelope().await.vcs.checkpoints.iter().find(|checkpoint| checkpoint.id == checkpoint_id).map(|checkpoint| checkpoint.composition_pins.clone()) else { return Ok(()) };
             self.pending_child_pins.clear();
+            self.admit_child_content_publication_span(pins.len())?;
             for pin in pins {
                 if permit.is_cancelled().await {
                     return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), "checkout cascade was cancelled between child steps"));
                 }
-                match self.children.iter_mut().find(|((_, child_id), _)| *child_id == pin.child_ref.artifact_id) {
-                    Some((_, (_, member))) => {
+                match self.children.keys().find(|(_, child_id)| *child_id == pin.child_ref.artifact_id).cloned() {
+                    Some((slot, child_id)) => {
+                        let publication_generation = self.admit_child_content_publication()?;
+                        let (_, member) = self.children.get_mut(&(slot.clone(), child_id.clone())).ok_or_else(|| plugin_sdk_fault("checkout child authority changed during bounded publication"))?;
                         let alternative_id = member.current_alternative_id().await.unwrap_or_default();
                         let _ = member.checkout(&pin.checkpoint_id, &alternative_id).await;
+                        self.publish_child_content_member(publication_generation, &slot, &child_id).await?;
                     }
                     None => self.pending_child_pins.push(pin),
                 }
@@ -14453,11 +15869,17 @@ pub mod app {
         /// here). A free-standing method (not inlined into `dispatch_emit_group`) so it is directly
         /// unit-testable against a synthetic `created_children` list, independent of the `ChildEmit`
         /// wire path (which never emits a `ChildGenesis` itself today).
-        pub(crate) async fn absorb_created_children(&mut self, created_children: Vec<(ArtifactRef, M)>) {
+        pub(crate) async fn absorb_created_children(&mut self, created_children: Vec<(ArtifactRef, M)>) -> Result<(), Fault> {
             for (target, member) in created_children {
+                let publication_generation = self.admit_child_content_publication()?;
                 let slot = self.composition.graph().await.slot_of(&target.artifact_id).await.unwrap_or_default().to_string();
-                self.children.insert((slot, target.artifact_id.clone()), (target.dialect.clone(), member));
+                ChildContentView::hash(&slot, &target.artifact_id)?;
+                let child_id = target.artifact_id.clone();
+                let admission = self.children.admit(&(slot.clone(), child_id.clone()))?;
+                self.children.insert_admitted(admission, (slot.clone(), child_id.clone()), (target.dialect.clone(), member));
+                self.publish_child_content_member(publication_generation, &slot, &child_id).await?;
             }
+            Ok(())
         }
 
         /// @emoji 🧩️ `dispatch_emit`'s composite-gesture branch, taken whenever `emit.child_emits` is
@@ -14491,6 +15913,7 @@ pub mod app {
             config_edit_id: Option<String>,
             meta: &ActionMeta,
         ) -> Result<InvocationResult, Fault> {
+            self.admit_child_content_publication_span(child_emits.len())?;
             let parent_id = self.store.envelope().await.id.clone();
             // 🚧️ `ArtifactEnvelope.dialect` stays `Option<ArtifactDialect>` per B2's own DEFERRED
             // scope decision (`📓️wave1-reports/b2-store-composition-report.md`) — this fallback (a
@@ -14540,12 +15963,16 @@ pub mod app {
             let receipt = self.composition.dispatch_group(&parent_ref, &mut self.store, &mut dispatches, parent_ops, Vec::new(), group_meta).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
             drop(dispatches);
             self.cache = None;
+            for child_emit in child_emits.iter() {
+                let publication_generation = self.admit_child_content_publication()?;
+                self.publish_child_content_member(publication_generation, &child_emit.slot, &child_emit.child_id).await?;
+            }
 
             // 🌱️ Absorb any freshly-created children into the live map — extracted into its own
             // method (below) both so it is directly unit-testable and so it needs no revisiting once
             // a genesis-emitting `Emit` constructor lands (`genesis` is always `Vec::new()` on THIS
             // call today — a `ChildEmit` only ever targets an ALREADY-live child).
-            self.absorb_created_children(receipt.created_children).await;
+            self.absorb_created_children(receipt.created_children).await?;
 
             let invocation_id = InvocationId(receipt.invocation_id.clone());
             // 🪪️ The PARENT's handle must be the same value its own `KernelMutation.document` carries
@@ -14696,6 +16123,7 @@ pub mod app {
         /// children internally to match `dispatch_group`'s apply order, and (per their own doc
         /// comments) treat every member independently regardless of order anyway.
         async fn dispatch_group_history_action(&mut self, action: &str, group_id: &str, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
+            self.admit_child_content_publication_span(self.children.len())?;
             let parent_id = self.store.envelope().await.id.clone();
             let parent_dialect = self.store.envelope().await.dialect.clone().unwrap_or_else(|| ArtifactDialect { artifact_kind: A::DOCUMENT_SCHEMA.to_string(), standard: "native".to_string(), subset: "*".to_string() });
             let parent_ref = ArtifactRef { artifact_id: parent_id.clone(), dialect: parent_dialect };
@@ -14720,6 +16148,13 @@ pub mod app {
             let report = if action == "undo" { CompositionCoordinator::undo_group(&parent_ref, &mut self.store, &mut children, group_id).await } else { CompositionCoordinator::redo_group(&parent_ref, &mut self.store, &mut children, group_id).await };
             drop(children);
             self.cache = None;
+            for (reference, _) in report.undone.iter().filter(|(reference, _)| reference.artifact_id != parent_id) {
+                let Some((slot, child_id)) = self.children.keys().find(|(_, child_id)| *child_id == reference.artifact_id).cloned() else {
+                    return Err(plugin_sdk_fault("group history moved a child without exact immutable-root authority"));
+                };
+                let publication_generation = self.admit_child_content_publication()?;
+                self.publish_child_content_member(publication_generation, &slot, &child_id).await?;
+            }
 
             let diagnostics: Vec<dsl::Diagnostic> =
                 report.skipped.iter().map(|(reference, error)| dsl::Diagnostic::error("composition.group-history.skipped-member", dsl::TextSpan::default(), format!("{action} skipped member {} ({error})", reference.artifact_id))).collect();
@@ -14778,7 +16213,7 @@ pub mod app {
                 protocol::HierarchyProvider::Topology => {
                     self.refresh_cache().await?;
                     let (_, snapshot, config, history) = self.cache.as_ref().expect("cache refreshed above");
-                    let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::new(&self.children).await).await;
+                    let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(&self.child_content_root)).await;
                     let cfg = ConfigView { snapshot: config.as_ref() };
                     let topology = A::interaction_topology(&doc, &cfg).await;
                     Ok(topology.domains.get(&def.id).cloned().unwrap_or_default())
@@ -14954,9 +16389,9 @@ pub mod app {
             // WRITTEN inside the walk while `interaction_hover`/`peer_presence` are only ever READ by
             // it, so a snapshot avoids an aliasing conflict against `&mut self`.
             let hover = self.interaction_hover.clone();
-            let peers = self.peer_presence.clone();
+            let peers = std::sync::Arc::clone(&self.peer_presence);
             let own_color = self.own_color;
-            let interaction = InteractionView { state, hover: &hover, peers: &peers };
+            let interaction = InteractionView { state, hover: &hover, peers: peers.as_ref() };
             Box::pin(self.stamp_and_cache_interaction_ui_node(&mut tree.root, state, &interaction, None, body_key, own_color)).await;
         }
 
@@ -15166,7 +16601,13 @@ pub mod app {
             }
             let pool =
                 semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1)));
-            let pending_step = self.media_closures.get(operation_id.0).and_then(|active| active.session.as_ref()).expect("constructed media session is persistently owned").submit_step(&pool, semio_framework_async::Lane::Interactive);
+            let pending_step = self
+                .media_closures
+                .get(operation_id.0)
+                .and_then(|active| active.session.as_ref())
+                .expect("constructed media session is persistently owned")
+                .try_submit_step(&pool, semio_framework_async::Lane::Interactive)
+                .map_err(|kind| fault(format!("media export worker admission failed closed: {kind:?}")))?;
             self.media_closures.get_mut(operation_id.0).expect("pre-admitted media construction owner").pending_step = Some(pending_step);
             let active = self.media_closures.remove(operation_id.0).expect("constructed media owner remains exact through submission");
             self.media_exports.insert_admitted(operation_id.0, active);
@@ -15175,10 +16616,7 @@ pub mod app {
         }
 
         fn quarantine_media_snapshot(&self, operation_id: u64, active: &ActiveMediaExport) -> Result<(), MediaError> {
-            self.snapshot_retirements
-                .get(operation_id)
-                .map(|_| ())
-                .ok_or_else(|| MediaError::Payload(active.port.clone(), "media export lost its pre-admitted app-owned snapshot retirement authority".into()))
+            self.snapshot_retirements.get(operation_id).map(|_| ()).ok_or_else(|| MediaError::Payload(active.port.clone(), "media export lost its pre-admitted app-owned snapshot retirement authority".into()))
         }
 
         fn finish_media_poll(&mut self, operation_id: u64, active: ActiveMediaExport, poll: ArtifactMediaExportPoll) -> Result<ArtifactMediaExportPoll, MediaError> {
@@ -15214,7 +16652,15 @@ pub mod app {
                     self.media_exports.insert_admitted(handle.operation_id.0, active);
                     return Ok(poll);
                 }
-                Some(Err(semio_framework_async::oneshot::TryRecvError::Closed)) | None => {
+                None => {
+                    if let Some(session) = active.session.as_ref() {
+                        active.pending_step = session.try_submit_step(&pool, semio_framework_async::Lane::Interactive).ok();
+                    }
+                    let poll = ArtifactMediaExportPoll::Running { applied_progress: active.applied_progress, checkpoint: active.checkpoint.clone() };
+                    self.media_exports.insert_admitted(handle.operation_id.0, active);
+                    return Ok(poll);
+                }
+                Some(Err(semio_framework_async::oneshot::TryRecvError::Closed)) => {
                     let port = active.port.clone();
                     self.finish_media_poll(handle.operation_id.0, active, ArtifactMediaExportPoll::Failed("media export worker result channel closed".into()))?;
                     return Err(MediaError::Payload(port, "media export worker result channel closed".into()));
@@ -15228,7 +16674,7 @@ pub mod app {
                     let Some(session) = active.session.as_ref() else {
                         return self.finish_media_poll(handle.operation_id.0, active, ArtifactMediaExportPoll::Failed("media export session entered disposal before terminal polling".into()));
                     };
-                    active.pending_step = Some(session.submit_step(&pool, semio_framework_async::Lane::Interactive));
+                    active.pending_step = session.try_submit_step(&pool, semio_framework_async::Lane::Interactive).ok();
                     let poll = ArtifactMediaExportPoll::Running { applied_progress: active.applied_progress, checkpoint: active.checkpoint.clone() };
                     self.media_exports.insert_admitted(handle.operation_id.0, active);
                     Ok(poll)
@@ -15242,7 +16688,7 @@ pub mod app {
                     let Some(session) = active.session.as_ref() else {
                         return self.finish_media_poll(handle.operation_id.0, active, ArtifactMediaExportPoll::Failed("media export session entered disposal before checkpoint polling".into()));
                     };
-                    active.pending_step = Some(session.submit_step(&pool, semio_framework_async::Lane::Interactive));
+                    active.pending_step = session.try_submit_step(&pool, semio_framework_async::Lane::Interactive).ok();
                     let poll = ArtifactMediaExportPoll::Running { applied_progress: active.applied_progress, checkpoint: active.checkpoint.clone() };
                     self.media_exports.insert_admitted(handle.operation_id.0, active);
                     Ok(poll)
@@ -15628,48 +17074,37 @@ pub mod app {
         }
 
         fn require_complete_tool_operation_pipeline(&self, admission: &AdmittedToolCommand) -> Result<(), Fault> {
-            Err(Fault::new(
-                FaultOrigin::Framework,
-                FaultCode::new("interactive-job.full-operation-pending"),
-                format!("typed command '{}' has exact handler/factory authority but no bounded prepare/reducer/commit operation authority", admission.verb),
-            ))
+            Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.full-operation-pending"), format!("typed command '{}' has exact handler/factory authority but no bounded prepare/reducer/commit operation authority", admission.verb)))
         }
 
-        /// @emoji 🎯️ B1: the shared body behind both `dispatch_typed_command` (wire bytes, decoded above)
-        /// and `dispatch_typed` (an already-typed value, for direct Rust callers — see `testkit`).
         async fn dispatch_typed_command_inner(&mut self, command: Box<A::Command>, admission: AdmittedToolCommand, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             let verb = A::command_id(&command).await.to_string();
             if admission.verb != verb {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.command-identity"), format!("exact admitted command '{}' decoded as '{verb}'", admission.verb)));
             }
             self.require_complete_tool_operation_pipeline(&admission)?;
+            let operation_id = semio_framework_job::allocate_operation_id();
+            if !self.tool_operations.can_insert(operation_id.0) || !self.segmented_downloads.can_insert(operation_id.0) || !self.segmented_closures.can_insert(operation_id.0) {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-capacity"), "fixed typed-operation and segmented-output authorities did not pre-admit the exact operation slot"));
+            }
             self.refresh_cache().await?;
             let draft_snapshot = self.draft_store.snapshot().await.map_err(|error| error.into_fault())?;
-            // 🕹️ Same "materialize owned before the field-wise destructure" reasoning as the clipboard
-            // branch above.
             let interaction_state = self.interaction_store.snapshot().await.unwrap_or_default();
             let interaction_hover = self.interaction_hover.clone();
             let (snapshot, config, history) = self.command_cache_inputs();
-            let children = ChildContentView::new(&self.children).await;
+            let children = ChildContentView::clone(&self.child_content_root);
             let presence_local = self.presence_store.local().await.clone();
-            let presence_peers = self.presence_store.peers().await.into_iter().map(|(actor, presence)| (actor.to_string(), presence.clone())).collect();
+            let presence_peers = self.presence_store.peers_root();
             let transient = self.transient_store.current().await.clone();
-            let peer_presence = self.peer_presence.clone();
+            let peer_presence = std::sync::Arc::clone(&self.peer_presence);
             let canonical_base_revision = self.store.content_revision().await;
             let base_revision = semio_framework_job::RevisionId(u64::from_be_bytes(canonical_base_revision[..8].try_into().expect("revision lane width")));
-            let operation_id = semio_framework_job::allocate_operation_id();
-            if !self.segmented_downloads.can_insert(operation_id.0) || !self.segmented_closures.can_insert(operation_id.0) {
-                return Err(Fault::new(
-                    FaultOrigin::Framework,
-                    FaultCode::new("interactive-job.segmented-download-capacity"),
-                    "fixed segmented download and close authorities did not pre-admit the exact operation slot",
-                ));
-            }
             let generation = semio_framework_job::Generation(self.store.generation().await);
             let parent_document_id = self.store.envelope().await.id.clone();
             let seed_handle = artifact_handle_of(&format!("{}/{}/{verb}/{}", meta.instance_id, self.tool_job_controller_id, base_revision.0)).await;
-            let seed = (seed_handle.0 as u64) ^ ((seed_handle.0 >> 64) as u64);
-            let operation = semio_framework_job::Operation::new(operation_id, base_revision, generation, seed);
+            let operation = semio_framework_job::Operation::new(operation_id, base_revision, generation, (seed_handle.0 as u64) ^ ((seed_handle.0 >> 64) as u64));
+            let operation_key = ToolOperationKey { app_instance_id: meta.instance_id, document: ArtifactDocumentAuthority(meta.instance_id), operation_id, base_revision, generation };
+            let cancellation_lease = self.tool_cancellations.begin(operation_key)?;
             let payload_schema_id = format!("{}.tool-command.v1", A::DOCUMENT_SCHEMA);
             let completion = ArtifactToolCompletion::<A>::new();
             let output_chunks = ArtifactOutputChunks::new(admission.proof.contract().max_output_bytes);
@@ -15708,7 +17143,7 @@ pub mod app {
                     contract: admission.proof.contract(),
                     decoded_items: admission.decoded_items,
                     app_instance_id: meta.instance_id,
-                    parent_document_id: parent_document_id.clone(),
+                    parent_document_id,
                     canonical_base_revision,
                     snapshot,
                     config,
@@ -15720,8 +17155,6 @@ pub mod app {
                 .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.missing-owned-builder"), format!("app-owned tool '{verb}' registered a factory but supplied no exact payload builder")))?,
             };
             let dispatch = self.tool_jobs.dispatch(operation_spec).map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.dispatch"), error.to_string()))?;
-            let operation_key = ToolOperationKey { app_instance_id: meta.instance_id, document: ArtifactDocumentAuthority(meta.instance_id), operation_id, base_revision, generation };
-            let cancellation_lease = self.tool_cancellations.begin(operation_key)?;
             let params = semio_framework_job::BatchJobParams {
                 operation: operation_id,
                 generation,
@@ -15734,81 +17167,34 @@ pub mod app {
                 },
                 now_ms: semio_framework_job::default_now_ms,
             };
-            let cores = std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1);
-            let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores));
+            let pool =
+                semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1)));
             let session = semio_framework_job::WorkerJobSession::new(dispatch.job, params);
-            let outcome = loop {
-                let outcome = session.step(&pool, semio_framework_async::Lane::Interactive).await.map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.worker-closed"), "interactive tool worker result channel closed"))?;
-                if outcome.is_terminal() {
-                    break outcome;
-                }
-            };
-            if let Some(elapsed_us) = semio_framework_job::watchdog_step_overrun_us(operation_id, generation) {
-                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.step-overrun"), format!("tool command '{verb}' exceeded the 8 ms step ceiling ({elapsed_us} µs)")));
-            }
-            let completion = completion.take().ok_or_else(|| match outcome {
-                semio_framework_job::StepOutcome::Cancelled => Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("tool command '{verb}' was cancelled")),
-                semio_framework_job::StepOutcome::Fault(fault) => Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.fault"), String::from_utf8_lossy(&fault.detail).into_owned()),
-                _ => Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.missing-output"), format!("tool command '{verb}' completed without typed output")),
-            })?;
-            let (emit, download, ephemeral) = match completion {
-                ArtifactToolCompletionValue::Emit(emit, ephemeral) => (Some(emit), None, ephemeral),
-                ArtifactToolCompletionValue::Download(download, ephemeral) => (None, Some(download), ephemeral),
-            };
-            let live_revision_bytes = self.store.content_revision().await;
-            let live_revision = semio_framework_job::RevisionId(u64::from_be_bytes(live_revision_bytes[..8].try_into().expect("revision lane width")));
-            let live_generation = semio_framework_job::Generation(self.store.generation().await);
-            if cancellation_lease.is_cancelled().await {
-                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("tool command '{verb}' was cancelled before result exposure")));
-            }
-            if !matches!(semio_framework_job::validate_commit(&operation, live_revision, live_generation), semio_framework_job::CommitValidation::Accepted) {
-                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.stale"), format!("tool command '{verb}' completed against a stale revision or generation")));
-            }
-            // 👥️🫧️ Applied outside the borrow above, and never through `dispatch_emit`: neither lane
-            // has an op log, an edit id, an undo group or a command-log row.
-            self.presence_store.apply(&ephemeral.presence).await.map_err(|error| Fault::from(error.to_string()))?;
-            self.transient_store.apply(&ephemeral.transient).await.map_err(|error| Fault::from(error.to_string()))?;
-            if let Some(download) = download {
-                let download = download?;
-                if !download.chunks.same_operation(&output_chunks) || download.chunks.bytes() > admission.proof.contract().max_output_bytes {
-                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.segmented-download-authority"), "segmented download did not preserve its exact operation-owned chunk authority"));
-                }
-                let effect = Effect::DownloadMediaExport {
-                    filename: download.filename.clone(),
-                    mime_type: download.mime_type.clone(),
-                    data: operation_id.0.to_string(),
-                    encoding: Some(download.handle_encoding()),
-                };
-                self.segmented_downloads.insert_admitted(operation_id.0, download);
-                cancellation_lease.finish();
-                return Ok(Self::empty_result(&verb, meta, vec![effect], Vec::new(), semio_framework::kernel::UiDirtyScope::None).await);
-            }
-            let emit = emit.expect("typed completion is exactly emit or segmented download")?;
-            // 🛂️ Kind discipline: a `View`/`Shell`-kind command must not emit document operations — mirrors
-            // the pre-B1 `dispatch_action`'s enforcement, now keyed off `command_id()` since dispatch is
-            // typed rather than stringly. `verb` may resolve to either a declared action (`.view_action`/
-            // `.mutation`/`.shell_action`, indexed in `AppActionRegistry::actions`) or an app/mode command
-            // (indexed separately in `app_commands`/`mode_commands`) — both must be consulted, mirroring
-            // `dispatch_action`'s own kind resolution above (see `self.registry.get(verb).or_else(||
-            // self.registry.get_command(verb))`). Only enforced when the registry actually declares `verb`
-            // (registry-backed exact admission above guarantees every reachable command is declared).
-            let resolved_kind = match self.invocation_kind {
-                Some(kind) => Some(kind),
-                None => match self.registry.get(&verb).await {
-                    Some(definition) => Some(definition.kind),
-                    None => self.registry.get_command(&verb).await.map(|definition| definition.kind),
+            self.tool_operations.insert_admitted(
+                operation_id.0,
+                ActiveToolCommand {
+                    verb: verb.clone(),
+                    meta: meta.clone(),
+                    operation,
+                    contract: admission.proof.contract(),
+                    session: Some(session),
+                    pending_step: None,
+                    completion,
+                    output_chunks,
+                    cancellation_lease,
+                    terminal_outcome: None,
+                    stage: ActiveToolCommandStage::AwaitWorker,
                 },
-            };
-            if let Some(kind) = resolved_kind {
-                if matches!(kind, ActionKind::View | ActionKind::Shell) && !emit.artifact_mutations.is_empty() {
-                    return Err(Fault::from(format!("{kind:?}-kind command '{verb}' must not emit operations")));
-                }
+            );
+            if let Some(active) = self.tool_operations.get_mut(operation_id.0) {
+                let _ = active.drive_worker_step(&pool)?;
             }
-            let result = self.dispatch_emit(&verb, emit, meta).await;
-            cancellation_lease.finish();
-            result
+            let mut started = Self::empty_result(&verb, meta, Vec::new(), Vec::new(), semio_framework::kernel::UiDirtyScope::None).await;
+            started.output = DslValue::Object(vec![("operationId".into(), DslValue::String(operation_id.0.to_string())), ("generation".into(), DslValue::String(generation.0.to_string()))]);
+            Ok(started)
         }
 
+        /// @emoji 🎯️ B1: the shared body behind both `dispatch_typed_command` (wire bytes, decoded above)
         /// @emoji 🎯️ B1: public typed-value dispatch entry point — the direct-Rust-caller counterpart to
         /// the wire-level `PluginApp::handle_command_frame`, self-contained (applies `finish_recorded`
         /// itself). Used by `testkit`'s generic app-agnostic helpers and any other in-process caller that
@@ -15911,6 +17297,7 @@ pub mod app {
             }
             if !self.close_started {
                 self.tool_cancellations.cancel_scope_generation();
+                self.peer_roster_scope.cancel_now();
                 self.close_started = true;
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
@@ -15919,6 +17306,9 @@ pub mod app {
                 self.close_cancellation_cursor = self.close_cancellation_cursor.saturating_add(1);
                 let _ = released;
                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if !self.tool_operations.is_empty() {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-typed-operation-disposer-missing"), "typed operation sessions and completion payloads do not yet expose an exact terminal-empty bounded disposer"));
             }
             if self.close_media_cursor < ARTIFACT_LIVE_OUTPUT_SLOTS {
                 let Some(operation_id) = self.media_exports.id_at(self.close_media_cursor) else {
@@ -15935,9 +17325,7 @@ pub mod app {
                     if !active.terminal_is_empty()? {
                         return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-media-terminal-not-empty"), "media close reported Complete without an exact terminal-empty witness"));
                     }
-                    self
-                        .quarantine_media_snapshot(operation_id, active)
-                        .map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-snapshot-quarantine"), error.to_string()))?;
+                    self.quarantine_media_snapshot(operation_id, active).map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-snapshot-quarantine"), error.to_string()))?;
                     let active = self.media_exports.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-media-authority"), "terminal media owner changed before exact removal"))?;
                     drop(active);
                     self.close_media_cursor = self.close_media_cursor.saturating_add(1);
@@ -15976,11 +17364,17 @@ pub mod app {
                 if maximum_bytes < ARTIFACT_OUTPUT_CHUNK_BYTES {
                     return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
                 }
-                let chunk = self.segmented_downloads.get(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-segment-authority"), "segmented close authority changed during one fixed step"))?.chunks.close_take_chunk()?;
+                let chunk = self
+                    .segmented_downloads
+                    .get(operation_id)
+                    .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-segment-authority"), "segmented close authority changed during one fixed step"))?
+                    .chunks
+                    .close_take_chunk()?;
                 return match chunk {
                     Some(chunk) => Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: chunk.len() }),
                     None => {
-                        let output = self.segmented_downloads.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-segment-authority"), "terminal segmented owner changed before exact removal"))?;
+                        let output =
+                            self.segmented_downloads.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-segment-authority"), "terminal segmented owner changed before exact removal"))?;
                         if !output.terminal_is_empty() {
                             self.segmented_downloads.insert_admitted(operation_id, output);
                             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-segment-terminal-not-empty"), "segmented owner reached terminal without an empty exact chunk queue"));
@@ -15999,11 +17393,19 @@ pub mod app {
                 if maximum_bytes < ARTIFACT_OUTPUT_CHUNK_BYTES {
                     return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
                 }
-                let chunk = self.segmented_closures.get(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-segment-cleanup-authority"), "segmented cleanup authority changed during one fixed step"))?.chunks.close_take_chunk()?;
+                let chunk = self
+                    .segmented_closures
+                    .get(operation_id)
+                    .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-segment-cleanup-authority"), "segmented cleanup authority changed during one fixed step"))?
+                    .chunks
+                    .close_take_chunk()?;
                 return match chunk {
                     Some(chunk) => Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: chunk.len() }),
                     None => {
-                        let output = self.segmented_closures.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-segment-cleanup-authority"), "terminal segmented cleanup changed before exact removal"))?;
+                        let output = self
+                            .segmented_closures
+                            .remove(operation_id)
+                            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-segment-cleanup-authority"), "terminal segmented cleanup changed before exact removal"))?;
                         if !output.terminal_is_empty() {
                             self.segmented_closures.insert_admitted(operation_id, output);
                             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-segment-terminal-not-empty"), "segmented cleanup reached terminal without an empty exact chunk queue"));
@@ -16028,12 +17430,212 @@ pub mod app {
                     if !self.snapshot_retirements.get(operation_id).is_some_and(ArtifactSnapshotCloseRetention::terminal_is_empty) {
                         return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-snapshot-terminal-not-empty"), "snapshot retirement reported Complete without its exact terminal-empty witness"));
                     }
-                    let retirement = self.snapshot_retirements.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-snapshot-authority"), "terminal snapshot retirement changed before exact removal"))?;
+                    let retirement =
+                        self.snapshot_retirements.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-snapshot-authority"), "terminal snapshot retirement changed before exact removal"))?;
                     drop(retirement);
                     self.close_snapshot_cursor = self.close_snapshot_cursor.saturating_add(1);
                     return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
                 }
                 return Ok(step);
+            }
+            if !self.child_content_retirements.is_empty() {
+                let Some((index, generation)) = self.child_content_retirements.next_id_from(self.close_child_root_cursor) else {
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-child-root-authority"), "child root retirement registry changed during one fixed close step"));
+                };
+                let step =
+                    {
+                        let retirements = &mut self.child_content_retirements;
+                        let children = &mut self.children;
+                        let current = &*self.child_content_root;
+                        retirements
+                            .get_mut(generation)
+                            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-child-root-authority"), "child root retirement authority changed during one fixed close step"))?
+                            .close_step(children, current, maximum_items, maximum_bytes)?
+                    };
+                if step != PluginCloseStep::Complete {
+                    self.close_child_root_cursor = index;
+                    return Ok(step);
+                }
+                if !self.child_content_retirements.get(generation).is_some_and(ChildContentRetirement::terminal_is_empty) {
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-child-root-terminal-not-empty"), "child root retirement reported Complete without its exact terminal-empty witness"));
+                }
+                let retirement =
+                    self.child_content_retirements.remove(generation).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-child-root-authority"), "terminal child root retirement changed before exact removal"))?;
+                drop(retirement);
+                self.close_child_root_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if !self.close_child_root_detached {
+                let retirement_generation = if self.child_content_root.root.as_ref().is_some_and(|root| root.len != 0) {
+                    let generation = self
+                        .child_content_generation
+                        .checked_add(1)
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-child-root-generation"), "child root close generation exhausted before exact ownership transfer"))?;
+                    if !self.child_content_retirements.can_insert(generation) {
+                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
+                    Some(generation)
+                } else {
+                    None
+                };
+                let previous = std::mem::replace(&mut *self.child_content_root, ChildContentView::EMPTY);
+                if let Some(generation) = retirement_generation {
+                    self.child_content_retirements.insert_admitted(generation, ChildContentRetirement::new(previous, true));
+                    self.child_content_generation = generation;
+                } else {
+                    drop(previous);
+                }
+                self.close_child_root_detached = true;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if let Some(retirement) = self.close_child_member.as_mut() {
+                let step = retirement.close_step(maximum_items, maximum_bytes)?;
+                if step != PluginCloseStep::Complete {
+                    return Ok(step);
+                }
+                if !retirement.terminal_is_empty() {
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-child-member-terminal-not-empty"), "child member retirement reported Complete without its exact terminal-empty witness"));
+                }
+                drop(self.close_child_member.take());
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if !self.children.is_empty() {
+                if self.close_child_member_cursor >= CHILD_CONTENT_SLOTS {
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-child-member-cursor"), "fixed child-member close cursor exhausted before every exact owner was detached"));
+                }
+                let index = self.close_child_member_cursor;
+                self.close_child_member_cursor += 1;
+                if let Some(entry) = self.children.take_at(index) {
+                    *self.close_child_member = Some(ChildMemberRetirement::new(entry));
+                }
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if !self.peer_roster_publications.is_empty() {
+                let Some((index, generation)) = self.peer_roster_publications.next_id_from(self.close_peer_roster_cursor) else {
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-peer-roster-authority"), "peer roster publication registry changed during one fixed close step"));
+                };
+                let step = self
+                    .peer_roster_publications
+                    .get_mut(generation)
+                    .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-peer-roster-authority"), "peer roster publication authority changed during one fixed close step"))?
+                    .close_step(maximum_items, maximum_bytes)?;
+                if step != PluginCloseStep::Complete {
+                    self.close_peer_roster_cursor = index;
+                    return Ok(step);
+                }
+                if !self.peer_roster_publications.get(generation).is_some_and(PeerRosterPublication::terminal_is_empty) {
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-peer-roster-terminal-not-empty"), "peer roster publication reported Complete without its exact terminal-empty witness"));
+                }
+                let publication =
+                    self.peer_roster_publications.remove(generation).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-peer-roster-authority"), "terminal peer roster publication changed before exact removal"))?;
+                drop(publication);
+                let reservation_slot = Self::peer_roster_slot(generation);
+                if self.peer_roster_reservations[reservation_slot].is_some_and(|(reserved, _)| reserved == generation) {
+                    self.peer_roster_reservations[reservation_slot] = None;
+                }
+                self.close_peer_roster_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if let Some((index, generation)) = self.peer_roster_outcomes.next_id_from(self.close_peer_roster_cursor) {
+                let outcome = self.peer_roster_outcomes.remove(generation).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-peer-roster-outcome"), "peer roster outcome changed during exact close removal"))?;
+                drop(outcome);
+                self.close_peer_roster_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if !self.peer_presence_retirements.is_empty() {
+                let Some((index, generation)) = self.peer_presence_retirements.next_id_from(self.close_peer_presence_cursor) else {
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-peer-presence-authority"), "peer-presence retirement registry changed during one fixed close step"));
+                };
+                let step = self
+                    .peer_presence_retirements
+                    .get_mut(generation)
+                    .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-peer-presence-authority"), "peer-presence retirement authority changed during one fixed close step"))?
+                    .close_step(maximum_items, maximum_bytes)?;
+                if step != PluginCloseStep::Complete {
+                    self.close_peer_presence_cursor = index;
+                    return Ok(step);
+                }
+                if !self.peer_presence_retirements.get(generation).is_some_and(PeerPresenceRootRetirement::terminal_is_empty) {
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-peer-presence-terminal-not-empty"), "peer-presence retirement reported Complete without its exact terminal-empty witness"));
+                }
+                let retirement = self
+                    .peer_presence_retirements
+                    .remove(generation)
+                    .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-peer-presence-authority"), "terminal peer-presence retirement changed before exact removal"))?;
+                drop(retirement);
+                self.close_peer_presence_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if !self.presence_peer_retirements.is_empty() {
+                let Some((index, generation)) = self.presence_peer_retirements.next_id_from(self.close_presence_peer_cursor) else {
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-presence-peer-authority"), "app-typed presence retirement registry changed during one fixed close step"));
+                };
+                let step = self
+                    .presence_peer_retirements
+                    .get_mut(generation)
+                    .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-presence-peer-authority"), "app-typed presence retirement authority changed during one fixed close step"))?
+                    .close_step(maximum_items, maximum_bytes)
+                    .map_err(plugin_sdk_fault)?;
+                match step {
+                    store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= maximum_items && released_bytes <= maximum_bytes => {
+                        self.close_presence_peer_cursor = index;
+                        return Ok(PluginCloseStep::Pending { released_items, released_bytes });
+                    }
+                    store::SnapshotRetirementStep::Pending { .. } => {
+                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-presence-peer-over-budget"), "app-typed presence retirement exceeded its exact close grant"));
+                    }
+                    store::SnapshotRetirementStep::Blocked => {
+                        self.close_presence_peer_cursor = index;
+                        return Ok(PluginCloseStep::Blocked { reason: "app-typed presence retirement waits for its exact captured root" });
+                    }
+                    store::SnapshotRetirementStep::Complete => {}
+                }
+                if !self.presence_peer_retirements.get(generation).is_some_and(store::PresencePeersRetirement::terminal_is_empty) {
+                    return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-presence-peer-terminal-not-empty"), "app-typed presence retirement reported Complete without its exact terminal-empty witness"));
+                }
+                let retirement = self
+                    .presence_peer_retirements
+                    .remove(generation)
+                    .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-presence-peer-authority"), "terminal app-typed presence retirement changed before exact removal"))?;
+                drop(retirement);
+                self.close_presence_peer_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if !self.close_peer_presence_detached {
+                let retirement_generation = if self.peer_presence.is_empty() {
+                    None
+                } else {
+                    let generation = self
+                        .peer_presence_generation
+                        .checked_add(1)
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.close-peer-presence-generation"), "peer-presence close generation exhausted before exact ownership transfer"))?;
+                    if !self.peer_presence_retirements.can_insert(generation) {
+                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
+                    Some(generation)
+                };
+                let previous = std::mem::replace(&mut *self.peer_presence, PeerPresenceRoot::empty_shared());
+                if let Some(generation) = retirement_generation {
+                    self.peer_presence_retirements.insert_admitted(generation, PeerPresenceRootRetirement::new(previous));
+                    self.peer_presence_generation = generation;
+                } else {
+                    drop(previous);
+                }
+                self.close_peer_presence_detached = true;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            if !self.close_snapshot_reads_drained {
+                let pump = &mut self.document_snapshot_read_returns;
+                let store = &mut self.store;
+                let step = pump.drive(|| store.take_returned_snapshot_read_retirement().map_err(|error| error.into_fault()), maximum_items, maximum_bytes)?;
+                if step != PluginCloseStep::Complete {
+                    return Ok(step);
+                }
+                if !self.store.snapshot_read_leases_terminal_is_empty() {
+                    return Ok(PluginCloseStep::Blocked { reason: "document snapshot read remains live outside the bounded return pump" });
+                }
+                self.close_snapshot_reads_drained = true;
+                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
             }
             let owned_step = match self.close_owned_stage {
                 0 => drive_artifact_owned_disposer("document-store", &mut self.store, &mut self.close_document_disposer, maximum_items, maximum_bytes),
@@ -16060,6 +17662,330 @@ pub mod app {
             false
         }
 
+        fn maintenance_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<PluginCloseStep, Fault> {
+            if maximum_items == 0 {
+                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+            }
+            if self.tool_operations.is_empty()
+                && self.media_closures.is_empty()
+                && self.segmented_closures.is_empty()
+                && self.snapshot_retirements.is_empty()
+                && self.child_content_retirements.is_empty()
+                && self.peer_roster_publications.is_empty()
+                && self.peer_presence_retirements.is_empty()
+                && self.presence_peer_retirements.is_empty()
+                && self.document_snapshot_read_returns.terminal_is_empty()
+            {
+                let pump = &mut self.document_snapshot_read_returns;
+                let store = &mut self.store;
+                return pump.drive(|| store.take_returned_snapshot_read_retirement().map_err(|error| error.into_fault()), maximum_items, maximum_bytes);
+            }
+            let stage = self.maintenance_stage;
+            self.maintenance_stage = (self.maintenance_stage + 1) % 9;
+            match stage {
+                0 => {
+                    let Some((index, operation_id)) = self.tool_operations.next_id_from(self.maintenance_tool_cursor) else {
+                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    };
+                    self.maintenance_tool_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                    let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(
+                        semio_framework_async::ProcessKind::InteractiveNative,
+                        std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1),
+                    ));
+                    self.tool_operations
+                        .get_mut(operation_id)
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-tool-authority"), "typed operation authority changed during one fixed maintenance step"))?
+                        .drive_worker_step(&pool)
+                }
+                1 => {
+                    let Some((index, operation_id)) = self.media_closures.next_id_from(self.maintenance_media_cursor) else {
+                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    };
+                    self.maintenance_media_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                    let step = self
+                        .media_closures
+                        .get_mut(operation_id)
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-media-authority"), "live media cleanup authority changed during one fixed step"))?
+                        .close_step(maximum_items, maximum_bytes)?;
+                    match step {
+                        PluginCloseStep::Complete => {
+                            let active =
+                                self.media_closures.get(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-media-authority"), "completed live media cleanup lost its exact fixed owner"))?;
+                            if !active.terminal_is_empty()? {
+                                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-media-terminal-not-empty"), "live media cleanup reported Complete without an exact terminal-empty witness"));
+                            }
+                            self.quarantine_media_snapshot(operation_id, active).map_err(|error| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-snapshot-quarantine"), error.to_string()))?;
+                            let active =
+                                self.media_closures.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-media-authority"), "terminal live media cleanup changed before exact removal"))?;
+                            drop(active);
+                            Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                        }
+                        step @ PluginCloseStep::Blocked { .. } => Ok(step),
+                        step => Ok(step),
+                    }
+                }
+                2 => {
+                    let Some((index, operation_id)) = self.segmented_closures.next_id_from(self.maintenance_segment_cursor) else {
+                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    };
+                    self.maintenance_segment_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                    if maximum_bytes < ARTIFACT_OUTPUT_CHUNK_BYTES {
+                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
+                    match self
+                        .segmented_closures
+                        .get(operation_id)
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-segment-authority"), "live segmented cleanup authority changed during one fixed step"))?
+                        .chunks
+                        .close_take_chunk()?
+                    {
+                        Some(chunk) => Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: chunk.len() }),
+                        None => {
+                            let output = self
+                                .segmented_closures
+                                .remove(operation_id)
+                                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-segment-authority"), "terminal live segmented cleanup changed before exact removal"))?;
+                            if !output.terminal_is_empty() {
+                                self.segmented_closures.insert_admitted(operation_id, output);
+                                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-segment-terminal-not-empty"), "live segmented cleanup reached terminal without an empty exact chunk queue"));
+                            }
+                            drop(output);
+                            Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                        }
+                    }
+                }
+                3 => {
+                    let Some((index, operation_id)) = self.snapshot_retirements.next_id_from(self.maintenance_snapshot_cursor) else {
+                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    };
+                    self.maintenance_snapshot_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                    if self.media_exports.get(operation_id).is_some() || self.media_closures.get(operation_id).is_some() {
+                        return Ok(PluginCloseStep::Blocked { reason: "snapshot retirement waits for its exact live media owner" });
+                    }
+                    let step = self
+                        .snapshot_retirements
+                        .get_mut(operation_id)
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-snapshot-authority"), "live snapshot retirement authority changed during one fixed step"))?
+                        .close_step(maximum_items, maximum_bytes)?;
+                    if step != PluginCloseStep::Complete {
+                        return Ok(match step {
+                            step @ PluginCloseStep::Blocked { .. } => step,
+                            step => step,
+                        });
+                    }
+                    if !self.snapshot_retirements.get(operation_id).is_some_and(ArtifactSnapshotCloseRetention::terminal_is_empty) {
+                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-snapshot-terminal-not-empty"), "live snapshot retirement reported Complete without its exact terminal-empty witness"));
+                    }
+                    let retirement = self
+                        .snapshot_retirements
+                        .remove(operation_id)
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-snapshot-authority"), "terminal live snapshot retirement changed before exact removal"))?;
+                    drop(retirement);
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                4 => {
+                    let Some((index, generation)) = self.child_content_retirements.next_id_from(self.maintenance_child_root_cursor) else {
+                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    };
+                    let step = {
+                        let retirements = &mut self.child_content_retirements;
+                        let children = &mut self.children;
+                        let current = &*self.child_content_root;
+                        retirements
+                            .get_mut(generation)
+                            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-child-root-authority"), "live child root retirement authority changed during one fixed step"))?
+                            .close_step(children, current, maximum_items, maximum_bytes)?
+                    };
+                    if step != PluginCloseStep::Complete {
+                        self.maintenance_child_root_cursor = index;
+                        return Ok(step);
+                    }
+                    if !self.child_content_retirements.get(generation).is_some_and(ChildContentRetirement::terminal_is_empty) {
+                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-child-root-terminal-not-empty"), "live child root retirement reported Complete without its exact terminal-empty witness"));
+                    }
+                    let retirement = self
+                        .child_content_retirements
+                        .remove(generation)
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-child-root-authority"), "terminal live child root retirement changed before exact removal"))?;
+                    drop(retirement);
+                    self.maintenance_child_root_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                5 => {
+                    let Some((index, generation)) = self.peer_presence_retirements.next_id_from(self.maintenance_peer_presence_cursor) else {
+                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    };
+                    let step = self
+                        .peer_presence_retirements
+                        .get_mut(generation)
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-presence-authority"), "live peer-presence retirement authority changed during one fixed step"))?
+                        .close_step(maximum_items, maximum_bytes)?;
+                    if step != PluginCloseStep::Complete {
+                        self.maintenance_peer_presence_cursor = index;
+                        return Ok(step);
+                    }
+                    if !self.peer_presence_retirements.get(generation).is_some_and(PeerPresenceRootRetirement::terminal_is_empty) {
+                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-presence-terminal-not-empty"), "live peer-presence retirement reported Complete without its exact terminal-empty witness"));
+                    }
+                    let retirement = self
+                        .peer_presence_retirements
+                        .remove(generation)
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-presence-authority"), "terminal live peer-presence retirement changed before exact removal"))?;
+                    drop(retirement);
+                    self.maintenance_peer_presence_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                6 => {
+                    let Some((index, generation)) = self.presence_peer_retirements.next_id_from(self.maintenance_presence_peer_cursor) else {
+                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    };
+                    let step = self
+                        .presence_peer_retirements
+                        .get_mut(generation)
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-presence-peer-authority"), "live app-typed presence retirement authority changed during one fixed step"))?
+                        .close_step(maximum_items, maximum_bytes)
+                        .map_err(plugin_sdk_fault)?;
+                    match step {
+                        store::SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= maximum_items && released_bytes <= maximum_bytes => {
+                            self.maintenance_presence_peer_cursor = index;
+                            return Ok(PluginCloseStep::Pending { released_items, released_bytes });
+                        }
+                        store::SnapshotRetirementStep::Pending { .. } => {
+                            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-presence-peer-over-budget"), "live app-typed presence retirement exceeded its exact maintenance grant"));
+                        }
+                        store::SnapshotRetirementStep::Blocked => {
+                            self.maintenance_presence_peer_cursor = index;
+                            return Ok(PluginCloseStep::Blocked { reason: "app-typed presence retirement waits for its exact captured root" });
+                        }
+                        store::SnapshotRetirementStep::Complete => {}
+                    }
+                    if !self.presence_peer_retirements.get(generation).is_some_and(store::PresencePeersRetirement::terminal_is_empty) {
+                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-presence-peer-terminal-not-empty"), "live app-typed presence retirement reported Complete without its exact terminal-empty witness"));
+                    }
+                    let retirement = self
+                        .presence_peer_retirements
+                        .remove(generation)
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-presence-peer-authority"), "terminal live app-typed presence retirement changed before exact removal"))?;
+                    drop(retirement);
+                    self.maintenance_presence_peer_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                7 => {
+                    let Some(generation) = self.peer_roster_processed_generation.checked_add(1) else {
+                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-generation"), "peer roster maintenance generation exhausted"));
+                    };
+                    let index = Self::peer_roster_slot(generation);
+                    if self.peer_roster_publications.get(generation).is_none() {
+                        return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                    }
+                    let faulted = self.peer_roster_publications.get(generation).is_some_and(|publication| publication.faulted);
+                    let step = if faulted {
+                        self.peer_roster_publications
+                            .get_mut(generation)
+                            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-authority"), "faulted peer roster publication changed during one fixed cleanup step"))?
+                            .close_step(maximum_items, maximum_bytes)?
+                    } else {
+                        let step = {
+                            let publications = &mut self.peer_roster_publications;
+                            let presence_store = &self.presence_store;
+                            publications.get_mut(generation).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-authority"), "peer roster publication changed during one fixed decode step"))?.step(
+                                presence_store,
+                                maximum_items,
+                                maximum_bytes,
+                            )
+                        };
+                        match step {
+                            Ok(step) => step,
+                            Err(fault) => {
+                                self.peer_roster_publications
+                                    .get_mut(generation)
+                                    .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-authority"), "peer roster publication changed before retained fault transition"))?
+                                    .fail(fault);
+                                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                            }
+                        }
+                    };
+                    if step != PluginCloseStep::Complete {
+                        self.maintenance_peer_roster_cursor = index;
+                        return Ok(step);
+                    }
+                    if faulted {
+                        if !self.peer_roster_publications.get(generation).is_some_and(PeerRosterPublication::terminal_is_empty) {
+                            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-terminal-not-empty"), "faulted peer roster publication reported Complete without its exact terminal-empty witness"));
+                        }
+                    } else {
+                        let (seq, cancel) = {
+                            let publication = self
+                                .peer_roster_publications
+                                .get(generation)
+                                .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-authority"), "complete peer roster publication changed before validation"))?;
+                            (publication.seq, publication.cancel.clone())
+                        };
+                        let admission = match self.validate_peer_roster_publication(seq, generation, &cancel) {
+                            Ok(admission) => admission,
+                            Err(fault) => {
+                                let publication = self
+                                    .peer_roster_publications
+                                    .get_mut(generation)
+                                    .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-authority"), "stale peer roster publication changed before cleanup handoff"))?;
+                                publication.fail(fault);
+                                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                            }
+                        };
+                        let candidate = match self
+                            .peer_roster_publications
+                            .get_mut(generation)
+                            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-authority"), "complete peer roster publication changed before exact candidate commit"))?
+                            .take_candidate()
+                        {
+                            Ok(candidate) => candidate,
+                            Err(fault) => {
+                                self.peer_roster_publications
+                                    .get_mut(generation)
+                                    .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-authority"), "peer roster publication changed before candidate fault transition"))?
+                                    .fail(fault);
+                                return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                            }
+                        };
+                        self.publish_peer_roster_candidate_admitted(admission, candidate);
+                    }
+                    if !self.peer_roster_publications.get(generation).is_some_and(PeerRosterPublication::terminal_is_empty) {
+                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-terminal-not-empty"), "peer roster publication reached outcome handoff without an exact empty terminal witness"));
+                    }
+                    let (seq, fault) = {
+                        let publication = self
+                            .peer_roster_publications
+                            .get_mut(generation)
+                            .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-authority"), "terminal peer roster publication changed before outcome handoff"))?;
+                        (publication.seq, publication.fault.take())
+                    };
+                    if !self.peer_roster_outcomes.can_insert(generation) {
+                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-outcome"), "pre-admitted peer roster outcome slot changed before exact handoff"));
+                    }
+                    self.peer_roster_outcomes.insert_admitted(generation, PresenceRosterOutcome { seq, fault });
+                    let publication = self
+                        .peer_roster_publications
+                        .remove(generation)
+                        .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-authority"), "terminal peer roster publication changed before exact removal"))?;
+                    drop(publication);
+                    let reservation_slot = Self::peer_roster_slot(generation);
+                    if self.peer_roster_reservations[reservation_slot] != Some((generation, seq)) {
+                        return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.maintenance-peer-roster-reservation"), "terminal peer roster lost its exact ingress reservation"));
+                    }
+                    self.peer_roster_reservations[reservation_slot] = None;
+                    self.peer_roster_processed_generation = generation;
+                    self.maintenance_peer_roster_cursor = (index + 1) % ARTIFACT_LIVE_OUTPUT_SLOTS;
+                    Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+                8 => {
+                    let pump = &mut self.document_snapshot_read_returns;
+                    let store = &mut self.store;
+                    pump.drive(|| store.take_returned_snapshot_read_retirement().map_err(|error| error.into_fault()), maximum_items, maximum_bytes)
+                }
+                _ => unreachable!("fixed maintenance stage"),
+            }
+        }
+
         async fn app_id(&self) -> &str {
             self.app.instance_id().await
         }
@@ -16076,9 +18002,7 @@ pub mod app {
             self.bounded_tool_contracts
                 .iter()
                 .cloned()
-                .chain(self.app_tool_registrations
-                .values()
-                .map(|registration| ArtifactToolPublicContract {
+                .chain(self.app_tool_registrations.values().map(|registration| ArtifactToolPublicContract {
                     owner: registration.owner,
                     controller_id: registration.key.controller_id.clone(),
                     tool_id: registration.key.tool_id.clone(),
@@ -16378,29 +18302,52 @@ pub mod app {
             EphemeralSnapshot { presence: self.presence_store.local().await.encode_pack(), presence_generation: self.presence_store.generation().await, transient_generation: self.transient_store.generation().await, interaction: interaction_bytes }
         }
 
-        /// 👥️ For each peer ≠ own actor (already guaranteed by the wire wrapper that built `peers` —
-        /// see `AppCommand::Presence`'s own doc comment; this app has no independent notion of "own
-        /// actor" to re-check against): adopts an app-typed `presence_pack` into `presence_store`
-        /// when present, and unconditionally upserts `color`/`surface`/`interaction` into
-        /// `peer_presence`. An actor absent from `peers` is dropped from BOTH maps — this call is the
-        /// roster's single source of truth, never a diff.
-        async fn adopt_presence(&mut self, own_color: Option<u8>, peers: &[protocol::PresencePeer], now_ms: i64) -> Result<(), Fault> {
-            self.own_color = own_color;
-            let mut seen: BTreeSet<String> = BTreeSet::new();
-            for peer in peers {
-                seen.insert(peer.actor.clone());
-                if let Some(pack) = &peer.presence_pack {
-                    let presence = A::Presence::decode_pack(pack).map_err(|error| plugin_sdk_fault(error.to_string()))?;
-                    self.presence_store.adopt_peer(peer.actor.clone(), presence, now_ms).await;
-                }
-                self.peer_presence.insert(peer.actor.clone(), PeerPresence { color: peer.color, surface: peer.surface.clone(), interaction: peer.interaction.clone() });
+        fn reserve_presence_ingress(&mut self, seq: u64) -> Result<PresenceRosterAdmission, Fault> {
+            let generation = self.peer_roster_admission_generation.checked_add(1).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-generation"), "peer roster admission generation exhausted"))?;
+            let slot = Self::peer_roster_slot(generation);
+            if self.peer_roster_reservations[slot].is_some()
+                || !self.peer_roster_publications.can_insert(generation)
+                || !self.peer_roster_outcomes.can_insert(generation)
+                || !self.peer_presence_retirements.can_insert(generation)
+                || !self.presence_peer_retirements.can_insert(generation)
+                || !self.presence_store.peer_retirement_available()
+            {
+                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-saturated"), "peer roster ingress, outcome, or retirement authority is saturated before payload decode"));
             }
-            let stale: Vec<String> = self.presence_store.peers().await.iter().map(|(actor, _)| (*actor).to_string()).filter(|actor| !seen.contains(actor)).collect();
-            for actor in stale {
-                self.presence_store.remove_peer(&actor).await;
-            }
-            self.peer_presence.retain(|actor, _| seen.contains(actor));
-            Ok(())
+            self.peer_roster_reservations[slot] = Some((generation, seq));
+            self.peer_roster_admission_generation = generation;
+            Ok(PresenceRosterAdmission { seq, generation, cancel: self.peer_roster_scope.child_now() })
+        }
+
+        fn admit_presence_ingress(&mut self, admission: PresenceRosterAdmission, command: protocol::PresenceCommandCursor, now_ms: i64) {
+            let slot = Self::peer_roster_slot(admission.generation);
+            assert_eq!(command.seq(), admission.seq, "Presence cursor sequence is bound by its unforgeable reservation");
+            assert_eq!(self.peer_roster_reservations[slot], Some((admission.generation, admission.seq)), "Presence reservation remains live under the app's exclusive owner");
+            assert!(self.peer_roster_publications.can_insert(admission.generation), "Presence publication slot was reserved before cursor construction");
+            let generation = admission.generation;
+            self.peer_roster_publications.insert_admitted(generation, PeerRosterPublication::<A>::new(admission, now_ms, command));
+        }
+
+        fn push_presence_ingress(&mut self, generation: u64, page_index: u32, page: semio_framework::kernel::FixedCommandPage) -> Result<(), (Fault, semio_framework::kernel::FixedCommandPage)> {
+            let Some(publication) = self.peer_roster_publications.get_mut(generation) else {
+                return Err((Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-owner"), "Presence page targets no retained publication owner"), page));
+            };
+            publication.push_page(page_index, page)
+        }
+
+        fn reject_presence_ingress(&mut self, admission: PresenceRosterAdmission, command: semio_framework::kernel::FixedCommandPage, fault: Fault) {
+            let slot = Self::peer_roster_slot(admission.generation);
+            assert_eq!(self.peer_roster_reservations[slot], Some((admission.generation, admission.seq)), "malformed Presence owner retains its exact reservation");
+            assert!(self.peer_roster_publications.can_insert(admission.generation), "malformed Presence cleanup uses its pre-reserved publication slot");
+            let generation = admission.generation;
+            self.peer_roster_publications.insert_admitted(generation, PeerRosterPublication::<A>::rejected(admission, command, fault));
+        }
+
+        fn take_presence_outcome(&mut self) -> Option<PresenceRosterOutcome> {
+            let generation = self.peer_roster_outcome_generation.checked_add(1)?;
+            let outcome = self.peer_roster_outcomes.remove(generation)?;
+            self.peer_roster_outcome_generation = generation;
+            Some(outcome)
         }
 
         async fn config_pack(&self) -> Result<store::ArtifactPackFiles, Fault> {
@@ -16529,9 +18476,9 @@ pub mod app {
                 return Ok(node);
             }
             let mut node = {
-                let VcsArtifactApp { app: _, cache, children, .. } = self;
+                let VcsArtifactApp { app: _, cache, child_content_root, .. } = self;
                 let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-                let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::new(children).await).await;
+                let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root)).await;
                 let cfg = ConfigView { snapshot: config.as_ref() };
                 A::render(&effective_body_key, &doc, &cfg).await
             };
@@ -16544,7 +18491,7 @@ pub mod app {
                 return HashMap::new();
             }
             let (_, snapshot, config, history) = self.cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::new(&self.children).await).await;
+            let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(&self.child_content_root)).await;
             let cfg = ConfigView { snapshot: config.as_ref() };
             A::window_engagements(&doc, &cfg).await
         }
@@ -16554,7 +18501,7 @@ pub mod app {
                 return HashMap::new();
             }
             let (_, snapshot, config, history) = self.cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::new(&self.children).await).await;
+            let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(&self.child_content_root)).await;
             let cfg = ConfigView { snapshot: config.as_ref() };
             A::window_measures(&doc, &cfg).await
         }
@@ -16563,9 +18510,9 @@ pub mod app {
             if self.refresh_cache().await.is_err() {
                 return HashMap::new();
             }
-            let VcsArtifactApp { app: _, cache, children, .. } = self;
+            let VcsArtifactApp { app: _, cache, child_content_root, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::new(children).await).await;
+            let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root)).await;
             let cfg = ConfigView { snapshot: config.as_ref() };
             A::tool_measures(&doc, &cfg).await
         }
@@ -16574,9 +18521,9 @@ pub mod app {
             if self.refresh_cache().await.is_err() {
                 return Vec::new();
             }
-            let VcsArtifactApp { app: _, cache, children, .. } = self;
+            let VcsArtifactApp { app: _, cache, child_content_root, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::new(children).await).await;
+            let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root)).await;
             let cfg = ConfigView { snapshot: config.as_ref() };
             A::pending_effects(&doc, &cfg).await
         }
@@ -16588,9 +18535,9 @@ pub mod app {
             if self.refresh_cache().await.is_err() {
                 return Vec::new();
             }
-            let VcsArtifactApp { app: _, cache, registry, children, .. } = self;
+            let VcsArtifactApp { app: _, cache, registry, child_content_root, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::new(children).await).await;
+            let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root)).await;
             let cfg = ConfigView { snapshot: config.as_ref() };
             let items = A::context_menu(request, &doc, &cfg, registry).await;
             ui_wgpu::wgpu::organize_context_menu(items, &|id| registry.category_of(id))
@@ -16612,9 +18559,9 @@ pub mod app {
                 }
             }
             self.refresh_cache().await.map_err(|error| MediaError::Payload(port.to_string(), error.message))?;
-            let VcsArtifactApp { app: _, cache, children, .. } = self;
+            let VcsArtifactApp { app: _, cache, child_content_root, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::new(children).await).await;
+            let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root)).await;
             let _cfg = ConfigView { snapshot: config.as_ref() };
             A::export_media(port, &doc).await
         }
@@ -16636,7 +18583,8 @@ pub mod app {
             let output = self.segmented_downloads.get(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.unknown-segmented-download"), format!("unknown segmented download operation {operation_id}")))?;
             let chunk = output.chunks.take_chunk()?;
             if chunk.is_none() {
-                let output = self.segmented_downloads.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.segmented-download-authority"), "terminal segmented download changed before exact removal"))?;
+                let output =
+                    self.segmented_downloads.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.segmented-download-authority"), "terminal segmented download changed before exact removal"))?;
                 if !output.terminal_is_empty() {
                     self.segmented_downloads.insert_admitted(operation_id, output);
                     return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.segmented-download-terminal-not-empty"), "terminal segmented download retained unread chunks"));
@@ -16654,9 +18602,9 @@ pub mod app {
 
         async fn media_fingerprint(&mut self, port: &str) -> Result<MediaFingerprint, MediaError> {
             self.refresh_cache().await.map_err(|error| MediaError::Payload(port.to_string(), error.message))?;
-            let VcsArtifactApp { app: _, cache, children, .. } = self;
+            let VcsArtifactApp { app: _, cache, child_content_root, .. } = self;
             let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::new(children).await).await;
+            let doc = ArtifactView::with_children(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root)).await;
             let _cfg = ConfigView { snapshot: config.as_ref() };
             A::media_fingerprint(port, &doc).await
         }
@@ -19202,19 +21150,28 @@ pub mod plugin_runtime {
     use serde_json::Value;
     use std::cell::{Cell, RefCell};
     use std::collections::HashMap;
-    use std::sync::atomic::{AtomicU32, AtomicU64, AtomicU8, Ordering};
+    use std::sync::atomic::{AtomicU8, AtomicU32, AtomicU64, Ordering};
     use ui_wgpu::wgpu::{ContextMenuPoint, ContextMenuRequest, ContextMenuResponse, ContextMenuSurfaceTarget, UiMenuRef};
 
     struct RuntimeAppCell<PA: PluginApp> {
         id: u32,
         instance: std::sync::Mutex<AppInstance<PA>>,
+        maintenance_status: AtomicU8,
+        maintenance_generation: AtomicU64,
+        maintenance_stalled_steps: AtomicU32,
     }
 
     impl<PA: PluginApp> RuntimeAppCell<PA> {
         fn new(instance: AppInstance<PA>) -> Self {
-            Self { id: instance.id, instance: std::sync::Mutex::new(instance) }
+            Self { id: instance.id, instance: std::sync::Mutex::new(instance), maintenance_status: AtomicU8::new(RUNTIME_MAINTENANCE_READY), maintenance_generation: AtomicU64::new(0), maintenance_stalled_steps: AtomicU32::new(0) }
         }
     }
+
+    const RUNTIME_MAINTENANCE_READY: u8 = 0;
+    const RUNTIME_MAINTENANCE_QUEUED: u8 = 1;
+    const RUNTIME_MAINTENANCE_RUNNING: u8 = 2;
+    const RUNTIME_MAINTENANCE_FAULT: u8 = 3;
+    const RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT: u32 = 256;
 
     const RUNTIME_CLOSE_READY: u8 = 0;
     const RUNTIME_CLOSE_QUEUED: u8 = 1;
@@ -19407,6 +21364,24 @@ pub mod plugin_runtime {
             drop(quarantine);
             assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0, "an incomplete registry shell must fail safe without walking or dropping nested values");
         }
+
+        #[test]
+        fn exhausted_close_generation_is_rejected_before_exact_owner_detachment() {
+            struct DropSentinel(std::sync::Arc<std::sync::atomic::AtomicUsize>);
+            impl Drop for DropSentinel {
+                fn drop(&mut self) {
+                    self.0.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                }
+            }
+            let drops = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+            let mut live = RuntimeInstanceRegistry::new();
+            live.insert_admitted(91, DropSentinel(drops.clone()));
+            assert!(checked_runtime_close_generation(u64::MAX).is_err());
+            assert!(live.get(91).is_some(), "generation admission must precede owner detachment");
+            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 0);
+            drop(live.take(91));
+            assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 1);
+        }
     }
 
     /// 🧩️ Typed state owned by each embedding plugin's `plugin_exports!` expansion.
@@ -19416,6 +21391,7 @@ pub mod plugin_runtime {
         instances: RefCell<RuntimeInstanceRegistry<std::sync::Arc<RuntimeAppCell<PA>>>>,
         close_quarantine: RefCell<RuntimeInstanceRegistry<RuntimeCloseEntry<PA>>>,
         close_cleanup_cursor: std::cell::Cell<usize>,
+        live_cleanup_cursor: std::cell::Cell<usize>,
         close_generation: std::cell::Cell<u64>,
         instance_actors: RefCell<RuntimeInstanceRegistry<RuntimeActorAuthority>>,
     }
@@ -19429,6 +21405,7 @@ pub mod plugin_runtime {
                 instances: RefCell::new(RuntimeInstanceRegistry::new()),
                 close_quarantine: RefCell::new(RuntimeInstanceRegistry::new()),
                 close_cleanup_cursor: std::cell::Cell::new(0),
+                live_cleanup_cursor: std::cell::Cell::new(0),
                 close_generation: std::cell::Cell::new(0),
                 instance_actors: RefCell::new(RuntimeInstanceRegistry::new()),
             }
@@ -19539,11 +21516,9 @@ pub mod plugin_runtime {
     /// plugin bundle. `#[cfg(test)]`-gated, never part of the real API surface.
     #[cfg(test)]
     pub(crate) async fn test_push_instance<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance: AppInstance<PA>) {
-        with_instances_mut(runtime, |list| {
-            list.insert(instance.id, std::sync::Arc::new(RuntimeAppCell::new(instance))).map_err(|_| plugin_internal_fault("fixed runtime instance authority is saturated or collided"))
-        })
-        .await
-        .expect("test_push_instance must not fail");
+        with_instances_mut(runtime, |list| list.insert(instance.id, std::sync::Arc::new(RuntimeAppCell::new(instance))).map_err(|_| plugin_internal_fault("fixed runtime instance authority is saturated or collided")))
+            .await
+            .expect("test_push_instance must not fail");
     }
 
     static NEXT_INSTANCE_ID: AtomicU32 = AtomicU32::new(1);
@@ -19933,6 +21908,88 @@ pub mod plugin_runtime {
     const RUNTIME_CLOSE_CALLBACK_WALL_US: u64 = 8_000;
     const RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT: u8 = 8;
 
+    struct RuntimeLiveCleanupJob<PA: PluginApp> {
+        instance_id: u32,
+        cell: std::sync::Arc<RuntimeAppCell<PA>>,
+        progress: Option<crate::app::PluginCloseStep>,
+        contended: bool,
+    }
+
+    impl<PA: PluginApp> semio_framework_job::InteractiveJob for RuntimeLiveCleanupJob<PA> {
+        fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::StepOutcome {
+            cx.set_stage("plugin-runtime-live-cleanup");
+            if cx.is_cancelled() {
+                return semio_framework_job::StepOutcome::Cancelled;
+            }
+            let mut instance = match self.cell.instance.try_lock() {
+                Ok(instance) => instance,
+                Err(std::sync::TryLockError::WouldBlock) => {
+                    self.contended = true;
+                    return semio_framework_job::StepOutcome::Yield;
+                }
+                Err(std::sync::TryLockError::Poisoned(_)) => {
+                    return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: b"plugin live cleanup authority is poisoned".to_vec() });
+                }
+            };
+            cx.consume_fuel(1);
+            match instance.app.maintenance_step(1, RUNTIME_CLOSE_BYTES_PER_STEP) {
+                Ok(progress @ crate::app::PluginCloseStep::Pending { released_items, released_bytes }) if released_items <= 1 && released_bytes <= RUNTIME_CLOSE_BYTES_PER_STEP => {
+                    self.progress = Some(progress);
+                    semio_framework_job::StepOutcome::CheckpointReady(semio_framework_job::Checkpoint { state: self.instance_id.to_le_bytes().to_vec(), applied_progress: released_items as u64 })
+                }
+                Ok(crate::app::PluginCloseStep::Pending { .. }) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: b"plugin live cleanup step exceeded its exact item or byte contract".to_vec() }),
+                Ok(progress @ crate::app::PluginCloseStep::Blocked { .. }) => {
+                    self.progress = Some(progress);
+                    semio_framework_job::StepOutcome::Yield
+                }
+                Ok(crate::app::PluginCloseStep::Complete) => {
+                    self.progress = Some(crate::app::PluginCloseStep::Complete);
+                    semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: self.instance_id.to_le_bytes().to_vec(), output: Vec::new() })
+                }
+                Err(error) => semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: error.message.into_bytes() }),
+            }
+        }
+    }
+
+    fn runtime_live_cleanup_nonterminal_status(contended: bool, progress: Option<crate::app::PluginCloseStep>, stalled_steps: &AtomicU32) -> u8 {
+        if contended {
+            return RUNTIME_MAINTENANCE_READY;
+        }
+        let zero_progress = matches!(progress, Some(crate::app::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 } | crate::app::PluginCloseStep::Blocked { .. }));
+        if !zero_progress {
+            stalled_steps.store(0, Ordering::SeqCst);
+            return RUNTIME_MAINTENANCE_READY;
+        }
+        let stalled = stalled_steps.fetch_add(1, Ordering::SeqCst).saturating_add(1);
+        if stalled >= RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT { RUNTIME_MAINTENANCE_FAULT } else { RUNTIME_MAINTENANCE_READY }
+    }
+
+    fn run_runtime_live_cleanup_turn<PA: PluginApp + 'static>(cell: &std::sync::Arc<RuntimeAppCell<PA>>, generation: semio_framework_job::Generation) {
+        let started = std::time::Instant::now();
+        if cell.maintenance_status.compare_exchange(RUNTIME_MAINTENANCE_QUEUED, RUNTIME_MAINTENANCE_RUNNING, Ordering::SeqCst, Ordering::SeqCst).is_err() {
+            return;
+        }
+        let mut job = RuntimeLiveCleanupJob { instance_id: cell.id, cell: cell.clone(), progress: None, contended: false };
+        let mut preview_sequence = 0;
+        let outcome = semio_framework_job::drive_step(
+            &mut job,
+            "plugin_runtime_live_cleanup",
+            semio_framework_job::OperationId((1u64 << 62) | cell.id as u64),
+            generation,
+            semio_framework_job::InteractiveStage::InteractiveStep,
+            semio_framework_job::StepBudget::new(1, semio_framework_job::default_now_ms().saturating_add(RUNTIME_CLOSE_INNER_GRANT_MS)),
+            semio_framework_job::CancelToken::root_now(),
+            semio_framework_job::default_now_ms,
+            &mut preview_sequence,
+        );
+        let status = match outcome {
+            semio_framework_job::StepOutcome::Fault(_) | semio_framework_job::StepOutcome::Cancelled => RUNTIME_MAINTENANCE_FAULT,
+            _ => runtime_live_cleanup_nonterminal_status(job.contended, job.progress, &cell.maintenance_stalled_steps),
+        };
+        let elapsed_us = started.elapsed().as_micros().min(u64::MAX as u128) as u64;
+        cell.maintenance_status.store(if elapsed_us > RUNTIME_CLOSE_CALLBACK_WALL_US { RUNTIME_MAINTENANCE_FAULT } else { status }, Ordering::SeqCst);
+    }
+
     struct RuntimeCloseCleanupJob<PA: PluginApp> {
         instance_id: u32,
         state: std::sync::Arc<RuntimeCloseWorkerState<PA>>,
@@ -19986,9 +22043,7 @@ pub mod plugin_runtime {
                 }
                 Ok(crate::app::PluginCloseStep::Complete) => {
                     if !instance.app.close_terminal_is_empty() {
-                        return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault {
-                            detail: b"plugin close reported Complete without a terminal-empty app witness".to_vec(),
-                        });
+                        return semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: b"plugin close reported Complete without a terminal-empty app witness".to_vec() });
                     }
                     self.progress = Some(crate::app::PluginCloseStep::Complete);
                     semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate { state: self.state.instance_id.to_le_bytes().to_vec(), output: Vec::new() })
@@ -20106,6 +22161,26 @@ pub mod plugin_runtime {
             }
             assert_eq!(runtime_close_nonterminal_status(false, Some(crate::app::PluginCloseStep::Pending { released_items: 0, released_bytes: 0 }), &stalled), RUNTIME_CLOSE_FAULT);
         }
+
+        #[test]
+        fn permanently_blocked_live_cleanup_faults_without_claiming_released_ownership() {
+            let stalled = AtomicU32::new(0);
+            let blocked = Some(crate::app::PluginCloseStep::Blocked { reason: "injected permanent external wait" });
+            for _ in 1..RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT {
+                assert_eq!(runtime_live_cleanup_nonterminal_status(false, blocked, &stalled), RUNTIME_MAINTENANCE_READY);
+            }
+            assert_eq!(runtime_live_cleanup_nonterminal_status(false, blocked, &stalled), RUNTIME_MAINTENANCE_FAULT);
+            assert_eq!(stalled.load(Ordering::SeqCst), RUNTIME_MAINTENANCE_ZERO_PROGRESS_LIMIT);
+        }
+
+        #[test]
+        fn contended_live_cleanup_does_not_consume_structural_stall_credit() {
+            let stalled = AtomicU32::new(0);
+            for _ in 0..1_024 {
+                assert_eq!(runtime_live_cleanup_nonterminal_status(true, None, &stalled), RUNTIME_MAINTENANCE_READY);
+            }
+            assert_eq!(stalled.load(Ordering::SeqCst), 0);
+        }
     }
 
     fn run_runtime_close_turn<PA: PluginApp + 'static>(state: &std::sync::Arc<RuntimeCloseWorkerState<PA>>) {
@@ -20141,6 +22216,10 @@ pub mod plugin_runtime {
         }
     }
 
+    fn checked_runtime_close_generation(current: u64) -> Result<u64, Fault> {
+        current.checked_add(1).ok_or_else(|| plugin_internal_fault("runtime close generation exhausted"))
+    }
+
     pub async fn plugin_destroy_app<PA: PluginApp + 'static>(runtime: &PluginRuntime<PA>, instance_id: u32) -> Result<(), Fault> {
         let mut instances = runtime.instances.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime instance authority is busy"))?;
         let mut quarantine = runtime.close_quarantine.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime close quarantine is busy"))?;
@@ -20148,8 +22227,8 @@ pub mod plugin_runtime {
         if !quarantine.can_insert(instance_id) {
             return Err(plugin_internal_fault(format!("runtime close quarantine is saturated or collided: {instance_id}")));
         }
+        let generation = checked_runtime_close_generation(runtime.close_generation.get())?;
         let cell = instances.take(instance_id).ok_or_else(|| plugin_internal_fault(format!("unknown instance: {instance_id}")))?;
-        let generation = runtime.close_generation.get().checked_add(1).ok_or_else(|| plugin_internal_fault("runtime close generation exhausted"))?;
         runtime.close_generation.set(generation);
         let state = std::sync::Arc::new(RuntimeCloseWorkerState {
             instance_id,
@@ -20172,12 +22251,7 @@ pub mod plugin_runtime {
     pub fn plugin_step_close_cleanup<PA: PluginApp + 'static>(runtime: &PluginRuntime<PA>) -> Result<bool, Fault> {
         let index = runtime.close_cleanup_cursor.get();
         runtime.close_cleanup_cursor.set((index + 1) % PLUGIN_RUNTIME_INSTANCE_SLOTS);
-        let entry = runtime
-            .close_quarantine
-            .try_borrow()
-            .map_err(|_| plugin_internal_fault("runtime close quarantine is busy"))?
-            .entry_at(index)
-            .map(|(instance_id, entry)| (instance_id, entry.state.clone()));
+        let entry = runtime.close_quarantine.try_borrow().map_err(|_| plugin_internal_fault("runtime close quarantine is busy"))?.entry_at(index).map(|(instance_id, entry)| (instance_id, entry.state.clone()));
         let Some((instance_id, state)) = entry else { return Ok(false) };
         match state.status.load(Ordering::SeqCst) {
             RUNTIME_CLOSE_COMPLETE => {
@@ -20199,6 +22273,47 @@ pub mod plugin_runtime {
                 pool.pump(semio_framework_job::default_now_ms());
                 Ok(scheduled || status == RUNTIME_CLOSE_QUEUED || status == RUNTIME_CLOSE_RUNNING)
             }
+        }
+    }
+
+    pub fn plugin_step_live_cleanup<PA: PluginApp + 'static>(runtime: &PluginRuntime<PA>) -> Result<bool, Fault> {
+        let index = runtime.live_cleanup_cursor.get();
+        runtime.live_cleanup_cursor.set((index + 1) % PLUGIN_RUNTIME_INSTANCE_SLOTS);
+        let cell = runtime.instances.try_borrow().map_err(|_| plugin_internal_fault("runtime instance authority is busy"))?.entry_at(index).map(|(_, cell)| cell.clone());
+        let Some(cell) = cell else { return Ok(false) };
+        match cell.maintenance_status.load(Ordering::SeqCst) {
+            RUNTIME_MAINTENANCE_FAULT => Err(plugin_internal_fault(format!("runtime live cleanup faulted for instance {}", cell.id))),
+            RUNTIME_MAINTENANCE_READY => {
+                let generation = cell
+                    .maintenance_generation
+                    .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |generation| generation.checked_add(1))
+                    .map_err(|_| plugin_internal_fault(format!("runtime live cleanup generation exhausted for instance {}", cell.id)))?
+                    .checked_add(1)
+                    .expect("checked maintenance generation");
+                if cell.maintenance_status.compare_exchange(RUNTIME_MAINTENANCE_READY, RUNTIME_MAINTENANCE_QUEUED, Ordering::SeqCst, Ordering::SeqCst).is_err() {
+                    return Ok(false);
+                }
+                let scheduled_cell = std::sync::Arc::downgrade(&cell);
+                let job: semio_framework_async::Job = Box::new(move || {
+                    let Some(scheduled_cell) = scheduled_cell.upgrade() else { return };
+                    run_runtime_live_cleanup_turn(&scheduled_cell, semio_framework_job::Generation(generation));
+                });
+                let pool = runtime_close_pool();
+                match pool.try_submit(semio_framework_async::Lane::Maintenance, job) {
+                    Ok(()) => {
+                        #[cfg(target_arch = "wasm32")]
+                        pool.pump(semio_framework_job::default_now_ms());
+                        Ok(true)
+                    }
+                    Err(error) => {
+                        cell.maintenance_status.compare_exchange(RUNTIME_MAINTENANCE_QUEUED, RUNTIME_MAINTENANCE_READY, Ordering::SeqCst, Ordering::SeqCst).ok();
+                        drop(error.into_job());
+                        Ok(false)
+                    }
+                }
+            }
+            RUNTIME_MAINTENANCE_QUEUED | RUNTIME_MAINTENANCE_RUNNING => Ok(true),
+            _ => Err(plugin_internal_fault(format!("runtime live cleanup has an invalid state for instance {}", cell.id))),
         }
     }
 
@@ -21106,16 +23221,118 @@ pub mod plugin_runtime {
         protocol::AppFrame::TransactionProposal { in_reply_to: seq, proposal_id: format!("{instance_id}:{seq}"), local_ops: proposal.local_ops, description: proposal.description, coalesce_key: proposal.coalesce_key, foreign }
     }
 
+    async fn encode_exchange_frames(frames: &[protocol::AppFrame]) -> Vec<Vec<u8>> {
+        let mut encoded = Vec::with_capacity(frames.len());
+        for frame in frames {
+            encoded.push(protocol::encode_app_frame(frame).await);
+        }
+        encoded
+    }
+
     /// 🔀️ `PluginExchangeOutput` — `plugin_exchange`'s return shape. `frames` still carries the
     /// surviving `protocol::AppFrame` wire encodings (routed through `route_app_frame` by the
     /// reactor's `poll`); `effects`/`events` are wire-encoded `kernel::Effect`/`kernel::AppEvent`
     /// bytes collected directly — channel v12 (A4) removed `AppFrame::Effects`/`AppFrame::Events`,
     /// since design-abi.md §2/§4 has effects/events travel straight into `TurnResult`, never wrapped
     /// as a frame.
+    pub enum PluginCommandIngress {
+        Encoded(semio_framework::kernel::PagedCommand),
+        Decoding(protocol::PagedAppCommandDecodeCursor),
+        Decoded(protocol::DecodedAppCommandOwner),
+        Closing { cursor: protocol::PagedAppCommandDecodeCursor, fault: Fault },
+        ClosingDecoded { owner: protocol::DecodedAppCommandOwner, fault: Fault },
+    }
+
+    enum PluginCommandIngressStep {
+        Pending(PluginCommandIngress),
+        Ready(protocol::DecodedAppCommandOwner),
+        TerminalFault(Fault),
+    }
+
+    impl PluginCommandIngress {
+        pub fn cancel(self, fault: Fault) -> Self {
+            match self {
+                Self::Encoded(command) => Self::Closing { cursor: protocol::PagedAppCommandDecodeCursor::new(command), fault },
+                Self::Decoding(cursor) | Self::Closing { cursor, .. } => Self::Closing { cursor, fault },
+                Self::Decoded(owner) | Self::ClosingDecoded { owner, .. } => Self::ClosingDecoded { owner, fault },
+            }
+        }
+
+        fn step(self) -> PluginCommandIngressStep {
+            match self {
+                Self::Encoded(encoded) => {
+                    let cursor = protocol::PagedAppCommandDecodeCursor::new(encoded);
+                    if cursor.kind() == 28 {
+                        PluginCommandIngressStep::Pending(Self::Closing { cursor, fault: plugin_internal_fault("Presence commands require the reserved presence ingress authority") })
+                    } else {
+                        PluginCommandIngressStep::Pending(Self::Decoding(cursor))
+                    }
+                }
+                Self::Decoding(mut cursor) => match cursor.step() {
+                    Ok(Some(command)) => PluginCommandIngressStep::Pending(Self::Decoded(protocol::DecodedAppCommandOwner::new(command))),
+                    Ok(None) => PluginCommandIngressStep::Pending(Self::Decoding(cursor)),
+                    Err(fault) => PluginCommandIngressStep::Pending(Self::Closing { cursor, fault }),
+                },
+                Self::Decoded(owner) => PluginCommandIngressStep::Ready(owner),
+                Self::Closing { mut cursor, fault } => {
+                    let (complete, _) = cursor.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
+                    if complete && cursor.terminal_is_empty() { PluginCommandIngressStep::TerminalFault(fault) } else { PluginCommandIngressStep::Pending(Self::Closing { cursor, fault }) }
+                }
+                Self::ClosingDecoded { mut owner, fault } => {
+                    let (complete, _, _) = owner.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES);
+                    if complete && owner.terminal_is_empty() { PluginCommandIngressStep::TerminalFault(fault) } else { PluginCommandIngressStep::Pending(Self::ClosingDecoded { owner, fault }) }
+                }
+            }
+        }
+    }
+
+    #[cfg(test)]
+    mod paged_command_ingress_tests {
+        use super::*;
+
+        fn two_page_command() -> semio_framework::kernel::PagedCommand {
+            let mut pages = semio_framework::kernel::CommandPageSet::try_new().unwrap();
+            pages.try_push(semio_framework::kernel::FixedCommandPage::try_copy_from(&[2; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES]).unwrap()).unwrap();
+            pages.try_push(semio_framework::kernel::FixedCommandPage::try_copy_from(b"tail").unwrap()).unwrap();
+            semio_framework::kernel::PagedCommand::try_from_pages(pages).unwrap()
+        }
+
+        #[test]
+        fn interrupted_two_page_command_closes_one_exact_page_per_step_then_faults() {
+            let fault = plugin_internal_fault("cancelled");
+            let first = PluginCommandIngress::Encoded(two_page_command()).cancel(fault);
+            let second = match first.step() {
+                PluginCommandIngressStep::Pending(next) => next,
+                _ => panic!("first close step must retain the tail"),
+            };
+            assert!(matches!(second.step(), PluginCommandIngressStep::TerminalFault(fault) if fault.message == "cancelled"));
+        }
+
+        #[test]
+        fn decoded_two_field_cancellation_never_publishes_partial_success() {
+            let owner = protocol::DecodedAppCommandOwner::new(protocol::AppCommand::Command { seq: 3, command: vec![1; 4_096], view_state: vec![2; 4_096] });
+            let first = PluginCommandIngress::Decoded(owner).cancel(plugin_internal_fault("cancelled"));
+            let second = match first.step() {
+                PluginCommandIngressStep::Pending(next) => next,
+                _ => panic!("first decoded field close must remain pending"),
+            };
+            let third = match second.step() {
+                PluginCommandIngressStep::Pending(next) => next,
+                _ => panic!("second decoded field close must remain pending until the shell witness"),
+            };
+            assert!(matches!(third.step(), PluginCommandIngressStep::TerminalFault(fault) if fault.message == "cancelled"));
+        }
+    }
+
     pub struct PluginExchangeOutput {
         pub frames: Vec<Vec<u8>>,
         pub effects: Vec<Vec<u8>>,
         pub events: Vec<Vec<u8>>,
+        pub retry_command: Option<(u64, PluginCommandIngress)>,
+        pub command_terminal_fault: Option<Vec<u8>>,
+        pub presence_pending: Option<u64>,
+        pub presence_terminal: Option<u64>,
+        pub presence_terminal_fault: Option<Vec<u8>>,
     }
 
     /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): erased `AsyncTask` resolution
@@ -21185,7 +23402,7 @@ pub mod plugin_runtime {
         for frame in frames.iter() {
             frame_bytes.push(protocol::encode_app_frame(frame).await);
         }
-        PluginExchangeOutput { frames: frame_bytes, effects: effect_bytes, events: event_bytes }
+        PluginExchangeOutput { frames: frame_bytes, effects: effect_bytes, events: event_bytes, retry_command: None, command_terminal_fault: None, presence_pending: None, presence_terminal: None, presence_terminal_fault: None }
     }
 
     /// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): dispatches every `intents` entry for
@@ -21240,7 +23457,7 @@ pub mod plugin_runtime {
         for frame in frames.iter() {
             frame_bytes.push(protocol::encode_app_frame(frame).await);
         }
-        Ok(PluginExchangeOutput { frames: frame_bytes, effects: effect_bytes, events: event_bytes })
+        Ok(PluginExchangeOutput { frames: frame_bytes, effects: effect_bytes, events: event_bytes, retry_command: None, command_terminal_fault: None, presence_pending: None, presence_terminal: None, presence_terminal_fault: None })
     }
 
     /// 👥️ M2 (ticket 26/08/17 `design-unified.md`): drains `instance_id`'s render-plane presence
@@ -21267,6 +23484,81 @@ pub mod plugin_runtime {
             .collect()
     }
 
+    pub async fn plugin_reserve_presence_ingress<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, seq: u64) -> Result<PresenceRosterAdmission, Fault> {
+        with_instances_mut(runtime, |list| {
+            let mut instance = find_instance(list, instance_id)?;
+            instance.app.reserve_presence_ingress(seq)
+        })
+        .await
+    }
+
+    pub async fn plugin_admit_reserved_presence<PA: PluginApp>(
+        runtime: &PluginRuntime<PA>,
+        instance_id: u32,
+        admission: PresenceRosterAdmission,
+        seq: u64,
+        own_color: Option<u8>,
+        item_count: u32,
+        page: semio_framework::kernel::FixedCommandPage,
+        now_ms: i64,
+    ) -> Result<u64, (Fault, PresenceRosterAdmission, semio_framework::kernel::FixedCommandPage)> {
+        let mut instances = match runtime.instances.try_borrow_mut() {
+            Ok(instances) => instances,
+            Err(_) => return Err((plugin_internal_fault("runtime instance authority is busy"), admission, page)),
+        };
+        let mut instance = match find_instance(&mut instances, instance_id) {
+            Ok(instance) => instance,
+            Err(fault) => return Err((fault, admission, page)),
+        };
+        let generation = admission.generation();
+        let cursor = match protocol::PresenceCommandCursor::admit_page(seq, own_color, item_count, page) {
+            Ok(cursor) => cursor,
+            Err((error, rejected)) => {
+                instance.app.reject_presence_ingress(admission, rejected, error.into_fault());
+                return Ok(generation);
+            }
+        };
+        instance.app.admit_presence_ingress(admission, cursor, now_ms);
+        Ok(generation)
+    }
+
+    pub async fn plugin_push_reserved_presence_page<PA: PluginApp>(
+        runtime: &PluginRuntime<PA>,
+        instance_id: u32,
+        generation: u64,
+        page_index: u32,
+        page: semio_framework::kernel::FixedCommandPage,
+    ) -> Result<(), (Fault, semio_framework::kernel::FixedCommandPage)> {
+        let mut instances = match runtime.instances.try_borrow_mut() {
+            Ok(instances) => instances,
+            Err(_) => return Err((plugin_internal_fault("runtime instance authority is busy"), page)),
+        };
+        let mut instance = match find_instance(&mut instances, instance_id) {
+            Ok(instance) => instance,
+            Err(fault) => return Err((fault, page)),
+        };
+        instance.app.push_presence_ingress(generation, page_index, page)
+    }
+
+    pub async fn plugin_reject_reserved_presence<PA: PluginApp>(
+        runtime: &PluginRuntime<PA>,
+        instance_id: u32,
+        admission: PresenceRosterAdmission,
+        command: semio_framework::kernel::FixedCommandPage,
+        fault: Fault,
+    ) -> Result<(), (Fault, semio_framework::kernel::FixedCommandPage)> {
+        let mut instances = match runtime.instances.try_borrow_mut() {
+            Ok(instances) => instances,
+            Err(_) => return Err((plugin_internal_fault("runtime instance authority is busy"), command)),
+        };
+        let mut instance = match find_instance(&mut instances, instance_id) {
+            Ok(instance) => instance,
+            Err(error) => return Err((error, command)),
+        };
+        instance.app.reject_presence_ingress(admission, command, fault);
+        Ok(())
+    }
+
     /// 🔀️ The single bidirectional entry point behind WIT `exchange` (see `📜️wit/📜️world.wit`'s
     /// `interface plugin` doc) — decodes each `protocol::AppCommand` in `commands`, dispatches it
     /// against `instance_id`, and returns every produced `protocol::AppFrame`/effect/event.
@@ -21286,38 +23578,81 @@ pub mod plugin_runtime {
     /// rendering is driven by `surface-visible`/`hidden` instead of `RefreshUi` probes, and the
     /// backbone attach/detach commands are gone with no replacement command in this wave. Those arms
     /// are deleted here rather than adapted (design-abi.md §4).
-    pub async fn plugin_exchange<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, commands: &[Vec<u8>]) -> Result<PluginExchangeOutput, Fault> {
+    pub async fn plugin_exchange<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, command: Option<(u64, PluginCommandIngress)>) -> Result<PluginExchangeOutput, Fault> {
         let mut frames: Vec<protocol::AppFrame> = Vec::new();
         let mut effect_bytes: Vec<Vec<u8>> = Vec::new();
         let mut event_bytes: Vec<Vec<u8>> = Vec::new();
+        let mut retry_command = None;
+        let mut command_terminal_fault = None;
+        let mut presence_pending = None;
+        let mut presence_terminal = None;
+        let mut presence_terminal_fault = None;
         let mut mutated = false;
 
-        for bytes in commands {
-            let command = protocol::decode_app_command(bytes).await.map_err(|error| error.into_fault())?;
-            match command {
-                protocol::AppCommand::Presence { seq, own_color, peers } => {
-                    // 👥️ The ONLY plugin ingress for the peer roster (contract-freeze §C7.6): decode
-                    // each wire `PresencePeer` and hand the WHOLE roster to `adopt_presence`, which is
-                    // documented as the roster's single source of truth (absent actors are dropped by
-                    // the callee, so this must not be treated as a diff). A peer entry that fails to
-                    // decode is skipped rather than failing the batch — one malformed peer must not
-                    // cost the actor its whole roster update.
-                    let mut decoded: Vec<protocol::PresencePeer> = Vec::with_capacity(peers.len());
-                    for bytes in peers.iter() {
-                        if let Ok(peer) = protocol::decode_presence_peer(bytes).await {
-                            decoded.push(peer);
-                        }
-                    }
-                    let now_ms = crate::host::now_ms().await;
-                    let adopted = with_instances_mut(runtime, |list| {
-                        let mut instance = find_instance(list, instance_id)?;
-                        resolve_ready(instance.app.adopt_presence(own_color, &decoded, now_ms))
+        let command = match command {
+            Some((envelope_seq, ingress)) => match ingress.step() {
+                PluginCommandIngressStep::Pending(ingress) => {
+                    return Ok(PluginExchangeOutput {
+                        frames: Vec::new(),
+                        effects: effect_bytes,
+                        events: event_bytes,
+                        retry_command: Some((envelope_seq, ingress)),
+                        command_terminal_fault,
+                        presence_pending,
+                        presence_terminal,
+                        presence_terminal_fault,
                     });
-                    match adopted.await {
-                        Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
-                        Err(fault) => push_app_fault(&mut frames, Some(seq), fault).await,
-                    }
                 }
+                PluginCommandIngressStep::Ready(owner) => Some((envelope_seq, owner)),
+                PluginCommandIngressStep::TerminalFault(fault) => {
+                    command_terminal_fault = Some(dsl::encode_fault_bytes(&fault));
+                    push_app_fault(&mut frames, Some(envelope_seq), fault).await;
+                    return Ok(PluginExchangeOutput { frames: encode_exchange_frames(&frames).await, effects: effect_bytes, events: event_bytes, retry_command, command_terminal_fault, presence_pending, presence_terminal, presence_terminal_fault });
+                }
+            },
+            None => None,
+        };
+
+        let presence_outcome = with_instances_mut(runtime, |list| {
+            let mut instance = find_instance(list, instance_id)?;
+            Ok(instance.app.take_presence_outcome())
+        })
+        .await;
+        let presence_outcome = match presence_outcome {
+            Ok(outcome) => outcome,
+            Err(fault) => {
+                if let Some((envelope_seq, owner)) = command {
+                    let ingress = PluginCommandIngress::Decoded(owner);
+                    let ingress = if fault.message == "runtime instance authority is busy" { ingress } else { ingress.cancel(fault) };
+                    return Ok(PluginExchangeOutput {
+                        frames: Vec::new(),
+                        effects: effect_bytes,
+                        events: event_bytes,
+                        retry_command: Some((envelope_seq, ingress)),
+                        command_terminal_fault,
+                        presence_pending,
+                        presence_terminal,
+                        presence_terminal_fault,
+                    });
+                }
+                return Err(fault);
+            }
+        };
+        if let Some(outcome) = presence_outcome {
+            presence_terminal = Some(outcome.seq);
+            match outcome.fault {
+                Some(fault) => {
+                    presence_terminal_fault = Some(dsl::encode_fault_bytes(&fault));
+                    push_app_fault(&mut frames, Some(outcome.seq), fault).await;
+                }
+                None => frames.push(protocol::AppFrame::Done { in_reply_to: outcome.seq }),
+            }
+        }
+
+        if let Some((envelope_seq, mut owner)) = command {
+            let command = owner.take_for_dispatch().ok_or_else(|| plugin_internal_fault("decoded command owner is terminal before dispatch"))?;
+            match command {
+                protocol::AppCommand::Presence { .. } => unreachable!("Presence commands are admitted from their fixed header before whole-command decoding"),
                 protocol::AppCommand::ConfigCommand { seq, command } => {
                     // 🧮️ B1: `command` is a binary-encoded `store::ArtifactCommand<A::ConfigMutation>` —
                     // real dispatch against the config store (replaces the deleted `apply_config_bytes`
@@ -21802,13 +24137,25 @@ pub mod plugin_runtime {
             frames.push(protocol::AppFrame::Ephemeral { presence, presence_generation, transient_generation, interaction });
         }
 
+        if let Some(outcome) = with_instances_mut(runtime, |list| {
+            let mut instance = find_instance(list, instance_id)?;
+            Ok(instance.app.take_presence_outcome())
+        })
+        .await?
+        {
+            match outcome.fault {
+                Some(fault) => push_app_fault(&mut frames, Some(outcome.seq), fault).await,
+                None => {}
+            }
+        }
+
         // 🌉️ Rewritten from a `.map(protocol::encode_app_frame).collect()` into an explicit loop
         // (sync — `Iterator::map` cannot take an async closure, and `encode_app_frame` is genuinely async).
         let mut frame_bytes = Vec::with_capacity(frames.len());
         for frame in frames.iter() {
             frame_bytes.push(protocol::encode_app_frame(frame).await);
         }
-        Ok(PluginExchangeOutput { frames: frame_bytes, effects: effect_bytes, events: event_bytes })
+        Ok(PluginExchangeOutput { frames: frame_bytes, effects: effect_bytes, events: event_bytes, retry_command, command_terminal_fault, presence_pending, presence_terminal, presence_terminal_fault })
     }
     //#endregion 🔖️Exchange
 
@@ -21842,7 +24189,7 @@ pub mod plugin_runtime {
                 let input = unsafe { $crate::owned_abi::take_json::<$crate::owned_abi::PollInput>(pointer, length) };
                 __semio_ensure_plugin_runtime();
                 let result = match input {
-                    Ok(input) => __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::reactor::poll_kernel(runtime, input.events, input.budget, &input.close_instances)).map_err(|fault| ::dsl::encode_fault_bytes(&fault)),
+                    Ok(input) => __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::reactor::poll_kernel(runtime, input.events, input.command_page, input.budget, &input.close_instances)).map_err(|fault| ::dsl::encode_fault_bytes(&fault)),
                     Err(error) => Err(error),
                 };
                 $crate::owned_abi::return_json(&result)
@@ -21928,10 +24275,11 @@ pub mod plugin_runtime {
             impl $crate::component::component::exports::semio::framework::reactor::Guest for __SemioComponentGuest {
                 async fn poll(
                     events: Vec<$crate::component::component::exports::semio::framework::reactor::Event>,
+                    command_page: Option<$crate::component::component::exports::semio::framework::reactor::CommandIngressPage>,
                     budget: $crate::component::component::exports::semio::framework::reactor::Budget,
                 ) -> Result<$crate::component::component::exports::semio::framework::reactor::TurnResult, $crate::component::component::semio::framework::types::PluginError> {
                     __semio_ensure_plugin_runtime();
-                    __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::reactor::poll(runtime, events, budget)).map_err($crate::component::component::plugin_error)
+                    __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::reactor::poll(runtime, events, command_page, budget)).map_err($crate::component::component::plugin_error)
                 }
             }
 
@@ -21962,9 +24310,7 @@ pub mod plugin_runtime {
 
                 async fn take_segmented_download_chunk(instance_id: u32, operation_id: u64) -> Result<Option<Vec<u8>>, $crate::component::component::semio::framework::types::PluginError> {
                     __semio_ensure_plugin_runtime();
-                    __SEMIO_PLUGIN_RUNTIME
-                        .with(|runtime| $crate::app::resolve_ready($crate::plugin_runtime::plugin_take_segmented_download_chunk(runtime, instance_id, operation_id)))
-                        .map_err($crate::component::component::plugin_error)
+                    __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::app::resolve_ready($crate::plugin_runtime::plugin_take_segmented_download_chunk(runtime, instance_id, operation_id))).map_err($crate::component::component::plugin_error)
                 }
             }
 
@@ -22873,6 +25219,34 @@ pub mod plugin_runtime {
             received_actions: std::cell::RefCell<Vec<String>>,
         }
 
+        struct NoPresenceRetirement {
+            snapshot: Option<std::sync::Arc<NoPresence>>,
+        }
+
+        impl store::ErasedSnapshotRetirement for NoPresenceRetirement {
+            fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+                if maximum_items == 0 {
+                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                if self.snapshot.take().is_some() {
+                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+                }
+                Ok(store::SnapshotRetirementStep::Complete)
+            }
+
+            fn terminal_is_empty(&self) -> bool {
+                self.snapshot.is_none()
+            }
+        }
+
+        struct NoPresenceRetirementFactory;
+
+        impl store::SnapshotRetirementFactory<NoPresence> for NoPresenceRetirementFactory {
+            fn retire(&self, snapshot: std::sync::Arc<NoPresence>) -> Box<dyn store::ErasedSnapshotRetirement> {
+                Box::new(NoPresenceRetirement { snapshot: Some(snapshot) })
+            }
+        }
+
         impl ArtifactApp for TestApp {
             // 🪪️ Must equal `test_app_surface_id()` — a hand-typed `&'static str` because the runtime
             // `ArtifactApp::APP_ID` const (contract §2.1, "kept") cannot call a heap-allocating fn at
@@ -22890,6 +25264,10 @@ pub mod plugin_runtime {
             type Transient = crate::app::NoTransient;
             type TransientMutation = crate::app::NoTransientMutation;
             type Command = TestCommand;
+
+            fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
+                Some(std::sync::Arc::new(NoPresenceRetirementFactory))
+            }
 
             async fn initial_snapshot() -> TestSnapshot {
                 TestSnapshot::default()
@@ -23285,13 +25663,17 @@ pub mod plugin_runtime {
 
             let mut saturated = Vec::new();
             for index in 0..1_024u32 {
-                saturated.push(handle.begin(ToolOperationKey {
-                    app_instance_id: index.saturating_add(100),
-                    document: ArtifactDocumentAuthority(index.saturating_add(100)),
-                    operation_id: semio_framework_job::allocate_operation_id(),
-                    base_revision: semio_framework_job::RevisionId(1),
-                    generation: semio_framework_job::Generation(1),
-                }).expect("fixed numeric cancellation slot"));
+                saturated.push(
+                    handle
+                        .begin(ToolOperationKey {
+                            app_instance_id: index.saturating_add(100),
+                            document: ArtifactDocumentAuthority(index.saturating_add(100)),
+                            operation_id: semio_framework_job::allocate_operation_id(),
+                            base_revision: semio_framework_job::RevisionId(1),
+                            generation: semio_framework_job::Generation(1),
+                        })
+                        .expect("fixed numeric cancellation slot"),
+                );
             }
             let first_saturated = saturated.first().expect("saturated lease").cancel_token();
             let last_saturated = saturated.last().expect("saturated lease").cancel_token();
@@ -23621,46 +26003,117 @@ pub mod plugin_runtime {
             }
         }
 
+        async fn publish_presence_roster(app: &mut VcsArtifactApp<TestApp>, seq: u64, own_color: Option<u8>, peers: &[protocol::PresencePeer], now_ms: i64) -> PresenceRosterOutcome {
+            let mut roster = protocol::PresenceRosterWire::empty();
+            for peer in peers {
+                roster.try_push(protocol::encode_presence_peer(peer).await).expect("fixed test roster");
+            }
+            let admission = app.reserve_presence_ingress(seq).expect("reserve roster before decode");
+            let first = roster.iter().next().map(<[u8]>::to_vec).unwrap_or_default();
+            let cursor = protocol::PresenceCommandCursor::admit_page(seq, own_color, roster.len() as u32, semio_framework::kernel::FixedCommandPage::try_copy_from(&first).expect("test peer page is fixed-authority"))
+                .map_err(|(error, _)| error)
+                .expect("admit first roster page");
+            let generation = admission.generation();
+            app.admit_presence_ingress(admission, cursor, now_ms);
+            let mut next_page = 1usize;
+            for _ in 0..512 {
+                app.maintenance_stage = 7;
+                let _ = PluginApp::maintenance_step(app, 1, 4096).expect("bounded roster step");
+                if next_page < roster.len() {
+                    let page = semio_framework::kernel::FixedCommandPage::try_copy_from(roster.iter().nth(next_page).expect("retained roster page")).expect("test peer page is fixed-authority");
+                    match app.push_presence_ingress(generation, next_page as u32, page) {
+                        Ok(()) => next_page += 1,
+                        Err((_fault, _page)) => {}
+                    }
+                }
+                if let Some(outcome) = app.take_presence_outcome() {
+                    return outcome;
+                }
+            }
+            panic!("retained roster did not reach an observable terminal outcome");
+        }
+
         /// 👥️ Contract-freeze §C7.6: `adopt_presence` (1) adopts an app-typed `presence_pack` into
         /// `presence_store` ONLY when one is present, (2) unconditionally upserts `color`/`surface`/
         /// `interaction` into `peer_presence` for every peer in the roster, and (3) treats the roster
         /// as the single source of truth — a peer absent from a later call is dropped from BOTH maps.
         #[semio_framework_async_macros::async_test]
-        async fn adopt_presence_fills_presence_store_and_peer_marks_and_drops_left_peers() {
+        async fn retained_presence_fills_presence_store_and_peer_marks_and_drops_left_peers() {
             let mut app = VcsArtifactApp::<TestApp>::new(TestApp::default()).await;
             let alice = sample_presence_peer("user:alice#s1", Some(3), true);
             let bob = sample_presence_peer("user:bob#s1", Some(5), false);
 
-            app.adopt_presence(Some(9), &[alice.clone(), bob], 1000).await.expect("adopt roster");
+            assert!(publish_presence_roster(&mut app, 1, Some(9), &[alice.clone(), bob], 1000).await.fault.is_none());
             assert_eq!(app.own_color, Some(9));
-            assert_eq!(app.presence_store.peers().await.len(), 1, "only the peer carrying a presence_pack adopts into presence_store");
-            assert_eq!(app.presence_store.peers().await[0].0, "user:alice#s1");
+            let typed_root = app.presence_store.peers_root();
+            assert_eq!(typed_root.peers().count(), 1, "only the peer carrying a presence_pack adopts into presence_store");
+            assert_eq!(typed_root.peers().next().unwrap().0, "user:alice#s1");
             assert_eq!(app.peer_presence.len(), 2, "both peers upsert into peer_presence regardless of presence_pack");
             assert_eq!(app.peer_presence.get("user:alice#s1").unwrap().color, Some(3));
             assert_eq!(app.peer_presence.get("user:bob#s1").unwrap().color, Some(5));
 
             // 👋 bob leaves the roster — a second call carrying only alice must drop bob from BOTH maps.
-            app.adopt_presence(Some(9), &[alice], 2000).await.expect("adopt roster after bob leaves");
-            assert_eq!(app.presence_store.peers().await.len(), 1);
+            assert!(publish_presence_roster(&mut app, 2, Some(9), &[alice], 2000).await.fault.is_none());
+            assert_eq!(app.presence_store.peers_root().peers().count(), 1);
             assert_eq!(app.peer_presence.len(), 1);
             assert!(app.peer_presence.contains_key("user:alice#s1"));
             assert!(!app.peer_presence.contains_key("user:bob#s1"), "an actor absent from the roster must be dropped, not left stale");
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn peer_presence_capture_is_one_arc_and_retirement_waits_for_then_drains_the_exact_root() {
+            let mut app = VcsArtifactApp::<TestApp>::new(TestApp::default()).await;
+            let alice = sample_presence_peer("user:alice#s1", Some(3), true);
+            let bob = sample_presence_peer("user:bob#s1", Some(5), false);
+            assert!(publish_presence_roster(&mut app, 1, Some(9), &[alice.clone(), bob], 1000).await.fault.is_none());
+            let captured = std::sync::Arc::clone(&app.peer_presence);
+            let typed_captured = app.presence_store.peers_root();
+            assert!(std::sync::Arc::ptr_eq(&captured, &app.peer_presence), "operation capture clones one peer root Arc");
+
+            assert!(publish_presence_roster(&mut app, 2, Some(9), &[alice], 2000).await.fault.is_none());
+            assert_eq!(captured.len(), 2, "captured roster remains revision-stable");
+            assert_eq!(app.peer_presence.len(), 1, "live roster advances independently");
+            app.maintenance_stage = 5;
+            assert!(matches!(PluginApp::maintenance_step(&mut app, 1, 4096).expect("shared old root blocks"), PluginCloseStep::Blocked { .. }));
+            app.maintenance_stage = 6;
+            let _ = PluginApp::maintenance_step(&mut app, 1, 4096).expect("app-typed retirement selects its displaced entry");
+            app.maintenance_stage = 6;
+            assert!(matches!(PluginApp::maintenance_step(&mut app, 1, 4096).expect("captured app-typed peer blocks"), PluginCloseStep::Blocked { .. }));
+
+            drop(captured);
+            drop(typed_captured);
+            for _ in 0..16 {
+                if app.peer_presence_retirements.is_empty() {
+                    break;
+                }
+                app.maintenance_stage = 5;
+                let _ = PluginApp::maintenance_step(&mut app, 1, 4096).expect("bounded peer root retirement progresses");
+            }
+            assert!(app.peer_presence_retirements.is_empty(), "old peer root reaches terminal-empty without a whole-roster drop");
+            for _ in 0..16 {
+                if app.presence_peer_retirements.is_empty() {
+                    break;
+                }
+                app.maintenance_stage = 6;
+                let _ = PluginApp::maintenance_step(&mut app, 1, 4096).expect("bounded app-typed peer retirement progresses");
+            }
+            assert!(app.presence_peer_retirements.is_empty(), "displaced app-typed peer reaches its domain-owned terminal witness");
         }
         //#endregion 🔖️AdoptPresenceTests
 
         //#region 🔖️InteractionViewPeersTests
         #[semio_framework_async_macros::async_test]
         async fn interaction_view_peers_selecting_returns_actor_and_color() {
-            let mut peers: BTreeMap<String, PeerPresence> = BTreeMap::new();
+            let mut peers = PeerPresenceRoot::empty();
             let mark_interaction = |selected: &[&str], hovered: &[&str]| {
                 Some(protocol::PresenceInteraction {
                     app_id: "draw".to_string(),
                     domains: vec![protocol::PresenceDomain { domain: "items".to_string(), granularity: "item".to_string(), selected: selected.iter().map(|id| id.to_string()).collect(), hovered: hovered.iter().map(|id| id.to_string()).collect() }],
                 })
             };
-            peers.insert("user:zed#s1".to_string(), PeerPresence { color: Some(7), surface: None, interaction: mark_interaction(&["item-1"], &[]) });
-            peers.insert("user:alice#s1".to_string(), PeerPresence { color: Some(2), surface: None, interaction: mark_interaction(&["item-1"], &[]) });
-            peers.insert("user:bob#s1".to_string(), PeerPresence { color: Some(4), surface: None, interaction: mark_interaction(&[], &["item-1"]) });
+            peers.insert("user:zed#s1".to_string(), PeerPresence { color: Some(7), surface: None, interaction: mark_interaction(&["item-1"], &[]) }).expect("zed peer");
+            peers.insert("user:alice#s1".to_string(), PeerPresence { color: Some(2), surface: None, interaction: mark_interaction(&["item-1"], &[]) }).expect("alice peer");
+            peers.insert("user:bob#s1".to_string(), PeerPresence { color: Some(4), surface: None, interaction: mark_interaction(&[], &["item-1"]) }).expect("bob peer");
 
             let state = protocol::InteractionState::default();
             let hover = InteractionHoverState::new();
@@ -23701,6 +26154,45 @@ pub mod plugin_runtime {
         async fn new_test_child(id: &str) -> Result<TestMembers, store::VcsError> {
             let envelope = store::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", id, TestSnapshot::default(), None);
             Ok(TestMembers::Child(store::ArtifactStore::new(envelope).await?))
+        }
+
+        struct TestSnapshotRetirement {
+            snapshot: Option<std::sync::Arc<TestSnapshot>>,
+            lie_about_terminal: bool,
+        }
+
+        impl store::ErasedSnapshotRetirement for TestSnapshotRetirement {
+            fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
+                if maximum_items == 0 {
+                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                if self.lie_about_terminal {
+                    return Ok(store::SnapshotRetirementStep::Complete);
+                }
+                if self.snapshot.take().is_some() {
+                    return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+                }
+                Ok(store::SnapshotRetirementStep::Complete)
+            }
+
+            fn terminal_is_empty(&self) -> bool {
+                self.snapshot.is_none()
+            }
+        }
+
+        struct TestSnapshotRetirementFactory {
+            lie_about_terminal: bool,
+        }
+
+        impl store::SnapshotRetirementFactory<TestSnapshot> for TestSnapshotRetirementFactory {
+            fn retire(&self, snapshot: std::sync::Arc<TestSnapshot>) -> Box<dyn store::ErasedSnapshotRetirement> {
+                Box::new(TestSnapshotRetirement { snapshot: Some(snapshot), lie_about_terminal: self.lie_about_terminal })
+            }
+        }
+
+        fn install_test_snapshot_retirement(app: &mut VcsArtifactApp<TestApp, TestMembers>, child_id: &str, lie_about_terminal: bool) {
+            let (_, TestMembers::Child(child)) = app.children.get_mut(&("slot".to_string(), child_id.to_string())).expect("exact child retirement owner");
+            child.install_snapshot_retirement_factory(std::sync::Arc::new(TestSnapshotRetirementFactory { lie_about_terminal })).expect("install exact child snapshot retirement factory once");
         }
 
         async fn test_child_dialect() -> store::os_io::ArtifactDialect {
@@ -23800,8 +26292,69 @@ pub mod plugin_runtime {
 
         /// 🧪️ The child's current `count`, read through the same `ChildContentView` seam an app uses.
         async fn reads_child_count(app: &VcsArtifactApp<TestApp, TestMembers>) -> i32 {
-            let view = crate::app::ChildContentView::new(&app.children).await;
+            let view = ChildContentView::clone(&app.child_content_root);
             view.typed_read::<TestSnapshot>("slot", "child-1").await.expect("child readable through the view").count
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn child_content_publication_path_copies_fixed_pages_and_command_capture_retains_one_root() {
+            let mut app = VcsArtifactApp::<TestApp, TestMembers>::new(TestApp::default()).await;
+            app.register_child("slot", "child-a", test_child_dialect().await, new_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
+            let admitted = ChildContentView::clone(&app.child_content_root);
+            let admitted_root = admitted.root.as_ref().expect("published root").clone();
+            assert!(std::sync::Arc::ptr_eq(&admitted_root, app.child_content_root.root.as_ref().expect("live root")), "command capture retains exactly one immutable root Arc");
+
+            app.register_child("slot", "child-b", test_child_dialect().await, new_test_child("child-b").await.expect("construct child-b")).await.expect("register child-b");
+            let current_root = app.child_content_root.root.as_ref().expect("advanced root");
+            assert!(!std::sync::Arc::ptr_eq(&admitted_root, current_root), "a child lifecycle event publishes a new root");
+            assert!(admitted.typed_read::<TestSnapshot>("slot", "child-a").await.is_ok(), "the admitted root remains exact after later publication");
+            assert!(admitted.typed_read::<TestSnapshot>("slot", "child-b").await.is_err(), "the admitted root never observes a later child");
+            assert!(ChildContentView::clone(&app.child_content_root).typed_read::<TestSnapshot>("slot", "child-b").await.is_ok());
+            assert!(!app.child_content_retirements.is_empty(), "the replaced nonempty root remains under explicit retirement authority");
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn child_snapshot_retirement_rejection_preserves_exact_erased_owner() {
+            let mut app = VcsArtifactApp::<TestApp, TestMembers>::new(TestApp::default()).await;
+            app.register_child("slot", "child-a", test_child_dialect().await, new_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
+            let generation = app.admit_child_content_publication().expect("admit replacement root");
+            app.publish_child_content_member(generation, "slot", "child-a").await.expect("replace the exact child snapshot lease");
+            app.maintenance_stage = 4;
+            assert!(matches!(PluginApp::maintenance_step(&mut app, 1, 4096).expect("missing factory blocks without losing authority"), PluginCloseStep::Blocked { .. }));
+            let retirement = app.child_content_retirements.get(2).expect("retirement remains registered after rejected transfer");
+            let entry = retirement.pending.as_ref().expect("exact rejected snapshot remains pending");
+            assert!(entry.snapshot.typed::<TestSnapshot>().is_some(), "rejection preserves the exact erased owner and type identity");
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn child_root_maintenance_requires_terminal_empty_before_reclaim() {
+            let mut app = VcsArtifactApp::<TestApp, TestMembers>::new(TestApp::default()).await;
+            app.register_child("slot", "child-a", test_child_dialect().await, new_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
+            install_test_snapshot_retirement(&mut app, "child-a", true);
+            let generation = app.admit_child_content_publication().expect("admit replacement root");
+            app.publish_child_content_member(generation, "slot", "child-a").await.expect("replace the exact child snapshot lease");
+            app.maintenance_stage = 4;
+            assert!(matches!(PluginApp::maintenance_step(&mut app, 1, 4096).expect("transfer retirement authority"), PluginCloseStep::Pending { .. }));
+            app.maintenance_stage = 4;
+            let fault = PluginApp::maintenance_step(&mut app, 1, 4096).expect_err("lying Complete must fail before registry removal");
+            assert_eq!(fault.code.0, "interactive-job.child-snapshot-terminal-not-empty");
+            assert!(!app.child_content_retirements.is_empty(), "terminal witness failure retains the registry authority");
+        }
+
+        #[semio_framework_async_macros::async_test]
+        async fn child_root_maintenance_reclaims_completed_owner_for_later_publication() {
+            let mut app = VcsArtifactApp::<TestApp, TestMembers>::new(TestApp::default()).await;
+            app.register_child("slot", "child-a", test_child_dialect().await, new_test_child("child-a").await.expect("construct child-a")).await.expect("register child-a");
+            install_test_snapshot_retirement(&mut app, "child-a", false);
+            let generation = app.admit_child_content_publication().expect("admit replacement root");
+            app.publish_child_content_member(generation, "slot", "child-a").await.expect("replace the exact child snapshot lease");
+            for _ in 0..4 {
+                app.maintenance_stage = 4;
+                let _ = PluginApp::maintenance_step(&mut app, 1, 4096).expect("bounded retirement progress");
+            }
+            assert!(app.child_content_retirements.is_empty(), "terminal-empty retirement is reclaimed while the app remains live");
+            let generation = app.admit_child_content_publication().expect("later publication can reuse the fixed retirement registry");
+            app.publish_child_content_member(generation, "slot", "child-a").await.expect("later publication after bounded reclaim");
         }
 
         #[semio_framework_async_macros::async_test]
@@ -23811,6 +26364,8 @@ pub mod plugin_runtime {
             let (_, member) = app.children.get_mut(&("slot".to_string(), "child-maximum".to_string())).expect("maximum child");
             let TestMembers::Child(child) = member;
             child.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetLabel { value: "x".repeat(MAXIMUM_CHILD_PROBE_BYTES) }], description: None }).await.expect("seed maximum child");
+            let publication_generation = app.admit_child_content_publication().expect("admit maximum child publication");
+            app.publish_child_content_member(publication_generation, "slot", "child-maximum").await.expect("publish maximum child root");
             MAXIMUM_CHILD_CLONES.store(0, std::sync::atomic::Ordering::Release);
             MAXIMUM_CHILD_ENCODINGS.store(0, std::sync::atomic::Ordering::Release);
 
@@ -23876,7 +26431,7 @@ pub mod plugin_runtime {
             let target = store::os_io::ArtifactRef { artifact_id: "genesis-child".into(), dialect: test_child_dialect().await };
             let created: Vec<(store::os_io::ArtifactRef, TestMembers)> = vec![(target, new_test_child("genesis-child").await.expect("construct genesis child"))];
 
-            app.absorb_created_children(created).await;
+            app.absorb_created_children(created).await.expect("absorb child and publish immutable root");
 
             let (dialect, member) = app.children.get_mut(&("genesisSlot".to_string(), "genesis-child".to_string())).expect("genesis child absorbed into the live map under its real slot");
             assert_eq!(dialect.artifact_kind, "s.test.child");
@@ -24894,17 +27449,23 @@ pub mod plugin_runtime {
             // 👥️ Contract-freeze §C7.6 peer setup — M2 (ticket 26/08/17 `design-unified.md`) makes
             // this the real presence-derivation fixture the prior packet's own gap note anticipated.
             app.own_color = Some(9);
-            app.peer_presence.insert(
-                "user:alice#s1".to_string(),
-                PeerPresence {
-                    color: Some(3),
-                    surface: None,
-                    interaction: Some(protocol::PresenceInteraction {
-                        app_id: "s.test.synthetic@1/*#editor".to_string(),
-                        domains: vec![protocol::PresenceDomain { domain: "items".to_string(), granularity: "item".to_string(), selected: vec!["item-1".to_string()], hovered: Vec::new() }],
-                    }),
-                },
-            );
+            let mut peer_presence = PeerPresenceRoot::empty();
+            peer_presence
+                .insert(
+                    "user:alice#s1".to_string(),
+                    PeerPresence {
+                        color: Some(3),
+                        surface: None,
+                        interaction: Some(protocol::PresenceInteraction {
+                            app_id: "s.test.synthetic@1/*#editor".to_string(),
+                            domains: vec![protocol::PresenceDomain { domain: "items".to_string(), granularity: "item".to_string(), selected: vec!["item-1".to_string()], hovered: Vec::new() }],
+                        }),
+                    },
+                )
+                .expect("peer fixture fits fixed root");
+            let previous = std::mem::replace(&mut *app.peer_presence, std::sync::Arc::new(peer_presence));
+            assert!(previous.is_empty());
+            drop(previous);
 
             // 👥️ M2: `stamp_and_cache_interaction_ui` no longer writes selection/hover back onto the
             // tree itself (`TreeNode`/`Component::TreeItem` still carry no presence field — see that
@@ -26106,6 +28667,7 @@ pub use app::{
     ArtifactDefinitionError,
     ArtifactDefinitionRegistry,
     ArtifactDeserializer,
+    ArtifactDownloadOutput,
     ArtifactEditor,
     ArtifactExecutableIdentity,
     ArtifactIdentity,
@@ -26124,7 +28686,6 @@ pub use app::{
     ArtifactKindSpec,
     ArtifactLocale,
     ArtifactLocalization,
-    ArtifactDownloadOutput,
     ArtifactMediaExportCompletion,
     ArtifactMediaExportCredit,
     ArtifactMediaExportHandle,
@@ -26135,14 +28696,14 @@ pub use app::{
     ArtifactOutputChunks,
     ArtifactOwnedToolJobFactory,
     ArtifactOwnedToolJobRequest,
-    ArtifactReservedToolInput,
     ArtifactReservedJob,
+    ArtifactReservedToolInput,
     ArtifactReservedToolJob,
     ArtifactReservedToolJobRequest,
-    ArtifactSnapshotCloseLease,
-    ArtifactSnapshotDisposer,
     ArtifactRuntimeCapabilityRequirement,
     ArtifactSerializer,
+    ArtifactSnapshotCloseLease,
+    ArtifactSnapshotDisposer,
     ArtifactToolCompletion,
     ArtifactToolFactoryRegistry,
     ArtifactView,
@@ -26206,9 +28767,9 @@ pub use app::{
     PanelTreeBuilder,
     Plugin,
     PluginApp,
-    PluginCloseStep,
     PluginAssemblyError,
     PluginBuilder,
+    PluginCloseStep,
     PluginProgram,
     PresenceView,
     StandardId,

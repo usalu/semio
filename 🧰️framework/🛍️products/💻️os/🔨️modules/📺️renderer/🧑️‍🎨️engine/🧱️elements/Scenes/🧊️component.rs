@@ -16,11 +16,185 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
+use std::io::Write as _;
 use ui_wgpu::wgpu::input::{DragAxis, KeyAction};
 use ui_wgpu::wgpu::{draw_text, draw_text_wrapped, render_widget, HitKind, HitTarget, Rect, Rgba, Theme, WidgetNode};
 use ui_wgpu::wgpu::{ActionDescriptor, SurfaceKind, UiComponentSceneNode, UiPresence};
 
 //#region SceneRuntime
+pub const SCENE_SURFACE_CAPACITY: usize = 256;
+pub const SCENE_SURFACE_ID_BYTE_CAPACITY: usize = 256;
+
+pub struct AdmittedSurfaceMap<T> {
+    values: HashMap<String, T>,
+    order: Box<[Option<String>; SCENE_SURFACE_CAPACITY]>,
+    order_len: usize,
+    fault: Option<&'static str>,
+}
+
+impl<T> Default for AdmittedSurfaceMap<T> {
+    fn default() -> Self {
+        Self { values: HashMap::with_capacity(SCENE_SURFACE_CAPACITY), order: Box::new(std::array::from_fn(|_| None)), order_len: 0, fault: None }
+    }
+}
+
+impl<T> AdmittedSurfaceMap<T> {
+    fn admit(&mut self, id: &str) -> bool {
+        if self.values.contains_key(id) {
+            return true;
+        }
+        if id.len() > SCENE_SURFACE_ID_BYTE_CAPACITY {
+            self.fault = Some("scene surface identifier exceeded fixed credits");
+            return false;
+        }
+        if self.order_len == SCENE_SURFACE_CAPACITY {
+            self.fault = Some("scene surface item credits exceeded");
+            return false;
+        }
+        self.order[self.order_len] = Some(id.to_string());
+        self.order_len += 1;
+        true
+    }
+
+    pub fn insert(&mut self, id: String, value: T) -> Option<T> {
+        if !self.admit(&id) {
+            return None;
+        }
+        self.values.insert(id, value)
+    }
+
+    pub fn get_or_insert_with(&mut self, id: String, create: impl FnOnce() -> T) -> Option<&mut T> {
+        if !self.admit(&id) {
+            return None;
+        }
+        Some(self.values.entry(id).or_insert_with(create))
+    }
+
+    pub fn id_at(&self, index: usize) -> Option<&str> {
+        self.order.get(index).and_then(Option::as_deref)
+    }
+
+    pub fn len(&self) -> usize {
+        self.values.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.values.is_empty()
+    }
+
+    pub fn contains_key(&self, id: &str) -> bool {
+        self.values.contains_key(id)
+    }
+
+    pub fn get(&self, id: &str) -> Option<&T> {
+        self.values.get(id)
+    }
+
+    pub fn get_mut(&mut self, id: &str) -> Option<&mut T> {
+        self.values.get_mut(id)
+    }
+
+    pub fn iter(&self) -> std::collections::hash_map::Iter<'_, String, T> {
+        self.values.iter()
+    }
+
+    pub fn values(&self) -> std::collections::hash_map::Values<'_, String, T> {
+        self.values.values()
+    }
+
+    pub fn values_mut(&mut self) -> std::collections::hash_map::ValuesMut<'_, String, T> {
+        self.values.values_mut()
+    }
+
+    pub fn remove(&mut self, id: &str) -> Option<T> {
+        let value = self.values.remove(id)?;
+        let Some(index) = (0..self.order_len).find(|index| self.order[*index].as_deref() == Some(id)) else {
+            self.fault = Some("scene surface order lost ownership");
+            return Some(value);
+        };
+        for cursor in index..self.order_len - 1 {
+            self.order[cursor] = self.order[cursor + 1].take();
+        }
+        self.order_len -= 1;
+        self.order[self.order_len] = None;
+        Some(value)
+    }
+
+    pub fn take_fault(&mut self) -> Option<&'static str> {
+        self.fault.take()
+    }
+
+    pub fn clear(&mut self) {
+        self.values.clear();
+        while self.order_len > 0 {
+            self.order_len -= 1;
+            self.order[self.order_len] = None;
+        }
+        self.fault = None;
+    }
+}
+
+impl infinite_world::world::World3dStateAccess for AdmittedSurfaceMap<World3dState> {
+    type Iter<'a>
+        = std::collections::hash_map::Iter<'a, String, World3dState>
+    where
+        Self: 'a;
+
+    fn iter_states(&self) -> Self::Iter<'_> {
+        self.values.iter()
+    }
+
+    fn get_state_mut(&mut self, id: &str) -> Option<&mut World3dState> {
+        self.values.get_mut(id)
+    }
+}
+
+#[cfg(test)]
+mod admitted_surface_map_tests {
+    use super::*;
+
+    #[test]
+    fn preserves_admission_order_with_constant_index_access() {
+        let mut surfaces = AdmittedSurfaceMap::default();
+        surfaces.insert("third".to_string(), 3usize);
+        surfaces.insert("first".to_string(), 1usize);
+        surfaces.insert("third".to_string(), 30usize);
+        assert_eq!(surfaces.id_at(0), Some("third"));
+        assert_eq!(surfaces.id_at(1), Some("first"));
+        assert_eq!(surfaces.id_at(2), None);
+        assert_eq!(surfaces.get("third"), Some(&30));
+    }
+
+    #[test]
+    fn rejects_the_257th_surface_before_map_ownership() {
+        let mut surfaces = AdmittedSurfaceMap::default();
+        for index in 0..SCENE_SURFACE_CAPACITY {
+            surfaces.insert(format!("surface-{index}"), index);
+        }
+        surfaces.insert("overflow".to_string(), SCENE_SURFACE_CAPACITY);
+        assert_eq!(surfaces.len(), SCENE_SURFACE_CAPACITY);
+        assert_eq!(surfaces.id_at(SCENE_SURFACE_CAPACITY), None);
+        assert_eq!(surfaces.take_fault(), Some("scene surface item credits exceeded"));
+    }
+
+    #[test]
+    fn replacement_removal_and_clear_preserve_order_invariants() {
+        let mut surfaces = AdmittedSurfaceMap::default();
+        surfaces.insert("a".to_string(), 1usize);
+        surfaces.insert("b".to_string(), 2usize);
+        surfaces.insert("a".to_string(), 3usize);
+        assert_eq!(surfaces.id_at(0), Some("a"));
+        assert_eq!(surfaces.id_at(1), Some("b"));
+        assert_eq!(surfaces.remove("a"), Some(3));
+        assert_eq!(surfaces.id_at(0), Some("b"));
+        assert_eq!(surfaces.id_at(1), None);
+        surfaces.clear();
+        assert!(surfaces.is_empty());
+        assert_eq!(surfaces.id_at(0), None);
+        assert_eq!(surfaces.take_fault(), None);
+    }
+}
+
 #[derive(Clone, Copy, Debug, Default)]
 struct Viewport {
     x: f32,
@@ -113,6 +287,53 @@ pub struct PendingRasterUpload {
     pub height: u32,
 }
 
+const RASTER_SURFACE_CAPACITY: usize = 256;
+const RASTER_UPLOADS_PER_SURFACE_CAPACITY: usize = 16;
+const RASTER_UPLOAD_KEY_BYTE_CAPACITY: usize = 256;
+const RASTER_UPLOAD_BYTE_CAPACITY: usize = 1024 * 1024;
+
+pub enum PendingRasterUploadStep {
+    Pending,
+    Upload(PendingRasterUpload),
+    Complete,
+    Fault(&'static str),
+}
+
+#[derive(Default)]
+pub struct PendingRasterUploadCursor {
+    surface_index: usize,
+}
+
+impl PendingRasterUploadCursor {
+    pub fn step(&mut self) -> PendingRasterUploadStep {
+        SCENE_STATE.with(|cell| {
+            let mut states = cell.borrow_mut();
+            if states.len() > RASTER_SURFACE_CAPACITY {
+                return PendingRasterUploadStep::Fault("raster surface credits exceeded");
+            }
+            if let Some(fault) = states.take_fault() {
+                return PendingRasterUploadStep::Fault(fault);
+            }
+            let Some(surface_id) = states.id_at(self.surface_index).map(str::to_owned) else { return PendingRasterUploadStep::Complete };
+            let Some(state) = states.get_mut(&surface_id) else { return PendingRasterUploadStep::Fault("raster surface order lost ownership") };
+            if state.pending_raster_uploads.len() > RASTER_UPLOADS_PER_SURFACE_CAPACITY {
+                return PendingRasterUploadStep::Fault("raster upload item credits exceeded");
+            }
+            let candidate = state.pending_raster.as_ref().or_else(|| state.pending_raster_uploads.last());
+            if let Some(candidate) = candidate {
+                if candidate.key.len() > RASTER_UPLOAD_KEY_BYTE_CAPACITY || candidate.pixels.len() > RASTER_UPLOAD_BYTE_CAPACITY {
+                    return PendingRasterUploadStep::Fault("raster upload byte credits exceeded");
+                }
+            }
+            if let Some(upload) = state.pending_raster.take().or_else(|| state.pending_raster_uploads.pop()) {
+                return PendingRasterUploadStep::Upload(upload);
+            }
+            self.surface_index += 1;
+            PendingRasterUploadStep::Pending
+        })
+    }
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 struct WorkerCell<T>(std::sync::OnceLock<std::sync::Mutex<RefCell<T>>>);
 
@@ -133,7 +354,7 @@ impl<T: Default> WorkerCell<T> {
 
 #[cfg(target_arch = "wasm32")]
 thread_local! {
-    static SCENE_STATE: RefCell<HashMap<String, SceneSurfaceState>> = RefCell::new(HashMap::new());
+    static SCENE_STATE: RefCell<AdmittedSurfaceMap<SceneSurfaceState>> = RefCell::new(AdmittedSurfaceMap::default());
     static GRAPH_NODE_CTX: RefCell<HashMap<String, Option<String>>> = RefCell::new(HashMap::new());
     /// 🕒️ Canvas2d/Paint2d's settle-then-dispatch deadline map — surface id -> the timestamp its
     /// debounced `setCamera` should fire at. Same shape/sweep (`sweep_expired_camera_dispatch_deadlines`)
@@ -141,14 +362,17 @@ thread_local! {
     /// `AppRuntime` because `handle_scene_wheel`/`handle_scene_pointer_move` (this module's wheel/pan
     /// mutators) only ever see a `&UiComponentSceneNode`, never `AppRuntime` itself.
     static SCENE_CAMERA_DISPATCH_DEADLINES_MS: RefCell<HashMap<String, f64>> = RefCell::new(HashMap::new());
+    static SCENE_CAMERA_DISPATCH_FAULT: RefCell<Option<&'static str>> = RefCell::new(None);
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-static SCENE_STATE: WorkerCell<HashMap<String, SceneSurfaceState>> = WorkerCell::new();
+static SCENE_STATE: WorkerCell<AdmittedSurfaceMap<SceneSurfaceState>> = WorkerCell::new();
 #[cfg(not(target_arch = "wasm32"))]
 static GRAPH_NODE_CTX: WorkerCell<HashMap<String, Option<String>>> = WorkerCell::new();
 #[cfg(not(target_arch = "wasm32"))]
 static SCENE_CAMERA_DISPATCH_DEADLINES_MS: WorkerCell<HashMap<String, f64>> = WorkerCell::new();
+#[cfg(not(target_arch = "wasm32"))]
+static SCENE_CAMERA_DISPATCH_FAULT: WorkerCell<Option<&'static str>> = WorkerCell::new();
 
 /** @emoji 🕸️ Clears per-frame graph node metadata used by context menus. */
 pub fn clear_graph_node_context() {
@@ -222,26 +446,102 @@ pub fn vfs_selection_for_click(surface_id: &str, row_id: &str, ordered_ids: &[St
 }
 
 fn scene_state(surface_id: &str) -> SceneSurfaceState {
-    SCENE_STATE.with(|cell| cell.borrow_mut().entry(surface_id.to_string()).or_default().clone())
+    SCENE_STATE.with(|cell| cell.borrow_mut().get_or_insert_with(surface_id.to_string(), SceneSurfaceState::default).cloned().unwrap_or_default())
 }
 
 fn mutate_scene_state(surface_id: &str, f: impl FnOnce(&mut SceneSurfaceState)) {
     SCENE_STATE.with(|cell| {
         let mut map = cell.borrow_mut();
-        let entry = map.entry(surface_id.to_string()).or_default();
-        f(entry);
+        if let Some(entry) = map.get_or_insert_with(surface_id.to_string(), SceneSurfaceState::default) {
+            f(entry);
+        }
     });
 }
 
 //#region SceneCameraDispatch
+const SCENE_CAMERA_DISPATCH_CAPACITY: usize = 256;
+const SCENE_CAMERA_ID_BYTE_CAPACITY: usize = 256;
+
 /// 🕒️ Pushes a Canvas2d/Paint2d surface's settled `setCamera` deadline ~350ms out — called on every
 /// wheel/pan mutation (see `handle_scene_wheel`'s `Canvas2d`/`Paint2d` arms and
 /// `handle_scene_pointer_move`'s `PanViewport` arm), same 350ms settle window as
 /// `AppRuntime::world3d_camera_dispatch_deadlines_ms`.
 fn schedule_scene_camera_dispatch(surface_id: &str) {
     SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| {
-        cell.borrow_mut().insert(surface_id.to_string(), crate::app_now_ms() + 350.0);
+        let mut deadlines = cell.borrow_mut();
+        if surface_id.len() > SCENE_CAMERA_ID_BYTE_CAPACITY || (!deadlines.contains_key(surface_id) && deadlines.len() >= SCENE_CAMERA_DISPATCH_CAPACITY) {
+            SCENE_CAMERA_DISPATCH_FAULT.with(|fault| *fault.borrow_mut() = Some("scene camera deadline credits exceeded"));
+            return;
+        }
+        deadlines.insert(surface_id.to_string(), crate::app_now_ms() + 350.0);
     });
+}
+
+pub enum SceneCameraDispatchStep {
+    Pending,
+    Action(ActionDescriptor),
+    Complete,
+    Fault(&'static str),
+}
+
+pub struct SceneCameraDispatchCursor {
+    entries: std::collections::hash_map::IntoIter<String, f64>,
+    now_ms: f64,
+    fault: Option<&'static str>,
+}
+
+impl SceneCameraDispatchCursor {
+    pub fn begin(now_ms: f64) -> Self {
+        let entries = SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| std::mem::take(&mut *cell.borrow_mut()).into_iter());
+        let fault = SCENE_CAMERA_DISPATCH_FAULT.with(|cell| cell.borrow_mut().take());
+        Self { entries, now_ms, fault }
+    }
+
+    fn restore(surface_id: String, deadline: f64) {
+        SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| {
+            let mut deadlines = cell.borrow_mut();
+            let effective = deadlines.get(surface_id.as_str()).copied().map_or(deadline, |newer| newer.max(deadline));
+            deadlines.insert(surface_id, effective);
+        });
+    }
+
+    pub fn step(&mut self) -> SceneCameraDispatchStep {
+        if let Some(fault) = self.fault.take() {
+            return SceneCameraDispatchStep::Fault(fault);
+        }
+        let Some((surface_id, deadline)) = self.entries.next() else { return SceneCameraDispatchStep::Complete };
+        if deadline > self.now_ms {
+            Self::restore(surface_id, deadline);
+            return SceneCameraDispatchStep::Pending;
+        }
+        let action = SCENE_STATE.with(|cell| -> Result<Option<ActionDescriptor>, &'static str> {
+            let states = cell.borrow();
+            let Some(state) = states.get(surface_id.as_str()) else { return Ok(None) };
+            let Some(controller_id) = state.camera_dispatch_controller_id.as_ref() else { return Ok(None) };
+            if controller_id.len() > SCENE_CAMERA_ID_BYTE_CAPACITY {
+                return Err("scene camera action identifier exceeded fixed credits");
+            }
+            Ok(Some(scene_camera_action(&surface_id, controller_id, state.viewport)))
+        });
+        match action {
+            Ok(Some(action)) => SceneCameraDispatchStep::Action(action),
+            Ok(None) => SceneCameraDispatchStep::Pending,
+            Err(fault) => SceneCameraDispatchStep::Fault(fault),
+        }
+    }
+
+    pub fn close_step(&mut self) -> bool {
+        let Some((surface_id, deadline)) = self.entries.next() else {
+            self.fault = None;
+            return true;
+        };
+        Self::restore(surface_id, deadline);
+        false
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.entries.len() == 0 && self.fault.is_none()
+    }
 }
 
 /// 🕒️ A Canvas2d/Paint2d `setCamera` action from a bare surface id/controller id/viewport — same
@@ -258,15 +558,17 @@ fn scene_camera_action(surface_id: &str, controller_id: &str, viewport: Viewport
 /// from its last-known viewport + stashed controller id (`camera_dispatch_controller_id`; `None` only
 /// if a deadline outlives its `SCENE_STATE` entry, which never happens in practice since both are
 /// written together in `schedule_scene_camera_dispatch`'s call sites).
+#[cfg(test)]
 pub fn sweep_expired_scene_camera_dispatches(now_ms: f64) -> Vec<ActionDescriptor> {
-    let expired = SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| crate::sweep_expired_camera_dispatch_deadlines(&mut cell.borrow_mut(), now_ms));
-    expired
-        .into_iter()
-        .filter_map(|surface_id| {
-            let state = scene_state(&surface_id);
-            state.camera_dispatch_controller_id.clone().map(|controller_id| scene_camera_action(&surface_id, &controller_id, state.viewport))
-        })
-        .collect()
+    let mut cursor = SceneCameraDispatchCursor::begin(now_ms);
+    let mut actions = Vec::new();
+    loop {
+        match cursor.step() {
+            SceneCameraDispatchStep::Pending => {}
+            SceneCameraDispatchStep::Action(action) => actions.push(action),
+            SceneCameraDispatchStep::Complete | SceneCameraDispatchStep::Fault(_) => return actions,
+        }
+    }
 }
 //#endregion SceneCameraDispatch
 
@@ -284,6 +586,194 @@ pub(crate) fn set_scene_last_pointer_pos(surface_id: &str, x: f32, y: f32) {
 
 fn scene_action(scene: &UiComponentSceneNode, action: &str, args: Value) -> ActionDescriptor {
     ActionDescriptor { controller_id: scene.controller_id.clone(), action: action.into(), args: semio_framework::optional_json_to_dsl(Some(args)) }
+}
+
+fn queue_surface_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, scene: &UiComponentSceneNode, action: &str) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, action, "surfaceId", &scene.surface_id])?;
+    let mut reservation = input.reserve_action(&scene.controller_id, action, bytes)?;
+    let builder = reservation.builder();
+    builder.begin_object(None)?;
+    builder.string(Some("surfaceId"), &scene.surface_id)?;
+    builder.end_container()?;
+    reservation.publish()
+}
+
+fn queue_document_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, scene: &UiComponentSceneNode, action: &str, document: &str) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, action, "surfaceId", &scene.surface_id, "document", document])?;
+    let mut reservation = input.reserve_action(&scene.controller_id, action, bytes)?;
+    let builder = reservation.builder();
+    builder.begin_object(None)?;
+    builder.string(Some("surfaceId"), &scene.surface_id)?;
+    builder.string(Some("document"), document)?;
+    builder.end_container()?;
+    reservation.publish()
+}
+
+fn queue_commit_rename_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, scene: &UiComponentSceneNode, occurrences: &[(usize, usize)]) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let text_bytes = input.text_view().len();
+    let base = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "commitRename", "surfaceId", &scene.surface_id, "occurrences", "text"])?;
+    let occurrence_bytes = occurrences.len().checked_mul("start".len() + "end".len()).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
+    let bytes = base.checked_add(occurrence_bytes).and_then(|bytes| bytes.checked_add(text_bytes)).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
+    if bytes > ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY {
+        return Err(ui_wgpu::wgpu::BoundedActionFault::ByteCredits);
+    }
+    input.publish_action(&scene.controller_id, "commitRename", bytes, |builder, text| {
+        builder.begin_object(None)?;
+        builder.string(Some("surfaceId"), &scene.surface_id)?;
+        builder.begin_array(Some("occurrences"))?;
+        for (start, end) in occurrences {
+            builder.begin_object(None)?;
+            builder.number(Some("start"), *start as f64)?;
+            builder.number(Some("end"), *end as f64)?;
+            builder.end_container()?;
+        }
+        builder.end_container()?;
+        builder.string(Some("text"), text)?;
+        builder.end_container()
+    })
+}
+
+#[cfg(test)]
+#[test]
+fn production_action_ingress_has_no_legacy_queue_and_text_vec_helpers_are_test_only() {
+    const SCENES_SOURCE: &str = include_str!("🧊️component.rs");
+    const INTERPRETER_SOURCE: &str = include_str!("../Interpreter/🧊️component.rs");
+    const ENGINE_CANVAS_SOURCE: &str = include_str!("../EngineCanvas/🧊️component.rs");
+    assert!(!SCENES_SOURCE.contains(concat!("queue_", "event(")));
+    assert!(!INTERPRETER_SOURCE.contains(concat!("queue_", "event(")));
+    assert!(!SCENES_SOURCE.contains(concat!("drain_", "keys(")));
+    assert!(INTERPRETER_SOURCE.contains("struct SceneInteractionIntent"));
+    assert!(INTERPRETER_SOURCE.contains("drive_scene_interaction_step"));
+    assert!(INTERPRETER_SOURCE.contains("tree_revision"));
+    assert!(!INTERPRETER_SOURCE.contains("Some(scene.clone())"));
+    assert!(!INTERPRETER_SOURCE.contains("reserve_actions(ui_wgpu::wgpu::action::ACTION_BATCH_ITEM_CAPACITY"));
+    for function in ["handle_scene_wheel", "handle_scene_pointer_move", "handle_scene_pointer_button"] {
+        assert!(SCENES_SOURCE.contains(&format!("#[cfg(test)]\npub fn {function}")), "{function} must be test-only");
+    }
+    for function in ["ink_apply_events_action", "ink_set_selection_action", "ink_set_hover_action", "ink_set_camera_action", "ink_pointer_down", "ink_pointer_up", "ink_hover_move", "ink_wheel"] {
+        assert!(SCENES_SOURCE.contains(&format!("#[cfg(test)]\nfn {function}")), "{function} must be test-only");
+    }
+    assert!(SCENES_SOURCE.contains("struct InkEventJsonPages"));
+    assert!(SCENES_SOURCE.contains("struct InkInteractionJob"));
+    assert!(SCENES_SOURCE.contains("struct InkInteractionDocument"));
+    assert!(SCENES_SOURCE.contains("Box<[Option<(u16, u16)>; INK_INTERACTION_ITEM_CAPACITY]>"));
+    assert!(!SCENES_SOURCE.contains("VecDeque<Value>"));
+    assert!(!SCENES_SOURCE.contains("stroke_update: Option<(String, Value)>"));
+    assert!(!SCENES_SOURCE.contains("pending_fragments: VecDeque"));
+    for variant in ["InkMove", "InkResize", "InkStroke", "InkEraser", "InkMarqueeDrag", "InkPan"] {
+        assert!(SCENES_SOURCE.contains(&format!("SceneDragMode::{variant}")), "{variant} must have a retained route");
+    }
+    assert!(!SCENES_SOURCE.contains(concat!("mem::", "forget")));
+    for function in ["text_editor_apply_key", "text_editor_pointer_down", "text_editor_pointer_move", "text_editor_pointer_up", "text_editor_select_span_at_screen", "text_editor_set_selection", "text_editor_apply_completion"] {
+        assert!(ENGINE_CANVAS_SOURCE.contains(&format!("#[cfg(test)]\npub fn {function}")), "{function} must not remain production-capable");
+    }
+    for function in ["node_graph_wheel", "node_graph_pointer_down", "node_graph_pointer_move", "node_graph_pointer_up", "tiled_map_wheel", "puzzle_board_pointer_move", "puzzle_board_pointer_up", "puzzle_board_pointer_leave", "puzzle_board_wheel"] {
+        assert!(ENGINE_CANVAS_SOURCE.contains(&format!("#[cfg(test)]\npub fn {function}")), "{function} must remain test-only");
+    }
+    for function in ["tiled_map_pointer_down", "tiled_map_pointer_move", "tiled_map_pointer_up", "puzzle_board_pointer_move", "puzzle_board_pointer_up", "puzzle_board_pointer_leave", "puzzle_board_wheel"] {
+        assert!(SCENES_SOURCE.contains(&format!("#[cfg(test)]\npub fn {function}")), "{function} must remain test-only");
+    }
+}
+
+#[cfg(test)]
+#[test]
+fn ink_event_pages_preserve_order_and_fail_before_exceeding_fixed_storage() {
+    let mut pages = InkEventJsonPages::default();
+    pages.push(&json!({ "operation": "first", "value": "quoted\\\"" })).unwrap();
+    pages.push(&json!({ "operation": "second" })).unwrap();
+    pages.seal().unwrap();
+    let decoded: Vec<Value> = serde_json::from_str(pages.as_str().unwrap()).unwrap();
+    assert_eq!(decoded[0]["operation"], "first");
+    assert_eq!(decoded[1]["operation"], "second");
+
+    let mut saturated = InkEventJsonPages::default();
+    let oversized = json!({ "value": "x".repeat(INK_EVENT_JSON_BYTE_CAPACITY) });
+    assert_eq!(saturated.push(&oversized), Err(ui_wgpu::wgpu::BoundedActionFault::ByteCredits));
+    assert_eq!(saturated.items, 0);
+}
+
+#[cfg(test)]
+#[test]
+fn ink_raw_fragment_pages_are_single_slab_fifo_and_reject_max_plus_one() {
+    let mut pages = InkRawPages::default();
+    pages.push("{\"id\":\"first\"}").unwrap();
+    pages.push("{\"id\":\"second\"}").unwrap();
+    assert_eq!(pages.front().unwrap(), Some("{\"id\":\"first\"}"));
+    assert!(pages.pop_front());
+    assert_eq!(pages.front().unwrap(), Some("{\"id\":\"second\"}"));
+    assert!(pages.pop_front());
+    assert!(!pages.pop_front());
+
+    let mut saturated = InkRawPages::default();
+    assert_eq!(saturated.push(&"x".repeat(INK_INTERACTION_DOCUMENT_BYTE_CAPACITY + 1)), Err(ui_wgpu::wgpu::BoundedActionFault::ByteCredits));
+    assert_eq!(saturated.len, 0);
+    assert_eq!(saturated.byte_len, 0);
+}
+
+#[cfg(test)]
+#[test]
+fn ink_block_cursor_visits_nested_groups_in_stable_depth_first_order() {
+    let source = json!({
+        "blocks": [{
+            "id": "group",
+            "kind": "group",
+            "children": [
+                { "id": "a", "kind": "text" },
+                {
+                    "id": "nested",
+                    "kind": "group",
+                    "children": [{ "id": "b", "kind": "text" }]
+                }
+            ]
+        }, {
+            "id": "c",
+            "kind": "text",
+            "children": [{ "id": "ignored", "kind": "text" }]
+        }]
+    })
+    .to_string();
+    let mut spans = Box::new(std::array::from_fn(|_| None));
+    let mut span_len = 0;
+    collect_ink_document_block_spans(source.as_bytes(), &mut spans, &mut span_len).unwrap();
+    let header = InkDocumentJson::default();
+    let document = InkInteractionDocument {
+        source,
+        spans,
+        span_len,
+        schema: header.schema,
+        id: header.id,
+        camera: header.camera,
+        active_utility: header.active_utility,
+        grid_visible: header.grid_visible,
+        grid_spacing: header.grid_spacing,
+        grid_subdivisions: header.grid_subdivisions,
+        grid_opacity: header.grid_opacity,
+        snap_enabled: header.snap_enabled,
+        snap_grid_spacing: header.snap_grid_spacing,
+        pencil_width: header.pencil_width,
+        eraser_radius: header.eraser_radius,
+    };
+    let mut cursor = InkBlockCursor::default();
+    let mut ids = Vec::new();
+    while let Some(block) = cursor.next(&document).unwrap() {
+        ids.push(ink_item_id(&block).to_owned());
+    }
+    let legacy: InkDocumentJson = serde_json::from_str(&document.source).unwrap();
+    let legacy_ids: Vec<&str> = flatten_ink_items(&legacy.blocks).into_iter().map(ink_item_id).collect();
+    assert_eq!(ids, ["group", "a", "nested", "b", "c"]);
+    assert_eq!(ids.iter().map(String::as_str).collect::<Vec<_>>(), legacy_ids);
+    assert!(cursor.next(&document).unwrap().is_none());
+}
+
+#[cfg(test)]
+#[test]
+fn ink_nested_value_admission_rejects_hostile_depth() {
+    let mut value = Value::Null;
+    for _ in 0..=ui_wgpu::wgpu::action::ACTION_DEPTH_CAPACITY {
+        value = Value::Array(vec![value]);
+    }
+    let mut nodes = 0usize;
+    assert_eq!(validate_ink_value(&value, 0, &mut nodes), Err(ui_wgpu::wgpu::BoundedActionFault::DepthCredits));
 }
 
 fn scroll_key(surface_id: &str, suffix: &str) -> String {
@@ -316,18 +806,6 @@ fn digest_pixels(pixels: &[u8]) -> u64 {
     pixels.iter().fold(0u64, |acc, byte| acc.wrapping_mul(31).wrapping_add(*byte as u64))
 }
 
-pub fn drain_pending_raster_uploads() -> Vec<PendingRasterUpload> {
-    let mut uploads = Vec::new();
-    SCENE_STATE.with(|cell| {
-        for state in cell.borrow_mut().values_mut() {
-            if let Some(pending) = state.pending_raster.take() {
-                uploads.push(pending);
-            }
-            uploads.append(&mut state.pending_raster_uploads);
-        }
-    });
-    uploads
-}
 //#endregion SceneRuntime
 
 fn canvas_world_pointer_json(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, extra: Value) -> Value {
@@ -349,6 +827,211 @@ fn canvas_world_pointer_json(scene: &UiComponentSceneNode, inner: Rect, x: f32, 
 //#region SceneInput
 const MAP_MARQUEE_THRESHOLD_PX: f32 = 6.0;
 
+fn write_canvas_pointer_action(
+    batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>,
+    scene: &UiComponentSceneNode,
+    action: &str,
+    world_x: f32,
+    world_y: f32,
+    button: Option<i16>,
+    extend: Option<bool>,
+) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let bytes = match (button, extend) {
+        (Some(_), Some(_)) => ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, action, "surfaceId", &scene.surface_id, "x", "y", "button", "extend"])?,
+        (None, None) => ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, action, "surfaceId", &scene.surface_id, "x", "y"])?,
+        _ => return Err(ui_wgpu::wgpu::BoundedActionFault::Structure),
+    };
+    batch.action(&scene.controller_id, action, bytes, |builder| {
+        builder.begin_object(None)?;
+        builder.string(Some("surfaceId"), &scene.surface_id)?;
+        builder.number(Some("x"), f64::from(world_x))?;
+        builder.number(Some("y"), f64::from(world_y))?;
+        if let Some(button) = button {
+            builder.number(Some("button"), f64::from(button))?;
+        }
+        if let Some(extend) = extend {
+            builder.boolean(Some("extend"), extend)?;
+        }
+        builder.end_container()
+    })
+}
+
+fn canvas_surface_action_bytes(scene: &UiComponentSceneNode, action: &str) -> Result<usize, ui_wgpu::wgpu::BoundedActionFault> {
+    ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, action, "surfaceId", &scene.surface_id])
+}
+
+fn write_canvas_surface_action(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, scene: &UiComponentSceneNode, action: &str) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let bytes = canvas_surface_action_bytes(scene, action)?;
+    batch.action(&scene.controller_id, action, bytes, |builder| {
+        builder.begin_object(None)?;
+        builder.string(Some("surfaceId"), &scene.surface_id)?;
+        builder.end_container()
+    })
+}
+
+fn canvas_state_snapshot(surface_id: &str) -> (Viewport, bool, bool) {
+    SCENE_STATE.with(|cell| cell.borrow().get(surface_id).map(|state| (state.viewport, matches!(state.drag.as_ref().map(|drag| &drag.mode), Some(SceneDragMode::PanViewport)), state.paint_stroke_active)).unwrap_or((Viewport::default(), false, false)))
+}
+
+pub fn canvas_pointer_move_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, down: bool, drag_dx: f32, drag_dy: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    if !inner.contains(x, y) {
+        return Ok(false);
+    }
+    let (viewport, is_pan, _) = canvas_state_snapshot(&scene.surface_id);
+    let pan = down && is_pan;
+    let action = down && !pan;
+    let (world_x, world_y) = viewport.screen_to_world(x, y, inner);
+    let mut batch = action
+        .then(|| {
+            let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "canvasPointerMove", "surfaceId", &scene.surface_id, "x", "y"])?;
+            input.reserve_actions(1, bytes)
+        })
+        .transpose()?;
+    if pan {
+        mutate_scene_state(&scene.surface_id, |state| {
+            state.viewport.x -= drag_dx / viewport.zoom.max(0.01);
+            state.viewport.y -= drag_dy / viewport.zoom.max(0.01);
+            state.camera_dispatch_controller_id = Some(scene.controller_id.clone());
+        });
+        schedule_scene_camera_dispatch(&scene.surface_id);
+    }
+    if let Some(batch) = batch.as_mut() {
+        write_canvas_pointer_action(batch, scene, "canvasPointerMove", world_x, world_y, None, None)?;
+    }
+    if let Some(batch) = batch {
+        batch.publish()?;
+    }
+    Ok(true)
+}
+
+pub fn canvas_pointer_button_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, down: bool, button: i16, shift: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    if !inner.contains(x, y) {
+        if !down {
+            mutate_scene_state(&scene.surface_id, |state| {
+                state.drag = None;
+                state.pointer_was_down = false;
+            });
+        }
+        return Ok(false);
+    }
+    let (viewport, _, paint_stroke_active) = canvas_state_snapshot(&scene.surface_id);
+    let (world_x, world_y) = viewport.screen_to_world(x, y, inner);
+    let stroke_action = if down && button == 0 {
+        Some("paintStrokeBegin")
+    } else if !down && paint_stroke_active {
+        Some("paintStrokeEnd")
+    } else {
+        None
+    };
+    let pointer_action = if down { "canvasPointerDown" } else { "canvasPointerUp" };
+    let pointer_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, pointer_action, "surfaceId", &scene.surface_id, "x", "y", "button", "extend"])?;
+    let stroke_bytes = stroke_action.map(|action| canvas_surface_action_bytes(scene, action)).transpose()?.unwrap_or(0);
+    let item_credits = 1 + usize::from(stroke_action.is_some());
+    let mut batch = input.reserve_actions(item_credits, pointer_bytes.checked_add(stroke_bytes).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?)?;
+    if let Some(action) = stroke_action {
+        write_canvas_surface_action(&mut batch, scene, action)?;
+    }
+    write_canvas_pointer_action(&mut batch, scene, pointer_action, world_x, world_y, Some(button), Some(shift))?;
+    batch.publish_with(|| {
+        mutate_scene_state(&scene.surface_id, |state| {
+            state.pointer_was_down = down;
+            if down && button == 0 {
+                state.paint_stroke_active = true;
+            }
+            if !down {
+                state.paint_stroke_active = false;
+                state.drag = None;
+            } else if button == 1 || button == 2 {
+                state.drag = Some(SceneDrag { mode: SceneDragMode::PanViewport });
+            }
+        });
+    })?;
+    Ok(true)
+}
+
+pub fn canvas_wheel_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, delta: f32) -> bool {
+    if !inner.contains(x, y) {
+        return false;
+    }
+    mutate_scene_state(&scene.surface_id, |state| {
+        let factor = (1.0 - delta * 0.001).clamp(0.5, 2.0);
+        state.viewport.zoom = (state.viewport.zoom * factor).clamp(0.125, 8.0);
+        state.camera_dispatch_controller_id = Some(scene.controller_id.clone());
+    });
+    schedule_scene_camera_dispatch(&scene.surface_id);
+    true
+}
+
+pub(crate) fn passive_scene_wheel(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, delta: f32) -> bool {
+    if !bounds.contains(x, y) {
+        return false;
+    }
+    match scene.component_kind {
+        SurfaceKind::Table => set_scroll_offset(&scene.surface_id, "body", scroll_offset(&scene.surface_id, "body") + delta * 0.5),
+        SurfaceKind::VirtualFileSystem => set_scroll_offset(&scene.surface_id, "vfs", scroll_offset(&scene.surface_id, "vfs") + delta * 0.5),
+        SurfaceKind::GraphTimeline => set_scroll_offset(&scene.surface_id, "history", scroll_offset(&scene.surface_id, "history") + delta * 0.5),
+        SurfaceKind::DiffView => set_scroll_offset(&scene.surface_id, "diff", scroll_offset(&scene.surface_id, "diff") + delta * 0.5),
+        SurfaceKind::EventFeed => set_scroll_offset(&scene.surface_id, "feed", scroll_offset(&scene.surface_id, "feed") + delta * 0.5),
+        SurfaceKind::Paint2d => {
+            let Some(paint) = scene.paint_2d.as_ref() else {
+                return false;
+            };
+            if paint.document_sync_json.len() > INK_INTERACTION_DOCUMENT_BYTE_CAPACITY {
+                return false;
+            }
+            let document: Paint2dDocSyncJson = serde_json::from_str(&paint.document_sync_json).unwrap_or_default();
+            mutate_scene_state(&scene.surface_id, |state| {
+                if state.viewport.zoom <= 0.0 {
+                    state.viewport = Viewport { x: document.camera.x as f32, y: document.camera.y as f32, zoom: document.camera.zoom as f32 };
+                }
+                let factor = (1.0 - delta * 0.001).clamp(0.5, 2.0);
+                state.viewport.zoom = (state.viewport.zoom * factor).clamp(0.05, 32.0);
+                state.camera_dispatch_controller_id = Some(scene.controller_id.clone());
+            });
+            schedule_scene_camera_dispatch(&scene.surface_id);
+        }
+        _ => return false,
+    }
+    true
+}
+
+pub(crate) fn passive_scene_pointer_button(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, down: bool, button: i16) -> bool {
+    if scene.component_kind != SurfaceKind::Paint2d || !bounds.contains(x, y) {
+        return false;
+    }
+    if down && (button == 1 || button == 2) {
+        mutate_scene_state(&scene.surface_id, |state| {
+            state.pointer_was_down = true;
+            state.drag = Some(SceneDrag { mode: SceneDragMode::PanViewport });
+        });
+    } else if !down {
+        mutate_scene_state(&scene.surface_id, |state| {
+            state.pointer_was_down = false;
+            state.drag = None;
+        });
+    }
+    true
+}
+
+pub(crate) fn passive_scene_pointer_move(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, delta_x: f32, delta_y: f32) -> bool {
+    if scene.component_kind != SurfaceKind::Paint2d || !bounds.contains(x, y) {
+        return false;
+    }
+    let viewport = SCENE_STATE.with(|cell| cell.borrow().get(&scene.surface_id).and_then(|state| matches!(state.drag.as_ref().map(|drag| &drag.mode), Some(SceneDragMode::PanViewport)).then_some(state.viewport)));
+    let Some(viewport) = viewport else {
+        return false;
+    };
+    mutate_scene_state(&scene.surface_id, |state| {
+        state.viewport.x -= delta_x / viewport.zoom.max(0.01);
+        state.viewport.y -= delta_y / viewport.zoom.max(0.01);
+        state.camera_dispatch_controller_id = Some(scene.controller_id.clone());
+        state.last_pointer_pos = (x, y);
+    });
+    schedule_scene_camera_dispatch(&scene.surface_id);
+    true
+}
+
+#[cfg(test)]
 pub fn handle_scene_wheel(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, delta: f32, ctrl: bool) -> Vec<ActionDescriptor> {
     if !bounds.contains(x, y) {
         return Vec::new();
@@ -363,7 +1046,7 @@ pub fn handle_scene_wheel(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y:
             set_scroll_offset(&scene.surface_id, "body", current + delta * 0.5);
             Vec::new()
         }
-        SurfaceKind::TextEditor => engine_canvas::text_editor_wheel(scene, delta),
+        SurfaceKind::TextEditor => Vec::new(),
         SurfaceKind::VirtualFileSystem => {
             let current = scroll_offset(&scene.surface_id, "vfs");
             set_scroll_offset(&scene.surface_id, "vfs", current + delta * 0.5);
@@ -415,6 +1098,7 @@ pub fn handle_scene_wheel(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y:
     }
 }
 
+#[cfg(test)]
 pub fn handle_scene_pointer_move(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, down: bool, _button: i16, drag_dx: f32, drag_dy: f32) -> Vec<ActionDescriptor> {
     let inner = bounds;
     if !inner.contains(x, y) {
@@ -555,20 +1239,16 @@ pub fn handle_scene_pointer_move(scene: &UiComponentSceneNode, bounds: Rect, x: 
         SurfaceKind::NodeGraph if down => {
             actions.extend(engine_canvas::node_graph_pointer_move(&scene.surface_id, &scene.controller_id, inner, x, y, false, false, false));
         }
-        SurfaceKind::TextEditor if down => {
-            actions.extend(engine_canvas::text_editor_pointer_move(scene, inner, x, y));
+        SurfaceKind::NodeGraph if !down => {
+            actions.extend(engine_canvas::node_graph_pointer_move(&scene.surface_id, &scene.controller_id, inner, x, y, false, false, false));
         }
-        SurfaceKind::NodeGraph | SurfaceKind::TextEditor if !down => {
-            actions.extend(match scene.component_kind {
-                SurfaceKind::NodeGraph => engine_canvas::node_graph_pointer_move(&scene.surface_id, &scene.controller_id, inner, x, y, false, false, false),
-                _ => engine_canvas::text_editor_pointer_move(scene, inner, x, y),
-            });
-        }
+        SurfaceKind::TextEditor => {}
         _ => {}
     }
     actions
 }
 
+#[cfg(test)]
 pub fn handle_scene_pointer_button(scene: &UiComponentSceneNode, bounds: Rect, x: f32, y: f32, down: bool, button: i16, shift: bool) -> Vec<ActionDescriptor> {
     let inner = bounds;
     if !inner.contains(x, y) {
@@ -618,9 +1298,7 @@ pub fn handle_scene_pointer_button(scene: &UiComponentSceneNode, bounds: Rect, x
             SurfaceKind::NodeGraph => {
                 actions.extend(engine_canvas::node_graph_pointer_down(&scene.surface_id, &scene.controller_id, inner, x, y, button, shift, false, false, false));
             }
-            SurfaceKind::TextEditor => {
-                actions.extend(engine_canvas::text_editor_pointer_down(scene, inner, x, y, button));
-            }
+            SurfaceKind::TextEditor => {}
             SurfaceKind::InkCanvas => {
                 actions.extend(ink_pointer_down(scene, inner, x, y, button, shift));
             }
@@ -643,9 +1321,7 @@ pub fn handle_scene_pointer_button(scene: &UiComponentSceneNode, bounds: Rect, x
             SurfaceKind::NodeGraph => {
                 actions.extend(engine_canvas::node_graph_pointer_up(&scene.surface_id, &scene.controller_id, inner, x, y, shift, false, false));
             }
-            SurfaceKind::TextEditor => {
-                actions.extend(engine_canvas::text_editor_pointer_up(scene, inner, x, y));
-            }
+            SurfaceKind::TextEditor => {}
             _ => {}
         }
         if let Some(target) = hit_double_click_target(scene, inner, x, y) {
@@ -714,11 +1390,11 @@ pub fn render_component_scene(
     ctx: &mut FrameworkWidgetContext<'_>,
     engine_resources: &mut engine_canvas::EngineCanvasBuildContext,
     world_resources: &mut World3dBuildContext,
-    world3d_states: &mut HashMap<String, World3dState>,
-    node_graph_states: &mut HashMap<String, NodeGraphSurface>,
-    tiled_map_states: &mut HashMap<String, TiledMapSurface>,
+    world3d_states: &mut AdmittedSurfaceMap<World3dState>,
+    node_graph_states: &mut AdmittedSurfaceMap<NodeGraphSurface>,
+    tiled_map_states: &mut AdmittedSurfaceMap<TiledMapSurface>,
     icon_render_states: &mut HashMap<String, World3dState>,
-    board2d_states: &mut HashMap<String, Board2dSurface>,
+    board2d_states: &mut AdmittedSurfaceMap<Board2dSurface>,
 ) {
     if let Err(message) = validate_component_scene(scene, &RENDER_PLAN_LIMITS) {
         let theme = ctx.theme;
@@ -740,7 +1416,7 @@ pub fn render_component_scene(
         SurfaceKind::TextEditor => render_text_editor(scene, bounds, ctx, engine_resources),
         SurfaceKind::InkCanvas => render_ink_canvas(scene, bounds, ctx),
         SurfaceKind::World3d => {
-            let state = world3d_states.entry(scene.surface_id.clone()).or_insert_with(|| World3dState::new(scene.surface_id.clone(), scene.controller_id.clone()));
+            let Some(state) = world3d_states.get_or_insert_with(scene.surface_id.clone(), || World3dState::new(scene.surface_id.clone(), scene.controller_id.clone())) else { return };
             render_world_3d(scene, bounds, ctx, state, world_resources);
         }
         SurfaceKind::IconRender => render_icon_render(scene, bounds, ctx, world_resources, icon_render_states),
@@ -2752,20 +3428,28 @@ pub(crate) fn decode_canvas_image(data_url: &str) -> Option<(Vec<u8>, u32, u32)>
  * the source string actually changes. Continuous rAF renderers (e.g. paint-2d) would otherwise redo
  * base64+PNG decode every frame for every image layer regardless of whether anything changed. */
 pub(crate) fn queue_canvas_image_upload(surface_id: &str, layer_id: &str, data_url: &str) -> Option<String> {
+    if surface_id.len().saturating_add(layer_id.len()).saturating_add(32) > RASTER_UPLOAD_KEY_BYTE_CAPACITY || data_url.len() > RASTER_UPLOAD_BYTE_CAPACITY.saturating_mul(2) {
+        return None;
+    }
     let key = format!("canvas-image:{surface_id}:{layer_id}");
     let src_key = format!("canvas-image-src:{surface_id}:{layer_id}");
     let src_digest = digest_pixels(data_url.as_bytes());
-    let unchanged = scene_state(surface_id).canvas_image_src_digests.get(&src_key).copied() == Some(src_digest);
+    let unchanged = SCENE_STATE.with(|cell| cell.borrow().get(surface_id).and_then(|state| state.canvas_image_src_digests.get(&src_key)).copied() == Some(src_digest));
     if unchanged {
         return Some(key);
     }
     let (pixels, width, height) = decode_canvas_image(data_url)?;
     let expected = (width as usize).saturating_mul(height as usize).saturating_mul(4);
-    if pixels.len() < expected {
+    if expected > RASTER_UPLOAD_BYTE_CAPACITY || pixels.len() < expected {
         return None;
     }
     let digest = digest_pixels(&pixels[..expected]);
+    let mut accepted = true;
     mutate_scene_state(surface_id, |state| {
+        if state.pending_raster_uploads.len() >= RASTER_UPLOADS_PER_SURFACE_CAPACITY {
+            accepted = false;
+            return;
+        }
         state.canvas_image_src_digests.insert(src_key.clone(), src_digest);
         let prior = state.canvas_image_digests.get(&key).copied();
         if prior != Some(digest) {
@@ -2773,7 +3457,7 @@ pub(crate) fn queue_canvas_image_upload(surface_id: &str, layer_id: &str, data_u
             state.pending_raster_uploads.push(PendingRasterUpload { key: key.clone(), pixels: pixels[..expected].to_vec(), width, height });
         }
     });
-    Some(key)
+    accepted.then_some(key)
 }
 
 /** Clamps checkerboard cell iteration to the world-space rect actually visible through `inner`
@@ -3405,6 +4089,26 @@ mod canvas2d_tests {
         assert_eq!(due.len(), 1);
         assert_eq!(due[0].args.as_ref().and_then(|args| args.get("surfaceId")).and_then(semio_framework::DslValue::as_str), Some(surface_id));
     }
+
+    #[test]
+    fn scene_camera_deadlines_saturate_before_ownership_and_close_cursor_restores_one_per_step() {
+        SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| cell.borrow_mut().clear());
+        SCENE_CAMERA_DISPATCH_FAULT.with(|cell| *cell.borrow_mut() = None);
+        for index in 0..SCENE_CAMERA_DISPATCH_CAPACITY {
+            schedule_scene_camera_dispatch(&format!("surface-{index}"));
+        }
+        schedule_scene_camera_dispatch("overflow");
+        let mut cursor = SceneCameraDispatchCursor::begin(crate::app_now_ms());
+        assert!(matches!(cursor.step(), SceneCameraDispatchStep::Fault("scene camera deadline credits exceeded")));
+        for remaining in (0..SCENE_CAMERA_DISPATCH_CAPACITY).rev() {
+            assert!(!cursor.close_step());
+            assert_eq!(cursor.entries.len(), remaining);
+        }
+        assert!(cursor.close_step());
+        assert!(cursor.terminal_is_empty());
+        SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| assert_eq!(cell.borrow().len(), SCENE_CAMERA_DISPATCH_CAPACITY));
+        SCENE_CAMERA_DISPATCH_DEADLINES_MS.with(|cell| cell.borrow_mut().clear());
+    }
 }
 //#endregion Canvas2dTests
 
@@ -3693,8 +4397,12 @@ fn ink_snap_point(x: f64, y: f64, spacing: f64) -> (f64, f64) {
 }
 
 fn ink_maybe_snap(doc: &InkDocumentJson, x: f64, y: f64) -> (f64, f64) {
-    if doc.snap_enabled.unwrap_or(false) {
-        ink_snap_point(x, y, doc.snap_grid_spacing.unwrap_or(8.0))
+    ink_maybe_snap_fields(doc.snap_enabled, doc.snap_grid_spacing, x, y)
+}
+
+fn ink_maybe_snap_fields(snap_enabled: Option<bool>, snap_grid_spacing: Option<f64>, x: f64, y: f64) -> (f64, f64) {
+    if snap_enabled.unwrap_or(false) {
+        ink_snap_point(x, y, snap_grid_spacing.unwrap_or(8.0))
     } else {
         (x, y)
     }
@@ -3885,6 +4593,1184 @@ fn positive_mod_f32(v: f32, m: f32) -> f32 {
 //#endregion InkCanvasModel
 
 //#region InkCanvasState
+const INK_INTERACTION_DOCUMENT_BYTE_CAPACITY: usize = 16 * 1024;
+const INK_INTERACTION_ITEM_CAPACITY: usize = 256;
+const INK_SELECTION_ITEM_CAPACITY: usize = ui_wgpu::wgpu::action::ACTION_NODE_CAPACITY - 2;
+const INK_EVENT_JSON_BYTE_CAPACITY: usize = ui_wgpu::wgpu::action::ACTION_STRING_BYTE_CAPACITY;
+
+struct InkInteractionDocument {
+    source: String,
+    spans: Box<[Option<(u16, u16)>; INK_INTERACTION_ITEM_CAPACITY]>,
+    span_len: usize,
+    schema: String,
+    id: String,
+    camera: InkCameraJson,
+    active_utility: Option<String>,
+    grid_visible: Option<bool>,
+    grid_spacing: Option<f64>,
+    grid_subdivisions: Option<f64>,
+    grid_opacity: Option<f64>,
+    snap_enabled: Option<bool>,
+    snap_grid_spacing: Option<f64>,
+    pencil_width: Option<f64>,
+    eraser_radius: Option<f64>,
+}
+
+impl InkInteractionDocument {
+    fn block(&self, index: usize) -> Result<Option<Value>, ui_wgpu::wgpu::BoundedActionFault> {
+        let Some((start, end)) = self.spans.get(index).and_then(|span| *span) else {
+            return Ok(None);
+        };
+        serde_json::from_slice(&self.source.as_bytes()[usize::from(start)..usize::from(end)]).map(Some).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)
+    }
+}
+
+fn ink_skip_ws(bytes: &[u8], mut index: usize) -> usize {
+    while bytes.get(index).is_some_and(u8::is_ascii_whitespace) {
+        index += 1;
+    }
+    index
+}
+
+fn ink_scan_string(bytes: &[u8], start: usize) -> Result<usize, ui_wgpu::wgpu::BoundedActionFault> {
+    if bytes.get(start) != Some(&b'"') {
+        return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+    }
+    let mut index = start + 1;
+    while let Some(byte) = bytes.get(index) {
+        match byte {
+            b'"' => return Ok(index + 1),
+            b'\\' => index = index.checked_add(2).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?,
+            _ => index += 1,
+        }
+    }
+    Err(ui_wgpu::wgpu::BoundedActionFault::Structure)
+}
+
+fn ink_skip_value(bytes: &[u8], start: usize, depth: usize) -> Result<usize, ui_wgpu::wgpu::BoundedActionFault> {
+    if depth > ui_wgpu::wgpu::action::ACTION_DEPTH_CAPACITY {
+        return Err(ui_wgpu::wgpu::BoundedActionFault::DepthCredits);
+    }
+    let mut index = ink_skip_ws(bytes, start);
+    match bytes.get(index) {
+        Some(b'"') => ink_scan_string(bytes, index),
+        Some(b'[') => {
+            index += 1;
+            loop {
+                index = ink_skip_ws(bytes, index);
+                if bytes.get(index) == Some(&b']') {
+                    return Ok(index + 1);
+                }
+                index = ink_skip_value(bytes, index, depth + 1)?;
+                index = ink_skip_ws(bytes, index);
+                match bytes.get(index) {
+                    Some(b',') => index += 1,
+                    Some(b']') => return Ok(index + 1),
+                    _ => return Err(ui_wgpu::wgpu::BoundedActionFault::Structure),
+                }
+            }
+        }
+        Some(b'{') => {
+            index += 1;
+            loop {
+                index = ink_skip_ws(bytes, index);
+                if bytes.get(index) == Some(&b'}') {
+                    return Ok(index + 1);
+                }
+                index = ink_scan_string(bytes, index)?;
+                index = ink_skip_ws(bytes, index);
+                if bytes.get(index) != Some(&b':') {
+                    return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+                }
+                index = ink_skip_value(bytes, index + 1, depth + 1)?;
+                index = ink_skip_ws(bytes, index);
+                match bytes.get(index) {
+                    Some(b',') => index += 1,
+                    Some(b'}') => return Ok(index + 1),
+                    _ => return Err(ui_wgpu::wgpu::BoundedActionFault::Structure),
+                }
+            }
+        }
+        Some(_) => {
+            while bytes.get(index).is_some_and(|byte| !byte.is_ascii_whitespace() && !matches!(*byte, b',' | b']' | b'}')) {
+                index += 1;
+            }
+            Ok(index)
+        }
+        None => Err(ui_wgpu::wgpu::BoundedActionFault::Structure),
+    }
+}
+
+fn ink_collect_block_array(bytes: &[u8], start: usize, spans: &mut [Option<(u16, u16)>; INK_INTERACTION_ITEM_CAPACITY], span_len: &mut usize, depth: usize) -> Result<usize, ui_wgpu::wgpu::BoundedActionFault> {
+    if depth > ui_wgpu::wgpu::action::ACTION_DEPTH_CAPACITY || bytes.get(start) != Some(&b'[') {
+        return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+    }
+    let mut index = start + 1;
+    loop {
+        index = ink_skip_ws(bytes, index);
+        if bytes.get(index) == Some(&b']') {
+            return Ok(index + 1);
+        }
+        if *span_len == spans.len() {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+        }
+        let slot = *span_len;
+        *span_len += 1;
+        let end = if bytes.get(index) == Some(&b'{') { ink_collect_block_object(bytes, index, spans, span_len, depth + 1)? } else { ink_skip_value(bytes, index, depth + 1)? };
+        spans[slot] = Some((u16::try_from(index).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?, u16::try_from(end).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?));
+        index = ink_skip_ws(bytes, end);
+        match bytes.get(index) {
+            Some(b',') => index += 1,
+            Some(b']') => return Ok(index + 1),
+            _ => return Err(ui_wgpu::wgpu::BoundedActionFault::Structure),
+        }
+    }
+}
+
+fn ink_collect_block_object(bytes: &[u8], start: usize, spans: &mut [Option<(u16, u16)>; INK_INTERACTION_ITEM_CAPACITY], span_len: &mut usize, depth: usize) -> Result<usize, ui_wgpu::wgpu::BoundedActionFault> {
+    let mut index = start + 1;
+    let mut is_group = false;
+    let mut children = None;
+    let end = loop {
+        index = ink_skip_ws(bytes, index);
+        if bytes.get(index) == Some(&b'}') {
+            break index + 1;
+        }
+        let key_start = index + 1;
+        let key_end_quote = ink_scan_string(bytes, index)? - 1;
+        let key = bytes.get(key_start..key_end_quote).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+        index = ink_skip_ws(bytes, key_end_quote + 1);
+        if bytes.get(index) != Some(&b':') {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+        }
+        index = ink_skip_ws(bytes, index + 1);
+        let value_start = index;
+        index = ink_skip_value(bytes, value_start, depth + 1)?;
+        if key == b"kind" {
+            is_group = serde_json::from_slice::<String>(&bytes[value_start..index]).is_ok_and(|kind| kind == "group");
+        } else if key == b"children" && bytes.get(value_start) == Some(&b'[') {
+            children = Some((value_start, index));
+        }
+        index = ink_skip_ws(bytes, index);
+        match bytes.get(index) {
+            Some(b',') => index += 1,
+            Some(b'}') => break index + 1,
+            _ => return Err(ui_wgpu::wgpu::BoundedActionFault::Structure),
+        }
+    };
+    if is_group {
+        if let Some((children_start, children_end)) = children {
+            let scanned_end = ink_collect_block_array(bytes, children_start, spans, span_len, depth + 1)?;
+            if scanned_end != children_end {
+                return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+            }
+        }
+    }
+    Ok(end)
+}
+
+fn collect_ink_document_block_spans(bytes: &[u8], spans: &mut [Option<(u16, u16)>; INK_INTERACTION_ITEM_CAPACITY], span_len: &mut usize) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let mut index = ink_skip_ws(bytes, 0);
+    if bytes.get(index) != Some(&b'{') {
+        return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+    }
+    index += 1;
+    loop {
+        index = ink_skip_ws(bytes, index);
+        if bytes.get(index) == Some(&b'}') {
+            return Ok(());
+        }
+        let key_start = index + 1;
+        let key_end_quote = ink_scan_string(bytes, index)? - 1;
+        let blocks = bytes.get(key_start..key_end_quote) == Some(b"blocks");
+        index = ink_skip_ws(bytes, key_end_quote + 1);
+        if bytes.get(index) != Some(&b':') {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+        }
+        index = ink_skip_ws(bytes, index + 1);
+        index = if blocks { ink_collect_block_array(bytes, index, spans, span_len, 0)? } else { ink_skip_value(bytes, index, 0)? };
+        index = ink_skip_ws(bytes, index);
+        match bytes.get(index) {
+            Some(b',') => index += 1,
+            Some(b'}') => return Ok(()),
+            _ => return Err(ui_wgpu::wgpu::BoundedActionFault::Structure),
+        }
+    }
+}
+
+struct InkEventJsonPages {
+    bytes: Box<[u8; INK_EVENT_JSON_BYTE_CAPACITY]>,
+    len: usize,
+    items: usize,
+    sealed: bool,
+}
+
+struct InkRawPages {
+    bytes: Box<[u8; INK_INTERACTION_DOCUMENT_BYTE_CAPACITY]>,
+    spans: Box<[Option<(u16, u16)>; INK_INTERACTION_ITEM_CAPACITY]>,
+    byte_len: usize,
+    head: usize,
+    len: usize,
+}
+
+struct InkOwnedRaw {
+    bytes: Box<[u8; INK_INTERACTION_DOCUMENT_BYTE_CAPACITY]>,
+    len: usize,
+}
+
+impl InkOwnedRaw {
+    fn new(raw: &str) -> Result<Self, ui_wgpu::wgpu::BoundedActionFault> {
+        if raw.len() > INK_INTERACTION_DOCUMENT_BYTE_CAPACITY {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::ByteCredits);
+        }
+        let mut bytes = Box::new([0; INK_INTERACTION_DOCUMENT_BYTE_CAPACITY]);
+        bytes[..raw.len()].copy_from_slice(raw.as_bytes());
+        Ok(Self { bytes, len: raw.len() })
+    }
+
+    fn as_str(&self) -> Result<&str, ui_wgpu::wgpu::BoundedActionFault> {
+        std::str::from_utf8(&self.bytes[..self.len]).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)
+    }
+}
+
+impl Default for InkRawPages {
+    fn default() -> Self {
+        Self { bytes: Box::new([0; INK_INTERACTION_DOCUMENT_BYTE_CAPACITY]), spans: Box::new(std::array::from_fn(|_| None)), byte_len: 0, head: 0, len: 0 }
+    }
+}
+
+impl InkRawPages {
+    fn push(&mut self, raw: &str) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+        if self.len == self.spans.len() {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+        }
+        let end = self.byte_len.checked_add(raw.len()).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
+        if end > self.bytes.len() {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::ByteCredits);
+        }
+        self.bytes[self.byte_len..end].copy_from_slice(raw.as_bytes());
+        let index = (self.head + self.len) % self.spans.len();
+        self.spans[index] = Some((u16::try_from(self.byte_len).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?, u16::try_from(end).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?));
+        self.byte_len = end;
+        self.len += 1;
+        Ok(())
+    }
+
+    fn front(&self) -> Result<Option<&str>, ui_wgpu::wgpu::BoundedActionFault> {
+        let Some((start, end)) = self.spans[self.head] else {
+            return Ok(None);
+        };
+        std::str::from_utf8(&self.bytes[usize::from(start)..usize::from(end)]).map(Some).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)
+    }
+
+    fn pop_front(&mut self) -> bool {
+        if self.len == 0 {
+            return false;
+        }
+        self.spans[self.head] = None;
+        self.head = (self.head + 1) % self.spans.len();
+        self.len -= 1;
+        if self.len == 0 {
+            self.head = 0;
+            self.byte_len = 0;
+        }
+        true
+    }
+}
+
+impl Default for InkEventJsonPages {
+    fn default() -> Self {
+        let mut bytes = Box::new([0; INK_EVENT_JSON_BYTE_CAPACITY]);
+        bytes[0] = b'[';
+        Self { bytes, len: 1, items: 0, sealed: false }
+    }
+}
+
+impl std::io::Write for InkEventJsonPages {
+    fn write(&mut self, source: &[u8]) -> std::io::Result<usize> {
+        let end = self.len.checked_add(source.len()).ok_or_else(|| std::io::Error::new(std::io::ErrorKind::WriteZero, "ink event byte credits exhausted"))?;
+        if end >= INK_EVENT_JSON_BYTE_CAPACITY {
+            return Err(std::io::Error::new(std::io::ErrorKind::WriteZero, "ink event byte credits exhausted"));
+        }
+        self.bytes[self.len..end].copy_from_slice(source);
+        self.len = end;
+        Ok(source.len())
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
+impl InkEventJsonPages {
+    fn push(&mut self, value: &Value) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+        if self.sealed || self.items == INK_INTERACTION_ITEM_CAPACITY {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+        }
+        let checkpoint = self.len;
+        let result = (|| {
+            if self.items != 0 {
+                self.write_all(b",").map_err(|_| ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
+            }
+            serde_json::to_writer(&mut *self, value).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::ByteCredits)
+        })();
+        if let Err(fault) = result {
+            self.len = checkpoint;
+            return Err(fault);
+        }
+        self.items += 1;
+        Ok(())
+    }
+
+    fn push_add_block_raw(&mut self, block: &str) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+        if self.sealed || self.items == INK_INTERACTION_ITEM_CAPACITY {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+        }
+        let checkpoint = self.len;
+        let result = (|| {
+            if self.items != 0 {
+                self.write_all(b",").map_err(|_| ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
+            }
+            self.write_all(b"{\"operation\":\"addBlock\",\"block\":").map_err(|_| ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
+            self.write_all(block.as_bytes()).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
+            self.write_all(b"}").map_err(|_| ui_wgpu::wgpu::BoundedActionFault::ByteCredits)
+        })();
+        if let Err(fault) = result {
+            self.len = checkpoint;
+            return Err(fault);
+        }
+        self.items += 1;
+        Ok(())
+    }
+
+    fn seal(&mut self) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+        if self.sealed {
+            return Ok(());
+        }
+        self.write_all(b"]").map_err(|_| ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
+        self.sealed = true;
+        Ok(())
+    }
+
+    fn as_str(&self) -> Result<&str, ui_wgpu::wgpu::BoundedActionFault> {
+        if !self.sealed {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+        }
+        std::str::from_utf8(&self.bytes[..self.len]).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)
+    }
+}
+
+fn write_ink_events_action(
+    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+    scene: &UiComponentSceneNode,
+    events: &InkEventJsonPages,
+    phase: &str,
+    select_id: Option<&str>,
+    mutate: impl FnOnce(),
+) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let events = events.as_str()?;
+    let base = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "inkApplyEvents", "surfaceId", &scene.surface_id, "eventsJson", events, "phase", phase])?;
+    let bytes = match select_id {
+        Some(id) => base.checked_add(ui_wgpu::wgpu::checked_action_string_bytes(&["selectIds", id])?).filter(|bytes| *bytes <= ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?,
+        None => base,
+    };
+    let mut reservation = input.reserve_action(&scene.controller_id, "inkApplyEvents", bytes)?;
+    let builder = reservation.builder();
+    builder.begin_object(None)?;
+    builder.string(Some("surfaceId"), &scene.surface_id)?;
+    builder.string(Some("eventsJson"), events)?;
+    builder.string(Some("phase"), phase)?;
+    if let Some(id) = select_id {
+        builder.begin_array(Some("selectIds"))?;
+        builder.string(None, id)?;
+        builder.end_container()?;
+    }
+    builder.end_container()?;
+    reservation.publish_with(mutate)
+}
+
+fn write_ink_owned_selection_actions(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, scene: &UiComponentSceneNode, ids: &[String], mutate: impl FnOnce()) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    if ids.len() > INK_SELECTION_ITEM_CAPACITY {
+        return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+    }
+    let mut bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "setSelection", "surfaceId", &scene.surface_id, "ids"])?;
+    for id in ids {
+        bytes = bytes.checked_add(ui_wgpu::wgpu::checked_action_string_bytes(&[id])?).filter(|bytes| *bytes <= ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
+    }
+    let mut reservation = input.reserve_action(&scene.controller_id, "setSelection", bytes)?;
+    let builder = reservation.builder();
+    builder.begin_object(None)?;
+    builder.string(Some("surfaceId"), &scene.surface_id)?;
+    builder.begin_array(Some("ids"))?;
+    for id in ids {
+        builder.string(None, id)?;
+    }
+    builder.end_container()?;
+    builder.end_container()?;
+    reservation.publish_with(mutate)
+}
+
+fn write_ink_hover_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, scene: &UiComponentSceneNode, id: Option<&str>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let base = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "setHover", "surfaceId", &scene.surface_id, "id"])?;
+    let bytes = match id {
+        Some(id) => base.checked_add(ui_wgpu::wgpu::checked_action_string_bytes(&[id])?).filter(|bytes| *bytes <= ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?,
+        None => base,
+    };
+    let mut reservation = input.reserve_action(&scene.controller_id, "setHover", bytes)?;
+    let builder = reservation.builder();
+    builder.begin_object(None)?;
+    builder.string(Some("surfaceId"), &scene.surface_id)?;
+    match id {
+        Some(id) => builder.string(Some("id"), id)?,
+        None => builder.null(Some("id"))?,
+    }
+    builder.end_container()?;
+    reservation.publish()
+}
+
+fn clear_ink_pointer_state(surface_id: &str) {
+    mutate_scene_state(surface_id, |state| {
+        state.drag = None;
+        state.pointer_was_down = false;
+        state.ink_marquee_points.clear();
+    });
+}
+
+fn checked_ink_document(scene: &UiComponentSceneNode) -> Result<Option<InkInteractionDocument>, ui_wgpu::wgpu::BoundedActionFault> {
+    let Some(ink) = scene.ink_canvas.as_ref() else {
+        return Ok(None);
+    };
+    if ink.document_json.len() > INK_INTERACTION_DOCUMENT_BYTE_CAPACITY || ink.selection_json.len() > ui_wgpu::wgpu::action::ACTION_STRING_BYTE_CAPACITY {
+        return Err(ui_wgpu::wgpu::BoundedActionFault::ByteCredits);
+    }
+    let document = serde_json::from_str::<InkDocumentJson>(&ink.document_json).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+    let mut nodes = 0usize;
+    for block in &document.blocks {
+        validate_ink_value(block, 0, &mut nodes)?;
+    }
+    for (key, asset) in &document.assets {
+        if key.len() > SCENE_SURFACE_ID_BYTE_CAPACITY {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::StringCredits);
+        }
+        validate_ink_value(asset, 0, &mut nodes)?;
+    }
+    if document.blocks.len() > INK_INTERACTION_ITEM_CAPACITY || document.assets.len() > INK_INTERACTION_ITEM_CAPACITY {
+        return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+    }
+    let source = ink.document_json.clone();
+    let mut spans = Box::new(std::array::from_fn(|_| None));
+    let mut span_len = 0usize;
+    collect_ink_document_block_spans(source.as_bytes(), &mut spans, &mut span_len)?;
+    Ok(Some(InkInteractionDocument {
+        source,
+        spans,
+        span_len,
+        schema: document.schema,
+        id: document.id,
+        camera: document.camera,
+        active_utility: document.active_utility,
+        grid_visible: document.grid_visible,
+        grid_spacing: document.grid_spacing,
+        grid_subdivisions: document.grid_subdivisions,
+        grid_opacity: document.grid_opacity,
+        snap_enabled: document.snap_enabled,
+        snap_grid_spacing: document.snap_grid_spacing,
+        pencil_width: document.pencil_width,
+        eraser_radius: document.eraser_radius,
+    }))
+}
+
+fn validate_ink_value(value: &Value, depth: usize, nodes: &mut usize) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    if depth > ui_wgpu::wgpu::action::ACTION_DEPTH_CAPACITY {
+        return Err(ui_wgpu::wgpu::BoundedActionFault::DepthCredits);
+    }
+    *nodes = nodes.checked_add(1).ok_or(ui_wgpu::wgpu::BoundedActionFault::NodeCredits)?;
+    if *nodes > INK_INTERACTION_ITEM_CAPACITY {
+        return Err(ui_wgpu::wgpu::BoundedActionFault::NodeCredits);
+    }
+    match value {
+        Value::Array(values) => {
+            for value in values {
+                validate_ink_value(value, depth + 1, nodes)?;
+            }
+        }
+        Value::Object(entries) => {
+            for (key, value) in entries {
+                if key.len() > SCENE_SURFACE_ID_BYTE_CAPACITY {
+                    return Err(ui_wgpu::wgpu::BoundedActionFault::StringCredits);
+                }
+                validate_ink_value(value, depth + 1, nodes)?;
+            }
+        }
+        Value::String(value) if value.len() > ui_wgpu::wgpu::action::ACTION_STRING_BYTE_CAPACITY => return Err(ui_wgpu::wgpu::BoundedActionFault::StringCredits),
+        _ => {}
+    }
+    Ok(())
+}
+
+fn ink_camera_checked(scene: &UiComponentSceneNode) -> Result<InkCameraF, ui_wgpu::wgpu::BoundedActionFault> {
+    if let Some(camera) = SCENE_STATE.with(|cell| cell.borrow().get(&scene.surface_id).and_then(|state| state.ink_camera)) {
+        return Ok(InkCameraF { x: camera.0, y: camera.1, zoom: camera.2 });
+    }
+    Ok(checked_ink_document(scene)?.map(|document| InkCameraF::from(document.camera)).unwrap_or_default())
+}
+
+fn write_ink_camera_action(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, scene: &UiComponentSceneNode, camera: InkCameraF, mutate: impl FnOnce()) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "setCamera", "surfaceId", &scene.surface_id, "camera", "x", "y", "zoom"])?;
+    let mut reservation = input.reserve_action(&scene.controller_id, "setCamera", bytes)?;
+    let builder = reservation.builder();
+    builder.begin_object(None)?;
+    builder.string(Some("surfaceId"), &scene.surface_id)?;
+    builder.begin_object(Some("camera"))?;
+    builder.number(Some("x"), camera.x)?;
+    builder.number(Some("y"), camera.y)?;
+    builder.number(Some("zoom"), camera.zoom)?;
+    builder.end_container()?;
+    builder.end_container()?;
+    reservation.publish_with(mutate)
+}
+
+pub(crate) fn ink_wheel_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, delta: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let Some(ink) = scene.ink_canvas.as_ref() else {
+        return Ok(false);
+    };
+    if ink.view_mode == "navigator" || !inner.contains(x, y) {
+        return Ok(false);
+    }
+    let camera = ink_camera_checked(scene)?;
+    let zoom_factor: f64 = if delta < 0.0 { 1.08 } else { 0.92 };
+    let next_zoom = (camera.zoom * zoom_factor).clamp(0.1, 8.0);
+    let (wx, wy) = ink_screen_to_world(camera, inner, x, y);
+    let next = InkCameraF { x: (x - inner.x) as f64 - wx * next_zoom, y: (y - inner.y) as f64 - wy * next_zoom, zoom: next_zoom };
+    write_ink_camera_action(input, scene, next, || {
+        mutate_scene_state(&scene.surface_id, |state| {
+            state.ink_camera = Some((next.x, next.y, next.zoom));
+        });
+    })?;
+    Ok(true)
+}
+
+#[derive(Clone, Copy)]
+pub(crate) enum InkInteractionEvent {
+    PointerDown { x: f32, y: f32, button: i16, shift: bool },
+    PointerUp { x: f32, y: f32 },
+    PointerMove { x: f32, y: f32 },
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum InkInteractionStage {
+    Scan,
+    Publish,
+    Complete,
+}
+
+pub(crate) enum InkInteractionStep {
+    Pending,
+    Complete,
+}
+
+#[derive(Default)]
+struct InkBlockCursor {
+    index: usize,
+}
+
+impl InkBlockCursor {
+    fn next(&mut self, document: &InkInteractionDocument) -> Result<Option<Value>, ui_wgpu::wgpu::BoundedActionFault> {
+        let block = document.block(self.index)?;
+        if block.is_some() {
+            self.index += 1;
+        }
+        Ok(block)
+    }
+}
+
+pub(crate) struct InkInteractionJob {
+    generation: u64,
+    event: InkInteractionEvent,
+    stage: InkInteractionStage,
+    document: Option<InkInteractionDocument>,
+    selected_ids: Vec<String>,
+    result_ids: Vec<String>,
+    result_bytes: usize,
+    block_cursor: InkBlockCursor,
+    hit_id: Option<String>,
+    hit_origin: Option<(f64, f64)>,
+    events: InkEventJsonPages,
+    utility: String,
+    camera: InkCameraF,
+    drag: Option<SceneDragMode>,
+    stroke_update: Option<(String, InkOwnedRaw)>,
+    pending_fragments: InkRawPages,
+    pending_remove_id: Option<String>,
+}
+
+fn checked_ink_drag(surface_id: &str) -> Result<Option<SceneDragMode>, ui_wgpu::wgpu::BoundedActionFault> {
+    SCENE_STATE.with(|cell| {
+        let states = cell.borrow();
+        let Some(mode) = states.get(surface_id).and_then(|state| state.drag.as_ref()).map(|drag| &drag.mode) else {
+            return Ok(None);
+        };
+        let mut bytes = 0usize;
+        match mode {
+            SceneDragMode::InkMove { origins, .. } => {
+                if origins.len() > INK_INTERACTION_ITEM_CAPACITY {
+                    return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+                }
+                for id in origins.keys() {
+                    bytes = bytes.checked_add(id.len()).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
+                }
+            }
+            SceneDragMode::InkResize { handle, selected_ids, .. } => {
+                if selected_ids.len() > INK_INTERACTION_ITEM_CAPACITY {
+                    return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+                }
+                bytes = handle.len();
+                for id in selected_ids {
+                    bytes = bytes.checked_add(id.len()).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
+                }
+            }
+            SceneDragMode::InkStroke { block_id } => bytes = block_id.len(),
+            SceneDragMode::InkEraser { mode } => bytes = mode.len(),
+            _ => {}
+        }
+        if bytes > ui_wgpu::wgpu::action::ACTION_STRING_BYTE_CAPACITY {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::ByteCredits);
+        }
+        Ok(Some(mode.clone()))
+    })
+}
+
+impl InkInteractionJob {
+    pub(crate) fn new(generation: u64, scene: &UiComponentSceneNode, event: InkInteractionEvent) -> Result<Option<Self>, ui_wgpu::wgpu::BoundedActionFault> {
+        if generation == 0 {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+        }
+        let Some(ink) = scene.ink_canvas.as_ref() else {
+            return Ok(None);
+        };
+        if ink.view_mode == "navigator" || !ink.interactive {
+            return Ok(None);
+        }
+        let Some(document) = checked_ink_document(scene)? else {
+            return Ok(None);
+        };
+        let selected_ids: Vec<String> = serde_json::from_str(&ink.selection_json).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+        if selected_ids.len() > INK_INTERACTION_ITEM_CAPACITY {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+        }
+        let mut selected_bytes = 0usize;
+        for id in &selected_ids {
+            if id.len() > SCENE_SURFACE_ID_BYTE_CAPACITY {
+                return Err(ui_wgpu::wgpu::BoundedActionFault::StringCredits);
+            }
+            selected_bytes = selected_bytes.checked_add(id.len()).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
+        }
+        if selected_bytes > ui_wgpu::wgpu::action::ACTION_STRING_BYTE_CAPACITY {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::ByteCredits);
+        }
+        let camera = SCENE_STATE.with(|cell| cell.borrow().get(&scene.surface_id).and_then(|state| state.ink_camera)).map(|(x, y, zoom)| InkCameraF { x, y, zoom }).unwrap_or_else(|| InkCameraF::from(document.camera.clone()));
+        let drag = checked_ink_drag(&scene.surface_id)?;
+        let utility = document.active_utility.clone().unwrap_or_else(|| "selectDirect".to_owned());
+        if utility.len() > SCENE_SURFACE_ID_BYTE_CAPACITY {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::StringCredits);
+        }
+        Ok(Some(Self {
+            generation,
+            event,
+            stage: InkInteractionStage::Scan,
+            document: Some(document),
+            selected_ids,
+            result_ids: Vec::with_capacity(INK_INTERACTION_ITEM_CAPACITY),
+            result_bytes: 0,
+            block_cursor: InkBlockCursor::default(),
+            hit_id: None,
+            hit_origin: None,
+            events: InkEventJsonPages::default(),
+            utility,
+            camera,
+            drag,
+            stroke_update: None,
+            pending_fragments: InkRawPages::default(),
+            pending_remove_id: None,
+        }))
+    }
+
+    pub(crate) fn step(&mut self, generation: u64, scene: &UiComponentSceneNode, inner: Rect, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<InkInteractionStep, ui_wgpu::wgpu::BoundedActionFault> {
+        if generation != self.generation {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+        }
+        if self.stage == InkInteractionStage::Complete {
+            return Ok(InkInteractionStep::Complete);
+        }
+        if self.stage == InkInteractionStage::Scan {
+            if self.scan_one(scene, inner)? {
+                self.stage = InkInteractionStage::Publish;
+            }
+            return Ok(InkInteractionStep::Pending);
+        }
+        self.publish(scene, inner, input)?;
+        self.stage = InkInteractionStage::Complete;
+        Ok(InkInteractionStep::Complete)
+    }
+
+    fn scan_one(&mut self, scene: &UiComponentSceneNode, inner: Rect) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+        match self.event {
+            InkInteractionEvent::PointerDown { x, y, button, .. } if button == 0 && (self.utility == "eraserStroke" || self.utility == "eraserPoint") => {
+                if self.push_pending_eraser_event()? {
+                    return Ok(false);
+                }
+                let document = self.document.as_ref().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+                let Some(block) = self.block_cursor.next(document)? else {
+                    self.events.seal()?;
+                    return Ok(true);
+                };
+                let (world_x, world_y) = ink_screen_to_world(self.camera, inner, x, y);
+                let prepared = Self::prepare_eraser_block(&block, world_x, world_y, document.eraser_radius.unwrap_or(12.0), self.utility == "eraserPoint")?;
+                if let Some((remove_id, fragments)) = prepared {
+                    self.pending_remove_id = Some(remove_id);
+                    self.pending_fragments = fragments;
+                }
+                Ok(false)
+            }
+            InkInteractionEvent::PointerDown { x, y, button: 0, .. } if self.utility == "selectDirect" => self.scan_hit(inner, x, y),
+            InkInteractionEvent::PointerMove { x, y } => {
+                if self.drag.is_none() {
+                    self.scan_hit(inner, x, y)
+                } else if matches!(self.drag.as_ref(), Some(SceneDragMode::InkMove { .. } | SceneDragMode::InkResize { .. } | SceneDragMode::InkStroke { .. } | SceneDragMode::InkEraser { .. })) {
+                    self.scan_drag_event(scene, inner, x, y, false)
+                } else {
+                    Ok(true)
+                }
+            }
+            InkInteractionEvent::PointerUp { x, y } => {
+                if matches!(self.drag.as_ref(), Some(SceneDragMode::InkMove { .. } | SceneDragMode::InkResize { .. } | SceneDragMode::InkStroke { .. })) {
+                    self.scan_drag_event(scene, inner, x, y, true)
+                } else if let Some((start_x, start_y)) = self.drag.as_ref().and_then(|drag| match drag {
+                    SceneDragMode::InkMarqueeDrag { start_x, start_y } => Some((*start_x, *start_y)),
+                    _ => None,
+                }) {
+                    self.scan_marquee(inner, x, y, start_x, start_y)
+                } else if matches!(self.drag.as_ref(), Some(SceneDragMode::InkEraser { .. })) {
+                    self.events.seal()?;
+                    Ok(true)
+                } else {
+                    Ok(true)
+                }
+            }
+            _ => Ok(true),
+        }
+    }
+
+    fn push_pending_eraser_event(&mut self) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+        if let Some(remove_id) = self.pending_remove_id.as_deref() {
+            self.events.push(&json!({ "operation": "removeBlock", "blockId": remove_id }))?;
+            self.pending_remove_id = None;
+            return Ok(true);
+        }
+        if let Some(fragment) = self.pending_fragments.front()? {
+            self.events.push_add_block_raw(fragment)?;
+            self.pending_fragments.pop_front();
+            return Ok(true);
+        }
+        Ok(false)
+    }
+
+    fn prepare_eraser_block(block: &Value, x: f64, y: f64, radius: f64, points_only: bool) -> Result<Option<(String, InkRawPages)>, ui_wgpu::wgpu::BoundedActionFault> {
+        if ink_item_kind(block) != "stroke" || !ink_hits_point(block, x, y, radius) {
+            return Ok(None);
+        }
+        let id = ink_item_id(block);
+        if id.len() > SCENE_SURFACE_ID_BYTE_CAPACITY {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::StringCredits);
+        }
+        if !points_only {
+            return Ok(Some((id.to_owned(), InkRawPages::default())));
+        }
+        let fragments = erase_ink_stroke_points_in_item(block, x, y, radius);
+        if fragments.len() == 1 && fragments[0] == *block {
+            return Ok(None);
+        }
+        if fragments.len() > INK_INTERACTION_ITEM_CAPACITY {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+        }
+        for fragment in &fragments {
+            let mut nodes = 0usize;
+            validate_ink_value(fragment, 0, &mut nodes)?;
+        }
+        let mut encoded = InkRawPages::default();
+        for fragment in fragments {
+            let raw = serde_json::to_string(&fragment).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+            if raw.len() > INK_INTERACTION_DOCUMENT_BYTE_CAPACITY {
+                return Err(ui_wgpu::wgpu::BoundedActionFault::ByteCredits);
+            }
+            encoded.push(&raw)?;
+        }
+        Ok(Some((id.to_owned(), encoded)))
+    }
+
+    fn scan_drag_event(&mut self, scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, commit: bool) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+        if matches!(self.drag.as_ref(), Some(SceneDragMode::InkEraser { .. })) {
+            if self.push_pending_eraser_event()? {
+                return Ok(false);
+            }
+            let document = self.document.as_ref().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+            let Some(block) = self.block_cursor.next(document)? else {
+                self.events.seal()?;
+                return Ok(true);
+            };
+            let (world_x, world_y) = ink_screen_to_world(self.camera, inner, x, y);
+            let points_only = matches!(self.drag.as_ref(), Some(SceneDragMode::InkEraser { mode }) if mode == "eraserPoint");
+            let prepared = Self::prepare_eraser_block(&block, world_x, world_y, document.eraser_radius.unwrap_or(12.0), points_only)?;
+            if let Some((remove_id, fragments)) = prepared {
+                self.pending_remove_id = Some(remove_id);
+                self.pending_fragments = fragments;
+            }
+            return Ok(false);
+        }
+        let document = self.document.as_ref().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+        let Some(block) = self.block_cursor.next(document)? else {
+            self.events.seal()?;
+            return Ok(true);
+        };
+        let id = ink_item_id(&block);
+        let event = match self.drag.as_ref().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)? {
+            SceneDragMode::InkMove { origins, start_x, start_y } => origins.get(id).map(|(origin_x, origin_y)| {
+                let dx = (x - *start_x) as f64 / self.camera.zoom.max(0.0001);
+                let dy = (y - *start_y) as f64 / self.camera.zoom.max(0.0001);
+                let updated = ink_item_with_position(&block, *origin_x + dx, *origin_y + dy);
+                json!({ "operation": "updateBlock", "blockId": id, "block": updated })
+            }),
+            SceneDragMode::InkResize { handle, from, start_x, start_y, selected_ids } if selected_ids.iter().any(|selected| selected == id) => {
+                let dx = (x - *start_x) as f64 / self.camera.zoom.max(0.0001);
+                let dy = (y - *start_y) as f64 / self.camera.zoom.max(0.0001);
+                let to = ink_resize_bounds(*from, handle, dx, dy, 8.0);
+                let updated = scale_ink_item(&block, *from, to);
+                Some(json!({ "operation": "updateBlock", "blockId": id, "block": updated }))
+            }
+            SceneDragMode::InkStroke { block_id } if block_id == id => {
+                let mut updated = SCENE_STATE
+                    .with(|cell| -> Result<Option<Value>, ui_wgpu::wgpu::BoundedActionFault> {
+                        let states = cell.borrow();
+                        let Some(value) = states.get(&scene.surface_id).and_then(|state| state.ink_overrides.get(id)) else {
+                            return Ok(None);
+                        };
+                        let mut nodes = 0usize;
+                        validate_ink_value(value, 0, &mut nodes)?;
+                        Ok(Some(value.clone()))
+                    })?
+                    .unwrap_or_else(|| block.clone());
+                if !commit {
+                    let (world_x, world_y) = ink_screen_to_world(self.camera, inner, x, y);
+                    let block_x = ink_item_num(&updated, "x");
+                    let block_y = ink_item_num(&updated, "y");
+                    if let Some(points) = updated.get_mut("points").and_then(Value::as_array_mut) {
+                        if points.len() == INK_INTERACTION_ITEM_CAPACITY {
+                            return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+                        }
+                        points.push(json!([world_x - block_x, world_y - block_y]));
+                    }
+                }
+                let update_json = serde_json::to_string(&updated).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+                self.stroke_update = Some((id.to_owned(), InkOwnedRaw::new(&update_json)?));
+                Some(json!({ "operation": "updateBlock", "blockId": id, "block": updated }))
+            }
+            _ => None,
+        };
+        if let Some(event) = event {
+            self.events.push(&event)?;
+        }
+        Ok(false)
+    }
+
+    fn scan_marquee(&mut self, inner: Rect, x: f32, y: f32, start_x: f32, start_y: f32) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+        let document = self.document.as_ref().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+        let Some(block) = self.block_cursor.next(document)? else {
+            return Ok(true);
+        };
+        let x0 = start_x.min(x);
+        let y0 = start_y.min(y);
+        let (world_x0, world_y0) = ink_screen_to_world(self.camera, inner, x0, y0);
+        let (world_x1, world_y1) = ink_screen_to_world(self.camera, inner, start_x.max(x), start_y.max(y));
+        let rectangle = InkBoundsF { x: world_x0.min(world_x1), y: world_y0.min(world_y1), w: (world_x1 - world_x0).abs(), h: (world_y1 - world_y0).abs() };
+        if ink_item_bounds(&block).intersects(&rectangle) {
+            let id = ink_item_id(&block);
+            let bytes = self.result_bytes.checked_add(id.len()).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
+            if self.result_ids.len() == INK_SELECTION_ITEM_CAPACITY || bytes > ui_wgpu::wgpu::action::ACTION_STRING_BYTE_CAPACITY {
+                return Err(ui_wgpu::wgpu::BoundedActionFault::ByteCredits);
+            }
+            self.result_ids.push(id.to_owned());
+            self.result_bytes = bytes;
+        }
+        Ok(false)
+    }
+
+    fn scan_hit(&mut self, inner: Rect, x: f32, y: f32) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+        let document = self.document.as_ref().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+        let Some(block) = self.block_cursor.next(document)? else {
+            return Ok(true);
+        };
+        let hit = {
+            let (world_x, world_y) = ink_screen_to_world(self.camera, inner, x, y);
+            if !ink_item_locked(&block) && ink_item_bounds(&block).contains_point(world_x, world_y) {
+                let id = ink_item_id(&block);
+                if id.len() > SCENE_SURFACE_ID_BYTE_CAPACITY {
+                    return Err(ui_wgpu::wgpu::BoundedActionFault::StringCredits);
+                }
+                Some((id.to_owned(), (ink_item_num(&block, "x"), ink_item_num(&block, "y"))))
+            } else {
+                None
+            }
+        };
+        if let Some((id, origin)) = hit {
+            self.hit_id = Some(id);
+            self.hit_origin = Some(origin);
+        }
+        Ok(false)
+    }
+
+    fn publish(&mut self, scene: &UiComponentSceneNode, inner: Rect, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+        match self.event {
+            InkInteractionEvent::PointerDown { x, y, button, shift } => self.publish_down(scene, inner, x, y, button, shift, input),
+            InkInteractionEvent::PointerUp { .. } => {
+                if matches!(self.drag.as_ref(), Some(SceneDragMode::InkMarqueeDrag { .. })) {
+                    return write_ink_owned_selection_actions(input, scene, &self.result_ids, || clear_ink_pointer_state(&scene.surface_id));
+                }
+                if matches!(self.drag.as_ref(), Some(SceneDragMode::InkMove { .. } | SceneDragMode::InkResize { .. } | SceneDragMode::InkStroke { .. } | SceneDragMode::InkEraser { .. })) {
+                    return write_ink_events_action(input, scene, &self.events, "commit", None, || clear_ink_pointer_state(&scene.surface_id));
+                }
+                clear_ink_pointer_state(&scene.surface_id);
+                Ok(())
+            }
+            InkInteractionEvent::PointerMove { x, y } => self.publish_move(scene, inner, x, y, input),
+        }
+    }
+
+    fn publish_down(&mut self, scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, button: i16, shift: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+        if self.utility == "pan" || button == 1 {
+            let camera = self.camera;
+            mutate_scene_state(&scene.surface_id, |state| {
+                state.pointer_was_down = true;
+                state.drag = Some(SceneDrag { mode: SceneDragMode::InkPan { start_x: x, start_y: y, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom } });
+            });
+            return Ok(());
+        }
+        if button != 0 {
+            return Ok(());
+        }
+        if self.utility == "eraserStroke" || self.utility == "eraserPoint" {
+            let utility = self.utility.clone();
+            if self.events.items == 0 {
+                mutate_scene_state(&scene.surface_id, |state| {
+                    state.pointer_was_down = true;
+                    state.drag = Some(SceneDrag { mode: SceneDragMode::InkEraser { mode: utility } });
+                });
+                return Ok(());
+            }
+            return write_ink_events_action(input, scene, &self.events, "begin", None, || {
+                mutate_scene_state(&scene.surface_id, |state| {
+                    state.pointer_was_down = true;
+                    state.drag = Some(SceneDrag { mode: SceneDragMode::InkEraser { mode: utility } });
+                });
+            });
+        }
+        if self.utility == "selectMarquee" {
+            mutate_scene_state(&scene.surface_id, |state| {
+                state.pointer_was_down = true;
+                state.drag = Some(SceneDrag { mode: SceneDragMode::InkMarqueeDrag { start_x: x, start_y: y } });
+                state.ink_marquee_points.clear();
+                state.ink_marquee_points.push((x, y));
+            });
+            return Ok(());
+        }
+        if self.utility == "selectDirect" {
+            let hit_id = self.hit_id.as_deref();
+            let hit_origin = self.hit_origin;
+            let mut next_selection = Vec::with_capacity(INK_SELECTION_ITEM_CAPACITY);
+            if shift {
+                for id in &self.selected_ids {
+                    if next_selection.len() == INK_SELECTION_ITEM_CAPACITY {
+                        return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+                    }
+                    next_selection.push(id.clone());
+                }
+            }
+            if let Some(id) = hit_id {
+                if !next_selection.iter().any(|selected| selected == id) {
+                    if next_selection.len() == INK_SELECTION_ITEM_CAPACITY {
+                        return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+                    }
+                    next_selection.push(id.to_owned());
+                }
+            }
+            return write_ink_owned_selection_actions(input, scene, &next_selection, || {
+                mutate_scene_state(&scene.surface_id, |state| {
+                    state.pointer_was_down = true;
+                    if let (Some(id), Some(origin)) = (hit_id, hit_origin) {
+                        let mut origins = HashMap::with_capacity(1);
+                        origins.insert(id.to_owned(), origin);
+                        state.drag = Some(SceneDrag { mode: SceneDragMode::InkMove { origins, start_x: x, start_y: y } });
+                    }
+                });
+            });
+        }
+        let document = self.document.as_ref().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+        if matches!(self.utility.as_str(), "pencil" | "text" | "image" | "table" | "math") {
+            let (world_x, world_y) = ink_screen_to_world(self.camera, inner, x, y);
+            let (world_x, world_y) = ink_maybe_snap_fields(document.snap_enabled, document.snap_grid_spacing, world_x, world_y);
+            let kind = if self.utility == "pencil" { "stroke" } else { self.utility.as_str() };
+            let block = create_ink_item(kind, world_x, world_y);
+            let block_id = ink_item_id(&block).to_owned();
+            let state_id = block_id.clone();
+            let mut events = InkEventJsonPages::default();
+            events.push(&json!({ "operation": "addBlock", "block": block.clone() }))?;
+            events.seal()?;
+            let phase = if self.utility == "pencil" { "begin" } else { "atomic" };
+            return write_ink_events_action(input, scene, &events, phase, Some(&block_id), || {
+                if kind == "stroke" {
+                    mutate_scene_state(&scene.surface_id, |state| {
+                        state.pointer_was_down = true;
+                        state.ink_overrides.insert(state_id.clone(), block);
+                        state.drag = Some(SceneDrag { mode: SceneDragMode::InkStroke { block_id: state_id } });
+                    });
+                }
+            });
+        }
+        Ok(())
+    }
+
+    fn publish_move(&mut self, scene: &UiComponentSceneNode, _inner: Rect, x: f32, y: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+        match self.drag.as_ref() {
+            Some(SceneDragMode::InkPan { start_x, start_y, camera_x, camera_y, zoom }) => {
+                let next = InkCameraF { x: *camera_x + (x - *start_x) as f64, y: *camera_y + (y - *start_y) as f64, zoom: *zoom };
+                write_ink_camera_action(input, scene, next, || {
+                    mutate_scene_state(&scene.surface_id, |state| {
+                        state.ink_camera = Some((next.x, next.y, next.zoom));
+                    });
+                })
+            }
+            Some(SceneDragMode::InkMarqueeDrag { start_x, start_y }) => {
+                mutate_scene_state(&scene.surface_id, |state| {
+                    state.ink_marquee_points.clear();
+                    state.ink_marquee_points.push((*start_x, *start_y));
+                    state.ink_marquee_points.push((x, y));
+                });
+                Ok(())
+            }
+            Some(SceneDragMode::InkMove { .. } | SceneDragMode::InkResize { .. } | SceneDragMode::InkEraser { .. }) => {
+                if self.events.items == 0 {
+                    Ok(())
+                } else {
+                    write_ink_events_action(input, scene, &self.events, "live", None, || {})
+                }
+            }
+            Some(SceneDragMode::InkStroke { .. }) => {
+                if let Some((id, _)) = self.stroke_update.as_ref() {
+                    let saturated = SCENE_STATE.with(|cell| cell.borrow().get(&scene.surface_id).is_some_and(|state| !state.ink_overrides.contains_key(id) && state.ink_overrides.len() == INK_INTERACTION_ITEM_CAPACITY));
+                    if saturated {
+                        return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+                    }
+                }
+                let update = self.stroke_update.as_ref().map(|(id, raw)| Ok((id.clone(), raw.as_str()?.to_owned()))).transpose()?;
+                write_ink_events_action(input, scene, &self.events, "live", None, || {
+                    if let Some((id, block_json)) = update {
+                        let block = serde_json::from_str(&block_json).expect("validated retained ink block");
+                        mutate_scene_state(&scene.surface_id, |state| {
+                            state.ink_overrides.insert(id, block);
+                        });
+                    }
+                })
+            }
+            Some(_) => Err(ui_wgpu::wgpu::BoundedActionFault::Structure),
+            None => {
+                let hovered = scene.ink_canvas.as_ref().and_then(|ink| ink.hovered_id.as_deref());
+                if hovered == self.hit_id.as_deref() {
+                    Ok(())
+                } else {
+                    write_ink_hover_action(input, scene, self.hit_id.as_deref())
+                }
+            }
+        }
+    }
+
+    pub(crate) fn close_step(&mut self) -> bool {
+        if self.selected_ids.pop().is_some() {
+            return false;
+        }
+        if self.result_ids.pop().is_some() {
+            return false;
+        }
+        if self.pending_remove_id.take().is_some() {
+            return false;
+        }
+        if self.pending_fragments.pop_front() {
+            return false;
+        }
+        if self.stroke_update.take().is_some() {
+            return false;
+        }
+        if let Some(drag) = self.drag.as_mut() {
+            match drag {
+                SceneDragMode::InkMove { origins, .. } => {
+                    if let Some(id) = origins.keys().next().cloned() {
+                        origins.remove(&id);
+                        return false;
+                    }
+                }
+                SceneDragMode::InkResize { handle, selected_ids, .. } => {
+                    if selected_ids.pop().is_some() {
+                        return false;
+                    }
+                    if !handle.is_empty() {
+                        handle.clear();
+                        return false;
+                    }
+                }
+                SceneDragMode::InkStroke { block_id } => {
+                    if !block_id.is_empty() {
+                        block_id.clear();
+                        return false;
+                    }
+                }
+                SceneDragMode::InkEraser { mode } => {
+                    if !mode.is_empty() {
+                        mode.clear();
+                        return false;
+                    }
+                }
+                _ => {}
+            }
+            self.drag = None;
+            return false;
+        }
+        let Some(document) = self.document.as_mut() else {
+            return true;
+        };
+        if document.span_len > 0 {
+            document.span_len -= 1;
+            document.spans[document.span_len] = None;
+            return false;
+        }
+        if !document.source.is_empty() {
+            document.source.clear();
+            return false;
+        }
+        if !document.schema.is_empty() {
+            document.schema.clear();
+            return false;
+        }
+        if !document.id.is_empty() {
+            document.id.clear();
+            return false;
+        }
+        if document.active_utility.take().is_some() {
+            return false;
+        }
+        self.document = None;
+        self.hit_id = None;
+        true
+    }
+}
+
 fn ink_current_camera(scene: &UiComponentSceneNode) -> InkCameraF {
     let state = scene_state(&scene.surface_id);
     if let Some((x, y, zoom)) = state.ink_camera {
@@ -3893,10 +5779,12 @@ fn ink_current_camera(scene: &UiComponentSceneNode) -> InkCameraF {
     scene.ink_canvas.as_ref().and_then(|ink| serde_json::from_str::<InkDocumentJson>(&ink.document_json).ok()).map(|doc| InkCameraF::from(doc.camera)).unwrap_or_default()
 }
 
+#[cfg(test)]
 fn ink_events_json(events: &[Value]) -> String {
     Value::Array(events.to_vec()).to_string()
 }
 
+#[cfg(test)]
 fn ink_apply_events_action(scene: &UiComponentSceneNode, events: &[Value], phase: &str, select_ids: Option<&[String]>) -> ActionDescriptor {
     let mut args = json!({
         "surfaceId": scene.surface_id,
@@ -3909,14 +5797,17 @@ fn ink_apply_events_action(scene: &UiComponentSceneNode, events: &[Value], phase
     scene_action(scene, "inkApplyEvents", args)
 }
 
+#[cfg(test)]
 fn ink_set_selection_action(scene: &UiComponentSceneNode, ids: &[String]) -> ActionDescriptor {
     scene_action(scene, "setSelection", json!({ "surfaceId": scene.surface_id, "ids": ids }))
 }
 
+#[cfg(test)]
 fn ink_set_hover_action(scene: &UiComponentSceneNode, id: Option<&str>) -> ActionDescriptor {
     scene_action(scene, "setHover", json!({ "surfaceId": scene.surface_id, "id": id }))
 }
 
+#[cfg(test)]
 fn ink_set_camera_action(scene: &UiComponentSceneNode, camera: InkCameraF) -> ActionDescriptor {
     scene_action(scene, "setCamera", json!({ "surfaceId": scene.surface_id, "camera": { "x": camera.x, "y": camera.y, "zoom": camera.zoom } }))
 }
@@ -3958,6 +5849,7 @@ fn ink_resize_handle_at(bounds: InkBoundsF, camera: InkCameraF, inner: Rect, sx:
 }
 
 /** @emoji 📝️ Pointer-down entry point for ink-canvas: mirrors handlePointerDown in ink-canvas-host.tsx. */
+#[cfg(test)]
 fn ink_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, button: i16, shift: bool) -> Vec<ActionDescriptor> {
     let Some(ink) = &scene.ink_canvas else {
         return Vec::new();
@@ -4075,6 +5967,7 @@ fn ink_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, b
 }
 
 /** @emoji 📝️ Pointer-up entry point for ink-canvas: commits the active gesture and finalizes marquee selection. */
+#[cfg(test)]
 fn ink_pointer_up(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> Vec<ActionDescriptor> {
     let mut actions = Vec::new();
     let state = scene_state(&scene.surface_id);
@@ -4142,6 +6035,7 @@ fn ink_pointer_up(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> 
 }
 
 /** @emoji 📝️ Pointer-move hover entry point for ink-canvas: mirrors the `!dragState` hover branch of handlePointerMove. */
+#[cfg(test)]
 fn ink_hover_move(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> Vec<ActionDescriptor> {
     let Some(ink) = &scene.ink_canvas else {
         return Vec::new();
@@ -4162,6 +6056,7 @@ fn ink_hover_move(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> 
 }
 
 /** @emoji 📝️ Wheel entry point for ink-canvas: zoom-at-cursor, mirrors handleWheel in ink-canvas-host.tsx. */
+#[cfg(test)]
 fn ink_wheel(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, delta: f32) -> Vec<ActionDescriptor> {
     let Some(ink) = &scene.ink_canvas else {
         return Vec::new();
@@ -4807,7 +6702,7 @@ fn hit_graph_node(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> 
     None
 }
 
-fn render_node_graph(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, engine_resources: &mut engine_canvas::EngineCanvasBuildContext, node_graph_states: &mut HashMap<String, NodeGraphSurface>) {
+fn render_node_graph(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, engine_resources: &mut engine_canvas::EngineCanvasBuildContext, node_graph_states: &mut AdmittedSurfaceMap<NodeGraphSurface>) {
     let Some(graph) = &scene.node_graph else {
         return render_placeholder("node-graph", bounds, ctx);
     };
@@ -4870,6 +6765,143 @@ fn paint_tiled_map_marquee(ctx: &mut FrameworkWidgetContext<'_>, surface_id: &st
 
 /** @emoji 🗺️ Pushes GIS map context-menu items for a screen-space hit. */
 
+fn write_tiled_map_selection(
+    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+    controller_id: &str,
+    surface_id: &str,
+    positions: &[String],
+    routes: &[String],
+    mode: &str,
+    commit: impl FnOnce(),
+) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    if positions.len().checked_add(routes.len()).ok_or(ui_wgpu::wgpu::BoundedActionFault::ItemCredits)? > ui_wgpu::wgpu::action::ACTION_NODE_CAPACITY - 5 {
+        return Err(ui_wgpu::wgpu::BoundedActionFault::NodeCredits);
+    }
+    let action = ui_wgpu::wgpu::tiled_map_actions::SET_FEATURE_SELECTION;
+    let mut bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, action, "surfaceId", surface_id, "positions", "routes", "mode", mode])?;
+    for id in positions.iter().chain(routes) {
+        bytes = bytes.checked_add(id.len()).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
+    }
+    let mut reservation = input.reserve_action(controller_id, action, bytes)?;
+    let builder = reservation.builder();
+    builder.begin_object(None)?;
+    builder.string(Some("surfaceId"), surface_id)?;
+    builder.begin_array(Some("positions"))?;
+    for id in positions {
+        builder.string(None, id)?;
+    }
+    builder.end_container()?;
+    builder.begin_array(Some("routes"))?;
+    for id in routes {
+        builder.string(None, id)?;
+    }
+    builder.end_container()?;
+    builder.string(Some("mode"), mode)?;
+    builder.end_container()?;
+    reservation.publish_with(commit)
+}
+
+fn write_tiled_map_hover(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, controller_id: &str, surface_id: &str, hover: Option<(&str, &str)>, commit: impl FnOnce()) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let action = ui_wgpu::wgpu::tiled_map_actions::SET_HOVER;
+    let (kind, id) = hover.unwrap_or(("", ""));
+    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, action, "surfaceId", surface_id, "hover", "kind", "id", kind, id])?;
+    let mut reservation = input.reserve_action(controller_id, action, bytes)?;
+    let builder = reservation.builder();
+    builder.begin_object(None)?;
+    builder.string(Some("surfaceId"), surface_id)?;
+    if hover.is_some() {
+        builder.begin_object(Some("hover"))?;
+        builder.string(Some("kind"), kind)?;
+        builder.string(Some("id"), id)?;
+        builder.end_container()?;
+    } else {
+        builder.null(Some("hover"))?;
+    }
+    builder.end_container()?;
+    reservation.publish_with(commit)
+}
+
+pub fn tiled_map_pointer_down_into(
+    surface_id: &str,
+    controller_id: &str,
+    inner: Rect,
+    x: f32,
+    y: f32,
+    button: i16,
+    shift: bool,
+    ctrl_or_meta: bool,
+    selection_method: &str,
+    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
+    if button == 0 {
+        if selection_method.len() > SCENE_SURFACE_ID_BYTE_CAPACITY {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::StringCredits);
+        }
+        mutate_scene_state(surface_id, |state| {
+            state.drag = Some(SceneDrag { mode: SceneDragMode::MapMarquee { start_x: sx as f32, start_y: sy as f32, method: selection_method.to_owned(), merge_mode: engine_canvas::map_marquee_mode(shift, ctrl_or_meta).to_owned() } });
+            state.map_marquee_points = vec![(sx as f32, sy as f32)];
+            state.map_marquee_active = false;
+        });
+        return Ok(true);
+    }
+    if button == 1 {
+        let published = engine_canvas::with_map_interaction_into(surface_id, controller_id, input, framework_surface_tiled_map::tiled_map::MapInteractionIntent::PointerDown { sx, sy, button: 1 })?;
+        if published {
+            mutate_scene_state(surface_id, |state| state.drag = Some(SceneDrag { mode: SceneDragMode::MapPan }));
+        }
+        return Ok(published);
+    }
+    Ok(false)
+}
+
+pub fn tiled_map_pointer_move_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, down: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
+    if down {
+        let state = scene_state(surface_id);
+        if let Some(drag) = &state.drag {
+            match &drag.mode {
+                SceneDragMode::MapPan => return engine_canvas::with_map_interaction_into(surface_id, controller_id, input, framework_surface_tiled_map::tiled_map::MapInteractionIntent::PointerMove { sx, sy }),
+                SceneDragMode::MapMarquee { start_x, start_y, method, .. } => {
+                    let distance = ((sx as f32 - *start_x).powi(2) + (sy as f32 - *start_y).powi(2)).sqrt();
+                    mutate_scene_state(surface_id, |state| {
+                        if distance >= MAP_MARQUEE_THRESHOLD_PX {
+                            state.map_marquee_active = true;
+                        }
+                        if state.map_marquee_active {
+                            if method == "lasso" {
+                                if state.map_marquee_points.last().copied() != Some((sx as f32, sy as f32)) {
+                                    state.map_marquee_points.push((sx as f32, sy as f32));
+                                }
+                            } else {
+                                state.map_marquee_points = vec![(*start_x, *start_y), (sx as f32, sy as f32)];
+                            }
+                        }
+                    });
+                }
+                _ => {}
+            }
+        }
+        return Ok(true);
+    }
+    #[derive(Deserialize)]
+    struct HoverRow {
+        kind: String,
+        id: String,
+    }
+    let hit_json = engine_canvas::with_map_host(surface_id, |host| host.hit_test_feature_json(sx, sy)).unwrap_or_else(|| "null".into());
+    let hover = serde_json::from_str::<Option<HoverRow>>(&hit_json).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+    let hover_json = hover.as_ref().map(|row| format!("{}:{}", row.kind, row.id)).unwrap_or_else(|| "null".into());
+    if scene_state(surface_id).map_last_hover_json.as_deref() == Some(hover_json.as_str()) {
+        return Ok(false);
+    }
+    write_tiled_map_hover(input, controller_id, surface_id, hover.as_ref().map(|row| (row.kind.as_str(), row.id.as_str())), || {
+        mutate_scene_state(surface_id, |state| state.map_last_hover_json = Some(hover_json));
+    })?;
+    Ok(true)
+}
+
+#[cfg(test)]
 pub fn tiled_map_pointer_down(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, button: i16, shift: bool, ctrl_or_meta: bool, selection_method: &str) -> Vec<ActionDescriptor> {
     let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
     if button == 0 {
@@ -4891,6 +6923,7 @@ pub fn tiled_map_pointer_down(surface_id: &str, controller_id: &str, inner: Rect
     Vec::new()
 }
 
+#[cfg(test)]
 pub fn tiled_map_pointer_move(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, down: bool) -> Vec<ActionDescriptor> {
     let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
     if down {
@@ -4936,6 +6969,74 @@ pub fn tiled_map_pointer_move(surface_id: &str, controller_id: &str, inner: Rect
     vec![engine_canvas::map_action(controller_id, ui_wgpu::wgpu::tiled_map_actions::SET_HOVER, json!({ "surfaceId": surface_id, "hover": hover }))]
 }
 
+pub fn tiled_map_pointer_up_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
+    let state = scene_state(surface_id);
+    let Some(drag) = state.drag.as_ref() else {
+        return Ok(false);
+    };
+    match &drag.mode {
+        SceneDragMode::MapPan => {
+            let published = engine_canvas::with_map_interaction_into(surface_id, controller_id, input, framework_surface_tiled_map::tiled_map::MapInteractionIntent::PointerUp { sx, sy })?;
+            if published {
+                mutate_scene_state(surface_id, |state| {
+                    state.drag = None;
+                    state.map_marquee_points.clear();
+                    state.map_marquee_active = false;
+                });
+            }
+            Ok(published)
+        }
+        SceneDragMode::MapMarquee { start_x, start_y, method, merge_mode } => {
+            let distance = ((sx as f32 - *start_x).powi(2) + (sy as f32 - *start_y).powi(2)).sqrt();
+            let mut positions = Vec::new();
+            let mut routes = Vec::new();
+            if state.map_marquee_active && distance >= MAP_MARQUEE_THRESHOLD_PX {
+                let mut points = state.map_marquee_points.clone();
+                if method == "lasso" {
+                    points.push((sx as f32, sy as f32));
+                } else {
+                    points = vec![(*start_x, *start_y), (sx as f32, sy as f32)];
+                }
+                let crossing = engine_canvas::map_marquee_crossing(method, *start_x, sx as f32);
+                (positions, routes) = engine_canvas::with_map_host(surface_id, |host| query_map_feature_hits(host, method, &points, crossing)).unwrap_or_default();
+            } else if distance < MAP_MARQUEE_THRESHOLD_PX {
+                #[derive(Deserialize)]
+                struct HitRow {
+                    kind: String,
+                    id: String,
+                }
+                let hit_json = engine_canvas::with_map_host(surface_id, |host| host.hit_test_feature_json(sx, sy)).unwrap_or_else(|| "null".into());
+                if let Some(hit) = serde_json::from_str::<Option<HitRow>>(&hit_json).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::Structure)? {
+                    match hit.kind.as_str() {
+                        "position" => positions.push(hit.id),
+                        "route" => routes.push(hit.id),
+                        _ => {}
+                    }
+                }
+            }
+            if positions.is_empty() && routes.is_empty() && distance >= MAP_MARQUEE_THRESHOLD_PX && !state.map_marquee_active {
+                mutate_scene_state(surface_id, |state| {
+                    state.drag = None;
+                    state.map_marquee_points.clear();
+                    state.map_marquee_active = false;
+                });
+                return Ok(false);
+            }
+            write_tiled_map_selection(input, controller_id, surface_id, &positions, &routes, merge_mode, || {
+                mutate_scene_state(surface_id, |state| {
+                    state.drag = None;
+                    state.map_marquee_points.clear();
+                    state.map_marquee_active = false;
+                });
+            })?;
+            Ok(true)
+        }
+        _ => Ok(false),
+    }
+}
+
+#[cfg(test)]
 pub fn tiled_map_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32) -> Vec<ActionDescriptor> {
     let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
     let state = scene_state(surface_id);
@@ -5001,7 +7102,7 @@ pub fn tiled_map_drag_active(surface_id: &str) -> bool {
     scene_state(surface_id).drag.as_ref().is_some_and(|drag| matches!(drag.mode, SceneDragMode::MapMarquee { .. } | SceneDragMode::MapPan))
 }
 
-fn render_tiled_map(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, engine_resources: &mut engine_canvas::EngineCanvasBuildContext, tiled_map_states: &mut HashMap<String, TiledMapSurface>) {
+fn render_tiled_map(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, engine_resources: &mut engine_canvas::EngineCanvasBuildContext, tiled_map_states: &mut AdmittedSurfaceMap<TiledMapSurface>) {
     let Some(map_scene) = &scene.tiled_map else {
         return render_placeholder("tiled-map", bounds, ctx);
     };
@@ -5289,7 +7390,7 @@ pub struct Board2dSurface {
     pub fixture_json: String,
 }
 
-fn render_board2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, engine_resources: &mut engine_canvas::EngineCanvasBuildContext, board2d_states: &mut HashMap<String, Board2dSurface>) {
+fn render_board2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>, engine_resources: &mut engine_canvas::EngineCanvasBuildContext, board2d_states: &mut AdmittedSurfaceMap<Board2dSurface>) {
     let Some(board_scene) = &scene.board2d else {
         return render_placeholder("board-2d", bounds, ctx);
     };
@@ -5302,14 +7403,49 @@ pub fn puzzle_board_pointer_down(surface_id: &str, inner: Rect, x: f32, y: f32, 
     engine_canvas::puzzle_board_pointer_down(surface_id, inner, x, y, button, shift, ctrl_or_meta);
 }
 
+pub fn puzzle_board_pointer_move_into(
+    surface_id: &str,
+    controller_id: &str,
+    inner: Rect,
+    x: f32,
+    y: f32,
+    shift: bool,
+    ctrl_or_meta: bool,
+    alt: bool,
+    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    engine_canvas::puzzle_board_pointer_move_into(surface_id, controller_id, inner, x, y, shift, ctrl_or_meta, alt, input)
+}
+
+pub fn puzzle_board_pointer_up_into(
+    surface_id: &str,
+    controller_id: &str,
+    inner: Rect,
+    x: f32,
+    y: f32,
+    shift: bool,
+    ctrl_or_meta: bool,
+    alt: bool,
+    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    engine_canvas::puzzle_board_pointer_up_into(surface_id, controller_id, inner, x, y, shift, ctrl_or_meta, alt, input)
+}
+
+pub fn puzzle_board_pointer_leave_into(surface_id: &str, controller_id: &str, alt: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    engine_canvas::puzzle_board_pointer_leave_into(surface_id, controller_id, alt, input)
+}
+
+#[cfg(test)]
 pub fn puzzle_board_pointer_move(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl_or_meta: bool, alt: bool) -> Vec<ActionDescriptor> {
     engine_canvas::puzzle_board_pointer_move(surface_id, controller_id, inner, x, y, shift, ctrl_or_meta, alt)
 }
 
+#[cfg(test)]
 pub fn puzzle_board_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl_or_meta: bool, alt: bool) -> Vec<ActionDescriptor> {
     engine_canvas::puzzle_board_pointer_up(surface_id, controller_id, inner, x, y, shift, ctrl_or_meta, alt)
 }
 
+#[cfg(test)]
 pub fn puzzle_board_pointer_leave(surface_id: &str, controller_id: &str, alt: bool) -> Vec<ActionDescriptor> {
     engine_canvas::puzzle_board_pointer_leave(surface_id, controller_id, alt)
 }
@@ -5318,6 +7454,11 @@ pub fn board2d_drag_active(surface_id: &str) -> bool {
     engine_canvas::board_drag_active(surface_id)
 }
 
+pub fn puzzle_board_wheel_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    engine_canvas::puzzle_board_wheel_into(surface_id, controller_id, inner, x, y, delta, input)
+}
+
+#[cfg(test)]
 pub fn puzzle_board_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32) -> Vec<ActionDescriptor> {
     engine_canvas::puzzle_board_wheel(surface_id, controller_id, inner, x, y, delta)
 }
@@ -5734,6 +7875,7 @@ struct TextEditorUiState {
     completions_open: bool,
     completion_index: usize,
     context_menu: Option<TextEditorContextMenu>,
+    pending_context_click: Option<(f32, f32, i16)>,
     rename_active: bool,
     rename_occurrences: Vec<(usize, usize)>,
 }
@@ -5852,28 +7994,31 @@ fn text_editor_context_menu_items(editor: &ui_wgpu::wgpu::TextEditorScene) -> Ve
 /// ▶️ Executes one context-menu row. `inner` re-derives the click point in surface-local screen space for
 /// "Select Token"/"Select Line"; "Select All" reuses `engine_canvas::text_editor_apply_key`'s existing
 /// Ctrl/Cmd+A path instead of adding a sixth wrapper.
-fn text_editor_run_menu_action(scene: &UiComponentSceneNode, editor: &ui_wgpu::wgpu::TextEditorScene, inner: Rect, menu: &TextEditorContextMenu, action_id: &str, ctx: &mut FrameworkWidgetContext<'_>, ui_state: &mut TextEditorUiState) {
+fn text_editor_run_menu_action(scene: &UiComponentSceneNode, editor: &ui_wgpu::wgpu::TextEditorScene, inner: Rect, menu: &TextEditorContextMenu, action_id: &str, ctx: &mut FrameworkWidgetContext<'_>, ui_state: &mut TextEditorUiState) -> bool {
     match action_id {
         "suggest" => {
             ui_state.completions_open = true;
             ui_state.completion_index = 0;
         }
         "select-token" => {
-            for action in engine_canvas::text_editor_select_span_at_screen(scene, inner, menu.x, menu.y) {
-                ctx.input.queue_event(action);
+            if let Err(fault) = engine_canvas::text_editor_select_span_into(scene, inner, menu.x, menu.y, ctx.input) {
+                ctx.input.record_action_fault(fault);
+                return false;
             }
         }
         "select-line" => {
             let offset = cursor_from_click(scene, inner, menu.x, menu.y, 0.0);
             let (start, end) = text_editor_line_range(&editor.buffer, offset);
-            for action in engine_canvas::text_editor_set_selection(scene, start, end) {
-                ctx.input.queue_event(action);
+            if let Err(fault) = engine_canvas::text_editor_set_selection_into(scene, start, end, ctx.input) {
+                ctx.input.record_action_fault(fault);
+                return false;
             }
         }
         "select-all" => {
             let modifiers = ui_wgpu::wgpu::PointerModifiers { ctrl: true, ..Default::default() };
-            for action in engine_canvas::text_editor_apply_key(scene, KeyAction::Char("a".to_string()), &modifiers) {
-                ctx.input.queue_event(action);
+            if let Err(fault) = engine_canvas::text_editor_apply_key_into(scene, &KeyAction::Char("a".to_string()), &modifiers, ctx.input) {
+                ctx.input.record_action_fault(fault);
+                return false;
             }
         }
         "rename" => {
@@ -5884,13 +8029,20 @@ fn text_editor_run_menu_action(scene: &UiComponentSceneNode, editor: &ui_wgpu::w
             }
         }
         "format" => {
-            ctx.input.queue_event(scene_action(scene, "formatDocument", json!({ "surfaceId": scene.surface_id })));
+            if let Err(fault) = queue_surface_action(ctx.input, scene, "formatDocument") {
+                ctx.input.record_action_fault(fault);
+                return false;
+            }
         }
         "lint" => {
-            ctx.input.queue_event(scene_action(scene, "lintDocument", json!({ "surfaceId": scene.surface_id })));
+            if let Err(fault) = queue_surface_action(ctx.input, scene, "lintDocument") {
+                ctx.input.record_action_fault(fault);
+                return false;
+            }
         }
         _ => {}
     }
+    true
 }
 //#endregion State
 
@@ -6042,6 +8194,17 @@ fn render_text_editor(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fram
     }
 
     let mut ui_state = text_editor_ui_state(&scene.surface_id);
+    if let Some((x, y, button)) = ui_state.pending_context_click.take() {
+        match engine_canvas::text_editor_pointer_click_into(scene, inner, x, y, button, ctx.input) {
+            Ok(_) => {
+                ui_state.context_menu = Some(TextEditorContextMenu { x, y, items: text_editor_context_menu_items(editor) });
+            }
+            Err(fault) => {
+                ctx.input.record_action_fault(fault);
+                ui_state.pending_context_click = Some((x, y, button));
+            }
+        }
+    }
     let hovered = inner.contains(ctx.input.pointer_x, ctx.input.pointer_y);
     let pressed_edge = ctx.input.pointer_down && !ui_state.was_pointer_down;
 
@@ -6061,24 +8224,29 @@ fn render_text_editor(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fram
                 if let Some(item) = completions.get(index) {
                     let (_, caret) = engine_canvas::text_editor_caret(scene);
                     let prefix_start = identifier_prefix_start(&editor.buffer, caret);
-                    let insert_text = item.insert_text.clone().unwrap_or_else(|| item.label.clone());
-                    for action in engine_canvas::text_editor_apply_completion(scene, prefix_start, caret, &insert_text) {
-                        ctx.input.queue_event(action);
+                    let insert_text = item.insert_text.as_deref().unwrap_or(&item.label);
+                    if let Err(fault) = engine_canvas::text_editor_apply_completion_into(scene, prefix_start, caret, insert_text, ctx.input) {
+                        ctx.input.record_action_fault(fault);
+                        ui_state.completions_open = true;
+                    } else {
+                        ui_state.completions_open = false;
                     }
                 }
-                ui_state.completions_open = false;
                 consumed_press = true;
             }
         }
         // 🖱️ Context-menu rows: any press while one is open dismisses it; a hit also runs the action.
         if !consumed_press {
             if let Some(menu) = ui_state.context_menu.clone() {
+                let mut keep_menu = false;
                 if let Some(index) = text_editor_menu_hit(&menu, ctx.theme, ctx.input.pointer_x, ctx.input.pointer_y) {
                     if let Some(item) = menu.items.get(index).copied() {
-                        text_editor_run_menu_action(scene, editor, inner, &menu, item.id, ctx, &mut ui_state);
+                        if !text_editor_run_menu_action(scene, editor, inner, &menu, item.id, ctx, &mut ui_state) {
+                            keep_menu = true;
+                        }
                     }
                 }
-                ui_state.context_menu = None;
+                ui_state.context_menu = keep_menu.then_some(menu);
                 consumed_press = true;
             }
         }
@@ -6090,14 +8258,14 @@ fn render_text_editor(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fram
                 // `button != 0` — now that it repositions the caret for every button (see that fn's own doc
                 // comment), passing the real button through is both correct AND avoids incorrectly flagging
                 // `drag_selecting` for what is not a primary-button press.
-                let mut actions = engine_canvas::text_editor_pointer_down(scene, inner, ctx.input.pointer_x, ctx.input.pointer_y, ctx.input.pointer_button);
-                actions.extend(engine_canvas::text_editor_pointer_up(scene, inner, ctx.input.pointer_x, ctx.input.pointer_y));
-                for action in actions {
-                    ctx.input.queue_event(action);
+                if let Err(fault) = engine_canvas::text_editor_pointer_click_into(scene, inner, ctx.input.pointer_x, ctx.input.pointer_y, ctx.input.pointer_button, ctx.input) {
+                    ctx.input.record_action_fault(fault);
+                    ui_state.pending_context_click = Some((ctx.input.pointer_x, ctx.input.pointer_y, ctx.input.pointer_button));
+                } else {
+                    ui_state.context_menu = Some(TextEditorContextMenu { x: ctx.input.pointer_x, y: ctx.input.pointer_y, items: text_editor_context_menu_items(editor) });
                 }
                 ctx.input.focus_id_owned(editor_id.clone());
                 ui_state.completions_open = false;
-                ui_state.context_menu = Some(TextEditorContextMenu { x: ctx.input.pointer_x, y: ctx.input.pointer_y, items: text_editor_context_menu_items(editor) });
             } else if ctx.input.pointer_button == 0 && hovered {
                 // ✋️ The generic `UiCommand::Scene` route already repositions the caret / extends the
                 // drag-selection for this same press (via `apply_scene_ui_command`); this only tracks
@@ -6109,8 +8277,8 @@ fn render_text_editor(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fram
                 let now = now_ms();
                 let is_double = ui_state.last_click_offset == Some(click_offset) && (now - ui_state.last_click_ms).abs() < 400.0;
                 if is_double {
-                    for action in engine_canvas::text_editor_select_span_at_screen(scene, inner, ctx.input.pointer_x, ctx.input.pointer_y) {
-                        ctx.input.queue_event(action);
+                    if let Err(fault) = engine_canvas::text_editor_select_span_into(scene, inner, ctx.input.pointer_x, ctx.input.pointer_y, ctx.input) {
+                        ctx.input.record_action_fault(fault);
                     }
                 }
                 ui_state.last_click_ms = now;
@@ -6125,15 +8293,18 @@ fn render_text_editor(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fram
     let focused = ctx.input.focused_id.as_deref() == Some(editor_id.as_str());
     let renaming = ui_state.rename_active && ctx.input.focused_id.as_deref() == Some(rename_id.as_str());
     if renaming {
-        for key in ctx.input.drain_keys() {
+        for key in ctx.input.take_key_step() {
             match key {
                 KeyAction::Escape => {
                     ui_state.rename_active = false;
                     ctx.input.blur_input();
                 }
                 KeyAction::Enter => {
-                    let occurrences: Vec<Value> = ui_state.rename_occurrences.iter().map(|(start, end)| json!({ "start": start, "end": end })).collect();
-                    ctx.input.queue_event(scene_action(scene, "commitRename", json!({ "surfaceId": scene.surface_id, "occurrences": occurrences, "text": ctx.input.text_view() })));
+                    if let Err(fault) = queue_commit_rename_action(ctx.input, scene, &ui_state.rename_occurrences) {
+                        ctx.input.record_action_fault(fault);
+                        ctx.input.retry_key(KeyAction::Enter).expect("popped key credit remains reserved");
+                        break;
+                    }
                     ui_state.rename_active = false;
                     ctx.input.blur_input();
                 }
@@ -6150,7 +8321,7 @@ fn render_text_editor(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fram
     } else if focused {
         let modifiers = ctx.input.modifiers.clone();
         let completions = text_editor_completions(editor);
-        for key in ctx.input.drain_keys() {
+        for key in ctx.input.take_key_step() {
             if ui_state.completions_open && !completions.is_empty() {
                 match key {
                     KeyAction::ArrowDown => {
@@ -6161,13 +8332,15 @@ fn render_text_editor(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fram
                         ui_state.completion_index = (ui_state.completion_index + completions.len() - 1) % completions.len();
                         continue;
                     }
-                    KeyAction::Tab | KeyAction::Enter => {
+                    key @ (KeyAction::Tab | KeyAction::Enter) => {
                         let item = &completions[ui_state.completion_index.min(completions.len() - 1)];
                         let (_, caret) = engine_canvas::text_editor_caret(scene);
                         let prefix_start = identifier_prefix_start(&editor.buffer, caret);
-                        let insert_text = item.insert_text.clone().unwrap_or_else(|| item.label.clone());
-                        for action in engine_canvas::text_editor_apply_completion(scene, prefix_start, caret, &insert_text) {
-                            ctx.input.queue_event(action);
+                        let insert_text = item.insert_text.as_deref().unwrap_or(&item.label);
+                        if let Err(fault) = engine_canvas::text_editor_apply_completion_into(scene, prefix_start, caret, insert_text, ctx.input) {
+                            ctx.input.record_action_fault(fault);
+                            ctx.input.retry_key(key).expect("popped key credit remains reserved");
+                            break;
                         }
                         ui_state.completions_open = false;
                         continue;
@@ -6185,20 +8358,34 @@ fn render_text_editor(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fram
                     ui_state.completion_index = 0;
                 }
                 KeyAction::Enter if modifiers.meta || modifiers.ctrl => {
-                    ctx.input.queue_event(scene_action(scene, "submit", json!({ "surfaceId": scene.surface_id, "document": editor.buffer })));
+                    if let Err(fault) = queue_document_action(ctx.input, scene, "submit", &editor.buffer) {
+                        ctx.input.record_action_fault(fault);
+                        ctx.input.retry_key(KeyAction::Enter).expect("popped key credit remains reserved");
+                        break;
+                    }
                 }
                 KeyAction::Char(ch) if (modifiers.meta || modifiers.ctrl) && ch.eq_ignore_ascii_case("s") => {
-                    ctx.input.queue_event(scene_action(scene, "formatDocument", json!({ "surfaceId": scene.surface_id })));
+                    if let Err(fault) = queue_surface_action(ctx.input, scene, "formatDocument") {
+                        ctx.input.record_action_fault(fault);
+                        ctx.input.retry_key(KeyAction::Char(ch)).expect("popped key credit remains reserved");
+                        break;
+                    }
                 }
-                KeyAction::Enter | KeyAction::Escape => {
-                    ctx.input.queue_event(scene_action(scene, "textEdit", json!({ "surfaceId": scene.surface_id, "document": editor.buffer })));
+                key @ (KeyAction::Enter | KeyAction::Escape) => {
+                    if let Err(fault) = queue_document_action(ctx.input, scene, "textEdit", &editor.buffer) {
+                        ctx.input.record_action_fault(fault);
+                        ctx.input.retry_key(key).expect("popped key credit remains reserved");
+                        break;
+                    }
                     if matches!(key, KeyAction::Escape) {
                         ctx.input.blur_input();
                     }
                 }
-                KeyAction::Char(_) | KeyAction::Backspace | KeyAction::Delete => {
-                    for action in engine_canvas::text_editor_apply_key(scene, key, &modifiers) {
-                        ctx.input.queue_event(action);
+                key @ (KeyAction::Char(_) | KeyAction::Backspace | KeyAction::Delete) => {
+                    if let Err(fault) = engine_canvas::text_editor_apply_key_into(scene, &key, &modifiers, ctx.input) {
+                        ctx.input.record_action_fault(fault);
+                        ctx.input.retry_key(key).expect("popped key credit remains reserved");
+                        break;
                     }
                 }
                 _ => {}

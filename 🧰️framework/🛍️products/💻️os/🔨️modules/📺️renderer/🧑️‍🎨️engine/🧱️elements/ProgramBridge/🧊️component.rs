@@ -94,9 +94,8 @@ mod wasm_program_exchange {
 
     /// 🎠️ H3-wgpu-native — the old synchronous `WasmPluginRuntime::exchange(instance, cmds) ->
     /// Vec<AppFrame>` in-process call, replaced by a real off-thread round-trip: each `AppCommand`
-    /// becomes an `Event::AppCommandEvent` the kernel thread's `GuestRuntime::execute_turn` actually
-    /// runs (`📓️design-abi.md` §2/§4's "exchange collapse": `exchange(id, cmds) ⇒ poll([app-command{
-    /// id,seq,cmd}…], budget)`). `AppFrame`s the guest sends back travel as `Effect::SendMessage{
+    /// becomes a retained host command owner whose fixed pages are lowered one at a time through the
+    /// reactor's dedicated command-page argument. `AppFrame`s the guest sends back travel as `Effect::SendMessage{
     /// target: Shell{instance}, payload: pack(AppFrame)}` and are already unpacked by
     /// `KernelClient::exchange_commands` — this fn is now a thin awaiting wrapper, not a decoder.
     async fn exchange(client: &KernelClient, instance_id: u32, commands: Vec<AppCommand>) -> Result<crate::kernel_runtime::ExchangeOutcome, String> {
@@ -220,10 +219,13 @@ mod wasm_program_exchange {
     /// as a single `AppCommand::Presence`, one `encode_presence_peer` blob per peer. A plain `Done`
     /// reply, never decoded further here.
     pub async fn push_presence(client: &KernelClient, instance_id: u32, own_color: Option<u8>, peers: &[protocol::PresencePeer]) -> Result<(), String> {
+        if peers.len() > protocol::PRESENCE_ROSTER_MAXIMUM_ITEMS {
+            return Err("presence roster exceeds its fixed producer admission".into());
+        }
         let seq = next_seq();
-        let mut peer_blobs = Vec::with_capacity(peers.len());
+        let mut peer_blobs = protocol::PresenceRosterWire::empty();
         for peer in peers {
-            peer_blobs.push(protocol::encode_presence_peer(peer).await);
+            peer_blobs.try_push(protocol::encode_presence_peer(peer).await).map_err(|rejected| rejected.reason.to_string())?;
         }
         let outcome = exchange(client, instance_id, vec![AppCommand::Presence { seq, own_color, peers: peer_blobs }]).await?;
         expect_done(&outcome.frames, seq)

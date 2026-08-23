@@ -311,6 +311,19 @@ fn selection_method_from_dag_label(label: &str) -> SelectionMethod {
 }
 
 //#region 🔖️GraphHost
+#[derive(Clone, Copy, Debug)]
+pub struct GraphWheelPlan {
+    revision: u64,
+    expected: [f64; 3],
+    next: [f64; 3],
+}
+
+impl GraphWheelPlan {
+    pub fn camera(&self) -> [f64; 3] {
+        self.next
+    }
+}
+
 /// 🕸️ Retained generic node-graph host wrapping the DAG canvas engine.
 pub struct GraphHost {
     /// 🧱️ (d) ephemeral working representation — hit-testing/layout structure rebuilt wholesale from
@@ -332,6 +345,8 @@ pub struct GraphHost {
     /// gesture, read once by [`GraphHost::take_selection_gather`] so the caller can dispatch it as ONE
     /// batched `interactionSelect` — no merge algebra lives here, `next_selection` owns that.
     pending_gather: Option<SelectionGather>,
+    interaction_revision: u64,
+    interaction_projection: Option<dag::DagInteractionProjection>,
 }
 
 impl Default for GraphHost {
@@ -342,7 +357,13 @@ impl Default for GraphHost {
 
 impl GraphHost {
     pub fn from_fixture(fixture: DagFixture) -> Self {
-        Self { dag: DagHost::from_fixture_without_layout(fixture), catalogue_json: String::new(), controls_json: String::new(), capabilities_json: String::new(), last_payload_signature: 0, pending_gather: None }
+        let dag = DagHost::from_fixture_without_layout(fixture);
+        let interaction_projection = dag.bounded_interaction_projection(0).ok();
+        Self { dag, catalogue_json: String::new(), controls_json: String::new(), capabilities_json: String::new(), last_payload_signature: 0, pending_gather: None, interaction_revision: 0, interaction_projection }
+    }
+
+    fn refresh_interaction_projection(&mut self) {
+        self.interaction_projection = self.dag.bounded_interaction_projection(self.interaction_revision).ok();
     }
 
     fn payload_signature(payload: &NodeGraphScenePayload) -> u64 {
@@ -408,6 +429,8 @@ impl GraphHost {
         self.catalogue_json = payload.catalogue_json.clone().unwrap_or_default();
         self.controls_json = payload.controls_json.clone().unwrap_or_default();
         self.capabilities_json = payload.capabilities_json.clone().unwrap_or_default();
+        self.interaction_revision = self.interaction_revision.wrapping_add(1);
+        self.refresh_interaction_projection();
         Ok(())
     }
 
@@ -436,6 +459,8 @@ impl GraphHost {
 
     pub fn set_viewport(&mut self, width: u32, height: u32, dpr: f64) {
         self.dag.set_viewport(width, height, dpr);
+        self.interaction_revision = self.interaction_revision.wrapping_add(1);
+        self.refresh_interaction_projection();
     }
 
     pub fn camera_json(&self) -> String {
@@ -459,26 +484,71 @@ impl GraphHost {
     }
 
     pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64, zoom_gesture: bool) {
-        if !zoom_gesture {
-            let cam = &self.dag.fixture.camera;
-            let zoom = cam.zoom.max(1e-9);
-            self.dag.set_camera(cam.x, cam.y - delta_y / zoom, zoom);
-            return;
-        }
-        let (wx, wy) = dag_screen_to_world(&self.dag, sx, sy);
-        let factor = if delta_y < 0.0 { 1.1 } else { 0.9 };
+        let plan = self.plan_wheel(sx, sy, delta_y, zoom_gesture);
+        let _ = self.commit_wheel(plan);
+    }
+
+    pub fn plan_wheel(&self, sx: f64, sy: f64, delta_y: f64, zoom_gesture: bool) -> GraphWheelPlan {
         let cam = &self.dag.fixture.camera;
-        let new_zoom = (cam.zoom * factor).clamp(0.05, 32.0);
-        let nx = wx - (wx - cam.x) * (new_zoom / cam.zoom);
-        let ny = wy - (wy - cam.y) * (new_zoom / cam.zoom);
-        self.dag.set_camera(nx, ny, new_zoom);
+        let expected = [cam.x, cam.y, cam.zoom];
+        let next = if !zoom_gesture {
+            [cam.x, cam.y - delta_y / cam.zoom.max(1e-9), cam.zoom.max(1e-9)]
+        } else {
+            let (wx, wy) = dag_screen_to_world(&self.dag, sx, sy);
+            let new_zoom = (cam.zoom * if delta_y < 0.0 { 1.1 } else { 0.9 }).clamp(0.05, 32.0);
+            [wx - (wx - cam.x) * (new_zoom / cam.zoom), wy - (wy - cam.y) * (new_zoom / cam.zoom), new_zoom]
+        };
+        GraphWheelPlan { revision: self.interaction_revision, expected, next }
+    }
+
+    pub fn commit_wheel(&mut self, plan: GraphWheelPlan) -> bool {
+        let cam = &self.dag.fixture.camera;
+        if self.interaction_revision != plan.revision || [cam.x.to_bits(), cam.y.to_bits(), cam.zoom.to_bits()] != [plan.expected[0].to_bits(), plan.expected[1].to_bits(), plan.expected[2].to_bits()] {
+            return false;
+        }
+        self.dag.set_camera(plan.next[0], plan.next[1], plan.next[2]);
+        self.interaction_revision = self.interaction_revision.wrapping_add(1);
+        self.refresh_interaction_projection();
+        true
+    }
+
+    pub fn plan_pointer(&self, intent: dag::DagPointerIntent) -> Result<dag::DagPointerPlan, dag::DagInteractionPlanFault> {
+        let projection = self.interaction_projection.ok_or(dag::DagInteractionPlanFault::NodeCredits)?;
+        if projection.revision() != self.interaction_revision {
+            return Err(dag::DagInteractionPlanFault::Unsupported);
+        }
+        self.dag.derive_pointer_plan(projection, intent)
+    }
+
+    pub fn commit_pointer(&mut self, plan: dag::DagPointerPlan) -> bool {
+        if self.interaction_revision != plan.expected_revision() {
+            return false;
+        }
+        self.dag.apply_pointer_plan(&plan);
+        self.interaction_projection = Some(*plan.projection());
+        self.interaction_revision = plan.projection().revision();
+        true
+    }
+
+    pub fn pointer_projection_snapshot(&self, plan: &dag::DagPointerPlan) -> Result<(Vec<String>, Option<String>, [f64; 3]), dag::DagInteractionPlanFault> {
+        let projection = plan.projection();
+        let mut bytes = 0usize;
+        for id in self.dag.projection_selected_id_refs(projection).chain(self.dag.projection_hovered_id_ref(projection)) {
+            bytes = bytes.checked_add(id.len()).ok_or(dag::DagInteractionPlanFault::StringCredits)?;
+            if bytes > 16 * 1024 {
+                return Err(dag::DagInteractionPlanFault::StringCredits);
+            }
+        }
+        Ok((self.dag.projection_selected_id_refs(projection).map(str::to_owned).collect(), self.dag.projection_hovered_id_ref(projection).map(str::to_owned), projection.camera()))
     }
 
     pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8, shift: bool, ctrl_or_meta: bool, alt: bool, pan: bool) {
+        self.interaction_revision = self.interaction_revision.wrapping_add(1);
         self.dag.pointer_down_screen(sx, sy, button, shift, ctrl_or_meta, alt, pan);
     }
 
     pub fn pointer_move_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
+        self.interaction_revision = self.interaction_revision.wrapping_add(1);
         self.dag.pointer_move_screen(sx, sy, shift, ctrl_or_meta, alt);
     }
 
@@ -490,6 +560,7 @@ impl GraphHost {
     /// os-kernel `next_selection` machine (not this file) applies merge/mode algebra, and the result
     /// flows back down through [`GraphHost::sync_interaction`] to become what actually paints.
     pub fn pointer_up_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
+        self.interaction_revision = self.interaction_revision.wrapping_add(1);
         let was_marquee = !self.dag.preselect_widget_ids().is_empty();
         let method = if was_marquee { selection_method_from_dag_label(self.dag.selection_preview_method()) } else { SelectionMethod::Pick };
         self.dag.pointer_up_screen(sx, sy, shift, ctrl_or_meta, alt);
@@ -512,6 +583,8 @@ impl GraphHost {
         self.dag.set_selection(&ids);
         let hover_id = hover.and_then(|hover| hover.ids.first()).map(String::as_str);
         self.dag.set_hover(hover_id);
+        self.interaction_revision = self.interaction_revision.wrapping_add(1);
+        self.refresh_interaction_projection();
     }
 
     pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
@@ -1179,6 +1252,49 @@ mod tests {
         host.set_viewport(400, 400, 1.0);
         host.wheel_screen(200.0, 200.0, -10.0, true);
         assert!(host.dag.fixture.camera.zoom > 1.0);
+    }
+
+    #[test]
+    fn graph_wheel_plan_matches_direct_and_rejects_stale_revision() {
+        let mut direct = GraphHost::default();
+        let mut planned = GraphHost::default();
+        direct.set_viewport(400, 400, 1.0);
+        planned.set_viewport(400, 400, 1.0);
+        direct.wheel_screen(160.0, 190.0, -10.0, true);
+        let plan = planned.plan_wheel(160.0, 190.0, -10.0, true);
+        assert!(planned.commit_wheel(plan));
+        assert_eq!(direct.camera_json(), planned.camera_json());
+
+        let stale = planned.plan_wheel(160.0, 190.0, -10.0, true);
+        planned.set_viewport(401, 400, 1.0);
+        let replacement = planned.camera_json();
+        assert!(!planned.commit_wheel(stale));
+        assert_eq!(planned.camera_json(), replacement);
+    }
+
+    #[test]
+    fn graph_pointer_plan_matches_direct_click_and_rejects_stale_revision() {
+        let payload = payload_with_node("a");
+        let mut direct = GraphHost::default();
+        let mut planned = GraphHost::default();
+        direct.sync_from_payload(&payload).expect("direct sync");
+        planned.sync_from_payload(&payload).expect("planned sync");
+        direct.set_viewport(400, 400, 1.0);
+        planned.set_viewport(400, 400, 1.0);
+
+        direct.pointer_down_screen(200.0, 200.0, 0, false, false, false, false);
+        direct.pointer_up_screen(200.0, 200.0, false, false, false);
+        let down = planned.plan_pointer(dag::DagPointerIntent { phase: dag::DagPointerPhase::Down, x: 200.0, y: 200.0, button: 0, shift: false, ctrl_or_meta: false, alt: false, pan: false }).expect("down plan");
+        assert!(planned.commit_pointer(down));
+        let up = planned.plan_pointer(dag::DagPointerIntent { phase: dag::DagPointerPhase::Up, x: 200.0, y: 200.0, button: 0, shift: false, ctrl_or_meta: false, alt: false, pan: false }).expect("up plan");
+        assert!(planned.commit_pointer(up));
+        assert_eq!(direct.dag.selected_node_ids(), planned.dag.selected_node_ids());
+
+        let stale = planned.plan_pointer(dag::DagPointerIntent { phase: dag::DagPointerPhase::Down, x: 200.0, y: 200.0, button: 0, shift: false, ctrl_or_meta: false, alt: false, pan: true }).expect("stale plan");
+        planned.set_viewport(401, 400, 1.0);
+        let camera = planned.camera_json();
+        assert!(!planned.commit_pointer(stale));
+        assert_eq!(planned.camera_json(), camera);
     }
 
     #[test]

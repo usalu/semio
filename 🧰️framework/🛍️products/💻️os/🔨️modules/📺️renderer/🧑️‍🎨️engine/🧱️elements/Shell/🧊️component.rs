@@ -10,7 +10,7 @@ use crate::dock::{compute_dock_drop_zone, drop_zone_indicator_rect, parse_path, 
 use crate::engine_canvas::theme_is_dark;
 use crate::interpreter::{framework_widget_context, render_ui_node, resolve_ui_image, validate_window_body_surface};
 use crate::program_bridge::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, PluginHostConfig, ProgramBridgeEntry};
-use crate::scenes::{clear_graph_node_context, resolve_graph_context_action, toggle_vfs_row_expanded, vfs_selection_for_click, Board2dSurface, NodeGraphSurface, TiledMapSurface};
+use crate::scenes::{clear_graph_node_context, resolve_graph_context_action, toggle_vfs_row_expanded, vfs_selection_for_click, AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface};
 use infinite_world::world::{
     fetch_pending_glb_meshes, fetch_pending_reference_images, fetch_pending_terrain_tiles, handle_world3d_paint_actions, handle_world3d_pointer_button, handle_world3d_pointer_drag, handle_world3d_pointer_move, handle_world3d_wheel, World3dState,
 };
@@ -1281,11 +1281,11 @@ pub struct ShellState {
     pub error: Option<String>,
     pub screen_w: f32,
     pub screen_h: f32,
-    pub world3d_states: HashMap<String, World3dState>,
-    pub node_graph_states: HashMap<String, NodeGraphSurface>,
-    pub tiled_map_states: HashMap<String, TiledMapSurface>,
+    pub world3d_states: AdmittedSurfaceMap<World3dState>,
+    pub node_graph_states: AdmittedSurfaceMap<NodeGraphSurface>,
+    pub tiled_map_states: AdmittedSurfaceMap<TiledMapSurface>,
     pub icon_render_states: HashMap<String, World3dState>,
-    pub board2d_states: HashMap<String, Board2dSurface>,
+    pub board2d_states: AdmittedSurfaceMap<Board2dSurface>,
     pub dock: DockState,
     pub active_left_kind: LeftPanelKind,
     pub active_right_kind: RightPanelKind,
@@ -1758,11 +1758,11 @@ impl ShellState {
             error: None,
             screen_w: 1280.0,
             screen_h: 720.0,
-            world3d_states: HashMap::new(),
-            node_graph_states: HashMap::new(),
-            tiled_map_states: HashMap::new(),
+            world3d_states: AdmittedSurfaceMap::default(),
+            node_graph_states: AdmittedSurfaceMap::default(),
+            tiled_map_states: AdmittedSurfaceMap::default(),
             icon_render_states: HashMap::new(),
-            board2d_states: HashMap::new(),
+            board2d_states: AdmittedSurfaceMap::default(),
             dock: DockState::default(),
             active_left_kind: LeftPanelKind::Workbench,
             active_right_kind: RightPanelKind::Details,
@@ -5152,22 +5152,22 @@ impl ShellState {
         if let Some(edge_id) = edge_id {
             hits.push(ui_wgpu::wgpu::ContextMenuHit { domain: "edge".into(), id: edge_id.into(), label: None });
         }
-        for (surface_id, surface) in &self.node_graph_states {
+        for (surface_id, surface) in self.node_graph_states.iter() {
             if surface.bounds.contains(x, y) {
                 return (surface_id.clone(), "nodeGraph".into(), hits);
             }
         }
-        for (surface_id, surface) in &self.tiled_map_states {
+        for (surface_id, surface) in self.tiled_map_states.iter() {
             if surface.bounds.contains(x, y) {
                 return (surface_id.clone(), "tiledMap".into(), hits);
             }
         }
-        for (surface_id, surface) in &self.board2d_states {
+        for (surface_id, surface) in self.board2d_states.iter() {
             if surface.bounds.contains(x, y) {
                 return (surface_id.clone(), "board2d".into(), hits);
             }
         }
-        for (surface_id, surface) in &self.world3d_states {
+        for (surface_id, surface) in self.world3d_states.iter() {
             if surface.bounds.contains(x, y) {
                 return (surface_id.clone(), "world3d".into(), hits);
             }
@@ -8506,7 +8506,7 @@ impl ShellState {
         self.chrome_build.skip_introduction();
         let ui = tutorial_capture_ui_snapshot(self);
         let mut cameras = Vec::new();
-        for (window_id, world) in &self.world3d_states {
+        for (window_id, world) in self.world3d_states.iter() {
             cameras.push(semio_framework::TutorialCameraKeyframe { at: 0, window_id: window_id.clone(), camera: orbit_to_tutorial_camera(&world.orbit), easing: semio_framework::TutorialEasing::Hold });
         }
         let now = chrome_now_ms();

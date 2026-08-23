@@ -1,0 +1,9 @@
+[verify interactivity] severity=deny scope: 4 UI root(s), 1 runtime-sanctioned root(s) exempt from the thread-pool rule.
+[verify interactivity] 1 finding(s) total:
+  blocking-bridge: 1
+[verify interactivity] 1 allowlist entr(y/ies) kept for the record but structurally invisible to this scanner (e.g. test-mod-only — never counted as stale):
+  🧰️framework/🛍️products/💻️os/🖥️host/🦀️component.rs (block_on, PERMANENT (test-only))
+[verify interactivity] 2 allowlist entr(y/ies) pre-declared for future scope widening (not scanned today, not counted as stale):
+  🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️bin.rs (block_on, PERMANENT)
+  🧰️framework/🔨️modules/⏳️async/✨️macros/🦀️component.rs (block_on, PERMANENT (test-only))
+[verify interactivity] DENY mode — clean.

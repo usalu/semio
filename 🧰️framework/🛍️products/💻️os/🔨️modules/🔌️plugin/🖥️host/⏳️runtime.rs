@@ -294,6 +294,7 @@ async fn convert_poll_success(turn: wit_reactor::TurnResult, mut effects: Vec<Ef
         next_wake: turn.next_wake,
         status: super::wit_turn_status_to_kernel(turn.status).await,
         fuel_used: turn.fuel_used,
+        command_ingress: super::wit_command_ingress_to_kernel(turn.command_ingress),
     })
 }
 //#endregion 🐛️Poll result conversion
@@ -370,7 +371,7 @@ impl AsyncActorTask {
                                 }
                                 impl AccessorTask<AsyncActorHostState> for PollTask {
                                     async fn run(self, accessor: &Accessor<AsyncActorHostState>) -> wasmtime::Result<()> {
-                                        let outcome = self.instance.semio_framework_reactor().call_poll(accessor, self.events, self.budget).await;
+                                        let outcome = self.instance.semio_framework_reactor().call_poll(accessor, self.events, None, self.budget).await;
                                         let mapped = match outcome {
                                             Ok(Ok(turn)) => {
                                                 // 🚫️async: E5 executor bridge. `AsyncActorHostState::take_effects`/`take_patches`

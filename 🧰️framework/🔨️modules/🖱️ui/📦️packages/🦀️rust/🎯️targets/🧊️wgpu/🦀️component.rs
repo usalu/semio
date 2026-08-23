@@ -2799,9 +2799,9 @@ pub mod ui {
     // own `🦀️scenes.rs` header for why (that crate is wasm-safe and depends on nothing beyond
     // `ui_contract`/`serde`, so it cannot carry either type).
     pub use ui_scene::{
-        decode as decode_surface_doc, encode as encode_surface_doc,
-        BlockListScene, Board2dScene, Canvas2dScene, DiffViewScene, EventFeedScene, GraphTimelineScene, IconRenderScene, InkCanvasScene, NodeGraphEdgeRecord, NodeGraphFindItem, NodeGraphHover, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord,
-        NodeGraphOperatorRecord, NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, Paint2dScene, SceneDoc, TableScene, TextEditorScene, TiledMapScene, VirtualFileSystemScene, World3dScene,
+        decode as decode_surface_doc, encode as encode_surface_doc, BlockListScene, Board2dScene, Canvas2dScene, DiffViewScene, EventFeedScene, GraphTimelineScene, IconRenderScene, InkCanvasScene, NodeGraphEdgeRecord, NodeGraphFindItem,
+        NodeGraphHover, NodeGraphNodeRecord, NodeGraphOperatorChannelRecord, NodeGraphOperatorRecord, NodeGraphOperatorVariadicRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, Paint2dScene, SceneDoc, TableScene, TextEditorScene,
+        TiledMapScene, VirtualFileSystemScene, World3dScene,
     };
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

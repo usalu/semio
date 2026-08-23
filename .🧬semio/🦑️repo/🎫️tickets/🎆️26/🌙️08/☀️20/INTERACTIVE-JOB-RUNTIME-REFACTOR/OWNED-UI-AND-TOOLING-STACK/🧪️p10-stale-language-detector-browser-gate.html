@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Owned locale first-paint gate</title>
+  </head>
+  <body>
+    <!-- #region ActualUiFixture -->
+    <main>
+      <div id="actual-ui"></div>
+      <output id="scenario"></output>
+      <output id="navigator-override"></output>
+      <output id="resolved-locale"></output>
+      <output id="resolved-label"></output>
+      <output id="rendered-label"></output>
+      <output id="first-paint-ready"></output>
+      <output id="gate-error"></output>
+    </main>
+    <!-- #endregion ActualUiFixture -->
+    <!-- #region BrowserEvidence -->
+    <script type="module">
+      import React from "react";
+      import { createRoot } from "react-dom/client";
+
+      const scenario = new URLSearchParams(location.search).get("case") === "navigator" ? "navigator" : "stored";
+      const storageKey = "ui.chrome.locale";
+      localStorage.removeItem(storageKey);
+      let navigatorOverride = "unused";
+      if (scenario === "stored") {
+        localStorage.setItem(storageKey, "de");
+      } else {
+        try {
+          Object.defineProperty(navigator, "language", { configurable: true, value: "de-AT" });
+          navigatorOverride = navigator.language;
+        } catch (error) {
+          navigatorOverride = `unsupported:${String(error)}`;
+        }
+      }
+
+      document.querySelector("#scenario").value = scenario;
+      document.querySelector("#navigator-override").value = navigatorOverride;
+
+      try {
+        const ui = await import("/🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/📦️index.tsx");
+        const resolvedLocale = ui.uiI18n.resolvedLanguage;
+        const resolvedLabel = ui.resolveTranslationLabel(ui.uiI18n.t("ui.nav.back"));
+        document.querySelector("#resolved-locale").value = resolvedLocale;
+        document.querySelector("#resolved-label").value = resolvedLabel;
+        document.querySelector("#first-paint-ready").value = String(resolvedLocale === "de" && resolvedLabel === "Zurück");
+        createRoot(document.querySelector("#actual-ui")).render(React.createElement(ui.NotFound, { title: "Fehlende Seite", parentPath: "/spaces" }));
+        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        document.querySelector("#rendered-label").value = document.querySelector('[data-slot="not-found"] button')?.textContent?.trim() ?? document.querySelector("button")?.textContent?.trim() ?? "";
+      } catch (error) {
+        document.querySelector("#gate-error").value = String(error);
+      }
+    </script>
+    <!-- #endregion BrowserEvidence -->
+  </body>
+</html>

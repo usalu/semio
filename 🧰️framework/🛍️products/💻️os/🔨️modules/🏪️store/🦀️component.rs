@@ -26,7 +26,7 @@
 // this crate even when the derive is exercised in-crate.
 // extern crate self removed after merge
 
-use crate::os_dsl::{from_dsl_value, to_dsl_value, DslOps, DslRecord, DslValue};
+use crate::os_dsl::{DslOps, DslRecord, DslValue, from_dsl_value, to_dsl_value};
 use crate::os_spr::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId, SchemaId, UndoPolicy};
 use crate::os_spr::{Edit, Mutation, MutationDiff, MutationMeta, OpBinary, OpText};
 use serde::de::DeserializeOwned;
@@ -36,21 +36,187 @@ use std::marker::PhantomData;
 use std::sync::{Arc, Mutex, MutexGuard};
 
 //#region 🧬️OpaqueSnapshotRead
-/// 👁️ Repository-owned immutable snapshot capability. Concrete shared ownership stays
-/// private while readers retain O(1) clone and dereference semantics.
-#[derive(Clone)]
+const SNAPSHOT_READ_LEASE_CAPACITY: usize = 1_024;
+
+struct SnapshotReadLeaseSlot {
+    generation: u64,
+    owner: Arc<dyn std::any::Any + Send + Sync>,
+    returned: Arc<std::sync::atomic::AtomicBool>,
+}
+
+struct SnapshotReadLeaseRegistryState {
+    slots: Box<[std::mem::MaybeUninit<SnapshotReadLeaseSlot>; SNAPSHOT_READ_LEASE_CAPACITY]>,
+    occupied: [u64; SNAPSHOT_READ_LEASE_CAPACITY / 64],
+    free: [u16; SNAPSHOT_READ_LEASE_CAPACITY],
+    free_read: usize,
+    free_len: usize,
+    next_generation: u64,
+    cleanup_cursor: usize,
+}
+
+struct SnapshotReadLeaseRegistry {
+    state: Mutex<SnapshotReadLeaseRegistryState>,
+    returned: std::sync::atomic::AtomicUsize,
+}
+
+impl SnapshotReadLeaseRegistry {
+    fn new() -> Self {
+        let mut free = [0; SNAPSHOT_READ_LEASE_CAPACITY];
+        for (index, slot) in free.iter_mut().enumerate() {
+            *slot = index as u16;
+        }
+        Self {
+            state: Mutex::new(SnapshotReadLeaseRegistryState {
+                slots: Box::new([const { std::mem::MaybeUninit::uninit() }; SNAPSHOT_READ_LEASE_CAPACITY]),
+                occupied: [0; SNAPSHOT_READ_LEASE_CAPACITY / 64],
+                free,
+                free_read: 0,
+                free_len: SNAPSHOT_READ_LEASE_CAPACITY,
+                next_generation: 0,
+                cleanup_cursor: 0,
+            }),
+            returned: std::sync::atomic::AtomicUsize::new(0),
+        }
+    }
+
+    fn try_issue<T: Send + Sync + 'static>(self: &Arc<Self>, owner: Arc<T>) -> Result<SnapshotReadLease, Arc<T>> {
+        let Ok(mut state) = self.state.try_lock() else {
+            return Err(owner);
+        };
+        if state.free_len == 0 {
+            return Err(owner);
+        }
+        let generation = match state.next_generation.checked_add(1) {
+            Some(generation) => generation,
+            None => return Err(owner),
+        };
+        let read = state.free_read;
+        let index = state.free[read] as usize;
+        state.free_read = (state.free_read + 1) % SNAPSHOT_READ_LEASE_CAPACITY;
+        state.free_len -= 1;
+        state.next_generation = generation;
+        let returned = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        state.slots[index].write(SnapshotReadLeaseSlot { generation, owner: owner.clone(), returned: returned.clone() });
+        state.occupied[index / 64] |= 1 << (index % 64);
+        Ok(SnapshotReadLease { registry: self.clone(), index: index as u16, generation, returned })
+    }
+
+    fn try_take(&self, index: u16, generation: u64) -> Result<Arc<dyn std::any::Any + Send + Sync>, String> {
+        let Ok(mut state) = self.state.try_lock() else {
+            return Err("snapshot read lease registry is busy".into());
+        };
+        let index = index as usize;
+        let mask = 1 << (index % 64);
+        if state.occupied[index / 64] & mask == 0 {
+            return Err("snapshot read lease is no longer registered".into());
+        }
+        let slot = unsafe { state.slots[index].assume_init_ref() };
+        if slot.generation != generation {
+            return Err("snapshot read lease generation is stale".into());
+        }
+        let slot = unsafe { state.slots[index].assume_init_read() };
+        state.occupied[index / 64] &= !mask;
+        let write = (state.free_read + state.free_len) % SNAPSHOT_READ_LEASE_CAPACITY;
+        state.free[write] = index as u16;
+        state.free_len += 1;
+        if slot.returned.load(std::sync::atomic::Ordering::Acquire) {
+            self.returned.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+        }
+        Ok(slot.owner)
+    }
+
+    fn contains(&self, index: u16, generation: u64) -> bool {
+        let Ok(state) = self.state.try_lock() else {
+            return true;
+        };
+        let index = index as usize;
+        let mask = 1 << (index % 64);
+        state.occupied[index / 64] & mask != 0 && unsafe { state.slots[index].assume_init_ref() }.generation == generation
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.returned.load(std::sync::atomic::Ordering::Acquire) == 0 && self.state.try_lock().is_ok_and(|state| state.free_len == SNAPSHOT_READ_LEASE_CAPACITY)
+    }
+
+    fn has_returned(&self) -> bool {
+        self.returned.load(std::sync::atomic::Ordering::Acquire) != 0
+    }
+
+    fn try_take_one_returned<T: Send + Sync + 'static>(&self) -> Result<Option<Arc<T>>, String> {
+        let Ok(mut state) = self.state.try_lock() else {
+            return Err("snapshot read lease registry is busy".into());
+        };
+        let index = state.cleanup_cursor;
+        state.cleanup_cursor = (index + 1) % SNAPSHOT_READ_LEASE_CAPACITY;
+        let mask = 1 << (index % 64);
+        if state.occupied[index / 64] & mask == 0 {
+            return Ok(None);
+        }
+        let slot = unsafe { state.slots[index].assume_init_ref() };
+        if !slot.returned.load(std::sync::atomic::Ordering::Acquire) {
+            return Ok(None);
+        }
+        if !slot.owner.is::<T>() {
+            return Err("snapshot read lease owner type changed inside its exact registry".into());
+        }
+        let slot = unsafe { state.slots[index].assume_init_read() };
+        state.occupied[index / 64] &= !mask;
+        let write = (state.free_read + state.free_len) % SNAPSHOT_READ_LEASE_CAPACITY;
+        state.free[write] = index as u16;
+        state.free_len += 1;
+        self.returned.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+        Ok(Some(slot.owner.downcast::<T>().expect("validated snapshot read lease owner type")))
+    }
+}
+
+impl Drop for SnapshotReadLeaseRegistry {
+    fn drop(&mut self) {
+        let state = self.state.get_mut().unwrap_or_else(|poisoned| poisoned.into_inner());
+        assert_eq!(state.free_len, SNAPSHOT_READ_LEASE_CAPACITY, "snapshot read lease registry reached Drop before every exact owner was returned and retired");
+        assert_eq!(self.returned.load(std::sync::atomic::Ordering::Acquire), 0, "snapshot read lease registry reached Drop with returned owners outside the bounded retirement pump");
+    }
+}
+
+struct SnapshotReadLease {
+    registry: Arc<SnapshotReadLeaseRegistry>,
+    index: u16,
+    generation: u64,
+    returned: Arc<std::sync::atomic::AtomicBool>,
+}
+
+impl SnapshotReadLease {
+    fn return_now(&mut self) -> bool {
+        self.registry.returned.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+        if self.returned.compare_exchange(false, true, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_err() {
+            self.registry.returned.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+            return false;
+        }
+        true
+    }
+}
+
 pub struct SnapshotRead<T: ?Sized> {
-    owner: Arc<T>,
+    owner: Option<Arc<T>>,
+    lease: Option<SnapshotReadLease>,
 }
 
 impl<T: ?Sized> SnapshotRead<T> {
-    fn new(owner: Arc<T>) -> Self {
-        Self { owner }
+    fn new(owner: Arc<T>, lease: SnapshotReadLease) -> Self {
+        Self { owner: Some(owner), lease: Some(lease) }
     }
 
     /// 👁️ Borrows the captured immutable value without exposing its owner.
     pub fn get(&self) -> &T {
-        self.owner.as_ref()
+        self.owner.as_deref().expect("live snapshot read owner is present")
+    }
+}
+
+impl<T: ?Sized> Drop for SnapshotRead<T> {
+    fn drop(&mut self) {
+        if let Some(lease) = self.lease.as_mut() {
+            let _ = lease.return_now();
+        }
+        drop(self.owner.take());
     }
 }
 
@@ -64,20 +230,97 @@ impl<T: ?Sized> std::ops::Deref for SnapshotRead<T> {
 
 /// 🧰 Type-erased snapshot capability used only until a composition view selects its
 /// repository-owned concrete artifact type.
-#[derive(Clone)]
 pub struct ErasedSnapshotRead {
-    owner: Arc<dyn std::any::Any + Send + Sync>,
+    owner: Option<Arc<dyn std::any::Any + Send + Sync>>,
+    lease: Option<SnapshotReadLease>,
 }
 
 impl ErasedSnapshotRead {
-    fn new(owner: Arc<dyn std::any::Any + Send + Sync>) -> Self {
-        Self { owner }
+    fn new<T: Send + Sync + 'static>(owner: Arc<T>, lease: SnapshotReadLease) -> Self {
+        Self { owner: Some(owner), lease: Some(lease) }
     }
 
-    /// 🧬️ Selects the expected artifact type while keeping concrete ownership private.
-    pub fn typed<T: Send + Sync + 'static>(&self) -> Option<SnapshotRead<T>> {
-        self.owner.clone().downcast::<T>().ok().map(SnapshotRead::new)
+    pub fn typed<T: Send + Sync + 'static>(&self) -> Option<SnapshotReadRef<'_, T>> {
+        self.owner.as_deref()?.downcast_ref::<T>().map(|owner| SnapshotReadRef { owner })
     }
+
+    fn into_typed<T: Send + Sync + 'static>(mut self, registry: &Arc<SnapshotReadLeaseRegistry>) -> Result<Arc<T>, Self> {
+        if self.lease.as_ref().is_none_or(|lease| !Arc::ptr_eq(&lease.registry, registry)) || self.owner.as_deref().is_none_or(|owner| !owner.is::<T>()) {
+            return Err(self);
+        }
+        let mut lease = self.lease.take().expect("validated snapshot read lease is present");
+        let owner = self.owner.take().expect("validated snapshot read owner is present").downcast::<T>().expect("validated snapshot read type");
+        let _ = lease.return_now();
+        let guard = match registry.try_take(lease.index, lease.generation) {
+            Ok(guard) => guard,
+            Err(_) => {
+                self.owner = Some(owner);
+                self.lease = Some(lease);
+                return Err(self);
+            }
+        };
+        drop(guard);
+        Ok(owner)
+    }
+}
+
+impl Drop for ErasedSnapshotRead {
+    fn drop(&mut self) {
+        if let Some(lease) = self.lease.as_mut() {
+            let _ = lease.return_now();
+        }
+        drop(self.owner.take());
+    }
+}
+
+pub struct SnapshotReadRef<'a, T: ?Sized> {
+    owner: &'a T,
+}
+
+impl<T: ?Sized> std::ops::Deref for SnapshotReadRef<'_, T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        self.owner
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SnapshotRetirementStep {
+    Pending { released_items: usize, released_bytes: usize },
+    Blocked,
+    Complete,
+}
+
+pub trait ErasedSnapshotRetirement: Send {
+    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String>;
+    fn terminal_is_empty(&self) -> bool;
+}
+
+pub struct SnapshotRetirementRejected {
+    pub snapshot: ErasedSnapshotRead,
+    pub reason: String,
+}
+
+pub trait SnapshotRetirementFactory<P>: Send + Sync {
+    fn retire(&self, snapshot: Arc<P>) -> Box<dyn ErasedSnapshotRetirement>;
+}
+
+pub trait ArtifactStoreOwnedDisposer<P, Mutation>: Send
+where
+    P: Clone + Serialize + DeserializeOwned,
+    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<P>,
+{
+    fn close_step(&mut self, store: &mut ArtifactStore<P, Mutation>, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String>;
+    fn terminal_is_empty(&self, store: &ArtifactStore<P, Mutation>) -> bool;
+}
+
+pub trait MemberStoreOwner<Mutation>: Sized
+where
+    Self: Clone + Serialize + DeserializeOwned,
+    Mutation: Clone + Serialize + DeserializeOwned + self::Mutation<Self>,
+{
+    fn install_member_store_owners(store: &mut ArtifactStore<Self, Mutation>) -> Result<(), VcsError>;
 }
 //#endregion 🧬️OpaqueSnapshotRead
 
@@ -85,8 +328,8 @@ impl ErasedSnapshotRead {
 // `Author`/`Change`/`Checkpoint`/`Alternative`/`VcsError`/etc through this crate, never through
 // `vcs` directly (see the crate doc comment above).
 pub use crate::os_vcs::{
-    apply_collection_mutation, apply_mutation, collection_diff_from_mutation, content_addressed_checkpoint_id, content_addressed_entity_id, edit_scoped_id, inverse_collection_mutation, mint_alternative_id, mint_change_id, mint_edit_id,
-    mint_mutation_id, Alternative, ArtifactVcs, Author, Change, Checkpoint, CollectionDiff, CollectionMutation, Identified, ItemPatch, Patchable, VcsError,
+    Alternative, ArtifactVcs, Author, Change, Checkpoint, CollectionDiff, CollectionMutation, Identified, ItemPatch, Patchable, VcsError, apply_collection_mutation, apply_mutation, collection_diff_from_mutation, content_addressed_checkpoint_id,
+    content_addressed_entity_id, edit_scoped_id, inverse_collection_mutation, mint_alternative_id, mint_change_id, mint_edit_id, mint_mutation_id,
 };
 
 //#region 🔖️ArtifactAssembly
@@ -1079,12 +1322,412 @@ pub type DraftStore<P, Mutation> = ArtifactStore<P, Mutation>;
 ///
 /// `generation` bumps on every local change so the host can tell "something to broadcast" from
 /// "nothing changed" without diffing snapshots — the signal a heartbeat coalescer throttles on.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct PresenceStore<P, Mutation> {
-    local: P,
-    peers: HashMap<String, (P, i64)>,
+    local: Arc<P>,
+    peers: Arc<PresencePeersRoot<P>>,
+    peer_retirement_factory: Option<Arc<dyn SnapshotRetirementFactory<P>>>,
     generation: u64,
     _mutation: PhantomData<fn() -> Mutation>,
+}
+
+pub const PRESENCE_PEER_SLOTS: usize = 64;
+pub const PRESENCE_PEER_ID_BYTES: usize = 256;
+
+#[derive(Clone, Debug)]
+struct PresencePeerEntry<P> {
+    actor: String,
+    presence: Option<Arc<P>>,
+    received_at_ms: i64,
+}
+
+#[derive(Debug)]
+pub struct PresencePeersRoot<P> {
+    entries: [Option<Arc<PresencePeerEntry<P>>>; PRESENCE_PEER_SLOTS],
+    len: usize,
+}
+
+impl<P> Clone for PresencePeersRoot<P> {
+    fn clone(&self) -> Self {
+        Self { entries: self.entries.clone(), len: self.len }
+    }
+}
+
+impl<P> PresencePeersRoot<P> {
+    pub fn empty() -> Self {
+        Self { entries: std::array::from_fn(|_| None), len: 0 }
+    }
+
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    pub fn peers(&self) -> impl Iterator<Item = (&str, &P)> {
+        self.entries[..self.len].iter().filter_map(|entry| entry.as_deref().and_then(|entry| entry.presence.as_deref().map(|presence| (entry.actor.as_str(), presence))))
+    }
+
+    fn upsert(&self, actor: String, presence: P, received_at_ms: i64) -> Result<(Self, Option<Arc<PresencePeerEntry<P>>>), String> {
+        if actor.is_empty() || actor.len() > PRESENCE_PEER_ID_BYTES {
+            return Err("presence peer actor is empty or exceeds its fixed byte authority".into());
+        }
+        let mut next = self.clone();
+        let mut index = 0usize;
+        while index < next.len && next.entries[index].as_ref().is_some_and(|entry| entry.actor.as_str() < actor.as_str()) {
+            index += 1;
+        }
+        if next.entries.get(index).and_then(Option::as_ref).is_some_and(|entry| entry.actor == actor) {
+            let retired = next.entries[index].replace(Arc::new(PresencePeerEntry { actor, presence: Some(Arc::new(presence)), received_at_ms }));
+            return Ok((next, retired));
+        }
+        if next.len == PRESENCE_PEER_SLOTS {
+            return Err("presence peer root exceeds its fixed item authority".into());
+        }
+        for cursor in (index..next.len).rev() {
+            next.entries[cursor + 1] = next.entries[cursor].take();
+        }
+        next.entries[index] = Some(Arc::new(PresencePeerEntry { actor, presence: Some(Arc::new(presence)), received_at_ms }));
+        next.len += 1;
+        Ok((next, None))
+    }
+
+    fn remove(&self, actor: &str) -> (Self, Option<Arc<PresencePeerEntry<P>>>) {
+        let mut next = self.clone();
+        let Some(index) = next.entries[..next.len].iter().position(|entry| entry.as_ref().is_some_and(|entry| entry.actor == actor)) else {
+            return (next, None);
+        };
+        let retired = next.entries[index].take();
+        for cursor in index..next.len.saturating_sub(1) {
+            next.entries[cursor] = next.entries[cursor + 1].take();
+        }
+        next.len = next.len.saturating_sub(1);
+        next.entries[next.len] = None;
+        (next, retired)
+    }
+
+    fn remove_at(&self, index: usize) -> (Self, Option<Arc<PresencePeerEntry<P>>>) {
+        if index >= self.len {
+            return (self.clone(), None);
+        }
+        let mut next = self.clone();
+        let retired = next.entries[index].take();
+        for cursor in index..next.len.saturating_sub(1) {
+            next.entries[cursor] = next.entries[cursor + 1].take();
+        }
+        next.len = next.len.saturating_sub(1);
+        next.entries[next.len] = None;
+        (next, retired)
+    }
+
+    fn retain_received(&self, oldest_allowed_ms: i64) -> (Self, PresencePeersRetiredEntries<P>) {
+        let mut next = Self::empty();
+        let mut retired = PresencePeersRetiredEntries::empty();
+        for entry in self.entries[..self.len].iter().filter_map(Option::as_ref) {
+            if entry.received_at_ms >= oldest_allowed_ms {
+                next.entries[next.len] = Some(entry.clone());
+                next.len += 1;
+            } else {
+                retired.entries[retired.len] = Some(entry.clone());
+                retired.len += 1;
+            }
+        }
+        (next, retired)
+    }
+}
+
+pub struct PresencePeersRetiredEntries<P> {
+    entries: std::mem::ManuallyDrop<[Option<Arc<PresencePeerEntry<P>>>; PRESENCE_PEER_SLOTS]>,
+    len: usize,
+}
+
+impl<P> PresencePeersRetiredEntries<P> {
+    pub fn empty() -> Self {
+        Self { entries: std::mem::ManuallyDrop::new(std::array::from_fn(|_| None)), len: 0 }
+    }
+
+    fn one(entry: Option<Arc<PresencePeerEntry<P>>>) -> Self {
+        let mut retired = Self::empty();
+        if let Some(entry) = entry {
+            retired.entries[0] = Some(entry);
+            retired.len = 1;
+        }
+        retired
+    }
+
+    pub fn append(&mut self, other: &mut Self) -> Result<(), ()> {
+        if self.len.saturating_add(other.len) > PRESENCE_PEER_SLOTS {
+            return Err(());
+        }
+        for index in 0..other.len {
+            if let Some(entry) = other.entries[index].take() {
+                self.entries[self.len] = Some(entry);
+                self.len += 1;
+            }
+        }
+        other.len = 0;
+        Ok(())
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+}
+
+impl<P> Drop for PresencePeersRetiredEntries<P> {
+    fn drop(&mut self) {
+        debug_assert!(self.is_empty(), "nonterminal app-typed presence retirement entries reached Drop");
+    }
+}
+
+pub struct PresencePeersRetirement<P> {
+    retired: std::mem::ManuallyDrop<PresencePeersRetiredEntries<P>>,
+    waiting: std::mem::ManuallyDrop<Option<Arc<PresencePeerEntry<P>>>>,
+    entry: std::mem::ManuallyDrop<Option<PresencePeerEntry<P>>>,
+    active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
+    factory: Arc<dyn SnapshotRetirementFactory<P>>,
+    cursor: usize,
+}
+
+pub struct PresencePeersPublication<P> {
+    candidate: std::mem::ManuallyDrop<Option<PresencePeersRoot<P>>>,
+    created: std::mem::ManuallyDrop<PresencePeersRetiredEntries<P>>,
+    retired: std::mem::ManuallyDrop<PresencePeersRetiredEntries<P>>,
+    active: std::mem::ManuallyDrop<Option<PresencePeersRetirement<P>>>,
+    factory: Arc<dyn SnapshotRetirementFactory<P>>,
+    prune_cursor: usize,
+    pruning_complete: bool,
+}
+
+pub struct PresencePeersCommit<P> {
+    root: Arc<PresencePeersRoot<P>>,
+    retirement: Option<PresencePeersRetirement<P>>,
+}
+
+impl<P: Send + Sync + 'static> PresencePeersPublication<P> {
+    fn new(current: &PresencePeersRoot<P>, factory: Arc<dyn SnapshotRetirementFactory<P>>) -> Self {
+        Self {
+            candidate: std::mem::ManuallyDrop::new(Some(current.clone())),
+            created: std::mem::ManuallyDrop::new(PresencePeersRetiredEntries::empty()),
+            retired: std::mem::ManuallyDrop::new(PresencePeersRetiredEntries::empty()),
+            active: std::mem::ManuallyDrop::new(None),
+            factory,
+            prune_cursor: 0,
+            pruning_complete: false,
+        }
+    }
+
+    pub fn prune_one(&mut self, mut keep: impl FnMut(&str) -> bool) -> Result<bool, String> {
+        if self.pruning_complete {
+            return Ok(false);
+        }
+        let candidate = self.candidate.as_ref().ok_or_else(|| "presence peer publication candidate is not owned".to_string())?;
+        if self.prune_cursor >= candidate.len {
+            self.pruning_complete = true;
+            return Ok(false);
+        }
+        let keep_entry = candidate.entries[self.prune_cursor].as_ref().is_some_and(|entry| keep(&entry.actor));
+        if keep_entry {
+            self.prune_cursor += 1;
+            return Ok(true);
+        }
+        let (next, retired) = candidate.remove_at(self.prune_cursor);
+        let previous = self.candidate.replace(next).expect("presence peer publication candidate");
+        drop(previous);
+        let mut retired = PresencePeersRetiredEntries::one(retired);
+        self.retired.append(&mut retired).map_err(|_| "presence peer publication displaced-entry authority is saturated".to_string())?;
+        Ok(true)
+    }
+
+    pub fn adopt(&mut self, actor: String, presence: P, received_at_ms: i64) -> Result<(), (String, P)> {
+        if !self.pruning_complete {
+            return Err(("presence peer publication must finish stale-entry pruning before decode adoption".into(), presence));
+        }
+        let Some(candidate) = self.candidate.as_ref() else {
+            return Err(("presence peer publication candidate is not owned".to_string(), presence));
+        };
+        if actor.is_empty() || actor.len() > PRESENCE_PEER_ID_BYTES {
+            return Err(("presence peer actor is empty or exceeds its fixed byte authority".into(), presence));
+        }
+        if candidate.len == PRESENCE_PEER_SLOTS && !candidate.entries[..candidate.len].iter().any(|entry| entry.as_ref().is_some_and(|entry| entry.actor == actor)) {
+            return Err(("presence peer root exceeds its fixed item authority".into(), presence));
+        }
+        let presence = Arc::new(presence);
+        let mut next = candidate.clone();
+        let mut index = 0usize;
+        while index < next.len && next.entries[index].as_ref().is_some_and(|entry| entry.actor.as_str() < actor.as_str()) {
+            index += 1;
+        }
+        let replaces = next.entries.get(index).and_then(Option::as_ref).is_some_and(|entry| entry.actor == actor);
+        if self.created.len == PRESENCE_PEER_SLOTS || (replaces && self.retired.len == PRESENCE_PEER_SLOTS) {
+            return Err(("presence peer publication ownership authority is saturated".into(), presence));
+        }
+        let inserted = Arc::new(PresencePeerEntry { actor, presence: Some(presence), received_at_ms });
+        let retired = if replaces {
+            next.entries[index].replace(inserted.clone())
+        } else {
+            for cursor in (index..next.len).rev() {
+                next.entries[cursor + 1] = next.entries[cursor].take();
+            }
+            next.entries[index] = Some(inserted.clone());
+            next.len += 1;
+            None
+        };
+        let previous = self.candidate.replace(next).expect("presence peer publication candidate");
+        drop(previous);
+        self.created.entries[self.created.len] = Some(inserted);
+        self.created.len += 1;
+        if let Some(retired) = retired {
+            self.retired.entries[self.retired.len] = Some(retired);
+            self.retired.len += 1;
+        }
+        Ok(())
+    }
+
+    pub fn release_created_one(&mut self) -> bool {
+        if self.created.len == 0 {
+            return false;
+        }
+        self.created.len -= 1;
+        drop(self.created.entries[self.created.len].take());
+        true
+    }
+
+    pub fn retire_rejected(&self, presence: P) -> Box<dyn ErasedSnapshotRetirement> {
+        self.factory.retire(Arc::new(presence))
+    }
+
+    pub fn take_commit(&mut self) -> Result<PresencePeersCommit<P>, String> {
+        if !self.pruning_complete || self.created.len != 0 || self.active.is_some() {
+            return Err("presence peer publication is not terminal-ready for commit".into());
+        }
+        let candidate = Arc::new(self.candidate.take().ok_or_else(|| "presence peer publication candidate was already transferred".to_string())?);
+        let retired = std::mem::replace(&mut *self.retired, PresencePeersRetiredEntries::empty());
+        let retirement = (!retired.is_empty()).then(|| PresencePeersRetirement::new(retired, self.factory.clone()));
+        Ok(PresencePeersCommit { root: candidate, retirement })
+    }
+
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+        if maximum_items == 0 {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(active) = self.active.as_mut() {
+            let step = active.close_step(maximum_items, maximum_bytes)?;
+            if step != SnapshotRetirementStep::Complete {
+                return Ok(step);
+            }
+            if !active.terminal_is_empty() {
+                return Err("presence peer publication cleanup reported Complete without its terminal-empty witness".into());
+            }
+            drop(self.active.take());
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(candidate) = self.candidate.as_mut() {
+            if candidate.len != 0 {
+                candidate.len -= 1;
+                drop(candidate.entries[candidate.len].take());
+                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+            drop(self.candidate.take());
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.retired.len != 0 {
+            self.retired.len -= 1;
+            drop(self.retired.entries[self.retired.len].take());
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if self.created.len != 0 {
+            let created = std::mem::replace(&mut *self.created, PresencePeersRetiredEntries::empty());
+            *self.active = Some(PresencePeersRetirement::new(created, self.factory.clone()));
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        Ok(SnapshotRetirementStep::Complete)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.candidate.is_none() && self.created.len == 0 && self.retired.len == 0 && self.active.is_none()
+    }
+}
+
+impl<P> Drop for PresencePeersPublication<P> {
+    fn drop(&mut self) {
+        debug_assert!(self.candidate.is_none() && self.created.len == 0 && self.retired.len == 0 && self.active.is_none(), "incomplete presence peer publication reached Drop without bounded disposal");
+    }
+}
+
+impl<P: Send + Sync + 'static> PresencePeersRetirement<P> {
+    fn new(retired: PresencePeersRetiredEntries<P>, factory: Arc<dyn SnapshotRetirementFactory<P>>) -> Self {
+        Self { retired: std::mem::ManuallyDrop::new(retired), waiting: std::mem::ManuallyDrop::new(None), entry: std::mem::ManuallyDrop::new(None), active: std::mem::ManuallyDrop::new(None), factory, cursor: 0 }
+    }
+
+    pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+        if maximum_items == 0 {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        }
+        if let Some(active) = self.active.as_mut() {
+            return match active.close_step(maximum_items, maximum_bytes)? {
+                step @ SnapshotRetirementStep::Pending { released_items, released_bytes } if released_items <= maximum_items && released_bytes <= maximum_bytes => Ok(step),
+                SnapshotRetirementStep::Pending { .. } => Err("presence peer snapshot disposer exceeded its exact item or byte grant".into()),
+                SnapshotRetirementStep::Blocked => Ok(SnapshotRetirementStep::Blocked),
+                SnapshotRetirementStep::Complete => {
+                    if !active.terminal_is_empty() {
+                        return Err("presence peer snapshot disposer reported Complete without its terminal-empty witness".into());
+                    }
+                    drop(self.active.take());
+                    Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
+                }
+            };
+        }
+        if let Some(entry) = self.entry.as_mut() {
+            if !entry.actor.is_empty() {
+                if entry.actor.len() > maximum_bytes {
+                    return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                }
+                let bytes = entry.actor.len();
+                entry.actor.clear();
+                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: bytes });
+            }
+            let snapshot = entry.presence.take().ok_or_else(|| "presence peer retirement entry lost its exact snapshot authority".to_string())?;
+            *self.active = Some(self.factory.retire(snapshot));
+            let entry = self.entry.take().expect("empty presence peer retirement entry");
+            drop(entry);
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+        }
+        if let Some(waiting) = self.waiting.take() {
+            match Arc::try_unwrap(waiting) {
+                Ok(entry) => {
+                    *self.entry = Some(entry);
+                    return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+                }
+                Err(waiting) => {
+                    *self.waiting = Some(waiting);
+                    return Ok(SnapshotRetirementStep::Blocked);
+                }
+            }
+        }
+        while self.cursor < self.retired.len {
+            let index = self.cursor;
+            self.cursor += 1;
+            if let Some(entry) = self.retired.entries[index].take() {
+                *self.waiting = Some(entry);
+                return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
+            }
+        }
+        self.retired.len = 0;
+        Ok(SnapshotRetirementStep::Complete)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.retired.len == 0 && self.waiting.is_none() && self.entry.is_none() && self.active.is_none()
+    }
+}
+
+impl<P> Drop for PresencePeersRetirement<P> {
+    fn drop(&mut self) {
+        debug_assert!(self.retired.len == 0 && self.waiting.is_none() && self.entry.is_none() && self.active.is_none(), "incomplete presence-peer retirement reached Drop without bounded disposal");
+    }
 }
 
 // 🚫️async: E1 impl of external `Default` — signature fixed outside this repo.
@@ -1098,53 +1741,77 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
     /// 🏗️ A roster holding only this actor's own initial presence.
     // 🚫️async: E1 pure constructor, consumed by `Default::default()` — see R9.
     pub fn new(local: P) -> Self {
-        Self { local, peers: HashMap::new(), generation: 0, _mutation: PhantomData }
+        Self { local: Arc::new(local), peers: Arc::new(PresencePeersRoot::empty()), peer_retirement_factory: None, generation: 0, _mutation: PhantomData }
     }
 
     /// 👤️ This actor's own presence — what gets broadcast.
     pub async fn local(&self) -> &P {
-        &self.local
+        self.local.as_ref()
+    }
+
+    /// 🧵️ Captures the event-maintained local presence root without cloning its payload.
+    pub fn local_root(&self) -> Arc<P> {
+        self.local.clone()
     }
 
     /// ✍️ Applies local presence operations atomically, bumping `generation` after the full batch.
     pub async fn apply(&mut self, mutations: &[Mutation]) -> crate::os_spr::MutationApplyResult<()> {
-        let mut candidate = self.local.clone();
+        let mut candidate = self.local.as_ref().clone();
         for mutation in mutations {
             candidate = mutation.diff(&candidate).diff().apply(&candidate)?;
         }
         if !mutations.is_empty() {
-            self.local = candidate;
+            self.local = Arc::new(candidate);
             self.generation = self.generation.wrapping_add(1);
         }
         Ok(())
     }
 
-    /// 📥️ Adopts a remote peer's whole presence snapshot, superseding whatever it last sent.
-    /// `received_at_ms` is the host's receive clock, used only to expire silent peers.
-    pub async fn adopt_peer(&mut self, actor: impl Into<String>, presence: P, received_at_ms: i64) {
-        self.peers.insert(actor.into(), (presence, received_at_ms));
+    pub fn peers_root(&self) -> Arc<PresencePeersRoot<P>> {
+        self.peers.clone()
     }
 
-    /// 🚪️ Drops a peer that left.
-    pub async fn remove_peer(&mut self, actor: &str) -> bool {
-        self.peers.remove(actor).is_some()
+    pub fn install_peer_retirement_factory(&mut self, factory: Arc<dyn SnapshotRetirementFactory<P>>) -> Result<(), String> {
+        if self.peer_retirement_factory.is_some() {
+            return Err("presence peer retirement factory is already installed".into());
+        }
+        self.peer_retirement_factory = Some(factory);
+        Ok(())
     }
 
-    /// ⏳️ Drops every peer whose last update is older than `oldest_allowed_ms` — a disconnected
-    /// collaborator's cursor must not linger forever.
-    pub async fn expire_peers(&mut self, oldest_allowed_ms: i64) {
-        self.peers.retain(|_, (_, received_at_ms)| *received_at_ms >= oldest_allowed_ms);
+    pub fn peer_retirement_available(&self) -> bool {
+        self.peer_retirement_factory.is_some()
     }
 
-    /// 👥️ Every peer's current presence, sorted by actor so readers get a stable order.
-    pub async fn peers(&self) -> Vec<(&str, &P)> {
-        let mut peers: Vec<(&str, &P)> = self.peers.iter().map(|(actor, (presence, _))| (actor.as_str(), presence)).collect();
-        peers.sort_by_key(|(actor, _)| *actor);
-        peers
+    pub fn begin_peer_retirement(&self, retired: PresencePeersRetiredEntries<P>) -> Result<PresencePeersRetirement<P>, PresencePeersRetiredEntries<P>>
+    where
+        P: Send + Sync + 'static,
+    {
+        let Some(factory) = self.peer_retirement_factory.as_ref() else { return Err(retired) };
+        Ok(PresencePeersRetirement::new(retired, factory.clone()))
+    }
+
+    pub fn begin_peer_publication(&self) -> Result<PresencePeersPublication<P>, String>
+    where
+        P: Send + Sync + 'static,
+    {
+        let factory = self.peer_retirement_factory.as_ref().ok_or_else(|| "presence peer publication has no exact bounded snapshot retirement factory".to_string())?;
+        Ok(PresencePeersPublication::new(self.peers.as_ref(), factory.clone()))
+    }
+
+    pub(crate) fn publish_peer_commit(&mut self, commit: PresencePeersCommit<P>) -> Option<PresencePeersRetirement<P>> {
+        let previous = std::mem::replace(&mut self.peers, commit.root);
+        drop(previous);
+        commit.retirement
     }
 
     /// 🔢️ Bumps on every local change; never on adopting a remote peer (that needs no rebroadcast).
     pub async fn generation(&self) -> u64 {
+        self.generation
+    }
+
+    /// 🪪️ Reads the event-maintained generation at an already-owned operation boundary.
+    pub fn generation_now(&self) -> u64 {
         self.generation
     }
 }
@@ -1158,7 +1825,7 @@ impl<P: Clone, Mutation: self::Mutation<P>> PresenceStore<P, Mutation> {
 /// `presence`; if it is document content, in the artifact (or its draft).
 #[derive(Clone, Debug)]
 pub struct TransientStore<P, Mutation> {
-    current: P,
+    current: Arc<P>,
     generation: u64,
     _mutation: PhantomData<fn() -> Mutation>,
 }
@@ -1173,21 +1840,26 @@ impl<P: Clone + Default, Mutation: self::Mutation<P>> Default for TransientStore
 impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
     // 🚫️async: E1 pure constructor, consumed by `Default::default()` — see R9.
     pub fn new(current: P) -> Self {
-        Self { current, generation: 0, _mutation: PhantomData }
+        Self { current: Arc::new(current), generation: 0, _mutation: PhantomData }
     }
 
     pub async fn current(&self) -> &P {
-        &self.current
+        self.current.as_ref()
+    }
+
+    /// 🧵️ Captures the event-maintained transient root without cloning its payload.
+    pub fn current_root(&self) -> Arc<P> {
+        self.current.clone()
     }
 
     /// ✍️ Applies transient operations atomically, without history.
     pub async fn apply(&mut self, mutations: &[Mutation]) -> crate::os_spr::MutationApplyResult<()> {
-        let mut candidate = self.current.clone();
+        let mut candidate = self.current.as_ref().clone();
         for mutation in mutations {
             candidate = mutation.diff(&candidate).diff().apply(&candidate)?;
         }
         if !mutations.is_empty() {
-            self.current = candidate;
+            self.current = Arc::new(candidate);
             self.generation = self.generation.wrapping_add(1);
         }
         Ok(())
@@ -1195,12 +1867,17 @@ impl<P: Clone, Mutation: self::Mutation<P>> TransientStore<P, Mutation> {
 
     /// 🔄️ Discards everything — what a host does when a view closes.
     pub async fn reset(&mut self, current: P) {
-        self.current = current;
+        self.current = Arc::new(current);
         self.generation = self.generation.wrapping_add(1);
     }
 
     /// 🔢️ Bumps on every change, so a renderer can skip untouched frames.
     pub async fn generation(&self) -> u64 {
+        self.generation
+    }
+
+    /// 🪪️ Reads the event-maintained transient generation without suspension.
+    pub fn generation_now(&self) -> u64 {
         self.generation
     }
 }
@@ -4497,6 +5174,12 @@ where
     /// O(1) `Undo` of exactly this edit; any other undo (not the cached tail, or `None`) falls back
     /// to `fold_current` — always correct, just not always O(1).
     tail_undo_cache: Option<(String, Arc<P>)>,
+    /// ♻️ Exact domain-owned bounded disposer for immutable snapshot roots transferred out
+    /// of this store. Composition retirement fails closed until the owner installs it.
+    snapshot_retirement_factory: Option<Arc<dyn SnapshotRetirementFactory<P>>>,
+    snapshot_read_leases: Arc<SnapshotReadLeaseRegistry>,
+    owned_disposer: Option<Box<dyn ArtifactStoreOwnedDisposer<P, Mutation>>>,
+    owned_disposer_terminal: bool,
     /// @emoji 📨️ Transient handoff from whichever `dispatch_inner` arm actually produced messages
     /// this call (`apply_command`/`amend_command`/`ingest_remote`/`resolve_conflict`) to `dispatch`,
     /// which drains it into the returned `CommandReceipt`. Reset at the top of every `dispatch`
@@ -4608,6 +5291,10 @@ where
             content_revision,
             revision_accumulator,
             current: Arc::new(current),
+            snapshot_retirement_factory: None,
+            snapshot_read_leases: Arc::new(SnapshotReadLeaseRegistry::new()),
+            owned_disposer: None,
+            owned_disposer_terminal: false,
             tail_undo_cache: None,
             pending_report: PendingCommandReport::default(),
         })
@@ -4622,7 +5309,17 @@ where
         ArtifactRevision { artifact_id: self.envelope.id.clone(), schema: self.envelope.schema.clone(), applied_edit_ids: self.applied_edit_ids.clone(), redo_edit_ids: self.redo_edit_ids.clone(), checkpoint_id: self.current_checkpoint_id.clone() }
     }
 
+    /// 🪪️ Reads the event-maintained generation at an already-owned operation boundary.
+    pub fn generation_now(&self) -> u64 {
+        self.generation
+    }
+
     pub async fn content_revision(&self) -> [u8; 32] {
+        self.content_revision
+    }
+
+    /// 🧬️ Reads the fixed-width event-maintained content revision without suspension.
+    pub fn content_revision_now(&self) -> [u8; 32] {
         self.content_revision
     }
 
@@ -4839,12 +5536,42 @@ where
     }
 
     /// 🧵️ Immutable O(1) snapshot capability for worker and composition boundaries.
-    pub async fn snapshot_read(&self) -> SnapshotRead<P> {
-        SnapshotRead::new(self.current.clone())
+    pub async fn snapshot_read(&self) -> Result<SnapshotRead<P>, VcsError> {
+        let owner = self.current.clone();
+        let lease = self.snapshot_read_leases.try_issue(owner.clone()).map_err(|_| VcsError::ValidationFailed("snapshot read lease registry is busy, saturated, or exhausted".into()))?;
+        Ok(SnapshotRead::new(owner, lease))
     }
 
     pub(crate) async fn snapshot_owner(&self) -> Arc<P> {
         self.current.clone()
+    }
+
+    /// 🧵️ Captures the immutable event-maintained snapshot root in O(1).
+    pub fn snapshot_root(&self) -> Arc<P> {
+        self.current.clone()
+    }
+
+    pub fn install_snapshot_retirement_factory(&mut self, factory: Arc<dyn SnapshotRetirementFactory<P>>) -> Result<(), VcsError> {
+        if self.snapshot_retirement_factory.is_some() {
+            return Err(VcsError::Deserialize("snapshot retirement factory is already installed".into()));
+        }
+        self.snapshot_retirement_factory = Some(factory);
+        Ok(())
+    }
+
+    pub fn take_returned_snapshot_read_retirement(&mut self) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, VcsError> {
+        if !self.snapshot_read_leases.has_returned() {
+            return Ok(None);
+        }
+        let Some(factory) = self.snapshot_retirement_factory.clone() else {
+            return Err(VcsError::ValidationFailed("snapshot read retirement factory is not installed".into()));
+        };
+        let owner = self.snapshot_read_leases.try_take_one_returned::<P>().map_err(VcsError::ValidationFailed)?;
+        Ok(owner.map(|owner| factory.retire(owner)))
+    }
+
+    pub fn snapshot_read_leases_terminal_is_empty(&self) -> bool {
+        self.snapshot_read_leases.terminal_is_empty()
     }
 
     /// @emoji 🔂️ Full raw fold of `initial_snapshot` over every `forwards` op in `applied_edit_ids`
@@ -5882,6 +6609,8 @@ where
             content_revision: self.content_revision,
             revision_accumulator: self.revision_accumulator.clone(),
             current: self.current.clone(),
+            snapshot_retirement_factory: self.snapshot_retirement_factory.clone(),
+            snapshot_read_leases: self.snapshot_read_leases.clone(),
             tail_undo_cache: self.tail_undo_cache.clone(),
             pending_report: PendingCommandReport::default(),
         }
@@ -7027,7 +7756,12 @@ pub trait BlobStore: Send + Sync {
 pub trait SpaceMember {
     async fn document_id(&self) -> &str;
     /// 🧵️ The live typed snapshot behind an opaque immutable ownership boundary.
-    async fn snapshot_read_erased(&self) -> ErasedSnapshotRead;
+    async fn snapshot_read_erased(&self) -> Result<ErasedSnapshotRead, String>;
+    fn retire_snapshot_read_erased(&mut self, snapshot: ErasedSnapshotRead) -> Result<Box<dyn ErasedSnapshotRetirement>, SnapshotRetirementRejected>;
+    fn take_returned_snapshot_read_retirement(&mut self) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, String>;
+    fn snapshot_read_leases_terminal_is_empty(&self) -> bool;
+    fn close_owned_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String>;
+    fn close_owned_terminal_is_empty(&self) -> bool;
     /// 🧬️ Fixed-size, restart-stable identity for the member's current history cursor.
     /// Implementations must not serialize or clone the materialized snapshot to answer this read.
     async fn content_revision(&self) -> [u8; 32];
@@ -7180,8 +7914,35 @@ where
         self.envelope().await.id.as_str()
     }
 
-    async fn snapshot_read_erased(&self) -> ErasedSnapshotRead {
-        ErasedSnapshotRead::new(self.current.clone())
+    async fn snapshot_read_erased(&self) -> Result<ErasedSnapshotRead, String> {
+        let owner = self.current.clone();
+        let lease = self.snapshot_read_leases.try_issue(owner.clone()).map_err(|_| "snapshot read lease registry is busy, saturated, or exhausted".to_string())?;
+        Ok(ErasedSnapshotRead::new(owner, lease))
+    }
+
+    fn retire_snapshot_read_erased(&mut self, snapshot: ErasedSnapshotRead) -> Result<Box<dyn ErasedSnapshotRetirement>, SnapshotRetirementRejected> {
+        let Some(factory) = self.snapshot_retirement_factory.as_ref() else {
+            return Err(SnapshotRetirementRejected { snapshot, reason: "child snapshot retirement factory is not installed".into() });
+        };
+        let snapshot =
+            snapshot.into_typed::<P>(&self.snapshot_read_leases).map_err(|snapshot| SnapshotRetirementRejected { snapshot, reason: "child snapshot retirement type, lease registry, or generation does not match its exact member".into() })?;
+        Ok(factory.retire(snapshot))
+    }
+
+    fn take_returned_snapshot_read_retirement(&mut self) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, String> {
+        ArtifactStore::take_returned_snapshot_read_retirement(self).map_err(|error| error.to_string())
+    }
+
+    fn snapshot_read_leases_terminal_is_empty(&self) -> bool {
+        ArtifactStore::snapshot_read_leases_terminal_is_empty(self)
+    }
+
+    fn close_owned_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+        Ok(SnapshotRetirementStep::Blocked)
+    }
+
+    fn close_owned_terminal_is_empty(&self) -> bool {
+        false
     }
 
     async fn content_revision(&self) -> [u8; 32] {
@@ -7390,7 +8151,27 @@ impl SpaceMember for NoMembers {
         match *self {}
     }
 
-    async fn snapshot_read_erased(&self) -> ErasedSnapshotRead {
+    async fn snapshot_read_erased(&self) -> Result<ErasedSnapshotRead, String> {
+        match *self {}
+    }
+
+    fn retire_snapshot_read_erased(&mut self, _snapshot: ErasedSnapshotRead) -> Result<Box<dyn ErasedSnapshotRetirement>, SnapshotRetirementRejected> {
+        match *self {}
+    }
+
+    fn take_returned_snapshot_read_retirement(&mut self) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, String> {
+        match *self {}
+    }
+
+    fn snapshot_read_leases_terminal_is_empty(&self) -> bool {
+        match *self {}
+    }
+
+    fn close_owned_step(&mut self, _maximum_items: usize, _maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+        match *self {}
+    }
+
+    fn close_owned_terminal_is_empty(&self) -> bool {
         match *self {}
     }
 
@@ -7528,8 +8309,23 @@ macro_rules! space_members {
             async fn document_id(&self) -> &str {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::document_id(m).await),+ }
             }
-            async fn snapshot_read_erased(&self) -> $crate::os_store::ErasedSnapshotRead {
+            async fn snapshot_read_erased(&self) -> Result<$crate::os_store::ErasedSnapshotRead, String> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::snapshot_read_erased(m).await),+ }
+            }
+            fn retire_snapshot_read_erased(&mut self, snapshot: $crate::os_store::ErasedSnapshotRead) -> Result<Box<dyn $crate::os_store::ErasedSnapshotRetirement>, $crate::os_store::SnapshotRetirementRejected> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::retire_snapshot_read_erased(m, snapshot)),+ }
+            }
+            fn take_returned_snapshot_read_retirement(&mut self) -> Result<Option<Box<dyn $crate::os_store::ErasedSnapshotRetirement>>, String> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::take_returned_snapshot_read_retirement(m)),+ }
+            }
+            fn snapshot_read_leases_terminal_is_empty(&self) -> bool {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::snapshot_read_leases_terminal_is_empty(m)),+ }
+            }
+            fn close_owned_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<$crate::os_store::SnapshotRetirementStep, String> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::close_owned_step(m, maximum_items, maximum_bytes)),+ }
+            }
+            fn close_owned_terminal_is_empty(&self) -> bool {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::close_owned_terminal_is_empty(m)),+ }
             }
             async fn content_revision(&self) -> [u8; 32] {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::content_revision(m).await),+ }
@@ -9269,6 +10065,149 @@ impl ArtifactPack for protocol::InteractionState {
 mod tests {
     use super::*;
 
+    #[test]
+    fn snapshot_read_lease_capacity_plus_one_returns_the_exact_owner_and_every_registered_owner_retires() {
+        let registry = Arc::new(SnapshotReadLeaseRegistry::new());
+        let mut reads = Vec::with_capacity(SNAPSHOT_READ_LEASE_CAPACITY);
+        for index in 0..SNAPSHOT_READ_LEASE_CAPACITY {
+            let owner = Arc::new(index);
+            let lease = registry.try_issue(owner.clone()).expect("fixed snapshot read lease admits its exact capacity");
+            reads.push(ErasedSnapshotRead::new(owner, lease));
+        }
+        let rejected = Arc::new(usize::MAX);
+        let returned = match registry.try_issue(rejected.clone()) {
+            Ok(_) => panic!("fixed snapshot read lease rejects capacity plus one"),
+            Err(returned) => returned,
+        };
+        assert!(Arc::ptr_eq(&rejected, &returned));
+        for read in reads {
+            let owner = match read.into_typed::<usize>(&registry) {
+                Ok(owner) => owner,
+                Err(_) => panic!("exact registered snapshot lease retires"),
+            };
+            drop(owner);
+        }
+        assert!(registry.terminal_is_empty());
+    }
+
+    #[test]
+    fn dropped_snapshot_read_remains_observable_until_one_slot_per_step_cleanup_takes_its_guard() {
+        let registry = Arc::new(SnapshotReadLeaseRegistry::new());
+        let owner = Arc::new(String::from("retained"));
+        let lease = registry.try_issue(owner.clone()).expect("snapshot read lease admission");
+        let index = lease.index;
+        let generation = lease.generation;
+        let read = ErasedSnapshotRead::new(owner, lease);
+        assert!(registry.contains(index, generation));
+        assert!(!registry.terminal_is_empty());
+        drop(read);
+        assert!(registry.contains(index, generation));
+        let mut retired = None;
+        for _ in 0..SNAPSHOT_READ_LEASE_CAPACITY {
+            if let Some(owner) = registry.try_take_one_returned::<String>().expect("one fixed cleanup probe") {
+                retired = Some(owner);
+                break;
+            }
+        }
+        assert_eq!(retired.as_deref().map(String::as_str), Some("retained"));
+        drop(retired);
+        assert!(registry.terminal_is_empty());
+    }
+
+    #[test]
+    fn stale_snapshot_read_generation_never_removes_a_reused_slot() {
+        let registry = Arc::new(SnapshotReadLeaseRegistry::new());
+        let owner = Arc::new(7u32);
+        let lease = registry.try_issue(owner.clone()).expect("first exact lease");
+        let index = lease.index;
+        let generation = lease.generation;
+        let read = ErasedSnapshotRead::new(owner, lease);
+        drop(match read.into_typed::<u32>(&registry) {
+            Ok(owner) => owner,
+            Err(_) => panic!("first exact retirement"),
+        });
+        assert!(registry.try_take(index, generation).is_err());
+        assert!(registry.terminal_is_empty());
+    }
+
+    #[test]
+    fn snapshot_read_lease_contention_returns_the_exact_untouched_owner() {
+        let registry = Arc::new(SnapshotReadLeaseRegistry::new());
+        let owner = Arc::new(String::from("contention-owner"));
+        let guard = registry.state.lock().expect("hold exact registry contention fixture");
+        let rejected = match registry.try_issue(owner.clone()) {
+            Ok(_) => panic!("nonblocking admission rejects while the fixed registry is contended"),
+            Err(rejected) => rejected,
+        };
+        assert!(Arc::ptr_eq(&owner, &rejected));
+        assert_eq!(Arc::strong_count(&owner), 2, "contention creates no hidden owner clone");
+        drop(guard);
+        let lease = registry.try_issue(rejected.clone()).expect("the same owner retries after contention");
+        let read = ErasedSnapshotRead::new(rejected, lease);
+        drop(match read.into_typed::<String>(&registry) {
+            Ok(owner) => owner,
+            Err(_) => panic!("retried exact owner handback succeeds"),
+        });
+        assert!(registry.terminal_is_empty());
+    }
+
+    #[test]
+    fn snapshot_read_double_return_is_counted_once_and_reclaimed_once() {
+        let registry = Arc::new(SnapshotReadLeaseRegistry::new());
+        let owner = Arc::new(11u32);
+        let mut lease = registry.try_issue(owner.clone()).expect("exact lease");
+        assert!(lease.return_now());
+        assert!(!lease.return_now(), "the same generation cannot be returned twice");
+        assert_eq!(registry.returned.load(std::sync::atomic::Ordering::Acquire), 1);
+        let mut reclaimed = None;
+        for _ in 0..SNAPSHOT_READ_LEASE_CAPACITY {
+            if let Some(owner) = registry.try_take_one_returned::<u32>().expect("one fixed return probe") {
+                reclaimed = Some(owner);
+                break;
+            }
+        }
+        assert_eq!(reclaimed.as_deref(), Some(&11));
+        assert_eq!(registry.returned.load(std::sync::atomic::Ordering::Acquire), 0);
+        drop(reclaimed);
+        drop(owner);
+        drop(lease);
+        assert!(registry.terminal_is_empty());
+    }
+
+    #[test]
+    fn stale_snapshot_read_generation_cannot_aba_remove_a_reused_slot() {
+        let registry = Arc::new(SnapshotReadLeaseRegistry::new());
+        let owner = Arc::new(1u16);
+        let first = registry.try_issue(owner.clone()).expect("first exact lease");
+        let stale_index = first.index;
+        let stale_generation = first.generation;
+        let first_read = ErasedSnapshotRead::new(owner, first);
+        drop(match first_read.into_typed::<u16>(&registry) {
+            Ok(owner) => owner,
+            Err(_) => panic!("first exact lease retires"),
+        });
+
+        let mut reads = Vec::with_capacity(SNAPSHOT_READ_LEASE_CAPACITY);
+        let mut reused_generation = None;
+        for value in 0..SNAPSHOT_READ_LEASE_CAPACITY {
+            let owner = Arc::new(value as u16);
+            let lease = registry.try_issue(owner.clone()).expect("fixed ring re-admits every slot");
+            if lease.index == stale_index {
+                reused_generation = Some(lease.generation);
+            }
+            reads.push(ErasedSnapshotRead::new(owner, lease));
+        }
+        assert!(reused_generation.is_some_and(|generation| generation != stale_generation));
+        assert!(registry.try_take(stale_index, stale_generation).is_err(), "stale generation cannot remove the reused exact slot");
+        for read in reads {
+            drop(match read.into_typed::<u16>(&registry) {
+                Ok(owner) => owner,
+                Err(_) => panic!("every reused exact lease retires"),
+            });
+        }
+        assert!(registry.terminal_is_empty());
+    }
+
     struct ArtifactStore<P, Mutation>(super::ArtifactStore<P, Mutation>)
     where
         P: Clone + Serialize + DeserializeOwned,
@@ -9318,8 +10257,23 @@ mod tests {
         async fn document_id(&self) -> &str {
             SpaceMember::document_id(&self.0).await
         }
-        async fn snapshot_read_erased(&self) -> ErasedSnapshotRead {
+        async fn snapshot_read_erased(&self) -> Result<ErasedSnapshotRead, String> {
             SpaceMember::snapshot_read_erased(&self.0).await
+        }
+        fn retire_snapshot_read_erased(&mut self, snapshot: ErasedSnapshotRead) -> Result<Box<dyn ErasedSnapshotRetirement>, SnapshotRetirementRejected> {
+            SpaceMember::retire_snapshot_read_erased(&mut self.0, snapshot)
+        }
+        fn take_returned_snapshot_read_retirement(&mut self) -> Result<Option<Box<dyn ErasedSnapshotRetirement>>, String> {
+            SpaceMember::take_returned_snapshot_read_retirement(&mut self.0)
+        }
+        fn snapshot_read_leases_terminal_is_empty(&self) -> bool {
+            SpaceMember::snapshot_read_leases_terminal_is_empty(&self.0)
+        }
+        fn close_owned_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<SnapshotRetirementStep, String> {
+            SpaceMember::close_owned_step(&mut self.0, maximum_items, maximum_bytes)
+        }
+        fn close_owned_terminal_is_empty(&self) -> bool {
+            SpaceMember::close_owned_terminal_is_empty(&self.0)
         }
         async fn content_revision(&self) -> [u8; 32] {
             SpaceMember::content_revision(&self.0).await
@@ -10513,6 +11467,55 @@ mod tests {
         assert_eq!(store.generation().await, 0);
     }
     //#endregion 🔖️InteractionStoreTests
+
+    //#region 🔖️ImmutableOperationRoots
+    #[semio_framework_async_macros::async_test]
+    async fn artifact_snapshot_root_is_o1_and_generation_stable_until_the_next_event() {
+        let envelope = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+        let mut store = ArtifactStore::new(envelope).await;
+        let generation = store.generation_now();
+        let before = store.snapshot_root();
+        let same = store.snapshot_root();
+        assert!(Arc::ptr_eq(&before, &same), "capturing an immutable operation root must only retain the existing Arc");
+        assert_eq!(generation, store.generation_now());
+
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], description: None }).await.expect("apply");
+        let after = store.snapshot_root();
+        assert!(!Arc::ptr_eq(&before, &after), "a committed event publishes a new immutable root");
+        assert_eq!(before.n, 0, "an already-admitted operation retains its exact pre-event snapshot");
+        assert_eq!(after.n, 7);
+        assert_eq!(store.content_revision_now(), store.content_revision().await);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn presence_local_root_is_o1_and_never_clones_the_payload_at_capture() {
+        let mut store = PresenceStore::<DemoSnapshot, DemoMutation>::new(DemoSnapshot { n: 1 });
+        let before = store.local_root();
+        assert!(Arc::ptr_eq(&before, &store.local_root()));
+        assert_eq!(store.generation_now(), 0);
+
+        store.apply(&[DemoMutation::SetN { n: 2 }]).await.expect("presence apply");
+        let after = store.local_root();
+        assert!(!Arc::ptr_eq(&before, &after));
+        assert_eq!(before.n, 1);
+        assert_eq!(after.n, 2);
+        assert_eq!(store.generation_now(), 1);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn transient_root_is_o1_and_retains_the_exact_pre_reset_value() {
+        let mut store = TransientStore::<DemoSnapshot, DemoMutation>::new(DemoSnapshot { n: 3 });
+        let before = store.current_root();
+        assert!(Arc::ptr_eq(&before, &store.current_root()));
+
+        store.reset(DemoSnapshot { n: 4 }).await;
+        let after = store.current_root();
+        assert!(!Arc::ptr_eq(&before, &after));
+        assert_eq!(before.n, 3);
+        assert_eq!(after.n, 4);
+        assert_eq!(store.generation_now(), 1);
+    }
+    //#endregion 🔖️ImmutableOperationRoots
 
     #[semio_framework_async_macros::async_test]
     async fn apply_computes_backwards_from_pre_state() {
@@ -12667,18 +13670,10 @@ mod tests {
         }
         impl MemberDirectory for FixtureDirectory {
             async fn head_pack(&self, artifact_id: &str) -> Option<Result<Vec<u8>, VcsError>> {
-                if artifact_id == "linked-doc" {
-                    Some(self.member.document_pack_bytes().await)
-                } else {
-                    None
-                }
+                if artifact_id == "linked-doc" { Some(self.member.document_pack_bytes().await) } else { None }
             }
             async fn checkpoint_pack(&self, artifact_id: &str, checkpoint_id: &str) -> Option<Result<Vec<u8>, VcsError>> {
-                if artifact_id == "linked-doc" {
-                    Some(self.member.pack_at_checkpoint(checkpoint_id).await)
-                } else {
-                    None
-                }
+                if artifact_id == "linked-doc" { Some(self.member.pack_at_checkpoint(checkpoint_id).await) } else { None }
             }
         }
 

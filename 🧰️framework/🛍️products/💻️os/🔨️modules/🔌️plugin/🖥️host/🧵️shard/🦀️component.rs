@@ -164,6 +164,7 @@ pub async fn to_actor_turn_result(result: &TurnResult, wall_us: u64, memory_byte
     semio_framework_actor::TurnResult {
         ui_patches: serde_json::to_vec(&result.ui_patches).unwrap_or_default(),
         effects: serde_json::to_vec(&result.effects).unwrap_or_default(),
+        command_ingress: serde_json::to_vec(&result.command_ingress).unwrap_or_default(),
         next_wake: result.next_wake,
         status,
         usage: semio_framework_actor::Usage { fuel: result.fuel_used, wall_us, memory_bytes },
@@ -644,7 +645,7 @@ impl ShardLoop {
                 // wire-shape-mismatch sites this packet's report flags (`🦀️component.rs`'s
                 // `execute_turn`, `⏳️runtime.rs`'s `convert_poll_success`): nothing was dropped
                 // here, there was simply nothing produced.
-                result: to_actor_turn_result(&TurnResult { ui_patches: Vec::new(), effects: Vec::new(), presence: Vec::new(), next_wake: None, status: semio_framework::kernel::TurnStatus::MoreWork, fuel_used: 0 }, 0, 0).await,
+                result: to_actor_turn_result(&TurnResult { ui_patches: Vec::new(), effects: Vec::new(), presence: Vec::new(), next_wake: None, status: semio_framework::kernel::TurnStatus::MoreWork, fuel_used: 0, command_ingress: semio_framework::kernel::CommandIngressStatus::Idle }, 0, 0).await,
             },
             Err(fault) => ShardOutcome::Fault { actor: actor_id, message: turn_fault_message(&fault).await },
         };
@@ -975,7 +976,7 @@ impl GuestRuntime for RecordingRuntime {
     async fn drop_instance(&self, _inst: GuestInstance) {}
     async fn execute_turn(&self, _inst: &mut GuestInstance, _events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault> {
         *self.last_turn_budget.lock().expect("lock") = Some(budget);
-        Ok(TurnResult { ui_patches: vec![], effects: vec![], presence: vec![], next_wake: None, status: semio_framework::kernel::TurnStatus::Idle, fuel_used: 0 })
+        Ok(TurnResult { ui_patches: vec![], effects: vec![], presence: vec![], next_wake: None, status: semio_framework::kernel::TurnStatus::Idle, fuel_used: 0, command_ingress: semio_framework::kernel::CommandIngressStatus::Idle })
     }
     async fn start_job(&self, _inst: &mut GuestInstance, _job: u64, _kind: &str, _input: Vec<u8>) -> Result<(), TurnFault> {
         Ok(())
@@ -1540,6 +1541,7 @@ mod tests {
                 result: semio_framework_actor::TurnResult {
                     ui_patches: vec![1],
                     effects: vec![2],
+                    command_ingress: vec![3],
                     next_wake: Some(3),
                     status: semio_framework_actor::TurnStatus::MoreWork,
                     usage: semio_framework_actor::Usage { fuel: 4, wall_us: 5, memory_bytes: 6 },
@@ -1744,7 +1746,7 @@ mod tests {
     //#region 🔖️BudgetBridge
     #[semio_framework_async_macros::async_test]
     async fn to_actor_turn_result_maps_status_and_carries_host_measured_usage() {
-        let kernel_result = TurnResult { ui_patches: vec![], effects: vec![], presence: vec![], next_wake: Some(42), status: semio_framework::kernel::TurnStatus::Faulted(b"trap".to_vec()), fuel_used: 999 };
+        let kernel_result = TurnResult { ui_patches: vec![], effects: vec![], presence: vec![], next_wake: Some(42), status: semio_framework::kernel::TurnStatus::Faulted(b"trap".to_vec()), fuel_used: 999, command_ingress: semio_framework::kernel::CommandIngressStatus::Idle };
         let bridged = to_actor_turn_result(&kernel_result, 1234, 5678).await;
         assert_eq!(bridged.next_wake, Some(42));
         assert_eq!(bridged.status, semio_framework_actor::TurnStatus::Faulted { detail: b"trap".to_vec() }, "status must map 1:1, and the actor crate's struct-variant Faulted (Part A) must be what this bridge constructs");
@@ -1761,7 +1763,7 @@ mod tests {
             (semio_framework::kernel::TurnStatus::MoreWork, semio_framework_actor::TurnStatus::MoreWork),
             (semio_framework::kernel::TurnStatus::CheckpointReady { checkpoint: checkpoint.clone() }, semio_framework_actor::TurnStatus::CheckpointReady { checkpoint: checkpoint.clone() }),
         ] {
-            let kernel_result = TurnResult { ui_patches: vec![], effects: vec![], presence: vec![], next_wake: None, status: kernel_status, fuel_used: 0 };
+            let kernel_result = TurnResult { ui_patches: vec![], effects: vec![], presence: vec![], next_wake: None, status: kernel_status, fuel_used: 0, command_ingress: semio_framework::kernel::CommandIngressStatus::Idle };
             assert_eq!(to_actor_turn_result(&kernel_result, 0, 0).await.status, expected);
         }
     }

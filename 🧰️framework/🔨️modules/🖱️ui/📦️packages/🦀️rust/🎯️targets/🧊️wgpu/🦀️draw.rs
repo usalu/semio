@@ -303,6 +303,95 @@ impl Default for DrawList {
 }
 
 impl DrawList {
+    pub(crate) fn retire_step(&mut self) -> bool {
+        if let Some(pass) = self.scene_passes.last_mut() {
+            if let Some(draw) = pass.textured_draws.last_mut() {
+                if let Some(instance) = draw.instances.last_mut() {
+                    if instance.texture_key.pop().is_some() {
+                        return false;
+                    }
+                    draw.instances.pop();
+                    return false;
+                }
+                pass.textured_draws.pop();
+                return false;
+            }
+            if let Some(draw) = pass.translucent_draws.last_mut() {
+                if let Some(instance) = draw.instances.last_mut() {
+                    if instance.id.pop().is_some() {
+                        return false;
+                    }
+                    draw.instances.pop();
+                    return false;
+                }
+                if draw.mesh_key.pop().is_some() {
+                    return false;
+                }
+                pass.translucent_draws.pop();
+                return false;
+            }
+            if let Some(draw) = pass.line_draws.last_mut() {
+                if draw.vertices.pop().is_some() {
+                    return false;
+                }
+                pass.line_draws.pop();
+                return false;
+            }
+            if let Some(draw) = pass.draws.last_mut() {
+                if let Some(instance) = draw.instances.last_mut() {
+                    if instance.id.pop().is_some() {
+                        return false;
+                    }
+                    draw.instances.pop();
+                    return false;
+                }
+                if draw.mesh_key.pop().is_some() {
+                    return false;
+                }
+                pass.draws.pop();
+                return false;
+            }
+            self.scene_passes.pop();
+            return false;
+        }
+        if let Some(layer) = self.layers.last_mut() {
+            if let Some(clip) = layer.clip.as_mut() {
+                if clip.scissors.pop().is_some() {
+                    return false;
+                }
+                layer.clip = None;
+                return false;
+            }
+            if let Some((key, _)) = layer.raster_instances.last_mut() {
+                if key.pop().is_some() {
+                    return false;
+                }
+                layer.raster_instances.pop();
+                return false;
+            }
+            if layer.overlay_vector_vertices.pop().is_some() || layer.overlay_ui_instances.pop().is_some() || layer.vector_vertices.pop().is_some() || layer.ui_instances.pop().is_some() {
+                return false;
+            }
+            self.layers.pop();
+            return false;
+        }
+        if self.glass_regions.pop().is_some() || self.scissor_stack.pop().is_some() || self.glass_content_stack.pop().is_some() {
+            return false;
+        }
+        if let Some(clip) = self.clip_stack.last_mut() {
+            if clip.scissors.pop().is_some() {
+                return false;
+            }
+            self.clip_stack.pop();
+            return false;
+        }
+        true
+    }
+
+    pub(crate) fn retirement_is_empty(&self) -> bool {
+        self.scene_passes.is_empty() && self.layers.is_empty() && self.glass_regions.is_empty() && self.scissor_stack.is_empty() && self.clip_stack.is_empty() && self.glass_content_stack.is_empty()
+    }
+
     pub fn set_screen_height(&mut self, height: f32) {
         self.screen_h = height;
     }

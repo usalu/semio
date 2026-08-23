@@ -2,7 +2,7 @@
 // #region 🧲️Header
 // 💻️ .storybook/main.ts
 // Specs: Aggregate the existing package-local Storybook trees into one root monorepo Storybook.
-// Summary: Configures the workspace Storybook with shared aliases, MDX support, Vite `resolve.conditions` so `node_modules` `exports` resolve (`import` before `storybook`), a composable scope system driven by `.storybook/scopes.ts` (`STORYBOOK_SCOPE` is a comma-separated list of hierarchical scope ids), and module-worker-safe Vite behavior.
+// Summary: Configures the workspace Storybook with shared aliases, Markdown docs support, Vite `resolve.conditions` so `node_modules` `exports` resolve (`import` before `storybook`), a composable scope system driven by `.storybook/scopes.ts` (`STORYBOOK_SCOPE` is a comma-separated list of hierarchical scope ids), and module-worker-safe Vite behavior.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
@@ -11,13 +11,8 @@ import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 
 import type { StorybookConfig } from "@storybook/react-vite";
-import rehypeAutolinkHeadings from "rehype-autolink-headings";
-import { semioAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, playgroundAssetVitePlugins } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts";
+import { semioAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️vite-elements-assets.ts";
 import { uiTailwindBuildPlugins } from "../🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🟦️build-tooling.ts";
-import rehypeSlug from "rehype-slug";
-import remarkFrontmatter from "remark-frontmatter";
-import remarkGfm from "remark-gfm";
-import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { resolveActiveScopes, buildScopeStoryGlobs, buildScopeAliases, buildScopeWatchIgnores, type StoryScope } from "./scopes.ts";
 
 const require = createRequire(import.meta.url);
@@ -132,6 +127,7 @@ const config: StorybookConfig = {
     if (!hasUiAssetsPlugin) {
       config.plugins.push(...semioAssetsVitePlugin(repoRootPath));
     }
+    config.plugins.push(playgroundFlowWasmDevStubPlugin(repoRootPath));
     // #region 🔖️ScopeAssetsAndPlugins
     /** @emoji 🌐️ Static-dir / tile-proxy / mesh-collection assets declared by active scopes (e.g. `framework/os`'s `/plugin-modules`, `/renderer-modules`). */
     const scopeAssets = activeScopes.flatMap((s) => s.assets ?? []);
@@ -166,12 +162,7 @@ const config: StorybookConfig = {
     }
 
     const mdx = await import("@mdx-js/rollup");
-    config.plugins.push(
-      mdx.default({
-        remarkPlugins: [remarkGfm, remarkFrontmatter, remarkMdxFrontmatter],
-        rehypePlugins: [rehypeSlug, rehypeAutolinkHeadings],
-      }),
-    );
+    config.plugins.push(mdx.default({}));
 
     config.optimizeDeps = config.optimizeDeps || {};
     config.optimizeDeps.include = [...(config.optimizeDeps.include || []), "golden-layout"];

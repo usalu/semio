@@ -272,6 +272,48 @@ impl PreparedRenderJob {
         self.receiver.take_latest()
     }
 
+    pub fn close_step(&mut self) -> bool {
+        let Some(input) = self.input.as_mut() else { return self.receiver.take_latest().is_none() };
+        if let Some(upload) = input.uploads.last_mut() {
+            let retained = match upload {
+                PreparedRenderUpload::GlyphAtlas { pixels, .. } | PreparedRenderUpload::IconAtlas { pixels, .. } => pixels.pop().is_some(),
+                PreparedRenderUpload::Raster { key, pixels, .. } => pixels.pop().is_some() || key.pop().is_some(),
+                PreparedRenderUpload::Mesh { key, positions, normals, indices, .. } => indices.pop().is_some() || normals.pop().is_some() || positions.pop().is_some() || key.pop().is_some(),
+            };
+            if retained {
+                return false;
+            }
+            input.uploads.pop();
+            return false;
+        }
+        if let Some(PreparedRenderEviction::Mesh { key }) = input.evictions.last_mut() {
+            if key.pop().is_some() {
+                return false;
+            }
+            input.evictions.pop();
+            return false;
+        }
+        if !input.draw.retire_step() {
+            return false;
+        }
+        if let Some(overlay) = input.overlay.as_mut() {
+            if !overlay.retire_step() {
+                return false;
+            }
+            input.overlay = None;
+            return false;
+        }
+        if input.damage.pop().is_some() || input.clips.pop().is_some() || input.directives.pop().is_some() {
+            return false;
+        }
+        self.input = None;
+        false
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.input.is_none() && self.receiver.acquire_latest().is_none()
+    }
+
     fn input(&self) -> &PreparedRenderInput {
         self.input.as_ref().expect("prepared render input")
     }
@@ -628,6 +670,22 @@ mod tests {
             usage: PreparedRenderUsage::default(),
             limits: PreparedRenderLimits::default(),
         }
+    }
+
+    #[test]
+    fn cancellation_retires_large_upload_incrementally_before_terminal_empty() {
+        let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
+        input.uploads.push(PreparedRenderUpload::GlyphAtlas { pixels: vec![0; 4_096], width: 64, height: 64 });
+        let mut job = PreparedRenderJob::new(input, 1);
+        assert!(!job.close_step());
+        assert!(!job.terminal_is_empty());
+        let mut turns = 1;
+        while !job.close_step() {
+            turns += 1;
+            assert!(turns < 5_000);
+        }
+        assert!(turns > 4_096);
+        assert!(job.terminal_is_empty());
     }
 
     fn assert_send<T: Send>() {}

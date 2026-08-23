@@ -500,3 +500,492 @@ cursors. The ordering must first reject ingress and cancel/wait for frame descen
 queues/text/runtime/app, and only then retire the presenter/GPU. Generic `DispatchState` still owns
 legacy strings, Rust JSON admission/apply/tick remains one 4 KiB callback, Rust/Wasm compilation and
 real OffscreenCanvas execution remain unrun, and only 3.1--3.2 GiB of disk is free.
+
+A subsequent source reattack found the normal browser frame path itself still violates the central
+rule. The wasm32 `FrameBuildHandle::poll_runtime_and_resubmit` calls `run_to_completion`, applies the
+runtime mailbox, calls the full application frame, and enters `AppFrameBuild::prepare` in one Worker
+tick; `prepare` then batch-drives `PreparedRenderJob` to terminal again. The native pool closure has
+the same logical batch boundary. Both frame build and prepared-packet build must remain persistent
+across Worker turns, take one governed step, publish only a generation-matching complete snapshot,
+and preserve the last valid frame while newer work is pending or faulted. This reopens the claimed
+Phase 5 browser seam as well as the Phase 3 gate.
+
+## Fresh Dependency Boundary Reproduction
+
+The coordinator independently reran both dependency-list commands after the accepted owned-force
+wave. The results reproduce exactly **63 Rust** plus **78 JavaScript** third-party identities, for a
+current boundary of **141**. Full machine-readable lists and the reproduction note are retained in
+`📝️coordinator-current-rust-dependencies.txt`, `📝️coordinator-current-js-dependencies.txt`, and
+`📓️coordinator-dependency-boundary-2026-08-22.md`. Dagre remains present. This is a freeze ratchet,
+not Phase 9/10 acceptance; the declared exit boundary remains zero.
+
+The fresh JavaScript parity pass is also clean for undeclared imports and lock mismatches. It reports
+83 manifests, 263 external manifest rows, 113 evidenced rows, and 150 advisory unowned rows. Those
+advisory rows are not deletion authority because several live implementations sit outside their
+manifest-directory evidence scope.
+
+## Framework Live-Reclamation Progress
+
+The framework lane now runs failed media/download construction reclamation through a persistent
+maintenance job on the shared pool. The app maintenance cursor selects an occupied fixed slot in
+constant time, reports zero progress honestly when no owner advances, retains a blocked snapshot
+dependency as blocked, separates transient lock contention, and faults a permanently blocked orphan
+after an exact 256-step credit. Close-generation overflow is checked before removing the live app.
+The focused verifier reports 80 self-tests.
+
+Phase 8 remains RED: typed command dispatch still loops its Worker session to terminal inside the
+public callback, deep app/runtime disposal still has no terminal-empty implementation, and runtime
+fault paths still contain unreachable `mem::forget` ownership. The 884-command ledger remains
+fail-closed at zero accepted commands.
+
+## Directed Layout React Ownership Accepted
+
+The Sol repair in
+`OWNED-UI-AND-TOOLING-STACK/📓️p10bo-owned-diagram-abandoned-result-repair.md` now retains suspended
+successors, treats a later committed lifecycle reset as the abandonment witness, and retires only
+non-displayed authorities one `closeStep` per macrotask. Its focused quick and long Diagram suites
+both pass 42 tests, UI typecheck/lint pass, and the shared Worker lane passes 32 tests plus both
+bundles.
+
+The fresh Terra audit in
+`OWNED-UI-AND-TOOLING-STACK/📓️p10bp-independent-owned-diagram-final-audit-3.md` **ACCEPTS** this
+Diagram-owned lifecycle boundary. It independently covers suspended-then-committed, abandoned,
+repeated generation, stale duplicate terminal, source fallback, unmount, hostile ingress, cursorized
+result close, and terminal-empty witnesses. One pre-existing timing-sensitive 20k force test failed
+in the auditor's initial simultaneous quick invocation, then the clean quick rerun and long tier both
+passed; no directed-layout ownership defect was reproduced.
+
+Dagre remains installed. The Worker checks are still fake/static protocol evidence, so dependency
+removal remains blocked on the real Rust/Wasm/OffscreenCanvas lifecycle and Phase 3/5 source and
+runtime gates. The accepted dependency boundary therefore remains **141 identities**.
+
+## Persistent Browser Frame And Typed Command Progress
+
+The browser/frame source lane has now removed both production `run_to_completion` calls. Deadline
+scanning persists with a 16-item step, prepared render construction persists through
+`AppFramePreparation` with a 64-item/1 ms step, native execution returns its owned state through the
+WorkerPool completion channel, and wasm Worker execution retains the same state across ticks.
+Generation mismatch cancels active work and only a complete matching presentation may replace the
+last valid surface. Frame close now receives/cancels/resubmits native active state and explicitly
+drives wasm active state to a terminal witness rather than dropping it in the callback.
+
+Phase 3/5 remain RED. `runtime.apply_pending` plus `app.frame` is still a monolithic build phase;
+camera-deadline state can grow beyond its intended 256 entries and is cloned before admission;
+runtime completion closures are not yet cursorized; and EngineCanvasPacket/Vello scene cancellation
+retirement still risks a large worker-turn destructor. The generic host retirement owners and real
+Rust/Wasm/OffscreenCanvas gate remain open.
+
+The framework typed-command source now stores a fixed persistent WorkerJobSession, submits or polls
+at most one step through live maintenance, preserves ownership on worker saturation, and returns an
+operation handle instead of awaiting the command to terminal. The old test-only batch loop is also
+gone. The verifier reports 81 self-tests with the broad DENY scan green.
+
+Phase 8 still deliberately fails closed before preparation. O(1) immutable store/child/history
+snapshot roots, bounded CommitReady publication, revision/generation/cancel validation, ephemeral
+and emit candidate construction, and typed-operation close/terminal-empty authority are not yet
+complete. No command classification credit is granted.
+
+## Next Serialized Dependency Packet
+
+The independent read-only scout in
+`OWNED-UI-AND-TOOLING-STACK/📓️next-dependency-scout-2026-08-22.md` selects the private one-call
+`pixelmatch` visual-parity comparator as the next file-disjoint owned replacement. Its executable
+surface is one import and one call in the mandated dev `📜️script.ts`, with no public type leak. A Sol
+implementation packet is active with differential fixtures and dev-tool gates. Acceptance would
+reduce the boundary from 141 to **140 = 63 Rust + 77 JavaScript**; the real screenshot sweep remains
+coupled to the later browser gate.
+
+## Fresh Source Acceptance Audit
+
+The coordinator re-read the active browser and framework seams rather than accepting progress from
+test counts alone. The browser completion mailbox has replaced its opaque `FnOnce` payload with a
+finite `RuntimeApply` enum, but `DispatchEvents` still hands an entire drained event batch to one
+async reducer, `AppRuntime::frame` still calls the full `render_chrome` build in one phase, and
+`OsHostRetirement` still has generic one-turn drops plus `mem::forget` fail-safe paths. Phase 3/5
+therefore remain RED until those owners are persistent, watchdog overruns become observable
+quarantine faults, and close reaches a real terminal-empty witness.
+
+The framework store seam now exposes O(1) immutable roots for the authoritative artifact snapshot,
+draft, local presence, and transient state. Presence/transient events publish new `Arc` roots, and
+pointer-identity plus pre-event retention tests guard the capture contract. The focused verifier is
+clean at 82 self-tests and the broad interactivity DENY scan is clean. This is progress only:
+peer/hover and child projections still clone whole maps, history still builds from the whole log,
+`CommitReady` has no bounded revision/generation/cancel publication, and typed-operation close has no
+terminal-empty disposer. The activation ledger correctly remains zero.
+
+The in-flight owned pixel comparator has removed the manifest/lock edge in its worktree, but its
+temporary differential record currently changes mismatch counts in three of four representative
+fixtures. That is not yet the plan's differential-parity gate. The implementation owner has been
+asked to preserve the previous observable comparison contract or supply evidence that every changed
+classification preserves the existing screenshot thresholds before the dependency can receive
+removal credit.
+
+## Pixel Comparator Independent Rejection
+
+The implementation owner corrected the representative differential counts to exact legacy parity
+and completed the source, lock, test, and dependency gates at **140 = 77 JavaScript + 63 Rust**. A
+fresh Terra audit nevertheless rejected the packet. Two ordinary `Uint8Array` views can overlap the
+same backing buffer; when the diff view begins four bytes into the reference view, row-major diff
+writes overwrite future reference pixels and change the retained text-edge result from two
+mismatches to eight. The independent reproduction and otherwise-green gates are retained in
+`OWNED-UI-AND-TOOLING-STACK/📓️independent-owned-parity-pixel-audit-2026-08-22.md`.
+
+The 140 boundary is therefore reproducible but not yet accepted. A focused Sol repair is adding an
+exact byte-span overlap guard before any output write, including exact alias, forward/back partial
+overlap, disjoint same-buffer, zero-length, and retained-fixture tests. A second fresh Terra audit is
+required before the dependency count ratchets down.
+
+## Pixel Comparator Accepted Boundary
+
+The focused repair now rejects every intersecting half-open byte span between the writable diff view
+and either read input before the first output write. It permits read-only input aliasing, disjoint
+views over one backing buffer, and empty spans. Permanent exact-alias, forward/back partial-overlap,
+disjoint-buffer, zero-length, and retained text-edge fixtures pass; the full dev suite is 36 of 36.
+
+The second fresh Terra audit in
+`OWNED-UI-AND-TOOLING-STACK/📓️independent-owned-parity-pixel-reaudit-2026-08-22.md` **ACCEPTS** the
+repair. It independently covered ordinary and shared backing buffers, no-mutation rejection,
+resized/detached early shape rejection, fixed differential counts/markers, frozen lock, dependency
+freeze/parity, and exact source/import/debug scans. The accepted dependency boundary ratchets to
+**140 = 77 JavaScript + 63 Rust**. The real browser screenshot sweep remains explicitly unrun and
+belongs to the Phase 3 Worker/Wasm runtime gate.
+
+## Browser Dispatch And Framework Child-Root Boundaries
+
+The browser runtime completion envelope is now a closed `RuntimeApply` enum. A retained
+`RuntimeDispatchCursor` preserves the prior pointer, scroll, then discrete ordering; it advances one
+event per reserved async interaction completion, retains authority on saturation, and retires one
+bounded event per close turn. Matching watchdog overruns now set a frame fault, cancel the active
+generation, and retire unpublished preparation before presentation. Focused Worker tests remain 32
+of 32 and both bundles pass. Phase 3/5 remain RED because the synchronous
+`AppRuntime::frame`/`ShellState::render_chrome` body, deep RuntimeMailbox/presenter/GPU close, generic
+dispatcher/text authority, and real Cargo/Wasm/browser runtime gates remain open.
+
+The framework typed-command seam now captures an event-maintained 1,024-slot paged child-content
+root in O(1), rather than rebuilding and cloning every child at public dispatch. Replaced roots move
+to a fixed retirement registry, and the verifier remains fail-closed at 83 self-tests. The next
+audit found the exact ownership boundary: heterogeneous erased child snapshots cannot be safely
+reclaimed because `SpaceMember` exposes read/revision but no owner-supplied bounded disposer. Shared
+code is adding a required no-default erased disposer/terminal-witness interface plus an exact domain
+cohort list; concrete domain bindings must land in a disjoint Sol packet before finite quarantine or
+the `close-child-root-disposer-missing` blocker can be accepted. Peer/hover roots, history,
+publication, cancellation, and typed close also remain RED.
+
+## Frame Cursor And Presence Publication Audit
+
+The browser frame transaction now retains deferred async work as `FrameDeferredCursor`: sync pump,
+each action, tutorial flush, and asset polling use separate reserved interaction completions, and
+saturation retains the cursor for a later frame. The coordinator source audit still rejects the
+frame boundary. Wheel traversal uses `HashMap::{values_mut,iter}.nth(index)`, so later turns repeat
+earlier scans, accumulate quadratic work, and depend on nondeterministic hash iteration order.
+Input transfer replaces a fixed 256-entry vector in O(1), but it still allocates the replacement
+buffer at the frame seam and exposes only whole-vector draining; generated/deferred actions have
+count credits without complete string/argument byte credits. The P3 owner is replacing these with
+stable event-maintained ID pages, one-item FIFO transfer, producer-side byte admission, and
+cursorized payload retirement. `ShellState::render_chrome` and asset/decode construction remain the
+larger synchronous RED boundary after those repairs.
+
+The framework peer root now captures an actor-sorted fixed 64-slot `Arc` root and incrementally
+retires old root, entry, domain, and string ownership. That does not yet earn publication credit:
+`PeerPresenceRoot::from_peers` still validates/builds an entire admitted roster, while the app-typed
+path awaits `PresenceStore::peers` and clones/collects the whole result. The P8 owner is replacing
+both sides with a retained, generation-checked per-entry publication/projection job. Activation
+therefore remains zero. The domain child-retirement cohort is independently held to schema-specific
+incremental disposal; a generic final `Arc<P>` drop, background deferral, or quarantine will be
+rejected.
+
+## Child Snapshot Retirement Contract Rejection
+
+The domain cohort produced schema-specific cursors for all 18 `stdio.semio` snapshot shapes rather
+than hiding a final opaque drop. Source audit found two shared-contract bypasses, so the cohort
+remains RED. First, `space_members!` publicly generates `MemberFactory::{create,open}` implementations
+that call `create_member_store`/`open_member_store` directly. The intended wrapper installs the
+retirement factory, but a public UFCS call can construct the same member without it. This needs a
+required owner hook in the shared macro; copying its roughly 30 delegated methods into one domain is
+not an acceptable fork.
+
+Second, `SnapshotRead<T>` and `ErasedSnapshotRead` are public cloneable `Arc` capabilities. When the
+domain disposer cannot unwrap because another read survives, it can cheaply release its own Arc,
+but the surviving clone may later become the last owner and deep-drop the entire nested snapshot
+outside any cursor. A store-installed factory therefore cannot prove bounded global reclamation.
+The shared contract must replace untracked clone ownership with scoped/registered leases whose
+release returns to retirement authority, or use a paged snapshot representation whose last-owner
+destruction is definitionally bounded. Until both seams are closed, schema-specific cursors are only
+foundation work and receive no child-root acceptance credit.
+
+The first focused Nx probe also exposed two unrelated/in-flight compiler boundaries before it could
+reach the domain tests. The shared P8 owner found that `snapshot_retirement_factory` had been placed
+on `TransientStore` while all construction/access targeted `ArtifactStore`; the field has been moved
+to its intended owner, resolving that E0560/E0609/E0063 and dyn-`Debug` class at source level. The UI
+text root had two E0382 moved-node paths at page-leaf misses. Those branches now return their
+definitionally terminal boundary result (`false` or `self.bytes`) instead of attempting another
+iteration with a moved node; focused `rustfmt --check` and diff-check are clean. A fresh typed build
+is still required before either repair receives compile credit.
+
+## Independent Child Root Ownership Design
+
+The Terra audit in
+`EVERY-TOOL-INTERACTIVE-JOB-MIGRATION/📓️terra-child-snapshot-ownership-audit-2026-08-22.md`
+independently confirms the rejection and traces the production bypasses. The smallest sound repair
+is not an installer hook alone. Store payload ownership must move into generation-keyed root cells;
+public reads become borrow-tied and non-owning; each worker receives one non-clone operation lease;
+child-content retirement releases index/root references rather than trying to retire a payload still
+owned by the child store; and `space_members!` emits only schema-bound child-store wrappers whose
+root lifecycle exists before exposure. Raw `ArtifactStore` must no longer satisfy child
+registration, covering generated create/open, composition genesis, `open_child`, and
+`register_child` together.
+
+The exact migration surface is unusually contained despite the architectural change: owning read
+APIs occur only in the shared store/plugin files, and Flow duplicate-widget is the sole non-test
+consumer of `ChildContentView::typed_read`. Acceptance requires compile-fail non-clone/lifetime
+fixtures, a borrow-across-await fixture with its lease held, exact root/receipt saturation and
+cancellation tests, unchanged-child replacement without payload retirement, and native/release/Wasm
+runtime gates. This packet must be serialized after the active peer-publication work because it
+changes the same shared files.
+
+## Accepted Partial Frame Cursor Boundary
+
+The P3 frame transaction now consumes one action from a fixed 256-slot FIFO per Worker turn without
+whole-vector replacement. Wheel and pending-raster traversal use deterministic admitted ID pages
+with 256-item/256-byte identity credits and O(1) index access; every former hash-map `nth` traversal
+is gone. The backing surface map no longer exposes `Deref`/`DerefMut`; legacy asset code receives a
+value-only `World3dStateAccess` interface, so structural mutation cannot bypass its order/admission
+invariant. Replacement, removal, clear, and saturation fixtures are present.
+
+The first attempt at recursive action retirement was rejected because it leaked abandoned/hostile
+payloads with `mem::forget`; that draft is fully removed and a permanent source assertion guards the
+boundary. Fresh coordinator invocations independently pass `test-browser-worker` at 32 of 32 and
+`check-browser-worker` with the 39.60-KB boot and 0.63-MB Worker bundles. This is partial acceptance
+only. FIFO saturation still consumes/drops the rejected action, action arguments lack producer-side
+flat/paged item and byte reservations, and one action can still deep-drop recursively. A focused Sol
+follow-up owns that repair. Chrome old-frame clear/rebuild, atlas clones, assets, GPU realization,
+deep close, Rust/Wasm compile, and real browser timing remain RED.
+
+## Fail-Closed Presence And Child Retirement Foundation
+
+The current P8 framework packet adds actor-sorted fixed presence roots, retained per-entry metadata
+and app-typed publication candidates, and exact child snapshot disposer/terminal-witness contracts.
+The verifier remains correctly fail closed at zero admitted operations and 884 remaining commands.
+This is not production acceptance. The public presence ingress still decoded/materialized the whole
+roster before app admission when the packet was first handed off, typed and metadata publication
+could be separately invoked, and ordinary `ManuallyDrop`/no-op Drop paths could leak incomplete
+owners. A reattack is active to admit encoded Presence commands before per-entry decode, retain
+malformed/saturated owners, and commit typed root, metadata root, color, generation, cancellation,
+and both retirement capacities in one release-validated publication turn.
+
+Global child-root acceptance remains blocked independently. Public cloneable Arc snapshot reads and
+generated/raw child-store construction bypass the intended retirement factory. The accepted design
+direction is generation-keyed store-owned root cells, borrow-tied non-clone reads, one non-clone
+operation lease, and schema-bound generated child wrappers. That shared migration is serialized
+after presence work stabilizes.
+
+## Provisional Owned Route Boundary And Real Browser Evidence
+
+The isolated owned-route packet removed the only live `react-router` import and public facade,
+reconciled the UI manifest and Bun lock, and provisionally reproduces **139 identities: 76
+JavaScript and 63 Rust** with clean dependency parity. Its implementation owner reports 719 UI
+tests plus typecheck, lint, primitive policy, frozen lock, dependency, and absence gates green. That
+count is not accepted until an independent Terra audit repeats the source and executable gates.
+
+The coordinator completed the otherwise-blocked real browser gate against a Vite harness importing
+the actual UI barrel. The actual `NotFound` button preserved `/spaces/a?tab=history#entry`, emitted
+exactly one owned `popstate`, and browser Back/Forward each appended the expected native event. The
+actual `RouteLink` reached `/spaces/b?tab=route#link`; console warnings/errors remained empty. Exact
+evidence is in `OWNED-UI-AND-TOOLING-STACK/📓️coordinator-owned-route-real-browser-gate-2026-08-22.md`.
+
+## Action Reservation Foundation Reattack
+
+P3 now has a non-Clone flat action owner with a 16-KiB inline byte slab, 256 Copy nodes, depth 32,
+fixed FIFO slots, aggregate byte credits, and an exclusive producer reservation that rejects
+saturation before allocation. The coordinator accepts this only as a source foundation. All 17
+production Interpreter/Scenes producers still built recursive `ActionDescriptor`/JSON values before
+entering the temporary bridge, so the exact source owner could still be consumed on saturation. A
+follow-up is converting every producer to direct schema-first reservation/build writes and requires
+an exhaustive zero-legacy-producer scan. Chrome, assets, presenter/GPU, deep close, compile, Wasm,
+and real Worker timing remain red.
+
+## Build Headroom Update
+
+The data volume currently has approximately 111 GiB free and the root `target` is approximately
+1.8 GiB. No coordinator cache/target deletion occurred and no Cargo/rustc process is active. The
+first cold Rust owner remains deferred until the two shared Rust implementation lanes stabilize;
+there will still be exactly one serialized Cargo owner.
+
+## Accepted Owned Navigation Retirement
+
+The provisional owned-route boundary is now accepted at **139 direct identities: 76 JavaScript and
+63 Rust**. Terra independently repeated the exact source/config/public-API and manifest/lock scans,
+the six focused owned-navigation tests, the complete 720-test UI suite, typecheck, lint, primitive
+policy, frozen-lock, dependency verification/list/parity, Prettier, and scoped diff checks. It found
+no live `react-router` consumer or lock survivor and accepted the coordinator's actual-barrel browser
+evidence as supporting runtime proof. The independent result is retained in
+`OWNED-UI-AND-TOOLING-STACK/📓️terra-independent-react-router-retirement-audit-2026-08-22.md`.
+
+The coordinator also freshly reproduced dependency verification, exact 76/63 lists, clean JavaScript
+manifest/import/lock parity, and a clean whole-worktree diff check. The machine-readable JavaScript
+boundary list and coordinator dependency report now reflect the accepted removal.
+
+## Accepted Owned Locale Detector Retirement
+
+The explicit owned locale resolver has replaced the sole live `i18next-browser-languagedetector`
+registration, direct manifest edge, and lock resolution. The focused three-test packet and complete
+723-test UI suite pass with typecheck, lint, primitive policy, frozen-lock, absence, formatting, and
+dependency/parity gates. Both coordinator and independent Terra browser runs imported the actual
+production React barrel: stored `de` and navigator `de-AT` each resolved `de` before first paint,
+rendered the actual `NotFound` button as `Zurück`, left the gate error empty, and emitted no browser
+warning/error entry.
+
+Terra's independent acceptance is retained in
+`OWNED-UI-AND-TOOLING-STACK/📓️terra-independent-language-detector-retirement-audit-2026-08-22.md`.
+The coordinator freshly reproduced dependency verification, JavaScript parity, the exact **75
+JavaScript + 63 Rust = 138** ratchet, detector absence from the current list, and whole-worktree diff
+hygiene. The detector-specific `./compose` build stub remains an explicitly excluded residual under
+the governing plan's out-of-scope Compose boundary.
+
+## 2026-08-23 Live Rust Reattack Audit
+
+The coordinator re-audited both active Rust packets before authorizing any Cargo owner. P3 remains
+source-RED beyond its accepted flat action foundation. The generic Scene/Ink route is now a retained
+job, but `InkValueRetirementCursor` and `InkInteractionJob` still own ordinary recursive JSON and
+collection fields. An unexpected fault, parent retirement, or queue destruction can therefore skip
+`close_step` and recursively release the remaining graph in one release-build callback. The current
+close path also converts a retirement error into an indefinitely pending job. The implementation
+owner was directed to make every retained root definitionally shallow or terminal-empty through an
+explicit non-recursive owner, and to add interrupted-drop fixtures. Bespoke NodeGraph, TiledMap, and
+Board vector producers, persistent one-command UI application, chrome/old-frame ownership, assets,
+GPU realization, deep host close, compilation, Wasm, and runtime timing remain open.
+
+The current P8 paged Presence route also remains source-RED and has a concrete correctness fault.
+`encode_app_command(Presence)` makes each peer payload one page and stores command kind `28` only as
+owned cursor metadata. `CommandBatchDriver` forwards the raw peer page, while the guest reactor
+currently requires the first raw byte to equal `cursor.kind`, rebuilds completed input through the
+generic page constructor, and thereby loses Presence item/color metadata. Variable-length Presence
+pages also violate `PagedCommand::byte_at`/`copy_range`'s fixed-4096-offset assumption. The owner was
+directed to trust and validate the opaque cursor authority, retain Presence pages without aggregate
+assembly, use the Presence-specific constructor/path, and cover empty and multi-peer real routes.
+Ordinary aggregate `Vec<Vec<u8>>` ingress and debug-assert-only child/presence retirement Drops remain
+independent release-build blockers. No Cargo, Nx Rust, Wasm, or runtime acceptance is claimed.
+
+The subsequent page-at-a-time repair removed guest aggregate assembly and preserved kind/item/color
+cursor metadata, but a fresh zero-roster trace found another exact blocker: the valid empty Presence
+page is accepted by the guest while `CommandBatchDriver::observe(PageAccepted)` rejects its zero-byte
+release as though no page had existed. The host release result must distinguish an accepted empty
+terminal page from a missing/rejected owner, and the complete zero-peer host-to-guest-to-terminal-ACK
+route must be fixture-covered before source acceptance.
+
+Malformed multi-page Presence adds a separate ACK constraint. A publication fault can become terminal
+before the untouched current/tail pages have been accepted. The guest currently collapses both a
+successful and a faulted terminal outcome into `CommandComplete`, which the host correctly rejects
+while its exact pages remain. The exchange result must preserve terminal success versus fault and
+return `CommandIngressStatus::Fault` for the latter so the host enters bounded close. The driver also
+must not report `PageReady` from `Idle` after its own fault flag is set. Malformed-first and
+malformed-middle page fixtures plus persistent MCP/WGPU close driving are required.
+
+The next P3 bespoke producer cutover is also still source-RED after coordinator review. NodeGraph,
+TiledMap, and Board now reserve flat queue capacity before invoking their hosts, but their exact
+snapshot/JSON/cap validation remains fallible after semantic mutation. NodeGraph/TiledMap can mutate
+the host and then abandon an oversized or unserializable result; Board can drain/take its pending
+events and then fail the flat writer, losing the exact retry owner. The repair must stage a bounded
+operation/result, finish the exact flat owner, and commit the semantic mutation only through the
+infallible publication closure, or retain a complete rollback owner. Saturation and oversize fixtures
+must prove zero mutation and exact FIFO retry before this boundary is accepted.
+
+## Accepted Owned PNG Codec Retirement
+
+The OS-dev visual parity harness no longer directly depends on `pngjs`. Its owned browser codec uses
+the already-open Playwright page for PNG decode and diagnostic encode, while crop and pixel comparison
+remain owned byte operations. Before removing the binding, the executor dual-ran real Chromium bytes
+against PNG.js and reproduced exact 4×3 dimensions, all 48 RGBA bytes, the exact eight-byte crop,
+and the 16-byte diagnostic round trip with zero semantic mismatches.
+
+Terra independently repeated the focused real-browser fixture, the complete 38-test OS-dev quick
+suite, frozen-lock, source/manifest/lock, dependency-list/parity, formatting, and packet diff gates.
+Its acceptance is retained in
+`OWNED-UI-AND-TOOLING-STACK/📓️terra-independent-pngjs-retirement-audit-2026-08-23.md`.
+The accepted boundary is now **74 JavaScript + 63 Rust = 137 identities**. The `pngjs` resolution
+still present in `bun.lock` is required transitively by `@vitest/browser` and is not a direct
+identity. Phase 10 and the overall zero-dependency exit gate remain open.
+
+## Accepted Globals Tooling Retirement
+
+The one direct `globals` tooling identity and its sole active UI React lint-config binding are now
+retired. Before deletion, the complete ten-file UI React lint target produced structurally identical
+zero-error, zero-warning results with the outgoing browser/Node map and an in-memory empty map. The
+permanent configuration assertion proves the active flat config neither carries a predefined globals
+map nor enables `no-undef`.
+
+The coordinator and Terra independently reproduced the focused assertion, complete uncached 724-test
+UI quick suite, lint, typecheck, active printed configuration, frozen-lock, dependency/list/parity,
+source/manifest/lock absence, formatting, and packet diff gates. The reconciled lock correctly removes
+the orphaned `globals@16.5.0` resolution: ESLint 10.8.0 has no runtime dependency on it. Terra's
+acceptance is retained in
+`OWNED-UI-AND-TOOLING-STACK/📓️terra-independent-globals-retirement-audit-2026-08-23.md`.
+The accepted boundary is now **73 JavaScript + 63 Rust = 136 identities**. Phase 10 and the overall
+zero-dependency exit gate remain open.
+
+## Accepted Remark MDX Frontmatter Retirement
+
+The direct `remark-mdx-frontmatter` tooling identity is retired from the owned root/UI boundary.
+The prerequisite current-source Storybook repairs established a green pre-removal baseline, and the
+post-removal uncached build preserves it exactly: 231 entries, 170 stories, 61 docs, 61 unique
+TypeScript/TSX inputs, and zero owned MDX. A permanent root-script guard now rejects new non-Compose
+MDX inputs before Storybook and rejects any UI discovery drift after the build.
+
+Terra independently reproduced the full build, complete 724-test UI quick suite, lint, typecheck,
+frozen install, dependency/list/parity, source/manifest absence, Compose-only lock ownership, root
+script syntax, and scoped plus whole-tree diff gates. Its acceptance is retained in
+`OWNED-UI-AND-TOOLING-STACK/📓️p10-remark-mdx-frontmatter-independent-audit-2026-08-23.md`.
+The 58-result raw-color inventory and four shared-file Prettier failures are explicit pre-existing
+baselines; neither was hidden or expanded by this wave. The accepted boundary is now
+**72 JavaScript + 63 Rust = 135 identities**. Phase 10 and the overall zero-dependency exit gate
+remain open.
+
+## Accepted Remark Frontmatter Retirement
+
+The direct root/UI `remark-frontmatter` tooling identity is retired. Its single live Storybook
+configuration binding had no transformable owned module: the non-Compose boundary has zero MDX files,
+zero Markdown/MDX import or require edges, and the frozen Storybook index contains only 61 TypeScript/
+TSX inputs. Both complete uncached builds preserve exactly 231 entries, comprising 170 stories and
+61 docs.
+
+Terra independently reran the complete 724-test UI quick suite, lint, typecheck, frozen install,
+dependency/list/parity, source/manifest/Compose-lock, root syntax, formatter-baseline, and scoped
+working/staged/HEAD diff gates. Its acceptance is retained in
+`OWNED-UI-AND-TOOLING-STACK/📓️terra-independent-remark-frontmatter-audit-2026-08-23.md`.
+At audit time the whole staged tree alone retained two stale trailing spaces in the staged copy of
+the prior MDX report; the live file was already corrected and all production scope checks were clean.
+The environment has since synchronized that correction without a Git-modifying command, so whole
+working, staged, and HEAD diff checks are clean again. The accepted boundary is now
+**71 JavaScript + 63 Rust = 134 identities**. Phase 10 and the overall zero-dependency exit gate
+remain open.
+
+## Accepted Remark GFM Retirement
+
+The direct root/UI `remark-gfm` tooling identity is retired. The outgoing Storybook processor had no
+owned Markdown/MDX module to transform, and the pre-removal and post-removal uncached builds produced
+the same raw index hash: exactly 231 entries, 170 stories, 61 Autodocs entries, 61 unique TSX inputs,
+and zero MDX.
+
+Terra independently reproduced the complete 724-test UI quick suite, lint, typecheck, frozen install,
+dependency/list/parity, exact source/manifest/Compose-lock ownership, retained MDX Rollup/rehype/Dagre
+boundaries, root syntax, formatter baseline, and whole plus scoped working/staged/HEAD diff gates. Its
+acceptance is retained in
+`OWNED-UI-AND-TOOLING-STACK/📓️terra-independent-remark-gfm-audit-2026-08-23.md`.
+The accepted boundary is now **70 JavaScript + 63 Rust = 133 identities**. Phase 10 and the overall
+zero-dependency exit gate remain open.
+
+## Accepted Rehype Slug Retirement
+
+The direct root/UI `rehype-slug` tooling identity is retired. Installed-source inspection proved
+Storybook Autodocs reuse TSX CSF import paths and do not synthesize a virtual MDX module; the only
+rehype path is the separate extension-gated Markdown/MDX processor, whose owned input domain is empty.
+Both complete uncached builds produced the same raw 231-entry index with 170 stories, 61 Autodocs,
+61 unique TSX inputs, and zero MDX.
+
+Terra independently reproduced the complete 724-test UI quick suite, lint, typecheck, frozen install,
+dependency/list/parity, exact source/manifest/Compose-lock ownership, installed-source reachability,
+root syntax, formatter baseline, and all scoped and whole working/staged/HEAD diff gates. Its
+acceptance is retained in
+`OWNED-UI-AND-TOOLING-STACK/📓️terra-independent-rehype-slug-audit-2026-08-23.md`.
+The accepted boundary is now **69 JavaScript + 63 Rust = 132 identities**. Phase 10 and the overall
+zero-dependency exit gate remain open.

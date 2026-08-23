@@ -1201,6 +1201,7 @@ impl Usage {
 pub struct TurnResult {
     pub ui_patches: Vec<u8>,
     pub effects: Vec<u8>,
+    pub command_ingress: Vec<u8>,
     pub next_wake: Option<u64>,
     pub status: TurnStatus,
     pub usage: Usage,
@@ -1210,6 +1211,7 @@ impl TurnResult {
     pub async fn pack_encode(&self, out: &mut Vec<u8>) {
         pack::write_bytes(out, &self.ui_patches).await;
         pack::write_bytes(out, &self.effects).await;
+        pack::write_bytes(out, &self.command_ingress).await;
         pack::write_opt_u64(out, &self.next_wake).await;
         self.status.pack_encode(out).await;
         self.usage.pack_encode(out).await;
@@ -1218,6 +1220,7 @@ impl TurnResult {
         Ok(Self {
             ui_patches: pack::read_bytes(bytes, pos, "TurnResult::ui_patches").await?,
             effects: pack::read_bytes(bytes, pos, "TurnResult::effects").await?,
+            command_ingress: pack::read_bytes(bytes, pos, "TurnResult::command_ingress").await?,
             next_wake: pack::read_opt_u64(bytes, pos, "TurnResult::next_wake").await?,
             status: TurnStatus::pack_decode(bytes, pos).await?,
             usage: Usage::pack_decode(bytes, pos).await?,
@@ -3295,7 +3298,7 @@ mod tests {
         }
 
         async fn ok_turn() -> TurnResult {
-            TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: TurnStatus::Idle, usage: Usage { fuel: 100, wall_us: 50, memory_bytes: 1024 } }
+            TurnResult { ui_patches: vec![], effects: vec![], command_ingress: vec![], next_wake: None, status: TurnStatus::Idle, usage: Usage { fuel: 100, wall_us: 50, memory_bytes: 1024 } }
         }
 
         fn bridge_operation() -> job::Operation {
@@ -3696,7 +3699,7 @@ mod tests {
             // turns), making it the one and only "clean" shard.
             let shard_ids: Vec<u16> = by_shard.keys().copied().collect();
             let (safe_shard, hot_shards) = shard_ids.split_last().unwrap();
-            let hot_turn = TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: TurnStatus::Idle, usage: Usage { fuel: 100, wall_us: 40_000, memory_bytes: 1024 } };
+            let hot_turn = TurnResult { ui_patches: vec![], effects: vec![], command_ingress: vec![], next_wake: None, status: TurnStatus::Idle, usage: Usage { fuel: 100, wall_us: 40_000, memory_bytes: 1024 } };
             for shard in hot_shards {
                 for actor in &by_shard[shard] {
                     kernel.complete(*actor, &hot_turn, 0).await.unwrap();
@@ -3936,7 +3939,7 @@ mod tests {
             let b = kernel.activate(package.clone(), 1, ActorKind::PluginApp { plugin: package, app_id: "b".into(), instance_id: 1 }, Lane::Background, None, ActivationEvent::Manual).await;
 
             for i in 0..FAILURE_QUARANTINE_RESTART_THRESHOLD {
-                let faulted = TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: TurnStatus::Faulted { detail: b"boom".to_vec() }, usage: Usage::default() };
+                let faulted = TurnResult { ui_patches: vec![], effects: vec![], command_ingress: vec![], next_wake: None, status: TurnStatus::Faulted { detail: b"boom".to_vec() }, usage: Usage::default() };
                 kernel.complete(a, &faulted, (i as u64) * 100).await.unwrap();
             }
             assert_eq!(kernel.actor_status(a).await, Some(&ActorStatus::Quarantined));
@@ -4182,7 +4185,7 @@ mod tests {
             let extension = kernel.activate_pinned(PackageId("s.cad.aec".into()), 2, ActorKind::Extension { plugin: plugin.clone(), extension_id: "aec".into() }, Lane::Background, None, ActivationEvent::Manual, shard, Some(parent), vec![]).await;
             kernel.link_extension(parent, extension).await.unwrap();
 
-            let faulted = TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: TurnStatus::Faulted { detail: b"boom".to_vec() }, usage: Usage::default() };
+            let faulted = TurnResult { ui_patches: vec![], effects: vec![], command_ingress: vec![], next_wake: None, status: TurnStatus::Faulted { detail: b"boom".to_vec() }, usage: Usage::default() };
             let escalation = kernel.complete(extension, &faulted, 10).await.unwrap();
             assert_eq!(escalation, FailureEscalation::Restart, "one trap must only Restart, never quarantine");
             assert_eq!(kernel.actor_status(extension).await, Some(&ActorStatus::Trapped));
@@ -4191,7 +4194,7 @@ mod tests {
             // Push the SAME extension past the quarantine threshold — still must not reach the parent,
             // because this test gave the extension its own PackageId (distinct from the parent's).
             for i in 1..FAILURE_QUARANTINE_RESTART_THRESHOLD {
-                let faulted = TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: TurnStatus::Faulted { detail: b"boom".to_vec() }, usage: Usage::default() };
+                let faulted = TurnResult { ui_patches: vec![], effects: vec![], command_ingress: vec![], next_wake: None, status: TurnStatus::Faulted { detail: b"boom".to_vec() }, usage: Usage::default() };
                 kernel.complete(extension, &faulted, 10 + i as u64).await.unwrap();
             }
             assert_eq!(kernel.actor_status(extension).await, Some(&ActorStatus::Quarantined), "the extension itself does escalate to quarantine");

@@ -37,11 +37,7 @@ impl SplitMix64 {
     }
 
     async fn next_range(&mut self, bound: u64) -> u64 {
-        if bound == 0 {
-            0
-        } else {
-            self.next_u64().await % bound
-        }
+        if bound == 0 { 0 } else { self.next_u64().await % bound }
     }
 }
 
@@ -111,11 +107,7 @@ async fn next_timestamp(rng: &mut SplitMix64, adversarial: bool) -> String {
         let minute = rng.next_range(60).await;
         let second = rng.next_range(60).await;
         let ms = rng.next_range(1000).await;
-        if ms == 0 {
-            format!("{year:04}-{month:02}-{day:02}T{hour:02}:{minute:02}:{second:02}Z")
-        } else {
-            format!("{year:04}-{month:02}-{day:02}T{hour:02}:{minute:02}:{second:02}.{ms:03}Z")
-        }
+        if ms == 0 { format!("{year:04}-{month:02}-{day:02}T{hour:02}:{minute:02}:{second:02}Z") } else { format!("{year:04}-{month:02}-{day:02}T{hour:02}:{minute:02}:{second:02}.{ms:03}Z") }
     }
 }
 
@@ -653,8 +645,10 @@ pub enum ChannelFrameSample {
 pub async fn assert_channel_frame_round_trip(sample: &ChannelFrameSample) {
     match sample {
         ChannelFrameSample::Command(command) => {
-            let bytes = crate::os_spr::encode_app_command(command).await;
-            let decoded = crate::os_spr::decode_app_command(&bytes).await.expect("decode_app_command must succeed on its own encode_app_command output");
+            let encoded = crate::os_spr::encode_app_command(command).await.expect("encode_app_command must succeed");
+            assert_eq!(encoded.page_len(), 1, "testkit command is one page");
+            let bytes = encoded.front_page().expect("testkit command has one page").as_slice();
+            let decoded = crate::os_spr::channel::decode_app_command(bytes).await.expect("decode_app_command must succeed on its own encode_app_command output");
             assert_eq!(&decoded, command, "decode_app_command(encode_app_command(command)) must equal command");
         }
         ChannelFrameSample::Frame(frame) => {
@@ -868,7 +862,7 @@ pub async fn assert_channel_frame_corpus<T: PartialEq + std::fmt::Debug>(corpus:
 /// 🛡️ Reused verbatim from `pack_testkit` — closure-generic panic-safety fuzzers plus their level/
 /// report types. LAW (exercised in this crate's own tests against `crate::os_spr::HistoryReader::open`
 /// and `crate::os_spr::format::recover`): `CorruptionReport::cases_panicked` must always be empty.
-pub use crate::os_pack::testkit::{fuzz_bit_flips, fuzz_truncation, CorruptionLevel, CorruptionReport};
+pub use crate::os_pack::testkit::{CorruptionLevel, CorruptionReport, fuzz_bit_flips, fuzz_truncation};
 //#endregion 🔖️Corrupt
 
 //#region 🔖️Golden
@@ -1499,7 +1493,16 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn frame_corpus_round_trip_holds_for_the_real_app_command_codec() {
         let corpus = vec![crate::os_spr::AppCommand::ReadConflicts { seq: 1 }, crate::os_spr::AppCommand::ConfigCommand { seq: 1, command: vec![1, 2, 3] }];
-        assert_channel_frame_corpus(&corpus, async |command| crate::os_spr::encode_app_command(command).await, async |bytes| crate::os_spr::decode_app_command(bytes).await.unwrap()).await;
+        assert_channel_frame_corpus(
+            &corpus,
+            async |command| {
+                let encoded = crate::os_spr::encode_app_command(command).await.unwrap();
+                assert_eq!(encoded.page_len(), 1);
+                encoded.front_page().unwrap().as_slice().to_vec()
+            },
+            async |bytes| crate::os_spr::channel::decode_app_command(bytes).await.unwrap(),
+        )
+        .await;
     }
 
     #[semio_framework_async_macros::async_test]

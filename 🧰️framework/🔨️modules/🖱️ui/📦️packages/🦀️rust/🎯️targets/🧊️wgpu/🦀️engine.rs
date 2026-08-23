@@ -37,11 +37,12 @@ struct UiWindow {
     layout_job: Option<LayoutJob>,
     lane: SurfaceLane,
     queued: bool,
+    revision: u64,
 }
 
 impl UiWindow {
     fn new(window_id: &str) -> Self {
-        Self { tree: UiTree::new(), layout: LayoutEngine::new(), router: EventRouter::new(window_id), draw: DrawList::default(), viewport: (0.0, 0.0), layout_job: None, lane: SurfaceLane::UserVisible, queued: false }
+        Self { tree: UiTree::new(), layout: LayoutEngine::new(), router: EventRouter::new(window_id), draw: DrawList::default(), viewport: (0.0, 0.0), layout_job: None, lane: SurfaceLane::UserVisible, queued: false, revision: 1 }
     }
 
     /// 🚨️ Whether this window's root (and thus, transitively, anything below it per
@@ -168,6 +169,9 @@ impl Ui {
         let window = self.window_mut(window_id);
         let unchanged = window.tree.root.and_then(|root| window.tree.node(root)).is_some_and(|node| node.spec.0 == *ui_node);
         window.tree.apply_tree(ui_node);
+        if !unchanged {
+            window.revision = window.revision.wrapping_add(1).max(1);
+        }
         let needs_layout = window.tree.root.and_then(|root| window.tree.node(root)).is_some_and(|node| node.flags.contains(NodeFlags::DIRTY_LAYOUT) || node.flags.contains(NodeFlags::SUBTREE_DIRTY));
         if needs_layout {
             if !unchanged {
@@ -383,6 +387,11 @@ impl Ui {
     /// 🌲️ Read-only access to `window_id`'s retained tree (root + `Node` arena) for a caller to walk.
     pub fn tree(&self, window_id: &str) -> Option<&UiTree> {
         self.windows.get(window_id).map(|window| &window.tree)
+    }
+
+    /// 🧬️ Returns the retained tree identity revision used to reject stale interactive intents.
+    pub fn tree_revision(&self, window_id: &str) -> Option<u64> {
+        self.windows.get(window_id).map(|window| window.revision)
     }
 
     /// 🎨️ The theme this façade last painted every window with (`Theme` is `Copy`).

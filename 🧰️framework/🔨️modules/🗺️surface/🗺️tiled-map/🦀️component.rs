@@ -1744,6 +1744,7 @@ pub struct MapHost {
     hovered_kind: Option<String>,
     /// 🕹️ (c) Preview/Effect — hover feedback entity id, UI-only.
     hovered_id: Option<String>,
+    interaction_revision: u64,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -1755,6 +1756,46 @@ enum MapInteraction {
         start_screen: Point,
     },
 }
+
+//#region 🔖️InteractionPlan
+#[derive(Clone, Copy, Debug)]
+pub enum MapInteractionIntent {
+    Wheel { sx: f64, sy: f64, delta_y: f64 },
+    PointerDown { sx: f64, sy: f64, button: u8 },
+    PointerMove { sx: f64, sy: f64 },
+    PointerUp { sx: f64, sy: f64 },
+}
+
+#[derive(Clone, Debug)]
+pub struct MapInteractionPlan {
+    revision: u64,
+    expected_camera: camera::Camera,
+    expected_interaction: MapInteraction,
+    next_camera: camera::Camera,
+    next_interaction: MapInteraction,
+    emit_camera: bool,
+}
+
+impl MapInteractionPlan {
+    pub fn camera(&self) -> [f64; 3] {
+        [self.next_camera.x, self.next_camera.y, self.next_camera.zoom]
+    }
+}
+
+fn map_camera_matches(left: &camera::Camera, right: &camera::Camera) -> bool {
+    left.x.to_bits() == right.x.to_bits() && left.y.to_bits() == right.y.to_bits() && left.zoom.to_bits() == right.zoom.to_bits()
+}
+
+fn map_interaction_matches(left: &MapInteraction, right: &MapInteraction) -> bool {
+    match (left, right) {
+        (MapInteraction::None, MapInteraction::None) => true,
+        (MapInteraction::Pan { origin: left_origin, start_screen: left_start }, MapInteraction::Pan { origin: right_origin, start_screen: right_start }) => {
+            map_camera_matches(left_origin, right_origin) && left_start.x.to_bits() == right_start.x.to_bits() && left_start.y.to_bits() == right_start.y.to_bits()
+        }
+        _ => false,
+    }
+}
+//#endregion 🔖️InteractionPlan
 
 fn map_point_segment_distance(px: f64, py: f64, x0: f64, y0: f64, x1: f64, y1: f64) -> f64 {
     let dx = x1 - x0;
@@ -1888,6 +1929,7 @@ impl Default for MapHost {
             selected_routes: std::collections::BTreeSet::new(),
             hovered_kind: None,
             hovered_id: None,
+            interaction_revision: 0,
         }
     }
 }
@@ -2049,10 +2091,12 @@ impl MapHost {
     pub fn set_size(&mut self, width: u32, height: u32, dpr: f64) {
         self.viewport.set_size(width, height, dpr);
         self.clamp_camera_to_world();
+        self.interaction_revision = self.interaction_revision.wrapping_add(1);
     }
 
     pub fn fit_world_camera(&mut self) {
         self.camera = projection::default_world_camera(&self.viewport);
+        self.interaction_revision = self.interaction_revision.wrapping_add(1);
     }
 
     pub fn clamp_camera_to_world(&mut self) {
@@ -2189,12 +2233,67 @@ impl MapHost {
         self.camera.zoom = zoom;
         self.clamp_camera_to_world();
         self.push_event("camera", serde_json::json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }));
+        self.interaction_revision = self.interaction_revision.wrapping_add(1);
     }
 
     pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
         map_wheel_screen(&mut self.camera, &self.viewport, sx, sy, delta_y);
         self.clamp_camera_to_world();
         self.push_event("camera", serde_json::json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }));
+        self.interaction_revision = self.interaction_revision.wrapping_add(1);
+    }
+
+    pub fn plan_interaction(&self, intent: MapInteractionIntent) -> MapInteractionPlan {
+        let mut next_camera = self.camera.clone();
+        let mut next_interaction = self.interaction.clone();
+        let mut emit_camera = false;
+        match intent {
+            MapInteractionIntent::Wheel { sx, sy, delta_y } => {
+                map_wheel_screen(&mut next_camera, &self.viewport, sx, sy, delta_y);
+                clamp_camera_to_world_bounds(&mut next_camera, &self.viewport);
+                emit_camera = true;
+            }
+            MapInteractionIntent::PointerDown { sx, sy, button } => {
+                if button == 1 {
+                    next_interaction = MapInteraction::Pan { origin: self.camera.clone(), start_screen: Point::new(sx, sy) };
+                }
+            }
+            MapInteractionIntent::PointerMove { sx, sy } => {
+                if let MapInteraction::Pan { origin, start_screen } = &self.interaction {
+                    let dx = (sx - start_screen.x) / self.camera.zoom;
+                    let dy = (sy - start_screen.y) / self.camera.zoom;
+                    next_camera.x = origin.x - dx;
+                    next_camera.y = origin.y - dy;
+                    clamp_camera_to_world_bounds(&mut next_camera, &self.viewport);
+                }
+            }
+            MapInteractionIntent::PointerUp { sx, sy } => {
+                if let MapInteraction::Pan { start_screen, .. } = &self.interaction {
+                    let dx = sx - start_screen.x;
+                    let dy = sy - start_screen.y;
+                    emit_camera = (dx * dx + dy * dy).sqrt() >= 6.0;
+                }
+                next_interaction = MapInteraction::None;
+            }
+        }
+        MapInteractionPlan { revision: self.interaction_revision, expected_camera: self.camera.clone(), expected_interaction: self.interaction.clone(), next_camera, next_interaction, emit_camera }
+    }
+
+    pub fn commit_interaction(&mut self, plan: MapInteractionPlan) -> bool {
+        if !self.can_commit_interaction(&plan) {
+            return false;
+        }
+        self.camera = plan.next_camera;
+        self.interaction = plan.next_interaction;
+        if plan.emit_camera {
+            self.push_event("camera", serde_json::json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }));
+        }
+        self.interaction_revision = self.interaction_revision.wrapping_add(1);
+        true
+    }
+
+    pub fn can_commit_interaction(&self, plan: &MapInteractionPlan) -> bool {
+        self.interaction_revision == plan.revision && map_camera_matches(&self.camera, &plan.expected_camera) && map_interaction_matches(&self.interaction, &plan.expected_interaction)
     }
 
     pub fn upload_tile(&mut self, z: u32, x: u32, y: u32, png_bytes: &[u8]) -> Result<(), FrameworkSurfaceTiledMapError> {
@@ -2239,6 +2338,7 @@ impl MapHost {
             return;
         }
         self.interaction = MapInteraction::Pan { origin: self.camera.clone(), start_screen: Point::new(sx, sy) };
+        self.interaction_revision = self.interaction_revision.wrapping_add(1);
     }
 
     pub fn pointer_move_screen(&mut self, sx: f64, sy: f64) {
@@ -2250,6 +2350,7 @@ impl MapHost {
         self.camera.x = origin.x - dx;
         self.camera.y = origin.y - dy;
         self.clamp_camera_to_world();
+        self.interaction_revision = self.interaction_revision.wrapping_add(1);
     }
 
     pub fn pointer_up_screen(&mut self, sx: f64, sy: f64) {
@@ -2266,6 +2367,7 @@ impl MapHost {
             }
         }
         self.interaction = MapInteraction::None;
+        self.interaction_revision = self.interaction_revision.wrapping_add(1);
     }
 
     fn hit_test_position(&self, sx: f64, sy: f64) -> Option<String> {
@@ -2468,6 +2570,7 @@ impl MapHost {
         }
         self.hovered_kind = hovered_id.map(|_| granularity.to_string());
         self.hovered_id = hovered_id.map(str::to_string);
+        self.interaction_revision = self.interaction_revision.wrapping_add(1);
     }
 
     pub fn position_screen_json(&self, id: &str) -> String {
@@ -2539,8 +2642,16 @@ impl MapHost {
         self.selected_positions.iter().cloned().collect()
     }
 
+    pub fn selected_position_ids(&self) -> impl ExactSizeIterator<Item = &str> {
+        self.selected_positions.iter().map(String::as_str)
+    }
+
     pub fn selected_routes_json(&self) -> Vec<String> {
         self.selected_routes.iter().cloned().collect()
+    }
+
+    pub fn selected_route_ids(&self) -> impl ExactSizeIterator<Item = &str> {
+        self.selected_routes.iter().map(String::as_str)
     }
 
     pub fn hovered_kind(&self) -> Option<&str> {
@@ -4364,6 +4475,38 @@ mod tests {
     fn map_point_segment_distance_zero_length_segment_uses_point_distance() {
         let d = super::map_point_segment_distance(3.0, 4.0, 0.0, 0.0, 0.0, 0.0);
         assert!((d - 5.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn interaction_plan_matches_direct_wheel_and_pan_semantics() {
+        let mut direct = super::MapHost::new();
+        let mut planned = super::MapHost::new();
+        direct.set_size(800, 600, 1.0);
+        planned.set_size(800, 600, 1.0);
+        direct.wheel_screen(320.0, 240.0, -12.0);
+        let wheel = planned.plan_interaction(super::MapInteractionIntent::Wheel { sx: 320.0, sy: 240.0, delta_y: -12.0 });
+        assert!(planned.commit_interaction(wheel));
+        assert!(super::map_camera_matches(&direct.camera, &planned.camera));
+
+        for intent in [super::MapInteractionIntent::PointerDown { sx: 100.0, sy: 120.0, button: 1 }, super::MapInteractionIntent::PointerMove { sx: 130.0, sy: 150.0 }, super::MapInteractionIntent::PointerUp { sx: 130.0, sy: 150.0 }] {
+            let plan = planned.plan_interaction(intent);
+            assert!(planned.commit_interaction(plan));
+        }
+        direct.pointer_down_screen(100.0, 120.0, 1);
+        direct.pointer_move_screen(130.0, 150.0);
+        direct.pointer_up_screen(130.0, 150.0);
+        assert!(super::map_camera_matches(&direct.camera, &planned.camera));
+        assert_eq!(direct.drain_events_json(), planned.drain_events_json());
+    }
+
+    #[test]
+    fn stale_interaction_plan_never_mutates_replaced_camera() {
+        let mut host = super::MapHost::new();
+        let plan = host.plan_interaction(super::MapInteractionIntent::Wheel { sx: 10.0, sy: 20.0, delta_y: -1.0 });
+        host.set_camera(42.0, -7.0, 2.0);
+        let replacement = [host.camera.x, host.camera.y, host.camera.zoom];
+        assert!(!host.commit_interaction(plan));
+        assert_eq!([host.camera.x, host.camera.y, host.camera.zoom], replacement);
     }
 
     #[test]

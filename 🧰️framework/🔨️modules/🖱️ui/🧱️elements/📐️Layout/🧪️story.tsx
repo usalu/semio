@@ -8,7 +8,7 @@
 
 // #endregion 🧲️Header
 
-import { Canvas, Panel, PanelChromeTabBar, Footer, HorizontalWindows, Layout, Navbar, singleTreeLeaf, Window, fundedByZukunftBauFooterItem, navbarFillItem } from "@semio-tech/ui-react";
+import { Canvas, Panel, PanelChromeTabBar, Footer, HorizontalWindows, Layout, Navbar, singleTreeLeaf, Window, navbarFillItem } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "../../🧪️story";
 import { useState, type ComponentType } from "react";
@@ -105,8 +105,7 @@ export const Default: Story = {
               { content: "Ln 1, Col 1", key: "cursor" },
               { content: "UTF-8", key: "selection" },
               navbarFillItem("footerTrailingFill"),
-              fundedByZukunftBauFooterItem(),
-              { key: "fundedByGap", className: "w-huge", content: null },
+              { key: "workspace", content: "Local workspace" },
               {
                 key: "bottomRightPanelTabs",
                 content: (

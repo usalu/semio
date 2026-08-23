@@ -366,9 +366,7 @@ impl Future for RequestFuture {
         }
         let mut inner = self.registry.borrow_mut();
         match inner.take(self.id) {
-            Some(SlotEntry { value: Slot::Ready { result }, .. }) => {
-                Poll::Ready(result)
-            }
+            Some(SlotEntry { value: Slot::Ready { result }, .. }) => Poll::Ready(result),
             Some(SlotEntry { instance, value: Slot::Pending { partial, .. }, .. }) => {
                 inner.insert_admitted(SlotEntry { id: self.id, instance, value: Slot::Pending { waker: Some(cx.waker().clone()), partial } });
                 Poll::Pending

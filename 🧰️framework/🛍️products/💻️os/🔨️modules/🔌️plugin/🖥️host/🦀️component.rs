@@ -895,7 +895,7 @@ impl MockGuestRuntime {
     /// 🏁️ A plain `Idle`, no-effects, no-patches turn result — convenience for tests that only
     /// care about scheduling/backpressure, not turn content.
     pub async fn idle_turn() -> TurnResult {
-        TurnResult { ui_patches: Vec::new(), effects: Vec::new(), presence: Vec::new(), next_wake: None, status: TurnStatus::Idle, fuel_used: 0 }
+        TurnResult { ui_patches: Vec::new(), effects: Vec::new(), presence: Vec::new(), next_wake: None, status: TurnStatus::Idle, fuel_used: 0, command_ingress: semio_framework::kernel::CommandIngressStatus::Idle }
     }
 
     /// 📼️ Every `events` slice `execute_turn` has been called with for `actor`, flattened across
@@ -1154,6 +1154,7 @@ struct OwnedInstanceState {
 #[derive(serde::Serialize)]
 struct OwnedPollInput<'a> {
     events: &'a [Event],
+    command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
     budget: Budget,
     close_instances: Vec<u32>,
 }
@@ -1219,7 +1220,20 @@ impl OwnedRuntime {
     pub fn execute_actor_turn(&self, inst: &mut GuestInstance, events: &[Event], budget: Budget) -> Result<TurnResult, TurnFault> {
         let state = owned_state_mut(inst)?;
         let close_instances = events.iter().filter(|event| matches!(event, Event::InstanceClose)).map(|_| state.instance_id).collect();
-        let input = serde_json::to_vec(&OwnedPollInput { events, budget, close_instances }).map_err(PluginHostError::from)?;
+        let mut ordinary_events = Vec::with_capacity(events.len());
+        let mut command_page = None;
+        for event in events {
+            match event {
+                Event::CommandIngressPage { cursor, bytes }
+                    if command_page.is_none() && bytes.len() <= semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES && (!bytes.is_empty() || (cursor.kind == 28 && cursor.item_count == 0)) =>
+                {
+                    command_page = Some((cursor.clone(), bytes.clone()));
+                }
+                Event::CommandIngressPage { .. } => return Err(TurnFault::Trapped("turn carries more than one command page or an invalid page size".to_string())),
+                event => ordinary_events.push(event.clone()),
+            }
+        }
+        let input = serde_json::to_vec(&OwnedPollInput { events: &ordinary_events, command_page, budget, close_instances }).map_err(PluginHostError::from)?;
         begin_owned_operation(state, OwnedOperation::Poll, Some(input))?;
         let invocation = resume_owned_operation(state, OwnedOperation::Poll, budget.fuel, budget.deadline_ms)?;
         let mut result: TurnResult = decode_owned_result(&invocation.output)?;
@@ -1967,15 +1981,23 @@ impl GuestRuntime for WasmtimeRuntime {
         // 🚫️async: R10 residue shape 1 — `kernel_event_to_wit` is async, hoisted out of the sync
         // `Iterator::map` closure via a plain loop.
         let mut wit_events: Vec<wit_events::Event> = Vec::with_capacity(events.len());
+        let mut wit_command_page = None;
         for event in events {
-            wit_events.push(kernel_event_to_wit(event, *instance_id).await);
+            if let Event::CommandIngressPage { cursor, bytes } = event {
+                if wit_command_page.is_some() || bytes.len() > semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES || (bytes.is_empty() && !(cursor.kind == 28 && cursor.item_count == 0)) {
+                    return Err(TurnFault::Trapped("turn carries more than one command page or an invalid page size".to_string()));
+                }
+                wit_command_page = Some(kernel_command_page_to_wit(cursor, bytes.as_slice()));
+            } else {
+                wit_events.push(kernel_event_to_wit(event, *instance_id).await);
+            }
         }
         // 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): `poll` is `async func`
         // now, so it is driven through `Store::run_concurrent`'s `Accessor` rather than called
         // directly against `&mut Store` — that is the ONLY shape wasmtime offers for an async-lifted
         // export, and it is what lets the guest suspend on a `host-async` import mid-turn without
         // unwinding the call. Args are owned (moved into the concurrent task), not borrowed.
-        let call_result = store.run_concurrent(async |accessor| bindings.semio_framework_reactor().call_poll(accessor, wit_events, wit_budget).await).await.and_then(|inner| inner);
+        let call_result = store.run_concurrent(async |accessor| bindings.semio_framework_reactor().call_poll(accessor, wit_events, wit_command_page, wit_budget).await).await.and_then(|inner| inner);
         let poll_result = match call_result {
             Ok(inner) => inner,
             Err(trap) => {
@@ -2036,6 +2058,7 @@ impl GuestRuntime for WasmtimeRuntime {
             next_wake: wit_turn_result.next_wake,
             status: wit_turn_status_to_kernel(wit_turn_result.status).await,
             fuel_used: wit_turn_result.fuel_used,
+            command_ingress: wit_command_ingress_to_kernel(wit_turn_result.command_ingress),
         })
     }
 
@@ -2339,6 +2362,139 @@ async fn wit_turn_status_to_kernel(status: wit_reactor::TurnStatus) -> TurnStatu
     }
 }
 
+fn wit_command_page_block(bytes: &[u8], block: usize) -> wit_reactor::CommandPageBlock {
+    let mut words = [0u64; 8];
+    for (index, word) in words.iter_mut().enumerate() {
+        let start = block * 64 + index * 8;
+        let end = (start + 8).min(bytes.len());
+        if start < end {
+            let mut fixed = [0u8; 8];
+            fixed[..end - start].copy_from_slice(&bytes[start..end]);
+            *word = u64::from_le_bytes(fixed);
+        }
+    }
+    wit_reactor::CommandPageBlock { word_0: words[0], word_1: words[1], word_2: words[2], word_3: words[3], word_4: words[4], word_5: words[5], word_6: words[6], word_7: words[7] }
+}
+
+fn kernel_command_page_to_wit(cursor: &semio_framework::kernel::CommandPageCursor, bytes: &[u8]) -> wit_reactor::CommandIngressPage {
+    wit_reactor::CommandIngressPage {
+        cursor: kernel_command_cursor_to_wit(cursor),
+        length: bytes.len() as u32,
+        block_00: wit_command_page_block(bytes, 0),
+        block_01: wit_command_page_block(bytes, 1),
+        block_02: wit_command_page_block(bytes, 2),
+        block_03: wit_command_page_block(bytes, 3),
+        block_04: wit_command_page_block(bytes, 4),
+        block_05: wit_command_page_block(bytes, 5),
+        block_06: wit_command_page_block(bytes, 6),
+        block_07: wit_command_page_block(bytes, 7),
+        block_08: wit_command_page_block(bytes, 8),
+        block_09: wit_command_page_block(bytes, 9),
+        block_10: wit_command_page_block(bytes, 10),
+        block_11: wit_command_page_block(bytes, 11),
+        block_12: wit_command_page_block(bytes, 12),
+        block_13: wit_command_page_block(bytes, 13),
+        block_14: wit_command_page_block(bytes, 14),
+        block_15: wit_command_page_block(bytes, 15),
+        block_16: wit_command_page_block(bytes, 16),
+        block_17: wit_command_page_block(bytes, 17),
+        block_18: wit_command_page_block(bytes, 18),
+        block_19: wit_command_page_block(bytes, 19),
+        block_20: wit_command_page_block(bytes, 20),
+        block_21: wit_command_page_block(bytes, 21),
+        block_22: wit_command_page_block(bytes, 22),
+        block_23: wit_command_page_block(bytes, 23),
+        block_24: wit_command_page_block(bytes, 24),
+        block_25: wit_command_page_block(bytes, 25),
+        block_26: wit_command_page_block(bytes, 26),
+        block_27: wit_command_page_block(bytes, 27),
+        block_28: wit_command_page_block(bytes, 28),
+        block_29: wit_command_page_block(bytes, 29),
+        block_30: wit_command_page_block(bytes, 30),
+        block_31: wit_command_page_block(bytes, 31),
+        block_32: wit_command_page_block(bytes, 32),
+        block_33: wit_command_page_block(bytes, 33),
+        block_34: wit_command_page_block(bytes, 34),
+        block_35: wit_command_page_block(bytes, 35),
+        block_36: wit_command_page_block(bytes, 36),
+        block_37: wit_command_page_block(bytes, 37),
+        block_38: wit_command_page_block(bytes, 38),
+        block_39: wit_command_page_block(bytes, 39),
+        block_40: wit_command_page_block(bytes, 40),
+        block_41: wit_command_page_block(bytes, 41),
+        block_42: wit_command_page_block(bytes, 42),
+        block_43: wit_command_page_block(bytes, 43),
+        block_44: wit_command_page_block(bytes, 44),
+        block_45: wit_command_page_block(bytes, 45),
+        block_46: wit_command_page_block(bytes, 46),
+        block_47: wit_command_page_block(bytes, 47),
+        block_48: wit_command_page_block(bytes, 48),
+        block_49: wit_command_page_block(bytes, 49),
+        block_50: wit_command_page_block(bytes, 50),
+        block_51: wit_command_page_block(bytes, 51),
+        block_52: wit_command_page_block(bytes, 52),
+        block_53: wit_command_page_block(bytes, 53),
+        block_54: wit_command_page_block(bytes, 54),
+        block_55: wit_command_page_block(bytes, 55),
+        block_56: wit_command_page_block(bytes, 56),
+        block_57: wit_command_page_block(bytes, 57),
+        block_58: wit_command_page_block(bytes, 58),
+        block_59: wit_command_page_block(bytes, 59),
+        block_60: wit_command_page_block(bytes, 60),
+        block_61: wit_command_page_block(bytes, 61),
+        block_62: wit_command_page_block(bytes, 62),
+        block_63: wit_command_page_block(bytes, 63),
+    }
+}
+
+fn wit_command_cursor_to_kernel(cursor: wit_reactor::CommandPageCursor) -> semio_framework::kernel::CommandPageCursor {
+    semio_framework::kernel::CommandPageCursor {
+        owner: cursor.owner,
+        generation: cursor.generation,
+        command_index: cursor.command_index,
+        command_count: cursor.command_count,
+        instance: cursor.instance,
+        seq: cursor.seq,
+        kind: cursor.kind,
+        page_index: cursor.page_index,
+        page_count: cursor.page_count,
+        item_count: cursor.item_count,
+        metadata: cursor.metadata,
+    }
+}
+
+fn kernel_command_cursor_to_wit(cursor: &semio_framework::kernel::CommandPageCursor) -> wit_reactor::CommandPageCursor {
+    wit_reactor::CommandPageCursor {
+        owner: cursor.owner,
+        generation: cursor.generation,
+        command_index: cursor.command_index,
+        command_count: cursor.command_count,
+        instance: cursor.instance,
+        seq: cursor.seq,
+        kind: cursor.kind,
+        page_index: cursor.page_index,
+        page_count: cursor.page_count,
+        item_count: cursor.item_count,
+        metadata: cursor.metadata,
+    }
+}
+
+fn wit_command_ingress_to_kernel(status: wit_reactor::CommandIngressStatus) -> semio_framework::kernel::CommandIngressStatus {
+    match status {
+        wit_reactor::CommandIngressStatus::Idle => semio_framework::kernel::CommandIngressStatus::Idle,
+        wit_reactor::CommandIngressStatus::PageAccepted(cursor) => semio_framework::kernel::CommandIngressStatus::PageAccepted(wit_command_cursor_to_kernel(cursor)),
+        wit_reactor::CommandIngressStatus::Backpressure(cursor) => semio_framework::kernel::CommandIngressStatus::Backpressure(wit_command_cursor_to_kernel(cursor)),
+        wit_reactor::CommandIngressStatus::CommandPending(cursor) => semio_framework::kernel::CommandIngressStatus::CommandPending(wit_command_cursor_to_kernel(cursor)),
+        wit_reactor::CommandIngressStatus::CommandComplete(cursor) => semio_framework::kernel::CommandIngressStatus::CommandComplete(wit_command_cursor_to_kernel(cursor)),
+        wit_reactor::CommandIngressStatus::Fault(fault) => {
+            let bytes = match fault.fault {
+                wit_types::PluginError::Fault(bytes) => bytes,
+            };
+            semio_framework::kernel::CommandIngressStatus::Fault { cursor: wit_command_cursor_to_kernel(fault.cursor), fault: bytes }
+        }
+    }
+}
+
 /// 🎁️ Every effect that carries a `req: request-id` becomes `RequestId(req)` — one line, so it's
 /// inlined at each call site below rather than its own helper.
 /// 🐛️ Guest → host: WIT `effect` (`📜️wit/📜️effects.wit`) to `semio_framework::kernel::Effect`.
@@ -2507,7 +2663,7 @@ async fn kernel_event_to_wit(event: &Event, instance_id: u32) -> wit_events::Eve
         Event::SuspendRequest => wit_events::Event::SuspendRequest(wit_events::SuspendRequestEvent { instance: instance_id }),
         Event::CapabilityChanged { change } => wit_events::Event::CapabilityChanged(wit_events::CapabilityChangedEvent { instance: instance_id, change: kernel_capability_change_to_wit(change).await }),
         Event::QuotaChanged { quotas } => wit_events::Event::QuotaChanged(wit_events::QuotaChangedEvent { instance: instance_id, quotas: encode_json(quotas).await }),
-        Event::AppCommandEvent { instance, seq, command } => wit_events::Event::AppCommand(wit_events::AppCommandEvent { instance: instance.0.parse().unwrap_or(instance_id), seq: *seq, command: command.clone() }),
+        Event::CommandIngressPage { .. } => unreachable!("command pages are lifted through reactor.poll's dedicated page argument"),
         Event::UiIntent { instance, intent } => wit_events::Event::UiIntent(wit_events::UiIntentEvent { instance: instance.0.parse().unwrap_or(instance_id), intent: intent.clone() }),
         Event::SurfaceVisible { surface } => wit_events::Event::SurfaceVisible(wit_events::SurfaceVisibleEvent { surface: wit_surface_ref(instance_id, surface).await }),
         Event::SurfaceHidden { surface } => wit_events::Event::SurfaceHidden(wit_events::SurfaceHiddenEvent { surface: wit_surface_ref(instance_id, surface).await }),
@@ -4086,7 +4242,7 @@ mod runtime_metrics_publisher_tests {
     }
 
     async fn ok_turn() -> TurnResult {
-        TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: TurnStatus::Idle, usage: Usage { fuel: 10, wall_us: 5, memory_bytes: 512 } }
+        TurnResult { ui_patches: vec![], effects: vec![], command_ingress: vec![], next_wake: None, status: TurnStatus::Idle, usage: Usage { fuel: 10, wall_us: 5, memory_bytes: 512 } }
     }
 
     /// 📈️ Drives a real `Kernel` (not a fake) through one turn, confirms the 2Hz gate (500ms), and
@@ -4208,7 +4364,7 @@ mod runtime_metrics_publisher_tests {
         let crash_actor = crash_profile_actor.expect("fixture has at least one \"crash\" profile record");
         kernel.submit(&env(crash_actor, Lane::UserVisible, 1).await).await;
         kernel.tick(1).await;
-        let faulted = TurnResult { ui_patches: vec![], effects: vec![], next_wake: None, status: TurnStatus::Faulted { detail: b"scale-fixture crash profile".to_vec() }, usage: Usage { fuel: 5, wall_us: 3, memory_bytes: 256 } };
+        let faulted = TurnResult { ui_patches: vec![], effects: vec![], command_ingress: vec![], next_wake: None, status: TurnStatus::Faulted { detail: b"scale-fixture crash profile".to_vec() }, usage: Usage { fuel: 5, wall_us: 3, memory_bytes: 256 } };
         kernel.complete(crash_actor, &faulted, 2).await.unwrap();
 
         let mut publisher = RuntimeMetricsPublisher::new();

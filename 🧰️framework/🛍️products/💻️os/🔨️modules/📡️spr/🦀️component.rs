@@ -13,32 +13,32 @@
 //#region 🔖️Reexports
 pub use crate::os_spr::format::{FrameCursor, RecordFrame, RecoveryMode, RecoveryReport, ReverseFrameCursor, SprWriter, VerificationLevel, WriteOptions};
 pub use crate::os_spr::history::{
-    decode_history, encode_history, frontier_delta, parse_ops_text, print_ops_text, AlternativeHead, DecodeOptions, EncodeOptions, FrontierComparison, FrontierSummary, HistoryAlternative, HistoryAppender, HistoryAuthor, HistoryChange,
-    HistoryCheckpoint, HistoryComposition, HistoryCursor, HistoryEdit, HistoryLog, HistoryOpMeta, HistoryReader, OpPayload, REC_COMPOSITION, REC_CURSOR,
+    AlternativeHead, DecodeOptions, EncodeOptions, FrontierComparison, FrontierSummary, HistoryAlternative, HistoryAppender, HistoryAuthor, HistoryChange, HistoryCheckpoint, HistoryComposition, HistoryCursor, HistoryEdit, HistoryLog, HistoryOpMeta,
+    HistoryReader, OpPayload, REC_COMPOSITION, REC_CURSOR, decode_history, encode_history, frontier_delta, parse_ops_text, print_ops_text,
 };
 #[cfg(not(target_arch = "wasm32"))]
-pub use crate::os_spr::io::{compact, recover_file, CompactOptions, HistoryFile, KeepSnapshots, ResumeState, TailFollower};
-pub use crate::os_spr::materialize::{materialize_with, resolve_plan, BaseBytes, BaseSnapshot, CheckpointPolicy, MaterializePlan, MaterializeReport, MaterializeTarget, SnapshotBodyKind, SnapshotRecord};
+pub use crate::os_spr::io::{CompactOptions, HistoryFile, KeepSnapshots, ResumeState, TailFollower, compact, recover_file};
+pub use crate::os_spr::materialize::{BaseBytes, BaseSnapshot, CheckpointPolicy, MaterializePlan, MaterializeReport, MaterializeTarget, SnapshotBodyKind, SnapshotRecord, materialize_with, resolve_plan};
 pub use crate::os_spr::wire::{ProtocolError, ProtocolLimits, RecordHasher, SignatureVerifier, Signer};
 
 pub use crate::os_spr::causal::{
-    decode_envelope, decode_envelopes, decode_frontier, decode_ops_vec, encode_envelope, encode_envelopes, encode_frontier, encode_ops_vec, frontier_delta as runtime_frontier_delta, mutation_envelope_from_edit, mutation_ids_for_edit, ArtifactDiff,
-    FrontierComparison as RuntimeFrontierComparison, FrontierSummary as RuntimeFrontierSummary, InsertResult, InverseMutation, MutationDag, MutationDagError, MutationEnvelope, MutationTransform, TransformOutcome,
+    ArtifactDiff, FrontierComparison as RuntimeFrontierComparison, FrontierSummary as RuntimeFrontierSummary, InsertResult, InverseMutation, MutationDag, MutationDagError, MutationEnvelope, MutationTransform, TransformOutcome, decode_envelope,
+    decode_envelopes, decode_frontier, decode_ops_vec, encode_envelope, encode_envelopes, encode_frontier, encode_ops_vec, frontier_delta as runtime_frontier_delta, mutation_envelope_from_edit, mutation_ids_for_edit,
 };
-pub use crate::os_spr::channel::{decode_app_command, decode_app_frame, encode_app_command, encode_app_frame, AppCommand, AppFrame, ChildPackEntry, CHANNEL_VERSION};
+pub use crate::os_spr::channel::{AppCommand, AppFrame, CHANNEL_VERSION, ChildPackEntry, decode_app_frame, encode_app_command, encode_app_frame};
 pub use crate::os_spr::command::{
-    apply_collection_mutation, collection_diff_from_mutation, fold_plan_diff, fold_plan_inverse, indexed_apply, inverse_collection_mutation, is_approved_verb, mutation_descriptor, named_apply, plan_foreign_steps, plan_of,
-    register_mutation_descriptor, str_eq, worst_level, CollectionDiff, CollectionMutation, CommandOutcome, CompositeMutationKind, DiffAlgebra, DiffCodec, DiffRegions, Edit, ForeignStep, ForeignTarget, Identified, IndexedTripleDiff, Inference,
-    InferenceFieldSpec, InferenceSpec, ItemPatch, Mutation, MutationApplyError, MutationApplyResult, MutationDescriptor, MutationDiff, MutationEvent, MutationKind, MutationMessage, MutationMeta, MutationOrigin, MutationOutcome, MutationUpcaster,
-    NamedTripleDiff, OpBinary, OpText, Patchable, PlanError, PlanStep, Planner, SemanticDescriptor, SemanticMutation, TouchedPaths, APPROVED_VERBS, MAX_PLAN_DEPTH,
+    APPROVED_VERBS, CollectionDiff, CollectionMutation, CommandOutcome, CompositeMutationKind, DiffAlgebra, DiffCodec, DiffRegions, Edit, ForeignStep, ForeignTarget, Identified, IndexedTripleDiff, Inference, InferenceFieldSpec, InferenceSpec,
+    ItemPatch, MAX_PLAN_DEPTH, Mutation, MutationApplyError, MutationApplyResult, MutationDescriptor, MutationDiff, MutationEvent, MutationKind, MutationMessage, MutationMeta, MutationOrigin, MutationOutcome, MutationUpcaster, NamedTripleDiff,
+    OpBinary, OpText, Patchable, PlanError, PlanStep, Planner, SemanticDescriptor, SemanticMutation, TouchedPaths, apply_collection_mutation, collection_diff_from_mutation, fold_plan_diff, fold_plan_inverse, indexed_apply,
+    inverse_collection_mutation, is_approved_verb, mutation_descriptor, named_apply, plan_foreign_steps, plan_of, register_mutation_descriptor, str_eq, worst_level,
 };
 pub use crate::os_spr::conflict::{Conflict, ConflictId, ConflictKind, ConflictResolution, ConflictStatus, DispatchReport, EditMessages, MergeReport};
 pub use crate::os_spr::wire::{
-    decode_client_frame, decode_presence_peer, decode_server_frame, encode_client_frame, encode_presence_peer, encode_server_frame, AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, PresencePeer, PresenceUi, PresenceViewKind, PresenceWindowView,
-    ServerFrame,
+    AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, PresencePeer, PresenceUi, PresenceViewKind, PresenceWindowView, ServerFrame, decode_client_frame, decode_presence_peer, decode_server_frame, encode_client_frame, encode_presence_peer,
+    encode_server_frame,
 };
 pub use crate::os_spr::wire::{
-    read_f64, read_str, read_varint_u64, write_f64, write_str, write_varint_u64, ActorId, ArtifactId, ArtifactVersion, HybridLogicalTimestamp, MergePolicy, MutationId, PayloadHash, SchemaId, SchemaVersion, StateClass, UndoPolicy,
+    ActorId, ArtifactId, ArtifactVersion, HybridLogicalTimestamp, MergePolicy, MutationId, PayloadHash, SchemaId, SchemaVersion, StateClass, UndoPolicy, read_f64, read_str, read_varint_u64, write_f64, write_str, write_varint_u64,
 };
 //#endregion 🔖️Reexports
 
@@ -115,11 +115,7 @@ pub async fn extract_range<'a>(protocol_bytes: &'a [u8], ordinals: std::ops::Ran
 /// digest alongside the bytes; the receiver calls `verify_slice` to detect any in-transit tamper.
 pub async fn verify_slice(slice: &[u8], expected_chain: &[u8; 32]) -> Result<(), ProtocolError> {
     let computed = slice_content_chain(slice).await?;
-    if &computed == expected_chain {
-        Ok(())
-    } else {
-        Err(ProtocolError::Malformed { what: "record slice chain", offset: 0, detail: "computed content chain does not match expected_chain".to_string() })
-    }
+    if &computed == expected_chain { Ok(()) } else { Err(ProtocolError::Malformed { what: "record slice chain", offset: 0, detail: "computed content chain does not match expected_chain".to_string() }) }
 }
 
 /// 🔐️ Shared by `verify_slice` and this crate's own tests: folds every frame's `blake3(full frame

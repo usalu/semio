@@ -13,8 +13,7 @@ import { Button, ControlDef, ControlTree, ControlTreeFolderSettings, Input, Leve
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "../../🧪️story";
 import type React from "react";
-import { expect } from "vitest";
-import { fireEvent, within } from "@semio-tech/ui-react/test";
+import { fireEvent, within } from "@testing-library/react";
 // #endregion 🔌️Adapters
 
 // 🌳️#region 📜️Tree
@@ -334,14 +333,13 @@ export const DragAndDrop: Story = {
     const targetSection = canvas.getByText("Selection").closest('[data-slot="tree-section-row"]') as HTMLElement | null;
     const dataTransfer = createStoryDataTransfer() as unknown as DataTransfer;
 
-    expect(sourceItem).toBeTruthy();
-    expect(targetSection).toBeTruthy();
+    if (!sourceItem || !targetSection) throw new Error("Tree drag-and-drop fixture is missing its source or target.");
 
-    fireEvent.dragStart(sourceItem!, { dataTransfer });
-    fireEvent.dragOver(targetSection!, { dataTransfer });
-    fireEvent.drop(targetSection!, { dataTransfer });
+    fireEvent.dragStart(sourceItem, { dataTransfer });
+    fireEvent.dragOver(targetSection, { dataTransfer });
+    fireEvent.drop(targetSection, { dataTransfer });
 
-    expect(canvas.getAllByText("Chair").length).toBeGreaterThan(0);
+    if (canvas.getAllByText("Chair").length === 0) throw new Error("Tree drag-and-drop fixture did not retain its source item.");
   },
 };
 

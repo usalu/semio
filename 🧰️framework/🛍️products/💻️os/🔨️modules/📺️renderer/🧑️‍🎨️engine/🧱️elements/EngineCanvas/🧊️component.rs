@@ -11,7 +11,7 @@ use crate::interpreter::FrameworkWidgetContext;
 use flow::{dag::dag_screen_to_world, FlowFixture, FlowHost};
 use framework_editor::EditorHost;
 use framework_surface_node_graph::node_graph::GraphHost;
-use framework_surface_tiled_map::tiled_map::MapHost;
+use framework_surface_tiled_map::tiled_map::{MapHost, MapInteractionIntent};
 use infinite_canvas as canvas;
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
@@ -71,8 +71,11 @@ struct EngineSurface {
     map_sync_cache: MapSyncCache,
     board_host: Option<puzzle::editor::puzzle2d::engine::BoardHost>,
     board_sync_cache: BoardSyncCache,
-    board_pending_events: Vec<BoardEventRow>,
+    board_pending_events: puzzle::editor::puzzle2d::engine::BoardEventQueue,
+    board_retiring_events: Option<puzzle::editor::puzzle2d::engine::BoardEventQueue>,
     board_pointer_inside: bool,
+    board_pointer_claim: Option<ui_wgpu::wgpu::BoundedActionClaim>,
+    board_pointer_controller_id: Option<String>,
     editor: Option<EditorHost>,
     editor_scene_pack: Option<Vec<u8>>,
     width: u32,
@@ -91,6 +94,19 @@ pub(crate) struct EngineCanvasPacket {
     clear: Color,
     width: u32,
     height: u32,
+}
+
+impl EngineCanvasPacket {
+    pub(crate) fn close_step(&mut self) -> bool {
+        if self.surface_id.pop().is_some() {
+            return false;
+        }
+        self.scene.retirement_step()
+    }
+
+    pub(crate) fn terminal_is_empty(&self) -> bool {
+        self.surface_id.is_empty() && self.scene.retirement_is_empty()
+    }
 }
 
 /// 🧰️ Worker-owned resource sink threaded through chrome/scene traversal.
@@ -323,6 +339,7 @@ fn scene_action(scene: &UiComponentSceneNode, action: &str, args: Value) -> Acti
     ActionDescriptor { controller_id: scene.controller_id.clone(), action: action.to_string(), args: semio_framework::optional_json_to_dsl(Some(args)) }
 }
 
+#[cfg(test)]
 fn graph_action(controller_id: &str, _surface_id: &str, action: &str, args: Value) -> ActionDescriptor {
     ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args: semio_framework::optional_json_to_dsl(Some(args)) }
 }
@@ -438,8 +455,11 @@ fn ensure_surface(surface_id: &str, pw: u32, ph: u32) {
                     map_sync_cache: MapSyncCache::default(),
                     board_host: None,
                     board_sync_cache: BoardSyncCache::default(),
-                    board_pending_events: Vec::new(),
+                    board_pending_events: puzzle::editor::puzzle2d::engine::BoardEventQueue::default(),
+                    board_retiring_events: None,
                     board_pointer_inside: false,
+                    board_pointer_claim: None,
+                    board_pointer_controller_id: None,
                     editor: None,
                     editor_scene_pack: None,
                     width: pw.max(1),
@@ -794,110 +814,271 @@ mod catalogue_workflow_drop_tests {
     }
 }
 
-pub fn node_graph_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, _ctrl: bool) -> Vec<ActionDescriptor> {
+pub fn node_graph_wheel_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, _ctrl: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let mut reservation = input.reserve_actions(3, 3 * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
-    ENGINE_SURFACES.with(|cell| {
-        let mut map = cell.borrow_mut();
-        let Some(entry) = map.get_mut(surface_id) else {
-            return Vec::new();
+    let planned = ENGINE_SURFACES.with(|cell| {
+        let map = cell.borrow();
+        let Some(entry) = map.get(surface_id) else {
+            return Ok(None);
         };
-        match entry.node_graph.as_mut() {
-            Some(NodeGraphEngine::Flow(host)) => {
-                host.dag.set_wheel_zoom_active(true);
-                host.wheel_screen(sx, sy, 0.0, delta as f64, true);
+        let plan = match entry.node_graph.as_ref() {
+            Some(NodeGraphEngine::Flow(host)) => NodeGraphWheelPlan::Flow(host.plan_wheel(sx, sy, 0.0, delta as f64, true)),
+            Some(NodeGraphEngine::Dag(host)) => NodeGraphWheelPlan::Dag(host.plan_wheel(sx, sy, delta as f64, true)),
+            None => return Ok(None),
+        };
+        graph_interaction_snapshot(entry, Some(plan.camera())).map(|snapshot| Some((plan, snapshot)))
+    })?;
+    let Some((plan, snapshot)) = planned else {
+        return Ok(false);
+    };
+    write_graph_interaction_actions(&mut reservation, surface_id, controller_id, snapshot)?;
+    reservation.publish_with_checked(|| {
+        ENGINE_SURFACES.with(|cell| {
+            let mut map = cell.borrow_mut();
+            let Some(engine) = map.get_mut(surface_id).and_then(|entry| entry.node_graph.as_mut()) else {
+                return false;
+            };
+            match (engine, plan) {
+                (NodeGraphEngine::Flow(host), NodeGraphWheelPlan::Flow(plan)) => {
+                    if !host.commit_wheel(plan) {
+                        return false;
+                    }
+                    host.dag.set_wheel_zoom_active(true);
+                    true
+                }
+                (NodeGraphEngine::Dag(host), NodeGraphWheelPlan::Dag(plan)) => {
+                    if !host.commit_wheel(plan) {
+                        return false;
+                    }
+                    host.dag.set_wheel_zoom_active(true);
+                    true
+                }
+                _ => false,
             }
-            Some(NodeGraphEngine::Dag(host)) => {
-                host.dag.set_wheel_zoom_active(true);
-                host.wheel_screen(sx, sy, delta as f64, true);
-            }
-            None => return Vec::new(),
-        }
-        graph_interaction_actions(surface_id, controller_id, entry)
-    })
+        })
+    })?;
+    Ok(true)
 }
 
-pub fn node_graph_pointer_down(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, button: i16, shift: bool, ctrl: bool, alt: bool, space_pressed: bool) -> Vec<ActionDescriptor> {
+pub fn node_graph_pointer_down_into(
+    surface_id: &str,
+    controller_id: &str,
+    inner: Rect,
+    x: f32,
+    y: f32,
+    button: i16,
+    shift: bool,
+    ctrl: bool,
+    alt: bool,
+    space_pressed: bool,
+    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let mut reservation = input.reserve_actions(3, 3 * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
     let pan = node_graph_pan_gesture(button, alt, space_pressed);
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
-    ENGINE_SURFACES.with(|cell| {
-        let mut map = cell.borrow_mut();
-        let Some(entry) = map.get_mut(surface_id) else {
-            return Vec::new();
-        };
-        if button == 0 && !pan && !shift && !ctrl {
-            if let Some(NodeGraphEngine::Flow(host)) = entry.node_graph.as_mut() {
-                if let Some((widget_id, world_x, world_y)) = note_widget_hit_at_screen(host, sx, sy) {
-                    let now = engine_now_ms();
-                    if let Some((last_id, last_ms)) = entry.last_note_click.clone() {
-                        if last_id == widget_id && now - last_ms < 400.0 {
-                            host.begin_note_edit(&widget_id, world_x, world_y);
-                            entry.last_note_click = None;
-                            return graph_interaction_actions(surface_id, controller_id, entry);
-                        }
-                    }
-                    entry.last_note_click = Some((widget_id, now));
-                } else {
-                    entry.last_note_click = None;
-                }
-            }
-        }
-        match entry.node_graph.as_mut() {
-            Some(NodeGraphEngine::Flow(host)) => {
-                host.pointer_down_screen(sx, sy, button as u8, shift, ctrl, alt, pan);
-            }
-            Some(NodeGraphEngine::Dag(host)) => {
-                host.pointer_down_screen(sx, sy, button as u8, shift, ctrl, alt, pan);
-            }
-            None => return Vec::new(),
-        }
-        graph_interaction_actions(surface_id, controller_id, entry)
-    })
+    let planned = plan_node_graph_pointer(surface_id, flow::dag::DagPointerIntent { phase: flow::dag::DagPointerPhase::Down, x: sx, y: sy, button: button.max(0) as u8, shift, ctrl_or_meta: ctrl, alt, pan })?;
+    let Some((plan, snapshot)) = planned else {
+        return Ok(false);
+    };
+    write_graph_interaction_actions(&mut reservation, surface_id, controller_id, snapshot)?;
+    reservation.publish_with_checked(|| commit_node_graph_pointer(surface_id, plan))?;
+    Ok(true)
 }
 
+pub fn node_graph_pointer_move_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl: bool, alt: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let mut reservation = input.reserve_actions(3, 3 * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
+    let sx = (x - inner.x) as f64;
+    let sy = (y - inner.y) as f64;
+    let planned = plan_node_graph_pointer(surface_id, flow::dag::DagPointerIntent { phase: flow::dag::DagPointerPhase::Move, x: sx, y: sy, button: 0, shift, ctrl_or_meta: ctrl, alt, pan: false })?;
+    let Some((plan, snapshot)) = planned else {
+        return Ok(false);
+    };
+    write_graph_interaction_actions(&mut reservation, surface_id, controller_id, snapshot)?;
+    reservation.publish_with_checked(|| commit_node_graph_pointer(surface_id, plan))?;
+    Ok(true)
+}
+
+pub fn node_graph_pointer_up_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl: bool, alt: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let mut reservation = input.reserve_actions(3, 3 * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
+    let sx = (x - inner.x) as f64;
+    let sy = (y - inner.y) as f64;
+    let planned = plan_node_graph_pointer(surface_id, flow::dag::DagPointerIntent { phase: flow::dag::DagPointerPhase::Up, x: sx, y: sy, button: 0, shift, ctrl_or_meta: ctrl, alt, pan: false })?;
+    let Some((plan, snapshot)) = planned else {
+        return Ok(false);
+    };
+    write_graph_interaction_actions(&mut reservation, surface_id, controller_id, snapshot)?;
+    reservation.publish_with_checked(|| commit_node_graph_pointer(surface_id, plan))?;
+    Ok(true)
+}
+
+#[cfg(test)]
+pub fn node_graph_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, ctrl: bool) -> Vec<ActionDescriptor> {
+    let mut input = ui_wgpu::wgpu::InputState::default();
+    let _ = node_graph_wheel_into(surface_id, controller_id, inner, x, y, delta, ctrl, &mut input);
+    input.drain_events()
+}
+
+#[cfg(test)]
+pub fn node_graph_pointer_down(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, button: i16, shift: bool, ctrl: bool, alt: bool, space_pressed: bool) -> Vec<ActionDescriptor> {
+    let mut input = ui_wgpu::wgpu::InputState::default();
+    let _ = node_graph_pointer_down_into(surface_id, controller_id, inner, x, y, button, shift, ctrl, alt, space_pressed, &mut input);
+    input.drain_events()
+}
+
+#[cfg(test)]
 pub fn node_graph_pointer_move(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl: bool, alt: bool) -> Vec<ActionDescriptor> {
-    let sx = (x - inner.x) as f64;
-    let sy = (y - inner.y) as f64;
-    ENGINE_SURFACES.with(|cell| {
-        let mut map = cell.borrow_mut();
-        let Some(entry) = map.get_mut(surface_id) else {
-            return Vec::new();
-        };
-        match entry.node_graph.as_mut() {
-            Some(NodeGraphEngine::Flow(host)) => {
-                host.pointer_move_screen(sx, sy, shift, ctrl, alt);
-            }
-            Some(NodeGraphEngine::Dag(host)) => {
-                host.pointer_move_screen(sx, sy, shift, ctrl, alt);
-            }
-            None => return Vec::new(),
-        }
-        graph_interaction_actions(surface_id, controller_id, entry)
-    })
+    let mut input = ui_wgpu::wgpu::InputState::default();
+    let _ = node_graph_pointer_move_into(surface_id, controller_id, inner, x, y, shift, ctrl, alt, &mut input);
+    input.drain_events()
 }
 
+#[cfg(test)]
 pub fn node_graph_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl: bool, alt: bool) -> Vec<ActionDescriptor> {
-    let sx = (x - inner.x) as f64;
-    let sy = (y - inner.y) as f64;
-    ENGINE_SURFACES.with(|cell| {
-        let mut map = cell.borrow_mut();
-        let Some(entry) = map.get_mut(surface_id) else {
-            return Vec::new();
-        };
-        match entry.node_graph.as_mut() {
-            Some(NodeGraphEngine::Flow(host)) => {
-                host.pointer_up_screen(sx, sy, shift, ctrl, alt);
-            }
-            Some(NodeGraphEngine::Dag(host)) => {
-                host.pointer_up_screen(sx, sy, shift, ctrl, alt);
-            }
-            None => return Vec::new(),
+    let mut input = ui_wgpu::wgpu::InputState::default();
+    let _ = node_graph_pointer_up_into(surface_id, controller_id, inner, x, y, shift, ctrl, alt, &mut input);
+    input.drain_events()
+}
+
+struct GraphInteractionSnapshot {
+    node_ids: Vec<String>,
+    hover_json: String,
+    viewport_json: String,
+}
+
+enum NodeGraphWheelPlan {
+    Flow(flow::FlowWheelPlan),
+    Dag(framework_surface_node_graph::node_graph::GraphWheelPlan),
+}
+
+enum NodeGraphPointerPlan {
+    Flow(flow::dag::DagPointerPlan),
+    Dag(flow::dag::DagPointerPlan),
+}
+
+impl NodeGraphWheelPlan {
+    fn camera(&self) -> [f64; 3] {
+        match self {
+            Self::Flow(plan) => plan.camera(),
+            Self::Dag(plan) => plan.camera(),
         }
-        graph_interaction_actions(surface_id, controller_id, entry)
+    }
+}
+
+fn graph_plan_fault(fault: flow::dag::DagInteractionPlanFault) -> ui_wgpu::wgpu::BoundedActionFault {
+    match fault {
+        flow::dag::DagInteractionPlanFault::NodeCredits => ui_wgpu::wgpu::BoundedActionFault::NodeCredits,
+        flow::dag::DagInteractionPlanFault::StringCredits => ui_wgpu::wgpu::BoundedActionFault::StringCredits,
+        flow::dag::DagInteractionPlanFault::Unsupported => ui_wgpu::wgpu::BoundedActionFault::Structure,
+    }
+}
+
+fn graph_projection_snapshot(node_ids: Vec<String>, hovered_id: Option<String>, camera: [f64; 3]) -> Result<GraphInteractionSnapshot, ui_wgpu::wgpu::BoundedActionFault> {
+    let hover_json = hovered_id.map(|id| json!({ "nodeId": id }).to_string()).unwrap_or_else(|| "null".into());
+    let viewport_json = json!({ "x": camera[0], "y": camera[1], "zoom": camera[2] }).to_string();
+    let mut parts = Vec::with_capacity(node_ids.len() + 2);
+    parts.extend([hover_json.as_str(), viewport_json.as_str()]);
+    parts.extend(node_ids.iter().map(String::as_str));
+    ui_wgpu::wgpu::checked_action_string_bytes(&parts)?;
+    Ok(GraphInteractionSnapshot { node_ids, hover_json, viewport_json })
+}
+
+fn plan_node_graph_pointer(surface_id: &str, intent: flow::dag::DagPointerIntent) -> Result<Option<(NodeGraphPointerPlan, GraphInteractionSnapshot)>, ui_wgpu::wgpu::BoundedActionFault> {
+    ENGINE_SURFACES.with(|cell| {
+        let map = cell.borrow();
+        let Some(engine) = map.get(surface_id).and_then(|entry| entry.node_graph.as_ref()) else {
+            return Ok(None);
+        };
+        match engine {
+            NodeGraphEngine::Flow(host) => {
+                let plan = host.plan_pointer(intent).map_err(graph_plan_fault)?;
+                let (node_ids, hovered_id, camera) = host.pointer_projection_snapshot(&plan).map_err(graph_plan_fault)?;
+                Ok(Some((NodeGraphPointerPlan::Flow(plan), graph_projection_snapshot(node_ids, hovered_id, camera)?)))
+            }
+            NodeGraphEngine::Dag(host) => {
+                let plan = host.plan_pointer(intent).map_err(graph_plan_fault)?;
+                let (node_ids, hovered_id, camera) = host.pointer_projection_snapshot(&plan).map_err(graph_plan_fault)?;
+                Ok(Some((NodeGraphPointerPlan::Dag(plan), graph_projection_snapshot(node_ids, hovered_id, camera)?)))
+            }
+        }
     })
 }
 
+fn commit_node_graph_pointer(surface_id: &str, plan: NodeGraphPointerPlan) -> bool {
+    ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let Some(engine) = map.get_mut(surface_id).and_then(|entry| entry.node_graph.as_mut()) else {
+            return false;
+        };
+        match (engine, plan) {
+            (NodeGraphEngine::Flow(host), NodeGraphPointerPlan::Flow(plan)) => host.commit_pointer(plan),
+            (NodeGraphEngine::Dag(host), NodeGraphPointerPlan::Dag(plan)) => host.commit_pointer(plan),
+            _ => false,
+        }
+    })
+}
+
+fn bounded_graph_selection(dag: &flow::dag::DagHost) -> Result<(Vec<String>, Option<String>), ui_wgpu::wgpu::BoundedActionFault> {
+    if dag.selected_node_count() > ui_wgpu::wgpu::action::ACTION_NODE_CAPACITY - 2 {
+        return Err(ui_wgpu::wgpu::BoundedActionFault::NodeCredits);
+    }
+    let hovered = dag.hovered_node_id_ref();
+    let mut bytes = 0usize;
+    for id in dag.selected_node_id_refs().chain(hovered) {
+        if id.len() > ui_wgpu::wgpu::action::ACTION_STRING_BYTE_CAPACITY {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::StringCredits);
+        }
+        bytes = bytes.checked_add(id.len()).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
+        if bytes > ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::ByteCredits);
+        }
+    }
+    Ok((dag.selected_node_id_refs().map(str::to_owned).collect(), hovered.map(str::to_owned)))
+}
+
+fn graph_interaction_snapshot(entry: &EngineSurface, camera: Option<[f64; 3]>) -> Result<GraphInteractionSnapshot, ui_wgpu::wgpu::BoundedActionFault> {
+    let (node_ids, hovered_id, current_camera) = match entry.node_graph.as_ref() {
+        Some(NodeGraphEngine::Flow(host)) => {
+            let (selected, hovered) = bounded_graph_selection(&host.dag)?;
+            (selected, hovered, [host.fixture.camera.x, host.fixture.camera.y, host.fixture.camera.zoom])
+        }
+        Some(NodeGraphEngine::Dag(host)) => {
+            let (selected, hovered) = bounded_graph_selection(&host.dag)?;
+            (selected, hovered, [host.dag.fixture.camera.x, host.dag.fixture.camera.y, host.dag.fixture.camera.zoom])
+        }
+        None => return Err(ui_wgpu::wgpu::BoundedActionFault::Structure),
+    };
+    graph_projection_snapshot(node_ids, hovered_id, camera.unwrap_or(current_camera))
+}
+
+fn write_graph_interaction_actions(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, surface_id: &str, controller_id: &str, snapshot: GraphInteractionSnapshot) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let select_action = "nodeGraphSelect";
+    let select_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, select_action, "surfaceId", surface_id, "nodeIds"])? + snapshot.node_ids.iter().map(String::len).sum::<usize>();
+    batch.action(controller_id, select_action, select_bytes, |builder| {
+        builder.begin_object(None)?;
+        builder.string(Some("surfaceId"), surface_id)?;
+        builder.begin_array(Some("nodeIds"))?;
+        for id in &snapshot.node_ids {
+            builder.string(None, id)?;
+        }
+        builder.end_container()?;
+        builder.end_container()
+    })?;
+    for (action, key, value) in [("nodeGraphHover", "hoverJson", snapshot.hover_json.as_str()), ("nodeGraphViewport", "viewportJson", snapshot.viewport_json.as_str())] {
+        let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, action, "surfaceId", surface_id, key, value])?;
+        batch.action(controller_id, action, bytes, |builder| {
+            builder.begin_object(None)?;
+            builder.string(Some("surfaceId"), surface_id)?;
+            builder.string(Some(key), value)?;
+            builder.end_container()
+        })?;
+    }
+    Ok(())
+}
+
+#[cfg(test)]
 fn graph_interaction_actions(surface_id: &str, controller_id: &str, entry: &EngineSurface) -> Vec<ActionDescriptor> {
     let (node_ids, hover_json, viewport_json) = match entry.node_graph.as_ref() {
         Some(NodeGraphEngine::Flow(host)) => {
@@ -1371,6 +1552,7 @@ pub fn with_map_host<R>(surface_id: &str, f: impl FnOnce(&MapHost) -> R) -> Opti
     })
 }
 
+#[cfg(test)]
 pub fn map_action(controller_id: &str, action: &str, args: Value) -> ActionDescriptor {
     ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args: semio_framework::optional_json_to_dsl(Some(args)) }
 }
@@ -1447,6 +1629,7 @@ pub fn parse_map_hover(hit_json: &str) -> Value {
     serde_json::from_str(hit_json).unwrap_or(Value::Null)
 }
 
+#[cfg(test)]
 pub fn map_interaction_actions(surface_id: &str, controller_id: &str, host: &MapHost) -> Vec<ActionDescriptor> {
     let selection = json!({
         "positions": host.selected_positions_json(),
@@ -1460,28 +1643,202 @@ pub fn map_interaction_actions(surface_id: &str, controller_id: &str, host: &Map
     ]
 }
 
-pub fn tiled_map_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, ctrl: bool) -> Vec<ActionDescriptor> {
+struct MapInteractionSnapshot {
+    camera: [f64; 3],
+    positions: Vec<String>,
+    routes: Vec<String>,
+    hover: Option<(String, String)>,
+}
+
+fn map_interaction_snapshot(host: &MapHost, camera: [f64; 3]) -> Result<MapInteractionSnapshot, ui_wgpu::wgpu::BoundedActionFault> {
+    let position_count = host.selected_position_ids().len();
+    let route_count = host.selected_route_ids().len();
+    if position_count.checked_add(route_count).ok_or(ui_wgpu::wgpu::BoundedActionFault::ItemCredits)? > ui_wgpu::wgpu::action::ACTION_NODE_CAPACITY - 4 {
+        return Err(ui_wgpu::wgpu::BoundedActionFault::NodeCredits);
+    }
+    let mut bytes = 0usize;
+    for part in host.selected_position_ids().chain(host.selected_route_ids()).chain(host.hovered_kind()).chain(host.hovered_id()) {
+        if part.len() > ui_wgpu::wgpu::action::ACTION_STRING_BYTE_CAPACITY {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::StringCredits);
+        }
+        bytes = bytes.checked_add(part.len()).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
+        if bytes > ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::ByteCredits);
+        }
+    }
+    let positions = host.selected_position_ids().map(str::to_owned).collect();
+    let routes = host.selected_route_ids().map(str::to_owned).collect();
+    let hover = host.hovered_kind().zip(host.hovered_id()).map(|(kind, id)| (kind.to_owned(), id.to_owned()));
+    Ok(MapInteractionSnapshot { camera, positions, routes, hover })
+}
+
+fn write_map_interaction_actions(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, surface_id: &str, controller_id: &str, snapshot: MapInteractionSnapshot) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let camera_action = ui_wgpu::wgpu::tiled_map_actions::SET_CAMERA;
+    let camera_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, camera_action, "surfaceId", surface_id, "camera", "x", "y", "zoom"])?;
+    batch.action(controller_id, camera_action, camera_bytes, |builder| {
+        builder.begin_object(None)?;
+        builder.string(Some("surfaceId"), surface_id)?;
+        builder.begin_object(Some("camera"))?;
+        builder.number(Some("x"), snapshot.camera[0])?;
+        builder.number(Some("y"), snapshot.camera[1])?;
+        builder.number(Some("zoom"), snapshot.camera[2])?;
+        builder.end_container()?;
+        builder.end_container()
+    })?;
+    let selection_action = ui_wgpu::wgpu::tiled_map_actions::SET_FEATURE_SELECTION;
+    let selection_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, selection_action, "surfaceId", surface_id, "positions", "routes"])?
+        + snapshot.positions.iter().map(String::len).sum::<usize>()
+        + snapshot.routes.iter().map(String::len).sum::<usize>();
+    batch.action(controller_id, selection_action, selection_bytes, |builder| {
+        builder.begin_object(None)?;
+        builder.string(Some("surfaceId"), surface_id)?;
+        builder.begin_array(Some("positions"))?;
+        for id in &snapshot.positions {
+            builder.string(None, id)?;
+        }
+        builder.end_container()?;
+        builder.begin_array(Some("routes"))?;
+        for id in &snapshot.routes {
+            builder.string(None, id)?;
+        }
+        builder.end_container()?;
+        builder.end_container()
+    })?;
+    let hover_action = ui_wgpu::wgpu::tiled_map_actions::SET_HOVER;
+    let (kind, id) = snapshot.hover.as_ref().map(|(kind, id)| (kind.as_str(), id.as_str())).unwrap_or(("", ""));
+    let hover_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, hover_action, "surfaceId", surface_id, "hover", "kind", "id", kind, id])?;
+    batch.action(controller_id, hover_action, hover_bytes, |builder| {
+        builder.begin_object(None)?;
+        builder.string(Some("surfaceId"), surface_id)?;
+        if snapshot.hover.is_some() {
+            builder.begin_object(Some("hover"))?;
+            builder.string(Some("kind"), kind)?;
+            builder.string(Some("id"), id)?;
+            builder.end_container()?;
+        } else {
+            builder.null(Some("hover"))?;
+        }
+        builder.end_container()
+    })?;
+    Ok(())
+}
+
+pub fn with_map_interaction_into(surface_id: &str, controller_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, intent: MapInteractionIntent) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let mut reservation = input.reserve_actions(3, 3 * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
+    let planned = ENGINE_SURFACES.with(|cell| {
+        let map = cell.borrow();
+        let Some(host) = map.get(surface_id).and_then(|entry| entry.map_host.as_ref()) else {
+            return Ok(None);
+        };
+        let plan = host.plan_interaction(intent);
+        map_interaction_snapshot(host, plan.camera()).map(|snapshot| Some((plan, snapshot)))
+    })?;
+    let Some((plan, snapshot)) = planned else {
+        return Ok(false);
+    };
+    write_map_interaction_actions(&mut reservation, surface_id, controller_id, snapshot)?;
+    reservation.publish_with_checked(|| ENGINE_SURFACES.with(|cell| cell.borrow_mut().get_mut(surface_id).and_then(|entry| entry.map_host.as_mut()).is_some_and(|host| host.commit_interaction(plan))))?;
+    Ok(true)
+}
+
+pub fn tiled_map_wheel_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, ctrl: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     let (sx, sy) = map_local_pointer(inner, x, y);
+    let delta_y = if ctrl { delta as f64 * 2.5 } else { delta as f64 };
+    with_map_interaction_into(surface_id, controller_id, input, MapInteractionIntent::Wheel { sx, sy, delta_y })
+}
+
+#[cfg(test)]
+pub fn tiled_map_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, ctrl: bool) -> Vec<ActionDescriptor> {
+    let mut input = ui_wgpu::wgpu::InputState::default();
+    let _ = tiled_map_wheel_into(surface_id, controller_id, inner, x, y, delta, ctrl, &mut input);
+    input.drain_events()
+}
+
+#[cfg(test)]
+#[test]
+fn saturated_map_action_queue_preserves_host_revision_and_camera() {
+    let surface_id = "map-plan-saturation";
+    ensure_surface(surface_id, 800, 600);
+    ENGINE_SURFACES.with(|cell| cell.borrow_mut().get_mut(surface_id).unwrap().map_host = Some(MapHost::new()));
+    let before = with_map_host(surface_id, |host| [host.camera.x, host.camera.y, host.camera.zoom]).unwrap();
+    let mut input = ui_wgpu::wgpu::InputState::default();
+    for _ in 0..ui_wgpu::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY - 2 {
+        input.publish_action("c", "a", 2, |_, _| Ok(())).unwrap();
+    }
+    assert_eq!(tiled_map_wheel_into(surface_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 200.0, 200.0, -12.0, false, &mut input), Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits));
+    let after = with_map_host(surface_id, |host| [host.camera.x, host.camera.y, host.camera.zoom]).unwrap();
+    assert_eq!(after, before);
+    ENGINE_SURFACES.with(|cell| {
+        cell.borrow_mut().remove(surface_id);
+    });
+}
+
+#[cfg(test)]
+#[test]
+fn saturated_graph_and_board_wheel_queues_preserve_cameras() {
+    fn saturate(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) {
+        for _ in 0..ui_wgpu::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY - 1 {
+            input.publish_action("c", "a", 2, |_, _| Ok(())).unwrap();
+        }
+    }
+
+    let graph_id = "graph-plan-saturation";
+    ensure_surface(graph_id, 800, 600);
+    ENGINE_SURFACES.with(|cell| cell.borrow_mut().get_mut(graph_id).unwrap().node_graph = Some(NodeGraphEngine::Dag(GraphHost::default())));
+    let graph_before = ENGINE_SURFACES.with(|cell| {
+        let map = cell.borrow();
+        let Some(NodeGraphEngine::Dag(host)) = map.get(graph_id).unwrap().node_graph.as_ref() else { unreachable!() };
+        [host.dag.fixture.camera.x, host.dag.fixture.camera.y, host.dag.fixture.camera.zoom]
+    });
+    let mut graph_input = ui_wgpu::wgpu::InputState::default();
+    saturate(&mut graph_input);
+    assert_eq!(node_graph_wheel_into(graph_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 200.0, 200.0, -12.0, false, &mut graph_input), Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits));
+    let graph_after = ENGINE_SURFACES.with(|cell| {
+        let map = cell.borrow();
+        let Some(NodeGraphEngine::Dag(host)) = map.get(graph_id).unwrap().node_graph.as_ref() else { unreachable!() };
+        [host.dag.fixture.camera.x, host.dag.fixture.camera.y, host.dag.fixture.camera.zoom]
+    });
+    assert_eq!(graph_after, graph_before);
+    let graph_selection_before = ENGINE_SURFACES.with(|cell| {
+        let map = cell.borrow();
+        let Some(NodeGraphEngine::Dag(host)) = map.get(graph_id).unwrap().node_graph.as_ref() else { unreachable!() };
+        host.selected_node_ids_json()
+    });
+    assert_eq!(node_graph_pointer_down_into(graph_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 200.0, 200.0, 0, false, false, false, false, &mut graph_input), Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits));
+    let graph_selection_after = ENGINE_SURFACES.with(|cell| {
+        let map = cell.borrow();
+        let Some(NodeGraphEngine::Dag(host)) = map.get(graph_id).unwrap().node_graph.as_ref() else { unreachable!() };
+        host.selected_node_ids_json()
+    });
+    assert_eq!(graph_selection_after, graph_selection_before);
+
+    let board_id = "board-plan-saturation";
+    ensure_surface(board_id, 800, 600);
+    ENGINE_SURFACES.with(|cell| cell.borrow_mut().get_mut(board_id).unwrap().board_host = Some(puzzle::editor::puzzle2d::engine::BoardHost::default()));
+    let board_before = with_board_host(board_id, |host| [host.camera.x, host.camera.y, host.camera.zoom]).unwrap();
+    let mut board_input = ui_wgpu::wgpu::InputState::default();
+    saturate(&mut board_input);
+    assert_eq!(puzzle_board_wheel_into(board_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 200.0, 200.0, -12.0, &mut board_input), Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits));
+    let board_after = with_board_host(board_id, |host| [host.camera.x, host.camera.y, host.camera.zoom]).unwrap();
+    assert_eq!(board_after, board_before);
+    puzzle_board_pointer_down(board_id, Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 100.0, 100.0, 1, false, false);
+    board_input.publish_action("c", "a", 2, |_, _| Ok(())).unwrap();
+    assert_eq!(puzzle_board_pointer_up_into(board_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 140.0, 130.0, false, false, false, &mut board_input), Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits));
+    assert!(with_board_host(board_id, |host| host.defers_descriptor_sync_from_js()).unwrap());
+    let mut retry = ui_wgpu::wgpu::InputState::default();
+    assert_eq!(puzzle_board_pointer_up_into(board_id, "controller", Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 }, 140.0, 130.0, false, false, false, &mut retry), Ok(true));
+    assert!(!with_board_host(board_id, |host| host.defers_descriptor_sync_from_js()).unwrap());
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
-        let Some(entry) = map.get_mut(surface_id) else {
-            return Vec::new();
-        };
-        let Some(host) = entry.map_host.as_mut() else {
-            return Vec::new();
-        };
-        let mut delta_y = delta as f64;
-        if ctrl {
-            delta_y *= 2.5;
-        }
-        host.wheel_screen(sx, sy, delta_y);
-        map_interaction_actions(surface_id, controller_id, host)
-    })
+        map.remove(graph_id);
+        map.remove(board_id);
+    });
 }
 //#endregion TiledMap
 
 //#region Board2d
 /// @emoji 🧩️ Raw event row drained from {@link puzzle::editor::puzzle2d::engine::BoardHost::drain_events_json}; mirrors the TS `BoardEventRow` shape.
+#[cfg(test)]
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct BoardEventRow {
     pub name: String,
@@ -1494,10 +1851,13 @@ pub struct CoalescedBoardEvents {
     pub events_json: String,
 }
 
+#[cfg(test)]
 const PUZZLE2D_TRANSIENT_EVENT_NAMES: &[&str] = &["preselect", "brushPreview", "linkCompatibleNodes", "linkTargetRing"];
+#[cfg(test)]
 const PUZZLE2D_FLUSH_NOW_EVENT_NAMES: &[&str] = &["select", "preselectCancel", "brushCandidates", "brushPlace", "edgeCreate", "edgeDelete", "nodeDelete"];
 
 /// @emoji 📬️ Drops transient rows, coalesces `camera` to its latest value and `nodeMove` to one row per id (unless a `nodeDragEnd` follows), and flags whether the buffer should flush immediately. Port of `coalesceBoard2dEvents` in the React host.
+#[cfg(test)]
 pub fn coalesce_board2d_events(rows: &[BoardEventRow]) -> CoalescedBoardEvents {
     let has_drag_end = rows.iter().any(|row| row.name == "nodeDragEnd");
     let mut flush_now = false;
@@ -1669,6 +2029,7 @@ pub fn with_board_host<R>(surface_id: &str, f: impl FnOnce(&puzzle::editor::puzz
     })
 }
 
+#[cfg(test)]
 pub fn board_action(controller_id: &str, action: &str, args: Value) -> ActionDescriptor {
     ActionDescriptor { controller_id: controller_id.to_string(), action: action.to_string(), args: semio_framework::optional_json_to_dsl(Some(args)) }
 }
@@ -1683,49 +2044,141 @@ pub fn board_pick_best_target_id(surface_id: &str, sx: f64, sy: f64) -> Option<S
     .flatten()
 }
 
-fn board_drain_into_buffer(surface_id: &str) {
-    let rows = with_board_host_mut(surface_id, |host| {
-        let json = host.drain_events_json();
-        serde_json::from_str::<Vec<BoardEventRow>>(&json).unwrap_or_default()
-    })
-    .unwrap_or_default();
-    if rows.is_empty() {
-        return;
+fn board_event_transient(kind: puzzle::editor::puzzle2d::engine::BoardEventKind) -> bool {
+    use puzzle::editor::puzzle2d::engine::BoardEventKind;
+    matches!(kind, BoardEventKind::Preselect | BoardEventKind::BrushPreview | BoardEventKind::LinkCompatibleNodes | BoardEventKind::LinkTargetRing)
+}
+
+fn board_event_flush_now(kind: puzzle::editor::puzzle2d::engine::BoardEventKind) -> bool {
+    use puzzle::editor::puzzle2d::engine::BoardEventKind;
+    matches!(kind, BoardEventKind::Select | BoardEventKind::PreselectCancel | BoardEventKind::BrushCandidates | BoardEventKind::BrushPlace | BoardEventKind::EdgeCreate | BoardEventKind::EdgeDelete | BoardEventKind::NodeDelete)
+}
+
+fn append_board_owned_event(output: &mut String, first: &mut bool, event: &puzzle::editor::puzzle2d::engine::BoardOwnedEvent) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    if !*first {
+        output.push(',');
     }
-    ENGINE_SURFACES.with(|cell| {
-        if let Some(entry) = cell.borrow_mut().get_mut(surface_id) {
-            entry.board_pending_events.extend(rows);
+    *first = false;
+    event.write_json(output);
+    if output.len() > ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY {
+        return Err(ui_wgpu::wgpu::BoundedActionFault::ByteCredits);
+    }
+    Ok(())
+}
+
+fn coalesce_owned_board_events(queue: &puzzle::editor::puzzle2d::engine::BoardEventQueue) -> Result<CoalescedBoardEvents, ui_wgpu::wgpu::BoundedActionFault> {
+    use puzzle::editor::puzzle2d::engine::BoardEventKind;
+    let has_drag_end = queue.iter().any(|event| event.kind() == BoardEventKind::NodeDragEnd);
+    let mut output = String::from("[");
+    let mut first = true;
+    let mut flush_now = false;
+    if let Some(camera) = queue.iter().filter(|event| event.kind() == BoardEventKind::Camera).last() {
+        append_board_owned_event(&mut output, &mut first, camera)?;
+    }
+    if !has_drag_end {
+        for (index, event) in queue.iter().enumerate() {
+            if event.kind() != BoardEventKind::NodeMove {
+                continue;
+            }
+            let key = event.key();
+            if queue.iter().take(index).any(|candidate| candidate.kind() == BoardEventKind::NodeMove && candidate.key() == key) {
+                continue;
+            }
+            let latest = queue.iter().skip(index).filter(|candidate| candidate.kind() == BoardEventKind::NodeMove && candidate.key() == key).last().expect("first node move is a latest candidate");
+            append_board_owned_event(&mut output, &mut first, latest)?;
         }
-    });
+    }
+    for event in queue.iter() {
+        let kind = event.kind();
+        if board_event_flush_now(kind) {
+            flush_now = true;
+        }
+        if kind == BoardEventKind::Camera || kind == BoardEventKind::NodeMove || board_event_transient(kind) {
+            continue;
+        }
+        append_board_owned_event(&mut output, &mut first, event)?;
+    }
+    output.push(']');
+    Ok(CoalescedBoardEvents { flush_now, events_json: output })
+}
+
+fn board_retirement_step(entry: &mut EngineSurface) -> bool {
+    if let Some(retiring) = entry.board_retiring_events.as_mut() {
+        if retiring.close_step() {
+            entry.board_retiring_events = None;
+        }
+        return true;
+    }
+    false
+}
+
+fn board_drain_into_buffer(surface_id: &str) -> bool {
+    ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let Some(entry) = map.get_mut(surface_id) else {
+            return false;
+        };
+        let retired = board_retirement_step(entry);
+        if retired {
+            return true;
+        }
+        let Some(host) = entry.board_host.as_mut() else {
+            return false;
+        };
+        let Some(bytes) = host.peek_owned_event().map(|event| event.owned_bytes()) else {
+            return false;
+        };
+        if entry.board_pending_events.reserve(1, bytes).is_err() {
+            return false;
+        }
+        let event = host.pop_owned_event().expect("peeked board event remains owned by host");
+        entry.board_pending_events.push(event).is_ok()
+    })
 }
 
 fn board_take_buffer_coalesced(surface_id: &str) -> Option<String> {
-    let rows = ENGINE_SURFACES.with(|cell| {
+    ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
-        map.get_mut(surface_id).map(|entry| std::mem::take(&mut entry.board_pending_events))
-    })?;
-    if rows.is_empty() {
-        return None;
-    }
-    let coalesced = coalesce_board2d_events(&rows);
-    if coalesced.events_json == "[]" {
-        None
-    } else {
-        Some(coalesced.events_json)
-    }
+        let entry = map.get_mut(surface_id)?;
+        if entry.board_retiring_events.is_some() {
+            return None;
+        }
+        let coalesced = coalesce_owned_board_events(&entry.board_pending_events).ok()?;
+        let pending = std::mem::take(&mut entry.board_pending_events);
+        entry.board_retiring_events = Some(pending);
+        (coalesced.events_json != "[]").then_some(coalesced.events_json)
+    })
+}
+
+fn board_peek_buffer_coalesced(surface_id: &str) -> Option<String> {
+    ENGINE_SURFACES.with(|cell| {
+        let map = cell.borrow();
+        let entry = map.get(surface_id)?;
+        if entry.board_retiring_events.is_some() {
+            return None;
+        }
+        let queue = &entry.board_pending_events;
+        if queue.is_empty() {
+            return None;
+        }
+        let coalesced = coalesce_owned_board_events(queue).ok()?;
+        (coalesced.events_json != "[]").then_some(coalesced.events_json)
+    })
 }
 
 /// @emoji 📤️ Unconditional drain + coalesce + dispatch, mirroring `flushBoardEvents` (used after pointer-up, pointer-leave, and wheel).
+#[cfg(test)]
 fn board_flush_events_action(surface_id: &str, controller_id: &str) -> Option<ActionDescriptor> {
-    board_drain_into_buffer(surface_id);
+    while board_drain_into_buffer(surface_id) {}
     let events_json = board_take_buffer_coalesced(surface_id)?;
     Some(board_action(controller_id, "applyBoardEvents", json!({ "eventsJson": events_json })))
 }
 
 /// @emoji 📤️ Drains into the buffer and only dispatches if a flush-now event (select, brushPlace, edgeCreate, ...) is pending, mirroring `drainAndMaybeFlush` (used on pointer-move).
+#[cfg(test)]
 fn board_drain_and_maybe_flush(surface_id: &str, controller_id: &str) -> Vec<ActionDescriptor> {
-    board_drain_into_buffer(surface_id);
-    let flush_now = ENGINE_SURFACES.with(|cell| cell.borrow().get(surface_id).map(|entry| coalesce_board2d_events(&entry.board_pending_events).flush_now).unwrap_or(false));
+    while board_drain_into_buffer(surface_id) {}
+    let flush_now = ENGINE_SURFACES.with(|cell| cell.borrow().get(surface_id).and_then(|entry| coalesce_owned_board_events(&entry.board_pending_events).ok()).is_some_and(|events| events.flush_now));
     if !flush_now {
         return Vec::new();
     }
@@ -1735,8 +2188,33 @@ fn board_drain_and_maybe_flush(surface_id: &str, controller_id: &str) -> Vec<Act
     }
 }
 
+#[cfg(test)]
 fn board_camera_action(surface_id: &str, controller_id: &str) -> Option<ActionDescriptor> {
     with_board_host(surface_id, |host| board_action(controller_id, "setCamera", json!({ "camera": { "x": host.camera.x, "y": host.camera.y, "zoom": host.camera.zoom } })))
+}
+
+fn write_board_events_flat(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, controller_id: &str, events_json: &str) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let action = "applyBoardEvents";
+    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, action, "eventsJson", events_json])?;
+    batch.action(controller_id, action, bytes, |builder| {
+        builder.begin_object(None)?;
+        builder.string(Some("eventsJson"), events_json)?;
+        builder.end_container()
+    })
+}
+
+fn write_board_camera_flat(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, controller_id: &str, camera: [f64; 3]) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let action = "setCamera";
+    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, action, "camera", "x", "y", "zoom"])?;
+    batch.action(controller_id, action, bytes, |builder| {
+        builder.begin_object(None)?;
+        builder.begin_object(Some("camera"))?;
+        builder.number(Some("x"), camera[0])?;
+        builder.number(Some("y"), camera[1])?;
+        builder.number(Some("zoom"), camera[2])?;
+        builder.end_container()?;
+        builder.end_container()
+    })
 }
 
 fn board_set_pointer_inside(surface_id: &str, inside: bool) {
@@ -1747,12 +2225,265 @@ fn board_set_pointer_inside(surface_id: &str, inside: bool) {
     });
 }
 
+fn board_pointer_plan_fault(fault: puzzle::editor::puzzle2d::engine::BoardPointerPlanFault) -> ui_wgpu::wgpu::BoundedActionFault {
+    match fault {
+        puzzle::editor::puzzle2d::engine::BoardPointerPlanFault::ItemCredits => ui_wgpu::wgpu::BoundedActionFault::ItemCredits,
+        puzzle::editor::puzzle2d::engine::BoardPointerPlanFault::ByteCredits => ui_wgpu::wgpu::BoundedActionFault::ByteCredits,
+        puzzle::editor::puzzle2d::engine::BoardPointerPlanFault::Unsupported => ui_wgpu::wgpu::BoundedActionFault::Structure,
+    }
+}
+
+fn plan_board_pointer(surface_id: &str, intent: puzzle::editor::puzzle2d::engine::BoardPointerIntent) -> Result<Option<puzzle::editor::puzzle2d::engine::BoardPointerPlan>, ui_wgpu::wgpu::BoundedActionFault> {
+    ENGINE_SURFACES.with(|cell| {
+        let map = cell.borrow();
+        let Some(host) = map.get(surface_id).and_then(|entry| entry.board_host.as_ref()) else {
+            return Ok(None);
+        };
+        host.plan_pointer(intent).map(Some).map_err(board_pointer_plan_fault)
+    })
+}
+
+fn commit_board_pointer(surface_id: &str, plan: &puzzle::editor::puzzle2d::engine::BoardPointerPlan, pointer_inside: Option<bool>) -> bool {
+    ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let Some(entry) = map.get_mut(surface_id) else {
+            return false;
+        };
+        let Some(host) = entry.board_host.as_mut() else {
+            return false;
+        };
+        if !host.commit_pointer(plan) {
+            return false;
+        }
+        if let Some(pointer_inside) = pointer_inside {
+            entry.board_pointer_inside = pointer_inside;
+        }
+        true
+    })
+}
+
+fn begin_board_pointer_commit(
+    surface_id: &str,
+    controller_id: &str,
+    plan: puzzle::editor::puzzle2d::engine::BoardPointerPlan,
+    pointer_inside: Option<bool>,
+    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let emits = plan.event_count() > 0;
+    let claim = if emits {
+        let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "applyBoardEvents", "eventsJson", plan.events_json()])?;
+        Some(input.claim_action(bytes)?)
+    } else {
+        None
+    };
+    let admitted = ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let Some(entry) = map.get_mut(surface_id) else {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+        };
+        if entry.board_pointer_claim.is_some() || entry.board_pointer_controller_id.is_some() {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
+        }
+        let Some(host) = entry.board_host.as_mut() else {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+        };
+        host.begin_pointer_commit(plan).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::ItemCredits)?;
+        entry.board_pointer_claim = claim;
+        entry.board_pointer_controller_id = emits.then(|| controller_id.to_owned());
+        if let Some(pointer_inside) = pointer_inside {
+            entry.board_pointer_inside = pointer_inside;
+        }
+        Ok(())
+    });
+    if admitted.is_err() {
+        if let Some(claim) = claim {
+            input.release_action_claim(claim)?;
+        }
+    }
+    admitted
+}
+
+pub fn drive_board_authority_step(surface_id: &str, context: &mut semio_framework_job::StepContext<'_>) -> puzzle::editor::puzzle2d::engine::BoardAuthorityStep {
+    ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let Some(host) = map.get_mut(surface_id).and_then(|entry| entry.board_host.as_mut()) else {
+            return puzzle::editor::puzzle2d::engine::BoardAuthorityStep::Complete;
+        };
+        if !host.pointer_authority_terminal_is_empty() {
+            return host.step_pointer_commit(context);
+        }
+        host.step_event_authority(context)
+    })
+}
+
+pub fn publish_board_pointer_step(surface_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let Some(entry) = map.get_mut(surface_id) else {
+            return Ok(false);
+        };
+        let Some(host) = entry.board_host.as_mut() else { return Ok(false) };
+        let Some(publication) = host.pointer_publication() else {
+            return Ok(false);
+        };
+        let claim = entry.board_pointer_claim.ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+        let controller_id = entry.board_pointer_controller_id.as_deref().ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+        let events_json = publication.events_json();
+        let mut reservation = input.reserve_claimed_action(claim, controller_id, "applyBoardEvents")?;
+        reservation.builder().begin_object(None)?;
+        reservation.builder().string(Some("eventsJson"), events_json)?;
+        reservation.builder().end_container()?;
+        reservation.publish_with_checked(|| {
+            let Some(mut publication) = host.take_pointer_publication() else {
+                return false;
+            };
+            publication.close_step() && publication.terminal_is_empty()
+        })?;
+        entry.board_pointer_claim = None;
+        entry.board_pointer_controller_id = None;
+        Ok(true)
+    })
+}
+
+pub fn release_board_pointer_claim(surface_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let claim = ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let entry = map.get_mut(surface_id)?;
+        entry.board_pointer_controller_id = None;
+        entry.board_pointer_claim.take()
+    });
+    match claim {
+        Some(claim) => input.release_action_claim(claim),
+        None => Ok(()),
+    }
+}
+
+pub fn publish_board_event_step(surface_id: &str, controller_id: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let Some(host) = map.get_mut(surface_id).and_then(|entry| entry.board_host.as_mut()) else {
+            return Ok(false);
+        };
+        let Some(event) = host.peek_owned_event() else {
+            return Ok(false);
+        };
+        let mut events_json = String::with_capacity(event.owned_bytes().saturating_add(32));
+        events_json.push('[');
+        event.write_json(&mut events_json);
+        events_json.push(']');
+        let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "applyBoardEvents", "eventsJson", &events_json])?;
+        let mut reservation = input.reserve_actions(1, bytes)?;
+        write_board_events_flat(&mut reservation, controller_id, &events_json)?;
+        reservation.publish_with_checked(|| host.pop_owned_event().is_some())?;
+        Ok(true)
+    })
+}
+
 pub fn puzzle_board_pointer_down(surface_id: &str, inner: Rect, x: f32, y: f32, button: i16, shift: bool, ctrl_or_meta: bool) {
     let (sx, sy) = map_local_pointer(inner, x, y);
     with_board_host_mut(surface_id, |host| host.pointer_down_screen(sx, sy, button.max(0) as u8, shift, ctrl_or_meta));
     board_set_pointer_inside(surface_id, true);
 }
 
+pub fn puzzle_board_pointer_move_into(
+    surface_id: &str,
+    controller_id: &str,
+    inner: Rect,
+    x: f32,
+    y: f32,
+    shift: bool,
+    ctrl_or_meta: bool,
+    alt: bool,
+    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let (sx, sy) = map_local_pointer(inner, x, y);
+    let plan = plan_board_pointer(surface_id, puzzle::editor::puzzle2d::engine::BoardPointerIntent { phase: puzzle::editor::puzzle2d::engine::BoardPointerPhase::Move, x: sx, y: sy, shift, ctrl_or_meta, alt })?;
+    let Some(plan) = plan else {
+        return Ok(false);
+    };
+    if plan.requires_retained_commit() {
+        let emits = plan.event_count() > 0;
+        begin_board_pointer_commit(surface_id, controller_id, plan, Some(true), input)?;
+        return Ok(emits);
+    }
+    if plan.event_count() == 0 {
+        if !commit_board_pointer(surface_id, &plan, Some(true)) {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+        }
+        return Ok(false);
+    }
+    let events_json = plan.events_json();
+    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "applyBoardEvents", "eventsJson", events_json])?;
+    let mut reservation = input.reserve_actions(1, bytes)?;
+    write_board_events_flat(&mut reservation, controller_id, events_json)?;
+    reservation.publish_with_checked(|| commit_board_pointer(surface_id, &plan, Some(true)))?;
+    Ok(true)
+}
+
+pub fn puzzle_board_pointer_up_into(
+    surface_id: &str,
+    controller_id: &str,
+    inner: Rect,
+    x: f32,
+    y: f32,
+    shift: bool,
+    ctrl_or_meta: bool,
+    alt: bool,
+    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let (sx, sy) = map_local_pointer(inner, x, y);
+    let plan = plan_board_pointer(surface_id, puzzle::editor::puzzle2d::engine::BoardPointerIntent { phase: puzzle::editor::puzzle2d::engine::BoardPointerPhase::Up, x: sx, y: sy, shift, ctrl_or_meta, alt })?;
+    let Some(plan) = plan else {
+        return Ok(false);
+    };
+    if plan.requires_retained_commit() {
+        let emits = plan.event_count() > 0;
+        begin_board_pointer_commit(surface_id, controller_id, plan, None, input)?;
+        return Ok(emits);
+    }
+    if plan.event_count() == 0 {
+        if !commit_board_pointer(surface_id, &plan, None) {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+        }
+        return Ok(false);
+    }
+    let events_json = plan.events_json();
+    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "applyBoardEvents", "eventsJson", events_json])?;
+    let mut reservation = input.reserve_actions(1, bytes)?;
+    write_board_events_flat(&mut reservation, controller_id, events_json)?;
+    reservation.publish_with_checked(|| commit_board_pointer(surface_id, &plan, None))?;
+    Ok(true)
+}
+
+pub fn puzzle_board_pointer_leave_into(surface_id: &str, controller_id: &str, alt: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let was_inside = ENGINE_SURFACES.with(|cell| cell.borrow().get(surface_id).is_some_and(|entry| entry.board_pointer_inside));
+    if !was_inside {
+        return Ok(false);
+    }
+    let plan = plan_board_pointer(surface_id, puzzle::editor::puzzle2d::engine::BoardPointerIntent { phase: puzzle::editor::puzzle2d::engine::BoardPointerPhase::Leave, x: 0.0, y: 0.0, shift: false, ctrl_or_meta: false, alt })?;
+    let Some(plan) = plan else {
+        return Ok(false);
+    };
+    if plan.requires_retained_commit() {
+        let emits = plan.event_count() > 0;
+        begin_board_pointer_commit(surface_id, controller_id, plan, Some(false), input)?;
+        return Ok(emits);
+    }
+    if plan.event_count() == 0 {
+        if !commit_board_pointer(surface_id, &plan, Some(false)) {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::Structure);
+        }
+        return Ok(false);
+    }
+    let events_json = plan.events_json();
+    let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller_id, "applyBoardEvents", "eventsJson", events_json])?;
+    let mut reservation = input.reserve_actions(1, bytes)?;
+    write_board_events_flat(&mut reservation, controller_id, events_json)?;
+    reservation.publish_with_checked(|| commit_board_pointer(surface_id, &plan, Some(false)))?;
+    Ok(true)
+}
+
+#[cfg(test)]
 pub fn puzzle_board_pointer_move(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl_or_meta: bool, alt: bool) -> Vec<ActionDescriptor> {
     let (sx, sy) = map_local_pointer(inner, x, y);
     with_board_host_mut(surface_id, |host| host.pointer_move_screen(sx, sy, shift, ctrl_or_meta, alt));
@@ -1760,12 +2491,14 @@ pub fn puzzle_board_pointer_move(surface_id: &str, controller_id: &str, inner: R
     board_drain_and_maybe_flush(surface_id, controller_id)
 }
 
+#[cfg(test)]
 pub fn puzzle_board_pointer_up(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, shift: bool, ctrl_or_meta: bool, alt: bool) -> Vec<ActionDescriptor> {
     let (sx, sy) = map_local_pointer(inner, x, y);
     with_board_host_mut(surface_id, |host| host.pointer_up_screen(sx, sy, shift, ctrl_or_meta, alt));
     board_flush_events_action(surface_id, controller_id).into_iter().collect()
 }
 
+#[cfg(test)]
 pub fn puzzle_board_pointer_leave(surface_id: &str, controller_id: &str, alt: bool) -> Vec<ActionDescriptor> {
     let was_inside = ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
@@ -1788,6 +2521,34 @@ pub fn board_drag_active(surface_id: &str) -> bool {
     with_board_host(surface_id, |host| host.defers_descriptor_sync_from_js() || host.is_dragging_area_select()).unwrap_or(false)
 }
 
+pub fn puzzle_board_wheel_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let mut reservation = input.reserve_actions(2, 2 * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
+    let (sx, sy) = map_local_pointer(inner, x, y);
+    let plan = with_board_host(surface_id, |host| host.plan_wheel(sx, sy, delta as f64)).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
+    let camera = plan.camera();
+    board_drain_into_buffer(surface_id);
+    let events_json = board_peek_buffer_coalesced(surface_id);
+    let retire_events = events_json.is_some();
+    write_board_camera_flat(&mut reservation, controller_id, camera)?;
+    if let Some(events_json) = events_json.as_deref() {
+        write_board_events_flat(&mut reservation, controller_id, events_json)?;
+    }
+    reservation.publish_partial_with_checked(|| {
+        let committed = with_board_host_mut(surface_id, |host| host.commit_wheel(plan)).unwrap_or(false);
+        if committed && retire_events {
+            ENGINE_SURFACES.with(|cell| {
+                if let Some(entry) = cell.borrow_mut().get_mut(surface_id) {
+                    let pending = std::mem::take(&mut entry.board_pending_events);
+                    entry.board_retiring_events = Some(pending);
+                }
+            });
+        }
+        committed
+    })?;
+    Ok(true)
+}
+
+#[cfg(test)]
 pub fn puzzle_board_wheel(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32) -> Vec<ActionDescriptor> {
     let (sx, sy) = map_local_pointer(inner, x, y);
     with_board_host_mut(surface_id, |host| host.wheel_screen(sx, sy, delta as f64));
@@ -1808,6 +2569,55 @@ mod board2d_engine_tests {
 
     fn row(name: &str, payload: Value) -> BoardEventRow {
         BoardEventRow { name: name.to_string(), payload }
+    }
+
+    fn typed_kind(name: &str) -> puzzle::editor::puzzle2d::engine::BoardEventKind {
+        use puzzle::editor::puzzle2d::engine::BoardEventKind;
+        match name {
+            "camera" => BoardEventKind::Camera,
+            "nodeMove" => BoardEventKind::NodeMove,
+            "nodeDragEnd" => BoardEventKind::NodeDragEnd,
+            "select" => BoardEventKind::Select,
+            "preselect" => BoardEventKind::Preselect,
+            "preselectCancel" => BoardEventKind::PreselectCancel,
+            "brushPreview" => BoardEventKind::BrushPreview,
+            "brushCandidates" => BoardEventKind::BrushCandidates,
+            "brushPlace" => BoardEventKind::BrushPlace,
+            "edgeCreate" => BoardEventKind::EdgeCreate,
+            "edgeDelete" => BoardEventKind::EdgeDelete,
+            "nodeDelete" => BoardEventKind::NodeDelete,
+            _ => panic!("fixture kind {name}"),
+        }
+    }
+
+    fn typed_coalesce(rows: &[BoardEventRow]) -> CoalescedBoardEvents {
+        let mut queue = puzzle::editor::puzzle2d::engine::BoardEventQueue::default();
+        for row in rows {
+            let payload = serde_json::to_string(&row.payload).unwrap();
+            let key = (row.name == "nodeMove").then(|| row.payload.get("id").and_then(Value::as_str)).flatten();
+            queue.push(puzzle::editor::puzzle2d::engine::BoardOwnedEvent::from_payload(typed_kind(&row.name), &payload, key).unwrap()).unwrap();
+        }
+        coalesce_owned_board_events(&queue).unwrap()
+    }
+
+    #[test]
+    fn typed_coalescer_matches_legacy_fifo_and_flush_semantics() {
+        let rows = vec![
+            row("camera", json!({ "x": 1 })),
+            row("nodeMove", json!({ "id": "a", "x": 1 })),
+            row("preselect", json!({ "ids": ["a"] })),
+            row("nodeMove", json!({ "id": "b", "x": 2 })),
+            row("nodeMove", json!({ "id": "a", "x": 3 })),
+            row("camera", json!({ "x": 2 })),
+            row("select", json!({ "ids": ["a"] })),
+        ];
+        let legacy = coalesce_board2d_events(&rows);
+        let typed = typed_coalesce(&rows);
+        assert_eq!(typed.flush_now, legacy.flush_now);
+        assert_eq!(serde_json::from_str::<Value>(&typed.events_json).unwrap(), serde_json::from_str::<Value>(&legacy.events_json).unwrap());
+
+        let drag_end = vec![row("nodeMove", json!({ "id": "a", "x": 1 })), row("nodeDragEnd", json!({ "moves": [{ "id": "a", "x": 1 }] }))];
+        assert_eq!(serde_json::from_str::<Value>(&typed_coalesce(&drag_end).events_json).unwrap(), serde_json::from_str::<Value>(&coalesce_board2d_events(&drag_end).events_json).unwrap());
     }
 
     #[test]
@@ -1867,6 +2677,7 @@ mod board2d_engine_tests {
 }
 
 //#region TextEditor
+#[cfg(test)]
 pub fn text_editor_apply_key(scene: &UiComponentSceneNode, key: KeyAction, modifiers: &PointerModifiers) -> Vec<ActionDescriptor> {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
@@ -1920,6 +2731,7 @@ pub fn paint_text_editor(resources: &mut EngineCanvasBuildContext, ctx: &mut Fra
     ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(editor_id), kind: HitKind::Input, drag_axis: None, drag_data: None });
 }
 
+#[cfg(test)]
 pub fn text_editor_wheel(scene: &UiComponentSceneNode, delta: f32) -> Vec<ActionDescriptor> {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
@@ -1934,6 +2746,21 @@ pub fn text_editor_wheel(scene: &UiComponentSceneNode, delta: f32) -> Vec<Action
     })
 }
 
+pub fn text_editor_wheel_into(scene: &UiComponentSceneNode, delta: f32) -> bool {
+    ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let Some(entry) = map.get_mut(&scene.surface_id) else {
+            return false;
+        };
+        let Some(host) = entry.editor.as_mut() else {
+            return false;
+        };
+        host.wheel_scroll_screen(delta as f64);
+        true
+    })
+}
+
+#[cfg(test)]
 pub fn text_editor_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, button: i16) -> Vec<ActionDescriptor> {
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
@@ -1950,6 +2777,7 @@ pub fn text_editor_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f3
     })
 }
 
+#[cfg(test)]
 pub fn text_editor_pointer_move(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> Vec<ActionDescriptor> {
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
@@ -1966,6 +2794,7 @@ pub fn text_editor_pointer_move(scene: &UiComponentSceneNode, inner: Rect, x: f3
     })
 }
 
+#[cfg(test)]
 pub fn text_editor_pointer_up(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> Vec<ActionDescriptor> {
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
@@ -1982,6 +2811,7 @@ pub fn text_editor_pointer_up(scene: &UiComponentSceneNode, inner: Rect, x: f32,
     })
 }
 
+#[cfg(test)]
 fn text_editor_interaction_actions(scene: &UiComponentSceneNode, host: &EditorHost) -> Vec<ActionDescriptor> {
     vec![
         scene_action(
@@ -1996,6 +2826,172 @@ fn text_editor_interaction_actions(scene: &UiComponentSceneNode, host: &EditorHo
     ]
 }
 
+fn emit_text_editor_actions(
+    scene: &UiComponentSceneNode,
+    input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
+    projected_document_bytes: impl FnOnce(&EditorHost) -> usize,
+    mutate: impl FnOnce(&mut EditorHost),
+) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let Some(entry) = map.get_mut(&scene.surface_id) else {
+            return Ok(false);
+        };
+        let Some(host) = entry.editor.as_mut() else {
+            return Ok(false);
+        };
+        let projected_bytes = projected_document_bytes(host);
+        if projected_bytes > ui_wgpu::wgpu::action::ACTION_STRING_BYTE_CAPACITY {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::StringCredits);
+        }
+        let selection_bytes = 17usize.checked_add(2 * decimal_digits(projected_bytes)).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
+        let batch_bytes = text_editor_pair_bytes(scene, projected_bytes, selection_bytes)?;
+        let mut batch = input.reserve_actions(2, batch_bytes)?;
+        mutate(host);
+        write_text_editor_action_pair(&mut batch, scene, host)?;
+        batch.publish()?;
+        Ok(true)
+    })
+}
+
+fn write_text_editor_action_pair(batch: &mut ui_wgpu::wgpu::BoundedActionBatchReservation<'_>, scene: &UiComponentSceneNode, host: &EditorHost) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    let selection = format!("{{\"start\":{},\"end\":{}}}", host.anchor(), host.caret());
+    let select_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "textSelect", "surfaceId", &scene.surface_id, "selectionJson", &selection])?;
+    batch.action(&scene.controller_id, "textSelect", select_bytes, |builder| {
+        builder.begin_object(None)?;
+        builder.string(Some("surfaceId"), &scene.surface_id)?;
+        builder.string(Some("selectionJson"), &selection)?;
+        builder.end_container()
+    })?;
+    let edit_bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "textEdit", "surfaceId", &scene.surface_id, "document", host.text()])?;
+    batch.action(&scene.controller_id, "textEdit", edit_bytes, |builder| {
+        builder.begin_object(None)?;
+        builder.string(Some("surfaceId"), &scene.surface_id)?;
+        builder.string(Some("document"), host.text())?;
+        builder.end_container()
+    })
+}
+
+fn decimal_digits(value: usize) -> usize {
+    if value == 0 {
+        1
+    } else {
+        value.ilog10() as usize + 1
+    }
+}
+
+fn text_editor_pair_bytes(scene: &UiComponentSceneNode, document_bytes: usize, selection_bytes: usize) -> Result<usize, ui_wgpu::wgpu::BoundedActionFault> {
+    let fixed = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, "textSelect", "surfaceId", &scene.surface_id, "selectionJson", &scene.controller_id, "textEdit", "surfaceId", &scene.surface_id, "document"])?;
+    fixed.checked_add(document_bytes).and_then(|bytes| bytes.checked_add(selection_bytes)).filter(|bytes| *bytes <= ui_wgpu::wgpu::action::ACTION_QUEUE_BYTE_CAPACITY).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)
+}
+
+pub fn text_editor_apply_key_into(scene: &UiComponentSceneNode, key: &KeyAction, modifiers: &PointerModifiers, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let supported = match key {
+        KeyAction::Char(_) if !(modifiers.meta || modifiers.ctrl) => true,
+        KeyAction::Char(ch) if (modifiers.meta || modifiers.ctrl) && ch.eq_ignore_ascii_case("a") => true,
+        KeyAction::Backspace | KeyAction::Delete => true,
+        _ => false,
+    };
+    if !supported {
+        return Ok(false);
+    }
+    emit_text_editor_actions(
+        scene,
+        input,
+        |host| {
+            let text = host.text();
+            let start = host.anchor().min(host.caret()).min(text.len());
+            let end = host.anchor().max(host.caret()).min(text.len());
+            match key {
+                KeyAction::Char(ch) if !(modifiers.meta || modifiers.ctrl) => text.len().saturating_sub(end - start).saturating_add(ch.len()),
+                KeyAction::Backspace if start != end => text.len().saturating_sub(end - start),
+                KeyAction::Backspace => text[..start].chars().next_back().map_or(text.len(), |ch| text.len().saturating_sub(ch.len_utf8())),
+                KeyAction::Delete if start != end => text.len().saturating_sub(end - start),
+                KeyAction::Delete => text[end..].chars().next().map_or(text.len(), |ch| text.len().saturating_sub(ch.len_utf8())),
+                _ => text.len(),
+            }
+        },
+        |host| match key {
+            KeyAction::Char(ch) if !(modifiers.meta || modifiers.ctrl) => host.insert_text(ch),
+            KeyAction::Backspace => host.backspace(),
+            KeyAction::Delete => host.delete_forward(),
+            KeyAction::Char(ch) if (modifiers.meta || modifiers.ctrl) && ch.eq_ignore_ascii_case("a") => host.select_all(),
+            _ => {}
+        },
+    )
+}
+
+pub fn text_editor_select_span_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let sx = (x - inner.x) as f64;
+    let sy = (y - inner.y) as f64;
+    emit_text_editor_actions(scene, input, |host| host.text().len(), |host| host.select_span_at_screen(sx, sy))
+}
+
+pub fn text_editor_pointer_button_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, button: i16, down: bool, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let sx = (x - inner.x) as f64;
+    let sy = (y - inner.y) as f64;
+    emit_text_editor_actions(
+        scene,
+        input,
+        |host| host.text().len(),
+        |host| {
+            if down {
+                host.pointer_down_screen(sx, sy, button as i32);
+            } else {
+                host.pointer_up_screen(sx, sy, button as i32);
+            }
+        },
+    )
+}
+
+pub fn text_editor_pointer_move_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let sx = (x - inner.x) as f64;
+    let sy = (y - inner.y) as f64;
+    emit_text_editor_actions(scene, input, |host| host.text().len(), |host| host.pointer_move_screen(sx, sy, 0))
+}
+
+pub fn text_editor_set_selection_into(scene: &UiComponentSceneNode, anchor: usize, caret: usize, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    emit_text_editor_actions(scene, input, |host| host.text().len(), |host| host.set_selection_range(anchor, caret))
+}
+
+pub fn text_editor_apply_completion_into(scene: &UiComponentSceneNode, prefix_start: usize, caret: usize, insert_text: &str, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    emit_text_editor_actions(
+        scene,
+        input,
+        |host| host.text().len().saturating_sub(caret.saturating_sub(prefix_start)).saturating_add(insert_text.len()),
+        |host| {
+            host.set_selection_range(prefix_start, caret);
+            host.replace_selection(insert_text);
+        },
+    )
+}
+
+pub fn text_editor_pointer_click_into(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, button: i16, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    let sx = (x - inner.x) as f64;
+    let sy = (y - inner.y) as f64;
+    ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let Some(entry) = map.get_mut(&scene.surface_id) else {
+            return Ok(false);
+        };
+        let Some(host) = entry.editor.as_mut() else {
+            return Ok(false);
+        };
+        if host.text().len() > ui_wgpu::wgpu::action::ACTION_STRING_BYTE_CAPACITY {
+            return Err(ui_wgpu::wgpu::BoundedActionFault::StringCredits);
+        }
+        let selection_bytes = 17usize.checked_add(2 * decimal_digits(host.text().len())).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?;
+        let pair_bytes = text_editor_pair_bytes(scene, host.text().len(), selection_bytes)?;
+        let mut batch = input.reserve_actions(4, pair_bytes.checked_mul(2).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits)?)?;
+        host.pointer_down_screen(sx, sy, button as i32);
+        write_text_editor_action_pair(&mut batch, scene, host)?;
+        host.pointer_up_screen(sx, sy, 0);
+        write_text_editor_action_pair(&mut batch, scene, host)?;
+        batch.publish()?;
+        Ok(true)
+    })
+}
+
 //#region 🔖️ScenesInteropAdditions
 // 🧭️ WGPU-RENDERER-FULL-PARITY (2026-07): five narrow additive wrappers, each a one-line delegation
 // mirroring `text_editor_pointer_down`/`_move`/`_up` immediately above — `scenes::TextEditor`'s
@@ -2008,6 +3004,7 @@ fn text_editor_interaction_actions(scene: &UiComponentSceneNode, host: &EditorHo
 /// hit-testing as `text_editor_pointer_down`), mirroring `WasmEditorSurface`'s `session.selectSpanAtScreen`
 /// (`framework/renderer/react/components/text-editor-host.tsx`). Also reused by the context menu's
 /// "Select Token" action at the original right-click point.
+#[cfg(test)]
 pub fn text_editor_select_span_at_screen(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> Vec<ActionDescriptor> {
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
@@ -2026,6 +3023,7 @@ pub fn text_editor_select_span_at_screen(scene: &UiComponentSceneNode, inner: Re
 
 /// 🎯️ Sets an explicit byte-offset selection range (anchor, caret) — used by the "Select Line" context-menu
 /// action, whose range is computed from the buffer text rather than a screen point.
+#[cfg(test)]
 pub fn text_editor_set_selection(scene: &UiComponentSceneNode, anchor: usize, caret: usize) -> Vec<ActionDescriptor> {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();
@@ -2042,6 +3040,7 @@ pub fn text_editor_set_selection(scene: &UiComponentSceneNode, anchor: usize, ca
 
 /// ✅️ Commits a completion: replaces `[prefix_start, caret)` with `insert_text`, mirroring
 /// `WasmEditorSurface.applyCompletion` (`setSelectionRange` + `replaceSelection`).
+#[cfg(test)]
 pub fn text_editor_apply_completion(scene: &UiComponentSceneNode, prefix_start: usize, caret: usize, insert_text: &str) -> Vec<ActionDescriptor> {
     ENGINE_SURFACES.with(|cell| {
         let mut map = cell.borrow_mut();

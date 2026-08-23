@@ -2,14 +2,17 @@
 //! 🖱️ Pointer and keyboard input state for hit testing.
 
 use crate::wgpu::geometry::Rect;
+#[cfg(test)]
+use crate::wgpu::ActionDescriptor;
+use crate::wgpu::{BoundedAction, BoundedActionBatchReservation, BoundedActionFault, BoundedActionQueue, BoundedActionReservation};
 use std::rc::Rc;
 
 use std::collections::HashMap;
 
 type TreeDragPayload = HashMap<String, String>;
 const HIT_TARGET_CAPACITY: usize = 8_192;
-const PENDING_EVENT_CAPACITY: usize = 256;
 const PENDING_KEY_CAPACITY: usize = 64;
+const PENDING_KEY_BYTE_CAPACITY: usize = 4 * 1024;
 const DRAG_POINT_CAPACITY: usize = 4_096;
 const INPUT_TEXT_PAGE_BYTES: usize = 16 * 1024;
 
@@ -114,6 +117,82 @@ pub enum KeyAction {
     Space(bool),
 }
 
+struct FixedKeyQueue {
+    slots: Box<[Option<KeyAction>; PENDING_KEY_CAPACITY]>,
+    head: usize,
+    len: usize,
+    bytes: usize,
+}
+
+impl Default for FixedKeyQueue {
+    fn default() -> Self {
+        Self { slots: Box::new(std::array::from_fn(|_| None)), head: 0, len: 0, bytes: 0 }
+    }
+}
+
+impl FixedKeyQueue {
+    fn key_bytes(key: &KeyAction) -> usize {
+        match key {
+            KeyAction::Char(value) => value.len(),
+            _ => 0,
+        }
+    }
+
+    fn push_back(&mut self, key: KeyAction) -> Result<(), KeyAction> {
+        let bytes = Self::key_bytes(&key);
+        if self.len == PENDING_KEY_CAPACITY || bytes > PENDING_KEY_BYTE_CAPACITY || self.bytes.checked_add(bytes).map_or(true, |next| next > PENDING_KEY_BYTE_CAPACITY) {
+            return Err(key);
+        }
+        let index = (self.head + self.len) % PENDING_KEY_CAPACITY;
+        self.slots[index] = Some(key);
+        self.len += 1;
+        self.bytes += bytes;
+        Ok(())
+    }
+
+    fn push_front(&mut self, key: KeyAction) -> Result<(), KeyAction> {
+        let bytes = Self::key_bytes(&key);
+        if self.len == PENDING_KEY_CAPACITY || bytes > PENDING_KEY_BYTE_CAPACITY || self.bytes.checked_add(bytes).map_or(true, |next| next > PENDING_KEY_BYTE_CAPACITY) {
+            return Err(key);
+        }
+        self.head = (self.head + PENDING_KEY_CAPACITY - 1) % PENDING_KEY_CAPACITY;
+        self.slots[self.head] = Some(key);
+        self.len += 1;
+        self.bytes += bytes;
+        Ok(())
+    }
+
+    fn pop_front(&mut self) -> Option<KeyAction> {
+        if self.len == 0 {
+            return None;
+        }
+        let key = self.slots[self.head].take();
+        self.head = (self.head + 1) % PENDING_KEY_CAPACITY;
+        self.len -= 1;
+        if let Some(key) = key.as_ref() {
+            self.bytes -= Self::key_bytes(key);
+        }
+        key
+    }
+
+    fn pop_back(&mut self) -> Option<KeyAction> {
+        if self.len == 0 {
+            return None;
+        }
+        let index = (self.head + self.len - 1) % PENDING_KEY_CAPACITY;
+        let key = self.slots[index].take();
+        self.len -= 1;
+        if let Some(key) = key.as_ref() {
+            self.bytes -= Self::key_bytes(key);
+        }
+        key
+    }
+
+    fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+}
+
 pub struct InputState<E> {
     pub pointer_x: f32,
     pub pointer_y: f32,
@@ -129,10 +208,11 @@ pub struct InputState<E> {
     text_view_start: usize,
     text_projection_pending: bool,
     text_fault: Option<ui_contract::TextEditFault>,
+    action_fault: Option<BoundedActionFault>,
     pub cursor_pos: usize,
     pub hit_targets: Vec<HitTarget<E>>,
-    pub pending_events: Vec<E>,
-    pub pending_keys: Vec<KeyAction>,
+    pending_actions: BoundedActionQueue,
+    pending_keys: FixedKeyQueue,
     pub right_click_pos: Option<(f32, f32)>,
 }
 
@@ -153,10 +233,11 @@ impl<E> Default for InputState<E> {
             text_view_start: 0,
             text_projection_pending: false,
             text_fault: None,
+            action_fault: None,
             cursor_pos: 0,
             hit_targets: Vec::with_capacity(HIT_TARGET_CAPACITY),
-            pending_events: Vec::with_capacity(PENDING_EVENT_CAPACITY),
-            pending_keys: Vec::with_capacity(PENDING_KEY_CAPACITY),
+            pending_actions: BoundedActionQueue::default(),
+            pending_keys: FixedKeyQueue::default(),
             right_click_pos: None,
         }
     }
@@ -213,28 +294,71 @@ impl<E: Clone> InputState<E> {
         drag
     }
 
-    pub fn drain_events(&mut self) -> Vec<E> {
-        std::mem::replace(&mut self.pending_events, Vec::with_capacity(PENDING_EVENT_CAPACITY))
-    }
-
-    pub fn drain_keys(&mut self) -> Vec<KeyAction> {
-        std::mem::replace(&mut self.pending_keys, Vec::with_capacity(PENDING_KEY_CAPACITY))
-    }
-
-    pub fn queue_event(&mut self, event: E) {
-        if self.pending_events.len() == PENDING_EVENT_CAPACITY {
-            self.text_fault = Some(ui_contract::TextEditFault::ItemCredits);
-            return;
+    pub fn take_action_step(&mut self) -> Result<Option<BoundedAction>, BoundedActionFault> {
+        if let Some(fault) = self.action_fault.take() {
+            return Err(fault);
         }
-        self.pending_events.push(event);
+        Ok(self.pending_actions.pop_front())
     }
 
-    pub fn queue_key(&mut self, action: KeyAction) {
-        if self.pending_keys.len() == PENDING_KEY_CAPACITY {
-            self.text_fault = Some(ui_contract::TextEditFault::ItemCredits);
-            return;
+    #[cfg(test)]
+    pub fn drain_events(&mut self) -> Vec<ActionDescriptor> {
+        let mut events = Vec::new();
+        while let Some(action) = self.take_action_step().expect("action authority live") {
+            events.push(action.into_descriptor().expect("bounded action materializes"));
         }
-        self.pending_keys.push(action);
+        events
+    }
+
+    pub fn take_key_step(&mut self) -> Option<KeyAction> {
+        self.pending_keys.pop_front()
+    }
+
+    pub fn reserve_action<'a>(&'a mut self, controller_id: &str, action: &str, byte_credits: usize) -> Result<BoundedActionReservation<'a>, BoundedActionFault> {
+        self.pending_actions.reserve(controller_id, action, byte_credits)
+    }
+
+    pub fn reserve_actions(&mut self, item_credits: usize, byte_credits: usize) -> Result<BoundedActionBatchReservation<'_>, BoundedActionFault> {
+        self.pending_actions.reserve_batch(item_credits, byte_credits)
+    }
+
+    pub fn claim_action(&mut self, byte_credits: usize) -> Result<crate::wgpu::BoundedActionClaim, BoundedActionFault> {
+        self.pending_actions.claim(byte_credits)
+    }
+
+    pub fn reserve_claimed_action<'a>(&'a mut self, claim: crate::wgpu::BoundedActionClaim, controller_id: &str, action: &str) -> Result<crate::wgpu::BoundedClaimedActionReservation<'a>, BoundedActionFault> {
+        self.pending_actions.reserve_claimed(claim, controller_id, action)
+    }
+
+    pub fn release_action_claim(&mut self, claim: crate::wgpu::BoundedActionClaim) -> Result<(), BoundedActionFault> {
+        self.pending_actions.release_claim(claim)
+    }
+
+    pub fn publish_action(&mut self, controller_id: &str, action: &str, byte_credits: usize, build: impl FnOnce(&mut crate::wgpu::BoundedActionBuilder, &str) -> Result<(), BoundedActionFault>) -> Result<(), BoundedActionFault> {
+        let text_view = self.text_view.as_str();
+        let mut reservation = self.pending_actions.reserve(controller_id, action, byte_credits)?;
+        build(reservation.builder(), text_view)?;
+        reservation.publish()
+    }
+
+    pub fn record_action_fault(&mut self, fault: BoundedActionFault) {
+        self.action_fault = Some(fault);
+        self.text_fault = Some(match fault {
+            BoundedActionFault::ByteCredits | BoundedActionFault::StringCredits => ui_contract::TextEditFault::ByteCredits,
+            _ => ui_contract::TextEditFault::ItemCredits,
+        });
+    }
+
+    pub fn queue_key(&mut self, action: KeyAction) -> Result<(), KeyAction> {
+        if let Err(action) = self.pending_keys.push_back(action) {
+            self.text_fault = Some(ui_contract::TextEditFault::ItemCredits);
+            return Err(action);
+        }
+        Ok(())
+    }
+
+    pub fn retry_key(&mut self, action: KeyAction) -> Result<(), KeyAction> {
+        self.pending_keys.push_front(action)
     }
 
     pub fn focus_input_owned(&mut self, id: String, value: String) {
@@ -347,10 +471,13 @@ impl<E: Clone> InputState<E> {
         if self.hit_targets.pop().is_some() {
             return Ok(false);
         }
-        if self.pending_events.pop().is_some() {
+        if self.pending_actions.pop_back().is_some() {
             return Ok(false);
         }
-        if self.pending_keys.pop().is_some() {
+        if !self.pending_actions.close_claim_step() {
+            return Ok(false);
+        }
+        if self.pending_keys.pop_back().is_some() {
             return Ok(false);
         }
         if self.drag.points.pop().is_some() {
@@ -368,12 +495,13 @@ impl<E: Clone> InputState<E> {
         }
         self.text_projection_pending = false;
         self.text_fault = None;
+        self.action_fault = None;
         self.text_buffer.close_step(1)
     }
 
     pub fn terminal_is_empty(&self) -> bool {
         self.hit_targets.is_empty()
-            && self.pending_events.is_empty()
+            && self.pending_actions.is_empty()
             && self.pending_keys.is_empty()
             && self.drag.points.is_empty()
             && self.drag.target_id.is_none()
@@ -381,6 +509,7 @@ impl<E: Clone> InputState<E> {
             && self.focused_id.is_none()
             && self.text_view.is_empty()
             && !self.text_projection_pending
+            && self.action_fault.is_none()
             && self.text_buffer.terminal_is_empty()
     }
 }
@@ -408,6 +537,70 @@ mod tests {
         let hit = input.hit_at(10.0, 36.0).expect("row point should hit");
         assert_eq!(hit.control_id.as_deref(), Some("tree.label.item-1"));
         assert_eq!(hit.kind, HitKind::TreeItem);
+    }
+
+    #[test]
+    fn event_queue_has_fixed_credits_and_transfers_one_fifo_item() {
+        let mut input = InputState::<ActionDescriptor>::default();
+        for index in 0..crate::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY {
+            let action = format!("event-{index}");
+            input.reserve_action("controller", &action, 128).expect("reservation").publish().expect("queue credit");
+        }
+        assert_eq!(input.pending_actions.len(), crate::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY);
+        for expected in 0..crate::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY {
+            assert_eq!(input.take_action_step().expect("authority").expect("event").into_descriptor().expect("materialized").action, format!("event-{expected}"));
+        }
+        assert!(input.take_action_step().expect("authority").is_none());
+    }
+
+    #[test]
+    fn event_queue_close_retires_one_owned_slot_per_step() {
+        let mut input = InputState::<ActionDescriptor>::default();
+        input.reserve_action("controller", "first", 128).expect("first").publish().expect("first queue");
+        input.reserve_action("controller", "second", 128).expect("second").publish().expect("second queue");
+        assert!(!input.close_step().expect("first retirement step"));
+        assert_eq!(input.pending_actions.len(), 1);
+        assert!(!input.close_step().expect("second retirement step"));
+        assert!(input.pending_actions.is_empty());
+    }
+
+    #[test]
+    fn saturated_reservation_does_not_consume_semantic_source_and_retry_keeps_fifo() {
+        let mut input = InputState::<ActionDescriptor>::default();
+        for index in 0..crate::wgpu::action::ACTION_QUEUE_ITEM_CAPACITY {
+            let action = format!("event-{index}");
+            input.reserve_action("controller", &action, 128).expect("reservation").publish().expect("publish");
+        }
+        let semantic_source = String::from("retry-owned");
+        let result = input.publish_action("controller", "retry", 128, |builder, _| {
+            builder.begin_object(None)?;
+            builder.string(Some("value"), &semantic_source)?;
+            builder.end_container()
+        });
+        assert_eq!(result, Err(BoundedActionFault::ItemCredits));
+        assert_eq!(semantic_source, "retry-owned");
+        assert_eq!(input.take_action_step().expect("authority").expect("first").into_descriptor().expect("descriptor").action, "event-0");
+        input
+            .publish_action("controller", "retry", 128, |builder, _| {
+                builder.begin_object(None)?;
+                builder.string(Some("value"), &semantic_source)?;
+                builder.end_container()
+            })
+            .expect("retry publication");
+        let mut last = None;
+        while let Some(action) = input.take_action_step().expect("authority") {
+            last = Some(action.into_descriptor().expect("descriptor"));
+        }
+        assert_eq!(last.expect("last").action, "retry");
+    }
+
+    #[test]
+    fn action_fault_is_observed_before_another_queued_owner() {
+        let mut input = InputState::<ActionDescriptor>::default();
+        input.reserve_action("controller", "queued", 128).expect("reservation").publish().expect("publish");
+        input.record_action_fault(BoundedActionFault::ByteCredits);
+        assert!(matches!(input.take_action_step(), Err(BoundedActionFault::ByteCredits)));
+        assert_eq!(input.take_action_step().expect("authority").expect("queued").into_descriptor().expect("descriptor").action, "queued");
     }
 }
 // #endregion input

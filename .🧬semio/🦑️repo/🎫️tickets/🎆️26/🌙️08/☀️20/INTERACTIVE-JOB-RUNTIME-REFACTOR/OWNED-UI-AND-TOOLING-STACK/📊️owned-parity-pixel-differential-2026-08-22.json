@@ -1,0 +1,46 @@
+{
+  "command": "bun nx run @semio-tech/framework-os-dev:test-quick --skip-nx-cache -- -t 'validates temporary representative' --disableConsoleIntercept",
+  "date": "2026-08-22",
+  "fixturePolicy": {
+    "opaque": "Both comparators count the same single perceptually material colour delta.",
+    "scene-gradient": "Both comparators retain the twelve-byte smooth gradient shift below threshold.",
+    "text-edge": "Both comparators count two boundary pixels and mark one interior coverage pixel as antialiasing.",
+    "transparent": "Both comparators count the same visible black coverage change, retain the coloured opacity delta below threshold, and ignore fully transparent RGB-only change."
+  },
+  "fixtures": [
+    {
+      "fixture": "opaque",
+      "oldCount": 1,
+      "ownedAntialiasMarkers": 0,
+      "ownedCount": 1,
+      "ownedMismatchMarkers": 1
+    },
+    {
+      "fixture": "transparent",
+      "oldCount": 1,
+      "ownedAntialiasMarkers": 0,
+      "ownedCount": 1,
+      "ownedMismatchMarkers": 1
+    },
+    {
+      "fixture": "text-edge",
+      "oldCount": 2,
+      "ownedAntialiasMarkers": 1,
+      "ownedCount": 2,
+      "ownedMismatchMarkers": 2
+    },
+    {
+      "fixture": "scene-gradient",
+      "oldCount": 0,
+      "ownedAntialiasMarkers": 0,
+      "ownedCount": 0,
+      "ownedMismatchMarkers": 0
+    }
+  ],
+  "legacyComparator": "pixelmatch@7.2.0",
+  "options": {
+    "ignoreAntialiasing": true,
+    "threshold": 0.1
+  },
+  "status": "representative-count-and-marker-parity"
+}

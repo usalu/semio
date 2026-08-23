@@ -42,9 +42,378 @@ pub struct ChildPackEntry {
 }
 //#endregion 🔖️ChildPackEntry
 
+//#region 🔖️PresenceRosterWire
+pub const PRESENCE_ROSTER_MAXIMUM_ITEMS: usize = 64;
+pub const PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES: usize = 4_096;
+pub const PRESENCE_ROSTER_MAXIMUM_BYTES: usize = PRESENCE_ROSTER_MAXIMUM_ITEMS * PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES;
+
+#[derive(Debug, PartialEq)]
+pub struct PresenceRosterWire {
+    entries: [Option<Box<[u8]>>; PRESENCE_ROSTER_MAXIMUM_ITEMS],
+    len: usize,
+    bytes: usize,
+}
+
+#[derive(Debug)]
+pub struct PresenceRosterPushRejected {
+    pub entry: Vec<u8>,
+    pub reason: &'static str,
+}
+
+impl PresenceRosterWire {
+    pub fn empty() -> Self {
+        Self { entries: std::array::from_fn(|_| None), len: 0, bytes: 0 }
+    }
+
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    pub fn byte_len(&self) -> usize {
+        self.bytes
+    }
+
+    pub fn try_push(&mut self, entry: Vec<u8>) -> Result<(), PresenceRosterPushRejected> {
+        if self.len == PRESENCE_ROSTER_MAXIMUM_ITEMS {
+            return Err(PresenceRosterPushRejected { entry, reason: "presence roster exceeds its fixed item authority" });
+        }
+        if entry.len() > PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES || self.bytes.checked_add(entry.len()).is_none_or(|bytes| bytes > PRESENCE_ROSTER_MAXIMUM_BYTES) {
+            return Err(PresenceRosterPushRejected { entry, reason: "presence roster exceeds its fixed byte authority" });
+        }
+        let bytes = entry.len();
+        self.entries[self.len] = Some(entry.into_boxed_slice());
+        self.len += 1;
+        self.bytes += bytes;
+        Ok(())
+    }
+
+    pub fn pop_back(&mut self) -> Option<Box<[u8]>> {
+        if self.len == 0 {
+            return None;
+        }
+        self.len -= 1;
+        let entry = self.entries[self.len].take().expect("occupied presence roster slot");
+        self.bytes -= entry.len();
+        Some(entry)
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &[u8]> {
+        self.entries[..self.len].iter().filter_map(|entry| entry.as_deref())
+    }
+
+    pub fn last(&self) -> Option<&[u8]> {
+        self.len.checked_sub(1).and_then(|index| self.entries[index].as_deref())
+    }
+}
+
+impl Default for PresenceRosterWire {
+    fn default() -> Self {
+        Self::empty()
+    }
+}
+//#endregion 🔖️PresenceRosterWire
+
+//#region 🔖️PresenceCommandCursor
+pub const PRESENCE_COMMAND_MAXIMUM_BYTES: usize = PRESENCE_ROSTER_MAXIMUM_BYTES + PRESENCE_ROSTER_MAXIMUM_ITEMS * 10 + 32;
+
+pub struct PresenceCommandCursor {
+    page: Option<semio_framework::kernel::FixedCommandPage>,
+    remaining: usize,
+    seq: u64,
+    own_color: Option<u8>,
+    next_page: u32,
+}
+
+impl PresenceCommandCursor {
+    pub fn retain_rejected(page: semio_framework::kernel::FixedCommandPage, seq: u64) -> Self {
+        Self { page: Some(page), remaining: 0, seq, own_color: None, next_page: 1 }
+    }
+
+    pub fn admit_page(seq: u64, own_color: Option<u8>, item_count: u32, page: semio_framework::kernel::FixedCommandPage) -> Result<Self, (crate::os_spr::ProtocolError, semio_framework::kernel::FixedCommandPage)> {
+        if item_count as usize > PRESENCE_ROSTER_MAXIMUM_ITEMS || page.len() > PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES || (item_count != 0 && page.is_empty()) || (item_count == 0 && !page.is_empty()) {
+            return Err((malformed("channel presence page", 0, "Presence page violates its exact item or 4096-byte authority"), page));
+        }
+        Ok(Self { page: Some(page), remaining: item_count as usize, seq, own_color, next_page: 1 })
+    }
+
+    pub fn push_page(&mut self, page_index: u32, page: semio_framework::kernel::FixedCommandPage) -> Result<(), (crate::os_spr::ProtocolError, semio_framework::kernel::FixedCommandPage)> {
+        if self.page.is_some() || self.remaining == 0 || page_index != self.next_page || page.is_empty() || page.len() > PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES {
+            return Err((malformed("channel presence page", page_index as u64, "page is out of order, saturated, empty, or oversized"), page));
+        }
+        self.page = Some(page);
+        self.next_page = self.next_page.saturating_add(1);
+        Ok(())
+    }
+
+    pub fn seq(&self) -> u64 {
+        self.seq
+    }
+
+    pub fn own_color(&self) -> Option<u8> {
+        self.own_color
+    }
+
+    pub fn take_next(&mut self) -> Result<Option<semio_framework::kernel::FixedCommandPage>, crate::os_spr::ProtocolError> {
+        if self.remaining == 0 {
+            return Ok(None);
+        }
+        let entry = self.page.take().ok_or_else(|| malformed("channel presence command owner", self.next_page as u64, "next page has not been admitted"))?;
+        self.remaining -= 1;
+        Ok(Some(entry))
+    }
+
+    pub fn next_len(&self) -> Result<Option<usize>, crate::os_spr::ProtocolError> {
+        if self.remaining == 0 {
+            return Ok(None);
+        }
+        Ok(self.page.as_ref().map(semio_framework::kernel::FixedCommandPage::len))
+    }
+
+    pub fn close_release(&mut self, maximum_bytes: usize) -> (bool, usize) {
+        let Some(page_len) = self.page.as_ref().map(semio_framework::kernel::FixedCommandPage::len) else {
+            return (self.remaining == 0, 0);
+        };
+        if page_len > maximum_bytes {
+            return (false, 0);
+        }
+        let page = self.page.take().expect("presence page was present");
+        let released = page.len();
+        drop(page);
+        self.remaining = 0;
+        (true, released)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.page.is_none() && self.remaining == 0
+    }
+
+    pub fn waiting_for_page(&self) -> bool {
+        self.page.is_none() && self.remaining != 0
+    }
+}
+//#endregion 🔖️PresenceCommandCursor
+
+//#region 🔖️PagedAppCommandDecode
+const APP_COMMAND_FIELD_MAXIMUM_BYTES: usize = semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES;
+
+#[derive(Debug)]
+enum PagedAppCommandDecodeState {
+    Header,
+    ConfigCommand { seq: u64 },
+    CommandPayload { seq: u64 },
+    CommandView { seq: u64, command: Option<Vec<u8>> },
+    CommandText { seq: u64 },
+    ContextMenu { seq: u64 },
+    ArtifactCommand { seq: u64 },
+    RejectedFields { first: Option<Vec<u8>>, second: Option<Vec<u8>> },
+    Terminal,
+    Faulted,
+}
+
+#[derive(Debug)]
+pub struct PagedAppCommandDecodeCursor {
+    reader: semio_framework::kernel::PagedCommandReader,
+    state: PagedAppCommandDecodeState,
+}
+
+#[derive(Debug)]
+pub struct DecodedAppCommandOwner {
+    command: Option<AppCommand>,
+    close_stage: u8,
+}
+
+impl DecodedAppCommandOwner {
+    pub fn new(command: AppCommand) -> Self {
+        Self { command: Some(command), close_stage: 0 }
+    }
+
+    pub fn take_for_dispatch(&mut self) -> Option<AppCommand> {
+        self.command.take()
+    }
+
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize, usize) {
+        let Some(command) = self.command.as_mut() else {
+            return (true, 0, 0);
+        };
+        let field = match (self.close_stage, command) {
+            (0, AppCommand::ConfigCommand { command, .. }) | (0, AppCommand::ContextMenu { request: command, .. }) | (0, AppCommand::ArtifactCommand { command, .. }) | (0, AppCommand::Command { command, .. }) => Some(std::mem::take(command)),
+            (0, AppCommand::CommandText { line, .. }) => Some(std::mem::take(line).into_bytes()),
+            (1, AppCommand::Command { view_state, .. }) => Some(std::mem::take(view_state)),
+            _ => None,
+        };
+        if let Some(field) = field {
+            if field.len() > maximum_bytes {
+                match (self.close_stage, self.command.as_mut().expect("decoded command owner was present")) {
+                    (0, AppCommand::ConfigCommand { command, .. }) | (0, AppCommand::ContextMenu { request: command, .. }) | (0, AppCommand::ArtifactCommand { command, .. }) | (0, AppCommand::Command { command, .. }) => *command = field,
+                    (0, AppCommand::CommandText { line, .. }) => *line = String::from_utf8(field).expect("decoded command text remains valid UTF-8"),
+                    (1, AppCommand::Command { view_state, .. }) => *view_state = field,
+                    _ => unreachable!("decoded command close field has an exact restoration target"),
+                }
+                return (false, 0, 0);
+            }
+            let released = field.len();
+            drop(field);
+            self.close_stage = self.close_stage.saturating_add(1);
+            return (false, 1, released);
+        }
+        let command = self.command.take().expect("decoded command shell was present");
+        drop(command);
+        (true, 1, 0)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.command.is_none()
+    }
+}
+
+impl PagedAppCommandDecodeCursor {
+    pub fn new(command: semio_framework::kernel::PagedCommand) -> Self {
+        Self { reader: semio_framework::kernel::PagedCommandReader::new(command), state: PagedAppCommandDecodeState::Header }
+    }
+
+    pub fn kind(&self) -> u8 {
+        self.reader.kind()
+    }
+
+    pub fn step(&mut self) -> Result<Option<AppCommand>, semio_framework::Fault> {
+        let state = std::mem::replace(&mut self.state, PagedAppCommandDecodeState::Faulted);
+        let outcome = match state {
+            PagedAppCommandDecodeState::Header => {
+                let tag = self.reader.read_byte()?;
+                let seq = self.reader.read_varint()?;
+                self.state = match tag {
+                    0 => PagedAppCommandDecodeState::ConfigCommand { seq },
+                    1 => PagedAppCommandDecodeState::CommandPayload { seq },
+                    2 => PagedAppCommandDecodeState::CommandText { seq },
+                    3 => PagedAppCommandDecodeState::ContextMenu { seq },
+                    4 => PagedAppCommandDecodeState::ArtifactCommand { seq },
+                    _ => {
+                        return Err(semio_framework::Fault::new(
+                            semio_framework::FaultOrigin::Framework,
+                            semio_framework::FaultCode::new("plugin.command-route-state-machine-required"),
+                            "this AppCommand kind requires its route-specific retained decoder before admission",
+                        ));
+                    }
+                };
+                None
+            }
+            PagedAppCommandDecodeState::ConfigCommand { seq } => {
+                let command = self.reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES)?;
+                Some(AppCommand::ConfigCommand { seq, command })
+            }
+            PagedAppCommandDecodeState::CommandPayload { seq } => {
+                let command = self.reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES)?;
+                self.state = PagedAppCommandDecodeState::CommandView { seq, command: Some(command) };
+                None
+            }
+            PagedAppCommandDecodeState::CommandView { seq, mut command } => {
+                let view_state = match self.reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES) {
+                    Ok(view_state) => view_state,
+                    Err(fault) => {
+                        self.state = PagedAppCommandDecodeState::CommandView { seq, command };
+                        return Err(fault);
+                    }
+                };
+                Some(AppCommand::Command { seq, command: command.take().expect("retained command payload"), view_state })
+            }
+            PagedAppCommandDecodeState::CommandText { seq } => {
+                let bytes = self.reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES)?;
+                let line = match String::from_utf8(bytes) {
+                    Ok(line) => line,
+                    Err(error) => {
+                        self.state = PagedAppCommandDecodeState::RejectedFields { first: Some(error.into_bytes()), second: None };
+                        return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.command-field-utf8"), "paged command text is not valid UTF-8"));
+                    }
+                };
+                Some(AppCommand::CommandText { seq, line })
+            }
+            PagedAppCommandDecodeState::ContextMenu { seq } => {
+                let request = self.reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES)?;
+                Some(AppCommand::ContextMenu { seq, request })
+            }
+            PagedAppCommandDecodeState::ArtifactCommand { seq } => {
+                let command = self.reader.read_bounded_bytes(APP_COMMAND_FIELD_MAXIMUM_BYTES)?;
+                Some(AppCommand::ArtifactCommand { seq, command })
+            }
+            PagedAppCommandDecodeState::RejectedFields { first, second } => {
+                self.state = PagedAppCommandDecodeState::RejectedFields { first, second };
+                return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.command-decode-closing"), "rejected paged command must be closed before it can be stepped again"));
+            }
+            PagedAppCommandDecodeState::Terminal | PagedAppCommandDecodeState::Faulted => {
+                return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.command-decode-terminal"), "paged command decoder was stepped after terminal"));
+            }
+        };
+        if let Some(command) = outcome {
+            if !self.reader.terminal_is_empty() {
+                let (first, second) = match command {
+                    AppCommand::ConfigCommand { command, .. } | AppCommand::ContextMenu { request: command, .. } | AppCommand::ArtifactCommand { command, .. } => (Some(command), None),
+                    AppCommand::Command { command, view_state, .. } => (Some(command), Some(view_state)),
+                    AppCommand::CommandText { line, .. } => (Some(line.into_bytes()), None),
+                    AppCommand::Presence { .. } => unreachable!("Presence is never decoded by the generic paged cursor"),
+                    _ => unreachable!("route-specific AppCommand is never decoded by the generic paged cursor"),
+                };
+                self.state = PagedAppCommandDecodeState::RejectedFields { first, second };
+                return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.command-decode-trailing"), "paged command carries trailing bytes after its terminal field"));
+            }
+            self.state = PagedAppCommandDecodeState::Terminal;
+            Ok(Some(command))
+        } else {
+            Ok(None)
+        }
+    }
+
+    pub fn close_step(&mut self, maximum_bytes: usize) -> (bool, usize) {
+        if let PagedAppCommandDecodeState::CommandView { command, .. } = &mut self.state {
+            if let Some(bytes) = command.as_ref() {
+                if bytes.len() > maximum_bytes {
+                    return (false, 0);
+                }
+                let bytes = command.take().expect("retained command payload");
+                let released = bytes.len();
+                drop(bytes);
+                return (false, released);
+            }
+        }
+        if let PagedAppCommandDecodeState::RejectedFields { first, second } = &mut self.state {
+            if let Some(bytes) = first.as_ref() {
+                if bytes.len() > maximum_bytes {
+                    return (false, 0);
+                }
+                let bytes = first.take().expect("first rejected field was present");
+                let released = bytes.len();
+                drop(bytes);
+                return (false, released);
+            }
+            if let Some(bytes) = second.as_ref() {
+                if bytes.len() > maximum_bytes {
+                    return (false, 0);
+                }
+                let bytes = second.take().expect("second rejected field was present");
+                let released = bytes.len();
+                drop(bytes);
+                return (false, released);
+            }
+        }
+        let (empty, released) = self.reader.close_step(maximum_bytes);
+        if empty {
+            self.state = PagedAppCommandDecodeState::Terminal;
+        }
+        (empty, released)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        matches!(self.state, PagedAppCommandDecodeState::Terminal) && self.reader.terminal_is_empty()
+    }
+}
+//#endregion 🔖️PagedAppCommandDecode
+
 //#region 🔖️AppCommand
 /// @emoji 📨️ One frame a client (UI or headless runner) sends to the app engine.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum AppCommand {
     ConfigCommand {
         seq: u64,
@@ -223,7 +592,7 @@ pub enum AppCommand {
     Presence {
         seq: u64,
         own_color: Option<u8>,
-        peers: Vec<Vec<u8>>,
+        peers: PresenceRosterWire,
     },
 }
 //#endregion 🔖️AppCommand
@@ -416,11 +785,7 @@ async fn write_opt_u64(out: &mut Vec<u8>, value: &Option<u64>) {
 }
 
 async fn read_opt_u64(bytes: &[u8], pos: &mut usize) -> Result<Option<u64>, crate::os_spr::ProtocolError> {
-    if crate::os_spr::read_bool(bytes, pos)? {
-        Ok(Some(crate::os_spr::read_varint_u64(bytes, pos)?))
-    } else {
-        Ok(None)
-    }
+    if crate::os_spr::read_bool(bytes, pos)? { Ok(Some(crate::os_spr::read_varint_u64(bytes, pos)?)) } else { Ok(None) }
 }
 
 /// 🎞️ `presence u8 | byte` — an `Option<u8>` (`AppCommand::Presence.own_color`), the same
@@ -460,6 +825,13 @@ async fn read_vec_bytes(bytes: &[u8], pos: &mut usize) -> Result<Vec<Vec<u8>>, c
     Ok(out)
 }
 
+async fn write_presence_roster(out: &mut Vec<u8>, roster: &PresenceRosterWire) {
+    crate::os_spr::write_varint_u64(out, roster.len() as u64);
+    for entry in roster.iter() {
+        crate::os_spr::write_bytes(out, entry);
+    }
+}
+
 async fn write_vec_envelope(out: &mut Vec<u8>, values: &[crate::os_spr::causal::MutationEnvelope]) {
     crate::os_spr::write_varint_u64(out, values.len() as u64);
     for value in values {
@@ -480,181 +852,285 @@ async fn read_vec_envelope(bytes: &[u8], pos: &mut usize) -> Result<Vec<crate::o
 //#endregion 🔖️Combinators
 
 /// @emoji 📤️ Encodes one `AppCommand`: `tag u8 | fields`.
-pub async fn encode_app_command(command: &AppCommand) -> Vec<u8> {
-    let mut out = Vec::new();
-    match command {
-        AppCommand::ConfigCommand { seq, command } => {
-            out.push(0);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_bytes(&mut out, command);
+
+struct CommandPageWriter {
+    pages: semio_framework::kernel::CommandPageSet,
+    current: [u8; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES],
+    current_len: usize,
+    bytes: usize,
+}
+
+impl CommandPageWriter {
+    fn try_new() -> Result<Self, semio_framework::Fault> {
+        Ok(Self { pages: semio_framework::kernel::CommandPageSet::try_new()?, current: [0; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES], current_len: 0, bytes: 0 })
+    }
+
+    fn flush(&mut self) -> Result<(), semio_framework::Fault> {
+        let current = std::mem::replace(&mut self.current, [0; semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES]);
+        let page = semio_framework::kernel::FixedCommandPage::try_from_array(current, self.current_len as u32)?;
+        self.current_len = 0;
+        self.pages.try_push(page).map_err(|(fault, _page)| fault)
+    }
+
+    fn write(&mut self, mut bytes: &[u8]) -> Result<(), semio_framework::Fault> {
+        while !bytes.is_empty() {
+            if self.current_len == semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES {
+                self.flush()?;
+            }
+            let take = bytes.len().min(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES - self.current_len);
+            self.current[self.current_len..self.current_len + take].copy_from_slice(&bytes[..take]);
+            self.current_len += take;
+            bytes = &bytes[take..];
+            self.bytes += take;
         }
-        AppCommand::Command { seq, command, view_state } => {
-            out.push(1);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_bytes(&mut out, command);
-            crate::os_spr::write_bytes(&mut out, view_state);
-        }
-        AppCommand::CommandText { seq, line } => {
-            out.push(2);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_str(&mut out, line);
-        }
-        AppCommand::ContextMenu { seq, request } => {
-            out.push(3);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_bytes(&mut out, request);
-        }
-        AppCommand::ArtifactCommand { seq, command } => {
-            out.push(4);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_bytes(&mut out, command);
-        }
-        AppCommand::ApplyEnvelopes { seq, envelopes } => {
-            out.push(5);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            write_vec_envelope(&mut out, envelopes).await;
-        }
-        AppCommand::LoadDocument { seq, pack, spr } => {
-            out.push(6);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_bytes(&mut out, pack);
-            crate::os_spr::write_bytes(&mut out, spr);
-        }
-        AppCommand::ReadDocument { seq } => {
-            out.push(7);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-        }
-        AppCommand::LoadConfig { seq, pack, spr } => {
-            out.push(8);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_bytes(&mut out, pack);
-            crate::os_spr::write_bytes(&mut out, spr);
-        }
-        AppCommand::ReadConfig { seq } => {
-            out.push(9);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-        }
-        AppCommand::MediaIn { seq, port, descriptor, data } => {
-            out.push(10);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_str(&mut out, port);
-            crate::os_spr::write_bytes(&mut out, descriptor);
-            crate::os_spr::write_bytes(&mut out, data);
-        }
-        AppCommand::MediaOut { seq, port, request } => {
-            out.push(11);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_str(&mut out, port);
-            crate::os_spr::write_bytes(&mut out, request);
-        }
-        AppCommand::MediaFingerprint { seq, port } => {
-            out.push(12);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_str(&mut out, port);
-        }
-        AppCommand::PureCommand { seq, command, document, document_spr, config, config_spr, draft, draft_spr } => {
-            out.push(13);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_bytes(&mut out, command);
-            crate::os_spr::write_bytes(&mut out, document);
-            crate::os_spr::write_bytes(&mut out, document_spr);
-            crate::os_spr::write_bytes(&mut out, config);
-            crate::os_spr::write_bytes(&mut out, config_spr);
-            crate::os_spr::write_bytes(&mut out, draft);
-            crate::os_spr::write_bytes(&mut out, draft_spr);
-        }
-        AppCommand::LoadChildren { seq, entries } => {
-            out.push(14);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            write_vec_child_pack(&mut out, entries).await;
-        }
-        AppCommand::ReadChildren { seq } => {
-            out.push(15);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-        }
-        AppCommand::ReadHistory { seq } => {
-            out.push(16);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-        }
-        AppCommand::TransactionPrepare { seq, txn_id, mutation_id, payload, prepared_ops, label, origin } => {
-            out.push(17);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_str(&mut out, txn_id);
-            crate::os_spr::write_str(&mut out, mutation_id);
-            crate::os_spr::write_bytes(&mut out, payload);
-            write_vec_bytes(&mut out, prepared_ops).await;
-            crate::os_spr::write_str(&mut out, label);
-            crate::os_spr::write_bytes(&mut out, origin);
-        }
-        AppCommand::TransactionCommit { seq, txn_id } => {
-            out.push(18);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_str(&mut out, txn_id);
-        }
-        AppCommand::TransactionRollback { seq, txn_id } => {
-            out.push(19);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_str(&mut out, txn_id);
-        }
-        AppCommand::TransactionUndo { seq, group_id } => {
-            out.push(20);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_str(&mut out, group_id);
-        }
-        AppCommand::TransactionRedo { seq, group_id } => {
-            out.push(21);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_str(&mut out, group_id);
-        }
-        AppCommand::OpenArtifact { seq, artifact_ref, role, plugin_id, app_id } => {
-            out.push(22);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_str(&mut out, artifact_ref);
-            out.push(*role);
-            crate::os_spr::write_str(&mut out, plugin_id);
-            crate::os_spr::write_str(&mut out, app_id);
-        }
-        AppCommand::SetDefaultApp { seq, artifact_kind, standard, subset, role, plugin_id, app_id } => {
-            out.push(23);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_str(&mut out, artifact_kind);
-            crate::os_spr::write_str(&mut out, standard);
-            crate::os_spr::write_str(&mut out, subset);
-            out.push(*role);
-            crate::os_spr::write_str(&mut out, plugin_id);
-            crate::os_spr::write_str(&mut out, app_id);
-        }
-        AppCommand::ClearDefaultApp { seq, artifact_kind, standard, subset, role } => {
-            out.push(24);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_str(&mut out, artifact_kind);
-            crate::os_spr::write_str(&mut out, standard);
-            crate::os_spr::write_str(&mut out, subset);
-            out.push(*role);
-        }
-        AppCommand::SetMergePolicy { seq, policy } => {
-            out.push(25);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            out.push(*policy);
-        }
-        AppCommand::ResolveConflict { seq, conflict_id, resolution } => {
-            out.push(26);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            crate::os_spr::write_str(&mut out, conflict_id);
-            out.push(*resolution);
-        }
-        AppCommand::ReadConflicts { seq } => {
-            out.push(27);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-        }
-        AppCommand::Presence { seq, own_color, peers } => {
-            out.push(28);
-            crate::os_spr::write_varint_u64(&mut out, *seq);
-            write_opt_u8(&mut out, own_color).await;
-            write_vec_bytes(&mut out, peers).await;
+        Ok(())
+    }
+
+    fn byte(&mut self, byte: u8) -> Result<(), semio_framework::Fault> {
+        self.write(&[byte])
+    }
+
+    fn varint(&mut self, mut value: u64) -> Result<(), semio_framework::Fault> {
+        loop {
+            let mut byte = (value & 0x7f) as u8;
+            value >>= 7;
+            if value != 0 {
+                byte |= 0x80;
+            }
+            self.byte(byte)?;
+            if value == 0 {
+                return Ok(());
+            }
         }
     }
-    out
+
+    fn bytes(&mut self, bytes: &[u8]) -> Result<(), semio_framework::Fault> {
+        self.varint(bytes.len() as u64)?;
+        self.write(bytes)
+    }
+
+    fn string(&mut self, value: &str) -> Result<(), semio_framework::Fault> {
+        self.bytes(value.as_bytes())
+    }
+
+    fn envelope(&mut self, value: &crate::os_spr::causal::MutationEnvelope) -> Result<(), semio_framework::Fault> {
+        self.string(&value.mutation_id.0)?;
+        self.string(&value.document_id.0)?;
+        self.string(&value.actor.0)?;
+        self.varint(value.dependencies.len() as u64)?;
+        for dependency in &value.dependencies {
+            self.string(&dependency.0)?;
+        }
+        self.string(&value.diff.schema.0)?;
+        self.bytes(&value.diff.payload)?;
+        self.string(&value.inverse.schema.0)?;
+        self.bytes(&value.inverse.payload)?;
+        self.varint(value.timestamp.actor)?;
+        self.varint(value.timestamp.physical_ms)?;
+        self.varint(value.timestamp.logical)
+    }
+
+    fn finish(mut self) -> Result<semio_framework::kernel::PagedCommand, semio_framework::Fault> {
+        if self.current_len != 0 {
+            self.flush()?;
+        }
+        semio_framework::kernel::PagedCommand::try_from_pages(self.pages).map_err(|(fault, _pages)| fault)
+    }
+}
+
+/// 📄️ Produces the exact pre-admitted page owner consumed by reactor command batches.
+pub async fn encode_app_command(command: &AppCommand) -> Result<semio_framework::kernel::PagedCommand, semio_framework::Fault> {
+    if let AppCommand::Presence { own_color, peers, .. } = command {
+        let mut pages = semio_framework::kernel::CommandPageSet::try_new()?;
+        for peer in peers.iter() {
+            pages.try_push(semio_framework::kernel::FixedCommandPage::try_copy_from(peer)?).map_err(|(fault, _page)| fault)?;
+        }
+        if pages.is_empty() {
+            pages.try_push(semio_framework::kernel::FixedCommandPage::try_copy_from(&[])?).map_err(|(fault, _page)| fault)?;
+        }
+        return semio_framework::kernel::PagedCommand::try_from_presence_pages(*own_color, pages, peers.len()).map_err(|(fault, _pages)| fault);
+    }
+    let mut out = CommandPageWriter::try_new()?;
+    match command {
+        AppCommand::ConfigCommand { seq, command } => {
+            out.byte(0)?;
+            out.varint(*seq)?;
+            out.bytes(command)?;
+        }
+        AppCommand::Command { seq, command, view_state } => {
+            out.byte(1)?;
+            out.varint(*seq)?;
+            out.bytes(command)?;
+            out.bytes(view_state)?;
+        }
+        AppCommand::CommandText { seq, line } => {
+            out.byte(2)?;
+            out.varint(*seq)?;
+            out.string(line)?;
+        }
+        AppCommand::ContextMenu { seq, request } => {
+            out.byte(3)?;
+            out.varint(*seq)?;
+            out.bytes(request)?;
+        }
+        AppCommand::ArtifactCommand { seq, command } => {
+            out.byte(4)?;
+            out.varint(*seq)?;
+            out.bytes(command)?;
+        }
+        AppCommand::ApplyEnvelopes { seq, envelopes } => {
+            out.byte(5)?;
+            out.varint(*seq)?;
+            out.varint(envelopes.len() as u64)?;
+            for envelope in envelopes {
+                out.envelope(envelope)?;
+            }
+        }
+        AppCommand::LoadDocument { seq, pack, spr } => {
+            out.byte(6)?;
+            out.varint(*seq)?;
+            out.bytes(pack)?;
+            out.bytes(spr)?;
+        }
+        AppCommand::ReadDocument { seq } => {
+            out.byte(7)?;
+            out.varint(*seq)?;
+        }
+        AppCommand::LoadConfig { seq, pack, spr } => {
+            out.byte(8)?;
+            out.varint(*seq)?;
+            out.bytes(pack)?;
+            out.bytes(spr)?;
+        }
+        AppCommand::ReadConfig { seq } => {
+            out.byte(9)?;
+            out.varint(*seq)?;
+        }
+        AppCommand::MediaIn { seq, port, descriptor, data } => {
+            out.byte(10)?;
+            out.varint(*seq)?;
+            out.string(port)?;
+            out.bytes(descriptor)?;
+            out.bytes(data)?;
+        }
+        AppCommand::MediaOut { seq, port, request } => {
+            out.byte(11)?;
+            out.varint(*seq)?;
+            out.string(port)?;
+            out.bytes(request)?;
+        }
+        AppCommand::MediaFingerprint { seq, port } => {
+            out.byte(12)?;
+            out.varint(*seq)?;
+            out.string(port)?;
+        }
+        AppCommand::PureCommand { seq, command, document, document_spr, config, config_spr, draft, draft_spr } => {
+            out.byte(13)?;
+            out.varint(*seq)?;
+            out.bytes(command)?;
+            out.bytes(document)?;
+            out.bytes(document_spr)?;
+            out.bytes(config)?;
+            out.bytes(config_spr)?;
+            out.bytes(draft)?;
+            out.bytes(draft_spr)?;
+        }
+        AppCommand::LoadChildren { seq, entries } => {
+            out.byte(14)?;
+            out.varint(*seq)?;
+            out.varint(entries.len() as u64)?;
+            for entry in entries {
+                out.string(&entry.slot)?;
+                out.string(&entry.child_id)?;
+                out.string(&entry.dialect)?;
+                out.bytes(&entry.envelope_pack)?;
+            }
+        }
+        AppCommand::ReadChildren { seq } => {
+            out.byte(15)?;
+            out.varint(*seq)?;
+        }
+        AppCommand::ReadHistory { seq } => {
+            out.byte(16)?;
+            out.varint(*seq)?;
+        }
+        AppCommand::TransactionPrepare { seq, txn_id, mutation_id, payload, prepared_ops, label, origin } => {
+            out.byte(17)?;
+            out.varint(*seq)?;
+            out.string(txn_id)?;
+            out.string(mutation_id)?;
+            out.bytes(payload)?;
+            out.varint(prepared_ops.len() as u64)?;
+            for op in prepared_ops {
+                out.bytes(op)?;
+            }
+            out.string(label)?;
+            out.bytes(origin)?;
+        }
+        AppCommand::TransactionCommit { seq, txn_id } => {
+            out.byte(18)?;
+            out.varint(*seq)?;
+            out.string(txn_id)?;
+        }
+        AppCommand::TransactionRollback { seq, txn_id } => {
+            out.byte(19)?;
+            out.varint(*seq)?;
+            out.string(txn_id)?;
+        }
+        AppCommand::TransactionUndo { seq, group_id } => {
+            out.byte(20)?;
+            out.varint(*seq)?;
+            out.string(group_id)?;
+        }
+        AppCommand::TransactionRedo { seq, group_id } => {
+            out.byte(21)?;
+            out.varint(*seq)?;
+            out.string(group_id)?;
+        }
+        AppCommand::OpenArtifact { seq, artifact_ref, role, plugin_id, app_id } => {
+            out.byte(22)?;
+            out.varint(*seq)?;
+            out.string(artifact_ref)?;
+            out.byte(*role)?;
+            out.string(plugin_id)?;
+            out.string(app_id)?;
+        }
+        AppCommand::SetDefaultApp { seq, artifact_kind, standard, subset, role, plugin_id, app_id } => {
+            out.byte(23)?;
+            out.varint(*seq)?;
+            out.string(artifact_kind)?;
+            out.string(standard)?;
+            out.string(subset)?;
+            out.byte(*role)?;
+            out.string(plugin_id)?;
+            out.string(app_id)?;
+        }
+        AppCommand::ClearDefaultApp { seq, artifact_kind, standard, subset, role } => {
+            out.byte(24)?;
+            out.varint(*seq)?;
+            out.string(artifact_kind)?;
+            out.string(standard)?;
+            out.string(subset)?;
+            out.byte(*role)?;
+        }
+        AppCommand::SetMergePolicy { seq, policy } => {
+            out.byte(25)?;
+            out.varint(*seq)?;
+            out.byte(*policy)?;
+        }
+        AppCommand::ResolveConflict { seq, conflict_id, resolution } => {
+            out.byte(26)?;
+            out.varint(*seq)?;
+            out.string(conflict_id)?;
+            out.byte(*resolution)?;
+        }
+        AppCommand::ReadConflicts { seq } => {
+            out.byte(27)?;
+            out.varint(*seq)?;
+        }
+        AppCommand::Presence { .. } => unreachable!(),
+    }
+    out.finish()
 }
 
 /// @emoji 🧸️ `count varint | (slot, child_id, dialect, envelope_pack)*` — the shared list codec for
@@ -680,7 +1156,7 @@ async fn read_vec_child_pack(bytes: &[u8], pos: &mut usize) -> Result<Vec<ChildP
 }
 
 /// @emoji 📥️ Decodes one `AppCommand`, the inverse of [`encode_app_command`].
-pub async fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate::os_spr::ProtocolError> {
+pub(super) async fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate::os_spr::ProtocolError> {
     let tag = *bytes.first().ok_or_else(|| malformed("channel app-command tag", 0, "empty frame"))?;
     let mut pos = 1usize;
     let command = match tag {
@@ -763,15 +1239,23 @@ pub async fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, crate::os_sp
             AppCommand::ResolveConflict { seq, conflict_id, resolution }
         }
         27 => AppCommand::ReadConflicts { seq: crate::os_spr::read_varint_u64(bytes, &mut pos)? },
-        28 => {
-            let seq = crate::os_spr::read_varint_u64(bytes, &mut pos)?;
-            let own_color = read_opt_u8(bytes, &mut pos).await?;
-            let peers = read_vec_bytes(bytes, &mut pos).await?;
-            AppCommand::Presence { seq, own_color, peers }
-        }
+        28 => return Err(malformed("channel presence command", pos as u64, "Presence requires reserve-before-decode PresenceCommandCursor admission")),
         other => return Err(malformed("channel app-command tag", pos as u64, &format!("unknown tag {other:#x}"))),
     };
     Ok(command)
+}
+
+/// 🪪 Reads only the fixed Presence tag and sequence so the app can reserve its exact
+/// item/byte owner before the roster decoder allocates or copies any entry.
+pub fn presence_command_sequence(bytes: &[u8]) -> Result<Option<u64>, crate::os_spr::ProtocolError> {
+    let Some(tag) = bytes.first().copied() else {
+        return Err(malformed("channel app-command tag", 0, "empty frame"));
+    };
+    if tag != 28 {
+        return Ok(None);
+    }
+    let mut pos = 1usize;
+    crate::os_spr::read_varint_u64(bytes, &mut pos).map(Some)
 }
 
 /// @emoji 📤️ Encodes one `AppFrame`: `tag u8 | fields`.
@@ -1026,9 +1510,17 @@ mod tests {
 
     //#region 🔖️AppCommand
     async fn assert_command_round_trips(command: &AppCommand) {
-        let bytes = encode_app_command(command);
-        let decoded = decode_app_command(&bytes.await).await.expect("decode must succeed");
+        let encoded = encode_app_command(command).await.expect("encode must succeed");
+        assert_eq!(encoded.page_len(), 1, "round-trip fixture is one page");
+        let bytes = encoded.front_page().expect("round-trip fixture has one page").as_slice();
+        let decoded = decode_app_command(bytes).await.expect("decode must succeed");
         assert_eq!(&decoded, command);
+    }
+
+    async fn encode_fixture_command(command: &AppCommand) -> Vec<u8> {
+        let encoded = encode_app_command(command).await.expect("fixture encode must succeed");
+        assert_eq!(encoded.page_len(), 1, "fixture command is one page");
+        encoded.front_page().expect("fixture command has one page").as_slice().to_vec()
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1347,9 +1839,107 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn decode_app_command_rejects_truncated_field() {
-        let bytes = encode_app_command(&AppCommand::CommandText { seq: 1, line: "hello".to_string() }).await;
+        let encoded = encode_app_command(&AppCommand::CommandText { seq: 1, line: "hello".to_string() }).await.unwrap();
+        assert_eq!(encoded.page_len(), 1);
+        let bytes = encoded.front_page().unwrap().as_slice();
         let truncated = &bytes[..bytes.len() - 2];
         assert!(decode_app_command(truncated).await.is_err());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn presence_roster_fixed_maximum_plus_one_returns_the_exact_rejected_owner() {
+        let mut roster = PresenceRosterWire::empty();
+        for index in 0..PRESENCE_ROSTER_MAXIMUM_ITEMS {
+            roster.try_push(vec![index as u8]).expect("fixed admitted roster slot");
+        }
+        let rejected = vec![0xA5; PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES];
+        let error = roster.try_push(rejected.clone()).expect_err("maximum plus one must fail before growth");
+        assert_eq!(error.entry, rejected);
+        assert_eq!(roster.len(), PRESENCE_ROSTER_MAXIMUM_ITEMS);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn presence_cursor_preserves_fifo_and_releases_at_most_one_grant() {
+        let mut roster = PresenceRosterWire::empty();
+        roster.try_push(vec![1; 17]).unwrap();
+        roster.try_push(vec![2; PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES]).unwrap();
+        let mut cursor = PresenceCommandCursor::admit_page(77, Some(4), 2, semio_framework::kernel::FixedCommandPage::try_copy_from(&[1; 17]).unwrap()).map_err(|(error, _)| error).unwrap();
+        assert_eq!(cursor.take_next().unwrap().unwrap().as_ref(), &[1; 17]);
+        cursor.push_page(1, semio_framework::kernel::FixedCommandPage::try_copy_from(&[2; PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES]).unwrap()).map_err(|(error, _)| error).unwrap();
+        assert_eq!(cursor.take_next().unwrap().unwrap().as_ref(), &[2; PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES]);
+        assert!(cursor.take_next().unwrap().is_none());
+        assert!(cursor.terminal_is_empty());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn generic_decoder_rejects_presence_before_whole_roster_materialization() {
+        let mut roster = PresenceRosterWire::empty();
+        roster.try_push(vec![7]).unwrap();
+        let encoded = encode_app_command(&AppCommand::Presence { seq: 3, own_color: None, peers: roster }).await.unwrap();
+        assert_eq!(encoded.kind(), 28);
+        let mut cursor = PresenceCommandCursor::admit_page(3, None, 1, semio_framework::kernel::FixedCommandPage::try_copy_from(&[7]).unwrap()).map_err(|(error, _)| error).unwrap();
+        while !cursor.close_release(PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES).0 {}
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn paged_generic_decoder_crosses_a_two_page_field_boundary_without_concatenation() {
+        let expected = AppCommand::Command { seq: 1, command: vec![0xA5; 4_090], view_state: vec![7, 8] };
+        let encoded = encode_app_command(&expected).await.unwrap();
+        assert_eq!(encoded.page_len(), 2);
+        let mut cursor = PagedAppCommandDecodeCursor::new(encoded);
+        assert!(cursor.step().unwrap().is_none());
+        assert!(cursor.step().unwrap().is_none());
+        assert_eq!(cursor.step().unwrap(), Some(expected));
+        assert!(cursor.terminal_is_empty());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn paged_generic_decoder_faults_hostile_field_length_and_closes_exact_owner() {
+        let page = semio_framework::kernel::FixedCommandPage::try_copy_from(&[0, 1, 0x81, 0x20]).unwrap();
+        let mut pages = semio_framework::kernel::CommandPageSet::try_new().unwrap();
+        pages.try_push(page).unwrap();
+        let mut cursor = PagedAppCommandDecodeCursor::new(semio_framework::kernel::PagedCommand::try_from_pages(pages).unwrap());
+        assert!(cursor.step().unwrap().is_none());
+        let fault = cursor.step().unwrap_err();
+        assert_eq!(fault.code.0, "plugin.command-field-cap");
+        assert_eq!(cursor.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES), (true, 0));
+        assert!(cursor.terminal_is_empty());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn paged_generic_decoder_retains_first_field_when_middle_field_is_truncated() {
+        let page = semio_framework::kernel::FixedCommandPage::try_copy_from(&[1, 1, 1, 9, 5, 7]).unwrap();
+        let mut pages = semio_framework::kernel::CommandPageSet::try_new().unwrap();
+        pages.try_push(page).unwrap();
+        let mut cursor = PagedAppCommandDecodeCursor::new(semio_framework::kernel::PagedCommand::try_from_pages(pages).unwrap());
+        assert!(cursor.step().unwrap().is_none());
+        assert!(cursor.step().unwrap().is_none());
+        assert_eq!(cursor.step().unwrap_err().code.0, "plugin.command-decode-truncated");
+        assert_eq!(cursor.close_step(1), (false, 1));
+        assert_eq!(cursor.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES), (true, 0));
+        assert!(cursor.terminal_is_empty());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn paged_generic_decoder_retains_terminal_fields_when_trailing_bytes_fault() {
+        let page = semio_framework::kernel::FixedCommandPage::try_copy_from(&[3, 1, 1, 9, 0xFF]).unwrap();
+        let mut pages = semio_framework::kernel::CommandPageSet::try_new().unwrap();
+        pages.try_push(page).unwrap();
+        let mut cursor = PagedAppCommandDecodeCursor::new(semio_framework::kernel::PagedCommand::try_from_pages(pages).unwrap());
+        assert!(cursor.step().unwrap().is_none());
+        assert_eq!(cursor.step().unwrap_err().code.0, "plugin.command-decode-trailing");
+        assert_eq!(cursor.close_step(1), (false, 1));
+        assert_eq!(cursor.close_step(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES), (true, 5));
+        assert!(cursor.terminal_is_empty());
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn decoded_generic_owner_closes_two_fields_one_grant_at_a_time() {
+        let mut owner = DecodedAppCommandOwner::new(AppCommand::Command { seq: 7, command: vec![1; 4_096], view_state: vec![2; 4_096] });
+        assert_eq!(owner.close_step(4_096), (false, 1, 4_096));
+        assert_eq!(owner.close_step(4_096), (false, 1, 4_096));
+        assert_eq!(owner.close_step(4_096), (true, 1, 0));
+        assert!(owner.terminal_is_empty());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1385,6 +1975,9 @@ mod tests {
 
     /// @emoji 🧾️ Named `AppCommand` fixture corpus, one entry per variant.
     async fn channel_command_fixture_corpus() -> Vec<(&'static str, AppCommand)> {
+        let mut presence_roster = PresenceRosterWire::empty();
+        presence_roster.try_push(vec![1, 2]).expect("bounded presence fixture entry");
+        presence_roster.try_push(vec![9]).expect("bounded presence fixture entry");
         vec![
             ("ConfigCommand", AppCommand::ConfigCommand { seq: 1, command: vec![9] }),
             ("Command", AppCommand::Command { seq: 1, command: vec![1], view_state: vec![] }),
@@ -1416,7 +2009,7 @@ mod tests {
             ("SetMergePolicy", AppCommand::SetMergePolicy { seq: 5, policy: 1 }),
             ("ResolveConflict", AppCommand::ResolveConflict { seq: 6, conflict_id: "conflict-1".to_string(), resolution: 0 }),
             ("ReadConflicts", AppCommand::ReadConflicts { seq: 7 }),
-            ("Presence", AppCommand::Presence { seq: 8, own_color: Some(3), peers: vec![vec![1, 2], vec![9]] }),
+            ("Presence", AppCommand::Presence { seq: 8, own_color: Some(3), peers: presence_roster }),
         ]
     }
 
@@ -1524,10 +2117,36 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn app_command_fixture_corpus_matches_golden_hex_and_round_trips() {
         for (label, value) in channel_command_fixture_corpus().await {
-            let encoded = encode_app_command(&value).await;
-            let actual = hex_encode(&encoded).await;
+            if let AppCommand::Presence { seq, own_color, peers } = &value {
+                let first = peers.iter().next().map(<[u8]>::to_vec).unwrap_or_default();
+                let mut cursor = PresenceCommandCursor::admit_page(*seq, *own_color, peers.len() as u32, semio_framework::kernel::FixedCommandPage::try_copy_from(&first).expect("encoded Presence page is fixed-authority"))
+                    .map_err(|(error, _)| error)
+                    .expect("Presence uses retained cursor admission");
+                assert_eq!(cursor.seq(), *seq);
+                assert_eq!(cursor.own_color(), *own_color);
+                let mut entries = Vec::new();
+                for (index, peer) in peers.iter().enumerate() {
+                    if index != 0 {
+                        cursor.push_page(index as u32, semio_framework::kernel::FixedCommandPage::try_copy_from(peer).expect("encoded Presence page is fixed-authority")).map_err(|(error, _)| error).expect("ordered peer page");
+                    }
+                    if let Some(entry) = cursor.take_next().expect("bounded Presence entry") {
+                        entries.push(entry);
+                    }
+                }
+                if peers.is_empty() {
+                    while !cursor.close_release(PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES).0 {}
+                }
+                assert!(entries.iter().map(Vec::as_slice).eq(peers.iter()), "Presence retained cursor must preserve exact entry order");
+                while !cursor.close_release(PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES).0 {}
+                assert!(cursor.terminal_is_empty());
+                continue;
+            }
+            let encoded = encode_app_command(&value).await.unwrap();
+            assert_eq!(encoded.page_len(), 1, "fixture is one page");
+            let bytes = encoded.front_page().expect("fixture has one page").as_slice();
+            let actual = hex_encode(bytes).await;
             assert_eq!(actual, channel_command_fixture_hex(label).await, "{label}'s encoding drifted from its committed golden hex");
-            let decoded = decode_app_command(&encode_app_command(&value).await).await.unwrap();
+            let decoded = decode_app_command(bytes).await.unwrap();
             assert_eq!(decoded, value, "{label} must round-trip");
         }
     }
@@ -1570,7 +2189,7 @@ mod tests {
 
         for (label, value) in channel_command_fixture_corpus().await {
             if let Some(expected) = command_vectors.get(label) {
-                let actual = hex_encode(&encode_app_command(&value).await).await;
+                let actual = hex_encode(&encode_fixture_command(&value).await).await;
                 assert_eq!(&actual, expected, "AppCommand::{label} drifted from the shared cross-language fixture");
             }
         }
@@ -1594,7 +2213,7 @@ mod tests {
 
         for (label, value) in channel_command_fixture_corpus().await {
             if let Some(expected) = command_vectors.get(label) {
-                let actual = hex_encode(&encode_app_command(&value).await).await;
+                let actual = hex_encode(&encode_fixture_command(&value).await).await;
                 assert_eq!(&actual, expected, "AppCommand::{label} drifted from the shared cross-language fixture");
             }
         }
@@ -1617,7 +2236,7 @@ mod tests {
 
         for (label, value) in channel_command_fixture_corpus().await {
             if let Some(expected) = command_vectors.get(label) {
-                let actual = hex_encode(&encode_app_command(&value).await).await;
+                let actual = hex_encode(&encode_fixture_command(&value).await).await;
                 assert_eq!(&actual, expected, "AppCommand::{label} drifted from the shared cross-language fixture");
             }
         }
