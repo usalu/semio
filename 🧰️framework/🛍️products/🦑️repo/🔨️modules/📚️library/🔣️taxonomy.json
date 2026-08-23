@@ -528,10 +528,34 @@
     "ordered-json-v1",
     "unordered-json-v1",
     "floating-point-v1",
-    "semantic-pdf-v1",
     "filesystem-tree-v1",
     "diagnostic-v1",
     "event-stream-v1"
+  ],
+  "_testContributionComment": "🧩️ Open/closed extension point. An owner that needs a reference implementation, an oracle crate or a format-specific comparison profile declares them in `<owner>/🧪️oracle/🔣️component.json`. The framework test domain DISCOVERS those manifests; it never names an owner, a plugin or a format. Adding PDF, PNG or any future artifact therefore requires zero framework edits.",
+  "testContributionDirName": "🧪️oracle",
+  "testContributionFilename": "🔣️component.json",
+  "testDomainPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
+  "testPhases": [
+    "discover",
+    "doctor",
+    "contract",
+    "oracle",
+    "subject",
+    "parity",
+    "run",
+    "report",
+    "metrics",
+    "clean",
+    "dependency",
+    "nx"
+  ],
+  "testLevellessPhases": [
+    "discover",
+    "doctor",
+    "report",
+    "metrics",
+    "nx"
   ],
   "testOutputCacheDirName": "tests",
   "testOutputMarkerFilename": "🧾️marker.json",
@@ -837,5 +861,6 @@
     "🟦️component.ts"
   ],
   "_stateLaneComment": "🫧️ Ticket 26/08/13/UNIFIED-STATE-ARCHITECTURE-AND-DEMONSTRATOR-RESTORATION wave A0: exactly four state mechanisms exist, enforced by API and policy — 🗿️artifacts = persisted shared, 🎚️config = persisted local-only, 👥️presence = ephemeral shared, 🫧️transient = ephemeral local-only UI state. Every state-owning scope (app, mode, window) carries the same three non-artifact lanes as sibling facet dirs, each shaped by configChildDirs/presenceChildDirs/transientChildDirs. modeChildDirs did not exist before this wave: modes had no declared children at all, so a mode-scoped config/presence/transient facet had nowhere legal to live. Draftness is a LANE property (which store a record lives in), never a field annotation, so `preview` folded into the artifact lane; `effect` was deleted (effects are Emit.effects, not state); and `inferred` left the state axis entirely for the orthogonal `#[derived]` / `x-semio-derived` marker.",
-  "_stdioFacetComment": "Stdio IO: io/{import/🧩️deserializers,export/🧵️serializers}/artifacts/<stdio>/."
+  "_stdioFacetComment": "Stdio IO: io/{import/🧩️deserializers,export/🧵️serializers}/artifacts/<stdio>/.",
+  "_testComparisonProfilesComment": "⚖️ The DOMAIN-NEUTRAL profiles the framework itself owns. A profile that knows a file format (semantic-pdf-v1, semantic-raster-v1, …) belongs to the owner of that format and is contributed through its `testContributionDirName` manifest — the framework supplies the comparison MECHANISM, never the per-format policy."
 }

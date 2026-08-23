@@ -5235,19 +5235,6 @@ impl<P, Mutation> Drop for ArtifactOwnedSprMutationArrayAuthority<P, Mutation> {
     }
 }
 
-const ARTIFACT_OWNED_SPR_EDIT_FIELDS: &[OwnedSchemaFieldSpec] = &[
-    OwnedSchemaFieldSpec { id: 1, key: "id", required: true },
-    OwnedSchemaFieldSpec { id: 2, key: "actor", required: false },
-    OwnedSchemaFieldSpec { id: 3, key: "forwards", required: true },
-    OwnedSchemaFieldSpec { id: 4, key: "inverse", required: true },
-    OwnedSchemaFieldSpec { id: 5, key: "mutationMeta", required: false },
-    OwnedSchemaFieldSpec { id: 6, key: "description", required: false },
-    OwnedSchemaFieldSpec { id: 7, key: "coalesceKey", required: false },
-    OwnedSchemaFieldSpec { id: 8, key: "sequenceNumber", required: true },
-    OwnedSchemaFieldSpec { id: 9, key: "startedAt", required: true },
-    OwnedSchemaFieldSpec { id: 10, key: "finishedAt", required: false },
-];
-
 enum ArtifactOwnedSprEditActive<P, Mutation> {
     String { field_id: u16, authority: OwnedSchemaStringAuthority<ARTIFACT_ENVELOPE_HISTORY_ENTRY_BYTES> },
     Mutations { field_id: u16, authority: ArtifactOwnedSprMutationArrayAuthority<P, Mutation> },
@@ -9003,7 +8990,7 @@ where
 
 /// @emoji 🎞️ `crate::os_spr::UndoPolicy` ordinal, matching `HistoryOpMeta.undo_policy`'s wire shape —
 /// distinct from `undo_policy_ordinal` above, which maps THIS crate's `ArtifactCommand`-facing
-/// `UndoPolicy` (currently `semio_framework::UndoPolicy`; the two enums have identical
+/// `UndoPolicy` (currently `semio_framework_replication::UndoPolicy`; the two enums have identical
 /// variants and will merge in the kernel-unification wave, see `protocol_core`'s own doc note).
 // 🚫️async: E1 pure ordinal mapping, consumed by `history_op_meta_from_operation_meta` which is
 // itself consumed only through `Iterator::map` fn-item arguments — see R9.
@@ -17202,7 +17189,7 @@ pub mod test_support {
     /// `MutationEnvelope` is a runtime struct that is never itself re-serialized back into an
     /// `Edit` (unlike `encode_pack`/`decode_pack`, there is no `envelope_to_edit` inverse — vcs's OWN
     /// `edit_from_operation_envelope` recovers a *whole edit* from vcs's own, differently-shaped,
-    /// per-edit `semio_framework::MutationEnvelope`, not from this per-operation
+    /// per-edit `semio_framework_replication::MutationEnvelope`, not from this per-operation
     /// `protocol_causal` one), so a byte-level encode-then-decode law is not meaningful here.
     /// Instead this checks the two LAWS that actually matter for this bridge: (1) whatever
     /// `edit.mutation_meta` explicitly recorded for a slot (the ground-truth source

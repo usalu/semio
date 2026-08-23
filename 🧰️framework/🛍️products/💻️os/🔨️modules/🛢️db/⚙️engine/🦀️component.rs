@@ -580,18 +580,22 @@ pub mod vcs_integration {
     }
 
     fn record_credit(document: &ArtifactId, change: &ChangeRecord) -> Result<(usize, u64), DbError> {
-        vcs_credit(1 + usize::from(change.parent.is_some()), [document.0.capacity(), change.parent.as_ref().map_or(0, String::capacity), change.author.0.capacity(), change.message.capacity()])
+        vcs_credit(1 + usize::from(change.parent.is_some()), [document.0.capacity(), change.parent.as_ref().map_or(0, String::capacity), change.author.0.capacity(), change.message.capacity(), std::mem::size_of::<HashMutation>()])
     }
 
     fn checkpoint_credit(document: &ArtifactId, request: &CheckpointRequest) -> Result<(usize, u64), DbError> {
+        let derived_author_items = request.authors.len();
         let items = 1usize
             .checked_add(usize::from(request.parent_checkpoint.is_some()))
             .and_then(|value| value.checked_add(request.change_ids.len()))
             .and_then(|value| value.checked_add(request.authors.len()))
+            .and_then(|value| value.checked_add(derived_author_items))
             .ok_or(DbError::LimitExceeded("vcs checkpoint item credit"))?;
         let change_owner_bytes = request.change_ids.capacity().checked_mul(std::mem::size_of::<String>()).ok_or(DbError::LimitExceeded("vcs checkpoint change owner bytes"))?;
         let author_owner_bytes = request.authors.capacity().checked_mul(std::mem::size_of::<ActorId>()).ok_or(DbError::LimitExceeded("vcs checkpoint author owner bytes"))?;
-        let fixed = [document.0.capacity(), request.parent_checkpoint.as_ref().map_or(0, String::capacity), request.message.capacity(), change_owner_bytes, author_owner_bytes];
+        let derived_author_owner_bytes = request.authors.capacity().checked_mul(std::mem::size_of::<vcs::Author>()).ok_or(DbError::LimitExceeded("vcs checkpoint derived author owner bytes"))?;
+        let derived_author_id_bytes = request.authors.iter().try_fold(0usize, |bytes, author| bytes.checked_add(author.0.capacity())).ok_or(DbError::LimitExceeded("vcs checkpoint derived author id bytes"))?;
+        let fixed = [document.0.capacity(), request.parent_checkpoint.as_ref().map_or(0, String::capacity), request.message.capacity(), change_owner_bytes, author_owner_bytes, derived_author_owner_bytes, derived_author_id_bytes];
         vcs_credit(items, fixed.into_iter().chain(request.change_ids.iter().map(String::capacity)).chain(request.authors.iter().map(|author| author.0.capacity())))
     }
 
@@ -619,9 +623,9 @@ pub mod vcs_integration {
             Self { state: Mutex::new(VcsStoreCellState { store: None, busy_generation: None, waiters: std::array::from_fn(|_| None) }) }
         }
 
-        fn take_next_waker(state: &mut VcsStoreCellState) -> Option<Waker> {
+        fn take_next_waker(state: &mut VcsStoreCellState) -> Option<(u64, Waker)> {
             let next = state.waiters.iter().enumerate().filter_map(|(slot, waiter)| waiter.as_ref().map(|waiter| (slot, waiter.generation))).min_by_key(|(_, generation)| *generation).map(|(slot, _)| slot)?;
-            state.waiters[next].take().map(|waiter| waiter.waker)
+            state.waiters[next].take().map(|waiter| (waiter.generation, waiter.waker))
         }
 
         fn release(&self, generation: u64, store: Option<HashStore>) {
@@ -634,7 +638,11 @@ pub mod vcs_integration {
                     state.store = Some(store);
                 }
                 state.busy_generation = None;
-                Self::take_next_waker(&mut state)
+                let next = Self::take_next_waker(&mut state);
+                if let Some((generation, _)) = &next {
+                    state.busy_generation = Some(*generation);
+                }
+                next.map(|(_, waker)| waker)
             };
             if let Some(waker) = wake {
                 waker.wake();
@@ -675,7 +683,7 @@ pub mod vcs_integration {
                 return Poll::Ready(Err(DbError::Closed));
             }
             let mut state = self.cell.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            if state.busy_generation.is_none() {
+            if state.busy_generation.is_none() || state.busy_generation == Some(self.generation) {
                 state.busy_generation = Some(self.generation);
                 state.waiters[self.slot] = None;
                 let store = state.store.take();
@@ -703,6 +711,20 @@ pub mod vcs_integration {
             let mut state = self.cell.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             if state.waiters[self.slot].as_ref().is_some_and(|waiter| waiter.generation == self.generation) {
                 state.waiters[self.slot] = None;
+            }
+            let wake = if state.busy_generation == Some(self.generation) {
+                state.busy_generation = None;
+                let next = VcsStoreCell::take_next_waker(&mut state);
+                if let Some((generation, _)) = &next {
+                    state.busy_generation = Some(*generation);
+                }
+                next.map(|(_, waker)| waker)
+            } else {
+                None
+            };
+            drop(state);
+            if let Some(waker) = wake {
+                waker.wake();
             }
         }
     }
@@ -780,8 +802,10 @@ pub mod vcs_integration {
         async fn record_change(&self, document: &ArtifactId, change: ChangeRecord) -> Result<String, DbError> {
             let admission = record_credit(document, &change).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes))?;
             let mut lease = self.store(document, &admission).await?;
-            let operation = HashMutation { hash: change.content_hash.0, author: Some(protocol::ActorId(change.author.0.clone())), timestamp: Some(protocol::HybridLogicalTimestamp::new(0, change.timestamp_ms)) };
-            lease.store_mut().dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], description: Some(change.message) }).await.map_err(map_vcs_error)?;
+            let ChangeRecord { content_hash, author, message, timestamp_ms, .. } = change;
+            let operation = HashMutation { hash: content_hash.0, author: Some(protocol::ActorId(author.0)), timestamp: Some(protocol::HybridLogicalTimestamp::new(0, timestamp_ms)) };
+            let mutations = Vec::from([operation]);
+            lease.store_mut().dispatch(store::ArtifactCommand::Apply { mutations, description: Some(message) }).await.map_err(map_vcs_error)?;
             Ok(lease.store_mut().envelope().await.vcs.edits.last().map(|edit| edit.id.clone()).unwrap_or_default())
         }
 
@@ -796,8 +820,13 @@ pub mod vcs_integration {
         async fn checkpoint(&self, document: &ArtifactId, request: CheckpointRequest) -> Result<String, DbError> {
             let admission = checkpoint_credit(document, &request).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes))?;
             let mut lease = self.store(document, &admission).await?;
-            let authors: Vec<vcs::Author> = request.authors.into_iter().map(|author| vcs::Author { id: author.0.clone(), name: author.0, avatar: None }).collect();
-            lease.store_mut().dispatch(store::ArtifactCommand::CommitCheckpoint { message: Some(request.message), authors }).await.map_err(map_vcs_error)?;
+            let CheckpointRequest { message, authors: source_authors, .. } = request;
+            let mut authors = Vec::with_capacity(source_authors.capacity());
+            for author in source_authors {
+                let name = author.0;
+                authors.push(vcs::Author { id: name.clone(), name, avatar: None });
+            }
+            lease.store_mut().dispatch(store::ArtifactCommand::CommitCheckpoint { message: Some(message), authors }).await.map_err(map_vcs_error)?;
             lease.store_mut().current_checkpoint_id().await.map(str::to_string).ok_or_else(|| DbError::Internal("vcs: commit_checkpoint produced no checkpoint id".to_string()))
         }
 
@@ -815,6 +844,207 @@ pub mod vcs_integration {
                 return Ok(found.checkpoint_ids.last().cloned());
             }
             Ok(lease.store_mut().current_checkpoint_id().await.map(str::to_string))
+        }
+    }
+
+    #[cfg(test)]
+    mod retained_tests {
+        use super::*;
+        use std::sync::atomic::{AtomicUsize, Ordering};
+
+        static TEST_LOCK: Mutex<()> = Mutex::new(());
+
+        struct CountWake(AtomicUsize);
+
+        impl std::task::Wake for CountWake {
+            fn wake(self: std::sync::Arc<Self>) {
+                self.0.fetch_add(1, Ordering::AcqRel);
+            }
+        }
+
+        #[test]
+        fn vcs_retained_item_cap_plus_one_and_nested_bytes_plus_one_return_without_mutation() {
+            let _guard = TEST_LOCK.lock().unwrap();
+            let claims: Vec<VcsOperationAdmission> = (0..VCS_OPERATION_ITEMS).map(|_| VcsOperationAdmission::try_claim(1, VCS_OPERATION_PAGE_BYTES).unwrap()).collect();
+            assert!(VcsOperationAdmission::try_claim(1, VCS_OPERATION_PAGE_BYTES).is_err());
+            assert!(vcs_credit(VCS_OPERATION_ITEMS + 1, [0]).is_err());
+            assert!(vcs_credit(1, [VCS_OPERATION_BYTES as usize]).is_err());
+            drop(claims);
+        }
+
+        fn record_with_author_bytes(bytes: usize) -> ChangeRecord {
+            let author = "a".repeat(bytes);
+            assert_eq!(author.capacity(), bytes);
+            ChangeRecord { parent: None, content_hash: pack::ContentHash([1; 32]), author: ActorId(author), message: String::new(), timestamp_ms: 1 }
+        }
+
+        fn checkpoint_with_author_bytes(bytes: usize) -> CheckpointRequest {
+            let author = "a".repeat(bytes);
+            assert_eq!(author.capacity(), bytes);
+            let mut authors = Vec::with_capacity(1);
+            authors.push(ActorId(author));
+            CheckpointRequest { parent_checkpoint: None, change_ids: Vec::new(), message: String::new(), authors, timestamp_ms: 1 }
+        }
+
+        #[test]
+        fn vcs_record_derived_owner_credit_cap_plus_one_preserves_exact_input() {
+            let document = ArtifactId(String::new());
+            let author_bytes = VCS_OPERATION_BYTES as usize - VCS_OPERATION_PAGE_BYTES as usize - std::mem::size_of::<HashMutation>();
+            let accepted = record_with_author_bytes(author_bytes);
+            assert_eq!(record_credit(&document, &accepted).unwrap(), (1, VCS_OPERATION_BYTES));
+            let rejected = record_with_author_bytes(author_bytes + 1);
+            let author_owner = rejected.author.0.as_ptr();
+            assert!(record_credit(&document, &rejected).is_err());
+            assert_eq!(rejected.author.0.as_ptr(), author_owner);
+            assert_eq!(rejected.author.0.len(), author_bytes + 1);
+        }
+
+        #[test]
+        fn vcs_checkpoint_derived_owner_credit_cap_plus_one_preserves_exact_input() {
+            let document = ArtifactId(String::new());
+            let fixed = VCS_OPERATION_PAGE_BYTES as usize + std::mem::size_of::<ActorId>() + std::mem::size_of::<vcs::Author>();
+            let author_bytes = (VCS_OPERATION_BYTES as usize - fixed) / 2;
+            let accepted = checkpoint_with_author_bytes(author_bytes);
+            assert_eq!(checkpoint_credit(&document, &accepted).unwrap().1, VCS_OPERATION_BYTES);
+            let rejected = checkpoint_with_author_bytes(author_bytes + 1);
+            let author_owner = rejected.authors[0].0.as_ptr();
+            assert!(checkpoint_credit(&document, &rejected).is_err());
+            assert_eq!(rejected.authors[0].0.as_ptr(), author_owner);
+            assert_eq!(rejected.authors[0].0.len(), author_bytes + 1);
+        }
+
+        #[test]
+        fn vcs_checkpoint_derived_item_boundary_admits_31_rejects_32_and_preserves_exact_owners() {
+            let document = ArtifactId(String::new());
+            let request = |count: usize| CheckpointRequest { parent_checkpoint: None, change_ids: Vec::new(), message: String::new(), authors: (0..count).map(|index| ActorId(format!("author-{index}"))).collect(), timestamp_ms: 1 };
+            let accepted = request(31);
+            let accepted_authors = accepted.authors.as_ptr();
+            let accepted_first = accepted.authors[0].0.as_ptr();
+            let (items, bytes) = checkpoint_credit(&document, &accepted).unwrap();
+            assert_eq!(items, 63);
+            let admission = VcsOperationAdmission::try_claim(items, bytes).unwrap();
+            assert_eq!(accepted.authors.as_ptr(), accepted_authors);
+            assert_eq!(accepted.authors[0].0.as_ptr(), accepted_first);
+            drop(admission);
+
+            let rejected = request(32);
+            let rejected_authors = rejected.authors.as_ptr();
+            let rejected_first = rejected.authors[0].0.as_ptr();
+            assert_eq!(1 + rejected.authors.len(), 33, "source-only formula would falsely admit");
+            assert_eq!(1 + rejected.authors.len() * 2, 65, "materialized name and id owners exceed the cap");
+            assert!(checkpoint_credit(&document, &rejected).is_err());
+            assert_eq!(rejected.authors.as_ptr(), rejected_authors);
+            assert_eq!(rejected.authors[0].0.as_ptr(), rejected_first);
+            assert_eq!(rejected.authors.len(), 32);
+        }
+
+        #[test]
+        fn vcs_derived_owner_process_aggregate_plus_one_rejects_without_consuming_input() {
+            let _guard = TEST_LOCK.lock().unwrap();
+            let document = ArtifactId(String::new());
+            let author_bytes = VCS_OPERATION_BYTES as usize - VCS_OPERATION_PAGE_BYTES as usize - std::mem::size_of::<HashMutation>();
+            let accepted = record_with_author_bytes(author_bytes);
+            let (items, bytes) = record_credit(&document, &accepted).unwrap();
+            let claims: Vec<VcsOperationAdmission> = (0..VCS_OPERATION_ITEMS).map(|_| VcsOperationAdmission::try_claim(items, bytes).unwrap()).collect();
+            assert_eq!(VCS_ADMISSION.lock().unwrap().bytes, VCS_TOTAL_BYTES);
+            let rejected = record_with_author_bytes(author_bytes);
+            let author_owner = rejected.author.0.as_ptr();
+            assert!(record_credit(&document, &rejected).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes)).is_err());
+            assert_eq!(rejected.author.0.as_ptr(), author_owner);
+            assert_eq!(VCS_ADMISSION.lock().unwrap().bytes, VCS_TOTAL_BYTES);
+            drop(claims);
+
+            let checkpoint = checkpoint_with_author_bytes((VCS_OPERATION_BYTES as usize - VCS_OPERATION_PAGE_BYTES as usize - std::mem::size_of::<ActorId>() - std::mem::size_of::<vcs::Author>()) / 2);
+            let (items, bytes) = checkpoint_credit(&document, &checkpoint).unwrap();
+            let claims: Vec<VcsOperationAdmission> = (0..VCS_OPERATION_ITEMS).map(|_| VcsOperationAdmission::try_claim(items, bytes).unwrap()).collect();
+            assert_eq!(VCS_ADMISSION.lock().unwrap().bytes, VCS_TOTAL_BYTES);
+            let rejected = checkpoint_with_author_bytes((VCS_OPERATION_BYTES as usize - VCS_OPERATION_PAGE_BYTES as usize - std::mem::size_of::<ActorId>() - std::mem::size_of::<vcs::Author>()) / 2);
+            let author_owner = rejected.authors[0].0.as_ptr();
+            assert!(checkpoint_credit(&document, &rejected).and_then(|(items, bytes)| VcsOperationAdmission::try_claim(items, bytes)).is_err());
+            assert_eq!(rejected.authors[0].0.as_ptr(), author_owner);
+            assert_eq!(VCS_ADMISSION.lock().unwrap().bytes, VCS_TOTAL_BYTES);
+            drop(claims);
+        }
+
+        #[test]
+        fn vcs_retained_pending_wake_is_fifo_one_shot_and_quiet_without_release() {
+            let _guard = TEST_LOCK.lock().unwrap();
+            let owner = VcsOperationAdmission::try_claim(1, VCS_OPERATION_PAGE_BYTES).unwrap();
+            let second = VcsOperationAdmission::try_claim(1, VCS_OPERATION_PAGE_BYTES).unwrap();
+            let third = VcsOperationAdmission::try_claim(1, VCS_OPERATION_PAGE_BYTES).unwrap();
+            let cell = std::sync::Arc::new(VcsStoreCell::new());
+            cell.state.lock().unwrap().busy_generation = Some(owner.generation);
+            let second_wake = std::sync::Arc::new(CountWake(AtomicUsize::new(0)));
+            let third_wake = std::sync::Arc::new(CountWake(AtomicUsize::new(0)));
+            let second_waker = std::task::Waker::from(second_wake.clone());
+            let third_waker = std::task::Waker::from(third_wake.clone());
+            let mut second_context = Context::from_waker(&second_waker);
+            let mut third_context = Context::from_waker(&third_waker);
+            let mut second_acquire = VcsStoreAcquire { cell: cell.clone(), slot: second.slot, generation: second.generation, resolved: false };
+            let mut third_acquire = VcsStoreAcquire { cell: cell.clone(), slot: third.slot, generation: third.generation, resolved: false };
+            assert!(Pin::new(&mut second_acquire).poll(&mut second_context).is_pending());
+            assert!(Pin::new(&mut third_acquire).poll(&mut third_context).is_pending());
+            assert_eq!(second_wake.0.load(Ordering::Acquire), 0);
+            assert_eq!(third_wake.0.load(Ordering::Acquire), 0);
+            cell.release(owner.generation, None);
+            assert_eq!(second_wake.0.load(Ordering::Acquire), 1);
+            assert_eq!(third_wake.0.load(Ordering::Acquire), 0);
+            let late = VcsOperationAdmission::try_claim(1, VCS_OPERATION_PAGE_BYTES).unwrap();
+            let late_wake = std::sync::Arc::new(CountWake(AtomicUsize::new(0)));
+            let late_waker = std::task::Waker::from(late_wake.clone());
+            let mut late_context = Context::from_waker(&late_waker);
+            let mut late_acquire = VcsStoreAcquire { cell: cell.clone(), slot: late.slot, generation: late.generation, resolved: false };
+            assert!(Pin::new(&mut late_acquire).poll(&mut late_context).is_pending());
+            let Poll::Ready(Ok(VcsStoreClaim::Build(permit))) = Pin::new(&mut second_acquire).poll(&mut second_context) else {
+                panic!("second retained owner must acquire first");
+            };
+            drop(permit);
+            assert_eq!(third_wake.0.load(Ordering::Acquire), 1);
+            assert_eq!(late_wake.0.load(Ordering::Acquire), 0);
+        }
+
+        #[test]
+        fn vcs_retained_cancel_clears_waiter_and_slot_aba_stays_stale() {
+            let _guard = TEST_LOCK.lock().unwrap();
+            let owner = VcsOperationAdmission::try_claim(1, VCS_OPERATION_PAGE_BYTES).unwrap();
+            let waiter = VcsOperationAdmission::try_claim(1, VCS_OPERATION_PAGE_BYTES).unwrap();
+            let cell = std::sync::Arc::new(VcsStoreCell::new());
+            cell.state.lock().unwrap().busy_generation = Some(owner.generation);
+            let waker = std::task::Waker::from(std::sync::Arc::new(CountWake(AtomicUsize::new(0))));
+            let mut context = Context::from_waker(&waker);
+            let mut acquire = VcsStoreAcquire { cell: cell.clone(), slot: waiter.slot, generation: waiter.generation, resolved: false };
+            assert!(Pin::new(&mut acquire).poll(&mut context).is_pending());
+            drop(acquire);
+            assert!(cell.state.lock().unwrap().waiters[waiter.slot].is_none());
+            let slot = waiter.slot;
+            let generation = waiter.generation;
+            drop(waiter);
+            let replacement = VcsOperationAdmission::try_claim(1, VCS_OPERATION_PAGE_BYTES).unwrap();
+            assert_eq!(replacement.slot, slot);
+            assert_ne!(replacement.generation, generation);
+            assert!(!VcsOperationAdmission::is_current(slot, generation));
+            cell.release(owner.generation, None);
+        }
+
+        #[test]
+        fn vcs_retained_live_source_has_no_nested_executor_or_guarded_await() {
+            let source = include_str!("🦀️component.rs");
+            let vcs = &source[source.find("pub mod vcs_integration").unwrap()..source.find("//#endregion 🔖️VersionGraph").unwrap()];
+            let production = &vcs[..vcs.find("#[cfg(test)]\n    mod retained_tests").unwrap()];
+            assert!(!production.contains("block_on("));
+            assert!(!production.contains("submit_blocking"));
+            assert!(!production.contains("ask_blocking"));
+            assert!(!production.contains("loop {"));
+            assert!(production.contains("VcsStoreAcquire"));
+            assert!(production.contains("VcsStoreLease"));
+            assert!(production.contains("std::mem::size_of::<HashMutation>()"));
+            assert!(production.contains("let derived_author_items = request.authors.len();"));
+            assert!(production.contains(".and_then(|value| value.checked_add(derived_author_items))"));
+            assert!(production.contains("derived_author_owner_bytes"));
+            assert!(production.contains("derived_author_id_bytes"));
+            assert!(production.contains("let mutations = Vec::from([operation]);"));
+            assert!(!production.contains("change.author.0.clone()"));
+            assert!(!production.contains("mutations: vec![operation]"));
         }
     }
     //#endregion 🔖️Store

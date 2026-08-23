@@ -14,42 +14,120 @@ use ui_wgpu::wgpu::{
 //#region 📦️PreparedWorldResources
 /// 📦️ Worker-owned World3d resource requests. It contains only CPU buffers and cache keys; device,
 /// queue, texture, and surface authority remain in the prepared renderer presenter.
-#[derive(Default)]
 pub struct World3dBuildContext {
     uploads: Vec<PreparedRenderUpload>,
     evictions: Vec<PreparedRenderEviction>,
     mesh_requests: HashSet<(String, u64)>,
     raster_requests: HashSet<String>,
-    cursor_wake: WorldCursorWake,
+    cursor_wake: WorldCursorWakeAuthority,
+    cursor_wake_token: Option<WorldCursorWakeToken>,
+    cursor_wake_fault: Option<WorldCursorWakeFault>,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct WorldCursorWakeToken {
+    generation: u64,
+}
+
+impl WorldCursorWakeToken {
+    pub fn generation(&self) -> u64 {
+        self.generation
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-struct WorldCursorWakeToken(u64);
-
-#[derive(Default)]
-struct WorldCursorWake {
-    generation: u64,
-    armed: bool,
+pub enum WorldCursorWakeFault {
+    Closed,
+    GenerationExhausted,
 }
 
-impl WorldCursorWake {
-    fn request(&mut self) -> WorldCursorWakeToken {
-        if !self.armed {
-            self.generation = self.generation.wrapping_add(1).max(1);
-            self.armed = true;
-        }
-        WorldCursorWakeToken(self.generation)
+#[derive(Default)]
+struct WorldCursorWakeState {
+    generation: u64,
+    acknowledged_generation: u64,
+    pending_generation: Option<u64>,
+    close_phase: u8,
+    closing: bool,
+    terminal: bool,
+}
+
+#[derive(Clone, Default)]
+pub struct WorldCursorWakeAuthority(std::sync::Arc<std::sync::Mutex<WorldCursorWakeState>>);
+
+impl WorldCursorWakeAuthority {
+    pub fn new() -> Self {
+        Self::default()
     }
 
-    fn take(&mut self) -> Option<WorldCursorWakeToken> {
-        self.armed.then(|| {
-            self.armed = false;
-            WorldCursorWakeToken(self.generation)
-        })
+    pub fn request(&self) -> Result<WorldCursorWakeToken, WorldCursorWakeFault> {
+        let mut state = self.0.lock().expect("World cursor wake authority lock");
+        if state.closing {
+            return Err(WorldCursorWakeFault::Closed);
+        }
+        let generation = match state.pending_generation {
+            Some(generation) => generation,
+            None => {
+                let generation = state.generation.checked_add(1).ok_or(WorldCursorWakeFault::GenerationExhausted)?;
+                state.generation = generation;
+                state.pending_generation = Some(generation);
+                generation
+            }
+        };
+        Ok(WorldCursorWakeToken { generation })
+    }
+
+    pub fn acknowledge(&self, token: &WorldCursorWakeToken) -> bool {
+        let mut state = self.0.lock().expect("World cursor wake authority lock");
+        if state.closing || state.pending_generation != Some(token.generation) {
+            return false;
+        }
+        state.pending_generation = None;
+        state.acknowledged_generation = token.generation;
+        true
+    }
+
+    pub fn close_step(&self) -> bool {
+        let mut state = self.0.lock().expect("World cursor wake authority lock");
+        state.closing = true;
+        match state.close_phase {
+            0 => {
+                state.pending_generation = None;
+                state.close_phase = 1;
+                false
+            }
+            1 => {
+                state.generation = 0;
+                state.close_phase = 2;
+                false
+            }
+            2 => {
+                state.acknowledged_generation = 0;
+                state.close_phase = 3;
+                false
+            }
+            _ => {
+                state.terminal = true;
+                true
+            }
+        }
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        let state = self.0.lock().expect("World cursor wake authority lock");
+        state.terminal && state.pending_generation.is_none() && state.generation == 0 && state.acknowledged_generation == 0
+    }
+
+    #[cfg(test)]
+    fn pending_generation(&self) -> Option<u64> {
+        self.0.lock().expect("World cursor wake authority lock").pending_generation
     }
 }
 
 impl World3dBuildContext {
+    pub fn new(cursor_wake: WorldCursorWakeAuthority) -> Self {
+        Self { uploads: Vec::new(), evictions: Vec::new(), mesh_requests: HashSet::new(), raster_requests: HashSet::new(), cursor_wake, cursor_wake_token: None, cursor_wake_fault: None }
+    }
+
     pub fn ensure_mesh(&mut self, key: &str, version: u64, lease: Mesh3dLease) {
         if self.mesh_requests.insert((key.to_string(), version)) {
             self.uploads.push(PreparedRenderUpload::Mesh { key: key.to_string(), version, lease });
@@ -67,11 +145,20 @@ impl World3dBuildContext {
     }
 
     fn request_cursor_wake(&mut self) {
-        self.cursor_wake.request();
+        if self.cursor_wake_token.is_some() || self.cursor_wake_fault.is_some() {
+            return;
+        }
+        match self.cursor_wake.request() {
+            Ok(token) => self.cursor_wake_token = Some(token),
+            Err(fault) => self.cursor_wake_fault = Some(fault),
+        }
     }
 
-    pub fn take_cursor_wake(&mut self) -> bool {
-        self.cursor_wake.take().is_some()
+    pub fn take_cursor_wake(&mut self) -> Result<Option<WorldCursorWakeToken>, WorldCursorWakeFault> {
+        match self.cursor_wake_fault.take() {
+            Some(fault) => Err(fault),
+            None => Ok(self.cursor_wake_token.take()),
+        }
     }
 
     pub fn append_to(&mut self, input: &mut ui_wgpu::wgpu::PreparedRenderInput) {
@@ -10934,20 +11021,132 @@ mod tests {
 
     #[test]
     fn cursor_wake_coalesces_duplicates_and_rearms_after_exact_take() {
-        let mut wake = WorldCursorWake::default();
-        let first = wake.request();
-        assert_eq!(wake.request(), first, "duplicate requests preserve the one outstanding wake");
-        assert_eq!(wake.take(), Some(first));
-        assert_eq!(wake.take(), None, "one wake has exactly one consumer handoff");
-        let second = wake.request();
-        assert_ne!(second, first, "work resumed after a handoff receives a fresh ABA witness");
-        assert_eq!(wake.take(), Some(second));
+        let wake = WorldCursorWakeAuthority::new();
+        let mut first_frame = World3dBuildContext::new(wake.clone());
+        first_frame.request_cursor_wake();
+        first_frame.request_cursor_wake();
+        let first = first_frame.take_cursor_wake().unwrap().expect("first frame wake token");
+        assert_eq!(first_frame.take_cursor_wake().unwrap(), None, "one frame carries one exact token");
+        for _ in 0..128 {
+            assert_eq!(wake.request().unwrap().generation(), first.generation(), "a pending wake storm coalesces onto one retained generation");
+        }
 
-        let mut build = World3dBuildContext::default();
-        build.request_cursor_wake();
-        build.request_cursor_wake();
-        assert!(build.take_cursor_wake());
-        assert!(!build.take_cursor_wake(), "prepared frame receives no duplicate wake directive");
+        let mut consecutive_frame = World3dBuildContext::new(wake.clone());
+        consecutive_frame.request_cursor_wake();
+        let duplicate = consecutive_frame.take_cursor_wake().unwrap().expect("pending wake coalesces across frames");
+        assert_eq!(duplicate.generation(), first.generation());
+        assert!(wake.acknowledge(&first));
+        assert!(!wake.acknowledge(&duplicate), "duplicate acknowledgement cannot consume another generation");
+
+        let mut resumed_frame = World3dBuildContext::new(wake.clone());
+        resumed_frame.request_cursor_wake();
+        let resumed = resumed_frame.take_cursor_wake().unwrap().expect("resumed work receives another token");
+        assert!(resumed.generation() > first.generation(), "consecutive presented frames retain an ABA-distinguishable generation");
+        assert!(!wake.acknowledge(&duplicate), "stale token cannot consume the newer pending generation");
+        assert_eq!(wake.pending_generation(), Some(resumed.generation()));
+        assert!(wake.acknowledge(&resumed));
+        assert_eq!(wake.pending_generation(), None);
+
+        let pending = wake.request().expect("close fixture pending wake");
+        assert_eq!(wake.pending_generation(), Some(pending.generation()));
+        assert!(!wake.close_step(), "first close grant retires only the pending token scalar");
+        assert!(!wake.close_step(), "second close grant retires only the generation scalar");
+        assert!(!wake.close_step(), "third close grant retires only the acknowledgement scalar");
+        assert!(wake.close_step());
+        assert!(wake.terminal_is_empty());
+        assert_eq!(wake.request(), Err(WorldCursorWakeFault::Closed));
+    }
+
+    #[test]
+    fn live_renderer_retains_generation_wake_and_rejects_recreation_erasure_loss_and_duplicate_consumption() {
+        const TOKEN_FIELD: &str = "cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>";
+        const HOST_TOKEN_FIELD: &str = "cursor_wake_requested: Option<crate::infinite_world::world::WorldCursorWakeToken>";
+
+        fn region<'a>(source: &'a str, start: &str, end: &str) -> Option<&'a str> {
+            let start = source.find(start)?;
+            let end = source[start..].find(end)?.checked_add(start)?;
+            Some(&source[start..end])
+        }
+
+        fn replace_region(source: &str, start: &str, end: &str, from: &str, to: &str) -> Option<String> {
+            let start = source.find(start)?;
+            let end = source[start..].find(end)?.checked_add(start)?;
+            let owned = source[start..end].replacen(from, to, 1);
+            let mut output = String::with_capacity(source.len().saturating_add(to.len()).saturating_sub(from.len()));
+            output.push_str(&source[..start]);
+            output.push_str(&owned);
+            output.push_str(&source[end..]);
+            Some(output)
+        }
+
+        fn exact(glue: &str, host: &str, native: &str, browser: &str) -> bool {
+            let typed_handoffs = [
+                ("AppFrameBuild", "pub(crate) struct AppFrameBuild {", "struct AppFrameAfterChrome {"),
+                ("AppFrameAfterChrome", "struct AppFrameAfterChrome {", "struct FrameWheelCursor {"),
+                ("AppFramePresentation", "pub(crate) struct AppFramePresentation {", "impl AppFrameBuild {"),
+                ("AppFramePreparation", "pub(crate) struct AppFramePreparation {", "impl AppFramePreparation {"),
+                ("AppPresentStep::Complete", "pub(crate) enum AppPresentStep {", "impl AppPresenter {"),
+            ];
+            let host_handoffs = [("OsHost", "pub struct OsHost {", "pub(crate) struct OsHostRetirement {"), ("OsHostRetirement", "pub(crate) struct OsHostRetirement {", "impl OsHost {")];
+            glue.contains("world_cursor_wake: infinite_world::world::WorldCursorWakeAuthority")
+                && glue.contains("World3dBuildContext::new(runtime.world_cursor_wake_authority())")
+                && glue.matches(TOKEN_FIELD).count() == typed_handoffs.len()
+                && typed_handoffs.iter().all(|(_, start, end)| region(glue, start, end).is_some_and(|handoff| handoff.matches(TOKEN_FIELD).count() == 1))
+                && region(glue, "pub(crate) enum AppPresentStep {", "impl AppPresenter {")
+                    .is_some_and(|handoff| handoff.contains("Complete { fullscreen: Option<bool>, cursor_wake: Option<infinite_world::world::WorldCursorWakeToken> }") && handoff.matches(TOKEN_FIELD).count() == 1)
+                && region(glue, "pub(crate) struct AppPresenter {", "#[derive(Clone, Copy, Debug, PartialEq, Eq)]").is_some_and(|presenter| presenter.matches("pending: Option<AppPresentCursor>").count() == 1)
+                && region(glue, "struct AppPresentCursor {", "pub(crate) enum AppPresentStep {").is_some_and(|presenter| presenter.matches("frame: AppFramePresentation").count() == 1)
+                && !glue.contains("cursor_wake: bool")
+                && !glue.contains("cursor_wake: Option<bool>")
+                && !glue.contains("request_frame: bool")
+                && glue.contains("fn close_world_cursor_wake_step(&self) -> bool")
+                && glue.contains("pub(crate) fn close_cursor_wake_step(&mut self) -> bool")
+                && !glue.contains("World3dBuildContext::default()")
+                && host.matches(HOST_TOKEN_FIELD).count() == host_handoffs.len()
+                && host_handoffs.iter().all(|(_, start, end)| region(host, start, end).is_some_and(|handoff| handoff.matches(HOST_TOKEN_FIELD).count() == 1))
+                && !host.contains("cursor_wake_requested: bool")
+                && !host.contains("cursor_wake_requested: Option<bool>")
+                && host.contains("token.generation() > pending.generation()")
+                && host.contains("if self.cursor_wake_requested.take().is_some()")
+                && native.contains("self.runtime.acknowledge_world_cursor_wake(&token)")
+                && native.contains("self.retain_cursor_wake_directive(token)")
+                && native.matches("host.take_cursor_wake_directive()").count() == 1
+                && browser.contains("host.take_cursor_wake_directive().is_some()")
+        }
+
+        let glue = include_str!("../../📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs");
+        let host = include_str!("../../📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️os_host.rs");
+        let native = include_str!("../../📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️winit_app.rs");
+        let browser = include_str!("../../📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️browser_worker.rs");
+        assert!(exact(glue, host, native, browser));
+        assert!(!exact(&glue.replace("World3dBuildContext::new(runtime.world_cursor_wake_authority())", "World3dBuildContext::default()"), host, native, browser));
+        for (name, start, end) in [
+            ("AppFrameBuild", "pub(crate) struct AppFrameBuild {", "struct AppFrameAfterChrome {"),
+            ("AppFrameAfterChrome", "struct AppFrameAfterChrome {", "struct FrameWheelCursor {"),
+            ("AppFramePresentation", "pub(crate) struct AppFramePresentation {", "impl AppFrameBuild {"),
+            ("AppFramePreparation", "pub(crate) struct AppFramePreparation {", "impl AppFramePreparation {"),
+            ("AppPresentStep::Complete", "pub(crate) enum AppPresentStep {", "impl AppPresenter {"),
+        ] {
+            let erased = replace_region(glue, start, end, TOKEN_FIELD, "request_frame: bool").expect("enumerated typed wake handoff");
+            assert!(!exact(&erased, host, native, browser), "erasing {name} must violate the exact typed-token handoff census");
+        }
+        let erased_all = glue.replace(TOKEN_FIELD, "request_frame: bool");
+        assert!(!exact(&erased_all, host, native, browser), "erasing every internal typed wake handoff must be rejected");
+        let extra_bool = glue.replacen("pub(crate) struct AppFrameBuild {", "pub(crate) struct AppFrameBuild {\n    request_frame: bool,", 1);
+        assert!(!exact(&extra_bool, host, native, browser), "an extra internal boolean wake channel must be rejected");
+        let presenter_erased = glue.replacen("frame: AppFramePresentation", "request_frame: bool", 1);
+        assert!(!exact(&presenter_erased, host, native, browser), "presenter ownership must retain the typed presentation handoff");
+        let pending_presenter_erased = glue.replacen("pending: Option<AppPresentCursor>", "request_frame: bool", 1);
+        assert!(!exact(&pending_presenter_erased, host, native, browser), "AppPresenter must retain its typed pending cursor");
+        for (name, start, end) in [("OsHost", "pub struct OsHost {", "pub(crate) struct OsHostRetirement {"), ("OsHostRetirement", "pub(crate) struct OsHostRetirement {", "impl OsHost {")] {
+            let erased = replace_region(host, start, end, HOST_TOKEN_FIELD, "cursor_wake_requested: bool").expect("enumerated host token field");
+            assert!(!exact(glue, &erased, native, browser), "erasing {name}'s retained host token must be rejected");
+        }
+        assert!(!exact(glue, host, &native.replace("self.runtime.acknowledge_world_cursor_wake(&token)", "true"), browser));
+        assert!(!exact(glue, host, &native.replace("self.retain_cursor_wake_directive(token)", "drop(token)"), browser));
+        assert!(!exact(glue, &host.replace("token.generation() > pending.generation()", "true"), native, browser));
+        assert!(!exact(glue, &host.replace("if self.cursor_wake_requested.take().is_some()", "if false"), native, browser));
+        assert!(!exact(glue, host, native, &browser.replace("host.take_cursor_wake_directive().is_some()", "host.cursor_wake_requested.is_some()")));
     }
 
     #[test]
@@ -11047,21 +11246,30 @@ mod tests {
         assert!(WorldTerrainMeshCursor::new("surface", 0, 0, 0, TerrainTileMeshPayload { positions: vec![0.0, 1.0], normals: Vec::new(), indices: vec![0, 1, 2], uvs: Vec::new() }, 80, 1, 1).is_err());
     }
 
-    fn face_overlay_test_mesh(generation: u64, revision: u64, face_id: u32) -> Mesh3dLease {
-        let schema = Mesh3dSchema { vertices: 3, indices: 3, face_ids: 1, vertex_ids: 0, edges: 0, edge_ids: 0, uvs: 0, colors: 0 };
+    fn face_overlay_test_mesh_with_faces(generation: u64, revision: u64, face_ids: &[u32]) -> Mesh3dLease {
+        let triangles = u32::try_from(face_ids.len()).expect("fixture triangle count");
+        let vertices = triangles * 3;
+        let schema = Mesh3dSchema { vertices, indices: vertices, face_ids: triangles, vertex_ids: 0, edges: 0, edge_ids: 0, uvs: 0, colors: 0 };
         let token = mesh3d_begin(generation, revision, schema).expect("face overlay fixture claim");
         while !mesh3d_allocate_step(token).expect("face overlay fixture page") {}
-        for position in [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]] {
-            mesh3d_write_vec3(token, Mesh3dField::Positions, position).unwrap();
+        for triangle in 0..triangles {
+            let x = triangle as f32 * 2.0;
+            for position in [[x, 0.0, 0.0], [x + 1.0, 0.0, 0.0], [x, 1.0, 0.0]] {
+                mesh3d_write_vec3(token, Mesh3dField::Positions, position).unwrap();
+                mesh3d_write_vec3(token, Mesh3dField::Normals, [0.0, 0.0, 1.0]).unwrap();
+            }
         }
-        for _ in 0..3 {
-            mesh3d_write_vec3(token, Mesh3dField::Normals, [0.0, 0.0, 1.0]).unwrap();
-        }
-        for index in [0, 1, 2] {
+        for index in 0..vertices {
             mesh3d_write_u32(token, Mesh3dField::Indices, index).unwrap();
         }
-        mesh3d_write_u32(token, Mesh3dField::FaceIds, face_id).unwrap();
+        for face_id in face_ids {
+            mesh3d_write_u32(token, Mesh3dField::FaceIds, *face_id).unwrap();
+        }
         mesh3d_seal(token).expect("face overlay fixture lease")
+    }
+
+    fn face_overlay_test_mesh(generation: u64, revision: u64, face_id: u32) -> Mesh3dLease {
+        face_overlay_test_mesh_with_faces(generation, revision, &[face_id])
     }
 
     #[test]
@@ -11125,15 +11333,19 @@ mod tests {
         state.interaction_revision = 7;
         state.draw_generation = 11;
         state.granularity = "face".into();
+        state.marquee_preview_ids.push("10".into());
         state.component_ids.push("12".into());
-        let source = face_overlay_test_mesh(750, 7, 12);
+        state.hovered_component_id = Some("11".into());
+        state.hovered_component_object_id = Some("object".into());
+        state.hovered_component_mode = Some("face".into());
+        let source = face_overlay_test_mesh_with_faces(750, 7, &[10, 11, 12]);
         publish_world3d_mesh_lease(&mut state, "source".into(), source).unwrap();
         let version = state.mesh_versions["source"];
         state.draws.push(SceneDraw3d { mesh_key: "source".into(), mesh_version: version, instances: vec![Instance3d { id: "object".into(), model: Mat4::identity(), color: [1.0; 4], selected: false, hovered: false }] }).unwrap();
         state.face_overlay_build = Some(WorldFaceOverlayMeshCursor::new("surface", 800, 7, 11).unwrap());
 
         let mut staged_seen = false;
-        for _ in 0..128 {
+        for _ in 0..1_024 {
             step_component_face_overlay_build(&mut state);
             if state.meshes.contains_key("component-face-overlay:surface:800:0") && state.face_overlay_generation.is_none() {
                 staged_seen = true;
@@ -11144,10 +11356,13 @@ mod tests {
         }
         assert!(staged_seen, "a completed bucket remains invisible while the family transaction is partial");
         assert_eq!(state.face_overlay_generation, Some(800));
-        assert_eq!(state.face_overlay_colors, [Some([0.35, 0.75, 1.0, 0.62]), None, None]);
+        assert_eq!(state.face_overlay_colors, [Some([1.0, 0.85, 0.35, 0.36]), Some([0.35, 0.75, 1.0, 0.48]), Some([0.35, 0.75, 1.0, 0.62])]);
+        for index in 0..3 {
+            assert!(state.meshes.contains_key(&format!("component-face-overlay:surface:800:{index}")), "every nonempty category publishes before family visibility");
+        }
 
         state.face_overlay_build = Some(WorldFaceOverlayMeshCursor::new("surface", 900, 7, 11).unwrap());
-        for _ in 0..128 {
+        for _ in 0..1_024 {
             step_component_face_overlay_build(&mut state);
             if state.meshes.contains_key("component-face-overlay:surface:900:0") {
                 break;
@@ -11162,6 +11377,7 @@ mod tests {
             }
         }
         assert_eq!(state.face_overlay_generation, Some(800), "stale family retirement preserves the last complete publication");
+        assert!(state.meshes.contains_key("component-face-overlay:surface:900:0"), "stale partial publication remains owned by the generation-qualified registry until bounded retirement");
     }
 
     #[test]
@@ -12192,7 +12408,7 @@ mod tests {
     #[test]
     fn prepared_world_resources_are_send_and_deduplicate_uploads() {
         assert_send::<World3dBuildContext>();
-        let mut resources = World3dBuildContext::default();
+        let mut resources = World3dBuildContext::new(WorldCursorWakeAuthority::new());
         resources.ensure_mesh("mesh", 3, &[0.0, 1.0, 2.0], &[0.0, 0.0, 1.0], &[0, 1, 2]);
         resources.ensure_mesh("mesh", 3, &[9.0], &[9.0], &[9]);
         resources.ensure_world_plane_texture("image", &[1, 2, 3, 4], 1, 1);

@@ -15,6 +15,18 @@ pub mod runner;
 
 #[path = "../../🔮️oracle/🦀️component.rs"]
 pub mod oracle;
+
+#[path = "../../🔮️oracle/🖼️raster/🦀️component.rs"]
+pub mod oracle_raster;
+
+#[path = "../../🔮️oracle/🎒️archive/🦀️component.rs"]
+pub mod oracle_archive;
+
+#[path = "../../🔮️oracle/🔊️audio/🦀️component.rs"]
+pub mod oracle_audio;
+
+#[path = "../../🔮️oracle/📊️tabular/🦀️component.rs"]
+pub mod oracle_tabular;
 //#endregion 🔖️Modules
 
 //#region 🔖️Surface

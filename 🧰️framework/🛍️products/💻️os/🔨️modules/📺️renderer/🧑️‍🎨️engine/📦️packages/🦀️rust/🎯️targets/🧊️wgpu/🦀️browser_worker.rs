@@ -301,7 +301,7 @@ impl BrowserRendererWorker {
         encode_tick(BrowserTickOutput {
             cursor: cursor_name(outcome.cursor),
             fullscreen: host.platform_fullscreen.take(),
-            request_frame: std::mem::take(&mut host.cursor_wake_requested) || host.scheduler.next_deadline().is_some() || host.runtime.has_pending_text_work() || host.presenter.has_pending_presentation(),
+            request_frame: host.take_cursor_wake_directive().is_some() || host.scheduler.next_deadline().is_some() || host.runtime.has_pending_text_work() || host.presenter.has_pending_presentation(),
             progress: 1.0,
             quarantined: present_fault.is_some(),
             fault_code: present_fault.as_ref().map(|_| fault_code),

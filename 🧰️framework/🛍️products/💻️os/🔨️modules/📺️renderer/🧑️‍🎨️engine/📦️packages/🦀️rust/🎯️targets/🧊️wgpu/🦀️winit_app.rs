@@ -173,10 +173,12 @@ impl OsHost {
             }
         }
         match self.presenter.present_step() {
-            Ok(crate::AppPresentStep::Complete { fullscreen, request_frame }) => {
+            Ok(crate::AppPresentStep::Complete { fullscreen, cursor_wake }) => {
                 self.platform_fullscreen = fullscreen;
-                if request_frame {
-                    self.cursor_wake_requested = true;
+                if let Some(token) = cursor_wake
+                    && self.runtime.acknowledge_world_cursor_wake(&token)
+                {
+                    self.retain_cursor_wake_directive(token);
                     self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);
                 }
             }
@@ -758,6 +760,9 @@ impl ApplicationHandler<HostUserEvent> for WinitApp {
             self.pending_reason = Some(reason);
             if let Some(window) = self.window.as_ref() {
                 window.request_redraw();
+                if reason.contains(InvalidationReason::RESOURCE_READY) {
+                    let _ = host.take_cursor_wake_directive();
+                }
             }
         }
         self.recompute_control_flow(event_loop);

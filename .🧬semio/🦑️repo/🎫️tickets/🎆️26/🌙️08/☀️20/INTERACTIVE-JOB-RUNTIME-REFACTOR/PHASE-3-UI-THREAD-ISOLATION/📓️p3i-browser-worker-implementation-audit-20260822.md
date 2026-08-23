@@ -1334,3 +1334,82 @@ Exact live residual routes after this checkpoint:
   last-valid replacement is also absent. Typed terrain input, dynamic collection/frame-owner
   retirement, semantic PNG/JPEG/MVT/SVG jobs, full pending-packet/GPU-table/atlas/raster/cache
   close, opaque render/submit timing, realm terminal-empty, and real Wasm/browser evidence remain.
+
+### Retained generation-qualified cursor-wake remediation
+
+- This checkpoint repairs the wake-specific rejection recorded in
+  `📓️sol-independent-p3-atomic-family-wake-legacy-zero-audit-2026-08-23.md` and supersedes
+  the preceding checkpoint's per-frame `WorldCursorWake`/host-bit claim. `RuntimeMailboxInner` now
+  owns the one durable `WorldCursorWakeAuthority`. Every `World3dBuildContext` receives only a
+  shallow clone of that authority, so consecutive frames observe the same retained generation
+  state; there is no production `World3dBuildContext::default()` path.
+- `WorldCursorWakeToken` remains a non-Copy, generation-qualified owner through
+  `AppFrameAfterChrome`, `AppFrameBuild`, `AppFramePreparation`, `AppFramePresentation`,
+  `AppPresentStep::Complete`, and the `OsHost` platform directive. Presentation acknowledges only
+  the exact pending generation. Duplicate and stale tokens cannot acknowledge a rearmed
+  generation. An already-pending platform directive is replaced only by a strictly newer token,
+  which prevents an older completed frame from erasing a newer wake.
+- Native completion retains the accepted token, invalidates `RESOURCE_READY`, requests the window
+  redraw, and takes that token exactly once at the platform edge. The browser Worker also takes the
+  token exactly once; only then is it projected to the wire `request_frame: bool`. Other browser
+  deadline/text/presentation reasons remain independent boolean sources and never recreate or
+  acknowledge the World token.
+- Close is explicit at every retained seam. `OsHostRetirement` clears one pending platform token
+  before presentation retirement; `AppPresenter` clears one token in a pending prepared frame;
+  frame preparation clears its token on a separate close turn; the runtime authority then retires
+  pending generation, current generation, and acknowledged generation on separate grants before
+  its terminal-empty witness succeeds.
+- The wake fixture now uses the same authority across consecutive build contexts, coalesces a
+  128-request storm onto one generation, proves exact one-shot acknowledgement, rearm to a newer
+  generation, stale/duplicate ABA rejection, and scalar close. A permanent live-path source
+  fixture rejects per-frame authority recreation, typed-token-to-boolean erasure, missing ACK,
+  lost native handoff, missing newest-generation coalescing, missing close take, and a browser
+  projection that observes without consuming. The face-family fixture now constructs preview,
+  hovered, and selected categories as three nonempty buckets, requires all three staging leases
+  before visibility, preserves the previous complete generation across stale interruption, and
+  proves the stale partial generation remains retained by its generation-qualified registry.
+- Source-only gates executed at this save: edition-2024 `rustfmt --check --config
+  skip_children=true` passed for ui-scene math, canonical World, renderer glue, OsHost, winit app,
+  browser Worker, and frame job; the exact framework-wide legacy `Mesh3d` spelling scan returned
+  zero matches; `LegacyMeshOracleData` remained 17 test-only references; production build-context
+  recreation was absent; internal renderer wake fields remained typed and `request_frame: bool`
+  appeared only in the final browser wire output; required wake/face paths were present; scoped and
+  whole working, staged, and `HEAD` `git diff --check` all passed. The Rust fixtures were authored
+  and inspected but not executed. Cargo, Nx, Wasm, browser, network, and root lint were not run by
+  instruction.
+- This is a wake-remediation source boundary, not Phase 3 acceptance. The independently recorded
+  normal face/terrain replacement retirement, typed terrain input, dynamic/frame-owner close,
+  semantic image/map decode, pending packet/GPU table/atlas/raster/cache retirement, opaque
+  render/submit timing, full realm terminal-empty, and real native/Wasm/browser timing gates remain
+  **RED**.
+
+### Exact typed wake-handoff evidence repair
+
+- This source-only evidence repair addresses the isolated rejection in
+  `📓️sol-independent-p3-atomic-family-wake-legacy-zero-reaudit-2026-08-23.md`; it does not
+  change the coherent live wake authority or platform behavior. The permissive `>= 4` predicate is
+  removed. The permanent source fixture now requires exactly five internal typed-token handoffs,
+  each in its named region: `AppFrameBuild` at renderer glue line 6922,
+  `AppFrameAfterChrome` at 6930, `AppFramePresentation` at 7508,
+  `AppFramePreparation` at 7531, and `AppPresentStep::Complete` at 7619. It also requires the exact
+  `AppPresenter.pending -> AppPresentCursor.frame -> AppFramePresentation` container path.
+- Host ownership is independently enumerated: exactly one typed field in `OsHost` and one in
+  `OsHostRetirement`, with exactly two host-token fields repository-locally. The predicate rejects
+  internal `cursor_wake: bool`, `Option<bool>`, `request_frame: bool`, and boolean host-token
+  fields. The final browser wire DTO remains outside this glue/host internal census.
+- The former single-occurrence token-erasure mutation is replaced by five region-qualified
+  mutations. Each removes exactly one named typed handoff and must fail the predicate. Separate
+  mutations erase all five, inject an extra internal boolean channel, erase the presenter frame
+  owner, erase the AppPresenter pending owner, erase either host field, recreate the per-frame
+  authority, skip exact acknowledgement, lose native transfer, disable newest-generation
+  coalescing, skip close take, or observe the browser token without consuming it. The exact global
+  count also rejects an unenumerated sixth typed field.
+- Source gates run at this save all passed: edition-2024 rustfmt/parser for ui-scene math, canonical
+  World, renderer glue, OsHost, winit app, browser Worker, and frame job; root interactivity
+  verifier self-test in clean DENY mode; exact five-field glue census; exact two-field host census;
+  no internal boolean wake fields; no production build-context recreation; framework-wide legacy
+  `Mesh3d` census zero; and 17 test-only `LegacyMeshOracleData` references. Scoped and whole
+  working, staged, and `HEAD` whitespace checks all passed. Rust fixtures,
+  Cargo, Nx, Wasm, browser, network, root lint, and runtime timing were not run.
+- Phase 3/5 remains **RED** only for the separately recorded production/runtime residuals. This
+  packet makes no claim about them and starts no next residual.

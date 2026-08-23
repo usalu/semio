@@ -16,8 +16,14 @@ path = "📦️lib.rs"
 [features]
 # 🔮️ Links the registered third-party reference implementations. Enabled only by a generated oracle
 # host, never by any production target — `bun ./📜️script.ts dependency` enforces that.
-oracles = ["dep:pdf-writer", "dep:lopdf"]
+oracles = ["dep:pdf-writer", "dep:lopdf", "dep:png", "dep:gif", "dep:zip", "dep:flate2", "dep:hound", "dep:csv"]
 
 [dependencies]
 pdf-writer = { version = "0.15", optional = true }
 lopdf = { version = "0.44", optional = true }
+png = { version = "0.18", optional = true }
+gif = { version = "0.13", optional = true }
+zip = { version = "6", optional = true, default-features = false, features = ["deflate"] }
+flate2 = { version = "1", optional = true }
+hound = { version = "3", optional = true }
+csv = { version = "1", optional = true }

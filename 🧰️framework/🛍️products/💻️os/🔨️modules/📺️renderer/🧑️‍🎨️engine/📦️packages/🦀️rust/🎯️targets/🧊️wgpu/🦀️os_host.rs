@@ -112,7 +112,7 @@ pub struct OsHost {
     /// distinguishable events in `Watchdog::violations()`, not one indistinguishable repeat.
     pub frame_generation: u64,
     pub frame_ready: bool,
-    pub(crate) cursor_wake_requested: bool,
+    pub(crate) cursor_wake_requested: Option<crate::infinite_world::world::WorldCursorWakeToken>,
     pub(crate) platform_fullscreen: Option<bool>,
     pub(crate) present_fault: Option<String>,
     /// 📬️ P3a (INTERACTIVE-JOB-RUNTIME-REFACTOR, ui-thread-isolation): the fixed-capacity enqueue-only
@@ -146,6 +146,7 @@ pub(crate) struct OsHostRetirement {
     ui_token: Option<ui_host::UiThreadToken>,
     snapshot_sink: Option<RenderSnapshotSink>,
     frame_build: Option<crate::frame_job::FrameBuildHandle>,
+    cursor_wake_requested: Option<crate::infinite_world::world::WorldCursorWakeToken>,
 }
 
 impl OsHost {
@@ -161,7 +162,7 @@ impl OsHost {
             hot_swap: HotSwapPoll::new(),
             frame_generation: 0,
             frame_ready: false,
-            cursor_wake_requested: false,
+            cursor_wake_requested: None,
             platform_fullscreen: None,
             present_fault: None,
             events: ui_host::EventQueue::new(),
@@ -178,7 +179,7 @@ impl OsHost {
     }
 
     pub(crate) fn into_retirement(self) -> OsHostRetirement {
-        let Self { runtime, presenter, scheduler, kernel, clock, caret, hot_swap, frame_generation: _, frame_ready: _, cursor_wake_requested: _, platform_fullscreen: _, present_fault: _, events, ui_token, snapshot_sink, frame_build } = self;
+        let Self { runtime, presenter, scheduler, kernel, clock, caret, hot_swap, frame_generation: _, frame_ready: _, cursor_wake_requested, platform_fullscreen: _, present_fault: _, events, ui_token, snapshot_sink, frame_build } = self;
         OsHostRetirement {
             runtime: Some(runtime),
             presenter: Some(presenter),
@@ -191,7 +192,18 @@ impl OsHost {
             ui_token: Some(ui_token),
             snapshot_sink: Some(snapshot_sink),
             frame_build: Some(frame_build),
+            cursor_wake_requested,
         }
+    }
+
+    pub(crate) fn retain_cursor_wake_directive(&mut self, token: crate::infinite_world::world::WorldCursorWakeToken) {
+        if self.cursor_wake_requested.as_ref().is_none_or(|pending| token.generation() > pending.generation()) {
+            self.cursor_wake_requested = Some(token);
+        }
+    }
+
+    pub(crate) fn take_cursor_wake_directive(&mut self) -> Option<crate::infinite_world::world::WorldCursorWakeToken> {
+        self.cursor_wake_requested.take()
     }
 }
 
@@ -214,7 +226,13 @@ impl OsHostRetirement {
             self.events = None;
             return false;
         }
+        if self.cursor_wake_requested.take().is_some() {
+            return false;
+        }
         if let Some(presenter) = self.presenter.as_mut() {
+            if !presenter.close_cursor_wake_step() {
+                return false;
+            }
             if !presenter.close_active_upload_step() {
                 return false;
             }
@@ -247,6 +265,7 @@ impl OsHostRetirement {
             && self.ui_token.is_none()
             && self.snapshot_sink.is_none()
             && self.frame_build.is_none()
+            && self.cursor_wake_requested.is_none()
     }
 }
 

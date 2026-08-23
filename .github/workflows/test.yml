@@ -1,0 +1,306 @@
+# 🧪️ Repository-wide non-exempt test gates.
+#
+# Every scope decision in this file is TAXONOMY DATA, never a literal here: which areas are exempt
+# comes from `areas` in `🔣️taxonomy.json`, which paths discovery skips comes from
+# `testExcludedPathPrefixes`, and which phases exist comes from `testPhases`. This workflow therefore
+# names no plugin, no product and no module path — it only calls the root router, and marking another
+# area exempt or adding a phase requires no edit here.
+#
+# No job may turn a failure into a skip: a missing toolchain fails setup, a timeout fails the case,
+# and there is no quarantine or known-broken allowlist anywhere in this file.
+name: test
+
+on:
+  pull_request:
+  push:
+    branches: ["⛳️wip", "main"]
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      level:
+        description: "Test level to run"
+        type: choice
+        options: [fundamental, quick, long, exhaustive]
+        default: exhaustive
+      owner:
+        description: "Owner root to narrow to (optional)"
+        type: string
+      case:
+        description: "Test case slug to narrow to (optional)"
+        type: string
+  release:
+    types: [published]
+
+concurrency:
+  group: test-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  SEMIO_AGENT_ID: ci-${{ github.run_id }}-${{ github.run_attempt }}
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  # ── Contract phase: everything provable without executing a single test ────────────────────────
+  test-taxonomy:
+    name: test-taxonomy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - name: Owner-root test taxonomy
+        run: bun ./📜️script.ts test discover
+      - name: No discovery result may contain an exempt area
+        run: |
+          bun ./📜️script.ts test discover > /tmp/discovered.txt
+          python3 - <<'PY'
+          import json, sys
+          taxonomy = json.load(open("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json", encoding="utf-8"))
+          exempt = [area for area, state in taxonomy.get("areas", {}).items() if state == "exempt"]
+          text = open("/tmp/discovered.txt", encoding="utf-8").read()
+          leaked = [area for area in exempt if f"{area}/" in text]
+          if leaked:
+              print(f"::error::test discovery returned an exempt area: {', '.join(leaked)}")
+              sys.exit(1)
+          print(f"clean — none of {exempt} appear in discovery")
+          PY
+
+  test-contract:
+    name: test-contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun ./📜️script.ts test contract
+
+  dependency-clean:
+    name: dependency-clean
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - name: Dependency freeze ratchet (shrink-only)
+        run: bun ./📜️script.ts verify dependencies
+      - name: Oracle packages must be test-only, or record their debt
+        run: bun ./📜️script.ts test dependency
+
+  # ── Execution ─────────────────────────────────────────────────────────────────────────────────
+  test-quick-linux:
+    name: test-quick-linux
+    needs: [test-taxonomy, test-contract]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: oven-sh/setup-bun@v2
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-go@v5
+        with: { go-version: "1.25" }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: "8.0.x" }
+      - run: bun install --frozen-lockfile
+      - name: Every claimed toolchain must be present — a missing tool fails setup
+        run: bun ./📜️script.ts test doctor
+      - name: Affected cases, quick level
+        run: bun nx affected -t test-quick --base=origin/${{ github.base_ref || '⛳️wip' }}
+      - name: Non-aggregate metrics (informational on an affected-only scope)
+        if: always()
+        run: bun ./📜️script.ts test metrics || true
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failed-quick-linux
+          path: |
+            .🧬semio/🦑️repo/⚡️cache/tests/diffs/**
+            .🧬semio/🦑️repo/⚡️cache/tests/reports/**
+            .🧬semio/🦑️repo/⚡️cache/tests/results/**/*.projection.json
+          if-no-files-found: ignore
+
+  test-fundamental-windows:
+    name: test-fundamental-windows
+    needs: [test-taxonomy, test-contract]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-go@v5
+        with: { go-version: "1.25" }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: "8.0.x" }
+      - run: bun install --frozen-lockfile
+      - run: bun ./📜️script.ts test parity fundamental
+
+  test-fundamental-macos:
+    name: test-fundamental-macos
+    needs: [test-taxonomy, test-contract]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-go@v5
+        with: { go-version: "1.25" }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: "8.0.x" }
+      - run: bun install --frozen-lockfile
+      - run: bun ./📜️script.ts test parity fundamental
+
+  test-long:
+    name: test-long
+    if: github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'release'
+    needs: [test-quick-linux]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: oven-sh/setup-bun@v2
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-go@v5
+        with: { go-version: "1.25" }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: "8.0.x" }
+      - run: bun install --frozen-lockfile
+      - run: bun ./📜️script.ts test parity long
+      - name: Non-aggregate metrics
+        if: always()
+        run: bun ./📜️script.ts test metrics
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failed-long-${{ matrix.os }}
+          path: |
+            .🧬semio/🦑️repo/⚡️cache/tests/diffs/**
+            .🧬semio/🦑️repo/⚡️cache/tests/reports/**
+          if-no-files-found: ignore
+
+  test-exhaustive:
+    name: test-exhaustive
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'release'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: oven-sh/setup-bun@v2
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-go@v5
+        with: { go-version: "1.25" }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: "8.0.x" }
+      - run: bun install --frozen-lockfile
+      - name: Full matrix
+        run: |
+          bun ./📜️script.ts test parity ${{ github.event.inputs.level || 'exhaustive' }} \
+            ${{ github.event.inputs.owner && format('--owner {0}', github.event.inputs.owner) || '' }} \
+            ${{ github.event.inputs.case && format('--case {0}', github.event.inputs.case) || '' }}
+      - name: Non-aggregate gates — scenario, implementation, parity, oracle and per-implementation source coverage
+        run: bun ./📜️script.ts test metrics --enforce
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reports-exhaustive-${{ matrix.os }}
+          path: .🧬semio/🦑️repo/⚡️cache/tests/reports/**
+          if-no-files-found: ignore
+
+  coverage:
+    name: coverage
+    if: github.event_name == 'schedule' || github.event_name == 'release'
+    needs: [test-exhaustive]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-go@v5
+        with: { go-version: "1.25" }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: "8.0.x" }
+      - run: bun install --frozen-lockfile
+      - name: Repository-wide coverage gate (95%), per-implementation reported
+        run: bun ./📜️script.ts test exhaustive
+        env:
+          SEMIO_COVERAGE: "1"
+
+  production-purity:
+    name: production-purity
+    if: github.event_name == 'release' || github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: dtolnay/rust-toolchain@stable
+      - run: bun install --frozen-lockfile
+      - name: Build production artifacts without any oracle or test-host package available
+        run: bun ./📜️script.ts build
+      - name: Inspect the built graph for oracle packages
+        run: |
+          bun ./📜️script.ts test dependency
+          python3 - <<'PY'
+          import json, subprocess, sys, pathlib
+          # 🔮️Which packages are oracles is REGISTRY data, discovered from every owner contribution —
+          # this step names none of them itself.
+          taxonomy = json.load(open("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json", encoding="utf-8"))
+          manifests = [pathlib.Path(taxonomy["testOracleRegistryPath"])] + list(pathlib.Path(".").glob(f"**/{taxonomy['testContributionDirName']}/{taxonomy['testContributionFilename']}"))
+          packages = set()
+          for manifest in manifests:
+              if not manifest.exists():
+                  continue
+              for oracle in json.loads(manifest.read_text(encoding="utf-8")).get("oracles", []):
+                  if oracle.get("productionDebt") is None:
+                      packages.add(oracle["package"])
+          tree = subprocess.run(["cargo", "tree", "--edges", "normal,build", "--prefix", "none"], capture_output=True, text=True).stdout
+          leaked = sorted(p for p in packages if any(line.split(" ")[0] == p for line in tree.splitlines()))
+          if leaked:
+              print(f"::error::registered test oracles are reachable from the production graph: {', '.join(leaked)}")
+              sys.exit(1)
+          print(f"clean — none of {len(packages)} registered oracles are production-reachable")
+          PY
+
+  clean-safety:
+    name: clean-safety
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - name: Generate some test output, then prove clean removes only marked state
+        run: |
+          bun ./📜️script.ts test subject quick --case host-protocol-parity --implementation typescript
+          bun ./📜️script.ts clean test --dry
+          bun ./📜️script.ts clean test
+      - name: Working tree must be unchanged — no fixture, source or exempt path may be removed
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::error::clean test modified tracked files"
+            git status --porcelain
+            exit 1
+          fi

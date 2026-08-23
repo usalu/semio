@@ -158,7 +158,10 @@ function selectCases(repoRoot: string, segments: readonly string[]): DiscoveredC
   const owner = value("--owner");
   const caseSlug = value("--case");
   const project = value("--project");
-  return all.filter((entry) => (owner === null || entry.owner === owner || entry.owner.endsWith(owner)) && (caseSlug === null || entry.case === caseSlug) && (project === null || entry.projectName === project));
+  // 🎛️`--owner` matches the exact owner path, a trailing segment of it, OR any ancestor segment, so
+  // `--owner 🗄️stdio` selects every artifact owned beneath that plugin rather than nothing.
+  const matchesOwner = (entry: DiscoveredCase): boolean => owner === null || entry.owner === owner || entry.owner.endsWith(`/${owner}`) || entry.owner.split("/").includes(owner) || entry.owner.includes(`${owner}/`);
+  return all.filter((entry) => matchesOwner(entry) && (caseSlug === null || entry.case === caseSlug) && (project === null || entry.projectName === project));
 }
 
 /** 🎛️ Implementations a command should exercise: every claimed adapter unless `--implementation` narrows it. */
@@ -230,9 +233,15 @@ function materializeRustHost(repoRoot: string, discovered: DiscoveredCase, role:
       'name = "host"',
       'path = "src/main.rs"',
       "",
+      // 🔮️The subject crate is OPTIONAL and reached only through the `sut` feature. §5.3 of the
+      // frozen plan requires the oracle-only test to pass WITHOUT invoking the local implementation,
+      // so the oracle role must not link — or even compile — the subject. An adapter therefore gates
+      // its subject half with `#[cfg(feature = "sut")]`, and this crate turns that feature on for
+      // the subject role only.
+      ...(sut === null ? [] : ["[features]", `sut = ["dep:${sut.name}"]`, ""]),
       "[dependencies]",
       `semio-repo-test-host = { path = ${JSON.stringify(join(repoRoot, RUST_PACKAGE_REL))}${needsRustOracles(repoRoot, discovered) ? ', features = ["oracles"]' : ""} }`,
-      ...(sut === null ? [] : [`${sut.name} = { path = ${JSON.stringify(sut.path)}, default-features = false }`]),
+      ...(sut === null ? [] : [`${sut.name} = { path = ${JSON.stringify(sut.path)}, default-features = false, optional = true }`]),
       "",
     ].join("\n"),
   );
@@ -251,7 +260,7 @@ function materializeRustHost(repoRoot: string, discovered: DiscoveredCase, role:
   );
   return {
     command: "cargo",
-    args: ["run", "--quiet", "--manifest-path", join(dir, "Cargo.toml"), "--", "--plan", planPath, "--out", outPath],
+    args: ["run", "--quiet", "--manifest-path", join(dir, "Cargo.toml"), ...(sut !== null && role === "subject" ? ["--features", "sut"] : []), "--", "--plan", planPath, "--out", outPath],
     cwd: repoRoot,
     env: { ...process.env, CARGO_TARGET_DIR: join(agentCacheRoot(repoRoot), "cargo-test-hosts") },
     hostDir: dir,
@@ -562,8 +571,12 @@ class DependencyScript extends Script {
     const oracleDeps = sorted.filter((entry) => entry.kinds.includes("test-oracle"));
     console.log(`[dependency] ecosystems=${new Set(sorted.map((entry) => entry.ecosystem)).size} entries=${sorted.length} production-reachable=${production.length} test-oracle=${oracleDeps.length}`);
     for (const entry of oracleDeps) console.log(`[dependency] test-oracle ${entry.ecosystem}:${entry.name}@${entry.version} (${(entry.oracleIds ?? []).join(",")})`);
-    const leaked = oracleDeps.filter((entry) => entry.productionReachable);
-    for (const entry of leaked) console.error(`[dependency] oracle package ${entry.name} is production-reachable — oracles must be test-only`);
+    // 🔒️Recorded debt is printed every run so it can never quietly become permanent; an UNRECORDED
+    // production-reachable oracle is still a hard failure.
+    const recorded = new Map(registry.oracles.filter((entry) => entry.productionDebt !== undefined).map((entry) => [entry.package, entry]));
+    for (const [, entry] of recorded) console.log(`[dependency] production-debt ${entry.package} (oracle ${entry.id}) reachable from ${entry.productionDebt!.reachableFrom.join(", ")} — owner ${entry.productionDebt!.owner}`);
+    const leaked = oracleDeps.filter((entry) => entry.productionReachable && !recorded.has(entry.name));
+    for (const entry of leaked) console.error(`[dependency] oracle package ${entry.name} is production-reachable and is NOT recorded as debt — oracles must be test-only`);
     if (!verdict.ok || leaked.length > 0) process.exit(1);
   }
 }

@@ -6199,6 +6199,7 @@ type RuntimeCompletionQueue = runtime_mailbox_core::BoundedCompletionQueue<Runti
 
 struct RuntimeMailboxInner {
     runtime: Mutex<AppRuntime>,
+    world_cursor_wake: infinite_world::world::WorldCursorWakeAuthority,
     completions: Mutex<RuntimeCompletionQueue>,
     waker: Mutex<Option<RuntimeHostWaker>>,
     next_revision: std::sync::atomic::AtomicU64,
@@ -6276,6 +6277,7 @@ impl RuntimeMailbox {
         };
         Self(Arc::new(RuntimeMailboxInner {
             runtime: Mutex::new(runtime),
+            world_cursor_wake: infinite_world::world::WorldCursorWakeAuthority::new(),
             completions: Mutex::new(RuntimeCompletionQueue::new()),
             waker: Mutex::new(None),
             next_revision: std::sync::atomic::AtomicU64::new(1),
@@ -6310,6 +6312,18 @@ impl RuntimeMailbox {
         self.0.try_lock()
     }
 
+    fn world_cursor_wake_authority(&self) -> infinite_world::world::WorldCursorWakeAuthority {
+        self.0.world_cursor_wake.clone()
+    }
+
+    pub(crate) fn acknowledge_world_cursor_wake(&self, token: &infinite_world::world::WorldCursorWakeToken) -> bool {
+        self.0.world_cursor_wake.acknowledge(token)
+    }
+
+    fn close_world_cursor_wake_step(&self) -> bool {
+        self.0.world_cursor_wake.close_step() && self.0.world_cursor_wake.terminal_is_empty()
+    }
+
     pub(crate) fn close_world3d_dynamic_step(&self) -> bool {
         if !self.close_renderer_asset_step() {
             return false;
@@ -6318,13 +6332,16 @@ impl RuntimeMailbox {
             return false;
         };
         let Some(interaction) = runtime.interaction.as_mut() else {
-            return true;
+            drop(runtime);
+            return self.close_world_cursor_wake_step();
         };
         let Ok(mut cursor) = self.0.world3d_close_cursor.try_lock() else {
             return false;
         };
         let Some(surface_id) = interaction.shell.world3d_states.id_at(*cursor).map(str::to_owned) else {
-            return true;
+            drop(cursor);
+            drop(runtime);
+            return self.close_world_cursor_wake_step();
         };
         let Some(state) = interaction.shell.world3d_states.get_mut(&surface_id) else {
             self.record_frame_fault("world3d close order lost ownership");
@@ -6902,7 +6919,7 @@ pub(crate) struct AppFrameBuild {
     pub(crate) cursor: SemioCursor,
     theme_dark: bool,
     fullscreen: Option<bool>,
-    request_frame: bool,
+    cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>,
 }
 
 struct AppFrameAfterChrome {
@@ -6910,7 +6927,7 @@ struct AppFrameAfterChrome {
     engine_packets: Option<Vec<engine_canvas::EngineCanvasPacket>>,
     deferred_actions: Vec<ActionDescriptor>,
     fullscreen: Option<bool>,
-    request_frame: bool,
+    cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>,
     retirement: Option<AppFramePreparation>,
 }
 
@@ -6928,8 +6945,13 @@ impl AppFrameAfterChrome {
             return false;
         }
         if self.retirement.is_none() {
-            let Some(input) = self.resource_input.take() else { return true };
-            let build = AppFrameBuild { input, engine_packets: self.engine_packets.take().unwrap_or_default(), cursor: SemioCursor::Default, theme_dark: false, fullscreen: self.fullscreen.take(), request_frame: self.request_frame };
+            let Some(input) = self.resource_input.take() else {
+                if self.cursor_wake.take().is_some() {
+                    return false;
+                }
+                return true;
+            };
+            let build = AppFrameBuild { input, engine_packets: self.engine_packets.take().unwrap_or_default(), cursor: SemioCursor::Default, theme_dark: false, fullscreen: self.fullscreen.take(), cursor_wake: self.cursor_wake.take() };
             self.retirement = Some(build.into_preparation());
             return false;
         }
@@ -7483,12 +7505,20 @@ pub(crate) struct AppFramePresentation {
     pub(crate) cursor: SemioCursor,
     theme_dark: bool,
     fullscreen: Option<bool>,
-    request_frame: bool,
+    cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>,
 }
 
 impl AppFrameBuild {
     pub(crate) fn into_preparation(self) -> AppFramePreparation {
-        AppFramePreparation { job: ui_wgpu::wgpu::PreparedRenderJob::new(self.input, 64), engine_packets: Some(self.engine_packets), cursor: self.cursor, theme_dark: self.theme_dark, fullscreen: self.fullscreen, request_frame: self.request_frame, terminal: false }
+        AppFramePreparation {
+            job: ui_wgpu::wgpu::PreparedRenderJob::new(self.input, 64),
+            engine_packets: Some(self.engine_packets),
+            cursor: self.cursor,
+            theme_dark: self.theme_dark,
+            fullscreen: self.fullscreen,
+            cursor_wake: self.cursor_wake,
+            terminal: false,
+        }
     }
 }
 
@@ -7498,7 +7528,7 @@ pub(crate) struct AppFramePreparation {
     cursor: SemioCursor,
     theme_dark: bool,
     fullscreen: Option<bool>,
-    request_frame: bool,
+    cursor_wake: Option<infinite_world::world::WorldCursorWakeToken>,
     terminal: bool,
 }
 
@@ -7525,12 +7555,15 @@ impl AppFramePreparation {
             return None;
         }
         let packet = self.job.take_packet()?;
-        Some(AppFramePresentation { packet, engine_packets: self.engine_packets.take()?, cursor: self.cursor, theme_dark: self.theme_dark, fullscreen: self.fullscreen, request_frame: self.request_frame })
+        Some(AppFramePresentation { packet, engine_packets: self.engine_packets.take()?, cursor: self.cursor, theme_dark: self.theme_dark, fullscreen: self.fullscreen, cursor_wake: self.cursor_wake.take() })
     }
 
     pub(crate) fn close_step(&mut self) -> bool {
         if !self.job.terminal_is_empty() {
             self.job.close_step();
+            return false;
+        }
+        if self.cursor_wake.take().is_some() {
             return false;
         }
         let Some(packets) = self.engine_packets.as_mut() else { return true };
@@ -7546,7 +7579,7 @@ impl AppFramePreparation {
     }
 
     pub(crate) fn terminal_is_empty(&self) -> bool {
-        self.job.terminal_is_empty() && self.engine_packets.is_none()
+        self.job.terminal_is_empty() && self.engine_packets.is_none() && self.cursor_wake.is_none()
     }
 }
 
@@ -7583,7 +7616,7 @@ struct AppPresentCursor {
 pub(crate) enum AppPresentStep {
     Idle,
     Pending,
-    Complete { fullscreen: Option<bool>, request_frame: bool },
+    Complete { fullscreen: Option<bool>, cursor_wake: Option<infinite_world::world::WorldCursorWakeToken> },
 }
 
 impl AppPresenter {
@@ -7601,6 +7634,14 @@ impl AppPresenter {
 
     pub(crate) fn close_active_upload_step(&mut self) -> bool {
         self.gpu.close_mesh_upload_step()
+    }
+
+    pub(crate) fn close_cursor_wake_step(&mut self) -> bool {
+        let Some(pending) = self.pending.as_mut() else { return true };
+        if pending.frame.cursor_wake.take().is_some() {
+            return false;
+        }
+        true
     }
 
     pub(crate) fn active_upload_terminal_is_empty(&self) -> bool {
@@ -7698,9 +7739,9 @@ impl AppPresenter {
                     apply_window_cursor(window, cursor.frame.cursor, cursor.frame.theme_dark, &mut self.last_cursor);
                 }
                 let fullscreen = self.window.is_none().then_some(cursor.frame.fullscreen).flatten();
-                let request_frame = cursor.frame.request_frame;
+                let cursor_wake = cursor.frame.cursor_wake.take();
                 self.pending = None;
-                Ok(AppPresentStep::Complete { fullscreen, request_frame })
+                Ok(AppPresentStep::Complete { fullscreen, cursor_wake })
             }
         }
     }
@@ -7926,20 +7967,27 @@ impl AppRuntime {
         // isn't — same reason `scene_events` gets deferred through `spawn_app_task` just after).
         self.shell.tutorial_tick(app_now_ms());
         let mut engine_resources = engine_canvas::EngineCanvasBuildContext::new(dpr as f64);
-        let mut world_resources = infinite_world::world::World3dBuildContext::default();
+        let runtime = RuntimeMailbox(handle.upgrade().expect("frame runtime retains its wake authority"));
+        let mut world_resources = infinite_world::world::World3dBuildContext::new(runtime.world_cursor_wake_authority());
         {
             let AppRuntime { atlas, icons, interaction, draw, overlay, .. } = self;
             let interaction = interaction.as_mut().expect("checked interaction availability");
             interaction.shell.render_chrome(draw, overlay, atlas, icons, &mut interaction.input, &interaction.theme, &mut engine_resources, &mut world_resources);
         }
         let engine_packets = engine_resources.take_packets();
-        let request_frame = world_resources.take_cursor_wake();
+        let cursor_wake = match world_resources.take_cursor_wake() {
+            Ok(token) => token,
+            Err(fault) => {
+                self.frame_fault = Some(format!("World cursor wake authority fault: {fault:?}"));
+                None
+            }
+        };
         let mut resource_input = ui_wgpu::wgpu::PreparedRenderInput::new(generation.0, generation.0, ui_wgpu::wgpu::DrawList::default(), None, 0.0);
         world_resources.append_to(&mut resource_input);
         if let Some(upload) = icon_upload {
             resource_input.uploads.push(upload);
         }
-        AppFrameAfterChrome { resource_input: Some(resource_input), engine_packets: Some(engine_packets), deferred_actions, fullscreen, request_frame, retirement: None }
+        AppFrameAfterChrome { resource_input: Some(resource_input), engine_packets: Some(engine_packets), deferred_actions, fullscreen, cursor_wake, retirement: None }
     }
 
     fn frame_after_input(&mut self, handle: &AppHandle, mut partial: AppFrameAfterChrome) -> AppFrameBuild {
@@ -7947,7 +7995,7 @@ impl AppRuntime {
         let mut resource_input = partial.resource_input.take().expect("chrome resource input");
         let engine_packets = partial.engine_packets.take().expect("chrome engine packets");
         let fullscreen = partial.fullscreen.take();
-        let request_frame = partial.request_frame;
+        let cursor_wake = partial.cursor_wake.take();
         let flush_tutorial = !self.shell.tutorial_pending_document_ops.is_empty();
         if self.atlas.take_dirty() {
             resource_input.uploads.push(ui_wgpu::wgpu::PreparedRenderUpload::GlyphAtlas { pixels: self.atlas.pixels.clone(), width: self.atlas.width, height: self.atlas.height });
@@ -7973,7 +8021,7 @@ impl AppRuntime {
         resource_input.draw = std::mem::take(&mut self.draw);
         resource_input.overlay = Some(std::mem::take(&mut self.overlay));
         resource_input.time_seconds = time_seconds;
-        let frame = AppFrameBuild { input: resource_input, engine_packets, cursor, theme_dark: self.theme_dark, fullscreen, request_frame };
+        let frame = AppFrameBuild { input: resource_input, engine_packets, cursor, theme_dark: self.theme_dark, fullscreen, cursor_wake };
         #[cfg(target_arch = "wasm32")]
         let pump_sync = false;
         if pump_sync || !deferred_actions.is_empty() || flush_tutorial {

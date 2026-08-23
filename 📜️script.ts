@@ -1674,6 +1674,100 @@ function toolJobGisMapEnvelopeCallerRetainedExact(store: string, gisMap: string,
   );
 }
 
+function toolJobDrawEnvelopeCallerRetainedExact(store: string, draw: string, editor: string, plugin: string): boolean {
+  const variants = [
+    "SetLayerVisible(payload)",
+    "SetLayerLocked(payload)",
+    "SetLayerOpacity(payload)",
+    "SetLayerBlendMode(payload)",
+    "RenameLayer(payload)",
+    "UpdateLayerTransform(payload)",
+    "ReplaceLayerFill(payload)",
+    "ReplaceLayerStroke(payload)",
+    "SetLayerBooleanOperation(payload)",
+    "UpdateLayerTraceParams(payload)",
+    "CreateLayer(payload)",
+    "DuplicateLayer(payload)",
+    "DeleteLayer(payload)",
+    "ReorderLayer(payload)",
+  ];
+  const owners = [
+    "DrawRetirementOwner::Layer(value)",
+    "DrawRetirementOwner::Fill(fill)",
+    "DrawRetirementOwner::Stroke(stroke)",
+    "DrawRetirementOwner::Segments(values)",
+    "DrawRetirementOwner::Stops(values)",
+    "DrawRetirementOwner::Points(values)",
+    "DrawRetirementOwner::AssetEntry",
+  ];
+  return (
+    store.includes("pub fn artifact_owned_spr_edit_history_decoder") &&
+    store.includes("struct ArtifactOwnedSprMutationArrayAuthority") &&
+    store.includes("self.scalar_entry") &&
+    store.includes("artifact-spr.mutation-array-cancelled") &&
+    draw.includes("pub struct DrawEnvelopeOwnedFieldCatalog") &&
+    draw.includes("artifact_owned_spr_edit_history_decoder") &&
+    draw.includes("DrawSnapshotDecodeAuthority") &&
+    draw.includes("DrawMutationDecodeAuthority") &&
+    draw.includes("OwnedSchemaHexAuthority<DRAW_OWNED_FIELD_BYTES>") &&
+    draw.includes("const DRAW_MAXIMUM_NESTED_ITEMS: usize = 4_096") &&
+    draw.includes("const DRAW_MAXIMUM_LAYER_DEPTH: usize = 64") &&
+    draw.includes("struct DrawSnapshotBoundsAuthority") &&
+    draw.includes("draw-store.preflight-depth-capacity") &&
+    draw.includes("draw-store.preflight-item-capacity") &&
+    draw.includes("draw-store.preflight-byte-capacity") &&
+    draw.includes("struct DrawLayerCloneAuthority") &&
+    draw.includes("self.bounds.step(source, cx)") &&
+    draw.includes("layer.step(source.layers.get(self.index)") &&
+    draw.includes("target.children.push(Self::skeleton(child)?)") &&
+    draw.includes("struct DrawStoreInitializationAuthority") &&
+    draw.includes("struct DrawMutationDigestAuthority") &&
+    draw.includes("struct DrawMutationCandidateAuthority") &&
+    draw.includes("struct DrawContainerRebuildAuthority") &&
+    draw.includes("DrawStoreInitializationPhase::ValidateEditId") &&
+    draw.includes("impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawSnapshot, DrawMutation> for DrawStoreInitializationAuthority") &&
+    draw.includes("DrawStoreInitializationPhase::ValidateEditPair") &&
+    draw.includes("DrawStoreInitializationPhase::SeedHistory") &&
+    draw.includes("DrawStoreInitializationPhase::BuildCandidate") &&
+    draw.includes("ArtifactStore::from_initialized_runtime_with_owners") &&
+    draw.includes("self.generation.0.checked_add(1)") &&
+    owners.every((owner) => draw.includes(owner)) &&
+    variants.every((variant) => draw.includes(variant)) &&
+    draw.includes("retained_draw_mutation_candidate_covers_all_fourteen_variants_and_returns_exact_owners") &&
+    draw.includes("retained_draw_depth_plus_one_and_hostile_fields_fault_then_close_terminal_empty") &&
+    draw.includes("retained_draw_container_false_terminal_saturation_and_interrupted_close_preserve_exact_owner") &&
+    !draw.includes("source.clone()") &&
+    !draw.includes("snapshot.clone()") &&
+    !draw.includes("operation.encode_op()") &&
+    !draw.includes("operation.diff(") &&
+    !draw.includes("diff.apply(") &&
+    !draw.includes("serde_json::from_value") &&
+    !draw.includes("serde_json::from_str") &&
+    !draw.includes("serde_json::to_vec") &&
+    !draw.includes("drop(value.layers)") &&
+    editor.includes("draw_document_store_initialization_job(envelope, operation, generation)") &&
+    editor.includes("draw_live_envelope_submit_recursive_clone_swap_displaced_store_and_exact_ack_succeed") &&
+    editor.includes("draw_live_envelope_cancel_closes_retained_pages_without_publication") &&
+    editor.includes("draw_live_envelope_rejects_single_and_final_edit_id_plus_one_before_mutation_candidate") &&
+    editor.includes('"forwards": [crate::artifacts::draw::mutations::DrawMutation::RenameLayer') &&
+    editor.includes("pub struct DrawEnvelopeLoadHandle") &&
+    editor.includes("source: &js_sys::Uint8Array") &&
+    editor.includes("begin_artifact_envelope_ingress(maximum_pages, maximum_bytes)") &&
+    editor.includes("admit_artifact_envelope_ingress_page(handle.runtime_handle(), page)") &&
+    editor.includes("seal_artifact_envelope_ingress(handle.runtime_handle())") &&
+    editor.includes("app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
+    editor.includes("advance_artifact_envelope_load(handle.runtime_handle())") &&
+    editor.includes("acknowledge_artifact_store_replacement(handle.runtime_handle())") &&
+    editor.includes("cancel_artifact_envelope_load(handle.runtime_handle())") &&
+    plugin.includes("envelope_ingress: ArtifactFixedRegistry<ActiveArtifactEnvelopeIngress>") &&
+    plugin.includes("self.retain_initializer_for_close(job)") &&
+    !editor.includes("reject_whole_buffer_artifact_envelope_ingress") &&
+    !editor.includes("envelope_json: Option<String>") &&
+    !editor.includes("while let") &&
+    !editor.includes("loop {")
+  );
+}
+
 function toolJobHistoryLedgerAdmissionExact(store: string, vcs: string): boolean {
   const checkpointPending = store.indexOf("let pending = uncommitted_edit_ids");
   const checkpointStart = checkpointPending < 0 ? -1 : store.lastIndexOf("ArtifactCommand::CommitCheckpoint { message, authors } => {", checkpointPending);
@@ -2940,6 +3034,93 @@ function toolJobCoverageSelfTests(): number {
   if (toolJobGisMapEnvelopeCallerRetainedExact(retainedJackStore, retainedGisMapCodec.replace("ReplaceRegionData(payload)", "drop(payload)"), retainedGisMapEditor, retainedGisMapWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test GIS-Map-mutation-catalog-hole was falsely accepted.");
   if (toolJobGisMapEnvelopeCallerRetainedExact(retainedJackStore, retainedGisMapCodec.replace("gis_map_all_twelve_mutation_variants_preserve_catalog_order_and_zero_grant_ownership", "gis_map_partial_mutation_catalog"), retainedGisMapEditor, retainedGisMapWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test GIS-Map-zero-grant-catalog-fixture-missing was falsely accepted.");
   if (toolJobGisMapEnvelopeCallerRetainedExact(retainedJackStore, retainedGisMapCodec, retainedGisMapEditor, `${retainedGisMapWasm}\nenvelope_json: &str`, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test GIS-Map-whole-buffer-ingress-bypass was falsely accepted.");
+  const retainedDrawCodec = [
+    "pub struct DrawEnvelopeOwnedFieldCatalog",
+    "artifact_owned_spr_edit_history_decoder",
+    "DrawSnapshotDecodeAuthority",
+    "DrawMutationDecodeAuthority",
+    "OwnedSchemaHexAuthority<DRAW_OWNED_FIELD_BYTES>",
+    "const DRAW_MAXIMUM_NESTED_ITEMS: usize = 4_096",
+    "const DRAW_MAXIMUM_LAYER_DEPTH: usize = 64",
+    "struct DrawSnapshotBoundsAuthority",
+    "draw-store.preflight-depth-capacity",
+    "draw-store.preflight-item-capacity",
+    "draw-store.preflight-byte-capacity",
+    "struct DrawLayerCloneAuthority",
+    "self.bounds.step(source, cx)",
+    "layer.step(source.layers.get(self.index)",
+    "target.children.push(Self::skeleton(child)?)",
+    "struct DrawStoreInitializationAuthority",
+    "struct DrawMutationDigestAuthority",
+    "struct DrawMutationCandidateAuthority",
+    "struct DrawContainerRebuildAuthority",
+    "DrawStoreInitializationPhase::ValidateEditId",
+    "impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawSnapshot, DrawMutation> for DrawStoreInitializationAuthority",
+    "DrawStoreInitializationPhase::ValidateEditPair",
+    "DrawStoreInitializationPhase::SeedHistory",
+    "DrawStoreInitializationPhase::BuildCandidate",
+    "ArtifactStore::from_initialized_runtime_with_owners",
+    "self.generation.0.checked_add(1)",
+    "DrawRetirementOwner::Layer(value)",
+    "DrawRetirementOwner::Fill(fill)",
+    "DrawRetirementOwner::Stroke(stroke)",
+    "DrawRetirementOwner::Segments(values)",
+    "DrawRetirementOwner::Stops(values)",
+    "DrawRetirementOwner::Points(values)",
+    "DrawRetirementOwner::AssetEntry",
+    "SetLayerVisible(payload)",
+    "SetLayerLocked(payload)",
+    "SetLayerOpacity(payload)",
+    "SetLayerBlendMode(payload)",
+    "RenameLayer(payload)",
+    "UpdateLayerTransform(payload)",
+    "ReplaceLayerFill(payload)",
+    "ReplaceLayerStroke(payload)",
+    "SetLayerBooleanOperation(payload)",
+    "UpdateLayerTraceParams(payload)",
+    "CreateLayer(payload)",
+    "DuplicateLayer(payload)",
+    "DeleteLayer(payload)",
+    "ReorderLayer(payload)",
+    "retained_draw_mutation_candidate_covers_all_fourteen_variants_and_returns_exact_owners",
+    "retained_draw_depth_plus_one_and_hostile_fields_fault_then_close_terminal_empty",
+    "retained_draw_container_false_terminal_saturation_and_interrupted_close_preserve_exact_owner",
+  ].join("\n");
+  const retainedDrawEditor = [
+    "draw_document_store_initialization_job(envelope, operation, generation)",
+    "draw_live_envelope_submit_recursive_clone_swap_displaced_store_and_exact_ack_succeed",
+    "draw_live_envelope_cancel_closes_retained_pages_without_publication",
+    "draw_live_envelope_rejects_single_and_final_edit_id_plus_one_before_mutation_candidate",
+    '"forwards": [crate::artifacts::draw::mutations::DrawMutation::RenameLayer',
+    "pub struct DrawEnvelopeLoadHandle",
+    "source: &js_sys::Uint8Array",
+    "begin_artifact_envelope_ingress(maximum_pages, maximum_bytes)",
+    "admit_artifact_envelope_ingress_page(handle.runtime_handle(), page)",
+    "seal_artifact_envelope_ingress(handle.runtime_handle())",
+    "app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)",
+    "advance_artifact_envelope_load(handle.runtime_handle())",
+    "acknowledge_artifact_store_replacement(handle.runtime_handle())",
+    "cancel_artifact_envelope_load(handle.runtime_handle())",
+  ].join("\n");
+  if (!toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec, retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test retained-Draw-envelope-route was falsely rejected.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("artifact_owned_spr_edit_history_decoder", "artifact_bounded_history_entry_decoder"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-domain-only-whole-edit-decoder was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("const DRAW_MAXIMUM_LAYER_DEPTH: usize = 64", "let depth = Vec::new()"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-resizable-recursion-stack was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("draw-store.preflight-byte-capacity", "unchecked_nested_bytes"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-nested-byte-preflight-hole was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("target.children.push(Self::skeleton(child)?)", "target.children.push(child.clone())"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-whole-recursive-layer-clone was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("DrawRetirementOwner::AssetEntry", "drop(asset)"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-asset-owner-drop was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("ReorderLayer(payload)", "drop(payload)"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-mutation-catalog-hole was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, `${retainedDrawCodec}\noperation.encode_op()`, retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-whole-operation-encode-before-credit was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, `${retainedDrawCodec}\nlet next = snapshot.clone();`, retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-whole-snapshot-clone-replay was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, `${retainedDrawCodec}\nserde_json::from_value(value)`, retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-serde-mutation-reconstruction was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("DrawStoreInitializationPhase::ValidateEditId", "skip_final_edit_id"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-single-final-edit-id-preflight-hole was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("struct DrawMutationCandidateAuthority", "struct SynchronousDrawDiffApply"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-retained-mutation-candidate-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("retained_draw_container_false_terminal_saturation_and_interrupted_close_preserve_exact_owner", "draw_string_predicate_only"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-authority-close-fixture-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec, retainedDrawEditor.replace("draw_live_envelope_rejects_single_and_final_edit_id_plus_one_before_mutation_candidate", "draw_skips_final_edit_id"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-live-final-edit-id-fixture-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec, retainedDrawEditor.replace('"forwards": [crate::artifacts::draw::mutations::DrawMutation::RenameLayer', '"forwards": []'), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-live-populated-history-route-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec, retainedDrawEditor.replace("source: &js_sys::Uint8Array", "source: &[u8]"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-post-lift-dynamic-page was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec, retainedDrawEditor.replace("acknowledge_artifact_store_replacement(handle.runtime_handle())", "return Ready"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-completion-without-exact-ack was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec, `${retainedDrawEditor}\nenvelope_json: Option<String>`, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-whole-buffer-constructor-bypass was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec, retainedDrawEditor, retainedWriterPlugin.replace("self.retain_initializer_for_close(job)", "drop(job)"))) throw new Error("[verify interactivity tool-jobs] self-test Draw-false-terminal-initializer-drop was falsely accepted.");
   const synchronousPeerRoster = "struct PeerPresenceRoot; struct VcsArtifactApp { peer_presence: Arc<PeerPresenceRoot> } impl PluginApp for VcsArtifactApp { async fn adopt_presence(&mut self, peers: &[PresencePeer]) { self.peer_presence = Arc::new(PeerPresenceRoot::from_peers(peers)); } } async fn dispatch_typed_command_inner() { let presence_peers = self.presence_store.peers().await.into_iter().map(|(actor, presence)| (actor.to_string(), presence.clone())).collect(); } let mut decoded: Vec<protocol::PresencePeer> = Vec::with_capacity(peers.len());";
   if (toolJobPeerInteractionRootsExact(synchronousPeerRoster, synchronousPeerRoster, synchronousPeerRoster)) throw new Error("[verify interactivity tool-jobs] self-test synchronous-whole-peer-roster-publication was falsely accepted.");
   const preadmissionRosterDecode = "pub struct PresenceRosterWire; async fn plugin_exchange(commands: &[Vec<u8>]) { let command = decode_app_command(bytes).await; reserve_presence_ingress(seq); }";
@@ -3000,7 +3181,7 @@ function toolJobCoverageSelfTests(): number {
   if (toolJobPagedIngressExact(unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy)) throw new Error("[verify interactivity tool-jobs] self-test WGPU-close-registry-without-pollable-exact-owner-handle was falsely accepted.");
   const shutdownDropsClose = "pub(crate) struct KernelCloseHandle; pub(crate) fn begin_destroy_app(&self, instance: u32) -> KernelCloseHandle; KernelRequest::DestroyApp { owner: self.clone() }; owner.finish(KernelCloseStatus::Complete); fn shutdown_step() { drop(owner); }";
   if (toolJobPagedIngressExact(shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose)) throw new Error("[verify interactivity tool-jobs] self-test WGPU-queue-shutdown-dropped-close-completion-owner was falsely accepted.");
-  return fixtures.length + 158;
+  return fixtures.length + 177;
 }
 
 /** 🎯️ Phase-8 source/runtime contract census used by `verify interactivity tool-jobs`. */
@@ -3077,6 +3258,8 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const gisMapEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs");
   const gisMapEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
   const gisMapWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
+  const drawEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧰️owned/🦀️component.rs");
+  const drawEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
   const allRustFiles = new Map(policyAllRustFiles(root).map((file) => [file, policyReadFileSafe(root, file)]));
   const proofs = toolJobProofs(productionFiles);
   const proofIdentities = new Set(proofs.map(toolJobProofIdentity));
@@ -3131,6 +3314,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   if (!toolJobWriterEnvelopeCallerRetainedExact(writerEnvelopeCodec, writerEditor, writerWasm, plugin)) failures.push("Writer envelope caller lacks retained fixed-page ingress, initializer recovery, maintenance publication, cancellation, or exact completion acknowledgement");
   if (!toolJobJackEnvelopeCallerRetainedExact(store, jackEnvelopeCodec, jackEditor, jackWasm, plugin)) failures.push("Jack `.spr`/`.ops` envelope caller lacks the shared retained edit decoder, exact child retirement, fixed-page ingress, initializer recovery, cancellation, or exact completion acknowledgement");
   if (!toolJobGisMapEnvelopeCallerRetainedExact(store, gisMapEnvelopeCodec, gisMapEditor, gisMapWasm, plugin)) failures.push("GIS Map `.spr`/`.ops` envelope caller lacks the shared retained edit decoder, exact drawing/image/value child retirement, fixed-page ingress, initializer recovery, cancellation, or exact completion acknowledgement");
+  if (!toolJobDrawEnvelopeCallerRetainedExact(store, drawEnvelopeCodec, drawEditor, plugin)) failures.push("Draw `.spr`/`.ops` envelope caller lacks recursive layer/style/asset preflight, one-item clone/retirement, fixed-page ingress, initializer recovery, cancellation, or exact completion acknowledgement");
   if (!toolJobChildRetirementInventoryExact(root, allRustFiles)) failures.push("child snapshot retirement domain cohorts or callsites do not match the exact machine-readable owner inventory");
   if (!toolJobPeerInteractionRootsExact(plugin, store, channel)) failures.push("peer ingress, app-typed presence, or interaction roots lack reserve-before-decode retained per-entry publication, atomic validated commit, or O(1) immutable capture");
   if (!toolJobPagedIngressExact(kernel, reactor, plugin, pluginHost, channel, componentWit, mcpWorkspace, runHost, wgpuHost)) failures.push("paged command ingress lacks fixed-page ownership, retained streaming decode/fault closure, generic multi-page ACK ordering, or terminal-close registries across MCP/run/WGPU callers");
@@ -3742,6 +3926,7 @@ const INTERACTIVITY_AUDIT_DB_STORAGE_FILE = "🧰️framework/🛍️products/�
 const INTERACTIVITY_AUDIT_DB_SQLITE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🪶️sqlite/🦀️component.rs";
 const INTERACTIVITY_AUDIT_DB_ENGINE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs";
 const INTERACTIVITY_AUDIT_DB_ARTIFACT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📄️artifact/🦀️component.rs";
+const INTERACTIVITY_AUDIT_DB_CLI_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⌨️cli/🦀️component.rs";
 const INTERACTIVITY_AUDIT_DB_TESTKIT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🧪️testkit/🦀️component.rs";
 const INTERACTIVITY_AUDIT_HUB_BIN_FILE = "🌎️hub/📦️packages/🦀️rust/📦️bin.rs";
 
@@ -3992,11 +4177,14 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   const dbSqlite = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_SQLITE_FILE);
   const dbEngine = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_ENGINE_FILE);
   const dbArtifact = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_ARTIFACT_FILE);
+  const dbCli = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_CLI_FILE);
   const dbTestkit = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_TESTKIT_FILE);
   const hubBin = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_HUB_BIN_FILE);
   for (const failure of interactivityDbIoFailures(dbStorage, dbSqlite, dbEngine, dbTestkit, hubBin)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_STORAGE_FILE, line: 0, text: failure });
   interactivityArtifactSubmitSelfTests();
   for (const failure of interactivityArtifactSubmitFailures(dbEngine, dbArtifact)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_ENGINE_FILE, line: 0, text: failure });
+  interactivityVcsBridgeSelfTests();
+  for (const failure of interactivityVcsBridgeFailures(dbEngine, dbCli)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_ENGINE_FILE, line: 0, text: failure });
   const byCategory: Record<string, number> = {};
   for (const f of findings) byCategory[f.category] = (byCategory[f.category] ?? 0) + 1;
 
@@ -4258,6 +4446,73 @@ function interactivityArtifactSubmitSelfTests(): void {
   ] as const;
   for (const [name, engine, artifact] of mutations) if (interactivityArtifactSubmitFailures(engine, artifact).length === 0) throw new Error(`[verify interactivity] ArtifactHandle submit self-test ${name} was falsely accepted.`);
   if (interactivityArtifactSubmitFailures(goodEngine, goodArtifact).length !== 0) throw new Error("[verify interactivity] ArtifactHandle submit self-test retained authority was falsely rejected.");
+}
+
+function interactivityVcsBridgeFailures(engineSource: string, cliSource: string): string[] {
+  const production = interactivityProductionSource(engineSource);
+  const productionCli = interactivityProductionSource(cliSource);
+  const vcs = production.slice(production.indexOf("pub mod vcs_integration"), production.indexOf("//#endregion 🔖️VersionGraph", production.indexOf("pub mod vcs_integration")));
+  const recordCredit = vcs.slice(vcs.indexOf("fn record_credit"), vcs.indexOf("fn checkpoint_credit"));
+  const checkpointCredit = vcs.slice(vcs.indexOf("fn checkpoint_credit"), vcs.indexOf("fn relation_credit"));
+  const acquire = vcs.slice(vcs.indexOf("impl Future for VcsStoreAcquire"), vcs.indexOf("impl Drop for VcsStoreAcquire"));
+  const failures: string[] = [];
+  const productionCliWaits = productionCli.match(/\bdb::actor::block_on\s*\(/g)?.length ?? 0;
+  const wholeCliWaits = cliSource.match(/\bdb::actor::block_on\s*\(/g)?.length ?? 0;
+  const seedDocument = cliSource.slice(cliSource.indexOf("fn seed_document"));
+  if (productionCliWaits !== 18 || wholeCliWaits !== 19 || productionCli.includes("fn seed_document") || !seedDocument.includes("db::actor::block_on(")) failures.push("DB CLI census is not exactly 18 production process-entry waits plus one test-only seed_document wait");
+  for (const forbidden of ["block_on(", "submit_blocking", "ask_blocking", "thread::spawn", "WorkerPool::new(", "loop {"]) if (vcs.includes(forbidden)) failures.push(`live VCS integration retains ${forbidden}`);
+  if (!vcs.includes("const VCS_OPERATION_ITEMS: usize = 64") || !vcs.includes("const VCS_OPERATION_PAGE_BYTES: u64 = 16 * 1024") || !vcs.includes("const VCS_OPERATION_PAGES: u64 = 4") || !vcs.includes("const VCS_TOTAL_PAGES: u64 = 256") || !vcs.includes("VcsOperationAdmission::try_claim(items, bytes)")) failures.push("VCS operation lacks fixed item/page/process admission");
+  for (const owner of ["document.0.capacity()", "change.parent.as_ref()", "change.author.0.capacity()", "change.message.capacity()", "request.change_ids.capacity()", "request.authors.capacity()", "request.change_ids.iter().map(String::capacity)", "request.authors.iter().map"])
+    if (!vcs.includes(owner)) failures.push(`VCS nested byte preflight missing ${owner}`);
+  if (!recordCredit.includes("std::mem::size_of::<HashMutation>()") || !checkpointCredit.includes("author_owner_bytes, derived_author_owner_bytes, derived_author_id_bytes") || !checkpointCredit.includes("vcs_credit(items, fixed.into_iter()")) failures.push("VCS derived mutation/author owners are outside admitted byte credit");
+  if (!checkpointCredit.includes("let derived_author_items = request.authors.len();") || !checkpointCredit.includes(".and_then(|value| value.checked_add(request.authors.len()))") || !checkpointCredit.includes(".and_then(|value| value.checked_add(derived_author_items))")) failures.push("VCS checkpoint item credit omits source-name or derived-id String owners");
+  if (!vcs.includes("protocol::ActorId(author.0)") || !vcs.includes("let mutations = Vec::from([operation]);") || vcs.includes("change.author.0.clone()") || vcs.includes("mutations: vec![operation]")) failures.push("VCS record conversion clones or allocates an uncredited derived owner");
+  if (!vcs.includes("Vec::with_capacity(source_authors.capacity())")) failures.push("VCS checkpoint conversion lacks the preflight-matched derived author backing owner");
+  if (!vcs.includes("waiters: [Option<VcsStoreWaiter>; VCS_OPERATION_ITEMS]") || !vcs.includes("min_by_key(|(_, generation)| *generation)") || !vcs.includes("state.waiters[self.slot] = None") || !vcs.includes("state.busy_generation = Some(*generation)") || vcs.includes("wake_all")) failures.push("VCS waiter ownership is not fixed, FIFO-reserved, and one-shot");
+  if (!acquire.includes("VcsOperationAdmission::is_current(self.slot, self.generation)") || acquire.indexOf("VcsOperationAdmission::is_current") > acquire.indexOf("state.busy_generation") || !acquire.includes("Poll::Pending")) failures.push("VCS acquire freshness does not precede store mutation or cannot park");
+  if (!vcs.includes("impl Drop for VcsStoreAcquire") || !vcs.includes("impl Drop for VcsStoreBuildPermit") || !vcs.includes("impl Drop for VcsStoreLease") || !vcs.includes("self.cell.release(self.generation, self.store.take())")) failures.push("VCS cancel/close cannot return the exact waiter/build/store owner");
+  for (const fixture of [
+    "vcs_retained_item_cap_plus_one_and_nested_bytes_plus_one_return_without_mutation",
+    "vcs_record_derived_owner_credit_cap_plus_one_preserves_exact_input",
+    "vcs_checkpoint_derived_owner_credit_cap_plus_one_preserves_exact_input",
+    "vcs_checkpoint_derived_item_boundary_admits_31_rejects_32_and_preserves_exact_owners",
+    "vcs_derived_owner_process_aggregate_plus_one_rejects_without_consuming_input",
+    "vcs_retained_pending_wake_is_fifo_one_shot_and_quiet_without_release",
+    "vcs_retained_cancel_clears_waiter_and_slot_aba_stays_stale",
+    "vcs_retained_live_source_has_no_nested_executor_or_guarded_await",
+  ]) if (!engineSource.includes(fixture)) failures.push(`VCS retained-bridge fixture missing: ${fixture}`);
+  return failures;
+}
+
+function interactivityVcsBridgeSelfTests(): void {
+  const fixtures = `vcs_retained_item_cap_plus_one_and_nested_bytes_plus_one_return_without_mutation vcs_record_derived_owner_credit_cap_plus_one_preserves_exact_input vcs_checkpoint_derived_owner_credit_cap_plus_one_preserves_exact_input vcs_checkpoint_derived_item_boundary_admits_31_rejects_32_and_preserves_exact_owners vcs_derived_owner_process_aggregate_plus_one_rejects_without_consuming_input vcs_retained_pending_wake_is_fifo_one_shot_and_quiet_without_release vcs_retained_cancel_clears_waiter_and_slot_aba_stays_stale vcs_retained_live_source_has_no_nested_executor_or_guarded_await`;
+  const good = `pub mod vcs_integration { const VCS_OPERATION_ITEMS: usize = 64 const VCS_OPERATION_PAGE_BYTES: u64 = 16 * 1024 const VCS_OPERATION_PAGES: u64 = 4 const VCS_TOTAL_PAGES: u64 = 256 VcsOperationAdmission::try_claim(items, bytes) fn record_credit { document.0.capacity() change.parent.as_ref() change.author.0.capacity() change.message.capacity() std::mem::size_of::<HashMutation>() } fn checkpoint_credit { let derived_author_items = request.authors.len(); .and_then(|value| value.checked_add(request.authors.len())) .and_then(|value| value.checked_add(derived_author_items)) request.change_ids.capacity() request.authors.capacity() request.change_ids.iter().map(String::capacity) request.authors.iter().map let derived_author_owner_bytes; let derived_author_id_bytes; let fixed = [author_owner_bytes, derived_author_owner_bytes, derived_author_id_bytes]; vcs_credit(items, fixed.into_iter() } fn relation_credit protocol::ActorId(author.0) let mutations = Vec::from([operation]); Vec::with_capacity(source_authors.capacity()) waiters: [Option<VcsStoreWaiter>; VCS_OPERATION_ITEMS] min_by_key(|(_, generation)| *generation) state.waiters[self.slot] = None state.busy_generation = Some(*generation) impl Future for VcsStoreAcquire { VcsOperationAdmission::is_current(self.slot, self.generation) state.busy_generation Poll::Pending } impl Drop for VcsStoreAcquire impl Drop for VcsStoreBuildPermit impl Drop for VcsStoreLease { self.cell.release(self.generation, self.store.take()) } ${fixtures} //#endregion 🔖️VersionGraph`;
+  const productionCliWaits = "db::actor::block_on(work)\n".repeat(18);
+  const goodCli = `${productionCliWaits}#[cfg(test)]\nfn seed_document() {\n  db::actor::block_on(work)\n}`;
+  const mutations = [
+    ["nested-block-on", good.replace("state.busy_generation", "block_on(work); state.busy_generation")],
+    ["unbounded-waiters", good.replace("waiters: [Option<VcsStoreWaiter>; VCS_OPERATION_ITEMS]", "waiters: Vec<VcsStoreWaiter>")],
+    ["missing-nested-bytes", good.replace("request.change_ids.iter().map(String::capacity)", "request.change_ids.len()")],
+    ["uncredited-record-author-clone", good.replace("protocol::ActorId(author.0)", "protocol::ActorId(change.author.0.clone())")],
+    ["uncredited-record-mutation-vec", good.replace("std::mem::size_of::<HashMutation>()", "0").replace("let mutations = Vec::from([operation]);", "mutations: vec![operation]")],
+    ["uncredited-checkpoint-author-id", good.replaceAll("derived_author_id_bytes", "unreserved_author_id_bytes")],
+    ["uncredited-checkpoint-author-vec", good.replaceAll("derived_author_owner_bytes", "unreserved_author_owner_bytes")],
+    ["uncredited-checkpoint-derived-id-item", good.replace(".and_then(|value| value.checked_add(derived_author_items))", "")],
+    ["checkpoint-derived-vec-growth", good.replace("Vec::with_capacity(source_authors.capacity())", "source_authors.into_iter().collect::<Vec<_>>()")],
+    ["stale-after-mutation", good.replace("VcsOperationAdmission::is_current(self.slot, self.generation) state.busy_generation", "state.busy_generation VcsOperationAdmission::is_current(self.slot, self.generation)")],
+    ["wake-all", good.replace("//#endregion 🔖️VersionGraph", "wake_all //#endregion 🔖️VersionGraph")],
+    ["unreserved-fifo-wake", good.replace("state.busy_generation = Some(*generation)", "drop(generation)")],
+    ["missing-lease-handback", good.replace("self.cell.release(self.generation, self.store.take())", "drop(self.store.take())")],
+    ["poll-loop", good.replace("Poll::Pending", "loop { Poll::Pending }")],
+    ["missing-fixture", good.replace("vcs_retained_cancel_clears_waiter_and_slot_aba_stays_stale", "")],
+    ["missing-derived-owner-fixture", good.replace("vcs_checkpoint_derived_owner_credit_cap_plus_one_preserves_exact_input", "")],
+  ] as const;
+  for (const [name, source] of mutations) if (interactivityVcsBridgeFailures(source, goodCli).length === 0) throw new Error(`[verify interactivity] VCS bridge self-test ${name} was falsely accepted.`);
+  const productionSeedCli = `${productionCliWaits}fn seed_document() {\n  db::actor::block_on(work)\n}`;
+  if (interactivityVcsBridgeFailures(good, productionSeedCli).length === 0) throw new Error("[verify interactivity] VCS bridge self-test production seed_document was falsely accepted.");
+  const missingSeedWaitCli = `${productionCliWaits}#[cfg(test)]\nfn seed_document() {\n  drop(work)\n}`;
+  if (interactivityVcsBridgeFailures(good, missingSeedWaitCli).length === 0) throw new Error("[verify interactivity] VCS bridge self-test missing test-only seed_document wait was falsely accepted.");
+  if (interactivityVcsBridgeFailures(good, goodCli).length !== 0) throw new Error("[verify interactivity] VCS bridge self-test retained authority was falsely rejected.");
 }
 
 function interactivityMcpHttpTransportFailures(transportSource: string, bridgeSource: string, rootSource: string): string[] {

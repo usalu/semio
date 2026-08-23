@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-23T10:58:45.523Z",
-  "commit": "9d7cabfd9ce77f57f5ffc6a2741f8f16c23c6c9b",
+  "generatedAt": "2026-08-23T11:57:29.717Z",
+  "commit": "0b10ba9e271a078548bd11c8ddbec59af40c9326",
   "entries": [
     {
       "ecosystem": "go",
@@ -2106,6 +2106,36 @@
     },
     {
       "ecosystem": "rust",
+      "name": "csv",
+      "version": "1",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "csv"
+      ]
+    },
+    {
+      "ecosystem": "rust",
+      "name": "flate2",
+      "version": "1",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "flate2"
+      ]
+    },
+    {
+      "ecosystem": "rust",
       "name": "futures",
       "version": "0.3",
       "kinds": [
@@ -2135,6 +2165,21 @@
     },
     {
       "ecosystem": "rust",
+      "name": "gif",
+      "version": "0.13",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "gif"
+      ]
+    },
+    {
+      "ecosystem": "rust",
       "name": "gltf",
       "version": "1.4.1",
       "kinds": [
@@ -2145,6 +2190,21 @@
         "🧰️framework/🔨️modules/🔺️mesh-engine/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
+    },
+    {
+      "ecosystem": "rust",
+      "name": "hound",
+      "version": "3",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "hound"
+      ]
     },
     {
       "ecosystem": "rust",
@@ -2372,14 +2432,18 @@
       "name": "png",
       "version": "0.17.16",
       "kinds": [
-        "production-runtime"
+        "test-oracle"
       ],
       "users": [
         "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml"
+        "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust/Cargo.toml"
       ],
-      "productionReachable": true
+      "productionReachable": false,
+      "oracleIds": [
+        "png"
+      ]
     },
     {
       "ecosystem": "rust",
@@ -3143,13 +3207,17 @@
       "name": "zip",
       "version": "2.4",
       "kinds": [
-        "production-runtime"
+        "test-oracle"
       ],
       "users": [
         "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml"
+        "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust/Cargo.toml"
       ],
-      "productionReachable": true
+      "productionReachable": false,
+      "oracleIds": [
+        "zip"
+      ]
     }
   ]
 }

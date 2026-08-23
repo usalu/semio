@@ -1466,3 +1466,195 @@ Verdict: **PASS for independent Terra source audit of the GIS Map retained-load 
 native/Wasm/runtime proof, source-bounded decode timing, the remaining 14 live whole-buffer callers,
 global ArtifactEnvelope/store structural failures, the full typed operation, all 884 activations,
 and Phase 8.**
+
+---
+
+## 2026-08-23 — Draw Shared `.spr`/`.ops` Retained-Load Cohort
+
+Draw is the next live caller on the accepted shared fixed-page envelope ingress, owner-supplied
+retained `.spr`/`.ops` Edit decoder, app maintenance pump, store initializer,
+generation-validated replacement, displaced-store retirement, and exact acknowledgement path. No
+Procedural2d, Raster, P3 renderer/World3D, P1 database, or engine file was touched.
+
+### Recursive domain catalog and exact owners
+
+`DrawEnvelopeOwnedFieldCatalog` supplies exact snapshot, mutation, VCS, rejected-conflict, snapshot
+retirement, and mutation retirement authorities. Its Edit field uses
+`artifact_owned_spr_edit_history_decoder`; there is no private Vec/HashMap Edit decoder or
+whole-envelope decoder in the live Draw route. Snapshot and mutation packed fields retain
+`OwnedSchemaHexAuthority<DRAW_OWNED_FIELD_BYTES>` and are admitted before their domain owner is
+published.
+
+`DrawRetirementOwner` disassembles all seven layer variants, their base fields and attributes, fills,
+strokes, stops, path segments, polygon points, Group children, image assets, strings, and boolean
+operand identifiers one exact owner at a time. All fourteen mutation variants have explicit
+retirement taxonomy: visibility, lock, opacity, blend, rename, transform, fill, stroke, boolean,
+trace, create, duplicate, delete, and reorder. A zero-item grant returns
+`Pending { released_items: 0, released_bytes: 0 }` without detaching or advancing ownership.
+
+`DrawSnapshotBoundsAuthority` preflights the recursive source before construction with fixed
+path/frame authority and checked item, byte, and depth credits: 4,096 nested items, the established
+fixed envelope byte cap, and depth 64. It advances one layer, child, string, or asset per step.
+`DrawLayerCloneAuthority` constructs typed layer skeletons and advances one string, stop, dash,
+point, path segment, boolean operand, or Group child per grant. `DrawSnapshotCloneAuthority` first
+requires the terminal preflight witness, then advances top-level fields, one nested layer cursor, one
+asset field, and the artboard. The production seam has no recursive source clone, whole-tree JSON
+materialization, or recursive Drop.
+
+`DrawStoreInitializationAuthority` validates the envelope and duplicate edits, incrementally clones
+the initial snapshot, seeds ordered history, applies forward mutations, hashes inverse/redo
+mutations, and builds the exact checked `generation + 1` candidate with Draw's required owner
+bundle. Every cancel, stale generation, false terminal, fault, rejected candidate, and displaced
+snapshot follows retained cursor close. Ordinary incomplete authority Drop requires the
+terminal-empty witness.
+
+The individual packed snapshot/mutation decode step remains source-bounded by the established
+4,096-byte field/page limit. Native timing under hostile valid recursive payloads was not measured,
+so no `<8ms` runtime claim is made.
+
+### Live ABI and zero reachability
+
+The Draw Wasm bridge now owns `VcsArtifactApp<EditorApp<DrawPlayApp>>` and exposes only:
+
+1. `beginEnvelopeLoad(maximumPages, maximumBytes)` for fixed item and byte admission;
+2. `admitEnvelopePage(handle, Uint8Array)`, rejecting length before the fixed Rust page copy;
+3. `sealEnvelopeLoad(handle)`;
+4. `pollEnvelopeLoad(handle)`, advancing one app maintenance step and one operation poll;
+5. generation-validated replacement followed by exact acknowledgement after `Ready`;
+6. `cancelEnvelopeLoad(handle)`; and
+7. one bounded `closeStep`.
+
+The old whole-string constructor/direct `ArtifactStore` route is absent. The exact repository census
+is **14** `reject_whole_buffer_artifact_envelope_ingress` symbols: **one** shared fail-closed
+definition plus **13** still-live structural callers. Draw has zero production occurrences.
+Structural placeholder count is therefore **13**. This count is independent of activation; the full
+command roster remains **0/884**.
+
+### Permanent source evidence
+
+Authored Rust fixtures cover a recursive Group containing a Path plus an image asset through live
+submit, maintenance, swap, displaced retirement, and exact acknowledgement; duplicate ACK; and
+partial-ingress cancellation without publication. The retained authorities themselves encode fixed
+item/byte/depth preflight, all seven layer variants, all fourteen mutation variants, zero-grant
+ownership preservation, exact cancellation/stale/fault retirement, and terminal-empty Drop. These
+Rust fixtures were not executed because Cargo/native/Wasm remained prohibited.
+
+The verifier adds eleven Draw route assertions/mutations. They reject loss of the shared Edit
+decoder, a resizable recursion stack, missing nested byte preflight, a recursive source clone, direct
+asset Drop, a missing mutation variant, post-lift dynamic page ownership, completion without exact
+ACK, whole-buffer constructor ingress, false-terminal initializer Drop, and absence of the full
+retained Draw route. Shared owned-schema and ingress fixtures continue to cover capacity/+1,
+malformed/truncated/unknown/duplicate/oversized fields, exact rejected-owner return, interrupted
+close, false terminal, saturation, cancellation, and one-real-page-per-grant cleanup.
+
+### Exact files and gates
+
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧰️owned/🦀️component.rs`
+- `✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs`
+- `✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/📦️glue.rs`
+- `📜️script.ts`
+- this report, `p8yt-draw-tool-jobs.json`, and `p8yt-draw-tool-jobs-repeat.json`
+
+| Gate | Result |
+| --- | --- |
+| canonical scoped Rust format/check | PASS on the three Draw Rust files |
+| `bun ./📜️script.ts verify interactivity tool-jobs --self-test --format json` | PASS: **174** self-tests clean |
+| Draw retained-route assertion | PASS; no Draw-specific failure in the full verifier |
+| deterministic full tool-job ledgers | PASS: byte-identical, SHA-256 `59dfda87dd276d9b1ecd9d7e12782108838e983da977f327254b30f2d2e47b07` |
+| full tool-job census | Expected RED: **18** failure classes; 50 hosts, 50 invocations, 775 rows, 773 unique, **0/884**, 8 reserved, 35 importers, 34 globals |
+| broad interactivity DENY | PASS: declared scope clean; recorded test-only blocking bridge only |
+| scoped and whole working/staged/HEAD diff checks | PASS |
+| Cargo/Nx/native/Wasm/browser/runtime timing | Not run; no compile or runtime PASS claimed |
+
+Verdict: **PASS for independent Terra source audit of the Draw retained-load cohort. REJECT for
+native/Wasm/runtime proof, hostile-recursive-payload timing, the remaining 13 live whole-buffer
+callers, global ArtifactEnvelope/store structural failures, the full typed operation, all 884
+activations, and Phase 8.**
+
+---
+
+## 2026-08-23 — Draw Independent-Rejection Remediation
+
+This section supersedes only the earlier Draw source verdict. The independent Sol audit correctly
+rejected the cohort because forward replay escaped through `operation.diff(current)` into a whole
+`snapshot.clone()`, synchronous serde reconstruction, and an asset-map clone; mutation admission
+also called whole-output `encode_op()` before checking its byte bound, and pair validation missed a
+single or final edit ID. The remediation keeps Draw at the same zero-placeholder census while
+replacing those live transitive paths with retained typed authorities.
+
+### Retained mutation replay and admission
+
+`DrawMutationCandidateAuthority` now owns an incrementally cloned candidate, a fixed-depth layer
+locator, typed field-clone cursors, and an owner-moving container rebuild cursor. It applies all
+fourteen mutation variants one semantic field, child, stop, dash, path entry, or layer owner per
+`StepContext` grant. Structural create, duplicate, delete, and reorder reserve the destination
+pointer capacity before moving an owner; the source, reverse buffer, output, pending item, and
+removed item remain in `ManuallyDrop` authorities until terminal publication or bounded close.
+Layer order is preserved by the reverse-buffer transfer. Publication replaces the initializer's
+current candidate only after the mutation authority reports terminal complete; the exact displaced
+snapshot enters the existing one-owner retirement cursor.
+
+`DrawMutationDigestAuthority` replaces every live `operation.encode_op()` call. It advances one
+typed mutation field, string, gradient stop, stroke dash, or retained layer clone/retirement per
+grant and enforces the established 4,096-byte mutation-field credit before owned materialization.
+It supplies forward, inverse, redo-forward, and redo-inverse history digests without building a
+whole encoded operation. The owned live source has zero occurrences of `operation.diff`,
+`diff.apply`, `snapshot.clone()`, `operation.encode_op()`, or serde reconstruction/serialization.
+
+`ValidateEditId` now advances across every history entry independently of duplicate-pair scanning.
+It rejects an empty or over-cap ID and over-cap optional actor, start timestamp, mutation timestamp,
+or mutation ID, including a history containing one edit and the final edit of a longer history.
+The live Draw envelope fixture now contains a real retained `RenameLayer` history edit and verifies
+the published nested Path name, so success no longer proves only an empty-history route.
+
+### Exact ownership evidence
+
+Three executable Rust authority fixtures were added to the owned Draw module:
+
+1. `retained_draw_mutation_candidate_covers_all_fourteen_variants_and_returns_exact_owners`
+   exercises every semantic mutation through one-fuel steps, including structural layer ownership,
+   typed fill/stroke owners, duplicate rewriting, and exact close;
+2. `retained_draw_depth_plus_one_and_hostile_fields_fault_then_close_terminal_empty` covers the
+   recursive cap +1 and hostile nested-field rejection with retained terminal cleanup; and
+3. `retained_draw_container_false_terminal_saturation_and_interrupted_close_preserve_exact_owner`
+   proves false-terminal rejection, reserved-capacity saturation, zero/one-grant interruption, and
+   exact structural owner handback.
+
+The live editor fixture
+`draw_live_envelope_rejects_single_and_final_edit_id_plus_one_before_mutation_candidate` exercises
+both ID holes through submit, maintenance, terminal fault, and unchanged generation. Existing live
+success/ACK, duplicate-ACK, displaced retirement, partial-ingress cancellation, stale generation,
+and terminal-close fixtures remain in place. These Rust fixtures are permanent source evidence but
+were not executed because Cargo/native/Wasm remained prohibited.
+
+The permanent verifier now rejects reintroduction of whole snapshot clone, whole operation encode,
+diff replay, serde reconstruction, skipped final-ID validation, missing retained candidate/digest/
+container authorities, missing authority-close evidence, missing populated live history, or missing
+live single/final-ID evidence. Seven new adversarial verifier mutations bring the tool-job suite to
+**182** self-tests.
+
+### Exact census and gates
+
+The repository still has exactly **14**
+`reject_whole_buffer_artifact_envelope_ingress` occurrences: **one** shared fail-closed definition
+plus **13** live structural callers. Draw has **zero** occurrences. The structural Draw decrement
+therefore remains 13, but cohort acceptance is deliberately left to an independent re-audit. No
+command activation follows from this census; the full roster remains **0/884** with **18** global
+failure classes.
+
+| Gate | Result |
+| --- | --- |
+| canonical scoped Rust format/check | PASS on Draw owned/editor/glue |
+| `bun ./📜️script.ts verify interactivity tool-jobs --self-test --format json` | PASS: **182** self-tests clean |
+| Draw retained-route assertion | PASS; no Draw-specific failure in the full verifier |
+| deterministic full tool-job ledgers | PASS: byte-identical, SHA-256 `21873b21e009a9b82d3a5a6497f8acbaf9e699187a77cd88890811392dcb7ba9` |
+| full tool-job census | Expected RED: **18** failure classes; 50 hosts, 50 invocations, 775 rows, 773 unique, **0/884**, 8 reserved, 35 importers, 34 globals |
+| broad interactivity DENY | PASS: declared scope clean; recorded test-only blocking bridge and predeclared future entries only |
+| Draw placeholder/banned-path census | PASS: Draw zero placeholder and zero live clone/diff/serde/whole-encode patterns |
+| scoped and whole working/staged/HEAD diff checks | PASS |
+| Cargo/Nx/native/Wasm/browser/runtime timing | Not run; no compile, runtime, or `<8ms` PASS claimed |
+
+Verdict: **READY for independent Draw source re-audit, without self-acceptance. Phase 8 remains RED.**
+The native/Wasm/runtime route, hostile-valid-payload timing, 13 remaining live whole-buffer callers,
+global snapshot/store ownership, full typed operation, all 884 activations, and Phase 8 remain
+unproven or rejected.

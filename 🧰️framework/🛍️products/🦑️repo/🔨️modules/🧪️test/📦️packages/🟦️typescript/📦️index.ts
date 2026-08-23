@@ -32,9 +32,44 @@ export type TestRole = (typeof TEST_ROLES)[number];
 export const TEST_MODES = ["differential", "conformance", "round-trip", "property", "error"] as const;
 export type TestMode = (typeof TEST_MODES)[number];
 
-/** ⚖️ Owned, versioned semantic comparison profiles — adapters never compare, profiles do. */
-export const COMPARISON_PROFILES = ["exact-bytes-v1", "utf8-text-v1", "ordered-json-v1", "unordered-json-v1", "floating-point-v1", "semantic-pdf-v1", "filesystem-tree-v1", "diagnostic-v1", "event-stream-v1"] as const;
-export type ComparisonProfile = (typeof COMPARISON_PROFILES)[number];
+/**
+ * ⚖️ A comparison profile id. Deliberately an OPEN string rather than a closed union: the framework
+ * owns the comparison MECHANISM and its domain-neutral profiles, while a profile that knows a file
+ * format is contributed by the owner of that format. Adding one must never require editing this file.
+ */
+export type ComparisonProfile = string;
+
+/**
+ * ⚖️ The declarative policy of one profile. Everything a profile can say is data, so a new profile is
+ * a manifest entry — never new framework code.
+ */
+export type ComparisonProfileSpec = Readonly<{
+  id: string;
+  /** 📖️ Why this profile exists and what it deliberately treats as producer freedom. */
+  description?: string;
+  /** 🔢️ `ordered` keeps array order significant; `set` compares arrays as multisets. */
+  arrays?: "ordered" | "set";
+  /** 🚫️ Keys stripped before comparison — the producer freedom this format allows. */
+  ignoreKeys?: readonly string[];
+  /** 📏️ Numeric tolerance, and the grid values are rounded onto before comparison. */
+  tolerance?: number;
+  /** 🔤️ `utf8` normalizes line endings, trailing whitespace and Unicode form. */
+  text?: "none" | "utf8";
+  /** 💾️ Compare the whole projection as an opaque byte string. */
+  bytes?: boolean;
+}>;
+
+/** ⚖️ The domain-neutral profiles the framework itself owns. Nothing here knows a file format. */
+export const CORE_COMPARISON_PROFILES: readonly ComparisonProfileSpec[] = [
+  { id: "exact-bytes-v1", description: "Byte-for-byte identity — used only where byte determinism is itself the requirement.", bytes: true },
+  { id: "utf8-text-v1", description: "Text identity after normalizing line endings, trailing whitespace and Unicode form.", text: "utf8" },
+  { id: "ordered-json-v1", description: "Structural identity with array order significant; key order never is." },
+  { id: "unordered-json-v1", description: "Structural identity with arrays compared as multisets.", arrays: "set" },
+  { id: "floating-point-v1", description: "Structural identity with a numeric tolerance for representation noise.", tolerance: 1e-9 },
+  { id: "filesystem-tree-v1", description: "A directory listing, where enumeration order is never normative.", arrays: "set" },
+  { id: "diagnostic-v1", description: "Diagnostics compared by kind and message, not by position or rendering.", arrays: "set", ignoreKeys: ["line", "column", "offset", "span", "detail"] },
+  { id: "event-stream-v1", description: "An event stream compared by content, not by wall-clock or process identity.", ignoreKeys: ["timestamp", "durationMs", "elapsedMs", "pid", "threadId"] },
+];
 
 /** 🗂️ Canonical taxonomy names, mirrored from `🔣️taxonomy.json` so a drift is a hard failure rather than a silent divergence. */
 export type TestTaxonomy = Readonly<{
@@ -51,6 +86,11 @@ export type TestTaxonomy = Readonly<{
   testOutputChildDirs: readonly string[];
   testOracleRegistryPath: string;
   testSchemaPath: string;
+  testContributionDirName: string;
+  testContributionFilename: string;
+  testDomainPath: string;
+  testPhases: readonly string[];
+  testLevellessPhases: readonly string[];
 }>;
 
 let taxonomyCache: { root: string; value: TestTaxonomy } | null = null;
@@ -59,7 +99,7 @@ let taxonomyCache: { root: string; value: TestTaxonomy } | null = null;
 export function testTaxonomy(repoRoot: string): TestTaxonomy {
   if (taxonomyCache && taxonomyCache.root === repoRoot) return taxonomyCache.value;
   const parsed = JSON.parse(readFileSync(join(repoRoot, TAXONOMY_REL_PATH), "utf8")) as Record<string, unknown>;
-  const required = ["testsDirName", "testFixturesDirName", "testFeatureFilename", "testCaseSlugPattern", "testAdapterFilenames", "testImplementationIds", "testExcludedPathPrefixes", "testOutputCacheDirName", "testOutputMarkerFilename", "testOutputMarkerKind", "testOutputChildDirs", "testOracleRegistryPath", "testSchemaPath"];
+  const required = ["testsDirName", "testFixturesDirName", "testFeatureFilename", "testCaseSlugPattern", "testAdapterFilenames", "testImplementationIds", "testExcludedPathPrefixes", "testOutputCacheDirName", "testOutputMarkerFilename", "testOutputMarkerKind", "testOutputChildDirs", "testOracleRegistryPath", "testSchemaPath", "testContributionDirName", "testContributionFilename", "testDomainPath", "testPhases", "testLevellessPhases"];
   const missing = required.filter((key) => parsed[key] === undefined);
   if (missing.length > 0) throw new Error(`🔣️taxonomy.json is missing the test contract keys: ${missing.join(", ")}`);
   const value = Object.fromEntries(required.map((key) => [key, parsed[key]])) as unknown as TestTaxonomy;
@@ -473,17 +513,102 @@ export function discoverTestCases(repoRoot: string): DiscoveredCase[] {
 
 //#region 📇️Registry
 /** 📇️ One approved third-party reference implementation, test-only by construction. */
-export type OracleEntry = Readonly<{ id: string; ecosystem: string; package: string; version?: string; capabilities: readonly string[]; comparisonProfiles: readonly ComparisonProfile[]; license: string; testOnly: true; homepage?: string; rationale?: string; hostPath?: string }>;
+export type OracleEntry = Readonly<{ id: string; ecosystem: string; package: string; version?: string; capabilities: readonly string[]; comparisonProfiles: readonly ComparisonProfile[]; license: string; testOnly: true; homepage?: string; rationale?: string; hostPath?: string; productionDebt?: { reachableFrom: readonly string[]; owner: string; plan: string } }>;
 
 /** 📇️ A recorded decision that a capability legitimately has no credible reference implementation. */
 export type NoOracleDecision = Readonly<{ id: string; capabilities: readonly string[]; rationale: string; substitutes: readonly string[] }>;
 
-export type OracleRegistry = Readonly<{ schemaVersion: number; oracles: readonly OracleEntry[]; noOracleDecisions: readonly NoOracleDecision[] }>;
+/** 🧩️ A native crate/package an owner contributes so its adapters can reach their reference libraries. */
+export type OracleHostPackage = Readonly<{ implementation: Implementation; package: string; path: string; features?: readonly string[] }>;
 
-/** 📇️ Loads the central oracle registry. Approved libraries live here, never in a production manifest. */
+/**
+ * 🧩️ One owner's contribution to the test platform. This is the OPEN half of open/closed: an owner
+ * that needs a reference implementation, a native oracle crate or a format-specific comparison
+ * profile declares them here, and the framework discovers the manifest without ever naming the
+ * owner, the plugin or the format.
+ */
+export type TestContribution = Readonly<{
+  owner: string;
+  manifestPath: string;
+  oracles: readonly OracleEntry[];
+  noOracleDecisions: readonly NoOracleDecision[];
+  comparisonProfiles: readonly ComparisonProfileSpec[];
+  oracleHostPackages: readonly OracleHostPackage[];
+}>;
+
+export type OracleRegistry = Readonly<{ schemaVersion: number; oracles: readonly OracleEntry[]; noOracleDecisions: readonly NoOracleDecision[]; comparisonProfiles: readonly ComparisonProfileSpec[]; oracleHostPackages: readonly OracleHostPackage[]; contributions: readonly TestContribution[] }>;
+
+function readContribution(repoRoot: string, owner: string, manifestPath: string): TestContribution | null {
+  let parsed: Record<string, unknown>;
+  try {
+    parsed = JSON.parse(readFileSync(join(repoRoot, manifestPath), "utf8")) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+  return {
+    owner,
+    manifestPath,
+    oracles: (parsed.oracles as OracleEntry[] | undefined) ?? [],
+    noOracleDecisions: (parsed.noOracleDecisions as NoOracleDecision[] | undefined) ?? [],
+    comparisonProfiles: (parsed.comparisonProfiles as ComparisonProfileSpec[] | undefined) ?? [],
+    oracleHostPackages: (parsed.oracleHostPackages as OracleHostPackage[] | undefined) ?? [],
+  };
+}
+
+/**
+ * 🧩️ Walks every non-excluded path for `<owner>/🧪️oracle/🔣️component.json`. Discovery is by
+ * convention, so a new owner extends the platform by adding a file — never by editing the framework.
+ */
+export function discoverTestContributions(repoRoot: string): TestContribution[] {
+  const taxonomy = testTaxonomy(repoRoot);
+  const found: TestContribution[] = [];
+  walkDirectories(repoRoot, (abs, rel) => {
+    if (isExcludedTestPath(repoRoot, rel)) return "skip";
+    if (basename(abs) !== taxonomy.testContributionDirName) return "enter";
+    const manifest = join(abs, taxonomy.testContributionFilename);
+    if (existsSync(manifest)) {
+      const owner = relative(repoRoot, dirname(abs)).split(sep).join("/") || ".";
+      const contribution = readContribution(repoRoot, owner, relative(repoRoot, manifest).split(sep).join("/"));
+      if (contribution !== null) found.push(contribution);
+    }
+    return "skip";
+  });
+  return found.sort((a, b) => a.owner.localeCompare(b.owner));
+}
+
+/**
+ * 📇️ The effective registry: the framework's own core manifest merged with every discovered owner
+ * contribution. The framework manifest holds only what is domain-neutral; nothing in this function
+ * knows that PDF, PNG or any other format exists.
+ */
 export function loadOracleRegistry(repoRoot: string): OracleRegistry {
-  const parsed = JSON.parse(readFileSync(join(repoRoot, testTaxonomy(repoRoot).testOracleRegistryPath), "utf8")) as OracleRegistry;
-  return { schemaVersion: parsed.schemaVersion, oracles: parsed.oracles ?? [], noOracleDecisions: parsed.noOracleDecisions ?? [] };
+  const core = (() => {
+    try {
+      return JSON.parse(readFileSync(join(repoRoot, testTaxonomy(repoRoot).testOracleRegistryPath), "utf8")) as Partial<OracleRegistry> & { schemaVersion: number };
+    } catch {
+      return { schemaVersion: 1 } as Partial<OracleRegistry> & { schemaVersion: number };
+    }
+  })();
+  const contributions = discoverTestContributions(repoRoot);
+  return {
+    schemaVersion: core.schemaVersion ?? 1,
+    oracles: [...(core.oracles ?? []), ...contributions.flatMap((entry) => entry.oracles)],
+    noOracleDecisions: [...(core.noOracleDecisions ?? []), ...contributions.flatMap((entry) => entry.noOracleDecisions)],
+    comparisonProfiles: [...CORE_COMPARISON_PROFILES, ...(core.comparisonProfiles ?? []), ...contributions.flatMap((entry) => entry.comparisonProfiles)],
+    oracleHostPackages: [...(core.oracleHostPackages ?? []), ...contributions.flatMap((entry) => entry.oracleHostPackages)],
+    contributions,
+  };
+}
+
+/** ⚖️ The effective profile table: core profiles plus every contributed one, keyed by id. */
+export function profileTable(registry: OracleRegistry): ReadonlyMap<string, ComparisonProfileSpec> {
+  return new Map(registry.comparisonProfiles.map((spec) => [spec.id, spec]));
+}
+
+/** 🧩️ The native oracle packages one owner's adapters may reach, walking up to the nearest contributor. */
+export function oracleHostPackagesFor(registry: OracleRegistry, owner: string, implementation: Implementation): OracleHostPackage[] {
+  const contributing = registry.contributions.filter((entry) => owner === entry.owner || owner.startsWith(`${entry.owner}/`));
+  return contributing.flatMap((entry) => entry.oracleHostPackages).filter((entry) => entry.implementation === implementation);
 }
 //#endregion 📇️Registry
 
@@ -663,8 +788,6 @@ export type ComparisonDiff = Readonly<{ path: string; oracle: unknown; subject: 
 /** ⚖️ The verdict of one comparison profile over two projections. */
 export type ComparisonVerdict = Readonly<{ profile: ComparisonProfile; equal: boolean; diffs: readonly ComparisonDiff[] }>;
 
-const FLOAT_TOLERANCE = 1e-9;
-
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -692,10 +815,8 @@ function sortDeep(value: unknown): unknown {
   return value;
 }
 
-/** 🧭️ Fields no two PDF producers can agree on, and which the PDF specification does not make normative. */
-const PDF_NONDETERMINISTIC_KEYS = new Set(["objectNumber", "xrefOffset", "producer", "creationDate", "modificationDate", "documentId", "fileSize", "byteLength", "generation", "streamFilter", "streamLength"]);
-
 function stripKeys(value: unknown, keys: ReadonlySet<string>): unknown {
+  if (keys.size === 0) return value;
   if (Array.isArray(value)) return value.map((entry) => stripKeys(entry, keys));
   if (isPlainObject(value))
     return Object.fromEntries(
@@ -707,10 +828,19 @@ function stripKeys(value: unknown, keys: ReadonlySet<string>): unknown {
 }
 
 function roundFloats(value: unknown, tolerance: number): unknown {
+  if (tolerance <= 0) return value;
   if (typeof value === "number") return Math.round(value / tolerance) * tolerance;
   if (Array.isArray(value)) return value.map((entry) => roundFloats(entry, tolerance));
   if (isPlainObject(value)) return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, roundFloats(entry, tolerance)]));
   return value;
+}
+
+function normalizeText(value: unknown): string {
+  return String(value)
+    .replace(/\r\n/g, "\n")
+    .replace(/[ \t]+$/gm, "")
+    .replace(/\n+$/, "")
+    .normalize("NFC");
 }
 
 function diffValues(path: string, oracle: unknown, subject: unknown, out: ComparisonDiff[], tolerance: number): void {
@@ -734,76 +864,51 @@ function diffValues(path: string, oracle: unknown, subject: unknown, out: Compar
   if (JSON.stringify(oracle) !== JSON.stringify(subject)) out.push({ path, oracle, subject, reason: "values differ" });
 }
 
+/** ⚖️ Applies a profile's declared policy to one projection, producing its canonical form. */
+function projectUnder(spec: ComparisonProfileSpec, value: unknown): unknown {
+  const stripped = stripKeys(value, new Set(spec.ignoreKeys ?? []));
+  const rounded = roundFloats(stripped, spec.tolerance ?? 0);
+  return spec.arrays === "set" ? sortDeep(rounded) : canonicalize(rounded);
+}
+
 /**
- * ⚖️ Applies one owned comparison profile. Comparison logic lives here — not in adapters — so two
- * implementations cannot quietly agree on different notions of "the same result".
+ * ⚖️ Applies one comparison profile. The MECHANISM lives here; the per-format policy is data, so a
+ * new format needs a manifest entry rather than a new branch. Comparison never lives in an adapter,
+ * so two implementations cannot quietly agree on different notions of "the same result".
  */
-export function compareProjections(profile: ComparisonProfile, oracle: unknown, subject: unknown): ComparisonVerdict {
+export function compareProjections(profile: ComparisonProfile, oracle: unknown, subject: unknown, profiles: ReadonlyMap<string, ComparisonProfileSpec> = coreProfileTable()): ComparisonVerdict {
+  const spec = profiles.get(profile);
+  if (spec === undefined) return { profile, equal: false, diffs: [{ path: "$", oracle: profile, subject: [...profiles.keys()].sort(), reason: `unknown comparison profile ${JSON.stringify(profile)} — register it in an owner's ${"🧪️oracle"} manifest` }] };
   const diffs: ComparisonDiff[] = [];
-  switch (profile) {
-    case "exact-bytes-v1": {
-      const a = typeof oracle === "string" ? oracle : JSON.stringify(oracle);
-      const b = typeof subject === "string" ? subject : JSON.stringify(subject);
-      if (a !== b) diffs.push({ path: "$", oracle: digest(a), subject: digest(b), reason: "byte-exact comparison failed" });
-      break;
-    }
-    case "utf8-text-v1": {
-      const norm = (value: unknown): string =>
-        String(value)
-          .replace(/\r\n/g, "\n")
-          .replace(/[ \t]+$/gm, "")
-          .replace(/\n+$/, "")
-          .normalize("NFC");
-      if (norm(oracle) !== norm(subject)) diffs.push({ path: "$", oracle: norm(oracle), subject: norm(subject), reason: "normalized text differs" });
-      break;
-    }
-    case "ordered-json-v1":
-      diffValues("$", canonicalize(oracle), canonicalize(subject), diffs, 0);
-      break;
-    case "unordered-json-v1":
-      diffValues("$", sortDeep(oracle), sortDeep(subject), diffs, 0);
-      break;
-    case "floating-point-v1":
-      diffValues("$", canonicalize(oracle), canonicalize(subject), diffs, FLOAT_TOLERANCE);
-      break;
-    case "semantic-pdf-v1":
-      diffValues("$", canonicalize(roundFloats(stripKeys(oracle, PDF_NONDETERMINISTIC_KEYS), 1e-4)), canonicalize(roundFloats(stripKeys(subject, PDF_NONDETERMINISTIC_KEYS), 1e-4)), diffs, 1e-4);
-      break;
-    case "filesystem-tree-v1": {
-      const norm = (value: unknown): unknown => (Array.isArray(value) ? [...value].map(String).sort() : sortDeep(value));
-      diffValues("$", norm(oracle), norm(subject), diffs, 0);
-      break;
-    }
-    case "diagnostic-v1": {
-      const norm = (value: unknown): unknown => sortDeep(stripKeys(value, new Set(["line", "column", "offset", "span", "detail"])));
-      diffValues("$", norm(oracle), norm(subject), diffs, 0);
-      break;
-    }
-    case "event-stream-v1": {
-      const norm = (value: unknown): unknown => canonicalize(stripKeys(value, new Set(["timestamp", "durationMs", "elapsedMs", "pid", "threadId"])));
-      diffValues("$", norm(oracle), norm(subject), diffs, 0);
-      break;
-    }
+  if (spec.bytes === true) {
+    const left = typeof oracle === "string" ? oracle : JSON.stringify(oracle);
+    const right = typeof subject === "string" ? subject : JSON.stringify(subject);
+    if (left !== right) diffs.push({ path: "$", oracle: digest(left), subject: digest(right), reason: "byte-exact comparison failed" });
+    return { profile, equal: diffs.length === 0, diffs };
   }
+  if (spec.text === "utf8") {
+    if (normalizeText(oracle) !== normalizeText(subject)) diffs.push({ path: "$", oracle: normalizeText(oracle), subject: normalizeText(subject), reason: "normalized text differs" });
+    return { profile, equal: diffs.length === 0, diffs };
+  }
+  diffValues("$", projectUnder(spec, oracle), projectUnder(spec, subject), diffs, spec.tolerance ?? 0);
   return { profile, equal: diffs.length === 0, diffs };
 }
 
 /** ⚖️ Digest of a projection under a profile's canonical form — the value results carry as `projectionHash`. */
-export function projectionHash(profile: ComparisonProfile, projection: unknown): string {
-  switch (profile) {
-    case "exact-bytes-v1":
-      return digest(typeof projection === "string" ? projection : JSON.stringify(projection));
-    case "unordered-json-v1":
-    case "filesystem-tree-v1":
-    case "diagnostic-v1":
-      return digest(JSON.stringify(sortDeep(projection)));
-    case "semantic-pdf-v1":
-      return digest(JSON.stringify(canonicalize(roundFloats(stripKeys(projection, PDF_NONDETERMINISTIC_KEYS), 1e-4))));
-    case "event-stream-v1":
-      return digest(JSON.stringify(canonicalize(stripKeys(projection, new Set(["timestamp", "durationMs", "elapsedMs", "pid", "threadId"])))));
-    default:
-      return digest(JSON.stringify(canonicalize(projection)));
-  }
+export function projectionHash(profile: ComparisonProfile, projection: unknown, profiles: ReadonlyMap<string, ComparisonProfileSpec> = coreProfileTable()): string {
+  const spec = profiles.get(profile);
+  if (spec === undefined) return digest(JSON.stringify(canonicalize(projection)));
+  if (spec.bytes === true) return digest(typeof projection === "string" ? projection : JSON.stringify(projection));
+  if (spec.text === "utf8") return digest(normalizeText(projection));
+  return digest(JSON.stringify(projectUnder(spec, projection)));
+}
+
+let coreProfileTableCache: ReadonlyMap<string, ComparisonProfileSpec> | null = null;
+
+/** ⚖️ The framework's own domain-neutral profile table, for callers with no contributions loaded. */
+export function coreProfileTable(): ReadonlyMap<string, ComparisonProfileSpec> {
+  coreProfileTableCache ??= new Map(CORE_COMPARISON_PROFILES.map((spec) => [spec.id, spec]));
+  return coreProfileTableCache;
 }
 //#endregion ⚖️Comparison
 
@@ -1004,6 +1109,10 @@ export function oracleImportsInProduction(repoRoot: string): { path: string; ora
   const caseDirs = new Set(discoverTestCases(repoRoot).map((entry) => entry.caseDir));
   const names = registry.oracles.map((entry) => [entry.id, entry.package.replace(/-/g, "_"), entry.package] as const);
   const isTestOwned = (rel: string): boolean => caseDirs.has(rel) || hostRoots.some((root) => rel === root || rel.startsWith(`${root}/`)) || rel === TEST_DOMAIN_REL_PATH || rel.startsWith(`${TEST_DOMAIN_REL_PATH}/`);
+  // 🔒️Recorded, shrink-only production debt: a package that was ALREADY production-reachable before
+  // it was registered as an oracle. The path is named in the registry entry so the debt is visible
+  // in the report instead of silently excused, and `dependency` prints it every run.
+  const recordedDebt = new Set(registry.oracles.flatMap((entry) => (entry.productionDebt?.reachableFrom ?? []).map((path) => `${path}::${entry.id}`)));
   const hits: { path: string; oracle: string }[] = [];
   walkDirectories(repoRoot, (abs, rel) => {
     if (isExcludedTestPath(repoRoot, rel)) return "skip";
@@ -1018,6 +1127,7 @@ export function oracleImportsInProduction(repoRoot: string): { path: string; ora
         continue;
       }
       for (const [id, moduleName, packageName] of names) {
+        if (recordedDebt.has(`${filePath}::${id}`)) continue;
         if (new RegExp(`(^|[^A-Za-z0-9_])(use\\s+${moduleName}\\b|extern\\s+crate\\s+${moduleName}\\b|from\\s+["']${packageName}["']|require\\(["']${packageName}["']\\))`).test(content)) hits.push({ path: filePath, oracle: id });
       }
     }

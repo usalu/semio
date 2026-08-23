@@ -166,6 +166,26 @@ impl ArtifactEditor for DrawPlayApp {
     const DIALECT: semio_framework::Dialect = crate::artifacts::draw::DRAW_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = DRAW_DOCUMENT_SCHEMA;
 
+    fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
+        Some(crate::artifacts::draw::spr::draw_envelope_decode_owner_bundle())
+    }
+
+    fn build_document_store_owners() -> Option<store::MemberStoreOwners<Self::Snapshot, Self::Mutation>> {
+        Some(crate::artifacts::draw::spr::draw_document_store_owners())
+    }
+
+    fn build_document_store_initialization_job(
+        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        operation: semio_framework_job::OperationId,
+        generation: semio_framework_job::Generation,
+    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+        Ok(crate::artifacts::draw::spr::draw_document_store_initialization_job(envelope, operation, generation))
+    }
+
+    fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
+    }
+
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: semio_framework_plugin::EditorApp<DrawPlayApp>,
         owner_file: "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs",
@@ -479,52 +499,117 @@ pub type DrawStore = store::ArtifactStore<DrawSnapshot, DrawMutation>;
 #[cfg(target_arch = "wasm32")]
 mod wasm_bridge {
     use super::*;
+    use semio_framework_plugin::{ArtifactEnvelopeDecodeOperationHandle, ArtifactEnvelopeDecodeOperationPoll, EditorApp, PluginApp, VcsArtifactApp};
     use std::cell::RefCell;
-    use store::create_document_envelope;
     use wasm_bindgen::prelude::*;
+
+    type DrawApp = VcsArtifactApp<EditorApp<DrawPlayApp>>;
+
+    const DRAW_ENVELOPE_MAXIMUM_PAGES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_PAGES;
+    const DRAW_ENVELOPE_MAXIMUM_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
+
+    fn js_fault(error: impl ToString) -> JsValue {
+        JsValue::from_str(&error.to_string())
+    }
+
+    #[wasm_bindgen]
+    pub struct DrawEnvelopeLoadHandle {
+        operation: u64,
+        generation: u64,
+    }
+
+    impl DrawEnvelopeLoadHandle {
+        fn runtime_handle(&self) -> ArtifactEnvelopeDecodeOperationHandle {
+            ArtifactEnvelopeDecodeOperationHandle { operation: semio_framework_job::OperationId(self.operation), generation: semio_framework_job::Generation(self.generation) }
+        }
+    }
+
+    #[wasm_bindgen]
+    impl DrawEnvelopeLoadHandle {
+        #[wasm_bindgen(getter)]
+        pub fn operation(&self) -> u64 {
+            self.operation
+        }
+
+        #[wasm_bindgen(getter)]
+        pub fn generation(&self) -> u64 {
+            self.generation
+        }
+    }
 
     #[wasm_bindgen]
     pub struct DrawSnapshotVcs {
-        store: RefCell<DrawStore>,
+        app: RefCell<DrawApp>,
     }
 
     #[wasm_bindgen]
     impl DrawSnapshotVcs {
         #[wasm_bindgen(constructor)]
-        pub async fn new(envelope_json: Option<String>) -> Result<DrawSnapshotVcs, JsValue> {
-            let store = match envelope_json {
-                Some(json) => {
-                    let envelope: DrawEnvelope = store::reject_whole_buffer_artifact_envelope_ingress(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-                    DrawStore::new(envelope).map_err(|e| JsValue::from_str(&e.to_string()))?
+        pub async fn new() -> Result<DrawSnapshotVcs, JsValue> {
+            Ok(Self { app: RefCell::new(VcsArtifactApp::new(EditorApp::<DrawPlayApp>::default()).await) })
+        }
+
+        #[wasm_bindgen(js_name = beginEnvelopeLoad)]
+        pub fn begin_envelope_load(&self, maximum_pages: usize, maximum_bytes: usize) -> Result<DrawEnvelopeLoadHandle, JsValue> {
+            if maximum_pages == 0 || maximum_pages > DRAW_ENVELOPE_MAXIMUM_PAGES || maximum_bytes == 0 || maximum_bytes > DRAW_ENVELOPE_MAXIMUM_BYTES {
+                return Err(js_fault("draw-envelope.invalid-credits"));
+            }
+            let handle = self.app.borrow_mut().begin_artifact_envelope_ingress(maximum_pages, maximum_bytes).map_err(js_fault)?;
+            Ok(DrawEnvelopeLoadHandle { operation: handle.operation.0, generation: handle.generation.0 })
+        }
+
+        #[wasm_bindgen(js_name = admitEnvelopePage)]
+        pub fn admit_envelope_page(&self, handle: &DrawEnvelopeLoadHandle, source: &js_sys::Uint8Array) -> Result<(), JsValue> {
+            let len = usize::try_from(source.length()).map_err(js_fault)?;
+            if len > store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES {
+                return Err(js_fault("draw-envelope.page-too-large"));
+            }
+            let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
+            source.copy_to(&mut bytes[..len]);
+            let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, len).map_err(|_| js_fault("draw-envelope.page-too-large"))?;
+            self.app.borrow_mut().admit_artifact_envelope_ingress_page(handle.runtime_handle(), page).map_err(|(fault, _page)| js_fault(fault))
+        }
+
+        #[wasm_bindgen(js_name = sealEnvelopeLoad)]
+        pub fn seal_envelope_load(&self, handle: &DrawEnvelopeLoadHandle) -> Result<bool, JsValue> {
+            self.app.borrow_mut().seal_artifact_envelope_ingress(handle.runtime_handle()).map_err(js_fault)
+        }
+
+        #[wasm_bindgen(js_name = pollEnvelopeLoad)]
+        pub fn poll_envelope_load(&self, handle: &DrawEnvelopeLoadHandle) -> Result<u8, JsValue> {
+            let mut app = self.app.borrow_mut();
+            app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(js_fault)?;
+            match app.advance_artifact_envelope_load(handle.runtime_handle()).map_err(js_fault)? {
+                ArtifactEnvelopeDecodeOperationPoll::Pending => Ok(0),
+                ArtifactEnvelopeDecodeOperationPoll::Progress => Ok(1),
+                ArtifactEnvelopeDecodeOperationPoll::Ready => {
+                    if !app.acknowledge_artifact_store_replacement(handle.runtime_handle()).map_err(js_fault)? {
+                        return Ok(1);
+                    }
+                    Ok(2)
                 }
-                None => DrawStore::new(create_document_envelope(DRAW_DOCUMENT_SCHEMA, "draw", crate::artifacts::draw::schema::empty_draw_snapshot(), None)).map_err(|e| JsValue::from_str(&e.to_string()))?,
-            };
-            Ok(Self { store: RefCell::new(store) })
+                ArtifactEnvelopeDecodeOperationPoll::Cancelled => {
+                    let _ = app.acknowledge_artifact_store_replacement(handle.runtime_handle()).map_err(js_fault)?;
+                    Ok(3)
+                }
+                ArtifactEnvelopeDecodeOperationPoll::Fault => {
+                    let _ = app.acknowledge_artifact_store_replacement(handle.runtime_handle()).map_err(js_fault)?;
+                    Ok(4)
+                }
+            }
         }
 
-        #[wasm_bindgen(js_name = dispatchText)]
-        pub async fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
-            self.store.borrow_mut().dispatch_text(command_text).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
+        #[wasm_bindgen(js_name = cancelEnvelopeLoad)]
+        pub fn cancel_envelope_load(&self, handle: &DrawEnvelopeLoadHandle) -> Result<(), JsValue> {
+            self.app.borrow_mut().cancel_artifact_envelope_load(handle.runtime_handle()).map_err(js_fault)
         }
 
-        #[wasm_bindgen(js_name = dispatchBinary)]
-        pub async fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
-            self.store.borrow_mut().dispatch_binary(command_bytes).map(|_| ()).map_err(|e| JsValue::from_str(&e.to_string()))
-        }
-
-        #[wasm_bindgen(js_name = projectionJson)]
-        pub async fn snapshot_json(&self) -> Result<String, JsValue> {
-            self.store.borrow().snapshot_json().map_err(|e| JsValue::from_str(&e.to_string()))
-        }
-
-        #[wasm_bindgen(js_name = envelopeJson)]
-        pub async fn envelope_json(&self) -> Result<String, JsValue> {
-            self.store.borrow().envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))
-        }
-
-        #[wasm_bindgen(js_name = generation)]
-        pub async fn generation(&self) -> u32 {
-            self.store.borrow().generation() as u32
+        #[wasm_bindgen(js_name = closeStep)]
+        pub fn close_step(&self) -> Result<bool, JsValue> {
+            match self.app.borrow_mut().close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(js_fault)? {
+                semio_framework_plugin::PluginCloseStep::Complete => Ok(true),
+                semio_framework_plugin::PluginCloseStep::Pending { .. } | semio_framework_plugin::PluginCloseStep::Blocked { .. } => Ok(false),
+            }
         }
     }
 }
@@ -578,6 +663,139 @@ mod tests {
     use semio_framework_plugin::kernel::Effect;
     use semio_framework_plugin::{testkit as fw_testkit, PluginApp, ViewModel, SET_ACTIVE_UTILITY_ACTION_ID};
     use testkit::{draw_app, draw_app_with_registry, set_utility, DrawApp};
+
+    fn draw_envelope_wire() -> Vec<u8> {
+        use store::ArtifactPack;
+
+        let mut snapshot = default_draw_document("draw-retained-load", None);
+        let mut group = crate::artifacts::draw::schema::create_draw_group_layer("Nested");
+        if let DrawLayerNode::Group(value) = &mut group {
+            value.children.push(crate::artifacts::draw::schema::create_draw_path_layer("Path", vec![crate::artifacts::draw::PathSegment::Move { to: [1.0, 2.0] }, crate::artifacts::draw::PathSegment::Line { to: [3.0, 4.0] }]));
+        }
+        let retained_target = match &group {
+            DrawLayerNode::Group(value) => crate::artifacts::draw::schema::layer_id(&value.children[0]).to_string(),
+            _ => unreachable!("retained Draw fixture group remains exact"),
+        };
+        snapshot.layers.push(group);
+        snapshot.assets.insert("image-a".into(), crate::artifacts::draw::DrawImageAsset { mime: "image/png".into(), data: "AA==".into(), width: Some(1), height: Some(1) });
+        let snapshot_pack = snapshot.encode_pack();
+        let snapshot_hex = snapshot_pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
+        let wire = serde_json::to_vec(&serde_json::json!({
+            "schema": DRAW_DOCUMENT_SCHEMA,
+            "id": "draw-retained-load",
+            "vcs": {
+                "initialSnapshot": snapshot_hex,
+                "edits": [{
+                    "id": "draw-retained-edit-final",
+                    "actor": "draw-retained-actor",
+                    "forwards": [crate::artifacts::draw::mutations::DrawMutation::RenameLayer(crate::artifacts::draw::mutations::RenameLayer { layer_id: retained_target.clone(), new_name: "Retained Path".into() })],
+                    "inverse": [],
+                    "sequenceNumber": 1,
+                    "startedAt": "2026-08-23T00:00:00.000Z"
+                }],
+                "changes": [],
+                "checkpoints": [],
+                "alternatives": []
+            },
+            "editMessages": [],
+            "conflicts": []
+        }))
+        .expect("schema-first Draw fixture envelope");
+        let envelope = store::create_document_envelope(DRAW_DOCUMENT_SCHEMA, "draw-retained-load", snapshot, None);
+        let mut retirement = crate::artifacts::draw::spr::draw_envelope_decode_owner_bundle().retire_envelope(envelope);
+        for _ in 0..100_000 {
+            match retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Draw fixture envelope retirement") {
+                store::SnapshotRetirementStep::Complete => {
+                    assert!(retirement.terminal_is_empty());
+                    drop(retirement);
+                    return wire;
+                }
+                store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
+                    assert!(released_items <= 1);
+                    assert!(released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
+                }
+                store::SnapshotRetirementStep::Blocked => panic!("unshared Draw fixture envelope retirement blocked"),
+            }
+        }
+        panic!("Draw fixture envelope retirement did not reach terminal")
+    }
+
+    fn admit_draw_envelope(app: &mut DrawApp, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
+        let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
+        let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("Draw live envelope ingress credits");
+        for chunk in wire.chunks(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+            let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
+            bytes[..chunk.len()].copy_from_slice(chunk);
+            let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded Draw envelope page");
+            app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("Draw envelope page admission failed: {fault}"));
+        }
+        assert!(app.seal_artifact_envelope_ingress(handle).expect("Draw envelope seal"));
+        handle
+    }
+
+    fn drive_draw_load(app: &mut DrawApp, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
+        for _ in 0..100_000 {
+            app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one Draw maintenance turn");
+            let poll = app.advance_artifact_envelope_load(handle).expect("Draw load advancement");
+            if matches!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
+                return poll;
+            }
+            std::thread::yield_now();
+        }
+        panic!("Draw retained envelope load did not reach terminal")
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn draw_live_envelope_submit_recursive_clone_swap_displaced_store_and_exact_ack_succeed() {
+        let mut app = draw_app();
+        let base_generation = app.artifact_generation_now();
+        let handle = admit_draw_envelope(&mut app, &draw_envelope_wire());
+        assert_eq!(handle.generation, base_generation);
+        assert_eq!(drive_draw_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
+        assert_eq!(app.artifact_generation_now().0, base_generation.0 + 1);
+        let projection = app.snapshot().expect("Draw retained mutation publication");
+        let renamed = crate::artifacts::draw::schema::find_draw_layer(&projection, &crate::artifacts::draw::schema::create_draw_id("path", b"Path")).expect("retained Draw target");
+        assert_eq!(crate::artifacts::draw::schema::layer_base(renamed).name, "Retained Path");
+        assert!(app.acknowledge_artifact_store_replacement(handle).expect("first Draw acknowledgement"));
+        assert!(!app.acknowledge_artifact_store_replacement(handle).expect("duplicate Draw acknowledgement"));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn draw_live_envelope_cancel_closes_retained_pages_without_publication() {
+        let mut app = draw_app();
+        let base_generation = app.artifact_generation_now();
+        let wire = draw_envelope_wire();
+        let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
+        let handle = app.begin_artifact_envelope_ingress(pages, wire.len()).expect("cancelled Draw ingress credits");
+        let first = &wire[..wire.len().min(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)];
+        let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
+        bytes[..first.len()].copy_from_slice(first);
+        let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, first.len()).expect("cancelled Draw first page");
+        app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("cancelled Draw page admission failed: {fault}"));
+        app.cancel_artifact_envelope_load(handle).expect("cancel Draw ingress");
+        assert_eq!(drive_draw_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
+        assert_eq!(app.artifact_generation_now(), base_generation);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn draw_live_envelope_rejects_single_and_final_edit_id_plus_one_before_mutation_candidate() {
+        for final_edit in [false, true] {
+            let mut value: serde_json::Value = serde_json::from_slice(&draw_envelope_wire()).expect("Draw retained fixture JSON");
+            let edits = value.pointer_mut("/vcs/edits").and_then(serde_json::Value::as_array_mut).expect("Draw retained edits");
+            if final_edit {
+                let mut first = edits[0].clone();
+                first["id"] = serde_json::Value::String("draw-retained-edit-first".into());
+                edits.insert(0, first);
+            }
+            edits.last_mut().expect("Draw final edit")["id"] = serde_json::Value::String("x".repeat(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES + 1));
+            let wire = serde_json::to_vec(&value).expect("hostile Draw edit fixture");
+            let mut app = draw_app();
+            let generation = app.artifact_generation_now();
+            let handle = admit_draw_envelope(&mut app, &wire);
+            assert_eq!(drive_draw_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
+            assert_eq!(app.artifact_generation_now(), generation);
+        }
+    }
 
     async fn first_layer_id(app: &DrawApp) -> String {
         layer_id(&app.snapshot().expect("materialize projection").layers[0]).to_string()

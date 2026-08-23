@@ -8,198 +8,674 @@
     "schemaVersion": 1
   },
   "$defs": {
-    "TestLevel": { "enum": ["fundamental", "quick", "long", "exhaustive"] },
-    "TestMode": { "enum": ["differential", "conformance", "round-trip", "property", "error"] },
-    "TestRole": { "enum": ["oracle", "subject"] },
-    "Implementation": { "enum": ["rust", "typescript", "go", "python", "dotnet"] },
+    "TestLevel": {
+      "enum": [
+        "fundamental",
+        "quick",
+        "long",
+        "exhaustive"
+      ]
+    },
+    "TestMode": {
+      "enum": [
+        "differential",
+        "conformance",
+        "round-trip",
+        "property",
+        "error"
+      ]
+    },
+    "TestRole": {
+      "enum": [
+        "oracle",
+        "subject"
+      ]
+    },
+    "Implementation": {
+      "enum": [
+        "rust",
+        "typescript",
+        "go",
+        "python",
+        "dotnet"
+      ]
+    },
     "ComparisonProfile": {
-      "enum": ["exact-bytes-v1", "utf8-text-v1", "ordered-json-v1", "unordered-json-v1", "floating-point-v1", "semantic-pdf-v1", "filesystem-tree-v1", "diagnostic-v1", "event-stream-v1"]
+      "enum": [
+        "exact-bytes-v1",
+        "utf8-text-v1",
+        "ordered-json-v1",
+        "unordered-json-v1",
+        "floating-point-v1",
+        "semantic-pdf-v1",
+        "filesystem-tree-v1",
+        "diagnostic-v1",
+        "event-stream-v1",
+        "semantic-raster-v1",
+        "semantic-archive-v1",
+        "semantic-tabular-v1",
+        "semantic-mesh-v1",
+        "semantic-audio-v1"
+      ]
     },
     "FixtureRef": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["uri", "scope", "name", "path", "digest"],
+      "required": [
+        "uri",
+        "scope",
+        "name",
+        "path",
+        "digest"
+      ],
       "properties": {
-        "uri": { "type": "string", "pattern": "^(shared|local)://.+$" },
-        "scope": { "enum": ["shared", "local"] },
-        "name": { "type": "string", "minLength": 1 },
-        "path": { "type": "string", "minLength": 1 },
-        "digest": { "type": "string", "minLength": 1 }
+        "uri": {
+          "type": "string",
+          "pattern": "^(shared|local)://.+$"
+        },
+        "scope": {
+          "enum": [
+            "shared",
+            "local"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
     "Step": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["keyword", "text"],
+      "required": [
+        "keyword",
+        "text"
+      ],
       "properties": {
-        "keyword": { "enum": ["Given", "When", "Then"] },
-        "rawKeyword": { "type": "string" },
-        "text": { "type": "string" },
-        "docString": { "type": "string" },
-        "dataTable": { "type": "array", "items": { "type": "array", "items": { "type": "string" } } }
+        "keyword": {
+          "enum": [
+            "Given",
+            "When",
+            "Then"
+          ]
+        },
+        "rawKeyword": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "docString": {
+          "type": "string"
+        },
+        "dataTable": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
       }
     },
     "Scenario": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "name", "level", "mode", "steps", "tags"],
+      "required": [
+        "id",
+        "name",
+        "level",
+        "mode",
+        "steps",
+        "tags"
+      ],
       "properties": {
-        "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
-        "name": { "type": "string" },
-        "level": { "$ref": "#/$defs/TestLevel" },
-        "mode": { "$ref": "#/$defs/TestMode" },
-        "tags": { "type": "array", "items": { "type": "string" } },
-        "steps": { "type": "array", "items": { "$ref": "#/$defs/Step" } },
-        "seed": { "type": "string" },
-        "platforms": { "type": "array", "items": { "type": "string" } },
-        "requires": { "type": "array", "items": { "type": "string" } },
-        "implementations": { "type": "array", "items": { "$ref": "#/$defs/Implementation" } },
-        "examples": { "type": "array", "items": { "type": "object", "additionalProperties": { "type": "string" } } },
-        "outlineOf": { "type": "string" },
-        "line": { "type": "integer" }
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "name": {
+          "type": "string"
+        },
+        "level": {
+          "$ref": "#/$defs/TestLevel"
+        },
+        "mode": {
+          "$ref": "#/$defs/TestMode"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Step"
+          }
+        },
+        "seed": {
+          "type": "string"
+        },
+        "platforms": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "requires": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "implementations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Implementation"
+          }
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "outlineOf": {
+          "type": "string"
+        },
+        "line": {
+          "type": "integer"
+        }
       }
     },
     "TestCasePlan": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schemaVersion", "owner", "case", "featurePath", "featureHash", "capability", "comparison", "scenarios", "adapters", "fixtures"],
+      "required": [
+        "schemaVersion",
+        "owner",
+        "case",
+        "featurePath",
+        "featureHash",
+        "capability",
+        "comparison",
+        "scenarios",
+        "adapters",
+        "fixtures"
+      ],
       "properties": {
-        "schemaVersion": { "const": 1 },
-        "owner": { "type": "string", "description": "Repo-relative owner root path." },
-        "case": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
-        "featurePath": { "type": "string" },
-        "featureHash": { "type": "string" },
-        "featureName": { "type": "string" },
-        "description": { "type": "string" },
-        "capability": { "type": "string" },
-        "oracle": { "type": ["string", "null"] },
-        "noOracleDecision": { "type": ["string", "null"] },
-        "comparison": { "$ref": "#/$defs/ComparisonProfile" },
-        "background": { "type": "array", "items": { "$ref": "#/$defs/Step" } },
-        "scenarios": { "type": "array", "items": { "$ref": "#/$defs/Scenario" } },
+        "schemaVersion": {
+          "const": 1
+        },
+        "owner": {
+          "type": "string",
+          "description": "Repo-relative owner root path."
+        },
+        "case": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "featurePath": {
+          "type": "string"
+        },
+        "featureHash": {
+          "type": "string"
+        },
+        "featureName": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "capability": {
+          "type": "string"
+        },
+        "oracle": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "noOracleDecision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "comparison": {
+          "$ref": "#/$defs/ComparisonProfile"
+        },
+        "background": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Step"
+          }
+        },
+        "scenarios": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Scenario"
+          }
+        },
         "adapters": {
           "type": "object",
           "additionalProperties": false,
-          "propertyNames": { "$ref": "#/$defs/Implementation" },
-          "patternProperties": { "^(rust|typescript|go|python|dotnet)$": { "type": "string" } }
+          "propertyNames": {
+            "$ref": "#/$defs/Implementation"
+          },
+          "patternProperties": {
+            "^(rust|typescript|go|python|dotnet)$": {
+              "type": "string"
+            }
+          }
         },
-        "fixtures": { "type": "array", "items": { "$ref": "#/$defs/FixtureRef" } },
-        "workDir": { "type": "string" },
-        "resultsPath": { "type": "string" },
-        "outputDir": { "type": "string" },
-        "level": { "$ref": "#/$defs/TestLevel" },
-        "role": { "$ref": "#/$defs/TestRole" },
-        "implementation": { "$ref": "#/$defs/Implementation" }
+        "fixtures": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FixtureRef"
+          }
+        },
+        "workDir": {
+          "type": "string"
+        },
+        "resultsPath": {
+          "type": "string"
+        },
+        "outputDir": {
+          "type": "string"
+        },
+        "level": {
+          "$ref": "#/$defs/TestLevel"
+        },
+        "role": {
+          "$ref": "#/$defs/TestRole"
+        },
+        "implementation": {
+          "$ref": "#/$defs/Implementation"
+        }
       }
     },
     "Diagnostic": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["severity", "message"],
+      "required": [
+        "severity",
+        "message"
+      ],
       "properties": {
-        "severity": { "enum": ["info", "warning", "error"] },
-        "message": { "type": "string" },
-        "detail": { "type": "string" }
+        "severity": {
+          "enum": [
+            "info",
+            "warning",
+            "error"
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "detail": {
+          "type": "string"
+        }
       }
     },
     "TestResult": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["testId", "owner", "case", "scenario", "implementation", "role", "level", "status", "durationMs", "output", "diagnostics"],
+      "required": [
+        "testId",
+        "owner",
+        "case",
+        "scenario",
+        "implementation",
+        "role",
+        "level",
+        "status",
+        "durationMs",
+        "output",
+        "diagnostics"
+      ],
       "properties": {
-        "testId": { "type": "string" },
-        "owner": { "type": "string" },
-        "case": { "type": "string" },
-        "scenario": { "type": "string" },
-        "implementation": { "$ref": "#/$defs/Implementation" },
-        "role": { "$ref": "#/$defs/TestRole" },
-        "level": { "$ref": "#/$defs/TestLevel" },
-        "status": { "enum": ["passed", "failed", "errored"] },
-        "durationMs": { "type": "number", "minimum": 0 },
-        "seed": { "type": "string" },
-        "featureHash": { "type": "string" },
-        "fixtureHash": { "type": "string" },
-        "sourceHash": { "type": "string" },
-        "dependencyFingerprint": { "type": "string" },
+        "testId": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "case": {
+          "type": "string"
+        },
+        "scenario": {
+          "type": "string"
+        },
+        "implementation": {
+          "$ref": "#/$defs/Implementation"
+        },
+        "role": {
+          "$ref": "#/$defs/TestRole"
+        },
+        "level": {
+          "$ref": "#/$defs/TestLevel"
+        },
+        "status": {
+          "enum": [
+            "passed",
+            "failed",
+            "errored"
+          ]
+        },
+        "durationMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "seed": {
+          "type": "string"
+        },
+        "featureHash": {
+          "type": "string"
+        },
+        "fixtureHash": {
+          "type": "string"
+        },
+        "sourceHash": {
+          "type": "string"
+        },
+        "dependencyFingerprint": {
+          "type": "string"
+        },
         "output": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["rawHash", "projectionHash"],
+          "required": [
+            "rawHash",
+            "projectionHash"
+          ],
           "properties": {
-            "rawHash": { "type": "string" },
-            "projectionHash": { "type": "string" },
-            "rawPath": { "type": "string" },
-            "projectionPath": { "type": "string" },
+            "rawHash": {
+              "type": "string"
+            },
+            "projectionHash": {
+              "type": "string"
+            },
+            "rawPath": {
+              "type": "string"
+            },
+            "projectionPath": {
+              "type": "string"
+            },
             "projection": {}
           }
         },
-        "diagnostics": { "type": "array", "items": { "$ref": "#/$defs/Diagnostic" } }
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Diagnostic"
+          }
+        }
       }
     },
     "OracleRegistryEntry": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "ecosystem", "package", "capabilities", "comparisonProfiles", "license", "testOnly"],
+      "required": [
+        "id",
+        "ecosystem",
+        "package",
+        "capabilities",
+        "comparisonProfiles",
+        "license",
+        "testOnly"
+      ],
       "properties": {
-        "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
-        "ecosystem": { "enum": ["rust", "javascript", "go", "python", "dotnet"] },
-        "package": { "type": "string" },
-        "version": { "type": "string" },
-        "capabilities": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
-        "comparisonProfiles": { "type": "array", "items": { "$ref": "#/$defs/ComparisonProfile" }, "minItems": 1 },
-        "license": { "type": "string" },
-        "testOnly": { "const": true },
-        "homepage": { "type": "string" },
-        "rationale": { "type": "string" },
-        "hostPath": { "type": "string" }
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "ecosystem": {
+          "enum": [
+            "rust",
+            "javascript",
+            "go",
+            "python",
+            "dotnet"
+          ]
+        },
+        "package": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "comparisonProfiles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ComparisonProfile"
+          },
+          "minItems": 1
+        },
+        "license": {
+          "type": "string"
+        },
+        "testOnly": {
+          "const": true
+        },
+        "homepage": {
+          "type": "string"
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "hostPath": {
+          "type": "string"
+        },
+        "productionDebt": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "🔒️ Pre-existing production reachability of this package, recorded rather than hidden. Shrink-only: a path may leave this list, never join it. Its presence means the `testOnly` claim is a TARGET, not yet a fact.",
+          "required": [
+            "reachableFrom",
+            "owner",
+            "plan"
+          ],
+          "properties": {
+            "reachableFrom": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "owner": {
+              "type": "string"
+            },
+            "plan": {
+              "type": "string"
+            }
+          }
+        }
       }
     },
     "NoOracleDecision": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "capabilities", "rationale", "substitutes"],
+      "required": [
+        "id",
+        "capabilities",
+        "rationale",
+        "substitutes"
+      ],
       "properties": {
-        "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
-        "capabilities": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
-        "rationale": { "type": "string", "minLength": 20 },
-        "substitutes": { "type": "array", "items": { "enum": ["specification-vectors", "metamorphic-laws", "independent-implementations", "second-parser"] }, "minItems": 1 }
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 20
+        },
+        "substitutes": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "specification-vectors",
+              "metamorphic-laws",
+              "independent-implementations",
+              "second-parser"
+            ]
+          },
+          "minItems": 1
+        }
       }
     },
     "OracleRegistry": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schemaVersion", "oracles", "noOracleDecisions"],
+      "required": [
+        "schemaVersion",
+        "oracles",
+        "noOracleDecisions"
+      ],
       "properties": {
-        "schemaVersion": { "const": 1 },
-        "oracles": { "type": "array", "items": { "$ref": "#/$defs/OracleRegistryEntry" } },
-        "noOracleDecisions": { "type": "array", "items": { "$ref": "#/$defs/NoOracleDecision" } }
+        "schemaVersion": {
+          "const": 1
+        },
+        "oracles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OracleRegistryEntry"
+          }
+        },
+        "noOracleDecisions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NoOracleDecision"
+          }
+        }
       }
     },
     "OutputMarker": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "testId", "cacheKey"],
+      "required": [
+        "kind",
+        "testId",
+        "cacheKey"
+      ],
       "properties": {
-        "kind": { "const": "semio-test-output" },
-        "testId": { "type": "string" },
-        "cacheKey": { "type": "string" }
+        "kind": {
+          "const": "semio-test-output"
+        },
+        "testId": {
+          "type": "string"
+        },
+        "cacheKey": {
+          "type": "string"
+        }
       }
     },
     "DependencyBaselineEntry": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["ecosystem", "name", "version", "kinds", "users"],
+      "required": [
+        "ecosystem",
+        "name",
+        "version",
+        "kinds",
+        "users"
+      ],
       "properties": {
-        "ecosystem": { "enum": ["rust", "js", "go", "python", "dotnet"] },
-        "name": { "type": "string" },
-        "version": { "type": "string" },
-        "kinds": { "type": "array", "items": { "enum": ["production-runtime", "production-build", "repository-tooling", "test-runner", "test-oracle", "runtime", "build", "test", "tooling"] } },
-        "users": { "type": "array", "items": { "type": "string" } },
-        "productionReachable": { "type": "boolean" },
-        "oracleIds": { "type": "array", "items": { "type": "string" } },
-        "capabilities": { "type": "array", "items": { "type": "string" } }
+        "ecosystem": {
+          "enum": [
+            "rust",
+            "js",
+            "go",
+            "python",
+            "dotnet"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "kinds": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "production-runtime",
+              "production-build",
+              "repository-tooling",
+              "test-runner",
+              "test-oracle",
+              "runtime",
+              "build",
+              "test",
+              "tooling"
+            ]
+          }
+        },
+        "users": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "productionReachable": {
+          "type": "boolean"
+        },
+        "oracleIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     }
   },
-  "oneOf": [{ "$ref": "#/$defs/TestCasePlan" }, { "$ref": "#/$defs/TestResult" }, { "$ref": "#/$defs/OracleRegistry" }]
+  "oneOf": [
+    {
+      "$ref": "#/$defs/TestCasePlan"
+    },
+    {
+      "$ref": "#/$defs/TestResult"
+    },
+    {
+      "$ref": "#/$defs/OracleRegistry"
+    }
+  ]
 }

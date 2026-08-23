@@ -12,9 +12,22 @@
     }
   },
   "ownerStatus": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip": "oracle-green",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif": "oracle-green",
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf": "oracle-green",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png": "oracle-green",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav": "oracle-green",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate": "oracle-green",
     "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️class-name-composition": "legacy-removed",
     "🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️style-variants": "legacy-removed",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test": "complete"
+  },
+  "_blockedBy": {
+    "summary": "Every stdio artifact SUBJECT phase is blocked behind semio-framework-os-kernel, which does not compile: 🔨️modules/📡️spr/🧵️channel/🦀️component.rs uses semio_framework::{Fault, kernel::*} while semio-framework (core) itself depends on os-kernel, so the edge cannot simply be declared. Introduced by a concurrent session's in-flight refactor.",
+    "repairedHere": [
+      "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml — declared the missing semio-framework-job dependency its own sources already used",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️component.rs — removed a byte-identical duplicate ARTIFACT_OWNED_SPR_EDIT_FIELDS definition and repointed MutationEnvelope/UndoPolicy at semio-framework-replication, where they are defined and which os-kernel already depends on"
+    ],
+    "remaining": "17 errors, all `semio_framework::` in 📡️spr/🧵️channel — needs an architectural decision by the owning session (move the types, re-export them, or invert the dependency); deliberately not made here."
   }
 }

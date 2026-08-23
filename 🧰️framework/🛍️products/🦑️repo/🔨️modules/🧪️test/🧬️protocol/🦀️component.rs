@@ -343,6 +343,11 @@ pub struct Scenario {
     pub mode: String,
     pub seed: String,
     pub steps: Vec<(String, String)>,
+    /// 📜️ Doc strings attached to this scenario's steps, in step order. A feature carries its own
+    /// vectors, so an adapter reads its input from here rather than hard-coding it.
+    pub doc_strings: Vec<String>,
+    /// 📊️ Data tables attached to this scenario's steps, in step order — header row first.
+    pub data_tables: Vec<Vec<Vec<String>>>,
 }
 
 /// 📋️ The owned execution plan. A host never parses a feature file — it executes exactly this.
@@ -381,6 +386,31 @@ impl Plan {
                 mode: entry.str("mode"),
                 seed: entry.str("seed"),
                 steps: entry.array("steps").iter().map(|step| (step.str("keyword"), step.str("text"))).collect(),
+                doc_strings: entry.array("steps").iter().filter_map(|step| match step.get("docString") {
+                    Some(Json::String(text)) => Some(text.clone()),
+                    _ => None,
+                }).collect(),
+                data_tables: entry
+                    .array("steps")
+                    .iter()
+                    .filter_map(|step| match step.get("dataTable") {
+                        Some(Json::Array(rows)) => Some(
+                            rows.iter()
+                                .map(|row| match row {
+                                    Json::Array(cells) => cells
+                                        .iter()
+                                        .map(|cell| match cell {
+                                            Json::String(text) => text.clone(),
+                                            _ => String::new(),
+                                        })
+                                        .collect(),
+                                    _ => Vec::new(),
+                                })
+                                .collect(),
+                        ),
+                        _ => None,
+                    })
+                    .collect(),
             })
             .collect();
         Plan {

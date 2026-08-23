@@ -56,6 +56,8 @@ pub mod artifacts {
                             #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs"]
                             mod component;
                             pub use component::*;
+                            #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧰️owned/🦀️component.rs"]
+                            pub mod owned;
                             #[path = "."]
                             pub mod snapshot {
                                 #[path = "../../🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️component.rs"]
@@ -475,6 +477,7 @@ pub mod artifacts {
         }
         pub mod spr {
             pub use crate::artifacts::draw::standards::v1::subsets::any::io::mutations::binary::*;
+            pub use crate::artifacts::draw::standards::v1::subsets::any::schema::owned::*;
         }
         pub mod diff {
             pub use crate::artifacts::draw::standards::v1::subsets::any::schema::diff::*;

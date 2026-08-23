@@ -10,29 +10,41 @@ Tracked machine-readably in
 
 | Owner | Status | Evidence |
 | --- | --- | --- |
-| `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test` | `complete` | 3 scenarios × 5 implementations green, 30/30 pairwise parity, 37 self-tests, contract clean, dependency clean, clean-safety self-tested |
-| `🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️class-name-composition` | `legacy-removed` | 2 cases, 11 executions, 4/4 differential parity against `clsx`; conflict half specified by vectors under a recorded no-oracle decision; legacy test deleted and baseline lowered |
-| `🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️style-variants` | `legacy-removed` | 6 executions, 3/3 differential parity against `class-variance-authority` across the full variant matrix; legacy test deleted and baseline lowered |
-| `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf` | `oracle-green` | contract clean; both oracles verified producing correct semantic projections through the independent reader; subject phase blocked on a peer session's undeclared `semio-framework-job` edge |
-| every other non-`compose` owner | `discovered` / `surveyed` | 48 unmanaged legacy test files counted per area and frozen as a shrink-only baseline |
+| `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test` | `complete` | 3 scenarios × 5 implementations, 30/30 pairwise parity, 45 self-tests, contract/dependency/clean all green |
+| `🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️class-name-composition` | `legacy-removed` | 4/4 differential parity vs `clsx`; conflict half specified by vectors under a recorded no-oracle decision; legacy test deleted |
+| `🧰️framework/🔨️modules/🖱️ui/🔨️modules/🏷️style-variants` | `legacy-removed` | 3/3 differential parity vs `class-variance-authority` across the full variant matrix; legacy test deleted |
+| `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf` | `oracle-green` | 5 oracle executions via `pdf-writer` + `lopdf`, projected by the independent reader |
+| `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png` | `oracle-green` | 3 oracle executions via `png` |
+| `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif` | `oracle-green` | 2 oracle executions via `gif` |
+| `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip` | `oracle-green` | 3 oracle executions via `zip`, including member removal |
+| `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate` | `oracle-green` | 3 oracle executions via `flate2`, round-trip mode |
+| `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav` | `oracle-green` | 3 oracle executions via `hound`, including sample-rate retune |
+| every other non-`compose` owner | `discovered` / `surveyed` | 48 unmanaged legacy test files, shrink-only baseline |
+
+All six artifact owners are `oracle-green` rather than `parity-green` for one reason: their
+subject phase links `semio-s-plugin-stdio`, which does not compile while a concurrent session's
+os-kernel refactor is in flight. Every subject handler is written; see `_blockedBy` in
+`🔒️migration.json`.
 
 ## Repository dashboard, current values
 
 | Metric | Value |
 | --- | --- |
-| Test cases discovered | 6 across 4 owners |
-| Scenarios declared / executed at quick | 18 / 13 (the 5 unexecuted are the peer-blocked PDF scenarios) |
-| Executions at quick | 32, all passing |
+| Test cases discovered | 11 across 8 owners |
+| Scenarios declared / executed at quick | 32 / 30 |
+| Executions at quick | 49, all passing |
 | Parity comparisons | 37 / 37 equal |
-| Implementations with a native host | 5 of 5 (Rust, TypeScript, Go, Python, .NET) |
-| Implementation coverage | typescript 13/13 · dotnet 3/3 · go 3/3 · python 3/3 · rust 3/8 |
-| Registered oracles | 4 (`pdf-writer`, `lopdf`, `clsx`, `cva`), all `productionReachable: false` |
+| Implementations with a native host | 5 of 5 |
+| Implementation coverage | typescript 13/13 · rust 20/22 · dotnet 3/3 · go 3/3 · python 3/3 |
+| Registered oracles | 10, every one classified `test-oracle` |
+| Oracles carrying recorded production debt | 2 (`png`, `zip`), both Phase 7 targets |
 | Recorded no-oracle decisions | 2, each naming its substitutes |
-| Oracle coverage | 6/6 cases backed |
-| External dependencies classified | 208 across 4 ecosystems (go 60, js 68, rust 65, python 15, dotnet 0) |
-| Production-reachable external dependencies | 154 — unchanged across two oracle additions |
-| Dependency-clean coverage | 54/208 (26%) — the Phase 7 target is 100% |
-| Unmanaged legacy tests | 48 (`🧰️framework` 35, `.storybook` 10, `🌎️hub` 2, `✏️s` 1), down from 50 |
+| Oracle coverage | 11/11 cases backed |
+| Comparison profiles | 14, each self-tested for both what it ignores and what it keeps |
+| External dependencies classified | 212 across 4 ecosystems |
+| Production-reachable external dependencies | 152 |
+| Dependency-clean coverage | 60/212 (28.3%) |
+| Unmanaged legacy tests | 48, shrink-only |
 | Orphan fixtures · committed generated wrappers · quarantine entries | 0 · 0 · 0 |
 
 ## What each remaining phase needs

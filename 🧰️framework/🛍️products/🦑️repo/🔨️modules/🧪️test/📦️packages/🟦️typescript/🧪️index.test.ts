@@ -394,4 +394,53 @@ describe("🚫️ oracle purity", () => {
   }, 60_000);
 });
 
+
+describe("🔒️ recorded production debt", () => {
+  test("an oracle claiming testOnly while already production-reachable must record the debt, not hide it", () => {
+    const registry = loadOracleRegistry(repoRoot);
+    const baseline = JSON.parse(readFileSync(join(repoRoot, "🔒️dependencies.json"), "utf8")) as { entries: { name: string; productionReachable: boolean }[] };
+    for (const oracle of registry.oracles) {
+      const entry = baseline.entries.find((candidate) => candidate.name === oracle.package);
+      if (entry?.productionReachable !== true) continue;
+      expect(oracle.productionDebt, `${oracle.package} is production-reachable but records no debt`).toBeDefined();
+      expect(oracle.productionDebt!.reachableFrom.length).toBeGreaterThan(0);
+      expect(oracle.productionDebt!.plan.length).toBeGreaterThan(20);
+    }
+  });
+
+  test("only the recorded paths are excused — any other production import is still a breach", () => {
+    const recorded = new Set(loadOracleRegistry(repoRoot).oracles.flatMap((oracle) => oracle.productionDebt?.reachableFrom ?? []));
+    for (const hit of oracleImportsInProduction(repoRoot)) expect(recorded.has(hit.path), `unrecorded oracle import at ${hit.path}`).toBe(true);
+  }, 60_000);
+
+  test("every registered oracle names its capabilities, comparison profiles and a rationale that scopes it", () => {
+    for (const oracle of loadOracleRegistry(repoRoot).oracles) {
+      expect(oracle.capabilities.length).toBeGreaterThan(0);
+      expect(oracle.comparisonProfiles.every((profile) => COMPARISON_PROFILES.includes(profile))).toBe(true);
+      expect((oracle.rationale ?? "").length).toBeGreaterThan(80);
+    }
+  });
+});
+
+describe("⚖️ artifact comparison profiles", () => {
+  test("semantic-raster-v1 ignores encoder choices and keeps the decoded samples", () => {
+    const oracle = { format: "png", width: 2, height: 1, samples: [1, 2, 3, 4], filter: "paeth", gamma: 45455 };
+    expect(compareProjections("semantic-raster-v1", oracle, { ...oracle, filter: "sub", gamma: 22222 }).equal).toBe(true);
+    expect(compareProjections("semantic-raster-v1", oracle, { ...oracle, samples: [1, 2, 3, 5] }).equal).toBe(false);
+  });
+
+  test("semantic-archive-v1 compares members as a set and ignores writer metadata", () => {
+    const a = { entries: [{ name: "a", size: 1, contentDigest: "x" }, { name: "b", size: 2, contentDigest: "y" }] };
+    const b = { entries: [{ name: "b", size: 2, contentDigest: "y", modified: "2020" }, { name: "a", size: 1, contentDigest: "x", compressedSize: 9 }] };
+    expect(compareProjections("semantic-archive-v1", a, b).equal).toBe(true);
+    expect(compareProjections("semantic-archive-v1", a, { entries: [a.entries[0]] }).equal).toBe(false);
+  });
+
+  test("semantic-audio-v1 keeps the format block and every sample", () => {
+    const oracle = { channels: 2, sampleRate: 44100, bitsPerSample: 16, samples: [1, -1], byteLength: 100 };
+    expect(compareProjections("semantic-audio-v1", oracle, { ...oracle, byteLength: 108 }).equal).toBe(true);
+    expect(compareProjections("semantic-audio-v1", oracle, { ...oracle, sampleRate: 48000 }).equal).toBe(false);
+  });
+});
+
 //#endregion 🧪️Tests

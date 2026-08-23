@@ -523,7 +523,7 @@ mod tests {
             cursor: ui_wgpu::wgpu::SemioCursor::Default,
             theme_dark: false,
             fullscreen: None,
-            request_frame: false,
+            cursor_wake: None,
         };
         let mut phase = ActiveFramePhase::Prepare(build.into_preparation());
         for _ in 0..100 {

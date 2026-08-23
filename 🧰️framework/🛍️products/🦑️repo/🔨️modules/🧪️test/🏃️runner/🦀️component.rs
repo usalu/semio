@@ -36,6 +36,21 @@ impl<'a> Context<'a> {
         Ok(target)
     }
 
+    /// 📜️ The scenario's first doc string — the feature-owned input vector.
+    pub fn doc_string(&self) -> Result<&str, String> {
+        self.scenario.doc_strings.first().map(String::as_str).ok_or_else(|| format!("scenario {} carries no doc string", self.scenario.id))
+    }
+
+    /// 📜️ The scenario's first doc string, parsed as the owned JSON value.
+    pub fn doc_json(&self) -> Result<crate::protocol::Json, String> {
+        crate::protocol::parse_json(self.doc_string()?)
+    }
+
+    /// 📊️ The scenario's first data table — header row first.
+    pub fn data_table(&self) -> Result<&Vec<Vec<String>>, String> {
+        self.scenario.data_tables.first().ok_or_else(|| format!("scenario {} carries no data table", self.scenario.id))
+    }
+
     /// 🎲️ Deterministic seed declared by the scenario's `@seed-…` tag.
     pub fn seed(&self) -> u64 {
         self.scenario.seed.parse().unwrap_or(0)
