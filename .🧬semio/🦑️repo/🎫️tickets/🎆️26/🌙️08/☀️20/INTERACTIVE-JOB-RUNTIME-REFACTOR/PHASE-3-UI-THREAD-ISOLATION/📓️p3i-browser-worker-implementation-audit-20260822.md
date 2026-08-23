@@ -1413,3 +1413,345 @@ Exact live residual routes after this checkpoint:
   Cargo, Nx, Wasm, browser, network, root lint, and runtime timing were not run.
 - Phase 3/5 remains **RED** only for the separately recorded production/runtime residuals. This
   packet makes no claim about them and starts no next residual.
+
+### Presenter-acknowledged prepared-packet and fixed mesh-GPU retirement checkpoint
+
+- Prepared packets are now single owned values rather than `Arc` snapshots. The worker receiver,
+  preparation job, presentation cursor, gate candidate, last-valid owner, replacement owner, and
+  close cursor all transfer the same packet. The packet exposes a retained retirement cursor that
+  releases at most one admitted pixel page, action/draw owner, key scalar, eviction, or metadata
+  item per grant. Atlas/raster allocation release remains explicitly outside this bounded claim.
+- The presenter uses a non-Clone `PreparedPresenterWitness { sequence, scene_revision,
+  preview_generation }`. A candidate is staged under that exact witness before platform render;
+  render borrows only the matching staged packet; and only a later exact one-shot acknowledgement
+  swaps it into `last_valid`. Missing, stale, duplicate, superseding, submission-fault, and close
+  paths keep the old packet authoritative and return the exact staged candidate to the retained
+  abort/retirement path. Frame production itself is invoked through `admit_next_frame`, so no
+  second frame is constructed before the capacity-one presenter accepts ownership.
+- Normal replacement is source-ordered as admission -> one engine/upload step -> stage -> opaque
+  platform render/present -> exact ACK -> old-packet/GPU retirement. A failed admission, engine
+  realization, upload, or submit enters `AppPresentPhase::Aborted`; its active upload buffers and
+  packet/frame owners are then retired through the same bounded cursor. The last-valid packet is
+  not replaced by any aborted candidate.
+- `MeshGpuTable` no longer uses a `HashMap` or whole-table `retain`. It is a fixed 256-slot registry
+  with 256-byte keys, exact key/version/lease upload identity, capacity-plus-one owner handback,
+  one-slot scanning, one-buffer retirement, ABA-safe version lookup, and terminal close. After ACK,
+  eviction first scans one prepared upload per grant into a fixed 256-version keep set, then retires
+  one table slot/buffer per grant. This preserves every mesh version referenced by the newly
+  acknowledged packet instead of deleting a same-key replacement.
+- `OsHostRetirement` now requires prepared cursor/gate/active-upload/fixed-table terminal witnesses
+  before `RuntimeMailbox::close_world3d_dynamic_step`. Authored Rust fixtures cover exact one-shot
+  ACK, old-visible-before-ACK, missing/stale/duplicate ACK, exact candidate handback, capacity +1,
+  ABA replacement, acknowledged-version preservation, page-stepped close, and source mutations
+  for stage/ACK/abort/Arc/HashMap/unbounded-cap/keep-version/admission/close bypasses. Those Rust
+  fixtures were not compiled or executed because Cargo remained prohibited.
+- Source-only gates run at this save: edition-2024 scoped rustfmt/parser passed; a 28-rule Bun
+  structural predicate passed 28/28; the interactivity verifier self-test and plain run both
+  reported clean DENY mode; scoped working/staged/HEAD whitespace checks passed. No Cargo, Nx,
+  Wasm, browser, network, or root lint ran.
+- This is a coherent source checkpoint, not Phase 3/5 acceptance. Opaque
+  `wgpu::Buffer::destroy`/destructor timing, `EngineCanvasPresenter::realize_one`,
+  `GpuContext::render_prepared`/queue submit/surface present, atlas/raster/cache ownership, the
+  remaining generic `GpuContext`/presenter/realm graph close, typed terrain input, semantic
+  PNG/JPEG/MVT/SVG work, and native/Wasm/browser timing evidence remain **RED**. Rust type/runtime
+  correctness is also unverified until the serialized build gate runs.
+
+### Independent presenter-freshness and Rust-2021 repair
+
+- This bounded repair addresses only the two source blockers in
+  `📓️sol-independent-p3-presenter-gpu-retirement-audit-2026-08-23.md`. All live let-chains in the
+  six audited renderer files were rewritten as Rust-2021 nested conditionals, and the complete
+  seven-file touched cohort (including the browser Worker constructor) now parses and formats with
+  manifest-selected edition/style 2021. No crate edition was changed.
+- `RuntimeMailboxInner` now owns a retained `RuntimePresentationAuthority`, independent of any
+  prepared candidate. Accepted and returned runtime completions advance its scene revision; the
+  native frame admission edge records the authoritative input generation before starting a frame.
+  `AppFrameTransaction` captures the authority witness before candidate construction and writes
+  that scene revision/input generation into `PreparedRenderInput`. A stale input generation faults
+  before candidate construction.
+- `AppPresenter` receives a clone of the same retained authority at both native and dedicated
+  browser-Worker construction sites. `BeginGpu` reads current authority and passes it to
+  `begin_prepared`/`begin_prepared_offscreen`; it no longer derives expected revision/generation
+  from the packet. Immediately before exact presenter acknowledgement it reads authority again.
+  A mismatch aborts the pending candidate into the retained retirement owner, leaves the previous
+  last-valid packet authoritative, and never publishes the stale candidate.
+- The runtime-free source fixture changes the authority while retaining an unchanged candidate,
+  then changes only the candidate while retaining an unchanged authority, and checks stale/current
+  input generations separately. The permanent presenter contract now requires exactly one
+  pre-candidate witness capture, exactly two independent presenter authority reads, both native and
+  offscreen BeginGpu calls, the ACK freshness comparison, exactly two scene-revision advances, and
+  the native input observation. It explicitly denies packet-derived expected assignments. Four new
+  mutations independently replace BeginGpu authority with packet values, replace the frame witness
+  with candidate/job values, remove scene-revision advancement, and remove input-generation
+  observation. Together with the existing thirteen ownership/ACK/table/close mutations, the
+  permanent Rust fixture now contains seventeen mutations. The Rust fixture was inspected but not
+  executed because builds were prohibited.
+- Executed source gates at this save:
+  - `rustfmt --edition 2021 --check --config style_edition=2021,skip_children=true` passed for
+    `prepared.rs`, `draw.rs`, `gpu.rs`, product `os_host.rs`, product `glue.rs`, `winit_app.rs`, and
+    `browser_worker.rs`; edition-2021 `--emit stdout` parser checks passed for each file;
+  - the exact six-file Rust-2024 let-chain scan and live packet-derived expected-value scan returned
+    zero;
+  - the independently reconstructed presenter/GPU predicate passed **28/28**;
+  - the focused independent-authority mutation probe denied **4/4** mutations;
+  - scoped and whole working, staged, and `HEAD` `git diff --check` passed.
+- Both interactivity verifier commands were rerun and are **RED outside this packet** on the
+  concurrently edited P1t DB history route:
+  `🛢️db/⚙️engine/🦀️component.rs:0: retained history route contains while`. The finding is not in
+  any audited P3 renderer file and was not modified here. Cargo, Nx, Wasm, browser, network, root
+  lint, and runtime timing were not run.
+- This source repair closes the independent audit's edition and tautological-freshness findings
+  only. Phase 3/5 remains **RED** for the previously enumerated opaque buffer destruction,
+  realization/render/submit/present timing, atlas/raster/cache ownership, full realm teardown,
+  typed terrain/semantic codec work, Rust type validation, and real native/Wasm/browser evidence.
+
+### Fixed staged raster GPU table and presenter-retirement checkpoint
+
+- This bounded source packet replaces only the raster GPU cache/upload-consumer authority. The
+  former dynamic `HashMap<String, RasterTexture>` is gone from the production table. Its
+  replacement is a deterministic fixed registry with 256 slots, an eight-probe maximum, and
+  256-byte fixed UTF-8 keys. Each entry carries scene revision, preview generation, and an exact
+  per-frame operation identity. A vacant-only insertion API returns the complete rejected owner;
+  no release-mode replacement/drop depends on a debug assertion.
+- Raster upload admission checks the exact `width * height * 4` byte claim and requires one row to
+  fit in the 16 KiB page budget. Each worker grant writes at most one group of whole rows totaling
+  at most 16 KiB. An interrupted upload retains its texture, key, dimensions, revision,
+  generation, operation, and row cursor. Capacity, probe, stale, duplicate, close, and occupied
+  failures leave the live entry unchanged and return or retain the exact candidate owner.
+- New textures publish into a staged registry. Rendering can borrow a staged entry only while the
+  matching `(scene_revision, preview_generation)` presenter witness is active; otherwise lookup
+  returns the previous live entry. Exact presenter ACK moves at most one staged slot per grant into
+  the live registry, then retires the displaced bind group, texture, key, and scalars one owner
+  action per grant. Abort/device/surface/realm-close paths retire the staged candidate through the
+  same cursor and preserve the old live texture. Terminal close requires live, staged, upload,
+  retirement, candidate, and presenting owners all to be empty.
+- Prepared raster uploads now pass the prepared packet revision/generation plus a checked upload
+  index as operation identity. EngineCanvas texture realization uses a disjoint checked operation
+  range. If staging rejects that texture, the exact `wgpu::Texture` is returned and restored to
+  the owning surface together with its newly reconstructed view; it is not discarded. Renderer
+  presentation begins the raster witness before platform render, commits it only after the exact
+  prepared presenter ACK, aborts it with the rejected packet witness, and drives raster terminal
+  close before the World-owner terminal witness.
+- Permanent Rust source fixtures require the fixed capacity/probe/page constants, generation and
+  operation checks, vacant-only insertion, staged begin-before-render ordering, commit/abort
+  retirement, exact EngineCanvas handback, and close-before-terminal ordering. Ten mutations erase
+  or weaken those independent rules. They were authored and inspected but not compiled or run
+  because builds remain prohibited. Independently executed Bun source predicates passed **11/11**
+  and denied **10/10** mutations, including capacity, page limit, generation, operation, vacant
+  ownership, begin, commit, abort, close, and returned-texture erasures.
+- Executed source gates passed: edition-2021 `rustfmt --check` for framework `draw.rs` and `gpu.rs`;
+  edition-2021 skip-children rustfmt/parser for product renderer `glue.rs`; edition-2021 parser for
+  EngineCanvas; production negative census for the dynamic raster map and replacement insertion;
+  and scoped working, staged, and `HEAD` `git diff --check`. The interactivity verifier self-test
+  had already passed **245/245** at the preceding save. Its plain repository run remained the
+  expected broader Phase 1/8 RED and is not claimed as a packet gate. Cargo, Nx, Wasm, browser,
+  network, root lint, and runtime timing were not run.
+- Phase 3/5 remains **RED**. `PreparedRenderUpload::{GlyphAtlas, IconAtlas, Raster}` still owns
+  contiguous pixel `Vec`s, so producer-side paging and old-packet pixel retirement are not closed
+  by this packet. `IconAtlas` still owns a pixel `Vec` plus a string `HashMap`; `FontAtlas` retains
+  dynamic glyph maps and pixel buffers; atlas writes remain whole-buffer operations. EngineCanvas
+  still owns a dynamic surface map and performs Vello realization/rendering. `GpuContext` still
+  has scene/frame/depth/pipeline/atlas resource owners without a realm-wide exact terminal close.
+  Platform queue submit, swapchain present, opaque GPU destruction timing, generic draw-list
+  construction/traversal, semantic codecs/input, and real native/Wasm/browser timing evidence are
+  also explicitly outside this source checkpoint and remain RED.
+
+### Independent raster-audit remediation: reservation, operation authority, and exact view ownership
+
+- This bounded repair addresses only the blockers in
+  `📓️sol-independent-p3-raster-gpu-checkpoint-audit-2026-08-23.md`. The previous checkpoint's
+  claim that EngineCanvas had an exact view handback was incorrect: it cloned the view and did GPU
+  work before table admission. `RasterTextureTable` now exposes a non-cloneable
+  `RasterTextureAdmission` obtained before `Renderer::new`, target creation/replacement, and Vello
+  render. Admission owns an exact staged slot/nonce, a fixed 256-byte key, dimensions, the full
+  witness, one item credit, and checked `width * height * 4` bytes. Per-owner bytes are limited to
+  16 MiB and simultaneous live/staged/reserved/retiring bytes to 256 MiB; simultaneous owners are
+  also limited to the fixed 256-item authority. Saturation or `+1` fails before GPU owner creation.
+- Staging now consumes the original `wgpu::Texture` and `wgpu::TextureView` by value. EngineCanvas
+  swaps both exact field owners for a fresh replacement pair without cloning either published
+  owner. Every explicit stage rejection returns the same admission, texture, and view; EngineCanvas
+  cancels the exact reservation and restores those returned owners. Prepared pixel uploads use the
+  same reservation seam before texture/view/bind-group creation. An invalid rejected token is
+  retained in a fixed reservation-retirement owner rather than deep-dropped.
+- `RuntimeMailboxInner` now owns a separate monotonic `RuntimeRasterOperationAuthority`.
+  `AppPresenter` mints a raster operation from the independently captured live presentation
+  revision/input generation, not from the prepared candidate. The full
+  `{ scene_revision, preview_generation, operation }` witness is retained through EngineCanvas,
+  prepared raster pages, staging, submit, and presenter ACK. EngineCanvas and the table compare
+  candidate and independent expected witnesses before realization/staging; submit and ACK compare
+  the still-live authority again. Stale/duplicate/ABA operations fail closed. Exact success, abort,
+  pending-close, device/surface close, and realm close release that authority once.
+- Raster entry retirement now retains and advances bind group, exact view, texture, inline key,
+  scene revision, preview generation, operation, width, height, and byte credit one owner/scalar per
+  grant. Candidate and presenting witnesses use three individually optional scalar fields and are
+  cleared one scalar per grant only after the fixed registry scan. An outstanding reservation has
+  its own fixed per-field close cursor. The terminal witness includes live, staged, upload,
+  reservation, reservation retirement, entry retirement, candidate, and presenting authorities.
+- Focused source fixtures cover the exact 256-byte key and `+1`, exact 16 MiB pixel claim and `+1`,
+  operation-only stale/duplicate/ABA comparisons, independent operation occupancy/release/device
+  close, and one-scalar witness retirement. The permanent source contract now includes
+  EngineCanvas itself and requires pre-realization reservation, by-value view transfer/return,
+  independent RuntimeMailbox authority, independent expected-value minting, submit/ACK freshness,
+  fixed key/item/table byte credits, and close ordering. Its exact matrix contains **13** mutations
+  and the reconstructed probe denied **13/13**; the requirement probe passed **11/11**.
+- Executed source-only gates:
+  - edition-2021 `rustfmt --check --config skip_children=true` passed for framework `draw.rs`,
+    `gpu.rs`, framework WGPU `glue.rs`, product renderer `glue.rs`, `browser_worker.rs`, and the
+    complete EngineCanvas file; rustfmt parsing therefore passed for all six scoped sources;
+  - the reconstructed raster predicate passed **11/11**, its permanent-contract predicate was
+    true, and all **13/13** exact mutations were denied;
+  - `bun ./📜️script.ts verify interactivity --self-test --format json` and the plain verifier both
+    exited zero in clean DENY mode with the one recorded allowlisted blocking-bridge finding;
+  - the dynamic raster-map, borrowed/cloned-view, old pair-witness, old `u32` operation, and
+    production `mem::forget` negative scans were clean; scoped and whole `git diff --check` passed.
+- Cargo, Nx, Wasm, browser, network, root lint, and runtime timing were not run. Rust type checking
+  and actual GPU identity/runtime behavior remain unverified until the serialized build/browser
+  gate. Phase 3/5 remains **RED** for the same out-of-packet atlas/icon/glyph, prepared-pixel
+  producer, dynamic EngineCanvas surface, Vello/render/submit/present timing, full GpuContext/realm
+  close, codec/input, opaque GPU destruction, and real native/Wasm/browser evidence residuals.
+
+### Raster checkpoint independent-rejection repair: permanent generation, retained cancel/close, and allocation claim
+
+- This source-only repair addresses exactly P3-R1 through P3-R3 from
+  `📓️sol-independent-p3-raster-gpu-checkpoint-remediation-audit-2026-08-23.md`. It changes
+  framework WGPU `draw.rs`/`gpu.rs` and product WGPU `📦️glue.rs`; it does not alter browser,
+  Wasm, renderer-world, atlas, codec, or runtime behavior outside the raster authority.
+- `RuntimeRasterOperationAuthority` now pairs its monotonic atomic with a permanent atomic
+  exhaustion bit. Ordinary values advance through compare-exchange; exactly one caller may mint
+  `u64::MAX`, after which every begin fails permanently even after the exact MAX witness is
+  released. The fixture exercises MAX-1, MAX, occupied MAX, release, exhausted-next, and reopen,
+  and asserts both the counter and exhausted state cannot return to operation 1. The permanent
+  predicate rejects restoration of unchecked `fetch_add`.
+- Matching EngineCanvas cancellation no longer clears the table reservation. It atomically moves
+  both the exact table reservation and the consumed admission token into
+  `RasterTextureReservationCloseCursor`. Each fixed key retires as one root and each witness,
+  dimension, byte, slot, and nonce field retires as one scalar. The runtime-free authority fixture
+  observes exactly two roots and sixteen scalars, never more than one released unit per grant, and
+  a terminal-empty shell. Retry admission advances this retained cursor one grant at a time and
+  remains fail-closed until it is empty.
+- Interrupted prepared upload now moves the whole upload owner in O(1) into
+  `RasterTextureUploadCloseCursor`; it does not clear a populated reservation, clear the upload,
+  or synthesize a three-scalar presenting witness in that opportunity. The cursor separately
+  retains and drains the allocation claim, bind group, exact view, texture, key, dimensions,
+  bytes, row, admission, and witness scalars. `RasterTextureCleanupStep` reports exact
+  `Pending { released_roots, released_scalars }`, `Blocked`, or `Complete`; ownership-only
+  transfers truthfully report zero releases. Empty-shell assertions run in release builds before
+  cursor owners are removed. Fixtures drive both before-first-page and mid-page interruption to
+  terminal empty and assert no step releases more than one root or scalar.
+- `RasterTextureStageClaim` captures the full reserved key/dimensions/bytes/slot/nonce, candidate
+  witness, and staged-slot generation. `claim_stage_before_gpu_allocation` validates missing or
+  stale reservation, nonce ABA, changed candidate, and occupied/invalid staged slot immediately
+  before both prepared texture allocation and EngineCanvas bind-group allocation. Publication
+  revalidates that exact retained claim before vacant-only staged insertion. Runtime-free fixtures
+  discriminate valid, missing-reservation, nonce-ABA, candidate-change, and occupied-slot cases;
+  the ordering mutation moves both claim calls away from the preallocation seam and is denied.
+- Preserved source invariants: 256 fixed slots/eight probes, 256-byte keys, 16 MiB per item,
+  256 MiB aggregate, 16 KiB upload opportunities, pre-realization reservation, by-value exact
+  `Texture` plus `TextureView` stage handback, independent presenter freshness, vacant-only staged
+  publication, last-valid live ownership, and raster-before-World close ordering.
+- Executed non-build evidence on the final source:
+  - canonical edition-2021 `rustfmt` write/check and `rustfmt --emit stdout` parsing passed for
+    framework `draw.rs`, framework `gpu.rs`, and product WGPU `📦️glue.rs`;
+  - the reconstructed complete raster predicate was true and denied **17/17** mutations; a second
+    rejection-focused probe denied **4/4** operation-wrap, wholesale-cancel, upload-drop, and
+    allocation-order mutations;
+  - `bun ./📜️script.ts verify interactivity --self-test --format json` and the plain
+    verifier both exited zero in clean DENY mode, retaining only the recorded allowlisted
+    blocking-bridge finding;
+  - production-only negative scans found zero unchecked raster operation `fetch_add`, wholesale
+    raster reservation clears, interrupted-close presenting-witness fabrication, dynamic raster
+    map, cloned EngineCanvas published view, `u32` raster operation, or `mem::forget`;
+  - scoped and whole working/staged/`HEAD` `git diff --check` all passed.
+- This packet is **audit-ready, not accepted**. Cargo, Nx, Wasm, browser, runtime/GPU timing,
+  network, and root lint were not run by instruction, so Rust type correctness and device identity
+  remain unproved. Phase 3/5 remains **RED** for atlas/icon/glyph and producer paging, dynamic
+  EngineCanvas surfaces, Vello/render/submit/present timing, opaque GPU destruction, full
+  GpuContext/realm teardown, semantic codecs/input, and native/Wasm/browser evidence.
+
+### Raster allocation-boundary and publication-owner re-audit repair
+
+- This source-only repair addresses exactly P3-R3 and P3-R4 from
+  `📓️sol-independent-p3-raster-gpu-checkpoint-remediation-reaudit-2026-08-23.md`. The owned source
+  scope is framework WGPU `draw.rs`/`gpu.rs`/`📦️glue.rs`, product
+  `EngineCanvas/🧊️component.rs`, product WGPU `📦️glue.rs`, and this report. No browser-worker,
+  World, atlas, codec, Wasm, or platform source changed in this packet.
+- `RasterTextureUploadCursor` is installed in the fixed raster table before any prepared GPU
+  allocation and owns texture, view, bind group, admission, upload row, and exact allocation claim
+  separately. A fresh call through the complete
+  reservation/key/witness/dimensions/bytes/staged-index/nonce/candidate/staged-vacancy validator
+  now immediately precedes prepared texture creation, view creation, and bind-group creation.
+  No other GPU or renderer allocation occurs between each matching validation and allocation.
+- The external EngineCanvas path performs the same complete validation immediately before each
+  target texture, target view, `Renderer::new`, resize replacement texture/view, final replacement
+  texture/view, and table bind-group allocation. Partial target/view owners created before a later
+  failed validation move into the table's reserved upload-close slot rather than unwinding on the
+  presenter stack.
+- Both prepared and EngineCanvas publication faults now move the exact admission, retained claim,
+  texture, view, and newly allocated bind group into `RasterTextureUploadCloseCursor`. Early
+  external bind-group validation faults return the exact admission, texture, and view through the
+  non-cloneable `RasterTextureStageFault::Returned` owner so EngineCanvas can cancel the exact
+  reservation and restore both surface roots. Once a bind group exists, publication faults instead
+  return the observable `Retained` state and all three GPU owners remain in the table close cursor.
+  `GpuContext::close_raster_upload_step` remains the public resumable cleanup seam. It first retires
+  the table reservation, then advances the exact fault/upload cursor; owner transfers report zero
+  releases and each later grant releases at most one bind group, view, texture, key, or scalar. The
+  prepared
+  `map_err(|(fault, _, _)| fault)` adapter and the external bind-group owner-erasure are absent.
+- The runtime-free tuple fixture now independently changes key, all three witness components,
+  width, height, byte credit, staged index, nonce, candidate, and staged occupancy. Every mismatch
+  rejects before allocation. The permanent structural predicate also proves the table-owned
+  preallocation cursor, every named allocation edge, both external fault-close branches, all five
+  GPU roots/authorities in publication close, and the absence of the owner-erasing adapter. Its
+  matrix increased from **17** to **38** mutations, including independent erasure of every named
+  allocation validation, each complete-tuple component, the fault cursor, and each returned GPU
+  root/handback. A faithful Bun reconstruction passed the baseline and denied **38/38**.
+- Executed non-build evidence on the final source:
+  - canonical edition-2021 `rustfmt` write/check and `rustfmt --emit stdout` parsing passed for all
+    five owned Rust source files;
+  - `bun ./📜️script.ts verify interactivity --self-test --format json` and the plain verifier both
+    exited zero in DENY mode with only the recorded allowlisted test-only blocking bridge;
+  - the focused scan found zero prepared/external
+    `map_err(|(fault, _, _)| fault)` adapters, cloned EngineCanvas published views, dynamic raster
+    maps, raster `u32` operations, or production `mem::forget`; the source contains three retained
+    fault-cursor construction sites and all named allocation validation edges;
+  - scoped working, staged, and `HEAD` diff checks passed for the five source files plus this
+    report. Whole-tree checks remain red only on concurrent, out-of-scope hygiene:
+    `.🧬semio/🦑️repo/💬️prompts/🐙️ueli.md:459` has trailing whitespace in working/`HEAD`, and the
+    staged/`HEAD` prior raster audit has a blank line at EOF on line 102. Neither file was edited by
+    this packet.
+- This repair is **audit-ready, not accepted**. Cargo, Nx, Wasm, browser, runtime/GPU execution,
+  network, and root lint were not run. Rust type checking and actual device behavior therefore
+  remain unproved. Phase 3/5 remains **RED** for prepared-pixel producer ownership, atlas/icon/glyph
+  resources, dynamic EngineCanvas surface retirement, Vello/render/submit/present timing, opaque
+  GPU destruction, complete GpuContext/realm teardown, semantic codecs/input, and the native/Wasm/
+  browser matrix.
+
+### Raster reservation-mutation verifier repair
+
+- The independent final re-audit found one verifier-only false negative: mutation 8 removed
+  `gpu.reserve_engine_texture`, but the permanent raster contract checked only the later
+  validation/allocation seams. Live raster allocation and ownership source was not changed by this
+  repair.
+- The contract now requires exactly one exact
+  `let admission = gpu.reserve_engine_texture(&key, width, height, candidate, expected)?;`
+  occurrence in EngineCanvas and requires its source index to precede the earliest target-texture,
+  view, or `Renderer::new` allocation. The existing immediate full-tuple validation rules still
+  guard every individual allocation edge.
+- The original 38-entry mutation matrix is unchanged. Its reservation-erasure mutation now fails
+  the exact-count rule, and a separate adversary removes the reservation line and reinserts it
+  immediately after the first target-texture allocation. That source retains one syntactically
+  exact token but fails the ordering rule, preventing a presence-only witness.
+- A faithful Bun reconstruction using Rust's all-occurrence replacement and absent-index sentinel
+  semantics reports baseline true and **38/38** original mutations denied. The independent
+  reservation-order probe reports the live count/index witness true, erasure denied, and
+  move-after-first-allocation denied.
+- Edition-2021 scoped rustfmt/check and parser output passed for framework draw/GPU/glue, product
+  WGPU glue, and EngineCanvas. The authored source check finds the exact count/order rules,
+  unchanged `mutations.len() == 38`, mutation 8, and the separate ordering adversary.
+  Interactivity self-test and plain DENY both exit zero with only the recorded allowlisted
+  test-only blocking bridge. Focused owner-erasure/clone/map/legacy scans remain clean. Scoped
+  working/staged/`HEAD` whitespace checks pass; whole checks remain concurrently RED only for the
+  unrelated prompt trailing whitespace and the staged prior raster audit's blank line at EOF.
+- Cargo, Nx, Wasm, browser, runtime, network, and root lint were not run. This is audit-ready
+  source, not Phase 3 acceptance; all previously reported runtime and out-of-packet residuals
+  remain RED.

@@ -3402,6 +3402,28 @@
       }
     },
     {
+      "name": "⚖️gate🏛️layering",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts verify layering",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 412.05
+      }
+    },
+    {
+      "name": "⚖️gate🏛️layering-write-baseline",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./📜️script.ts verify layering write-baseline",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 412.06
+      }
+    },
+    {
       "name": "🧪️test🔍️discover",
       "type": "node-terminal",
       "request": "launch",
@@ -3526,8 +3548,8 @@
       "name": "🧪️test🔒️dependency",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./📜️script.ts dependency",
-      "cwd": "${workspaceFolder}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
+      "command": "bun ./📜️script.ts test dependency",
+      "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
         "order": 412.19

@@ -7,7 +7,7 @@
 //! with zero other changes.
 //! 🧩️ Maps framework UiNode trees to ui_wgpu widget nodes.
 
-use crate::scenes::{decode_canvas_image, queue_canvas_image_upload, render_component_scene, AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface};
+use crate::scenes::{decode_canvas_image_dimensions, queue_canvas_image_upload, render_component_scene, AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface};
 use infinite_world::world::{WorldAssetFault, WorldAssetMetadataId, WorldAssetRequestKind};
 use serde_json::Value;
 use std::sync::{Mutex, MutexGuard, OnceLock};
@@ -1676,7 +1676,7 @@ pub(crate) fn resolve_ui_image(id: &str, src: &str) -> (Option<String>, Option<(
         return resolve_ui_image_svg(id, &svg_text, ui_image_digest(src.as_bytes()));
     }
     if src.starts_with("data:") {
-        let size = decode_canvas_image(src).map(|(_, width, height)| (width, height));
+        let size = decode_canvas_image_dimensions(src);
         return (queue_canvas_image_upload("ui-image", id, src), size);
     }
     resolve_ui_image_url(id, src)

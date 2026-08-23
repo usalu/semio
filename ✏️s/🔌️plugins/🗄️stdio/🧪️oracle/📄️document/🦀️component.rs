@@ -6,7 +6,7 @@
 //!
 //! @see 📇️registry/🔣️component.json — the approved oracle registry these functions implement.
 
-use crate::protocol::Json;
+use semio_repo_test_host::Json;
 
 //#region 🔖️PdfSpec
 /// 📄️ Owned description of a PDF to create. Deliberately independent of any writer library so the

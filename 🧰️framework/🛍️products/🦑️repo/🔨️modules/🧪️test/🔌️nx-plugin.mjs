@@ -4,13 +4,14 @@
 // for tests, so a case can never be silently omitted from a higher level, and `checkLeveledTestTargets`
 // style scanners become unnecessary — the four level targets are generated, always, for every case.
 //
-// `compose/**` is excluded HERE, in the discovery library, not by a workflow path filter.
+// The exclusion set, the case slug rule, the adapter filenames and the location of the testing
+// domain are all TAXONOMY DATA (`🔣️taxonomy.json`). This plugin declares none of them, so marking
+// another area exempt or relocating the domain is a vocabulary edit, never a code edit here.
 
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
 
 const TAXONOMY_REL = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
-const DOMAIN_REL = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test";
 const LEVELS = ["quick", "long", "exhaustive"];
 
 /** 🔣️ Reads the frozen test vocabulary; the plugin never re-declares taxonomy strings. */
@@ -45,6 +46,7 @@ async function ownerHash(ownerRel) {
 /** 📥️ Cache inputs of one case: the feature, its fixtures, its adapters, the claimed sources, the contract. */
 function inputsFor(workspaceRoot, vocabulary, ownerRel, caseRel, adapters) {
   const sharedFixtures = `${ownerRel}/${vocabulary.testFixturesDirName}`;
+  const domain = vocabulary.testDomainPath;
   const inputs = [
     `{workspaceRoot}/${caseRel}/${vocabulary.testFeatureFilename}`,
     `{workspaceRoot}/${caseRel}/${vocabulary.testFixturesDirName}/**/*`,
@@ -53,11 +55,10 @@ function inputsFor(workspaceRoot, vocabulary, ownerRel, caseRel, adapters) {
     `{workspaceRoot}/${vocabulary.testOracleRegistryPath}`,
     `{workspaceRoot}/${vocabulary.testSchemaPath}`,
     `{workspaceRoot}/${TAXONOMY_REL}`,
-    `{workspaceRoot}/${DOMAIN_REL}/📦️packages/**/*`,
-    `{workspaceRoot}/${DOMAIN_REL}/🧬️protocol/**/*`,
-    `{workspaceRoot}/${DOMAIN_REL}/🏃️runner/**/*`,
-    `{workspaceRoot}/${DOMAIN_REL}/🔮️oracle/**/*`,
-    `{workspaceRoot}/${DOMAIN_REL}/📜️script.ts`,
+    // 🧩️Whatever the platform itself is made of, wherever the taxonomy says it lives.
+    `{workspaceRoot}/${domain}/**/*`,
+    // 🧩️And every owner contribution, so adding or changing an oracle invalidates the cases that use it.
+    `{workspaceRoot}/**/${vocabulary.testContributionDirName}/**/*`,
     "sharedGlobals",
   ];
   // 🧭️ A change to the owner's own sources must invalidate the case, or a subject regression would
@@ -67,10 +68,10 @@ function inputsFor(workspaceRoot, vocabulary, ownerRel, caseRel, adapters) {
 }
 
 /** 🎚️ One generated target routed through the testing domain's own router. */
-function target(command, inputs, cacheable = true) {
+function target(domain, command, inputs, cacheable = true) {
   return {
     executor: "nx:run-commands",
-    options: { cwd: DOMAIN_REL, command: `bun ./📜️script.ts ${command}`, forwardAllArgs: false },
+    options: { cwd: domain, command: `bun ./📜️script.ts ${command}`, forwardAllArgs: false },
     inputs,
     outputs: [`{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/tests`],
     cache: cacheable,
@@ -105,6 +106,7 @@ async function testCaseProjects(configFiles, _options, context) {
 
     const name = projectNameFor(ownerRel, caseSlug, await ownerHash(ownerRel));
     const inputs = inputsFor(workspaceRoot, vocabulary, ownerRel, caseRel, adapters);
+    const domain = vocabulary.testDomainPath;
     const select = `--owner ${JSON.stringify(ownerRel)} --case ${caseSlug}`;
 
     results.push([
@@ -117,13 +119,13 @@ async function testCaseProjects(configFiles, _options, context) {
             projectType: "application",
             tags: ["type:test", `owner:${ownerRel}`, ...adapters.map((adapter) => `impl:${basename(adapter)}`)],
             targets: {
-              lint: target(`contract ${select}`, inputs),
-              "test-contract": target(`contract ${select}`, inputs),
-              "test-oracle": target(`oracle ${select}`, inputs),
-              "test-subject": target(`subject ${select}`, inputs),
-              "test-parity": target(`parity ${select}`, inputs),
-              test: target(`run ${select}`, inputs),
-              ...Object.fromEntries(LEVELS.map((level) => [`test-${level}`, target(`run ${level} ${select}`, inputs, level !== "exhaustive")])),
+              lint: target(domain, `contract ${select}`, inputs),
+              "test-contract": target(domain, `contract ${select}`, inputs),
+              "test-oracle": target(domain, `oracle ${select}`, inputs),
+              "test-subject": target(domain, `subject ${select}`, inputs),
+              "test-parity": target(domain, `parity ${select}`, inputs),
+              test: target(domain, `run ${select}`, inputs),
+              ...Object.fromEntries(LEVELS.map((level) => [`test-${level}`, target(domain, `run ${level} ${select}`, inputs, level !== "exhaustive")])),
             },
           },
         },

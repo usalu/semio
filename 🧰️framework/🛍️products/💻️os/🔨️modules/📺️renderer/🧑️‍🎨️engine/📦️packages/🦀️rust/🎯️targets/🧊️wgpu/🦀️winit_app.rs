@@ -20,12 +20,12 @@
 //! the just-created `Window` (or an explicit two-phase `NativeHost::new_pending()` API) would let a
 //! future revision drop this file's hand-rolled `ApplicationHandler` entirely.
 
-use crate::AppInteractionState;
-use crate::RuntimeMailbox;
 use crate::kernel_seam::KernelSeam;
 use crate::os_host::OsHost;
+use crate::AppInteractionState;
+use crate::RuntimeMailbox;
 use std::sync::Arc;
-use ui_host::{RedrawOutcome, WindowDelegate, WindowMetrics, should_request_redraw};
+use ui_host::{should_request_redraw, RedrawOutcome, WindowDelegate, WindowMetrics};
 use ui_render::{CursorRequest, DispatchEvent, EventModifiers, InvalidationReason, PhysicalSize, PointerButton, PointerInfo};
 #[cfg(target_arch = "wasm32")]
 use ui_render::{PointerId, PointerKind};
@@ -165,21 +165,19 @@ impl OsHost {
         let build_inputs = self.runtime.frame_inputs(crate::app_now_ms());
         let build_operation = render_frame_operation_id();
         let build_generation = semio_framework_trace::Generation(self.frame_generation);
-        let frame = (!self.presenter.has_pending_presentation()).then(|| self.frame_build.poll_runtime_and_resubmit(self.runtime.clone(), build_inputs, build_operation, build_generation, self.presenter.dpr())).flatten();
-        let cursor = frame.as_ref().map(|frame| semio_cursor_to_request(frame.cursor)).unwrap_or_else(|| self.snapshot_sink.acquire().cursor);
-        if let Some(frame) = frame {
-            if self.presenter.begin_present(frame).is_err() {
-                self.present_fault = Some("presentation authority rejected a second in-flight frame".to_string());
-            }
-        }
+        self.runtime.observe_presentation_input_generation(build_generation.0);
+        let runtime = self.runtime.clone();
+        let dpr = self.presenter.dpr();
+        let frame_build = &mut self.frame_build;
+        let cursor = self.presenter.admit_next_frame(|| frame_build.poll_runtime_and_resubmit(runtime, build_inputs, build_operation, build_generation, dpr)).map(semio_cursor_to_request).unwrap_or_else(|| self.snapshot_sink.acquire().cursor);
         match self.presenter.present_step() {
             Ok(crate::AppPresentStep::Complete { fullscreen, cursor_wake }) => {
                 self.platform_fullscreen = fullscreen;
-                if let Some(token) = cursor_wake
-                    && self.runtime.acknowledge_world_cursor_wake(&token)
-                {
-                    self.retain_cursor_wake_directive(token);
-                    self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);
+                if let Some(token) = cursor_wake {
+                    if self.runtime.acknowledge_world_cursor_wake(&token) {
+                        self.retain_cursor_wake_directive(token);
+                        self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);
+                    }
                 }
             }
             Ok(crate::AppPresentStep::Pending) => self.scheduler.invalidate(InvalidationReason::RESOURCE_READY),

@@ -107,7 +107,8 @@ export function testTaxonomy(repoRoot: string): TestTaxonomy {
   return value;
 }
 
-/** 🚫️ `compose/**` is excluded here, in the discovery library — never only by a workflow path filter. */
+/** 🚫️ Excluded paths come from the taxonomy and are applied HERE, in the discovery library — never
+ * only by a CI path filter. This function names no area; which ones are excluded is vocabulary. */
 export function isExcludedTestPath(repoRoot: string, relPath: string): boolean {
   const normalized = relPath.split(sep).join("/");
   return testTaxonomy(repoRoot).testExcludedPathPrefixes.some((prefix) => normalized === prefix.replace(/\/$/, "") || normalized.startsWith(prefix) || normalized.includes(`/${prefix}`));
@@ -349,8 +350,10 @@ export function parseFeature(source: string): ParsedFeature {
   const oracle = tagValue(featureTags, "@oracle-");
   const noOracleDecision = tagValue(featureTags, "@no-oracle-");
   const comparisonRaw = tagValue(featureTags, "@comparison-");
-  const comparison = (COMPARISON_PROFILES as readonly string[]).includes(comparisonRaw ?? "") ? (comparisonRaw as ComparisonProfile) : null;
-  if (comparisonRaw !== null && comparison === null) errors.push(`Unknown comparison profile @comparison-${comparisonRaw}`);
+  // 🧭️The parser records the declared profile; whether that profile EXISTS is registry knowledge and
+  // is checked in the contract phase, so the Gherkin profile stays independent of which formats the
+  // repository happens to own today.
+  const comparison: ComparisonProfile | null = comparisonRaw;
 
   const seen = new Set<string>();
   for (const scenario of scenarios) {
@@ -534,6 +537,8 @@ export type TestContribution = Readonly<{
   noOracleDecisions: readonly NoOracleDecision[];
   comparisonProfiles: readonly ComparisonProfileSpec[];
   oracleHostPackages: readonly OracleHostPackage[];
+  /** 🔒️ Where this owner stands on the migration ladder, declared by the owner itself. */
+  migrationStatus?: Readonly<Record<string, string>>;
 }>;
 
 export type OracleRegistry = Readonly<{ schemaVersion: number; oracles: readonly OracleEntry[]; noOracleDecisions: readonly NoOracleDecision[]; comparisonProfiles: readonly ComparisonProfileSpec[]; oracleHostPackages: readonly OracleHostPackage[]; contributions: readonly TestContribution[] }>;
@@ -552,6 +557,7 @@ function readContribution(repoRoot: string, owner: string, manifestPath: string)
     noOracleDecisions: (parsed.noOracleDecisions as NoOracleDecision[] | undefined) ?? [],
     comparisonProfiles: (parsed.comparisonProfiles as ComparisonProfileSpec[] | undefined) ?? [],
     oracleHostPackages: (parsed.oracleHostPackages as OracleHostPackage[] | undefined) ?? [],
+    migrationStatus: (parsed.migrationStatus as Record<string, string> | undefined) ?? {},
   };
 }
 
@@ -560,6 +566,8 @@ function readContribution(repoRoot: string, owner: string, manifestPath: string)
  * convention, so a new owner extends the platform by adding a file — never by editing the framework.
  */
 export function discoverTestContributions(repoRoot: string): TestContribution[] {
+  const cached = contributionCache.get(repoRoot);
+  if (cached !== undefined) return cached;
   const taxonomy = testTaxonomy(repoRoot);
   const found: TestContribution[] = [];
   walkDirectories(repoRoot, (abs, rel) => {
@@ -573,7 +581,19 @@ export function discoverTestContributions(repoRoot: string): TestContribution[] 
     }
     return "skip";
   });
-  return found.sort((a, b) => a.owner.localeCompare(b.owner));
+  found.sort((a, b) => a.owner.localeCompare(b.owner));
+  contributionCache.set(repoRoot, found);
+  return found;
+}
+
+/** 🧩️ Discovery walks the whole repository, and the registry is consulted per case and per role, so
+ * the result is memoized for the life of the process. `clearContributionCache` exists for tests that
+ * add or remove a manifest mid-run. */
+const contributionCache = new Map<string, TestContribution[]>();
+
+/** 🧩️ Forgets the memoized contribution scan. */
+export function clearContributionCache(): void {
+  contributionCache.clear();
 }
 
 /**
@@ -999,7 +1019,9 @@ export function validateCaseContract(repoRoot: string, discovered: DiscoveredCas
   const feature = parseFeature(readFileSync(join(repoRoot, discovered.featurePath), "utf8"));
   for (const error of feature.errors) breaches.push(breach("testing/contract", "feature-syntax", discovered.featurePath, error, "The feature file must parse under the repository's restricted Gherkin profile.", "Fix the feature file syntax."));
   if (feature.capability === null) breaches.push(breach("testing/contract", "missing-capability", discovered.featurePath, "Feature is missing its @capability-<id> tag", "Every feature declares the capability it specifies so owners and implementations can be matched to it.", "Add a feature-level @capability-<id> tag."));
-  if (feature.comparison === null) breaches.push(breach("testing/contract", "missing-comparison", discovered.featurePath, "Feature is missing a valid @comparison-<profile> tag", "Comparison belongs to an owned, tested profile — never to an adapter.", `Add one of ${COMPARISON_PROFILES.join(", ")}.`));
+  const knownProfiles = profileTable(registry);
+  if (feature.comparison === null) breaches.push(breach("testing/contract", "missing-comparison", discovered.featurePath, "Feature is missing a @comparison-<profile> tag", "Comparison belongs to an owned, tested profile — never to an adapter.", `Add one of ${[...knownProfiles.keys()].sort().join(", ")}.`));
+  else if (!knownProfiles.has(feature.comparison)) breaches.push(breach("testing/contract", "unknown-comparison", discovered.featurePath, `Unknown comparison profile @comparison-${feature.comparison}`, "A profile is either one of the framework's domain-neutral profiles or one an owner contributes through its 🧪️oracle manifest.", `Add it to this owner's 🧪️oracle/🔣️component.json, or use one of ${[...knownProfiles.keys()].sort().join(", ")}.`));
   if (feature.oracle === null && feature.noOracleDecision === null) {
     breaches.push(breach("testing/oracle", "missing-oracle", discovered.featurePath, "Feature declares neither @oracle-<id> nor @no-oracle-<decision-id>", "A test without a reference implementation or an explicitly recorded no-oracle decision proves only that the code agrees with itself.", "Register an oracle in the oracle registry, or record an approved no-oracle decision."));
   }
@@ -1105,7 +1127,10 @@ export function surveyUnmanagedTests(repoRoot: string): UnmanagedTest[] {
  */
 export function oracleImportsInProduction(repoRoot: string): { path: string; oracle: string }[] {
   const registry = loadOracleRegistry(repoRoot);
-  const hostRoots = registry.oracles.map((entry) => entry.hostPath).filter((value): value is string => value !== undefined);
+  // 🧩️An owner's whole contribution directory is test-owned BY DEFINITION — that is what the
+  // directory is for — so it is derived from the discovered manifests rather than listed by hand.
+  const contributionRoots = registry.contributions.map((entry) => entry.manifestPath.slice(0, entry.manifestPath.lastIndexOf("/")));
+  const hostRoots = [...contributionRoots, ...registry.oracles.map((entry) => entry.hostPath).filter((value): value is string => value !== undefined)];
   const caseDirs = new Set(discoverTestCases(repoRoot).map((entry) => entry.caseDir));
   const names = registry.oracles.map((entry) => [entry.id, entry.package.replace(/-/g, "_"), entry.package] as const);
   const isTestOwned = (rel: string): boolean => caseDirs.has(rel) || hostRoots.some((root) => rel === root || rel.startsWith(`${root}/`)) || rel === TEST_DOMAIN_REL_PATH || rel.startsWith(`${TEST_DOMAIN_REL_PATH}/`);
@@ -1137,26 +1162,53 @@ export function oracleImportsInProduction(repoRoot: string): { path: string; ora
 }
 
 
-/** 🔒️ The shrink-only migration baseline: how much legacy test debt each area is still allowed. */
-export type MigrationBaseline = Readonly<{ schemaVersion: number; unmanagedTests: { total: number; byArea: Record<string, number> }; ownerStatus: Record<string, string> }>;
+/**
+ * 🔒️ The repo-wide shrink-only migration ratchet. It carries AREA counts only — never a list of
+ * owners — so deleting an implementation area simply surveys as zero and passes, and no framework
+ * file goes stale when one disappears.
+ */
+export type MigrationBaseline = Readonly<{ schemaVersion: number; unmanagedTests: { total: number; byArea: Record<string, number> } }>;
+
+/** 🔒️ Repo-relative path of the ratchet, beside the dependency baseline: repository state, not module state. */
+export const MIGRATION_BASELINE_REL_PATH = "🔒️migration.json";
 
 /** 🔒️ Ordered migration ladder every owner walks; an owner advances only on machine-readable evidence. */
 export const MIGRATION_STATUSES = ["discovered", "surveyed", "contract-ready", "oracle-green", "subject-green", "parity-green", "coverage-green", "dependency-clean", "legacy-removed", "ci-enforced", "complete"] as const;
 export type MigrationStatus = (typeof MIGRATION_STATUSES)[number];
 
-/** 🔒️ Loads the committed migration baseline. */
+/** 🔒️ Loads the committed repo-wide ratchet. */
 export function loadMigrationBaseline(repoRoot: string): MigrationBaseline {
-  const path = join(repoRoot, TEST_DOMAIN_REL_PATH, "📇️registry", "🔒️migration.json");
-  if (!existsSync(path)) return { schemaVersion: 1, unmanagedTests: { total: 0, byArea: {} }, ownerStatus: {} };
+  const path = join(repoRoot, MIGRATION_BASELINE_REL_PATH);
+  if (!existsSync(path)) return { schemaVersion: 1, unmanagedTests: { total: 0, byArea: {} } };
   return JSON.parse(readFileSync(path, "utf8")) as MigrationBaseline;
+}
+
+/**
+ * 🔒️ Every owner's declared migration status, collected from the owners themselves. The framework
+ * holds no list of owners, so an owner that is deleted takes its status with it.
+ */
+export function migrationStatusByOwner(repoRoot: string): Record<string, string> {
+  const collected: Record<string, string> = {};
+  const core = (() => {
+    try {
+      return JSON.parse(readFileSync(join(repoRoot, testTaxonomy(repoRoot).testOracleRegistryPath), "utf8")) as { migrationStatus?: Record<string, string> };
+    } catch {
+      return {};
+    }
+  })();
+  for (const [owner, status] of Object.entries(core.migrationStatus ?? {})) collected[owner] = status;
+  for (const contribution of discoverTestContributions(repoRoot)) for (const [owner, status] of Object.entries(contribution.migrationStatus ?? {})) collected[owner] = status;
+  return collected;
 }
 
 /** 🧾️ Repository-wide contract sweep across every discovered case. */
 export function validateAllContracts(repoRoot: string, cases: readonly DiscoveredCase[] = discoverTestCases(repoRoot)): BreachRecord[] {
   const registry = loadOracleRegistry(repoRoot);
   const breaches = cases.flatMap((discovered) => validateCaseContract(repoRoot, discovered, registry));
-  for (const leak of cases.filter((discovered) => discovered.owner.startsWith("compose/"))) {
-    breaches.push(breach("testing/discovery", "compose-leak", leak.caseDir, "Discovery returned a compose/ path", "compose/** is a hard forbidden path for this project and must be excluded in the discovery library itself.", "Fix testExcludedPathPrefixes in 🔣️taxonomy.json."));
+  // 🚫️Self-check: discovery must never return a path the taxonomy excludes. The excluded set is
+  // vocabulary, so this check names no area of its own.
+  for (const leak of cases.filter((discovered) => isExcludedTestPath(repoRoot, discovered.caseDir))) {
+    breaches.push(breach("testing/discovery", "excluded-path-leak", leak.caseDir, "Discovery returned a path the taxonomy excludes", "An excluded area is excluded in the discovery library itself, not by a caller's filter.", "Fix testExcludedPathPrefixes in 🔣️taxonomy.json."));
   }
   for (const hit of oracleImportsInProduction(repoRoot)) {
     breaches.push(breach("testing/dependency", "oracle-in-production", hit.path, `Production source imports the registered oracle ${hit.oracle}`, "An oracle is evidence a test host gathers. Once production code can reach it, the differential test compares an implementation with itself and the dependency stops being test-only.", "Move the usage into the oracle host, or remove the oracle from the registry."));
@@ -1211,7 +1263,7 @@ function countTree(abs: string): { files: number; bytes: number } {
 /**
  * 🧹️ Removes generated test state and nothing else. Every candidate is resolved and proven to sit
  * beneath the canonical test-output root, must carry an ownership marker, and symlinks are never
- * followed — so no tracked fixture, no source file and no `compose/` path can be reached from here.
+ * followed — so no tracked fixture, no source file and no excluded path can be reached from here.
  */
 export function cleanTestOutputs(repoRoot: string, opts: { dry?: boolean; stale?: boolean; liveTestIds?: ReadonlySet<string> } = {}): TestCleanReport {
   const dry = opts.dry ?? false;
@@ -1524,7 +1576,7 @@ export function markRunComplete(absDir: string): void {
 }
 
 /** 🧮️ Pairs every subject result with its oracle counterpart and applies the case's comparison profile. */
-export function evaluateParity(profile: ComparisonProfile, results: readonly TestResult[]): { verdicts: { testId: string; profile: ComparisonProfile; equal: boolean; diffs: number; verdict: ComparisonVerdict }[]; unmatched: string[] } {
+export function evaluateParity(profile: ComparisonProfile, results: readonly TestResult[], profiles: ReadonlyMap<string, ComparisonProfileSpec> = coreProfileTable()): { verdicts: { testId: string; profile: ComparisonProfile; equal: boolean; diffs: number; verdict: ComparisonVerdict }[]; unmatched: string[] } {
   const oracles = new Map<string, TestResult>();
   for (const result of results) if (result.role === "oracle") oracles.set(`${result.owner}::${result.case}::${result.scenario}`, result);
   const verdicts: { testId: string; profile: ComparisonProfile; equal: boolean; diffs: number; verdict: ComparisonVerdict }[] = [];
@@ -1536,14 +1588,14 @@ export function evaluateParity(profile: ComparisonProfile, results: readonly Tes
       unmatched.push(result.testId);
       continue;
     }
-    const verdict = compareProjections(profile, oracle.output.projection, result.output.projection);
+    const verdict = compareProjections(profile, oracle.output.projection, result.output.projection, profiles);
     verdicts.push({ testId: result.testId, profile, equal: verdict.equal, diffs: verdict.diffs.length, verdict });
   }
   return { verdicts, unmatched };
 }
 
 /** 🧮️ Pairwise subject equivalence, so two implementations cannot exploit different oracle ambiguities. */
-export function evaluateCrossSubjectParity(profile: ComparisonProfile, results: readonly TestResult[]): { pair: string; equal: boolean; diffs: number }[] {
+export function evaluateCrossSubjectParity(profile: ComparisonProfile, results: readonly TestResult[], profiles: ReadonlyMap<string, ComparisonProfileSpec> = coreProfileTable()): { pair: string; equal: boolean; diffs: number }[] {
   const byScenario = new Map<string, TestResult[]>();
   for (const result of results) {
     if (result.role !== "subject") continue;
@@ -1556,7 +1608,7 @@ export function evaluateCrossSubjectParity(profile: ComparisonProfile, results: 
     const sorted = [...rows].sort((a, b) => a.implementation.localeCompare(b.implementation));
     for (let i = 0; i < sorted.length; i += 1) {
       for (let j = i + 1; j < sorted.length; j += 1) {
-        const verdict = compareProjections(profile, sorted[i]!.output.projection, sorted[j]!.output.projection);
+        const verdict = compareProjections(profile, sorted[i]!.output.projection, sorted[j]!.output.projection, profiles);
         out.push({ pair: `${key}::${sorted[i]!.implementation}~${sorted[j]!.implementation}`, equal: verdict.equal, diffs: verdict.diffs.length });
       }
     }

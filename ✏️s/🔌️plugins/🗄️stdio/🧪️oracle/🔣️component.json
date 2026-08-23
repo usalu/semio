@@ -1,0 +1,385 @@
+{
+  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ This plugin's contribution to the repository test platform. The framework discovers this file by convention (`testContributionDirName` in 🔣️taxonomy.json) and never names this plugin or any format it owns. Everything format-specific — which reference libraries are approved, what their projections mean, and which native crate carries them — lives here, with the owner of the formats.",
+  "oracles": [
+    {
+      "id": "pdf-writer",
+      "ecosystem": "rust",
+      "package": "pdf-writer",
+      "version": "0.15",
+      "capabilities": [
+        "pdf-create"
+      ],
+      "comparisonProfiles": [
+        "semantic-pdf-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/typst/pdf-writer",
+      "rationale": "Typed, step-by-step PDF writer with explicit control over catalog, page tree, media boxes and content streams — the creation reference. Deterministic given the same call sequence, no network, no system dependencies, runs on Windows/macOS/Linux.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    },
+    {
+      "id": "lopdf",
+      "ecosystem": "rust",
+      "package": "lopdf",
+      "version": "0.44",
+      "capabilities": [
+        "pdf-edit",
+        "pdf-parse"
+      ],
+      "comparisonProfiles": [
+        "semantic-pdf-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/J-F-Liu/lopdf",
+      "rationale": "PDF document-manipulation library exposing object-level editing, page insert/delete, content-stream rewriting and an independent parser — serves both as the editing oracle and as the independent reader that proves a subject's output is parseable.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    },
+    {
+      "id": "png",
+      "ecosystem": "rust",
+      "package": "png",
+      "version": "0.18",
+      "capabilities": [
+        "png-raster"
+      ],
+      "comparisonProfiles": [
+        "semantic-raster-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/image-rs/image-png",
+      "rationale": "The reference PNG encoder/decoder of the Rust ecosystem, and an INDEPENDENT reader for this repository's own encoder. Deterministic for a fixed colour type, bit depth and filter setting, no network, no system dependencies, cross-platform. Scoped to the normative surface: dimensions, colour model, bit depth and decoded samples — filter selection, interlacing and ancillary chunks are encoder freedom and are canonicalized away by semantic-raster-v1.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "productionDebt": {
+        "reachableFrom": [
+          "🧰️framework/🛍️products/💻️os/🖥️host/🦀️component.rs"
+        ],
+        "owner": "🧰️framework/🛍️products/💻️os/🖥️host",
+        "plan": "The OS host rasterizes SVG to PNG through this crate, so it is production-reachable TODAY. Discovered by the oracle-purity gate when png was registered — the gate did its job. Phase 7 target: the rasterizer's PNG writing belongs behind ✏️s/🔌️plugins/🗄️stdio's own encode_png, at which point this entry loses its productionDebt and testOnly becomes a fact."
+      }
+    },
+    {
+      "id": "gif",
+      "ecosystem": "rust",
+      "package": "gif",
+      "version": "0.13",
+      "capabilities": [
+        "gif-raster"
+      ],
+      "comparisonProfiles": [
+        "semantic-raster-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/image-rs/image-gif",
+      "rationale": "The reference GIF encoder/decoder of the Rust ecosystem. GIF is palette-based, so exact RGBA is a quantizer choice; the oracle is used only for frame geometry, frame count and opaque-sample structure, which the format does fix.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    },
+    {
+      "id": "zip",
+      "ecosystem": "rust",
+      "package": "zip",
+      "version": "6",
+      "capabilities": [
+        "zip-archive"
+      ],
+      "comparisonProfiles": [
+        "semantic-archive-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/zip-rs/zip2",
+      "rationale": "The reference ZIP reader/writer of the Rust ecosystem, and an independent reader for this repository's own writer. Entry order, compression method and level, timestamps and external attributes are writer freedom; member names, uncompressed sizes and content digests are normative and are what semantic-archive-v1 compares.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "productionDebt": {
+        "reachableFrom": [
+          "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml"
+        ],
+        "owner": "🧰️framework/🛍️products/💻️os/🖥️host",
+        "plan": "The OS host declares an optional `zip` dependency for container handling, so it is production-reachable TODAY. Phase 7 target: route that through ✏️s/🔌️plugins/🗄️stdio's own encode_zip/decode_zip."
+      }
+    },
+    {
+      "id": "flate2",
+      "ecosystem": "rust",
+      "package": "flate2",
+      "version": "1",
+      "capabilities": [
+        "zlib-compression"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/rust-lang/flate2-rs",
+      "rationale": "The reference zlib/deflate implementation of the Rust ecosystem. RFC 1951 does not fix WHICH encoding a compressor chooses, so this oracle is deliberately used for the ROUND TRIP — an independent inflater must recover exactly what this repository deflated — never for byte equality.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    },
+    {
+      "id": "hound",
+      "ecosystem": "rust",
+      "package": "hound",
+      "version": "3",
+      "capabilities": [
+        "wave-audio"
+      ],
+      "comparisonProfiles": [
+        "semantic-audio-v1"
+      ],
+      "license": "Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/ruuda/hound",
+      "rationale": "The reference RIFF/PCM WAVE reader/writer of the Rust ecosystem, and an independent reader for this repository's own writer. Chunk padding, LIST/INFO metadata and chunk order are writer freedom; the format block and the decoded samples are normative.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    },
+    {
+      "id": "csv",
+      "ecosystem": "rust",
+      "package": "csv",
+      "version": "1",
+      "capabilities": [
+        "tabular-csv"
+      ],
+      "comparisonProfiles": [
+        "semantic-tabular-v1"
+      ],
+      "license": "MIT OR Unlicense",
+      "testOnly": true,
+      "homepage": "https://github.com/BurntSushi/rust-csv",
+      "rationale": "The reference RFC 4180 CSV reader/writer of the Rust ecosystem. Line terminator, quote style and trailing newline are writer freedom; the header and the cell grid are normative.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    },
+    {
+      "id": "image-bmp",
+      "ecosystem": "rust",
+      "package": "image",
+      "version": "0.25",
+      "capabilities": [
+        "bmp-raster"
+      ],
+      "comparisonProfiles": [
+        "semantic-raster-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/image-rs/image",
+      "rationale": "The reference BMP encoder/decoder of the Rust ecosystem, and an INDEPENDENT reader for this repository's own encoder. One crate covers BMP, TIFF and JPEG, so a single approved dependency serves three formats rather than three. Scoped to the normative surface: dimensions, colour model and the decoded samples. BMP carries no alpha channel, so the reference is given RGB and the projection compares what a conforming reader recovers, never a channel the format cannot hold.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "productionDebt": {
+        "reachableFrom": [
+          "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️component.rs",
+          "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️component.rs"
+        ],
+        "owner": "🧰️framework/🔨️modules/🗺️surface",
+        "plan": "The `image` crate is production-reachable TODAY from two places: the 🎞️animate plugin's video engine and 🧰️framework/🔨️modules/🗺️surface's tiled-map. Discovered by the oracle-purity gate the moment `image` was registered — the gate did its job. Phase 7 target: both call sites want raster decode/encode that ✏️s/🔌️plugins/🗄️stdio already implements, so routing them through decode_bmp / decode_tiff / decode_jpg retires the dependency and this record with it."
+      }
+    },
+    {
+      "id": "image-tiff",
+      "ecosystem": "rust",
+      "package": "image",
+      "version": "0.25",
+      "capabilities": [
+        "tiff-raster"
+      ],
+      "comparisonProfiles": [
+        "semantic-raster-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/image-rs/image",
+      "rationale": "The reference TIFF encoder/decoder of the Rust ecosystem, and an independent reader for this repository's own encoder. TIFF leaves compression scheme, strip layout, byte order and ancillary tags to the writer; dimensions, colour model and decoded samples are normative and are what semantic-raster-v1 compares.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "productionDebt": {
+        "reachableFrom": [
+          "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️component.rs",
+          "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️component.rs"
+        ],
+        "owner": "🧰️framework/🔨️modules/🗺️surface",
+        "plan": "The `image` crate is production-reachable TODAY from two places: the 🎞️animate plugin's video engine and 🧰️framework/🔨️modules/🗺️surface's tiled-map. Discovered by the oracle-purity gate the moment `image` was registered — the gate did its job. Phase 7 target: both call sites want raster decode/encode that ✏️s/🔌️plugins/🗄️stdio already implements, so routing them through decode_bmp / decode_tiff / decode_jpg retires the dependency and this record with it."
+      }
+    },
+    {
+      "id": "image-jpeg",
+      "ecosystem": "rust",
+      "package": "image",
+      "version": "0.25",
+      "capabilities": [
+        "jpg-raster"
+      ],
+      "comparisonProfiles": [
+        "semantic-raster-v1"
+      ],
+      "license": "MIT OR Apache-2.0",
+      "testOnly": true,
+      "homepage": "https://github.com/image-rs/image",
+      "rationale": "The reference JPEG encoder/decoder of the Rust ecosystem. JPEG is LOSSY, so this oracle is deliberately NOT used for sample equality: the projection reports geometry and a coarse luma histogram, which is what the codec actually preserves. Asserting exact pixels through a lossy codec would be a test that can only pass by accident.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "productionDebt": {
+        "reachableFrom": [
+          "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎥️video/🦀️component.rs",
+          "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️component.rs"
+        ],
+        "owner": "🧰️framework/🔨️modules/🗺️surface",
+        "plan": "The `image` crate is production-reachable TODAY from two places: the 🎞️animate plugin's video engine and 🧰️framework/🔨️modules/🗺️surface's tiled-map. Discovered by the oracle-purity gate the moment `image` was registered — the gate did its job. Phase 7 target: both call sites want raster decode/encode that ✏️s/🔌️plugins/🗄️stdio already implements, so routing them through decode_bmp / decode_tiff / decode_jpg retires the dependency and this record with it."
+      }
+    },
+    {
+      "id": "tobj",
+      "ecosystem": "rust",
+      "package": "tobj",
+      "version": "4",
+      "capabilities": [
+        "obj-mesh"
+      ],
+      "comparisonProfiles": [
+        "semantic-mesh-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/Twinklebear/tobj",
+      "rationale": "The reference Wavefront OBJ reader of the Rust ecosystem. OBJ has no reference WRITER — it is a plain-text grammar — so the oracle writes the grammar directly and tobj serves as the independent reader that makes the comparison meaningful. Whitespace, numeric formatting and statement order are writer freedom; the vertex set, face topology and counts are normative.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    },
+    {
+      "id": "stl-io",
+      "ecosystem": "rust",
+      "package": "stl_io",
+      "version": "0.8",
+      "capabilities": [
+        "stl-mesh"
+      ],
+      "comparisonProfiles": [
+        "semantic-mesh-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "homepage": "https://github.com/hmeyer/stl_io",
+      "rationale": "The reference binary/ASCII STL reader and writer of the Rust ecosystem. STL is a triangle soup with no vertex index and a derivable per-facet normal, so the projection compares resolved corner positions per triangle — what the format actually fixes — rather than an index buffer the format never had.",
+      "hostPath": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust"
+    }
+  ],
+  "noOracleDecisions": [],
+  "comparisonProfiles": [
+    {
+      "id": "semantic-pdf-v1",
+      "description": "PDF documents compared by version, page tree, media boxes, content operators, extracted text and normative metadata. Object numbers, cross-reference offsets, dictionary order, compression choices, timestamps and document ids are not normative.",
+      "tolerance": 0.0001,
+      "ignoreKeys": [
+        "objectNumber",
+        "xrefOffset",
+        "producer",
+        "creationDate",
+        "modificationDate",
+        "documentId",
+        "fileSize",
+        "byteLength",
+        "generation",
+        "streamFilter",
+        "streamLength"
+      ]
+    },
+    {
+      "id": "semantic-raster-v1",
+      "description": "Raster images compared by dimensions, colour model, bit depth and decoded samples. Filter selection, interlacing, chunk order, compression level, gamma and ancillary metadata are encoder freedom.",
+      "ignoreKeys": [
+        "filter",
+        "interlace",
+        "compression",
+        "chunkOrder",
+        "ancillaryChunks",
+        "gamma",
+        "software",
+        "encoderVersion",
+        "byteLength",
+        "fileSize",
+        "rowStride",
+        "paletteOrder"
+      ]
+    },
+    {
+      "id": "semantic-archive-v1",
+      "description": "Archives compared as a SET of members by name, uncompressed size and content digest. Entry order, compression method and level, timestamps, attributes and the extra field are writer freedom.",
+      "arrays": "set",
+      "ignoreKeys": [
+        "compressedSize",
+        "compressionMethod",
+        "compressionLevel",
+        "modified",
+        "created",
+        "accessed",
+        "externalAttributes",
+        "internalAttributes",
+        "extraField",
+        "comment",
+        "crcOrder",
+        "centralDirectoryOffset",
+        "byteLength",
+        "fileSize"
+      ]
+    },
+    {
+      "id": "semantic-tabular-v1",
+      "description": "Tables compared by header and cell grid. Line terminator, quote style and trailing newline are writer freedom.",
+      "ignoreKeys": [
+        "byteLength",
+        "lineTerminator",
+        "quoteStyle",
+        "trailingNewline"
+      ]
+    },
+    {
+      "id": "semantic-audio-v1",
+      "description": "PCM audio compared by format block and decoded samples. Chunk padding, LIST/INFO metadata, chunk order and total byte length are writer freedom.",
+      "ignoreKeys": [
+        "byteLength",
+        "fileSize",
+        "chunkOrder",
+        "listChunks",
+        "software",
+        "padding"
+      ]
+    },
+    {
+      "id": "semantic-mesh-v1",
+      "description": "Meshes compared by vertex set, face topology and counts. Generator strings, comments, precision and solid naming are writer freedom.",
+      "tolerance": 1e-05,
+      "ignoreKeys": [
+        "generator",
+        "comment",
+        "byteLength",
+        "fileSize",
+        "precision",
+        "solidName"
+      ]
+    }
+  ],
+  "oracleHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-plugin-stdio-test-oracle",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust",
+      "features": [
+        "oracles"
+      ]
+    }
+  ],
+  "migrationStatus": {
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip": "oracle-green",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif": "oracle-green",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf": "oracle-green",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg": "oracle-green",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png": "oracle-green",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav": "oracle-green",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp": "oracle-green",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff": "oracle-green",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate": "oracle-green",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🟪️stl": "oracle-green",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj": "oracle-green"
+  }
+}

@@ -5817,7 +5817,7 @@
       "reason": "no explicit factory, bounded-first-step proof, or fail-closed disposition"
     }
   ],
-  "selfTests": 182,
+  "selfTests": 245,
   "failures": [
     "framework-owned reserved routes lack exact route-specific resumable factories, direct-branch closure, binary fail-closure, or commit-held cancellation",
     "shared import submission serializes or clones the whole media envelope before resumable job construction",

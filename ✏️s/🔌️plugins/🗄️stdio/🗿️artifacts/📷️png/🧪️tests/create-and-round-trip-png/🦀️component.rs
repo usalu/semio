@@ -5,7 +5,7 @@
 //! streams are read back by the independent `png` decoder before the `semantic-raster-v1` profile
 //! compares the decoded samples — a round trip that loses one pixel is a failure.
 
-use semio_repo_test_host::oracle_raster::{oracle_create_png, project_png, RasterSpec};
+use semio_s_plugin_stdio_test_oracle::raster::{oracle_create_png, project_png, RasterSpec};
 use semio_repo_test_host::{Adapter, Context, Outcome};
 
 //#region 🔖️Input
@@ -29,7 +29,7 @@ fn oracle(ctx: &Context) -> Result<Outcome, String> {
 #[cfg(feature = "sut")]
 mod subject {
     use super::spec;
-    use semio_repo_test_host::oracle_raster::{oracle_create_png, project_png};
+    use semio_s_plugin_stdio_test_oracle::raster::{oracle_create_png, project_png};
     use semio_repo_test_host::{Context, Outcome};
     use semio_s_plugin_stdio::artifacts::png::standards::v1_2::subsets::any::io::{decode_png, encode_png};
 

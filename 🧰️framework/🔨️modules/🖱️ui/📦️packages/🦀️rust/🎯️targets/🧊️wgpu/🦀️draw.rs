@@ -2,6 +2,7 @@
 //! 🖌️ Draw list and GPU pipeline for UI quads, vector geometry, and 3D scene passes.
 
 use super::kernel_3d_scene::{Mat4Math, ScenePass3d};
+use crate::wgpu::prepared::PreparedRasterPages;
 use crate::wgpu::shaders::{BLUR_DOWNSAMPLE_SHADER, GLASS_SHADER, SCENE_BLIT_SHADER, UI_SHADER, VECTOR_SHADER, WORLD3D_LINES_SHADER, WORLD3D_SHADER};
 use crate::wgpu::theme::{GlassStyle, Rgba, Theme};
 use bytemuck::{Pod, Zeroable};
@@ -821,13 +822,86 @@ pub struct GpuMeshBuffers {
     pub index_count: u32,
 }
 
+pub const MESH_GPU_TABLE_CAPACITY: usize = 256;
+const MESH_GPU_KEY_BYTES: usize = 256;
+pub const MESH_GPU_KEEP_VERSION_CAPACITY: usize = 256;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct MeshGpuKey {
+    bytes: [u8; MESH_GPU_KEY_BYTES],
+    len: u16,
+}
+
+impl MeshGpuKey {
+    fn new(key: &str) -> Result<Self, &'static str> {
+        if key.is_empty() || key.len() > MESH_GPU_KEY_BYTES {
+            return Err("mesh GPU key exceeded fixed credits");
+        }
+        let mut bytes = [0; MESH_GPU_KEY_BYTES];
+        bytes[..key.len()].copy_from_slice(key.as_bytes());
+        Ok(Self { bytes, len: key.len() as u16 })
+    }
+
+    fn matches(self, key: &str) -> bool {
+        usize::from(self.len) == key.len() && &self.bytes[..usize::from(self.len)] == key.as_bytes()
+    }
+}
+
+struct MeshGpuEntry<T> {
+    key: MeshGpuKey,
+    version: u64,
+    value: T,
+}
+
+struct FixedMeshGpuRegistry<T> {
+    slots: [Option<MeshGpuEntry<T>>; MESH_GPU_TABLE_CAPACITY],
+    len: usize,
+}
+
+impl<T> Default for FixedMeshGpuRegistry<T> {
+    fn default() -> Self {
+        Self { slots: std::array::from_fn(|_| None), len: 0 }
+    }
+}
+
+impl<T> FixedMeshGpuRegistry<T> {
+    fn get(&self, key: &str, version: u64) -> Option<&T> {
+        self.slots.iter().flatten().find(|entry| entry.version == version && entry.key.matches(key)).map(|entry| &entry.value)
+    }
+
+    fn insert(&mut self, entry: MeshGpuEntry<T>) -> Result<(), MeshGpuEntry<T>> {
+        let Some(slot) = self.slots.iter_mut().find(|slot| slot.is_none()) else { return Err(entry) };
+        *slot = Some(entry);
+        self.len += 1;
+        Ok(())
+    }
+
+    fn take(&mut self, index: usize) -> Option<MeshGpuEntry<T>> {
+        let value = self.slots.get_mut(index)?.take();
+        if value.is_some() {
+            self.len = self.len.saturating_sub(1);
+        }
+        value
+    }
+
+    fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    fn is_full(&self) -> bool {
+        self.len == MESH_GPU_TABLE_CAPACITY
+    }
+}
+
 pub struct MeshGpuTable {
-    meshes: std::collections::HashMap<String, GpuMeshBuffers>,
+    meshes: FixedMeshGpuRegistry<GpuMeshBuffers>,
     upload: Option<MeshGpuUploadCursor>,
+    retirement: Option<MeshGpuRetirementCursor>,
+    closing: bool,
 }
 
 struct MeshGpuUploadCursor {
-    key: String,
+    key: MeshGpuKey,
     version: u64,
     lease: crate::wgpu::kernel_3d_scene::Mesh3dLease,
     schema: crate::wgpu::kernel_3d_scene::Mesh3dSchema,
@@ -837,9 +911,37 @@ struct MeshGpuUploadCursor {
     index: u32,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum MeshGpuRetirementSelector {
+    Exact { key: MeshGpuKey, version: u64 },
+    KeyExcept { key: MeshGpuKey, versions: [u64; MESH_GPU_KEEP_VERSION_CAPACITY], len: u16 },
+    All,
+}
+
+impl MeshGpuRetirementSelector {
+    fn selects<T>(self, entry: &MeshGpuEntry<T>) -> bool {
+        match self {
+            Self::Exact { key, version } => entry.key == key && entry.version == version,
+            Self::KeyExcept { key, versions, len } => entry.key == key && !versions[..usize::from(len)].contains(&entry.version),
+            Self::All => true,
+        }
+    }
+}
+
+struct MeshGpuRetirementCursor {
+    selector: MeshGpuRetirementSelector,
+    scan: usize,
+    owner: Option<MeshGpuRetirementOwner>,
+}
+
+struct MeshGpuRetirementOwner {
+    vertex_buffer: Option<wgpu::Buffer>,
+    index_buffer: Option<wgpu::Buffer>,
+}
+
 impl Default for MeshGpuTable {
     fn default() -> Self {
-        Self { meshes: std::collections::HashMap::new(), upload: None }
+        Self { meshes: FixedMeshGpuRegistry::default(), upload: None, retirement: None, closing: false }
     }
 }
 
@@ -858,23 +960,26 @@ pub fn mesh_content_version(positions: &[f32], normals: &[f32], indices: &[u32])
 
 impl MeshGpuTable {
     pub fn get(&self, key: &str) -> Option<&GpuMeshBuffers> {
-        self.meshes.get(key)
-    }
-
-    pub fn lookup_key(mesh_key: &str, version: u64) -> String {
-        format!("{mesh_key}:{version}")
+        let (key, version) = key.rsplit_once(':')?;
+        self.get_versioned(key, version.parse().ok()?)
     }
 
     pub fn get_versioned(&self, mesh_key: &str, version: u64) -> Option<&GpuMeshBuffers> {
-        self.get(&Self::lookup_key(mesh_key, version))
+        self.meshes.get(mesh_key, version)
     }
 
     pub fn ensure_mesh_step(&mut self, device: &wgpu::Device, queue: &wgpu::Queue, key: &str, version: u64, lease: crate::wgpu::kernel_3d_scene::Mesh3dLease) -> Result<bool, &'static str> {
-        let store_key = format!("{key}:{version}");
-        if self.meshes.contains_key(&store_key) {
+        if self.closing {
+            return Err("mesh GPU table is closing");
+        }
+        if self.meshes.get(key, version).is_some() {
             return Ok(true);
         }
         if self.upload.is_none() {
+            if self.meshes.is_full() {
+                return Err("mesh GPU table capacity exhausted");
+            }
+            let key = MeshGpuKey::new(key)?;
             let schema = lease.schema().map_err(|_| "mesh upload lease was stale")?;
             let vertex_bytes = u64::from(schema.vertices).checked_mul(std::mem::size_of::<World3dVertex>() as u64).ok_or("mesh upload vertex byte credits overflowed")?;
             let index_bytes = u64::from(schema.indices).checked_mul(std::mem::size_of::<u32>() as u64).ok_or("mesh upload index byte credits overflowed")?;
@@ -883,10 +988,10 @@ impl MeshGpuTable {
             }
             let vertex_buffer = device.create_buffer(&wgpu::BufferDescriptor { label: Some("world3d_vertices"), size: vertex_bytes, usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST, mapped_at_creation: false });
             let index_buffer = device.create_buffer(&wgpu::BufferDescriptor { label: Some("world3d_indices"), size: index_bytes, usage: wgpu::BufferUsages::INDEX | wgpu::BufferUsages::COPY_DST, mapped_at_creation: false });
-            self.upload = Some(MeshGpuUploadCursor { key: key.to_owned(), version, lease, schema, vertex_buffer: Some(vertex_buffer), index_buffer: Some(index_buffer), vertex: 0, index: 0 });
+            self.upload = Some(MeshGpuUploadCursor { key, version, lease, schema, vertex_buffer: Some(vertex_buffer), index_buffer: Some(index_buffer), vertex: 0, index: 0 });
         }
         let cursor = self.upload.as_mut().expect("mesh upload cursor initialized above");
-        if cursor.key != key || cursor.version != version || cursor.lease != lease {
+        if !cursor.key.matches(key) || cursor.version != version || cursor.lease != lease {
             return Err("mesh upload authority is occupied by another generation");
         }
         if cursor.vertex < cursor.schema.vertices {
@@ -904,16 +1009,24 @@ impl MeshGpuTable {
             return Ok(false);
         }
         let mut cursor = self.upload.take().expect("completed mesh upload cursor");
-        self.meshes
-            .insert(store_key, GpuMeshBuffers { vertex_buffer: cursor.vertex_buffer.take().expect("completed mesh vertex buffer"), index_buffer: cursor.index_buffer.take().expect("completed mesh index buffer"), index_count: cursor.schema.indices });
-        Ok(true)
+        let entry = MeshGpuEntry {
+            key: cursor.key,
+            version: cursor.version,
+            value: GpuMeshBuffers { vertex_buffer: cursor.vertex_buffer.take().expect("completed mesh vertex buffer"), index_buffer: cursor.index_buffer.take().expect("completed mesh index buffer"), index_count: cursor.schema.indices },
+        };
+        match self.meshes.insert(entry) {
+            Ok(()) => Ok(true),
+            Err(entry) => {
+                cursor.vertex_buffer = Some(entry.value.vertex_buffer);
+                cursor.index_buffer = Some(entry.value.index_buffer);
+                self.upload = Some(cursor);
+                Err("mesh GPU table capacity exhausted")
+            }
+        }
     }
 
     pub fn close_upload_step(&mut self) -> bool {
         let Some(cursor) = self.upload.as_mut() else { return true };
-        if cursor.key.pop().is_some() {
-            return false;
-        }
         if let Some(buffer) = cursor.vertex_buffer.take() {
             buffer.destroy();
             return false;
@@ -930,9 +1043,80 @@ impl MeshGpuTable {
         self.upload.is_none()
     }
 
-    pub fn evict_mesh(&mut self, key: &str) {
-        let prefix = format!("{key}:");
-        self.meshes.retain(|existing, _| !existing.starts_with(&prefix));
+    fn begin_retirement(&mut self, selector: MeshGpuRetirementSelector) -> Result<(), &'static str> {
+        if let Some(retirement) = self.retirement.as_ref() {
+            return (retirement.selector == selector).then_some(()).ok_or("mesh GPU retirement authority is occupied");
+        }
+        self.retirement = Some(MeshGpuRetirementCursor { selector, scan: 0, owner: None });
+        Ok(())
+    }
+
+    fn retirement_step(&mut self) -> bool {
+        let Some(cursor) = self.retirement.as_mut() else { return true };
+        if let Some(owner) = cursor.owner.as_mut() {
+            if let Some(buffer) = owner.vertex_buffer.take() {
+                buffer.destroy();
+                return false;
+            }
+            if let Some(buffer) = owner.index_buffer.take() {
+                buffer.destroy();
+                return false;
+            }
+            cursor.owner = None;
+            if matches!(cursor.selector, MeshGpuRetirementSelector::Exact { .. }) {
+                cursor.scan = MESH_GPU_TABLE_CAPACITY;
+            }
+            return false;
+        }
+        if cursor.scan >= MESH_GPU_TABLE_CAPACITY {
+            self.retirement = None;
+            return true;
+        }
+        let index = cursor.scan;
+        cursor.scan += 1;
+        let selected = self.meshes.slots[index].as_ref().is_some_and(|entry| cursor.selector.selects(entry));
+        if selected {
+            let entry = self.meshes.take(index).expect("selected mesh GPU entry");
+            cursor.owner = Some(MeshGpuRetirementOwner { vertex_buffer: Some(entry.value.vertex_buffer), index_buffer: Some(entry.value.index_buffer) });
+        }
+        false
+    }
+
+    pub fn retire_exact_step(&mut self, key: &str, version: u64) -> Result<bool, &'static str> {
+        self.begin_retirement(MeshGpuRetirementSelector::Exact { key: MeshGpuKey::new(key)?, version })?;
+        Ok(self.retirement_step())
+    }
+
+    pub fn evict_mesh_step(&mut self, key: &str) -> Result<bool, &'static str> {
+        self.evict_mesh_except_step(key, &[])
+    }
+
+    pub fn evict_mesh_except_step(&mut self, key: &str, keep_versions: &[u64]) -> Result<bool, &'static str> {
+        if keep_versions.len() > MESH_GPU_KEEP_VERSION_CAPACITY {
+            return Err("mesh GPU eviction keep-version credits exhausted");
+        }
+        let mut versions = [0; MESH_GPU_KEEP_VERSION_CAPACITY];
+        versions[..keep_versions.len()].copy_from_slice(keep_versions);
+        self.begin_retirement(MeshGpuRetirementSelector::KeyExcept { key: MeshGpuKey::new(key)?, versions, len: keep_versions.len() as u16 })?;
+        Ok(self.retirement_step())
+    }
+
+    pub fn close_step(&mut self) -> bool {
+        self.closing = true;
+        if !self.close_upload_step() {
+            return false;
+        }
+        if self.retirement.is_none() {
+            let _ = self.begin_retirement(MeshGpuRetirementSelector::All);
+        }
+        if !self.retirement_step() {
+            return false;
+        }
+        true
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.closing && self.upload.is_none() && self.retirement.is_none() && self.meshes.is_empty()
     }
 }
 
@@ -1080,25 +1264,879 @@ impl IconAtlas {
 
 pub struct RasterTexture {
     pub texture: wgpu::Texture,
+    pub view: wgpu::TextureView,
     pub bind_group: wgpu::BindGroup,
     pub width: u32,
     pub height: u32,
 }
 
+pub const RASTER_TEXTURE_TABLE_CAPACITY: usize = 256;
+pub const RASTER_TEXTURE_KEY_BYTES: usize = 256;
+pub const RASTER_TEXTURE_ITEM_BYTE_CAPACITY: usize = 16 * 1024 * 1024;
+pub const RASTER_TEXTURE_TABLE_BYTE_CAPACITY: usize = 256 * 1024 * 1024;
+const RASTER_TEXTURE_PROBE_CAPACITY: usize = 8;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RasterTextureWitness {
+    pub scene_revision: u64,
+    pub preview_generation: u64,
+    pub operation: u64,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RasterTextureCleanupStep {
+    Pending { released_roots: u8, released_scalars: u8 },
+    Blocked(&'static str),
+    Complete,
+}
+
+impl RasterTextureCleanupStep {
+    fn root() -> Self {
+        Self::Pending { released_roots: 1, released_scalars: 0 }
+    }
+
+    fn scalar() -> Self {
+        Self::Pending { released_roots: 0, released_scalars: 1 }
+    }
+
+    fn retained() -> Self {
+        Self::Pending { released_roots: 0, released_scalars: 0 }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct RasterTextureKey {
+    bytes: [u8; RASTER_TEXTURE_KEY_BYTES],
+    len: u16,
+    hash: u64,
+}
+
+impl RasterTextureKey {
+    fn new(key: &str) -> Result<Self, &'static str> {
+        if key.is_empty() || key.len() > RASTER_TEXTURE_KEY_BYTES {
+            return Err("raster texture key exceeded fixed credits");
+        }
+        let mut bytes = [0; RASTER_TEXTURE_KEY_BYTES];
+        bytes[..key.len()].copy_from_slice(key.as_bytes());
+        let mut hash = 0xcbf29ce484222325u64;
+        for byte in key.as_bytes() {
+            hash ^= u64::from(*byte);
+            hash = hash.wrapping_mul(0x100000001b3);
+        }
+        Ok(Self { bytes, len: key.len() as u16, hash })
+    }
+
+    fn matches(self, key: &str) -> bool {
+        usize::from(self.len) == key.len() && &self.bytes[..usize::from(self.len)] == key.as_bytes()
+    }
+
+    fn as_str(&self) -> &str {
+        std::str::from_utf8(&self.bytes[..usize::from(self.len)]).expect("raster key was admitted from UTF-8")
+    }
+
+    fn start(self) -> usize {
+        self.hash as usize % RASTER_TEXTURE_TABLE_CAPACITY
+    }
+}
+
+fn raster_texture_bytes(width: u32, height: u32) -> Option<usize> {
+    usize::try_from(width).ok()?.checked_mul(usize::try_from(height).ok()?)?.checked_mul(4)
+}
+
+fn raster_witness_is_stale(current: RasterTextureWitness, candidate: RasterTextureWitness) -> bool {
+    current.scene_revision > candidate.scene_revision
+        || (current.scene_revision == candidate.scene_revision && current.preview_generation > candidate.preview_generation)
+        || (current.scene_revision == candidate.scene_revision && current.preview_generation == candidate.preview_generation && current.operation >= candidate.operation)
+}
+
+struct RasterTextureEntry<T> {
+    key: RasterTextureKey,
+    witness: RasterTextureWitness,
+    bytes: usize,
+    value: T,
+}
+
+struct FixedRasterTextureRegistry<T> {
+    slots: Box<[Option<RasterTextureEntry<T>>; RASTER_TEXTURE_TABLE_CAPACITY]>,
+    len: usize,
+    bytes: usize,
+}
+
+impl<T> Default for FixedRasterTextureRegistry<T> {
+    fn default() -> Self {
+        Self { slots: Box::new(std::array::from_fn(|_| None)), len: 0, bytes: 0 }
+    }
+}
+
+impl<T> FixedRasterTextureRegistry<T> {
+    fn locate(&self, key: RasterTextureKey) -> Result<Result<usize, usize>, &'static str> {
+        let start = key.start();
+        let mut vacant = None;
+        for offset in 0..RASTER_TEXTURE_PROBE_CAPACITY {
+            let index = (start + offset) % RASTER_TEXTURE_TABLE_CAPACITY;
+            match self.slots[index].as_ref() {
+                Some(entry) if entry.key == key => return Ok(Ok(index)),
+                None if vacant.is_none() => vacant = Some(index),
+                _ => {}
+            }
+        }
+        vacant.map(Err).ok_or("raster texture probe credits exhausted")
+    }
+
+    fn get(&self, key: &str) -> Option<&RasterTextureEntry<T>> {
+        let key = RasterTextureKey::new(key).ok()?;
+        let Ok(index) = self.locate(key).ok()? else { return None };
+        self.slots[index].as_ref()
+    }
+
+    fn insert(&mut self, entry: RasterTextureEntry<T>) -> Result<Option<RasterTextureEntry<T>>, RasterTextureEntry<T>> {
+        let index = match self.locate(entry.key) {
+            Ok(Ok(index)) | Ok(Err(index)) => index,
+            Err(_) => return Err(entry),
+        };
+        let previous = self.slots[index].replace(entry);
+        match previous.as_ref() {
+            Some(previous) => {
+                self.bytes = self.bytes.saturating_sub(previous.bytes);
+            }
+            None => self.len += 1,
+        }
+        self.bytes = self.bytes.saturating_add(self.slots[index].as_ref().expect("inserted raster entry").bytes);
+        Ok(previous)
+    }
+
+    fn insert_vacant(&mut self, index: usize, entry: RasterTextureEntry<T>) -> Result<(), RasterTextureEntry<T>> {
+        let Some(slot) = self.slots.get_mut(index) else { return Err(entry) };
+        if slot.is_some() {
+            return Err(entry);
+        }
+        *slot = Some(entry);
+        self.len += 1;
+        self.bytes = self.bytes.saturating_add(slot.as_ref().expect("inserted raster entry").bytes);
+        Ok(())
+    }
+
+    fn take(&mut self, index: usize) -> Option<RasterTextureEntry<T>> {
+        let value = self.slots.get_mut(index)?.take();
+        if let Some(value) = value.as_ref() {
+            self.len = self.len.saturating_sub(1);
+            self.bytes = self.bytes.saturating_sub(value.bytes);
+        }
+        value
+    }
+
+    fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+}
+
+pub struct RasterTextureAdmission {
+    key: RasterTextureKey,
+    witness: RasterTextureWitness,
+    width: u32,
+    height: u32,
+    bytes: usize,
+    staged_index: usize,
+    nonce: u64,
+}
+
+pub enum RasterTextureStageFault {
+    Returned { fault: &'static str, admission: RasterTextureAdmission, texture: wgpu::Texture, view: wgpu::TextureView },
+    Retained(&'static str),
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct RasterTextureReservation {
+    key: RasterTextureKey,
+    witness: RasterTextureWitness,
+    width: u32,
+    height: u32,
+    bytes: usize,
+    staged_index: usize,
+    nonce: u64,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct RasterTextureStageClaim {
+    reservation: RasterTextureReservation,
+    candidate: RasterTextureWitness,
+    staged_index: usize,
+    staged_nonce: u64,
+}
+
+impl RasterTextureReservation {
+    fn matches(&self, admission: &RasterTextureAdmission) -> bool {
+        self.key == admission.key
+            && self.witness == admission.witness
+            && self.width == admission.width
+            && self.height == admission.height
+            && self.bytes == admission.bytes
+            && self.staged_index == admission.staged_index
+            && self.nonce == admission.nonce
+    }
+}
+
+fn claim_raster_stage_tuple(
+    reservation: Option<RasterTextureReservation>,
+    candidate: Option<RasterTextureWitness>,
+    staged_occupied: bool,
+    admission: &RasterTextureAdmission,
+    expected: RasterTextureWitness,
+) -> Result<RasterTextureStageClaim, &'static str> {
+    if admission.witness != expected {
+        return Err("raster operation authority was stale before GPU allocation");
+    }
+    let Some(reservation) = reservation else {
+        return Err("raster texture reservation was missing before GPU allocation");
+    };
+    if !reservation.matches(admission) {
+        return Err("raster texture reservation was stale before GPU allocation");
+    }
+    if candidate != Some(expected) {
+        return Err("raster candidate witness changed before GPU allocation");
+    }
+    if staged_occupied {
+        return Err("raster staged slot changed before GPU allocation");
+    }
+    Ok(RasterTextureStageClaim { reservation, candidate: expected, staged_index: admission.staged_index, staged_nonce: admission.nonce })
+}
+
+struct RasterTextureReservationRetirement {
+    key: Option<RasterTextureKey>,
+    scene_revision: Option<u64>,
+    preview_generation: Option<u64>,
+    operation: Option<u64>,
+    width: Option<u32>,
+    height: Option<u32>,
+    bytes: Option<usize>,
+    staged_index: Option<usize>,
+    nonce: Option<u64>,
+}
+
+impl RasterTextureReservationRetirement {
+    fn new(reservation: RasterTextureReservation) -> Self {
+        Self {
+            key: Some(reservation.key),
+            scene_revision: Some(reservation.witness.scene_revision),
+            preview_generation: Some(reservation.witness.preview_generation),
+            operation: Some(reservation.witness.operation),
+            width: Some(reservation.width),
+            height: Some(reservation.height),
+            bytes: Some(reservation.bytes),
+            staged_index: Some(reservation.staged_index),
+            nonce: Some(reservation.nonce),
+        }
+    }
+
+    fn step(&mut self) -> RasterTextureCleanupStep {
+        if self.key.take().is_some() {
+            return RasterTextureCleanupStep::root();
+        }
+        if self.scene_revision.take().is_some() {
+            return RasterTextureCleanupStep::scalar();
+        }
+        if self.preview_generation.take().is_some() {
+            return RasterTextureCleanupStep::scalar();
+        }
+        if self.operation.take().is_some() {
+            return RasterTextureCleanupStep::scalar();
+        }
+        if self.width.take().is_some() {
+            return RasterTextureCleanupStep::scalar();
+        }
+        if self.height.take().is_some() {
+            return RasterTextureCleanupStep::scalar();
+        }
+        if self.bytes.take().is_some() {
+            return RasterTextureCleanupStep::scalar();
+        }
+        if self.staged_index.take().is_some() {
+            return RasterTextureCleanupStep::scalar();
+        }
+        if self.nonce.take().is_some() {
+            return RasterTextureCleanupStep::scalar();
+        }
+        RasterTextureCleanupStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.key.is_none()
+            && self.scene_revision.is_none()
+            && self.preview_generation.is_none()
+            && self.operation.is_none()
+            && self.width.is_none()
+            && self.height.is_none()
+            && self.bytes.is_none()
+            && self.staged_index.is_none()
+            && self.nonce.is_none()
+    }
+}
+
+struct RasterTextureReservationCloseCursor {
+    reservation_retirement: Option<RasterTextureReservationRetirement>,
+    admission_retirement: Option<RasterTextureReservationRetirement>,
+}
+
+impl RasterTextureReservationCloseCursor {
+    fn reservation(reservation: RasterTextureReservation) -> Self {
+        Self { reservation_retirement: Some(RasterTextureReservationRetirement::new(reservation)), admission_retirement: None }
+    }
+
+    fn cancelled(reservation: RasterTextureReservation, admission: RasterTextureAdmission) -> Self {
+        Self {
+            reservation_retirement: Some(RasterTextureReservationRetirement::new(reservation)),
+            admission_retirement: Some(RasterTextureReservationRetirement::new(RasterTextureReservation {
+                key: admission.key,
+                witness: admission.witness,
+                width: admission.width,
+                height: admission.height,
+                bytes: admission.bytes,
+                staged_index: admission.staged_index,
+                nonce: admission.nonce,
+            })),
+        }
+    }
+
+    fn rejected(admission: RasterTextureAdmission) -> Self {
+        Self {
+            reservation_retirement: None,
+            admission_retirement: Some(RasterTextureReservationRetirement::new(RasterTextureReservation {
+                key: admission.key,
+                witness: admission.witness,
+                width: admission.width,
+                height: admission.height,
+                bytes: admission.bytes,
+                staged_index: admission.staged_index,
+                nonce: admission.nonce,
+            })),
+        }
+    }
+
+    fn step(&mut self) -> RasterTextureCleanupStep {
+        if let Some(retirement) = self.reservation_retirement.as_mut() {
+            let step = retirement.step();
+            if matches!(step, RasterTextureCleanupStep::Complete) {
+                assert!(retirement.terminal_is_empty(), "completed raster reservation must be terminal-empty");
+                self.reservation_retirement = None;
+                return RasterTextureCleanupStep::retained();
+            }
+            return step;
+        }
+        if let Some(retirement) = self.admission_retirement.as_mut() {
+            let step = retirement.step();
+            if matches!(step, RasterTextureCleanupStep::Complete) {
+                assert!(retirement.terminal_is_empty(), "completed raster admission must be terminal-empty");
+                self.admission_retirement = None;
+                return RasterTextureCleanupStep::retained();
+            }
+            return step;
+        }
+        RasterTextureCleanupStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.reservation_retirement.is_none() && self.admission_retirement.is_none()
+    }
+
+    fn retained_bytes(&self) -> usize {
+        self.reservation_retirement.as_ref().and_then(|retirement| retirement.bytes).unwrap_or(0) + self.admission_retirement.as_ref().and_then(|retirement| retirement.bytes).unwrap_or(0)
+    }
+
+    fn retained_items(&self) -> usize {
+        usize::from(self.reservation_retirement.is_some()) + usize::from(self.admission_retirement.is_some())
+    }
+}
+
+struct RasterTextureStageClaimRetirement {
+    reservation: RasterTextureReservationRetirement,
+    candidate: RasterTextureWitnessSlot,
+    staged_index: Option<usize>,
+    staged_nonce: Option<u64>,
+}
+
+impl RasterTextureStageClaimRetirement {
+    fn new(claim: RasterTextureStageClaim) -> Self {
+        let mut candidate = RasterTextureWitnessSlot::default();
+        candidate.set(claim.candidate);
+        Self { reservation: RasterTextureReservationRetirement::new(claim.reservation), candidate, staged_index: Some(claim.staged_index), staged_nonce: Some(claim.staged_nonce) }
+    }
+
+    fn step(&mut self) -> RasterTextureCleanupStep {
+        let reservation = self.reservation.step();
+        if !matches!(reservation, RasterTextureCleanupStep::Complete) {
+            return reservation;
+        }
+        if !self.candidate.is_empty() {
+            self.candidate.retire_one();
+            return RasterTextureCleanupStep::scalar();
+        }
+        if self.staged_index.take().is_some() {
+            return RasterTextureCleanupStep::scalar();
+        }
+        if self.staged_nonce.take().is_some() {
+            return RasterTextureCleanupStep::scalar();
+        }
+        RasterTextureCleanupStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.reservation.terminal_is_empty() && self.candidate.is_empty() && self.staged_index.is_none() && self.staged_nonce.is_none()
+    }
+}
+
+#[derive(Default)]
+struct RasterTextureWitnessSlot {
+    scene_revision: Option<u64>,
+    preview_generation: Option<u64>,
+    operation: Option<u64>,
+}
+
+impl RasterTextureWitnessSlot {
+    fn get(&self) -> Option<RasterTextureWitness> {
+        Some(RasterTextureWitness { scene_revision: self.scene_revision?, preview_generation: self.preview_generation?, operation: self.operation? })
+    }
+
+    fn set(&mut self, witness: RasterTextureWitness) {
+        self.scene_revision = Some(witness.scene_revision);
+        self.preview_generation = Some(witness.preview_generation);
+        self.operation = Some(witness.operation);
+    }
+
+    fn retire_one(&mut self) -> bool {
+        if self.scene_revision.take().is_some() {
+            return false;
+        }
+        if self.preview_generation.take().is_some() {
+            return false;
+        }
+        if self.operation.take().is_some() {
+            return false;
+        }
+        true
+    }
+
+    fn is_empty(&self) -> bool {
+        self.scene_revision.is_none() && self.preview_generation.is_none() && self.operation.is_none()
+    }
+}
+
+struct RasterTextureUploadCursor {
+    admission: Option<RasterTextureAdmission>,
+    row: u32,
+    texture: Option<wgpu::Texture>,
+    view: Option<wgpu::TextureView>,
+    bind_group: Option<wgpu::BindGroup>,
+    allocation_claim: Option<RasterTextureStageClaim>,
+}
+
+pub(crate) enum RasterUploadPixels<'a> {
+    Contiguous(&'a [u8]),
+    Pages(&'a PreparedRasterPages),
+}
+
+impl RasterUploadPixels<'_> {
+    fn len(&self) -> usize {
+        match self {
+            Self::Contiguous(pixels) => pixels.len(),
+            Self::Pages(pixels) => pixels.byte_len(),
+        }
+    }
+
+    fn dimensions_match(&self, width: u32, height: u32) -> bool {
+        match self {
+            Self::Contiguous(_) => true,
+            Self::Pages(pixels) => pixels.width() == width && pixels.height() == height,
+        }
+    }
+
+    fn rows(&self, row: u32, start: usize, end: usize, rows: u32) -> Option<(&[u8], u32)> {
+        match self {
+            Self::Contiguous(pixels) => pixels.get(start..end).map(|page| (page, rows)),
+            Self::Pages(pixels) => pixels.page_for_row(row),
+        }
+    }
+}
+
+struct RasterTextureRetirementOwner {
+    key: Option<RasterTextureKey>,
+    scene_revision: Option<u64>,
+    preview_generation: Option<u64>,
+    operation: Option<u64>,
+    width: Option<u32>,
+    height: Option<u32>,
+    bytes: Option<usize>,
+    bind_group: Option<wgpu::BindGroup>,
+    view: Option<wgpu::TextureView>,
+    texture: Option<wgpu::Texture>,
+}
+
+impl RasterTextureRetirementOwner {
+    fn new(entry: RasterTextureEntry<RasterTexture>) -> Self {
+        Self {
+            key: Some(entry.key),
+            scene_revision: Some(entry.witness.scene_revision),
+            preview_generation: Some(entry.witness.preview_generation),
+            operation: Some(entry.witness.operation),
+            width: Some(entry.value.width),
+            height: Some(entry.value.height),
+            bytes: Some(entry.bytes),
+            bind_group: Some(entry.value.bind_group),
+            view: Some(entry.value.view),
+            texture: Some(entry.value.texture),
+        }
+    }
+
+    fn step(&mut self) -> RasterTextureCleanupStep {
+        if self.bind_group.take().is_some() {
+            return RasterTextureCleanupStep::root();
+        }
+        if self.view.take().is_some() {
+            return RasterTextureCleanupStep::root();
+        }
+        if let Some(texture) = self.texture.take() {
+            texture.destroy();
+            return RasterTextureCleanupStep::root();
+        }
+        if self.key.take().is_some() {
+            return RasterTextureCleanupStep::root();
+        }
+        if self.scene_revision.take().is_some() {
+            return RasterTextureCleanupStep::scalar();
+        }
+        if self.preview_generation.take().is_some() {
+            return RasterTextureCleanupStep::scalar();
+        }
+        if self.operation.take().is_some() {
+            return RasterTextureCleanupStep::scalar();
+        }
+        if self.width.take().is_some() {
+            return RasterTextureCleanupStep::scalar();
+        }
+        if self.height.take().is_some() {
+            return RasterTextureCleanupStep::scalar();
+        }
+        if self.bytes.take().is_some() {
+            return RasterTextureCleanupStep::scalar();
+        }
+        RasterTextureCleanupStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.key.is_none()
+            && self.scene_revision.is_none()
+            && self.preview_generation.is_none()
+            && self.operation.is_none()
+            && self.width.is_none()
+            && self.height.is_none()
+            && self.bytes.is_none()
+            && self.bind_group.is_none()
+            && self.view.is_none()
+            && self.texture.is_none()
+    }
+
+    fn retained_bytes(&self) -> usize {
+        self.bytes.unwrap_or(0)
+    }
+}
+
+struct RasterTextureUploadCloseCursor {
+    source: Option<RasterTextureUploadCursor>,
+    admission: Option<RasterTextureAdmission>,
+    admission_retirement: Option<RasterTextureReservationRetirement>,
+    allocation_claim_retirement: Option<RasterTextureStageClaimRetirement>,
+    owner: Option<RasterTextureRetirementOwner>,
+    row_retired: bool,
+}
+
+impl RasterTextureUploadCloseCursor {
+    fn new(source: RasterTextureUploadCursor) -> Self {
+        Self { source: Some(source), admission: None, admission_retirement: None, allocation_claim_retirement: None, owner: None, row_retired: false }
+    }
+
+    fn step(&mut self) -> RasterTextureCleanupStep {
+        if let Some(owner) = self.owner.as_mut() {
+            let step = owner.step();
+            if matches!(step, RasterTextureCleanupStep::Complete) {
+                assert!(owner.terminal_is_empty(), "completed raster GPU owner must be terminal-empty");
+                self.owner = None;
+                return RasterTextureCleanupStep::retained();
+            }
+            return step;
+        }
+        if let Some(retirement) = self.allocation_claim_retirement.as_mut() {
+            let step = retirement.step();
+            if matches!(step, RasterTextureCleanupStep::Complete) {
+                assert!(retirement.terminal_is_empty(), "completed raster allocation claim must be terminal-empty");
+                self.allocation_claim_retirement = None;
+                return RasterTextureCleanupStep::retained();
+            }
+            return step;
+        }
+        if let Some(retirement) = self.admission_retirement.as_mut() {
+            let step = retirement.step();
+            if matches!(step, RasterTextureCleanupStep::Complete) {
+                assert!(retirement.terminal_is_empty(), "completed raster admission must be terminal-empty");
+                self.admission_retirement = None;
+                return RasterTextureCleanupStep::retained();
+            }
+            return step;
+        }
+        if let Some(source) = self.source.as_mut() {
+            if self.admission.is_none() {
+                if let Some(admission) = source.admission.take() {
+                    self.admission = Some(admission);
+                    return RasterTextureCleanupStep::retained();
+                }
+            }
+            if let Some(claim) = source.allocation_claim.take() {
+                self.allocation_claim_retirement = Some(RasterTextureStageClaimRetirement::new(claim));
+                return RasterTextureCleanupStep::retained();
+            }
+            if source.texture.is_some() || source.view.is_some() || source.bind_group.is_some() {
+                let admission = self.admission.as_ref().expect("retained upload close admission");
+                self.owner = Some(RasterTextureRetirementOwner {
+                    key: Some(admission.key),
+                    scene_revision: Some(admission.witness.scene_revision),
+                    preview_generation: Some(admission.witness.preview_generation),
+                    operation: Some(admission.witness.operation),
+                    width: Some(admission.width),
+                    height: Some(admission.height),
+                    bytes: Some(admission.bytes),
+                    bind_group: source.bind_group.take(),
+                    view: source.view.take(),
+                    texture: source.texture.take(),
+                });
+                return RasterTextureCleanupStep::retained();
+            }
+            if !self.row_retired {
+                source.row = 0;
+                self.row_retired = true;
+                return RasterTextureCleanupStep::scalar();
+            }
+            self.source = None;
+            return RasterTextureCleanupStep::retained();
+        }
+        if let Some(admission) = self.admission.take() {
+            self.admission_retirement = Some(RasterTextureReservationRetirement::new(RasterTextureReservation {
+                key: admission.key,
+                witness: admission.witness,
+                width: admission.width,
+                height: admission.height,
+                bytes: admission.bytes,
+                staged_index: admission.staged_index,
+                nonce: admission.nonce,
+            }));
+            return RasterTextureCleanupStep::retained();
+        }
+        RasterTextureCleanupStep::Complete
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.source.is_none() && self.admission.is_none() && self.admission_retirement.is_none() && self.allocation_claim_retirement.is_none() && self.owner.is_none()
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum RasterTextureRetirementMode {
+    Abort(RasterTextureWitness),
+    Commit(RasterTextureWitness),
+    Close,
+}
+
+struct RasterTextureRetirementCursor {
+    mode: RasterTextureRetirementMode,
+    scan: usize,
+    owner: Option<RasterTextureRetirementOwner>,
+    candidate_retired: bool,
+    presenting_retired: bool,
+}
+
 pub struct RasterTextureTable {
-    textures: std::collections::HashMap<String, RasterTexture>,
+    live: FixedRasterTextureRegistry<RasterTexture>,
+    staged: FixedRasterTextureRegistry<RasterTexture>,
+    upload: Option<RasterTextureUploadCursor>,
+    upload_close: Option<RasterTextureUploadCloseCursor>,
+    retirement: Option<RasterTextureRetirementCursor>,
+    reservation: Option<RasterTextureReservation>,
+    reservation_retirement: Option<RasterTextureReservationCloseCursor>,
+    candidate: RasterTextureWitnessSlot,
+    presenting: RasterTextureWitnessSlot,
+    next_reservation_nonce: u64,
     layout: wgpu::BindGroupLayout,
     sampler: wgpu::Sampler,
+    closing: bool,
 }
 
 impl RasterTextureTable {
     pub fn new(device: &wgpu::Device, layout: &wgpu::BindGroupLayout) -> Self {
         let sampler = device.create_sampler(&wgpu::SamplerDescriptor { label: Some("raster_sampler"), mag_filter: wgpu::FilterMode::Linear, min_filter: wgpu::FilterMode::Linear, ..Default::default() });
-        Self { textures: std::collections::HashMap::new(), layout: layout.clone(), sampler }
+        Self {
+            live: FixedRasterTextureRegistry::default(),
+            staged: FixedRasterTextureRegistry::default(),
+            upload: None,
+            upload_close: None,
+            retirement: None,
+            reservation: None,
+            reservation_retirement: None,
+            candidate: RasterTextureWitnessSlot::default(),
+            presenting: RasterTextureWitnessSlot::default(),
+            next_reservation_nonce: 1,
+            layout: layout.clone(),
+            sampler,
+            closing: false,
+        }
+    }
+
+    fn retained_bytes(&self) -> usize {
+        self.live.bytes
+            + self.staged.bytes
+            + self.reservation.map_or(0, |reservation| reservation.bytes)
+            + self.reservation_retirement.as_ref().map_or(0, RasterTextureReservationCloseCursor::retained_bytes)
+            + self.retirement.as_ref().and_then(|cursor| cursor.owner.as_ref()).map_or(0, RasterTextureRetirementOwner::retained_bytes)
+    }
+
+    fn retained_items(&self) -> usize {
+        self.live.len
+            + self.staged.len
+            + usize::from(self.reservation.is_some())
+            + self.reservation_retirement.as_ref().map_or(0, RasterTextureReservationCloseCursor::retained_items)
+            + usize::from(self.retirement.as_ref().is_some_and(|cursor| cursor.owner.is_some()))
+    }
+
+    fn validate_freshness(&self, key: RasterTextureKey, witness: RasterTextureWitness) -> Result<(), &'static str> {
+        if let Ok(Ok(index)) = self.live.locate(key) {
+            let current = self.live.slots[index].as_ref().expect("located live raster");
+            if raster_witness_is_stale(current.witness, witness) {
+                return Err("raster operation witness was stale or duplicated");
+            }
+        }
+        Ok(())
+    }
+
+    pub fn reserve_engine_texture(&mut self, key: &str, width: u32, height: u32, candidate: RasterTextureWitness, expected: RasterTextureWitness) -> Result<RasterTextureAdmission, &'static str> {
+        if let Some(retirement) = self.reservation_retirement.as_mut() {
+            if matches!(retirement.step(), RasterTextureCleanupStep::Complete) {
+                assert!(retirement.terminal_is_empty(), "completed raster reservation must be terminal-empty");
+                self.reservation_retirement = None;
+            }
+            return Err("raster cancelled reservation retirement is pending");
+        }
+        if candidate != expected {
+            return Err("raster operation authority was stale before admission");
+        }
+        if self.closing || self.upload.is_some() || self.upload_close.is_some() || self.retirement.is_some() || self.reservation.is_some() {
+            return Err("raster texture table is occupied");
+        }
+        if self.candidate.get().is_some_and(|witness| witness != candidate) {
+            return Err("raster candidate generation was occupied");
+        }
+        let key = RasterTextureKey::new(key)?;
+        let bytes = raster_texture_bytes(width, height).ok_or("raster texture byte credits overflowed")?;
+        if width == 0 || height == 0 || bytes > RASTER_TEXTURE_ITEM_BYTE_CAPACITY {
+            return Err("raster texture exceeded fixed item byte credits");
+        }
+        if self.retained_items() >= RASTER_TEXTURE_TABLE_CAPACITY {
+            return Err("raster texture table item credits exhausted");
+        }
+        if self.retained_bytes().checked_add(bytes).is_none_or(|total| total > RASTER_TEXTURE_TABLE_BYTE_CAPACITY) {
+            return Err("raster texture table byte credits exhausted");
+        }
+        self.validate_freshness(key, candidate)?;
+        if self.staged.get(key.as_str()).is_some() {
+            return Err("raster staged generation was duplicated");
+        }
+        self.live.locate(key)?;
+        let staged_index = match self.staged.locate(key)? {
+            Ok(index) | Err(index) => index,
+        };
+        let nonce = self.next_reservation_nonce;
+        self.next_reservation_nonce = self.next_reservation_nonce.checked_add(1).ok_or("raster reservation generation exhausted")?;
+        let reservation = RasterTextureReservation { key, witness: candidate, width, height, bytes, staged_index, nonce };
+        self.reservation = Some(reservation);
+        if self.candidate.get().is_none() {
+            self.candidate.set(candidate);
+        }
+        Ok(RasterTextureAdmission { key, witness: candidate, width, height, bytes, staged_index, nonce })
+    }
+
+    pub fn cancel_engine_texture_admission(&mut self, admission: RasterTextureAdmission) -> Result<(), &'static str> {
+        if self.reservation.as_ref().is_some_and(|reservation| reservation.matches(&admission)) {
+            if self.reservation_retirement.is_some() {
+                return Err("raster reservation retirement capacity exhausted");
+            }
+            let reservation = self.reservation.take().expect("matching raster reservation");
+            self.reservation_retirement = Some(RasterTextureReservationCloseCursor::cancelled(reservation, admission));
+            return Ok(());
+        }
+        if self.reservation_retirement.is_some() {
+            return Err("raster rejected admission retirement capacity exhausted");
+        }
+        self.reservation_retirement = Some(RasterTextureReservationCloseCursor::rejected(admission));
+        Err("raster admission was stale and retained for bounded retirement")
+    }
+
+    fn claim_stage_before_gpu_allocation(&self, admission: &RasterTextureAdmission, expected: RasterTextureWitness) -> Result<RasterTextureStageClaim, &'static str> {
+        let staged_occupied = self.staged.slots.get(admission.staged_index).is_none_or(Option::is_some);
+        claim_raster_stage_tuple(self.reservation, self.candidate.get(), staged_occupied, admission, expected)
+    }
+
+    fn claim_texture_allocation(&self, admission: &RasterTextureAdmission, expected: RasterTextureWitness) -> Result<RasterTextureStageClaim, &'static str> {
+        self.claim_stage_before_gpu_allocation(admission, expected)
+    }
+
+    fn claim_view_allocation(&self, admission: &RasterTextureAdmission, expected: RasterTextureWitness) -> Result<RasterTextureStageClaim, &'static str> {
+        self.claim_stage_before_gpu_allocation(admission, expected)
+    }
+
+    fn claim_bind_group_allocation(&self, admission: &RasterTextureAdmission, expected: RasterTextureWitness) -> Result<RasterTextureStageClaim, &'static str> {
+        self.claim_stage_before_gpu_allocation(admission, expected)
+    }
+
+    pub(super) fn validate_engine_renderer_allocation(&self, admission: &RasterTextureAdmission, expected: RasterTextureWitness) -> Result<(), &'static str> {
+        self.claim_stage_before_gpu_allocation(admission, expected).map(|_| ())
+    }
+
+    pub(super) fn validate_engine_target_texture_allocation(&self, admission: &RasterTextureAdmission, expected: RasterTextureWitness) -> Result<(), &'static str> {
+        self.claim_stage_before_gpu_allocation(admission, expected).map(|_| ())
+    }
+
+    pub(super) fn validate_engine_target_view_allocation(&self, admission: &RasterTextureAdmission, expected: RasterTextureWitness) -> Result<(), &'static str> {
+        self.claim_stage_before_gpu_allocation(admission, expected).map(|_| ())
+    }
+
+    pub(super) fn validate_engine_replacement_texture_allocation(&self, admission: &RasterTextureAdmission, expected: RasterTextureWitness) -> Result<(), &'static str> {
+        self.claim_stage_before_gpu_allocation(admission, expected).map(|_| ())
+    }
+
+    pub(super) fn validate_engine_replacement_view_allocation(&self, admission: &RasterTextureAdmission, expected: RasterTextureWitness) -> Result<(), &'static str> {
+        self.claim_stage_before_gpu_allocation(admission, expected).map(|_| ())
+    }
+
+    pub(super) fn retain_engine_allocation_fault(&mut self, admission: RasterTextureAdmission, texture: Option<wgpu::Texture>, view: Option<wgpu::TextureView>) {
+        assert!(self.upload.is_none() && self.upload_close.is_none(), "matching raster allocation fault must own its reserved close slot");
+        self.upload_close = Some(RasterTextureUploadCloseCursor::new(RasterTextureUploadCursor { admission: Some(admission), row: 0, texture, view, bind_group: None, allocation_claim: None }));
+    }
+
+    fn stage_claimed_texture(&mut self, admission: RasterTextureAdmission, value: RasterTexture, claim: RasterTextureStageClaim) -> Result<(), (&'static str, RasterTextureAdmission, RasterTexture)> {
+        if self.reservation != Some(claim.reservation) || !claim.reservation.matches(&admission) || claim.candidate != admission.witness || claim.staged_index != admission.staged_index || claim.staged_nonce != admission.nonce {
+            return Err(("raster allocation claim changed before publication", admission, value));
+        }
+        if self.candidate.get() != Some(claim.candidate) {
+            return Err(("raster candidate witness changed after GPU allocation", admission, value));
+        }
+        if self.staged.slots[claim.staged_index].is_some() {
+            return Err(("raster staged slot changed after GPU allocation", admission, value));
+        }
+        let entry = RasterTextureEntry { key: admission.key, witness: admission.witness, bytes: admission.bytes, value };
+        if let Err(entry) = self.staged.insert_vacant(claim.staged_index, entry) {
+            return Err(("raster staged slot changed after preflight", admission, entry.value));
+        }
+        let _completed_reservation = self.reservation.take().expect("published raster reservation");
+        Ok(())
     }
 
     #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
-    pub fn ensure_raster(
+    pub fn ensure_raster_step(
         &mut self,
         device: &wgpu::Device,
         queue: &wgpu::Queue,
@@ -1108,67 +2146,145 @@ impl RasterTextureTable {
         _icon_view: &wgpu::TextureView,
         _icon_sampler: &wgpu::Sampler,
         key: &str,
-        pixels: &[u8],
+        pixels: RasterUploadPixels<'_>,
         width: u32,
         height: u32,
-    ) {
-        if let Some(existing) = self.textures.get(key) {
-            queue.write_texture(
-                wgpu::TexelCopyTextureInfo { texture: &existing.texture, mip_level: 0, origin: wgpu::Origin3d::ZERO, aspect: wgpu::TextureAspect::All },
-                pixels,
-                wgpu::TexelCopyBufferLayout { offset: 0, bytes_per_row: Some(width * 4), rows_per_image: Some(height) },
-                wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
-            );
-            return;
+        candidate: RasterTextureWitness,
+        expected: RasterTextureWitness,
+    ) -> Result<bool, &'static str> {
+        const PAGE_BYTES: usize = 16 * 1024;
+        if self.closing || self.retirement.is_some() {
+            return Err("raster texture table is closing or retiring");
         }
-        let texture = device.create_texture(&wgpu::TextureDescriptor {
-            label: Some("raster_texture"),
-            size: wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
-            mip_level_count: 1,
-            sample_count: 1,
-            dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Rgba8UnormSrgb,
-            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
-            view_formats: &[],
-        });
-        queue.write_texture(
-            wgpu::TexelCopyTextureInfo { texture: &texture, mip_level: 0, origin: wgpu::Origin3d::ZERO, aspect: wgpu::TextureAspect::All },
-            pixels,
-            wgpu::TexelCopyBufferLayout { offset: 0, bytes_per_row: Some(width * 4), rows_per_image: Some(height) },
-            wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
-        );
-        let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
-        let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: Some("raster_texture_bind_group"),
-            layout: &self.layout,
-            entries: &[
-                wgpu::BindGroupEntry { binding: 0, resource: globals_buffer.as_entire_binding() },
-                wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::TextureView(glyph_view) },
-                wgpu::BindGroupEntry { binding: 2, resource: wgpu::BindingResource::Sampler(glyph_sampler) },
-                wgpu::BindGroupEntry { binding: 3, resource: wgpu::BindingResource::TextureView(&view) },
-                wgpu::BindGroupEntry { binding: 4, resource: wgpu::BindingResource::Sampler(&self.sampler) },
-            ],
-        });
-        self.textures.insert(key.to_string(), RasterTexture { texture, bind_group, width, height });
+        let row_bytes = usize::try_from(width).ok().and_then(|value| value.checked_mul(4)).ok_or("raster row byte credits overflowed")?;
+        let expected_bytes = row_bytes.checked_mul(usize::try_from(height).map_err(|_| "raster height exceeded fixed credits")?).ok_or("raster byte credits overflowed")?;
+        if width == 0 || height == 0 || row_bytes > PAGE_BYTES || pixels.len() != expected_bytes || !pixels.dimensions_match(width, height) {
+            return Err("raster upload exceeded fixed page or byte credits");
+        }
+        if self.upload.is_none() {
+            let admission = self.reserve_engine_texture(key, width, height, candidate, expected)?;
+            self.upload = Some(RasterTextureUploadCursor { admission: Some(admission), row: 0, texture: None, view: None, bind_group: None, allocation_claim: None });
+            let allocation_claim = {
+                let admission = self.upload.as_ref().and_then(|cursor| cursor.admission.as_ref()).expect("retained raster texture admission");
+                match self.claim_texture_allocation(admission, expected) {
+                    Ok(claim) => claim,
+                    Err(fault) => return Err(fault),
+                }
+            };
+            self.upload.as_mut().expect("retained raster texture claim").allocation_claim = Some(allocation_claim);
+            let texture = device.create_texture(&wgpu::TextureDescriptor {
+                label: Some("raster_texture"),
+                size: wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+                mip_level_count: 1,
+                sample_count: 1,
+                dimension: wgpu::TextureDimension::D2,
+                format: wgpu::TextureFormat::Rgba8UnormSrgb,
+                usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+                view_formats: &[],
+            });
+            self.upload.as_mut().expect("retained raster texture upload").texture = Some(texture);
+            let allocation_claim = {
+                let admission = self.upload.as_ref().and_then(|cursor| cursor.admission.as_ref()).expect("retained raster view admission");
+                match self.claim_view_allocation(admission, expected) {
+                    Ok(claim) => claim,
+                    Err(fault) => return Err(fault),
+                }
+            };
+            self.upload.as_mut().expect("retained raster view claim").allocation_claim = Some(allocation_claim);
+            let view = self.upload.as_ref().and_then(|cursor| cursor.texture.as_ref()).expect("retained raster texture owner").create_view(&wgpu::TextureViewDescriptor::default());
+            self.upload.as_mut().expect("retained raster view upload").view = Some(view);
+            let allocation_claim = {
+                let admission = self.upload.as_ref().and_then(|cursor| cursor.admission.as_ref()).expect("retained raster bind-group admission");
+                match self.claim_bind_group_allocation(admission, expected) {
+                    Ok(claim) => claim,
+                    Err(fault) => return Err(fault),
+                }
+            };
+            self.upload.as_mut().expect("retained raster bind-group claim").allocation_claim = Some(allocation_claim);
+            let view = self.upload.as_ref().and_then(|cursor| cursor.view.as_ref()).expect("retained raster view owner");
+            let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+                label: Some("raster_texture_bind_group"),
+                layout: &self.layout,
+                entries: &[
+                    wgpu::BindGroupEntry { binding: 0, resource: globals_buffer.as_entire_binding() },
+                    wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::TextureView(glyph_view) },
+                    wgpu::BindGroupEntry { binding: 2, resource: wgpu::BindingResource::Sampler(glyph_sampler) },
+                    wgpu::BindGroupEntry { binding: 3, resource: wgpu::BindingResource::TextureView(&view) },
+                    wgpu::BindGroupEntry { binding: 4, resource: wgpu::BindingResource::Sampler(&self.sampler) },
+                ],
+            });
+            let upload = self.upload.as_mut().expect("retained raster bind-group upload");
+            upload.bind_group = Some(bind_group);
+        }
+        let cursor = self.upload.as_mut().expect("raster upload cursor initialized above");
+        let admission = cursor.admission.as_ref().ok_or("raster upload admission was retired")?;
+        if admission.key.as_str() != key || admission.witness != candidate || admission.width != width || admission.height != height || candidate != expected {
+            return Err("raster upload authority was occupied by another generation");
+        }
+        if cursor.row < height {
+            let rows = (PAGE_BYTES / row_bytes).max(1).min(usize::try_from(height - cursor.row).unwrap_or(usize::MAX));
+            let start = usize::try_from(cursor.row).unwrap_or(usize::MAX).saturating_mul(row_bytes);
+            let end = start.saturating_add(rows.saturating_mul(row_bytes));
+            let texture = cursor.texture.as_ref().ok_or("raster upload texture was retired")?;
+            let (page, page_rows) = pixels.rows(cursor.row, start, end, rows as u32).ok_or("raster prepared page ownership was incomplete")?;
+            queue.write_texture(
+                wgpu::TexelCopyTextureInfo { texture, mip_level: 0, origin: wgpu::Origin3d { x: 0, y: cursor.row, z: 0 }, aspect: wgpu::TextureAspect::All },
+                page,
+                wgpu::TexelCopyBufferLayout { offset: 0, bytes_per_row: Some(width * 4), rows_per_image: Some(page_rows) },
+                wgpu::Extent3d { width, height: page_rows, depth_or_array_layers: 1 },
+            );
+            cursor.row += page_rows;
+            return Ok(false);
+        }
+        let mut cursor = self.upload.take().expect("completed raster upload cursor");
+        let admission = cursor.admission.take().expect("completed raster upload admission");
+        let allocation_claim = cursor.allocation_claim.take().expect("completed raster allocation claim");
+        let value = RasterTexture {
+            texture: cursor.texture.take().expect("completed raster upload texture"),
+            view: cursor.view.take().expect("completed raster upload view"),
+            bind_group: cursor.bind_group.take().expect("completed raster upload bind group"),
+            width,
+            height,
+        };
+        if let Err((fault, admission, value)) = self.stage_claimed_texture(admission, value, allocation_claim) {
+            self.upload_close = Some(RasterTextureUploadCloseCursor::new(RasterTextureUploadCursor {
+                admission: Some(admission),
+                row: height,
+                texture: Some(value.texture),
+                view: Some(value.view),
+                bind_group: Some(value.bind_group),
+                allocation_claim: Some(allocation_claim),
+            }));
+            return Err(fault);
+        }
+        Ok(true)
     }
 
     pub fn get(&self, key: &str) -> Option<&RasterTexture> {
-        self.textures.get(key)
+        if let Some(witness) = self.presenting.get() {
+            if let Some(entry) = self.staged.get(key).filter(|entry| entry.witness == witness) {
+                return Some(&entry.value);
+            }
+        }
+        self.live.get(key).map(|entry| &entry.value)
     }
 
     #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
-    pub fn replace_gpu_bind_group(
+    pub fn stage_gpu_bind_group(
         &mut self,
         device: &wgpu::Device,
         globals_buffer: &wgpu::Buffer,
         glyph_view: &wgpu::TextureView,
         glyph_sampler: &wgpu::Sampler,
-        key: &str,
-        raster_view: &wgpu::TextureView,
+        admission: RasterTextureAdmission,
+        raster_view: wgpu::TextureView,
         texture: wgpu::Texture,
-        width: u32,
-        height: u32,
-    ) {
+        expected: RasterTextureWitness,
+    ) -> Result<(), RasterTextureStageFault> {
+        let allocation_claim = match self.claim_bind_group_allocation(&admission, expected) {
+            Ok(claim) => claim,
+            Err(fault) => return Err(RasterTextureStageFault::Returned { fault, admission, texture, view: raster_view }),
+        };
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("raster_bind_group"),
             layout: &self.layout,
@@ -1176,11 +2292,209 @@ impl RasterTextureTable {
                 wgpu::BindGroupEntry { binding: 0, resource: globals_buffer.as_entire_binding() },
                 wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::TextureView(glyph_view) },
                 wgpu::BindGroupEntry { binding: 2, resource: wgpu::BindingResource::Sampler(glyph_sampler) },
-                wgpu::BindGroupEntry { binding: 3, resource: wgpu::BindingResource::TextureView(raster_view) },
+                wgpu::BindGroupEntry { binding: 3, resource: wgpu::BindingResource::TextureView(&raster_view) },
                 wgpu::BindGroupEntry { binding: 4, resource: wgpu::BindingResource::Sampler(&self.sampler) },
             ],
         });
-        self.textures.insert(key.to_string(), RasterTexture { texture, bind_group, width, height });
+        let width = admission.width;
+        let height = admission.height;
+        let value = RasterTexture { texture, view: raster_view, bind_group, width, height };
+        if let Err((fault, admission, value)) = self.stage_claimed_texture(admission, value, allocation_claim) {
+            assert!(self.upload.is_none() && self.upload_close.is_none(), "matching raster publication fault must own its reserved close slot");
+            self.upload_close = Some(RasterTextureUploadCloseCursor::new(RasterTextureUploadCursor {
+                admission: Some(admission),
+                row: height,
+                texture: Some(value.texture),
+                view: Some(value.view),
+                bind_group: Some(value.bind_group),
+                allocation_claim: Some(allocation_claim),
+            }));
+            return Err(RasterTextureStageFault::Retained(fault));
+        }
+        Ok(())
+    }
+
+    pub fn begin_presenting(&mut self, witness: RasterTextureWitness) -> Result<bool, &'static str> {
+        if self.closing || self.retirement.is_some() || self.upload.is_some() {
+            return Err("raster candidate was not terminal before presentation");
+        }
+        if self.staged.is_empty() {
+            return Ok(false);
+        }
+        if self.candidate.get() != Some(witness) {
+            return Err("raster candidate witness was stale before presentation");
+        }
+        if !self.presenting.is_empty() {
+            return Err("raster presentation witness was already occupied");
+        }
+        self.presenting.set(witness);
+        Ok(true)
+    }
+
+    fn begin_retirement(&mut self, mode: RasterTextureRetirementMode) -> Result<(), &'static str> {
+        if let Some(cursor) = self.retirement.as_ref() {
+            return (cursor.mode == mode).then_some(()).ok_or("raster retirement authority was occupied");
+        }
+        self.retirement = Some(RasterTextureRetirementCursor { mode, scan: 0, owner: None, candidate_retired: false, presenting_retired: false });
+        Ok(())
+    }
+
+    fn retirement_step(&mut self) -> Result<bool, &'static str> {
+        let Some(cursor) = self.retirement.as_mut() else { return Ok(true) };
+        if let Some(owner) = cursor.owner.as_mut() {
+            return match owner.step() {
+                RasterTextureCleanupStep::Pending { .. } => Ok(false),
+                RasterTextureCleanupStep::Blocked(fault) => Err(fault),
+                RasterTextureCleanupStep::Complete => {
+                    assert!(owner.terminal_is_empty(), "completed raster retirement owner must be terminal-empty");
+                    cursor.owner = None;
+                    Ok(false)
+                }
+            };
+        }
+        if cursor.scan >= RASTER_TEXTURE_TABLE_CAPACITY {
+            match cursor.mode {
+                RasterTextureRetirementMode::Abort(witness) | RasterTextureRetirementMode::Commit(witness) => {
+                    if self.presenting.get() != Some(witness) {
+                        return Err("raster retirement presentation witness was stale");
+                    }
+                }
+                RasterTextureRetirementMode::Close => {}
+            }
+            if !cursor.candidate_retired {
+                cursor.candidate_retired = self.candidate.retire_one();
+                return Ok(false);
+            }
+            if !cursor.presenting_retired {
+                cursor.presenting_retired = self.presenting.retire_one();
+                return Ok(false);
+            }
+            self.retirement = None;
+            return Ok(true);
+        }
+        let index = cursor.scan;
+        cursor.scan += 1;
+        match cursor.mode {
+            RasterTextureRetirementMode::Abort(witness) => {
+                let selected = self.staged.slots[index].as_ref().is_some_and(|entry| entry.witness == witness);
+                if selected {
+                    let entry = self.staged.take(index).expect("selected staged raster");
+                    cursor.owner = Some(RasterTextureRetirementOwner::new(entry));
+                }
+            }
+            RasterTextureRetirementMode::Commit(witness) => {
+                let selected = self.staged.slots[index].as_ref().is_some_and(|entry| entry.witness == witness);
+                if selected {
+                    let entry = self.staged.take(index).expect("selected staged raster");
+                    match self.live.insert(entry) {
+                        Ok(Some(previous)) => cursor.owner = Some(RasterTextureRetirementOwner::new(previous)),
+                        Ok(None) => {}
+                        Err(entry) => {
+                            if let Err(entry) = self.staged.insert_vacant(index, entry) {
+                                cursor.owner = Some(RasterTextureRetirementOwner::new(entry));
+                            }
+                            return Err("raster live table capacity exhausted");
+                        }
+                    }
+                }
+            }
+            RasterTextureRetirementMode::Close => {
+                let staged = self.staged.take(index);
+                if staged.is_some() && self.live.slots[index].is_some() {
+                    cursor.scan = index;
+                }
+                if let Some(entry) = staged.or_else(|| self.live.take(index)) {
+                    cursor.owner = Some(RasterTextureRetirementOwner::new(entry));
+                }
+            }
+        }
+        Ok(false)
+    }
+
+    pub fn commit_presented_step(&mut self, witness: RasterTextureWitness) -> Result<bool, &'static str> {
+        if self.presenting.is_empty() && self.staged.is_empty() {
+            return Ok(true);
+        }
+        if self.candidate.get() != Some(witness) || self.presenting.get() != Some(witness) {
+            return Err("raster commit witness was stale");
+        }
+        self.begin_retirement(RasterTextureRetirementMode::Commit(witness))?;
+        self.retirement_step()
+    }
+
+    pub fn abort_presented_step(&mut self, witness: RasterTextureWitness) -> Result<bool, &'static str> {
+        if self.presenting.is_empty() && self.candidate.is_empty() && self.staged.is_empty() && self.upload.is_none() {
+            return Ok(true);
+        }
+        if self.presenting.is_empty() {
+            self.presenting.set(witness);
+        }
+        if self.candidate.get() != Some(witness) || self.presenting.get() != Some(witness) {
+            return Err("raster abort witness was stale");
+        }
+        self.begin_retirement(RasterTextureRetirementMode::Abort(witness))?;
+        self.retirement_step()
+    }
+
+    pub fn close_upload_step(&mut self) -> RasterTextureCleanupStep {
+        if let Some(retirement) = self.reservation_retirement.as_mut() {
+            let step = retirement.step();
+            if matches!(step, RasterTextureCleanupStep::Complete) {
+                assert!(retirement.terminal_is_empty(), "completed raster reservation must be terminal-empty");
+                self.reservation_retirement = None;
+                return RasterTextureCleanupStep::retained();
+            }
+            return step;
+        }
+        if let Some(reservation) = self.reservation.take() {
+            self.reservation_retirement = Some(RasterTextureReservationCloseCursor::reservation(reservation));
+            return RasterTextureCleanupStep::retained();
+        }
+        if self.upload_close.is_none() {
+            if let Some(upload) = self.upload.take() {
+                self.upload_close = Some(RasterTextureUploadCloseCursor::new(upload));
+                return RasterTextureCleanupStep::retained();
+            }
+            return RasterTextureCleanupStep::Complete;
+        }
+        let cursor = self.upload_close.as_mut().expect("retained raster upload close cursor");
+        let step = cursor.step();
+        if matches!(step, RasterTextureCleanupStep::Complete) {
+            assert!(cursor.terminal_is_empty(), "completed raster upload close must be terminal-empty");
+            self.upload_close = None;
+            return RasterTextureCleanupStep::retained();
+        }
+        step
+    }
+
+    pub fn close_step(&mut self) -> Result<bool, &'static str> {
+        self.closing = true;
+        match self.close_upload_step() {
+            RasterTextureCleanupStep::Pending { .. } => return Ok(false),
+            RasterTextureCleanupStep::Blocked(fault) => return Err(fault),
+            RasterTextureCleanupStep::Complete => {}
+        }
+        if self.retirement.is_some() && !self.retirement_step()? {
+            return Ok(false);
+        }
+        if self.retirement.is_none() && (!self.live.is_empty() || !self.staged.is_empty() || !self.candidate.is_empty() || !self.presenting.is_empty()) {
+            self.begin_retirement(RasterTextureRetirementMode::Close)?;
+            return Ok(false);
+        }
+        Ok(self.terminal_is_empty())
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.closing
+            && self.live.is_empty()
+            && self.staged.is_empty()
+            && self.upload.is_none()
+            && self.upload_close.is_none()
+            && self.retirement.is_none()
+            && self.reservation.is_none()
+            && self.reservation_retirement.is_none()
+            && self.candidate.is_empty()
+            && self.presenting.is_empty()
     }
 }
 
@@ -1964,8 +3278,7 @@ impl UiPipelines {
     }
 
     fn draw_world_range<'a>(pass: &mut wgpu::RenderPass<'a>, mesh_store: &MeshGpuTable, draw_call: &WorldDrawRange, instance_buffer: wgpu::BufferSlice<'a>, instance_stride: u64) {
-        let store_key = MeshGpuTable::lookup_key(&draw_call.mesh_key, draw_call.mesh_version);
-        let Some(mesh) = mesh_store.get(&store_key) else {
+        let Some(mesh) = mesh_store.get_versioned(&draw_call.mesh_key, draw_call.mesh_version) else {
             return;
         };
         let byte_offset = draw_call.instance_offset as u64 * instance_stride;
@@ -2603,10 +3916,252 @@ impl UiPipelines {
 
 #[cfg(test)]
 mod tests {
-    use super::{content_stencil_state, ear_clip_polygon, mask_instances, mask_stencil_state, mesh_content_version, ClipRegion, DrawList, ScissorRect, WORLD_GLOBALS_SLOT_SIZE};
+    use super::{
+        claim_raster_stage_tuple, content_stencil_state, ear_clip_polygon, mask_instances, mask_stencil_state, mesh_content_version, raster_texture_bytes, raster_witness_is_stale, ClipRegion, DrawList, FixedMeshGpuRegistry,
+        FixedRasterTextureRegistry, MeshGpuEntry, MeshGpuKey, RasterTextureAdmission, RasterTextureCleanupStep, RasterTextureEntry, RasterTextureKey, RasterTextureReservation, RasterTextureReservationCloseCursor, RasterTextureReservationRetirement,
+        RasterTextureStageClaim, RasterTextureUploadCloseCursor, RasterTextureUploadCursor, RasterTextureWitness, RasterTextureWitnessSlot, ScissorRect, MESH_GPU_KEEP_VERSION_CAPACITY, MESH_GPU_TABLE_CAPACITY, RASTER_TEXTURE_ITEM_BYTE_CAPACITY,
+        RASTER_TEXTURE_KEY_BYTES, RASTER_TEXTURE_PROBE_CAPACITY, RASTER_TEXTURE_TABLE_CAPACITY, WORLD_GLOBALS_SLOT_SIZE,
+    };
     use crate::wgpu::geometry::Rect;
     use crate::wgpu::kernel_3d_scene::ScenePass3d;
     use crate::wgpu::theme::Rgba;
+
+    #[test]
+    fn fixed_mesh_gpu_registry_rejects_capacity_plus_one_and_returns_exact_owner() {
+        let mut registry = FixedMeshGpuRegistry::default();
+        for index in 0..MESH_GPU_TABLE_CAPACITY {
+            let key = MeshGpuKey::new(&format!("mesh-{index}")).expect("bounded key");
+            registry.insert(MeshGpuEntry { key, version: index as u64, value: Box::new(index) }).ok().expect("fixed mesh slot");
+        }
+        let rejected = Box::new(MESH_GPU_TABLE_CAPACITY);
+        let rejected_pointer = (&*rejected) as *const usize;
+        let rejected = registry.insert(MeshGpuEntry { key: MeshGpuKey::new("overflow").expect("bounded key"), version: 1, value: rejected }).expect_err("capacity plus one");
+        assert_eq!((&*rejected.value) as *const usize, rejected_pointer);
+        assert_eq!(*rejected.value, MESH_GPU_TABLE_CAPACITY);
+        let first = registry.take(0).expect("first exact owner");
+        assert_eq!(*first.value, 0);
+        registry.insert(rejected).ok().expect("returned owner retries after one slot retires");
+        assert_eq!(registry.len, MESH_GPU_TABLE_CAPACITY);
+    }
+
+    #[test]
+    fn fixed_mesh_gpu_registry_version_identity_rejects_stale_aba_lookup() {
+        let mut registry = FixedMeshGpuRegistry::default();
+        registry.insert(MeshGpuEntry { key: MeshGpuKey::new("terrain").expect("bounded key"), version: 7, value: 70u64 }).ok().expect("first generation");
+        assert_eq!(registry.get("terrain", 7), Some(&70));
+        let old = registry.take(0).expect("old generation owner");
+        assert_eq!(old.version, 7);
+        registry.insert(MeshGpuEntry { key: MeshGpuKey::new("terrain").expect("bounded key"), version: 8, value: 80u64 }).ok().expect("replacement generation");
+        assert!(registry.get("terrain", 7).is_none());
+        assert_eq!(registry.get("terrain", 8), Some(&80));
+    }
+
+    fn raster_key_for_start(start: usize, ordinal: usize) -> RasterTextureKey {
+        (0usize..1_000_000).map(|candidate| RasterTextureKey::new(&format!("raster-{start}-{ordinal}-{candidate}")).expect("bounded raster key")).find(|key| key.start() == start).expect("deterministic raster key for slot")
+    }
+
+    #[test]
+    fn fixed_raster_registry_rejects_capacity_plus_one_with_exact_handback() {
+        let mut registry = FixedRasterTextureRegistry::default();
+        for index in 0..RASTER_TEXTURE_TABLE_CAPACITY {
+            let key = raster_key_for_start(index, 0);
+            registry.insert(RasterTextureEntry { key, witness: RasterTextureWitness { scene_revision: 1, preview_generation: 1, operation: index as u64 }, bytes: 1, value: Box::new(index) }).ok().expect("fixed raster slot");
+        }
+        let rejected = Box::new(RASTER_TEXTURE_TABLE_CAPACITY);
+        let rejected_pointer = (&*rejected) as *const usize;
+        let rejected =
+            match registry.insert(RasterTextureEntry { key: RasterTextureKey::new("overflow").expect("bounded raster key"), witness: RasterTextureWitness { scene_revision: 2, preview_generation: 2, operation: 1 }, bytes: 1, value: rejected }) {
+                Err(rejected) => rejected,
+                Ok(_) => panic!("raster capacity plus one was accepted"),
+            };
+        assert_eq!((&*rejected.value) as *const usize, rejected_pointer);
+        assert_eq!(registry.len, RASTER_TEXTURE_TABLE_CAPACITY);
+    }
+
+    #[test]
+    fn fixed_raster_registry_probe_saturation_and_replacement_preserve_owners() {
+        let start = 17;
+        let mut registry = FixedRasterTextureRegistry::default();
+        for ordinal in 0..RASTER_TEXTURE_PROBE_CAPACITY {
+            let key = raster_key_for_start(start, ordinal);
+            registry.insert(RasterTextureEntry { key, witness: RasterTextureWitness { scene_revision: 7, preview_generation: ordinal as u64, operation: ordinal as u64 + 1 }, bytes: 1, value: Box::new(ordinal) }).ok().expect("probe slot");
+        }
+        let rejected_owner = Box::new(99usize);
+        let rejected_pointer = (&*rejected_owner) as *const usize;
+        let rejected =
+            match registry.insert(RasterTextureEntry { key: raster_key_for_start(start, RASTER_TEXTURE_PROBE_CAPACITY), witness: RasterTextureWitness { scene_revision: 8, preview_generation: 0, operation: 1 }, bytes: 1, value: rejected_owner }) {
+                Err(rejected) => rejected,
+                Ok(_) => panic!("probe capacity plus one was accepted"),
+            };
+        assert_eq!((&*rejected.value) as *const usize, rejected_pointer);
+        let replacement_key = raster_key_for_start(start, 0);
+        let previous =
+            registry.insert(RasterTextureEntry { key: replacement_key, witness: RasterTextureWitness { scene_revision: 9, preview_generation: 3, operation: 77 }, bytes: 1, value: Box::new(777usize) }).ok().flatten().expect("exact replaced owner");
+        assert_eq!(*previous.value, 0);
+        let current = registry.get(replacement_key.as_str()).expect("replacement generation");
+        assert_eq!((current.witness.scene_revision, current.witness.preview_generation, current.witness.operation, *current.value), (9, 3, 77, 777));
+    }
+
+    #[test]
+    fn raster_key_and_byte_credits_reject_exact_plus_one() {
+        let key = "k".repeat(RASTER_TEXTURE_KEY_BYTES);
+        assert!(RasterTextureKey::new(&key).is_ok());
+        assert!(RasterTextureKey::new(&(key + "x")).is_err());
+        assert_eq!(raster_texture_bytes(2048, 2048), Some(RASTER_TEXTURE_ITEM_BYTE_CAPACITY));
+        assert!(raster_texture_bytes(2048, 2049).is_some_and(|bytes| bytes > RASTER_TEXTURE_ITEM_BYTE_CAPACITY));
+    }
+
+    #[test]
+    fn raster_operation_freshness_is_independent_and_aba_safe() {
+        let current = RasterTextureWitness { scene_revision: 9, preview_generation: 4, operation: 12 };
+        assert!(raster_witness_is_stale(current, RasterTextureWitness { operation: 11, ..current }));
+        assert!(raster_witness_is_stale(current, current));
+        assert!(!raster_witness_is_stale(current, RasterTextureWitness { operation: 13, ..current }));
+    }
+
+    #[test]
+    fn raster_witness_close_retires_exactly_one_scalar_per_grant() {
+        let mut slot = RasterTextureWitnessSlot::default();
+        slot.set(RasterTextureWitness { scene_revision: 3, preview_generation: 5, operation: 7 });
+        assert!(!slot.retire_one());
+        assert!(slot.scene_revision.is_none());
+        assert!(slot.preview_generation.is_some());
+        assert!(!slot.retire_one());
+        assert!(slot.preview_generation.is_none());
+        assert!(slot.operation.is_some());
+        assert!(!slot.retire_one());
+        assert!(slot.operation.is_none());
+        assert!(slot.retire_one());
+    }
+
+    #[test]
+    fn raster_reservation_cancel_retires_one_exact_root_or_scalar_per_grant() {
+        let reservation = RasterTextureReservation {
+            key: RasterTextureKey::new("cancelled").expect("bounded key"),
+            witness: RasterTextureWitness { scene_revision: 3, preview_generation: 5, operation: 7 },
+            width: 16,
+            height: 8,
+            bytes: 512,
+            staged_index: 11,
+            nonce: 13,
+        };
+        let mut retirement = RasterTextureReservationRetirement::new(reservation);
+        assert_eq!(retirement.step(), RasterTextureCleanupStep::Pending { released_roots: 1, released_scalars: 0 });
+        for _ in 0..8 {
+            assert_eq!(retirement.step(), RasterTextureCleanupStep::Pending { released_roots: 0, released_scalars: 1 });
+        }
+        assert_eq!(retirement.step(), RasterTextureCleanupStep::Complete);
+    }
+
+    #[test]
+    fn raster_matching_cancel_retains_both_reservation_and_admission_to_terminal() {
+        let witness = RasterTextureWitness { scene_revision: 61, preview_generation: 67, operation: 71 };
+        let key = RasterTextureKey::new("matching-cancel").expect("bounded key");
+        let reservation = RasterTextureReservation { key, witness, width: 32, height: 8, bytes: 1024, staged_index: 73, nonce: 79 };
+        let admission = RasterTextureAdmission { key, witness, width: 32, height: 8, bytes: 1024, staged_index: 73, nonce: 79 };
+        let mut close = RasterTextureReservationCloseCursor::cancelled(reservation, admission);
+        let mut released_roots = 0;
+        let mut released_scalars = 0;
+        let mut steps = 0;
+        loop {
+            steps += 1;
+            assert!(steps < 32, "matching cancellation must terminate");
+            match close.step() {
+                RasterTextureCleanupStep::Pending { released_roots: roots, released_scalars: scalars } => {
+                    assert!(roots + scalars <= 1);
+                    released_roots += roots;
+                    released_scalars += scalars;
+                }
+                RasterTextureCleanupStep::Blocked(fault) => panic!("unexpected matching cancellation block: {fault}"),
+                RasterTextureCleanupStep::Complete => break,
+            }
+        }
+        assert_eq!((released_roots, released_scalars), (2, 16));
+        assert!(close.terminal_is_empty());
+    }
+
+    #[test]
+    fn raster_gpu_allocation_claim_rejects_missing_aba_candidate_and_occupied_slot() {
+        fn authorities(nonce: u64) -> (RasterTextureReservation, RasterTextureAdmission, RasterTextureWitness) {
+            let witness = RasterTextureWitness { scene_revision: 17, preview_generation: 19, operation: 23 };
+            let key = RasterTextureKey::new("claimed").expect("bounded key");
+            let reservation = RasterTextureReservation { key, witness, width: 32, height: 16, bytes: 2048, staged_index: 29, nonce };
+            let admission = RasterTextureAdmission { key, witness, width: 32, height: 16, bytes: 2048, staged_index: 29, nonce };
+            (reservation, admission, witness)
+        }
+
+        let (reservation, admission, witness) = authorities(31);
+        let claim = claim_raster_stage_tuple(Some(reservation), Some(witness), false, &admission, witness).expect("full tuple");
+        assert_eq!((claim.staged_index, claim.staged_nonce), (29, 31));
+        assert!(claim_raster_stage_tuple(None, Some(witness), false, &admission, witness).is_err());
+
+        let (reservation, stale_admission, witness) = authorities(37);
+        assert!(claim_raster_stage_tuple(Some(reservation), Some(witness), false, &stale_admission, witness).is_ok());
+        let (_, aba_admission, _) = authorities(38);
+        assert!(claim_raster_stage_tuple(Some(reservation), Some(witness), false, &aba_admission, witness).is_err());
+        let (_, mut mismatched, _) = authorities(37);
+        mismatched.key = RasterTextureKey::new("other-key").expect("bounded key");
+        assert!(claim_raster_stage_tuple(Some(reservation), Some(witness), false, &mismatched, witness).is_err());
+        let (_, mut mismatched, _) = authorities(37);
+        mismatched.witness.scene_revision += 1;
+        assert!(claim_raster_stage_tuple(Some(reservation), Some(witness), false, &mismatched, mismatched.witness).is_err());
+        let (_, mut mismatched, _) = authorities(37);
+        mismatched.witness.preview_generation += 1;
+        assert!(claim_raster_stage_tuple(Some(reservation), Some(witness), false, &mismatched, mismatched.witness).is_err());
+        let (_, mut mismatched, _) = authorities(37);
+        mismatched.witness.operation += 1;
+        assert!(claim_raster_stage_tuple(Some(reservation), Some(witness), false, &mismatched, mismatched.witness).is_err());
+        let (_, mut mismatched, _) = authorities(37);
+        mismatched.width += 1;
+        assert!(claim_raster_stage_tuple(Some(reservation), Some(witness), false, &mismatched, witness).is_err());
+        let (_, mut mismatched, _) = authorities(37);
+        mismatched.height += 1;
+        assert!(claim_raster_stage_tuple(Some(reservation), Some(witness), false, &mismatched, witness).is_err());
+        let (_, mut mismatched, _) = authorities(37);
+        mismatched.bytes += 1;
+        assert!(claim_raster_stage_tuple(Some(reservation), Some(witness), false, &mismatched, witness).is_err());
+        let (_, mut mismatched, _) = authorities(37);
+        mismatched.staged_index += 1;
+        assert!(claim_raster_stage_tuple(Some(reservation), Some(witness), false, &mismatched, witness).is_err());
+        assert!(claim_raster_stage_tuple(Some(reservation), Some(RasterTextureWitness { operation: 24, ..witness }), false, &stale_admission, witness).is_err());
+        assert!(claim_raster_stage_tuple(Some(reservation), Some(witness), true, &stale_admission, witness).is_err());
+    }
+
+    #[test]
+    fn raster_interrupted_upload_close_is_truthful_before_first_and_mid_page() {
+        for row in [0, 7] {
+            let witness = RasterTextureWitness { scene_revision: 41, preview_generation: 43, operation: 47 };
+            let key = RasterTextureKey::new("interrupted").expect("bounded key");
+            let reservation = RasterTextureReservation { key, witness, width: 64, height: 64, bytes: 16 * 1024, staged_index: 53, nonce: 59 };
+            let admission = RasterTextureAdmission { key, witness, width: 64, height: 64, bytes: 16 * 1024, staged_index: 53, nonce: 59 };
+            let claim = RasterTextureStageClaim { reservation, candidate: witness, staged_index: 53, staged_nonce: 59 };
+            let mut close = RasterTextureUploadCloseCursor::new(RasterTextureUploadCursor { admission: Some(admission), row, texture: None, view: None, bind_group: None, allocation_claim: Some(claim) });
+            let mut steps = 0;
+            loop {
+                steps += 1;
+                assert!(steps < 64, "retained upload close must terminate");
+                match close.step() {
+                    RasterTextureCleanupStep::Pending { released_roots, released_scalars } => assert!(released_roots + released_scalars <= 1),
+                    RasterTextureCleanupStep::Blocked(fault) => panic!("unexpected retained close block: {fault}"),
+                    RasterTextureCleanupStep::Complete => break,
+                }
+            }
+            assert!(close.terminal_is_empty());
+        }
+    }
+
+    #[test]
+    fn mesh_gpu_retirement_preserves_acknowledged_versions() {
+        let key = MeshGpuKey::new("terrain").expect("bounded key");
+        let other = MeshGpuKey::new("other").expect("bounded key");
+        let mut versions = [0; MESH_GPU_KEEP_VERSION_CAPACITY];
+        versions[..2].copy_from_slice(&[8, 9]);
+        let selector = super::MeshGpuRetirementSelector::KeyExcept { key, versions, len: 2 };
+        assert!(selector.selects(&MeshGpuEntry { key, version: 7, value: () }));
+        assert!(!selector.selects(&MeshGpuEntry { key, version: 8, value: () }));
+        assert!(!selector.selects(&MeshGpuEntry { key, version: 9, value: () }));
+        assert!(!selector.selects(&MeshGpuEntry { key: other, version: 7, value: () }));
+    }
 
     #[test]
     fn scissor_intersects_child() {

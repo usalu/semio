@@ -6,7 +6,7 @@
 //#region 🔌️Adapters
 import { ephemeralBox } from "@semio-tech/framework";
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { chmodSync, existsSync, fstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { type Dirent, chmodSync, existsSync, fstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { availableParallelism, devNull, homedir, tmpdir } from "node:os";
 import { basename, dirname, join, normalize, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -627,6 +627,165 @@ export function dependencyBoundaryBreachesForBundleDir(repoRoot: string, bundleR
   return breachs;
 }
 //#endregion 🔖️dependency-boundary
+
+
+//#region 🏛️Layering
+/** 🏛️ One place where repo-wide or framework code names an implementation area. */
+export type LayeringReference = Readonly<{ file: string; area: string; count: number }>;
+
+/** 🏛️ The shrink-only layering baseline: how many such references each file is still allowed. */
+export type LayeringBaseline = Readonly<{ schemaVersion: number; allowed: Readonly<Record<string, number>> }>;
+
+/** 🏛️ Repo-relative path of the committed layering baseline. */
+export const LAYERING_BASELINE_REL_PATH = "🔒️layering.json";
+
+const LAYERING_SCANNED_EXTENSIONS = new Set([".ts", ".tsx", ".mts", ".cts", ".js", ".mjs", ".cjs", ".rs", ".go", ".py", ".cs", ".json", ".toml", ".yml", ".yaml"]);
+const LAYERING_SKIPPED_DIRS = new Set(["node_modules", ".git", ".nx", ".venv", "target", "dist", "build", "out", "__pycache__", "obj", "bin", "storybook-static", "🎫️tickets", "⚡️cache", "🤖️generated"]);
+
+function layeringTaxonomy(repoRoot: string): { layers: Record<string, string>; repoWide: string[]; generated: string[]; banners: string[] } {
+  const parsed = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")) as Record<string, unknown>;
+  return { layers: (parsed.areaLayers ?? {}) as Record<string, string>, repoWide: (parsed.repoWideFiles ?? []) as string[], generated: (parsed.layeringGeneratedInventories ?? []) as string[], banners: (parsed.layeringGeneratedBanners ?? []) as string[] };
+}
+
+/**
+ * 🏛️ Finds every reference from repo-wide or framework code to an implementation area.
+ *
+ * The rule this enforces is concrete: deleting an implementation area must leave every repo-wide and
+ * framework file correct. A rule that only makes sense for one implementation belongs in that
+ * implementation's own `📜️script.ts`, which the policy plugin already discovers by convention.
+ *
+ * Which areas are implementations is taxonomy data (`areaLayers`), so this function names none of
+ * them itself and a new area needs no code change here.
+ */
+export function layeringReferences(repoRoot: string): LayeringReference[] {
+  const { layers, repoWide, generated, banners } = layeringTaxonomy(repoRoot);
+  const isGenerated = (relPath: string): boolean => generated.some((name) => relPath === name || relPath.endsWith(`/${name}`));
+  const implementations = Object.entries(layers)
+    .filter(([, layer]) => layer === "implementation")
+    .map(([area]) => area);
+  const frameworkRoots = Object.entries(layers)
+    .filter(([, layer]) => layer === "framework")
+    .map(([area]) => area);
+  if (implementations.length === 0) return [];
+
+  const found: LayeringReference[] = [];
+  const scan = (relPath: string): void => {
+    if (isGenerated(relPath)) return;
+    if (!LAYERING_SCANNED_EXTENSIONS.has(relPath.slice(relPath.lastIndexOf(".")))) return;
+    let content: string;
+    try {
+      content = readFileSync(join(repoRoot, relPath), "utf8");
+    } catch {
+      return;
+    }
+    // 🏛️A bundled or generated file re-derives itself; only AUTHORED coupling can go stale.
+    const head = content.slice(0, 512);
+    if (banners.some((banner) => head.includes(banner))) return;
+    for (const area of implementations) {
+      const count = content.split(`${area}/`).length - 1;
+      if (count > 0) found.push({ file: relPath, area, count });
+    }
+  };
+  for (const file of repoWide) if (existsSync(join(repoRoot, file))) scan(file);
+  const walk = (relDir: string): void => {
+    let entries: Dirent[];
+    try {
+      entries = readdirSync(join(repoRoot, relDir), { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const childRel = `${relDir}/${entry.name}`;
+      if (entry.isDirectory()) {
+        if (!LAYERING_SKIPPED_DIRS.has(entry.name)) walk(childRel);
+        continue;
+      }
+      scan(childRel);
+    }
+  };
+  for (const root of frameworkRoots) walk(root);
+  return found.sort((a, b) => b.count - a.count || a.file.localeCompare(b.file) || a.area.localeCompare(b.area));
+}
+
+/** 🏛️ Loads the committed layering baseline, or an empty one on first run. */
+export function loadLayeringBaseline(repoRoot: string): LayeringBaseline {
+  const path = join(repoRoot, LAYERING_BASELINE_REL_PATH);
+  if (!existsSync(path)) return { schemaVersion: 1, allowed: {} };
+  return JSON.parse(readFileSync(path, "utf8")) as LayeringBaseline;
+}
+
+/** 🏛️ Total references per file, the unit the ratchet compares. */
+export function layeringCounts(references: readonly LayeringReference[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const reference of references) counts[reference.file] = (counts[reference.file] ?? 0) + reference.count;
+  return counts;
+}
+
+/** 🏛️ The shrink-only verdict: a file may reference fewer implementation paths than its baseline, never more. */
+export function layeringBreaches(repoRoot: string): BreachRecord[] {
+  const baseline = loadLayeringBaseline(repoRoot);
+  const counts = layeringCounts(layeringReferences(repoRoot));
+  const breaches: BreachRecord[] = [];
+  for (const [file, count] of Object.entries(counts).sort((a, b) => b[1] - a[1])) {
+    const allowed = baseline.allowed[file] ?? 0;
+    if (count <= allowed) continue;
+    breaches.push({
+      id: "implementation-reference",
+      kind: "layering/implementation-reference",
+      scope: file,
+      summary: `${count} reference(s) to an implementation area, baseline allows ${allowed}`,
+      priority: "high",
+      reason: "Repo-wide and framework code must stay correct when an implementation area is deleted. A rule that only makes sense for one implementation belongs to that implementation.",
+      solution: "Move the implementation-specific logic into that implementation's own 📜️script.ts (the policy plugin discovers it), or express the dependency as taxonomy vocabulary instead of a literal path.",
+    });
+  }
+  return breaches;
+}
+
+/** 🏛️ Rewrites the baseline from the current tree — the deliberate ratchet step after a migration. */
+export function writeLayeringBaseline(repoRoot: string): LayeringBaseline {
+  const counts = layeringCounts(layeringReferences(repoRoot));
+  const baseline: LayeringBaseline = { schemaVersion: 1, allowed: Object.fromEntries(Object.entries(counts).sort(([a], [b]) => a.localeCompare(b))) };
+  writeFileSync(join(repoRoot, LAYERING_BASELINE_REL_PATH), `${JSON.stringify({ _comment: "🏛️ Shrink-only layering ratchet. Each entry is how many references to an implementation area (`areaLayers` in 🔣️taxonomy.json) one repo-wide or framework file is still allowed. A count may fall, never rise; a file that reaches zero should be removed from this list. Regenerate deliberately with `bun ./📜️script.ts verify layering write-baseline` AFTER a migration, never to make a failure go away.", ...baseline }, null, 2)}\n`);
+  return baseline;
+}
+
+/** 🔒️ Filename an area uses to contribute allowlist entries to repository policy rules. */
+export const POLICY_ALLOWLIST_FILENAME = "🔒️policy-allowlist.json";
+
+/**
+ * 🔒️ Merges one policy rule's allowlist from every area that contributes to it. A rule therefore
+ * never names a path it exempts: the exemption lives with the code it describes, and deleting that
+ * code deletes the exemption. Discovery is by convention, so a new area needs no code change.
+ */
+export function policyDiscoveredAllowlist(repoRoot: string, key: string): Set<string> {
+  const merged = new Set<string>();
+  const walk = (relDir: string): void => {
+    let entries: Dirent[];
+    try {
+      entries = readdirSync(join(repoRoot, relDir || "."), { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const childRel = relDir ? `${relDir}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) {
+        if (!LAYERING_SKIPPED_DIRS.has(entry.name)) walk(childRel);
+        continue;
+      }
+      if (entry.name !== POLICY_ALLOWLIST_FILENAME) continue;
+      try {
+        const parsed = JSON.parse(readFileSync(join(repoRoot, childRel), "utf8")) as Record<string, unknown>;
+        for (const value of (parsed[key] as string[] | undefined) ?? []) merged.add(value);
+      } catch {
+        /* an unreadable allowlist contributes nothing, which fails closed */
+      }
+    }
+  };
+  walk("");
+  return merged;
+}
+//#endregion 🏛️Layering
 
 //#region 🔖️policy-runner
 export type LintScriptModule = {

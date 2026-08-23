@@ -18,7 +18,7 @@
 //! waiting on the Element migration to land first.
 
 use crate::deadlines::{CaretBlink, HotSwapPoll};
-use crate::kernel_seam::{AppKernelSeam, default_intent_exchange};
+use crate::kernel_seam::{default_intent_exchange, AppKernelSeam};
 use crate::render_snapshot::{RenderSnapshot, RenderSnapshotSink};
 use crate::{AppPresenter, RuntimeMailbox};
 use ui_render::{CursorRequest, FrameScheduler};
@@ -233,10 +233,10 @@ impl OsHostRetirement {
             if !presenter.close_cursor_wake_step() {
                 return false;
             }
-            if !presenter.close_active_upload_step() {
+            if !matches!(presenter.close_world_owners_step(), Ok(true)) {
                 return false;
             }
-            if !presenter.active_upload_terminal_is_empty() {
+            if !presenter.world_owners_terminal_is_empty() {
                 return false;
             }
         }

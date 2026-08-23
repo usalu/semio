@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "_comment": "🔒️ Repo-wide shrink-only test-migration ratchet, kept beside 🔒️dependencies.json because it is repository state rather than any module's state. `unmanagedTests` counts executable test files that still live outside the canonical owner-root test tree, keyed by the AREA they sit in (`areas` in 🔣️taxonomy.json). The contract phase fails when a count grows; an area that is deleted simply surveys as zero and passes. Per-owner migration status is NOT here — it lives with each owner, in that owner's own 🧪️oracle manifest.",
+  "unmanagedTests": {
+    "total": 48,
+    "byArea": {
+      ".storybook": 10,
+      "✏️s": 1,
+      "🌎️hub": 2,
+      "🧰️framework": 35
+    }
+  }
+}

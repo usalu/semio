@@ -19,7 +19,7 @@ use std::collections::{HashMap, HashSet};
 use std::io::Write as _;
 use ui_wgpu::wgpu::input::{DragAxis, KeyAction};
 use ui_wgpu::wgpu::{draw_text, draw_text_wrapped, render_widget, HitKind, HitTarget, Rect, Rgba, Theme, WidgetNode};
-use ui_wgpu::wgpu::{ActionDescriptor, SurfaceKind, UiComponentSceneNode, UiPresence};
+use ui_wgpu::wgpu::{ActionDescriptor, PreparedRasterProducer, PreparedRasterRejected, SurfaceKind, UiComponentSceneNode, UiPresence};
 
 //#region SceneRuntime
 pub const SCENE_SURFACE_CAPACITY: usize = 256;
@@ -401,8 +401,6 @@ struct SceneSurfaceState {
     last_click_target: Option<String>,
     node_positions: HashMap<String, (f32, f32)>,
     selected_ids: HashSet<String>,
-    pending_raster: Option<PendingRasterUpload>,
-    pending_raster_uploads: Vec<PendingRasterUpload>,
     canvas_image_digests: HashMap<String, u64>,
     canvas_image_src_digests: HashMap<String, u64>,
     paint_stroke_active: bool,
@@ -425,22 +423,72 @@ struct SceneSurfaceState {
     camera_dispatch_controller_id: Option<String>,
 }
 
-#[derive(Clone, Debug)]
-pub struct PendingRasterUpload {
-    pub key: String,
-    pub pixels: Vec<u8>,
-    pub width: u32,
-    pub height: u32,
-}
-
 const RASTER_SURFACE_CAPACITY: usize = 256;
 const RASTER_UPLOADS_PER_SURFACE_CAPACITY: usize = 16;
 const RASTER_UPLOAD_KEY_BYTE_CAPACITY: usize = 256;
 const RASTER_UPLOAD_BYTE_CAPACITY: usize = 1024 * 1024;
 
+struct PendingRasterQueue {
+    slots: Box<[Option<PreparedRasterProducer>; RASTER_UPLOADS_PER_SURFACE_CAPACITY]>,
+    head: u8,
+    len: u8,
+}
+
+impl Default for PendingRasterQueue {
+    fn default() -> Self {
+        Self { slots: Box::new([const { None }; RASTER_UPLOADS_PER_SURFACE_CAPACITY]), head: 0, len: 0 }
+    }
+}
+
+impl PendingRasterQueue {
+    fn len(&self) -> usize {
+        usize::from(self.len)
+    }
+
+    fn is_full(&self) -> bool {
+        self.len() == RASTER_UPLOADS_PER_SURFACE_CAPACITY
+    }
+
+    fn push_back(&mut self, producer: PreparedRasterProducer) -> Result<(), PreparedRasterProducer> {
+        if self.is_full() {
+            return Err(producer);
+        }
+        let index = (usize::from(self.head) + self.len()) % RASTER_UPLOADS_PER_SURFACE_CAPACITY;
+        self.slots[index] = Some(producer);
+        self.len += 1;
+        Ok(())
+    }
+
+    fn pop_front(&mut self) -> Option<PreparedRasterProducer> {
+        if self.len == 0 {
+            return None;
+        }
+        let index = usize::from(self.head);
+        let producer = self.slots[index].take();
+        self.head = ((index + 1) % RASTER_UPLOADS_PER_SURFACE_CAPACITY) as u8;
+        self.len -= 1;
+        producer
+    }
+
+    #[cfg(test)]
+    fn close_all(&mut self) {
+        while let Some(mut producer) = self.pop_front() {
+            producer.begin_close();
+            while !producer.close_step() {}
+        }
+    }
+}
+
+#[derive(Default)]
+struct PendingRasterSurface {
+    queue: PendingRasterQueue,
+    rejected: Option<PreparedRasterRejected>,
+    closing: Option<PreparedRasterProducer>,
+}
+
 pub enum PendingRasterUploadStep {
     Pending,
-    Upload(PendingRasterUpload),
+    Upload(PreparedRasterProducer),
     Complete,
     Fault(&'static str),
 }
@@ -448,11 +496,19 @@ pub enum PendingRasterUploadStep {
 #[derive(Default)]
 pub struct PendingRasterUploadCursor {
     surface_index: usize,
+    closing: Option<PreparedRasterProducer>,
 }
 
 impl PendingRasterUploadCursor {
     pub fn step(&mut self) -> PendingRasterUploadStep {
-        SCENE_STATE.with(|cell| {
+        if let Some(producer) = self.closing.as_mut() {
+            if !producer.close_step() {
+                return PendingRasterUploadStep::Pending;
+            }
+            self.closing = None;
+            return PendingRasterUploadStep::Fault("raster producer handoff was rejected");
+        }
+        PENDING_RASTER_STATE.with(|cell| {
             let mut states = cell.borrow_mut();
             if states.len() > RASTER_SURFACE_CAPACITY {
                 return PendingRasterUploadStep::Fault("raster surface credits exceeded");
@@ -462,21 +518,45 @@ impl PendingRasterUploadCursor {
             }
             let Some(surface_id) = states.id_at(self.surface_index).map(str::to_owned) else { return PendingRasterUploadStep::Complete };
             let Some(state) = states.get_mut(&surface_id) else { return PendingRasterUploadStep::Fault("raster surface order lost ownership") };
-            if state.pending_raster_uploads.len() > RASTER_UPLOADS_PER_SURFACE_CAPACITY {
-                return PendingRasterUploadStep::Fault("raster upload item credits exceeded");
-            }
-            let candidate = state.pending_raster.as_ref().or_else(|| state.pending_raster_uploads.last());
-            if let Some(candidate) = candidate {
-                if candidate.key.len() > RASTER_UPLOAD_KEY_BYTE_CAPACITY || candidate.pixels.len() > RASTER_UPLOAD_BYTE_CAPACITY {
-                    return PendingRasterUploadStep::Fault("raster upload byte credits exceeded");
+            if let Some(rejected) = state.rejected.as_mut() {
+                let fault = rejected.fault();
+                if !rejected.close_step() {
+                    return PendingRasterUploadStep::Pending;
                 }
+                state.rejected = None;
+                return PendingRasterUploadStep::Fault(fault);
             }
-            if let Some(upload) = state.pending_raster.take().or_else(|| state.pending_raster_uploads.pop()) {
-                return PendingRasterUploadStep::Upload(upload);
+            if let Some(producer) = state.closing.as_mut() {
+                if !producer.close_step() {
+                    return PendingRasterUploadStep::Pending;
+                }
+                state.closing = None;
+                return PendingRasterUploadStep::Fault("raster producer admission changed before FIFO publication");
+            }
+            if let Some(producer) = state.queue.pop_front() {
+                return PendingRasterUploadStep::Upload(producer);
             }
             self.surface_index += 1;
             PendingRasterUploadStep::Pending
         })
+    }
+
+    pub fn retain_rejected(&mut self, mut producer: PreparedRasterProducer) -> Result<(), PreparedRasterProducer> {
+        if self.closing.is_some() {
+            return Err(producer);
+        }
+        producer.begin_close();
+        self.closing = Some(producer);
+        Ok(())
+    }
+
+    pub fn close_step(&mut self) -> bool {
+        let Some(producer) = self.closing.as_mut() else { return true };
+        if !producer.close_step() {
+            return false;
+        }
+        self.closing = None;
+        true
     }
 }
 
@@ -501,6 +581,7 @@ impl<T: Default> WorkerCell<T> {
 #[cfg(target_arch = "wasm32")]
 thread_local! {
     static SCENE_STATE: RefCell<AdmittedSurfaceMap<SceneSurfaceState>> = RefCell::new(AdmittedSurfaceMap::default());
+    static PENDING_RASTER_STATE: RefCell<AdmittedSurfaceMap<PendingRasterSurface>> = RefCell::new(AdmittedSurfaceMap::default());
     static GRAPH_NODE_CTX: RefCell<HashMap<String, Option<String>>> = RefCell::new(HashMap::new());
     /// 🕒️ Canvas2d/Paint2d's settle-then-dispatch deadline map — surface id -> the timestamp its
     /// debounced `setCamera` should fire at. Same shape/sweep (`sweep_expired_camera_dispatch_deadlines`)
@@ -513,6 +594,8 @@ thread_local! {
 
 #[cfg(not(target_arch = "wasm32"))]
 static SCENE_STATE: WorkerCell<AdmittedSurfaceMap<SceneSurfaceState>> = WorkerCell::new();
+#[cfg(not(target_arch = "wasm32"))]
+static PENDING_RASTER_STATE: WorkerCell<AdmittedSurfaceMap<PendingRasterSurface>> = WorkerCell::new();
 #[cfg(not(target_arch = "wasm32"))]
 static GRAPH_NODE_CTX: WorkerCell<HashMap<String, Option<String>>> = WorkerCell::new();
 #[cfg(not(target_arch = "wasm32"))]
@@ -3569,6 +3652,12 @@ pub(crate) fn decode_canvas_image(data_url: &str) -> Option<(Vec<u8>, u32, u32)>
     Some((rgba.into_raw(), width, height))
 }
 
+pub(crate) fn decode_canvas_image_dimensions(data_url: &str) -> Option<(u32, u32)> {
+    let payload = data_url.strip_prefix("data:image/png;base64,").or_else(|| data_url.strip_prefix("data:image/jpeg;base64,")).unwrap_or(data_url);
+    let bytes = base64::engine::general_purpose::STANDARD.decode(payload).ok()?;
+    image::ImageReader::new(std::io::Cursor::new(bytes)).with_guessed_format().ok()?.into_dimensions().ok()
+}
+
 /** Hashes the raw (still-encoded) `data_url` before touching base64/PNG decode, so an unchanged
  * image layer costs one cheap byte-hash per frame instead of a full decode — decode only runs when
  * the source string actually changes. Continuous rAF renderers (e.g. paint-2d) would otherwise redo
@@ -3584,26 +3673,56 @@ pub(crate) fn queue_canvas_image_upload(surface_id: &str, layer_id: &str, data_u
     if unchanged {
         return Some(key);
     }
+    let ready = PENDING_RASTER_STATE.with(|cell| {
+        let mut surfaces = cell.borrow_mut();
+        surfaces.get_or_insert_with(surface_id.to_string(), PendingRasterSurface::default).is_some_and(|surface| !surface.queue.is_full() && surface.rejected.is_none() && surface.closing.is_none())
+    });
+    if !ready {
+        return None;
+    }
     let (pixels, width, height) = decode_canvas_image(data_url)?;
     let expected = (width as usize).saturating_mul(height as usize).saturating_mul(4);
-    if expected > RASTER_UPLOAD_BYTE_CAPACITY || pixels.len() < expected {
+    if expected > RASTER_UPLOAD_BYTE_CAPACITY || pixels.len() != expected {
         return None;
     }
     let digest = digest_pixels(&pixels[..expected]);
-    let mut accepted = true;
-    mutate_scene_state(surface_id, |state| {
-        if state.pending_raster_uploads.len() >= RASTER_UPLOADS_PER_SURFACE_CAPACITY {
-            accepted = false;
-            return;
+    if SCENE_STATE.with(|cell| cell.borrow().get(surface_id).and_then(|state| state.canvas_image_digests.get(&key)).copied()) == Some(digest) {
+        mutate_scene_state(surface_id, |state| {
+            state.canvas_image_src_digests.insert(src_key, src_digest);
+        });
+        return Some(key);
+    }
+    let (producer, published_key) = match PreparedRasterProducer::try_admit(key, pixels, width, height) {
+        Ok(admitted) => admitted,
+        Err(rejected) => {
+            PENDING_RASTER_STATE.with(|cell| {
+                if let Some(surface) = cell.borrow_mut().get_mut(surface_id) {
+                    surface.rejected = Some(rejected);
+                }
+            });
+            return None;
         }
-        state.canvas_image_src_digests.insert(src_key.clone(), src_digest);
-        let prior = state.canvas_image_digests.get(&key).copied();
-        if prior != Some(digest) {
-            state.canvas_image_digests.insert(key.clone(), digest);
-            state.pending_raster_uploads.push(PendingRasterUpload { key: key.clone(), pixels: pixels[..expected].to_vec(), width, height });
+    };
+    let accepted = PENDING_RASTER_STATE.with(|cell| {
+        let mut surfaces = cell.borrow_mut();
+        let Some(surface) = surfaces.get_mut(surface_id) else { return false };
+        match surface.queue.push_back(producer) {
+            Ok(()) => true,
+            Err(mut producer) => {
+                producer.begin_close();
+                surface.closing = Some(producer);
+                false
+            }
         }
     });
-    accepted.then_some(key)
+    if !accepted {
+        return None;
+    }
+    mutate_scene_state(surface_id, |state| {
+        state.canvas_image_src_digests.insert(src_key, src_digest);
+        state.canvas_image_digests.insert(published_key.clone(), digest);
+    });
+    Some(published_key)
 }
 
 /** Clamps checkerboard cell iteration to the world-space rect actually visible through `inner`
@@ -6456,6 +6575,48 @@ fn render_ink_canvas(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
 mod raster_frame_cost_tests {
     use super::*;
 
+    fn pending_raster_len(surface_id: &str) -> usize {
+        PENDING_RASTER_STATE.with(|cell| cell.borrow().get(surface_id).map_or(0, |surface| surface.queue.len()))
+    }
+
+    fn clear_pending_rasters(surface_id: &str) {
+        PENDING_RASTER_STATE.with(|cell| {
+            if let Some(surface) = cell.borrow_mut().get_mut(surface_id) {
+                surface.queue.close_all();
+                if let Some(mut rejected) = surface.rejected.take() {
+                    while !rejected.close_step() {}
+                }
+                if let Some(mut producer) = surface.closing.take() {
+                    while !producer.close_step() {}
+                }
+            }
+        });
+    }
+
+    #[test]
+    fn pending_raster_ring_is_fixed_fifo_and_returns_cap_plus_one_owner() {
+        let mut queue = PendingRasterQueue::default();
+        let mut generations = Vec::new();
+        for index in 0..RASTER_UPLOADS_PER_SURFACE_CAPACITY {
+            let (producer, _) = PreparedRasterProducer::try_admit(format!("raster-{index}"), vec![index as u8; 4], 1, 1).expect("fixed queue admission");
+            generations.push(producer.source_generation());
+            queue.push_back(producer).ok().expect("fixed FIFO slot");
+        }
+        let (overflow, _) = PreparedRasterProducer::try_admit("overflow".into(), vec![9; 4], 1, 1).expect("ledger still owns the cap-plus-one producer");
+        let overflow_generation = overflow.source_generation();
+        let mut overflow = queue.push_back(overflow).expect_err("ring cap plus one returns exact producer");
+        assert_eq!(overflow.source_generation(), overflow_generation);
+        overflow.begin_close();
+        while !overflow.close_step() {}
+        for expected in generations {
+            let mut producer = queue.pop_front().expect("FIFO producer owner");
+            assert_eq!(producer.source_generation(), expected);
+            producer.begin_close();
+            while !producer.close_step() {}
+        }
+        assert_eq!(queue.len(), 0);
+    }
+
     fn count_solids(draw: &ui_wgpu::wgpu::DrawList) -> usize {
         draw.layers.iter().map(|layer| layer.ui_instances.len()).sum()
     }
@@ -6473,13 +6634,12 @@ mod raster_frame_cost_tests {
         let data_url = tiny_png_data_url(10, 20, 30);
         let first = queue_canvas_image_upload(surface_id, "layer-a", &data_url);
         assert!(first.is_some());
-        mutate_scene_state(surface_id, |state| {
-            state.pending_raster_uploads.clear();
-        });
+        clear_pending_rasters(surface_id);
         let second = queue_canvas_image_upload(surface_id, "layer-a", &data_url);
         assert_eq!(first, second, "key must stay stable across frames");
-        let pending = scene_state(surface_id).pending_raster_uploads.len();
+        let pending = pending_raster_len(surface_id);
         assert_eq!(pending, 0, "unchanged data_url must not re-decode/re-queue an upload");
+        clear_pending_rasters(surface_id);
     }
 
     #[test]
@@ -6488,10 +6648,11 @@ mod raster_frame_cost_tests {
         let png_a = tiny_png_data_url(10, 20, 30);
         let png_b = tiny_png_data_url(200, 100, 50);
         queue_canvas_image_upload(surface_id, "layer-a", &png_a);
-        mutate_scene_state(surface_id, |state| state.pending_raster_uploads.clear());
+        clear_pending_rasters(surface_id);
         queue_canvas_image_upload(surface_id, "layer-a", &png_b);
-        let pending = scene_state(surface_id).pending_raster_uploads.len();
+        let pending = pending_raster_len(surface_id);
         assert_eq!(pending, 1, "changed data_url must re-decode and queue exactly one upload");
+        clear_pending_rasters(surface_id);
     }
 
     #[test]

@@ -10,7 +10,7 @@
 //! renderer has booted inside its dedicated Worker isolate; calls from a browser UI isolate fail
 //! closed and never execute the transaction inline.
 
-use semio_framework_job::{BatchDriveConfig, BatchJobParams, CancelToken, CommitCandidate, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS, InteractiveJob, StepContext, StepOutcome, root_cancel_token};
+use semio_framework_job::{root_cancel_token, BatchDriveConfig, BatchJobParams, CancelToken, CommitCandidate, InteractiveJob, StepContext, StepOutcome, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS};
 use semio_framework_trace::{Generation, InteractiveStage, OperationId};
 use std::sync::Arc;
 

@@ -5,7 +5,7 @@
 //! snapshot, and re-encodes with `encode_zip`. Both results are read back by the independent reader
 //! before the `semantic-archive-v1` profile compares the members as a set.
 
-use semio_repo_test_host::oracle_archive::{oracle_create_zip, oracle_remove_zip_entry, project_zip, ArchiveSpec};
+use semio_s_plugin_stdio_test_oracle::archive::{oracle_create_zip, oracle_remove_zip_entry, project_zip, ArchiveSpec};
 use semio_repo_test_host::{Adapter, Context, Json, Outcome};
 
 //#region 🔖️Input
@@ -44,7 +44,7 @@ fn oracle_remove(ctx: &Context) -> Result<Outcome, String> {
 #[cfg(feature = "sut")]
 mod subject {
     use super::{removed_name, spec};
-    use semio_repo_test_host::oracle_archive::{oracle_create_zip, project_zip};
+    use semio_s_plugin_stdio_test_oracle::archive::{oracle_create_zip, project_zip};
     use semio_repo_test_host::{Context, Outcome};
     use semio_s_plugin_stdio::artifacts::zip::standards::v2_0::subsets::any::io::{decode_zip, encode_zip};
 

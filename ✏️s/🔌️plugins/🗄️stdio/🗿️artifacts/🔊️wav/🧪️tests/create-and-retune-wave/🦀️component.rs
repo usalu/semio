@@ -5,7 +5,7 @@
 //! back by the independent `hound` reader, so a lossy decode or a malformed re-encode surfaces as a
 //! real difference instead of a producer agreeing with its own reading.
 
-use semio_repo_test_host::oracle_audio::{oracle_create_wav, oracle_retune_wav, project_wav, AudioSpec};
+use semio_s_plugin_stdio_test_oracle::audio::{oracle_create_wav, oracle_retune_wav, project_wav, AudioSpec};
 use semio_repo_test_host::{Adapter, Context, Outcome};
 
 //#region 🔖️Input
@@ -44,7 +44,7 @@ fn oracle_retune(ctx: &Context) -> Result<Outcome, String> {
 #[cfg(feature = "sut")]
 mod subject {
     use super::{retune_to, spec};
-    use semio_repo_test_host::oracle_audio::{oracle_create_wav, project_wav};
+    use semio_s_plugin_stdio_test_oracle::audio::{oracle_create_wav, project_wav};
     use semio_repo_test_host::{Context, Outcome};
     use semio_s_plugin_stdio::artifacts::wav::standards::riff_pcm::subsets::any::io::{decode_wav, encode_wav};
 

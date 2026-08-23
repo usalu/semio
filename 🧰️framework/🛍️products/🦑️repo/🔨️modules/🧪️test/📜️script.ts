@@ -37,7 +37,10 @@ import {
   formatMetrics,
   formatCleanReport,
   isProductionClass,
+  isExcludedTestPath,
   loadOracleRegistry,
+  oracleHostPackagesFor,
+  profileTable,
   markOutputDir,
   markRunComplete,
   planExecution,
@@ -205,11 +208,13 @@ function rustSutCrate(repoRoot: string, discovered: DiscoveredCase): { name: str
   return null;
 }
 
-/** 🔮️ Whether this case's registered oracle is a Rust one, which is what enables the host's `oracles` feature. */
-function needsRustOracles(repoRoot: string, discovered: DiscoveredCase): boolean {
-  const oracleId = readFileSync(join(repoRoot, discovered.featurePath), "utf8").match(/@oracle-([a-z0-9-]+)/)?.[1];
-  if (oracleId === undefined) return false;
-  return loadOracleRegistry(repoRoot).oracles.some((entry) => entry.id === oracleId && entry.ecosystem === "rust");
+/**
+ * 🧩️ The native oracle packages this case's OWNER contributes, resolved from the discovered
+ * contribution manifests. The framework links whatever an owner declares; it never names a package,
+ * a plugin or a format, so a new artifact family needs no edit here.
+ */
+function contributedOraclePackages(repoRoot: string, discovered: DiscoveredCase, implementation: Implementation): { package: string; path: string; features: readonly string[] }[] {
+  return oracleHostPackagesFor(loadOracleRegistry(repoRoot), discovered.owner, implementation).map((entry) => ({ package: entry.package, path: join(repoRoot, entry.path), features: entry.features ?? [] }));
 }
 
 /** 🦀️ Materializes a standalone cache-local integration crate that links the adapter and the host support crate by path. */
@@ -217,6 +222,7 @@ function materializeRustHost(repoRoot: string, discovered: DiscoveredCase, role:
   const dir = hostDirFor(repoRoot, discovered, role, "rust");
   const adapterAbs = join(repoRoot, discovered.adapters.rust!);
   const sut = rustSutCrate(repoRoot, discovered);
+  const oraclePackages = contributedOraclePackages(repoRoot, discovered, "rust");
   mkdirSync(join(dir, "src"), { recursive: true });
   writeFileSync(
     join(dir, "Cargo.toml"),
@@ -240,7 +246,9 @@ function materializeRustHost(repoRoot: string, discovered: DiscoveredCase, role:
       // the subject role only.
       ...(sut === null ? [] : ["[features]", `sut = ["dep:${sut.name}"]`, ""]),
       "[dependencies]",
-      `semio-repo-test-host = { path = ${JSON.stringify(join(repoRoot, RUST_PACKAGE_REL))}${needsRustOracles(repoRoot, discovered) ? ', features = ["oracles"]' : ""} }`,
+      `semio-repo-test-host = { path = ${JSON.stringify(join(repoRoot, RUST_PACKAGE_REL))} }`,
+      // 🧩️Whatever the owner contributed, exactly as the owner declared it.
+      ...oraclePackages.map((entry) => `${entry.package} = { path = ${JSON.stringify(entry.path)}${entry.features.length > 0 ? `, features = [${entry.features.map((feature) => JSON.stringify(feature)).join(", ")}]` : ""} }`),
       ...(sut === null ? [] : [`${sut.name} = { path = ${JSON.stringify(sut.path)}, default-features = false, optional = true }`]),
       "",
     ].join("\n"),
@@ -389,6 +397,9 @@ function runPhases(repoRoot: string, segments: readonly string[], phases: readon
   const allResults: TestResult[] = [];
   const problems: string[] = [];
   const parity: { testId: string; profile: ComparisonProfile; equal: boolean; diffs: number }[] = [];
+  // ⚖️One effective profile table for the whole run: the framework's domain-neutral profiles plus
+  // every profile the discovered owners contribute.
+  const profiles = profileTable(loadOracleRegistry(repoRoot));
   let scenarioCount = 0;
 
   for (const discovered of cases) {
@@ -416,7 +427,7 @@ function runPhases(repoRoot: string, segments: readonly string[], phases: readon
     const diffDir = testCacheDir(repoRoot, "diffs");
     mkdirSync(diffDir, { recursive: true });
     if (decision.implementation !== null) {
-      const { verdicts, unmatched } = evaluateParity(decision.comparison, caseResults);
+      const { verdicts, unmatched } = evaluateParity(decision.comparison, caseResults, profiles);
       for (const verdict of verdicts) {
         parity.push({ testId: verdict.testId, profile: verdict.profile, equal: verdict.equal, diffs: verdict.diffs });
         if (verdict.equal) continue;
@@ -429,7 +440,7 @@ function runPhases(repoRoot: string, segments: readonly string[], phases: readon
     // 🧮️ Pairwise subject equivalence keeps two implementations from exploiting different oracle
     // ambiguities, and is the ONLY parity evidence a recorded no-oracle case can offer — so it must
     // then involve at least two independently written implementations to mean anything at all.
-    const crossPairs = evaluateCrossSubjectParity(decision.comparison, caseResults);
+    const crossPairs = evaluateCrossSubjectParity(decision.comparison, caseResults, profiles);
     for (const pair of crossPairs) {
       parity.push({ testId: pair.pair, profile: decision.comparison, equal: pair.equal, diffs: pair.diffs });
       if (!pair.equal) problems.push(`cross-subject parity failed: ${pair.pair} (${pair.diffs} differences)`);
@@ -537,7 +548,7 @@ class ReportScript extends Script {
   }
 }
 
-/** 🧹️ Marker-guarded removal of generated test state. Never descends into `compose/`. */
+/** 🧹️ Marker-guarded removal of generated test state. Never descends into an excluded area. */
 class CleanScript extends Script {
   run(segments: string[]): void {
     const dry = segments.includes("--dry");
@@ -545,9 +556,10 @@ class CleanScript extends Script {
     const liveTestIds = new Set(discoverTestCases(this.repoRoot).map((entry) => `${entry.owner}::${entry.case}`));
     const report = cleanTestOutputs(this.repoRoot, { dry, stale, liveTestIds: stale ? liveTestIds : undefined });
     console.log(formatCleanReport(this.repoRoot, report));
-    const leaked = report.removals.filter((row) => row.path.includes("compose/"));
+    // 🚫️Which areas may never be touched is taxonomy vocabulary; this router names none of them.
+    const leaked = report.removals.filter((row) => isExcludedTestPath(this.repoRoot, row.path));
     if (leaked.length > 0) {
-      console.error(`[clean test] refusing: ${leaked.length} candidate(s) resolved inside compose/`);
+      console.error(`[clean test] refusing: ${leaked.length} candidate(s) resolved inside an excluded area`);
       process.exit(1);
     }
   }

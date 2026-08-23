@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-23T11:57:29.717Z",
-  "commit": "0b10ba9e271a078548bd11c8ddbec59af40c9326",
+  "generatedAt": "2026-08-23T17:24:30.393Z",
+  "commit": "215e369d07d8014806a43f8f75a1bba3c6015908",
   "entries": [
     {
       "ecosystem": "go",
@@ -1123,6 +1123,18 @@
     },
     {
       "ecosystem": "js",
+      "name": "@types/semver",
+      "version": "^7.7.1",
+      "kinds": [
+        "repository-tooling"
+      ],
+      "users": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/package.json"
+      ],
+      "productionReachable": false
+    },
+    {
+      "ecosystem": "js",
       "name": "@types/three",
       "version": "^0.182.0",
       "kinds": [
@@ -1588,6 +1600,21 @@
         "✏️s/🔌️plugins/🎞️animate/📦️packages/🟦️typescript/package.json"
       ],
       "productionReachable": true
+    },
+    {
+      "ecosystem": "js",
+      "name": "semver",
+      "version": "7.8.5",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/package.json"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "semver"
+      ]
     },
     {
       "ecosystem": "js",
@@ -2112,7 +2139,7 @@
         "test-oracle"
       ],
       "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust/Cargo.toml"
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": false,
       "oracleIds": [
@@ -2127,7 +2154,7 @@
         "test-oracle"
       ],
       "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust/Cargo.toml"
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": false,
       "oracleIds": [
@@ -2171,7 +2198,7 @@
         "test-oracle"
       ],
       "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust/Cargo.toml"
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": false,
       "oracleIds": [
@@ -2199,7 +2226,7 @@
         "test-oracle"
       ],
       "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust/Cargo.toml"
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": false,
       "oracleIds": [
@@ -2211,16 +2238,22 @@
       "name": "image",
       "version": "0.25",
       "kinds": [
-        "production-runtime"
+        "test-oracle"
       ],
       "users": [
         "✏️s/🔌️plugins/🎞️animate/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/🖍️draw/📦️packages/🦀️rust/Cargo.toml",
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/Cargo.toml"
       ],
-      "productionReachable": true
+      "productionReachable": false,
+      "oracleIds": [
+        "image-bmp",
+        "image-tiff",
+        "image-jpeg"
+      ]
     },
     {
       "ecosystem": "rust",
@@ -2281,7 +2314,7 @@
         "test-oracle"
       ],
       "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust/Cargo.toml"
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": false,
       "oracleIds": [
@@ -2420,7 +2453,7 @@
         "test-oracle"
       ],
       "users": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust/Cargo.toml"
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": false,
       "oracleIds": [
@@ -2437,8 +2470,8 @@
       "users": [
         "✏️s/🔌️plugins/💠️lowpoly/📦️packages/🦀️rust/Cargo.toml",
         "✏️s/🔌️plugins/📸️remodel/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust/Cargo.toml"
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/Cargo.toml",
+        "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": false,
       "oracleIds": [
@@ -2814,6 +2847,21 @@
     },
     {
       "ecosystem": "rust",
+      "name": "stl_io",
+      "version": "0.8",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "stl-io"
+      ]
+    },
+    {
+      "ecosystem": "rust",
       "name": "swash",
       "version": "0.2.6",
       "kinds": [
@@ -2868,6 +2916,21 @@
         "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": true
+    },
+    {
+      "ecosystem": "rust",
+      "name": "tobj",
+      "version": "4",
+      "kinds": [
+        "test-oracle"
+      ],
+      "users": [
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/Cargo.toml"
+      ],
+      "productionReachable": false,
+      "oracleIds": [
+        "tobj"
+      ]
     },
     {
       "ecosystem": "rust",
@@ -3205,14 +3268,14 @@
     {
       "ecosystem": "rust",
       "name": "zip",
-      "version": "2.4",
+      "version": "6",
       "kinds": [
         "test-oracle"
       ],
       "users": [
+        "✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust/Cargo.toml",
         "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml",
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust/Cargo.toml"
+        "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml"
       ],
       "productionReachable": false,
       "oracleIds": [

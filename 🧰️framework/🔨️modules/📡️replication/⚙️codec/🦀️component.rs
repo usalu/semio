@@ -404,6 +404,34 @@ pub fn crc32c(bytes: &[u8]) -> u32 {
     }
     crc ^ 0xFFFF_FFFF
 }
+
+/// @emoji 🧮️ Retained CRC-32C state for fixed-page readers that must yield between input pages.
+pub struct Crc32cCursor {
+    crc: u32,
+}
+
+impl Crc32cCursor {
+    pub const fn new() -> Self {
+        Self { crc: 0xffff_ffff }
+    }
+
+    pub fn update_page(&mut self, bytes: &[u8]) {
+        for &byte in bytes {
+            let index = ((self.crc ^ u32::from(byte)) & 0xff) as usize;
+            self.crc = CRC32C_TABLE[index] ^ (self.crc >> 8);
+        }
+    }
+
+    pub const fn finish(&self) -> u32 {
+        !self.crc
+    }
+}
+
+impl Default for Crc32cCursor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 //#endregion 🔖️Crc
 
 //#region 🔖️Codec
@@ -686,6 +714,16 @@ mod tests {
     #[test]
     fn crc32c_matches_known_test_vector() {
         assert_eq!(crc32c(b"123456789"), 0xE306_9283);
+    }
+
+    #[test]
+    fn retained_crc32c_pages_match_the_contiguous_oracle() {
+        let bytes = b"a fixed-page CRC cursor must preserve the canonical checksum";
+        let mut cursor = Crc32cCursor::new();
+        cursor.update_page(&bytes[..17]);
+        cursor.update_page(&bytes[17..41]);
+        cursor.update_page(&bytes[41..]);
+        assert_eq!(cursor.finish(), crc32c(bytes));
     }
 
     #[test]

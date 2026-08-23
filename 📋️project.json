@@ -8,7 +8,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts scale-fixture check",
+        "command": "bun ./📜️script.ts scale-fixture check",
         "forwardAllArgs": true
       }
     },
@@ -461,42 +461,54 @@
     },
     "stdio-long": {
       "executor": "nx:run-commands",
-      "dependsOn": ["stdio-quick"],
+      "dependsOn": [
+        "stdio-quick"
+      ],
       "options": {
         "command": "bun ./📜️script.ts stdio long"
       }
     },
     "stdio-exhaustive": {
       "executor": "nx:run-commands",
-      "dependsOn": ["stdio-long"],
+      "dependsOn": [
+        "stdio-long"
+      ],
       "options": {
         "command": "bun ./📜️script.ts stdio exhaustive"
       }
     },
     "stdio-schema-parity": {
       "executor": "nx:run-commands",
-      "dependsOn": ["stdio-quick"],
+      "dependsOn": [
+        "stdio-quick"
+      ],
       "options": {
         "command": "bun ./📜️script.ts stdio schema-parity"
       }
     },
     "stdio-standards-coverage": {
       "executor": "nx:run-commands",
-      "dependsOn": ["stdio-schema-parity"],
+      "dependsOn": [
+        "stdio-schema-parity"
+      ],
       "options": {
         "command": "bun ./📜️script.ts stdio standards-coverage"
       }
     },
     "stdio-codec": {
       "executor": "nx:run-commands",
-      "dependsOn": ["stdio-standards-coverage"],
+      "dependsOn": [
+        "stdio-standards-coverage"
+      ],
       "options": {
         "command": "bun ./📜️script.ts stdio codec"
       }
     },
     "stdio-mutation-law": {
       "executor": "nx:run-commands",
-      "dependsOn": ["stdio-codec"],
+      "dependsOn": [
+        "stdio-codec"
+      ],
       "options": {
         "command": "bun ./📜️script.ts stdio mutation-law"
       }
@@ -510,28 +522,36 @@
     },
     "stdio-inference": {
       "executor": "nx:run-commands",
-      "dependsOn": ["stdio-mutation-law"],
+      "dependsOn": [
+        "stdio-mutation-law"
+      ],
       "options": {
         "command": "bun ./📜️script.ts stdio inference"
       }
     },
     "stdio-runtime": {
       "executor": "nx:run-commands",
-      "dependsOn": ["stdio-inference"],
+      "dependsOn": [
+        "stdio-inference"
+      ],
       "options": {
         "command": "bun ./📜️script.ts stdio runtime"
       }
     },
     "stdio-fuzz": {
       "executor": "nx:run-commands",
-      "dependsOn": ["stdio-runtime"],
+      "dependsOn": [
+        "stdio-runtime"
+      ],
       "options": {
         "command": "bun ./📜️script.ts stdio fuzz"
       }
     },
     "stdio-cross-platform": {
       "executor": "nx:run-commands",
-      "dependsOn": ["stdio-fuzz"],
+      "dependsOn": [
+        "stdio-fuzz"
+      ],
       "options": {
         "command": "bun ./📜️script.ts stdio cross-platform"
       }
@@ -546,7 +566,9 @@
     },
     "verify-gate": {
       "executor": "nx:run-commands",
-      "dependsOn": ["mutation-outcome-law"],
+      "dependsOn": [
+        "mutation-outcome-law"
+      ],
       "options": {
         "command": "bun ./📜️script.ts verify gate"
       }
@@ -604,6 +626,21 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts verify dependencies write-baseline"
+      }
+    },
+    "verify-layering": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./📜️script.ts verify layering"
+      }
+    },
+    "verify-layering-write-baseline": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify layering write-baseline"
       }
     },
     "build": {

@@ -64,6 +64,10 @@ Everything end to end.
 
 ---
 
+The codebasse
+
+---
+
 The current test approach in our repository is extremely adhoc.
 We want to develop a proper testing setup and use it to refactor our entire repository.
 Our repository is a polyglot, multi-implementation (the same code will be reimplemented in different languages) that uses a language agnostic domain-driven folder and file taxonomy tree and the tests must follow the same tree style.
@@ -447,6 +451,15 @@ TODO: Add roomie to discord for verification
 TODO: Start new project `elements` that offers domain-agnostic primitives (such as multi-lingual ui and cross-plattform desktop with App for multi-device, multi-window ui where sketchpad/coda can use all primitive functionality. Introduce sidebar (no need for mobile support) for system trays, companions and side panels e.g. rhino plugin)t
 
 ##
+
+---
+
+Still a huge amount of open/closed princinple violations. This means e.g. s could be deleted and no code in framework should be out of date.
+violations
+e.g. /Users/ueli/Documents/semio/📜️script.ts wrongly depends on individual implementations (such as plugins, etc), has policies that should be local and should only have repo wide code, no specific 
+/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📇️registry/🔒️migration.json wrongly depends on s
+etc.
+
 
 ---
 

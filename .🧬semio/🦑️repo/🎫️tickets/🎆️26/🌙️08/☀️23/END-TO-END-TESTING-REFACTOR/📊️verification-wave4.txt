@@ -1,0 +1,100 @@
+🧪️ Verification record — wave 4 (open/closed restoration)
+Every line below is a command that was actually executed and its actual output.
+
+────────────────────────────────────────────────────────────────────────────────
+THE TWO VIOLATIONS, AND WHAT THEY WERE
+
+A) The ROOT script depended on implementation detail.
+     TEST_DOMAIN_DIR = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"   ← a module's location
+     LEVELLESS_PHASES = ["discover","doctor","report","metrics"]           ← another module's vocabulary
+     names.filter((n) => n.toLowerCase().includes("compose"))              ← an area, by name
+     policyReadFileSafe(repoRoot, "…/🧪️test/📇️registry/🔣️component.json")  ← another module's file
+
+B) The FRAMEWORK test domain depended on ✏️s and 🌎️hub.
+     🔮️oracle/{,🖼️raster,🎒️archive,🔊️audio,📊️tabular}/🦀️component.rs      ← PDF/PNG/GIF/ZIP/WAV/CSV
+     Cargo.toml: pdf-writer, lopdf, png, gif, zip, flate2, hound, csv       ← eight format libraries
+     COMPARISON_PROFILES = [… "semantic-pdf-v1", "semantic-raster-v1" …]    ← per-format policy
+     📇️registry/🔣️component.json: stdio + ui oracles, and prose naming ✏️s
+
+────────────────────────────────────────────────────────────────────────────────
+WHAT REPLACED THEM
+
+1. One declared extension point, in the taxonomy:
+     testContributionDirName  = "🧪️oracle"
+     testContributionFilename = "🔣️component.json"
+     testDomainPath, testPhases, testLevellessPhases
+     testComparisonProfiles   = the eight DOMAIN-NEUTRAL profiles only
+
+2. Comparison became a mechanism over data. A profile is now
+     { id, arrays: "ordered"|"set", ignoreKeys[], tolerance, text, bytes }
+   so the framework comparator has ZERO format branches:
+     $ grep -c 'case "semantic-' 📦️index.ts   → 0
+
+3. Oracles moved to the owner of the format they reference.
+     ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/{📄️document,🖼️raster,🎒️archive,🔊️audio,📊️tabular}/🦀️component.rs
+     ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/📦️packages/🦀️rust  → semio-s-plugin-stdio-test-oracle
+     ✏️s/🔌️plugins/🗄️stdio/🧪️oracle/🔣️component.json    → 8 oracles, 6 profiles, 1 host package
+     🧰️framework/🔨️modules/🖱️ui/🧪️oracle/🔣️component.json → clsx, cva, 1 no-oracle decision
+
+4. The framework Rust host has NO dependencies at all:
+     $ dependency table of 📦️packages/🦀️rust/Cargo.toml → empty (asserted by a self-test)
+
+5. The framework registry holds only what is domain-neutral:
+     oracles: []   comparisonProfiles: []   oracleHostPackages: []
+     noOracleDecisions: [repo-test-platform]      ← a decision about the platform itself
+
+6. The root script, the Nx plugin, CI and launch.json all read vocabulary instead of literals:
+     $ grep -c "TEST_DOMAIN_DIR|composeProjectNames|LEVELLESS_PHASES" 📜️script.ts   → 0
+     $ grep -c "🔨️modules/🧪️test" 📜️script.ts                                      → 0
+     $ grep -c "🔨️modules/🧪️test" .vscode/launch.json                              → 0
+     $ grep -c "🔨️modules/🧪️test|compose" .github/workflows/test.yml               → 0
+     $ grep -c "DOMAIN_REL" 🔌️nx-plugin.mjs                                        → 0
+   The exempt-area exclusion now derives from `areas` in the taxonomy, so marking another
+   area exempt is a vocabulary edit. The CI purity job derives the oracle package list
+   from the discovered manifests rather than naming png/zip itself.
+
+────────────────────────────────────────────────────────────────────────────────
+FIVE SELF-TESTS NOW HOLD THE LINE (describe "🧩️ open/closed")
+
+  · the framework's own registry names no plugin, product or file format
+  · every oracle and every format-specific profile arrives as an owner contribution
+  · the framework's own comparison profiles are domain-neutral
+  · the framework Rust host declares no dependency at all
+  · the framework test domain's sources name no implementation area (✏️s/, 🌎️hub/)
+  · the root script names neither the test module's location nor its phase vocabulary
+
+────────────────────────────────────────────────────────────────────────────────
+NOTHING REGRESSED
+
+  $ bun test ./🧪️index.test.ts                 52 pass  0 fail  691 expect() calls
+  $ bunx tsc -p tsconfig.json --noEmit         clean
+  $ bun ./📜️script.ts test contract            0 high-priority breach(es)
+  $ bun ./📜️script.ts test oracle quick        cases=11 executed=24 passed=24
+  $ bun ./📜️script.ts test parity quick        cases=11 executed=49 passed=49 parity=37/37
+  $ bun ./📜️script.ts verify dependencies      clean — no new third-party dependencies
+  $ bun ./📜️script.ts test dependency          entries=212 production-reachable=152 test-oracle=10
+  $ bun nx show project …-create-and-round-trip-png
+      targets: lint, test, test-contract, test-exhaustive, test-long, test-oracle,
+               test-parity, test-quick, test-subject
+      cwd:     🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test   ← from the taxonomy, not a literal
+
+  $ discoverTestContributions()
+      ✏️s/🔌️plugins/🗄️stdio        oracles=8 profiles=6 hostPackages=1
+      🧰️framework/🔨️modules/🖱️ui   oracles=2 profiles=0 hostPackages=0
+
+────────────────────────────────────────────────────────────────────────────────
+TWO THINGS TO KNOW
+
+· Adding a new artifact family now touches ZERO framework files: create
+  `<owner>/🧪️oracle/🔣️component.json`, put the reference libraries in a crate beside it,
+  and write the adapter. Discovery, profile resolution, host linking and the dependency
+  gate all pick it up by convention.
+
+· `.github/workflows/test.yml` disappeared from disk between waves (it had never been
+  staged, and something in the shared tree removed it). It has been recreated and
+  `git add`-ed so a sweep cannot silently drop it again.
+
+· The root `📜️script.ts` still names `✏️s/🔌️plugins` and `compose` in PRE-EXISTING code —
+  DevScript's dev-server routes and several `policyRule*` scanners. Those predate this
+  ticket and are a separate concern; what this wave removed is every such dependency the
+  testing work itself introduced.

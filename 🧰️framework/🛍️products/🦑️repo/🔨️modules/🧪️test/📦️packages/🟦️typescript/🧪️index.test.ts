@@ -13,10 +13,20 @@ import { join, relative, sep } from "node:path";
 
 /** 🧭️ Repo-relative, forward-slashed path — the shape every discovered record carries. */
 const relativeToRepo = (root: string, target: string): string => relative(root, target).split(sep).join("/");
-import { COMPARISON_PROFILES, canonicalize, oracleImportsInProduction, computeCoverageMetrics, enforceMetricGates, validateCaseContract, cleanTestOutputs, compareProjections, digest, discoverTestCases, fixtureUrisIn, isExcludedTestPath, loadMigrationBaseline, loadOracleRegistry, markOutputDir, parseFeature, MIGRATION_STATUSES, projectionHash, ratchetDependencies, readOutputMarker, repoRootFromHere, setDigest, surveyUnmanagedTests, testCacheDir, testProjectName, testTaxonomy, validateAllContracts, validateResult } from "./📦️index.ts";
+import { CORE_COMPARISON_PROFILES, discoverTestContributions, profileTable, coreProfileTable, canonicalize, oracleImportsInProduction, computeCoverageMetrics, enforceMetricGates, validateCaseContract, cleanTestOutputs, compareProjections, digest, discoverTestCases, fixtureUrisIn, isExcludedTestPath, loadMigrationBaseline, migrationStatusByOwner, loadOracleRegistry, markOutputDir, parseFeature, MIGRATION_STATUSES, projectionHash, ratchetDependencies, readOutputMarker, repoRootFromHere, setDigest, surveyUnmanagedTests, testCacheDir, testProjectName, testTaxonomy, validateAllContracts, validateResult } from "./📦️index.ts";
 //#endregion 🔌️Adapters
 
 const repoRoot = repoRootFromHere();
+
+/** ⚖️ The effective profile table: framework profiles plus every one an owner contributes. */
+const contributed = (): ReadonlyMap<string, import("./📦️index.ts").ComparisonProfileSpec> => profileTable(loadOracleRegistry(repoRoot));
+
+/** 🔣️ The taxonomy's own area vocabulary — these tests name no area of their own. */
+const taxonomyAreas = (): Record<string, string> => JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")).areas as Record<string, string>;
+
+/** 🚫️ Areas the taxonomy marks exempt, and the layers it marks as implementations. */
+const exemptAreas = (): string[] => Object.entries(taxonomyAreas()).filter(([, state]) => state === "exempt").map(([area]) => area);
+const implementationAreas = (): string[] => Object.entries(JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")).areaLayers as Record<string, string>).filter(([, layer]) => layer === "implementation").map(([area]) => area);
 
 //#region 🧪️Tests
 describe("🔣️ contract", () => {
@@ -28,20 +38,29 @@ describe("🔣️ contract", () => {
     expect(taxonomy.testOutputChildDirs).toEqual(["work", "hosts", "oracles", "results", "diffs", "reports"]);
   });
 
-  test("compose/ is excluded by the discovery library itself, not by a workflow path filter", () => {
-    expect(isExcludedTestPath(repoRoot, "compose")).toBe(true);
-    expect(isExcludedTestPath(repoRoot, "compose/client/lib/rs")).toBe(true);
-    expect(isExcludedTestPath(repoRoot, "✏️s/🔌️plugins/🗄️stdio")).toBe(false);
+  test("every exempt area is excluded by the discovery library itself, not by a caller's filter", () => {
+    const areas = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")).areas as Record<string, string>;
+    const exempt = Object.entries(areas).filter(([, state]) => state === "exempt").map(([area]) => area);
+    expect(exempt.length).toBeGreaterThan(0);
+    for (const area of exempt) {
+      expect(isExcludedTestPath(repoRoot, area)).toBe(true);
+      expect(isExcludedTestPath(repoRoot, `${area}/anything/below/it`)).toBe(true);
+    }
   });
 
-  test("no legacy area is excluded — only compose is a permanent exemption", () => {
-    for (const legacy of ["♻️mit-bestand", "🌎️hub", "✏️s/🔨️modules"]) expect(isExcludedTestPath(repoRoot, legacy)).toBe(false);
+  test("no area is excluded merely for being legacy or mixed — only an exempt one is", () => {
+    const areas = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")).areas as Record<string, string>;
+    for (const [area, state] of Object.entries(areas)) {
+      if (state === "exempt") continue;
+      expect(isExcludedTestPath(repoRoot, area), `${area} (${state}) must not be excluded`).toBe(false);
+    }
   });
 
   test("project names are deterministic and CLI-safe", () => {
-    const name = testProjectName("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf", "create-minimal-pdf");
-    expect(name).toBe(testProjectName("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf", "create-minimal-pdf"));
-    expect(name).toMatch(/^[a-z0-9-]+$/);
+    const owner = "🧪️synthetic/🔬️owner/📐️with-emoji";
+    expect(testProjectName(owner, "a-case")).toBe(testProjectName(owner, "a-case"));
+    expect(testProjectName(owner, "a-case")).toMatch(/^[a-z0-9-]+$/);
+    expect(testProjectName(owner, "a-case")).not.toBe(testProjectName(`${owner}-other`, "a-case"));
   });
 });
 
@@ -128,8 +147,8 @@ describe("⚖️ comparison profiles", () => {
   test("semantic-pdf-v1 canonicalizes the nondeterministic artefacts and keeps the normative fields", () => {
     const oracle = { version: "1.7", pageCount: 1, objectNumber: 5, creationDate: "A", pages: [{ mediaBox: [0, 0, 595, 842] }] };
     const subject = { version: "1.7", pageCount: 1, objectNumber: 9, creationDate: "B", pages: [{ mediaBox: [0, 0, 595, 842.00001] }] };
-    expect(compareProjections("semantic-pdf-v1", oracle, subject).equal).toBe(true);
-    expect(compareProjections("semantic-pdf-v1", oracle, { ...subject, pageCount: 2 }).equal).toBe(false);
+    expect(compareProjections("semantic-pdf-v1", oracle, subject, contributed()).equal).toBe(true);
+    expect(compareProjections("semantic-pdf-v1", oracle, { ...subject, pageCount: 2 }, contributed()).equal).toBe(false);
   });
 
   test("utf8-text-v1 normalizes line endings and trailing whitespace only", () => {
@@ -137,11 +156,19 @@ describe("⚖️ comparison profiles", () => {
     expect(compareProjections("utf8-text-v1", "a", "b").equal).toBe(false);
   });
 
-  test("every declared profile is implemented and produces a stable projection hash", () => {
-    for (const profile of COMPARISON_PROFILES) {
-      expect(compareProjections(profile, { a: 1 }, { a: 1 }).equal).toBe(true);
-      expect(projectionHash(profile, { a: 1 })).toBe(projectionHash(profile, { a: 1 }));
+  test("every profile — core and contributed — is applicable and produces a stable projection hash", () => {
+    const profiles = profileTable(loadOracleRegistry(repoRoot));
+    expect(profiles.size).toBeGreaterThan(CORE_COMPARISON_PROFILES.length);
+    for (const [id] of profiles) {
+      expect(compareProjections(id, { a: 1 }, { a: 1 }, profiles).equal).toBe(true);
+      expect(projectionHash(id, { a: 1 }, profiles)).toBe(projectionHash(id, { a: 1 }, profiles));
     }
+  }, 30_000);
+
+  test("an unknown profile fails loudly instead of silently comparing as equal", () => {
+    const verdict = compareProjections("no-such-profile-v1", { a: 1 }, { a: 1 });
+    expect(verdict.equal).toBe(false);
+    expect(verdict.diffs[0]!.reason).toContain("unknown comparison profile");
   });
 
   test("a failed comparison reports where it failed", () => {
@@ -191,7 +218,7 @@ describe("🔍️ discovery and contract", () => {
   test("discovery finds the committed cases and never returns a compose path", () => {
     const cases = discoverTestCases(repoRoot);
     expect(cases.length).toBeGreaterThan(0);
-    expect(cases.every((entry) => !entry.owner.startsWith("compose/") && !entry.caseDir.includes("compose/"))).toBe(true);
+    for (const area of exemptAreas()) expect(cases.every((entry) => !entry.owner.startsWith(`${area}/`) && !entry.caseDir.includes(`${area}/`)), `an exempt area leaked into discovery: ${area}`).toBe(true);
     expect(cases.some((entry) => entry.case === "host-protocol-parity")).toBe(true);
   });
 
@@ -216,7 +243,7 @@ describe("🔍️ discovery and contract", () => {
       const live = surveyUnmanagedTests(repoRoot).reduce((map, entry) => map.set(entry.area, (map.get(entry.area) ?? 0) + 1), new Map<string, number>());
       for (const [area, count] of live) expect(count).toBeLessThanOrEqual(baseline.unmanagedTests.byArea[area] ?? 0);
       expect([...live.values()].reduce((sum, count) => sum + count, 0)).toBeLessThanOrEqual(baseline.unmanagedTests.total);
-      for (const status of Object.values(baseline.ownerStatus)) expect(MIGRATION_STATUSES).toContain(status);
+      for (const status of Object.values(migrationStatusByOwner(repoRoot))) expect(MIGRATION_STATUSES).toContain(status);
     },
     30_000,
   );
@@ -256,7 +283,7 @@ describe("🧹️ clean safety", () => {
     const report = cleanTestOutputs(repoRoot, { dry: true });
     for (const row of report.removals) {
       expect(row.path.startsWith(".🧬semio/🦑️repo/⚡️cache/tests/")).toBe(true);
-      expect(row.path.includes("compose/")).toBe(false);
+      for (const area of exemptAreas()) expect(row.path.includes(`${area}/`), `clean candidate inside the exempt area ${area}`).toBe(false);
     }
     expect(readFileSync(sentinelFixture, "utf8")).toBe(before);
     expect(existsSync(join(repoRoot, "compose"))).toBe(true);
@@ -268,7 +295,7 @@ describe("🧹️ clean safety", () => {
 });
 
 describe("🔒️ dependency ratchet", () => {
-  const registry = { schemaVersion: 1, oracles: [{ id: "pdf-writer", ecosystem: "rust", package: "pdf-writer", capabilities: ["pdf-create"], comparisonProfiles: ["semantic-pdf-v1" as const], license: "MIT", testOnly: true as const }], noOracleDecisions: [] };
+  const registry = { schemaVersion: 1, oracles: [{ id: "pdf-writer", ecosystem: "rust", package: "pdf-writer", capabilities: ["pdf-create"], comparisonProfiles: ["semantic-pdf-v1"], license: "MIT", testOnly: true as const }], noOracleDecisions: [], comparisonProfiles: [], oracleHostPackages: [], contributions: [] };
   const base = [{ ecosystem: "rust" as const, name: "existing", version: "1", kinds: ["production-runtime" as const], users: [], productionReachable: true }];
 
   test("a new production-reachable dependency is always forbidden", () => {
@@ -296,7 +323,7 @@ describe("🔒️ dependency ratchet", () => {
     expect(baseline.entries.length).toBeGreaterThan(0);
     for (const entry of baseline.entries) {
       expect(["production-runtime", "production-build", "repository-tooling", "test-runner", "test-oracle"]).toContain(entry.kinds[0]);
-      expect(entry.users.every((user) => !user.startsWith("compose/"))).toBe(true);
+      for (const area of exemptAreas()) expect(entry.users.every((user) => !user.startsWith(`${area}/`)), `${entry.name} is attributed to the exempt area ${area}`).toBe(true);
     }
     for (const oracle of loadOracleRegistry(repoRoot).oracles) {
       const entry = baseline.entries.find((candidate) => candidate.name === oracle.package);
@@ -355,7 +382,7 @@ describe("📈️ non-aggregate metrics", () => {
 
 describe("🔮️ oracle evidence rules", () => {
   test("a differential scenario with neither an oracle nor a second implementation is a contract breach", () => {
-    const registry = { schemaVersion: 1, oracles: [], noOracleDecisions: [{ id: "vectors-only", capabilities: ["x"], rationale: "a rationale long enough to satisfy the schema minimum length", substitutes: ["specification-vectors"] }] };
+    const registry = { schemaVersion: 1, oracles: [], noOracleDecisions: [{ id: "vectors-only", capabilities: ["x"], rationale: "a rationale long enough to satisfy the schema minimum length", substitutes: ["specification-vectors"] }], comparisonProfiles: [...CORE_COMPARISON_PROFILES], oracleHostPackages: [], contributions: [] };
     const feature = "@capability-x @no-oracle-vectors-only @comparison-ordered-json-v1\nFeature: F\n  @id-s @level-quick @mode-differential\n  Scenario: S\n    Given a value\n";
     const dir = join(testCacheDir(repoRoot, "work"), "🧪️contract-self-test", "🧪️tests", "differential-without-oracle");
     rmSync(join(testCacheDir(repoRoot, "work"), "🧪️contract-self-test"), { recursive: true, force: true });
@@ -388,8 +415,9 @@ describe("🚫️ oracle purity", () => {
   test("narrowing a run to one case must not make other cases' adapters look like production source", () => {
     // 🧭️Regression: the exclusion set was once derived from the CALLER's selected cases, so
     // `contract --case X` reported every other case's adapter as a production oracle import.
-    const single = discoverTestCases(repoRoot).filter((entry) => entry.case === "compile-style-variants");
-    expect(single).toHaveLength(1);
+    const all = discoverTestCases(repoRoot);
+    expect(all.length).toBeGreaterThan(1);
+    const single = all.slice(0, 1);
     expect(validateAllContracts(repoRoot, single).filter((breach) => breach.id === "oracle-in-production")).toEqual([]);
   }, 60_000);
 });
@@ -414,32 +442,83 @@ describe("🔒️ recorded production debt", () => {
   }, 60_000);
 
   test("every registered oracle names its capabilities, comparison profiles and a rationale that scopes it", () => {
+    const known = contributed();
     for (const oracle of loadOracleRegistry(repoRoot).oracles) {
       expect(oracle.capabilities.length).toBeGreaterThan(0);
-      expect(oracle.comparisonProfiles.every((profile) => COMPARISON_PROFILES.includes(profile))).toBe(true);
+      expect(oracle.comparisonProfiles.every((profile) => known.has(profile)), `${oracle.id} names a profile nobody defines`).toBe(true);
       expect((oracle.rationale ?? "").length).toBeGreaterThan(80);
     }
-  });
+  }, 30_000);
 });
 
 describe("⚖️ artifact comparison profiles", () => {
   test("semantic-raster-v1 ignores encoder choices and keeps the decoded samples", () => {
     const oracle = { format: "png", width: 2, height: 1, samples: [1, 2, 3, 4], filter: "paeth", gamma: 45455 };
-    expect(compareProjections("semantic-raster-v1", oracle, { ...oracle, filter: "sub", gamma: 22222 }).equal).toBe(true);
-    expect(compareProjections("semantic-raster-v1", oracle, { ...oracle, samples: [1, 2, 3, 5] }).equal).toBe(false);
+    expect(compareProjections("semantic-raster-v1", oracle, { ...oracle, filter: "sub", gamma: 22222 }, contributed()).equal).toBe(true);
+    expect(compareProjections("semantic-raster-v1", oracle, { ...oracle, samples: [1, 2, 3, 5] }, contributed()).equal).toBe(false);
   });
 
   test("semantic-archive-v1 compares members as a set and ignores writer metadata", () => {
     const a = { entries: [{ name: "a", size: 1, contentDigest: "x" }, { name: "b", size: 2, contentDigest: "y" }] };
     const b = { entries: [{ name: "b", size: 2, contentDigest: "y", modified: "2020" }, { name: "a", size: 1, contentDigest: "x", compressedSize: 9 }] };
-    expect(compareProjections("semantic-archive-v1", a, b).equal).toBe(true);
-    expect(compareProjections("semantic-archive-v1", a, { entries: [a.entries[0]] }).equal).toBe(false);
+    expect(compareProjections("semantic-archive-v1", a, b, contributed()).equal).toBe(true);
+    expect(compareProjections("semantic-archive-v1", a, { entries: [a.entries[0]] }, contributed()).equal).toBe(false);
   });
 
   test("semantic-audio-v1 keeps the format block and every sample", () => {
     const oracle = { channels: 2, sampleRate: 44100, bitsPerSample: 16, samples: [1, -1], byteLength: 100 };
-    expect(compareProjections("semantic-audio-v1", oracle, { ...oracle, byteLength: 108 }).equal).toBe(true);
-    expect(compareProjections("semantic-audio-v1", oracle, { ...oracle, sampleRate: 48000 }).equal).toBe(false);
+    expect(compareProjections("semantic-audio-v1", oracle, { ...oracle, byteLength: 108 }, contributed()).equal).toBe(true);
+    expect(compareProjections("semantic-audio-v1", oracle, { ...oracle, sampleRate: 48000 }, contributed()).equal).toBe(false);
+  });
+});
+
+
+describe("🧩️ open/closed", () => {
+  test("the framework's own registry names no plugin, product or file format", () => {
+    const core = JSON.parse(readFileSync(join(repoRoot, testTaxonomy(repoRoot).testOracleRegistryPath), "utf8")) as { oracles?: unknown[]; comparisonProfiles?: unknown[]; oracleHostPackages?: unknown[] };
+    expect(core.oracles ?? []).toEqual([]);
+    expect(core.comparisonProfiles ?? []).toEqual([]);
+    expect(core.oracleHostPackages ?? []).toEqual([]);
+  });
+
+  test("every oracle and every format-specific profile arrives as an owner contribution", () => {
+    const contributions = discoverTestContributions(repoRoot);
+    expect(contributions.length).toBeGreaterThan(0);
+    const registry = loadOracleRegistry(repoRoot);
+    const contributedOracleIds = new Set(contributions.flatMap((entry) => entry.oracles.map((oracle) => oracle.id)));
+    for (const oracle of registry.oracles) expect(contributedOracleIds.has(oracle.id), `${oracle.id} is not contributed by any owner`).toBe(true);
+    const coreIds = new Set(CORE_COMPARISON_PROFILES.map((spec) => spec.id));
+    for (const spec of registry.comparisonProfiles) {
+      if (coreIds.has(spec.id)) continue;
+      expect(contributions.some((entry) => entry.comparisonProfiles.some((candidate) => candidate.id === spec.id)), `${spec.id} is not contributed by any owner`).toBe(true);
+    }
+  }, 30_000);
+
+  test("the framework's own comparison profiles are domain-neutral", () => {
+    for (const spec of CORE_COMPARISON_PROFILES) {
+      expect(spec.id).not.toMatch(/pdf|png|gif|zip|wav|csv|raster|archive|audio|mesh|tabular/);
+    }
+  });
+
+  test("the framework Rust host declares no dependency at all", () => {
+    const manifest = readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust/Cargo.toml"), "utf8");
+    const dependencyTable = manifest.split(/^\[dependencies\]$/m)[1] ?? "";
+    expect(dependencyTable.split(/\r?\n/).filter((line) => /^[a-z0-9_-]+\s*=/.test(line.trim()))).toEqual([]);
+  });
+
+  test("the framework test domain's sources name no implementation area", () => {
+    const domain = join(repoRoot, testTaxonomy(repoRoot).testDomainPath);
+    for (const file of ["📜️script.ts", "📦️packages/🟦️typescript/📦️index.ts", "🧬️protocol/🦀️component.rs", "🏃️runner/🦀️component.rs"]) {
+      const content = readFileSync(join(domain, file), "utf8");
+      // 🧭️Which areas are implementations is taxonomy vocabulary; this test names none of them.
+      for (const area of implementationAreas()) expect(content.includes(`${area}/`), `${file} names the implementation area ${area}`).toBe(false);
+    }
+  });
+
+  test("the root script names neither the test module's location nor its phase vocabulary", () => {
+    const root = readFileSync(join(repoRoot, "📜️script.ts"), "utf8");
+    expect(root.includes(testTaxonomy(repoRoot).testDomainPath)).toBe(false);
+    expect(root).not.toMatch(/LEVELLESS_PHASES|composeProjectNames/);
   });
 });
 

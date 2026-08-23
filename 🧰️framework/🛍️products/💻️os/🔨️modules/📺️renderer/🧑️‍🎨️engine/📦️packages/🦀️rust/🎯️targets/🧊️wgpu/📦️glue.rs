@@ -88,10 +88,10 @@ mod winit_app;
 pub mod parallel_runtime;
 
 use infinite_world::world::{
-    WORLD_ASSET_RESPONSE_BYTE_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES, WORLD_ASSET_RESPONSE_PAGE_CAPACITY, World3dSnapshotApplyStep, WorldAssetFault, WorldAssetFetchOwner, WorldAssetIoAuthority, WorldAssetMetadataId, WorldAssetRequestKind,
-    WorldAssetRequestToken, WorldAssetResponsePage, WorldDrawRebuildStep, WorldDynamicFault, WorldInteractionAuthorityStep, WorldInteractionIntent, begin_world3d_dynamic_retirement, enqueue_world3d_event, finish_world3d_asset,
-    publish_world3d_asset_mesh_lease, reserve_world3d_asset_response, retire_cancelled_world3d_asset_step, return_world3d_asset, seal_world3d_asset_response, step_world3d_draw_rebuild, step_world3d_dynamic_retirement, step_world3d_interaction,
-    step_world3d_snapshot, take_next_completed_world3d_asset_step, take_next_world3d_asset, world3d_asset_cancellation_requested, world3d_dynamic_retirement_terminal_is_empty, world3d_interaction_front_generation,
+    begin_world3d_dynamic_retirement, enqueue_world3d_event, finish_world3d_asset, publish_world3d_asset_mesh_lease, reserve_world3d_asset_response, retire_cancelled_world3d_asset_step, return_world3d_asset, seal_world3d_asset_response,
+    step_world3d_draw_rebuild, step_world3d_dynamic_retirement, step_world3d_interaction, step_world3d_snapshot, take_next_completed_world3d_asset_step, take_next_world3d_asset, world3d_asset_cancellation_requested,
+    world3d_dynamic_retirement_terminal_is_empty, world3d_interaction_front_generation, World3dSnapshotApplyStep, WorldAssetFault, WorldAssetFetchOwner, WorldAssetIoAuthority, WorldAssetMetadataId, WorldAssetRequestKind, WorldAssetRequestToken,
+    WorldAssetResponsePage, WorldDrawRebuildStep, WorldDynamicFault, WorldInteractionAuthorityStep, WorldInteractionIntent, WORLD_ASSET_RESPONSE_BYTE_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES, WORLD_ASSET_RESPONSE_PAGE_CAPACITY,
 };
 use program_bridge::filter_plugins;
 #[cfg(not(target_arch = "wasm32"))]
@@ -103,16 +103,16 @@ use std::cell::RefCell;
 use std::future::Future;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
-use ui_wgpu::wgpu::ActionDescriptor;
 #[cfg(target_arch = "wasm32")]
 use ui_wgpu::wgpu::apply_canvas_cursor;
+use ui_wgpu::wgpu::ActionDescriptor;
 // 🏚️ `dispatch_window_event`/`WindowInputState`/`schedule_frame` no longer imported here — they were
 // `SemioApp`/`start_frame_loop`-only (both deleted, packet os-host); `winit_app.rs` normalizes input
 // itself via `ui_host::event` instead. See the `OsHostDecomposition — SemioApp deletion` region above.
 use ui_wgpu::wgpu::{
-    CursorDragState, DrawList, FontAtlas, GpuContext, IconAtlas, InputState, KeyAction, Mesh3dFault, Mesh3dField, Mesh3dItem, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, PointerModifiers, SemioCursor, Theme, apply_window_cursor, fetch_font_bytes,
-    mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_read_write_u32, mesh3d_read_write_vec3, mesh3d_seal, mesh3d_update_vec3, mesh3d_write_u32, mesh3d_write_vec2, mesh3d_write_vec3,
-    resolve_semio_cursor,
+    apply_window_cursor, fetch_font_bytes, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_read_write_u32, mesh3d_read_write_vec3, mesh3d_seal, mesh3d_update_vec3, mesh3d_write_u32,
+    mesh3d_write_vec2, mesh3d_write_vec3, resolve_semio_cursor, CursorDragState, DrawList, FontAtlas, GpuContext, IconAtlas, InputState, KeyAction, Mesh3dFault, Mesh3dField, Mesh3dItem, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, PointerModifiers,
+    SemioCursor, Theme,
 };
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
@@ -473,7 +473,11 @@ impl GlbStructureCursor {
     }
 
     fn finish(&self) -> Result<(), &'static str> {
-        if self.consumed == self.total_bytes && self.json && self.bin && matches!(self.phase, GlbStructurePhase::Terminal) { Ok(()) } else { Err("GLB structure ended before JSON and BIN reached terminal") }
+        if self.consumed == self.total_bytes && self.json && self.bin && matches!(self.phase, GlbStructurePhase::Terminal) {
+            Ok(())
+        } else {
+            Err("GLB structure ended before JSON and BIN reached terminal")
+        }
     }
 }
 
@@ -566,7 +570,11 @@ impl PngStructureCursor {
     }
 
     fn finish(&self) -> Result<(), &'static str> {
-        if self.consumed == self.total_bytes && self.ihdr && self.idat && matches!(self.phase, PngStructurePhase::Terminal) { Ok(()) } else { Err("PNG structure ended before IHDR, IDAT, and IEND reached terminal") }
+        if self.consumed == self.total_bytes && self.ihdr && self.idat && matches!(self.phase, PngStructurePhase::Terminal) {
+            Ok(())
+        } else {
+            Err("PNG structure ended before IHDR, IDAT, and IEND reached terminal")
+        }
     }
 }
 
@@ -673,7 +681,11 @@ impl JpegStructureCursor {
     }
 
     fn finish(&self) -> Result<(), &'static str> {
-        if self.consumed == self.total_bytes && self.dimensions && matches!(self.phase, JpegStructurePhase::Terminal) { Ok(()) } else { Err("JPEG structure ended before a bounded frame and EOI reached terminal") }
+        if self.consumed == self.total_bytes && self.dimensions && matches!(self.phase, JpegStructurePhase::Terminal) {
+            Ok(())
+        } else {
+            Err("JPEG structure ended before a bounded frame and EOI reached terminal")
+        }
     }
 }
 
@@ -724,7 +736,11 @@ impl TextAssetStructureCursor {
     }
 
     fn finish(&self) -> Result<(), &'static str> {
-        if self.consumed == self.total_bytes && (!self.validate_utf8 || self.utf8_remaining == 0) && (!self.require_svg || self.saw_svg) { Ok(()) } else { Err("text asset structure did not reach its bounded terminal witness") }
+        if self.consumed == self.total_bytes && (!self.validate_utf8 || self.utf8_remaining == 0) && (!self.require_svg || self.saw_svg) {
+            Ok(())
+        } else {
+            Err("text asset structure did not reach its bounded terminal witness")
+        }
     }
 }
 
@@ -807,7 +823,11 @@ impl ProtobufStructureCursor {
     }
 
     fn finish(&self) -> Result<(), &'static str> {
-        if self.consumed == self.total_bytes && self.fields != 0 && matches!(self.phase, ProtobufStructurePhase::Key { value: 0, shift: 0 }) { Ok(()) } else { Err("protobuf structure did not reach a field boundary") }
+        if self.consumed == self.total_bytes && self.fields != 0 && matches!(self.phase, ProtobufStructurePhase::Key { value: 0, shift: 0 }) {
+            Ok(())
+        } else {
+            Err("protobuf structure did not reach a field boundary")
+        }
     }
 }
 
@@ -2013,7 +2033,11 @@ fn glb_transform_normal(matrix: GlbMatrix, normal: [f32; 3]) -> [f32; 3] {
 
 fn glb_normalize(value: [f32; 3]) -> [f32; 3] {
     let length = value.iter().map(|value| value * value).sum::<f32>().sqrt();
-    if length <= f32::EPSILON { value } else { value.map(|value| value / length) }
+    if length <= f32::EPSILON {
+        value
+    } else {
+        value.map(|value| value / length)
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -2421,23 +2445,43 @@ fn glb_read_component(owner: &RendererAssetFetchOwner, pages: &RendererAssetPage
     let value = match component {
         5120 => {
             let value = i8::from_le_bytes(pages.read::<1>(owner, absolute)?);
-            if normalized { (f32::from(value) / 127.0).max(-1.0) } else { f32::from(value) }
+            if normalized {
+                (f32::from(value) / 127.0).max(-1.0)
+            } else {
+                f32::from(value)
+            }
         }
         5121 => {
             let value = u8::from_le_bytes(pages.read::<1>(owner, absolute)?);
-            if normalized { f32::from(value) / 255.0 } else { f32::from(value) }
+            if normalized {
+                f32::from(value) / 255.0
+            } else {
+                f32::from(value)
+            }
         }
         5122 => {
             let value = i16::from_le_bytes(pages.read::<2>(owner, absolute)?);
-            if normalized { (f32::from(value) / 32767.0).max(-1.0) } else { f32::from(value) }
+            if normalized {
+                (f32::from(value) / 32767.0).max(-1.0)
+            } else {
+                f32::from(value)
+            }
         }
         5123 => {
             let value = u16::from_le_bytes(pages.read::<2>(owner, absolute)?);
-            if normalized { f32::from(value) / 65535.0 } else { f32::from(value) }
+            if normalized {
+                f32::from(value) / 65535.0
+            } else {
+                f32::from(value)
+            }
         }
         5125 => {
             let value = u32::from_le_bytes(pages.read::<4>(owner, absolute)?);
-            if normalized { value as f32 / u32::MAX as f32 } else { value as f32 }
+            if normalized {
+                value as f32 / u32::MAX as f32
+            } else {
+                value as f32
+            }
         }
         5126 if !normalized => f32::from_le_bytes(pages.read::<4>(owner, absolute)?),
         5126 => return Err("GLB FLOAT accessor could not be normalized"),
@@ -2710,7 +2754,7 @@ impl Drop for RendererIoHandle {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn submit_renderer_io(request: semio_framework_os_services::NativeIoRequest) -> RendererIoHandle {
-    use semio_framework_job::{BatchDriveConfig, BatchJobParams, Generation, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS, InteractiveStage, allocate_operation_id, root_cancel_token};
+    use semio_framework_job::{allocate_operation_id, root_cancel_token, BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, INTERACTIVE_LANE_FUEL, INTERACTIVE_LANE_WALL_MS};
     let (job, completion) = semio_framework_os_services::NativeIoJob::new(request);
     let cancel = root_cancel_token();
     let params = BatchJobParams {
@@ -2746,7 +2790,7 @@ async fn run_renderer_io(request: semio_framework_os_services::NativeIoRequest) 
 #[cfg(not(target_arch = "wasm32"))]
 pub(crate) mod kernel_runtime {
     use semio_framework::kernel::{BrokerCapabilityGrant, Budget as TurnBudget, Effect, Event, MessageEndpoint, QuotaSchema, TurnResult, UiPatch as KernelUiPatch};
-    use semio_framework_actor::{ActivationEvent, ActorId, ActorKind, Backpressure, CapabilityGrant, Envelope, Lane, Origin, PackageHash, PackageId, Payload, intersect_capabilities};
+    use semio_framework_actor::{intersect_capabilities, ActivationEvent, ActorId, ActorKind, Backpressure, CapabilityGrant, Envelope, Lane, Origin, PackageHash, PackageId, Payload};
     use semio_framework_plugin_host::shard::ShardOutcome;
     use semio_framework_plugin_host::{GuestRuntime, GuestRuntimes, OwnedRuntime, PackageRef};
     use std::collections::HashMap;
@@ -4011,7 +4055,7 @@ pub(crate) mod kernel_runtime {
             let rejections: Vec<(u32, SurfaceId)> = self.pending_rejections.keys().filter(|(inst, _)| *inst == instance).cloned().collect();
             for key in rejections {
                 if let Some((revision, reason)) = self.pending_rejections.remove(&key) {
-                    events.insert(0, Event::PatchRejected { surface: key.1.0, revision: revision.0, reason });
+                    events.insert(0, Event::PatchRejected { surface: key.1 .0, revision: revision.0, reason });
                 }
             }
             self.run_turn(actor, instance, events).await
@@ -5680,6 +5724,8 @@ mod async_boundary_tests {
     const OS_HOST_SOURCE: &str = include_str!("🦀️os_host.rs");
     const GPU_SOURCE: &str = include_str!("../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️gpu.rs");
     const DRAW_SOURCE: &str = include_str!("../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs");
+    const PREPARED_SOURCE: &str = include_str!("../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️prepared.rs");
+    const ENGINE_CANVAS_SOURCE: &str = include_str!("../../../../🧱️elements/EngineCanvas/🧊️component.rs");
 
     #[test]
     fn product_library_has_no_executor_bridge() {
@@ -5708,9 +5754,305 @@ mod async_boundary_tests {
         assert!(DRAW_SOURCE.contains("pub fn ensure_mesh_step"));
         assert!(DRAW_SOURCE.contains("pub fn close_upload_step"));
         assert!(GPU_SOURCE.contains("pub fn close_mesh_upload_step"));
-        let upload_close = OS_HOST_SOURCE.find("presenter.close_active_upload_step()").expect("active upload close phase");
+        let upload_close = OS_HOST_SOURCE.find("presenter.close_world_owners_step()").expect("active upload and packet close phase");
         let world_close = OS_HOST_SOURCE.find("runtime.close_world3d_dynamic_step()").expect("world mesh close phase");
         assert!(upload_close < world_close);
+    }
+
+    fn retained_raster_contract(draw: &str, gpu: &str, glue: &str, engine: &str) -> bool {
+        fn guarded_allocations(source: &str, validation: &str, allocation: &str, expected: usize) -> bool {
+            let validations = source.match_indices(validation).map(|(index, _)| index).collect::<Vec<_>>();
+            if validations.len() != expected {
+                return false;
+            }
+            let mut allocation_floor = 0;
+            for validation_index in validations {
+                let Some(relative_allocation) = source[validation_index + validation.len()..].find(allocation) else {
+                    return false;
+                };
+                let allocation_index = validation_index + validation.len() + relative_allocation;
+                if allocation_index < allocation_floor {
+                    return false;
+                }
+                let gap = &source[validation_index + validation.len()..allocation_index];
+                if ["device.create_texture", ".create_view", "device.create_bind_group", "create_target_texture", "Renderer::new"].iter().any(|marker| gap.contains(marker)) {
+                    return false;
+                }
+                allocation_floor = allocation_index + allocation.len();
+            }
+            true
+        }
+
+        let begin = gpu.find("self.raster_store.begin_presenting").unwrap_or(usize::MAX);
+        let render = gpu.find("self.render_prepared(packet)").unwrap_or(0);
+        let presenter_close = glue.find("self.gpu.close_raster_table_step()").unwrap_or(usize::MAX);
+        let world_terminal = glue.find("self.gpu.raster_table_terminal_is_empty()").unwrap_or(0);
+        let engine_reservation = "let admission = gpu.reserve_engine_texture(&key, width, height, candidate, expected)?;";
+        let engine_reservation_index = engine.find(engine_reservation).unwrap_or(usize::MAX);
+        let first_engine_allocation = ["create_target_texture", ".create_view", "Renderer::new"].iter().filter_map(|marker| engine.find(marker)).min().unwrap_or(0);
+        let upload_stage = &draw[draw.find("pub fn ensure_raster_step").unwrap_or(draw.len())..draw.find("pub fn get(&self, key: &str) -> Option<&RasterTexture>").unwrap_or(draw.len())];
+        let gpu_stage = &draw[draw.find("pub fn stage_gpu_bind_group").unwrap_or(draw.len())..draw.find("pub fn begin_presenting").unwrap_or(draw.len())];
+        let cancellation = &draw[draw.find("pub fn cancel_engine_texture_admission").unwrap_or(draw.len())..draw.find("fn claim_stage_before_gpu_allocation").unwrap_or(draw.len())];
+        let upload_close = &draw[draw.find("pub fn close_upload_step(&mut self) -> RasterTextureCleanupStep").unwrap_or(draw.len())..];
+        let upload_close = &upload_close[..upload_close.find("pub fn close_step(&mut self)").unwrap_or(upload_close.len())];
+        draw.contains("pub const RASTER_TEXTURE_TABLE_CAPACITY: usize = 256")
+            && draw.contains("pub const RASTER_TEXTURE_KEY_BYTES: usize = 256")
+            && draw.contains("pub const RASTER_TEXTURE_ITEM_BYTE_CAPACITY: usize = 16 * 1024 * 1024")
+            && draw.contains("pub const RASTER_TEXTURE_TABLE_BYTE_CAPACITY: usize = 256 * 1024 * 1024")
+            && draw.contains("const RASTER_TEXTURE_PROBE_CAPACITY: usize = 8")
+            && draw.contains("const PAGE_BYTES: usize = 16 * 1024")
+            && draw.contains("struct FixedRasterTextureRegistry<T>")
+            && draw.contains("pub struct RasterTextureAdmission")
+            && draw.contains("candidate: RasterTextureWitnessSlot")
+            && draw.contains("current.operation >= candidate.operation")
+            && draw.contains("admission.witness != expected")
+            && draw.contains("view: Option<wgpu::TextureView>")
+            && draw.contains("scene_revision: Option<u64>")
+            && draw.contains("preview_generation: Option<u64>")
+            && draw.contains("operation: Option<u64>")
+            && draw.contains("width: Option<u32>")
+            && draw.contains("height: Option<u32>")
+            && draw.contains("fn insert_vacant")
+            && !draw.contains("fn insert_at")
+            && draw.contains("RasterTextureRetirementMode::Commit")
+            && draw.contains("RasterTextureRetirementMode::Abort")
+            && draw.contains("pub fn commit_presented_step")
+            && draw.contains("pub fn abort_presented_step")
+            && draw.contains("pub fn terminal_is_empty(&self) -> bool")
+            && draw.contains("struct RasterTextureUploadCloseCursor")
+            && draw.contains("struct RasterTextureReservationCloseCursor")
+            && draw.contains("enum RasterTextureCleanupStep")
+            && cancellation.contains("self.reservation.take().expect(\"matching raster reservation\")")
+            && cancellation.contains("RasterTextureReservationCloseCursor::cancelled(reservation, admission)")
+            && !cancellation.contains(concat!("self.reservation =", " None"))
+            && upload_close.contains("RasterTextureUploadCloseCursor::new(upload)")
+            && !upload_close.contains("self.presenting.set")
+            && !upload_close.contains(concat!("self.reservation =", " None"))
+            && draw.contains("self.key == admission.key")
+            && draw.contains("self.witness == admission.witness")
+            && draw.contains("self.width == admission.width")
+            && draw.contains("self.height == admission.height")
+            && draw.contains("self.bytes == admission.bytes")
+            && draw.contains("self.staged_index == admission.staged_index")
+            && draw.contains("self.nonce == admission.nonce")
+            && draw.contains("if admission.witness != expected")
+            && draw.contains("if !reservation.matches(admission)")
+            && draw.contains("if candidate != Some(expected)")
+            && draw.contains("if staged_occupied")
+            && draw.contains("staged_index: admission.staged_index, staged_nonce: admission.nonce")
+            && draw.contains("fn claim_stage_before_gpu_allocation")
+            && upload_stage.contains("self.upload = Some(RasterTextureUploadCursor")
+            && guarded_allocations(upload_stage, "self.claim_texture_allocation(admission, expected)", "device.create_texture", 1)
+            && guarded_allocations(upload_stage, "self.claim_view_allocation(admission, expected)", ".create_view", 1)
+            && guarded_allocations(upload_stage, "self.claim_bind_group_allocation(admission, expected)", "device.create_bind_group", 1)
+            && guarded_allocations(gpu_stage, "self.claim_bind_group_allocation(&admission, expected)", "device.create_bind_group", 1)
+            && upload_stage.contains("if let Err((fault, admission, value)) = self.stage_claimed_texture(admission, value, allocation_claim)")
+            && upload_stage.contains("self.upload_close = Some(RasterTextureUploadCloseCursor::new(RasterTextureUploadCursor")
+            && upload_stage.contains("texture: Some(value.texture)")
+            && upload_stage.contains("view: Some(value.view)")
+            && upload_stage.contains("bind_group: Some(value.bind_group)")
+            && upload_stage.contains("allocation_claim: Some(allocation_claim)")
+            && !upload_stage.contains("map_err(|(fault, _, _)| fault)")
+            && gpu_stage.matches("self.upload_close = Some(RasterTextureUploadCloseCursor::new(RasterTextureUploadCursor").count() == 1
+            && gpu_stage.contains("RasterTextureStageFault::Returned { fault, admission, texture, view: raster_view }")
+            && gpu_stage.contains("texture: Some(value.texture)")
+            && gpu_stage.contains("view: Some(value.view)")
+            && gpu_stage.contains("bind_group: Some(value.bind_group)")
+            && gpu_stage.contains("allocation_claim: Some(allocation_claim)")
+            && !gpu_stage.contains("map_err(|(fault, _, _)| fault)")
+            && draw.contains("bind_group: source.bind_group.take()")
+            && draw.contains("view: source.view.take()")
+            && draw.contains("texture: source.texture.take()")
+            && !draw.contains("HashMap<String, RasterTexture>")
+            && gpu.contains("self.ensure_raster_texture_step(key, pixels")
+            && gpu.contains("pub fn stage_engine_texture")
+            && gpu.contains("view: wgpu::TextureView")
+            && gpu.contains(".stage_gpu_bind_group")
+            && gpu.contains("Result<(), RasterTextureStageFault>")
+            && begin < render
+            && engine.matches(engine_reservation).count() == 1
+            && engine_reservation_index < first_engine_allocation
+            && guarded_allocations(engine, "gpu.validate_engine_target_texture_allocation(&admission, expected)", "create_target_texture", 1)
+            && guarded_allocations(engine, "gpu.validate_engine_target_view_allocation(&admission, expected)", ".create_view", 1)
+            && guarded_allocations(engine, "gpu.validate_engine_renderer_allocation(&admission, expected)", "Renderer::new", 1)
+            && guarded_allocations(engine, "gpu.validate_engine_replacement_texture_allocation(&admission, expected)", "create_target_texture", 2)
+            && guarded_allocations(engine, "gpu.validate_engine_replacement_view_allocation(&admission, expected)", ".create_view", 2)
+            && engine.matches("gpu.retain_engine_allocation_fault(admission, Some(texture), None)").count() == 2
+            && engine.contains("gpu.retain_engine_allocation_fault(admission, Some(texture), Some(view))")
+            && engine.contains("gpu.retain_engine_allocation_fault(admission, Some(replacement_texture), None)")
+            && engine.contains("RasterTextureStageFault::Returned { fault, admission, texture, view }")
+            && engine.contains("surface.texture = texture")
+            && engine.contains("surface.view = view")
+            && engine.contains("RasterTextureStageFault::Retained(fault)")
+            && engine.contains("let published_view = std::mem::replace(&mut surface.view, replacement_view)")
+            && !engine.contains("surface.view.clone()")
+            && glue.contains("struct RuntimeRasterOperationAuthority")
+            && glue.contains("exhausted: AtomicBool")
+            && glue.contains("compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)")
+            && !glue.contains(concat!("next_operation.", "fetch_add(1, Ordering::AcqRel)"))
+            && glue.contains("raster_operation_authority: RuntimeRasterOperationAuthority")
+            && glue.contains("raster_operation_authority.begin(expected.scene_revision, expected.input_generation)")
+            && glue.contains("raster_operation_authority.matches(raster_witness)")
+            && glue.contains("RasterCandidateRetirement::Commit")
+            && glue.contains("RasterCandidateRetirement::Abort")
+            && presenter_close < world_terminal
+    }
+
+    #[test]
+    fn raster_upload_cache_is_fixed_generation_witnessed_and_mutation_complete() {
+        assert!(retained_raster_contract(DRAW_SOURCE, GPU_SOURCE, LIBRARY_SOURCE, ENGINE_CANVAS_SOURCE));
+        let mutations = [
+            (DRAW_SOURCE.replace("pub const RASTER_TEXTURE_TABLE_CAPACITY: usize = 256", "pub const RASTER_TEXTURE_TABLE_CAPACITY: usize = 257"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
+            (DRAW_SOURCE.replace("pub const RASTER_TEXTURE_KEY_BYTES: usize = 256", "pub const RASTER_TEXTURE_KEY_BYTES: usize = 255"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
+            (
+                DRAW_SOURCE.replace("pub const RASTER_TEXTURE_ITEM_BYTE_CAPACITY: usize = 16 * 1024 * 1024", "pub const RASTER_TEXTURE_ITEM_BYTE_CAPACITY: usize = usize::MAX"),
+                GPU_SOURCE.to_string(),
+                LIBRARY_SOURCE.to_string(),
+                ENGINE_CANVAS_SOURCE.to_string(),
+            ),
+            (DRAW_SOURCE.replace("pub struct RasterTextureAdmission", "pub struct ErasedRasterTextureAdmission"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
+            (DRAW_SOURCE.replace("current.operation >= candidate.operation", "current.operation > candidate.operation"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
+            (DRAW_SOURCE.replace("view: Option<wgpu::TextureView>", "view_erased: bool"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
+            (DRAW_SOURCE.to_string(), GPU_SOURCE.replace("view: wgpu::TextureView", "view: &wgpu::TextureView"), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
+            (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.replace("gpu.reserve_engine_texture", "gpu.realize_without_reservation")),
+            (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.replace("let published_view = std::mem::replace(&mut surface.view, replacement_view)", "let published_view = surface.view.clone()")),
+            (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.replace("raster_operation_authority: RuntimeRasterOperationAuthority", "raster_operation_authority_erased: bool"), ENGINE_CANVAS_SOURCE.to_string()),
+            (
+                DRAW_SOURCE.to_string(),
+                GPU_SOURCE.to_string(),
+                LIBRARY_SOURCE.replace(
+                    "let operation = loop {",
+                    concat!("let operation = self.0.next_operation.", "fetch_add(1, Ordering::AcqRel); if operation == 0 { return Err(\"raster operation generation exhausted\"); } loop {"),
+                ),
+                ENGINE_CANVAS_SOURCE.to_string(),
+            ),
+            (
+                DRAW_SOURCE.replace(
+                    "let reservation = self.reservation.take().expect(\"matching raster reservation\");",
+                    concat!("self.reservation =", " None; let reservation = RasterTextureReservation { key: admission.key, witness: admission.witness, width: admission.width, height: admission.height, bytes: admission.bytes, staged_index: admission.staged_index, nonce: admission.nonce };"),
+                ),
+                GPU_SOURCE.to_string(),
+                LIBRARY_SOURCE.to_string(),
+                ENGINE_CANVAS_SOURCE.to_string(),
+            ),
+            (
+                DRAW_SOURCE.replace("self.upload_close = Some(RasterTextureUploadCloseCursor::new(upload));", "self.upload = None;"),
+                GPU_SOURCE.to_string(),
+                LIBRARY_SOURCE.to_string(),
+                ENGINE_CANVAS_SOURCE.to_string(),
+            ),
+            (
+                DRAW_SOURCE.replace("fn claim_stage_before_gpu_allocation", "fn claim_stage_after_gpu_allocation"),
+                GPU_SOURCE.to_string(),
+                LIBRARY_SOURCE.to_string(),
+                ENGINE_CANVAS_SOURCE.to_string(),
+            ),
+            (
+                DRAW_SOURCE.to_string(),
+                GPU_SOURCE.to_string(),
+                LIBRARY_SOURCE.replace("raster_operation_authority.begin(expected.scene_revision, expected.input_generation)", "raster_operation_authority.begin(packet.scene_revision(), packet.preview_generation())"),
+                ENGINE_CANVAS_SOURCE.to_string(),
+            ),
+            (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.replace("raster_operation_authority.matches(raster_witness)", "true"), ENGINE_CANVAS_SOURCE.to_string()),
+            (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.replace("self.gpu.close_raster_table_step()", "true"), ENGINE_CANVAS_SOURCE.to_string()),
+            (
+                DRAW_SOURCE.replace("self.claim_texture_allocation(admission, expected)", "self.allocate_texture_without_full_claim(admission, expected)"),
+                GPU_SOURCE.to_string(),
+                LIBRARY_SOURCE.to_string(),
+                ENGINE_CANVAS_SOURCE.to_string(),
+            ),
+            (
+                DRAW_SOURCE.replace("self.claim_view_allocation(admission, expected)", "self.allocate_view_without_full_claim(admission, expected)"),
+                GPU_SOURCE.to_string(),
+                LIBRARY_SOURCE.to_string(),
+                ENGINE_CANVAS_SOURCE.to_string(),
+            ),
+            (
+                DRAW_SOURCE.replace("self.claim_bind_group_allocation(admission, expected)", "self.allocate_bind_group_without_full_claim(admission, expected)"),
+                GPU_SOURCE.to_string(),
+                LIBRARY_SOURCE.to_string(),
+                ENGINE_CANVAS_SOURCE.to_string(),
+            ),
+            (
+                DRAW_SOURCE.replace("self.claim_bind_group_allocation(&admission, expected)", "self.allocate_bind_group_without_full_claim(&admission, expected)"),
+                GPU_SOURCE.to_string(),
+                LIBRARY_SOURCE.to_string(),
+                ENGINE_CANVAS_SOURCE.to_string(),
+            ),
+            (
+                DRAW_SOURCE.to_string(),
+                GPU_SOURCE.to_string(),
+                LIBRARY_SOURCE.to_string(),
+                ENGINE_CANVAS_SOURCE.replace("gpu.validate_engine_target_texture_allocation(&admission, expected)", "Ok(())"),
+            ),
+            (
+                DRAW_SOURCE.to_string(),
+                GPU_SOURCE.to_string(),
+                LIBRARY_SOURCE.to_string(),
+                ENGINE_CANVAS_SOURCE.replace("gpu.validate_engine_target_view_allocation(&admission, expected)", "Ok(())"),
+            ),
+            (
+                DRAW_SOURCE.to_string(),
+                GPU_SOURCE.to_string(),
+                LIBRARY_SOURCE.to_string(),
+                ENGINE_CANVAS_SOURCE.replace("gpu.validate_engine_renderer_allocation(&admission, expected)", "Ok(())"),
+            ),
+            (
+                DRAW_SOURCE.to_string(),
+                GPU_SOURCE.to_string(),
+                LIBRARY_SOURCE.to_string(),
+                ENGINE_CANVAS_SOURCE.replace("gpu.validate_engine_replacement_texture_allocation(&admission, expected)", "Ok(())"),
+            ),
+            (
+                DRAW_SOURCE.to_string(),
+                GPU_SOURCE.to_string(),
+                LIBRARY_SOURCE.to_string(),
+                ENGINE_CANVAS_SOURCE.replace("gpu.validate_engine_replacement_view_allocation(&admission, expected)", "Ok(())"),
+            ),
+            (
+                DRAW_SOURCE.replace(
+                    "if let Err((fault, admission, value)) = self.stage_claimed_texture(admission, value, allocation_claim)",
+                    "if self.stage_claimed_texture(admission, value, allocation_claim).map_err(|(fault, _, _)| fault).is_err()",
+                ),
+                GPU_SOURCE.to_string(),
+                LIBRARY_SOURCE.to_string(),
+                ENGINE_CANVAS_SOURCE.to_string(),
+            ),
+            (
+                DRAW_SOURCE.replace("self.upload_close = Some(RasterTextureUploadCloseCursor::new(RasterTextureUploadCursor", "self.upload = None; Some(RasterTextureUploadCursor"),
+                GPU_SOURCE.to_string(),
+                LIBRARY_SOURCE.to_string(),
+                ENGINE_CANVAS_SOURCE.to_string(),
+            ),
+            (DRAW_SOURCE.replace("texture: Some(value.texture)", "texture: None"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
+            (DRAW_SOURCE.replace("view: Some(value.view)", "view: None"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
+            (DRAW_SOURCE.replace("bind_group: Some(value.bind_group)", "bind_group: None"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
+            (DRAW_SOURCE.replace("if !reservation.matches(admission)", "if false"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
+            (DRAW_SOURCE.replace("if candidate != Some(expected)", "if false"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
+            (DRAW_SOURCE.replace("if staged_occupied", "if false"), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.to_string()),
+            (
+                DRAW_SOURCE.replace("staged_index: admission.staged_index, staged_nonce: admission.nonce", "staged_index: admission.staged_index, staged_nonce: 0"),
+                GPU_SOURCE.to_string(),
+                LIBRARY_SOURCE.to_string(),
+                ENGINE_CANVAS_SOURCE.to_string(),
+            ),
+            (
+                DRAW_SOURCE.replace("Returned {", "Erased {"),
+                GPU_SOURCE.to_string(),
+                LIBRARY_SOURCE.to_string(),
+                ENGINE_CANVAS_SOURCE.to_string(),
+            ),
+            (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.replace("surface.texture = texture", "drop(texture)")),
+            (DRAW_SOURCE.to_string(), GPU_SOURCE.to_string(), LIBRARY_SOURCE.to_string(), ENGINE_CANVAS_SOURCE.replace("surface.view = view", "drop(view)")),
+        ];
+        assert_eq!(mutations.len(), 38);
+        for (draw, gpu, glue, engine) in mutations {
+            assert!(!retained_raster_contract(&draw, &gpu, &glue, &engine));
+        }
+        let reservation = "let admission = gpu.reserve_engine_texture(&key, width, height, candidate, expected)?;";
+        let first_allocation = "let texture = create_target_texture(gpu.device(), width, height);";
+        let reservation_after_first_allocation = ENGINE_CANVAS_SOURCE.replacen(reservation, "", 1).replacen(first_allocation, &format!("{first_allocation}\n            {reservation}"), 1);
+        assert!(!retained_raster_contract(DRAW_SOURCE, GPU_SOURCE, LIBRARY_SOURCE, &reservation_after_first_allocation));
     }
 
     #[test]
@@ -5951,6 +6293,223 @@ mod async_boundary_tests {
         assert!(!LIBRARY_SOURCE.contains("let mut fetched_map = Vec::new()"));
         assert!(!LIBRARY_SOURCE.contains("let mut fetched_ui_images = Vec::new()"));
     }
+
+    #[test]
+    fn runtime_presentation_authority_and_candidate_identity_change_independently() {
+        let authority = RuntimePresentationAuthority::new();
+        authority.observe_input_generation(7);
+        let unchanged_candidate = authority.current();
+        assert!(authority.matches(unchanged_candidate.scene_revision, unchanged_candidate.input_generation));
+
+        authority.mark_scene_changed();
+        assert_eq!(unchanged_candidate, RuntimePresentationWitness { scene_revision: 1, input_generation: 7 });
+        assert!(!authority.matches(unchanged_candidate.scene_revision, unchanged_candidate.input_generation));
+
+        let unchanged_authority = authority.current();
+        let changed_candidate = RuntimePresentationWitness { scene_revision: unchanged_authority.scene_revision + 1, input_generation: unchanged_authority.input_generation + 1 };
+        assert_eq!(authority.current(), unchanged_authority);
+        assert!(!authority.matches(changed_candidate.scene_revision, changed_candidate.input_generation));
+
+        authority.observe_input_generation(8);
+        assert!(authority.witness_for(7).is_none());
+        assert_eq!(authority.witness_for(8), Some(authority.current()));
+    }
+
+    #[test]
+    fn runtime_raster_operation_authority_rejects_stale_duplicate_and_device_close_ack() {
+        let authority = RuntimeRasterOperationAuthority::new();
+        let first = authority.begin(3, 5).expect("independent raster operation");
+        assert_eq!(first.scene_revision, 3);
+        assert_eq!(first.preview_generation, 5);
+        assert!(authority.matches(first));
+        assert!(authority.begin(3, 5).is_err());
+        let stale = ui_wgpu::wgpu::RasterTextureWitness { operation: first.operation.wrapping_add(1), ..first };
+        assert!(!authority.matches(stale));
+        assert!(authority.release(stale).is_err());
+        assert!(authority.matches(first));
+        authority.release(first).expect("device close returns exact operation owner");
+        assert!(authority.current().is_none());
+        assert!(authority.release(first).is_err());
+        let second = authority.begin(3, 5).expect("next operation");
+        assert!(second.operation > first.operation);
+    }
+
+    #[test]
+    fn runtime_raster_operation_authority_exhausts_permanently_without_aba() {
+        let authority = RuntimeRasterOperationAuthority::new();
+        authority.0.next_operation.store(u64::MAX - 1, Ordering::Release);
+
+        let penultimate = authority.begin(8, 13).expect("MAX-1 operation");
+        assert_eq!(penultimate.operation, u64::MAX - 1);
+        authority.release(penultimate).expect("release MAX-1");
+
+        let last = authority.begin(8, 13).expect("MAX operation");
+        assert_eq!(last.operation, u64::MAX);
+        assert!(authority.begin(8, 13).is_err(), "live MAX remains occupied");
+        authority.release(last).expect("release MAX");
+        assert!(authority.begin(8, 13).is_err(), "exhaustion remains permanent after release");
+        assert!(authority.current().is_none());
+        assert!(authority.0.exhausted.load(Ordering::Acquire));
+        assert_eq!(authority.0.next_operation.load(Ordering::Acquire), u64::MAX);
+    }
+
+    fn presenter_retirement_contract(glue: &str, prepared: &str, gpu: &str, draw: &str, host: &str, winit: &str) -> bool {
+        let table = &draw[draw.find("pub struct MeshGpuTable").unwrap_or(0)..draw.find("pub const WORLD_GLOBALS_SLOT_SIZE").unwrap_or(draw.len())];
+        prepared.contains("pub struct PreparedPresenterWitness")
+            && prepared.contains("pub fn stage_presented")
+            && prepared.contains("pub fn pending_presented")
+            && prepared.contains("pub fn acknowledge_presented")
+            && prepared.contains("pub fn abort_pending")
+            && prepared.contains("pub fn take_last_valid")
+            && prepared.contains("pub fn retire_step(&mut self) -> bool")
+            && !prepared.contains("Option<Arc<PreparedRenderPacket>>")
+            && glue.contains("AppPresentPhase::Acknowledge")
+            && glue.contains("AppPresentPhase::Stage")
+            && glue.contains("AppPresentPhase::Aborted")
+            && glue.contains("self.gate.stage_presented(packet)")
+            && glue.contains("self.gate.pending_presented(witness)")
+            && glue.contains("self.gate.acknowledge_presented(witness)")
+            && glue.contains("struct RuntimePresentationAuthority")
+            && glue.contains("presentation_authority: RuntimePresentationAuthority")
+            && glue.matches(concat!("runtime.presentation_", "witness_for(self.generation.0)")).count() == 1
+            && glue.contains("presentation_witness.scene_revision")
+            && glue.contains("presentation_witness.input_generation")
+            && glue.matches(concat!("let expected = self.presentation_", "authority.current();")).count() == 2
+            && glue.contains("begin_prepared(&token, &self.gate, packet, expected.scene_revision, expected.input_generation)")
+            && glue.contains("begin_prepared_offscreen(token, &self.gate, packet, expected.scene_revision, expected.input_generation)")
+            && glue.contains("packet.scene_revision() != expected.scene_revision || packet.preview_generation() != expected.input_generation")
+            && glue.matches(concat!("self.presentation_authority.", "mark_scene_changed();")).count() == 2
+            && glue.contains("runtime_presentation_authority_and_candidate_identity_change_independently")
+            && !glue.contains(concat!("let revision = packet.", "scene_revision();"))
+            && !glue.contains(concat!("let generation = packet.", "preview_generation();"))
+            && !glue.contains(concat!("scene_revision: packet.", "scene_revision()"))
+            && !glue.contains(concat!("input_generation: packet.", "preview_generation()"))
+            && glue.contains("struct AppPresentedRetirement")
+            && glue.contains("acknowledged_eviction")
+            && glue.contains("acknowledged_upload_scan")
+            && glue.contains("acknowledged_versions")
+            && glue.contains("previous.retire_step()")
+            && glue.contains("if !gpu.close_mesh_upload_step()")
+            && glue.contains("self.gpu.close_mesh_table_step()")
+            && glue.contains("pub(crate) fn admit_next_frame")
+            && winit.contains(".admit_next_frame(|| frame_build.poll_runtime_and_resubmit")
+            && winit.contains("observe_presentation_input_generation(build_generation.0)")
+            && !winit.contains("begin_present(frame).is_err()")
+            && host.contains("presenter.close_world_owners_step()")
+            && host.contains("presenter.world_owners_terminal_is_empty()")
+            && draw.contains("pub const MESH_GPU_TABLE_CAPACITY: usize = 256")
+            && draw.contains("slots: [Option<MeshGpuEntry<T>>; MESH_GPU_TABLE_CAPACITY]")
+            && draw.contains("pub fn evict_mesh_step")
+            && draw.contains("pub fn evict_mesh_except_step")
+            && draw.contains("mesh_gpu_retirement_preserves_acknowledged_versions")
+            && draw.contains("pub fn close_step(&mut self) -> bool")
+            && draw.contains("fixed_mesh_gpu_registry_rejects_capacity_plus_one_and_returns_exact_owner")
+            && !table.contains("HashMap")
+            && !table.contains(".retain(")
+            && gpu.contains("self.mesh_store.evict_mesh_except_step(key, keep_versions)")
+            && gpu.contains("self.mesh_store.close_step()")
+    }
+
+    #[test]
+    fn presenter_ack_retirement_source_mutations_are_denied() {
+        assert!(presenter_retirement_contract(LIBRARY_SOURCE, PREPARED_SOURCE, GPU_SOURCE, DRAW_SOURCE, OS_HOST_SOURCE, WINT_APP_SOURCE));
+        let mutations = [
+            (LIBRARY_SOURCE.replace("AppPresentPhase::Acknowledge", "AppPresentPhase::Fullscreen"), PREPARED_SOURCE.to_string(), GPU_SOURCE.to_string(), DRAW_SOURCE.to_string(), OS_HOST_SOURCE.to_string(), WINT_APP_SOURCE.to_string()),
+            (
+                LIBRARY_SOURCE.replace("self.gate.acknowledge_presented(witness)", "drop(witness); self.gate.acknowledge_presented_unchecked()"),
+                PREPARED_SOURCE.to_string(),
+                GPU_SOURCE.to_string(),
+                DRAW_SOURCE.to_string(),
+                OS_HOST_SOURCE.to_string(),
+                WINT_APP_SOURCE.to_string(),
+            ),
+            (LIBRARY_SOURCE.to_string(), PREPARED_SOURCE.replace("pub fn abort_pending", "fn abandon_pending"), GPU_SOURCE.to_string(), DRAW_SOURCE.to_string(), OS_HOST_SOURCE.to_string(), WINT_APP_SOURCE.to_string()),
+            (
+                LIBRARY_SOURCE.to_string(),
+                PREPARED_SOURCE.replace("last_valid: Option<PreparedRenderPacket>", "last_valid: Option<Arc<PreparedRenderPacket>>"),
+                GPU_SOURCE.to_string(),
+                DRAW_SOURCE.to_string(),
+                OS_HOST_SOURCE.to_string(),
+                WINT_APP_SOURCE.to_string(),
+            ),
+            (LIBRARY_SOURCE.replace("previous.retire_step()", "drop(previous)"), PREPARED_SOURCE.to_string(), GPU_SOURCE.to_string(), DRAW_SOURCE.to_string(), OS_HOST_SOURCE.to_string(), WINT_APP_SOURCE.to_string()),
+            (LIBRARY_SOURCE.replace("AppPresentPhase::Stage", "AppPresentPhase::Render"), PREPARED_SOURCE.to_string(), GPU_SOURCE.to_string(), DRAW_SOURCE.to_string(), OS_HOST_SOURCE.to_string(), WINT_APP_SOURCE.to_string()),
+            (LIBRARY_SOURCE.replace("AppPresentPhase::Aborted", "AppPresentPhase::Render"), PREPARED_SOURCE.to_string(), GPU_SOURCE.to_string(), DRAW_SOURCE.to_string(), OS_HOST_SOURCE.to_string(), WINT_APP_SOURCE.to_string()),
+            (
+                LIBRARY_SOURCE.to_string(),
+                PREPARED_SOURCE.to_string(),
+                GPU_SOURCE.replace("self.mesh_store.evict_mesh_except_step(key, keep_versions)", "self.mesh_store.evict_mesh_step(key)"),
+                DRAW_SOURCE.to_string(),
+                OS_HOST_SOURCE.to_string(),
+                WINT_APP_SOURCE.to_string(),
+            ),
+            (
+                LIBRARY_SOURCE.to_string(),
+                PREPARED_SOURCE.to_string(),
+                GPU_SOURCE.to_string(),
+                DRAW_SOURCE.replace("MESH_GPU_TABLE_CAPACITY: usize = 256", "MESH_GPU_TABLE_CAPACITY: usize = usize::MAX"),
+                OS_HOST_SOURCE.to_string(),
+                WINT_APP_SOURCE.to_string(),
+            ),
+            (
+                LIBRARY_SOURCE.to_string(),
+                PREPARED_SOURCE.to_string(),
+                GPU_SOURCE.to_string(),
+                DRAW_SOURCE.replace("FixedMeshGpuRegistry<GpuMeshBuffers>", "std::collections::HashMap<String, GpuMeshBuffers>"),
+                OS_HOST_SOURCE.to_string(),
+                WINT_APP_SOURCE.to_string(),
+            ),
+            (
+                LIBRARY_SOURCE.to_string(),
+                PREPARED_SOURCE.to_string(),
+                GPU_SOURCE.to_string(),
+                DRAW_SOURCE.replace("pub fn close_step(&mut self) -> bool", "pub fn close_all(&mut self) -> bool"),
+                OS_HOST_SOURCE.to_string(),
+                WINT_APP_SOURCE.to_string(),
+            ),
+            (LIBRARY_SOURCE.to_string(), PREPARED_SOURCE.to_string(), GPU_SOURCE.to_string(), DRAW_SOURCE.to_string(), OS_HOST_SOURCE.replace("presenter.world_owners_terminal_is_empty()", "true"), WINT_APP_SOURCE.to_string()),
+            (
+                LIBRARY_SOURCE.to_string(),
+                PREPARED_SOURCE.to_string(),
+                GPU_SOURCE.to_string(),
+                DRAW_SOURCE.to_string(),
+                OS_HOST_SOURCE.to_string(),
+                WINT_APP_SOURCE.replace(".admit_next_frame(|| frame_build.poll_runtime_and_resubmit", ".poll_runtime_and_resubmit"),
+            ),
+            (
+                LIBRARY_SOURCE.replacen(
+                    concat!("let expected = self.presentation_", "authority.current();"),
+                    concat!("let expected = RuntimePresentationWitness { scene_revision: packet.", "scene_revision(), input_generation: packet.", "preview_generation() };"),
+                    1,
+                ),
+                PREPARED_SOURCE.to_string(),
+                GPU_SOURCE.to_string(),
+                DRAW_SOURCE.to_string(),
+                OS_HOST_SOURCE.to_string(),
+                WINT_APP_SOURCE.to_string(),
+            ),
+            (
+                LIBRARY_SOURCE.replace(concat!("runtime.presentation_", "witness_for(self.generation.0)"), "Some(RuntimePresentationWitness { scene_revision: self.generation.0, input_generation: self.generation.0 })"),
+                PREPARED_SOURCE.to_string(),
+                GPU_SOURCE.to_string(),
+                DRAW_SOURCE.to_string(),
+                OS_HOST_SOURCE.to_string(),
+                WINT_APP_SOURCE.to_string(),
+            ),
+            (LIBRARY_SOURCE.replace(concat!("self.presentation_authority.", "mark_scene_changed();"), ""), PREPARED_SOURCE.to_string(), GPU_SOURCE.to_string(), DRAW_SOURCE.to_string(), OS_HOST_SOURCE.to_string(), WINT_APP_SOURCE.to_string()),
+            (
+                LIBRARY_SOURCE.to_string(),
+                PREPARED_SOURCE.to_string(),
+                GPU_SOURCE.to_string(),
+                DRAW_SOURCE.to_string(),
+                OS_HOST_SOURCE.to_string(),
+                WINT_APP_SOURCE.replace("self.runtime.observe_presentation_input_generation(build_generation.0);", ""),
+            ),
+        ];
+        for (glue, prepared, gpu, draw, host, winit) in mutations {
+            assert!(!presenter_retirement_contract(&glue, &prepared, &gpu, &draw, &host, &winit));
+        }
+    }
 }
 //#endregion 🔖️AsyncBoundaryTests
 
@@ -6188,6 +6747,105 @@ const RUNTIME_COMPLETION_CAPACITY: usize = 128;
 const WORLD3D_DEADLINE_CAPACITY: usize = 256;
 const WORLD3D_DEADLINE_ID_BYTES: usize = 256;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct RuntimePresentationWitness {
+    scene_revision: u64,
+    input_generation: u64,
+}
+
+struct RuntimePresentationAuthorityInner {
+    scene_revision: AtomicU64,
+    input_generation: AtomicU64,
+}
+
+#[derive(Clone)]
+struct RuntimePresentationAuthority(Arc<RuntimePresentationAuthorityInner>);
+
+impl RuntimePresentationAuthority {
+    fn new() -> Self {
+        Self(Arc::new(RuntimePresentationAuthorityInner { scene_revision: AtomicU64::new(1), input_generation: AtomicU64::new(0) }))
+    }
+
+    fn mark_scene_changed(&self) {
+        self.0.scene_revision.fetch_add(1, Ordering::AcqRel);
+    }
+
+    fn observe_input_generation(&self, generation: u64) {
+        self.0.input_generation.store(generation, Ordering::Release);
+    }
+
+    fn current(&self) -> RuntimePresentationWitness {
+        RuntimePresentationWitness { scene_revision: self.0.scene_revision.load(Ordering::Acquire), input_generation: self.0.input_generation.load(Ordering::Acquire) }
+    }
+
+    fn witness_for(&self, input_generation: u64) -> Option<RuntimePresentationWitness> {
+        let witness = self.current();
+        (witness.input_generation == input_generation).then_some(witness)
+    }
+
+    #[cfg(test)]
+    fn matches(&self, scene_revision: u64, input_generation: u64) -> bool {
+        self.current() == RuntimePresentationWitness { scene_revision, input_generation }
+    }
+}
+
+struct RuntimeRasterOperationAuthorityInner {
+    next_operation: AtomicU64,
+    exhausted: AtomicBool,
+    current: Mutex<Option<ui_wgpu::wgpu::RasterTextureWitness>>,
+}
+
+#[derive(Clone)]
+struct RuntimeRasterOperationAuthority(Arc<RuntimeRasterOperationAuthorityInner>);
+
+impl RuntimeRasterOperationAuthority {
+    fn new() -> Self {
+        Self(Arc::new(RuntimeRasterOperationAuthorityInner { next_operation: AtomicU64::new(1), exhausted: AtomicBool::new(false), current: Mutex::new(None) }))
+    }
+
+    fn begin(&self, scene_revision: u64, preview_generation: u64) -> Result<ui_wgpu::wgpu::RasterTextureWitness, &'static str> {
+        let mut current = self.0.current.lock().map_err(|_| "raster operation authority was poisoned")?;
+        if current.is_some() {
+            return Err("raster operation authority was occupied");
+        }
+        let operation = loop {
+            if self.0.exhausted.load(Ordering::Acquire) {
+                return Err("raster operation generation exhausted");
+            }
+            let operation = self.0.next_operation.load(Ordering::Acquire);
+            if operation == u64::MAX {
+                if self.0.exhausted.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_ok() {
+                    break operation;
+                }
+                continue;
+            }
+            if self.0.next_operation.compare_exchange(operation, operation + 1, Ordering::AcqRel, Ordering::Acquire).is_ok() {
+                break operation;
+            }
+        };
+        let witness = ui_wgpu::wgpu::RasterTextureWitness { scene_revision, preview_generation, operation };
+        *current = Some(witness);
+        Ok(witness)
+    }
+
+    fn current(&self) -> Option<ui_wgpu::wgpu::RasterTextureWitness> {
+        self.0.current.lock().ok().and_then(|current| *current)
+    }
+
+    fn matches(&self, witness: ui_wgpu::wgpu::RasterTextureWitness) -> bool {
+        self.current() == Some(witness)
+    }
+
+    fn release(&self, witness: ui_wgpu::wgpu::RasterTextureWitness) -> Result<(), &'static str> {
+        let mut current = self.0.current.lock().map_err(|_| "raster operation authority was poisoned")?;
+        if *current != Some(witness) {
+            return Err("raster operation authority was stale or duplicated");
+        }
+        *current = None;
+        Ok(())
+    }
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 type RuntimeHostWaker = Arc<dyn Fn() + Send + Sync>;
 
@@ -6199,6 +6857,8 @@ type RuntimeCompletionQueue = runtime_mailbox_core::BoundedCompletionQueue<Runti
 
 struct RuntimeMailboxInner {
     runtime: Mutex<AppRuntime>,
+    presentation_authority: RuntimePresentationAuthority,
+    raster_operation_authority: RuntimeRasterOperationAuthority,
     world_cursor_wake: infinite_world::world::WorldCursorWakeAuthority,
     completions: Mutex<RuntimeCompletionQueue>,
     waker: Mutex<Option<RuntimeHostWaker>>,
@@ -6241,6 +6901,7 @@ impl RuntimeMailboxInner {
             return false;
         }
         drop(queue);
+        self.presentation_authority.mark_scene_changed();
         if let Some(waker) = self.waker.lock().expect("runtime completion waker lock").as_ref() {
             waker();
         }
@@ -6251,6 +6912,7 @@ impl RuntimeMailboxInner {
         let mut queue = self.completions.lock().expect("runtime completion mailbox lock");
         queue.finish(completion);
         drop(queue);
+        self.presentation_authority.mark_scene_changed();
         if let Some(waker) = self.waker.lock().expect("runtime completion waker lock").as_ref() {
             waker();
         }
@@ -6262,6 +6924,8 @@ pub(crate) struct RuntimeMailbox(Arc<RuntimeMailboxInner>);
 
 impl RuntimeMailbox {
     fn new(runtime: AppRuntime) -> Self {
+        let presentation_authority = RuntimePresentationAuthority::new();
+        let raster_operation_authority = RuntimeRasterOperationAuthority::new();
         #[cfg(not(target_arch = "wasm32"))]
         let (native_asset_http, native_asset_https, native_asset_http_runtime, native_asset_http_scope, native_asset_http_cancel) = {
             use semio_framework_async::HostAsyncRuntime;
@@ -6277,6 +6941,8 @@ impl RuntimeMailbox {
         };
         Self(Arc::new(RuntimeMailboxInner {
             runtime: Mutex::new(runtime),
+            presentation_authority,
+            raster_operation_authority,
             world_cursor_wake: infinite_world::world::WorldCursorWakeAuthority::new(),
             completions: Mutex::new(RuntimeCompletionQueue::new()),
             waker: Mutex::new(None),
@@ -6314,6 +6980,22 @@ impl RuntimeMailbox {
 
     fn world_cursor_wake_authority(&self) -> infinite_world::world::WorldCursorWakeAuthority {
         self.0.world_cursor_wake.clone()
+    }
+
+    fn presentation_authority(&self) -> RuntimePresentationAuthority {
+        self.0.presentation_authority.clone()
+    }
+
+    fn raster_operation_authority(&self) -> RuntimeRasterOperationAuthority {
+        self.0.raster_operation_authority.clone()
+    }
+
+    fn presentation_witness_for(&self, input_generation: u64) -> Option<RuntimePresentationWitness> {
+        self.0.presentation_authority.witness_for(input_generation)
+    }
+
+    pub(crate) fn observe_presentation_input_generation(&self, generation: u64) {
+        self.0.presentation_authority.observe_input_generation(generation);
     }
 
     pub(crate) fn acknowledge_world_cursor_wake(&self, token: &infinite_world::world::WorldCursorWakeToken) -> bool {
@@ -6977,6 +7659,7 @@ pub(crate) struct AppFrameTransaction {
     wheel: Option<FrameWheelCursor>,
     generated_actions: Option<std::vec::IntoIter<ActionDescriptor>>,
     raster_uploads: Option<scenes::PendingRasterUploadCursor>,
+    raster_rejected: Option<ui_wgpu::wgpu::PreparedRasterProducer>,
 }
 
 pub(crate) enum AppFrameTransactionStep {
@@ -7017,6 +7700,7 @@ impl AppFrameTransaction {
             wheel: None,
             generated_actions: None,
             raster_uploads: None,
+            raster_rejected: None,
         }
     }
 
@@ -7083,7 +7767,12 @@ impl AppFrameTransaction {
                     app.drive_pending_frame_deferred(handle);
                     return AppFrameTransactionStep::Pending;
                 }
-                self.after_chrome = Some(app.frame_before_input(handle, directives, self.generation, self.dpr, std::mem::take(&mut self.deferred_actions)));
+                let Some(presentation_witness) = runtime.presentation_witness_for(self.generation.0) else {
+                    runtime.record_frame_fault("frame presentation input generation was stale before candidate construction");
+                    self.phase = AppFrameTransactionPhase::Terminal;
+                    return AppFrameTransactionStep::Fault;
+                };
+                self.after_chrome = Some(app.frame_before_input(handle, directives, presentation_witness, self.dpr, std::mem::take(&mut self.deferred_actions)));
                 self.phase = AppFrameTransactionPhase::InputEvents;
                 AppFrameTransactionStep::Pending
             }
@@ -7432,15 +8121,28 @@ impl AppFrameTransaction {
                 let cursor = self.raster_uploads.get_or_insert_with(Default::default);
                 match cursor.step() {
                     scenes::PendingRasterUploadStep::Pending => AppFrameTransactionStep::Pending,
-                    scenes::PendingRasterUploadStep::Upload(upload) => {
+                    scenes::PendingRasterUploadStep::Upload(mut producer) => {
                         let partial = self.after_chrome.as_mut().expect("chrome phase precedes raster uploads");
                         let input = partial.resource_input.as_mut().expect("chrome resource input");
-                        if input.uploads.len() >= WORLD3D_DEADLINE_CAPACITY {
+                        if input.raster_producers.len().saturating_add(input.uploads.len()) >= input.limits.max_upload_items {
+                            if let Err(mut returned) = cursor.retain_rejected(producer) {
+                                returned.begin_close();
+                                self.raster_rejected = Some(returned);
+                            }
                             runtime.record_frame_fault("frame raster upload item credits exceeded");
                             self.phase = AppFrameTransactionPhase::Terminal;
                             return AppFrameTransactionStep::Fault;
                         }
-                        input.uploads.push(ui_wgpu::wgpu::PreparedRenderUpload::Raster { key: upload.key, pixels: upload.pixels, width: upload.width, height: upload.height });
+                        if !producer.bind_frame_generation(input.preview_generation) {
+                            if let Err(mut returned) = cursor.retain_rejected(producer) {
+                                returned.begin_close();
+                                self.raster_rejected = Some(returned);
+                            }
+                            runtime.record_frame_fault("frame raster producer generation was stale");
+                            self.phase = AppFrameTransactionPhase::Terminal;
+                            return AppFrameTransactionStep::Fault;
+                        }
+                        input.raster_producers.push_back(producer);
                         AppFrameTransactionStep::Pending
                     }
                     scenes::PendingRasterUploadStep::Complete => {
@@ -7468,6 +8170,20 @@ impl AppFrameTransaction {
     }
 
     pub(crate) fn close_step(&mut self) -> bool {
+        if let Some(producer) = self.raster_rejected.as_mut() {
+            if !producer.close_step() {
+                return false;
+            }
+            self.raster_rejected = None;
+            return false;
+        }
+        if let Some(cursor) = self.raster_uploads.as_mut() {
+            if !cursor.close_step() {
+                return false;
+            }
+            self.raster_uploads = None;
+            return false;
+        }
         if let Some(actions) = self.generated_actions.as_mut() {
             if actions.next().is_some() {
                 return false;
@@ -7500,7 +8216,7 @@ impl AppFrameTransaction {
 }
 
 pub(crate) struct AppFramePresentation {
-    packet: Arc<ui_wgpu::wgpu::PreparedRenderPacket>,
+    packet: Option<ui_wgpu::wgpu::PreparedRenderPacket>,
     engine_packets: Vec<engine_canvas::EngineCanvasPacket>,
     pub(crate) cursor: SemioCursor,
     theme_dark: bool,
@@ -7555,7 +8271,7 @@ impl AppFramePreparation {
             return None;
         }
         let packet = self.job.take_packet()?;
-        Some(AppFramePresentation { packet, engine_packets: self.engine_packets.take()?, cursor: self.cursor, theme_dark: self.theme_dark, fullscreen: self.fullscreen, cursor_wake: self.cursor_wake.take() })
+        Some(AppFramePresentation { packet: Some(packet), engine_packets: self.engine_packets.take()?, cursor: self.cursor, theme_dark: self.theme_dark, fullscreen: self.fullscreen, cursor_wake: self.cursor_wake.take() })
     }
 
     pub(crate) fn close_step(&mut self) -> bool {
@@ -7587,11 +8303,14 @@ pub(crate) struct AppPresenter {
     gpu: GpuContext,
     engine: engine_canvas::EngineCanvasPresenter,
     gate: ui_wgpu::wgpu::PreparedRenderGate,
+    presentation_authority: RuntimePresentationAuthority,
+    raster_operation_authority: RuntimeRasterOperationAuthority,
     window: Option<Arc<Window>>,
     #[cfg(target_arch = "wasm32")]
     offscreen_token: Option<ui_wgpu::wgpu::OffscreenPresentToken>,
     last_cursor: Option<(SemioCursor, bool)>,
     pending: Option<AppPresentCursor>,
+    retirement: Option<AppPresentedRetirement>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -7599,9 +8318,11 @@ enum AppPresentPhase {
     Fullscreen,
     Engine,
     BeginGpu,
-    Evictions,
     Uploads,
+    Stage,
     Render,
+    Acknowledge,
+    Aborted,
     Directives,
 }
 
@@ -7609,14 +8330,163 @@ struct AppPresentCursor {
     frame: AppFramePresentation,
     phase: AppPresentPhase,
     engine: usize,
-    eviction: usize,
     upload: usize,
+    witness: Option<ui_wgpu::wgpu::PreparedPresenterWitness>,
+    raster_witness: Option<ui_wgpu::wgpu::RasterTextureWitness>,
+}
+
+struct AppPresentedRetirement {
+    previous: Option<ui_wgpu::wgpu::PreparedRenderPacket>,
+    completed_frame: Option<AppFramePresentation>,
+    raster: RasterCandidateRetirement,
+    acknowledged_eviction: usize,
+    acknowledged_upload_scan: usize,
+    acknowledged_versions: [u64; ui_wgpu::wgpu::MESH_GPU_KEEP_VERSION_CAPACITY],
+    acknowledged_version_count: usize,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum RasterCandidateRetirement {
+    Infer,
+    Abort(ui_wgpu::wgpu::RasterTextureWitness),
+    Commit(ui_wgpu::wgpu::RasterTextureWitness),
+    Complete,
 }
 
 pub(crate) enum AppPresentStep {
     Idle,
     Pending,
     Complete { fullscreen: Option<bool>, cursor_wake: Option<infinite_world::world::WorldCursorWakeToken> },
+}
+
+impl AppFramePresentation {
+    fn close_step(&mut self) -> bool {
+        if let Some(packet) = self.packet.as_mut() {
+            if !packet.retire_step() {
+                return false;
+            }
+            self.packet = None;
+            return false;
+        }
+        if let Some(packet) = self.engine_packets.last_mut() {
+            if !packet.close_step() || !packet.terminal_is_empty() {
+                return false;
+            }
+            self.engine_packets.pop();
+            return false;
+        }
+        if self.cursor_wake.take().is_some() {
+            return false;
+        }
+        true
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.packet.is_none() && self.engine_packets.is_empty() && self.cursor_wake.is_none()
+    }
+}
+
+impl AppPresentedRetirement {
+    fn new(previous: Option<ui_wgpu::wgpu::PreparedRenderPacket>) -> Self {
+        Self {
+            previous,
+            completed_frame: None,
+            raster: RasterCandidateRetirement::Infer,
+            acknowledged_eviction: 0,
+            acknowledged_upload_scan: 0,
+            acknowledged_versions: [0; ui_wgpu::wgpu::MESH_GPU_KEEP_VERSION_CAPACITY],
+            acknowledged_version_count: 0,
+        }
+    }
+
+    fn abort(previous: ui_wgpu::wgpu::PreparedRenderPacket, witness: ui_wgpu::wgpu::RasterTextureWitness) -> Self {
+        let raster = RasterCandidateRetirement::Abort(witness);
+        Self { previous: Some(previous), completed_frame: None, raster, acknowledged_eviction: 0, acknowledged_upload_scan: 0, acknowledged_versions: [0; ui_wgpu::wgpu::MESH_GPU_KEEP_VERSION_CAPACITY], acknowledged_version_count: 0 }
+    }
+
+    fn commit(previous: Option<ui_wgpu::wgpu::PreparedRenderPacket>, witness: ui_wgpu::wgpu::RasterTextureWitness) -> Self {
+        Self {
+            previous,
+            completed_frame: None,
+            raster: RasterCandidateRetirement::Commit(witness),
+            acknowledged_eviction: 0,
+            acknowledged_upload_scan: 0,
+            acknowledged_versions: [0; ui_wgpu::wgpu::MESH_GPU_KEEP_VERSION_CAPACITY],
+            acknowledged_version_count: 0,
+        }
+    }
+
+    fn step(&mut self, gpu: &mut GpuContext, gate: &ui_wgpu::wgpu::PreparedRenderGate) -> Result<bool, String> {
+        if self.raster == RasterCandidateRetirement::Infer {
+            self.raster = RasterCandidateRetirement::Complete;
+            return Ok(false);
+        }
+        match self.raster {
+            RasterCandidateRetirement::Abort(witness) => {
+                if !gpu.abort_presented_rasters_step(witness)? {
+                    return Ok(false);
+                }
+                self.raster = RasterCandidateRetirement::Complete;
+                return Ok(false);
+            }
+            RasterCandidateRetirement::Commit(witness) => {
+                if !gpu.commit_presented_rasters_step(witness)? {
+                    return Ok(false);
+                }
+                self.raster = RasterCandidateRetirement::Complete;
+                return Ok(false);
+            }
+            RasterCandidateRetirement::Infer | RasterCandidateRetirement::Complete => {}
+        }
+        if !gpu.close_mesh_upload_step() {
+            return Ok(false);
+        }
+        if let Some(packet) = gate.last_valid() {
+            if self.acknowledged_eviction < packet.evictions().len() {
+                let key = match &packet.evictions()[self.acknowledged_eviction] {
+                    ui_wgpu::wgpu::PreparedRenderEviction::Mesh { key } => key,
+                };
+                if let Some(upload) = packet.uploads().get(self.acknowledged_upload_scan) {
+                    if let ui_wgpu::wgpu::PreparedRenderUpload::Mesh { key: upload_key, version, .. } = upload {
+                        if upload_key == key {
+                            let Some(slot) = self.acknowledged_versions.get_mut(self.acknowledged_version_count) else {
+                                return Err("prepared mesh eviction keep-version credits exhausted".to_string());
+                            };
+                            *slot = *version;
+                            self.acknowledged_version_count += 1;
+                        }
+                    }
+                    self.acknowledged_upload_scan += 1;
+                    return Ok(false);
+                }
+                if gpu.apply_prepared_eviction_step(packet, self.acknowledged_eviction, &self.acknowledged_versions[..self.acknowledged_version_count])? {
+                    self.acknowledged_eviction += 1;
+                    self.acknowledged_upload_scan = 0;
+                    self.acknowledged_version_count = 0;
+                }
+                return Ok(false);
+            }
+        }
+        if let Some(previous) = self.previous.as_mut() {
+            if !previous.retire_step() {
+                return Ok(false);
+            }
+            self.previous = None;
+            return Ok(false);
+        }
+        if let Some(frame) = self.completed_frame.as_mut() {
+            if !frame.close_step() {
+                return Ok(false);
+            }
+            self.completed_frame = None;
+            return Ok(false);
+        }
+        Ok(true)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.raster == RasterCandidateRetirement::Complete && self.previous.is_none() && self.completed_frame.as_ref().is_none_or(AppFramePresentation::terminal_is_empty)
+    }
 }
 
 impl AppPresenter {
@@ -7629,11 +8499,7 @@ impl AppPresenter {
     }
 
     pub(crate) fn has_pending_presentation(&self) -> bool {
-        self.pending.is_some()
-    }
-
-    pub(crate) fn close_active_upload_step(&mut self) -> bool {
-        self.gpu.close_mesh_upload_step()
+        self.pending.is_some() || self.retirement.is_some() || self.gate.has_pending_acknowledgement()
     }
 
     pub(crate) fn close_cursor_wake_step(&mut self) -> bool {
@@ -7644,21 +8510,110 @@ impl AppPresenter {
         true
     }
 
-    pub(crate) fn active_upload_terminal_is_empty(&self) -> bool {
-        self.gpu.mesh_upload_terminal_is_empty()
+    pub(crate) fn close_world_owners_step(&mut self) -> Result<bool, String> {
+        if let Some(mut cursor) = self.pending.take() {
+            if cursor.frame.packet.is_none() {
+                cursor.frame.packet = self.gate.abort_pending();
+            }
+            let retirement = self.retirement.get_or_insert_with(|| AppPresentedRetirement::new(None));
+            if retirement.completed_frame.is_some() {
+                self.pending = Some(cursor);
+                return Err("presenter close retirement capacity exhausted".to_string());
+            }
+            if let Some(witness) = cursor.raster_witness.take() {
+                if let Err(error) = self.raster_operation_authority.release(witness) {
+                    cursor.raster_witness = Some(witness);
+                    self.pending = Some(cursor);
+                    return Err(error.to_string());
+                }
+                retirement.raster = RasterCandidateRetirement::Abort(witness);
+            }
+            retirement.completed_frame = Some(cursor.frame);
+            return Ok(false);
+        }
+        if let Some(packet) = self.gate.abort_pending() {
+            if self.retirement.is_some() {
+                return Err("presenter pending packet cannot overtake retirement".to_string());
+            }
+            let witness = self.raster_operation_authority.current().ok_or_else(|| "presenter raster operation witness was missing during close".to_string())?;
+            self.raster_operation_authority.release(witness).map_err(str::to_owned)?;
+            self.retirement = Some(AppPresentedRetirement::abort(packet, witness));
+            return Ok(false);
+        }
+        if let Some(retirement) = self.retirement.as_mut() {
+            if !retirement.step(&mut self.gpu, &self.gate)? {
+                return Ok(false);
+            }
+            self.retirement = None;
+            return Ok(false);
+        }
+        if let Some(packet) = self.gate.take_last_valid() {
+            self.retirement = Some(AppPresentedRetirement::new(Some(packet)));
+            return Ok(false);
+        }
+        if !self.gate.close_step() {
+            return Ok(false);
+        }
+        if !self.gpu.close_mesh_upload_step() {
+            return Ok(false);
+        }
+        if !self.gpu.close_mesh_table_step() {
+            return Ok(false);
+        }
+        if !self.gpu.close_raster_table_step()? {
+            return Ok(false);
+        }
+        Ok(self.world_owners_terminal_is_empty())
     }
 
-    pub(crate) fn begin_present(&mut self, frame: AppFramePresentation) -> Result<(), AppFramePresentation> {
-        if self.pending.is_some() {
-            return Err(frame);
+    pub(crate) fn world_owners_terminal_is_empty(&self) -> bool {
+        self.pending.is_none()
+            && self.retirement.as_ref().is_none_or(AppPresentedRetirement::terminal_is_empty)
+            && self.gate.terminal_is_empty()
+            && self.gpu.mesh_upload_terminal_is_empty()
+            && self.gpu.mesh_table_terminal_is_empty()
+            && self.gpu.raster_table_terminal_is_empty()
+            && self.raster_operation_authority.current().is_none()
+    }
+
+    pub(crate) fn admit_next_frame(&mut self, produce: impl FnOnce() -> Option<AppFramePresentation>) -> Option<SemioCursor> {
+        if self.has_pending_presentation() {
+            return None;
         }
-        self.pending = Some(AppPresentCursor { frame, phase: AppPresentPhase::BeginGpu, engine: 0, eviction: 0, upload: 0 });
-        Ok(())
+        let frame = produce()?;
+        let cursor = frame.cursor;
+        self.pending = Some(AppPresentCursor { frame, phase: AppPresentPhase::BeginGpu, engine: 0, upload: 0, witness: None, raster_witness: None });
+        Some(cursor)
     }
 
     pub(crate) fn present_step(&mut self) -> Result<AppPresentStep, String> {
+        if self.pending.is_none() {
+            let Some(retirement) = self.retirement.as_mut() else { return Ok(AppPresentStep::Idle) };
+            if retirement.step(&mut self.gpu, &self.gate)? {
+                self.retirement = None;
+            }
+            return Ok(AppPresentStep::Pending);
+        }
         let Some(cursor) = self.pending.as_mut() else { return Ok(AppPresentStep::Idle) };
         match cursor.phase {
+            AppPresentPhase::Aborted => {
+                let mut aborted = self.pending.take().expect("aborted presentation cursor");
+                let retirement = self.retirement.get_or_insert_with(|| AppPresentedRetirement::new(None));
+                if retirement.completed_frame.is_some() {
+                    self.pending = Some(aborted);
+                    return Err("aborted presentation retirement capacity exhausted".to_string());
+                }
+                if let Some(witness) = aborted.raster_witness.take() {
+                    if let Err(error) = self.raster_operation_authority.release(witness) {
+                        aborted.raster_witness = Some(witness);
+                        self.pending = Some(aborted);
+                        return Err(error.to_string());
+                    }
+                    retirement.raster = RasterCandidateRetirement::Abort(witness);
+                }
+                retirement.completed_frame = Some(aborted.frame);
+                Ok(AppPresentStep::Pending)
+            }
             AppPresentPhase::Fullscreen => {
                 if let Some(active) = cursor.frame.fullscreen {
                     #[cfg(not(target_arch = "wasm32"))]
@@ -7687,50 +8642,144 @@ impl AppPresenter {
             }
             AppPresentPhase::Engine => {
                 if let Some(packet) = cursor.frame.engine_packets.get(cursor.engine) {
-                    self.engine.realize_one(&mut self.gpu, packet).map_err(|error| format!("engine canvas present: {error}"))?;
+                    let candidate = cursor.raster_witness.ok_or_else(|| "engine raster operation witness was missing".to_string())?;
+                    let expected = self.raster_operation_authority.current().ok_or_else(|| "engine raster operation authority was empty".to_string())?;
+                    if let Err(error) = self.engine.realize_one(&mut self.gpu, packet, candidate, expected) {
+                        cursor.phase = AppPresentPhase::Aborted;
+                        return Err(format!("engine canvas present: {error}"));
+                    }
                     cursor.engine += 1;
                     return Ok(AppPresentStep::Pending);
                 }
-                cursor.phase = AppPresentPhase::Evictions;
+                cursor.phase = AppPresentPhase::Uploads;
                 Ok(AppPresentStep::Pending)
             }
             AppPresentPhase::BeginGpu => {
-                let revision = cursor.frame.packet.scene_revision();
-                let generation = cursor.frame.packet.preview_generation();
+                let packet = cursor.frame.packet.as_ref().ok_or_else(|| "prepared frame packet was transferred before admission".to_string())?;
+                let expected = self.presentation_authority.current();
                 #[cfg(not(target_arch = "wasm32"))]
                 {
                     let token = ui_wgpu::wgpu::UiPresentToken::mint_for_current_thread();
-                    self.gpu.begin_prepared(&token, &self.gate, &cursor.frame.packet, revision, generation).map_err(|error| format!("prepared frame admission: {error}"))?;
+                    if let Err(error) = self.gpu.begin_prepared(&token, &self.gate, packet, expected.scene_revision, expected.input_generation) {
+                        cursor.phase = AppPresentPhase::Aborted;
+                        return Err(format!("prepared frame admission: {error}"));
+                    }
                 }
                 #[cfg(target_arch = "wasm32")]
                 {
-                    let token = self.offscreen_token.as_ref().ok_or_else(|| "browser presentation requires dedicated Worker authority".to_string())?;
-                    self.gpu.begin_prepared_offscreen(token, &self.gate, &cursor.frame.packet, revision, generation).map_err(|error| format!("offscreen prepared frame admission: {error}"))?;
+                    let Some(token) = self.offscreen_token.as_ref() else {
+                        cursor.phase = AppPresentPhase::Aborted;
+                        return Err("browser presentation requires dedicated Worker authority".to_string());
+                    };
+                    if let Err(error) = self.gpu.begin_prepared_offscreen(token, &self.gate, packet, expected.scene_revision, expected.input_generation) {
+                        cursor.phase = AppPresentPhase::Aborted;
+                        return Err(format!("offscreen prepared frame admission: {error}"));
+                    }
                 }
+                let witness = match self.raster_operation_authority.begin(expected.scene_revision, expected.input_generation) {
+                    Ok(witness) => witness,
+                    Err(error) => {
+                        cursor.phase = AppPresentPhase::Aborted;
+                        return Err(format!("raster operation admission: {error}"));
+                    }
+                };
+                cursor.raster_witness = Some(witness);
                 cursor.phase = AppPresentPhase::Engine;
                 Ok(AppPresentStep::Pending)
             }
-            AppPresentPhase::Evictions => {
-                if cursor.eviction >= cursor.frame.packet.evictions().len() {
-                    cursor.phase = AppPresentPhase::Uploads;
+            AppPresentPhase::Uploads => {
+                let packet = cursor.frame.packet.as_ref().ok_or_else(|| "prepared frame packet was transferred before upload".to_string())?;
+                if cursor.upload >= packet.uploads().len() {
+                    cursor.phase = AppPresentPhase::Stage;
                     return Ok(AppPresentStep::Pending);
                 }
-                self.gpu.apply_prepared_eviction_step(&cursor.frame.packet, cursor.eviction)?;
-                cursor.eviction += 1;
+                let candidate = cursor.raster_witness.ok_or_else(|| "prepared raster operation witness was missing".to_string())?;
+                let expected = self.raster_operation_authority.current().ok_or_else(|| "prepared raster operation authority was empty".to_string())?;
+                match self.gpu.apply_prepared_upload_step(packet, cursor.upload, candidate, expected) {
+                    Ok(true) => cursor.upload += 1,
+                    Ok(false) => {}
+                    Err(error) => {
+                        cursor.phase = AppPresentPhase::Aborted;
+                        return Err(error);
+                    }
+                }
                 Ok(AppPresentStep::Pending)
             }
-            AppPresentPhase::Uploads => {
-                if cursor.upload >= cursor.frame.packet.uploads().len() {
-                    cursor.phase = AppPresentPhase::Render;
-                    return Ok(AppPresentStep::Pending);
-                }
-                if self.gpu.apply_prepared_upload_step(&cursor.frame.packet, cursor.upload)? {
-                    cursor.upload += 1;
-                }
+            AppPresentPhase::Stage => {
+                let packet = cursor.frame.packet.take().expect("validated prepared frame packet");
+                cursor.witness = match self.gate.stage_presented(packet) {
+                    Ok(witness) => Some(witness),
+                    Err(packet) => {
+                        cursor.frame.packet = Some(packet);
+                        cursor.phase = AppPresentPhase::Aborted;
+                        return Err("prepared frame presenter witness was already occupied".to_string());
+                    }
+                };
+                cursor.phase = AppPresentPhase::Render;
                 Ok(AppPresentStep::Pending)
             }
             AppPresentPhase::Render => {
-                self.gpu.finish_prepared(&mut self.gate, cursor.frame.packet.clone()).map_err(|error| format!("prepared frame submit: {error}"))?;
+                let Some(witness) = cursor.witness.as_ref() else {
+                    cursor.frame.packet = self.gate.abort_pending();
+                    cursor.phase = AppPresentPhase::Aborted;
+                    return Err("prepared frame presenter witness was missing before submit".to_string());
+                };
+                let Some(packet) = self.gate.pending_presented(witness) else {
+                    cursor.frame.packet = self.gate.abort_pending();
+                    cursor.witness = None;
+                    cursor.phase = AppPresentPhase::Aborted;
+                    return Err("prepared frame presenter witness was stale before submit".to_string());
+                };
+                let raster_witness = cursor.raster_witness.ok_or_else(|| "raster operation witness was missing before submit".to_string())?;
+                if !self.raster_operation_authority.matches(raster_witness) {
+                    cursor.frame.packet = self.gate.abort_pending();
+                    cursor.witness = None;
+                    cursor.phase = AppPresentPhase::Aborted;
+                    return Err("raster operation authority was stale before submit".to_string());
+                }
+                if let Err(error) = self.gpu.finish_prepared(packet, raster_witness) {
+                    cursor.frame.packet = self.gate.abort_pending();
+                    cursor.witness = None;
+                    cursor.phase = AppPresentPhase::Aborted;
+                    return Err(format!("prepared frame submit: {error}"));
+                }
+                cursor.phase = AppPresentPhase::Acknowledge;
+                Ok(AppPresentStep::Pending)
+            }
+            AppPresentPhase::Acknowledge => {
+                let Some(witness) = cursor.witness.take() else {
+                    cursor.frame.packet = self.gate.abort_pending();
+                    cursor.phase = AppPresentPhase::Aborted;
+                    return Err("prepared frame presenter witness was missing".to_string());
+                };
+                let Some(packet) = self.gate.pending_presented(&witness) else {
+                    cursor.frame.packet = self.gate.abort_pending();
+                    cursor.phase = AppPresentPhase::Aborted;
+                    return Err("prepared frame presenter witness was stale before acknowledgement".to_string());
+                };
+                let expected = self.presentation_authority.current();
+                if packet.scene_revision() != expected.scene_revision || packet.preview_generation() != expected.input_generation {
+                    cursor.frame.packet = self.gate.abort_pending();
+                    cursor.phase = AppPresentPhase::Aborted;
+                    return Err("prepared frame authority was stale before acknowledgement".to_string());
+                }
+                let raster_witness = cursor.raster_witness.ok_or_else(|| "raster operation witness was missing before acknowledgement".to_string())?;
+                if !self.raster_operation_authority.matches(raster_witness) || raster_witness.scene_revision != packet.scene_revision() || raster_witness.preview_generation != packet.preview_generation() {
+                    cursor.frame.packet = self.gate.abort_pending();
+                    cursor.phase = AppPresentPhase::Aborted;
+                    return Err("raster operation authority was stale before acknowledgement".to_string());
+                }
+                let mut replacement = match self.gate.acknowledge_presented(witness) {
+                    Ok(replacement) => replacement,
+                    Err(_) => {
+                        cursor.frame.packet = self.gate.abort_pending();
+                        cursor.phase = AppPresentPhase::Aborted;
+                        return Err("prepared frame presenter witness was stale or duplicated".to_string());
+                    }
+                };
+                self.raster_operation_authority.release(raster_witness).map_err(str::to_owned)?;
+                cursor.raster_witness = None;
+                self.retirement = Some(AppPresentedRetirement::commit(replacement.take_previous(), raster_witness));
                 cursor.phase = AppPresentPhase::Fullscreen;
                 Ok(AppPresentStep::Pending)
             }
@@ -7739,8 +8788,15 @@ impl AppPresenter {
                     apply_window_cursor(window, cursor.frame.cursor, cursor.frame.theme_dark, &mut self.last_cursor);
                 }
                 let fullscreen = self.window.is_none().then_some(cursor.frame.fullscreen).flatten();
-                let cursor_wake = cursor.frame.cursor_wake.take();
-                self.pending = None;
+                let mut completed = self.pending.take().expect("completed presentation cursor");
+                let cursor_wake = completed.frame.cursor_wake.take();
+                let retirement = self.retirement.get_or_insert_with(|| AppPresentedRetirement::new(None));
+                if retirement.completed_frame.is_some() {
+                    completed.frame.cursor_wake = cursor_wake;
+                    self.pending = Some(completed);
+                    return Err("completed presentation retirement capacity exhausted".to_string());
+                }
+                retirement.completed_frame = Some(completed.frame);
                 Ok(AppPresentStep::Complete { fullscreen, cursor_wake })
             }
         }
@@ -7919,7 +8975,7 @@ impl AppRuntime {
     /// `frame_job::FrameBuildJob`'s (possibly stale, see that module's own doc) output — a candidate
     /// list this method re-validates against LIVE state before acting on, never applies blindly. See
     /// `winit_app.rs`'s `build_and_publish_snapshot` for where it is computed and passed in.
-    fn frame_before_input(&mut self, handle: &AppHandle, build_directives: &crate::frame_job::FrameDirectives, generation: semio_framework_trace::Generation, dpr: f32, deferred_actions: Vec<ActionDescriptor>) -> AppFrameAfterChrome {
+    fn frame_before_input(&mut self, handle: &AppHandle, build_directives: &crate::frame_job::FrameDirectives, presentation_witness: RuntimePresentationWitness, dpr: f32, deferred_actions: Vec<ActionDescriptor>) -> AppFrameAfterChrome {
         self.drive_text_operation();
         let fullscreen = std::mem::take(&mut self.shell.fullscreen_toggle_requested).then(|| {
             self.shell.fullscreen_active = !self.shell.fullscreen_active;
@@ -7982,7 +9038,7 @@ impl AppRuntime {
                 None
             }
         };
-        let mut resource_input = ui_wgpu::wgpu::PreparedRenderInput::new(generation.0, generation.0, ui_wgpu::wgpu::DrawList::default(), None, 0.0);
+        let mut resource_input = ui_wgpu::wgpu::PreparedRenderInput::new(presentation_witness.scene_revision, presentation_witness.input_generation, ui_wgpu::wgpu::DrawList::default(), None, 0.0);
         world_resources.append_to(&mut resource_input);
         if let Some(upload) = icon_upload {
             resource_input.uploads.push(upload);
@@ -8374,16 +9430,6 @@ async fn boot_runtime(
     shell.screen_h = css_height * dpr;
     shell.boot().await.map_err(|err| format!("shell boot failed: {err}"))?;
 
-    let presenter = AppPresenter {
-        gpu,
-        engine: engine_canvas::EngineCanvasPresenter::default(),
-        gate: ui_wgpu::wgpu::PreparedRenderGate::default(),
-        window: Some(window.clone()),
-        #[cfg(target_arch = "wasm32")]
-        offscreen_token: None,
-        last_cursor: None,
-        pending: None,
-    };
     let runtime = RuntimeMailbox::new(AppRuntime {
         atlas,
         icons,
@@ -8421,6 +9467,19 @@ async fn boot_runtime(
         #[cfg(not(target_arch = "wasm32"))]
         native_reload_pending: false,
     });
+    let presenter = AppPresenter {
+        gpu,
+        engine: engine_canvas::EngineCanvasPresenter::default(),
+        gate: ui_wgpu::wgpu::PreparedRenderGate::default(),
+        presentation_authority: runtime.presentation_authority(),
+        raster_operation_authority: runtime.raster_operation_authority(),
+        window: Some(window.clone()),
+        #[cfg(target_arch = "wasm32")]
+        offscreen_token: None,
+        last_cursor: None,
+        pending: None,
+        retirement: None,
+    };
 
     // 🧹️ P3c: this used to build a `PointerCallbacks` here (5 `Rc<RefCell<AppRuntime>>` clones, one
     // per input kind) and hand it back alongside `runtime`. `winit_app.rs`'s own `HostUserEvent` doc

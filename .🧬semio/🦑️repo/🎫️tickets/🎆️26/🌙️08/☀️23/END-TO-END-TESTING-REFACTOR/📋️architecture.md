@@ -45,6 +45,29 @@ adapters          ─┘        (parsed ONCE)                          ├─►
 The coordinator parses the feature exactly once. No native host reads `component.feature`, discovers
 anything, or decides what "equal" means — which is what makes five languages provably agree.
 
+## Open/closed shape
+
+The framework supplies MECHANISM; every owner supplies its own POLICY.
+
+```
+🧰️framework/…/🧪️test          ← closed for modification
+├── comparison mechanism       (profiles are data: ignoreKeys, tolerance, arrays, text, bytes)
+├── discovery, planning, hosts (knows adapters and levels; knows no format)
+├── 📇️registry                 (domain-neutral decisions only — no oracle, no profile)
+└── 📦️packages/🦀️rust          (ZERO dependencies)
+
+<any owner>/🧪️oracle/          ← open for extension, discovered by convention
+├── 🔣️component.json           oracles · comparisonProfiles · oracleHostPackages · no-oracle decisions
+└── 📦️packages/<lang>/         the crate that links the reference libraries
+
+✏️s/🔌️plugins/🗄️stdio/🧪️oracle   8 oracles · 6 profiles · semio-s-plugin-stdio-test-oracle
+🧰️framework/🔨️modules/🖱️ui/🧪️oracle   clsx · cva · 1 no-oracle decision
+```
+
+Adding an artifact family touches no framework file. The root `📜️script.ts` likewise reads
+`testDomainPath`, `testPhases` and `areas` from the taxonomy rather than naming a module, a phase or
+an exempt area — so relocating the testing domain or exempting another area is a vocabulary edit.
+
 ## Key decisions and why
 
 **Generated hosts, never committed wrappers.** The taxonomy filenames are deliberately not the names

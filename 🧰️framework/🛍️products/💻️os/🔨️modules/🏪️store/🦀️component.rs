@@ -420,9 +420,8 @@ impl ErasedSnapshotRetirement for ArtifactStoreRevisionAccumulatorRetirement {
             };
         }
         let Some(accumulator) = self.accumulator.as_mut() else { return Ok(SnapshotRetirementStep::Complete) };
-        if let Some(record) = accumulator.redo.pop().or_else(|| accumulator.applied.pop()) {
-            *self.active = Some(ArtifactStoreStringRetirement::new(record.id));
-            return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+        if accumulator.redo.pop().or_else(|| accumulator.applied.pop()).is_some() {
+            return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         let accumulator = self.accumulator.take().expect("terminal revision accumulator remains present");
         drop(accumulator);
@@ -10780,7 +10779,7 @@ pub async fn build_history_columns<P, Mutation>(envelope: &ArtifactEnvelope<P, M
 //#region 🔖️ArtifactStore
 #[derive(Clone)]
 struct CursorRevisionRecord {
-    id: String,
+    id_digest: [u8; 32],
     edit_digest: [u8; 32],
     prefix_digest: [u8; 32],
 }
@@ -10850,21 +10849,18 @@ impl CursorRevisionAccumulator {
 
     fn reconcile_stack<Mutation: Serialize>(records: &mut Vec<CursorRevisionRecord>, ids: &[String], edits: &ArtifactHistoryLedger<Edit<Mutation>>, domain: &[u8], identity_digest: [u8; 32]) -> Vec<String> {
         let mut common = 0;
-        while common < records.len().min(ids.len()) && records[common].id == ids[common] {
+        while common < records.len().min(ids.len()) && records[common].id_digest == Self::hash_record(b"edit-id", &[ids[common].as_bytes()]) {
             common += 1;
         }
-        let mut retired = Vec::new();
         while records.len() > common {
-            let CursorRevisionRecord { id, edit_digest: _, prefix_digest: _ } = records.pop().expect("revision suffix owner remains present");
-            retired.push(id);
+            records.pop().expect("revision suffix record remains present");
         }
         if common == ids.len() && common != 0 {
             let id = &ids[common - 1];
             let edit = edits.iter().find(|edit| edit.id == *id).expect("validated cursor edit exists");
             let edit_digest = Self::edit_digest(edit);
             if records[common - 1].edit_digest != edit_digest {
-                let CursorRevisionRecord { id, edit_digest: _, prefix_digest: _ } = records.pop().expect("validated revision record remains present");
-                retired.push(id);
+                records.pop().expect("validated revision record remains present");
                 common -= 1;
             }
         }
@@ -10873,9 +10869,9 @@ impl CursorRevisionAccumulator {
             let edit_digest = Self::edit_digest(edit);
             let previous = records.last().map_or(identity_digest, |record| record.prefix_digest);
             let prefix_digest = Self::hash_record(domain, &[&previous, &edit_digest]);
-            records.push(CursorRevisionRecord { id: id.clone(), edit_digest, prefix_digest });
+            records.push(CursorRevisionRecord { id_digest: Self::hash_record(b"edit-id", &[id.as_bytes()]), edit_digest, prefix_digest });
         }
-        retired
+        Vec::new()
     }
 
     fn reconcile<Mutation: Serialize>(&mut self, applied_ids: &[String], redo_ids: &[String], edits: &ArtifactHistoryLedger<Edit<Mutation>>) -> (Vec<String>, Vec<String>) {
@@ -10895,6 +10891,41 @@ impl CursorRevisionAccumulator {
 /// @emoji 🏗️ Exact runtime owners assembled by a domain's retained store initializer.
 /// Every mutating method advances one already-admitted history or reference owner; final store
 /// construction only moves these prepared authorities into their from-birth terminal shells.
+pub struct ArtifactStoreInitializationOwnerCatalog {
+    applied_edit_ids: Vec<String>,
+    redo_edit_ids: Vec<String>,
+    applied_revision: Vec<CursorRevisionRecord>,
+    redo_revision: Vec<CursorRevisionRecord>,
+}
+
+impl ArtifactStoreInitializationOwnerCatalog {
+    pub fn try_new() -> Result<Self, &'static str> {
+        let capacity = crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY;
+        let mut applied_edit_ids = Vec::new();
+        let mut redo_edit_ids = Vec::new();
+        let mut applied_revision = Vec::new();
+        let mut redo_revision = Vec::new();
+        applied_edit_ids.try_reserve_exact(capacity).map_err(|_| "artifact store applied owner catalog allocation failed")?;
+        redo_edit_ids.try_reserve_exact(capacity).map_err(|_| "artifact store redo owner catalog allocation failed")?;
+        applied_revision.try_reserve_exact(capacity).map_err(|_| "artifact store applied revision catalog allocation failed")?;
+        redo_revision.try_reserve_exact(capacity).map_err(|_| "artifact store redo revision catalog allocation failed")?;
+        Ok(Self { applied_edit_ids, redo_edit_ids, applied_revision, redo_revision })
+    }
+
+    pub fn admitted_items(&self) -> usize {
+        self.applied_edit_ids.capacity() + self.redo_edit_ids.capacity() + self.applied_revision.capacity() + self.redo_revision.capacity()
+    }
+
+    pub fn admitted_bytes(&self) -> Option<usize> {
+        self.applied_edit_ids
+            .capacity()
+            .checked_mul(std::mem::size_of::<String>())?
+            .checked_add(self.redo_edit_ids.capacity().checked_mul(std::mem::size_of::<String>())?)?
+            .checked_add(self.applied_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)?
+            .checked_add(self.redo_revision.capacity().checked_mul(std::mem::size_of::<CursorRevisionRecord>())?)
+    }
+}
+
 pub struct ArtifactStoreInitializationRuntime<P> {
     current: std::mem::ManuallyDrop<Option<P>>,
     applied_edit_ids: std::mem::ManuallyDrop<Vec<String>>,
@@ -10913,18 +10944,24 @@ pub struct ArtifactStoreInitializationRuntime<P> {
 
 impl<P> ArtifactStoreInitializationRuntime<P> {
     pub fn new(artifact_id: &str, schema: &str, current: P, initial_digest: [u8; 32]) -> Self {
+        let catalog = ArtifactStoreInitializationOwnerCatalog::try_new().expect("artifact store initialization owner catalog must be pre-admitted");
+        Self::new_with_owner_catalog(artifact_id, schema, current, initial_digest, catalog)
+    }
+
+    pub fn new_with_owner_catalog(artifact_id: &str, schema: &str, current: P, initial_digest: [u8; 32], catalog: ArtifactStoreInitializationOwnerCatalog) -> Self {
         let identity_digest = CursorRevisionAccumulator::hash_record(b"initial", &[artifact_id.as_bytes(), schema.as_bytes(), &initial_digest]);
+        let ArtifactStoreInitializationOwnerCatalog { applied_edit_ids, redo_edit_ids, applied_revision, redo_revision } = catalog;
         Self {
             current: std::mem::ManuallyDrop::new(Some(current)),
-            applied_edit_ids: std::mem::ManuallyDrop::new(Vec::with_capacity(crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY)),
-            redo_edit_ids: std::mem::ManuallyDrop::new(Vec::with_capacity(crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY)),
+            applied_edit_ids: std::mem::ManuallyDrop::new(applied_edit_ids),
+            redo_edit_ids: std::mem::ManuallyDrop::new(redo_edit_ids),
             current_checkpoint_id: std::mem::ManuallyDrop::new(None),
             local_actor_id: std::mem::ManuallyDrop::new(None),
             dag: std::mem::ManuallyDrop::new(Some(crate::os_spr::MutationDag::new())),
             edit_sequence: 0,
             clock: HybridLogicalTimestamp::new(0, now_ms()),
             initial_digest,
-            revision: std::mem::ManuallyDrop::new(CursorRevisionAccumulator { identity_digest, applied: Vec::with_capacity(crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY), redo: Vec::with_capacity(crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY) }),
+            revision: std::mem::ManuallyDrop::new(CursorRevisionAccumulator { identity_digest, applied: applied_revision, redo: redo_revision }),
             close_active: std::mem::ManuallyDrop::new(None),
             close_phase: 0,
             taken: false,
@@ -10935,13 +10972,13 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         self.current.as_mut()
     }
 
-    fn push_revision_record(records: &mut Vec<CursorRevisionRecord>, identity_digest: [u8; 32], domain: &[u8], id: String, edit_digest: [u8; 32]) -> Result<(), String> {
+    fn push_revision_record(records: &mut Vec<CursorRevisionRecord>, identity_digest: [u8; 32], domain: &[u8], id: &str, edit_digest: [u8; 32]) -> Result<(), String> {
         if records.len() == crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY {
             return Err("artifact store revision ledger is saturated".into());
         }
         let previous = records.last().map_or(identity_digest, |record| record.prefix_digest);
         let prefix_digest = CursorRevisionAccumulator::hash_record(domain, &[&previous, &edit_digest]);
-        records.push(CursorRevisionRecord { id, edit_digest, prefix_digest });
+        records.push(CursorRevisionRecord { id_digest: CursorRevisionAccumulator::hash_record(b"edit-id", &[id.as_bytes()]), edit_digest, prefix_digest });
         Ok(())
     }
 
@@ -10949,7 +10986,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         if self.applied_edit_ids.len() == crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY {
             return Err("artifact store applied ledger is saturated".into());
         }
-        Self::push_revision_record(&mut self.revision.applied, self.revision.identity_digest, b"applied", id.clone(), edit_digest)?;
+        Self::push_revision_record(&mut self.revision.applied, self.revision.identity_digest, b"applied", &id, edit_digest)?;
         self.applied_edit_ids.push(id);
         Ok(())
     }
@@ -10958,7 +10995,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         if self.redo_edit_ids.len() == crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY {
             return Err("artifact store redo ledger is saturated".into());
         }
-        Self::push_revision_record(&mut self.revision.redo, self.revision.identity_digest, b"redo", id.clone(), edit_digest)?;
+        Self::push_revision_record(&mut self.revision.redo, self.revision.identity_digest, b"redo", &id, edit_digest)?;
         self.redo_edit_ids.push(id);
         Ok(())
     }
@@ -11049,16 +11086,14 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
                 self.close_phase = 6;
             }
             6 => {
-                if let Some(record) = self.revision.applied.pop() {
-                    *self.close_active = Some(Box::new(ArtifactStoreStringRetirement::new(record.id)));
-                    return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                if self.revision.applied.pop().is_some() {
+                    return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
                 }
                 self.close_phase = 7;
             }
             7 => {
-                if let Some(record) = self.revision.redo.pop() {
-                    *self.close_active = Some(Box::new(ArtifactStoreStringRetirement::new(record.id)));
-                    return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
+                if self.revision.redo.pop().is_some() {
+                    return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
                 }
                 self.close_phase = 8;
             }
@@ -12707,8 +12742,8 @@ where
         let value = match lane {
             ArtifactStoreCloseStringLane::AppliedEditIds => self.applied_edit_ids.pop(),
             ArtifactStoreCloseStringLane::RedoEditIds => self.redo_edit_ids.pop(),
-            ArtifactStoreCloseStringLane::AppliedRevisionIds => self.revision_accumulator.applied.pop().map(|record| record.id),
-            ArtifactStoreCloseStringLane::RedoRevisionIds => self.revision_accumulator.redo.pop().map(|record| record.id),
+            ArtifactStoreCloseStringLane::AppliedRevisionIds => self.revision_accumulator.applied.pop().map(|_| String::new()),
+            ArtifactStoreCloseStringLane::RedoRevisionIds => self.revision_accumulator.redo.pop().map(|_| String::new()),
             ArtifactStoreCloseStringLane::CurrentCheckpointId => self.current_checkpoint_id.take(),
             ArtifactStoreCloseStringLane::LocalActorId => self.local_actor_id.take(),
             ArtifactStoreCloseStringLane::TailUndoEditId => self.tail_undo_cache.as_mut().and_then(|(edit_id, _)| (!edit_id.is_empty()).then(|| std::mem::take(edit_id))),

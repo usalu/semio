@@ -873,6 +873,10 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactEngine<A, V> {
         &self.commit_log
     }
 
+    pub fn history_replay(&self, operation_generation: u64, cancelled: Arc<std::sync::atomic::AtomicBool>, reservation: HistoryReplayReservation) -> HistoryReplayFuture {
+        HistoryReplayFuture::new(self.storage.clone(), self.document.clone(), operation_generation, cancelled, reservation)
+    }
+
     /// @emoji 📤️ Hands out (and clears) every effect queued since the last drain.
     pub async fn drain_outbox(&mut self) -> Vec<OutboxEntry> {
         std::mem::take(&mut self.outbox)
@@ -1113,6 +1117,1464 @@ pub struct MaterializeReport {
 }
 //#endregion 🔖️Snapshot
 
+//#region 🔖️HistoryReplay
+const HISTORY_REPLAY_PAGE_BYTES: u64 = 16 * 1024;
+const HISTORY_REPLAY_SEGMENT_PAGES: u64 = 1_024;
+const HISTORY_REPLAY_SEGMENT_BYTES: u64 = HISTORY_REPLAY_PAGE_BYTES * HISTORY_REPLAY_SEGMENT_PAGES;
+const HISTORY_REPLAY_RESULT_BYTES: u64 = 15 * 1024 * 1024;
+const HISTORY_REPLAY_OPERATION_BYTES: u64 = 32 * 1024 * 1024;
+const HISTORY_REPLAY_MAX_FRAME_BYTES: u64 = 1024 * 1024;
+const HISTORY_REPLAY_MAX_FIELD_BYTES: usize = HISTORY_REPLAY_PAGE_BYTES as usize;
+const HISTORY_REPLAY_MAX_ENTRIES: usize = 4_096;
+const HISTORY_REPLAY_MAX_OPERATION_IDS: usize = 8_192;
+const HISTORY_REPLAY_RESULT_PAGES: usize = (HISTORY_REPLAY_RESULT_BYTES / HISTORY_REPLAY_PAGE_BYTES) as usize;
+const HISTORY_REPLAY_CONSTRUCTION_SLOTS: usize = 64;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct HistoryTextRange {
+    start: u32,
+    len: u16,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ArtifactHistoryEntry {
+    pub operation_start: u16,
+    pub operation_count: u16,
+    pub head_seq: u64,
+    pub commit_seq: u64,
+    pub chain_hash: [u8; 32],
+    pub epoch: u64,
+}
+
+pub struct ArtifactHistoryView {
+    pub entries: Vec<ArtifactHistoryEntry>,
+    operation_ids: Vec<HistoryTextRange>,
+    result_pages: Vec<Option<Vec<u8>>>,
+    result_len: u64,
+    pub retained_bytes: u64,
+    pub retained_items: usize,
+}
+
+impl ArtifactHistoryView {
+    pub fn operation_id_eq(&self, entry: usize, operation: usize, expected: &str) -> bool {
+        let Some(entry) = self.entries.get(entry) else {
+            return false;
+        };
+        if operation >= entry.operation_count as usize {
+            return false;
+        }
+        let Some(index) = (entry.operation_start as usize).checked_add(operation) else {
+            return false;
+        };
+        let Some(range) = self.operation_ids.get(index).copied() else {
+            return false;
+        };
+        let expected = expected.as_bytes();
+        if expected.len() != range.len as usize {
+            return false;
+        }
+        let offset = range.start as usize;
+        let page = offset / HISTORY_REPLAY_PAGE_BYTES as usize;
+        let within = offset % HISTORY_REPLAY_PAGE_BYTES as usize;
+        let Some(first) = self.result_pages.get(page).and_then(Option::as_ref) else {
+            return false;
+        };
+        let first_len = expected.len().min(first.len().saturating_sub(within));
+        if first_len == 0 || expected.get(..first_len) != first.get(within..within + first_len) {
+            return false;
+        }
+        if first_len == expected.len() {
+            return true;
+        }
+        self.result_pages.get(page + 1).and_then(Option::as_ref).and_then(|second| second.get(..expected.len() - first_len)) == expected.get(first_len..)
+    }
+
+    pub fn close_step(&mut self) -> bool {
+        if self.operation_ids.pop().is_some() {
+            return true;
+        }
+        if self.entries.pop().is_some() {
+            return true;
+        }
+        if let Some(owner) = self.result_pages.pop() {
+            drop(owner);
+            return true;
+        }
+        false
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.operation_ids.is_empty() && self.entries.is_empty() && self.result_pages.is_empty()
+    }
+}
+
+pub struct HistoryReplayReservation {
+    source_pages: Vec<Option<Vec<u8>>>,
+    source_page_count: usize,
+    result_pages: Vec<Option<Vec<u8>>>,
+    operation_ids: Vec<HistoryTextRange>,
+    entries: Vec<ArtifactHistoryEntry>,
+    scratch: Option<Vec<u8>>,
+    retained_operation_bytes: u64,
+    retained_result_bytes: u64,
+}
+
+impl HistoryReplayReservation {
+    pub(crate) fn try_new() -> Result<Self, HistoryReplayReservationConstructionFault> {
+        Self::try_new_retained(None)
+    }
+
+    #[cfg(test)]
+    fn try_new_with_result_page_failure(failure_after: usize) -> Result<Self, HistoryReplayReservationConstructionFault> {
+        Self::try_new_retained(Some(failure_after))
+    }
+
+    fn try_new_retained(failure_after: Option<usize>) -> Result<Self, HistoryReplayReservationConstructionFault> {
+        let mut builder = match HistoryReplayReservationConstructionBuilder::new() {
+            Ok(builder) => builder,
+            Err(fault) => return Err(fault),
+        };
+        if !builder.edit_cursor(|cursor| cursor.source_pages.as_mut().is_some_and(|owners| owners.try_reserve_exact(HISTORY_REPLAY_SEGMENT_PAGES as usize).is_ok())).unwrap_or(false) {
+            return Err(builder.fault(|| DbError::Unavailable("history source owner-slot reservation failed".to_string())));
+        }
+        if !builder
+            .edit_cursor(|cursor| {
+                let Some(owners) = cursor.source_pages.as_mut() else {
+                    return false;
+                };
+                owners.resize_with(HISTORY_REPLAY_SEGMENT_PAGES as usize, || None);
+                true
+            })
+            .unwrap_or(false)
+        {
+            return Err(builder.fault(|| DbError::Unavailable("history source owner-slot publication failed".to_string())));
+        }
+        if !builder.edit_cursor(|cursor| cursor.result_pages.as_mut().is_some_and(|owners| owners.try_reserve_exact(HISTORY_REPLAY_RESULT_PAGES).is_ok())).unwrap_or(false) {
+            return Err(builder.fault(|| DbError::Unavailable("history result page-slot reservation failed".to_string())));
+        }
+        let mut result_owner_bytes = 0u64;
+        for page_index in 0..HISTORY_REPLAY_RESULT_PAGES {
+            if failure_after == Some(page_index) {
+                return Err(builder.fault(|| DbError::Unavailable("history injected result page reservation failed".to_string())));
+            }
+            let mut page = Vec::new();
+            if page.try_reserve_exact(HISTORY_REPLAY_PAGE_BYTES as usize).is_err() {
+                return Err(builder.fault(|| DbError::Unavailable("history result page reservation failed".to_string())));
+            }
+            page.resize(HISTORY_REPLAY_PAGE_BYTES as usize, 0);
+            let Some(next_result_owner_bytes) = result_owner_bytes.checked_add(page.capacity() as u64) else {
+                let published = builder.edit_cursor(|cursor| {
+                    cursor.result_pages.as_mut().is_some_and(|owners| {
+                        owners.push(Some(page));
+                        true
+                    })
+                });
+                if !published.unwrap_or(false) {
+                    return Err(builder.fault(|| DbError::Unavailable("history result page publication failed".to_string())));
+                }
+                return Err(builder.fault(|| DbError::LimitExceeded("history result reservation bytes")));
+            };
+            result_owner_bytes = next_result_owner_bytes;
+            if !builder
+                .edit_cursor(|cursor| {
+                    cursor.result_pages.as_mut().is_some_and(|owners| {
+                        owners.push(Some(page));
+                        true
+                    })
+                })
+                .unwrap_or(false)
+            {
+                return Err(builder.fault(|| DbError::Unavailable("history result page publication failed".to_string())));
+            }
+        }
+        if failure_after == Some(HISTORY_REPLAY_RESULT_PAGES) {
+            return Err(builder.fault(|| DbError::Unavailable("history injected result page boundary failed".to_string())));
+        }
+        if !builder.edit_cursor(|cursor| cursor.operation_ids.as_mut().is_some_and(|owners| owners.try_reserve_exact(HISTORY_REPLAY_MAX_OPERATION_IDS).is_ok())).unwrap_or(false) {
+            return Err(builder.fault(|| DbError::Unavailable("history operation owner-slot reservation failed".to_string())));
+        }
+        if !builder.edit_cursor(|cursor| cursor.entries.as_mut().is_some_and(|owners| owners.try_reserve_exact(HISTORY_REPLAY_MAX_ENTRIES).is_ok())).unwrap_or(false) {
+            return Err(builder.fault(|| DbError::Unavailable("history entry owner-slot reservation failed".to_string())));
+        }
+        let Some((result_slot_bytes, operation_slot_bytes, entry_slot_bytes, source_slot_bytes)) = builder
+            .read_cursor(|cursor| {
+                let result = cursor.result_pages.as_ref().map(Vec::capacity);
+                let operations = cursor.operation_ids.as_ref().map(Vec::capacity);
+                let entries = cursor.entries.as_ref().map(Vec::capacity);
+                let source = cursor.source_pages.as_ref().map(Vec::capacity);
+                match (result, operations, entries, source) {
+                    (Some(result), Some(operations), Some(entries), Some(source)) => Some((
+                        (result * std::mem::size_of::<Option<Vec<u8>>>()) as u64,
+                        (operations * std::mem::size_of::<HistoryTextRange>()) as u64,
+                        (entries * std::mem::size_of::<ArtifactHistoryEntry>()) as u64,
+                        (source * std::mem::size_of::<Option<Vec<u8>>>()) as u64,
+                    )),
+                    _ => None,
+                }
+            })
+            .flatten()
+        else {
+            return Err(builder.fault(|| DbError::Unavailable("history construction owner accounting was unavailable".to_string())));
+        };
+        let Some(retained_result_bytes) = result_owner_bytes.checked_add(result_slot_bytes).and_then(|bytes| bytes.checked_add(operation_slot_bytes)).and_then(|bytes| bytes.checked_add(entry_slot_bytes)) else {
+            return Err(builder.fault(|| DbError::LimitExceeded("history retained result bytes")));
+        };
+        let Some(retained_operation_bytes) = retained_result_bytes.checked_add(source_slot_bytes).and_then(|bytes| bytes.checked_add(HISTORY_REPLAY_MAX_FIELD_BYTES as u64)) else {
+            return Err(builder.fault(|| DbError::LimitExceeded("history retained operation bytes")));
+        };
+        if !builder.edit_cursor(|cursor| cursor.scratch.as_mut().is_some_and(|scratch| scratch.try_reserve_exact(HISTORY_REPLAY_MAX_FIELD_BYTES).is_ok())).unwrap_or(false) {
+            return Err(builder.fault(|| DbError::Unavailable("history scratch page reservation failed".to_string())));
+        }
+        if !builder
+            .edit_cursor(|cursor| {
+                cursor.scratch.as_mut().is_some_and(|scratch| {
+                    scratch.resize(HISTORY_REPLAY_MAX_FIELD_BYTES, 0);
+                    true
+                })
+            })
+            .unwrap_or(false)
+        {
+            return Err(builder.fault(|| DbError::Unavailable("history scratch page publication failed".to_string())));
+        }
+        builder.finish(retained_operation_bytes, retained_result_bytes)
+    }
+
+    fn retained_bytes(&self) -> Option<u64> {
+        Some(self.retained_operation_bytes)
+    }
+
+    fn preflight_result_range(&self, result_len: u64, len: u64) -> Result<u64, DbError> {
+        if self.operation_ids.len() >= HISTORY_REPLAY_MAX_OPERATION_IDS {
+            return Err(DbError::LimitExceeded("history operation item credit"));
+        }
+        match result_len.checked_add(len) {
+            Some(end) if end <= HISTORY_REPLAY_RESULT_BYTES => Ok(end),
+            _ => Err(DbError::LimitExceeded("history result byte credit")),
+        }
+    }
+
+    #[cfg(test)]
+    fn retain_source_page(&mut self, page: Vec<u8>) -> Result<(), Vec<u8>> {
+        let Some(slot) = self.source_pages.get_mut(self.source_page_count) else {
+            return Err(page);
+        };
+        if slot.is_some() {
+            return Err(page);
+        }
+        *slot = Some(page);
+        self.source_page_count += 1;
+        Ok(())
+    }
+}
+
+pub struct HistoryReplayReservationCloseCursor {
+    source_pages: Option<Vec<Option<Vec<u8>>>>,
+    source_page_count: usize,
+    result_pages: Option<Vec<Option<Vec<u8>>>>,
+    operation_ids: Option<Vec<HistoryTextRange>>,
+    entries: Option<Vec<ArtifactHistoryEntry>>,
+    scratch: Option<Vec<u8>>,
+    retained_operation_bytes: u64,
+    retained_result_bytes: u64,
+    started: bool,
+}
+
+impl HistoryReplayReservationCloseCursor {
+    pub fn new(reservation: HistoryReplayReservation) -> Self {
+        let HistoryReplayReservation { source_pages, source_page_count, result_pages, operation_ids, entries, scratch, retained_operation_bytes, retained_result_bytes } = reservation;
+        Self { source_pages: Some(source_pages), source_page_count, result_pages: Some(result_pages), operation_ids: Some(operation_ids), entries: Some(entries), scratch, retained_operation_bytes, retained_result_bytes, started: false }
+    }
+
+    pub fn close_step(&mut self) -> bool {
+        self.started = true;
+        if self.source_page_count != 0 {
+            self.source_page_count -= 1;
+            if let Some(owner) = self.source_pages.as_mut().and_then(|pages| pages.get_mut(self.source_page_count)).and_then(Option::take) {
+                drop(owner);
+            }
+            return true;
+        }
+        if self.operation_ids.as_mut().is_some_and(|owners| owners.pop().is_some()) {
+            return true;
+        }
+        if self.entries.as_mut().is_some_and(|owners| owners.pop().is_some()) {
+            return true;
+        }
+        if let Some(owner) = self.result_pages.as_mut().and_then(Vec::pop) {
+            drop(owner);
+            return true;
+        }
+        if self.scratch.take().is_some() {
+            return true;
+        }
+        if self.source_pages.take().is_some() {
+            return true;
+        }
+        if self.operation_ids.take().is_some() {
+            return true;
+        }
+        if self.entries.take().is_some() {
+            return true;
+        }
+        if self.result_pages.take().is_some() {
+            return true;
+        }
+        false
+    }
+
+    pub fn resume(&mut self) -> Option<HistoryReplayReservation> {
+        if self.started {
+            return None;
+        }
+        Some(HistoryReplayReservation {
+            source_pages: self.source_pages.take()?,
+            source_page_count: self.source_page_count,
+            result_pages: self.result_pages.take()?,
+            operation_ids: self.operation_ids.take()?,
+            entries: self.entries.take()?,
+            scratch: self.scratch.take(),
+            retained_operation_bytes: self.retained_operation_bytes,
+            retained_result_bytes: self.retained_result_bytes,
+        })
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.source_pages.is_none() && self.result_pages.is_none() && self.operation_ids.is_none() && self.entries.is_none() && self.scratch.is_none()
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+struct HistoryReplayReservationConstructionToken {
+    slot: usize,
+    generation: u64,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct HistoryReplayReservationConstructionHandbackRejection {
+    slot: usize,
+    generation: u64,
+}
+
+struct HistoryReplayReservationConstructionSlot {
+    generation: u64,
+    occupied: bool,
+    checked_out: bool,
+    error: Option<DbError>,
+    cursor: Option<HistoryReplayReservationCloseCursor>,
+}
+
+impl Default for HistoryReplayReservationConstructionSlot {
+    fn default() -> Self {
+        Self { generation: 0, occupied: false, checked_out: false, error: None, cursor: None }
+    }
+}
+
+struct HistoryReplayReservationConstructionRegistry {
+    slots: [HistoryReplayReservationConstructionSlot; HISTORY_REPLAY_CONSTRUCTION_SLOTS],
+    next_generation: u64,
+}
+
+fn history_replay_reservation_construction_registry() -> &'static std::sync::Mutex<HistoryReplayReservationConstructionRegistry> {
+    static REGISTRY: std::sync::OnceLock<std::sync::Mutex<HistoryReplayReservationConstructionRegistry>> = std::sync::OnceLock::new();
+    REGISTRY.get_or_init(|| std::sync::Mutex::new(HistoryReplayReservationConstructionRegistry { slots: std::array::from_fn(|_| HistoryReplayReservationConstructionSlot::default()), next_generation: 1 }))
+}
+
+fn claim_history_replay_reservation_construction() -> Result<HistoryReplayReservationConstructionToken, DbError> {
+    let mut registry = history_replay_reservation_construction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(slot) = registry.slots.iter().position(|slot| !slot.occupied) else {
+        return Err(DbError::Unavailable("history construction registry capacity exhausted".to_string()));
+    };
+    let generation = registry.next_generation;
+    let Some(next_generation) = generation.checked_add(1) else {
+        return Err(DbError::LimitExceeded("history construction generation"));
+    };
+    registry.next_generation = next_generation;
+    registry.slots[slot] = HistoryReplayReservationConstructionSlot {
+        generation,
+        occupied: true,
+        checked_out: true,
+        error: None,
+        cursor: Some(HistoryReplayReservationCloseCursor {
+            source_pages: Some(Vec::new()),
+            source_page_count: 0,
+            result_pages: Some(Vec::new()),
+            operation_ids: Some(Vec::new()),
+            entries: Some(Vec::new()),
+            scratch: Some(Vec::new()),
+            retained_operation_bytes: 0,
+            retained_result_bytes: 0,
+            started: false,
+        }),
+    };
+    Ok(HistoryReplayReservationConstructionToken { slot, generation })
+}
+
+fn handback_history_replay_reservation_construction(token: &HistoryReplayReservationConstructionToken) -> Result<(), HistoryReplayReservationConstructionHandbackRejection> {
+    let mut registry = history_replay_reservation_construction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(slot) = registry.slots.get_mut(token.slot) else {
+        return Err(HistoryReplayReservationConstructionHandbackRejection { slot: token.slot, generation: token.generation });
+    };
+    if !slot.occupied || !slot.checked_out || slot.generation != token.generation || slot.cursor.is_none() {
+        return Err(HistoryReplayReservationConstructionHandbackRejection { slot: token.slot, generation: token.generation });
+    }
+    slot.checked_out = false;
+    Ok(())
+}
+
+fn release_history_replay_reservation_construction(token: &HistoryReplayReservationConstructionToken) -> bool {
+    let mut registry = history_replay_reservation_construction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let Some(slot) = registry.slots.get_mut(token.slot) else {
+        return false;
+    };
+    if !slot.occupied || !slot.checked_out || slot.generation != token.generation || slot.error.is_some() || slot.cursor.is_some() {
+        return false;
+    }
+    slot.generation = 0;
+    slot.occupied = false;
+    slot.checked_out = false;
+    true
+}
+
+pub(crate) fn take_history_replay_reservation_construction_fault(generation: u64) -> Option<HistoryReplayReservationConstructionFault> {
+    let mut registry = history_replay_reservation_construction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let slot_index = registry.slots.iter().position(|slot| slot.occupied && !slot.checked_out && slot.generation == generation)?;
+    let slot = &mut registry.slots[slot_index];
+    slot.checked_out = true;
+    Some(HistoryReplayReservationConstructionFault { token: Some(HistoryReplayReservationConstructionToken { slot: slot_index, generation }), unregistered_error: None })
+}
+
+struct HistoryReplayReservationConstructionBuilder {
+    token: Option<HistoryReplayReservationConstructionToken>,
+}
+
+impl HistoryReplayReservationConstructionBuilder {
+    fn new() -> Result<Self, HistoryReplayReservationConstructionFault> {
+        let token = match claim_history_replay_reservation_construction() {
+            Ok(token) => token,
+            Err(error) => return Err(HistoryReplayReservationConstructionFault::unregistered(error)),
+        };
+        Ok(Self { token: Some(token) })
+    }
+
+    fn edit_cursor<T>(&mut self, edit: impl FnOnce(&mut HistoryReplayReservationCloseCursor) -> T) -> Option<T> {
+        let token = self.token.as_ref()?;
+        let mut registry = history_replay_reservation_construction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let slot = registry.slots.get_mut(token.slot)?;
+        if !slot.occupied || !slot.checked_out || slot.generation != token.generation || slot.error.is_some() {
+            return None;
+        }
+        slot.cursor.as_mut().map(edit)
+    }
+
+    fn read_cursor<T>(&self, read: impl FnOnce(&HistoryReplayReservationCloseCursor) -> T) -> Option<T> {
+        let token = self.token.as_ref()?;
+        let registry = history_replay_reservation_construction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let slot = registry.slots.get(token.slot)?;
+        if !slot.occupied || !slot.checked_out || slot.generation != token.generation || slot.error.is_some() {
+            return None;
+        }
+        slot.cursor.as_ref().map(read)
+    }
+
+    fn fault(mut self, error: impl FnOnce() -> DbError) -> HistoryReplayReservationConstructionFault {
+        let Some(token) = self.token.take() else {
+            return HistoryReplayReservationConstructionFault::unregistered(DbError::Unavailable("history construction token was unavailable".to_string()));
+        };
+        {
+            let mut registry = history_replay_reservation_construction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let Some(slot) = registry.slots.get_mut(token.slot) else {
+                return HistoryReplayReservationConstructionFault { token: Some(token), unregistered_error: None };
+            };
+            if slot.occupied && slot.checked_out && slot.generation == token.generation && slot.error.is_none() && slot.cursor.is_some() {
+                slot.error = Some(error());
+            }
+        }
+        HistoryReplayReservationConstructionFault { token: Some(token), unregistered_error: None }
+    }
+
+    fn finish(mut self, retained_operation_bytes: u64, retained_result_bytes: u64) -> Result<HistoryReplayReservation, HistoryReplayReservationConstructionFault> {
+        let Some(token) = self.token.take() else {
+            return Err(HistoryReplayReservationConstructionFault::unregistered(DbError::Unavailable("history construction token was unavailable".to_string())));
+        };
+        let reservation = {
+            let mut registry = history_replay_reservation_construction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let Some(slot) = registry.slots.get_mut(token.slot) else {
+                return Err(HistoryReplayReservationConstructionFault { token: Some(token), unregistered_error: None });
+            };
+            if !slot.occupied || !slot.checked_out || slot.generation != token.generation || slot.error.is_some() {
+                return Err(HistoryReplayReservationConstructionFault { token: Some(token), unregistered_error: None });
+            }
+            let Some(mut cursor) = slot.cursor.take() else {
+                return Err(HistoryReplayReservationConstructionFault { token: Some(token), unregistered_error: None });
+            };
+            cursor.retained_operation_bytes = retained_operation_bytes;
+            cursor.retained_result_bytes = retained_result_bytes;
+            let Some(reservation) = cursor.resume() else {
+                slot.cursor = Some(cursor);
+                return Err(HistoryReplayReservationConstructionFault { token: Some(token), unregistered_error: None });
+            };
+            slot.generation = 0;
+            slot.occupied = false;
+            slot.checked_out = false;
+            reservation
+        };
+        Ok(reservation)
+    }
+}
+
+impl Drop for HistoryReplayReservationConstructionBuilder {
+    fn drop(&mut self) {
+        if let Some(token) = self.token.as_ref() {
+            let mut registry = history_replay_reservation_construction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if let Some(slot) = registry.slots.get_mut(token.slot).filter(|slot| slot.occupied && slot.checked_out && slot.generation == token.generation && slot.error.is_none() && slot.cursor.is_some()) {
+                slot.error = Some(DbError::Unavailable("history reservation construction unwound".to_string()));
+            }
+        }
+        if let Some(token) = self.token.take() {
+            let _ = handback_history_replay_reservation_construction(&token);
+        }
+    }
+}
+
+pub(crate) struct HistoryReplayReservationConstructionFault {
+    token: Option<HistoryReplayReservationConstructionToken>,
+    unregistered_error: Option<DbError>,
+}
+
+impl HistoryReplayReservationConstructionFault {
+    fn unregistered(error: DbError) -> Self {
+        Self { token: None, unregistered_error: Some(error) }
+    }
+
+    pub(crate) fn generation(&self) -> Option<u64> {
+        self.token.as_ref().map(|token| token.generation)
+    }
+
+    pub(crate) fn take_error(&mut self) -> Option<DbError> {
+        if self.unregistered_error.is_some() {
+            return self.unregistered_error.take();
+        }
+        let token = self.token.as_ref()?;
+        let mut registry = history_replay_reservation_construction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let slot = registry.slots.get_mut(token.slot)?;
+        if !slot.occupied || !slot.checked_out || slot.generation != token.generation {
+            return None;
+        }
+        slot.error.take()
+    }
+
+    pub(crate) fn close_step(&mut self) -> bool {
+        if self.unregistered_error.take().is_some() {
+            return true;
+        }
+        let Some(token) = self.token.as_ref() else {
+            return false;
+        };
+        {
+            let mut registry = history_replay_reservation_construction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let Some(slot) = registry.slots.get_mut(token.slot) else {
+                return false;
+            };
+            if !slot.occupied || !slot.checked_out || slot.generation != token.generation {
+                return false;
+            }
+            if let Some(cursor) = slot.cursor.as_mut() {
+                if cursor.close_step() {
+                    return true;
+                }
+                if cursor.terminal_is_empty() {
+                    slot.cursor = None;
+                    return true;
+                }
+            }
+            if slot.error.take().is_some() {
+                return true;
+            }
+        }
+        if release_history_replay_reservation_construction(token) {
+            self.token = None;
+            return true;
+        }
+        false
+    }
+
+    pub(crate) fn terminal_is_empty(&self) -> bool {
+        self.token.is_none() && self.unregistered_error.is_none()
+    }
+
+    #[cfg(test)]
+    fn retained_result_page_count(&self) -> usize {
+        let Some(token) = self.token.as_ref() else {
+            return 0;
+        };
+        let registry = history_replay_reservation_construction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        registry.slots.get(token.slot).filter(|slot| slot.occupied && slot.generation == token.generation).and_then(|slot| slot.cursor.as_ref()).and_then(|cursor| cursor.result_pages.as_ref()).map_or(0, Vec::len)
+    }
+
+    #[cfg(test)]
+    fn retained_result_page_pointer(&self, index: usize) -> Option<*const u8> {
+        let token = self.token.as_ref()?;
+        let registry = history_replay_reservation_construction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        registry
+            .slots
+            .get(token.slot)
+            .filter(|slot| slot.occupied && slot.generation == token.generation)
+            .and_then(|slot| slot.cursor.as_ref())
+            .and_then(|cursor| cursor.result_pages.as_ref())
+            .and_then(|owners| owners.get(index))
+            .and_then(Option::as_ref)
+            .map(Vec::as_ptr)
+    }
+
+    #[cfg(test)]
+    fn retained_error_pointer(&self) -> Option<*const u8> {
+        if let Some(DbError::Unavailable(message)) = self.unregistered_error.as_ref() {
+            return Some(message.as_ptr());
+        }
+        let token = self.token.as_ref()?;
+        let registry = history_replay_reservation_construction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        match registry.slots.get(token.slot).filter(|slot| slot.occupied && slot.generation == token.generation)?.error.as_ref()? {
+            DbError::Unavailable(message) => Some(message.as_ptr()),
+            _ => None,
+        }
+    }
+}
+
+impl std::fmt::Debug for HistoryReplayReservationConstructionFault {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.debug_struct("HistoryReplayReservationConstructionFault").field("generation", &self.generation()).field("terminal_is_empty", &self.terminal_is_empty()).finish()
+    }
+}
+
+impl Drop for HistoryReplayReservationConstructionFault {
+    fn drop(&mut self) {
+        if let Some(token) = self.token.take() {
+            let _ = handback_history_replay_reservation_construction(&token);
+        }
+    }
+}
+
+impl Drop for HistoryReplayReservationCloseCursor {
+    fn drop(&mut self) {
+        assert!(self.terminal_is_empty(), "history replay reservation reached Drop before retained retirement or exact resume");
+    }
+}
+
+struct HistoryPageSet {
+    pages: Vec<Option<Vec<u8>>>,
+    len: u64,
+}
+
+impl HistoryPageSet {
+    fn byte(&self, offset: u64) -> Result<u8, DbError> {
+        if offset >= self.len {
+            return Err(DbError::Corrupt("history page cursor exceeded the segment".to_string()));
+        }
+        let page = usize::try_from(offset / HISTORY_REPLAY_PAGE_BYTES).map_err(|_| DbError::LimitExceeded("history page index"))?;
+        let within = usize::try_from(offset % HISTORY_REPLAY_PAGE_BYTES).map_err(|_| DbError::LimitExceeded("history page offset"))?;
+        self.pages.get(page).and_then(Option::as_ref).and_then(|bytes| bytes.get(within)).copied().ok_or_else(|| DbError::Corrupt("history page owner is missing admitted bytes".to_string()))
+    }
+
+    fn page_slice(&self, offset: u64, maximum: u64) -> Result<&[u8], DbError> {
+        if offset >= self.len {
+            return Ok(&[]);
+        }
+        let page = usize::try_from(offset / HISTORY_REPLAY_PAGE_BYTES).map_err(|_| DbError::LimitExceeded("history page index"))?;
+        let within = usize::try_from(offset % HISTORY_REPLAY_PAGE_BYTES).map_err(|_| DbError::LimitExceeded("history page offset"))?;
+        let bytes = self.pages.get(page).and_then(Option::as_ref).ok_or_else(|| DbError::Corrupt("history page owner is missing".to_string()))?;
+        let available = bytes.len().checked_sub(within).ok_or_else(|| DbError::Corrupt("history page offset exceeds owner".to_string()))?;
+        let take = available.min(usize::try_from(maximum).unwrap_or(usize::MAX));
+        Ok(&bytes[within..within + take])
+    }
+
+    fn read_varint(&self, pos: &mut u64, end: u64) -> Result<u64, DbError> {
+        let mut value = 0u64;
+        for shift in (0..70).step_by(7) {
+            if *pos >= end {
+                return Err(DbError::Corrupt("history varint exceeds its admitted range".to_string()));
+            }
+            let byte = self.byte(*pos)?;
+            *pos = pos.checked_add(1).ok_or(DbError::LimitExceeded("history varint offset"))?;
+            value |= u64::from(byte & 0x7f).checked_shl(shift).ok_or(DbError::LimitExceeded("history varint"))?;
+            if byte & 0x80 == 0 {
+                return Ok(value);
+            }
+        }
+        Err(DbError::Corrupt("history varint exceeds ten bytes".to_string()))
+    }
+
+    fn read_range(&self, pos: &mut u64, end: u64, maximum: u64) -> Result<std::ops::Range<u64>, DbError> {
+        let len = self.read_varint(pos, end)?;
+        if len > maximum {
+            return Err(DbError::LimitExceeded("history envelope field bytes"));
+        }
+        let start = *pos;
+        let next = start.checked_add(len).ok_or(DbError::LimitExceeded("history envelope field range"))?;
+        if next > end {
+            return Err(DbError::Corrupt("history envelope field exceeds its frame payload".to_string()));
+        }
+        *pos = next;
+        Ok(start..next)
+    }
+
+    fn copy_small<'a>(&self, range: std::ops::Range<u64>, scratch: &'a mut [u8]) -> Result<&'a [u8], DbError> {
+        let len = range.end.checked_sub(range.start).ok_or(DbError::LimitExceeded("history copied range"))?;
+        if len > HISTORY_REPLAY_PAGE_BYTES {
+            return Err(DbError::LimitExceeded("history scratch page bytes"));
+        }
+        let first = self.page_slice(range.start, len)?;
+        scratch[..first.len()].copy_from_slice(first);
+        let remaining = usize::try_from(len).map_err(|_| DbError::LimitExceeded("history scratch page bytes"))?.checked_sub(first.len()).ok_or(DbError::LimitExceeded("history scratch page bytes"))?;
+        if remaining != 0 {
+            let offset = range.start.checked_add(first.len() as u64).ok_or(DbError::LimitExceeded("history scratch page offset"))?;
+            let second = self.page_slice(offset, remaining as u64)?;
+            if second.len() != remaining {
+                return Err(DbError::Corrupt("history scratch page is truncated".to_string()));
+            }
+            scratch[first.len()..first.len() + remaining].copy_from_slice(second);
+        }
+        Ok(&scratch[..len as usize])
+    }
+
+    fn read_array<const N: usize>(&self, pos: &mut u64, end: u64, scratch: &mut [u8]) -> Result<[u8; N], DbError> {
+        let next = pos.checked_add(N as u64).ok_or(DbError::LimitExceeded("history scalar range"))?;
+        if next > end {
+            return Err(DbError::Corrupt("history scalar exceeds its frame payload".to_string()));
+        }
+        let owner = self.copy_small(*pos..next, scratch)?;
+        *pos = next;
+        owner.try_into().map_err(|_| DbError::Corrupt("history scalar length mismatch".to_string()))
+    }
+}
+
+enum HistoryFrameToken {
+    End,
+    TxBegin,
+    Command { offset: u64, len: u64 },
+    Frontier { offset: u64, len: u64 },
+    Other,
+}
+
+enum HistoryFrameStage {
+    BodyLen,
+    Kind,
+    Flags,
+    Payload,
+    StoredCrc,
+    BackLen,
+    Finish,
+}
+
+struct HistoryFrameCursor {
+    frame_start: u64,
+    pos: u64,
+    body_len: u64,
+    varint_shift: u32,
+    kind: u8,
+    payload_start: u64,
+    payload_remaining: u64,
+    crc: protocol::codec::Crc32cCursor,
+    stored_crc: [u8; 4],
+    stored_crc_pos: usize,
+    back_len: [u8; 4],
+    back_len_pos: usize,
+    stage: HistoryFrameStage,
+}
+
+impl HistoryFrameCursor {
+    fn new(offset: u64) -> Self {
+        Self {
+            frame_start: offset,
+            pos: offset,
+            body_len: 0,
+            varint_shift: 0,
+            kind: 0,
+            payload_start: 0,
+            payload_remaining: 0,
+            crc: protocol::codec::Crc32cCursor::new(),
+            stored_crc: [0; 4],
+            stored_crc_pos: 0,
+            back_len: [0; 4],
+            back_len_pos: 0,
+            stage: HistoryFrameStage::BodyLen,
+        }
+    }
+
+    fn step(&mut self, pages: &HistoryPageSet) -> Result<Option<HistoryFrameToken>, DbError> {
+        if self.frame_start == pages.len {
+            return Ok(Some(HistoryFrameToken::End));
+        }
+        match self.stage {
+            HistoryFrameStage::BodyLen => {
+                let byte = pages.byte(self.pos)?;
+                self.pos = self.pos.checked_add(1).ok_or(DbError::LimitExceeded("history frame offset"))?;
+                self.body_len |= u64::from(byte & 0x7f).checked_shl(self.varint_shift).ok_or(DbError::LimitExceeded("history frame body length"))?;
+                if byte & 0x80 == 0 {
+                    if self.body_len < 2 || self.body_len > HISTORY_REPLAY_MAX_FRAME_BYTES {
+                        return Err(DbError::LimitExceeded("history frame body bytes"));
+                    }
+                    self.stage = HistoryFrameStage::Kind;
+                } else {
+                    self.varint_shift = self.varint_shift.checked_add(7).ok_or(DbError::LimitExceeded("history frame body varint"))?;
+                    if self.varint_shift >= 70 {
+                        return Err(DbError::Corrupt("history frame body varint exceeds ten bytes".to_string()));
+                    }
+                }
+            }
+            HistoryFrameStage::Kind => {
+                self.kind = pages.byte(self.pos)?;
+                self.crc.update_page(&[self.kind]);
+                self.pos = self.pos.checked_add(1).ok_or(DbError::LimitExceeded("history frame offset"))?;
+                self.stage = HistoryFrameStage::Flags;
+            }
+            HistoryFrameStage::Flags => {
+                let flags = pages.byte(self.pos)?;
+                if flags & protocol::wire::FRAME_FLAG_COMPRESSED != 0 {
+                    return Err(DbError::Corrupt("compressed WAL history frame is unsupported".to_string()));
+                }
+                self.crc.update_page(&[flags]);
+                self.pos = self.pos.checked_add(1).ok_or(DbError::LimitExceeded("history frame offset"))?;
+                self.payload_start = self.pos;
+                self.payload_remaining = self.body_len - 2;
+                self.stage = if self.payload_remaining == 0 { HistoryFrameStage::StoredCrc } else { HistoryFrameStage::Payload };
+            }
+            HistoryFrameStage::Payload => {
+                let maximum = self.payload_remaining.min(HISTORY_REPLAY_PAGE_BYTES);
+                let page = pages.page_slice(self.pos, maximum)?;
+                if page.is_empty() {
+                    return Err(DbError::Corrupt("history frame payload is truncated".to_string()));
+                }
+                self.crc.update_page(page);
+                self.pos = self.pos.checked_add(page.len() as u64).ok_or(DbError::LimitExceeded("history frame payload offset"))?;
+                self.payload_remaining = self.payload_remaining.checked_sub(page.len() as u64).ok_or(DbError::LimitExceeded("history frame payload bytes"))?;
+                if self.payload_remaining == 0 {
+                    self.stage = HistoryFrameStage::StoredCrc;
+                }
+            }
+            HistoryFrameStage::StoredCrc => {
+                self.stored_crc[self.stored_crc_pos] = pages.byte(self.pos)?;
+                self.pos = self.pos.checked_add(1).ok_or(DbError::LimitExceeded("history frame CRC offset"))?;
+                self.stored_crc_pos += 1;
+                if self.stored_crc_pos == self.stored_crc.len() {
+                    self.stage = HistoryFrameStage::BackLen;
+                }
+            }
+            HistoryFrameStage::BackLen => {
+                self.back_len[self.back_len_pos] = pages.byte(self.pos)?;
+                self.pos = self.pos.checked_add(1).ok_or(DbError::LimitExceeded("history frame trailer offset"))?;
+                self.back_len_pos += 1;
+                if self.back_len_pos == self.back_len.len() {
+                    self.stage = HistoryFrameStage::Finish;
+                }
+            }
+            HistoryFrameStage::Finish => {
+                let stored_crc = u32::from_le_bytes(self.stored_crc);
+                if stored_crc != self.crc.finish() {
+                    return Err(DbError::Corrupt("history frame CRC mismatch".to_string()));
+                }
+                let frame_len = self.pos.checked_sub(self.frame_start).ok_or(DbError::LimitExceeded("history frame length"))?;
+                if u64::from(u32::from_le_bytes(self.back_len)) != frame_len {
+                    return Err(DbError::Corrupt("history frame back length mismatch".to_string()));
+                }
+                let payload_len = self.body_len - 2;
+                let token = match self.kind {
+                    db_wal::WAL_TX_BEGIN => HistoryFrameToken::TxBegin,
+                    db_wal::WAL_COMMAND => HistoryFrameToken::Command { offset: self.payload_start, len: payload_len },
+                    db_wal::WAL_FRONTIER => HistoryFrameToken::Frontier { offset: self.payload_start, len: payload_len },
+                    kind if (db_wal::WAL_SEGMENT_HEADER..=db_wal::WAL_MIGRATION).contains(&kind) || kind == protocol::wire::REC_COMMIT => HistoryFrameToken::Other,
+                    kind => return Err(DbError::Corrupt(format!("unexpected frame kind {kind:#x} in history replay"))),
+                };
+                return Ok(Some(token));
+            }
+        }
+        Ok(None)
+    }
+}
+
+enum HistoryEnvelopeField {
+    MutationId,
+    Document,
+    Actor,
+    DependencyCount,
+    Dependency,
+    DiffSchema,
+    DiffPayload,
+    InverseSchema,
+    InversePayload,
+    ClockActor,
+    ClockPhysical,
+    ClockLogical,
+    Done,
+}
+
+struct HistoryEnvelopeCursor {
+    pos: u64,
+    end: u64,
+    field: HistoryEnvelopeField,
+    dependencies: u64,
+    mutation_id: Option<std::ops::Range<u64>>,
+}
+
+impl HistoryEnvelopeCursor {
+    fn new(pages: &HistoryPageSet, offset: u64, len: u64) -> Result<Self, DbError> {
+        let end = offset.checked_add(len).ok_or(DbError::LimitExceeded("history command range"))?;
+        if end > pages.len {
+            return Err(DbError::Corrupt("history command range exceeds retained pages".to_string()));
+        }
+        Ok(Self { pos: offset, end, field: HistoryEnvelopeField::MutationId, dependencies: 0, mutation_id: None })
+    }
+
+    fn skip_text(&mut self, pages: &HistoryPageSet, scratch: &mut [u8]) -> Result<(), DbError> {
+        let range = pages.read_range(&mut self.pos, self.end, HISTORY_REPLAY_MAX_FIELD_BYTES as u64)?;
+        let scratch = pages.copy_small(range, scratch)?;
+        std::str::from_utf8(&scratch).map_err(|_| DbError::Corrupt("history envelope text is not valid utf-8".to_string()))?;
+        Ok(())
+    }
+
+    fn step(&mut self, pages: &HistoryPageSet, scratch: &mut [u8]) -> Result<Option<std::ops::Range<u64>>, DbError> {
+        match self.field {
+            HistoryEnvelopeField::MutationId => {
+                let range = pages.read_range(&mut self.pos, self.end, HISTORY_REPLAY_MAX_FIELD_BYTES as u64)?;
+                let value = pages.copy_small(range.clone(), scratch)?;
+                std::str::from_utf8(value).map_err(|_| DbError::Corrupt("history operation id is not valid utf-8".to_string()))?;
+                self.mutation_id = Some(range);
+                self.field = HistoryEnvelopeField::Document;
+            }
+            HistoryEnvelopeField::Document => {
+                self.skip_text(pages, scratch)?;
+                self.field = HistoryEnvelopeField::Actor;
+            }
+            HistoryEnvelopeField::Actor => {
+                self.skip_text(pages, scratch)?;
+                self.field = HistoryEnvelopeField::DependencyCount;
+            }
+            HistoryEnvelopeField::DependencyCount => {
+                self.dependencies = pages.read_varint(&mut self.pos, self.end)?;
+                if self.dependencies > HISTORY_REPLAY_MAX_OPERATION_IDS as u64 {
+                    return Err(DbError::LimitExceeded("history dependency item credit"));
+                }
+                self.field = if self.dependencies == 0 { HistoryEnvelopeField::DiffSchema } else { HistoryEnvelopeField::Dependency };
+            }
+            HistoryEnvelopeField::Dependency => {
+                self.skip_text(pages, scratch)?;
+                self.dependencies -= 1;
+                if self.dependencies == 0 {
+                    self.field = HistoryEnvelopeField::DiffSchema;
+                }
+            }
+            HistoryEnvelopeField::DiffSchema => {
+                self.skip_text(pages, scratch)?;
+                self.field = HistoryEnvelopeField::DiffPayload;
+            }
+            HistoryEnvelopeField::DiffPayload => {
+                pages.read_range(&mut self.pos, self.end, HISTORY_REPLAY_MAX_FRAME_BYTES)?;
+                self.field = HistoryEnvelopeField::InverseSchema;
+            }
+            HistoryEnvelopeField::InverseSchema => {
+                self.skip_text(pages, scratch)?;
+                self.field = HistoryEnvelopeField::InversePayload;
+            }
+            HistoryEnvelopeField::InversePayload => {
+                pages.read_range(&mut self.pos, self.end, HISTORY_REPLAY_MAX_FRAME_BYTES)?;
+                self.field = HistoryEnvelopeField::ClockActor;
+            }
+            HistoryEnvelopeField::ClockActor => {
+                pages.read_varint(&mut self.pos, self.end)?;
+                self.field = HistoryEnvelopeField::ClockPhysical;
+            }
+            HistoryEnvelopeField::ClockPhysical => {
+                pages.read_varint(&mut self.pos, self.end)?;
+                self.field = HistoryEnvelopeField::ClockLogical;
+            }
+            HistoryEnvelopeField::ClockLogical => {
+                pages.read_varint(&mut self.pos, self.end)?;
+                if self.pos != self.end {
+                    return Err(DbError::Corrupt("history envelope has trailing bytes".to_string()));
+                }
+                self.field = HistoryEnvelopeField::Done;
+            }
+            HistoryEnvelopeField::Done => return Ok(self.mutation_id.take()),
+        }
+        Ok(None)
+    }
+}
+
+enum HistoryFrontierField {
+    Document,
+    Head,
+    Commit,
+    Chain,
+    Epoch,
+}
+
+struct HistoryFrontierCursor {
+    pos: u64,
+    end: u64,
+    field: HistoryFrontierField,
+    head_seq: u64,
+    commit_seq: u64,
+    chain_hash: [u8; 32],
+}
+
+impl HistoryFrontierCursor {
+    fn new(pages: &HistoryPageSet, offset: u64, len: u64) -> Result<Self, DbError> {
+        let end = offset.checked_add(len).ok_or(DbError::LimitExceeded("history frontier range"))?;
+        if end > pages.len {
+            return Err(DbError::Corrupt("history frontier range exceeds retained pages".to_string()));
+        }
+        Ok(Self { pos: offset, end, field: HistoryFrontierField::Document, head_seq: 0, commit_seq: 0, chain_hash: [0; 32] })
+    }
+
+    fn step(&mut self, pages: &HistoryPageSet, scratch: &mut [u8]) -> Result<Option<(u64, u64, [u8; 32], u64)>, DbError> {
+        match self.field {
+            HistoryFrontierField::Document => {
+                let range = pages.read_range(&mut self.pos, self.end, HISTORY_REPLAY_MAX_FIELD_BYTES as u64)?;
+                let scratch = pages.copy_small(range, scratch)?;
+                std::str::from_utf8(&scratch).map_err(|_| DbError::Corrupt("history frontier document is not valid utf-8".to_string()))?;
+                self.field = HistoryFrontierField::Head;
+            }
+            HistoryFrontierField::Head => {
+                self.head_seq = u64::from_le_bytes(pages.read_array(&mut self.pos, self.end, scratch)?);
+                self.field = HistoryFrontierField::Commit;
+            }
+            HistoryFrontierField::Commit => {
+                self.commit_seq = u64::from_le_bytes(pages.read_array(&mut self.pos, self.end, scratch)?);
+                self.field = HistoryFrontierField::Chain;
+            }
+            HistoryFrontierField::Chain => {
+                self.chain_hash = pages.read_array(&mut self.pos, self.end, scratch)?;
+                self.field = HistoryFrontierField::Epoch;
+            }
+            HistoryFrontierField::Epoch => {
+                let epoch = u64::from_le_bytes(pages.read_array(&mut self.pos, self.end, scratch)?);
+                if self.pos != self.end {
+                    return Err(DbError::Corrupt("history frontier has trailing bytes".to_string()));
+                }
+                return Ok(Some((self.head_seq, self.commit_seq, self.chain_hash, epoch)));
+            }
+        }
+        Ok(None)
+    }
+}
+
+type HistorySegmentLenFuture = Pin<Box<dyn Future<Output = Result<u64, DbError>> + Send + 'static>>;
+type HistoryPageReadFuture = Pin<Box<dyn Future<Output = Result<Vec<u8>, DbError>> + Send + 'static>>;
+
+enum HistoryReplayPhase {
+    Probe { index: u64 },
+    SegmentLen { index: u64, future: HistorySegmentLenFuture },
+    PageStart { index: u64, len: u64, offset: u64 },
+    PageRead { index: u64, len: u64, offset: u64, requested: u64, future: HistoryPageReadFuture },
+    Frame { index: u64, cursor: HistoryFrameCursor },
+    Envelope { index: u64, next_offset: u64, cursor: HistoryEnvelopeCursor },
+    CopyMutation { index: u64, next_offset: u64, range: std::ops::Range<u64>, copied: u64, result_start: u64 },
+    Frontier { index: u64, next_offset: u64, cursor: HistoryFrontierCursor },
+    ClearPending { index: u64, next_offset: u64 },
+    Publish { index: u64, next_offset: u64, head_seq: u64, commit_seq: u64, chain_hash: [u8; 32], epoch: u64 },
+    Retire { next_index: u64 },
+    FinalizeSuccess,
+}
+
+enum HistoryReplayTransition {
+    InProgress,
+    FaultRetire,
+    Complete,
+}
+
+pub struct HistoryReplayFuture {
+    storage: Arc<db_storage::DbBackend>,
+    document: Arc<ArtifactId>,
+    phase: Option<HistoryReplayPhase>,
+    transition: HistoryReplayTransition,
+    pages: HistoryPageSet,
+    page_count: usize,
+    reservation: Option<HistoryReplayReservation>,
+    reservation_close: Option<HistoryReplayReservationCloseCursor>,
+    terminal_page: Option<Vec<u8>>,
+    terminal_error: Option<DbError>,
+    result_len: u64,
+    pending_start: usize,
+    operation_generation: u64,
+    cancelled: Arc<std::sync::atomic::AtomicBool>,
+    panic_before_transition_commit: bool,
+}
+
+impl HistoryReplayFuture {
+    fn new(storage: Arc<db_storage::DbBackend>, document: ArtifactId, operation_generation: u64, cancelled: Arc<std::sync::atomic::AtomicBool>, mut reservation: HistoryReplayReservation) -> Self {
+        let source_pages = std::mem::take(&mut reservation.source_pages);
+        reservation.source_page_count = 0;
+        Self {
+            storage,
+            document: Arc::new(document),
+            phase: Some(HistoryReplayPhase::Probe { index: 0 }),
+            transition: HistoryReplayTransition::InProgress,
+            pages: HistoryPageSet { pages: source_pages, len: 0 },
+            page_count: 0,
+            reservation: Some(reservation),
+            reservation_close: None,
+            terminal_page: None,
+            terminal_error: None,
+            result_len: 0,
+            pending_start: 0,
+            operation_generation,
+            cancelled,
+            panic_before_transition_commit: false,
+        }
+    }
+
+    pub fn request_close(&mut self, error: DbError) {
+        if self.terminal_error.is_none() {
+            self.terminal_error = Some(error);
+        }
+        if !matches!(self.transition, HistoryReplayTransition::Complete) {
+            self.transition = HistoryReplayTransition::FaultRetire;
+        }
+    }
+
+    pub fn close_step(&mut self) -> bool {
+        if self.terminal_page.take().is_some() {
+            return true;
+        }
+        if self.page_count != 0 {
+            self.page_count -= 1;
+            drop(self.pages.pages[self.page_count].take());
+            return true;
+        }
+        if !self.pages.pages.is_empty() {
+            drop(std::mem::take(&mut self.pages.pages));
+            return true;
+        }
+        if self.reservation_close.is_none() {
+            if let Some(reservation) = self.reservation.take() {
+                self.reservation_close = Some(HistoryReplayReservationCloseCursor::new(reservation));
+                return true;
+            }
+        }
+        if self.reservation_close.as_mut().is_some_and(HistoryReplayReservationCloseCursor::close_step) {
+            return true;
+        }
+        if self.reservation_close.as_ref().is_some_and(HistoryReplayReservationCloseCursor::terminal_is_empty) {
+            self.reservation_close = None;
+            return true;
+        }
+        false
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.terminal_page.is_none() && self.page_count == 0 && self.pages.pages.is_empty() && self.reservation.is_none() && self.reservation_close.is_none() && self.phase.is_none() && matches!(self.transition, HistoryReplayTransition::Complete)
+    }
+
+    fn begin_fault(&mut self, error: DbError) {
+        self.request_close(error);
+    }
+
+    fn fail_pending(&mut self, error: DbError) {
+        self.begin_fault(error);
+    }
+
+    fn copy_mutation_fragment(pages: &HistoryPageSet, reservation: &mut Option<HistoryReplayReservation>, range: &std::ops::Range<u64>, copied: u64, result_start: u64) -> Result<u64, DbError> {
+        let remaining = range.end.checked_sub(range.start).and_then(|len| len.checked_sub(copied)).ok_or(DbError::LimitExceeded("history result copy range"))?;
+        if remaining == 0 {
+            return Ok(0);
+        }
+        let source_offset = range.start.checked_add(copied).ok_or(DbError::LimitExceeded("history result source offset"))?;
+        let destination_offset = result_start.checked_add(copied).ok_or(DbError::LimitExceeded("history result destination offset"))?;
+        let source = pages.page_slice(source_offset, remaining.min(HISTORY_REPLAY_PAGE_BYTES))?;
+        let page_index = usize::try_from(destination_offset / HISTORY_REPLAY_PAGE_BYTES).map_err(|_| DbError::LimitExceeded("history result page index"))?;
+        let within = usize::try_from(destination_offset % HISTORY_REPLAY_PAGE_BYTES).map_err(|_| DbError::LimitExceeded("history result page offset"))?;
+        let reservation = reservation.as_mut().ok_or(DbError::Closed)?;
+        let destination = reservation.result_pages.get_mut(page_index).and_then(Option::as_mut).ok_or_else(|| DbError::Corrupt("history result page owner is missing".to_string()))?;
+        let take = source.len().min(destination.len().saturating_sub(within));
+        if take == 0 {
+            return Err(DbError::Corrupt("history result copy made no progress".to_string()));
+        }
+        destination[within..within + take].copy_from_slice(&source[..take]);
+        Ok(take as u64)
+    }
+
+    fn finish_view(&mut self) -> Result<ArtifactHistoryView, DbError> {
+        let Some(reservation) = self.reservation.as_ref() else {
+            return Err(DbError::Closed);
+        };
+        let retained_bytes = Ok(reservation.retained_result_bytes);
+        let retained_items = reservation
+            .result_pages
+            .len()
+            .checked_add(reservation.operation_ids.len())
+            .and_then(|items| items.checked_add(reservation.entries.len()))
+            .and_then(|items| items.checked_add(1))
+            .ok_or(DbError::LimitExceeded("history retained result items"));
+        let (Ok(retained_bytes), Ok(retained_items)) = (retained_bytes, retained_items) else {
+            return Err(DbError::LimitExceeded("history retained result credit"));
+        };
+        let Some(mut reservation) = self.reservation.take() else {
+            return Err(DbError::Closed);
+        };
+        if reservation.scratch.is_some() || !reservation.source_pages.is_empty() {
+            self.reservation = Some(reservation);
+            return Err(DbError::Internal("history final view retained non-result owners".to_string()));
+        }
+        Ok(ArtifactHistoryView { entries: reservation.entries, operation_ids: reservation.operation_ids, result_pages: reservation.result_pages, result_len: self.result_len, retained_bytes, retained_items })
+    }
+
+    fn next(self: Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Result<ArtifactHistoryView, DbError>> {
+        let this = self.get_mut();
+        if this.operation_generation == 0 {
+            this.request_close(DbError::Closed);
+        }
+        if this.cancelled.load(std::sync::atomic::Ordering::Acquire) {
+            this.request_close(DbError::Closed);
+        }
+        if matches!(this.transition, HistoryReplayTransition::Complete) {
+            return std::task::Poll::Ready(Err(this.terminal_error.take().unwrap_or(DbError::Closed)));
+        }
+        if matches!(this.transition, HistoryReplayTransition::FaultRetire) {
+            if this.phase.take().is_some() {
+                context.waker().wake_by_ref();
+                return std::task::Poll::Pending;
+            }
+            if this.close_step() {
+                context.waker().wake_by_ref();
+                return std::task::Poll::Pending;
+            }
+            this.transition = HistoryReplayTransition::Complete;
+            return std::task::Poll::Ready(Err(this.terminal_error.take().unwrap_or(DbError::Closed)));
+        }
+        let mut next = None;
+        let mut fault = None;
+        let mut finalize = false;
+        let Some(active) = this.phase.as_mut() else {
+            this.request_close(DbError::Internal("history replay transition authority was missing".to_string()));
+            context.waker().wake_by_ref();
+            return std::task::Poll::Pending;
+        };
+        match active {
+            HistoryReplayPhase::Probe { index } => {
+                if let Some(error) = this.terminal_error.take() {
+                    fault = Some(error);
+                } else {
+                    let index = *index;
+                    let storage = this.storage.clone();
+                    let document = this.document.clone();
+                    next = Some(HistoryReplayPhase::SegmentLen { index, future: Box::pin(async move { storage.wal().await.segment_len(&document, index).await }) });
+                }
+            }
+            HistoryReplayPhase::SegmentLen { index, future } => match future.as_mut().poll(context) {
+                std::task::Poll::Pending => {}
+                std::task::Poll::Ready(Err(DbError::NotFound(_))) => {
+                    if let Some(error) = this.terminal_error.take() {
+                        fault = Some(error);
+                    } else {
+                        next = Some(HistoryReplayPhase::FinalizeSuccess);
+                    }
+                }
+                std::task::Poll::Ready(Err(error)) => fault = Some(this.terminal_error.take().unwrap_or(error)),
+                std::task::Poll::Ready(Ok(len)) => {
+                    if let Some(error) = this.terminal_error.take() {
+                        fault = Some(error);
+                    } else if let Some(page_count) = len.checked_add(HISTORY_REPLAY_PAGE_BYTES - 1).map(|bytes| bytes / HISTORY_REPLAY_PAGE_BYTES) {
+                        let simultaneous = this.reservation.as_ref().and_then(HistoryReplayReservation::retained_bytes).and_then(|bytes| bytes.checked_add(len));
+                        if len < protocol::format::HEADER_SIZE as u64 || page_count > HISTORY_REPLAY_SEGMENT_PAGES || simultaneous.is_none_or(|bytes| bytes > HISTORY_REPLAY_OPERATION_BYTES) {
+                            fault = Some(DbError::LimitExceeded("history replay page/source byte credit"));
+                        } else {
+                            this.pages.len = len;
+                            next = Some(HistoryReplayPhase::PageStart { index: *index, len, offset: 0 });
+                        }
+                    } else {
+                        fault = Some(DbError::LimitExceeded("history segment page rounding"));
+                    }
+                }
+            },
+            HistoryReplayPhase::PageStart { index, len, offset } => {
+                if offset == len {
+                    next = Some(HistoryReplayPhase::Frame { index: *index, cursor: HistoryFrameCursor::new(protocol::format::HEADER_SIZE as u64) });
+                } else {
+                    match len.checked_sub(*offset) {
+                        Some(remaining) => {
+                            let requested = remaining.min(HISTORY_REPLAY_PAGE_BYTES);
+                            let storage = this.storage.clone();
+                            let document = this.document.clone();
+                            let (index, len, offset) = (*index, *len, *offset);
+                            next = Some(HistoryReplayPhase::PageRead { index, len, offset, requested, future: Box::pin(async move { storage.wal().await.read(&document, index, pack::ByteRange { offset, len: requested }).await }) });
+                        }
+                        None => fault = Some(DbError::LimitExceeded("history page remaining bytes")),
+                    }
+                }
+            }
+            HistoryReplayPhase::PageRead { index, len, offset, requested, future } => match future.as_mut().poll(context) {
+                std::task::Poll::Pending => {}
+                std::task::Poll::Ready(Err(error)) => fault = Some(this.terminal_error.take().unwrap_or(error)),
+                std::task::Poll::Ready(Ok(page)) => {
+                    if let Some(error) = this.terminal_error.take() {
+                        this.terminal_page = Some(page);
+                        fault = Some(error);
+                    } else if page.len() as u64 != *requested || page.capacity() as u64 > HISTORY_REPLAY_PAGE_BYTES || this.page_count >= HISTORY_REPLAY_SEGMENT_PAGES as usize {
+                        this.terminal_page = Some(page);
+                        fault = Some(DbError::LimitExceeded("history backend page ownership"));
+                    } else if let Some(next_offset) = offset.checked_add(*requested) {
+                        this.pages.pages[this.page_count] = Some(page);
+                        this.page_count += 1;
+                        next = Some(HistoryReplayPhase::PageStart { index: *index, len: *len, offset: next_offset });
+                    } else {
+                        this.terminal_page = Some(page);
+                        fault = Some(DbError::LimitExceeded("history page offset"));
+                    }
+                }
+            },
+            HistoryReplayPhase::Frame { index, cursor } => match cursor.step(&this.pages) {
+                Err(error) => fault = Some(error),
+                Ok(None) => {}
+                Ok(Some(HistoryFrameToken::End)) => match index.checked_add(1) {
+                    Some(next_index) => next = Some(HistoryReplayPhase::Retire { next_index }),
+                    None => fault = Some(DbError::LimitExceeded("history segment index")),
+                },
+                Ok(Some(HistoryFrameToken::TxBegin)) => next = Some(HistoryReplayPhase::ClearPending { index: *index, next_offset: cursor.pos }),
+                Ok(Some(HistoryFrameToken::Command { offset, len })) => match HistoryEnvelopeCursor::new(&this.pages, offset, len) {
+                    Ok(envelope) => next = Some(HistoryReplayPhase::Envelope { index: *index, next_offset: cursor.pos, cursor: envelope }),
+                    Err(error) => fault = Some(error),
+                },
+                Ok(Some(HistoryFrameToken::Frontier { offset, len })) => match HistoryFrontierCursor::new(&this.pages, offset, len) {
+                    Ok(frontier) => next = Some(HistoryReplayPhase::Frontier { index: *index, next_offset: cursor.pos, cursor: frontier }),
+                    Err(error) => fault = Some(error),
+                },
+                Ok(Some(HistoryFrameToken::Other)) => next = Some(HistoryReplayPhase::Frame { index: *index, cursor: HistoryFrameCursor::new(cursor.pos) }),
+            },
+            HistoryReplayPhase::Envelope { index, next_offset, cursor } => {
+                let step = match this.reservation.as_mut().and_then(|owner| owner.scratch.as_mut()) {
+                    Some(scratch) => cursor.step(&this.pages, scratch),
+                    None => Err(DbError::Closed),
+                };
+                match step {
+                    Err(error) => fault = Some(error),
+                    Ok(Some(range)) => {
+                        let len = range.end.saturating_sub(range.start);
+                        match this.reservation.as_ref().map_or(Err(DbError::Closed), |owner| owner.preflight_result_range(this.result_len, len)) {
+                            Ok(_) => next = Some(HistoryReplayPhase::CopyMutation { index: *index, next_offset: *next_offset, range, copied: 0, result_start: this.result_len }),
+                            Err(error) => fault = Some(error),
+                        }
+                    }
+                    Ok(None) => {}
+                }
+            }
+            HistoryReplayPhase::CopyMutation { index, next_offset, range, copied, result_start } => match Self::copy_mutation_fragment(&this.pages, &mut this.reservation, range, *copied, *result_start) {
+                Err(error) => fault = Some(error),
+                Ok(0) => {
+                    if let Some(len) = range.end.checked_sub(range.start).and_then(|value| u16::try_from(value).ok()) {
+                        if let Some(reservation) = this.reservation.as_mut() {
+                            reservation.operation_ids.push(HistoryTextRange { start: *result_start as u32, len });
+                            this.result_len = *result_start + u64::from(len);
+                            next = Some(HistoryReplayPhase::Frame { index: *index, cursor: HistoryFrameCursor::new(*next_offset) });
+                        } else {
+                            fault = Some(DbError::Closed);
+                        }
+                    } else {
+                        fault = Some(DbError::LimitExceeded("history operation id range"));
+                    }
+                }
+                Ok(count) => *copied += count,
+            },
+            HistoryReplayPhase::Frontier { index, next_offset, cursor } => {
+                let step = match this.reservation.as_mut().and_then(|owner| owner.scratch.as_mut()) {
+                    Some(scratch) => cursor.step(&this.pages, scratch),
+                    None => Err(DbError::Closed),
+                };
+                match step {
+                    Err(error) => fault = Some(error),
+                    Ok(Some((head_seq, commit_seq, chain_hash, epoch))) => next = Some(HistoryReplayPhase::Publish { index: *index, next_offset: *next_offset, head_seq, commit_seq, chain_hash, epoch }),
+                    Ok(None) => {}
+                }
+            }
+            HistoryReplayPhase::ClearPending { index, next_offset } => {
+                let reservation = this.reservation.as_mut();
+                if reservation.as_ref().is_some_and(|owner| owner.operation_ids.len() > this.pending_start) {
+                    if let Some(range) = reservation.and_then(|owner| owner.operation_ids.pop()) {
+                        this.result_len = range.start as u64;
+                    }
+                } else {
+                    next = Some(HistoryReplayPhase::Frame { index: *index, cursor: HistoryFrameCursor::new(*next_offset) });
+                }
+            }
+            HistoryReplayPhase::Publish { index, next_offset, head_seq, commit_seq, chain_hash, epoch } => {
+                let operation_end = this.reservation.as_ref().map_or(this.pending_start, |owner| owner.operation_ids.len());
+                if operation_end == this.pending_start {
+                    next = Some(HistoryReplayPhase::Frame { index: *index, cursor: HistoryFrameCursor::new(*next_offset) });
+                } else if this.reservation.as_ref().is_none_or(|owner| owner.entries.len() >= HISTORY_REPLAY_MAX_ENTRIES) {
+                    fault = Some(DbError::LimitExceeded("history entry item credit"));
+                } else {
+                    let count = operation_end - this.pending_start;
+                    let start = u16::try_from(this.pending_start);
+                    let count = u16::try_from(count);
+                    match (start, count, this.reservation.as_mut()) {
+                        (Ok(operation_start), Ok(operation_count), Some(reservation)) => {
+                            reservation.entries.push(ArtifactHistoryEntry { operation_start, operation_count, head_seq: *head_seq, commit_seq: *commit_seq, chain_hash: *chain_hash, epoch: *epoch });
+                            this.pending_start = operation_end;
+                            next = Some(HistoryReplayPhase::Frame { index: *index, cursor: HistoryFrameCursor::new(*next_offset) });
+                        }
+                        _ => fault = Some(DbError::LimitExceeded("history entry range")),
+                    }
+                }
+            }
+            HistoryReplayPhase::Retire { next_index } => {
+                if this.page_count != 0 {
+                    this.page_count -= 1;
+                    drop(this.pages.pages[this.page_count].take());
+                } else {
+                    this.pages.len = 0;
+                    next = Some(HistoryReplayPhase::Probe { index: *next_index });
+                }
+            }
+            HistoryReplayPhase::FinalizeSuccess => {
+                if this.reservation.as_mut().and_then(|owner| owner.scratch.take()).is_some() {
+                } else if !this.pages.pages.is_empty() {
+                    drop(std::mem::take(&mut this.pages.pages));
+                } else {
+                    finalize = true;
+                }
+            }
+        }
+        if std::mem::take(&mut this.panic_before_transition_commit) {
+            panic!("history replay transition panic fixture");
+        }
+        if let Some(error) = fault {
+            if this.terminal_error.is_none() {
+                this.terminal_error = Some(error);
+            }
+            this.transition = HistoryReplayTransition::FaultRetire;
+        } else if finalize {
+            match this.finish_view() {
+                Ok(view) => {
+                    this.phase = None;
+                    this.transition = HistoryReplayTransition::Complete;
+                    return std::task::Poll::Ready(Ok(view));
+                }
+                Err(error) => {
+                    this.terminal_error.get_or_insert(error);
+                    this.transition = HistoryReplayTransition::FaultRetire;
+                }
+            }
+        } else if let Some(next) = next {
+            this.phase = Some(next);
+        }
+        context.waker().wake_by_ref();
+        std::task::Poll::Pending
+    }
+}
+
+impl Future for HistoryReplayFuture {
+    type Output = Result<ArtifactHistoryView, DbError>;
+
+    fn poll(self: Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+        self.next(context)
+    }
+}
+
+impl Drop for HistoryReplayFuture {
+    fn drop(&mut self) {
+        assert!(self.terminal_is_empty(), "history replay reached Drop before retained source/result/page retirement");
+    }
+}
+//#endregion 🔖️HistoryReplay
+
 //#region 🔖️Actor
 /// @emoji 📨️ A `Send` message crossing `ArtifactAuthority`'s bounded mailbox.
 pub enum ArtifactMessage {
@@ -1143,6 +2605,12 @@ pub enum ArtifactMessage {
     DrainOutbox {
         reply: db_actor::ReplySender<Vec<OutboxEntry>>,
     },
+    History {
+        operation_generation: u64,
+        cancelled: Arc<std::sync::atomic::AtomicBool>,
+        reservation: HistoryReplayReservation,
+        reply: db_actor::ReplySender<Result<ArtifactHistoryView, DbError>>,
+    },
 }
 
 /// @emoji 🎭️ A live handle to one document's authority actor. Each admitted mailbox message wakes
@@ -1164,6 +2632,12 @@ type ArtifactBuildFuture<A, V> = Pin<Box<dyn Future<Output = Result<ArtifactEngi
 type ArtifactTurnFuture<A, V> = Pin<Box<dyn Future<Output = ArtifactEngine<A, V>> + Send + 'static>>;
 
 #[cfg(not(target_arch = "wasm32"))]
+enum ArtifactTurn<A: AuthzHook + 'static, V: VersionGraph + 'static> {
+    Future(ArtifactTurnFuture<A, V>),
+    History { engine: Option<ArtifactEngine<A, V>>, replay: HistoryReplayFuture, reply: Option<db_actor::ReplySender<Result<ArtifactHistoryView, DbError>>> },
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 const ARTIFACT_RUNNER_RETRY_MS: u64 = 1;
 #[cfg(not(target_arch = "wasm32"))]
 const ARTIFACT_RUNNER_RETRY_LIMIT: u8 = 8;
@@ -1172,7 +2646,8 @@ const ARTIFACT_RUNNER_RETRY_LIMIT: u8 = 8;
 struct ArtifactRunnerHandoff {
     pool: Arc<semio_framework_async::WorkerPool>,
     terminal_job: std::sync::Mutex<Option<(semio_framework_async::WorkerSubmitErrorKind, semio_framework_async::Job)>>,
-    close_runner: std::sync::Mutex<Option<Arc<dyn Fn() + Send + Sync>>>,
+    close_runner: std::sync::Mutex<Option<Arc<dyn Fn() -> bool + Send + Sync>>>,
+    active_history: std::sync::atomic::AtomicBool,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -1189,7 +2664,7 @@ struct ArtifactRunner<A: AuthzHook + 'static, V: VersionGraph + 'static> {
     generation: u64,
     builder: std::sync::Mutex<Option<ArtifactBuildFuture<A, V>>>,
     engine: std::sync::Mutex<Option<ArtifactEngine<A, V>>>,
-    turn: std::sync::Mutex<Option<ArtifactTurnFuture<A, V>>>,
+    turn: std::sync::Mutex<Option<ArtifactTurn<A, V>>>,
     ready: std::sync::Mutex<Option<db_actor::ReplySender<Result<(), DbError>>>>,
     done: std::sync::Mutex<Option<db_actor::ReplySender<()>>>,
     handoff: Arc<ArtifactRunnerHandoff>,
@@ -1198,6 +2673,7 @@ struct ArtifactRunner<A: AuthzHook + 'static, V: VersionGraph + 'static> {
     retry_generation: std::sync::atomic::AtomicU64,
     scheduled: std::sync::atomic::AtomicBool,
     cancelled: std::sync::atomic::AtomicBool,
+    close_driving: std::sync::atomic::AtomicBool,
     terminal: std::sync::atomic::AtomicBool,
 }
 
@@ -1215,7 +2691,7 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> std::task::Wake for Arti
 
     fn wake_by_ref(self: &Arc<Self>) {
         if let Some(runner) = self.runner.upgrade() {
-            if self.generation == runner.generation {
+            if self.generation == runner.generation && !runner.close_driving.load(std::sync::atomic::Ordering::Acquire) {
                 runner.schedule();
             }
         }
@@ -1271,9 +2747,8 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
             let retry = runner.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
             if let Some((job, attempt)) = retry {
                 if runner.cancelled.load(Ordering::Acquire) {
-                    drop(job);
                     runner.scheduled.store(false, Ordering::Release);
-                    runner.finish();
+                    *runner.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((semio_framework_async::WorkerSubmitErrorKind::Saturated, job));
                 } else {
                     runner.submit_exact(job, attempt);
                 }
@@ -1287,6 +2762,9 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
     }
 
     fn finish(&self) {
+        if self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().is_some_and(|turn| matches!(turn, ArtifactTurn::History { replay, .. } if !replay.terminal_is_empty())) {
+            return;
+        }
         if !self.terminal.swap(true, std::sync::atomic::Ordering::AcqRel) {
             let builder = self.builder.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
             if builder.is_none() {
@@ -1301,19 +2779,26 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
         }
     }
 
-    fn start_turn(engine: ArtifactEngine<A, V>, message: ArtifactMessage) -> ArtifactTurnFuture<A, V> {
-        Box::pin(async move {
-            let mut engine = engine;
-            match message {
-                ArtifactMessage::Submit { batch, options, now_ms, reply } => reply.send(engine.submit(batch, options, now_ms).await),
-                ArtifactMessage::Query { path, reply } => reply.send(engine.get(&path).await),
-                ArtifactMessage::Frontier { reply } => reply.send(engine.frontier().await),
-                ArtifactMessage::RunQuery { query, consistency, reply } => reply.send(engine.query(query, consistency).await),
-                ArtifactMessage::SnapshotNow { now_ms, reply } => reply.send(engine.snapshot_now(now_ms).await),
-                ArtifactMessage::DrainOutbox { reply } => reply.send(engine.drain_outbox().await),
+    fn start_turn(engine: ArtifactEngine<A, V>, message: ArtifactMessage) -> ArtifactTurn<A, V> {
+        match message {
+            ArtifactMessage::History { operation_generation, cancelled, reservation, reply } => {
+                let replay = engine.history_replay(operation_generation, cancelled, reservation);
+                ArtifactTurn::History { engine: Some(engine), replay, reply: Some(reply) }
             }
-            engine
-        })
+            message => ArtifactTurn::Future(Box::pin(async move {
+                let mut engine = engine;
+                match message {
+                    ArtifactMessage::Submit { batch, options, now_ms, reply } => reply.send(engine.submit(batch, options, now_ms).await),
+                    ArtifactMessage::Query { path, reply } => reply.send(engine.get(&path).await),
+                    ArtifactMessage::Frontier { reply } => reply.send(engine.frontier().await),
+                    ArtifactMessage::RunQuery { query, consistency, reply } => reply.send(engine.query(query, consistency).await),
+                    ArtifactMessage::SnapshotNow { now_ms, reply } => reply.send(engine.snapshot_now(now_ms).await),
+                    ArtifactMessage::DrainOutbox { reply } => reply.send(engine.drain_outbox().await),
+                    ArtifactMessage::History { reply, .. } => reply.send(Err(DbError::Internal("history turn bypassed retained runner cursor".to_string()))),
+                }
+                engine
+            })),
+        }
     }
 
     fn run_turn(self: Arc<Self>, generation: u64) {
@@ -1325,8 +2810,14 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
         }
         self.scheduled.store(false, Ordering::Release);
         if self.cancelled.load(Ordering::Acquire) {
-            self.finish();
-            return;
+            let mut turn = self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if let Some(ArtifactTurn::History { replay, .. }) = turn.as_mut() {
+                replay.request_close(DbError::Closed);
+            } else {
+                drop(turn);
+                self.finish();
+                return;
+            }
         }
 
         let waker = std::task::Waker::from(Arc::new(ArtifactRunnerWake { runner: Arc::downgrade(&self), generation }));
@@ -1371,26 +2862,66 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
         drop(builder);
 
         let mut turn = self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        if let Some(future) = turn.as_mut() {
-            match std::panic::catch_unwind(AssertUnwindSafe(|| future.as_mut().poll(&mut context))) {
-                Ok(std::task::Poll::Pending) => return,
-                Ok(std::task::Poll::Ready(engine)) => {
-                    turn.take();
-                    drop(turn);
-                    *self.engine.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(engine);
-                    if self.cancelled.load(Ordering::Acquire) || self.address.is_idle_and_closed() {
-                        self.finish();
-                    } else if self.address.has_messages() {
-                        self.schedule();
+        if let Some(active) = turn.as_mut() {
+            match active {
+                ArtifactTurn::Future(future) => match std::panic::catch_unwind(AssertUnwindSafe(|| future.as_mut().poll(&mut context))) {
+                    Ok(std::task::Poll::Pending) => return,
+                    Ok(std::task::Poll::Ready(engine)) => {
+                        turn.take();
+                        drop(turn);
+                        *self.engine.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(engine);
+                        if self.cancelled.load(Ordering::Acquire) || self.address.is_idle_and_closed() {
+                            self.finish();
+                        } else if self.address.has_messages() {
+                            self.schedule();
+                        }
+                        return;
                     }
-                    return;
-                }
-                Err(_) => {
-                    turn.take();
-                    drop(turn);
-                    self.address.close();
-                    self.finish();
-                    return;
+                    Err(_) => {
+                        turn.take();
+                        drop(turn);
+                        self.address.close();
+                        self.finish();
+                        return;
+                    }
+                },
+                ArtifactTurn::History { engine, replay, reply } => {
+                    if self.cancelled.load(Ordering::Acquire) || self.address.is_idle_and_closed() {
+                        replay.request_close(DbError::Closed);
+                    }
+                    match std::panic::catch_unwind(AssertUnwindSafe(|| Pin::new(&mut *replay).poll(&mut context))) {
+                        Ok(std::task::Poll::Pending) => return,
+                        Ok(std::task::Poll::Ready(result)) => {
+                            let engine = engine.take();
+                            if let Some(reply) = reply.take() {
+                                reply.send(result);
+                            }
+                            let replay_empty = replay.terminal_is_empty();
+                            if replay_empty {
+                                self.handoff.active_history.store(false, Ordering::Release);
+                                turn.take();
+                            }
+                            drop(turn);
+                            if let Some(engine) = engine {
+                                *self.engine.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(engine);
+                            }
+                            if !replay_empty {
+                                self.schedule();
+                            } else if self.cancelled.load(Ordering::Acquire) || self.address.is_idle_and_closed() {
+                                self.finish();
+                            } else if self.address.has_messages() {
+                                self.schedule();
+                            }
+                            return;
+                        }
+                        Err(_) => {
+                            replay.request_close(DbError::Internal("history replay cursor panicked".to_string()));
+                            drop(turn);
+                            self.address.close();
+                            self.schedule();
+                            return;
+                        }
+                    }
                 }
             }
         }
@@ -1399,7 +2930,9 @@ impl<A: AuthzHook + 'static, V: VersionGraph + 'static> ArtifactRunner<A, V> {
         if let Some(envelope) = self.receiver.try_recv() {
             let engine = self.engine.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
             if let Some(engine) = engine {
-                *self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Self::start_turn(engine, envelope.payload));
+                let turn = Self::start_turn(engine, envelope.payload);
+                self.handoff.active_history.store(matches!(&turn, ArtifactTurn::History { .. }), Ordering::Release);
+                *self.turn.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(turn);
                 self.schedule();
             } else {
                 self.address.close();
@@ -1425,7 +2958,7 @@ impl ArtifactAuthority {
         let (address, receiver) = db_actor::mailbox::<ArtifactMessage>(capacities);
         let (ready_tx, ready_rx) = db_actor::oneshot::<Result<(), DbError>>();
         let (done_tx, done_rx) = db_actor::oneshot();
-        let handoff = Arc::new(ArtifactRunnerHandoff { pool: pool.clone(), terminal_job: std::sync::Mutex::new(None), close_runner: std::sync::Mutex::new(None) });
+        let handoff = Arc::new(ArtifactRunnerHandoff { pool: pool.clone(), terminal_job: std::sync::Mutex::new(None), close_runner: std::sync::Mutex::new(None), active_history: std::sync::atomic::AtomicBool::new(false) });
         let runner = Arc::new(ArtifactRunner {
             pool,
             address: address.clone(),
@@ -1442,6 +2975,7 @@ impl ArtifactAuthority {
             retry_generation: std::sync::atomic::AtomicU64::new(1),
             scheduled: std::sync::atomic::AtomicBool::new(false),
             cancelled: std::sync::atomic::AtomicBool::new(false),
+            close_driving: std::sync::atomic::AtomicBool::new(false),
             terminal: std::sync::atomic::AtomicBool::new(false),
         });
         let weak = Arc::downgrade(&runner);
@@ -1451,11 +2985,19 @@ impl ArtifactAuthority {
             }
         }));
         let weak = Arc::downgrade(&runner);
-        *handoff.close_runner.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Arc::new(move || {
+        *handoff.close_runner.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Arc::new(move || -> bool {
             if let Some(runner) = weak.upgrade() {
-                runner.scheduled.store(false, std::sync::atomic::Ordering::Release);
                 runner.cancelled.store(true, std::sync::atomic::Ordering::Release);
-                runner.finish();
+                runner.close_driving.store(true, std::sync::atomic::Ordering::Release);
+                runner.scheduled.store(true, std::sync::atomic::Ordering::Release);
+                let generation = runner.generation;
+                let witness = runner.clone();
+                runner.run_turn(generation);
+                let closed = witness.terminal.load(std::sync::atomic::Ordering::Acquire);
+                witness.close_driving.store(false, std::sync::atomic::Ordering::Release);
+                closed
+            } else {
+                true
             }
         }));
         let runner_for_cancel = runner.clone();
@@ -1474,6 +3016,10 @@ impl ArtifactAuthority {
         self.address.ask(Priority::Command, |reply| ArtifactMessage::Submit { batch, options, now_ms, reply })
     }
 
+    pub fn history_retained(&self, operation_generation: u64, cancelled: Arc<std::sync::atomic::AtomicBool>, reservation: HistoryReplayReservation) -> db_actor::AskFuture<ArtifactMessage, Result<ArtifactHistoryView, DbError>> {
+        self.address.ask(Priority::Query, |reply| ArtifactMessage::History { operation_generation, cancelled, reservation, reply })
+    }
+
     pub fn generation(&self) -> GenerationId {
         self.address.generation()
     }
@@ -1483,19 +3029,24 @@ impl ArtifactAuthority {
     }
 
     pub fn close_step(&self) -> bool {
-        if let Some((_, job)) = self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
-            if let Some(close) = self.handoff.close_runner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref() {
-                close();
-            }
-            drop(job);
-            true
-        } else {
-            false
+        let active = self.handoff.active_history.load(std::sync::atomic::Ordering::Acquire);
+        if !active && self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() {
+            return false;
         }
+        let closed = self.handoff.close_runner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().is_none_or(|close| close());
+        let mut terminal = self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if terminal.is_none() {
+            return active;
+        }
+        if closed {
+            let owner = terminal.take();
+            drop(owner);
+        }
+        true
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+        self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() && !self.handoff.active_history.load(std::sync::atomic::Ordering::Acquire)
     }
 
     pub async fn submit(&self, batch: CommandBatch, options: SubmitOptions, now_ms: u64) -> Result<CommandReceipt, DbError> {
@@ -1551,11 +3102,11 @@ impl ArtifactRunnerTerminalJob {
     }
 
     pub fn close(mut self) {
-        let (_, job) = self.owner.take().expect("terminal artifact runner job already resolved");
-        if let Some(close) = self.handoff.close_runner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref() {
-            close();
+        let owner = self.owner.take().expect("terminal artifact runner job already resolved");
+        let closed = self.handoff.close_runner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().is_none_or(|close| close());
+        if !closed {
+            *self.handoff.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(owner);
         }
-        drop(job);
     }
 }
 
@@ -1574,6 +3125,17 @@ impl Drop for ArtifactRunnerTerminalJob {
 mod tests {
     use super::*;
     use std::sync::Arc as StdArc;
+
+    fn history_construction_test_lock() -> std::sync::MutexGuard<'static, ()> {
+        static LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+        LOCK.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+    }
+
+    struct HistoryReplayTestWake;
+
+    impl std::task::Wake for HistoryReplayTestWake {
+        fn wake(self: StdArc<Self>) {}
+    }
 
     async fn storage() -> StdArc<db_storage::DbBackend> {
         StdArc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new().await))
@@ -1959,6 +3521,282 @@ mod tests {
         let result = ArtifactAuthority::spawn(pool.clone(), || async { Err::<ArtifactEngine<AllowAll, NullVersionGraph>, DbError>(DbError::InvalidArgument("boom".to_string())) }, MailboxCapacities::uniform(4));
         assert!(matches!(result.await, Err(DbError::InvalidArgument(_))));
         pool.shutdown();
+    }
+
+    #[test]
+    fn artifact_history_backend_token_crc_fault_retire_1024_pages_one_grant_each() {
+        let mut reservation = HistoryReplayReservation::try_new().unwrap();
+        for _ in 0..HISTORY_REPLAY_SEGMENT_PAGES {
+            reservation.retain_source_page(vec![0]).unwrap();
+        }
+        let mut cursor = HistoryReplayReservationCloseCursor::new(reservation);
+        for remaining in (0..HISTORY_REPLAY_SEGMENT_PAGES as usize).rev() {
+            assert!(cursor.close_step());
+            assert_eq!(cursor.source_page_count, remaining);
+        }
+        assert!(cursor.close_step(), "fault retirement continues with one result page/range/scalar owner");
+        for _ in 0..HISTORY_REPLAY_RESULT_PAGES + 8 {
+            if cursor.terminal_is_empty() {
+                break;
+            }
+            assert!(cursor.close_step());
+        }
+        assert!(cursor.terminal_is_empty());
+        let replay = include_str!("🦀️component.rs");
+        for fault in ["history backend page ownership", "history frame CRC mismatch", "history envelope has trailing bytes"] {
+            assert!(replay.contains(fault), "missing retained fault source {fault}");
+        }
+        assert!(replay.contains("HistoryReplayTransition::FaultRetire"));
+    }
+
+    #[test]
+    fn artifact_history_scratch_result_boundary_plus_one_preserves_exact_owner() {
+        let reservation = HistoryReplayReservation::try_new().unwrap();
+        let first_result_owner = reservation.result_pages[0].as_ref().unwrap().as_ptr();
+        assert_eq!(reservation.source_pages.len(), HISTORY_REPLAY_SEGMENT_PAGES as usize);
+        assert_eq!(reservation.result_pages.len(), HISTORY_REPLAY_RESULT_PAGES);
+        assert_eq!(reservation.operation_ids.capacity(), HISTORY_REPLAY_MAX_OPERATION_IDS);
+        assert_eq!(reservation.entries.capacity(), HISTORY_REPLAY_MAX_ENTRIES);
+        assert_eq!(reservation.scratch.as_ref().unwrap().len(), HISTORY_REPLAY_MAX_FIELD_BYTES);
+        assert_eq!(reservation.result_pages[0].as_ref().unwrap().as_ptr(), first_result_owner);
+        assert_eq!(reservation.preflight_result_range(HISTORY_REPLAY_RESULT_BYTES - 1, 1).unwrap(), HISTORY_REPLAY_RESULT_BYTES);
+        assert!(matches!(reservation.preflight_result_range(HISTORY_REPLAY_RESULT_BYTES, 1), Err(DbError::LimitExceeded("history result byte credit"))));
+        assert_eq!(reservation.result_pages[0].as_ref().unwrap().as_ptr(), first_result_owner, "cap+1 rejection must return the exact preadmitted page owner");
+        let mut cursor = HistoryReplayReservationCloseCursor::new(reservation);
+        for _ in 0..HISTORY_REPLAY_RESULT_PAGES + 8 {
+            if cursor.terminal_is_empty() {
+                break;
+            }
+            assert!(cursor.close_step());
+        }
+        assert!(cursor.terminal_is_empty());
+    }
+
+    #[test]
+    fn artifact_history_reservation_construction_fault_cap_plus_one_and_each_page_retire_one_owner() {
+        let _guard = history_construction_test_lock();
+        for failure_after in [0, 1, HISTORY_REPLAY_RESULT_PAGES / 2, HISTORY_REPLAY_RESULT_PAGES - 1, HISTORY_REPLAY_RESULT_PAGES] {
+            let mut fault = HistoryReplayReservation::try_new_with_result_page_failure(failure_after).unwrap_err();
+            let error = fault.take_error().expect("exact construction error");
+            assert!(matches!(error, DbError::Unavailable(_)));
+            let retained_pages = fault.retained_result_page_count();
+            assert_eq!(retained_pages, failure_after, "failure must retain every page allocated before its exact boundary");
+            let mut previous_pages = retained_pages;
+            while !fault.terminal_is_empty() {
+                assert!(fault.close_step());
+                let current_pages = fault.retained_result_page_count();
+                assert!(previous_pages.saturating_sub(current_pages) <= 1, "one construction-fault grant may retire at most one result page");
+                previous_pages = current_pages;
+            }
+        }
+
+        let reservation = HistoryReplayReservation::try_new_with_result_page_failure(HISTORY_REPLAY_RESULT_PAGES + 1).expect("a failure boundary beyond the fixed page cap cannot fabricate an extra owner");
+        assert_eq!(reservation.result_pages.len(), HISTORY_REPLAY_RESULT_PAGES);
+        let mut cursor = HistoryReplayReservationCloseCursor::new(reservation);
+        while !cursor.terminal_is_empty() {
+            assert!(cursor.close_step());
+        }
+
+        for page_count in 0..=HISTORY_REPLAY_RESULT_PAGES {
+            let result_pages = (0..page_count).map(|_| Some(Vec::new())).collect();
+            let token = claim_history_replay_reservation_construction().expect("fixed construction slot");
+            let close = HistoryReplayReservationCloseCursor {
+                source_pages: Some(Vec::new()),
+                source_page_count: 0,
+                result_pages: Some(result_pages),
+                operation_ids: Some(Vec::new()),
+                entries: Some(Vec::new()),
+                scratch: None,
+                retained_operation_bytes: 0,
+                retained_result_bytes: 0,
+                started: true,
+            };
+            {
+                let mut registry = history_replay_reservation_construction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                let slot = &mut registry.slots[token.slot];
+                slot.cursor = Some(close);
+            }
+            let mut fault = HistoryReplayReservationConstructionFault { token: Some(token), unregistered_error: None };
+            let mut retired_pages = 0;
+            while fault.retained_result_page_count() != 0 {
+                let before = fault.retained_result_page_count();
+                assert!(fault.close_step());
+                let after = fault.retained_result_page_count();
+                assert_eq!(before - after, 1, "failure after page {page_count} must retire exactly one allocated page per grant");
+                retired_pages += 1;
+            }
+            assert_eq!(retired_pages, page_count);
+            while !fault.terminal_is_empty() {
+                assert!(fault.close_step());
+            }
+        }
+    }
+
+    #[test]
+    fn artifact_history_unchecked_construction_error_and_checked_out_drop_hand_back_exact_pages() {
+        let _guard = history_construction_test_lock();
+        let generation = history_replay_reservation_construction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner).next_generation;
+        let dropped = std::panic::catch_unwind(|| {
+            let _ = HistoryReplayReservation::try_new_with_result_page_failure(3);
+        });
+        assert!(dropped.is_ok(), "unchecked construction error Drop must not panic");
+        let fault = take_history_replay_reservation_construction_fault(generation).expect("unchecked error registered exact partial owner");
+        assert_eq!(fault.retained_result_page_count(), 3);
+        drop(fault);
+        let mut resumed = take_history_replay_reservation_construction_fault(generation).expect("checked-out Drop returned exact partial owner");
+        assert!(matches!(resumed.take_error(), Some(DbError::Unavailable(_))));
+        let mut previous_pages = 3;
+        while !resumed.terminal_is_empty() {
+            assert!(resumed.close_step());
+            let pages = resumed.retained_result_page_count();
+            assert!(previous_pages.saturating_sub(pages) <= 1);
+            previous_pages = pages;
+        }
+        assert!(take_history_replay_reservation_construction_fault(generation).is_none());
+    }
+
+    #[test]
+    fn artifact_history_construction_unwind_hands_partial_owner_to_registry_without_bulk_drop() {
+        let _guard = history_construction_test_lock();
+        let generation = history_replay_reservation_construction_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner).next_generation;
+        let unwind = std::panic::catch_unwind(|| {
+            let mut builder = HistoryReplayReservationConstructionBuilder::new().expect("fixed construction authority");
+            let mut page = Vec::new();
+            page.try_reserve_exact(HISTORY_REPLAY_PAGE_BYTES as usize).expect("fixture page");
+            page.resize(HISTORY_REPLAY_PAGE_BYTES as usize, 0);
+            assert!(builder
+                .edit_cursor(|cursor| cursor.result_pages.as_mut().is_some_and(|owners| {
+                    owners.push(Some(page));
+                    true
+                }))
+                .unwrap_or(false));
+            panic!("injected construction unwind");
+        });
+        assert!(unwind.is_err());
+        let mut fault = take_history_replay_reservation_construction_fault(generation).expect("builder Drop registered partial owner");
+        assert_eq!(fault.retained_result_page_count(), 1);
+        assert!(matches!(fault.take_error(), Some(DbError::Unavailable(_))));
+        let before = fault.retained_result_page_count();
+        assert!(fault.close_step());
+        let after = fault.retained_result_page_count();
+        assert_eq!(before - after, 1);
+        while !fault.terminal_is_empty() {
+            assert!(fault.close_step());
+        }
+    }
+
+    #[test]
+    fn artifact_history_construction_registry_saturation_rejects_before_partial_owner_and_reuses_with_fresh_generation() {
+        let _guard = history_construction_test_lock();
+        let mut faults = Vec::with_capacity(HISTORY_REPLAY_CONSTRUCTION_SLOTS);
+        for _ in 0..HISTORY_REPLAY_CONSTRUCTION_SLOTS {
+            faults.push(HistoryReplayReservation::try_new_with_result_page_failure(0).unwrap_err());
+        }
+        let mut rejected = HistoryReplayReservation::try_new_with_result_page_failure(0).unwrap_err();
+        assert!(rejected.generation().is_none());
+        assert!(matches!(rejected.take_error(), Some(DbError::Unavailable(_))));
+        let released_generation = faults[0].generation().expect("registered generation");
+        let mut released = faults.remove(0);
+        while !released.terminal_is_empty() {
+            assert!(released.close_step());
+        }
+        let replacement = HistoryReplayReservation::try_new_with_result_page_failure(0).unwrap_err();
+        assert_ne!(replacement.generation(), Some(released_generation));
+        faults.push(replacement);
+        for mut fault in faults {
+            while !fault.terminal_is_empty() {
+                assert!(fault.close_step());
+            }
+        }
+    }
+
+    #[test]
+    fn artifact_history_construction_handback_rejects_stale_duplicate_and_aba_without_owner_overwrite() {
+        let _guard = history_construction_test_lock();
+        let mut first = HistoryReplayReservation::try_new_with_result_page_failure(1).unwrap_err();
+        let first_token = first.token.as_ref().map(|token| (token.slot, token.generation)).expect("first linear construction token");
+        while !first.terminal_is_empty() {
+            assert!(first.close_step());
+        }
+
+        let replacement = HistoryReplayReservation::try_new_with_result_page_failure(1).unwrap_err();
+        let replacement_token = replacement.token.as_ref().map(|token| (token.slot, token.generation)).expect("replacement linear construction token");
+        assert_eq!(replacement_token.0, first_token.0);
+        assert_ne!(replacement_token.1, first_token.1);
+        let page_pointer = replacement.retained_result_page_pointer(0).expect("replacement page owner");
+        let error_pointer = replacement.retained_error_pointer().expect("replacement error owner");
+
+        let stale = HistoryReplayReservationConstructionToken { slot: first_token.0, generation: first_token.1 };
+        assert_eq!(handback_history_replay_reservation_construction(&stale), Err(HistoryReplayReservationConstructionHandbackRejection { slot: first_token.0, generation: first_token.1 }));
+        assert_eq!(replacement.retained_result_page_pointer(0), Some(page_pointer));
+        assert_eq!(replacement.retained_error_pointer(), Some(error_pointer));
+
+        let out_of_bounds = HistoryReplayReservationConstructionToken { slot: HISTORY_REPLAY_CONSTRUCTION_SLOTS, generation: replacement_token.1 };
+        assert_eq!(handback_history_replay_reservation_construction(&out_of_bounds), Err(HistoryReplayReservationConstructionHandbackRejection { slot: HISTORY_REPLAY_CONSTRUCTION_SLOTS, generation: replacement_token.1 }));
+        assert_eq!(replacement.retained_result_page_pointer(0), Some(page_pointer));
+        assert_eq!(replacement.retained_error_pointer(), Some(error_pointer));
+
+        drop(replacement);
+        let duplicate = HistoryReplayReservationConstructionToken { slot: replacement_token.0, generation: replacement_token.1 };
+        assert_eq!(handback_history_replay_reservation_construction(&duplicate), Err(HistoryReplayReservationConstructionHandbackRejection { slot: replacement_token.0, generation: replacement_token.1 }));
+        let mut resumed = take_history_replay_reservation_construction_fault(replacement_token.1).expect("current generation remained resumable");
+        assert_eq!(resumed.retained_result_page_pointer(0), Some(page_pointer));
+        assert_eq!(resumed.retained_error_pointer(), Some(error_pointer));
+        while !resumed.terminal_is_empty() {
+            assert!(resumed.close_step());
+        }
+    }
+
+    #[test]
+    fn artifact_history_fixed_owner_accounting_has_no_capacity_scan() {
+        let source = include_str!("🦀️component.rs");
+        let replay = &source[source.find("//#region 🔖️HistoryReplay").unwrap()..source.find("//#endregion 🔖️HistoryReplay").unwrap()];
+        for forbidden in [".rposition(", "result_pages.iter()", "source_pages.iter().all", "pages.iter().all", "pages.iter().filter"] {
+            assert!(!replay.contains(forbidden), "retained history accounting scanned fixed capacity through {forbidden}");
+        }
+        for retained in ["source_page_count", "retained_operation_bytes", "retained_result_bytes"] {
+            assert!(replay.contains(retained), "retained history accounting omitted {retained}");
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn artifact_history_panic_at_each_phase_transition_retains_then_fault_retires() {
+        let engine = ArtifactEngine::create_retained(document_id().await, storage().await, ArtifactEngineConfig::default(), 0).await.unwrap();
+        let phases = Vec::from([
+            HistoryReplayPhase::Probe { index: 0 },
+            HistoryReplayPhase::SegmentLen { index: 0, future: Box::pin(async { Err(DbError::NotFound("phase fixture".to_string())) }) },
+            HistoryReplayPhase::PageStart { index: 0, len: 1, offset: 0 },
+            HistoryReplayPhase::PageRead { index: 0, len: 1, offset: 0, requested: 1, future: Box::pin(async { Ok(vec![0]) }) },
+            HistoryReplayPhase::Frame { index: 0, cursor: HistoryFrameCursor::new(0) },
+            HistoryReplayPhase::Envelope { index: 0, next_offset: 0, cursor: HistoryEnvelopeCursor { pos: 0, end: 0, field: HistoryEnvelopeField::MutationId, dependencies: 0, mutation_id: None } },
+            HistoryReplayPhase::CopyMutation { index: 0, next_offset: 0, range: 0..0, copied: 0, result_start: 0 },
+            HistoryReplayPhase::Frontier { index: 0, next_offset: 0, cursor: HistoryFrontierCursor { pos: 0, end: 0, field: HistoryFrontierField::Document, head_seq: 0, commit_seq: 0, chain_hash: [0; 32] } },
+            HistoryReplayPhase::ClearPending { index: 0, next_offset: 0 },
+            HistoryReplayPhase::Publish { index: 0, next_offset: 0, head_seq: 0, commit_seq: 0, chain_hash: [0; 32], epoch: 0 },
+            HistoryReplayPhase::Retire { next_index: 1 },
+            HistoryReplayPhase::FinalizeSuccess,
+        ]);
+        let waker = std::task::Waker::from(StdArc::new(HistoryReplayTestWake));
+        let mut context = std::task::Context::from_waker(&waker);
+        for phase in phases {
+            let mut replay = engine.history_replay(1, StdArc::new(std::sync::atomic::AtomicBool::new(false)), HistoryReplayReservation::try_new().unwrap());
+            replay.phase = Some(phase);
+            replay.transition = HistoryReplayTransition::InProgress;
+            replay.panic_before_transition_commit = true;
+            assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| Pin::new(&mut replay).poll(&mut context))).is_err());
+            assert!(replay.phase.is_some(), "panic must retain the exact active phase owner");
+            assert!(matches!(replay.transition, HistoryReplayTransition::InProgress));
+            replay.request_close(DbError::Internal("phase panic fixture".to_string()));
+            let mut terminal = false;
+            for _ in 0..50_000 {
+                if Pin::new(&mut replay).poll(&mut context).is_ready() {
+                    terminal = true;
+                    break;
+                }
+            }
+            assert!(terminal);
+            assert!(replay.terminal_is_empty());
+        }
     }
     //#endregion 🔖️Actor
 }

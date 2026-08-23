@@ -6,7 +6,7 @@
 //! the recovered payload, so a stream this repository emits that no conforming inflater can read is
 //! a failure — which byte comparison would never have caught.
 
-use semio_repo_test_host::oracle_archive::{oracle_zlib_compress, project_zlib};
+use semio_s_plugin_stdio_test_oracle::archive::{oracle_zlib_compress, project_zlib};
 use semio_repo_test_host::{Adapter, Context, Outcome};
 
 //#region 🔖️Input
@@ -30,7 +30,7 @@ fn oracle(ctx: &Context) -> Result<Outcome, String> {
 #[cfg(feature = "sut")]
 mod subject {
     use super::payload;
-    use semio_repo_test_host::oracle_archive::project_zlib;
+    use semio_s_plugin_stdio_test_oracle::archive::project_zlib;
     use semio_repo_test_host::{Context, Outcome};
     use semio_s_plugin_stdio::artifacts::deflate::standards::v_rfc1950::subsets::any::io::{zlib_compress, zlib_decompress};
 

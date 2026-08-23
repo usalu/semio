@@ -1658,3 +1658,478 @@ Verdict: **READY for independent Draw source re-audit, without self-acceptance. 
 The native/Wasm/runtime route, hostile-valid-payload timing, 13 remaining live whole-buffer callers,
 global snapshot/store ownership, full typed operation, all 884 activations, and Phase 8 remain
 unproven or rejected.
+
+---
+
+## 2026-08-23 — Draw Semantic-Digest and Aggregate-Credit Re-Audit Repair
+
+This section repairs only the blockers in
+`sol-independent-p8-draw-retained-load-cohort-reaudit-2026-08-23.md`. It does not self-accept the
+Draw cohort, decrement another structural placeholder, activate a command, or begin another
+cohort. Draw remains pending an independent source re-audit; Phase 8 remains RED at **0/884** and
+**18** global failure classes.
+
+### Schema-complete retained semantic digest
+
+`DrawMutationDigestAuthority` now frames every semantic observation with an explicit domain byte,
+field tag, and big-endian length, while a repository-owned incremental SHA-256 authority absorbs
+the same frames. The terminal SHA-256 is folded into the retained initialization revision digest;
+no whole mutation encoding is constructed. One call to `step` observes at most one semantic
+field/item.
+
+The cursor taxonomy now covers:
+
+- `None`/`Some` and Solid/Linear/Radial fill discriminants; every color component, coordinate,
+  stop count, stop offset, and stop color component;
+- stroke presence, every color component, width, cap, join, dash presence/count, and each dash;
+- all layer variant discriminants; ID, name, visibility, lock, opacity, blend mode, all transform
+  scalars, fill, and stroke;
+- Shape kind and every optional Rect/Ellipse/Circle/Line/Polygon discriminator/scalar/point; every
+  Move/Line/Quad/Cubic/Arc/Close path discriminator and scalar/flag; Text, Image, Group, Boolean,
+  and Trace fields; deterministic child/operand/path/point ordering and asset/source references;
+- the exact discriminant and every payload field of all fourteen Draw mutation variants,
+  including Create parent/index and its full recursive layer.
+
+`retained_draw_schema_digest_distinguishes_every_nested_semantic_field` is a runtime-free authority
+fixture. It mutates formerly omitted fill, stroke, base, geometry, path Arc, layer variant/order,
+image/trace reference, and all fourteen mutation payload authorities and requires distinct
+semantic digests. Exact mutation owners are then drained through `DrawMutationRetirementFactory`.
+These Rust fixtures were authored as permanent evidence but not executed because Cargo/native was
+prohibited.
+
+### Aggregate reservation before derived allocation
+
+`DrawMutationCandidateAuthority` now starts in `PreflightSource`, then
+`PreflightMutation`. The first fixed-depth cursor calculates source item/byte counts and the largest
+live container. The second schema-complete cursor calculates the exact mutation semantic credits.
+Only their terminal witnesses may construct `DrawMutationAggregateReservation`; only a successful
+reservation may construct the snapshot clone authority.
+
+The checked aggregate includes source ownership, the simultaneously retained candidate copy,
+mutation-derived copies, one retained decode page, fixed path/frame/locator/digest backing, source
+index backing, and the reverse/output/pending structural container slots. The fixed limits are
+**4,096 aggregate items**
+and **262,144 aggregate bytes**. Create/Duplicate/Reorder reserve the possible `+1` destination
+slot before `Vec::try_reserve_exact`; `DrawContainerRebuildAuthority::new` rejects any capacity not
+covered by the exact reservation and returns the untouched source/pending owners.
+
+`retained_draw_aggregate_credit_admits_exact_4096_rejects_plus_one_with_owner_handback` proves in
+source that the exact 4,096-byte semantic field and exact aggregate boundaries admit, item/byte
+`+1` reject, and a real 700-layer source fails aggregate admission before candidate construction
+while its last-valid source remains unchanged. `retained_draw_cancel_stale_each_replay_candidate_container_stage_preserves_last_valid`
+interrupts and cursor-closes exact authority at source preflight, mutation preflight, clone,
+primary/secondary/destination location, owned-value preparation, scalar application, source and
+destination rebuild, and terminal candidate stages. It asserts terminal-empty close and unchanged
+last-valid source ownership.
+
+### One-entry history preparation
+
+`ValidateEditId` no longer calls `mutation_meta.iter().any`. It advances into
+`ValidateEditMeta { edit, meta }` and validates exactly one metadata owner per grant. Applied ID,
+optional actor, and redo ID allocations now occur in separate `PrepareApplied`/`PrepareRedo`
+grants; cancellation or stale authority transfers any prepared string into the retained one-owner
+close pump. Commit no longer creates the outer ID/actor owners in the same grant.
+
+### Permanent verifier and exact gates
+
+The Draw verifier now requires the SHA-256 terminal fold, fill/stroke/path/layer digest cursors,
+every previously omitted semantic field marker, aggregate reservation and both cap faults, both
+preflight phases, per-entry metadata validation, split history preparation, and all three new
+authority fixtures. Forty-seven field-removal mutations plus SHA downgrade/seal loss, aggregate
+item/byte loss, clone-before-preflight, whole metadata scan, multi-clone history preparation, and
+retained-page credit loss, fixture-erasure mutations must all fail the intended predicate. The suite is now **245** clean
+tool-job self-tests.
+
+| Gate | Result |
+| --- | --- |
+| scoped canonical Rust format/check | PASS on the owned Draw file |
+| `bun ./📜️script.ts verify interactivity tool-jobs --self-test --format json` | PASS: **245** self-tests clean |
+| Draw retained-route predicate in the full verifier | PASS; no Draw-specific failure |
+| deterministic ledgers | PASS: byte-identical `p8yt-draw-tool-jobs.json` and repeat, SHA-256 `c6285afecde02b6005349bc05f24009996ab9c3a4842ce34fd5c9f1008617472` |
+| full tool-job verifier | expected global RED: 50 hosts, 50 invocations, 775 rows, 773 unique, **0/884**, 8 reserved, 35 importers, 34 globals, **18** failures |
+| broad interactivity self/plain DENY | PASS: declared scope clean; one recorded test-only blocking bridge and two predeclared future entries only |
+| forbidden Draw replay/materialization census | PASS: zero source/snapshot whole clone, whole encode, diff/apply, serde reconstruction, or whole metadata scan in the owned file |
+| placeholder census | repository **14** occurrences = one shared fail-closed definition + 13 live callers; Draw **0**; cohort count remains unaccepted pending re-audit |
+| scoped and whole working/staged/HEAD diff checks | PASS |
+| Cargo/Nx/native/Wasm/browser/network/runtime timing | not run by instruction; RED/unverified |
+
+Exact changed evidence in this repair is the owned Draw component, `📜️script.ts`, this report, and
+the two Draw ledger JSON files. Verdict: **READY for independent Draw source re-audit, without
+self-acceptance.** Runtime behavior, hostile-valid-payload timing, remaining callers, 884 command
+activations, and Phase 8 remain RED.
+
+---
+
+## 2026-08-23 — Draw Exact Owner-Census and Staged-Commit Repair
+
+This repair addresses only the blockers in
+`sol-independent-p8-draw-semantic-aggregate-credit-final-reaudit-2026-08-23.md`. It does not
+self-accept Draw, decrement the independently accepted structural count, activate any tool, or
+begin another cohort. The accepted structural placeholder census therefore remains **14** pending
+re-audit; the repository still has one shared fail-closed definition plus 13 live callers, and Draw
+has zero live placeholder reachability. Phase 8 remains RED at **0/884** and **18** global failure
+classes.
+
+### Fixed owner census and reservation
+
+`DrawSnapshotBoundsAuthority` and `DrawSemanticDigestCredit` now fill
+`DrawFixedOwnerCensus`, whose 4,096 direct slots exist from construction and cannot grow. Each slot
+records separate source and derived item/byte authority. Snapshot traversal accounts source
+`String` and `Vec` capacity, the planned candidate capacity, typed layer/fill/stroke/path/container
+owners, ordered asset key/value owners, fixed traversal/index state, and the retained page. Mutation
+traversal separately records the typed source mutation and every replacement `String`, `Vec`,
+`Box`, style, path, layer, and structural owner before candidate construction. The aggregate
+reservation exposes each simultaneously retained category explicitly: source, candidate,
+mutation-source, mutation-derived, duplicate candidate, authority, structural containers, and
+page. The former `semantic_total × structural_copies` approximation and fabricated
+`exact_for_test` boundary are absent.
+
+The live aggregate fixture drives the real source-bounds and mutation-digest cursors. It admits an
+exact 4,096-byte semantic field, rejects 4,097 bytes, grows real layer owners to the first aggregate
+item/byte rejection, verifies the last admitted totals remain within 4,096 items / 262,144 bytes,
+and checks that the rejected source keeps the exact same `Vec` backing and unchanged last-valid
+document identity. No owner is constructed from fabricated totals.
+
+### One-owner history and duplicate stages
+
+The shared store revision record no longer retains a second `String`. `CursorRevisionRecord` stores
+the fixed `[u8; 32]` edit-ID digest; `push_applied` and `push_redo` hash a borrowed `&id` and then
+move the sole prepared `String` into its fixed history lane. Revision close removes one shallow
+fixed record per grant. Reintroducing the former `id.clone()` form is a permanent Draw verifier
+failure.
+
+`DrawDuplicateRewriteAuthority` is persistent across distinct opportunities for ID copy, name copy,
+length-framed hash initialization, each at-most-4,096-byte hash page, new-ID reservation/format,
+ID replacement, name-suffix reservation, name append, and displaced-ID retirement. Pending and
+retired IDs remain in terminal-asserting `ManuallyDrop` slots. Asset preflight uses
+`DrawAssetBoundsCursor` plus ordered `BTreeMap::range`; the former `iter().nth` rescan is absent.
+
+### Live cancellation and stale authority
+
+Every `DrawMutationCandidateAuthority::step` validates the exact operation and generation and then
+the real cancellation token before source preflight, mutation preflight, clone, primary/secondary
+location, owned-value preparation, scalar application, source rebuild, destination location,
+destination rebuild, and terminal candidate handoff. The adversarial fixture reaches every named
+phase, injects either `cancel_now()` or a mismatched generation, observes the exact fault, pumps
+the retained authority to terminal-empty, and verifies that no partial candidate replaced the
+last-valid source.
+
+### Permanent verifier and evidence
+
+The Draw predicate now requires the fixed census/slots, separate source and derived owner credits,
+fixed asset range cursor, staged duplicate authority, borrowed history-ID hashing, real aggregate
+fixture, and live cancellation/stale fixture. It rejects a fabricated boundary, resizable owner
+census, semantic-copy approximation, asset `iter().nth`, String revision record, one-step duplicate
+rewrite, close-only cancellation, missing item/byte caps, and missing retained page credits. The
+unrelated accepted Jack predicate was intentionally left independent of these Draw-only markers.
+
+| Gate | Result |
+| --- | --- |
+| scoped canonical Rust format/check | PASS on Draw owned and shared store source |
+| `bun ./📜️script.ts verify interactivity tool-jobs --self-test --format json` | PASS: **245** self-tests clean |
+| Draw retained-route predicate | PASS mechanically; no Draw-specific failure |
+| deterministic full verifier ledgers | PASS: byte-identical `📊️p8yt-draw-owner-credit-ledger-a.json` / `-b.json`, SHA-256 `c6285afecde02b6005349bc05f24009996ab9c3a4842ce34fd5c9f1008617472` |
+| full verifier census | expected RED: 50 hosts, 50 invocations, 775 rows, 773 unique, **0/884**, 8 reserved, 35 importers, 34 globals, **18** failures |
+| broad interactivity DENY | concurrent RED: five P1-owned DB-engine retained-history findings; no Draw finding or allowlist change |
+| Cargo/Nx/native/Wasm/browser/network/runtime timing | not run by instruction; RED/unverified |
+
+Exact repair files are the owned Draw component, shared store component, `📜️script.ts`, this report,
+and the two `📊️p8yt-draw-owner-credit-ledger-*.json` evidence files. Verdict: **READY for focused
+independent Draw source re-audit, without self-acceptance.** Runtime behavior, exact allocator/timing
+evidence, hostile-valid-payload timing, remaining structural callers, all 884 activations, and
+Phase 8 remain RED.
+
+---
+
+## 2026-08-23 — Draw Fixed-Owner Overlay and Framed-Identity Repair
+
+This section repairs the source blockers recorded by
+`sol-independent-p8-draw-exact-owner-staged-commit-reaudit-2026-08-23.md`. It does not
+self-accept Draw, change the independently accepted structural count, activate a command, or start
+another cohort.
+
+### Pre-admitted owners and overlay publication
+
+The live initializer no longer clones the initial `DrawSnapshot`. After per-entry envelope and
+history validation, it hashes bounded identity fields, moves the exact initial snapshot owner out
+of the envelope, and installs it into
+`ArtifactStoreInitializationRuntime::new_with_owner_catalog`. The catalog pre-reserves the
+applied, redo, and both revision ledgers before the initializer authority is constructed; the
+runtime consumes those exact returned capacities.
+
+`DrawMutationCandidateAuthority::try_new` now owns, before its admission pass:
+
+- two fixed 64-slot `DrawLayerNode` container arenas;
+- sixteen fixed 4,096-byte String/page owners whose allocator-returned capacities are summed;
+- the fixed duplicate-ID String owner;
+- both 4,096-slot fixed census authorities and the candidate shell itself.
+
+Aggregate admission reads the actual returned `Vec::capacity` and `String::capacity` of these
+retained owners. It no longer infers derived capacity from logical length. Snapshot assets remain
+the exact moved immutable `BTreeMap` base; the synthetic BTree node-pointer constant and
+candidate-map rebuild accounting are gone. Scalar string mutations consume a preallocated page
+owner. Structural publication uses `DrawMutationOverlayPatch`, validates the exact source
+address on every turn, rebuilds through the retained fixed container arenas, and exposes the
+candidate only after the overlay terminal witness. Unused page owners are released one per
+candidate/close opportunity.
+
+The live initial snapshot, asset map, and history lanes therefore move into final store
+construction; final construction does not rebuild or clone their `BTreeMap`, history `Vec`, or
+identity `String` owners. Existing recursive layer/style clone cursors remain one semantic
+field/item per grant and are covered by the fixed derived-page credit; native allocator and timing
+behavior remain unexecuted under the no-build instruction.
+
+### Duplicate identity and adversarial authority
+
+`DrawDuplicateRewriteAuthority` now hashes these frames in order:
+
+1. `semio.draw.duplicate-id.v1`;
+2. big-endian ID byte length;
+3. ID bytes in at-most-4,096-byte pages;
+4. big-endian name byte length;
+5. name bytes in at-most-4,096-byte pages.
+
+The output String is the preallocated fixed owner retained by the candidate, not a post-admission
+allocation. The permanent split-boundary fixture proves `("ab", "c")` and `("a", "bc")`
+mint distinct IDs.
+
+The exact-boundary fixture now drives the real candidate authority. A live 4,096-byte rename
+consumes a preallocated page and preserves the source container pointer; 4,097 bytes faults and
+returns that exact pointer without publication. Aggregate growth continues until the first real
+item/byte rejection and records only allocator-returned capacities. A live editor fixture
+interrupts the retained ingress/initializer after multiple maintenance depths, injects a stale
+generation, cancels the exact handle, checks unchanged last-valid generation/document identity,
+then separately proves stale ACK rejection, exact ACK, and duplicate-ACK idempotence. Rust
+fixtures were not executed because Cargo/native/Wasm were explicitly prohibited.
+
+### Permanent verifier and gates
+
+Thirteen permanent verifier mutations now reject removal or replacement of fixed overlay/container
+arenas, the overlay owner witness, pre-admitted store catalog, initial-owner move, any duplicate
+domain/ID-length/name-length frame, the split-boundary fixture, or the live staged
+cancel/stale/ACK fixture. The verifier also rejects the former synthetic BTree node constant and
+`CloneInitial` route.
+
+| Gate | Result |
+| --- | --- |
+| edition-2021 rustfmt write/check | PASS: Draw owned/editor and shared store |
+| tool-job self-tests | PASS: **258** clean |
+| Draw retained predicate | PASS mechanically; no Draw-specific full-verifier failure |
+| deterministic ledgers | PASS: byte-identical `📊️p8yt-draw-fixed-overlay-ledger-a.json` / `-b.json`, 312,305 bytes, SHA-256 `b24a25c754648a9792fe9348ee141ddf48c1b9d0f5af807d88c4cab44fe481b8` |
+| full tool-job census | expected global RED: 50 hosts, 50 invocations, 775 rows, 773 unique, **0/884**, 8 reserved, 35 importers, 34 globals, **18** failures |
+| broad interactivity self/plain DENY | PASS: one recorded test-only bridge and two predeclared future entries only |
+| production placeholder census | 14 source occurrences = one shared fail-closed definition + 13 live callers; Draw zero; no count change before independent acceptance |
+| scoped/whole working, staged, and HEAD diff checks | PASS |
+| Cargo/Nx/native/Wasm/browser/network/runtime timing | not run; compile/runtime/`<8ms` remain unverified |
+
+Exact repair files are the Draw owned component, Draw editor, shared store component,
+`📜️script.ts`, this report, and the two fixed-overlay ledgers. Verdict: **READY for independent
+source re-audit, without self-acceptance.** Phase 8 remains RED at **0/884** and **18** global
+failure classes.
+
+---
+
+## 2026-08-23 — Draw Process-Arena Admission and Duplicate-Name Repair
+
+This narrow repair addresses only the two blockers in
+`coordinator-independent-p8-draw-fixed-owner-overlay-audit-2026-08-23.md`. It does not begin a
+new cohort, self-accept Draw, decrement the independently accepted structural census, or activate
+any command. The structural census therefore remains **14** pending independent re-audit: one
+shared fail-closed definition plus 13 other live callers, with Draw at zero live placeholder
+reachability. Phase 8 remains RED at **0/884** and **18** global failure classes.
+
+### Process-retained fixed arena authority
+
+The container/page/duplicate scratch owners are no longer allocated by
+`DrawMutationCandidateAuthority::try_new`. `DrawPlayApp::default` initializes one retained process
+pool before any Draw operation can be admitted. The pool owns exactly four generation-tagged
+bundles. Each bundle contains two preallocated 64-slot `DrawLayerNode` vectors, sixteen
+preallocated 4,096-byte String pages, and one preallocated duplicate-ID String. Pool construction
+records the allocator-returned item and byte authority of every bundle and fails closed if the
+fixed process claim exceeds four times the 4,096-item / 262,144-byte operation ceiling.
+
+Candidate admission performs only a nonblocking fixed-slot borrow. Capacity `+1`, mutex
+contention, generation exhaustion, stale ABA return, occupied-field collision, and nonterminal return are
+explicit faults. Both success and close return the exact generation-tagged slot. The container
+rebuild now uses the two pooled vectors only as scratch: after the ordered edit is built, it moves
+one layer per grant back into the original source `Vec`, publishes that original backing, and
+returns both empty scratch vectors. It preflights the original source capacity before any move.
+No candidate arena `reserve` or allocation remains.
+
+Pool return is itself a retained four-phase cursor. It moves only one fixed root per grant in this
+order: reverse vector, output vector, page catalog, duplicate-ID String. Contention returns
+`Blocked` without detaching the next owner; each successful partial handback truthfully returns
+`Pending { released_items: 1 }`; only the fourth generation-validated handback makes the slot
+available again. An interrupted close therefore cannot deep-drop either a partial bundle or its
+remaining candidate owners.
+
+`retained_draw_process_arena_pool_cap_plus_one_returns_exact_slots_and_rejects_stale_aba` uses an
+isolated live pool authority, borrows all four slots, proves the fifth admission rejects, closes
+each candidate, reborrows all four slots, and compares the exact reverse/output/page/duplicate
+allocation pointers while requiring an advanced generation. The fixture is isolated from the
+production singleton so parallel tests cannot consume its capacity.
+
+### Duplicate-name staging without live growth
+
+`DrawDuplicateRewriteAuthority` now retains both the fixed duplicate-ID owner and one exact
+4,096-byte name page. After the existing domain + ID-length/bytes + name-length/bytes SHA-256
+frames complete, it validates the destination ID/name capacities and scratch-page capacity before
+modifying the unpublished candidate. ID copy, original-name copy, suffix append, and final name
+write are separate fuel opportunities. The live destination String owner is updated in place only
+after capacity validation; the scratch owners are cleared and returned to their exact pool slot.
+There is no `base.name.try_reserve_exact`, post-admission reserve, displaced scratch leak, or
+ordinary owner Drop on success, rejection, cancellation, or close.
+
+`retained_draw_duplicate_name_uses_preadmitted_page_and_returns_exact_rejection_owner` proves the
+successful `"Layer copy"` path preserves the original last-valid name backing, then drives an
+unadmitted destination through the exact capacity fault and verifies the exact source container
+pointer is returned. The framed collision fixture remains intact.
+
+### Permanent verifier and exact evidence
+
+The Draw predicate now requires the process pool, fixed capacity, pre-admission app initializer,
+nonblocking borrow, actual capacity claim, generation-tagged return, terminal bundle witness,
+original-container restoration, retained duplicate-name owner, destination preflight, pool
+cap/+1/pointer/ABA fixture, and the live duplicate-name fixture. Thirteen new adversarial mutations
+reject per-candidate allocation, missing pool/borrow, nonterminal return, stale generation,
+post-admission name reserve, unretained name authority, missing live-container preflight,
+publishing the scratch backing, missing handback fixture, and late pool initialization.
+
+| Gate | Result |
+| --- | --- |
+| edition-2021 scoped rustfmt write/check | PASS: Draw owned and Draw editor |
+| `bun ./📜️script.ts verify interactivity tool-jobs --self-test --format json` | PASS: **271** clean |
+| Draw retained-route predicate | PASS mechanically; the full verifier reports no Draw-specific failure |
+| deterministic verifier ledgers | PASS: byte-identical `📊️p8yt-draw-process-arena-ledger-a.json` / `-b.json`, 312,305 bytes each, SHA-256 `bac5c05663843af9f70290b449192e6844b59cd8c836b4408761e09ec7e3861f` |
+| full tool-job census | expected global RED: 50 hosts, 50 invocations, 775 rows, 773 unique, **0/884**, 8 reserved, 35 importer owners, 34 globals, **18** failures |
+| broad interactivity DENY | PASS: one recorded test-only bridge and two predeclared future entries only |
+| forbidden Draw allocation/materialization scan | PASS: zero post-admission duplicate-name reserve, candidate arena allocation, whole snapshot clone, serde reconstruction, whole encode, or asset `iter().nth` |
+| placeholder census | repository **14** source occurrences = one shared fail-closed definition + 13 other live callers; Draw **0**; no structural count change before independent acceptance |
+| scoped/whole working, staged, and HEAD diff checks | PASS |
+| Cargo/Nx/native/Wasm/browser/network/runtime timing | not run by instruction; compile/runtime/`<8ms` remain unverified |
+
+Exact files for this repair are the owned Draw component, Draw editor, `📜️script.ts`, this
+report, and the two process-arena ledger JSON files. Verdict: **READY for focused independent Draw
+source re-audit, without self-acceptance.** Runtime behavior, native allocator/timing evidence, the
+13 remaining live callers, all 884 command activations, and Phase 8 remain RED.
+
+---
+
+## 2026-08-23 — Draw Rebuild Rollback and Bootstrap-Fault Repair
+
+This packet repairs only the two blockers in
+`sol-independent-p8-draw-process-arena-duplicate-name-repair-audit-2026-08-23.md`. It does not
+self-accept Draw or start another cohort.
+
+### Exact rebuild rollback and pool handback
+
+`DrawContainerRebuildAuthority` now records every source/reverse/output/pending/removed owner
+move in a fixed 257-entry move log. Move-log capacity and every destination owner are validated
+before detaching the next layer. Cancellation, stale generation, and close replay that log in
+reverse, one layer owner per grant. Candidate close then restores the exact original live
+container `Vec` backing and returns the exact empty reverse/output scratch roots before advancing
+the existing page-catalog and duplicate-ID handback phases. The generation-tagged four-slot pool
+therefore remains unavailable until all four roots have returned.
+
+Reorder has a retained `DrawContainerSourceUndo`. If cancellation occurs after the removal-side
+container completed but before destination publication, close first rolls back any active
+destination rebuild and then drives a second retained insertion rebuild to restore the removed
+owner at its original parent/index. No fallible validation occurs after the live container is
+detached: `start_rebuild` validates reservation and scratch owners first, and
+`finish_rebuild` validates the destination container before taking the terminal owner tuple.
+
+The new source fixtures inject cancel and stale authority after a real owner move in every rebuild
+phase, compare the exact live `Vec::as_ptr`, FIFO layer IDs, reverse/output/page/String pointers,
+terminal witness, immediate slot reuse, and advanced pool generation. A separate reorder fixture
+interrupts destination rebuild after source handoff and proves the exact nested container backing
+and order are restored before the same pool slot is reborrowed.
+
+### Retained process bootstrap and construction faults
+
+Pool construction is now a persistent process state:
+`Building -> Ready` or `Building -> Retiring -> Fault`. One call to
+`initialize_draw_mutation_arena_pool` advances at most one allocation, publication action, or
+retirement root. The real `DrawStoreInitializationAuthority::InitializeArena` phase pumps that
+state once per governed store turn; an incomplete bootstrap cannot publish an operation-admission
+pool. The former synchronous loop is compiled only for isolated Rust fixtures.
+
+`DrawMutationArenaOwnerBuilder` retains the two container vectors, page-catalog vector, sixteen
+page Strings, duplicate-ID String, and any rejected String in `ManuallyDrop<Option<_>>` fields.
+`DrawMutationArenaPoolBootstrap` retains four completed bundles in a fixed array. Allocation,
+completed-bundle, arithmetic, and final aggregate-cap failures transition to the retained fault
+path. Close releases one page/String/vector/catalog root per grant, keeps the partially built
+catalog unavailable, and exposes a terminal fault only after `terminal_is_empty`. The editor
+retains the immediate fault witness and its getter also reads the process-terminal fault, so the
+failure is not discarded.
+
+Fixtures cover all 80 individual allocation boundaries, all four completed-bundle boundaries,
+exact aggregate item/byte caps and each `+1`, one-allocation-per-turn progression, withheld
+publication while incomplete, one-root-per-close grant, and terminal-empty cleanup. The
+permanent verifier adds fourteen discriminating mutations for rollback removal, source-undo
+removal, pre-move-only tests, synchronous production bootstrap, question-mark partial Drop,
+missing allocation/bundle/aggregate matrices, and ignored app fault publication.
+
+### Source gates
+
+| Gate | Result |
+| --- | --- |
+| edition-2021 parser + scoped rustfmt check | **PASS**: owned Draw and Draw editor |
+| tool-job source-verifier self-test | **PASS: 285 clean** |
+| Draw retained-route predicate | **PASS mechanically**: the full verifier has no Draw-specific failure |
+| deterministic ledgers | **PASS**: byte-identical `📊️p8yt-draw-rebuild-bootstrap-ledger-a.json` / `-b.json`, 312,560 bytes, SHA-256 `bc1a768b0f2d4f00848bf9e5fe141d4f4be55801b208e4b344cda8b25a1efad4` |
+| full tool-job census | expected global **RED**: 50 hosts, 50 invocations, 775 rows, 773 unique, **0/884**, 8 reserved, 35 importer owners, 35 global payload stores, **18** failures |
+| forbidden Draw scan | **PASS**: zero production `DrawMutationArenaOwner::try_new()?`, `rposition(Option::is_some)`, post-admission duplicate-name reserve, fabricated exact helper, structural-copy counter, or asset `iter().nth` |
+| placeholder census | **PASS**: repository 14 Rust occurrences = one shared definition + 13 live callers; Draw zero |
+| scoped working/staged/HEAD diff checks | **PASS** |
+| broad interactivity DENY | **RED outside this packet**: current P1t retained-history synthetic fixture is rejected before the broad audit reaches Draw |
+| whole-worktree diff checks | **RED outside this packet**: existing trailing whitespace in `🐙️ueli.md` and a blank EOF line in the staged P3 raster audit |
+| Cargo/Nx/native/Wasm/browser/network/runtime timing | **not run by instruction**; compile/runtime and allocator/timing evidence remain unverified |
+
+Verdict: **AUDIT-READY, not accepted.** Both independently rejected Draw source seams are repaired
+and their scoped non-build gates are clean. Phase 8 remains RED at **0/884**, **18** global failure
+classes, and runtime unverified until independent re-audit and serialized build/runtime evidence.
+
+## Draw governed-bootstrap final re-audit repair
+
+This addendum supersedes the preceding bootstrap description. The production
+`initialize_draw_mutation_arena_pool` entry point no longer exists. The process begins in inert
+metadata, and `request_draw_mutation_arena_pool` only coalesces an atomic request and observes the
+process with `try_lock`; neither the Draw app default path nor an early arena borrow can allocate,
+reserve, or advance bootstrap state. An early borrow returns typed `NotReady`, `Contended`, or
+`Fault` authority.
+
+`DrawMutationArenaBootstrapJob` owns the exact operation, generation, fixed admission, cancellation,
+deadline, and terminal witness. Only its `step(&mut StepContext)` can move the process from `Inert`
+to `Building`, advance one admitted allocation, publish `Ready`, or retire one retained root after
+cancellation/fault. Budget exhaustion and lock contention report truthful `Blocked`; retained
+retirement reports only the ownership actually released. `DrawStoreInitializationAuthority` pumps
+this job once in its real `InitializeArena` phase before envelope validation. Default construction,
+a second app request, and borrow-before-ready therefore remain allocation-free and only schedule or
+coalesce the governed job.
+
+The permanent verifier now matches the live `InitializeArena => match
+self.arena_bootstrap_job.step(cx)` block and the exact source-undo
+`start_rebuild(..., DrawMutationRebuildRole::CloseSourceUndo)` call. Mutating that actual role to
+`Destination`, replacing the actual store-phase pump with `Ok(true)`, reintroducing allocation in
+the request/borrow/default paths, or deleting the governed cancellation/saturation fixtures is
+rejected. Runtime-free fixtures cover default plus second-app requests, borrow under contention
+without allocation, zero budget, lock contention, cancellation during partial bootstrap, one-root
+retirement, pool saturation, and terminal slot reuse.
+
+### Final governed-bootstrap source gates
+
+| Gate | Result |
+| --- | --- |
+| edition-2021 scoped rustfmt write/check | **PASS**: Draw owned schema and editor |
+| tool-job source-verifier self-test | **PASS: 285 clean** |
+| live Draw predicate and discriminating mutations | **PASS**: baseline accepted; actual source-undo-role and actual store-pump mutations rejected |
+| broad interactivity deny | **PASS**: clean; one test-only bridge and two predeclared future entries reported |
+| deterministic tool-job ledgers | **PASS**: two byte-identical 312,560-byte JSON results, SHA-256 `8e38a992ffd6c810b5caf6f02f374ac4c3854e0f6f04656804e2dc479962fcf0` |
+| full census | expected global **RED**: 50 hosts, 50 invocations, 775 rows, 773 unique, **0/884**, 8 reserved, 35 importer owners, 35 global payload stores, **18** failures; Draw-specific failures zero |
+| scoped working/staged/HEAD diff checks | **PASS** |
+| whole working/staged/HEAD diff checks | **RED outside this packet**: existing trailing whitespace in `🐙️ueli.md` and blank EOF whitespace in the staged P3 raster audit |
+| Cargo/Nx/native/Wasm/browser/network/runtime | **not run by instruction** |
+
+Verdict: **AUDIT-READY, not accepted.** The governed-bootstrap rejection is source-repaired and its
+permanent non-build evidence is green. Phase 8 remains fail-closed at **0/884** pending independent
+re-audit and separately serialized compile/runtime evidence.

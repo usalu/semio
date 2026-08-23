@@ -1,10 +1,10 @@
 //! 🧵️ Dedicated browser Worker owner for the complete frame transaction and OffscreenCanvas surface.
 
 use crate::kernel_seam::{HostWaker, KernelSeam};
-use crate::program_bridge::{ProgramBridgeEntry, filter_plugins, parse_plugin_entries};
+use crate::program_bridge::{filter_plugins, parse_plugin_entries, ProgramBridgeEntry};
 use crate::shell::ShellState;
 use crate::{AppInteractionState, AppPresenter, AppRuntime, RendererAssetFetchOwner, RuntimeMailbox};
-use infinite_world::world::{WORLD_ASSET_RESPONSE_BYTE_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES, WorldAssetResponsePage};
+use infinite_world::world::{WorldAssetResponsePage, WORLD_ASSET_RESPONSE_BYTE_CAPACITY, WORLD_ASSET_RESPONSE_PAGE_BYTES};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -670,10 +670,13 @@ impl BrowserRendererBootstrap {
             gpu: self.gpu.take().expect("bootstrap GPU exists"),
             engine: crate::engine_canvas::EngineCanvasPresenter::default(),
             gate: ui_wgpu::wgpu::PreparedRenderGate::default(),
+            presentation_authority: runtime.presentation_authority(),
+            raster_operation_authority: runtime.raster_operation_authority(),
             window: None,
             offscreen_token: Some(token),
             last_cursor: None,
             pending: None,
+            retirement: None,
         };
         let mut host = crate::os_host::OsHost::new(runtime, presenter);
         let runtime_wake = self.wake.clone();

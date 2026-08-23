@@ -34,10 +34,9 @@
 //! ownership this wave. `snapshot_now` is likewise `Unimplemented`: `db_artifact`'s own module doc
 //! documents that `DocumentState` materializes purely from the WAL suffix with no full-state
 //! enumeration to serialize into a pack snapshot, and `db_snapshot` is not even a direct dependency
-//! of this crate per its `Cargo.toml`. `ArtifactHandle::history` IS real: it replays a document's
-//! WAL directly via `db_wal::replay_document` (a crate this one already depends on) rather than
-//! going through the actor, since `db_artifact::ArtifactEngine`'s in-memory `commit_log` is only
-//! populated by live `submit()` calls in the current process, not reconstructed by `open()`'s replay.
+//! of this crate per its `Cargo.toml`. `ArtifactHandle::history` replays the WAL through the
+//! document authority's retained cursor because its in-memory `commit_log` only contains live
+//! submissions from the current process.
 
 use std::collections::HashMap;
 use std::future::Future;
@@ -53,6 +52,719 @@ use semio_framework_async::{Lane, WorkerPool};
 pub use crate::db_durability::DurabilityClass;
 pub use crate::db_policy::{DbCapabilities, DbConfig, Profile};
 //#endregion 🔖️Reexports
+
+//#region 🔖️CapabilityOpen
+const DATABASE_CAPABILITY_OPEN_SLOTS: usize = 64;
+const DATABASE_CAPABILITY_OPEN_ITEMS: u64 = 8;
+const DATABASE_CAPABILITY_OPEN_BYTES: u64 = 16 * 1024;
+const DATABASE_CAPABILITY_OPEN_TOTAL_ITEMS: u64 = DATABASE_CAPABILITY_OPEN_ITEMS * DATABASE_CAPABILITY_OPEN_SLOTS as u64;
+const DATABASE_CAPABILITY_OPEN_TOTAL_BYTES: u64 = DATABASE_CAPABILITY_OPEN_BYTES * DATABASE_CAPABILITY_OPEN_SLOTS as u64;
+const DATABASE_CAPABILITY_OPEN_RETRY_MS: u64 = 1;
+const DATABASE_CAPABILITY_OPEN_RETRY_LIMIT: u8 = 8;
+
+#[derive(Clone, Copy)]
+struct DatabaseCapabilityOpenAdmissionSlot {
+    generation: u64,
+    items: u64,
+    bytes: u64,
+    occupied: bool,
+}
+
+const EMPTY_DATABASE_CAPABILITY_OPEN_SLOT: DatabaseCapabilityOpenAdmissionSlot = DatabaseCapabilityOpenAdmissionSlot { generation: 0, items: 0, bytes: 0, occupied: false };
+
+struct DatabaseCapabilityOpenAdmissionState {
+    slots: [DatabaseCapabilityOpenAdmissionSlot; DATABASE_CAPABILITY_OPEN_SLOTS],
+    items: u64,
+    bytes: u64,
+    next_generation: u64,
+}
+
+impl DatabaseCapabilityOpenAdmissionState {
+    #[cfg(test)]
+    fn empty() -> Self {
+        Self { slots: [EMPTY_DATABASE_CAPABILITY_OPEN_SLOT; DATABASE_CAPABILITY_OPEN_SLOTS], items: 0, bytes: 0, next_generation: 1 }
+    }
+
+    fn try_claim(&mut self, items: u64, bytes: u64) -> Result<(usize, u64), DbError> {
+        if items == 0 || items > DATABASE_CAPABILITY_OPEN_ITEMS {
+            return Err(DbError::LimitExceeded("database capability-open item credit"));
+        }
+        if bytes == 0 || bytes > DATABASE_CAPABILITY_OPEN_BYTES {
+            return Err(DbError::LimitExceeded("database capability-open byte credit"));
+        }
+        let Some(slot) = self.slots.iter().position(|entry| !entry.occupied) else {
+            return Err(DbError::Unavailable("database capability-open item capacity exhausted".to_string()));
+        };
+        if self.items.checked_add(items).is_none_or(|next| next > DATABASE_CAPABILITY_OPEN_TOTAL_ITEMS) {
+            return Err(DbError::Unavailable("database capability-open aggregate item capacity exhausted".to_string()));
+        }
+        if self.bytes.checked_add(bytes).is_none_or(|next| next > DATABASE_CAPABILITY_OPEN_TOTAL_BYTES) {
+            return Err(DbError::Unavailable("database capability-open aggregate byte capacity exhausted".to_string()));
+        }
+        let generation = self.next_generation;
+        let Some(next_generation) = generation.checked_add(1) else {
+            return Err(DbError::LimitExceeded("database capability-open generation"));
+        };
+        self.next_generation = next_generation;
+        self.slots[slot] = DatabaseCapabilityOpenAdmissionSlot { generation, items, bytes, occupied: true };
+        self.items += items;
+        self.bytes += bytes;
+        Ok((slot, generation))
+    }
+
+    fn release(&mut self, slot: usize, generation: u64, items: u64, bytes: u64) -> bool {
+        let Some(entry) = self.slots.get_mut(slot) else {
+            return false;
+        };
+        if !entry.occupied || entry.generation != generation || entry.items != items || entry.bytes != bytes {
+            return false;
+        }
+        *entry = EMPTY_DATABASE_CAPABILITY_OPEN_SLOT;
+        self.items = self.items.checked_sub(items).expect("database capability-open item credit underflow");
+        self.bytes = self.bytes.checked_sub(bytes).expect("database capability-open byte credit underflow");
+        true
+    }
+}
+
+static DATABASE_CAPABILITY_OPEN_ADMISSION: std::sync::Mutex<DatabaseCapabilityOpenAdmissionState> =
+    std::sync::Mutex::new(DatabaseCapabilityOpenAdmissionState { slots: [EMPTY_DATABASE_CAPABILITY_OPEN_SLOT; DATABASE_CAPABILITY_OPEN_SLOTS], items: 0, bytes: 0, next_generation: 1 });
+
+struct DatabaseCapabilityOpenAdmission {
+    slot: usize,
+    generation: u64,
+    items: u64,
+    bytes: u64,
+}
+
+impl DatabaseCapabilityOpenAdmission {
+    fn try_claim(items: u64, bytes: u64) -> Result<Self, DbError> {
+        let mut state = DATABASE_CAPABILITY_OPEN_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let (slot, generation) = state.try_claim(items, bytes)?;
+        Ok(Self { slot, generation, items, bytes })
+    }
+
+    fn is_current(&self) -> bool {
+        let state = DATABASE_CAPABILITY_OPEN_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        state.slots.get(self.slot).is_some_and(|entry| entry.occupied && entry.generation == self.generation && entry.items == self.items && entry.bytes == self.bytes)
+    }
+}
+
+impl Drop for DatabaseCapabilityOpenAdmission {
+    fn drop(&mut self) {
+        let mut state = DATABASE_CAPABILITY_OPEN_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        state.release(self.slot, self.generation, self.items, self.bytes);
+    }
+}
+
+/// 🧭️ Progress of one retained database capability probe.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DatabaseCapabilityOpenProgress {
+    Admitted,
+    Scheduled,
+    Polling,
+    Pending,
+    Completed,
+    Cancelled,
+    Fault,
+}
+
+/// 🧹️ One bounded public terminal-cleanup opportunity.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DatabaseCapabilityOpenCloseStep {
+    Progress,
+    Blocked,
+    Complete,
+}
+
+/// 📦️ Exact storage owner and capability scalar returned by the retained probe.
+pub struct DatabaseCapabilityOpenResult {
+    storage: Arc<db_storage::DbBackend>,
+    capabilities: db_storage::StorageCapabilities,
+}
+
+impl DatabaseCapabilityOpenResult {
+    pub fn into_parts(self) -> (Arc<db_storage::DbBackend>, db_storage::StorageCapabilities) {
+        (self.storage, self.capabilities)
+    }
+}
+
+/// ↩️ Admission rejection that returns the exact storage owner unchanged.
+pub struct DatabaseCapabilityOpenRejected {
+    error: DbError,
+    storage: Arc<db_storage::DbBackend>,
+}
+
+impl DatabaseCapabilityOpenRejected {
+    pub fn error(&self) -> &DbError {
+        &self.error
+    }
+
+    pub fn into_parts(self) -> (DbError, Arc<db_storage::DbBackend>) {
+        (self.error, self.storage)
+    }
+}
+
+impl std::fmt::Debug for DatabaseCapabilityOpenRejected {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.debug_struct("DatabaseCapabilityOpenRejected").field("error", &self.error).field("storage", &Arc::as_ptr(&self.storage)).finish()
+    }
+}
+
+type DatabaseCapabilityOpenBackendFuture = std::pin::Pin<Box<dyn Future<Output = DatabaseCapabilityOpenResult> + Send + 'static>>;
+
+struct DatabaseCapabilityOpenWork {
+    future: Option<DatabaseCapabilityOpenBackendFuture>,
+    #[cfg(test)]
+    storage_identity: usize,
+}
+
+impl DatabaseCapabilityOpenWork {
+    fn new(storage: Arc<db_storage::DbBackend>) -> Self {
+        #[cfg(test)]
+        let storage_identity = Arc::as_ptr(&storage) as usize;
+        let future = Box::pin(async move {
+            let capabilities = storage.capabilities().await;
+            DatabaseCapabilityOpenResult { storage, capabilities }
+        });
+        Self {
+            future: Some(future),
+            #[cfg(test)]
+            storage_identity,
+        }
+    }
+
+    fn poll(&mut self, context: &mut std::task::Context<'_>) -> std::task::Poll<DatabaseCapabilityOpenResult> {
+        self.future.as_mut().map_or(std::task::Poll::Pending, |future| future.as_mut().poll(context))
+    }
+
+    fn close_step(&mut self) -> bool {
+        self.future.take().is_some()
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.future.is_none()
+    }
+}
+
+struct DatabaseCapabilityOpenState {
+    pool: Arc<WorkerPool>,
+    slot: usize,
+    generation: u64,
+    admission: std::sync::Mutex<Option<DatabaseCapabilityOpenAdmission>>,
+    work: std::sync::Mutex<Option<DatabaseCapabilityOpenWork>>,
+    completion: std::sync::Mutex<Option<Result<DatabaseCapabilityOpenResult, DbError>>>,
+    terminal_work: std::sync::Mutex<Option<DatabaseCapabilityOpenWork>>,
+    terminal_result: std::sync::Mutex<Option<Result<DatabaseCapabilityOpenResult, DbError>>>,
+    retry_job: std::sync::Mutex<Option<(semio_framework_async::Job, u8)>>,
+    terminal_job: std::sync::Mutex<Option<(semio_framework_async::WorkerSubmitErrorKind, semio_framework_async::Job)>>,
+    waker: std::sync::Mutex<Option<std::task::Waker>>,
+    retry_armed: std::sync::atomic::AtomicBool,
+    retry_generation: std::sync::atomic::AtomicU64,
+    scheduled: std::sync::atomic::AtomicBool,
+    polling: std::sync::atomic::AtomicBool,
+    wake_requested: std::sync::atomic::AtomicBool,
+    cancelled: std::sync::atomic::AtomicBool,
+    abandoned: std::sync::atomic::AtomicBool,
+    finished: std::sync::atomic::AtomicBool,
+    terminal_checked_out: std::sync::atomic::AtomicBool,
+    progress: std::sync::atomic::AtomicU8,
+}
+
+struct DatabaseCapabilityOpenWake {
+    state: std::sync::Weak<DatabaseCapabilityOpenState>,
+    generation: u64,
+}
+
+fn database_capability_open_registry() -> &'static std::sync::Mutex<[Option<Arc<DatabaseCapabilityOpenState>>; DATABASE_CAPABILITY_OPEN_SLOTS]> {
+    static REGISTRY: std::sync::OnceLock<std::sync::Mutex<[Option<Arc<DatabaseCapabilityOpenState>>; DATABASE_CAPABILITY_OPEN_SLOTS]>> = std::sync::OnceLock::new();
+    REGISTRY.get_or_init(|| std::sync::Mutex::new(std::array::from_fn(|_| None)))
+}
+
+impl std::task::Wake for DatabaseCapabilityOpenWake {
+    fn wake(self: Arc<Self>) {
+        self.wake_by_ref();
+    }
+
+    fn wake_by_ref(self: &Arc<Self>) {
+        let Some(state) = self.state.upgrade() else {
+            return;
+        };
+        if state.generation != self.generation || !state.is_current() || state.cancelled.load(std::sync::atomic::Ordering::Acquire) {
+            return;
+        }
+        state.wake_requested.store(true, std::sync::atomic::Ordering::Release);
+        if !state.polling.load(std::sync::atomic::Ordering::Acquire) {
+            state.schedule();
+        }
+    }
+}
+
+impl DatabaseCapabilityOpenState {
+    fn set_progress(&self, progress: DatabaseCapabilityOpenProgress) {
+        self.progress.store(progress as u8, std::sync::atomic::Ordering::Release);
+    }
+
+    fn is_current(&self) -> bool {
+        self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().is_some_and(DatabaseCapabilityOpenAdmission::is_current)
+    }
+
+    fn wake_waiter(&self) {
+        if let Some(waker) = self.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            waker.wake();
+        }
+    }
+
+    fn complete(&self, result: Result<DatabaseCapabilityOpenResult, DbError>, progress: DatabaseCapabilityOpenProgress) {
+        self.set_progress(progress);
+        let mut completion = self.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if self.abandoned.load(std::sync::atomic::Ordering::Acquire) {
+            drop(completion);
+            *self.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
+        } else {
+            *completion = Some(result);
+            drop(completion);
+            self.wake_waiter();
+        }
+    }
+
+    fn schedule(self: &Arc<Self>) {
+        use std::sync::atomic::Ordering;
+        if self.finished.load(Ordering::Acquire) || !self.is_current() || self.cancelled.load(Ordering::Acquire) || self.scheduled.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return;
+        }
+        self.set_progress(DatabaseCapabilityOpenProgress::Scheduled);
+        let state = self.clone();
+        let generation = self.generation;
+        self.submit_exact(Box::new(move || state.drive_one(generation)), 0);
+    }
+
+    fn submit_exact(self: &Arc<Self>, job: semio_framework_async::Job, attempt: u8) {
+        match self.pool.try_submit(Lane::Io, job) {
+            Ok(()) => {}
+            Err(error) => {
+                self.scheduled.store(false, std::sync::atomic::Ordering::Release);
+                match error.kind() {
+                    semio_framework_async::WorkerSubmitErrorKind::Contended | semio_framework_async::WorkerSubmitErrorKind::Saturated if attempt < DATABASE_CAPABILITY_OPEN_RETRY_LIMIT => {
+                        *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((error.into_job(), attempt + 1));
+                        self.arm_retry();
+                    }
+                    kind => {
+                        *self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((kind, error.into_job()));
+                        self.complete(Err(DbError::Unavailable(format!("database capability-open WorkerPool submission failed: {kind:?}"))), DatabaseCapabilityOpenProgress::Fault);
+                    }
+                }
+            }
+        }
+    }
+
+    fn arm_retry(self: &Arc<Self>) {
+        use std::sync::atomic::Ordering;
+        if self.retry_armed.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return;
+        }
+        let generation = loop {
+            let current = self.retry_generation.load(Ordering::Acquire);
+            let Some(next) = current.checked_add(1) else {
+                self.retry_armed.store(false, Ordering::Release);
+                self.set_progress(DatabaseCapabilityOpenProgress::Fault);
+                self.complete(Err(DbError::LimitExceeded("database capability-open retry generation")), DatabaseCapabilityOpenProgress::Fault);
+                return;
+            };
+            if self.retry_generation.compare_exchange(current, next, Ordering::AcqRel, Ordering::Acquire).is_ok() {
+                break next;
+            }
+        };
+        let state = self.clone();
+        self.pool.callback_at(self.pool.now_ms().saturating_add(DATABASE_CAPABILITY_OPEN_RETRY_MS), move || {
+            if generation != state.retry_generation.load(Ordering::Acquire) {
+                return;
+            }
+            state.retry_armed.store(false, Ordering::Release);
+            let retry = state.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+            if let Some((job, attempt)) = retry {
+                if state.cancelled.load(Ordering::Acquire) || !state.is_current() {
+                    *state.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((semio_framework_async::WorkerSubmitErrorKind::Saturated, job));
+                    state.terminalize_before_poll(DbError::Closed, DatabaseCapabilityOpenProgress::Cancelled);
+                } else {
+                    state.scheduled.store(true, Ordering::Release);
+                    state.submit_exact(job, attempt);
+                }
+            }
+        });
+    }
+
+    fn drive_one(self: Arc<Self>, generation: u64) {
+        use std::sync::atomic::Ordering;
+        if generation != self.generation {
+            return;
+        }
+        self.scheduled.store(false, Ordering::Release);
+        if !self.is_current() {
+            self.terminalize_before_poll(DbError::Unavailable("database capability-open generation became stale".to_string()), DatabaseCapabilityOpenProgress::Fault);
+            return;
+        }
+        if self.cancelled.load(Ordering::Acquire) {
+            self.terminalize_before_poll(DbError::Closed, DatabaseCapabilityOpenProgress::Cancelled);
+            return;
+        }
+        let Some(mut work) = self.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() else {
+            return;
+        };
+        self.polling.store(true, Ordering::Release);
+        self.set_progress(DatabaseCapabilityOpenProgress::Polling);
+        let wake = std::task::Waker::from(Arc::new(DatabaseCapabilityOpenWake { state: Arc::downgrade(&self), generation }));
+        let mut context = std::task::Context::from_waker(&wake);
+        let polled = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| work.poll(&mut context)));
+        self.polling.store(false, Ordering::Release);
+        match polled {
+            Ok(std::task::Poll::Pending) => {
+                if self.cancelled.load(Ordering::Acquire) || !self.is_current() {
+                    *self.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(work);
+                    self.complete(Err(DbError::Closed), DatabaseCapabilityOpenProgress::Cancelled);
+                } else {
+                    *self.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(work);
+                    self.set_progress(DatabaseCapabilityOpenProgress::Pending);
+                    if self.wake_requested.swap(false, Ordering::AcqRel) {
+                        self.schedule();
+                    }
+                }
+            }
+            Ok(std::task::Poll::Ready(output)) => {
+                if self.cancelled.load(Ordering::Acquire) || !self.is_current() {
+                    *self.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Ok(output));
+                    self.complete(Err(DbError::Closed), DatabaseCapabilityOpenProgress::Cancelled);
+                } else {
+                    self.complete(Ok(output), DatabaseCapabilityOpenProgress::Completed);
+                }
+            }
+            Err(_) => {
+                *self.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(work);
+                self.complete(Err(DbError::Unavailable("database capability-open backend poll panicked".to_string())), DatabaseCapabilityOpenProgress::Fault);
+            }
+        }
+    }
+
+    fn terminalize_before_poll(&self, error: DbError, progress: DatabaseCapabilityOpenProgress) {
+        self.cancelled.store(true, std::sync::atomic::Ordering::Release);
+        if self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() {
+            if let Some(work) = self.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+                *self.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(work);
+            }
+        }
+        if self.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() {
+            self.complete(Err(error), progress);
+        }
+    }
+
+    fn roots_are_empty(&self) -> bool {
+        self.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+            && self.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+            && self.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+            && self.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+            && self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+            && self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+            && self.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+    }
+
+    fn close_step(self: &Arc<Self>) -> DatabaseCapabilityOpenCloseStep {
+        use std::sync::atomic::Ordering;
+        self.cancelled.store(true, Ordering::Release);
+        if let Some((_, job)) = self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            drop(job);
+            return DatabaseCapabilityOpenCloseStep::Progress;
+        }
+        if let Some((job, _)) = self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            drop(job);
+            return DatabaseCapabilityOpenCloseStep::Progress;
+        }
+        if self.retry_armed.load(Ordering::Acquire) {
+            let current = self.retry_generation.load(Ordering::Acquire);
+            if let Some(next) = current.checked_add(1) {
+                self.retry_generation.store(next, Ordering::Release);
+                self.retry_armed.store(false, Ordering::Release);
+                return DatabaseCapabilityOpenCloseStep::Progress;
+            }
+            return DatabaseCapabilityOpenCloseStep::Blocked;
+        }
+        if self.scheduled.load(Ordering::Acquire) || self.polling.load(Ordering::Acquire) {
+            return DatabaseCapabilityOpenCloseStep::Blocked;
+        }
+        if let Some(work) = self.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            *self.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(work);
+            return DatabaseCapabilityOpenCloseStep::Progress;
+        }
+        {
+            let mut terminal = self.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if let Some(work) = terminal.as_mut() {
+                if work.close_step() {
+                    return DatabaseCapabilityOpenCloseStep::Progress;
+                }
+                if work.terminal_is_empty() {
+                    terminal.take();
+                    return DatabaseCapabilityOpenCloseStep::Progress;
+                }
+            }
+        }
+        if let Some(result) = self.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            drop(result);
+            return DatabaseCapabilityOpenCloseStep::Progress;
+        }
+        if let Some(result) = self.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            *self.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
+            return DatabaseCapabilityOpenCloseStep::Progress;
+        }
+        if self.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().is_some() {
+            return DatabaseCapabilityOpenCloseStep::Progress;
+        }
+        if self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().is_some() {
+            self.finished.store(true, Ordering::Release);
+            let mut registry = database_capability_open_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if registry.get(self.slot).and_then(Option::as_ref).is_some_and(|state| state.generation == self.generation) {
+                registry[self.slot] = None;
+            }
+            return DatabaseCapabilityOpenCloseStep::Progress;
+        }
+        if self.roots_are_empty() {
+            self.finished.store(true, Ordering::Release);
+            DatabaseCapabilityOpenCloseStep::Complete
+        } else {
+            DatabaseCapabilityOpenCloseStep::Blocked
+        }
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.finished.load(std::sync::atomic::Ordering::Acquire) && self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() && self.roots_are_empty()
+    }
+
+    fn release_success(&self) {
+        if !self.roots_are_empty() || self.scheduled.load(std::sync::atomic::Ordering::Acquire) || self.polling.load(std::sync::atomic::Ordering::Acquire) {
+            return;
+        }
+        self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        self.finished.store(true, std::sync::atomic::Ordering::Release);
+        let mut registry = database_capability_open_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if registry.get(self.slot).and_then(Option::as_ref).is_some_and(|state| state.generation == self.generation) {
+            registry[self.slot] = None;
+        }
+    }
+
+    #[cfg(test)]
+    fn retained_owner_count(&self) -> usize {
+        usize::from(self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some())
+            + usize::from(self.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some())
+            + usize::from(self.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some())
+            + usize::from(self.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some())
+            + usize::from(self.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some())
+            + usize::from(self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some())
+            + usize::from(self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some())
+            + usize::from(self.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some())
+    }
+}
+
+/// 🔭️ Retained capability-probe future; backend polling occurs only on the process I/O lane.
+pub struct DatabaseCapabilityOpenFuture {
+    state: Arc<DatabaseCapabilityOpenState>,
+    resolved: bool,
+}
+
+impl DatabaseCapabilityOpenFuture {
+    pub fn try_submit(pool: Arc<WorkerPool>, storage: Arc<db_storage::DbBackend>) -> Result<Self, DatabaseCapabilityOpenRejected> {
+        Self::try_prepare(pool, storage, true)
+    }
+
+    fn try_prepare(pool: Arc<WorkerPool>, storage: Arc<db_storage::DbBackend>, schedule: bool) -> Result<Self, DatabaseCapabilityOpenRejected> {
+        let admission = match DatabaseCapabilityOpenAdmission::try_claim(DATABASE_CAPABILITY_OPEN_ITEMS, DATABASE_CAPABILITY_OPEN_BYTES) {
+            Ok(admission) => admission,
+            Err(error) => return Err(DatabaseCapabilityOpenRejected { error, storage }),
+        };
+        {
+            let registry = database_capability_open_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if registry[admission.slot].is_some() {
+                return Err(DatabaseCapabilityOpenRejected { error: DbError::Unavailable("database capability-open terminal slot remained occupied".to_string()), storage });
+            }
+        }
+        let slot = admission.slot;
+        let generation = admission.generation;
+        let state = Arc::new(DatabaseCapabilityOpenState {
+            pool,
+            slot,
+            generation,
+            admission: std::sync::Mutex::new(Some(admission)),
+            work: std::sync::Mutex::new(Some(DatabaseCapabilityOpenWork::new(storage))),
+            completion: std::sync::Mutex::new(None),
+            terminal_work: std::sync::Mutex::new(None),
+            terminal_result: std::sync::Mutex::new(None),
+            retry_job: std::sync::Mutex::new(None),
+            terminal_job: std::sync::Mutex::new(None),
+            waker: std::sync::Mutex::new(None),
+            retry_armed: std::sync::atomic::AtomicBool::new(false),
+            retry_generation: std::sync::atomic::AtomicU64::new(1),
+            scheduled: std::sync::atomic::AtomicBool::new(false),
+            polling: std::sync::atomic::AtomicBool::new(false),
+            wake_requested: std::sync::atomic::AtomicBool::new(false),
+            cancelled: std::sync::atomic::AtomicBool::new(false),
+            abandoned: std::sync::atomic::AtomicBool::new(false),
+            finished: std::sync::atomic::AtomicBool::new(false),
+            terminal_checked_out: std::sync::atomic::AtomicBool::new(false),
+            progress: std::sync::atomic::AtomicU8::new(DatabaseCapabilityOpenProgress::Admitted as u8),
+        });
+        database_capability_open_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner)[slot] = Some(state.clone());
+        if schedule {
+            state.schedule();
+        }
+        Ok(Self { state, resolved: false })
+    }
+
+    pub fn generation(&self) -> u64 {
+        self.state.generation
+    }
+
+    pub fn progress(&self) -> DatabaseCapabilityOpenProgress {
+        match self.state.progress.load(std::sync::atomic::Ordering::Acquire) {
+            0 => DatabaseCapabilityOpenProgress::Admitted,
+            1 => DatabaseCapabilityOpenProgress::Scheduled,
+            2 => DatabaseCapabilityOpenProgress::Polling,
+            3 => DatabaseCapabilityOpenProgress::Pending,
+            4 => DatabaseCapabilityOpenProgress::Completed,
+            5 => DatabaseCapabilityOpenProgress::Cancelled,
+            _ => DatabaseCapabilityOpenProgress::Fault,
+        }
+    }
+
+    pub fn cancel(&self) {
+        self.state.cancelled.store(true, std::sync::atomic::Ordering::Release);
+        if !self.state.scheduled.load(std::sync::atomic::Ordering::Acquire) && !self.state.polling.load(std::sync::atomic::Ordering::Acquire) {
+            self.state.terminalize_before_poll(DbError::Closed, DatabaseCapabilityOpenProgress::Cancelled);
+        }
+    }
+
+    #[cfg(test)]
+    fn retained_storage_identity(&self) -> Option<usize> {
+        self.state
+            .work
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .as_ref()
+            .map(|work| work.storage_identity)
+            .or_else(|| self.state.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().map(|work| work.storage_identity))
+    }
+}
+
+impl Future for DatabaseCapabilityOpenFuture {
+    type Output = Result<DatabaseCapabilityOpenResult, DbError>;
+
+    fn poll(mut self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+        let result = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        if let Some(result) = result {
+            self.resolved = true;
+            if result.is_err() {
+                self.state.abandoned.store(true, std::sync::atomic::Ordering::Release);
+            }
+            self.state.release_success();
+            return std::task::Poll::Ready(result);
+        }
+        *self.state.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(context.waker().clone());
+        std::task::Poll::Pending
+    }
+}
+
+impl Drop for DatabaseCapabilityOpenFuture {
+    fn drop(&mut self) {
+        use std::sync::atomic::Ordering;
+        if self.resolved {
+            return;
+        }
+        let mut completion = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        self.state.abandoned.store(true, Ordering::Release);
+        self.state.cancelled.store(true, Ordering::Release);
+        if let Some(result) = completion.take() {
+            *self.state.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
+        }
+        drop(completion);
+        if !self.state.scheduled.load(Ordering::Acquire) && !self.state.polling.load(Ordering::Acquire) {
+            self.state.terminalize_before_poll(DbError::Closed, DatabaseCapabilityOpenProgress::Cancelled);
+        }
+    }
+}
+
+/// 🧯️ Public retained authority for cancellation, saturation, fault, and abandoned-open cleanup.
+pub struct DatabaseCapabilityOpenTerminalHandle {
+    state: Arc<DatabaseCapabilityOpenState>,
+}
+
+impl DatabaseCapabilityOpenTerminalHandle {
+    pub fn generation(&self) -> u64 {
+        self.state.generation
+    }
+
+    pub fn close_step(&self) -> DatabaseCapabilityOpenCloseStep {
+        self.state.close_step()
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.state.terminal_is_empty()
+    }
+
+    pub fn resume(self) -> Result<DatabaseCapabilityOpenFuture, Self> {
+        use std::sync::atomic::Ordering;
+        if self.state.scheduled.load(Ordering::Acquire) || self.state.polling.load(Ordering::Acquire) || self.state.finished.load(Ordering::Acquire) {
+            return Err(self);
+        }
+        let job = self.state.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        let work = if job.is_none() { self.state.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() } else { None };
+        let result = if job.is_none() && work.is_none() { self.state.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() } else { None };
+        if let Some((_, job)) = job {
+            self.state.abandoned.store(false, Ordering::Release);
+            self.state.cancelled.store(false, Ordering::Release);
+            self.state.terminal_checked_out.store(false, Ordering::Release);
+            self.state.scheduled.store(true, Ordering::Release);
+            self.state.submit_exact(job, 0);
+            return Ok(DatabaseCapabilityOpenFuture { state: self.state.clone(), resolved: false });
+        } else if let Some(work) = work {
+            *self.state.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(work);
+        } else if let Some(result) = result {
+            *self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
+        } else {
+            return Err(self);
+        }
+        self.state.abandoned.store(false, Ordering::Release);
+        self.state.cancelled.store(false, Ordering::Release);
+        self.state.terminal_checked_out.store(false, Ordering::Release);
+        if self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() {
+            self.state.schedule();
+        }
+        Ok(DatabaseCapabilityOpenFuture { state: self.state.clone(), resolved: false })
+    }
+}
+
+impl Drop for DatabaseCapabilityOpenTerminalHandle {
+    fn drop(&mut self) {
+        self.state.terminal_checked_out.store(false, std::sync::atomic::Ordering::Release);
+    }
+}
+
+/// 🧲️ Takes the exact abandoned capability-open generation without moving its nested owners.
+pub fn take_database_capability_open_terminal(generation: u64) -> Option<DatabaseCapabilityOpenTerminalHandle> {
+    use std::sync::atomic::Ordering;
+    let registry = database_capability_open_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let state = registry.iter().filter_map(Option::as_ref).find(|state| state.generation == generation && state.abandoned.load(Ordering::Acquire))?.clone();
+    if state.terminal_checked_out.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
+        return None;
+    }
+    Some(DatabaseCapabilityOpenTerminalHandle { state })
+}
+
+/// 🧲️ Takes the oldest abandoned capability-open authority when its generation was not observed.
+pub fn take_next_database_capability_open_terminal() -> Option<DatabaseCapabilityOpenTerminalHandle> {
+    use std::sync::atomic::Ordering;
+    let registry = database_capability_open_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let state = registry.iter().filter_map(Option::as_ref).filter(|state| state.abandoned.load(Ordering::Acquire)).min_by_key(|state| state.generation)?.clone();
+    if state.terminal_checked_out.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
+        return None;
+    }
+    Some(DatabaseCapabilityOpenTerminalHandle { state })
+}
+//#endregion 🔖️CapabilityOpen
 
 //#region 🔖️Ids
 /// @emoji 🌉️ `protocol::ArtifactId` → `ArtifactId`, the lossless single-`String` bridge
@@ -161,44 +873,64 @@ pub struct QueryStream {
 //#endregion 🔖️Query
 
 //#region 🔖️History
-/// @emoji 📜️ One committed batch's identity plus the frontier it produced — `ArtifactHandle::history`'s
-/// unit, reconstructed from a direct `db_wal::replay_document` pass (see module doc for why this
-/// does NOT go through `ArtifactAuthority`'s mailbox).
-#[derive(Clone, Debug, PartialEq)]
-pub struct HistoryEntry {
-    pub operation_ids: Vec<protocol::MutationId>,
-    pub frontier: Frontier,
-}
+pub use db_artifact::ArtifactHistoryEntry as HistoryEntry;
 
-#[derive(Clone, Debug, PartialEq, Default)]
 pub struct HistoryView {
-    pub entries: Vec<HistoryEntry>,
+    inner: Option<db_artifact::ArtifactHistoryView>,
+    admission: Option<ArtifactHistoryAdmission>,
+    terminal_state: Option<Arc<ArtifactHistoryState>>,
+    return_on_drop: bool,
 }
 
-/// @emoji 🔁️ Replays `document`'s ENTIRE WAL directly (bypassing the actor — see module doc) and
-/// groups `WAL_COMMAND` records by the `WAL_FRONTIER` record that closes their transaction, exactly
-/// mirroring `db_artifact::ArtifactEngine::submit`'s own commit shape (one frontier record per
-/// committed batch, preceded by that batch's command records).
-async fn replay_history(storage: &db_storage::DbBackend, core_document: &ArtifactId, protocol_document: &protocol::ArtifactId) -> Result<HistoryView, DbError> {
-    let records = db_actor::block_on(async { db_wal::replay_document(&storage.wal().await, core_document).await })?;
-    let mut entries = Vec::new();
-    let mut pending_operation_ids: Vec<protocol::MutationId> = Vec::new();
-    for record in records {
-        match record {
-            db_wal::WalRecord::TxBegin { .. } => pending_operation_ids.clear(),
-            db_wal::WalRecord::Command(bytes) => {
-                let mut pos = 0usize;
-                let envelope = protocol::decode_envelope(&bytes, &mut pos).map_err(|err| DbError::Corrupt(format!("history: wal command record is not a valid operation envelope: {err}")))?;
-                pending_operation_ids.push(envelope.mutation_id);
-            }
-            db_wal::WalRecord::Frontier(frontier) if !pending_operation_ids.is_empty() => {
-                entries.push(HistoryEntry { operation_ids: std::mem::take(&mut pending_operation_ids), frontier: to_engine_frontier(&frontier, protocol_document.clone()) });
-            }
-            _ => {}
-        }
+impl HistoryView {
+    fn new(inner: db_artifact::ArtifactHistoryView, admission: Option<ArtifactHistoryAdmission>, terminal_state: Arc<ArtifactHistoryState>) -> Self {
+        Self { inner: Some(inner), admission, terminal_state: Some(terminal_state), return_on_drop: true }
     }
-    Ok(HistoryView { entries })
+
+    pub fn entries(&self) -> &[HistoryEntry] {
+        self.inner.as_ref().map_or(&[], |inner| inner.entries.as_slice())
+    }
+
+    pub fn operation_id_eq(&self, entry: usize, operation: usize, expected: &str) -> bool {
+        self.inner.as_ref().is_some_and(|inner| inner.operation_id_eq(entry, operation, expected))
+    }
+
+    pub fn close_step(&mut self) -> bool {
+        if self.inner.as_mut().is_some_and(db_artifact::ArtifactHistoryView::close_step) {
+            return true;
+        }
+        if self.inner.take().is_some() {
+            return true;
+        }
+        if self.admission.take().is_some() {
+            return true;
+        }
+        false
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.inner.is_none() && self.admission.is_none()
+    }
+
+    fn rearm_terminal_return(&mut self) {
+        self.return_on_drop = true;
+    }
 }
+
+impl Drop for HistoryView {
+    fn drop(&mut self) {
+        if !self.terminal_is_empty() && self.return_on_drop {
+            if let Some(state) = self.terminal_state.as_ref().cloned() {
+                let owner = HistoryView { inner: self.inner.take(), admission: self.admission.take(), terminal_state: Some(state.clone()), return_on_drop: false };
+                state.finished.store(false, std::sync::atomic::Ordering::Release);
+                register_artifact_history(&state);
+                *state.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Ok(owner));
+            }
+        }
+        assert!(self.terminal_is_empty(), "history result reached Drop before page/range/admission retirement");
+    }
+}
+
 //#endregion 🔖️History
 
 //#region 🔖️LiveQuery + Preview
@@ -1250,8 +1982,14 @@ impl<A: db_artifact::AuthzHook + 'static> Database<A> {
 // `default_emit()`'s concrete return type regardless of which `impl` block `open_with` itself lives
 // in, so the split is transparent to every call site.
 impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
+    /// 🧵️ Admits the exact storage owner before probing one backend capability future on I/O.
+    pub fn open_retained(pool: Arc<WorkerPool>, storage: Arc<db_storage::DbBackend>) -> Result<DatabaseCapabilityOpenFuture, DatabaseCapabilityOpenRejected> {
+        DatabaseCapabilityOpenFuture::try_submit(pool, storage)
+    }
+
     async fn open_with(pool: Arc<WorkerPool>, config: DbConfig, storage: Arc<db_storage::DbBackend>, authz: Arc<A>, emit: Arc<E>) -> Result<Database<A, E>, DbError> {
-        let storage_capabilities = db_actor::block_on(storage.capabilities());
+        let capability_probe = Self::open_retained(pool.clone(), storage).map_err(|rejected| rejected.into_parts().0)?;
+        let (storage, storage_capabilities) = capability_probe.await?.into_parts();
         let capabilities = DbCapabilities {
             // 🧩️ Extension seam: real, honest today — see module doc on why preview/live-query
             // aren't reachable through `ArtifactAuthority`'s current mailbox surface, and why
@@ -1335,9 +2073,8 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
     }
 
     async fn register_handle(&self, document: protocol::ArtifactId, authority: Arc<db_artifact::ArtifactAuthority>) -> ArtifactHandle {
-        let core_document = to_core_document_id(&document).await;
         self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned").insert(document.0.clone(), authority.clone());
-        ArtifactHandle { authority, storage: self.storage.clone(), document, core_document, pool: self.pool.clone() }
+        ArtifactHandle { authority, document, pool: self.pool.clone() }
     }
 
     /// @emoji 🌱️ The frozen `create_document`: mints a brand-new document, durably records it in the
@@ -1386,7 +2123,7 @@ impl<A: db_artifact::AuthzHook + 'static, E: Emit + 'static> Database<A, E> {
         // `to_core_document_id(id).await` below, making this future non-`Send` (R7).
         let existing = self.open_artifacts.lock().expect("db_engine: open_artifacts mutex poisoned").get(&id.0).cloned();
         if let Some(authority) = existing {
-            return Ok(ArtifactHandle { authority, storage: self.storage.clone(), document: id.clone(), core_document: to_core_document_id(id).await, pool: self.pool.clone() });
+            return Ok(ArtifactHandle { authority, document: id.clone(), pool: self.pool.clone() });
         }
         let known = self.catalog.lock().expect("db_engine: catalog mutex poisoned").entries.iter().any(|entry| &entry.document == id);
         if !known {
@@ -1919,7 +2656,9 @@ impl SubmitFuture {
     }
 
     pub fn close_step(&self) -> bool {
-        self.state.close_one() || self.state.authority.close_step()
+        let progressed = self.state.close_one() || self.state.authority.close_step();
+        self.state.finish_if_terminal_empty();
+        progressed
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -2027,13 +2766,938 @@ impl Drop for ArtifactSubmitTerminalWork {
     }
 }
 
+const ARTIFACT_HISTORY_OPERATION_SLOTS: usize = 8;
+const ARTIFACT_HISTORY_PAGE_BYTES: u64 = 16 * 1024;
+const ARTIFACT_HISTORY_OPERATION_PAGES: u64 = 2_048;
+const ARTIFACT_HISTORY_OPERATION_BYTES: u64 = ARTIFACT_HISTORY_PAGE_BYTES * ARTIFACT_HISTORY_OPERATION_PAGES;
+const ARTIFACT_HISTORY_TOTAL_BYTES: u64 = ARTIFACT_HISTORY_OPERATION_BYTES * ARTIFACT_HISTORY_OPERATION_SLOTS as u64;
+const ARTIFACT_HISTORY_OPERATION_ITEMS: usize = 20_481;
+
+#[derive(Clone, Copy)]
+struct ArtifactHistoryAdmissionSlot {
+    generation: u64,
+    bytes: u64,
+    items: usize,
+    occupied: bool,
+}
+
+const EMPTY_ARTIFACT_HISTORY_SLOT: ArtifactHistoryAdmissionSlot = ArtifactHistoryAdmissionSlot { generation: 0, bytes: 0, items: 0, occupied: false };
+
+struct ArtifactHistoryAdmissionState {
+    slots: [ArtifactHistoryAdmissionSlot; ARTIFACT_HISTORY_OPERATION_SLOTS],
+    bytes: u64,
+    next_generation: u64,
+}
+
+static ARTIFACT_HISTORY_ADMISSION: std::sync::Mutex<ArtifactHistoryAdmissionState> = std::sync::Mutex::new(ArtifactHistoryAdmissionState { slots: [EMPTY_ARTIFACT_HISTORY_SLOT; ARTIFACT_HISTORY_OPERATION_SLOTS], bytes: 0, next_generation: 1 });
+
+struct ArtifactHistoryAdmission {
+    slot: usize,
+    generation: u64,
+    reservation: Option<db_artifact::HistoryReplayReservation>,
+}
+
+enum ArtifactHistoryAdmissionError {
+    Rejected(DbError),
+    Construction { admission: ArtifactHistoryAdmission, fault: db_artifact::HistoryReplayReservationConstructionFault },
+}
+
+impl std::fmt::Debug for ArtifactHistoryAdmissionError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Rejected(error) => formatter.debug_tuple("Rejected").field(error).finish(),
+            Self::Construction { fault, .. } => formatter.debug_struct("Construction").field("fault", fault).finish(),
+        }
+    }
+}
+
+impl ArtifactHistoryAdmission {
+    fn try_claim() -> Result<Self, ArtifactHistoryAdmissionError> {
+        let (slot, generation) = {
+            let mut state = ARTIFACT_HISTORY_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let Some(slot) = state.slots.iter().position(|entry| !entry.occupied) else {
+                return Err(ArtifactHistoryAdmissionError::Rejected(DbError::Unavailable("artifact history item capacity exhausted".to_string())));
+            };
+            let Some(next_bytes) = state.bytes.checked_add(ARTIFACT_HISTORY_OPERATION_BYTES) else {
+                return Err(ArtifactHistoryAdmissionError::Rejected(DbError::LimitExceeded("artifact history aggregate bytes")));
+            };
+            if next_bytes > ARTIFACT_HISTORY_TOTAL_BYTES {
+                return Err(ArtifactHistoryAdmissionError::Rejected(DbError::Unavailable("artifact history byte capacity exhausted".to_string())));
+            }
+            let generation = state.next_generation;
+            let Some(next_generation) = state.next_generation.checked_add(1) else {
+                return Err(ArtifactHistoryAdmissionError::Rejected(DbError::LimitExceeded("artifact history generation")));
+            };
+            state.next_generation = next_generation;
+            state.slots[slot] = ArtifactHistoryAdmissionSlot { generation, bytes: ARTIFACT_HISTORY_OPERATION_BYTES, items: ARTIFACT_HISTORY_OPERATION_ITEMS, occupied: true };
+            state.bytes = next_bytes;
+            (slot, generation)
+        };
+        let mut claim = Self { slot, generation, reservation: None };
+        match db_artifact::HistoryReplayReservation::try_new() {
+            Ok(reservation) => {
+                claim.reservation = Some(reservation);
+                Ok(claim)
+            }
+            Err(fault) => Err(ArtifactHistoryAdmissionError::Construction { admission: claim, fault }),
+        }
+    }
+
+    fn take_reservation(&mut self) -> Option<db_artifact::HistoryReplayReservation> {
+        self.reservation.take()
+    }
+
+    fn begin_reservation_close(&mut self) -> Option<db_artifact::HistoryReplayReservationCloseCursor> {
+        self.reservation.take().map(db_artifact::HistoryReplayReservationCloseCursor::new)
+    }
+
+    fn restore_reservation(&mut self, reservation: db_artifact::HistoryReplayReservation) {
+        assert!(self.reservation.is_none(), "artifact history reservation restore slot was occupied");
+        self.reservation = Some(reservation);
+    }
+}
+
+impl Drop for ArtifactHistoryAdmission {
+    fn drop(&mut self) {
+        assert!(self.reservation.is_none(), "artifact history admission dropped a live replay reservation");
+        let mut state = ARTIFACT_HISTORY_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let entry = &mut state.slots[self.slot];
+        if !entry.occupied || entry.generation != self.generation || entry.bytes != ARTIFACT_HISTORY_OPERATION_BYTES || entry.items != ARTIFACT_HISTORY_OPERATION_ITEMS {
+            return;
+        }
+        *entry = EMPTY_ARTIFACT_HISTORY_SLOT;
+        state.bytes = state.bytes.checked_sub(ARTIFACT_HISTORY_OPERATION_BYTES).expect("artifact history byte credit underflow");
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum HistoryProgress {
+    Admitted,
+    Scheduled,
+    Waiting,
+    Mapping,
+    Completed,
+    Cancelled,
+    Fault,
+}
+
+type ArtifactActorHistoryFuture = db_actor::AskFuture<db_artifact::ArtifactMessage, Result<db_artifact::ArtifactHistoryView, DbError>>;
+pub type ArtifactHistoryOutcome = Result<HistoryView, DbError>;
+
+enum ArtifactHistoryWorkOwner {
+    Request,
+    Actor(ArtifactActorHistoryFuture),
+}
+
+struct ArtifactHistoryState {
+    pool: WorkerPool,
+    authority: Arc<db_artifact::ArtifactAuthority>,
+    generation: u64,
+    authority_generation: db_ids::GenerationId,
+    admission: std::sync::Mutex<Option<ArtifactHistoryAdmission>>,
+    work: std::sync::Mutex<Option<ArtifactHistoryWorkOwner>>,
+    completion: std::sync::Mutex<Option<ArtifactHistoryOutcome>>,
+    terminal_work: std::sync::Mutex<Option<ArtifactHistoryWorkOwner>>,
+    terminal_result: std::sync::Mutex<Option<ArtifactHistoryOutcome>>,
+    terminal_reservation: std::sync::Mutex<Option<db_artifact::HistoryReplayReservationCloseCursor>>,
+    reservation_checked_out: std::sync::atomic::AtomicBool,
+    terminal_construction: std::sync::Mutex<Option<db_artifact::HistoryReplayReservationConstructionFault>>,
+    construction_checked_out: std::sync::atomic::AtomicBool,
+    retry_job: std::sync::Mutex<Option<(semio_framework_async::Job, u8)>>,
+    terminal_job: std::sync::Mutex<Option<(semio_framework_async::WorkerSubmitErrorKind, semio_framework_async::Job)>>,
+    waker: std::sync::Mutex<Option<std::task::Waker>>,
+    retry_armed: std::sync::atomic::AtomicBool,
+    retry_generation: std::sync::atomic::AtomicU64,
+    scheduled: std::sync::atomic::AtomicBool,
+    cancelled: Arc<std::sync::atomic::AtomicBool>,
+    abandoned: std::sync::atomic::AtomicBool,
+    finished: std::sync::atomic::AtomicBool,
+    progress: std::sync::atomic::AtomicU8,
+}
+
+pub struct HistoryFuture {
+    state: Arc<ArtifactHistoryState>,
+    resolved: bool,
+}
+
+pub struct ArtifactHistoryTerminalHandle {
+    state: Arc<ArtifactHistoryState>,
+}
+
+pub struct ArtifactHistoryTerminalJob {
+    state: Arc<ArtifactHistoryState>,
+    owner: Option<(semio_framework_async::WorkerSubmitErrorKind, semio_framework_async::Job)>,
+}
+
+pub struct ArtifactHistoryTerminalWork {
+    state: Arc<ArtifactHistoryState>,
+    owner: Option<ArtifactHistoryWorkOwner>,
+}
+
+pub struct ArtifactHistoryTerminalReservation {
+    state: Arc<ArtifactHistoryState>,
+    owner: Option<db_artifact::HistoryReplayReservationCloseCursor>,
+}
+
+pub struct ArtifactHistoryTerminalConstructionFault {
+    state: Arc<ArtifactHistoryState>,
+    owner: Option<db_artifact::HistoryReplayReservationConstructionFault>,
+}
+
+struct ArtifactHistoryWake {
+    state: std::sync::Weak<ArtifactHistoryState>,
+    generation: u64,
+}
+
+fn artifact_history_registry() -> &'static std::sync::Mutex<[Option<Arc<ArtifactHistoryState>>; ARTIFACT_HISTORY_OPERATION_SLOTS]> {
+    static REGISTRY: std::sync::OnceLock<std::sync::Mutex<[Option<Arc<ArtifactHistoryState>>; ARTIFACT_HISTORY_OPERATION_SLOTS]>> = std::sync::OnceLock::new();
+    REGISTRY.get_or_init(|| std::sync::Mutex::new(std::array::from_fn(|_| None)))
+}
+
+fn register_artifact_history(state: &Arc<ArtifactHistoryState>) {
+    if state.generation == 0 {
+        return;
+    }
+    let mut registry = artifact_history_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    if registry.iter().any(|slot| slot.as_ref().is_some_and(|registered| registered.generation == state.generation)) {
+        return;
+    }
+    if let Some(slot) = registry.iter_mut().find(|slot| slot.is_none()) {
+        *slot = Some(state.clone());
+    }
+}
+
+fn unregister_artifact_history(generation: u64) {
+    let mut registry = artifact_history_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    if let Some(slot) = registry.iter_mut().find(|slot| slot.as_ref().is_some_and(|state| state.generation == generation)) {
+        *slot = None;
+    }
+}
+
+impl std::task::Wake for ArtifactHistoryWake {
+    fn wake(self: Arc<Self>) {
+        self.wake_by_ref();
+    }
+
+    fn wake_by_ref(self: &Arc<Self>) {
+        if let Some(state) = self.state.upgrade() {
+            if self.generation == state.generation {
+                state.schedule();
+            }
+        }
+    }
+}
+
+impl ArtifactHistoryState {
+    fn set_progress(&self, progress: HistoryProgress) {
+        self.progress.store(progress as u8, std::sync::atomic::Ordering::Release);
+    }
+
+    fn wake_waiter(&self) {
+        if let Some(waker) = self.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            waker.wake();
+        }
+    }
+
+    fn take_terminal_reservation(self: &Arc<Self>) -> Option<ArtifactHistoryTerminalReservation> {
+        use std::sync::atomic::Ordering;
+        if self.reservation_checked_out.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return None;
+        }
+        let owner = self.terminal_reservation.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        if owner.is_none() {
+            self.reservation_checked_out.store(false, Ordering::Release);
+            return None;
+        }
+        Some(ArtifactHistoryTerminalReservation { state: self.clone(), owner })
+    }
+
+    fn take_terminal_construction_fault(self: &Arc<Self>) -> Option<ArtifactHistoryTerminalConstructionFault> {
+        use std::sync::atomic::Ordering;
+        if self.construction_checked_out.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return None;
+        }
+        let owner = self.terminal_construction.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        if owner.is_none() {
+            self.construction_checked_out.store(false, Ordering::Release);
+            return None;
+        }
+        Some(ArtifactHistoryTerminalConstructionFault { state: self.clone(), owner })
+    }
+
+    fn terminal_roots_are_empty(&self) -> bool {
+        self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+            && self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+            && self.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+            && self.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+            && self.terminal_reservation.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+            && !self.reservation_checked_out.load(std::sync::atomic::Ordering::Acquire)
+            && self.terminal_construction.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+            && !self.construction_checked_out.load(std::sync::atomic::Ordering::Acquire)
+            && self.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+            && self.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.finished.load(std::sync::atomic::Ordering::Acquire)
+            && self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+            && self.terminal_roots_are_empty()
+            && !self.scheduled.load(std::sync::atomic::Ordering::Acquire)
+            && !self.retry_armed.load(std::sync::atomic::Ordering::Acquire)
+    }
+
+    fn finish_if_terminal_empty(&self) -> bool {
+        use std::sync::atomic::Ordering;
+        if !self.terminal_roots_are_empty() || self.scheduled.load(Ordering::Acquire) || self.retry_armed.load(Ordering::Acquire) {
+            return false;
+        }
+        let mut admission = self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if self.finished.load(Ordering::Acquire) {
+            return false;
+        }
+        let owner = admission.take();
+        assert!(owner.as_ref().is_none_or(|owner| owner.reservation.is_none()), "artifact history admission finished before reservation retirement");
+        drop(owner);
+        unregister_artifact_history(self.generation);
+        self.finished.store(true, Ordering::Release);
+        true
+    }
+
+    fn begin_unhanded_reservation_close(&self) {
+        if self.terminal_reservation.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some() || self.reservation_checked_out.load(std::sync::atomic::Ordering::Acquire) {
+            return;
+        }
+        let cursor = self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_mut().and_then(ArtifactHistoryAdmission::begin_reservation_close);
+        if let Some(cursor) = cursor {
+            *self.terminal_reservation.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(cursor);
+        }
+    }
+
+    fn resume_unhanded_reservation(&self) -> bool {
+        if self.reservation_checked_out.load(std::sync::atomic::Ordering::Acquire) {
+            return false;
+        }
+        let mut terminal = self.terminal_reservation.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let Some(cursor) = terminal.as_mut() else {
+            return self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().is_some_and(|owner| owner.reservation.is_some());
+        };
+        let mut admission = self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if admission.as_ref().is_none_or(|owner| owner.reservation.is_some()) {
+            return false;
+        }
+        let Some(reservation) = cursor.resume() else {
+            return false;
+        };
+        let admission = admission.as_mut().expect("artifact history reservation admission disappeared after preflight");
+        admission.restore_reservation(reservation);
+        terminal.take();
+        true
+    }
+
+    fn complete(&self, result: ArtifactHistoryOutcome, progress: HistoryProgress) {
+        self.set_progress(progress);
+        let mut completion = self.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if self.abandoned.load(std::sync::atomic::Ordering::Acquire) {
+            drop(completion);
+            *self.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
+        } else {
+            *completion = Some(result);
+            drop(completion);
+            self.wake_waiter();
+        }
+    }
+
+    fn terminalize_work(&self, result: ArtifactHistoryOutcome, progress: HistoryProgress) {
+        if let Some(work) = self.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            if matches!(&work, ArtifactHistoryWorkOwner::Request) {
+                self.begin_unhanded_reservation_close();
+            }
+            *self.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(work);
+        }
+        self.complete(result, progress);
+    }
+
+    fn terminalize_unhanded_request(&self, result: ArtifactHistoryOutcome, progress: HistoryProgress) -> bool {
+        let mut work = self.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if !work.as_ref().is_some_and(|owner| matches!(owner, ArtifactHistoryWorkOwner::Request)) {
+            return false;
+        }
+        let request = work.take().expect("artifact history request disappeared after retained preflight");
+        drop(work);
+        self.begin_unhanded_reservation_close();
+        *self.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(request);
+        self.complete(result, progress);
+        true
+    }
+
+    fn schedule(self: &Arc<Self>) {
+        use std::sync::atomic::Ordering;
+        if self.finished.load(Ordering::Acquire)
+            || self.terminal_construction.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some()
+            || self.construction_checked_out.load(Ordering::Acquire)
+            || self.scheduled.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err()
+        {
+            return;
+        }
+        self.set_progress(HistoryProgress::Scheduled);
+        let state = self.clone();
+        let generation = self.generation;
+        self.submit_exact(Box::new(move || state.drive_one(generation)), 0);
+    }
+
+    fn submit_exact(self: &Arc<Self>, job: semio_framework_async::Job, attempt: u8) {
+        match self.pool.try_submit(Lane::Io, job) {
+            Ok(()) => {}
+            Err(error) => match error.kind() {
+                semio_framework_async::WorkerSubmitErrorKind::Contended | semio_framework_async::WorkerSubmitErrorKind::Saturated if attempt < ARTIFACT_SUBMIT_RETRY_LIMIT => {
+                    *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((error.into_job(), attempt + 1));
+                    self.arm_retry();
+                }
+                kind => {
+                    let job = error.into_job();
+                    self.scheduled.store(false, std::sync::atomic::Ordering::Release);
+                    *self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((kind, job));
+                    self.terminalize_work(Err(DbError::Unavailable(format!("artifact history WorkerPool submission failed: {kind:?}"))), HistoryProgress::Fault);
+                }
+            },
+        }
+    }
+
+    fn arm_retry(self: &Arc<Self>) {
+        use std::sync::atomic::Ordering;
+        if self.retry_armed.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
+            return;
+        }
+        let generation = self.retry_generation.fetch_add(1, Ordering::AcqRel).checked_add(1).expect("artifact history retry generation exhausted");
+        let state = self.clone();
+        self.pool.callback_at(self.pool.now_ms().saturating_add(ARTIFACT_SUBMIT_RETRY_MS), move || {
+            if generation != state.retry_generation.load(Ordering::Acquire) {
+                return;
+            }
+            state.retry_armed.store(false, Ordering::Release);
+            let retry = state.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+            if let Some((job, attempt)) = retry {
+                if state.cancelled.load(Ordering::Acquire) {
+                    state.scheduled.store(false, Ordering::Release);
+                    *state.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((semio_framework_async::WorkerSubmitErrorKind::Saturated, job));
+                    state.terminalize_work(Err(DbError::Closed), HistoryProgress::Cancelled);
+                } else {
+                    state.submit_exact(job, attempt);
+                }
+            }
+        });
+    }
+
+    fn drive_one(self: Arc<Self>, generation: u64) {
+        use std::future::Future as _;
+        use std::sync::atomic::Ordering;
+
+        if generation != self.generation {
+            return;
+        }
+        self.scheduled.store(false, Ordering::Release);
+        if self.authority.generation() != self.authority_generation {
+            self.cancelled.store(true, Ordering::Release);
+            let actor_active = self.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().is_some_and(|owner| matches!(owner, ArtifactHistoryWorkOwner::Actor(_)));
+            if !actor_active {
+                self.terminalize_work(Err(DbError::StaleGeneration { expected: self.authority.generation(), actual: self.authority_generation }), HistoryProgress::Fault);
+                return;
+            }
+        }
+        if self.cancelled.load(Ordering::Acquire) {
+            let actor_active = self.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().is_some_and(|owner| matches!(owner, ArtifactHistoryWorkOwner::Actor(_)));
+            if !actor_active {
+                self.terminalize_work(Err(DbError::Closed), HistoryProgress::Cancelled);
+                return;
+            }
+        }
+
+        let mut work = self.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        match work.as_mut() {
+            Some(ArtifactHistoryWorkOwner::Request) => {
+                let reservation = self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_mut().and_then(ArtifactHistoryAdmission::take_reservation);
+                let Some(reservation) = reservation else {
+                    drop(work);
+                    self.terminalize_work(Err(DbError::Unavailable("artifact history fixed reservation owner is missing".to_string())), HistoryProgress::Fault);
+                    return;
+                };
+                *work = Some(ArtifactHistoryWorkOwner::Actor(self.authority.history_retained(self.generation, self.cancelled.clone(), reservation)));
+                drop(work);
+                self.schedule();
+            }
+            Some(ArtifactHistoryWorkOwner::Actor(future)) => {
+                let waker = std::task::Waker::from(Arc::new(ArtifactHistoryWake { state: Arc::downgrade(&self), generation }));
+                let mut context = std::task::Context::from_waker(&waker);
+                match std::pin::Pin::new(future).poll(&mut context) {
+                    std::task::Poll::Pending => self.set_progress(HistoryProgress::Waiting),
+                    std::task::Poll::Ready(Ok(Ok(view))) => {
+                        work.take();
+                        drop(work);
+                        let admission = self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+                        match admission {
+                            Some(admission) => self.complete(Ok(HistoryView::new(view, Some(admission), self.clone())), HistoryProgress::Completed),
+                            None => self.complete(Ok(HistoryView::new(view, None, self.clone())), HistoryProgress::Fault),
+                        }
+                    }
+                    std::task::Poll::Ready(Ok(Err(error))) => {
+                        work.take();
+                        drop(work);
+                        self.complete(Err(error), HistoryProgress::Fault);
+                    }
+                    std::task::Poll::Ready(Err(error)) => {
+                        work.take();
+                        drop(work);
+                        self.complete(Err(error), HistoryProgress::Fault);
+                    }
+                }
+            }
+            None => {}
+        }
+    }
+
+    fn close_one(self: &Arc<Self>) -> bool {
+        if self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().is_some() {
+            return true;
+        }
+        if self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().is_some() {
+            return true;
+        }
+        if let Some(work) = self.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            match work {
+                ArtifactHistoryWorkOwner::Request => self.begin_unhanded_reservation_close(),
+                ArtifactHistoryWorkOwner::Actor(owner) => {
+                    *self.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ArtifactHistoryWorkOwner::Actor(owner));
+                    self.cancelled.store(true, std::sync::atomic::Ordering::Release);
+                    self.schedule();
+                }
+            }
+            return true;
+        }
+        let mut reservation = self.terminal_reservation.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if let Some(cursor) = reservation.as_mut() {
+            if cursor.close_step() {
+                return true;
+            }
+            if cursor.terminal_is_empty() {
+                reservation.take();
+                return true;
+            }
+        }
+        drop(reservation);
+        let mut construction = self.terminal_construction.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if let Some(cursor) = construction.as_mut() {
+            if cursor.close_step() {
+                return true;
+            }
+            if cursor.terminal_is_empty() {
+                construction.take();
+                return true;
+            }
+        }
+        drop(construction);
+        let mut terminal = self.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if let Some(result) = terminal.as_mut() {
+            match result {
+                Ok(view) if view.close_step() => return true,
+                Ok(_) | Err(_) => {
+                    terminal.take();
+                    return true;
+                }
+            }
+        }
+        false
+    }
+}
+
+impl HistoryFuture {
+    fn submit(handle: &ArtifactHandle) -> Self {
+        let (admission, construction_fault, rejected_error, generation) = match ArtifactHistoryAdmission::try_claim() {
+            Ok(admission) => {
+                let generation = admission.generation;
+                (Some(admission), None, None, generation)
+            }
+            Err(ArtifactHistoryAdmissionError::Construction { admission, fault }) => {
+                let generation = admission.generation;
+                (Some(admission), Some(fault), None, generation)
+            }
+            Err(ArtifactHistoryAdmissionError::Rejected(error)) => (None, None, Some(error), 0),
+        };
+        let ready = construction_fault.is_none() && rejected_error.is_none();
+        let state = Arc::new(ArtifactHistoryState {
+            pool: handle.pool.as_ref().clone(),
+            authority: handle.authority.clone(),
+            generation,
+            authority_generation: handle.authority.generation(),
+            admission: std::sync::Mutex::new(admission),
+            work: std::sync::Mutex::new(ready.then_some(ArtifactHistoryWorkOwner::Request)),
+            completion: std::sync::Mutex::new(None),
+            terminal_work: std::sync::Mutex::new(None),
+            terminal_result: std::sync::Mutex::new(None),
+            terminal_reservation: std::sync::Mutex::new(None),
+            reservation_checked_out: std::sync::atomic::AtomicBool::new(false),
+            terminal_construction: std::sync::Mutex::new(construction_fault),
+            construction_checked_out: std::sync::atomic::AtomicBool::new(false),
+            retry_job: std::sync::Mutex::new(None),
+            terminal_job: std::sync::Mutex::new(None),
+            waker: std::sync::Mutex::new(None),
+            retry_armed: std::sync::atomic::AtomicBool::new(false),
+            retry_generation: std::sync::atomic::AtomicU64::new(1),
+            scheduled: std::sync::atomic::AtomicBool::new(false),
+            cancelled: Arc::new(std::sync::atomic::AtomicBool::new(false)),
+            abandoned: std::sync::atomic::AtomicBool::new(false),
+            finished: std::sync::atomic::AtomicBool::new(false),
+            progress: std::sync::atomic::AtomicU8::new(if generation == 0 { HistoryProgress::Fault as u8 } else { HistoryProgress::Admitted as u8 }),
+        });
+        register_artifact_history(&state);
+        let construction_error = state.terminal_construction.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_mut().and_then(db_artifact::HistoryReplayReservationConstructionFault::take_error);
+        if let Some(error) = rejected_error.or(construction_error) {
+            *state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Err(error));
+        } else {
+            state.schedule();
+        }
+        Self { state, resolved: false }
+    }
+
+    pub fn generation(&self) -> u64 {
+        self.state.generation
+    }
+
+    pub fn terminal_handle(&self) -> ArtifactHistoryTerminalHandle {
+        ArtifactHistoryTerminalHandle { state: self.state.clone() }
+    }
+
+    pub fn progress(&self) -> HistoryProgress {
+        match self.state.progress.load(std::sync::atomic::Ordering::Acquire) {
+            0 => HistoryProgress::Admitted,
+            1 => HistoryProgress::Scheduled,
+            2 => HistoryProgress::Waiting,
+            3 => HistoryProgress::Mapping,
+            4 => HistoryProgress::Completed,
+            5 => HistoryProgress::Cancelled,
+            _ => HistoryProgress::Fault,
+        }
+    }
+
+    pub fn cancel(&self) {
+        if !matches!(self.progress(), HistoryProgress::Completed | HistoryProgress::Cancelled | HistoryProgress::Fault) {
+            self.state.cancelled.store(true, std::sync::atomic::Ordering::Release);
+            if !self.state.terminalize_unhanded_request(Err(DbError::Closed), HistoryProgress::Cancelled) {
+                self.state.schedule();
+            }
+        }
+    }
+
+    pub fn take_terminal_job(&self) -> Option<ArtifactHistoryTerminalJob> {
+        self.state.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().map(|owner| ArtifactHistoryTerminalJob { state: self.state.clone(), owner: Some(owner) })
+    }
+
+    pub fn take_terminal_work(&self) -> Option<ArtifactHistoryTerminalWork> {
+        self.state.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().map(|owner| ArtifactHistoryTerminalWork { state: self.state.clone(), owner: Some(owner) })
+    }
+
+    pub fn take_terminal_reservation(&self) -> Option<ArtifactHistoryTerminalReservation> {
+        self.state.take_terminal_reservation()
+    }
+
+    pub fn take_terminal_construction_fault(&self) -> Option<ArtifactHistoryTerminalConstructionFault> {
+        self.state.take_terminal_construction_fault()
+    }
+
+    pub fn take_terminal_result(&self) -> Option<ArtifactHistoryOutcome> {
+        let mut result = self.state.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        if let Some(Ok(view)) = result.as_mut() {
+            view.rearm_terminal_return();
+        }
+        if result.is_some() {
+            self.state.finish_if_terminal_empty();
+        }
+        result
+    }
+
+    pub fn take_actor_terminal_job(&self) -> Option<db_artifact::ArtifactRunnerTerminalJob> {
+        self.state.authority.take_terminal_job()
+    }
+
+    pub fn close_step(&self) -> bool {
+        if self.state.close_one() {
+            return true;
+        }
+        if self.state.authority.close_step() {
+            return true;
+        }
+        self.state.finish_if_terminal_empty()
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.state.terminal_is_empty() && self.state.authority.terminal_is_empty()
+    }
+}
+
+impl ArtifactHistoryTerminalHandle {
+    pub fn generation(&self) -> u64 {
+        self.state.generation
+    }
+
+    pub fn take_terminal_job(&self) -> Option<ArtifactHistoryTerminalJob> {
+        self.state.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().map(|owner| ArtifactHistoryTerminalJob { state: self.state.clone(), owner: Some(owner) })
+    }
+
+    pub fn take_terminal_work(&self) -> Option<ArtifactHistoryTerminalWork> {
+        self.state.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().map(|owner| ArtifactHistoryTerminalWork { state: self.state.clone(), owner: Some(owner) })
+    }
+
+    pub fn take_terminal_reservation(&self) -> Option<ArtifactHistoryTerminalReservation> {
+        self.state.take_terminal_reservation()
+    }
+
+    pub fn take_terminal_construction_fault(&self) -> Option<ArtifactHistoryTerminalConstructionFault> {
+        self.state.take_terminal_construction_fault()
+    }
+
+    pub fn take_terminal_result(&self) -> Option<ArtifactHistoryOutcome> {
+        let mut result = self.state.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        if let Some(Ok(view)) = result.as_mut() {
+            view.rearm_terminal_return();
+        }
+        if result.is_some() {
+            self.state.finish_if_terminal_empty();
+        }
+        result
+    }
+
+    pub fn take_actor_terminal_job(&self) -> Option<db_artifact::ArtifactRunnerTerminalJob> {
+        self.state.authority.take_terminal_job()
+    }
+
+    pub fn close_step(&self) -> bool {
+        if self.state.close_one() {
+            return true;
+        }
+        if self.state.authority.close_step() {
+            return true;
+        }
+        self.state.finish_if_terminal_empty()
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.state.terminal_is_empty() && self.state.authority.terminal_is_empty()
+    }
+}
+
+impl Future for HistoryFuture {
+    type Output = ArtifactHistoryOutcome;
+
+    fn poll(mut self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+        let result = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        if let Some(result) = result {
+            self.resolved = true;
+            self.state.finish_if_terminal_empty();
+            return std::task::Poll::Ready(result);
+        }
+        *self.state.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(context.waker().clone());
+        std::task::Poll::Pending
+    }
+}
+
+impl Drop for HistoryFuture {
+    fn drop(&mut self) {
+        if !self.resolved {
+            let mut completion = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            self.state.abandoned.store(true, std::sync::atomic::Ordering::Release);
+            if let Some(result) = completion.take() {
+                *self.state.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
+            }
+            drop(completion);
+            self.state.cancelled.store(true, std::sync::atomic::Ordering::Release);
+            if !self.state.terminalize_unhanded_request(Err(DbError::Closed), HistoryProgress::Cancelled) {
+                self.state.schedule();
+            }
+        }
+        self.state.finish_if_terminal_empty();
+    }
+}
+
+impl ArtifactHistoryTerminalJob {
+    pub fn reason(&self) -> semio_framework_async::WorkerSubmitErrorKind {
+        self.owner.as_ref().expect("terminal artifact history job already resolved").0
+    }
+
+    pub fn resume(mut self) {
+        let request = self.state.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().is_some_and(|owner| matches!(owner, ArtifactHistoryWorkOwner::Request));
+        if request && !self.state.resume_unhanded_reservation() {
+            return;
+        }
+        let (_, job) = self.owner.take().expect("terminal artifact history job already resolved");
+        if self.state.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() {
+            let work = self.state.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+            *self.state.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = work;
+        }
+        if let Some(result) = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            *self.state.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
+        }
+        self.state.cancelled.store(false, std::sync::atomic::Ordering::Release);
+        self.state.scheduled.store(true, std::sync::atomic::Ordering::Release);
+        self.state.submit_exact(job, 0);
+    }
+
+    pub fn close(mut self) {
+        self.owner.take().expect("terminal artifact history job already resolved");
+        self.state.finish_if_terminal_empty();
+    }
+}
+
+impl Drop for ArtifactHistoryTerminalJob {
+    fn drop(&mut self) {
+        if let Some(owner) = self.owner.take() {
+            *self.state.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(owner);
+        }
+    }
+}
+
+impl ArtifactHistoryTerminalWork {
+    pub fn resume(mut self) -> Result<(), Self> {
+        if self.state.generation == 0 {
+            return Err(self);
+        }
+        if self.owner.as_ref().is_some_and(|owner| matches!(owner, ArtifactHistoryWorkOwner::Request)) && !self.state.resume_unhanded_reservation() {
+            return Err(self);
+        }
+        let owner = self.owner.take().expect("terminal artifact history work already resolved");
+        *self.state.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(owner);
+        if let Some(result) = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            *self.state.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
+        }
+        self.state.cancelled.store(false, std::sync::atomic::Ordering::Release);
+        self.state.set_progress(HistoryProgress::Admitted);
+        if self.state.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() {
+            self.state.schedule();
+        }
+        Ok(())
+    }
+
+    pub fn close(mut self) {
+        let owner = self.owner.take().expect("terminal artifact history work already resolved");
+        match owner {
+            ArtifactHistoryWorkOwner::Request => {
+                self.state.begin_unhanded_reservation_close();
+                self.state.finish_if_terminal_empty();
+            }
+            ArtifactHistoryWorkOwner::Actor(owner) => {
+                *self.state.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ArtifactHistoryWorkOwner::Actor(owner));
+                self.state.cancelled.store(true, std::sync::atomic::Ordering::Release);
+                self.state.schedule();
+            }
+        }
+    }
+}
+
+impl ArtifactHistoryTerminalReservation {
+    pub fn resume(mut self) -> Result<(), Self> {
+        let mut admission = self.state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if admission.as_ref().is_none_or(|owner| owner.reservation.is_some()) {
+            drop(admission);
+            return Err(self);
+        }
+        let Some(cursor) = self.owner.as_mut() else {
+            drop(admission);
+            return Err(self);
+        };
+        let Some(reservation) = cursor.resume() else {
+            drop(admission);
+            return Err(self);
+        };
+        let admission = admission.as_mut().expect("artifact history admission changed after reservation preflight");
+        admission.restore_reservation(reservation);
+        self.owner = None;
+        self.state.reservation_checked_out.store(false, std::sync::atomic::Ordering::Release);
+        Ok(())
+    }
+
+    pub fn close_step(&mut self) -> bool {
+        let Some(cursor) = self.owner.as_mut() else {
+            return false;
+        };
+        if cursor.close_step() {
+            return true;
+        }
+        if cursor.terminal_is_empty() {
+            self.owner = None;
+            self.state.reservation_checked_out.store(false, std::sync::atomic::Ordering::Release);
+            self.state.finish_if_terminal_empty();
+            return true;
+        }
+        false
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.owner.as_ref().is_none_or(db_artifact::HistoryReplayReservationCloseCursor::terminal_is_empty)
+    }
+}
+
+impl Drop for ArtifactHistoryTerminalReservation {
+    fn drop(&mut self) {
+        if let Some(owner) = self.owner.take() {
+            *self.state.terminal_reservation.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(owner);
+        }
+        self.state.reservation_checked_out.store(false, std::sync::atomic::Ordering::Release);
+    }
+}
+
+impl ArtifactHistoryTerminalConstructionFault {
+    pub fn resume(mut self) -> Result<(), Self> {
+        let mut terminal = self.state.terminal_construction.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if terminal.is_some() {
+            drop(terminal);
+            return Err(self);
+        }
+        *terminal = self.owner.take();
+        drop(terminal);
+        self.state.construction_checked_out.store(false, std::sync::atomic::Ordering::Release);
+        Ok(())
+    }
+
+    pub fn close_step(&mut self) -> bool {
+        let Some(cursor) = self.owner.as_mut() else {
+            return false;
+        };
+        if cursor.close_step() {
+            return true;
+        }
+        if cursor.terminal_is_empty() {
+            self.owner = None;
+            self.state.construction_checked_out.store(false, std::sync::atomic::Ordering::Release);
+            return true;
+        }
+        false
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.owner.as_ref().is_none_or(db_artifact::HistoryReplayReservationConstructionFault::terminal_is_empty)
+    }
+}
+
+impl Drop for ArtifactHistoryTerminalConstructionFault {
+    fn drop(&mut self) {
+        if let Some(owner) = self.owner.take() {
+            *self.state.terminal_construction.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(owner);
+        }
+        self.state.construction_checked_out.store(false, std::sync::atomic::Ordering::Release);
+    }
+}
+
+impl Drop for ArtifactHistoryTerminalWork {
+    fn drop(&mut self) {
+        if let Some(owner) = self.owner.take() {
+            *self.state.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(owner);
+        }
+    }
+}
+
 /// @emoji 🎭️ The frozen `ArtifactHandle`: a clone-cheap live handle to one open document.
 #[derive(Clone)]
 pub struct ArtifactHandle {
     authority: Arc<db_artifact::ArtifactAuthority>,
-    storage: Arc<db_storage::DbBackend>,
     document: protocol::ArtifactId,
-    core_document: ArtifactId,
     pool: Arc<WorkerPool>,
 }
 
@@ -2106,10 +3770,14 @@ impl ArtifactHandle {
         Err(DbError::Unimplemented("preview publish/query is not yet reachable: ArtifactAuthority's mailbox only exposes Submit/Query/Frontier messages"))
     }
 
-    /// @emoji 📜️ The frozen `history` — real, see module doc: replays the WAL directly rather than
-    /// going through the actor.
-    pub async fn history(&self) -> Result<HistoryView, DbError> {
-        replay_history(self.storage.as_ref(), &self.core_document, &self.document).await
+    /// @emoji 📜️ Replays history through the document authority. Each accepted process-pool grant
+    /// advances one retained mailbox, WAL, envelope, or result-mapping opportunity.
+    pub fn history(&self) -> HistoryFuture {
+        HistoryFuture::submit(self)
+    }
+
+    pub fn history_terminal(&self, generation: u64) -> Option<ArtifactHistoryTerminalHandle> {
+        artifact_history_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner).iter().find_map(|slot| slot.as_ref().filter(|state| state.generation == generation).map(|state| ArtifactHistoryTerminalHandle { state: state.clone() }))
     }
 
     /// @emoji 📸️ The frozen `snapshot_now` — see module doc's `//🎯️ Design choice`: always resolves
@@ -2134,6 +3802,146 @@ mod tests {
     use crate::vcs_integration::{HashMutation, HashProjection};
     use protocol::{OpBinary, OpText};
     use store::ArtifactPack;
+
+    #[test]
+    fn database_capability_open_fixed_admission_cap_plus_one_and_generation_aba() {
+        let mut state = DatabaseCapabilityOpenAdmissionState::empty();
+        assert!(state.try_claim(DATABASE_CAPABILITY_OPEN_ITEMS + 1, DATABASE_CAPABILITY_OPEN_BYTES).is_err());
+        assert!(state.try_claim(DATABASE_CAPABILITY_OPEN_ITEMS, DATABASE_CAPABILITY_OPEN_BYTES + 1).is_err());
+        let mut claims = Vec::with_capacity(DATABASE_CAPABILITY_OPEN_SLOTS);
+        for _ in 0..DATABASE_CAPABILITY_OPEN_SLOTS {
+            claims.push(state.try_claim(DATABASE_CAPABILITY_OPEN_ITEMS, DATABASE_CAPABILITY_OPEN_BYTES).expect("fixed capability-open admission"));
+        }
+        assert!(state.try_claim(DATABASE_CAPABILITY_OPEN_ITEMS, DATABASE_CAPABILITY_OPEN_BYTES).is_err());
+        assert_eq!(state.items, DATABASE_CAPABILITY_OPEN_TOTAL_ITEMS);
+        assert_eq!(state.bytes, DATABASE_CAPABILITY_OPEN_TOTAL_BYTES);
+        let (slot, generation) = claims.remove(0);
+        assert!(state.release(slot, generation, DATABASE_CAPABILITY_OPEN_ITEMS, DATABASE_CAPABILITY_OPEN_BYTES));
+        let replacement = state.try_claim(DATABASE_CAPABILITY_OPEN_ITEMS, DATABASE_CAPABILITY_OPEN_BYTES).expect("released fixed slot is reusable");
+        assert_eq!(replacement.0, slot);
+        assert_ne!(replacement.1, generation);
+        assert!(!state.release(slot, generation, DATABASE_CAPABILITY_OPEN_ITEMS, DATABASE_CAPABILITY_OPEN_BYTES), "stale generation cannot release the replacement");
+        assert!(state.release(replacement.0, replacement.1, DATABASE_CAPABILITY_OPEN_ITEMS, DATABASE_CAPABILITY_OPEN_BYTES));
+        for (slot, generation) in claims {
+            assert!(state.release(slot, generation, DATABASE_CAPABILITY_OPEN_ITEMS, DATABASE_CAPABILITY_OPEN_BYTES));
+        }
+        assert_eq!((state.items, state.bytes), (0, 0));
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn database_capability_open_success_returns_exact_storage_owner_and_scalar() {
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new().await));
+        let pointer = Arc::as_ptr(&storage);
+        let probe = match DatabaseCapabilityOpenFuture::try_submit(test_worker_pool(), storage) {
+            Ok(probe) => probe,
+            Err(_) => panic!("fixed capability-open admission unexpectedly rejected"),
+        };
+        let output = probe.await.expect("retained capability probe");
+        let (storage, capabilities) = output.into_parts();
+        assert_eq!(Arc::as_ptr(&storage), pointer);
+        assert!(!capabilities.durable);
+        assert_eq!(capabilities.max_durability, DurabilityClass::Memory);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn database_capability_open_cancel_and_stale_generation_retain_exact_owner_for_public_close() {
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new().await));
+        let pointer = Arc::as_ptr(&storage) as usize;
+        let probe = DatabaseCapabilityOpenFuture::try_prepare(test_worker_pool(), storage, false).expect("fixed capability-open preparation");
+        let generation = probe.generation();
+        assert_eq!(probe.retained_storage_identity(), Some(pointer));
+        probe.cancel();
+        assert_eq!(probe.progress(), DatabaseCapabilityOpenProgress::Cancelled);
+        assert_eq!(probe.retained_storage_identity(), Some(pointer));
+        drop(probe);
+        let terminal = take_database_capability_open_terminal(generation).expect("cancelled capability-open terminal authority");
+        let mut previous = terminal.state.retained_owner_count();
+        loop {
+            match terminal.close_step() {
+                DatabaseCapabilityOpenCloseStep::Progress => {
+                    let current = terminal.state.retained_owner_count();
+                    assert!(previous.saturating_sub(current) <= 1, "one close grant releases at most one capability-open owner");
+                    assert!(current <= previous);
+                    previous = current;
+                }
+                DatabaseCapabilityOpenCloseStep::Blocked => std::thread::yield_now(),
+                DatabaseCapabilityOpenCloseStep::Complete => break,
+            }
+        }
+        assert!(terminal.terminal_is_empty());
+
+        let stale_storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new().await));
+        let stale_pointer = Arc::as_ptr(&stale_storage) as usize;
+        let stale = DatabaseCapabilityOpenFuture::try_prepare(test_worker_pool(), stale_storage, false).expect("fixed stale capability-open preparation");
+        let stale_generation = stale.generation();
+        {
+            let mut admission = DATABASE_CAPABILITY_OPEN_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            admission.slots[stale.state.slot].generation = stale_generation.checked_add(1).expect("fixture generation");
+        }
+        stale.state.clone().drive_one(stale_generation);
+        assert_eq!(stale.progress(), DatabaseCapabilityOpenProgress::Fault);
+        assert_eq!(stale.retained_storage_identity(), Some(stale_pointer));
+        {
+            let mut admission = DATABASE_CAPABILITY_OPEN_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            admission.slots[stale.state.slot].generation = stale_generation;
+        }
+        drop(stale);
+        let terminal = take_database_capability_open_terminal(stale_generation).expect("stale capability-open terminal authority");
+        while !terminal.terminal_is_empty() {
+            assert_ne!(terminal.close_step(), DatabaseCapabilityOpenCloseStep::Complete);
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn database_capability_open_saturation_and_shutdown_keep_retry_job_and_public_terminal() {
+        let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+        let gate = Arc::new((std::sync::Mutex::new(false), std::sync::Condvar::new()));
+        let (started_tx, started_rx) = std::sync::mpsc::sync_channel(1);
+        let worker_gate = gate.clone();
+        pool.try_submit(
+            Lane::Io,
+            Box::new(move || {
+                started_tx.send(()).expect("fixture start handoff");
+                let (lock, ready) = &*worker_gate;
+                let mut released = lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                while !*released {
+                    released = ready.wait(released).unwrap_or_else(std::sync::PoisonError::into_inner);
+                }
+            }),
+        )
+        .expect("fixture blocker admission");
+        started_rx.recv().expect("fixture worker entered blocker");
+        loop {
+            match pool.try_submit(Lane::Io, Box::new(|| {})) {
+                Ok(()) => {}
+                Err(error) => {
+                    assert_eq!(error.kind(), semio_framework_async::WorkerSubmitErrorKind::Saturated);
+                    drop(error.into_job());
+                    break;
+                }
+            }
+        }
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new().await));
+        let pointer = Arc::as_ptr(&storage) as usize;
+        let probe = DatabaseCapabilityOpenFuture::try_submit(pool.clone(), storage).expect("capability operation admission remains independent of queue saturation");
+        assert_eq!(probe.retained_storage_identity(), Some(pointer));
+        assert!(probe.state.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some(), "the exact saturated job remains retained for generation-keyed retry");
+        let generation = probe.generation();
+        drop(probe);
+        {
+            let (lock, ready) = &*gate;
+            *lock.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = true;
+            ready.notify_one();
+        }
+        pool.shutdown();
+        let terminal = take_database_capability_open_terminal(generation).or_else(take_next_database_capability_open_terminal).expect("abandoned saturated capability-open authority remains public");
+        while !terminal.terminal_is_empty() {
+            match terminal.close_step() {
+                DatabaseCapabilityOpenCloseStep::Progress | DatabaseCapabilityOpenCloseStep::Blocked => {}
+                DatabaseCapabilityOpenCloseStep::Complete => break,
+            }
+        }
+    }
 
     #[semio_framework_async_macros::async_test]
     async fn hash_operation_text_and_binary_round_trip_with_every_field_present_and_absent() {
@@ -2254,9 +4062,34 @@ mod tests {
         let at_least = handle.query(Query::Get { path: "name".to_string() }, Consistency::AtLeast(frontier)).await.unwrap();
         assert_eq!(at_least.results.len(), 1);
 
-        let history = handle.history().await.unwrap();
-        assert_eq!(history.entries.len(), 1);
-        assert_eq!(history.entries[0].operation_ids, vec![protocol::MutationId("op-1".to_string())]);
+        let mut history = handle.history().await.unwrap();
+        assert_eq!(history.entries().len(), 1);
+        assert!(history.operation_id_eq(0, 0, "op-1"));
+        while history.close_step() {}
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn artifact_history_empty_and_two_batch_replay_are_deterministic() {
+        let root = tempdir("history-order").await;
+        let database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
+        let document = protocol::ArtifactId("history-doc".to_string());
+        let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
+        let mut empty = handle.history().await.unwrap();
+        assert!(empty.entries().is_empty());
+        while empty.close_step() {}
+        for id in ["history-1", "history-2"] {
+            let batch = db_artifact::CommandBatch::new(vec![envelope(id, &[], "alice", &document, &[("value", serde_json::json!(id))]).await]).await.unwrap();
+            db_actor::block_on(handle.submit(batch, db_artifact::SubmitOptions::default())).unwrap().unwrap();
+        }
+        let mut first = handle.history().await.unwrap();
+        let mut second = handle.history().await.unwrap();
+        assert_eq!(first.entries(), second.entries());
+        assert!(first.operation_id_eq(0, 0, "history-1"));
+        assert!(first.operation_id_eq(1, 0, "history-2"));
+        assert!(second.operation_id_eq(0, 0, "history-1"));
+        assert!(second.operation_id_eq(1, 0, "history-2"));
+        while first.close_step() {}
+        while second.close_step() {}
     }
 
     #[semio_framework_async_macros::async_test]
@@ -2387,6 +4220,17 @@ mod tests {
         include_str!("🦀️component.rs")
     }
 
+    fn retire_history_admission(mut admission: ArtifactHistoryAdmission) {
+        let mut cursor = admission.begin_reservation_close().expect("history test admission retained its reservation");
+        for _ in 0..50_000 {
+            if cursor.terminal_is_empty() {
+                break;
+            }
+            assert!(cursor.close_step());
+        }
+        assert!(cursor.terminal_is_empty());
+    }
+
     #[test]
     fn artifact_submit_late_readiness_parks_then_one_shot_wake_reschedules() {
         let source = retained_submit_source();
@@ -2474,8 +4318,285 @@ mod tests {
         assert!(!runner.contains("ask_blocking"));
         assert!(runner.contains("future.as_mut().poll(&mut context)"));
         assert!(runner.contains("Self::start_turn(engine, envelope.payload)"));
-        assert_eq!(runner.matches("close();\n            }\n            drop(job);").count(), 1);
-        assert_eq!(runner.matches("close();\n        }\n        drop(job);").count(), 1);
+        assert!(runner.contains("let closed ="));
+        assert!(runner.contains("if !closed"));
+    }
+
+    #[test]
+    fn artifact_history_empty_one_cap_plus_one_admission_returns_exact_request() {
+        let mut claims = Vec::new();
+        for _ in 0..ARTIFACT_HISTORY_OPERATION_SLOTS {
+            claims.push(ArtifactHistoryAdmission::try_claim().unwrap());
+        }
+        assert!(matches!(ArtifactHistoryAdmission::try_claim(), Err(ArtifactHistoryAdmissionError::Rejected(DbError::Unavailable(_)))));
+        for claim in claims {
+            retire_history_admission(claim);
+        }
+        let source = retained_submit_source();
+        assert!(source.contains("HistoryFrameToken::End"));
+        assert!(source.contains("ArtifactHistoryWorkOwner::Request"));
+    }
+
+    #[test]
+    fn artifact_history_cancel_before_handoff_retires_full_reservation_before_credit_release() {
+        let mut cancelled = ArtifactHistoryAdmission::try_claim().unwrap();
+        let cancelled_generation = cancelled.generation;
+        let mut cursor = cancelled.begin_reservation_close().expect("cancelled pre-handoff request retained its full reservation");
+        let mut peers = Vec::new();
+        for _ in 1..ARTIFACT_HISTORY_OPERATION_SLOTS {
+            peers.push(ArtifactHistoryAdmission::try_claim().unwrap());
+        }
+        assert!(matches!(ArtifactHistoryAdmission::try_claim(), Err(ArtifactHistoryAdmissionError::Rejected(DbError::Unavailable(_)))), "retirement must retain admission credit until terminal-empty");
+        assert!(cursor.close_step());
+        assert!(!cursor.terminal_is_empty());
+        for _ in 0..50_000 {
+            if cursor.terminal_is_empty() {
+                break;
+            }
+            assert!(cursor.close_step());
+        }
+        assert!(cursor.terminal_is_empty());
+        drop(cursor);
+        drop(cancelled);
+        let replacement = ArtifactHistoryAdmission::try_claim().unwrap();
+        assert_ne!(replacement.generation, cancelled_generation);
+        retire_history_admission(replacement);
+        for peer in peers {
+            retire_history_admission(peer);
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn artifact_history_public_terminal_close_releases_admission_only_after_roots_are_empty() {
+        let root = tempdir("history-public-terminal-release").await;
+        let database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
+        let document = protocol::ArtifactId("history-public-terminal-release".to_string());
+        let handle = database.create_document(ArtifactSpec::new(document).await).await.unwrap();
+        let mut peers = Vec::new();
+        for _ in 1..ARTIFACT_HISTORY_OPERATION_SLOTS {
+            peers.push(ArtifactHistoryAdmission::try_claim().unwrap());
+        }
+        let history = handle.history();
+        let generation = history.generation();
+        let terminal = history.terminal_handle();
+        history.cancel();
+        drop(history);
+        assert!(matches!(ArtifactHistoryAdmission::try_claim(), Err(ArtifactHistoryAdmissionError::Rejected(DbError::Unavailable(_)))));
+        assert!(!terminal.terminal_is_empty());
+        let mut released = false;
+        for _ in 0..100_000 {
+            if terminal.terminal_is_empty() {
+                break;
+            }
+            let roots_were_empty = terminal.state.terminal_roots_are_empty();
+            let admission_was_retained = terminal.state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some();
+            let progressed = terminal.close_step();
+            let admission_is_released = terminal.state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none();
+            if admission_was_retained && admission_is_released {
+                assert!(roots_were_empty, "the admission release must occupy a grant after every terminal root was already empty");
+                assert!(progressed);
+                assert!(terminal.state.finished.load(std::sync::atomic::Ordering::Acquire));
+                released = true;
+            }
+            if !progressed {
+                std::thread::yield_now();
+            }
+        }
+        assert!(released);
+        assert!(terminal.terminal_is_empty());
+        assert!(handle.history_terminal(generation).is_none(), "terminal completion must unregister the released generation");
+        let replacement = ArtifactHistoryAdmission::try_claim().unwrap();
+        retire_history_admission(replacement);
+        for peer in peers {
+            retire_history_admission(peer);
+        }
+    }
+
+    #[test]
+    fn artifact_history_nested_derived_item_and_byte_caps_precede_materialization() {
+        let artifact = include_str!("../📄️artifact/🦀️component.rs");
+        for required in ["HISTORY_REPLAY_RESULT_BYTES", "HISTORY_REPLAY_OPERATION_BYTES", "HISTORY_REPLAY_MAX_ENTRIES", "HISTORY_REPLAY_MAX_OPERATION_IDS", "history dependency item credit", "history result byte credit"] {
+            assert!(artifact.contains(required), "missing {required}");
+        }
+        let preflight = artifact.find("operation_count >= HISTORY_REPLAY_MAX_OPERATION_IDS").unwrap();
+        let publish = artifact.find("reservation.operation_ids.push(HistoryTextRange").unwrap();
+        assert!(preflight < publish);
+    }
+
+    #[test]
+    fn artifact_history_segment_cap_plus_one_reads_only_one_admitted_page() {
+        let artifact = include_str!("../📄️artifact/🦀️component.rs");
+        assert!(artifact.contains("HISTORY_REPLAY_SEGMENT_PAGES: u64 = 1_024"));
+        assert!(artifact.contains(".min(HISTORY_REPLAY_PAGE_BYTES)"));
+        assert!(artifact.contains("pack::ByteRange { offset, len: requested }"));
+        assert!(artifact.contains("page.capacity() as u64 > HISTORY_REPLAY_PAGE_BYTES"));
+        assert!(!artifact.contains("pack::ByteRange { offset: 0, len }"));
+    }
+
+    #[test]
+    fn artifact_history_crc_and_frame_tokenizer_advance_one_page_per_grant() {
+        let artifact = include_str!("../📄️artifact/🦀️component.rs");
+        assert!(artifact.contains("protocol::codec::Crc32cCursor"));
+        assert!(artifact.contains("self.crc.update_page(page)"));
+        assert!(artifact.contains("self.payload_remaining.min(HISTORY_REPLAY_PAGE_BYTES)"));
+        assert!(!artifact.contains("protocol::codec::crc32c(whole_frame)"));
+        assert!(!artifact.contains("decode_history_token"));
+    }
+
+    #[test]
+    fn artifact_history_cancel_retires_one_page_or_nested_owner_per_actor_grant() {
+        let artifact = include_str!("../📄️artifact/🦀️component.rs");
+        assert!(artifact.contains("HistoryReplayTransition::FaultRetire"));
+        assert!(artifact.contains("self.page_count -= 1"));
+        assert!(artifact.contains("self.operation_ids.pop().is_some()"));
+        assert!(artifact.contains("self.result_pages.pop()"));
+        assert!(!artifact.contains("pages.clear()"));
+    }
+
+    #[test]
+    fn artifact_history_quiet_late_wake_and_retry_are_generation_coalesced() {
+        let source = retained_submit_source();
+        assert!(source.contains("impl std::task::Wake for ArtifactHistoryWake"));
+        assert!(source.contains("self.generation == state.generation"));
+        assert!(source.contains("self.scheduled.compare_exchange(false, true"));
+        assert!(source.contains("self.pool.callback_at"));
+        assert!(source.contains("retry_generation"));
+    }
+
+    #[test]
+    fn artifact_history_cancel_before_during_after_retains_actor_and_result_owners() {
+        let source = retained_submit_source();
+        assert!(source.contains("history_retained(self.generation, self.cancelled.clone(), reservation)"));
+        assert!(source.contains("terminalize_unhanded_request(Err(DbError::Closed), HistoryProgress::Cancelled)"));
+        assert!(source.contains("self.terminalize_work(Err(DbError::Closed), HistoryProgress::Cancelled)"));
+        assert!(source.contains("*self.terminal_result.lock()"));
+        assert!(source.contains("HistoryProgress::Completed | HistoryProgress::Cancelled | HistoryProgress::Fault"));
+    }
+
+    #[test]
+    fn artifact_history_stale_generation_and_slot_aba_precede_mailbox_mutation() {
+        let first = ArtifactHistoryAdmission::try_claim().unwrap();
+        let slot = first.slot;
+        let generation = first.generation;
+        retire_history_admission(first);
+        let next = ArtifactHistoryAdmission::try_claim().unwrap();
+        assert_eq!(next.slot, slot);
+        assert_ne!(next.generation, generation);
+        let source = retained_submit_source();
+        let stale = source.find("if self.authority.generation() != self.authority_generation").unwrap();
+        let handoff = source.find("self.authority.history_retained").unwrap();
+        assert!(stale < handoff);
+        retire_history_admission(next);
+    }
+
+    #[test]
+    fn artifact_history_replay_ordering_is_segment_frame_then_result_fifo() {
+        let artifact = include_str!("../📄️artifact/🦀️component.rs");
+        assert!(artifact.contains("HistoryReplayPhase::Probe { index: 0 }"));
+        assert!(artifact.contains("cursor: HistoryFrameCursor::new(next_offset)"));
+        assert!(artifact.contains("reservation.entries.push(ArtifactHistoryEntry"));
+        assert!(!retained_submit_source().contains("ArtifactHistoryWorkOwner::Map"));
+    }
+
+    #[test]
+    fn artifact_history_terminal_job_work_result_take_resume_and_close_one_owner() {
+        let source = retained_submit_source();
+        for required in [
+            "pub fn take_terminal_job",
+            "pub fn take_terminal_work",
+            "pub fn take_terminal_result",
+            "pub fn take_actor_terminal_job",
+            "pub fn close_step",
+            "pub fn terminal_is_empty",
+            "impl ArtifactHistoryTerminalJob",
+            "impl ArtifactHistoryTerminalWork",
+            "pub struct ArtifactHistoryTerminalReservation",
+            "pub fn take_terminal_reservation",
+        ] {
+            assert!(source.contains(required), "missing {required}");
+        }
+        assert!(source.contains("fn close_one(self: &Arc<Self>) -> bool"));
+    }
+
+    #[test]
+    fn artifact_history_construction_fault_is_public_and_admission_release_is_a_final_grant() {
+        let engine = retained_submit_source();
+        let artifact = include_str!("../📄️artifact/🦀️component.rs");
+        for required in [
+            "terminal_construction: std::sync::Mutex<Option<db_artifact::HistoryReplayReservationConstructionFault>>",
+            "pub struct ArtifactHistoryTerminalConstructionFault",
+            "pub fn take_terminal_construction_fault",
+            "pub fn resume(mut self) -> Result<(), Self>",
+            "fn terminal_roots_are_empty(&self) -> bool",
+            "self.finished.load(std::sync::atomic::Ordering::Acquire)",
+            "self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()",
+            "self.state.finish_if_terminal_empty()",
+        ] {
+            assert!(engine.contains(required), "missing retained public construction/admission authority: {required}");
+        }
+        assert!(artifact.contains("const HISTORY_REPLAY_CONSTRUCTION_SLOTS: usize = 64"));
+        assert!(artifact.contains("pub(crate) fn try_new()"));
+        assert!(artifact.contains("pub(crate) struct HistoryReplayReservationConstructionFault"));
+        assert!(artifact.contains("impl Drop for HistoryReplayReservationConstructionBuilder"));
+        assert!(artifact.contains("impl Drop for HistoryReplayReservationConstructionFault"));
+        assert!(artifact.contains("take_history_replay_reservation_construction_fault"));
+        assert!(!artifact.contains("pub fn into_parts"));
+        assert!(!artifact.contains("pub struct HistoryReplayReservationConstructionFaultCursor"));
+        assert!(artifact.contains("try_new_with_result_page_failure"));
+        let terminal = &engine[engine.find("impl ArtifactHistoryTerminalHandle").unwrap()..engine.find("impl Future for HistoryFuture").unwrap()];
+        let close = &terminal[terminal.find("pub fn close_step(&self)").unwrap()..terminal.find("pub fn terminal_is_empty(&self)").unwrap()];
+        assert!(close.find("self.state.close_one()").unwrap() < close.find("self.state.finish_if_terminal_empty()").unwrap());
+        assert!(close.contains("return true"), "owner retirement must return before the final admission-release grant");
+    }
+
+    #[test]
+    fn artifact_history_one_grant_advances_one_retained_phase_without_blocking() {
+        let engine = retained_submit_source();
+        let artifact = include_str!("../📄️artifact/🦀️component.rs");
+        let history = &engine[engine.find("const ARTIFACT_HISTORY_OPERATION_SLOTS").unwrap()..engine.find("pub struct ArtifactHandle").unwrap()];
+        let replay = &artifact[artifact.find("//#region 🔖️HistoryReplay").unwrap()..artifact.find("//#endregion 🔖️HistoryReplay").unwrap()];
+        for forbidden in ["block_on(", "ask_blocking", "submit_blocking", "loop {", "while "] {
+            assert!(!history.contains(forbidden), "history outer authority retained {forbidden}");
+            assert!(!replay.contains(forbidden), "history replay cursor retained {forbidden}");
+        }
+        assert!(history.contains("std::pin::Pin::new(future).poll(&mut context)"));
+        assert!(artifact.contains("future.as_mut().poll(&mut context)"));
+    }
+
+    #[test]
+    fn artifact_history_drop_after_complete_moves_result_to_public_terminal_registry() {
+        let source = retained_submit_source();
+        let result_drop = &source[source.find("impl Drop for HistoryView").unwrap()..source.find("//#endregion 🔖️History").unwrap()];
+        assert!(result_drop.contains("register_artifact_history(&state)"));
+        assert!(result_drop.contains("state.terminal_result"));
+        assert!(result_drop.contains("self.inner.take()"));
+        assert!(source.contains("pub fn history_terminal(&self, generation: u64)"));
+    }
+
+    #[test]
+    fn artifact_history_runner_close_mid_turn_retains_replay_until_terminal_empty() {
+        let artifact = include_str!("../📄️artifact/🦀️component.rs");
+        let runner = &artifact[artifact.find("enum ArtifactTurn").unwrap()..artifact.find("//#region 🧪️Tests").unwrap()];
+        assert!(runner.contains("ArtifactTurn::History"));
+        assert!(runner.contains("replay.request_close(DbError::Closed)"));
+        assert!(runner.contains("!replay.terminal_is_empty()"));
+        assert!(runner.contains("Pin::new(&mut *replay).poll(&mut context)"));
+        let panic_close = &runner[runner.find("history replay cursor panicked").unwrap()..];
+        assert!(panic_close.contains("replay.request_close"));
+        assert!(panic_close.contains("self.schedule()"));
+        assert!(!runner.contains("turn.take();\n                    drop(turn);\n                    self.address.close();"));
+    }
+
+    #[test]
+    fn artifact_history_future_handle_drop_and_terminal_take_resume_are_exact() {
+        let source = retained_submit_source();
+        let future_drop = &source[source.find("impl Drop for HistoryFuture").unwrap()..source.find("impl ArtifactHistoryTerminalJob").unwrap()];
+        assert!(future_drop.contains("completion.take()"));
+        assert!(future_drop.contains("terminal_result"));
+        assert!(!future_drop.contains("self.state.close_one()"));
+        for required in ["pub struct ArtifactHistoryTerminalHandle", "pub fn terminal_handle(&self)", "pub fn take_terminal_result(&self)", "pub fn resume(mut self)", "pub fn close_step(&self)"] {
+            assert!(source.contains(required), "missing {required}");
+        }
     }
     //#endregion 🔖️Retained submit authority
 

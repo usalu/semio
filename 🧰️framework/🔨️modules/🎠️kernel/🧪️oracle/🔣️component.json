@@ -1,0 +1,41 @@
+{
+  "$schema": "../../../🛍️products/🦑️repo/🔨️modules/🧪️test/🧬️schema/🔣️component.json",
+  "schemaVersion": 1,
+  "_comment": "🧩️ The kernel module's contribution to the repository test platform. `semver` is the published contract this module's own versionSatisfies() implements a deliberate subset of, so it belongs to this owner rather than to the test framework.",
+  "oracles": [
+    {
+      "id": "semver",
+      "ecosystem": "javascript",
+      "package": "semver",
+      "version": "7.8.5",
+      "capabilities": [
+        "version-requirement-satisfaction"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "ISC",
+      "testOnly": true,
+      "homepage": "https://github.com/npm/node-semver",
+      "rationale": "The reference implementation of the semver requirement grammar, and the definition of the caret tiers this module reimplements (^1.2.3 pins major, ^0.2.3 pins minor, ^0.0.3 pins patch). Deterministic, dependency-free, no network. Valid only INSIDE the frozen subset — `*`, `=`, `^`, `~`, `>=` over plain major.minor.patch — because ranges, prerelease tags, wildcards and whitespace comparators are rejected by design here, and comparing those would measure a deliberate divergence rather than a defect.",
+      "hostPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript"
+    }
+  ],
+  "noOracleDecisions": [
+    {
+      "id": "frozen-requirement-grammar",
+      "capabilities": [
+        "version-requirement-error-law"
+      ],
+      "rationale": "Outside the frozen requirement grammar this repository guarantees 'unsatisfied, never a throw'. `semver` cannot adjudicate that: it THROWS on some malformed input and coerces other malformed input to a match, which is a different and equally valid contract. Comparing against it would measure a deliberate divergence rather than a defect, so the vectors carry the specification instead.",
+      "substitutes": [
+        "specification-vectors"
+      ]
+    }
+  ],
+  "comparisonProfiles": [],
+  "oracleHostPackages": [],
+  "migrationStatus": {
+    "🧰️framework/🔨️modules/🎠️kernel": "parity-green"
+  }
+}

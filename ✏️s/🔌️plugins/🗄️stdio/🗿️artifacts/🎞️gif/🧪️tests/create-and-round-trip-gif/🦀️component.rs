@@ -5,7 +5,7 @@
 //! subject decodes that artifact with this repository's `decode_gif` and re-encodes with
 //! `encode_gif`. Both are read back by the independent decoder.
 
-use semio_repo_test_host::oracle_raster::{oracle_create_gif, project_gif, RasterSpec};
+use semio_s_plugin_stdio_test_oracle::raster::{oracle_create_gif, project_gif, RasterSpec};
 use semio_repo_test_host::{Adapter, Context, Outcome};
 
 //#region 🔖️Input
@@ -29,7 +29,7 @@ fn oracle(ctx: &Context) -> Result<Outcome, String> {
 #[cfg(feature = "sut")]
 mod subject {
     use super::spec;
-    use semio_repo_test_host::oracle_raster::{oracle_create_gif, project_gif};
+    use semio_s_plugin_stdio_test_oracle::raster::{oracle_create_gif, project_gif};
     use semio_repo_test_host::{Context, Outcome};
     use semio_s_plugin_stdio::artifacts::gif::standards::v89a::subsets::any::io::{decode_gif, encode_gif};
 

@@ -28,8 +28,9 @@
 /// point: `db::Database::open_at(pool, root, db::Profile::Dev)` stands up a
 /// document database over `FsStorage`.
 pub use crate::db_engine::{
-    ArtifactHandle, ArtifactSpec, CatalogEntry, CatalogView, CommandReceipt, Consistency, Database, DbHealth, HistoryEntry, HistoryView, LiveQuery, LiveQuerySpec, PreviewHandle, Query, QueryStream, SecurityAuthzHook, SnapshotFuture, SnapshotKind,
-    SnapshotReceipt, SubmitFuture,
+    take_database_capability_open_terminal, take_next_database_capability_open_terminal, ArtifactHandle, ArtifactHistoryTerminalConstructionFault, ArtifactHistoryTerminalHandle, ArtifactSpec, CatalogEntry, CatalogView, CommandReceipt, Consistency,
+    Database, DatabaseCapabilityOpenCloseStep, DatabaseCapabilityOpenFuture, DatabaseCapabilityOpenProgress, DatabaseCapabilityOpenRejected, DatabaseCapabilityOpenResult, DatabaseCapabilityOpenTerminalHandle, DbHealth, HistoryEntry, HistoryView,
+    LiveQuery, LiveQuerySpec, PreviewHandle, Query, QueryStream, SecurityAuthzHook, SnapshotFuture, SnapshotKind, SnapshotReceipt, SubmitFuture,
 };
 
 /// 🗄️🌿️ The real `vcs`-backed `VersionGraph` — the ONLY place in the whole `db` family
@@ -256,8 +257,9 @@ mod tests {
         let frontier = handle.frontier().await.unwrap();
         assert!(frontier.dominates(&receipt.frontier).unwrap());
 
-        let history = handle.history().await.unwrap();
-        assert_eq!(history.entries.len(), 1);
+        let mut history = handle.history().await.unwrap();
+        assert_eq!(history.entries().len(), 1);
+        while history.close_step() {}
 
         assert_eq!(database.catalog().await.artifacts.len(), 1);
         database.shutdown(std::time::Duration::from_secs(1)).await.unwrap();

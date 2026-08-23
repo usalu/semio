@@ -8,18 +8,18 @@
 //! 🎨️ Embeds GraphHost, FlowHost, and EditorHost via vello offscreen compositing.
 
 use crate::interpreter::FrameworkWidgetContext;
-use flow::{FlowFixture, FlowHost, dag::dag_screen_to_world};
+use flow::{dag::dag_screen_to_world, FlowFixture, FlowHost};
 use framework_editor::EditorHost;
 use framework_surface_node_graph::node_graph::GraphHost;
-use framework_surface_tiled_map::tiled_map::{MapHost, MapInteractionIntent, tiles::VisibleTileCursor};
+use framework_surface_tiled_map::tiled_map::{tiles::VisibleTileCursor, MapHost, MapInteractionIntent};
 use infinite_canvas as canvas;
-use infinite_world::world::{WORLD_ASSET_URL_BYTE_CAPACITY, WorldAssetFault, WorldAssetMetadataId, WorldAssetRequestKind};
-use serde_json::{Value, json};
+use infinite_world::world::{WorldAssetFault, WorldAssetMetadataId, WorldAssetRequestKind, WORLD_ASSET_URL_BYTE_CAPACITY};
+use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
 use std::mem::ManuallyDrop;
 use std::sync::{Mutex, MutexGuard, OnceLock};
+use ui_wgpu::wgpu::{draw_text_overlay, FontAtlas, GpuContext, HitKind, HitTarget, KeyAction, PointerModifiers, RasterTextureStageFault, Rect, Rgba, Theme};
 use ui_wgpu::wgpu::{ActionDescriptor, UiComponentSceneNode};
-use ui_wgpu::wgpu::{FontAtlas, GpuContext, HitKind, HitTarget, KeyAction, PointerModifiers, Rect, Rgba, Theme, draw_text_overlay};
 use vello::peniko::Color;
 use vello::wgpu;
 use vello::{AaConfig, AaSupport, RenderParams, Renderer, RendererOptions};
@@ -421,17 +421,49 @@ pub(crate) struct EngineCanvasPresenter {
 }
 
 impl EngineCanvasPresenter {
-    pub(crate) fn realize_one(&mut self, gpu: &mut GpuContext, packet: &EngineCanvasPacket) -> Result<(), String> {
+    pub(crate) fn realize_one(&mut self, gpu: &mut GpuContext, packet: &EngineCanvasPacket, candidate: ui_wgpu::wgpu::RasterTextureWitness, expected: ui_wgpu::wgpu::RasterTextureWitness) -> Result<(), String> {
         let width = packet.width.max(1);
         let height = packet.height.max(1);
+        if candidate != expected {
+            return Err("engine raster operation authority was stale before realization".to_string());
+        }
+        let key = raster_key(&packet.surface_id);
+        let admission = gpu.reserve_engine_texture(&key, width, height, candidate, expected)?;
         let needs_create = !self.surfaces.contains_key(&packet.surface_id);
         if needs_create {
-            let vello = Renderer::new(gpu.device(), RendererOptions { use_cpu: false, antialiasing_support: AaSupport::area_only(), num_init_threads: std::num::NonZeroUsize::new(1), pipeline_cache: None })
-                .map_err(|error| format!("vello renderer: {error:?}"))?;
-            let (texture, view) = create_target_texture(gpu.device(), width, height);
+            if let Err(error) = gpu.validate_engine_target_texture_allocation(&admission, expected) {
+                let _ = gpu.cancel_engine_texture_admission(admission);
+                return Err(error);
+            }
+            let texture = create_target_texture(gpu.device(), width, height);
+            if let Err(error) = gpu.validate_engine_target_view_allocation(&admission, expected) {
+                gpu.retain_engine_allocation_fault(admission, Some(texture), None);
+                return Err(error);
+            }
+            let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
+            if let Err(error) = gpu.validate_engine_renderer_allocation(&admission, expected) {
+                gpu.retain_engine_allocation_fault(admission, Some(texture), Some(view));
+                return Err(error);
+            }
+            let vello = match Renderer::new(gpu.device(), RendererOptions { use_cpu: false, antialiasing_support: AaSupport::area_only(), num_init_threads: std::num::NonZeroUsize::new(1), pipeline_cache: None }) {
+                Ok(vello) => vello,
+                Err(error) => {
+                    gpu.retain_engine_allocation_fault(admission, Some(texture), Some(view));
+                    return Err(format!("vello renderer: {error:?}"));
+                }
+            };
             self.surfaces.insert(packet.surface_id.clone(), EngineGpuSurface { vello, texture, view, width, height });
         } else if self.surfaces.get(&packet.surface_id).is_some_and(|surface| surface.width != width || surface.height != height) {
-            let (texture, view) = create_target_texture(gpu.device(), width, height);
+            if let Err(error) = gpu.validate_engine_replacement_texture_allocation(&admission, expected) {
+                let _ = gpu.cancel_engine_texture_admission(admission);
+                return Err(error);
+            }
+            let texture = create_target_texture(gpu.device(), width, height);
+            if let Err(error) = gpu.validate_engine_replacement_view_allocation(&admission, expected) {
+                gpu.retain_engine_allocation_fault(admission, Some(texture), None);
+                return Err(error);
+            }
+            let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
             let surface = self.surfaces.get_mut(&packet.surface_id).expect("engine surface");
             surface.texture = texture;
             surface.view = view;
@@ -440,11 +472,33 @@ impl EngineCanvasPresenter {
         }
         let surface = self.surfaces.get_mut(&packet.surface_id).expect("engine surface");
         let params = RenderParams { base_color: packet.clear, width, height, antialiasing_method: AaConfig::Area };
-        surface.vello.render_to_texture(gpu.device(), gpu.queue(), packet.scene.vello_scene(), &surface.view, &params).map_err(|error| format!("vello render: {error:?}"))?;
-        let published_view = surface.view.clone();
-        let published_texture = std::mem::replace(&mut surface.texture, create_target_texture(gpu.device(), width, height).0);
-        surface.view = surface.texture.create_view(&wgpu::TextureViewDescriptor::default());
-        gpu.register_engine_texture(&raster_key(&packet.surface_id), published_texture, &published_view, width, height);
+        if let Err(error) = surface.vello.render_to_texture(gpu.device(), gpu.queue(), packet.scene.vello_scene(), &surface.view, &params) {
+            let _ = gpu.cancel_engine_texture_admission(admission);
+            return Err(format!("vello render: {error:?}"));
+        }
+        if let Err(error) = gpu.validate_engine_replacement_texture_allocation(&admission, expected) {
+            let _ = gpu.cancel_engine_texture_admission(admission);
+            return Err(error);
+        }
+        let replacement_texture = create_target_texture(gpu.device(), width, height);
+        if let Err(error) = gpu.validate_engine_replacement_view_allocation(&admission, expected) {
+            gpu.retain_engine_allocation_fault(admission, Some(replacement_texture), None);
+            return Err(error);
+        }
+        let replacement_view = replacement_texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let published_texture = std::mem::replace(&mut surface.texture, replacement_texture);
+        let published_view = std::mem::replace(&mut surface.view, replacement_view);
+        if let Err(fault) = gpu.stage_engine_texture(admission, published_texture, published_view, expected) {
+            match fault {
+                RasterTextureStageFault::Returned { fault, admission, texture, view } => {
+                    let _ = gpu.cancel_engine_texture_admission(admission);
+                    surface.texture = texture;
+                    surface.view = view;
+                    return Err(fault.to_owned());
+                }
+                RasterTextureStageFault::Retained(fault) => return Err(fault.to_owned()),
+            }
+        }
         Ok(())
     }
 }
@@ -581,7 +635,11 @@ pub(crate) fn theme_is_dark(theme: &Theme) -> bool {
 }
 
 fn linear_to_rgba8_channel(linear: f32) -> u8 {
-    if linear <= 0.0031308 { (linear * 12.92 * 255.0).round() as u8 } else { (1.055 * linear.powf(1.0 / 2.4) - 0.055).mul_add(255.0, 0.0).round() as u8 }
+    if linear <= 0.0031308 {
+        (linear * 12.92 * 255.0).round() as u8
+    } else {
+        (1.055 * linear.powf(1.0 / 2.4) - 0.055).mul_add(255.0, 0.0).round() as u8
+    }
 }
 
 fn sync_canvas_theme_dark(_cache: &mut NodeGraphSyncCache, dark: bool, flow: &mut FlowHost) {
@@ -832,8 +890,8 @@ pub(crate) fn opaque_scene_quarantine_status() -> (usize, bool) {
     canvas::opaque_scene_retirement_status()
 }
 
-fn create_target_texture(device: &wgpu::Device, width: u32, height: u32) -> (wgpu::Texture, wgpu::TextureView) {
-    let texture = device.create_texture(&wgpu::TextureDescriptor {
+fn create_target_texture(device: &wgpu::Device, width: u32, height: u32) -> wgpu::Texture {
+    device.create_texture(&wgpu::TextureDescriptor {
         label: Some("engine_canvas_target"),
         size: wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
         mip_level_count: 1,
@@ -842,9 +900,7 @@ fn create_target_texture(device: &wgpu::Device, width: u32, height: u32) -> (wgp
         format: wgpu::TextureFormat::Rgba8Unorm,
         usage: wgpu::TextureUsages::STORAGE_BINDING | wgpu::TextureUsages::TEXTURE_BINDING,
         view_formats: &[],
-    });
-    let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
-    (texture, view)
+    })
 }
 
 fn render_vello_scene(resources: &mut EngineCanvasBuildContext, surface_id: &str, scene: canvas::Scene, clear: Color, width: u32, height: u32) {
@@ -1969,7 +2025,11 @@ pub fn map_marquee_mode(shift: bool, ctrl_or_meta: bool) -> &'static str {
 }
 
 pub fn map_marquee_crossing(method: &str, start_x: f32, end_x: f32) -> bool {
-    if method == "lasso" { end_x < start_x } else { end_x < start_x }
+    if method == "lasso" {
+        end_x < start_x
+    } else {
+        end_x < start_x
+    }
 }
 
 pub fn map_merge_selection(mode: &str, current_positions: &[String], current_routes: &[String], next_positions: &[String], next_routes: &[String]) -> (Vec<String>, Vec<String>) {
@@ -3264,7 +3324,11 @@ fn write_text_editor_action_pair(batch: &mut ui_wgpu::wgpu::BoundedActionBatchRe
 }
 
 fn decimal_digits(value: usize) -> usize {
-    if value == 0 { 1 } else { value.ilog10() as usize + 1 }
+    if value == 0 {
+        1
+    } else {
+        value.ilog10() as usize + 1
+    }
 }
 
 fn text_editor_pair_bytes(scene: &UiComponentSceneNode, document_bytes: usize, selection_bytes: usize) -> Result<usize, ui_wgpu::wgpu::BoundedActionFault> {

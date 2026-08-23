@@ -123,3 +123,18 @@ Atomic-family and wake checkpoint — 2026-08-23 (supersedes every earlier count
   generation-qualified registry leases outside realm close; typed terrain input; dynamic
   HashSet/HashMap/frame-vector retirement; PNG/JPEG/MVT/SVG semantics; pending packet/GPU table,
   atlas/raster/cache and opaque render/submit close; realm terminal-empty; real Wasm/browser timing.
+
+Presenter/GPU retirement checkpoint — 2026-08-23
+- PreparedRenderPacket Clone/Arc census in the live packet/gate path: 0 owned packet clones and 0
+  `Option<Arc<PreparedRenderPacket>>` authorities.
+- typed presenter handoff: stage(sequence/revision/generation) -> borrowed staged render -> exact
+  acknowledge -> last-valid swap -> returned old packet retirement.
+- mesh GPU table: 256 fixed slots, 256-byte fixed keys, exact key+version lookup, zero HashMap/retain
+  in the table region, one slot/buffer per retirement grant.
+- acknowledged replacement preservation: one upload inspected per grant; up to 256 exact current
+  versions retained while same-key old versions retire.
+- close order: pending presentation/packet -> staged/last-valid gate -> active upload -> fixed GPU
+  table -> World dynamic authority. Full GpuContext/atlas/raster/cache/platform teardown remains RED.
+- source gates: rustfmt/parser PASS; Bun structural predicate 28/28; interactivity verifier
+  self-test/plain clean DENY; scoped working/staged/HEAD diff checks PASS. Rust/build/runtime gates
+  unrun by instruction.

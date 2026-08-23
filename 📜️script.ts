@@ -42,6 +42,11 @@ import {
   runCmd,
   runCmdStatus,
   runProbe,
+  layeringBreaches,
+  policyDiscoveredAllowlist,
+  layeringCounts,
+  layeringReferences,
+  writeLayeringBaseline,
   runTestBudgeted,
   spawnDaemon,
   summarizeCoverage,
@@ -1595,6 +1600,69 @@ function toolJobJackEnvelopeCallerRetainedExact(store: string, jack: string, edi
   );
 }
 
+function toolJobTrinityRewriteEnvelopeCallerRetainedExact(store: string, jack: string, editor: string, rewrite: string, plugin: string): boolean {
+  return (
+    store.includes("pub fn artifact_owned_spr_edit_history_decoder") &&
+    store.includes("struct ArtifactOwnedSprMutationArrayAuthority") &&
+    store.includes("self.scalar_entry") &&
+    store.includes("artifact-spr.mutation-array-cancelled") &&
+    store.includes("SPR edit decode reached Drop before exact publication or bounded retirement") &&
+    jack.includes("pub struct JackEnvelopeOwnedFieldCatalog") &&
+    jack.includes("artifact_owned_spr_edit_history_decoder") &&
+    jack.includes("struct JackMutationDecodeAuthority") &&
+    jack.includes("OwnedSchemaHexAuthority<JACK_OWNED_FIELD_BYTES>") &&
+    jack.includes("struct JackSnapshotCloneAuthority") &&
+    jack.includes("struct JackStoreInitializationAuthority") &&
+    jack.includes("impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, TrinityGraphMutation> for JackStoreInitializationAuthority") &&
+    jack.includes("JackStoreInitializationPhase::ValidateEditPair") &&
+    jack.includes("JackStoreInitializationPhase::SeedHistory") &&
+    jack.includes("JackStoreInitializationPhase::BuildCandidate") &&
+    jack.includes("ArtifactStoreInitializationRuntime::new") &&
+    jack.includes("ArtifactStore::from_initialized_runtime_with_owners") &&
+    jack.includes("self.generation.0.checked_add(1)") &&
+    jack.includes("Jack store initialization authority reached Drop before exact candidate handoff or retained rejection close") &&
+    jack.includes("jack_store_initializer_publishes_exact_next_generation_and_candidate_closes_incrementally") &&
+    jack.includes("jack_store_initializer_cancel_and_stale_generation_return_every_owner_terminal_empty") &&
+    jack.includes("jack_nested_mutation_and_child_snapshot_retire_one_exact_owner_per_grant") &&
+    editor.includes("fn build_document_store_initialization_job(") &&
+    editor.includes("jack_document_store_initialization_job(envelope, operation, generation)") &&
+    editor.includes("jack_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed") &&
+    editor.includes("jack_live_envelope_cancel_closes_retained_pages_without_publication") &&
+    rewrite.includes("type TrinityRewriteApp = VcsArtifactApp<EditorApp<TrinityJackPlayApp>>") &&
+    rewrite.includes("pub struct TrinityRewriteEnvelopeLoadHandle") &&
+    rewrite.includes("fn runtime_handle(&self) -> ArtifactEnvelopeDecodeOperationHandle") &&
+    rewrite.includes("TRINITY_REWRITE_ENVELOPE_MAXIMUM_PAGES") &&
+    rewrite.includes("TRINITY_REWRITE_ENVELOPE_MAXIMUM_BYTES") &&
+    rewrite.includes("trinity_rewrite_envelope_credits_admit_exact_caps_and_reject_zero_or_plus_one") &&
+    rewrite.includes("pub async fn new()") &&
+    rewrite.includes("VcsArtifactApp::new(EditorApp::<TrinityJackPlayApp>::default()).await") &&
+    rewrite.includes("pub fn begin_envelope_load(") &&
+    rewrite.includes("begin_artifact_envelope_ingress(maximum_pages, maximum_bytes)") &&
+    rewrite.includes("source: &js_sys::Uint8Array") &&
+    rewrite.includes("let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES]") &&
+    rewrite.includes("ArtifactEnvelopeDecodePage::try_from_array(bytes, len)") &&
+    rewrite.includes("admit_artifact_envelope_ingress_page(handle.runtime_handle(), page).map_err(|(fault, _page)| js_fault(fault))") &&
+    rewrite.includes("seal_artifact_envelope_ingress(handle.runtime_handle())") &&
+    rewrite.includes("app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
+    rewrite.includes("advance_artifact_envelope_load(handle.runtime_handle())") &&
+    rewrite.includes("acknowledge_artifact_store_replacement(handle.runtime_handle())") &&
+    rewrite.includes("cancel_artifact_envelope_load(handle.runtime_handle())") &&
+    rewrite.includes("close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
+    plugin.includes("envelope_ingress: ArtifactFixedRegistry<ActiveArtifactEnvelopeIngress>") &&
+    plugin.includes("self.retain_initializer_for_close(job)") &&
+    plugin.includes("artifact_envelope_ingress_saturation_returns_exact_plus_one_owner_and_closes_fifo_slots") &&
+    plugin.includes("artifact_envelope_ingress_cancel_and_interrupted_close_release_one_real_page_per_grant") &&
+    !rewrite.includes("envelope_json: Option<String>") &&
+    !rewrite.includes("RefCell<TrinityGraphStore>") &&
+    !rewrite.includes("reject_whole_buffer_artifact_envelope_ingress") &&
+    !rewrite.includes("TrinityGraphStore::new") &&
+    !rewrite.includes("dispatch_text(command_text)") &&
+    !rewrite.includes("dispatch_binary(command_bytes)") &&
+    !rewrite.includes("while let") &&
+    !rewrite.includes("loop {")
+  );
+}
+
 function toolJobGisMapEnvelopeCallerRetainedExact(store: string, gisMap: string, editor: string, wasm: string, plugin: string): boolean {
   const variants = [
     "CreatePosition(payload)",
@@ -1700,11 +1768,73 @@ function toolJobDrawEnvelopeCallerRetainedExact(store: string, draw: string, edi
     "DrawRetirementOwner::Points(values)",
     "DrawRetirementOwner::AssetEntry",
   ];
+  const digestFields = [
+    "FillStyle::Solid { color }",
+    "FillStyle::LinearGradient { x1, y1, x2, y2, stops }",
+    "FillStyle::RadialGradient { cx: center_x, cy: center_y, r, stops }",
+    "stop.offset",
+    "stop.color",
+    "value.color[(self.phase - 1) as usize]",
+    "value.width",
+    "observe_owned_string(digest, 246, &value.cap",
+    "observe_owned_string(digest, 247, &value.join",
+    "value.dash.is_some()",
+    "base.visible",
+    "base.locked",
+    "base.opacity",
+    "observe_owned_string(digest, 106, &base.blend_mode",
+    "base.transform.rotation",
+    "observe_owned_string(digest, 340, &value.shape_kind",
+    "value.rect.is_some()",
+    "value.ellipse.is_some()",
+    "value.circle.is_some()",
+    "value.line.is_some()",
+    "value.polygon.is_some()",
+    "PathSegment::Move",
+    "PathSegment::Line",
+    "PathSegment::Quad",
+    "PathSegment::Cubic",
+    "PathSegment::Arc",
+    "PathSegment::Close",
+    "observe_owned_string(digest, 382, &value.content",
+    "observe_owned_string(digest, 390, &value.image_key",
+    "observe_owned_string(digest, 410, &value.operation",
+    "value.children.len()",
+    "observe_owned_string(digest, 420, &value.source_key",
+    "value.params.threshold",
+    "Self::variant(mutation)",
+    "value.visible",
+    "value.locked",
+    "value.opacity",
+    "observe_owned_string(digest, 3, &value.blend_mode",
+    "observe_owned_string(digest, 3, &value.new_name",
+    "value.transform.rotation",
+    "value.fill.as_ref()",
+    "value.stroke.as_ref()",
+    "observe_owned_string(digest, 3, &value.boolean_operation",
+    "value.params.simplify_epsilon",
+    "value.parent_id.is_some()",
+    "value.index",
+    "value.layer",
+  ];
+  const requestStart = draw.indexOf("pub fn request_draw_mutation_arena_pool()");
+  const requestAuthority = requestStart >= 0 ? toolJobRustBlock(draw, draw.indexOf("{", requestStart)) : undefined;
+  const requestBlock = requestAuthority?.body ?? "";
+  const borrowStart = draw.indexOf("fn borrow_draw_mutation_arena()");
+  const borrowAuthority = borrowStart >= 0 ? toolJobRustBlock(draw, draw.indexOf("{", borrowStart)) : undefined;
+  const borrowBlock = borrowAuthority?.body ?? "";
+  const defaultStart = editor.indexOf("impl Default for DrawPlayApp");
+  const defaultAuthority = defaultStart >= 0 ? toolJobRustBlock(editor, editor.indexOf("{", defaultStart)) : undefined;
+  const defaultBlock = defaultAuthority?.body ?? "";
+  const governedBootstrapArm = /DrawStoreInitializationPhase::InitializeArena\s*=>\s*\{\s*match\s+self\.arena_bootstrap_job\.step\(cx\)/s.test(draw);
+  const exactSourceUndo = /if let Some\(undo\) = self\.source_undo\s*\{[\s\S]*?self\.start_rebuild\(source, undo\.parent, None, Some\(undo\.index\), DrawContainerRebuildRole::CloseSourceUndo\)\?;/s.test(draw);
   return (
     store.includes("pub fn artifact_owned_spr_edit_history_decoder") &&
     store.includes("struct ArtifactOwnedSprMutationArrayAuthority") &&
     store.includes("self.scalar_entry") &&
     store.includes("artifact-spr.mutation-array-cancelled") &&
+    store.includes("id_digest: [u8; 32]") &&
+    store.includes('Self::push_revision_record(&mut self.revision.applied, self.revision.identity_digest, b"applied", &id, edit_digest)') &&
     draw.includes("pub struct DrawEnvelopeOwnedFieldCatalog") &&
     draw.includes("artifact_owned_spr_edit_history_decoder") &&
     draw.includes("DrawSnapshotDecodeAuthority") &&
@@ -1713,6 +1843,53 @@ function toolJobDrawEnvelopeCallerRetainedExact(store: string, draw: string, edi
     draw.includes("const DRAW_MAXIMUM_NESTED_ITEMS: usize = 4_096") &&
     draw.includes("const DRAW_MAXIMUM_LAYER_DEPTH: usize = 64") &&
     draw.includes("struct DrawSnapshotBoundsAuthority") &&
+    draw.includes("struct DrawFixedOwnerCensus") &&
+    draw.includes("slots: [DrawOwnerCreditSlot; DRAW_MAXIMUM_NESTED_ITEMS]") &&
+    draw.includes("const DRAW_MUTATION_OVERLAY_PAGE_CAPACITY: usize = 16") &&
+    draw.includes("const DRAW_MUTATION_CONTAINER_SLOT_CAPACITY: usize = 64") &&
+    draw.includes("const DRAW_MUTATION_ARENA_POOL_CAPACITY: usize = 4") &&
+    draw.includes("struct DrawMutationArenaOwner") &&
+    draw.includes("struct DrawMutationArenaPool {") &&
+    draw.includes("DrawMutationArenaProcessState::Building") &&
+    draw.includes("#[cfg(test)]\n    fn try_new()") &&
+    draw.includes("struct DrawMutationArenaOwnerBuilder") &&
+    draw.includes("struct DrawMutationArenaPoolBootstrap") &&
+    draw.includes("struct DrawMutationArenaBootstrapJob") &&
+    draw.includes("fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> DrawMutationArenaBootstrapStep") &&
+    draw.includes("DrawMutationArenaProcessState::Inert") &&
+    draw.includes("DrawMutationArenaBootstrapAdmission::fixed()") &&
+    draw.includes("DrawMutationArenaBootstrapStep::Blocked") &&
+    governedBootstrapArm &&
+    exactSourceUndo &&
+    requestBlock.includes("DrawMutationArenaProcessState::Inert") &&
+    requestBlock.includes("DRAW_MUTATION_ARENA_BOOTSTRAP_REQUESTED.store(true") &&
+    !requestBlock.includes("bootstrap.step(") &&
+    !requestBlock.includes("try_reserve_exact") &&
+    !requestBlock.includes("DrawMutationArenaPoolBootstrap::production") &&
+    borrowBlock.includes("DrawMutationArenaBorrowError::NotReady") &&
+    borrowBlock.includes("request_draw_mutation_arena_pool()") &&
+    !borrowBlock.includes("bootstrap.step(") &&
+    !borrowBlock.includes("try_reserve_exact") &&
+    !borrowBlock.includes("DrawMutationArenaPoolBootstrap::production") &&
+    draw.includes("DrawStoreInitializationPhase::InitializeArena") &&
+    draw.includes("DrawMutationArenaProcessTransition::Retire") &&
+    draw.includes("draw_mutation_arena_pool_fault") &&
+    draw.includes("borrow_draw_mutation_arena_from") &&
+    draw.includes("draw-store.mutation-arena-pool-saturated") &&
+    draw.includes("draw-store.mutation-arena-stale-generation") &&
+    draw.includes("owner.terminal_is_empty()") &&
+    draw.includes("arena_return_phase: u8") &&
+    draw.includes("Ok(Some(false)) => return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })") &&
+    draw.includes("reverse.try_reserve_exact(DRAW_MUTATION_CONTAINER_SLOT_CAPACITY)") &&
+    draw.includes("pages.try_reserve_exact(DRAW_MUTATION_OVERLAY_PAGE_CAPACITY)") &&
+    draw.includes("page.try_reserve_exact(DRAW_MUTATION_RETAINED_PAGE_BYTES)") &&
+    draw.includes("total.checked_add(page.capacity())") &&
+    draw.includes("fn write_overlay_string") &&
+    draw.includes("target.capacity() < source.len()") &&
+    draw.includes("struct DrawMutationOverlayPatch") &&
+    draw.includes("draw-store.mutation-overlay-owner-changed") &&
+    draw.includes("struct DrawAssetBoundsCursor") &&
+    draw.includes("assets.range::<str, _>") &&
     draw.includes("draw-store.preflight-depth-capacity") &&
     draw.includes("draw-store.preflight-item-capacity") &&
     draw.includes("draw-store.preflight-byte-capacity") &&
@@ -1721,21 +1898,81 @@ function toolJobDrawEnvelopeCallerRetainedExact(store: string, draw: string, edi
     draw.includes("layer.step(source.layers.get(self.index)") &&
     draw.includes("target.children.push(Self::skeleton(child)?)") &&
     draw.includes("struct DrawStoreInitializationAuthority") &&
+    draw.includes("struct DrawSemanticDigestCredit") &&
+    draw.includes("semantic: Option<semio_framework_hash::Sha256>") &&
+    draw.includes('digest.observe(b"draw.semantic.sha256")') &&
+    draw.includes("struct DrawFillDigestAuthority") &&
+    draw.includes("struct DrawStrokeDigestAuthority") &&
+    draw.includes("struct DrawPathSegmentDigestAuthority") &&
+    draw.includes("struct DrawLayerVariantDigestAuthority") &&
+    draw.includes("struct DrawLayerDigestAuthority") &&
     draw.includes("struct DrawMutationDigestAuthority") &&
+    draw.includes("struct DrawMutationAggregateReservation") &&
+    draw.includes("mutation_source_items") &&
+    draw.includes("mutation_derived_items") &&
+    draw.includes("duplicate_candidate_items") &&
+    draw.includes("source_owner_bytes") &&
+    draw.includes("derived_owner_bytes") &&
+    draw.includes("DRAW_MUTATION_AGGREGATE_ITEMS") &&
+    draw.includes("DRAW_MUTATION_AGGREGATE_BYTES") &&
+    draw.includes("DRAW_MUTATION_RETAINED_PAGE_ITEMS") &&
+    draw.includes("DRAW_MUTATION_RETAINED_PAGE_BYTES") &&
+    draw.includes("draw-store.mutation-aggregate-item-capacity") &&
+    draw.includes("draw-store.mutation-aggregate-byte-capacity") &&
     draw.includes("struct DrawMutationCandidateAuthority") &&
+    draw.includes("draw-store.mutation-candidate-stale-authority") &&
+    draw.includes("draw-store.mutation-candidate-cancelled") &&
+    draw.includes("struct DrawDuplicateRewriteAuthority") &&
+    draw.includes("material: [u8; DRAW_DUPLICATE_MATERIAL_BYTES]") &&
+    draw.includes("self.hash_cursor + DRAW_OWNED_FIELD_BYTES") &&
+    draw.includes('update(b"semio.draw.duplicate-id.v1")') &&
+    draw.includes("update(&(self.id_len as u64).to_be_bytes())") &&
+    draw.includes("update(&(self.name_len as u64).to_be_bytes())") &&
+    draw.includes("pending_name: std::mem::ManuallyDrop<Option<String>>") &&
+    draw.includes("draw-store.duplicate-destination-capacity") &&
+    draw.includes("DrawMutationCandidatePhase::PreflightSource") &&
+    draw.includes("DrawMutationCandidatePhase::PreflightMutation") &&
     draw.includes("struct DrawContainerRebuildAuthority") &&
+    draw.includes("const DRAW_CONTAINER_REBUILD_MOVE_CAPACITY") &&
+    draw.includes("enum DrawContainerRebuildMove") &&
+    draw.includes("rebuild.rollback_step()?") &&
+    draw.includes("DrawContainerRebuildRole::CloseSourceUndo") &&
+    draw.includes("source_undo: Option<DrawContainerSourceUndo>") &&
+    draw.includes("source.capacity() < output_capacity") &&
+    draw.includes("self.source.as_mut().ok_or(\"draw-store.container-source\")?.push(value)") &&
     draw.includes("DrawStoreInitializationPhase::ValidateEditId") &&
+    draw.includes("DrawStoreInitializationPhase::ValidateEditMeta") &&
+    draw.includes("DrawStoreInitializationPhase::PrepareApplied") &&
+    draw.includes("DrawStoreInitializationPhase::PrepareRedo") &&
     draw.includes("impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawSnapshot, DrawMutation> for DrawStoreInitializationAuthority") &&
     draw.includes("DrawStoreInitializationPhase::ValidateEditPair") &&
     draw.includes("DrawStoreInitializationPhase::SeedHistory") &&
     draw.includes("DrawStoreInitializationPhase::BuildCandidate") &&
     draw.includes("ArtifactStore::from_initialized_runtime_with_owners") &&
+    draw.includes("ArtifactStoreInitializationOwnerCatalog::try_new()") &&
+    draw.includes("ArtifactStoreInitializationRuntime::new_with_owner_catalog") &&
+    draw.includes("DrawStoreInitializationPhase::MoveInitialOwner") &&
     draw.includes("self.generation.0.checked_add(1)") &&
     owners.every((owner) => draw.includes(owner)) &&
+    digestFields.every((field) => draw.includes(field)) &&
     variants.every((variant) => draw.includes(variant)) &&
     draw.includes("retained_draw_mutation_candidate_covers_all_fourteen_variants_and_returns_exact_owners") &&
     draw.includes("retained_draw_depth_plus_one_and_hostile_fields_fault_then_close_terminal_empty") &&
     draw.includes("retained_draw_container_false_terminal_saturation_and_interrupted_close_preserve_exact_owner") &&
+    draw.includes("retained_draw_schema_digest_distinguishes_every_nested_semantic_field") &&
+    draw.includes("retained_draw_aggregate_credit_admits_exact_4096_rejects_plus_one_with_owner_handback") &&
+    draw.includes("retained_draw_duplicate_hash_frames_domain_id_and_name_lengths_without_concatenation_collision") &&
+    draw.includes("retained_draw_process_arena_pool_cap_plus_one_returns_exact_slots_and_rejects_stale_aba") &&
+    draw.includes("retained_draw_duplicate_name_uses_preadmitted_page_and_returns_exact_rejection_owner") &&
+    draw.includes("retained_draw_cancel_stale_each_replay_candidate_container_stage_preserves_last_valid") &&
+    draw.includes("retained_draw_rebuild_fault_after_every_phase_rolls_back_exact_container_and_reuses_pool_slot") &&
+    draw.includes("retained_draw_reorder_fault_after_source_handoff_restores_exact_nested_fifo_and_pool_roots") &&
+    draw.includes("retained_draw_arena_bootstrap_failure_at_each_allocation_retires_one_exact_root_per_grant") &&
+    draw.includes("retained_draw_arena_bootstrap_failure_after_each_bundle_keeps_every_root_until_terminal_close") &&
+    draw.includes("retained_draw_arena_bootstrap_advances_one_allocation_per_turn_and_withholds_incomplete_pool") &&
+    draw.includes("retained_draw_arena_bootstrap_exact_cap_and_plus_one_rejection_preserve_every_owner_until_close") &&
+    draw.includes("retained_draw_arena_default_second_app_and_borrow_only_request_without_allocation") &&
+    draw.includes("retained_draw_arena_bootstrap_job_cancel_budget_contention_and_saturation_are_governed") &&
     !draw.includes("source.clone()") &&
     !draw.includes("snapshot.clone()") &&
     !draw.includes("operation.encode_op()") &&
@@ -1744,11 +1981,24 @@ function toolJobDrawEnvelopeCallerRetainedExact(store: string, draw: string, edi
     !draw.includes("serde_json::from_value") &&
     !draw.includes("serde_json::from_str") &&
     !draw.includes("serde_json::to_vec") &&
+    !draw.includes("mutation_meta.iter().any") &&
+    !draw.includes("exact_for_test") &&
+    !draw.includes("iter().nth") &&
+    !draw.includes("structural_copies") &&
+    !draw.includes("DRAW_ASSET_MAP_NODE_POINTERS") &&
+    !draw.includes("DrawStoreInitializationPhase::CloneInitial") &&
+    !draw.includes("base.name.try_reserve_exact") &&
+    !draw.includes("DrawMutationArenaOwner::try_new()?") &&
+    !draw.includes("rposition(Option::is_some)") &&
+    !store.includes("id.clone(), edit_digest") &&
     !draw.includes("drop(value.layers)") &&
     editor.includes("draw_document_store_initialization_job(envelope, operation, generation)") &&
     editor.includes("draw_live_envelope_submit_recursive_clone_swap_displaced_store_and_exact_ack_succeed") &&
     editor.includes("draw_live_envelope_cancel_closes_retained_pages_without_publication") &&
     editor.includes("draw_live_envelope_rejects_single_and_final_edit_id_plus_one_before_mutation_candidate") &&
+    editor.includes("draw_live_initializer_candidate_container_commit_ack_cancel_stale_preserve_last_valid_and_exact_handle") &&
+    editor.includes("arena_boot_fault: Option<&'static str>") &&
+    editor.includes("draw_mutation_arena_pool_fault") &&
     editor.includes('"forwards": [crate::artifacts::draw::mutations::DrawMutation::RenameLayer') &&
     editor.includes("pub struct DrawEnvelopeLoadHandle") &&
     editor.includes("source: &js_sys::Uint8Array") &&
@@ -1759,6 +2009,11 @@ function toolJobDrawEnvelopeCallerRetainedExact(store: string, draw: string, edi
     editor.includes("advance_artifact_envelope_load(handle.runtime_handle())") &&
     editor.includes("acknowledge_artifact_store_replacement(handle.runtime_handle())") &&
     editor.includes("cancel_artifact_envelope_load(handle.runtime_handle())") &&
+    editor.includes("request_draw_mutation_arena_pool()") &&
+    defaultBlock.includes("request_draw_mutation_arena_pool()") &&
+    !defaultBlock.includes("bootstrap.step(") &&
+    !defaultBlock.includes("try_reserve_exact") &&
+    !defaultBlock.includes("initialize_draw_mutation_arena_pool") &&
     plugin.includes("envelope_ingress: ArtifactFixedRegistry<ActiveArtifactEnvelopeIngress>") &&
     plugin.includes("self.retain_initializer_for_close(job)") &&
     !editor.includes("reject_whole_buffer_artifact_envelope_ingress") &&
@@ -2951,6 +3206,8 @@ function toolJobCoverageSelfTests(): number {
     "struct ArtifactOwnedSprMutationArrayAuthority",
     "self.scalar_entry",
     "artifact-spr.mutation-array-cancelled",
+    "id_digest: [u8; 32]",
+    'Self::push_revision_record(&mut self.revision.applied, self.revision.identity_digest, b"applied", &id, edit_digest)',
     "SPR edit decode reached Drop before exact publication or bounded retirement",
   ].join("\n");
   const retainedJackCodec = [
@@ -2980,6 +3237,42 @@ function toolJobCoverageSelfTests(): number {
   if (toolJobJackEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedJackWasm.replace("acknowledge_artifact_store_replacement(handle.runtime_handle())", "return Ready"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Jack-completion-without-exact-ack was falsely accepted.");
   if (toolJobJackEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedJackWasm, retainedWriterPlugin.replace("self.retain_initializer_for_close(job)", "drop(job)"))) throw new Error("[verify interactivity tool-jobs] self-test Jack-false-terminal-initializer-drop was falsely accepted.");
   if (toolJobJackEnvelopeCallerRetainedExact(retainedJackStore.replace("self.scalar_entry", "let raw = serde_json::from_slice(bytes)"), retainedJackCodec, retainedJackEditor, retainedJackWasm, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Jack-string-mutation-whole-buffer-bypass was falsely accepted.");
+  const retainedTrinityRewrite = [
+    "type TrinityRewriteApp = VcsArtifactApp<EditorApp<TrinityJackPlayApp>>",
+    "pub struct TrinityRewriteEnvelopeLoadHandle",
+    "fn runtime_handle(&self) -> ArtifactEnvelopeDecodeOperationHandle",
+    "TRINITY_REWRITE_ENVELOPE_MAXIMUM_PAGES",
+    "TRINITY_REWRITE_ENVELOPE_MAXIMUM_BYTES",
+    "trinity_rewrite_envelope_credits_admit_exact_caps_and_reject_zero_or_plus_one",
+    "pub async fn new()",
+    "VcsArtifactApp::new(EditorApp::<TrinityJackPlayApp>::default()).await",
+    "pub fn begin_envelope_load(",
+    "begin_artifact_envelope_ingress(maximum_pages, maximum_bytes)",
+    "source: &js_sys::Uint8Array",
+    "let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES]",
+    "ArtifactEnvelopeDecodePage::try_from_array(bytes, len)",
+    "admit_artifact_envelope_ingress_page(handle.runtime_handle(), page).map_err(|(fault, _page)| js_fault(fault))",
+    "seal_artifact_envelope_ingress(handle.runtime_handle())",
+    "app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)",
+    "advance_artifact_envelope_load(handle.runtime_handle())",
+    "acknowledge_artifact_store_replacement(handle.runtime_handle())",
+    "cancel_artifact_envelope_load(handle.runtime_handle())",
+    "close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)",
+  ].join("\n");
+  if (!toolJobTrinityRewriteEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedTrinityRewrite, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test retained-Trinity-Rewrite-envelope-route was falsely rejected.");
+  if (toolJobTrinityRewriteEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, `${retainedTrinityRewrite}\nenvelope_json: Option<String>`, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Trinity-Rewrite-whole-buffer-constructor-bypass was falsely accepted.");
+  if (toolJobTrinityRewriteEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedTrinityRewrite.replace("source: &js_sys::Uint8Array", "source: &[u8]"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Trinity-Rewrite-post-lift-dynamic-page was falsely accepted.");
+  if (toolJobTrinityRewriteEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedTrinityRewrite.replace("fn runtime_handle(&self) -> ArtifactEnvelopeDecodeOperationHandle", "fn operation_only(&self) -> u64"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Trinity-Rewrite-generation-handle-erasure was falsely accepted.");
+  if (toolJobTrinityRewriteEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedTrinityRewrite.replace("let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES]", "let mut bytes = Vec::new()"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Trinity-Rewrite-fixed-page-owner-removal was falsely accepted.");
+  if (toolJobTrinityRewriteEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedTrinityRewrite.replace(".map_err(|(fault, _page)| js_fault(fault))", ".map_err(js_fault)"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Trinity-Rewrite-rejected-page-handback-removal was falsely accepted.");
+  if (toolJobTrinityRewriteEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedTrinityRewrite.replace("seal_artifact_envelope_ingress(handle.runtime_handle())", "submit_unsealed(handle.runtime_handle())"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Trinity-Rewrite-unsealed-ingress was falsely accepted.");
+  if (toolJobTrinityRewriteEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedTrinityRewrite.replace("app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)", "app.run_to_completion()"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Trinity-Rewrite-unbounded-poll-turn was falsely accepted.");
+  if (toolJobTrinityRewriteEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedTrinityRewrite.replace("acknowledge_artifact_store_replacement(handle.runtime_handle())", "return Ready"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Trinity-Rewrite-terminal-without-exact-ack was falsely accepted.");
+  if (toolJobTrinityRewriteEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedTrinityRewrite.replace("cancel_artifact_envelope_load(handle.runtime_handle())", "drop(handle)"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Trinity-Rewrite-cancel-owner-drop was falsely accepted.");
+  if (toolJobTrinityRewriteEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedTrinityRewrite.replace("close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)", "close_all()"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Trinity-Rewrite-bulk-close was falsely accepted.");
+  if (toolJobTrinityRewriteEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedTrinityRewrite.replace("trinity_rewrite_envelope_credits_admit_exact_caps_and_reject_zero_or_plus_one", "trinity_rewrite_envelope_accepts_unbounded_credits"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Trinity-Rewrite-cap-plus-one-fixture-missing was falsely accepted.");
+  if (toolJobTrinityRewriteEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedTrinityRewrite, retainedWriterPlugin.replace("artifact_envelope_ingress_saturation_returns_exact_plus_one_owner_and_closes_fifo_slots", "artifact_envelope_ingress_drops_plus_one"))) throw new Error("[verify interactivity tool-jobs] self-test Trinity-Rewrite-fixed-registry-exact-handback-fixture-missing was falsely accepted.");
+  if (toolJobTrinityRewriteEnvelopeCallerRetainedExact(retainedJackStore, retainedJackCodec, retainedJackEditor, retainedTrinityRewrite, retainedWriterPlugin.replace("artifact_envelope_ingress_cancel_and_interrupted_close_release_one_real_page_per_grant", "artifact_envelope_ingress_bulk_close"))) throw new Error("[verify interactivity tool-jobs] self-test Trinity-Rewrite-one-page-close-fixture-missing was falsely accepted.");
   const retainedGisMapCodec = [
     "pub struct GisMapEnvelopeOwnedFieldCatalog",
     "artifact_owned_spr_edit_history_decoder",
@@ -3043,6 +3336,55 @@ function toolJobCoverageSelfTests(): number {
     "const DRAW_MAXIMUM_NESTED_ITEMS: usize = 4_096",
     "const DRAW_MAXIMUM_LAYER_DEPTH: usize = 64",
     "struct DrawSnapshotBoundsAuthority",
+    "struct DrawFixedOwnerCensus",
+    "slots: [DrawOwnerCreditSlot; DRAW_MAXIMUM_NESTED_ITEMS]",
+    "const DRAW_MUTATION_OVERLAY_PAGE_CAPACITY: usize = 16",
+    "const DRAW_MUTATION_CONTAINER_SLOT_CAPACITY: usize = 64",
+    "const DRAW_MUTATION_ARENA_POOL_CAPACITY: usize = 4",
+    "struct DrawMutationArenaOwner",
+    "struct DrawMutationArenaPool {",
+    "DrawMutationArenaProcessState::Building",
+    "#[cfg(test)]\n    fn try_new()",
+    "struct DrawMutationArenaOwnerBuilder",
+    "struct DrawMutationArenaPoolBootstrap",
+    "struct DrawMutationArenaBootstrapJob",
+    "fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> DrawMutationArenaBootstrapStep",
+    "DrawMutationArenaProcessState::Inert",
+    "DrawMutationArenaBootstrapAdmission::fixed()",
+    "DrawMutationArenaBootstrapStep::Blocked",
+    "pub fn request_draw_mutation_arena_pool() {",
+    "DRAW_MUTATION_ARENA_BOOTSTRAP_REQUESTED.store(true",
+    "DrawMutationArenaProcessState::Inert",
+    "}",
+    "pub fn draw_mutation_arena_pool_fault",
+    "fn borrow_draw_mutation_arena() {",
+    "request_draw_mutation_arena_pool()",
+    "DrawMutationArenaBorrowError::NotReady",
+    "}",
+    "//#endregion",
+    "DrawStoreInitializationPhase::InitializeArena",
+    "DrawStoreInitializationPhase::InitializeArena => {",
+    "match self.arena_bootstrap_job.step(cx)",
+    "if let Some(undo) = self.source_undo {",
+    "self.start_rebuild(source, undo.parent, None, Some(undo.index), DrawContainerRebuildRole::CloseSourceUndo)?;",
+    "DrawMutationArenaProcessTransition::Retire",
+    "draw_mutation_arena_pool_fault",
+    "borrow_draw_mutation_arena_from",
+    "draw-store.mutation-arena-pool-saturated",
+    "draw-store.mutation-arena-stale-generation",
+    "owner.terminal_is_empty()",
+    "arena_return_phase: u8",
+    "Ok(Some(false)) => return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })",
+    "reverse.try_reserve_exact(DRAW_MUTATION_CONTAINER_SLOT_CAPACITY)",
+    "pages.try_reserve_exact(DRAW_MUTATION_OVERLAY_PAGE_CAPACITY)",
+    "page.try_reserve_exact(DRAW_MUTATION_RETAINED_PAGE_BYTES)",
+    "total.checked_add(page.capacity())",
+    "fn write_overlay_string",
+    "target.capacity() < source.len()",
+    "struct DrawMutationOverlayPatch",
+    "draw-store.mutation-overlay-owner-changed",
+    "struct DrawAssetBoundsCursor",
+    "assets.range::<str, _>",
     "draw-store.preflight-depth-capacity",
     "draw-store.preflight-item-capacity",
     "draw-store.preflight-byte-capacity",
@@ -3051,15 +3393,60 @@ function toolJobCoverageSelfTests(): number {
     "layer.step(source.layers.get(self.index)",
     "target.children.push(Self::skeleton(child)?)",
     "struct DrawStoreInitializationAuthority",
+    "struct DrawSemanticDigestCredit",
+    "semantic: Option<semio_framework_hash::Sha256>",
+    'digest.observe(b"draw.semantic.sha256")',
+    "struct DrawFillDigestAuthority",
+    "struct DrawStrokeDigestAuthority",
+    "struct DrawPathSegmentDigestAuthority",
+    "struct DrawLayerVariantDigestAuthority",
+    "struct DrawLayerDigestAuthority",
     "struct DrawMutationDigestAuthority",
+    "struct DrawMutationAggregateReservation",
+    "mutation_source_items",
+    "mutation_derived_items",
+    "duplicate_candidate_items",
+    "source_owner_bytes",
+    "derived_owner_bytes",
+    "DRAW_MUTATION_AGGREGATE_ITEMS",
+    "DRAW_MUTATION_AGGREGATE_BYTES",
+    "DRAW_MUTATION_RETAINED_PAGE_ITEMS",
+    "DRAW_MUTATION_RETAINED_PAGE_BYTES",
+    "draw-store.mutation-aggregate-item-capacity",
+    "draw-store.mutation-aggregate-byte-capacity",
     "struct DrawMutationCandidateAuthority",
+    "draw-store.mutation-candidate-stale-authority",
+    "draw-store.mutation-candidate-cancelled",
+    "struct DrawDuplicateRewriteAuthority",
+    "material: [u8; DRAW_DUPLICATE_MATERIAL_BYTES]",
+    "self.hash_cursor + DRAW_OWNED_FIELD_BYTES",
+    'update(b"semio.draw.duplicate-id.v1")',
+    "update(&(self.id_len as u64).to_be_bytes())",
+    "update(&(self.name_len as u64).to_be_bytes())",
+    "pending_name: std::mem::ManuallyDrop<Option<String>>",
+    "draw-store.duplicate-destination-capacity",
+    "DrawMutationCandidatePhase::PreflightSource",
+    "DrawMutationCandidatePhase::PreflightMutation",
     "struct DrawContainerRebuildAuthority",
+    "const DRAW_CONTAINER_REBUILD_MOVE_CAPACITY",
+    "enum DrawContainerRebuildMove",
+    "rebuild.rollback_step()?",
+    "DrawContainerRebuildRole::CloseSourceUndo",
+    "source_undo: Option<DrawContainerSourceUndo>",
+    "source.capacity() < output_capacity",
+    'self.source.as_mut().ok_or("draw-store.container-source")?.push(value)',
     "DrawStoreInitializationPhase::ValidateEditId",
+    "DrawStoreInitializationPhase::ValidateEditMeta",
+    "DrawStoreInitializationPhase::PrepareApplied",
+    "DrawStoreInitializationPhase::PrepareRedo",
     "impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawSnapshot, DrawMutation> for DrawStoreInitializationAuthority",
     "DrawStoreInitializationPhase::ValidateEditPair",
     "DrawStoreInitializationPhase::SeedHistory",
     "DrawStoreInitializationPhase::BuildCandidate",
     "ArtifactStore::from_initialized_runtime_with_owners",
+    "ArtifactStoreInitializationOwnerCatalog::try_new()",
+    "ArtifactStoreInitializationRuntime::new_with_owner_catalog",
+    "DrawStoreInitializationPhase::MoveInitialOwner",
     "self.generation.0.checked_add(1)",
     "DrawRetirementOwner::Layer(value)",
     "DrawRetirementOwner::Fill(fill)",
@@ -3068,6 +3455,53 @@ function toolJobCoverageSelfTests(): number {
     "DrawRetirementOwner::Stops(values)",
     "DrawRetirementOwner::Points(values)",
     "DrawRetirementOwner::AssetEntry",
+    "FillStyle::Solid { color }",
+    "FillStyle::LinearGradient { x1, y1, x2, y2, stops }",
+    "FillStyle::RadialGradient { cx: center_x, cy: center_y, r, stops }",
+    "stop.offset",
+    "stop.color",
+    "value.color[(self.phase - 1) as usize]",
+    "value.width",
+    "observe_owned_string(digest, 246, &value.cap",
+    "observe_owned_string(digest, 247, &value.join",
+    "value.dash.is_some()",
+    "base.visible",
+    "base.locked",
+    "base.opacity",
+    "observe_owned_string(digest, 106, &base.blend_mode",
+    "base.transform.rotation",
+    "observe_owned_string(digest, 340, &value.shape_kind",
+    "value.rect.is_some()",
+    "value.ellipse.is_some()",
+    "value.circle.is_some()",
+    "value.line.is_some()",
+    "value.polygon.is_some()",
+    "PathSegment::Move",
+    "PathSegment::Line",
+    "PathSegment::Quad",
+    "PathSegment::Cubic",
+    "PathSegment::Arc",
+    "PathSegment::Close",
+    "observe_owned_string(digest, 382, &value.content",
+    "observe_owned_string(digest, 390, &value.image_key",
+    "observe_owned_string(digest, 410, &value.operation",
+    "value.children.len()",
+    "observe_owned_string(digest, 420, &value.source_key",
+    "value.params.threshold",
+    "Self::variant(mutation)",
+    "value.visible",
+    "value.locked",
+    "value.opacity",
+    "observe_owned_string(digest, 3, &value.blend_mode",
+    "observe_owned_string(digest, 3, &value.new_name",
+    "value.transform.rotation",
+    "value.fill.as_ref()",
+    "value.stroke.as_ref()",
+    "observe_owned_string(digest, 3, &value.boolean_operation",
+    "value.params.simplify_epsilon",
+    "value.parent_id.is_some()",
+    "value.index",
+    "value.layer",
     "SetLayerVisible(payload)",
     "SetLayerLocked(payload)",
     "SetLayerOpacity(payload)",
@@ -3085,12 +3519,33 @@ function toolJobCoverageSelfTests(): number {
     "retained_draw_mutation_candidate_covers_all_fourteen_variants_and_returns_exact_owners",
     "retained_draw_depth_plus_one_and_hostile_fields_fault_then_close_terminal_empty",
     "retained_draw_container_false_terminal_saturation_and_interrupted_close_preserve_exact_owner",
+    "retained_draw_schema_digest_distinguishes_every_nested_semantic_field",
+    "retained_draw_aggregate_credit_admits_exact_4096_rejects_plus_one_with_owner_handback",
+    "retained_draw_duplicate_hash_frames_domain_id_and_name_lengths_without_concatenation_collision",
+    "retained_draw_process_arena_pool_cap_plus_one_returns_exact_slots_and_rejects_stale_aba",
+    "retained_draw_duplicate_name_uses_preadmitted_page_and_returns_exact_rejection_owner",
+    "retained_draw_cancel_stale_each_replay_candidate_container_stage_preserves_last_valid",
+    "retained_draw_rebuild_fault_after_every_phase_rolls_back_exact_container_and_reuses_pool_slot",
+    "retained_draw_reorder_fault_after_source_handoff_restores_exact_nested_fifo_and_pool_roots",
+    "retained_draw_arena_bootstrap_failure_at_each_allocation_retires_one_exact_root_per_grant",
+    "retained_draw_arena_bootstrap_failure_after_each_bundle_keeps_every_root_until_terminal_close",
+    "retained_draw_arena_bootstrap_advances_one_allocation_per_turn_and_withholds_incomplete_pool",
+    "retained_draw_arena_bootstrap_exact_cap_and_plus_one_rejection_preserve_every_owner_until_close",
+    "retained_draw_arena_default_second_app_and_borrow_only_request_without_allocation",
+    "retained_draw_arena_bootstrap_job_cancel_budget_contention_and_saturation_are_governed",
   ].join("\n");
   const retainedDrawEditor = [
     "draw_document_store_initialization_job(envelope, operation, generation)",
+    "impl Default for DrawPlayApp {",
+    "request_draw_mutation_arena_pool()",
+    "}",
+    "impl ArtifactEditor for DrawPlayApp",
+    "arena_boot_fault: Option<&'static str>",
+    "draw_mutation_arena_pool_fault",
     "draw_live_envelope_submit_recursive_clone_swap_displaced_store_and_exact_ack_succeed",
     "draw_live_envelope_cancel_closes_retained_pages_without_publication",
     "draw_live_envelope_rejects_single_and_final_edit_id_plus_one_before_mutation_candidate",
+    "draw_live_initializer_candidate_container_commit_ack_cancel_stale_preserve_last_valid_and_exact_handle",
     '"forwards": [crate::artifacts::draw::mutations::DrawMutation::RenameLayer',
     "pub struct DrawEnvelopeLoadHandle",
     "source: &js_sys::Uint8Array",
@@ -3103,6 +3558,124 @@ function toolJobCoverageSelfTests(): number {
     "cancel_artifact_envelope_load(handle.runtime_handle())",
   ].join("\n");
   if (!toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec, retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test retained-Draw-envelope-route was falsely rejected.");
+  const retainedDrawSemanticFields = [
+    "FillStyle::Solid { color }",
+    "FillStyle::LinearGradient { x1, y1, x2, y2, stops }",
+    "FillStyle::RadialGradient { cx: center_x, cy: center_y, r, stops }",
+    "stop.offset",
+    "stop.color",
+    "value.color[(self.phase - 1) as usize]",
+    "value.width",
+    "observe_owned_string(digest, 246, &value.cap",
+    "observe_owned_string(digest, 247, &value.join",
+    "value.dash.is_some()",
+    "base.visible",
+    "base.locked",
+    "base.opacity",
+    "observe_owned_string(digest, 106, &base.blend_mode",
+    "base.transform.rotation",
+    "observe_owned_string(digest, 340, &value.shape_kind",
+    "value.rect.is_some()",
+    "value.ellipse.is_some()",
+    "value.circle.is_some()",
+    "value.line.is_some()",
+    "value.polygon.is_some()",
+    "PathSegment::Move",
+    "PathSegment::Line",
+    "PathSegment::Quad",
+    "PathSegment::Cubic",
+    "PathSegment::Arc",
+    "PathSegment::Close",
+    "observe_owned_string(digest, 382, &value.content",
+    "observe_owned_string(digest, 390, &value.image_key",
+    "observe_owned_string(digest, 410, &value.operation",
+    "value.children.len()",
+    "observe_owned_string(digest, 420, &value.source_key",
+    "value.params.threshold",
+    "Self::variant(mutation)",
+    "value.visible",
+    "value.locked",
+    "value.opacity",
+    "observe_owned_string(digest, 3, &value.blend_mode",
+    "observe_owned_string(digest, 3, &value.new_name",
+    "value.transform.rotation",
+    "value.fill.as_ref()",
+    "value.stroke.as_ref()",
+    "observe_owned_string(digest, 3, &value.boolean_operation",
+    "value.params.simplify_epsilon",
+    "value.parent_id.is_some()",
+    "value.index",
+    "value.layer",
+  ];
+  for (const field of retainedDrawSemanticFields) {
+    if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace(field, "omitted-semantic-field"), retainedDrawEditor, retainedWriterPlugin)) {
+      throw new Error(`[verify interactivity tool-jobs] self-test Draw-semantic-digest-omission-${field} was falsely accepted.`);
+    }
+  }
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("semantic: Option<semio_framework_hash::Sha256>", "semantic: u64"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-non-collision-resistant-digest was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace('digest.observe(b"draw.semantic.sha256")', "digest.observe(&field)"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-unsealed-semantic-digest was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("struct DrawMutationAggregateReservation", "struct DrawPerAllocationGuess"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-missing-aggregate-reservation was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("struct DrawFixedOwnerCensus", "struct DrawResizableOwnerGuess"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-fixed-owner-census-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("const DRAW_MUTATION_OVERLAY_PAGE_CAPACITY: usize = 16", "let overlay_pages = Vec::new()"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-fixed-overlay-page-arena-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("page.try_reserve_exact(DRAW_MUTATION_RETAINED_PAGE_BYTES)", "page.reserve(source.len())"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-overlay-page-not-preadmitted was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("total.checked_add(page.capacity())", "total.checked_add(page.len())"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-overlay-allocator-capacity-not-reconciled was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("fn write_overlay_string", "fn clone_overlay_string"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-overlay-owner-not-moved was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("reverse.try_reserve_exact(DRAW_MUTATION_CONTAINER_SLOT_CAPACITY)", "let reverse = Vec::new()"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-fixed-container-owner-catalog-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("struct DrawMutationArenaPool {", "struct PerCandidateArenaAllocation {"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-process-arena-pool-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("DrawMutationArenaProcessState::Building", "DrawMutationArenaOwner::try_new()?"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-arena-allocation-before-process-admission was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, `${retainedDrawCodec}\nDrawMutationArenaOwner::try_new()?;`, retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-question-mark-partial-bootstrap-drop was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("#[cfg(test)]\n    fn try_new()", "fn try_new()"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-synchronous-bootstrap-loop-was-production-reachable was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("borrow_draw_mutation_arena_from", "allocate_draw_mutation_arena_per_candidate"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-candidate-did-not-borrow-fixed-arena was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("owner.terminal_is_empty()", "true"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-nonterminal-arena-return-was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("arena_return_phase: u8", "return_whole_arena_bundle: bool"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-arena-return-was-not-one-root-per-grant was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("draw-store.mutation-arena-stale-generation", "accept-stale-arena-return"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-arena-ABA-generation-check-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, `${retainedDrawCodec}\nbase.name.try_reserve_exact(suffix.len());`, retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-post-admission-duplicate-name-reserve was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("pending_name: std::mem::ManuallyDrop<Option<String>>", "pending_name: String"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-duplicate-name-owner-not-retained was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("source.capacity() < output_capacity", "false"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-live-container-owner-capacity-not-preflighted was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace('self.source.as_mut().ok_or("draw-store.container-source")?.push(value)', 'self.output.as_mut().unwrap().push(value)'), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-container-scratch-owner-published-instead-of-returned was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("retained_draw_process_arena_pool_cap_plus_one_returns_exact_slots_and_rejects_stale_aba", "draw-string-only-pool-predicate"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-live-process-pool-handback-fixture-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("retained_draw_duplicate_name_uses_preadmitted_page_and_returns_exact_rejection_owner", "draw-string-only-name-predicate"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-live-duplicate-name-owner-fixture-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec, retainedDrawEditor.replace("request_draw_mutation_arena_pool()", "initialize_draw_mutation_arena_pool()"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-app-default-advanced-bootstrap was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("DRAW_MUTATION_ARENA_BOOTSTRAP_REQUESTED.store(true", "Vec::<u8>::new().try_reserve_exact(64); DRAW_MUTATION_ARENA_BOOTSTRAP_REQUESTED.store(true"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-request-path-allocated-before-governed-turn was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("fn borrow_draw_mutation_arena() {\nrequest_draw_mutation_arena_pool()", "fn borrow_draw_mutation_arena() {\nbootstrap.step(cx); request_draw_mutation_arena_pool()"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-borrow-path-advanced-bootstrap was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("struct DrawMutationOverlayPatch", "struct DrawWholeCandidateRebuild"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-retained-overlay-patch-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("mutation_derived_items", "semantic_totals_times_copies"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-derived-owner-credit-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, `${retainedDrawCodec}\nfn exact_for_test() {}`, retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-fabricated-boundary-authority was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, `${retainedDrawCodec}\nsource.assets.iter().nth(index)`, retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-asset-rescan-cursor was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore.replace("id_digest: [u8; 32]", "id: String"), retainedDrawCodec, retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-shared-history-id-clone-owner was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("struct DrawDuplicateRewriteAuthority", "fn rewrite_duplicate_in_one_step"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-staged-duplicate-authority-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace('update(b"semio.draw.duplicate-id.v1")', "update(&material_len.to_be_bytes())"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-duplicate-domain-frame-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("update(&(self.id_len as u64).to_be_bytes())", "update(&(self.material_len as u64).to_be_bytes())"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-duplicate-id-length-frame-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("update(&(self.name_len as u64).to_be_bytes())", "update(&[])"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-duplicate-name-length-frame-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("draw-store.mutation-candidate-cancelled", "close-only-cancel"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-live-candidate-cancellation-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("draw-store.mutation-aggregate-item-capacity", "unchecked-aggregate-items"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-aggregate-item-plus-one was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("draw-store.mutation-aggregate-byte-capacity", "unchecked-aggregate-bytes"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-aggregate-byte-plus-one was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("DRAW_MUTATION_RETAINED_PAGE_ITEMS", "uncredited-retained-pages"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-retained-page-item-credit-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("DRAW_MUTATION_RETAINED_PAGE_BYTES", "uncredited-retained-page-bytes"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-retained-page-byte-credit-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("DrawMutationCandidatePhase::PreflightSource", "DrawMutationCandidatePhase::Clone"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-clone-before-source-preflight was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("DrawMutationCandidatePhase::PreflightMutation", "DrawMutationCandidatePhase::Clone"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-clone-before-mutation-preflight was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("DrawStoreInitializationPhase::ValidateEditMeta", "mutation_meta.iter().any"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-whole-metadata-scan was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("DrawStoreInitializationPhase::PrepareApplied", "DrawStoreInitializationPhase::CommitApplied"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-applied-id-actor-multi-clone-grant was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("DrawStoreInitializationPhase::PrepareRedo", "DrawStoreInitializationPhase::CommitRedo"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-redo-id-multi-clone-grant was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("retained_draw_schema_digest_distinguishes_every_nested_semantic_field", "draw-string-name-predicate"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-semantic-authority-fixture-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("retained_draw_aggregate_credit_admits_exact_4096_rejects_plus_one_with_owner_handback", "draw-aggregate-string-predicate"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-real-aggregate-saturation-fixture-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("retained_draw_duplicate_hash_frames_domain_id_and_name_lengths_without_concatenation_collision", "draw-duplicate-name-only-predicate"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-duplicate-split-boundary-fixture-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("retained_draw_cancel_stale_each_replay_candidate_container_stage_preserves_last_valid", "draw-only-cancels-before-start"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-stage-cancel-stale-fixture-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("rebuild.rollback_step()?", "rebuild.close_forward_step()?"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-active-rebuild-close-did-not-rollback was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("self.start_rebuild(source, undo.parent, None, Some(undo.index), DrawContainerRebuildRole::CloseSourceUndo)?;", "self.start_rebuild(source, undo.parent, None, Some(undo.index), DrawContainerRebuildRole::Destination)?;"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-live-source-undo-close-authority-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("retained_draw_rebuild_fault_after_every_phase_rolls_back_exact_container_and_reuses_pool_slot", "draw-only-cancels-before-owner-move"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-every-rebuild-move-fault-fixture-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("retained_draw_reorder_fault_after_source_handoff_restores_exact_nested_fifo_and_pool_roots", "draw-does-not-restore-source-handoff"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-reorder-source-undo-fixture-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("struct DrawMutationArenaOwnerBuilder", "fn try_new_arena_owner()"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-retained-bootstrap-owner-builder-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("struct DrawMutationArenaPoolBootstrap", "fn build_pool_with_question_mark()"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-retained-bootstrap-pool-owner-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("match self.arena_bootstrap_job.step(cx)", "match Ok::<bool, &'static str>(true)"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-live-bootstrap-not-driven-by-governed-store-turn was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("retained_draw_arena_bootstrap_failure_at_each_allocation_retires_one_exact_root_per_grant", "draw-bootstrap-only-tests-success"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-bootstrap-allocation-fault-matrix-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("retained_draw_arena_bootstrap_failure_after_each_bundle_keeps_every_root_until_terminal_close", "draw-bootstrap-drops-completed-bundles"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-bootstrap-bundle-fault-matrix-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("retained_draw_arena_bootstrap_advances_one_allocation_per_turn_and_withholds_incomplete_pool", "draw-bootstrap-loops-to-completion"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-bootstrap-governed-progress-fixture-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("retained_draw_arena_bootstrap_exact_cap_and_plus_one_rejection_preserve_every_owner_until_close", "draw-bootstrap-skips-aggregate-plus-one"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-bootstrap-aggregate-rejection-fixture-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec, retainedDrawEditor.replace("draw_mutation_arena_pool_fault", "ignore_arena_boot_fault"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-app-bootstrap-fault-was-not-surfaced was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("retained_draw_arena_default_second_app_and_borrow_only_request_without_allocation", "draw-default-allocates-on-second-app"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-default-borrow-no-allocation-fixture-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("retained_draw_arena_bootstrap_job_cancel_budget_contention_and_saturation_are_governed", "draw-bootstrap-ignores-governed-cancellation"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-governed-bootstrap-adversarial-fixture-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, `${retainedDrawCodec}\nmutation_meta.iter().any(|meta| true)`, retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-resurrected-whole-metadata-scan was falsely accepted.");
   if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("artifact_owned_spr_edit_history_decoder", "artifact_bounded_history_entry_decoder"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-domain-only-whole-edit-decoder was falsely accepted.");
   if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("const DRAW_MAXIMUM_LAYER_DEPTH: usize = 64", "let depth = Vec::new()"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-resizable-recursion-stack was falsely accepted.");
   if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("draw-store.preflight-byte-capacity", "unchecked_nested_bytes"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-nested-byte-preflight-hole was falsely accepted.");
@@ -3113,9 +3686,12 @@ function toolJobCoverageSelfTests(): number {
   if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, `${retainedDrawCodec}\nlet next = snapshot.clone();`, retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-whole-snapshot-clone-replay was falsely accepted.");
   if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, `${retainedDrawCodec}\nserde_json::from_value(value)`, retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-serde-mutation-reconstruction was falsely accepted.");
   if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("DrawStoreInitializationPhase::ValidateEditId", "skip_final_edit_id"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-single-final-edit-id-preflight-hole was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("ArtifactStoreInitializationOwnerCatalog::try_new()", "ArtifactStoreInitializationRuntime::new()"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-store-owner-catalog-not-preadmitted was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("DrawStoreInitializationPhase::MoveInitialOwner", "DrawStoreInitializationPhase::CloneInitial"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-initial-owner-clone-resurrected was falsely accepted.");
   if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("struct DrawMutationCandidateAuthority", "struct SynchronousDrawDiffApply"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-retained-mutation-candidate-missing was falsely accepted.");
   if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec.replace("retained_draw_container_false_terminal_saturation_and_interrupted_close_preserve_exact_owner", "draw_string_predicate_only"), retainedDrawEditor, retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-authority-close-fixture-missing was falsely accepted.");
   if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec, retainedDrawEditor.replace("draw_live_envelope_rejects_single_and_final_edit_id_plus_one_before_mutation_candidate", "draw_skips_final_edit_id"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-live-final-edit-id-fixture-missing was falsely accepted.");
+  if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec, retainedDrawEditor.replace("draw_live_initializer_candidate_container_commit_ack_cancel_stale_preserve_last_valid_and_exact_handle", "draw-close-only-after-success"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-live-staged-cancel-stale-ack-fixture-missing was falsely accepted.");
   if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec, retainedDrawEditor.replace('"forwards": [crate::artifacts::draw::mutations::DrawMutation::RenameLayer', '"forwards": []'), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-live-populated-history-route-missing was falsely accepted.");
   if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec, retainedDrawEditor.replace("source: &js_sys::Uint8Array", "source: &[u8]"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-post-lift-dynamic-page was falsely accepted.");
   if (toolJobDrawEnvelopeCallerRetainedExact(retainedJackStore, retainedDrawCodec, retainedDrawEditor.replace("acknowledge_artifact_store_replacement(handle.runtime_handle())", "return Ready"), retainedWriterPlugin)) throw new Error("[verify interactivity tool-jobs] self-test Draw-completion-without-exact-ack was falsely accepted.");
@@ -3181,7 +3757,7 @@ function toolJobCoverageSelfTests(): number {
   if (toolJobPagedIngressExact(unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy, unpollableDestroy)) throw new Error("[verify interactivity tool-jobs] self-test WGPU-close-registry-without-pollable-exact-owner-handle was falsely accepted.");
   const shutdownDropsClose = "pub(crate) struct KernelCloseHandle; pub(crate) fn begin_destroy_app(&self, instance: u32) -> KernelCloseHandle; KernelRequest::DestroyApp { owner: self.clone() }; owner.finish(KernelCloseStatus::Complete); fn shutdown_step() { drop(owner); }";
   if (toolJobPagedIngressExact(shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose, shutdownDropsClose)) throw new Error("[verify interactivity tool-jobs] self-test WGPU-queue-shutdown-dropped-close-completion-owner was falsely accepted.");
-  return fixtures.length + 177;
+  return fixtures.length + 294;
 }
 
 /** 🎯️ Phase-8 source/runtime contract census used by `verify interactivity tool-jobs`. */
@@ -3255,6 +3831,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   const jackEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs");
   const jackEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
   const jackWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
+  const trinityRewrite = policyReadFileSafe(root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewrite/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌍️world/🦀️component.rs");
   const gisMapEnvelopeCodec = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs");
   const gisMapEditor = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️component.rs");
   const gisMapWasm = policyReadFileSafe(root, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️component.rs");
@@ -3313,6 +3890,7 @@ function toolJobCoverageRun(root: string): ToolJobCoverageReport {
   if (!toolJobPresentEnvelopeCallerRetainedExact(presentEnvelopeCodec, presentWasm, plugin)) failures.push("Present envelope representative caller exposes a raw job/whole-string Wasm route or lacks fixed app-retained worker/result/close ownership");
   if (!toolJobWriterEnvelopeCallerRetainedExact(writerEnvelopeCodec, writerEditor, writerWasm, plugin)) failures.push("Writer envelope caller lacks retained fixed-page ingress, initializer recovery, maintenance publication, cancellation, or exact completion acknowledgement");
   if (!toolJobJackEnvelopeCallerRetainedExact(store, jackEnvelopeCodec, jackEditor, jackWasm, plugin)) failures.push("Jack `.spr`/`.ops` envelope caller lacks the shared retained edit decoder, exact child retirement, fixed-page ingress, initializer recovery, cancellation, or exact completion acknowledgement");
+  if (!toolJobTrinityRewriteEnvelopeCallerRetainedExact(store, jackEnvelopeCodec, jackEditor, trinityRewrite, plugin)) failures.push("Trinity Rewrite envelope caller lacks the Jack-owned fixed-page operation store, generation handle, bounded progress/cancel/close, exact rejected-page handback, or completion acknowledgement");
   if (!toolJobGisMapEnvelopeCallerRetainedExact(store, gisMapEnvelopeCodec, gisMapEditor, gisMapWasm, plugin)) failures.push("GIS Map `.spr`/`.ops` envelope caller lacks the shared retained edit decoder, exact drawing/image/value child retirement, fixed-page ingress, initializer recovery, cancellation, or exact completion acknowledgement");
   if (!toolJobDrawEnvelopeCallerRetainedExact(store, drawEnvelopeCodec, drawEditor, plugin)) failures.push("Draw `.spr`/`.ops` envelope caller lacks recursive layer/style/asset preflight, one-item clone/retirement, fixed-page ingress, initializer recovery, cancellation, or exact completion acknowledgement");
   if (!toolJobChildRetirementInventoryExact(root, allRustFiles)) failures.push("child snapshot retirement domain cohorts or callsites do not match the exact machine-readable owner inventory");
@@ -3426,6 +4004,10 @@ export class VerifyScript extends Script {
     }
     if (segments[0] === "dependencies") {
       this.runDependencyFreeze(segments.slice(1));
+      return;
+    }
+    if (segments[0] === "layering") {
+      this.runLayering(segments.slice(1));
       return;
     }
     await this.runGate();
@@ -3614,6 +4196,28 @@ export class VerifyScript extends Script {
     console.log("[verify dependencies] clean — no new third-party dependencies.");
   }
 
+  /**
+   * 🏛️Dependency-direction gate. Repo-wide and framework code must stay correct when an
+   * implementation area is deleted, so every reference from the former to the latter is counted
+   * against a shrink-only baseline. Which areas are implementations is taxonomy vocabulary.
+   */
+  private runLayering(segments: string[]): void {
+    if (segments.includes("write-baseline")) {
+      const baseline = writeLayeringBaseline(this.root);
+      console.log(`[verify layering] baseline rewritten: ${Object.keys(baseline.allowed).length} file(s) still referencing an implementation area.`);
+      return;
+    }
+    const counts = layeringCounts(layeringReferences(this.root));
+    const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
+    console.log(`[verify layering] ${Object.keys(counts).length} authored repo-wide/framework file(s) reference an implementation area (${total} reference(s)).`);
+    const breaches = layeringBreaches(this.root);
+    for (const breach of breaches) console.error(`[verify layering] ${breach.scope}: ${breach.summary}`);
+    if (breaches.length > 0) {
+      throw new Error(`[verify layering] ${breaches.length} file(s) grew past their baseline — move the implementation-specific logic into that implementation's own 📜️script.ts.`);
+    }
+    console.log("[verify layering] clean — no file references more implementation paths than its baseline.");
+  }
+
   private async runGate(): Promise<void> {
     // Deliberately calls dependency-cruiser directly rather than `LintScript`/`nx run-many -t lint --all`:
     // several unrelated projects (repo/client/vscode, compose-js, …) have pre-existing broken eslint configs,
@@ -3634,8 +4238,13 @@ export class VerifyScript extends Script {
     runCmd("bun", ["nx", "run", "@semio-tech/ui-rs:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] chrome i18n literal scan…");
     runCmd("bun", ["nx", "run", "@semio-tech/ui-react:check-chrome-i18n"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    console.log("[verify] dependency direction (repo-wide/framework must not name an implementation)…");
+    this.runLayering([]);
     console.log("[verify] owner-root test taxonomy and feature contract…");
-    runCmd("bun", [join(this.root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test", "📜️script.ts"), "contract"], { cwd: join(this.root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test"), ...orchestratorBudgetOpts() });
+    {
+      const domain = String(repoTaxonomy(this.root).testDomainPath ?? "");
+      if (domain !== "") runCmd("bun", [join(this.root, domain, "📜️script.ts"), "contract"], { cwd: join(this.root, domain), ...orchestratorBudgetOpts() });
+    }
     console.log("[verify] storybook scope freshness…");
     this.checkStorybookFreshness();
     console.log("[verify] OS exclusive state authority policies…");
@@ -3926,9 +4535,15 @@ const INTERACTIVITY_AUDIT_DB_STORAGE_FILE = "🧰️framework/🛍️products/�
 const INTERACTIVITY_AUDIT_DB_SQLITE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🪶️sqlite/🦀️component.rs";
 const INTERACTIVITY_AUDIT_DB_ENGINE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️component.rs";
 const INTERACTIVITY_AUDIT_DB_ARTIFACT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📄️artifact/🦀️component.rs";
+const INTERACTIVITY_AUDIT_DB_WAL_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🦀️component.rs";
 const INTERACTIVITY_AUDIT_DB_CLI_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⌨️cli/🦀️component.rs";
 const INTERACTIVITY_AUDIT_DB_TESTKIT_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🧪️testkit/🦀️component.rs";
 const INTERACTIVITY_AUDIT_HUB_BIN_FILE = "🌎️hub/📦️packages/🦀️rust/📦️bin.rs";
+const INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️prepared.rs";
+const INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️draw.rs";
+const INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE = "🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/🦀️gpu.rs";
+const INTERACTIVITY_AUDIT_CANVAS_RASTER_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/🧱️elements/Scenes/🧊️component.rs";
+const INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑️‍🎨️engine/📦️packages/🦀️rust/🎯️targets/🧊️wgpu/📦️glue.rs";
 
 /**
  * ⏱️ The "single sanctioned runtime module" the thread/pool-construction rule (category
@@ -4177,14 +4792,24 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   const dbSqlite = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_SQLITE_FILE);
   const dbEngine = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_ENGINE_FILE);
   const dbArtifact = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_ARTIFACT_FILE);
+  const dbWal = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_WAL_FILE);
   const dbCli = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_CLI_FILE);
   const dbTestkit = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_DB_TESTKIT_FILE);
   const hubBin = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_HUB_BIN_FILE);
   for (const failure of interactivityDbIoFailures(dbStorage, dbSqlite, dbEngine, dbTestkit, hubBin)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_STORAGE_FILE, line: 0, text: failure });
   interactivityArtifactSubmitSelfTests();
   for (const failure of interactivityArtifactSubmitFailures(dbEngine, dbArtifact)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_ENGINE_FILE, line: 0, text: failure });
+  interactivityArtifactHistorySelfTests();
+  for (const failure of interactivityArtifactHistoryFailures(dbEngine, dbArtifact, dbWal)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_ENGINE_FILE, line: 0, text: failure });
   interactivityVcsBridgeSelfTests();
   for (const failure of interactivityVcsBridgeFailures(dbEngine, dbCli)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_DB_ENGINE_FILE, line: 0, text: failure });
+  interactivityPreparedRasterProducerSelfTests();
+  const preparedRaster = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE);
+  const preparedRasterDraw = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE);
+  const preparedRasterGpu = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE);
+  const canvasRaster = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_CANVAS_RASTER_FILE);
+  const rendererGlue = policyReadFileSafe(repoRoot, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE);
+  for (const failure of interactivityPreparedRasterProducerFailures(preparedRaster, preparedRasterDraw, preparedRasterGpu, canvasRaster, rendererGlue)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE, line: 0, text: failure });
   const byCategory: Record<string, number> = {};
   for (const f of findings) byCategory[f.category] = (byCategory[f.category] ?? 0) + 1;
 
@@ -4197,6 +4822,62 @@ function interactivityAuditRun(repoRoot: string): InteractivityAuditReport {
   const staleAllowlistEntries = inScopeAllowlist.filter((e) => !blockingBridgeFindings.some((f) => f.file === e.file && f.text.includes(e.pattern)));
 
   return { findings, byCategory, blockingBridgeUnlisted, staleAllowlistEntries, expectedNeverToMatchEntries, preDeclaredOutOfScope };
+}
+
+function interactivityPreparedRasterProducerFailures(preparedSource: string, drawSource: string, gpuSource: string, canvasSource: string, glueSource: string): string[] {
+  const prepared = interactivityProductionSource(preparedSource);
+  const canvas = interactivityProductionSource(canvasSource);
+  const canvasQueue = canvas.slice(canvas.indexOf("pub(crate) fn queue_canvas_image_upload"));
+  const glue = interactivityProductionSource(glueSource);
+  const failures: string[] = [];
+  if (!prepared.includes("PREPARED_RASTER_PAGE_BYTES: usize = 16 * 1024") || !prepared.includes("PREPARED_RASTER_PRODUCER_CAPACITY: usize = 256") || !prepared.includes("PREPARED_RASTER_PRODUCER_BYTES: usize = 32 * 1024 * 1024")) failures.push("prepared raster producer lacks fixed page/item/byte credits");
+  if (!prepared.includes("slots: Vec<PreparedRasterPage>") || !prepared.includes("slots: Vec::with_capacity(page_capacity)") || !prepared.includes("source.split_off(start).into_boxed_slice()") || prepared.includes("source.clone()")) failures.push("prepared raster pages grow or clone outside exact pre-admission");
+  if (!prepared.includes("page_capacity.checked_add(5)") || !prepared.includes("key.capacity().checked_mul(2)") || !prepared.includes("source.capacity().checked_add(byte_len)") || !prepared.includes("page_capacity.checked_mul(size_of::<PreparedRasterPage>())")) failures.push("prepared raster source and derived key/page owners are not jointly credited");
+  if (!prepared.includes("self.slots = Vec::new()") || !prepared.includes("*key = String::new()") || !prepared.includes("self.key = String::new()") || !prepared.includes("self.slots.capacity() == 0") || !prepared.includes("self.key_released && self.credit.is_none()")) failures.push("prepared raster page/key backing can drop before retained retirement and credit release");
+  if (!prepared.includes("if self.frame_generation != Some(expected_generation)") || prepared.indexOf("if self.frame_generation != Some(expected_generation)") > prepared.indexOf("self.source.split_off(start)")) failures.push("stale prepared raster generation can consume source bytes");
+  if (!prepared.includes("raster_producers.front_mut()") || !prepared.includes("return StepOutcome::Yield") || !prepared.includes("producer.begin_close()") || !prepared.includes("producer.close_step()")) failures.push("prepared raster job does not advance or retire one retained producer opportunity");
+  if (!canvas.includes("slots: Box<[Option<PreparedRasterProducer>; RASTER_UPLOADS_PER_SURFACE_CAPACITY]>") || !canvas.includes("fn pop_front(&mut self)") || !canvasQueue.includes("surface.queue.is_full()") || canvasQueue.indexOf("surface.queue.is_full()") > canvasQueue.indexOf("decode_canvas_image(data_url)")) failures.push("Canvas raster admission is not a fixed FIFO preflight before decode");
+  if (canvas.includes("pixels[..expected].to_vec()") || canvas.includes("pending_raster_uploads: Vec") || canvas.includes("PendingRasterUpload {")) failures.push("Canvas raster path reintroduced a contiguous prepared-pixel clone or growable queue");
+  if (!canvas.includes("PreparedRasterProducer::try_admit(key, pixels, width, height)") || !glue.includes("producer.bind_frame_generation(input.preview_generation)") || !glue.includes("input.raster_producers.push_back(producer)")) failures.push("Canvas producer is not moved by value with its frame generation witness");
+  if (!gpuSource.includes("PreparedRenderUpload::RasterPages") || !gpuSource.includes("pixels.frame_generation() != packet.preview_generation()") || !drawSource.includes("Self::Pages(pixels) => pixels.page_for_row(row)")) failures.push("paged producer handoff is not consumed directly by the accepted raster upload cursor");
+  const fixtures = [
+    "paged_raster_producer_advances_one_page_and_moves_page_identity",
+    "stale_generation_does_not_consume_a_prepared_raster_page",
+    "raster_cap_plus_one_rejects_the_exact_source_before_page_allocation",
+    "raster_process_bytes_plus_one_returns_the_exact_reserved_backing",
+    "raster_credit_epoch_rejects_aba_and_cancel_retires_one_owner_per_grant",
+    "pending_raster_ring_is_fixed_fifo_and_returns_cap_plus_one_owner",
+  ];
+  for (const fixture of fixtures) if (!preparedSource.includes(fixture) && !canvasSource.includes(fixture)) failures.push(`prepared raster fixture missing ${fixture}`);
+  return failures;
+}
+
+function interactivityPreparedRasterProducerSelfTests(): void {
+  const fixtures = `paged_raster_producer_advances_one_page_and_moves_page_identity stale_generation_does_not_consume_a_prepared_raster_page raster_cap_plus_one_rejects_the_exact_source_before_page_allocation raster_process_bytes_plus_one_returns_the_exact_reserved_backing raster_credit_epoch_rejects_aba_and_cancel_retires_one_owner_per_grant`;
+  const prepared = `const PREPARED_RASTER_PAGE_BYTES: usize = 16 * 1024; const PREPARED_RASTER_PRODUCER_CAPACITY: usize = 256; const PREPARED_RASTER_PRODUCER_BYTES: usize = 32 * 1024 * 1024; slots: Vec<PreparedRasterPage> slots: Vec::with_capacity(page_capacity) page_capacity.checked_add(5) page_capacity.checked_mul(size_of::<PreparedRasterPage>()) key.capacity().checked_mul(2) source.capacity().checked_add(byte_len) self.slots = Vec::new() *key = String::new() self.key = String::new() self.slots.capacity() == 0 self.key_released && self.credit.is_none() if self.frame_generation != Some(expected_generation) { return Fault } self.source.split_off(start).into_boxed_slice() raster_producers.front_mut() producer.begin_close() producer.close_step() return StepOutcome::Yield ${fixtures}`;
+  const canvasFixture = "pending_raster_ring_is_fixed_fifo_and_returns_cap_plus_one_owner";
+  const canvas = `slots: Box<[Option<PreparedRasterProducer>; RASTER_UPLOADS_PER_SURFACE_CAPACITY]> fn pop_front(&mut self) pub(crate) fn queue_canvas_image_upload surface.queue.is_full() decode_canvas_image(data_url) PreparedRasterProducer::try_admit(key, pixels, width, height) ${canvasFixture}`;
+  const glue = "producer.bind_frame_generation(input.preview_generation) input.raster_producers.push_back(producer)";
+  const gpu = "PreparedRenderUpload::RasterPages pixels.frame_generation() != packet.preview_generation()";
+  const draw = "Self::Pages(pixels) => pixels.page_for_row(row)";
+  const mutations = [
+    ["page-cap", prepared.replace("16 * 1024", "64 * 1024"), canvas, glue],
+    ["unreserved-derived-key", prepared.replace("key.capacity().checked_mul(2)", "key.capacity()"), canvas, glue],
+    ["unreserved-page-slots", prepared.replace("page_capacity.checked_mul(size_of::<PreparedRasterPage>())", "0"), canvas, glue],
+    ["dynamic-pages", prepared.replace("Vec::with_capacity(page_capacity)", "Vec::new()"), canvas, glue],
+    ["whole-clone", `${prepared} source.clone()`, canvas, glue],
+    ["stale-after-consume", prepared.replace("if self.frame_generation != Some(expected_generation) { return Fault } self.source.split_off(start)", "self.source.split_off(start) if self.frame_generation != Some(expected_generation) { return Fault }"), canvas, glue],
+    ["growable-canvas-queue", prepared, canvas.replace("slots: Box<[Option<PreparedRasterProducer>; RASTER_UPLOADS_PER_SURFACE_CAPACITY]>", "pending_raster_uploads: Vec<PendingRasterUpload>"), glue],
+    ["decode-before-cap", prepared, canvas.replace("surface.queue.is_full() decode_canvas_image(data_url)", "decode_canvas_image(data_url) surface.queue.is_full()"), glue],
+    ["generation-erasure", prepared, canvas, glue.replace("producer.bind_frame_generation(input.preview_generation)", "drop(input.preview_generation)")],
+    ["contiguous-clone", prepared, `${canvas} pixels[..expected].to_vec()`, glue],
+    ["missing-fixture", prepared.replace("raster_credit_epoch_rejects_aba_and_cancel_retires_one_owner_per_grant", ""), canvas, glue],
+    ["missing-bytes-fixture", prepared.replace("raster_process_bytes_plus_one_returns_the_exact_reserved_backing", ""), canvas, glue],
+    ["ordinary-page-slot-drop", prepared.replace("self.slots = Vec::new()", "self.slots.clear()"), canvas, glue],
+    ["ordinary-key-backing-drop", prepared.replace("*key = String::new()", "key.clear()"), canvas, glue],
+  ] as const;
+  for (const [name, mutatedPrepared, mutatedCanvas, mutatedGlue] of mutations) if (interactivityPreparedRasterProducerFailures(mutatedPrepared, draw, gpu, mutatedCanvas, mutatedGlue).length === 0) throw new Error(`[verify interactivity] prepared raster producer self-test ${name} was falsely accepted.`);
+  if (interactivityPreparedRasterProducerFailures(prepared, draw, gpu, canvas, glue).length !== 0) throw new Error("[verify interactivity] prepared raster producer self-test bounded pages were falsely rejected.");
 }
 
 function interactivityShardExecutorFailures(executorSource: string, shardSource: string): string[] {
@@ -4411,7 +5092,7 @@ function interactivityArtifactSubmitFailures(engineSource: string, artifactSourc
   if (!handle.includes("self.pool.try_submit(Lane::Io, job)") || !handle.includes("error.into_job()") || !handle.includes("self.pool.callback_at") || !handle.includes("retry_generation") || !handle.includes("ARTIFACT_SUBMIT_RETRY_LIMIT")) failures.push("ArtifactHandle quiet saturation lacks exact closure handback and coalesced timer-wheel retry");
   for (const terminal of ["pub fn take_terminal_job", "pub fn take_terminal_work", "pub fn take_terminal_result", "pub fn take_actor_terminal_job", "pub fn close_step", "pub fn terminal_is_empty", "pub fn resume(mut self)"]) if (!handle.includes(terminal)) failures.push(`ArtifactHandle terminal authority missing ${terminal}`);
   if (!runner.includes("ArtifactBuildFuture") || !runner.includes("ArtifactTurnFuture") || !runner.includes("future.as_mut().poll(&mut context)") || !runner.includes("Self::start_turn(engine, envelope.payload)") || !runner.includes("self.pool.try_submit(semio_framework_async::Lane::UserVisible, job)") || !runner.includes("self.pool.callback_at")) failures.push("ArtifactRunner does not retain one build/turn poll with exact pool retry");
-  if (!runnerCloseStep.includes("close();") || !runnerCloseStep.includes("drop(job);") || runnerCloseStep.indexOf("close();") > runnerCloseStep.indexOf("drop(job);") || !runnerTerminalClose.includes("close();") || !runnerTerminalClose.includes("drop(job);") || runnerTerminalClose.indexOf("close();") > runnerTerminalClose.indexOf("drop(job);")) failures.push("ArtifactRunner terminal close can drop the last runner owner before its retained cursor is released");
+  if (!runnerCloseStep.includes("let closed =") || !runnerCloseStep.includes("if closed") || !runnerCloseStep.includes("terminal.take()") || !runnerTerminalClose.includes("let closed =") || !runnerTerminalClose.includes("if !closed") || !runnerTerminalClose.includes("terminal_job")) failures.push("ArtifactRunner terminal close can drop the last runner owner before its retained cursor is released");
   if (!engine.includes("ArtifactEngine::create_retained") || !engine.includes("ArtifactEngine::open_retained") || engine.includes("move || db_artifact::ArtifactEngine::create(")) failures.push("live database authority construction reaches a synchronous ArtifactEngine wrapper");
   if (!artifact.includes("pub fn submit_retained") || !artifact.includes("self.address.ask(Priority::Command") || !artifact.includes("pub async fn query") || !artifact.includes("pub async fn frontier")) failures.push("ArtifactAuthority retains a blocking mailbox compatibility path on the live submit route");
   for (const fixture of [
@@ -4430,7 +5111,7 @@ function interactivityArtifactSubmitFailures(engineSource: string, artifactSourc
 function interactivityArtifactSubmitSelfTests(): void {
   const fixtures = `artifact_submit_late_readiness_parks_then_one_shot_wake_reschedules artifact_submit_pool_saturation_without_later_ingress_retains_exact_job artifact_submit_cancel_before_during_after_preserves_exact_owner artifact_submit_stale_generation_and_slot_aba_cannot_consume_current_work artifact_submit_missing_handle_terminalizes_without_mailbox_mutation artifact_submit_terminal_job_work_result_take_resume_and_close_one_owner artifact_submit_item_cap_plus_one_and_nested_bytes_plus_one_return_owner artifact_runner_one_grant_polls_one_turn_and_never_blocks_on`;
   const goodEngine = `//#region 🔖️ArtifactHandle const ARTIFACT_SUBMIT_PAGE_BYTES: u64 = 16 * 1024 const ARTIFACT_SUBMIT_OPERATION_PAGES: u64 = 64 const ARTIFACT_SUBMIT_TOTAL_PAGES: u64 = 1024 const ARTIFACT_SUBMIT_OPERATION_ITEMS: usize = 64 ArtifactSubmitAdmission::try_claim(items, bytes) batch.envelopes.capacity() envelope.dependencies.capacity() envelope.diff.payload.capacity() envelope.inverse.payload.capacity() dependency.0.capacity() impl std::task::Wake for ArtifactSubmitWake self.generation == state.generation self.scheduled.compare_exchange(false, true SubmitProgress::Waiting self.pool.try_submit(Lane::Io, job) error.into_job() self.pool.callback_at retry_generation ARTIFACT_SUBMIT_RETRY_LIMIT pub fn take_terminal_job pub fn take_terminal_work pub fn take_terminal_result pub fn take_actor_terminal_job pub fn close_step pub fn terminal_is_empty pub fn resume(mut self) fn drive_one(self: Arc<Self>, generation: u64) { if generation != self.generation { return; } if self.authority.generation() != self.authority_generation {} self.scheduled.store matches!(work.as_ref(), Some(ArtifactSubmitWorkOwner::Request { .. })) self.authority.submit_retained std::pin::Pin::new(future).poll(&mut context) } fn close_one ArtifactEngine::create_retained ArtifactEngine::open_retained ${fixtures} //#endregion 🔖️ArtifactHandle`;
-  const goodArtifact = `type ArtifactBuildFuture type ArtifactTurnFuture impl Wake ArtifactRunner fn submit_exact { self.pool.try_submit(semio_framework_async::Lane::UserVisible, job) self.pool.callback_at } fn run_turn { future.as_mut().poll(&mut context) Self::start_turn(engine, envelope.payload) } pub fn close_step { close(); drop(job); } pub fn terminal_is_empty impl ArtifactRunnerTerminalJob { pub fn close(mut self) { close(); drop(job); } } impl Drop for ArtifactRunnerTerminalJob pub fn submit_retained { self.address.ask(Priority::Command } pub async fn query pub async fn frontier //#region 🧪️Tests`;
+  const goodArtifact = `type ArtifactBuildFuture type ArtifactTurnFuture impl Wake ArtifactRunner fn submit_exact { self.pool.try_submit(semio_framework_async::Lane::UserVisible, job) self.pool.callback_at } fn run_turn { future.as_mut().poll(&mut context) Self::start_turn(engine, envelope.payload) } pub fn close_step { let closed = close(); if closed { terminal.take(); } } pub fn terminal_is_empty impl ArtifactRunnerTerminalJob { pub fn close(mut self) { let closed = close(); if !closed { terminal_job = Some(owner); } } } impl Drop for ArtifactRunnerTerminalJob pub fn submit_retained { self.address.ask(Priority::Command } pub async fn query pub async fn frontier //#region 🧪️Tests`;
   const mutations = [
     ["outer-block-on", goodEngine.replace("//#endregion 🔖️ArtifactHandle", "block_on(future) //#endregion 🔖️ArtifactHandle"), goodArtifact],
     ["inner-runner-block-on", goodEngine, goodArtifact.replace("future.as_mut().poll(&mut context)", "block_on(engine.submit())")],
@@ -4442,10 +5123,202 @@ function interactivityArtifactSubmitSelfTests(): void {
     ["missing-terminal-work", goodEngine.replace("pub fn take_terminal_work", "fn inspect_terminal_work"), goodArtifact],
     ["blocking-mailbox", goodEngine, goodArtifact.replace("self.address.ask(Priority::Command", "self.address.ask_blocking(Priority::Command")],
     ["sync-live-constructor", goodEngine.replace("ArtifactEngine::create_retained", "move || db_artifact::ArtifactEngine::create("), goodArtifact],
-    ["drop-runner-before-close", goodEngine, goodArtifact.replaceAll("close(); drop(job);", "drop(job); close();")],
+    ["drop-runner-before-close", goodEngine, goodArtifact.replaceAll("if !closed { terminal_job = Some(owner); }", "drop(owner);")],
   ] as const;
   for (const [name, engine, artifact] of mutations) if (interactivityArtifactSubmitFailures(engine, artifact).length === 0) throw new Error(`[verify interactivity] ArtifactHandle submit self-test ${name} was falsely accepted.`);
   if (interactivityArtifactSubmitFailures(goodEngine, goodArtifact).length !== 0) throw new Error("[verify interactivity] ArtifactHandle submit self-test retained authority was falsely rejected.");
+}
+
+function interactivityArtifactHistoryFailures(engineSource: string, artifactSource: string, walSource: string): string[] {
+  const engine = interactivityProductionSource(engineSource);
+  const artifact = interactivityProductionSource(artifactSource);
+  const wal = interactivityProductionSource(walSource);
+  const history = engine.slice(engine.indexOf("const ARTIFACT_HISTORY_OPERATION_SLOTS"), engine.indexOf("pub struct ArtifactHandle"));
+  const replay = artifact.slice(artifact.indexOf("//#region 🔖️HistoryReplay"), artifact.indexOf("//#endregion 🔖️HistoryReplay"));
+  const replayNext = replay.slice(replay.indexOf("fn next("), replay.indexOf("impl Future for HistoryReplayFuture"));
+  const reservationBuild = replay.slice(replay.indexOf("impl HistoryReplayReservation"), replay.indexOf("struct HistoryReplayReservationCloseCursor"));
+  const actor = artifact.slice(artifact.indexOf("//#region 🔖️Actor"), artifact.indexOf("//#endregion 🔖️Actor"));
+  const terminalHandle = history.slice(history.indexOf("impl ArtifactHistoryTerminalHandle"), history.indexOf("impl Future for HistoryFuture"));
+  const terminalCloseStart = terminalHandle.indexOf("pub fn close_step(&self)");
+  const terminalClose = terminalHandle.slice(terminalCloseStart, terminalHandle.indexOf("pub fn terminal_is_empty(&self)", terminalCloseStart));
+  const productionWaits = engine.match(/\bdb_actor::block_on\s*\(/g)?.length ?? 0;
+  const failures: string[] = [];
+  if (productionWaits !== 6 || engine.includes("async fn replay_history") || engine.includes("db_wal::replay_document(&storage.wal")) failures.push("DB engine replay_history removal did not reduce the seven residual waits to exactly six");
+  for (const forbidden of ["block_on(", "ask_blocking", "submit_blocking", "thread::spawn", "WorkerPool::new(", "loop {", "while "])
+    if (history.includes(forbidden) || replay.includes(forbidden)) failures.push(`retained history route contains ${forbidden}`);
+  if (!history.includes("const ARTIFACT_HISTORY_OPERATION_SLOTS: usize = 8") || !history.includes("const ARTIFACT_HISTORY_PAGE_BYTES: u64 = 16 * 1024") || !history.includes("const ARTIFACT_HISTORY_OPERATION_PAGES: u64 = 2_048") || !history.includes("const ARTIFACT_HISTORY_OPERATION_ITEMS: usize = 20_481") || !history.includes("ArtifactHistoryAdmission::try_claim()")) failures.push("history operation lacks fixed item/page/operation/process admission");
+  if (!replay.includes("pub struct HistoryReplayReservation") || !replay.includes(".try_reserve_exact(HISTORY_REPLAY_SEGMENT_PAGES") || !replay.includes(".try_reserve_exact(HISTORY_REPLAY_RESULT_PAGES)") || !replay.includes(".try_reserve_exact(HISTORY_REPLAY_MAX_OPERATION_IDS)") || !replay.includes(".try_reserve_exact(HISTORY_REPLAY_MAX_ENTRIES)") || !replay.includes("result_len.checked_add(len)") || !replay.includes("retained_bytes") || !history.includes("HistoryView::new(view, Some(admission)") || !history.includes("reservation: Option<db_artifact::HistoryReplayReservation>")) failures.push("history source and derived byte/item owners are not jointly credited before publication");
+  if (!replay.includes("HistoryEnvelopeField::Dependency") || !replay.includes("HistoryEnvelopeField::DiffPayload") || !replay.includes("HistoryEnvelopeField::InversePayload") || !replay.includes("self.dependencies -= 1") || !replay.includes("self.pos != self.end")) failures.push("history envelope cursor is not retained one field/item with exact range validation");
+  if (!replay.includes("PageRead") || !replay.includes("requested =") || !replay.includes("requested.min(HISTORY_REPLAY_PAGE_BYTES)") && !replay.includes(".min(HISTORY_REPLAY_PAGE_BYTES)") || !replay.includes("pack::ByteRange { offset, len: requested }") || !replay.includes("page.capacity() as u64 > HISTORY_REPLAY_PAGE_BYTES") || replay.includes("pack::ByteRange { offset: 0, len }") || replay.includes("read(document, index, range_all)")) failures.push("history backend read is not retained to one admitted 16KiB page");
+  if (!replay.includes("protocol::codec::Crc32cCursor") || !replay.includes("self.crc.update_page(page)") || !replay.includes("let maximum = self.payload_remaining.min(HISTORY_REPLAY_PAGE_BYTES)") || replay.includes("protocol::codec::crc32c(whole_frame)") || replay.includes("decode_history_token")) failures.push("history frame CRC/tokenization is not retained to one admitted page");
+  if (!replay.includes("Command { offset: u64, len: u64 }") || replay.includes("Command(Vec<u8>)") || wal.includes("pub async fn decode_history_token")) failures.push("history command token duplicates raw pages or revives whole-frame WAL decoding");
+  if (!replay.includes("HistoryReplayPhase::Retire") || !replay.includes("HistoryReplayTransition::FaultRetire") || !replay.includes("pub struct HistoryReplayReservationCloseCursor") || !replay.includes("self.page_count -= 1") || !replay.includes("self.source_page_count -= 1") || !replay.includes("self.operation_ids.as_mut().is_some_and") || !replay.includes("self.entries.as_mut().is_some_and") || !replay.includes("self.result_pages.as_mut().and_then(Vec::pop)") || !replay.includes("assert!(self.terminal_is_empty()")) failures.push("history normal/cancel close does not retire one exact page or nested owner per actor grant");
+  if (!history.includes("terminal_reservation: std::sync::Mutex<Option<db_artifact::HistoryReplayReservationCloseCursor>>") || !history.includes("pub struct ArtifactHistoryTerminalReservation") || !history.includes("begin_unhanded_reservation_close") || !history.includes("terminalize_unhanded_request") || !history.includes("pub fn take_terminal_reservation") || !history.includes("assert!(self.reservation.is_none()")) failures.push("history pre-handoff reservation lacks public retained retirement and exact admission handback");
+  const constructionBuilder = replay.slice(replay.indexOf("struct HistoryReplayReservationConstructionBuilder"), replay.indexOf("pub(crate) struct HistoryReplayReservationConstructionFault"));
+  const constructionFault = replay.slice(replay.indexOf("pub(crate) struct HistoryReplayReservationConstructionFault"), replay.indexOf("impl Drop for HistoryReplayReservationCloseCursor"));
+  const copyableConstructionToken = /#\[derive\([^\)]*(?:Clone|Copy)[^\)]*\)\]\s*struct HistoryReplayReservationConstructionToken/.test(replay);
+  const constructionClaimOwner = replay.slice(replay.indexOf("fn claim_history_replay_reservation_construction"), replay.indexOf("fn handback_history_replay_reservation_construction"));
+  const constructionHandback = replay.slice(replay.indexOf("fn handback_history_replay_reservation_construction"), replay.indexOf("fn release_history_replay_reservation_construction"));
+  const constructionClaim = reservationBuild.indexOf("HistoryReplayReservationConstructionBuilder::new()");
+  const firstConstructionAllocation = reservationBuild.indexOf(".try_reserve_exact(HISTORY_REPLAY_SEGMENT_PAGES");
+  if (copyableConstructionToken || !constructionClaimOwner.includes("cursor: Some(HistoryReplayReservationCloseCursor"))
+    failures.push("history construction token is copyable or partial owners are not registry-resident before allocation");
+  if (
+    !constructionHandback.includes("registry.slots.get_mut(token.slot)") ||
+    !constructionHandback.includes("!slot.occupied") ||
+    !constructionHandback.includes("!slot.checked_out") ||
+    !constructionHandback.includes("slot.generation != token.generation") ||
+    !constructionHandback.includes("slot.cursor.is_none()") ||
+    !constructionHandback.includes("HistoryReplayReservationConstructionHandbackRejection") ||
+    constructionHandback.includes("slot.generation = token.generation") ||
+    constructionHandback.includes("slot.error =") ||
+    constructionHandback.includes("slot.cursor =")
+  )
+    failures.push("history construction handback is not a checked linear ABA-safe compare that leaves registry owners resident");
+  if (
+    !history.includes("terminal_construction: std::sync::Mutex<Option<db_artifact::HistoryReplayReservationConstructionFault>>") ||
+    !history.includes("pub struct ArtifactHistoryTerminalConstructionFault") ||
+    !history.includes("pub fn take_terminal_construction_fault") ||
+    !history.includes("impl ArtifactHistoryTerminalConstructionFault") ||
+    !history.includes("pub fn resume(mut self) -> Result<(), Self>") ||
+    !history.includes("construction_checked_out") ||
+    !replay.includes("const HISTORY_REPLAY_CONSTRUCTION_SLOTS: usize = 64") ||
+    !replay.includes("pub(crate) fn try_new()") ||
+    replay.includes("pub fn try_new() -> Result<Self, HistoryReplayReservationConstructionFault>") ||
+    !replay.includes("pub(crate) struct HistoryReplayReservationConstructionFault") ||
+    replay.includes("pub struct HistoryReplayReservationConstructionFaultCursor") ||
+    replay.includes("pub fn into_parts") ||
+    reservationBuild.includes("?") ||
+    !reservationBuild.includes("scratch.try_reserve_exact(HISTORY_REPLAY_MAX_FIELD_BYTES)") ||
+    constructionClaim < 0 ||
+    firstConstructionAllocation < constructionClaim ||
+    !constructionBuilder.includes("impl Drop for HistoryReplayReservationConstructionBuilder") ||
+    !constructionBuilder.includes("handback_history_replay_reservation_construction(&token)") ||
+    !constructionFault.includes("impl Drop for HistoryReplayReservationConstructionFault") ||
+    !constructionFault.includes("handback_history_replay_reservation_construction(&token)") ||
+    !constructionFault.includes("release_history_replay_reservation_construction(token)") ||
+    !replay.includes("take_history_replay_reservation_construction_fault") ||
+    constructionFault.includes("assert!(self.terminal_is_empty()")
+  )
+    failures.push("history reservation construction fault can escape or bulk-drop partial fixed owners before registered public retirement");
+  const closeOwner = terminalClose.indexOf("if self.state.close_one()");
+  const closeAuthority = terminalClose.indexOf("if self.state.authority.close_step()");
+  const closeAdmission = terminalClose.indexOf("self.state.finish_if_terminal_empty()");
+  if (!history.includes("fn terminal_roots_are_empty(&self) -> bool") || !history.includes("self.finished.load(std::sync::atomic::Ordering::Acquire)") || !history.includes("self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()") || terminalCloseStart < 0 || closeOwner < 0 || closeAuthority < closeOwner || closeAdmission < closeAuthority || !terminalClose.includes("return true")) failures.push("history public terminal witness can release or report empty before admission and registry ownership are terminal");
+  if (!replay.includes("enum HistoryReplayTransition") || !replay.includes("phase: Option<HistoryReplayPhase>") || !replay.includes("self.transition = HistoryReplayTransition::FaultRetire") || !replay.includes("if this.phase.take().is_some()") || replay.includes("std::mem::replace(&mut self.phase, HistoryReplayPhase::Complete")) failures.push("history phase transition can publish Complete before panic-safe retained retirement");
+  for (const scan of [".rposition(", "result_pages.iter()", "source_pages.iter().all", "pages.iter().all", "pages.iter().filter"])
+    if (replay.includes(scan)) failures.push(`history fixed owner accounting contains full-capacity scan ${scan}`);
+  if (!replay.includes("source_page_count") || !replay.includes("retained_operation_bytes") || !replay.includes("retained_result_bytes")) failures.push("history fixed owner accounting lacks retained O(1) counters");
+  if (!actor.includes("ArtifactMessage::History") || !actor.includes("ArtifactTurn::History") || !actor.includes("engine.history_replay(operation_generation, cancelled, reservation)") || !actor.includes("Pin::new(&mut *replay).poll(&mut context)") || !actor.includes("replay.request_close") || !actor.includes("!replay.terminal_is_empty()")) failures.push("history replay is not polled through the retained artifact actor turn");
+  const panicMessage = actor.indexOf("history replay cursor panicked");
+  const panicRequest = actor.lastIndexOf("replay.request_close", panicMessage);
+  const panicSchedule = actor.indexOf("self.schedule()", panicMessage);
+  if (panicMessage < 0 || panicRequest < 0 || panicSchedule < panicMessage) failures.push("history runner panic does not retain and reschedule fault cleanup");
+  if (!history.includes("if generation != self.generation") || !history.includes("if self.authority.generation() != self.authority_generation") || history.indexOf("if self.authority.generation() != self.authority_generation") > history.indexOf("self.authority.history_retained")) failures.push("history generation freshness follows mailbox mutation");
+  if (!history.includes("impl std::task::Wake for ArtifactHistoryWake") || !history.includes("self.generation == state.generation") || !history.includes("self.scheduled.compare_exchange(false, true") || !history.includes("self.pool.callback_at") || !history.includes("retry_generation") || !history.includes("error.into_job()")) failures.push("history late readiness or quiet saturation lacks one-shot wake and exact timer retry");
+  if (!history.includes("ArtifactHistoryWorkOwner::Request") || !history.includes("ArtifactHistoryWorkOwner::Actor") || history.includes("ArtifactHistoryWorkOwner::Map") || !history.includes("std::pin::Pin::new(future).poll(&mut context)") || !history.includes("self.complete(Ok(HistoryView::new")) failures.push("history grant is not one request, actor poll, or result item opportunity");
+  if (replayNext.includes("?") || replayNext.includes("try_reserve") || replayNext.includes("Vec::with_capacity") || replayNext.includes("String::from_utf8") || replayNext.includes("std::mem::take(&mut this.entries)") || history.includes("drop(self.owner.take") || history.includes("drop(result)")) failures.push("history live cursor can bypass retained fault/result retirement or allocate after admission");
+  for (const terminal of ["pub fn take_terminal_job", "pub fn take_terminal_work", "pub fn take_terminal_result", "pub fn take_actor_terminal_job", "pub fn close_step", "pub fn terminal_is_empty", "impl ArtifactHistoryTerminalJob", "impl ArtifactHistoryTerminalWork"])
+    if (!history.includes(terminal)) failures.push(`history terminal authority missing ${terminal}`);
+  for (const fixture of [
+    "artifact_history_empty_one_cap_plus_one_admission_returns_exact_request",
+    "artifact_history_empty_and_two_batch_replay_are_deterministic",
+    "artifact_history_nested_derived_item_and_byte_caps_precede_materialization",
+    "artifact_history_segment_cap_plus_one_reads_only_one_admitted_page",
+    "artifact_history_crc_and_frame_tokenizer_advance_one_page_per_grant",
+    "artifact_history_cancel_retires_one_page_or_nested_owner_per_actor_grant",
+    "artifact_history_quiet_late_wake_and_retry_are_generation_coalesced",
+    "artifact_history_cancel_before_during_after_retains_actor_and_result_owners",
+    "artifact_history_stale_generation_and_slot_aba_precede_mailbox_mutation",
+    "artifact_history_replay_ordering_is_segment_frame_then_result_fifo",
+    "artifact_history_terminal_job_work_result_take_resume_and_close_one_owner",
+    "artifact_history_one_grant_advances_one_retained_phase_without_blocking",
+    "artifact_history_drop_after_complete_moves_result_to_public_terminal_registry",
+    "artifact_history_backend_token_crc_fault_retire_1024_pages_one_grant_each",
+    "artifact_history_scratch_result_boundary_plus_one_preserves_exact_owner",
+    "artifact_history_runner_close_mid_turn_retains_replay_until_terminal_empty",
+    "artifact_history_future_handle_drop_and_terminal_take_resume_are_exact",
+    "artifact_history_cancel_before_handoff_retires_full_reservation_before_credit_release",
+    "artifact_history_public_terminal_close_releases_admission_only_after_roots_are_empty",
+    "artifact_history_construction_fault_is_public_and_admission_release_is_a_final_grant",
+    "artifact_history_reservation_construction_fault_cap_plus_one_and_each_page_retire_one_owner",
+    "artifact_history_unchecked_construction_error_and_checked_out_drop_hand_back_exact_pages",
+    "artifact_history_construction_unwind_hands_partial_owner_to_registry_without_bulk_drop",
+    "artifact_history_construction_registry_saturation_rejects_before_partial_owner_and_reuses_with_fresh_generation",
+    "artifact_history_construction_handback_rejects_stale_duplicate_and_aba_without_owner_overwrite",
+    "artifact_history_panic_at_each_phase_transition_retains_then_fault_retires",
+    "artifact_history_fixed_owner_accounting_has_no_capacity_scan",
+  ]) if (!engineSource.includes(fixture) && !artifactSource.includes(fixture) && !walSource.includes(fixture)) failures.push(`retained history fixture missing: ${fixture}`);
+  return failures;
+}
+
+function interactivityArtifactHistorySelfTests(): void {
+  const fixtures = `artifact_history_empty_one_cap_plus_one_admission_returns_exact_request artifact_history_empty_and_two_batch_replay_are_deterministic artifact_history_nested_derived_item_and_byte_caps_precede_materialization artifact_history_segment_cap_plus_one_reads_only_one_admitted_page artifact_history_crc_and_frame_tokenizer_advance_one_page_per_grant artifact_history_cancel_retires_one_page_or_nested_owner_per_actor_grant artifact_history_quiet_late_wake_and_retry_are_generation_coalesced artifact_history_cancel_before_during_after_retains_actor_and_result_owners artifact_history_stale_generation_and_slot_aba_precede_mailbox_mutation artifact_history_replay_ordering_is_segment_frame_then_result_fifo artifact_history_terminal_job_work_result_take_resume_and_close_one_owner artifact_history_one_grant_advances_one_retained_phase_without_blocking artifact_history_drop_after_complete_moves_result_to_public_terminal_registry artifact_history_backend_token_crc_fault_retire_1024_pages_one_grant_each artifact_history_scratch_result_boundary_plus_one_preserves_exact_owner artifact_history_runner_close_mid_turn_retains_replay_until_terminal_empty artifact_history_future_handle_drop_and_terminal_take_resume_are_exact artifact_history_cancel_before_handoff_retires_full_reservation_before_credit_release artifact_history_public_terminal_close_releases_admission_only_after_roots_are_empty artifact_history_construction_fault_is_public_and_admission_release_is_a_final_grant artifact_history_reservation_construction_fault_cap_plus_one_and_each_page_retire_one_owner artifact_history_panic_at_each_phase_transition_retains_then_fault_retires artifact_history_fixed_owner_accounting_has_no_capacity_scan`;
+  const sixWaits = "db_actor::block_on(entry)\n".repeat(6);
+  const goodEngine = `${sixWaits} const ARTIFACT_HISTORY_OPERATION_SLOTS: usize = 8 const ARTIFACT_HISTORY_PAGE_BYTES: u64 = 16 * 1024 const ARTIFACT_HISTORY_OPERATION_PAGES: u64 = 2_048 const ARTIFACT_HISTORY_OPERATION_ITEMS: usize = 20_481 ArtifactHistoryAdmission::try_claim() reservation: Option<db_artifact::HistoryReplayReservation> assert!(self.reservation.is_none() HistoryView::new(view, Some(admission) terminal_reservation: std::sync::Mutex<Option<db_artifact::HistoryReplayReservationCloseCursor>> pub struct ArtifactHistoryTerminalReservation begin_unhanded_reservation_close terminalize_unhanded_request pub fn take_terminal_reservation terminal_construction: std::sync::Mutex<Option<db_artifact::HistoryReplayReservationConstructionFaultCursor>> construction_checked_out pub struct ArtifactHistoryTerminalConstructionFault pub fn take_terminal_construction_fault impl ArtifactHistoryTerminalConstructionFault { pub fn resume(mut self) -> Result<(), Self> fn terminal_roots_are_empty(&self) -> bool fn terminal_is_empty(&self) -> bool { self.finished.load(std::sync::atomic::Ordering::Acquire) self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() } impl std::task::Wake for ArtifactHistoryWake self.generation == state.generation self.scheduled.compare_exchange(false, true self.pool.callback_at retry_generation error.into_job() ArtifactHistoryWorkOwner::Request ArtifactHistoryWorkOwner::Actor pub fn take_terminal_job pub fn take_terminal_work pub fn take_terminal_result pub fn take_actor_terminal_job impl ArtifactHistoryTerminalHandle { pub fn close_step(&self) -> bool { if self.state.close_one() { return true; } if self.state.authority.close_step() { return true; } self.state.finish_if_terminal_empty() } pub fn terminal_is_empty(&self) -> bool impl ArtifactHistoryTerminalJob impl ArtifactHistoryTerminalWork fn drive_one(self: Arc<Self>, generation: u64) { if generation != self.generation { return; } if self.authority.generation() != self.authority_generation {} self.authority.history_retained std::pin::Pin::new(future).poll(&mut context) self.complete(Ok(HistoryView::new } pub struct ArtifactHandle ${fixtures}`;
+  const goodArtifact = `//#region 🔖️HistoryReplay HISTORY_REPLAY_SEGMENT_PAGES: u64 = 1_024 HISTORY_REPLAY_RESULT_BYTES pub struct HistoryReplayReservation impl HistoryReplayReservation { source_page_count retained_operation_bytes retained_result_bytes source_pages.try_reserve_exact(HISTORY_REPLAY_SEGMENT_PAGES result_pages.try_reserve_exact(HISTORY_REPLAY_RESULT_PAGES) operation_ids.try_reserve_exact(HISTORY_REPLAY_MAX_OPERATION_IDS) entries.try_reserve_exact(HISTORY_REPLAY_MAX_ENTRIES) HistoryReplayReservationConstructionFault::new try_new_with_result_page_failure result_len.checked_add(len) retained_bytes } pub struct HistoryReplayReservationCloseCursor pub struct HistoryReplayReservationConstructionFaultCursor self.source_page_count -= 1 self.operation_ids.as_mut().is_some_and self.entries.as_mut().is_some_and self.result_pages.as_mut().and_then(Vec::pop) HistoryEnvelopeField::Dependency HistoryEnvelopeField::DiffPayload HistoryEnvelopeField::InversePayload self.dependencies -= 1 self.pos != self.end enum HistoryFrameToken { Command { offset: u64, len: u64 } } enum HistoryReplayPhase { PageRead, Retire } enum HistoryReplayTransition { InProgress FaultRetire Complete } phase: Option<HistoryReplayPhase> self.transition = HistoryReplayTransition::FaultRetire if this.phase.take().is_some() let requested = remaining.min(HISTORY_REPLAY_PAGE_BYTES); pack::ByteRange { offset, len: requested } page.capacity() as u64 > HISTORY_REPLAY_PAGE_BYTES protocol::codec::Crc32cCursor let maximum = self.payload_remaining.min(HISTORY_REPLAY_PAGE_BYTES); self.crc.update_page(page) HistoryReplayPhase::Retire HistoryReplayTransition::FaultRetire self.page_count -= 1 fn next() { retained_step } impl Future for HistoryReplayFuture assert!(self.terminal_is_empty() //#endregion 🔖️HistoryReplay //#region 🔖️Actor ArtifactMessage::History ArtifactTurn::History engine.history_replay(operation_generation, cancelled, reservation) Pin::new(&mut *replay).poll(&mut context) replay.request_close !replay.terminal_is_empty() replay.request_close history replay cursor panicked self.schedule() pub fn history_retained future.as_mut().poll(&mut context) //#endregion 🔖️Actor`;
+  const registeredEngine = `${goodEngine.replace("terminal_construction: std::sync::Mutex<Option<db_artifact::HistoryReplayReservationConstructionFaultCursor>>", "terminal_construction: std::sync::Mutex<Option<db_artifact::HistoryReplayReservationConstructionFault>>")} artifact_history_unchecked_construction_error_and_checked_out_drop_hand_back_exact_pages artifact_history_construction_unwind_hands_partial_owner_to_registry_without_bulk_drop artifact_history_construction_registry_saturation_rejects_before_partial_owner_and_reuses_with_fresh_generation artifact_history_construction_handback_rejects_stale_duplicate_and_aba_without_owner_overwrite`;
+  const constructionRegistry = `const HISTORY_REPLAY_CONSTRUCTION_SLOTS: usize = 64 struct HistoryReplayReservationConstructionToken { slot: usize, generation: u64 } pub(crate) struct HistoryReplayReservationConstructionHandbackRejection struct HistoryReplayReservationConstructionSlot fn claim_history_replay_reservation_construction { cursor: Some(HistoryReplayReservationCloseCursor } fn handback_history_replay_reservation_construction(token: &HistoryReplayReservationConstructionToken) -> Result<(), HistoryReplayReservationConstructionHandbackRejection> { registry.slots.get_mut(token.slot) !slot.occupied !slot.checked_out slot.generation != token.generation slot.cursor.is_none() HistoryReplayReservationConstructionHandbackRejection slot.checked_out = false } fn release_history_replay_reservation_construction struct HistoryReplayReservationConstructionBuilder impl Drop for HistoryReplayReservationConstructionBuilder { handback_history_replay_reservation_construction(&token) } pub(crate) struct HistoryReplayReservationConstructionFault impl HistoryReplayReservationConstructionFault { release_history_replay_reservation_construction(token) } impl Drop for HistoryReplayReservationConstructionFault { handback_history_replay_reservation_construction(&token) } take_history_replay_reservation_construction_fault impl Drop for HistoryReplayReservationCloseCursor`;
+  const registeredArtifact = goodArtifact.replace("source_page_count", "pub(crate) fn try_new() HistoryReplayReservationConstructionBuilder::new() scratch.try_reserve_exact(HISTORY_REPLAY_MAX_FIELD_BYTES) source_page_count").replace("pub struct HistoryReplayReservationConstructionFaultCursor", "").replace("//#endregion 🔖️HistoryReplay", `${constructionRegistry} //#endregion 🔖️HistoryReplay`);
+  const goodWal = ``;
+  const mutations = [
+    ["reintroduced-replay-block-on", goodEngine.replace("pub struct ArtifactHandle", "block_on(replay); pub struct ArtifactHandle"), goodArtifact, goodWal],
+    ["seventh-engine-wait", `${goodEngine} db_actor::block_on(extra)`, goodArtifact, goodWal],
+    ["unbounded-replay-loop", goodEngine, goodArtifact.replace("self.dependencies -= 1", "loop { self.dependencies -= 1 }"), goodWal],
+    ["missing-derived-byte-credit", goodEngine, goodArtifact.replace("result_len.checked_add(len)", "result_len.saturating_add(len)"), goodWal],
+    ["missing-derived-item-cap", goodEngine, goodArtifact.replace("operation_ids.try_reserve_exact(HISTORY_REPLAY_MAX_OPERATION_IDS)", "operation_ids = Vec::new()"), goodWal],
+    ["raw-command-clone", goodEngine, goodArtifact.replace("Command { offset: u64, len: u64 }", "Command(Vec<u8>)"), goodWal],
+    ["whole-segment-read", goodEngine, goodArtifact.replace("pack::ByteRange { offset, len: requested }", "pack::ByteRange { offset: 0, len }"), goodWal],
+    ["whole-frame-crc", goodEngine, goodArtifact.replace("self.crc.update_page(page)", "protocol::codec::crc32c(whole_frame)"), goodWal],
+    ["bulk-page-retire", goodEngine, goodArtifact.replace("self.result_pages.as_mut().and_then(Vec::pop)", "self.result_pages.as_mut().map(Vec::clear)"), goodWal],
+    ["stale-after-handoff", goodEngine.replace("if self.authority.generation() != self.authority_generation {} self.authority.history_retained", "self.authority.history_retained; if self.authority.generation() != self.authority_generation {}"), goodArtifact, goodWal],
+    ["wake-storm", goodEngine.replace("self.scheduled.compare_exchange(false, true", "self.scheduled.store(true"), goodArtifact, goodWal],
+    ["quiet-saturation-strand", goodEngine.replace("self.pool.callback_at", "drop"), goodArtifact, goodWal],
+    ["missing-terminal-work", goodEngine.replace("pub fn take_terminal_work", "fn inspect_terminal_work"), goodArtifact, goodWal],
+    ["dynamic-result-growth", goodEngine, goodArtifact.replace("fn next() { retained_step }", "fn next() { entries.try_reserve(1); retained_step }"), goodWal],
+    ["fault-question-mark", goodEngine, goodArtifact.replace("fn next() { retained_step }", "fn next() { cursor.step()?; retained_step }"), goodWal],
+    ["runner-history-drop", goodEngine, goodArtifact.replace("!replay.terminal_is_empty()", "turn.take()"), goodWal],
+    ["pre-handoff-reservation-drop", goodEngine.replace("begin_unhanded_reservation_close", "drop(admission)"), goodArtifact, goodWal],
+    ["panic-complete-before-retire", goodEngine, goodArtifact.replace("self.transition = HistoryReplayTransition::FaultRetire", "std::mem::replace(&mut self.phase, HistoryReplayPhase::Complete"), goodWal],
+    ["panic-cleanup-strand", goodEngine, goodArtifact.replace("history replay cursor panicked self.schedule()", "history replay cursor panicked"), goodWal],
+    ["fixed-owner-rposition-scan", goodEngine, goodArtifact.replace("fn next() { retained_step }", "fn next() { source_pages.iter().rposition(|owner| owner.is_some()); retained_step }"), goodWal],
+    ["missing-retained-source-count", goodEngine, goodArtifact.replaceAll("source_page_count", "source_scan"), goodWal],
+    ["public-terminal-missing-final-admission-release", goodEngine.replace("self.state.finish_if_terminal_empty()", "false"), goodArtifact, goodWal],
+    ["public-terminal-false-admission-witness", goodEngine.replace("self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()", "true"), goodArtifact, goodWal],
+    ["construction-fault-bulk-unwind", goodEngine, goodArtifact.replace("HistoryReplayReservationConstructionFault::new", "map_err(|_| DbError::Unavailable(String::new()))?"), goodWal],
+    ["construction-fault-missing-page-boundary", goodEngine.replace("artifact_history_reservation_construction_fault_cap_plus_one_and_each_page_retire_one_owner", ""), goodArtifact, goodWal],
+    ["construction-fault-missing-resume", goodEngine.replace("pub fn resume(mut self) -> Result<(), Self>", "fn inspect(self)"), goodArtifact, goodWal],
+    ["missing-fixture", goodEngine.replace("artifact_history_stale_generation_and_slot_aba_precede_mailbox_mutation", ""), goodArtifact, goodWal],
+  ] as const;
+  const registeredMutations = mutations.map(([name, engine, artifact, wal]) => [
+    name,
+    `${engine.replace("terminal_construction: std::sync::Mutex<Option<db_artifact::HistoryReplayReservationConstructionFaultCursor>>", "terminal_construction: std::sync::Mutex<Option<db_artifact::HistoryReplayReservationConstructionFault>>")} artifact_history_unchecked_construction_error_and_checked_out_drop_hand_back_exact_pages artifact_history_construction_unwind_hands_partial_owner_to_registry_without_bulk_drop artifact_history_construction_registry_saturation_rejects_before_partial_owner_and_reuses_with_fresh_generation artifact_history_construction_handback_rejects_stale_duplicate_and_aba_without_owner_overwrite`,
+    artifact.replace("source_page_count", "pub(crate) fn try_new() HistoryReplayReservationConstructionBuilder::new() scratch.try_reserve_exact(HISTORY_REPLAY_MAX_FIELD_BYTES) source_page_count").replace("pub struct HistoryReplayReservationConstructionFaultCursor", "").replace("//#endregion 🔖️HistoryReplay", `${constructionRegistry} //#endregion 🔖️HistoryReplay`),
+    wal,
+  ] as const);
+  const constructionMutations = [
+    ["construction-fault-public-raw-result", registeredEngine, registeredArtifact.replace("pub(crate) fn try_new()", "pub fn try_new() -> Result<Self, HistoryReplayReservationConstructionFault>"), goodWal],
+    ["construction-fault-public-raw-cursor", registeredEngine, registeredArtifact.replace("pub(crate) struct HistoryReplayReservationConstructionFault", "pub struct HistoryReplayReservationConstructionFaultCursor"), goodWal],
+    ["construction-fault-into-parts-escape", registeredEngine, registeredArtifact.replace("impl HistoryReplayReservationConstructionFault {", "impl HistoryReplayReservationConstructionFault { pub fn into_parts"), goodWal],
+    ["construction-fault-builder-drop-strand", registeredEngine, registeredArtifact.replace("impl Drop for HistoryReplayReservationConstructionBuilder { handback_history_replay_reservation_construction(&token)", "impl Drop for HistoryReplayReservationConstructionBuilder { strand_checked_out_owner"), goodWal],
+    ["construction-fault-infallible-scratch", registeredEngine, registeredArtifact.replace("scratch.try_reserve_exact(HISTORY_REPLAY_MAX_FIELD_BYTES)", "Box::new([0; HISTORY_REPLAY_MAX_FIELD_BYTES])"), goodWal],
+    ["construction-fault-checked-out-drop", registeredEngine, registeredArtifact.replace("impl Drop for HistoryReplayReservationConstructionFault { handback_history_replay_reservation_construction(&token)", "impl Drop for HistoryReplayReservationConstructionFault { strand_checked_out_owner"), goodWal],
+    ["construction-fault-copyable-token", registeredEngine, registeredArtifact.replace("struct HistoryReplayReservationConstructionToken", "#[derive(Clone, Copy)] struct HistoryReplayReservationConstructionToken"), goodWal],
+    ["construction-fault-handback-bounds", registeredEngine, registeredArtifact.replace("registry.slots.get_mut(token.slot)", "&mut registry.slots[token.slot]"), goodWal],
+    ["construction-fault-handback-occupied", registeredEngine, registeredArtifact.replace("!slot.occupied", "false"), goodWal],
+    ["construction-fault-handback-checked-out", registeredEngine, registeredArtifact.replace("!slot.checked_out", "false"), goodWal],
+    ["construction-fault-handback-generation", registeredEngine, registeredArtifact.replace("slot.generation != token.generation", "false"), goodWal],
+    ["construction-fault-handback-owner-witness", registeredEngine, registeredArtifact.replace("slot.cursor.is_none()", "false"), goodWal],
+    ["construction-fault-handback-unconditional-owner-assignment", registeredEngine, registeredArtifact.replace("slot.checked_out = false", "slot.error = error slot.cursor = cursor slot.checked_out = false"), goodWal],
+    ["construction-fault-missing-registry-take", registeredEngine, registeredArtifact.replace("take_history_replay_reservation_construction_fault", "inspect_history_replay_reservation_construction_fault"), goodWal],
+    ["construction-fault-missing-unchecked-drop-fixture", registeredEngine.replace("artifact_history_unchecked_construction_error_and_checked_out_drop_hand_back_exact_pages", ""), registeredArtifact, goodWal],
+    ["construction-fault-missing-unwind-fixture", registeredEngine.replace("artifact_history_construction_unwind_hands_partial_owner_to_registry_without_bulk_drop", ""), registeredArtifact, goodWal],
+    ["construction-fault-missing-registry-aba-fixture", registeredEngine.replace("artifact_history_construction_registry_saturation_rejects_before_partial_owner_and_reuses_with_fresh_generation", ""), registeredArtifact, goodWal],
+    ["construction-fault-missing-stale-duplicate-handback-fixture", registeredEngine.replace("artifact_history_construction_handback_rejects_stale_duplicate_and_aba_without_owner_overwrite", ""), registeredArtifact, goodWal],
+  ] as const;
+  for (const [name, engine, artifact, wal] of [...registeredMutations, ...constructionMutations]) if (interactivityArtifactHistoryFailures(engine, artifact, wal).length === 0) throw new Error(`[verify interactivity] ArtifactHandle history self-test ${name} was falsely accepted.`);
+  const registeredFailures = interactivityArtifactHistoryFailures(registeredEngine, registeredArtifact, goodWal);
+  if (registeredFailures.length !== 0) throw new Error(`[verify interactivity] ArtifactHandle history self-test retained replay was falsely rejected: ${registeredFailures.join("; ")}`);
 }
 
 function interactivityVcsBridgeFailures(engineSource: string, cliSource: string): string[] {
@@ -5276,17 +6149,48 @@ function dependencyFreezeCurrentThirdParty(repoRoot: string): DependencyBaseline
 
 /** 📇️Package name → approved oracle ids, from the registry that claims them as test-only references. */
 function dependencyOracleRegistryPackages(repoRoot: string): Map<string, string[]> {
-  const content = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📇️registry/🔣️component.json");
   const map = new Map<string, string[]>();
-  if (!content) return map;
-  try {
-    for (const entry of (JSON.parse(content) as { oracles?: { id: string; package: string }[] }).oracles ?? []) {
-      map.set(entry.package, [...(map.get(entry.package) ?? []), entry.id]);
+  const taxonomy = repoTaxonomy(repoRoot);
+  const manifests = [String(taxonomy.testOracleRegistryPath ?? ""), ...dependencyDiscoverContributionManifests(repoRoot, String(taxonomy.testContributionDirName ?? ""), String(taxonomy.testContributionFilename ?? ""))];
+  for (const manifest of manifests) {
+    if (manifest === "") continue;
+    const content = policyReadFileSafe(repoRoot, manifest);
+    if (!content) continue;
+    try {
+      for (const entry of (JSON.parse(content) as { oracles?: { id: string; package: string }[] }).oracles ?? []) {
+        map.set(entry.package, [...(map.get(entry.package) ?? []), entry.id]);
+      }
+    } catch {
+      /* an unreadable manifest means no package is excused as an oracle */
     }
-  } catch {
-    /* an unreadable registry means no package is excused as an oracle */
   }
   return map;
+}
+
+/** 🧩️Every `<owner>/<contributionDir>/<contributionFile>` manifest, found by convention. */
+function dependencyDiscoverContributionManifests(repoRoot: string, dirName: string, fileName: string): string[] {
+  if (dirName === "" || fileName === "") return [];
+  const found: string[] = [];
+  const walk = (relDir: string): void => {
+    let entries: ReturnType<typeof readdirSync>;
+    try {
+      entries = readdirSync(join(repoRoot, relDir || "."), { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      const childRel = relDir ? `${relDir}/${entry.name}` : entry.name;
+      if (entry.name === "node_modules" || entry.name === ".git" || entry.name === ".nx" || entry.name === "target" || entry.name === "dist" || childRel.startsWith(".🧬semio")) continue;
+      if (entry.name === dirName) {
+        if (existsSync(join(repoRoot, childRel, fileName))) found.push(`${childRel}/${fileName}`);
+        continue;
+      }
+      walk(childRel);
+    }
+  };
+  walk("");
+  return found;
 }
 
 /** 🐹️Module directories `go.work` declares, minus any `compose/` path — the hard forbidden area. */
@@ -5458,22 +6362,65 @@ function testTargetForLevel(level: TestLevel): string {
   return level === "fundamental" ? "test" : `test-${level}`;
 }
 
-/** 🧪️Repo-relative root of the testing domain every test phase is routed through. */
-const TEST_DOMAIN_DIR = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test";
+/**
+ * 🔣️The SSOT taxonomy, read once. The root script must not know WHERE a module lives or WHICH
+ * subcommands it offers — both are declared vocabulary, so adding a phase or relocating the testing
+ * domain is a taxonomy edit and never an edit here.
+ */
+function repoTaxonomy(root: string): Record<string, unknown> {
+  return JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")) as Record<string, unknown>;
+}
 
 /**
- * 🚫️Nx project names that belong to `compose/**`. `compose` is a hard forbidden path for the
- * repository-wide test path: it is never built, tested, cleaned, covered or reported on here. The
- * exclusion lives in this discovery step — not in a CI path filter — so it holds for every caller.
+ * 🚫️Nx project names inside an area the taxonomy marks `exempt`. The exemption is DATA
+ * (`areas` in `🔣️taxonomy.json`), so marking another area exempt needs no code change and this file
+ * never names `compose` — or any other area — itself.
  */
-function composeProjectNames(root: string): string[] {
+function exemptProjectNames(root: string): string[] {
+  const taxonomy = repoTaxonomy(root);
+  const areas = (taxonomy.areas ?? {}) as Record<string, string>;
+  const exempt = Object.entries(areas)
+    .filter(([, state]) => state === "exempt")
+    .map(([area]) => area);
+  if (exempt.length === 0) return [];
   const probe = runProbe("bun", ["nx", "show", "projects", "--json"], { cwd: root, ...orchestratorBudgetOpts() });
   if ((probe.status ?? 1) !== 0) return [];
+  let names: string[];
   try {
-    return (JSON.parse(probe.stdout) as string[]).filter((name) => name.toLowerCase().includes("compose"));
+    names = JSON.parse(probe.stdout) as string[];
   } catch {
     return [];
   }
+  // 🧭️A project belongs to an exempt area when its manifest lives beneath that area. Resolving each
+  // name through Nx would cost one process per project, so the area's own manifests are read once.
+  const owned = new Set<string>();
+  for (const area of exempt) {
+    const walk = (relDir: string): void => {
+      let entries: ReturnType<typeof readdirSync>;
+      try {
+        entries = readdirSync(join(root, relDir), { withFileTypes: true });
+      } catch {
+        return;
+      }
+      for (const entry of entries) {
+        const childRel = `${relDir}/${entry.name}`;
+        if (entry.isDirectory()) {
+          if (entry.name === "node_modules" || entry.name === ".git" || entry.name === "target" || entry.name === "dist") continue;
+          walk(childRel);
+          continue;
+        }
+        if (entry.name !== "project.json" && entry.name !== "📋️project.json" && entry.name !== "package.json") continue;
+        try {
+          const name = (JSON.parse(readFileSync(join(root, childRel), "utf8")) as { name?: string }).name;
+          if (name) owned.add(name);
+        } catch {
+          /* an unreadable manifest simply contributes no name */
+        }
+      }
+    };
+    walk(area);
+  }
+  return names.filter((name) => owned.has(name));
 }
 
 /**
@@ -5481,7 +6428,7 @@ function composeProjectNames(root: string): string[] {
  *
  * It resolves the level, resolves the scope, invokes Nx and enforces the gates. Everything that
  * knows what a test *is* (discovery, the feature contract, oracles, hosts, comparison, reports)
- * lives in the testing domain at {@link TEST_DOMAIN_DIR}; everything that knows how to *run a
+ * lives in the testing domain the taxonomy names; everything that knows how to *run a
  * process* stays in the repo library. No test phase is special-cased here any more, no `compose`
  * project is prebuilt, and no repository-wide Vitest aggregation is constructed.
  */
@@ -5508,13 +6455,17 @@ export class TestScript extends Script {
     }
     // 🧪️ Owner-root test phases, routed through the testing domain's own router.
     // 🎚️Both `test quick parity` and `test parity quick` must mean the same run. The first form is
-    // already resolved above (and exported through SEMIO_TEST_LEVEL); the second is resolved here,
-    // over the segments that FOLLOW the phase word, so the level is never read as a phase argument.
-    const LEVELLESS_PHASES = ["discover", "doctor", "report", "metrics"];
+    // already resolved above (and exported through SEMIO_TEST_LEVEL); the second is resolved over the
+    // segments that FOLLOW the phase word. Which phases exist, and where the router that serves them
+    // lives, are both taxonomy vocabulary — this file never enumerates either.
+    const taxonomy = repoTaxonomy(this.root);
+    const domain = String(taxonomy.testDomainPath ?? "");
+    const phases = (taxonomy.testPhases ?? []) as string[];
+    const levelless = (taxonomy.testLevellessPhases ?? []) as string[];
     const phase = rest[0] ?? "";
-    if (["contract", "oracle", "subject", "parity", "run", ...LEVELLESS_PHASES].includes(phase)) {
+    if (domain !== "" && phases.includes(phase)) {
       const { level: phaseLevel, rest: phaseArgs } = resolveTestLevel(rest.slice(1));
-      runCmd("bun", [join(this.root, TEST_DOMAIN_DIR, "📜️script.ts"), phase, ...(LEVELLESS_PHASES.includes(phase) ? [] : [phaseLevel]), ...phaseArgs], { cwd: join(this.root, TEST_DOMAIN_DIR), ...orchestratorBudgetOpts() });
+      runCmd("bun", [join(this.root, domain, "📜️script.ts"), phase, ...(levelless.includes(phase) ? [] : [phaseLevel]), ...phaseArgs], { cwd: join(this.root, domain), ...orchestratorBudgetOpts() });
       return;
     }
 
@@ -5526,11 +6477,11 @@ export class TestScript extends Script {
     }
 
     // 🧾️ Contract first: a case whose plan is not well formed can never be reported as passing.
-    runCmd("bun", [join(this.root, TEST_DOMAIN_DIR, "📜️script.ts"), "contract"], { cwd: join(this.root, TEST_DOMAIN_DIR), ...orchestratorBudgetOpts() });
+    if (domain !== "") runCmd("bun", [join(this.root, domain, "📜️script.ts"), "contract"], { cwd: join(this.root, domain), ...orchestratorBudgetOpts() });
 
     // nx orchestrators: exempt — leaves individually budgeted. Generated per-test-case projects are
     // included by their own `test-<level>` targets, so no manual leveled-target scanner is needed.
-    const exclude = ["workspace", ...composeProjectNames(this.root)];
+    const exclude = ["workspace", ...exemptProjectNames(this.root)];
     runCmd("bun", ["nx", "run-many", "-t", testTargetForLevel(level), "--all", "--exclude", exclude.join(",")], { cwd: this.root, ...orchestratorBudgetOpts() });
     if (TEST_LEVELS.indexOf(level) >= TEST_LEVELS.indexOf("long")) {
       await this.runStorybookPlaywright();
@@ -6538,7 +7489,9 @@ export class CleanScript extends Script {
     if (segments[0] === "test") {
       // 🧪️ Marker-guarded removal of generated test state, delegated to its owner. Never descends
       // into `compose/`, never follows a symlink, never deletes an unmarked directory.
-      runCmd("bun", [join(this.root, TEST_DOMAIN_DIR, "📜️script.ts"), "clean", ...segments.slice(1)], { cwd: join(this.root, TEST_DOMAIN_DIR), ...orchestratorBudgetOpts() });
+      const domain = String(repoTaxonomy(this.root).testDomainPath ?? "");
+      if (domain === "") throw new Error("🔣️taxonomy.json declares no testDomainPath — `clean test` has no owner to delegate to.");
+      runCmd("bun", [join(this.root, domain, "📜️script.ts"), "clean", ...segments.slice(1)], { cwd: join(this.root, domain), ...orchestratorBudgetOpts() });
       return;
     }
     if (segments[0] === "coverage") {
@@ -13173,350 +14126,12 @@ function policyArtifactRootOfMutationsDir(mutationsRel: string): string {
  * later waves' handcrafted `rename`/`change`/`move`/… mutations shrink this file-by-file (see
  * `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`).
  */
-const POLICY_SEMANTIC_VOCABULARY_ALLOWLIST = new Set<string>([
-  "✏️s/🔌️plugins/✒️writer/🎛️apps/✒️writer/🎮️commands/✍️text/🦀️component.rs",
-  "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-  "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
-  "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
-  "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️mathematical/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🌊️flow/🎛️apps/🌊️flow/🎮️commands/🕸️node-graph/🦀️component.rs",
-  "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🎮️commands/🎨️example/🦀️component.rs",
-  "✏️s/🔌️plugins/🌍️gis/🎛️apps/◻2d/🎮️commands/🗺️features/🦀️component.rs",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🌿️vcs/🎛️apps/🌿️vcs/🎮️commands/🖱️canvas/🦀️component.rs",
-  "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🎮️commands/⌨️engagement/🦀️component.rs",
-  "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🎮️commands/🀄️tile/🦀️component.rs",
-  "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🎮️commands/👁️view/🦀️component.rs",
-  "✏️s/🔌️plugins/🎞️animate/🎛️apps/🎬️present/🎮️commands/🖼️source/🦀️component.rs",
-  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
-  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📸set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️present/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎮️commands/🎥️set-camera/🦀️component.rs",
-  "✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎮️commands/📦️asset/🦀️component.rs",
-  "✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎮️commands/📷️shot/🦀️component.rs",
-  "✏️s/🔌️plugins/🎥️shooting/🎛️apps/🎥️shooting/🎮️commands/🗃️fixture/🦀️component.rs",
-  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎥saved-cameras/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎥saved-cameras/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
-  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦assets/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦assets/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📸shots/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📸shots/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-  "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
-  "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫙no-mutation/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫙no-mutation/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫙no-mutation/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🏗️fem/🎛️apps/◻2d/🎮️commands/📚️example/🦀️component.rs",
-  "✏️s/🔌️plugins/🏗️fem/🎛️apps/🧊️3d/🎮️commands/📚️example/🦀️component.rs",
-  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/🎮️commands/🏗️element/🦀️component.rs",
-  "✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/🎮️commands/📤️exchange/🦀️component.rs",
-  "✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/🎮️commands/🔬️analysis/🦀️component.rs",
-  "✏️s/🔌️plugins/🏛️architect/🎛️apps/🏛️architect/🎮️commands/🕸️graph/🦀️component.rs",
-  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎮️commands/📄️artifact/🦀️component.rs",
-  "✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎮️commands/📤️media/🦀️component.rs",
-  "✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎮️commands/🔎️inspector/🦀️component.rs",
-  "✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎮️commands/🛠️workshop/🦀️component.rs",
-  "✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎮️commands/🪜️step/🦀️component.rs",
-  "✏️s/🔌️plugins/🏭️process/🎛️apps/🧊️3d/🎮️commands/🪵️stock/🦀️component.rs",
-  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋steps/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋steps/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
-  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️machines/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️machines/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/💠️lowpoly/🎛️apps/💠️lowpoly/🎮️commands/📄️fixture/🦀️component.rs",
-  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️objects-move/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️objects-move/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️objects-add/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️objects-add/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️objects-remove/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️objects-remove/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
-  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹objects-patch/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹objects-patch/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/💡️reasoning/🎛️apps/🔌️wires/🎮️commands/🧬️example/🦀️component.rs",
-  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/📏️layout/🎛️apps/📏️layout/🎮️commands/✏️author/🦀️component.rs",
-  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🎮️commands/📥️io/🦀️component.rs",
-  "✏️s/🔌️plugins/📐️cad/🎛️apps/📐️cad/🎮️commands/🗺️model-definition/🦀️component.rs",
-  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📓️iso16757/🎮️commands/📤️set-snapshot/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📓️iso16757/🎮️commands/🧮️evaluate/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📔️vdi3805/🎮️commands/📤️set-snapshot/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📔️vdi3805/🎮️commands/🧮️evaluate/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📕️din4108/🎮️commands/📤️set-snapshot/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📕️din4108/🎮️commands/🧮️evaluate/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📗️din16798/🎮️commands/📤️set-snapshot/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📗️din16798/🎮️commands/🧮️evaluate/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1990/🎮️commands/📤️set-snapshot/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1990/🎮️commands/🧮️evaluate/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1991/🎮️commands/📤️set-snapshot/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1991/🎮️commands/🧮️evaluate/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1992/🎮️commands/📤️set-snapshot/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1992/🎮️commands/🧮️evaluate/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1993/🎮️commands/📤️set-snapshot/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1993/🎮️commands/🧮️evaluate/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1994/🎮️commands/📤️set-snapshot/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1994/🎮️commands/🧮️evaluate/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1995/🎮️commands/📤️set-snapshot/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1995/🎮️commands/🧮️evaluate/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1996/🎮️commands/📤️set-snapshot/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1996/🎮️commands/🧮️evaluate/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1997/🎮️commands/📤️set-snapshot/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1997/🎮️commands/🧮️evaluate/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1998/🎮️commands/📤️set-snapshot/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1998/🎮️commands/🧮️evaluate/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1999/🎮️commands/📤️set-snapshot/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📘️en1999/🎮️commands/🧮️evaluate/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📙️din18599/🎮️commands/📤️set-snapshot/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🎛️apps/📙️din18599/🎮️commands/🧮️evaluate/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📓️iso16757/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📔️vdi3805/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📕️din4108/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📗️din16798/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1990/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1991/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1992/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1993/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1994/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1995/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1996/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1997/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1998/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📘️en1999/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝️text/🦀️component.rs",
-  "✏️s/🔌️plugins/📕️norm/🗿️artifacts/📙️din18599/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/📜️imperative/🎛️apps/📜️imperative/🎮️commands/🔧️step/🦀️component.rs",
-  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-  "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️imperative/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-  "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🕸️dag/🎛️apps/🕸️dag/🎮️commands/🔧️nodes/🦀️component.rs",
-  "✏️s/🔌️plugins/🕸️dag/🎛️apps/🕸️dag/🎮️commands/🕸️graph/🦀️component.rs",
-  "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🖍️draw/🎛️apps/🖍️draw/🎮️commands/📄️artifact/🦀️component.rs",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↔️set-layer-transform/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️set-stroke/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️add-layer/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖️remove-layer/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️set-layer-opacity/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨set-fill/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️set-layer-name/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️set-layer-visible/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀set-boolean-operation/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃reorder-layer/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️set-layer-locked/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️set-layer-blend-mode/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-trace-params/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️draw/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧬️duplicate-layer/↩️inverse/🦀️component.rs",
-  "✏️s/🔌️plugins/🖨️raster/🎛️apps/🖨️raster/🎮️commands/🗂️document/🦀️component.rs",
-  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/🔖️89a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🏅️standards/🔖️mpeg1-layer3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄️pdf/🏅️standards/🔖️1.7/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰xml/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔣️json/🏅️standards/🔖️rfc8259/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1018/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔖️ac1024/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dxf/🏅️standards/🔖️r12/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🟪️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/✳️any/🔨️modules/🧭️mutation-dispatch/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🔺️diff/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️obj/🏅️standards/🔖️3.0/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️animation/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️audio/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️brep/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️cad/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️document/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️drawing/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️image/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️mesh/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️model/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️object/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️video/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️workflow/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🗒️note/🎛️apps/🗒️note/🎮️commands/🗃️fixture/🦀️component.rs",
-  "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🎛️apps/◻2d/🎮️commands/🎨️example/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🎛️apps/🖐️5d/🎮️commands/🎨️example/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🎛️apps/🧊️3d/🎮️commands/🎨️example/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📄set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-  "✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🎮️commands/📄️artifact/🦀️component.rs",
-  "✏️s/🔌️plugins/🪵️sourcing/🎛️apps/🗂️curate/🎮️commands/🧺️curation/🦀️component.rs",
-  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/🦀️component.rs",
-  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📸️set-snapshot/🦠️mutation/🦀️component.rs",
-  "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curate/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️component.rs",
-]);
+/**
+ * 📏️Files this rule deliberately exempts. The ENTRIES are owned by the areas they describe and are
+ * discovered from every `🔒️policy-allowlist.json` in the tree, so this router names no path of its
+ * own and an area that is deleted takes its exemptions with it.
+ */
+const POLICY_SEMANTIC_VOCABULARY_ALLOWLIST = policyDiscoveredAllowlist(WORKSPACE_ROOT, "semantic-vocabulary");
 
 /**
  * 🚫️High-priority banned generic-vocabulary tokens: the whole-document escape hatch, the sentinel, and the

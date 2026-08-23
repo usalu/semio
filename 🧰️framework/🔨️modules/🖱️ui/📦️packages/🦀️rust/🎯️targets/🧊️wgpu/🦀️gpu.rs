@@ -1,12 +1,11 @@
 // #region gpu
 //! 🖥️ WebGPU device, surface, and frame loop.
 
-use crate::wgpu::draw::{FrameBuffers, MeshGpuTable, RasterTextureTable, SceneColorTarget, UiPipelines};
+use crate::wgpu::draw::{FrameBuffers, MeshGpuTable, RasterTextureAdmission, RasterTextureCleanupStep, RasterTextureStageFault, RasterTextureTable, RasterTextureWitness, RasterUploadPixels, SceneColorTarget, UiPipelines};
 #[cfg(target_arch = "wasm32")]
 use crate::wgpu::prepared::OffscreenPresentToken;
 use crate::wgpu::prepared::{PreparedRenderEviction, PreparedRenderGate, PreparedRenderPacket, PreparedRenderUpload, UiPresentToken};
 use crate::wgpu::text::FontAtlas;
-use std::sync::Arc;
 use wgpu::Surface;
 
 pub struct GpuContext {
@@ -152,8 +151,16 @@ impl GpuContext {
         self.mesh_store.upload_terminal_is_empty()
     }
 
-    pub fn evict_mesh(&mut self, key: &str) {
-        self.mesh_store.evict_mesh(key);
+    pub fn retire_mesh_exact_step(&mut self, key: &str, version: u64) -> Result<bool, &'static str> {
+        self.mesh_store.retire_exact_step(key, version)
+    }
+
+    pub fn close_mesh_table_step(&mut self) -> bool {
+        self.mesh_store.close_step()
+    }
+
+    pub fn mesh_table_terminal_is_empty(&self) -> bool {
+        self.mesh_store.terminal_is_empty()
     }
 
     pub fn begin_prepared(&self, _token: &UiPresentToken, gate: &PreparedRenderGate, packet: &PreparedRenderPacket, live_revision: u64, live_generation: u64) -> Result<(), String> {
@@ -165,15 +172,14 @@ impl GpuContext {
         gate.validate(packet, live_revision, live_generation).map_err(|error| error.to_string())
     }
 
-    pub fn apply_prepared_eviction_step(&mut self, packet: &PreparedRenderPacket, index: usize) -> Result<bool, String> {
+    pub fn apply_prepared_eviction_step(&mut self, packet: &PreparedRenderPacket, index: usize, keep_versions: &[u64]) -> Result<bool, String> {
         let Some(eviction) = packet.evictions().get(index) else { return Ok(true) };
         match eviction {
-            PreparedRenderEviction::Mesh { key } => self.evict_mesh(key),
+            PreparedRenderEviction::Mesh { key } => self.mesh_store.evict_mesh_except_step(key, keep_versions).map_err(str::to_owned),
         }
-        Ok(index + 1 == packet.evictions().len())
     }
 
-    pub fn apply_prepared_upload_step(&mut self, packet: &PreparedRenderPacket, index: usize) -> Result<bool, String> {
+    pub fn apply_prepared_upload_step(&mut self, packet: &PreparedRenderPacket, index: usize, candidate: RasterTextureWitness, expected: RasterTextureWitness) -> Result<bool, String> {
         let Some(upload) = packet.uploads().get(index) else { return Ok(true) };
         let complete = match upload {
             PreparedRenderUpload::GlyphAtlas { pixels, width, height } => {
@@ -184,19 +190,21 @@ impl GpuContext {
                 self.pipelines.upload_icon_atlas(&self.queue, pixels, *width, *height);
                 true
             }
-            PreparedRenderUpload::Raster { key, pixels, width, height } => {
-                self.ensure_raster_texture(key, pixels, *width, *height);
-                true
+            PreparedRenderUpload::Raster { key, pixels, width, height } => self.ensure_raster_texture_step(key, RasterUploadPixels::Contiguous(pixels), *width, *height, candidate, expected).map_err(str::to_owned)?,
+            PreparedRenderUpload::RasterPages { key, pixels } => {
+                if pixels.frame_generation() != packet.preview_generation() {
+                    return Err("prepared raster producer generation is stale".into());
+                }
+                self.ensure_raster_texture_step(key, RasterUploadPixels::Pages(pixels), pixels.width(), pixels.height(), candidate, expected).map_err(str::to_owned)?
             }
             PreparedRenderUpload::Mesh { key, version, lease } => self.ensure_mesh_step(key, *version, *lease).map_err(str::to_owned)?,
         };
         Ok(complete)
     }
 
-    pub fn finish_prepared(&mut self, gate: &mut PreparedRenderGate, packet: Arc<PreparedRenderPacket>) -> Result<(), String> {
-        self.render_prepared(&packet)?;
-        gate.commit_presented(packet);
-        Ok(())
+    pub fn finish_prepared(&mut self, packet: &PreparedRenderPacket, witness: RasterTextureWitness) -> Result<(), String> {
+        self.raster_store.begin_presenting(witness).map_err(str::to_owned)?;
+        self.render_prepared(packet)
     }
 
     fn render_prepared(&mut self, packet: &PreparedRenderPacket) -> Result<(), String> {
@@ -237,12 +245,42 @@ impl GpuContext {
         self.pipelines.upload_icon_atlas(&self.queue, &atlas.pixels, atlas.width, atlas.height);
     }
 
-    pub fn ensure_raster_texture(&mut self, key: &str, pixels: &[u8], width: u32, height: u32) {
-        self.raster_store.ensure_raster(&self.device, &self.queue, self.pipelines.globals_buffer(), &self.pipelines.glyph_view(), self.pipelines.glyph_sampler(), &self.pipelines.icon_view(), self.pipelines.icon_sampler(), key, pixels, width, height);
+    fn ensure_raster_texture_step(&mut self, key: &str, pixels: RasterUploadPixels<'_>, width: u32, height: u32, candidate: RasterTextureWitness, expected: RasterTextureWitness) -> Result<bool, &'static str> {
+        self.raster_store.ensure_raster_step(
+            &self.device,
+            &self.queue,
+            self.pipelines.globals_buffer(),
+            &self.pipelines.glyph_view(),
+            self.pipelines.glyph_sampler(),
+            &self.pipelines.icon_view(),
+            self.pipelines.icon_sampler(),
+            key,
+            pixels,
+            width,
+            height,
+            candidate,
+            expected,
+        )
     }
 
-    pub fn ensure_world_plane_texture(&mut self, key: &str, pixels: &[u8], width: u32, height: u32) {
-        self.ensure_raster_texture(key, pixels, width, height);
+    pub fn commit_presented_rasters_step(&mut self, witness: RasterTextureWitness) -> Result<bool, String> {
+        self.raster_store.commit_presented_step(witness).map_err(str::to_owned)
+    }
+
+    pub fn abort_presented_rasters_step(&mut self, witness: RasterTextureWitness) -> Result<bool, String> {
+        self.raster_store.abort_presented_step(witness).map_err(str::to_owned)
+    }
+
+    pub fn close_raster_upload_step(&mut self) -> RasterTextureCleanupStep {
+        self.raster_store.close_upload_step()
+    }
+
+    pub fn close_raster_table_step(&mut self) -> Result<bool, String> {
+        self.raster_store.close_step().map_err(str::to_owned)
+    }
+
+    pub fn raster_table_terminal_is_empty(&self) -> bool {
+        self.raster_store.terminal_is_empty()
     }
 
     pub fn device(&self) -> &wgpu::Device {
@@ -257,8 +295,40 @@ impl GpuContext {
         self.dpr
     }
 
-    pub fn register_engine_texture(&mut self, key: &str, texture: wgpu::Texture, view: &wgpu::TextureView, width: u32, height: u32) {
-        self.raster_store.replace_gpu_bind_group(&self.device, self.pipelines.globals_buffer(), &self.pipelines.glyph_view(), self.pipelines.glyph_sampler(), key, view, texture, width, height);
+    pub fn reserve_engine_texture(&mut self, key: &str, width: u32, height: u32, candidate: RasterTextureWitness, expected: RasterTextureWitness) -> Result<RasterTextureAdmission, String> {
+        self.raster_store.reserve_engine_texture(key, width, height, candidate, expected).map_err(str::to_owned)
+    }
+
+    pub fn cancel_engine_texture_admission(&mut self, admission: RasterTextureAdmission) -> Result<(), String> {
+        self.raster_store.cancel_engine_texture_admission(admission).map_err(str::to_owned)
+    }
+
+    pub fn validate_engine_renderer_allocation(&self, admission: &RasterTextureAdmission, expected: RasterTextureWitness) -> Result<(), String> {
+        self.raster_store.validate_engine_renderer_allocation(admission, expected).map_err(str::to_owned)
+    }
+
+    pub fn validate_engine_target_texture_allocation(&self, admission: &RasterTextureAdmission, expected: RasterTextureWitness) -> Result<(), String> {
+        self.raster_store.validate_engine_target_texture_allocation(admission, expected).map_err(str::to_owned)
+    }
+
+    pub fn validate_engine_target_view_allocation(&self, admission: &RasterTextureAdmission, expected: RasterTextureWitness) -> Result<(), String> {
+        self.raster_store.validate_engine_target_view_allocation(admission, expected).map_err(str::to_owned)
+    }
+
+    pub fn validate_engine_replacement_texture_allocation(&self, admission: &RasterTextureAdmission, expected: RasterTextureWitness) -> Result<(), String> {
+        self.raster_store.validate_engine_replacement_texture_allocation(admission, expected).map_err(str::to_owned)
+    }
+
+    pub fn validate_engine_replacement_view_allocation(&self, admission: &RasterTextureAdmission, expected: RasterTextureWitness) -> Result<(), String> {
+        self.raster_store.validate_engine_replacement_view_allocation(admission, expected).map_err(str::to_owned)
+    }
+
+    pub fn retain_engine_allocation_fault(&mut self, admission: RasterTextureAdmission, texture: Option<wgpu::Texture>, view: Option<wgpu::TextureView>) {
+        self.raster_store.retain_engine_allocation_fault(admission, texture, view);
+    }
+
+    pub fn stage_engine_texture(&mut self, admission: RasterTextureAdmission, texture: wgpu::Texture, view: wgpu::TextureView, expected: RasterTextureWitness) -> Result<(), RasterTextureStageFault> {
+        self.raster_store.stage_gpu_bind_group(&self.device, self.pipelines.globals_buffer(), &self.pipelines.glyph_view(), self.pipelines.glyph_sampler(), admission, view, texture, expected)
     }
 
     pub fn width(&self) -> u32 {

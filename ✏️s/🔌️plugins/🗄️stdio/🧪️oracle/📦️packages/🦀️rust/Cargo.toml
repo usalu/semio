@@ -1,0 +1,33 @@
+# 🧭️ Own workspace root: this crate is linked by generated cache-local test hosts by path and must
+# not join the repository workspace, whose root manifest is a shared, contended file.
+[workspace]
+
+[package]
+name = "semio-s-plugin-stdio-test-oracle"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "🔮️ Reference implementations for the artifacts ✏️s/🔌️plugins/🗄️stdio owns, contributed to the repository test platform."
+
+[lib]
+name = "semio_s_plugin_stdio_test_oracle"
+path = "📦️lib.rs"
+
+[features]
+# 🔮️ Links the registered third-party reference implementations. Enabled only by a generated test
+# host, never by any production target — `bun ./📜️script.ts dependency` enforces that.
+oracles = ["dep:pdf-writer", "dep:lopdf", "dep:png", "dep:gif", "dep:zip", "dep:flate2", "dep:hound", "dep:csv", "dep:image", "dep:tobj", "dep:stl_io"]
+
+[dependencies]
+semio-repo-test-host = { path = "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust" }
+pdf-writer = { version = "0.15", optional = true }
+lopdf = { version = "0.44", optional = true }
+png = { version = "0.18", optional = true }
+gif = { version = "0.13", optional = true }
+zip = { version = "6", optional = true, default-features = false, features = ["deflate"] }
+flate2 = { version = "1", optional = true }
+hound = { version = "3", optional = true }
+csv = { version = "1", optional = true }
+image = { version = "0.25", optional = true, default-features = false, features = ["bmp", "tiff", "jpeg"] }
+tobj = { version = "4", optional = true }
+stl_io = { version = "0.8", optional = true }

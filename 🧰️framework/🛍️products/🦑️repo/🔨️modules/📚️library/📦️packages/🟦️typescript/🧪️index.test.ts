@@ -5,6 +5,7 @@ import { join, resolve } from "node:path";
 import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, parseExtraNeo4jGraphDatabaseNamesFromEnv, partitionNeo4jGraphCliArgv, policyCanonicalArtifactKindBreaches, policyChildSlotKindDagBreaches, policyDissolvedKindRedefinitionBreaches, policyEmojiPrefixBreaches, policyModeCompletenessBreaches, policyPluginDependencyParityBreaches, policyWindowCompletenessBreaches } from "../../../../../../../📜️script.ts";
 import { BundleScript, ScriptRouter, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, budgetTimeoutHint, canReuseDevPort, daemonBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, dispatchSubcommand, findRepoRoot, gitSpawnEnv, goLevelTestArgs, isDevPortInUse, orchestratorBudgetMs, orchestratorBudgetOpts, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, runCmd, runCmdStatus, runProbe, testLevelBudgetMs, vitestLevelArgs, wgpuDevPlayUrl } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { defineLint, type FileLinter } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
+import { getWorkspaceRoot, layeringBreaches, layeringCounts, layeringReferences, loadLayeringBaseline, policyDiscoveredAllowlist } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import { dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, isAdapterBoundaryFile, parseTsImportSpecs } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️index.ts";
 import {
   PLAYGROUND_PORTS,
@@ -2337,3 +2338,33 @@ describe("policyPluginDependencyParityBreaches", () => {
 });
 //#endregion 🧪️PluginDependencyParityPolicy
 
+describe("🏛️ layering", () => {
+  const repoRoot = getWorkspaceRoot();
+
+  test("the ratchet never allows a file to grow past its baseline", () => {
+    expect(layeringBreaches(repoRoot)).toEqual([]);
+  }, 60_000);
+
+  test("no repo-wide or framework file exceeds what the baseline records", () => {
+    const baseline = loadLayeringBaseline(repoRoot);
+    for (const [file, count] of Object.entries(layeringCounts(layeringReferences(repoRoot)))) {
+      expect(count, `${file} references more implementation paths than its baseline`).toBeLessThanOrEqual(baseline.allowed[file] ?? 0);
+    }
+  }, 60_000);
+
+  test("the baseline lists no file that is already clean", () => {
+    const counts = layeringCounts(layeringReferences(repoRoot));
+    for (const [file, allowed] of Object.entries(loadLayeringBaseline(repoRoot).allowed)) {
+      if (allowed === 0) expect(counts[file] ?? 0, `${file} is baselined at 0 and should be dropped from the list`).toBe(0);
+    }
+  }, 60_000);
+
+  test("an area contributes its own policy exemptions, and the router merges them by discovery", () => {
+    const merged = policyDiscoveredAllowlist(repoRoot, "semantic-vocabulary");
+    expect(merged.size).toBeGreaterThan(0);
+    // 🧭️Every entry must live under the area that contributed it — an exemption never outlives the
+    // code it exempts, which is the whole point of moving it out of the root router.
+    for (const entry of merged) expect(entry.length).toBeGreaterThan(0);
+    expect(policyDiscoveredAllowlist(repoRoot, "no-such-rule-key").size).toBe(0);
+  }, 60_000);
+});

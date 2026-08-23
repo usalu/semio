@@ -146,8 +146,25 @@ fn draw_session_key(app_instance_id: u32, document_id: &str, operation_id: u64, 
 /// lives in [`DrawConfig`], written through [`DrawConfigMutation`]s. `session` holds the one piece of
 /// state that is neither document nor view-config — the live gesture statechart — threaded into every
 /// command handler as the `app_commands!` dispatch context.
-#[derive(Default)]
-pub struct DrawPlayApp;
+pub struct DrawPlayApp {
+    arena_boot_fault: Option<&'static str>,
+}
+
+impl DrawPlayApp {
+    pub fn arena_boot_fault(&self) -> Option<&'static str> {
+        self.arena_boot_fault.or_else(crate::artifacts::draw::spr::draw_mutation_arena_pool_fault)
+    }
+}
+
+impl Default for DrawPlayApp {
+    fn default() -> Self {
+        let arena_boot_fault = match crate::artifacts::draw::spr::request_draw_mutation_arena_pool() {
+            crate::artifacts::draw::spr::DrawMutationArenaPoolAvailability::Fault(error) => Some(error),
+            crate::artifacts::draw::spr::DrawMutationArenaPoolAvailability::Ready | crate::artifacts::draw::spr::DrawMutationArenaPoolAvailability::NotReady | crate::artifacts::draw::spr::DrawMutationArenaPoolAvailability::Contended => None,
+        };
+        Self { arena_boot_fault }
+    }
+}
 
 impl ArtifactEditor for DrawPlayApp {
     type Snapshot = DrawSnapshot;
@@ -775,6 +792,33 @@ mod tests {
         app.cancel_artifact_envelope_load(handle).expect("cancel Draw ingress");
         assert_eq!(drive_draw_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
         assert_eq!(app.artifact_generation_now(), base_generation);
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn draw_live_initializer_candidate_container_commit_ack_cancel_stale_preserve_last_valid_and_exact_handle() {
+        for turns in [0usize, 1, 2, 8] {
+            let mut app = draw_app();
+            let base_generation = app.artifact_generation_now();
+            let base_id = app.snapshot().expect("Draw last-valid snapshot").id;
+            let handle = admit_draw_envelope(&mut app, &draw_envelope_wire());
+            for _ in 0..turns {
+                app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("bounded Draw staged maintenance");
+            }
+            let stale = semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle { operation: handle.operation, generation: semio_framework_job::Generation(handle.generation.0 + 1) };
+            assert!(app.advance_artifact_envelope_load(stale).is_err(), "stale staged handle cannot consume the exact operation owner");
+            app.cancel_artifact_envelope_load(handle).expect("exact Draw staged cancellation");
+            assert!(matches!(drive_draw_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled));
+            assert_eq!(app.artifact_generation_now(), base_generation);
+            assert_eq!(app.snapshot().expect("Draw last-valid survives staged cancel").id, base_id);
+        }
+
+        let mut app = draw_app();
+        let handle = admit_draw_envelope(&mut app, &draw_envelope_wire());
+        assert_eq!(drive_draw_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
+        let stale = semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle { operation: handle.operation, generation: semio_framework_job::Generation(handle.generation.0 + 1) };
+        assert!(app.acknowledge_artifact_store_replacement(stale).is_err(), "stale ACK cannot retire the exact committed owner");
+        assert!(app.acknowledge_artifact_store_replacement(handle).expect("exact staged Draw ACK"));
+        assert!(!app.acknowledge_artifact_store_replacement(handle).expect("duplicate staged Draw ACK is idempotent"));
     }
 
     #[semio_framework_async_macros::async_test]
